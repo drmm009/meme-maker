@@ -1969,7 +1969,11 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
           touchAction: 'none',
           userSelect: 'none',
           WebkitUserSelect: 'none',
-          cursor: isDrawingMode ? 'crosshair' : 'default'
+          cursor: isDrawingMode ? 'crosshair' : 'default',
+          width: '100%',
+          height: 'auto',
+          maxHeight: '82vh',
+          aspectRatio: `${canvasW} / ${canvasH}`
         }}
       />
 
