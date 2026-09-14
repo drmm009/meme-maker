@@ -800,7 +800,7 @@ body {
   width: auto;
   max-width: 100%;
   height: auto;
-  max-height: 600px;
+  max-height: 82vh;
   box-shadow: 0 10px 30px #00000080;
 }
 .canvas-hint {
