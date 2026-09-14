@@ -1,0 +1,61 @@
+/* Video Editor Specific Styles */
+.canvas-container { background: transparent; position: relative; }
+.timeline-tracks { flex: 1; overflow: visible; position: relative; }
+.track { height: 50px; background: #131622; border-bottom: 1px solid transparent; box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3); position: relative; margin-bottom: 2px; border-radius: 8px; }
+.timeline-item-layer { border-radius: var(--radius-sm); overflow: hidden; box-shadow: var(--shadow-sm); transition: box-shadow 0.2s ease; }
+.timeline-item-layer:hover { box-shadow: 0 0 0 2px var(--accent-primary); }
+
+.aspect-ratio-wrapper {
+  display: flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: var(--radius-md);
+  gap: 8px;
+}
+
+.aspect-ratio-display {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  color: var(--text-main);
+  font-size: 0.9rem;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+@media (max-width: 1024px) {
+  .aspect-ratio-wrapper {
+    padding: 4px;
+    gap: 0;
+  }
+  .desktop-only {
+    display: none !important;
+  }
+  .aspect-ratio-display {
+    padding: 6px;
+    justify-content: center;
+  }
+  .aspect-ratio-text {
+    display: none;
+  }
+  .aspect-ratio-mobile-icon {
+    display: block !important;
+    color: var(--text-main);
+  }
+}
+
+/* Timeline container responsive padding */
+.timeline-section {
+  padding: 16px;
+}
+
+@media (max-width: 768px) {
+  .timeline-section {
+    padding: 16px 0;
+  }
+  .timeline-controls-wrap {
+    padding: 0 16px;
+  }
+}
