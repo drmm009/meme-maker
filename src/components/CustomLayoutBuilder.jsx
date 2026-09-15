@@ -345,8 +345,20 @@ export default function CustomLayoutBuilder({
       {/* STEP 1: CLEAN 3 COLUMNS x 2 ROWS LAYOUT SELECTOR WITH SPACING BELOW HEADER */}
       {step === 1 && (
         <div className="step-selection-area">
-          <div className="step-header text-center step-header-spaced">
-            <h3><span className="step-prefix-highlight">Step 1:</span> Select Layout Structure</h3>
+          <div className="step-header-bar margin-bottom-sm step-header-spaced">
+            {onBack && (
+              <button
+                className="btn btn-ghost btn-xs step-back-btn"
+                onClick={onBack}
+                title="Back to templates"
+              >
+                <ArrowLeft className="icon-sm" /> Back
+              </button>
+            )}
+            <h3 style={{ margin: 0, textAlign: 'center', flex: 1 }}>
+              <span className="step-prefix-highlight">Step 1:</span> Select Layout Structure
+            </h3>
+            <div style={{ width: '65px', flexShrink: 0 }} className="desktop-spacer" />
           </div>
 
           <div style={{ marginBottom: '24px' }}>
@@ -457,8 +469,18 @@ export default function CustomLayoutBuilder({
       {/* STEP 2: POPULATE IMAGES */}
       {step === 2 && (
         <div className="step-population-area animate-fade-in">
-          <div className="flex-center margin-bottom-sm step-header-spaced">
-            <h3 style={{ margin: 0 }}><span className="step-prefix-highlight">Step 2:</span> Populate Panels</h3>
+          <div className="step-header-bar margin-bottom-sm step-header-spaced">
+            <button
+              className="btn btn-ghost btn-xs step-back-btn"
+              onClick={() => setStep(1)}
+              title="Back to Step 1: Select Layout"
+            >
+              <ArrowLeft className="icon-sm" /> Back
+            </button>
+            <h3 style={{ margin: 0, textAlign: 'center', flex: 1 }}>
+              <span className="step-prefix-highlight">Step 2:</span> Populate Panels
+            </h3>
+            <div style={{ width: '65px', flexShrink: 0 }} className="desktop-spacer" />
           </div>
 
           <div className="aspect-ratio-selector flex-center margin-bottom" style={{ gap: '8px', flexWrap: 'wrap' }}>
