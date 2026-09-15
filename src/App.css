@@ -767,7 +767,7 @@ body {
 }
 .editor-workspace {
   grid-template-columns: 1fr 370px;
-  align-items: start;
+  align-items: stretch;
   gap: 16px;
   display: grid;
 }
