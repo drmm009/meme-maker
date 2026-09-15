@@ -1073,7 +1073,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                   {watermark?.enabled && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginTop: '8px' }}>
                       <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                        <div className="input-field watermark-text-input" style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <div className="watermark-text-input" style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '6px' }}>
                           <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem', userSelect: 'none' }}>@</span>
                           <input 
                             type="text" 
