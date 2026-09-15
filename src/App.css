@@ -3789,21 +3789,26 @@ h1, h2, h3,
   border-radius: 10px !important;
 }
 .btn-primary {
-  background: #171310 !important;
-  color: #fff8ee !important;
-  border: 2px solid #171310 !important;
-  box-shadow: 3px 3px 0 rgba(23, 19, 16, 0.35) !important;
+  background: var(--poster-orange) !important;
+  color: #171310 !important;
+  border: 2px solid var(--poster-orange) !important;
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.45) !important;
 }
 .btn-secondary {
   background: transparent !important;
-  color: #171310 !important;
-  border: 2px solid #171310 !important;
+  color: var(--text-main) !important;
+  border: 2px solid var(--text-main) !important;
   box-shadow: none !important;
 }
 .btn-primary:hover,
 .btn-secondary:hover {
   transform: translate(-1px, -1px) !important;
-  box-shadow: 4px 4px 0 rgba(23, 19, 16, 0.45) !important;
+  box-shadow: 4px 4px 0 var(--poster-orange) !important;
+  border-color: var(--poster-orange) !important;
+  color: #171310 !important;
+}
+.btn-secondary:hover {
+  background: var(--poster-orange) !important;
 }
 .theme-light .btn-primary,
 [data-theme='light'] .btn-primary {
