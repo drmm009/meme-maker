@@ -43,11 +43,11 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom }) 
 
           <div className="hero-actions">
             <motion.button
-              className="btn btn-primary shadow-glow"
+              className="btn shadow-glow"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => onCreateCustom('image')}
-              style={{ borderRadius: '28px' }}
+              style={{ backgroundColor: '#ffffff', color: '#000000', borderColor: '#ffffff', borderRadius: '28px', fontWeight: 600 }}
             >
               <ImageIcon className="icon-md" /> Custom Image Builder
             </motion.button>
