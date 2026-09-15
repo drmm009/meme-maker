@@ -1261,14 +1261,7 @@ body {
   margin: 0 auto;
   text-align: center !important;
 }
-.step-header-bar {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  position: relative;
-}
-.step-back-btn {
+.wizard-back-btn {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -1277,19 +1270,26 @@ body {
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid var(--glass-border);
   border-radius: 8px;
-  padding: 6px 12px;
+  padding: 6px 14px;
   cursor: pointer;
   transition: all 0.2s ease;
   flex-shrink: 0;
+  z-index: 2;
 }
-.step-back-btn:hover {
+.wizard-back-btn:hover {
   background: rgba(255, 255, 255, 0.12);
   color: var(--cyber-cyan);
   border-color: rgba(0, 240, 255, 0.35);
   transform: translateY(-1px);
 }
-@media (max-width: 520px) {
-  .desktop-spacer {
+.wizard-back-spacer {
+  flex-shrink: 0;
+  width: 70px;
+}
+/* Completely remove Back button from mobile view */
+@media (max-width: 768px) {
+  .wizard-back-btn,
+  .wizard-back-spacer {
     display: none !important;
   }
 }

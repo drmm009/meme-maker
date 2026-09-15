@@ -307,9 +307,21 @@ export default function CustomLayoutBuilder({
       onTouchMove={handleSlotPointerMove}
       onTouchEnd={handleSlotPointerUp}
     >
-      {/* PERFECTLY CENTERED & UNIFORM 3-STEP NAVIGATION BAR */}
-      <div className="wizard-progress-bar glass-card flex-center margin-bottom" style={{ padding: '10px 14px' }}>
-        <div className="step-indicator flex-center" style={{ gap: '14px' }}>
+      {/* TOP NAVIGATION PANEL WITH BACK BUTTON ON LEFT-MOST SIDE (DESKTOP ONLY) */}
+      <div className="wizard-progress-bar glass-card flex-between margin-bottom" style={{ padding: '10px 14px', position: 'relative' }}>
+        {onBack ? (
+          <button
+            className="btn btn-ghost btn-xs wizard-back-btn"
+            onClick={step === 1 ? onBack : () => setStep(1)}
+            title={step === 1 ? 'Back to templates' : 'Back to Step 1'}
+          >
+            <ArrowLeft className="icon-sm" /> <span>Back</span>
+          </button>
+        ) : (
+          <div className="wizard-back-spacer" />
+        )}
+
+        <div className="step-indicator flex-center" style={{ gap: '14px', margin: '0 auto' }}>
           <span
             className={`step-badge ${step === 1 ? 'active' : 'completed'}`}
             onClick={() => setStep(1)}
@@ -340,25 +352,15 @@ export default function CustomLayoutBuilder({
             3. Editor <ArrowRight className="icon-xs" />
           </span>
         </div>
+
+        <div className="wizard-back-spacer" style={{ width: '70px' }} />
       </div>
 
       {/* STEP 1: CLEAN 3 COLUMNS x 2 ROWS LAYOUT SELECTOR WITH SPACING BELOW HEADER */}
       {step === 1 && (
         <div className="step-selection-area">
-          <div className="step-header-bar margin-bottom-sm step-header-spaced">
-            {onBack && (
-              <button
-                className="btn btn-ghost btn-xs step-back-btn"
-                onClick={onBack}
-                title="Back to templates"
-              >
-                <ArrowLeft className="icon-sm" /> Back
-              </button>
-            )}
-            <h3 style={{ margin: 0, textAlign: 'center', flex: 1 }}>
-              <span className="step-prefix-highlight">Step 1:</span> Select Layout Structure
-            </h3>
-            <div style={{ width: '65px', flexShrink: 0 }} className="desktop-spacer" />
+          <div className="step-header text-center step-header-spaced">
+            <h3><span className="step-prefix-highlight">Step 1:</span> Select Layout Structure</h3>
           </div>
 
           <div style={{ marginBottom: '24px' }}>
@@ -469,18 +471,8 @@ export default function CustomLayoutBuilder({
       {/* STEP 2: POPULATE IMAGES */}
       {step === 2 && (
         <div className="step-population-area animate-fade-in">
-          <div className="step-header-bar margin-bottom-sm step-header-spaced">
-            <button
-              className="btn btn-ghost btn-xs step-back-btn"
-              onClick={() => setStep(1)}
-              title="Back to Step 1: Select Layout"
-            >
-              <ArrowLeft className="icon-sm" /> Back
-            </button>
-            <h3 style={{ margin: 0, textAlign: 'center', flex: 1 }}>
-              <span className="step-prefix-highlight">Step 2:</span> Populate Panels
-            </h3>
-            <div style={{ width: '65px', flexShrink: 0 }} className="desktop-spacer" />
+          <div className="flex-center margin-bottom-sm step-header-spaced">
+            <h3 style={{ margin: 0 }}><span className="step-prefix-highlight">Step 2:</span> Populate Panels</h3>
           </div>
 
           <div className="aspect-ratio-selector flex-center margin-bottom" style={{ gap: '8px', flexWrap: 'wrap' }}>
