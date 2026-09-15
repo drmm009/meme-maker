@@ -1952,7 +1952,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     <div
       ref={wrapperRef}
       className="canvas-interactive-wrapper"
-      style={{ position: 'relative', display: 'inline-block', touchAction: 'none' }}
+      style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center', touchAction: 'none' }}
       onMouseDown={handlePointerDown}
       onMouseMove={handlePointerMove}
       onMouseUp={handlePointerEnd}

@@ -58,6 +58,7 @@ body {
   color: var(--text-main);
   -webkit-tap-highlight-color: transparent;
   background-attachment: fixed;
+  overflow-y: scroll;
   font-family:
     Plus Jakarta Sans,
     system-ui,
@@ -767,7 +768,7 @@ body {
 }
 .editor-workspace {
   grid-template-columns: 1fr 370px;
-  align-items: stretch;
+  align-items: start;
   gap: 16px;
   display: grid;
 }
