@@ -1952,7 +1952,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     <div
       ref={wrapperRef}
       className="canvas-interactive-wrapper"
-      style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center', touchAction: 'none' }}
+      style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center', touchAction: 'none', width: '100%', height: '100%' }}
       onMouseDown={handlePointerDown}
       onMouseMove={handlePointerMove}
       onMouseUp={handlePointerEnd}
@@ -1970,10 +1970,11 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
           userSelect: 'none',
           WebkitUserSelect: 'none',
           cursor: isDrawingMode ? 'crosshair' : 'default',
-          width: '100%',
+          width: 'auto',
           height: 'auto',
+          maxWidth: '100%',
           maxHeight: '82vh',
-          aspectRatio: `${canvasW} / ${canvasH}`
+          display: 'block'
         }}
       />
 
