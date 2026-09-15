@@ -2961,7 +2961,7 @@ export const MEME_TEMPLATES = [
     name: 'Strong Hairstyle',
     category: 'desi',
     tag: 'free',
-    imageUrl: '/images/desi-wifi-hairstyle.jpg',
+    imageUrl: './images/desi-wifi-hairstyle.jpg',
     defaultCaptions: [
       { text: 'WHEN YOUR WIFI SIGNAL IS WEAK', x: 0.5, y: 0.08, width: 0.9, height: 0.2, fontSize: 45, color: '#ffffff', stroke: '#000000', align: 'center' },
       { text: 'BUT YOUR HAIRSTYLE IS STRONG', x: 0.5, y: 0.18, width: 0.9, height: 0.2, fontSize: 45, color: '#ffffff', stroke: '#000000', align: 'center' }
@@ -2975,7 +2975,7 @@ export const MEME_TEMPLATES = [
     name: 'SRK Darr Hakla',
     category: 'desi',
     tag: 'free',
-    imageUrl: '/images/sunny-deol-hugging-juhi-chawla-angry-shahrukh-khan-1024x1024.jpg',
+    imageUrl: './images/sunny-deol-hugging-juhi-chawla-angry-shahrukh-khan-1024x1024.jpg',
     defaultCaptions: [
       { text: 'K-K-K-KIRAN', x: 0.5, y: 0.85, width: 0.8, height: 0.2, fontSize: 45, color: '#ffffff', stroke: '#000000', align: 'center' }
     ],
@@ -2988,7 +2988,7 @@ export const MEME_TEMPLATES = [
     name: 'Kaash Main Tumhari Jagah Hota',
     category: 'desi',
     tag: 'free',
-    imageUrl: '/images/kaash-kaash-mai-tumhari-jagah-hota-1024x515.jpg',
+    imageUrl: './images/kaash-kaash-mai-tumhari-jagah-hota-1024x515.jpg',
     defaultCaptions: [
       { text: 'KAASH MAIN TUMHARI JAGAH HOTA', x: 0.5, y: 0.85, width: 0.8, height: 0.2, fontSize: 45, color: '#ffffff', stroke: '#000000', align: 'center' }
     ],
@@ -3001,7 +3001,7 @@ export const MEME_TEMPLATES = [
     name: 'Akshay Kumar Crying',
     category: 'desi',
     tag: 'free',
-    imageUrl: '/images/Akshay-Kumar-funny-crying-1024x664.webp',
+    imageUrl: './images/Akshay-Kumar-funny-crying-1024x664.webp',
     defaultCaptions: [
       { text: 'WHEN THE BUG IS FINALLY FIXED', x: 0.5, y: 0.15, width: 0.8, height: 0.2, fontSize: 45, color: '#ffffff', stroke: '#000000', align: 'center' }
     ],
@@ -3014,7 +3014,7 @@ export const MEME_TEMPLATES = [
     name: 'Lekin Ye Sala Kar Kya Raha Hai',
     category: 'desi',
     tag: 'free',
-    imageUrl: '/images/Lekin-ye-sala-kar-kya-raha-hai-yaha-1024x576.webp',
+    imageUrl: './images/Lekin-ye-sala-kar-kya-raha-hai-yaha-1024x576.webp',
     defaultCaptions: [
       { text: 'LEKIN YE SALA KAR KYA RAHA HAI YAHA', x: 0.5, y: 0.85, width: 0.8, height: 0.2, fontSize: 45, color: '#ffffff', stroke: '#000000', align: 'center' }
     ],
@@ -3027,7 +3027,7 @@ export const MEME_TEMPLATES = [
     name: 'Akshay Kumar Disguised',
     category: 'desi',
     tag: 'free',
-    imageUrl: '/images/akshay-kumar-disguised-reaction-1024x955.jpg',
+    imageUrl: './images/akshay-kumar-disguised-reaction-1024x955.jpg',
     defaultCaptions: [
       { text: 'ME PRETENDING TO UNDERSTAND THE CODE', x: 0.5, y: 0.85, width: 0.8, height: 0.2, fontSize: 45, color: '#ffffff', stroke: '#000000', align: 'center' }
     ],
@@ -3040,7 +3040,7 @@ export const MEME_TEMPLATES = [
     name: 'Akshay Slapping Rajpal',
     category: 'desi',
     tag: 'free',
-    imageUrl: '/images/akshay-kumar-slapping-rajpal-yadav-1024x575.jpg',
+    imageUrl: './images/akshay-kumar-slapping-rajpal-yadav-1024x575.jpg',
     defaultCaptions: [
       { text: 'WHEN SOMEONE PUSHES TO MASTER', x: 0.5, y: 0.15, width: 0.8, height: 0.2, fontSize: 45, color: '#ffffff', stroke: '#000000', align: 'center' }
     ],
@@ -3053,7 +3053,7 @@ export const MEME_TEMPLATES = [
     name: 'Nirlaj Tu Phir Aa Gaya',
     category: 'desi',
     tag: 'free',
-    imageUrl: '/images/Nirlaj-Tu-Phir-Aa-Gaya-popular-indian-meme-templates-300x200.jpg',
+    imageUrl: './images/Nirlaj-Tu-Phir-Aa-Gaya-popular-indian-meme-templates-300x200.jpg',
     defaultCaptions: [
       { text: 'NIRLAJ TU PHIR AA GAYA', x: 0.5, y: 0.85, width: 0.8, height: 0.2, fontSize: 45, color: '#ffffff', stroke: '#000000', align: 'center' }
     ],
@@ -3066,7 +3066,7 @@ export const MEME_TEMPLATES = [
     name: 'Meri Taraf Mat Dekhiye',
     category: 'desi',
     tag: 'free',
-    imageUrl: '/images/meri-taraf-mat-dekhiye-main-aapki-koi-sahayata-nahi-kar-paunga-popular-indian-meme-templates-300x225.jpg',
+    imageUrl: './images/meri-taraf-mat-dekhiye-main-aapki-koi-sahayata-nahi-kar-paunga-popular-indian-meme-templates-300x225.jpg',
     defaultCaptions: [
       { text: 'MERI TARAF MAT DEKHIYE...', x: 0.5, y: 0.15, width: 0.8, height: 0.2, fontSize: 45, color: '#ffffff', stroke: '#000000', align: 'center' },
       { text: 'MAIN AAPKI KOI SAHAYATA NAHI KAR PAUNGA', x: 0.5, y: 0.85, width: 0.8, height: 0.2, fontSize: 45, color: '#ffffff', stroke: '#000000', align: 'center' }
@@ -3080,7 +3080,7 @@ export const MEME_TEMPLATES = [
     name: 'Aap Chahe To Quit Kr Skte Hai',
     category: 'desi',
     tag: 'free',
-    imageUrl: '/images/aap-chahe-to-quit-kr-skte-hai-popular-indian-meme-templates-300x169.jpg',
+    imageUrl: './images/aap-chahe-to-quit-kr-skte-hai-popular-indian-meme-templates-300x169.jpg',
     defaultCaptions: [
       { text: 'AAP CHAHE TO QUIT KAR SAKTE HAIN', x: 0.5, y: 0.85, width: 0.8, height: 0.2, fontSize: 45, color: '#ffffff', stroke: '#000000', align: 'center' }
     ],
@@ -3093,7 +3093,7 @@ export const MEME_TEMPLATES = [
     name: 'Arjun Kapoor Angry',
     category: 'desi',
     tag: 'free',
-    imageUrl: '/images/arjun-kapoor-angry-1024x1018.webp',
+    imageUrl: './images/arjun-kapoor-angry-1024x1018.webp',
     defaultCaptions: [
       { text: 'WHEN THE CODE DOES NOT COMPILE', x: 0.5, y: 0.15, width: 0.8, height: 0.2, fontSize: 45, color: '#ffffff', stroke: '#000000', align: 'center' }
     ],
@@ -3106,7 +3106,7 @@ export const MEME_TEMPLATES = [
     name: 'James Doakes Staring',
     category: 'desi',
     tag: 'free',
-    imageUrl: '/images/James-Doakes-Staring-1024x890.webp',
+    imageUrl: './images/James-Doakes-Staring-1024x890.webp',
     defaultCaptions: [
       { text: 'SURPRISE MF', x: 0.5, y: 0.85, width: 0.8, height: 0.2, fontSize: 45, color: '#ffffff', stroke: '#000000', align: 'center' }
     ],
@@ -3119,7 +3119,7 @@ export const MEME_TEMPLATES = [
     name: 'Aura Farming Kid',
     category: 'desi',
     tag: 'free',
-    imageUrl: '/images/aura-farming-kid.webp',
+    imageUrl: './images/aura-farming-kid.webp',
     defaultCaptions: [
       { text: 'ME EXPLAINING HOW I FIXED THE BUG', x: 0.5, y: 0.15, width: 0.8, height: 0.2, fontSize: 45, color: '#ffffff', stroke: '#000000', align: 'center' }
     ],
@@ -3132,7 +3132,7 @@ export const MEME_TEMPLATES = [
     name: 'Magnus Carlsen Table Slam',
     category: 'desi',
     tag: 'free',
-    imageUrl: '/images/Magnus-Carlsen-table-slam-1024x419.webp',
+    imageUrl: './images/Magnus-Carlsen-table-slam-1024x419.webp',
     defaultCaptions: [
       { text: 'WHEN YOU LOSE PRODUCTION DATABASE', x: 0.5, y: 0.15, width: 0.8, height: 0.2, fontSize: 45, color: '#ffffff', stroke: '#000000', align: 'center' }
     ],
@@ -3274,7 +3274,7 @@ export const MEME_TEMPLATES = [
     name: 'Mirror Selfie',
     category: 'custom',
     tag: 'free',
-    imageUrl: '/images/custom-mirror-selfie-new.jpg',
+    imageUrl: './images/custom-mirror-selfie-new.jpg',
     defaultCaptions: [
       { text: 'LOOKING FRESH', x: 0.5, y: 0.85, width: 0.8, height: 0.2, fontSize: 45, color: '#ffffff', stroke: '#000000', align: 'center' }
     ],
