@@ -1006,7 +1006,8 @@ body {
   gap: 8px;
   padding: 6px 2px 10px;
   display: flex;
-  overflow-x: auto;
+  flex-wrap: wrap;
+  overflow-x: visible;
 }
 .preset-chips-scroll::-webkit-scrollbar {
   height: 4px;
@@ -1014,6 +1015,12 @@ body {
 .preset-chips-scroll::-webkit-scrollbar-thumb {
   background: #fff3;
   border-radius: 4px;
+}
+@media (width<=768px) {
+  .preset-chips-scroll {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+  }
 }
 .phrase-chip {
   white-space: nowrap;
