@@ -47,7 +47,14 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom }) 
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => onCreateCustom('image')}
-              style={{ backgroundColor: '#ffffff', color: '#000000', borderColor: '#ffffff', borderRadius: '28px', fontWeight: 600 }}
+              style={{
+                background: 'linear-gradient(135deg, #f97316 0%, #ea580c 45%, #9a3412 100%)',
+                color: '#ffffff',
+                borderColor: '#ea580c',
+                borderRadius: '28px',
+                fontWeight: 600,
+                boxShadow: '0 4px 18px rgba(234, 88, 12, 0.45)'
+              }}
             >
               <ImageIcon className="icon-md" /> Custom Image Builder
             </motion.button>
