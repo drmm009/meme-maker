@@ -1,5 +1,7 @@
 import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { fetchFile, toBlobURL } from '@ffmpeg/util';
+import Konva from 'konva';
+import { generateGridImage } from './gridHelper';
 
 let ffmpeg = null;
 let loadPromise = null;
@@ -15,8 +17,13 @@ export const loadFFmpeg = async () => {
         console.error('[FFmpeg Log]', message);
       });
       
-      const coreURL = await toBlobURL(new URL('/ffmpeg/ffmpeg-core.js', window.location.origin).href, 'text/javascript');
-      const wasmURL = await toBlobURL(new URL('/ffmpeg/ffmpeg-core.wasm', window.location.origin).href, 'application/wasm');
+      const baseUrl = import.meta.env.BASE_URL || './';
+      const cleanBase = baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`;
+      const coreHref = new URL(`${cleanBase}ffmpeg/ffmpeg-core.js`, window.location.href).href;
+      const wasmHref = new URL(`${cleanBase}ffmpeg/ffmpeg-core.wasm`, window.location.href).href;
+
+      const coreURL = await toBlobURL(coreHref, 'text/javascript');
+      const wasmURL = await toBlobURL(wasmHref, 'application/wasm');
 
       await ff.load({ coreURL, wasmURL });
       ffmpeg = ff;
@@ -30,32 +37,33 @@ export const loadFFmpeg = async () => {
   return loadPromise;
 };
 
-import { generateGridImage } from './gridHelper';
-
-export const exportVideoFFmpeg = async (items, durationMs, canvasAspectRatio, canvasDimensions, layoutId, onProgress) => {
+export const exportVideoFFmpeg = async (items = [], durationMs = 7000, canvasAspectRatio = 16/9, canvasDimensions = { width: 800, height: 600 }, layoutId = null, onProgress = () => {}) => {
   try {
     const ff = await loadFFmpeg();
     ff.on('progress', ({ progress }) => {
       onProgress(progress * 100);
     });
 
-    const durationSec = durationMs / 1000;
+    const safeDurationMs = (typeof durationMs === 'number' && !isNaN(durationMs) && durationMs > 0) ? durationMs : 7000;
+    const durationSec = Math.max(0.1, safeDurationMs / 1000);
     
-    // We target 1280x720 canvas in FFmpeg (or scaled by aspect ratio)
+    // Target 1280x720 canvas in FFmpeg (or scaled by aspect ratio)
+    const safeAspect = (typeof canvasAspectRatio === 'number' && !isNaN(canvasAspectRatio) && canvasAspectRatio > 0) ? canvasAspectRatio : (16 / 9);
     let canvasW = 1280;
     let canvasH = 720;
-    if (canvasAspectRatio < 1) {
+    if (safeAspect < 1) {
       canvasH = 1280;
-      canvasW = 1280 * canvasAspectRatio;
+      canvasW = Math.round(1280 * safeAspect);
     } else {
       canvasW = 1280;
-      canvasH = 1280 / canvasAspectRatio;
+      canvasH = Math.round(1280 / safeAspect);
     }
     
     // Ensure even dimensions
-    canvasW = Math.trunc(canvasW / 2) * 2;
-    canvasH = Math.trunc(canvasH / 2) * 2;
-    const konvaRatio = canvasW / (canvasDimensions?.width || 800);
+    canvasW = Math.max(2, Math.round(canvasW / 2) * 2);
+    canvasH = Math.max(2, Math.round(canvasH / 2) * 2);
+    const canvasWidthRef = (canvasDimensions && typeof canvasDimensions.width === 'number' && canvasDimensions.width > 0) ? canvasDimensions.width : 800;
+    const konvaRatio = canvasW / canvasWidthRef;
 
     const command = [
       '-f', 'lavfi',
@@ -70,18 +78,19 @@ export const exportVideoFFmpeg = async (items, durationMs, canvasAspectRatio, ca
     const audioStreams = [];
     const filesToDelete = [];
 
-    // Write font file for text
-    const fontData = await fetchFile('/Roboto-Regular.ttf');
-    await ff.writeFile('Roboto-Regular.ttf', fontData);
-    filesToDelete.push('Roboto-Regular.ttf');
-
     const visualItems = items.filter(item => item.type === 'video' || item.type === 'image' || item.type === 'sticker');
     const textItems = items.filter(item => item.type === 'text');
 
     for (const item of visualItems) {
       if (!item.url) continue;
-      const fileData = await fetchFile(item.url);
-      if (fileData.byteLength === 0) continue;
+      let fileData;
+      try {
+        fileData = await fetchFile(item.url);
+      } catch (err) {
+        console.warn(`[FFmpeg Export] Could not fetch visual item from ${item.url}:`, err);
+        continue;
+      }
+      if (!fileData || fileData.byteLength === 0) continue;
 
       const isVideo = item.type === 'video';
       const fileName = isVideo ? `input_${inputIndex}.mp4` : `input_${inputIndex}.png`;
@@ -91,7 +100,7 @@ export const exportVideoFFmpeg = async (items, durationMs, canvasAspectRatio, ca
       if (!isVideo) {
         command.push('-loop', '1', '-i', fileName);
       } else {
-        const trimStartSec = (item.trimStartMs || 0) / 1000;
+        const trimStartSec = Math.max(0, (typeof item.trimStartMs === 'number' && !isNaN(item.trimStartMs) ? item.trimStartMs : 0) / 1000);
         if (trimStartSec > 0) {
           command.push('-ss', trimStartSec.toString());
         }
@@ -114,9 +123,10 @@ export const exportVideoFFmpeg = async (items, durationMs, canvasAspectRatio, ca
           }
 
           if (videoHasAudio) {
-            const startMs = Math.max(0, Math.round(item.startMs || 0));
-            const clipDurSec = Math.max(0.1, (item.endMs - item.startMs) / 1000);
-            const vol = item.volume !== undefined ? item.volume : 1.0;
+            const startMs = Math.max(0, Math.round(typeof item.startMs === 'number' && !isNaN(item.startMs) ? item.startMs : 0));
+            const rawEnd = typeof item.endMs === 'number' && !isNaN(item.endMs) ? item.endMs : (startMs + 3000);
+            const clipDurSec = Math.max(0.1, (rawEnd - startMs) / 1000);
+            const vol = (typeof item.volume === 'number' && !isNaN(item.volume)) ? item.volume : 1.0;
             const delayFilter = startMs > 0 ? `,adelay=${startMs}|${startMs}` : '';
             filterComplex += `[${inputIndex}:a]atrim=0:${clipDurSec},asetpts=PTS-STARTPTS,aformat=channel_layouts=stereo:sample_rates=44100${delayFilter},volume=${vol}[aud${inputIndex}];`;
             audioStreams.push(`[aud${inputIndex}]`);
@@ -124,18 +134,18 @@ export const exportVideoFFmpeg = async (items, durationMs, canvasAspectRatio, ca
         }
       }
 
-      const startT = item.startMs / 1000;
-      const endT = item.endMs / 1000;
+      const startT = Math.max(0, (typeof item.startMs === 'number' && !isNaN(item.startMs) ? item.startMs : 0) / 1000);
+      const endT = Math.max(startT + 0.05, (typeof item.endMs === 'number' && !isNaN(item.endMs) ? item.endMs : safeDurationMs) / 1000);
       
-      const w = Math.round((item.width || 100) * (item.scaleX || item.scale || 1) * konvaRatio);
-      const h = Math.round((item.height || 100) * (item.scaleY || item.scale || 1) * konvaRatio);
-      const x = Math.round((item.x || 0) * konvaRatio);
-      const y = Math.round((item.y || 0) * konvaRatio);
+      const rawW = (item.width || 100) * (item.scaleX || item.scale || 1) * konvaRatio;
+      const rawH = (item.height || 100) * (item.scaleY || item.scale || 1) * konvaRatio;
+      const w = Math.max(2, Math.round(rawW / 2) * 2);
+      const h = Math.max(2, Math.round(rawH / 2) * 2);
+      const x = Math.round((typeof item.x === 'number' && !isNaN(item.x) ? item.x : 0) * konvaRatio);
+      const y = Math.round((typeof item.y === 'number' && !isNaN(item.y) ? item.y : 0) * konvaRatio);
 
       // Force scale and correctly offset PTS so delayed videos don't expire before their start time
       filterComplex += `[${inputIndex}:v]setpts=PTS-STARTPTS+${startT}/TB,scale=${w}:${h}[vis${inputIndex}];`;
-      
-      // Removed eof_action=pass so that if the video finishes playing before endT, it holds its last frame (default repeat behavior)
       filterComplex += `[${currentBgIndex === 0 ? '0:v' : `bg${currentBgIndex}`}][vis${inputIndex}]overlay=${x}:${y}:enable='between(t,${startT},${endT})'[bg${currentBgIndex + 1}];`;
       
       currentBgIndex++;
@@ -145,68 +155,111 @@ export const exportVideoFFmpeg = async (items, durationMs, canvasAspectRatio, ca
     // Helper to render text into a transparent PNG buffer matching the output resolution
     const renderTextToPNG = async (item, w, h, ratio) => {
       return new Promise((resolve) => {
-        const container = document.createElement('div');
-        document.body.appendChild(container); // Append temporarily to ensure font loading context
-        container.style.display = 'none';
+        try {
+          const container = document.createElement('div');
+          container.style.position = 'absolute';
+          container.style.left = '-9999px';
+          container.style.top = '-9999px';
+          container.style.width = `${w}px`;
+          container.style.height = `${h}px`;
+          document.body.appendChild(container);
 
-        const stage = new Konva.Stage({ container, width: w, height: h });
-        const layer = new Konva.Layer();
-        stage.add(layer);
+          const stage = new Konva.Stage({ container, width: w, height: h });
+          const layer = new Konva.Layer();
+          stage.add(layer);
 
-        const textNode = new Konva.Text({
-          x: (item.x || 0) * ratio,
-          y: (item.y || 0) * ratio,
-          text: item.text || 'Sample Text',
-          fontSize: (item.fontSize || 32) * ratio,
-          fontFamily: item.fontFamily || 'Impact, sans-serif',
-          fontStyle: 'bold',
-          fill: item.color || '#ffffff',
-          stroke: item.stroke || '#000000',
-          strokeWidth: (item.strokeWidth || Math.max(2, (item.fontSize || 32) / 25)) * ratio,
-          width: item.width ? item.width * ratio : undefined,
-          align: item.align || 'center',
-          rotation: item.rotation || 0,
-          scaleX: 1, 
-          scaleY: 1,
-          letterSpacing: (-(item.fontSize || 32) * 0.05) * ratio,
-          lineJoin: 'miter',
-          miterLimit: 2,
-        });
+          const textX = (typeof item.x === 'number' && !isNaN(item.x) ? item.x : 0) * ratio;
+          const textY = (typeof item.y === 'number' && !isNaN(item.y) ? item.y : 0) * ratio;
+          const fontSize = Math.max(10, (typeof item.fontSize === 'number' && !isNaN(item.fontSize) ? item.fontSize : 32) * ratio);
 
-        if (item.bgColor && item.bgColor !== 'none' && item.bgColor !== 'transparent') {
-          const bgFill = item.bgColor === 'white' ? '#ffffff' : (item.bgColor === 'black' ? '#000000' : item.bgColor);
-          const bgRect = new Konva.Rect({
-            x: textX - 8 * ratio,
-            y: textY - 4 * ratio,
-            width: textNode.width() + 16 * ratio,
-            height: textNode.height() + 8 * ratio,
-            fill: bgFill,
-            cornerRadius: 6 * ratio,
+          const textNode = new Konva.Text({
+            x: textX,
+            y: textY,
+            text: item.text || 'Sample Text',
+            fontSize: fontSize,
+            fontFamily: item.fontFamily || 'Impact, sans-serif',
+            fontStyle: 'bold',
+            fill: item.color || '#ffffff',
+            stroke: item.stroke || '#000000',
+            strokeWidth: (typeof item.strokeWidth === 'number' && !isNaN(item.strokeWidth) ? item.strokeWidth : Math.max(2, fontSize / 25)) * ratio,
+            width: item.width ? item.width * ratio : undefined,
+            align: item.align || 'center',
             rotation: item.rotation || 0,
+            scaleX: 1, 
+            scaleY: 1,
+            letterSpacing: (-fontSize * 0.05) * ratio,
+            lineJoin: 'miter',
+            miterLimit: 2,
           });
-          layer.add(bgRect);
+
+          if (item.bgColor && item.bgColor !== 'none' && item.bgColor !== 'transparent') {
+            const bgFill = item.bgColor === 'white' ? '#ffffff' : (item.bgColor === 'black' ? '#000000' : item.bgColor);
+            const bgRect = new Konva.Rect({
+              x: textX - 8 * ratio,
+              y: textY - 4 * ratio,
+              width: textNode.width() + 16 * ratio,
+              height: textNode.height() + 8 * ratio,
+              fill: bgFill,
+              cornerRadius: 6 * ratio,
+              rotation: item.rotation || 0,
+            });
+            layer.add(bgRect);
+          }
+
+          layer.add(textNode);
+          layer.draw();
+
+          const dataURL = stage.toDataURL({ pixelRatio: 1 });
+          stage.destroy();
+          if (container.parentNode) {
+            container.parentNode.removeChild(container);
+          }
+
+          fetch(dataURL)
+            .then(res => res.arrayBuffer())
+            .then(buffer => resolve(new Uint8Array(buffer)))
+            .catch(() => resolve(new Uint8Array(0)));
+        } catch (err) {
+          console.error('[renderTextToPNG] Konva render error:', err);
+          // Canvas 2D fallback
+          try {
+            const canvas = document.createElement('canvas');
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+              const textX = (typeof item.x === 'number' && !isNaN(item.x) ? item.x : 0) * ratio;
+              const textY = (typeof item.y === 'number' && !isNaN(item.y) ? item.y : 0) * ratio;
+              const fontSize = Math.max(10, (typeof item.fontSize === 'number' && !isNaN(item.fontSize) ? item.fontSize : 32) * ratio);
+              ctx.font = `bold ${fontSize}px ${item.fontFamily || 'Impact, sans-serif'}`;
+              ctx.fillStyle = item.color || '#ffffff';
+              ctx.strokeStyle = item.stroke || '#000000';
+              ctx.lineWidth = Math.max(2, fontSize / 25) * ratio;
+              ctx.strokeText(item.text || '', textX, textY + fontSize);
+              ctx.fillText(item.text || '', textX, textY + fontSize);
+              canvas.toBlob(blob => {
+                if (blob) {
+                  blob.arrayBuffer().then(buf => resolve(new Uint8Array(buf))).catch(() => resolve(new Uint8Array(0)));
+                } else {
+                  resolve(new Uint8Array(0));
+                }
+              });
+              return;
+            }
+          } catch (e2) {}
+          resolve(new Uint8Array(0));
         }
-
-        layer.add(textNode);
-        layer.draw();
-
-        const dataURL = stage.toDataURL({ pixelRatio: 1 });
-        stage.destroy();
-        document.body.removeChild(container);
-
-        fetch(dataURL)
-          .then(res => res.arrayBuffer())
-          .then(buffer => resolve(new Uint8Array(buffer)));
       });
     };
 
     // Add text items via PNG overlay for pixel-perfect font, stroke, and rotation support
     for (const item of textItems) {
-      const startT = item.startMs / 1000;
-      const endT = item.endMs / 1000;
+      const startT = Math.max(0, (typeof item.startMs === 'number' && !isNaN(item.startMs) ? item.startMs : 0) / 1000);
+      const endT = Math.max(startT + 0.05, (typeof item.endMs === 'number' && !isNaN(item.endMs) ? item.endMs : safeDurationMs) / 1000);
       
       const fileName = `text_${inputIndex}.png`;
       const pngData = await renderTextToPNG(item, canvasW, canvasH, konvaRatio);
+      if (!pngData || pngData.byteLength === 0) continue;
       
       await ff.writeFile(fileName, pngData);
       filesToDelete.push(fileName);
@@ -222,22 +275,23 @@ export const exportVideoFFmpeg = async (items, durationMs, canvasAspectRatio, ca
     if (layoutId) {
       const gridDataUrl = generateGridImage(layoutId, canvasW, canvasH);
       if (gridDataUrl) {
-        // Fetch the data URL as an ArrayBuffer
-        const res = await fetch(gridDataUrl);
-        const fileData = new Uint8Array(await res.arrayBuffer());
-        
-        if (fileData.byteLength > 0) {
-          const fileName = `grid_${inputIndex}.png`;
-          await ff.writeFile(fileName, fileData);
-          filesToDelete.push(fileName);
+        try {
+          const res = await fetch(gridDataUrl);
+          const fileData = new Uint8Array(await res.arrayBuffer());
           
-          command.push('-loop', '1', '-i', fileName);
-          
-          // No need to scale as the grid image is generated exactly at canvasW:canvasH
-          filterComplex += `[${currentBgIndex === 0 ? '0:v' : `bg${currentBgIndex}`}][${inputIndex}:v]overlay=0:0[bg${currentBgIndex + 1}];`;
-          
-          currentBgIndex++;
-          inputIndex++;
+          if (fileData.byteLength > 0) {
+            const fileName = `grid_${inputIndex}.png`;
+            await ff.writeFile(fileName, fileData);
+            filesToDelete.push(fileName);
+            
+            command.push('-loop', '1', '-i', fileName);
+            filterComplex += `[${currentBgIndex === 0 ? '0:v' : `bg${currentBgIndex}`}][${inputIndex}:v]overlay=0:0[bg${currentBgIndex + 1}];`;
+            
+            currentBgIndex++;
+            inputIndex++;
+          }
+        } catch (err) {
+          console.warn('[FFmpeg Export] Grid layout generation skipped:', err);
         }
       }
     }
@@ -265,17 +319,18 @@ export const exportVideoFFmpeg = async (items, durationMs, canvasAspectRatio, ca
       await ff.writeFile(fileName, fileData);
       filesToDelete.push(fileName);
 
-      const trimStartSec = (item.trimStartMs || 0) / 1000;
+      const trimStartSec = Math.max(0, (typeof item.trimStartMs === 'number' && !isNaN(item.trimStartMs) ? item.trimStartMs : 0) / 1000);
       if (trimStartSec > 0) {
         command.push('-ss', trimStartSec.toString());
       }
       command.push('-i', fileName);
 
       if (!item.muted) {
-        const startMs = Math.max(0, Math.round(item.startMs || 0));
-        const clipDurSec = Math.max(0.05, (item.endMs - item.startMs) / 1000);
-        const vol = item.volume !== undefined ? item.volume : 1.0;
-        const rate = item.playbackRate || 1;
+        const startMs = Math.max(0, Math.round(typeof item.startMs === 'number' && !isNaN(item.startMs) ? item.startMs : 0));
+        const rawEnd = typeof item.endMs === 'number' && !isNaN(item.endMs) ? item.endMs : (startMs + 3000);
+        const clipDurSec = Math.max(0.05, (rawEnd - startMs) / 1000);
+        const vol = (typeof item.volume === 'number' && !isNaN(item.volume)) ? item.volume : 1.0;
+        const rate = (typeof item.playbackRate === 'number' && !isNaN(item.playbackRate)) ? item.playbackRate : 1;
         let atempoFilter = '';
         if (rate !== 1 && rate >= 0.5 && rate <= 2.0) {
           atempoFilter = `,atempo=${rate}`;
@@ -357,3 +412,4 @@ export const exportVideoFFmpeg = async (items, durationMs, canvasAspectRatio, ca
     }
   }
 };
+

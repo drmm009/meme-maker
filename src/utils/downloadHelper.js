@@ -63,11 +63,19 @@ export const downloadImageHelper = async (dataUrl, filename = 'meme.png') => {
 export const recordCanvasAsVideo = (canvas, baseFilename = 'meme-video', durationMs = 6000, onProgress, mediaElements = [], returnUrlOnly = false) => {
   return new Promise((resolve, reject) => {
     try {
-      const mimeType = 'video/mp4';
-      const ext = 'mp4';
+      const mimeCandidates = [
+        { mime: 'video/mp4;codecs=avc1', ext: 'mp4' },
+        { mime: 'video/mp4', ext: 'mp4' },
+        { mime: 'video/webm;codecs=vp9,opus', ext: 'webm' },
+        { mime: 'video/webm;codecs=vp8,opus', ext: 'webm' },
+        { mime: 'video/webm', ext: 'webm' },
+      ];
+      let chosen = mimeCandidates.find(c => typeof MediaRecorder !== 'undefined' && typeof MediaRecorder.isTypeSupported === 'function' && MediaRecorder.isTypeSupported(c.mime));
+      const mimeType = chosen ? chosen.mime : '';
+      const ext = chosen ? chosen.ext : 'mp4';
       const filename = `${baseFilename}.${ext}`;
 
-      console.log(`[VideoExport] Using mimeType: ${mimeType}, file: ${filename}`);
+      console.log(`[VideoExport] Using mimeType: ${mimeType || 'default'}, file: ${filename}`);
 
       const canvasStream = canvas.captureStream(30);
       const audioTracks = [];
@@ -92,10 +100,14 @@ export const recordCanvasAsVideo = (canvas, baseFilename = 'meme-video', duratio
         console.log(`[VideoExport] Multiplexed ${audioTracks.length} audio track(s) into recording stream.`);
       }
 
-      const recorder = new MediaRecorder(finalStream, {
-        mimeType,
+      const recorderOptions = {
         videoBitsPerSecond: 8_000_000
-      });
+      };
+      if (mimeType) {
+        recorderOptions.mimeType = mimeType;
+      }
+
+      const recorder = new MediaRecorder(finalStream, recorderOptions);
       const chunks = [];
 
       recorder.ondataavailable = (e) => {

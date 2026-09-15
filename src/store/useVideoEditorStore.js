@@ -13,8 +13,10 @@ const debounce = (func, wait) => {
 // A "Track" is a horizontal row on the timeline that holds Items.
 
 const calculateDuration = (items) => {
-  if (items.length === 0) return 7000;
-  const maxEnd = Math.max(...items.map(i => i.endMs));
+  if (!items || items.length === 0) return 7000;
+  const validEnds = items.map(i => i.endMs).filter(t => typeof t === 'number' && !isNaN(t) && t > 0);
+  if (validEnds.length === 0) return 7000;
+  const maxEnd = Math.max(...validEnds);
   const rawDuration = Math.max(7000, maxEnd + 3000);
   return Math.min(100000, rawDuration); // Maximum 100s
 };
@@ -58,17 +60,19 @@ export const useEditorStore = create(temporal((set, get) => ({
     
     if (item.type !== 'video' && item.type !== 'audio') {
       const videos = state.items.filter(i => i.type === 'video');
-      const maxVideoEnd = videos.length > 0 ? Math.max(...videos.map(v => v.endMs)) : 0;
+      const validVideoEnds = videos.map(v => v.endMs).filter(t => typeof t === 'number' && !isNaN(t) && t > 0);
+      const maxVideoEnd = validVideoEnds.length > 0 ? Math.max(...validVideoEnds) : 0;
       startMs = 0; // Cover whole timeline by default
       if (maxVideoEnd > 0) {
         endMs = maxVideoEnd;
       } else {
-        const maxEnd = state.items.length > 0 ? Math.max(...state.items.map(i => i.endMs)) : 7000;
+        const validEnds = state.items.map(i => i.endMs).filter(t => typeof t === 'number' && !isNaN(t) && t > 0);
+        const maxEnd = validEnds.length > 0 ? Math.max(...validEnds) : 7000;
         endMs = maxEnd > 0 ? maxEnd : 7000;
       }
     }
     
-    endMs = Math.min(100000, endMs);
+    endMs = Math.min(100000, Number.isFinite(endMs) ? endMs : 7000);
     
     // Auto-assign empty slot if applicable
     let slotIndex = item.slotIndex;

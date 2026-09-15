@@ -139,15 +139,18 @@ export default function VideoEditor({ template, onBack, theme, onToggleTheme }) 
       const state = useEditorStore.getState();
       
       // Calculate exact duration to end on the last element, rather than using timeline visual padding
-      const maxEndMs = state.items.length > 0 
-        ? Math.max(...state.items.map(i => i.endMs)) 
-        : 1000; // Fallback to 1 second if empty
+      const validEndTimes = (state.items || [])
+        .map(i => i.endMs)
+        .filter(t => typeof t === 'number' && !isNaN(t) && t > 0);
+      const maxEndMs = validEndTimes.length > 0 
+        ? Math.max(...validEndTimes) 
+        : (state.duration || 7000);
         
       await exportVideoFFmpeg(
-        state.items, 
+        state.items || [], 
         maxEndMs, 
-        state.canvasAspectRatio, 
-        state.canvasDimensions,
+        state.canvasAspectRatio || (16 / 9), 
+        state.canvasDimensions || { width: 800, height: 600 },
         state.layoutId,
         (progress) => setExportProgress(progress)
       );
