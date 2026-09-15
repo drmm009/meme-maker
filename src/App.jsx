@@ -189,7 +189,7 @@ function App() {
                 <Sparkles className="icon-md text-cyan" />
               </motion.div>
               <div>
-                <h1 className="brand-title">Meme Creator v11</h1>
+                <h1 className="brand-title">Meme Creator v12</h1>
                 <span className="brand-tagline">Mobile & Web Studio</span>
               </div>
             </div>

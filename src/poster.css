@@ -226,8 +226,14 @@ h1, h2, h3,
 
 /* --- Template cards --------------------------------------- */
 .template-grid {
-  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)) !important;
-  gap: 18px !important;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 18px;
+}
+@media (max-width: 640px) {
+  .template-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+  }
 }
 .template-card {
   background: var(--bg-surface-1) !important;
