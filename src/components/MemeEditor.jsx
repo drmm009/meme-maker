@@ -31,6 +31,126 @@ const PRESET_PHRASES = [
 
 const COLOR_SWATCHES = ['#ffffff', '#ffff00', '#a855f7', '#ff0055', '#00ff66', '#000000'];
 
+// Calculates a default canvas position (normalized 0..1) that avoids overlapping existing elements
+const getNonOverlappingPosition = (type, captions = [], stickers = [], imageLayers = []) => {
+  // Estimated normalized width and height per element type
+  let newW = 0.38;
+  let newH = 0.12;
+  if (type === 'phrase') {
+    newW = 0.55;
+    newH = 0.14;
+  } else if (type === 'sticker' || type === 'emoji') {
+    newW = 0.20;
+    newH = 0.20;
+  } else if (type === 'image') {
+    newW = 0.28;
+    newH = 0.28;
+  }
+
+  // Collect all existing elements on canvas with normalized bounds
+  const existing = [
+    ...captions.map((c) => ({
+      x: typeof c.x === 'number' ? c.x : 0.5,
+      y: typeof c.y === 'number' ? c.y : 0.5,
+      w: c.width ? Math.min(Math.max(c.width, 0.35), 0.8) : 0.38,
+      h: (c.fontSize || 50) > 60 ? 0.15 : 0.12
+    })),
+    ...stickers.map((s) => ({
+      x: typeof s.x === 'number' ? s.x : 0.5,
+      y: typeof s.y === 'number' ? s.y : 0.5,
+      w: 0.20,
+      h: 0.20
+    })),
+    ...imageLayers.map((img) => ({
+      x: typeof img.x === 'number' ? img.x : 0.5,
+      y: typeof img.y === 'number' ? img.y : 0.5,
+      w: 0.28,
+      h: 0.28
+    }))
+  ];
+
+  const checkOverlap = (cx, cy, w, h, items, margin = 0.03) => {
+    for (const it of items) {
+      const minDx = (w + it.w) / 2 + margin;
+      const minDy = (h + it.h) / 2 + margin;
+      if (Math.abs(cx - it.x) < minDx && Math.abs(cy - it.y) < minDy) {
+        return true;
+      }
+    }
+    return false;
+  };
+
+  // If canvas is completely empty, default to center
+  if (existing.length === 0) {
+    return { x: 0.5, y: 0.5 };
+  }
+
+  // 1. If center is completely free, use center
+  if (!checkOverlap(0.5, 0.5, newW, newH, existing, 0.03)) {
+    return { x: 0.5, y: 0.5 };
+  }
+
+  // 2. Safe boundaries inside canvas
+  const minX = Math.max(0.18, newW / 2 + 0.04);
+  const maxX = Math.min(0.82, 1 - (newW / 2 + 0.04));
+  const minY = Math.max(0.18, newH / 2 + 0.04);
+  const maxY = Math.min(0.82, 1 - (newH / 2 + 0.04));
+
+  // Build grid of candidate coordinates
+  const candidates = [];
+  const step = 0.05;
+  for (let y = minY; y <= maxY + 0.001; y += step) {
+    for (let x = minX; x <= maxX + 0.001; x += step) {
+      const px = Number(x.toFixed(3));
+      const py = Number(y.toFixed(3));
+      const dist = Math.hypot(px - 0.5, (py - 0.5) * 1.05);
+      candidates.push({ x: px, y: py, dist });
+    }
+  }
+
+  // Sort candidates by closeness to center
+  candidates.sort((a, b) => a.dist - b.dist);
+
+  // Pass 1: standard margin (comfortable spacing)
+  for (const cand of candidates) {
+    if (!checkOverlap(cand.x, cand.y, newW, newH, existing, 0.03)) {
+      return { x: cand.x, y: cand.y };
+    }
+  }
+
+  // Pass 2: tighter margin
+  for (const cand of candidates) {
+    if (!checkOverlap(cand.x, cand.y, newW, newH, existing, 0.01)) {
+      return { x: cand.x, y: cand.y };
+    }
+  }
+
+  // Pass 3: least crowded point (maximize minimum distance to any existing element)
+  let bestCand = null;
+  let maxMinDist = -1;
+  for (const cand of candidates) {
+    let minDist = Infinity;
+    for (const it of existing) {
+      const d = Math.hypot(cand.x - it.x, cand.y - it.y);
+      if (d < minDist) minDist = d;
+    }
+    if (minDist > maxMinDist) {
+      maxMinDist = minDist;
+      bestCand = cand;
+    }
+  }
+
+  if (bestCand) {
+    return { x: bestCand.x, y: bestCand.y };
+  }
+
+  const offset = (existing.length % 5) * 0.06;
+  return {
+    x: Number(Math.min(0.8, Math.max(0.2, 0.5 + offset)).toFixed(3)),
+    y: Number(Math.min(0.8, Math.max(0.2, 0.5 + offset)).toFixed(3))
+  };
+};
+
 export default function MemeEditor({ template, onBack, onSaveToGallery, theme, onToggleTheme }) {
   const [captions, setCaptions] = useState(() => {
     let initialCaps = [];
@@ -373,11 +493,12 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
 
   // Caption Handlers
   const handleAddCaption = () => {
+    const pos = getNonOverlappingPosition('caption', captions, stickers, imageLayers);
     const newCap = {
       id: `cap-${Date.now()}`,
       text: 'NEW TEXT',
-      x: 0.5,
-      y: 0.5,
+      x: pos.x,
+      y: pos.y,
       fontSize: 50,
       color: '#ffffff',
       stroke: '#000000',
@@ -388,15 +509,16 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     const nextCaps = [...captions, newCap];
     setCaptions(nextCaps);
     setActiveLayerId(newCap.id);
-    pushHistory(nextCaps, stickers);
+    pushHistory(nextCaps, stickers, imageLayers);
   };
 
   const handleAddPresetPhrase = (phraseText) => {
+    const pos = getNonOverlappingPosition('phrase', captions, stickers, imageLayers);
     const newCap = {
       id: `cap-${Date.now()}`,
       text: phraseText,
-      x: 0.5,
-      y: 0.5,
+      x: pos.x,
+      y: pos.y,
       fontSize: 50,
       color: '#ffffff',
       stroke: '#000000',
@@ -408,7 +530,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     const nextCaps = [...captions, newCap];
     setCaptions(nextCaps);
     setActiveLayerId(newCap.id);
-    pushHistory(nextCaps, stickers);
+    pushHistory(nextCaps, stickers, imageLayers);
   };
 
   const updateActiveCaption = (key, value) => {
@@ -477,11 +599,12 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
   };
 
   const commitAddImageLayer = (src, trimStart, trimEnd) => {
+    const pos = getNonOverlappingPosition('image', captions, stickers, imageLayers);
     const newImgLayer = {
       id: `img-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
       url: src,
-      x: 0.5,
-      y: 0.5,
+      x: pos.x,
+      y: pos.y,
       scale: 1.5,
       rotation: 0,
       fitMode: 'stretch',
@@ -629,11 +752,12 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
 
   // Emoji & Sticker Handlers
   const handleAddSticker = (stickerObj) => {
+    const pos = getNonOverlappingPosition('sticker', captions, stickers, imageLayers);
     const newSticker = {
       id: `stk-${Date.now()}`,
       emoji: stickerObj.emoji,
-      x: 0.5,
-      y: 0.5,
+      x: pos.x,
+      y: pos.y,
       scale: 2.5,
       rotation: 0
     };
@@ -642,16 +766,17 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     setActiveLayerId(newSticker.id);
     setActiveTab('stickers');
     setShowEmojiModal(false);
-    pushHistory(captions, nextStickers);
+    pushHistory(captions, nextStickers, imageLayers);
   };
 
   const handleAddGraphicSticker = (stickerObj) => {
+    const pos = getNonOverlappingPosition('sticker', captions, stickers, imageLayers);
     const newSticker = {
       id: `stk-graphic-${Date.now()}`,
       name: stickerObj.name,
       url: stickerObj.url,
-      x: 0.5,
-      y: 0.5,
+      x: pos.x,
+      y: pos.y,
       scale: 2.2,
       rotation: 0
     };
@@ -660,7 +785,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     setActiveLayerId(newSticker.id);
     setActiveTab('stickers');
     setShowMemeStickersModal(false);
-    pushHistory(captions, nextStickers);
+    pushHistory(captions, nextStickers, imageLayers);
   };
 
   const activeCaption = captions.find((c) => c.id === activeLayerId);

@@ -82,12 +82,17 @@ export const useEditorStore = create(temporal((set, get) => ({
       }
     }
 
+    const visualItems = state.items.filter(i => i.type === 'text' || i.type === 'sticker' || i.type === 'image');
+    const offset = (visualItems.length % 6) * 35;
+    const defaultX = item.x !== undefined ? item.x : (50 + offset);
+    const defaultY = item.y !== undefined ? item.y : (50 + offset);
+
     const newItems = [...state.items, { 
       ...item, 
       id: `item-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
       startMs: startMs,
       endMs: endMs,
-      x: 50, y: 50, scale: 1, rotation: 0,
+      x: defaultX, y: defaultY, scale: 1, rotation: 0,
       slotIndex,
       playbackRate: 1,
       muted: false,
