@@ -248,17 +248,17 @@ h1, h2, h3,
   transform: translate(-2px, -2px) !important;
   box-shadow: 6px 6px 0 var(--poster-orange) !important;
 }
-/* show the whole template instead of cropping faces and captions */
+/* templates stretch to fill the boxes without fit-inside letterboxing */
 .template-image-wrapper {
-  background:
-    repeating-linear-gradient(45deg, var(--bg-surface-3) 0 10px, var(--bg-surface-2) 10px 20px) !important;
+  background: var(--bg-surface-3) !important;
   aspect-ratio: 4 / 3 !important;
   border-bottom: 2px solid var(--glass-border) !important;
 }
 .template-image-wrapper img {
-  object-fit: contain !important;
+  object-fit: fill !important;
   object-position: center !important;
-  background: var(--bg-surface-2) !important;
+  width: 100% !important;
+  height: 100% !important;
 }
 .template-card:hover .template-image-wrapper img {
   transform: scale(1.03) !important;
@@ -570,7 +570,9 @@ select {
 .theme-light .template-image-wrapper img,
 [data-theme='light'] .template-image-wrapper img {
   background: #f1e9dd !important;
-  object-fit: contain !important;
+  object-fit: fill !important;
+  width: 100% !important;
+  height: 100% !important;
 }
 .theme-light .template-info,
 [data-theme='light'] .template-info {
