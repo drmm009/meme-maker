@@ -86,7 +86,34 @@ export default function VideoEditor({ template, onBack, theme, onToggleTheme }) 
       
       // If it's a built-in meme template (not custom), add it as the background
       if (template.category !== 'custom') {
-        addItem({ type: 'image', url: template.imageUrl, name: 'Background Template' });
+        if (template.type === 'video') {
+          addItem({ 
+            type: 'video', 
+            url: template.videoUrl, 
+            thumbnailUrl: template.thumbnailUrl, 
+            name: template.name,
+            durationMs: template.durationMs || 10000,
+            width: template.width,
+            height: template.height
+          });
+          
+          if (template.defaultCaptions && template.defaultCaptions.length > 0) {
+            template.defaultCaptions.forEach((cap, idx) => {
+              addItem({
+                type: 'text',
+                text: cap.text,
+                durationMs: template.durationMs || 10000,
+                fontSize: cap.fontSize || 48,
+                // Simple positioning based on fractional y
+                y: cap.y ? cap.y * (template.height || 720) : (100 + (idx * 100)),
+                color: '#ffffff',
+                stroke: '#000000'
+              });
+            });
+          }
+        } else {
+          addItem({ type: 'image', url: template.imageUrl, name: 'Background Template' });
+        }
       }
 
       if (template.mediaItems && template.mediaItems.length > 0) {

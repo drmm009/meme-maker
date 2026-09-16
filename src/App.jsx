@@ -123,9 +123,15 @@ function App() {
   // Handlers
   const handleSelectTemplate = (template) => {
     setSelectedTemplate(template);
-    setEditorSessionKey((k) => k + 1);
-    setHasOpenedEditor(true);
-    setCurrentView('editor');
+    if (template.type === 'video') {
+      setVideoSessionKey((k) => k + 1);
+      setHasOpenedVideoEditor(true);
+      setCurrentView('video-editor');
+    } else {
+      setEditorSessionKey((k) => k + 1);
+      setHasOpenedEditor(true);
+      setCurrentView('editor');
+    }
   };
 
   const handleCreateCustom = (mode) => {
@@ -198,7 +204,7 @@ function App() {
                 <Sparkles className="icon-md text-cyan" />
               </motion.div>
               <div>
-                <h1 className="brand-title">Meme Creator v24</h1>
+                <h1 className="brand-title">Meme Creator v25</h1>
                 <span className="brand-tagline">Mobile & Web Studio</span>
               </div>
             </div>

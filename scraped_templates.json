@@ -1,0 +1,162 @@
+[
+  {
+    "id": "vid-3683",
+    "name": "Pyaari Samajh Gayi",
+    "category": "Trending",
+    "type": "video",
+    "videoUrl": "https://api.memes.co.in/api/meme-videos/3683/download",
+    "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_dOYuKmo.png",
+    "durationMs": 7000,
+    "aspectRatio": 1.7777777777777777,
+    "width": 1280,
+    "height": 720,
+    "defaultCaptions": [
+      {
+        "text": "ME WHEN...",
+        "fontSize": 48,
+        "y": 0.1
+      }
+    ],
+    "trendingScore": 95
+  },
+  {
+    "id": "vid-3682",
+    "name": "Amrish Puri Kaun Bola Meme",
+    "category": "Trending",
+    "type": "video",
+    "videoUrl": "https://api.memes.co.in/api/meme-videos/3682/download",
+    "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_Ir1ZwqQ.png",
+    "durationMs": 7000,
+    "aspectRatio": 1.7777777777777777,
+    "width": 1280,
+    "height": 720,
+    "defaultCaptions": [
+      {
+        "text": "ME WHEN...",
+        "fontSize": 48,
+        "y": 0.1
+      }
+    ],
+    "trendingScore": 95
+  },
+  {
+    "id": "vid-3681",
+    "name": "Yeah",
+    "category": "Trending",
+    "type": "video",
+    "videoUrl": "https://api.memes.co.in/api/meme-videos/3681/download",
+    "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_oKsa5uR.png",
+    "durationMs": 7000,
+    "aspectRatio": 1.7777777777777777,
+    "width": 1280,
+    "height": 720,
+    "defaultCaptions": [
+      {
+        "text": "ME WHEN...",
+        "fontSize": 48,
+        "y": 0.1
+      }
+    ],
+    "trendingScore": 95
+  },
+  {
+    "id": "vid-3680",
+    "name": "Dragon Ball Super Ka Me Ha Me Ha",
+    "category": "Trending",
+    "type": "video",
+    "videoUrl": "https://api.memes.co.in/api/meme-videos/3680/download",
+    "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_Bv1LiL3.png",
+    "durationMs": 7000,
+    "aspectRatio": 1.7777777777777777,
+    "width": 1280,
+    "height": 720,
+    "defaultCaptions": [
+      {
+        "text": "ME WHEN...",
+        "fontSize": 48,
+        "y": 0.1
+      }
+    ],
+    "trendingScore": 95
+  },
+  {
+    "id": "vid-3679",
+    "name": "Amrish Puri Pehle Bata Tha Na Idiot",
+    "category": "Trending",
+    "type": "video",
+    "videoUrl": "https://api.memes.co.in/api/meme-videos/3679/download",
+    "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_gN6TNUt.png",
+    "durationMs": 7000,
+    "aspectRatio": 1.7777777777777777,
+    "width": 1280,
+    "height": 720,
+    "defaultCaptions": [
+      {
+        "text": "ME WHEN...",
+        "fontSize": 48,
+        "y": 0.1
+      }
+    ],
+    "trendingScore": 95
+  },
+  {
+    "id": "vid-3678",
+    "name": "Puneet Superstar Laughing While Taking Tea Memes",
+    "category": "Trending",
+    "type": "video",
+    "videoUrl": "https://api.memes.co.in/api/meme-videos/3678/download",
+    "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_JhAYgLI.png",
+    "durationMs": 7000,
+    "aspectRatio": 1.7777777777777777,
+    "width": 1280,
+    "height": 720,
+    "defaultCaptions": [
+      {
+        "text": "ME WHEN...",
+        "fontSize": 48,
+        "y": 0.1
+      }
+    ],
+    "trendingScore": 95
+  },
+  {
+    "id": "vid-3676",
+    "name": "I Got That Feeling",
+    "category": "Trending",
+    "type": "video",
+    "videoUrl": "https://api.memes.co.in/api/meme-videos/3676/download",
+    "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_pSyqfvY.png",
+    "durationMs": 7000,
+    "aspectRatio": 1.7777777777777777,
+    "width": 1280,
+    "height": 720,
+    "defaultCaptions": [
+      {
+        "text": "ME WHEN...",
+        "fontSize": 48,
+        "y": 0.1
+      }
+    ],
+    "trendingScore": 95
+  },
+  {
+    "id": "vid-3675",
+    "name": "My Hero Academia I Got This Meme",
+    "category": "Trending",
+    "type": "video",
+    "videoUrl": "https://api.memes.co.in/api/meme-videos/3675/download",
+    "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_aJyaPuJ.png",
+    "durationMs": 7000,
+    "aspectRatio": 1.7777777777777777,
+    "width": 1280,
+    "height": 720,
+    "defaultCaptions": [
+      {
+        "text": "ME WHEN...",
+        "fontSize": 48,
+        "y": 0.1
+      }
+    ],
+    "trendingScore": 95
+  }
+]

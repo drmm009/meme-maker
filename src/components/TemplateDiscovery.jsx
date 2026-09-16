@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { MEME_TEMPLATES, CATEGORIES } from '../data/templates';
+import { VIDEO_MEME_TEMPLATES } from '../data/videoTemplates';
 import { Search, Sparkles, Flame, PlusCircle, Crown, Image as ImageIcon, Video } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -7,9 +8,14 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom }) 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [sortBy, setSortBy] = useState('trending');
+  const [mediaType, setMediaType] = useState('all'); // 'all', 'image', 'video'
+
+  const allTemplates = useMemo(() => {
+    return [...MEME_TEMPLATES, ...VIDEO_MEME_TEMPLATES];
+  }, []);
 
   const filteredTemplates = useMemo(() => {
-    return MEME_TEMPLATES.filter((template) => {
+    return allTemplates.filter((template) => {
       const matchesSearch = template.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         template.category.toLowerCase().includes(searchQuery.toLowerCase());
 
@@ -22,13 +28,18 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom }) 
         matchesCategory = template.category === selectedCategory;
       }
 
-      return matchesSearch && matchesCategory;
+      let matchesMediaType = true;
+      if (mediaType !== 'all') {
+        matchesMediaType = template.type === mediaType || (mediaType === 'image' && !template.type);
+      }
+
+      return matchesSearch && matchesCategory && matchesMediaType;
     }).sort((a, b) => {
       if (sortBy === 'trending') return b.trendingScore - a.trendingScore;
       if (sortBy === 'name') return a.name.localeCompare(b.name);
       return 0;
     });
-  }, [searchQuery, selectedCategory, sortBy]);
+  }, [searchQuery, selectedCategory, sortBy, mediaType, allTemplates]);
 
   return (
     <div className="template-discovery animate-fade-in">
@@ -100,8 +111,12 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom }) 
           </div>
         </div>
 
-        {/* Horizontal Category Scroll Pills */}
         <div className="horizontal-scroll-pills margin-bottom">
+          <div style={{ display: 'flex', gap: '4px', borderRight: '1px solid var(--glass-border)', paddingRight: '8px', marginRight: '4px' }}>
+            <button className={`category-pill ${mediaType === 'all' ? 'active' : ''}`} onClick={() => setMediaType('all')}>All</button>
+            <button className={`category-pill ${mediaType === 'image' ? 'active' : ''}`} onClick={() => setMediaType('image')}>🖼️ Images</button>
+            <button className={`category-pill ${mediaType === 'video' ? 'active' : ''}`} onClick={() => setMediaType('video')}>🎬 Videos</button>
+          </div>
           {CATEGORIES.map((cat) => (
             <button
               key={cat.id}
@@ -125,8 +140,29 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom }) 
                 whileTap={{ scale: 0.97 }}
                 onClick={() => onSelectTemplate(template)}
               >
-                <div className="template-image-wrapper">
-                  <img src={template.imageUrl} alt={template.name} loading="lazy" />
+                <div className="template-image-wrapper" style={{ position: 'relative' }}>
+                  <img src={template.type === 'video' ? template.thumbnailUrl : template.imageUrl} alt={template.name} loading="lazy" />
+                  
+                  {template.type === 'video' && (
+                    <div style={{
+                      position: 'absolute',
+                      bottom: '4px',
+                      right: '4px',
+                      background: 'rgba(0,0,0,0.7)',
+                      color: '#fff',
+                      padding: '2px 6px',
+                      borderRadius: '4px',
+                      fontSize: '11px',
+                      fontWeight: 'bold',
+                      zIndex: 2,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px'
+                    }}>
+                      🎬 {Math.round(template.durationMs / 1000)}s
+                    </div>
+                  )}
+
                   <div className="card-badges">
                     {template.trendingScore >= 95 && (
                       <span className="badge badge-trending"><Flame className="icon-xs" /> HOT</span>

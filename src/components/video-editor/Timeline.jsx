@@ -6,6 +6,7 @@ import { GRAPHIC_STICKERS, GRAPHIC_STICKER_CATEGORIES } from '../../data/memeSti
 import { MEME_TEMPLATES, CATEGORIES } from '../../data/templates';
 import { fetchOpenSourceMemes } from '../../services/memeService';
 import AudioModal from './AudioModal';
+import VideoTemplateModal from './VideoTemplateModal';
 import ModalPortal from '../ModalPortal';
 
 const TIMELINE_WIDTH_PX = 1000; // Fixed visual width for the timeline track
@@ -75,6 +76,7 @@ export default function Timeline() {
   const [showAudioModal, setShowAudioModal] = React.useState(false);
   const [dropdownOpen, setDropdownOpen] = React.useState(null);
   const [showImageTemplatePicker, setShowImageTemplatePicker] = React.useState(false);
+  const [showVideoTemplatePicker, setShowVideoTemplatePicker] = React.useState(false);
   const [templateSearchQuery, setTemplateSearchQuery] = React.useState('');
   const [templateCategory, setTemplateCategory] = React.useState('all');
   const [templateList, setTemplateList] = React.useState(MEME_TEMPLATES);
@@ -542,7 +544,7 @@ export default function Timeline() {
                           if (row.sectionId === 'image') {
                             setShowImageTemplatePicker(true);
                           } else {
-                            alert('Templates coming soon!');
+                            setShowVideoTemplatePicker(true);
                           }
                         }}
                       >
@@ -1349,6 +1351,23 @@ export default function Timeline() {
     <AudioModal
       isOpen={showAudioModal}
       onClose={() => setShowAudioModal(false)}
+    />
+
+    <VideoTemplateModal
+      isOpen={showVideoTemplatePicker}
+      onClose={() => setShowVideoTemplatePicker(false)}
+      onSelect={(template) => {
+        useEditorStore.getState().addItem({
+          type: 'video',
+          startMs: playhead,
+          endMs: playhead + template.durationMs,
+          url: template.videoUrl,
+          thumbnailUrl: template.thumbnailUrl,
+          name: template.name,
+          width: template.width,
+          height: template.height
+        });
+      }}
     />
   </div>
   );

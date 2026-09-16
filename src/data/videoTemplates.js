@@ -1,0 +1,2003 @@
+export const VIDEO_MEME_TEMPLATES = [
+
+  {
+  "id": "vid-3683",
+  "name": "Pyaari Samajh Gayi",
+  "category": "Trending",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Pyaari_Samajh_Gayi_Meme_Video_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_dOYuKmo.png",
+  "durationMs": 2633,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "ME WHEN...",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 95
+},
+  {
+  "id": "vid-3682",
+  "name": "Amrish Puri Kaun Bola Meme",
+  "category": "Trending",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Amrish_Puri_Kaun_Bola_Meme_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_Ir1ZwqQ.png",
+  "durationMs": 1333,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "ME WHEN...",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 95
+},
+  {
+  "id": "vid-3681",
+  "name": "Yeah",
+  "category": "Trending",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Yeah_Meme_Video_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_oKsa5uR.png",
+  "durationMs": 1133,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "ME WHEN...",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 95
+},
+  {
+  "id": "vid-3680",
+  "name": "Dragon Ball Super Ka Me Ha Me Ha",
+  "category": "Trending",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Dragon_Ball_Super_Ka_Me_Ha_Me_Ha_Meme_Video_Download_1.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_Bv1LiL3.png",
+  "durationMs": 30033,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "ME WHEN...",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 95
+},
+  {
+  "id": "vid-3679",
+  "name": "Amrish Puri Pehle Bata Tha Na Idiot",
+  "category": "Trending",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Amrish_Puri_Pehle_Bata_Tha_Na_Idiot_Meme_Video_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_gN6TNUt.png",
+  "durationMs": 2333,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "ME WHEN...",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 95
+},
+  {
+  "id": "vid-3678",
+  "name": "Puneet Superstar Laughing While Taking Tea Memes",
+  "category": "Trending",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Puneet_Superstar_Laughing_While_Taking_Tea_Memes_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_JhAYgLI.png",
+  "durationMs": 4733,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "ME WHEN...",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 95
+},
+  {
+  "id": "vid-3676",
+  "name": "I Got That Feeling",
+  "category": "Trending",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_I_Got_That_Feeling_Meme_Video_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_pSyqfvY.png",
+  "durationMs": 7533,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "ME WHEN...",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 95
+},
+  {
+  "id": "vid-3675",
+  "name": "My Hero Academia I Got This Meme",
+  "category": "Trending",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_My_Hero_Academia_I_Got_This_Meme_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_aJyaPuJ.png",
+  "durationMs": 2600,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "ME WHEN...",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 95
+},
+  {
+  "id": "vid-3684",
+  "name": "Crazy Laugh",
+  "category": "Laughing Memes",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Crazy_Laugh_Meme_Video_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_tSo5mI8.png",
+  "durationMs": 2933,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 95.0
+},
+  {
+  "id": "vid-3677",
+  "name": "Amrish Puri Hame Yaha Kyu Bula Liya Meme",
+  "category": "Popular Memes",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Amrish_Puri_Hame_Yaha_Kyu_Bula_Liya_Meme_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_rGW3zci.png",
+  "durationMs": 1666,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 94.3
+},
+  {
+  "id": "vid-3674",
+  "name": "Dragon Ball Super All Out Fight",
+  "category": "Anime",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Dragon_Ball_Super_All_Out_Fight_Meme_Video_Download_1.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_QWGC2GR.png",
+  "durationMs": 17966,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 94.0
+},
+  {
+  "id": "vid-3673",
+  "name": "Knives Out Eat Shit",
+  "category": "Meme Templates",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Knives_Out_Eat_Shit_Meme_Video_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_l5q0StH.png",
+  "durationMs": 10033,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 93.9
+},
+  {
+  "id": "vid-3672",
+  "name": "I'm OK",
+  "category": "Meme Templates",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Im_OK_Meme_Video_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_lrjXjle.png",
+  "durationMs": 18600,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 93.8
+},
+  {
+  "id": "vid-3671",
+  "name": "Paresh Rawal Main Sab Samjhta Hu Bhai Meme",
+  "category": "Popular Memes",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Paresh_Rawal_Main_Sab_Samjhta_Hu_Bhai_Meme_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_Loau26G.png",
+  "durationMs": 1933,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 93.7
+},
+  {
+  "id": "vid-3670",
+  "name": "Nana Patekar Laughing Memes",
+  "category": "Popular Memes",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Nana_Patekar_Laughing_Memes_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_7HWH5z6.png",
+  "durationMs": 2466,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 93.6
+},
+  {
+  "id": "vid-3669",
+  "name": "Akshay Kumar Main Madad Karu",
+  "category": "Meme Templates",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Akshay_Kumar_Main_Madad_Karu_Meme_Video_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_hh8VZ5q.png",
+  "durationMs": 933,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 93.5
+},
+  {
+  "id": "vid-3660",
+  "name": "Troll Laughing Face",
+  "category": "Green Screen Memes",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Troll_Laughing_Face_Meme_Video_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_TCYbOxx.png",
+  "durationMs": 6000,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 93.4
+},
+  {
+  "id": "vid-3659",
+  "name": "Pushing Daisies Oh Hell No Meme",
+  "category": "Meme Templates",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Pushing_Daisies_Oh_Hell_No_Meme_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_yzEZrak.png",
+  "durationMs": 3133,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 93.3
+},
+  {
+  "id": "vid-3668",
+  "name": "Amrish Puri Jaldi Kuch Karo Memes",
+  "category": "Popular Memes",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Amrish_Puri_Jaldi_Kuch_Karo_Memes_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_Qet8Osc.png",
+  "durationMs": 1466,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 93.2
+},
+  {
+  "id": "vid-3667",
+  "name": "Fullmetal Alchemist I'll Kill You Meme",
+  "category": "Anime",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Fullmetal_Alchemist_Ill_Kill_You_Meme_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_dCNfUWE.png",
+  "durationMs": 3033,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 93.1
+},
+  {
+  "id": "vid-3666",
+  "name": "Dragon Ball Z Abridged Where Are You From Meme",
+  "category": "Anime",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Dragon_Ball_Z_Abridged_Where_Are_You_From_Meme_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_Y3pFiU9.png",
+  "durationMs": 1233,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 93.0
+},
+  {
+  "id": "vid-3665",
+  "name": "Beyonce Happy Birthday",
+  "category": "Meme Templates",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Beyonce_Happy_Birthday_Meme_Video_Download_1.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_9kIWzin.png",
+  "durationMs": 15033,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 92.9
+},
+  {
+  "id": "vid-3664",
+  "name": "Paresh Rawal Arey Baba Mar Gaya Re Tu Meme",
+  "category": "Trending Memes",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Paresh_Rawal_Arey_Baba_Mar_Gaya_Re_Tu_Meme_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_mhcuZ4l.png",
+  "durationMs": 1800,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 92.8
+},
+  {
+  "id": "vid-3663",
+  "name": "Ajay Devgan Ab Aisa Hi Hoga Meme",
+  "category": "Popular Memes",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Ajay_Devgan_Ab_Aisa_Hi_Hoga_Meme_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_IgI3WZB.png",
+  "durationMs": 933,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 92.7
+},
+  {
+  "id": "vid-3662",
+  "name": "Nana Patekar Arey Ye Rukti Kaise Hai Memes",
+  "category": "Meme Templates",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Nana_Patekar_Arey_Ye_Rukti_Kaise_Hai_Memes_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_tlfXsaO.png",
+  "durationMs": 1933,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 92.6
+},
+  {
+  "id": "vid-3661",
+  "name": "Funny Monkey Laughing Video Meme",
+  "category": "Laughing Memes",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Funny_Monkey_Laughing_Video_Meme_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_XJW6GgG.png",
+  "durationMs": 9133,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 92.5
+},
+  {
+  "id": "vid-3658",
+  "name": "Akshay Kumar Paisa Laya Memes",
+  "category": "Popular Memes",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Akshay_Kumar_Paisa_Laya_Memes_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_Q14fwk1.png",
+  "durationMs": 1466,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 92.4
+},
+  {
+  "id": "vid-3657",
+  "name": "Akshay Kumar Kuch To Lihaaz Karo",
+  "category": "Popular Memes",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Akshay_Kumar_Kuch_To_Lihaaz_Karo_Meme_Video_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_eX45kg5.png",
+  "durationMs": 1666,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 92.3
+},
+  {
+  "id": "vid-3656",
+  "name": "Kitten With Empty Wallet Cry Meme",
+  "category": "Green Screen Memes",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Kitten_With_Empty_Wallet_Cry_Meme_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_mLJ17Su.png",
+  "durationMs": 10900,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 92.2
+},
+  {
+  "id": "vid-3655",
+  "name": "Hinamatsuri Stop Meme",
+  "category": "Anime",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Hinamatsuri_Stop_Meme_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_hXggFPJ.png",
+  "durationMs": 1033,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 92.1
+},
+  {
+  "id": "vid-3654",
+  "name": "Fullmetal Alchemist Brotherhood Hmmm Meme",
+  "category": "Anime",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Fullmetal_Alchemist_Brotherhood_Hmmm_Meme_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_EjQJOYv.png",
+  "durationMs": 6033,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 92.0
+},
+  {
+  "id": "vid-3653",
+  "name": "Paresh Rawal Smart Hai Ha Meme",
+  "category": "Popular Memes",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Paresh_Rawal_Smart_Hai_Ha_Meme_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_Sd8JAX1.png",
+  "durationMs": 1433,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 91.9
+},
+  {
+  "id": "vid-3652",
+  "name": "Paresh Rawal First Class Idea Hai Ye Meme",
+  "category": "Popular Memes",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Paresh_Rawal_First_Class_Idea_Hai_Ye_Meme_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_nASnYNl.png",
+  "durationMs": 1266,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 91.8
+},
+  {
+  "id": "vid-3651",
+  "name": "Nana Patekar Tu Zinda Hai Meme",
+  "category": "Meme Templates",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Nana_Patekar_Tu_Zinda_Hai_Meme_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_KR2SIHi.png",
+  "durationMs": 1200,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 91.7
+},
+  {
+  "id": "vid-3650",
+  "name": "Narendra Modi Bahut Bahut Dhanyawad",
+  "category": "Meme Templates",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Narendra_Modi_Bahut_Bahut_Dhanyawad_Meme_Template_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_oL4HcFG.png",
+  "durationMs": 1633,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 91.6
+},
+  {
+  "id": "vid-3649",
+  "name": "Ninja Ooh That's A Good One Meme",
+  "category": "Green Screen Memes",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Ninja_Ooh_Thats_A_Good_One_Meme_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_EBmLOYl.png",
+  "durationMs": 1900,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 91.5
+},
+  {
+  "id": "vid-3648",
+  "name": "Dragon Ball Z Abridged Bye Meme",
+  "category": "Anime",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Dragon_Ball_Z_Abridged_Bye_Meme_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_wjzEaSL.png",
+  "durationMs": 1500,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 91.4
+},
+  {
+  "id": "vid-3647",
+  "name": "Pikachu Laughing Meme",
+  "category": "Anime",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Pikachu_Laughing_Meme_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_FPtpDTn.png",
+  "durationMs": 1433,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 91.3
+},
+  {
+  "id": "vid-3646",
+  "name": "Over The Top Laugh Memes",
+  "category": "Laughing Memes",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Over_The_Top_Laugh_Memes_Download_1.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_2wUpi6l.png",
+  "durationMs": 10733,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 91.2
+},
+  {
+  "id": "vid-3645",
+  "name": "Paresh Rawal Matlab Kuch Khatra Hai Meme",
+  "category": "Popular Memes",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Paresh_Rawal_Matlab_Kuch_Khatra_Hai_Meme_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_pE4lkoH.png",
+  "durationMs": 1200,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 91.1
+},
+  {
+  "id": "vid-3644",
+  "name": "Tumhari Aukaat Kya Hai Meme",
+  "category": "Popular Memes",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Tumhari_Aukaat_Kya_Hai_MemeDownload.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_3o4Lr6F.png",
+  "durationMs": 1566,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 91.0
+},
+  {
+  "id": "vid-3643",
+  "name": "Manoj Joshi Bhayankar Hai Ye Meme",
+  "category": "Meme Templates",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Bhayankar_Hai_Ye_Meme_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_FUbYmTt.png",
+  "durationMs": 1600,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 90.9
+},
+  {
+  "id": "vid-3642",
+  "name": "Narendra Modi Namumkin Hai Meme",
+  "category": "Meme Templates",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Narendra_Modi_Namumkin_Hai_Meme_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_XDxVF13.png",
+  "durationMs": 1166,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 90.8
+},
+  {
+  "id": "vid-3641",
+  "name": "Paresh Rawal Koi Raasta Nikalo Na Bhai",
+  "category": "Funny Videos",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Paresh_Rawal_Koi_Raasta_Nikalo_Na_Bhai_Meme_Video_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_9DQGciU.png",
+  "durationMs": 1266,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 90.7
+},
+  {
+  "id": "vid-3640",
+  "name": "Rajpal Yadav Shaadi Ho Gayi Tumhari Memes",
+  "category": "Popular Memes",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Rajpal_Yadav_Shaadi_Ho_Gayi_Tumhari_Memes_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_OneYAue.png",
+  "durationMs": 1033,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 90.6
+},
+  {
+  "id": "vid-3639",
+  "name": "Bee Movie Wait Wait Wait",
+  "category": "Meme Templates",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Bee_Movie_Wait_Wait_Wait_Meme_Video_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_KB3gkdH.png",
+  "durationMs": 1233,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 90.5
+},
+  {
+  "id": "vid-3638",
+  "name": "Salman Khan Funny Laughing Meme",
+  "category": "Laughing Memes",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Salman_Khan_Funny_Laughing_Meme_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_6dwVjN7.png",
+  "durationMs": 2200,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 90.4
+},
+  {
+  "id": "vid-3637",
+  "name": "Kya Bakwas Hai Ye Meme",
+  "category": "Meme Templates",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Kya_Bakwas_Hai_Ye_Meme_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_sgAViAk.png",
+  "durationMs": 1000,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 90.3
+},
+  {
+  "id": "vid-3636",
+  "name": "Manoj Joshi Aye Kya Keh Kya Rahe Hai Aap Meme",
+  "category": "Meme Templates",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Manoj_Joshi_Aye_Kya_Keh_Kya_Rahe_Hai_Aap_Meme_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_vJqMMDF.png",
+  "durationMs": 1766,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 90.2
+},
+  {
+  "id": "vid-3635",
+  "name": "Nana Patekar Idhar Kaiko Aaya Tu Meme",
+  "category": "Popular Memes",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Nana_Patekar_Idhar_Kaiko_Aaya_Tu_Meme_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_pxdcAzC.png",
+  "durationMs": 933,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 90.1
+},
+  {
+  "id": "vid-3634",
+  "name": "Paresh Rawal Mere Ko Kuch Dikh Nahi Raha Iss Me Meme",
+  "category": "Funny Memes",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Paresh_Rawal_Mere_Ko_Kuch_Dikh_Nahi_Raha_Iss_Me_Meme_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_M2UeOdW.png",
+  "durationMs": 1466,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 90.0
+},
+  {
+  "id": "vid-3633",
+  "name": "Paresh Rawal Hamari Bhi Izzat Hai Meme",
+  "category": "Popular Memes",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Paresh_Rawal_Hamari_Bhi_Izzat_Hai_Meme_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_F9SDUJM.png",
+  "durationMs": 1333,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 89.9
+},
+  {
+  "id": "vid-3632",
+  "name": "Akshay Kumar Paisa Kaha Hai Meme",
+  "category": "Meme Templates",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Akshay_Kumar_Paisa_Kaha_Hai_Meme_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_6pw7wjl.png",
+  "durationMs": 900,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 89.8
+},
+  {
+  "id": "vid-3631",
+  "name": "Puneet Superstar Crying and Laughing Meme",
+  "category": "Laughing Memes",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Puneet_Superstar_Crying_and_Laughing_Meme_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_mmUoby1.png",
+  "durationMs": 8433,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 89.7
+},
+  {
+  "id": "vid-3630",
+  "name": "Paresh Rawal Sabse Pehle Main Hi Aaya Meme",
+  "category": "Popular Memes",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Paresh_Rawal_Sabse_Pehle_Main_Hi_Aaya_Meme_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_XCjacXg.png",
+  "durationMs": 1533,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 89.6
+},
+  {
+  "id": "vid-3629",
+  "name": "Laughing Cat Hahaha Meme",
+  "category": "Green Screen Memes",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Laughing_Cat_Hahaha_Meme_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_jh7n7Kr.png",
+  "durationMs": 9000,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 89.5
+},
+  {
+  "id": "vid-3628",
+  "name": "Dragon Ball Super Are You Crying Memes",
+  "category": "Anime",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Dragon_Ball_Super_Are_You_Crying_Memes_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_ubnZDeC.png",
+  "durationMs": 1733,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 89.4
+},
+  {
+  "id": "vid-3627",
+  "name": "Goat Says Yeah",
+  "category": "Meme Templates",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Goat_Says_Yeah_Meme_Video_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_peZzuB9.png",
+  "durationMs": 5033,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 89.3
+},
+  {
+  "id": "vid-3626",
+  "name": "Dido Thank You Meme",
+  "category": "Meme Templates",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Dido_Thank_You_Meme_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_rcBgSJC.png",
+  "durationMs": 1033,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 89.2
+},
+  {
+  "id": "vid-3625",
+  "name": "Much Much Much Later",
+  "category": "Meme Templates",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Much_Much_Much_Later_Meme_Video_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_70VrxbZ.png",
+  "durationMs": 1866,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 89.1
+},
+  {
+  "id": "vid-3624",
+  "name": "Spider Man You Serious",
+  "category": "Popular Memes",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Spider_Man_You_Serious_Meme_Video_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_FBD8Vob.png",
+  "durationMs": 10566,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 89.0
+},
+  {
+  "id": "vid-3623",
+  "name": "Paresh Rawal Itna Kafi Hai Memes",
+  "category": "Popular Memes",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Paresh_Rawal_Itna_Kafi_Hai_Memes_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_pub2sbJ.png",
+  "durationMs": 1233,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 88.9
+},
+  {
+  "id": "vid-3622",
+  "name": "Pankaj Tripathi Risk Hai Meme",
+  "category": "Meme Templates",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Pankaj_Tripathi_Risk_Hai_Meme_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_RwhVsFI.png",
+  "durationMs": 1266,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 88.8
+},
+  {
+  "id": "vid-3621",
+  "name": "Mutahar Laughing Meme",
+  "category": "Laughing Memes",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Mutahar_Laughing_Meme_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_0ZhwCUz.png",
+  "durationMs": 5100,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 88.7
+},
+  {
+  "id": "vid-3620",
+  "name": "Paresh Rawal Ye Jhoot Bol Raha Hai Meme",
+  "category": "Popular Memes",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Paresh_Rawal_Ye_Jhoot_Bol_Raha_Hai_Meme_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_hHcQbyL.png",
+  "durationMs": 2733,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 88.6
+},
+  {
+  "id": "vid-3619",
+  "name": "Narendra Modi Ye Koi Mamuli Vishay Nahi Hai Memes Template",
+  "category": "Meme Templates",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Narendra_Modi_Ye_Koi_Mamuli_Vishay_Nahi_Hai_Memes_Template.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_exjhEHE.png",
+  "durationMs": 3033,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 88.5
+},
+  {
+  "id": "vid-3602",
+  "name": "Paresh Rawal Best Idea Hai Ye Meme",
+  "category": "Popular Memes",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Paresh_Rawal_Best_Idea_Hai_Ye_Meme_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_I3GR92L.png",
+  "durationMs": 1566,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 88.4
+},
+  {
+  "id": "vid-3600",
+  "name": "Dragon Ball Super That Is Your Limit",
+  "category": "Anime",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Dragon_Ball_Super_That_Is_Your_Limit_Meme_Video_Download_1.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_lbGvHDN.png",
+  "durationMs": 23833,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 88.3
+},
+  {
+  "id": "vid-3590",
+  "name": "Toy Story Woody Laughing",
+  "category": "Laughing Memes",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Toy_Story_Woody_Laughing_Meme_Video_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_aPRQsV6.png",
+  "durationMs": 7100,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 88.2
+},
+  {
+  "id": "vid-3589",
+  "name": "Yes Yes Yes Meme",
+  "category": "Meme Templates",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Yes_Yes_Yes_Meme_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_T31ufX4.png",
+  "durationMs": 4100,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 88.1
+},
+  {
+  "id": "vid-3601",
+  "name": "Main Nahi Bataunga",
+  "category": "Meme Templates",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Main_Nahi_Bataunga_Meme_Video_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_asNNO8s.png",
+  "durationMs": 2433,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 88.0
+},
+  {
+  "id": "vid-3599",
+  "name": "Dragon Ball Super You Are An Idiot",
+  "category": "Anime",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Dragon_Ball_Super_You_Are_An_Idiot_Meme_Video_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_FVEbmXo.png",
+  "durationMs": 3566,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 87.9
+},
+  {
+  "id": "vid-3618",
+  "name": "Dr Reasons Laughing Meme",
+  "category": "Laughing Memes",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Dr_Reasons_Laughing_Meme_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_qNTAHku.png",
+  "durationMs": 2233,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 87.8
+},
+  {
+  "id": "vid-3617",
+  "name": "Ghachar Ghachar Old Woman Video Meme",
+  "category": "Popular Memes",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Ghachar_Ghachar_Old_Woman_Video_Meme_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_FhBXX57.png",
+  "durationMs": 1300,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 87.7
+},
+  {
+  "id": "vid-3616",
+  "name": "Nepali Men Laughing Meme",
+  "category": "Laughing Memes",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Nepali_Men_Laughing_Meme_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_yohwoTv.png",
+  "durationMs": 3833,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 87.6
+},
+  {
+  "id": "vid-3615",
+  "name": "Amrish Puri Tumhe Pata Nahi Hai Bete Meme",
+  "category": "Popular Memes",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Amrish_Puri_Tumhe_Pata_Nahi_Hai_Bete_Meme_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_6VihM4F.png",
+  "durationMs": 2500,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 87.5
+},
+  {
+  "id": "vid-3614",
+  "name": "Delete Delete Delete Memes",
+  "category": "Anime",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Delete_Delete_Delete_Memes_Download_1.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_MBg68WT.png",
+  "durationMs": 24433,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 87.4
+},
+  {
+  "id": "vid-3613",
+  "name": "Ilana Glazer Shocked OMG Meme",
+  "category": "Meme Templates",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Ilana_Glazer_Shocked_OMG_Meme_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_CzLVNvR.png",
+  "durationMs": 3533,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 87.3
+},
+  {
+  "id": "vid-3612",
+  "name": "Friends Oh My God",
+  "category": "Meme Templates",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Friends_Oh_My_God_Meme_Video_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_EtIlBpx.png",
+  "durationMs": 4433,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 87.2
+},
+  {
+  "id": "vid-3611",
+  "name": "Owen Wilson Wow Meme",
+  "category": "Meme Templates",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Owen_Wilson_Wow_Meme_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_mFWYr0K.png",
+  "durationMs": 1533,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 87.1
+},
+  {
+  "id": "vid-3610",
+  "name": "Bleach What Do You Mean Meme",
+  "category": "Anime",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Bleach_What_Do_You_Mean_Meme_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_cJY6GVI.png",
+  "durationMs": 3733,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 87.0
+},
+  {
+  "id": "vid-3609",
+  "name": "Arshad Warsi Pagal Ho Gaya Kya Memes",
+  "category": "Popular Memes",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Arshad_Warsi_Pagal_Ho_Gaya_Kya_Memes_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_6Nriu7r.png",
+  "durationMs": 1033,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 86.9
+},
+  {
+  "id": "vid-3608",
+  "name": "Manoj Bajpayee Ae Gaadi Start Kar",
+  "category": "Popular Memes",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Manoj_Bajpayee_Ae_Gaadi_Start_Kar_Meme_Video_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_t5X8JQr.png",
+  "durationMs": 1300,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 86.8
+},
+  {
+  "id": "vid-3607",
+  "name": "Manoj Joshi Pehle Tu De Meme",
+  "category": "Funny Memes",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Manoj_Joshi_Pehle_Tu_De_Meme_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_iKumWv6.png",
+  "durationMs": 866,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 86.7
+},
+  {
+  "id": "vid-3606",
+  "name": "Paresh Rawal Wah Pehli Hi Ball Me Sixer",
+  "category": "Popular Memes",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Paresh_Rawal_Wah_Pehli_Hi_Ball_Me_Sixer_Meme_Video_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_QbPkwMu.png",
+  "durationMs": 2366,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 86.6
+},
+  {
+  "id": "vid-3605",
+  "name": "Puneet Superstar Laughing Red Face Memes",
+  "category": "Laughing Memes",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Puneet_Superstar_Laughing_Red_Face_Memes_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_mV4Xy1J.png",
+  "durationMs": 4500,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 86.5
+},
+  {
+  "id": "vid-3604",
+  "name": "Anil Kapoor Ab Iska Kya Kare Meme",
+  "category": "Meme Templates",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Anil_Kapoor_Ab_Iska_Kya_Kare_Meme_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_q7sQHq8.png",
+  "durationMs": 1866,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 86.4
+},
+  {
+  "id": "vid-3603",
+  "name": "Ravi Kishan Money Follows My Brother Video Meme",
+  "category": "Meme Templates",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Money_Follows_My_Brother_Video_Meme_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_Wl1y8h8.png",
+  "durationMs": 1933,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 86.3
+},
+  {
+  "id": "vid-3598",
+  "name": "Dragon Ball Super Go Away Memes",
+  "category": "Anime",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Dragon_Ball_Super_Go_Away_Memes_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_Hp1nKrQ.png",
+  "durationMs": 2700,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 86.2
+},
+  {
+  "id": "vid-3597",
+  "name": "Dragon Ball Super What's Wrong",
+  "category": "Anime",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Dragon_Ball_Super_Whats_Wrong_Meme_Video_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_PbvuZFp.png",
+  "durationMs": 800,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 86.1
+},
+  {
+  "id": "vid-3596",
+  "name": "I Am Rich Meme",
+  "category": "Meme Templates",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_I_Am_Rich_Meme_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_QGMxhib.png",
+  "durationMs": 8900,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 86.0
+},
+  {
+  "id": "vid-3595",
+  "name": "Big Guy Laughing Memes",
+  "category": "Laughing Memes",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Big_Guy_Laughing_Memes_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_QUmkzMr.png",
+  "durationMs": 3900,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 85.9
+},
+  {
+  "id": "vid-3594",
+  "name": "Nice Meme",
+  "category": "Meme Templates",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Nice_Meme_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_2xC5bkd.png",
+  "durationMs": 7300,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 85.8
+},
+  {
+  "id": "vid-3593",
+  "name": "I Am Sorry Babu",
+  "category": "Meme Templates",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_I_Am_Sorry_Babu_Meme_Video_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_iwPd8XJ.png",
+  "durationMs": 2300,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 85.7
+},
+  {
+  "id": "vid-3592",
+  "name": "Sanjay Dutt Tension Nahi Lene Ka Apun Hai Na Meme",
+  "category": "Meme Templates",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Sanjay_Dutt_Tension_Nahi_Lene_Ka_Apun_Hai_Na_Meme_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_P0uwpsY.png",
+  "durationMs": 3300,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 85.6
+},
+  {
+  "id": "vid-3591",
+  "name": "Chup Bilkul Chup Meme",
+  "category": "Meme Templates",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Chup_Bilkul_Chup_Meme_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_q7g31rQ.png",
+  "durationMs": 5133,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 85.5
+},
+  {
+  "id": "vid-3588",
+  "name": "Funny Laughing Memes",
+  "category": "Laughing Memes",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Funny_Laughing_Memes_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_f6SDEDA.png",
+  "durationMs": 4300,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 85.4
+},
+  {
+  "id": "vid-3587",
+  "name": "Paresh Rawal Mai Thukta Hoon Teri Surat Pe Meme",
+  "category": "Popular Memes",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Paresh_Rawal_Mai_Thukta_Hoon_Teri_Surat_Pe_Meme_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_JiSSZA7.png",
+  "durationMs": 2500,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 85.3
+},
+  {
+  "id": "vid-3586",
+  "name": "Wow Very Dangerous Meme",
+  "category": "Popular Memes",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Wow_Very_Dangerous_Meme_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_atK0yMB.png",
+  "durationMs": 4000,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 85.2
+},
+  {
+  "id": "vid-3585",
+  "name": "Yehi Nahi Abhi Aur Suniye Meme",
+  "category": "Meme Templates",
+  "type": "video",
+  "videoUrl": "https://api.memes.co.in/storage/memesvideo/watermarked/wm_Yehi_Nahi_Abhi_Aur_Suniye_Meme_Download.mp4",
+  "thumbnailUrl": "https://api.memes.co.in/media/memesvideo/thumbnail/thumbnail_FTFBo1n.png",
+  "durationMs": 3400,
+  "aspectRatio": 1.7777777777777777,
+  "width": 1280,
+  "height": 720,
+  "defaultCaptions": [
+    {
+      "text": "POV: ME",
+      "fontSize": 48,
+      "y": 0.1
+    }
+  ],
+  "trendingScore": 85.1
+}
+];
