@@ -135,8 +135,8 @@ export default function VideoLayoutBuilder({ onLayoutComplete, onBack }) {
         <button className="btn btn-ghost btn-xs" onClick={onBack}>
           <ArrowLeft className="icon-sm" /> Back
         </button>
-        <h2 className="choose-layout-heading" style={{ display: 'flex', alignItems: 'center', margin: 0 }}>
-          <span style={{ color: '#00f0ff', textShadow: '0 0 8px rgba(0, 240, 255, 0.4)', fontWeight: 'bold' }}>Select Layout Structure</span>
+        <h2 className="choose-layout-heading" style={{ display: 'flex', alignItems: 'center', margin: 0, color: 'var(--text-main)', fontWeight: 'bold' }}>
+          Select Layout Structure
         </h2>
         <div style={{ width: '60px' }}>{/* Placeholder to balance flex-between */}</div>
       </div>
@@ -202,7 +202,7 @@ export default function VideoLayoutBuilder({ onLayoutComplete, onBack }) {
                 onClick={() => setIsConfiguringCustom(true)}
                 style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100px' }}
               >
-                <Grid className="icon-sm" style={{ color: 'var(--cyber-cyan)', marginBottom: '8px', filter: 'drop-shadow(0 0 8px rgba(0, 240, 255, 0.6))', width: '40px', height: '40px' }} />
+                <Grid className="icon-sm" style={{ color: 'var(--poster-orange)', marginBottom: '8px', width: '40px', height: '40px' }} />
                 <span className="icon-layout-label" style={{ fontWeight: 'bold' }}>Custom Grid</span>
               </div>
             </>

@@ -49,6 +49,8 @@
   --glass-border-glow: var(--poster-orange) !important;
   --glass-shadow: 4px 4px 0 rgba(23, 19, 16, 0.9) !important;
   --primary-accent: var(--poster-orange) !important;
+  --cyber-cyan: var(--poster-orange) !important;
+  --cyber-pink: var(--poster-orange) !important;
 }
 
 html,
@@ -875,6 +877,11 @@ button:active {
   border: none !important;
   box-shadow: none !important;
   outline: none !important;
+}
+
+.step-prefix-highlight {
+  color: var(--poster-orange) !important;
+  text-shadow: none !important;
 }
 
 
