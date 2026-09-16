@@ -25,23 +25,113 @@
   border-radius: 4px;
 }
 
+/* Video Editor Desktop Side-by-Side Layout */
+.video-editor-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100vh;
+  max-height: 100vh;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.video-editor-main {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+  padding: 8px 16px 16px;
+  overflow: hidden;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.video-canvas-area {
+  flex: 1.05;
+  min-width: 0;
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  padding: 12px;
+  box-sizing: border-box;
+}
+
+.video-timeline-section {
+  flex: 0.95;
+  min-width: 0;
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  margin-top: 0 !important;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.timeline-controls-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-height: 38px;
+  flex-shrink: 0;
+}
+
+/* Timeline container padding */
+.timeline-section {
+  padding: 16px;
+}
+
 @media (max-width: 768px) {
   .desktop-only {
     display: none !important;
   }
 }
 
+/* Mobile & Tablet Stacked Layout (<= 900px) */
+@media (max-width: 900px) {
+  .video-editor-container {
+    height: auto;
+    max-height: none;
+    overflow: visible;
+  }
 
-/* Timeline container responsive padding */
-.timeline-section {
-  padding: 16px;
-}
+  .video-editor-main {
+    flex-direction: column;
+    height: auto;
+    max-height: none;
+    overflow: visible;
+    padding: 8px;
+    gap: 12px;
+  }
 
-@media (max-width: 768px) {
-  .timeline-section {
+  .video-canvas-area {
+    width: 100%;
+    min-height: 280px;
+    max-height: 48vh;
+    height: auto;
+    flex: none;
+  }
+
+  .video-timeline-section {
+    width: 100%;
+    height: auto;
+    min-height: 380px;
+    flex: none;
+    overflow: visible;
+    margin-top: 0 !important;
     padding: 16px 0;
   }
+
   .timeline-controls-wrap {
     padding: 0 16px;
   }
 }
+

@@ -560,11 +560,12 @@ const CanvasPreview = forwardRef((props, ref) => {
     const updateSize = () => {
       if (containerRef.current) {
         // We get the available width from the parent container
-        const parentArea = containerRef.current.closest('.canvas-area');
+        const parentArea = containerRef.current.closest('.canvas-area, .video-canvas-area, .canvas-wrapper') || containerRef.current.parentElement;
         
         // Find max available bounds from the parent area (or window fallback)
-        const availableWidth = parentArea ? parentArea.clientWidth - 32 : window.innerWidth - 32; // -32 for padding
-        const availableHeight = parentArea ? parentArea.clientHeight - 32 : (window.innerHeight * 0.5) - 32;
+        const pad = 24;
+        const availableWidth = Math.max(100, (parentArea ? parentArea.clientWidth : window.innerWidth) - pad);
+        const availableHeight = Math.max(100, (parentArea ? parentArea.clientHeight : (window.innerHeight * 0.5)) - pad);
 
         let newWidth = availableWidth;
         let newHeight = availableWidth / canvasAspectRatio;
@@ -584,8 +585,20 @@ const CanvasPreview = forwardRef((props, ref) => {
     
     window.addEventListener('resize', updateSize);
     updateSize(); // Initial call
+
+    let ro = null;
+    if (typeof ResizeObserver !== 'undefined' && containerRef.current) {
+      const parentArea = containerRef.current.closest('.canvas-area, .video-canvas-area, .canvas-wrapper') || containerRef.current.parentElement;
+      if (parentArea) {
+        ro = new ResizeObserver(() => updateSize());
+        ro.observe(parentArea);
+      }
+    }
     
-    return () => window.removeEventListener('resize', updateSize);
+    return () => {
+      window.removeEventListener('resize', updateSize);
+      if (ro) ro.disconnect();
+    };
   }, [canvasAspectRatio]);
 
   // We map ALL items so they stay mounted, but pass isVisible down

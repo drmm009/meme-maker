@@ -165,7 +165,7 @@ export default function VideoEditor({ template, onBack, theme, onToggleTheme }) 
   };
   
   return (
-    <div className="meme-editor-container animate-fade-in">
+    <div className="meme-editor-container animate-fade-in video-editor-container">
       {/* Top Header */}
       <div className="editor-topbar glass-card flex-between">
         <button className="btn btn-ghost btn-xs" onClick={onBack}>
@@ -229,10 +229,9 @@ export default function VideoEditor({ template, onBack, theme, onToggleTheme }) 
         </div>
       </div>
 
-      {/* Canvas Area */}
+      {/* Canvas and Timeline Area (Side by Side on Desktop) */}
       <main 
-        className="editor-main" 
-        style={{ flexDirection: 'column' }}
+        className="editor-main video-editor-main" 
         onPointerDown={(e) => {
           if (e.target === e.currentTarget) {
             useEditorStore.getState().setActiveItem(null);
@@ -240,8 +239,7 @@ export default function VideoEditor({ template, onBack, theme, onToggleTheme }) 
         }}
       >
         <div 
-          className="canvas-wrapper glass-card" 
-          style={{ flex: 1, position: 'relative', width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+          className="canvas-wrapper glass-card canvas-area video-canvas-area" 
           onPointerDown={(e) => {
             if (e.target === e.currentTarget) {
               useEditorStore.getState().setActiveItem(null);
@@ -268,7 +266,7 @@ export default function VideoEditor({ template, onBack, theme, onToggleTheme }) 
         </div>
 
         {/* Timeline Area */}
-        <section className="tools-panel glass-card timeline-section" style={{ width: '100%', marginTop: '16px' }}>
+        <section className="tools-panel glass-card timeline-section video-timeline-section">
           <div className="flex-between align-center timeline-controls-wrap" style={{ marginBottom: '16px', position: 'relative' }}>
             <div className="flex-gap align-center">
               <button 
