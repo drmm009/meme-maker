@@ -2300,19 +2300,6 @@ input:checked + .slider.round:before {
 }
 
 /* Watermark Tab Controls */
-.watermark-text-input {
-  border-radius: 24px;
-  height: 38px;
-  padding: 0 14px;
-  background: #131622;
-  border: 1px solid var(--glass-border);
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
-  transition: border-color 0.2s;
-}
-.watermark-text-input:focus-within {
-  border-color: rgba(6, 182, 212, 0.5);
-  box-shadow: 0 0 14px rgba(6, 182, 212, 0.2), inset 0 2px 4px rgba(0, 0, 0, 0.3);
-}
 
 .watermark-upload-btn {
   width: 38px !important;
