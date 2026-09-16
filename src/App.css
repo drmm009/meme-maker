@@ -4628,5 +4628,24 @@ button:active {
   outline: none !important;
 }
 
+/* Home Screen Theme Switcher */
+.theme-toggle-header-btn:hover {
+  filter: brightness(1.1);
+}
+
+@media (max-width: 640px) {
+  .theme-toggle-header-btn {
+    padding: 6px !important;
+    border-radius: 50% !important;
+    width: 38px !important;
+    height: 38px !important;
+    justify-content: center !important;
+  }
+  .theme-toggle-header-btn .theme-toggle-text {
+    display: none !important;
+  }
+}
+
+
 
 
