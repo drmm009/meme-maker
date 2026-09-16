@@ -37,11 +37,11 @@
 
 :root[data-theme='light'],
 .theme-light {
-  --bg-dark: #f6f1e9 !important;
+  --bg-dark: #e8ecf1 !important;
   --bg-gradient: none !important;
   --bg-surface-1: #ffffff !important;
-  --bg-surface-2: #fbf7f1 !important;
-  --bg-surface-3: #f1e9dd !important;
+  --bg-surface-2: #f1f4f8 !important;
+  --bg-surface-3: #dfe3ea !important;
   --text-main: #171310 !important;
   --text-muted: #6b6259 !important;
   --glass-bg: #ffffff !important;
