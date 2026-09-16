@@ -114,10 +114,11 @@
 
   .video-canvas-area {
     width: 100%;
-    min-height: 280px;
-    max-height: 48vh;
+    min-height: 320px;
     height: auto;
+    max-height: none;
     flex: none;
+    padding: 6px;
   }
 
   .video-timeline-section {

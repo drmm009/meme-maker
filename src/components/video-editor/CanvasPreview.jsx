@@ -559,18 +559,27 @@ const CanvasPreview = forwardRef((props, ref) => {
   useEffect(() => {
     const updateSize = () => {
       if (containerRef.current) {
-        // We get the available width from the parent container
-        const parentArea = containerRef.current.closest('.canvas-area, .video-canvas-area, .canvas-wrapper') || containerRef.current.parentElement;
+        const isMobile = window.innerWidth <= 900;
         
-        // Find max available bounds from the parent area (or window fallback)
-        const pad = 24;
-        const availableWidth = Math.max(100, (parentArea ? parentArea.clientWidth : window.innerWidth) - pad);
-        const availableHeight = Math.max(100, (parentArea ? parentArea.clientHeight : (window.innerHeight * 0.5)) - pad);
+        let availableWidth;
+        let availableHeight;
+
+        if (isMobile) {
+          // On mobile, restore full canvas width without restrictive container caps
+          availableWidth = Math.max(280, window.innerWidth - 20);
+          availableHeight = Math.max(340, window.innerHeight * 0.55);
+        } else {
+          // On desktop, use exact dimensions from the left side-by-side flex container
+          const parentArea = containerRef.current.closest('.canvas-area, .video-canvas-area, .canvas-wrapper') || containerRef.current.parentElement;
+          const pad = 24;
+          availableWidth = Math.max(100, (parentArea ? parentArea.clientWidth : window.innerWidth * 0.5) - pad);
+          availableHeight = Math.max(100, (parentArea ? parentArea.clientHeight : (window.innerHeight - 80)) - pad);
+        }
 
         let newWidth = availableWidth;
         let newHeight = availableWidth / canvasAspectRatio;
 
-        // If the calculated height based on width exceeds our available height, we MUST scale down by height instead!
+        // If the calculated height based on width exceeds our available height, scale down by height
         if (newHeight > availableHeight) {
           newHeight = availableHeight;
           newWidth = newHeight * canvasAspectRatio;
