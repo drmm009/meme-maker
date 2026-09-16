@@ -11,15 +11,15 @@
   --glass-border: transparent;
   --glass-border-glow: transparent;
   --glass-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
-  --primary-accent: #a855f7;
+  --primary-accent: #ff6b2c;
   --primary-gradient: linear-gradient(
-    90deg,
-    #00d4ff 0%,
-    #8b5cf6 50%,
-    #ec4899 100%
+    100deg,
+    #ff6b2c 0%,
+    #ff8a3d 50%,
+    #ffc93c 100%
   );
-  --cyber-cyan: #00d4ff;
-  --cyber-pink: #ec4899;
+  --cyber-cyan: #ffc93c;
+  --cyber-pink: #ff6b2c;
   --emerald-accent: #00e676;
   --amber-accent: #ffb300;
   --radius-sm: 10px;
@@ -158,23 +158,24 @@ body {
   outline: none;
 }
 .btn:active {
-  outline: none;
+  outline: none !important;
   transform: scale(0.97) translateY(0) !important;
+  -webkit-tap-highlight-color: transparent !important;
 }
 .btn-primary {
   background: var(--primary-gradient);
-  color: #ffffff !important;
+  color: #171310 !important;
   font-weight: 800;
   border: none;
-  box-shadow: 0 4px 20px rgba(168, 85, 247, 0.4);
+  box-shadow: 0 4px 14px rgba(255, 107, 44, 0.35);
 }
 .btn-primary:hover {
   background: var(--primary-gradient);
-  filter: brightness(1.1);
-  color: #ffffff !important;
+  filter: brightness(1.06);
+  color: #171310 !important;
   opacity: 1;
   transform: translateY(-2px);
-  box-shadow: 0 8px 28px rgba(6, 182, 212, 0.4);
+  box-shadow: 0 6px 18px rgba(255, 107, 44, 0.4);
 }
 .btn-secondary {
   color: var(--text-main);
@@ -2139,8 +2140,8 @@ body.modal-open {
   background: transparent !important;
 }
 .tab-btn.active {
-  color: var(--cyber-cyan) !important;
-  border-bottom: 2px solid var(--cyber-cyan) !important;
+  color: var(--poster-orange) !important;
+  border-bottom: 2px solid var(--poster-orange) !important;
   background: transparent !important;
   box-shadow: none !important;
   transform: none !important;
@@ -2200,16 +2201,20 @@ input[type="range"]::-webkit-slider-thumb:hover {
   color: #fff !important;
 }
 .editor-sidebar .btn-primary {
-  background: var(--primary-gradient) !important;
-  color: #ffffff !important;
-  border: none !important;
-  box-shadow: 0 4px 14px rgba(168, 85, 247, 0.35) !important;
+  background: var(--poster-orange) !important;
+  color: #171310 !important;
+  border: 2px solid var(--poster-orange) !important;
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.45) !important;
   font-weight: 700 !important;
-  border-radius: 6px !important;
+  border-radius: 8px !important;
 }
-.editor-sidebar .btn-primary:hover {
-  background: linear-gradient(135deg, #7c7dff 0%, #06b6d4 50%, #f472b6 100%) !important;
-  box-shadow: 0 6px 20px rgba(168, 85, 247, 0.5) !important;
+.editor-sidebar .btn-primary:hover,
+.editor-sidebar .btn-primary:active,
+.editor-sidebar .btn-primary:focus {
+  background: var(--poster-orange) !important;
+  color: #171310 !important;
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.5) !important;
+  outline: none !important;
 }
 
 /* Switches (Toggle) */
@@ -4469,4 +4474,89 @@ select {
     justify-content: center;
   }
 }
+
+/* ============================================================
+   REMOVE ALL BLUISH TAP HIGHLIGHTS, FOCUS GLOWS & CLICK GRADIENTS
+   ============================================================ */
+
+/* Disable mobile/touch bluish tap-highlight overlay globally */
+*,
+*::before,
+*::after {
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+/* Remove blue focus rings and active blue gradient effects on all buttons */
+button,
+.btn,
+.tab-btn,
+.btn-icon,
+.font-mini-chip,
+.phrase-chip,
+.sticker-chip-btn,
+.graphic-sticker-btn,
+.aspect-ratio-display,
+.category-pill,
+[role="button"] {
+  -webkit-tap-highlight-color: transparent !important;
+  -webkit-touch-callout: none !important;
+  outline: none !important;
+}
+
+button:focus,
+button:focus-visible,
+button:active,
+.btn:focus,
+.btn:focus-visible,
+.btn:active,
+.tab-btn:focus,
+.tab-btn:focus-visible,
+.tab-btn:active,
+.btn-icon:focus,
+.btn-icon:focus-visible,
+.btn-icon:active,
+.font-mini-chip:focus,
+.font-mini-chip:active,
+.phrase-chip:focus,
+.phrase-chip:active,
+.sticker-chip-btn:focus,
+.sticker-chip-btn:active,
+.graphic-sticker-btn:focus,
+.graphic-sticker-btn:active,
+.aspect-ratio-display:focus,
+.aspect-ratio-display:active,
+.category-pill:focus,
+.category-pill:active {
+  outline: none !important;
+  box-shadow: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+/* Specific button click/active states for editor: no bluish gradient */
+.editor-topbar button:active,
+.editor-topbar .btn:active,
+.editor-sidebar button:active,
+.editor-sidebar .btn:active,
+.tab-buttons button:active,
+.btn:active,
+button:active {
+  background-image: none !important;
+  outline: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+/* Active primary buttons in editor maintain solid warm poster orange, never blue */
+.editor-sidebar .btn-primary:active,
+.editor-sidebar .btn-primary:focus,
+.editor-topbar .btn-primary:active,
+.editor-topbar .btn-primary:focus,
+.btn-primary:active,
+.btn-primary:focus {
+  background: var(--poster-orange) !important;
+  color: #171310 !important;
+  border-color: var(--poster-orange) !important;
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.45) !important;
+  outline: none !important;
+}
+
 

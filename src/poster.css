@@ -717,3 +717,84 @@ select {
 [data-theme='light'] .brand-logo svg {
   color: #171310 !important;
 }
+
+/* ============================================================
+   REMOVE ALL BLUISH TAP HIGHLIGHTS, FOCUS GLOWS & CLICK GRADIENTS
+   ============================================================ */
+
+*,
+*::before,
+*::after {
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+button,
+.btn,
+.tab-btn,
+.btn-icon,
+.font-mini-chip,
+.phrase-chip,
+.sticker-chip-btn,
+.graphic-sticker-btn,
+.aspect-ratio-display,
+.category-pill,
+[role="button"] {
+  -webkit-tap-highlight-color: transparent !important;
+  -webkit-touch-callout: none !important;
+  outline: none !important;
+}
+
+button:focus,
+button:focus-visible,
+button:active,
+.btn:focus,
+.btn:focus-visible,
+.btn:active,
+.tab-btn:focus,
+.tab-btn:focus-visible,
+.tab-btn:active,
+.btn-icon:focus,
+.btn-icon:focus-visible,
+.btn-icon:active,
+.font-mini-chip:focus,
+.font-mini-chip:active,
+.phrase-chip:focus,
+.phrase-chip:active,
+.sticker-chip-btn:focus,
+.sticker-chip-btn:active,
+.graphic-sticker-btn:focus,
+.graphic-sticker-btn:active,
+.aspect-ratio-display:focus,
+.aspect-ratio-display:active,
+.category-pill:focus,
+.category-pill:active {
+  outline: none !important;
+  box-shadow: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+.editor-topbar button:active,
+.editor-topbar .btn:active,
+.editor-sidebar button:active,
+.editor-sidebar .btn:active,
+.tab-buttons button:active,
+.btn:active,
+button:active {
+  background-image: none !important;
+  outline: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+.editor-sidebar .btn-primary:active,
+.editor-sidebar .btn-primary:focus,
+.editor-topbar .btn-primary:active,
+.editor-topbar .btn-primary:focus,
+.btn-primary:active,
+.btn-primary:focus {
+  background: var(--poster-orange) !important;
+  color: #171310 !important;
+  border-color: var(--poster-orange) !important;
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.45) !important;
+  outline: none !important;
+}
+
