@@ -383,6 +383,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
 
   const canvasRef = useRef(null);
   const watermarkInputRef = useRef(null);
+  const watermarkTextInputRef = useRef(null);
   const historyTimerRef = useRef(null);
   const tabButtonsRef = useRef(null);
 
@@ -1198,17 +1199,24 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                   {watermark?.enabled && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginTop: '8px' }}>
                       <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                        <input 
-                          type="text" 
-                          placeholder="@username" 
-                          value={watermark.text || ''} 
-                          onChange={(e) => {
-                            const val = e.target.value;
-                            updateWatermark('text', val);
-                            if (val) updateWatermark('imageUrl', null);
-                          }} 
-                          style={{ flex: 1, height: '38px', padding: '0 12px', fontSize: '0.9rem' }} 
-                        />
+                        <div 
+                          className="watermark-unified-box"
+                          onClick={() => watermarkTextInputRef.current?.focus()}
+                        >
+                          <span className="watermark-at-prefix">@</span>
+                          <input 
+                            ref={watermarkTextInputRef}
+                            type="text" 
+                            className="watermark-inner-input"
+                            placeholder="username" 
+                            value={(watermark.text || '').replace(/^@/, '')} 
+                            onChange={(e) => {
+                              const raw = e.target.value.replace(/^@+/, '');
+                              updateWatermark('text', raw ? `@${raw}` : '');
+                              if (raw) updateWatermark('imageUrl', null);
+                            }} 
+                          />
+                        </div>
                         <button 
                           type="button"
                           className="watermark-upload-btn" 
