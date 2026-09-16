@@ -25,26 +25,12 @@
   border-radius: 4px;
 }
 
-@media (max-width: 1024px) {
-  .aspect-ratio-wrapper {
-    padding: 4px;
-    gap: 0;
-  }
+@media (max-width: 768px) {
   .desktop-only {
     display: none !important;
   }
-  .aspect-ratio-display {
-    padding: 6px;
-    justify-content: center;
-  }
-  .aspect-ratio-text {
-    display: none;
-  }
-  .aspect-ratio-mobile-icon {
-    display: block !important;
-    color: var(--text-main);
-  }
 }
+
 
 /* Timeline container responsive padding */
 .timeline-section {

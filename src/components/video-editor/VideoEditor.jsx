@@ -195,31 +195,28 @@ export default function VideoEditor({ template, onBack, theme, onToggleTheme }) 
         </div>
         
         <div className="header-actions flex-gap">
-          <div className="glass-card aspect-ratio-wrapper">
-            <Monitor className="icon-xs monitor-icon desktop-only" color="var(--text-muted)" />
-            <AspectRatioDropdown 
-              value={canvasAspectRatio}
-              options={VIDEO_ASPECT_RATIOS}
-              onChange={(newRatio) => {
-                const store = useEditorStore.getState();
-                const oldRatio = store.canvasAspectRatio;
-                store.setCanvasAspectRatio(newRatio);
+          <AspectRatioDropdown 
+            value={canvasAspectRatio}
+            options={VIDEO_ASPECT_RATIOS}
+            onChange={(newRatio) => {
+              const store = useEditorStore.getState();
+              const oldRatio = store.canvasAspectRatio;
+              store.setCanvasAspectRatio(newRatio);
+              
+              if (store.layoutSlots && store.layoutSlots.length > 0) {
+                const oldHeight = 800 / oldRatio;
+                const newHeight = 800 / newRatio;
+                const scaleY = newHeight / oldHeight;
                 
-                if (store.layoutSlots && store.layoutSlots.length > 0) {
-                  const oldHeight = 800 / oldRatio;
-                  const newHeight = 800 / newRatio;
-                  const scaleY = newHeight / oldHeight;
-                  
-                  const newSlots = store.layoutSlots.map(slot => ({
-                    ...slot,
-                    y: slot.y * scaleY,
-                    height: slot.height * scaleY
-                  }));
-                  store.setLayoutSlots(newSlots);
-                }
-              }}
-            />
-          </div>
+                const newSlots = store.layoutSlots.map(slot => ({
+                  ...slot,
+                  y: slot.y * scaleY,
+                  height: slot.height * scaleY
+                }));
+                store.setLayoutSlots(newSlots);
+              }
+            }}
+          />
 
           <button 
             className="btn btn-primary btn-sm shadow-glow" 

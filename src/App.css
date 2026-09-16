@@ -4435,3 +4435,38 @@ select {
 [data-theme='light'] .brand-logo svg {
   color: #171310 !important;
 }
+
+/* Aspect Ratio Dropdown Responsive Display */
+.aspect-ratio-mobile-badge,
+.aspect-ratio-mobile-icon {
+  display: none !important;
+}
+.aspect-ratio-desktop-icon {
+  display: inline-flex !important;
+}
+.aspect-ratio-desktop-text,
+.aspect-ratio-text {
+  display: inline !important;
+}
+
+@media (max-width: 768px) {
+  .aspect-ratio-desktop-icon {
+    display: none !important;
+  }
+  .aspect-ratio-desktop-text,
+  .aspect-ratio-text {
+    display: none !important;
+  }
+  .aspect-ratio-mobile-badge,
+  .aspect-ratio-mobile-icon {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-main);
+  }
+  .aspect-ratio-display {
+    padding: 4px 8px !important;
+    justify-content: center;
+  }
+}
+

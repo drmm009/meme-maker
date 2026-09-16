@@ -12,14 +12,20 @@ const AspectRatioDropdown = ({ value, onChange, options }) => {
         className="aspect-ratio-display glass-card shadow-glow"
         style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '4px 12px', borderRadius: '24px', height: '32px', gap: '6px' }}
       >
-        {value === 'original' || !value ? (
-          <Monitor className="icon-xs aspect-ratio-mobile-icon" />
-        ) : (
-          <div className="aspect-ratio-mobile-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 'bold', lineHeight: 1, transform: 'translateY(1px)' }}>
-            {selected.label.split(' ')[0]}
-          </div>
-        )}
-        <span className="aspect-ratio-text" style={{ fontSize: '0.75rem', fontWeight: '600', whiteSpace: 'nowrap' }}>{selected.label}</span>
+        {/* Desktop View: Monitor icon + single full label */}
+        <Monitor className="icon-xs aspect-ratio-desktop-icon" />
+        <span className="aspect-ratio-text aspect-ratio-desktop-text" style={{ fontSize: '0.75rem', fontWeight: '600', whiteSpace: 'nowrap' }}>
+          {selected.label}
+        </span>
+
+        {/* Mobile View: Compact ratio or monitor icon */}
+        <div className="aspect-ratio-mobile-icon aspect-ratio-mobile-badge" style={{ display: 'none', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 'bold', lineHeight: 1 }}>
+          {value === 'original' || !value ? (
+            <Monitor className="icon-xs" />
+          ) : (
+            selected.label.split(' ')[0]
+          )}
+        </div>
       </div>
       
       {isOpen && (
