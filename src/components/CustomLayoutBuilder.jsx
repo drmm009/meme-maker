@@ -360,7 +360,7 @@ export default function CustomLayoutBuilder({
       {step === 1 && (
         <div className="step-selection-area">
           <div className="step-header text-center step-header-spaced">
-            <h3><span className="step-prefix-highlight">Step 1:</span> Select Layout Structure</h3>
+            <h3><span className="step-prefix-highlight">Step 1:</span> Select Layout<span className="layout-structure-word">&nbsp;Structure</span></h3>
           </div>
 
           <div style={{ marginBottom: '24px' }}>

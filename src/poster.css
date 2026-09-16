@@ -884,4 +884,10 @@ button:active {
   text-shadow: none !important;
 }
 
+@media (max-width: 768px) {
+  .layout-structure-word {
+    display: none !important;
+  }
+}
+
 

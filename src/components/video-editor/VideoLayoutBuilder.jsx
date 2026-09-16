@@ -136,7 +136,7 @@ export default function VideoLayoutBuilder({ onLayoutComplete, onBack }) {
           <ArrowLeft className="icon-sm" /> Back
         </button>
         <h2 className="choose-layout-heading" style={{ display: 'flex', alignItems: 'center', margin: 0, color: 'var(--text-main)', fontWeight: 'bold' }}>
-          Select Layout Structure
+          Select Layout<span className="layout-structure-word">&nbsp;Structure</span>
         </h2>
         <div style={{ width: '60px' }}>{/* Placeholder to balance flex-between */}</div>
       </div>
