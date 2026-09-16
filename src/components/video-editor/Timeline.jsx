@@ -458,7 +458,8 @@ export default function Timeline() {
       <div 
         ref={trackContainerRef} 
         onPointerDown={handlePointerDown}
-        style={{ height: '30px', borderBottom: '1px solid rgba(255,255,255,0.05)', position: 'sticky', top: 0, zIndex: 50, background: '#111', cursor: 'ew-resize', touchAction: 'none', flexShrink: 0, marginLeft: '64px', marginRight: '15px' }}
+        className="timeline-ruler"
+        style={{ height: '30px', borderBottom: '1px solid var(--glass-border)', position: 'sticky', top: 0, zIndex: 50, cursor: 'ew-resize', touchAction: 'none', flexShrink: 0, marginLeft: '64px', marginRight: '15px' }}
       >
         {/* Render numeric scale ticks */}
         {(() => {
@@ -473,8 +474,8 @@ export default function Timeline() {
             const percent = (tickMs / duration) * 100;
             const seconds = tickMs / 1000;
             return (
-              <div key={i} style={{ position: 'absolute', left: `${percent}%`, bottom: 0, height: '10px', borderLeft: '1px solid rgba(255,255,255,0.15)' }}>
-                <span style={{ position: 'absolute', top: '-18px', left: percent >= 100 ? undefined : '4px', right: percent >= 100 ? '4px' : undefined, fontSize: '0.65rem', fontWeight: 500, color: 'rgba(255,255,255,0.4)' }}>
+              <div key={i} className="timeline-tick" style={{ position: 'absolute', left: `${percent}%`, bottom: 0, height: '10px' }}>
+                <span className="timeline-tick-label" style={{ position: 'absolute', top: '-18px', left: percent >= 100 ? undefined : '4px', right: percent >= 100 ? '4px' : undefined, fontSize: '0.65rem', fontWeight: 500 }}>
                   {seconds}
                 </span>
               </div>
@@ -492,7 +493,7 @@ export default function Timeline() {
       <div style={{ display: 'flex', flex: 1, minHeight: 0, overflowY: 'auto', position: 'relative' }}>
         
         {/* Left Sidebar for Track Icons */}
-        <div style={{ width: '64px', flexShrink: 0, borderRight: '1px solid var(--glass-border)' }}>
+        <div className="timeline-track-sidebar" style={{ width: '64px', flexShrink: 0, borderRight: '1px solid var(--glass-border)' }}>
           {rows.map((row, idx) => (
             <div 
               key={`icon-${idx}`} 
@@ -645,7 +646,7 @@ export default function Timeline() {
             {rows.map((row, idx) => {
             const item = row.item;
             if (!item) {
-              return <div key={`empty-${idx}`} style={{ height: '48px', borderBottom: '1px solid var(--glass-border)', position: 'relative', background: 'rgba(255,255,255,0.02)' }} />;
+              return <div key={`empty-${idx}`} className="timeline-track-row empty-track" style={{ height: '48px', borderBottom: '1px solid var(--glass-border)', position: 'relative' }} />;
             }
 
             const leftPercent = (item.startMs / duration) * 100;
@@ -668,7 +669,7 @@ export default function Timeline() {
             const itemTheme = getItemStyle(row.sectionId, item);
             
             return (
-              <div key={item.id} style={{ height: '48px', borderBottom: '1px solid var(--glass-border)', position: 'relative', background: idx % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'transparent' }}>
+              <div key={item.id} className="timeline-track-row" style={{ height: '48px', borderBottom: '1px solid var(--glass-border)', position: 'relative' }}>
                   <div
                     key={item.id}
                     onPointerDown={(e) => handleItemPointerDown(e, item, 'move')}
