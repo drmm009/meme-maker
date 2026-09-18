@@ -867,11 +867,7 @@ body {
   border-radius: 16px;
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.06);
   position: relative;
-  overflow-y: auto !important;
-  overflow-x: hidden !important;
-  -webkit-overflow-scrolling: touch !important;
-  overscroll-behavior: contain !important;
-  scrollbar-width: thin;
+  overflow: hidden;
 }
 
 @media (min-width: 769px) {
@@ -882,8 +878,7 @@ body {
     height: 100% !important;
     max-height: 100% !important;
     flex-shrink: 0 !important;
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
+    overflow: hidden !important;
   }
 }
 .editor-sidebar::before {
@@ -976,15 +971,19 @@ body {
   flex-direction: column;
   gap: 12px;
   display: flex;
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
+  flex: 1 1 0%;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
   padding-right: 4px;
   scrollbar-width: thin;
   scrollbar-color: rgba(168, 85, 247, 0.4) transparent;
   position: relative;
   z-index: 1;
   animation: tabFadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  overscroll-behavior: contain;
 }
 .tab-content::-webkit-scrollbar {
   width: 4px;
@@ -1986,16 +1985,12 @@ body.modal-open {
     border-bottom: none !important;
     border-radius: 18px 18px 0 0 !important;
     box-sizing: border-box !important;
-    padding: 10px 14px 28px 14px !important;
+    padding: 12px 14px 18px 14px !important;
     flex: 1 1 0% !important;
-    min-height: 0 !important;
-    height: auto !important;
-    max-height: none !important;
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
-    -webkit-overflow-scrolling: touch !important;
-    overscroll-behavior: contain !important;
-    touch-action: pan-y !important;
+    min-height: 240px !important;
+    max-height: 44vh !important;
+    height: 44vh !important;
+    overflow: hidden !important;
     box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3) !important;
     display: flex !important;
     flex-direction: column !important;
@@ -2010,24 +2005,23 @@ body.modal-open {
     box-shadow: 0 -2px 0 rgba(23, 19, 16, 0.9) !important;
   }
   .tab-buttons {
-    position: sticky !important;
-    top: -10px !important;
-    z-index: 15 !important;
-    padding-top: 4px !important;
-    padding-bottom: 4px !important;
-    background: var(--bg-surface-1, #1a1613) !important;
-    border-radius: 20px !important;
     flex-shrink: 0 !important;
-  }
-  .theme-light .tab-buttons,
-  [data-theme='light'] .tab-buttons {
-    background: #ffffff !important;
+    margin-bottom: 10px !important;
+    position: static !important;
+    border-radius: 24px !important;
+    padding: 6px !important;
   }
   .tab-content {
-    overflow: visible !important;
+    flex: 1 1 0% !important;
+    min-height: 0 !important;
     max-height: none !important;
     height: auto !important;
-    flex: 0 0 auto !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+    touch-action: pan-y !important;
+    overscroll-behavior: contain !important;
+    padding-right: 4px !important;
     padding-bottom: 24px !important;
   }
   .template-grid,
