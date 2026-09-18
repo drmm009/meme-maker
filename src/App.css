@@ -4755,19 +4755,19 @@ button:active {
   object-fit: cover !important;
   display: block !important;
 }
-/* stronger scatter, collage-style */
-.template-card:nth-child(6n + 1) { transform: rotate(-2.2deg); }
-.template-card:nth-child(6n + 2) { transform: rotate(1.6deg); }
-.template-card:nth-child(6n + 3) { transform: rotate(-1.1deg); }
-.template-card:nth-child(6n + 4) { transform: rotate(2.4deg); }
-.template-card:nth-child(6n + 5) { transform: rotate(-1.8deg); }
-.template-card:nth-child(6n + 6) { transform: rotate(0.9deg); }
+/* stronger scatter, collage-style (home feed masonry grid only) */
+.template-grid > .template-card:nth-child(6n + 1) { transform: rotate(-2.2deg); }
+.template-grid > .template-card:nth-child(6n + 2) { transform: rotate(1.6deg); }
+.template-grid > .template-card:nth-child(6n + 3) { transform: rotate(-1.1deg); }
+.template-grid > .template-card:nth-child(6n + 4) { transform: rotate(2.4deg); }
+.template-grid > .template-card:nth-child(6n + 5) { transform: rotate(-1.8deg); }
+.template-grid > .template-card:nth-child(6n + 6) { transform: rotate(0.9deg); }
 /* tape strips converted to category sticker tags */
 .template-card::before {
   display: none !important;
 }
 
-.card-sticker-tag {
+.template-grid > .template-card .card-sticker-tag {
   position: absolute !important;
   top: -10px !important;
   left: 50% !important;
@@ -4789,56 +4789,152 @@ button:active {
 }
 
 /* varied tape tilt and warm palette colors for collage look */
-.template-card:nth-child(4n + 1) .card-sticker-tag {
+.template-grid > .template-card:nth-child(4n + 1) .card-sticker-tag {
   transform: translateX(-50%) rotate(-2.5deg) !important;
   background: rgba(255, 225, 77, 0.95) !important;
   color: #171310 !important;
 }
 
-.template-card:nth-child(4n + 2) .card-sticker-tag {
+.template-grid > .template-card:nth-child(4n + 2) .card-sticker-tag {
   transform: translateX(-50%) rotate(2.2deg) !important;
   background: rgba(249, 115, 22, 0.95) !important;
   color: #ffffff !important;
   border-color: rgba(255, 255, 255, 0.35) !important;
 }
 
-.template-card:nth-child(4n + 3) .card-sticker-tag {
+.template-grid > .template-card:nth-child(4n + 3) .card-sticker-tag {
   transform: translateX(-50%) rotate(-1.5deg) !important;
   background: rgba(255, 183, 3, 0.95) !important;
   color: #171310 !important;
 }
 
-.template-card:nth-child(4n + 4) .card-sticker-tag {
+.template-grid > .template-card:nth-child(4n + 4) .card-sticker-tag {
   transform: translateX(-50%) rotate(2.8deg) !important;
   background: rgba(234, 88, 12, 0.95) !important;
   color: #ffffff !important;
   border-color: rgba(255, 255, 255, 0.35) !important;
 }
 
-.template-card:hover .card-sticker-tag {
+.template-grid > .template-card:hover .card-sticker-tag {
   transform: translateX(-50%) rotate(0deg) scale(1.05) !important;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4) !important;
 }
-/* polaroid frame on every 3rd card */
-.template-card:nth-child(3n + 2) {
+
+/* polaroid frame on every 3rd card in collage feed only */
+.template-grid > .template-card:nth-child(3n + 2) {
   background: #f4f1ea !important;
   padding: 10px 10px 0 !important;
 }
-.template-card:nth-child(3n + 2) .template-info {
+.template-grid > .template-card:nth-child(3n + 2) .template-info {
   background: transparent !important;
   border-top: none !important;
 }
-.template-card:nth-child(3n + 2) .template-image-wrapper {
+.template-grid > .template-card:nth-child(3n + 2) .template-image-wrapper {
   border: 2px solid #0d0c10 !important;
   border-radius: 10px !important;
 }
-.template-card:nth-child(3n + 2) h4 { color: #17150f !important; }
-.template-card:nth-child(3n + 2) .template-category { color: #6b675e !important; }
+.template-grid > .template-card:nth-child(3n + 2) h4,
+.template-grid > .template-card:nth-child(3n + 2) span,
+.template-grid > .template-card:nth-child(3n + 2) p,
+.template-grid > .template-card:nth-child(3n + 2) .template-info * {
+  color: #17150f !important;
+  -webkit-text-fill-color: #17150f !important;
+}
+.template-grid > .template-card:nth-child(3n + 2) .template-category { color: #6b675e !important; }
+
 /* hover straightens the sticker */
-.template-card:hover {
+.template-grid > .template-card:hover {
   transform: translateY(-6px) rotate(0deg) scale(1.03) !important;
   z-index: 5 !important;
 }
+
+/* ============================================================
+   MODAL TEMPLATE CARDS (Picker modals in Meme Editor, Video Editor, Builder)
+   Ensures uniform card style and high-contrast readable text in both themes
+   ============================================================ */
+.modal-content .template-card,
+.modal-body .template-card,
+.modal-backdrop .template-card,
+.picker-container .template-card {
+  transform: none !important;
+  display: flex !important;
+  flex-direction: column !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border-radius: 12px !important;
+  overflow: hidden !important;
+  position: relative !important;
+}
+
+.modal-content .template-card:hover,
+.modal-body .template-card:hover,
+.modal-backdrop .template-card:hover,
+.picker-container .template-card:hover {
+  transform: translateY(-3px) scale(1.02) !important;
+  z-index: 2 !important;
+}
+
+.modal-content .card-sticker-tag,
+.modal-body .card-sticker-tag,
+.modal-backdrop .card-sticker-tag,
+.picker-container .card-sticker-tag {
+  display: none !important;
+}
+
+/* Dark Mode Modals: Clean dark card background with bright readable white/cream text */
+:root:not([data-theme='light']) .modal-content .template-card,
+.theme-dark .modal-content .template-card,
+[data-theme='dark'] .modal-content .template-card,
+:root:not([data-theme='light']) .modal-body .template-card,
+.theme-dark .modal-body .template-card,
+[data-theme='dark'] .modal-body .template-card,
+:root:not([data-theme='light']) .modal-backdrop .template-card,
+.theme-dark .modal-backdrop .template-card,
+[data-theme='dark'] .modal-backdrop .template-card {
+  background: var(--bg-surface-1, #1a1613) !important;
+  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.12)) !important;
+}
+
+:root:not([data-theme='light']) .modal-content .template-card .template-info,
+.theme-dark .modal-content .template-card .template-info,
+[data-theme='dark'] .modal-content .template-card .template-info,
+:root:not([data-theme='light']) .modal-content .template-card .template-info *,
+.theme-dark .modal-content .template-card .template-info *,
+[data-theme='dark'] .modal-content .template-card .template-info *,
+:root:not([data-theme='light']) .modal-backdrop .template-card .template-info *,
+.theme-dark .modal-backdrop .template-card .template-info *,
+[data-theme='dark'] .modal-backdrop .template-card .template-info * {
+  color: #f7f3ef !important;
+  -webkit-text-fill-color: #f7f3ef !important;
+}
+
+/* Light Mode Modals: Clean white card background with crisp dark ink text */
+.app-root.theme-light .modal-content .template-card,
+.theme-light .modal-content .template-card,
+[data-theme='light'] .modal-content .template-card,
+.app-root.theme-light .modal-body .template-card,
+.theme-light .modal-body .template-card,
+[data-theme='light'] .modal-body .template-card,
+.app-root.theme-light .modal-backdrop .template-card,
+.theme-light .modal-backdrop .template-card,
+[data-theme='light'] .modal-backdrop .template-card {
+  background: #ffffff !important;
+  border: 2px solid #171310 !important;
+}
+
+.app-root.theme-light .modal-content .template-card .template-info,
+.theme-light .modal-content .template-card .template-info,
+[data-theme='light'] .modal-content .template-card .template-info,
+.app-root.theme-light .modal-content .template-card .template-info *,
+.theme-light .modal-content .template-card .template-info *,
+[data-theme='light'] .modal-content .template-card .template-info *,
+.app-root.theme-light .modal-backdrop .template-card .template-info *,
+.theme-light .modal-backdrop .template-card .template-info *,
+[data-theme='light'] .modal-backdrop .template-card .template-info * {
+  color: #171310 !important;
+  -webkit-text-fill-color: #171310 !important;
+}
+
 /* light mode */
 .app-root.theme-light .template-card::before,
 .theme-light .template-card::before { box-shadow: 0 2px 3px rgba(0, 0, 0, 0.15) !important; }
