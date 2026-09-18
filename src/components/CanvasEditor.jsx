@@ -807,7 +807,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
 
         if (cap.id === activeLayerId && !isDrawingMode) {
           ctx.globalAlpha = 1.0;
-          ctx.strokeStyle = '#a855f7';
+          ctx.strokeStyle = '#f97316';
           ctx.lineWidth = 3;
           ctx.setLineDash([6, 6]);
           
@@ -818,7 +818,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
           ctx.strokeRect(boxX, boxY, boxWidth, boxHeight);
           
           ctx.setLineDash([]);
-          ctx.fillStyle = '#a855f7';
+          ctx.fillStyle = '#f97316';
           ctx.strokeStyle = '#000000';
           ctx.lineWidth = 2;
           
@@ -833,6 +833,8 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
           drawHandle(boxX + boxWidth, boxY); // Top Right
           drawHandle(boxX, boxY + boxHeight); // Bottom Left
           drawHandle(boxX + boxWidth, boxY + boxHeight); // Bottom Right
+          drawHandle(boxX, boxY + boxHeight / 2); // Left Middle
+          drawHandle(boxX + boxWidth, boxY + boxHeight / 2); // Right Middle
           
           ctx.beginPath();
           ctx.moveTo(0, boxY);
@@ -840,7 +842,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
           ctx.stroke();
           
           ctx.beginPath();
-          ctx.fillStyle = '#a855f7';
+          ctx.fillStyle = '#f97316';
           ctx.arc(0, boxY - 34, 16, 0, Math.PI * 2);
           ctx.fill();
           ctx.stroke();
@@ -1095,24 +1097,39 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
           const handles = [
             { type: 'delete_layer', x: leftX - 36, y: topY - 36, r: 26 },
             { type: 'rotate_caption', x: cx, y: topY - 34, r: 24 },
-            { type: 'resize_caption_tl', x: leftX, y: topY, r: 22 },
-            { type: 'resize_caption_tr', x: rightX, y: topY, r: 22 },
-            { type: 'resize_caption_bl', x: leftX, y: bottomY, r: 22 },
-            { type: 'resize_caption_br', x: rightX, y: bottomY, r: 22 }
+            { type: 'resize_caption_tl', x: leftX, y: topY, r: 24 },
+            { type: 'resize_caption_tr', x: rightX, y: topY, r: 24 },
+            { type: 'resize_caption_bl', x: leftX, y: bottomY, r: 24 },
+            { type: 'resize_caption_br', x: rightX, y: bottomY, r: 24 },
+            { type: 'resize_caption_l',  x: leftX, y: cy,      r: 24 },
+            { type: 'resize_caption_r',  x: rightX, y: cy,     r: 24 }
           ];
 
+          let closestHandle = null;
+          let minDistance = Infinity;
+
           for (const h of handles) {
-            if (Math.hypot(p.x - h.x, p.y - h.y) <= h.r) {
-              hitLayer = { 
-                id: activeCap.id, 
-                type: h.type, 
-                x: activeCap.x, 
-                y: activeCap.y, 
-                width: (actualWidth / canvas.width), 
-                rotation: activeCap.rotation || 0 
-              };
-              break;
+            const dist = Math.hypot(p.x - h.x, p.y - h.y);
+            if (dist <= h.r && dist < minDistance) {
+              minDistance = dist;
+              closestHandle = h;
             }
+          }
+
+          if (closestHandle) {
+            const cornerDist = Math.hypot(closestHandle.x - cx, closestHandle.y - cy);
+            hitLayer = { 
+              id: activeCap.id, 
+              type: closestHandle.type, 
+              x: activeCap.x, 
+              y: activeCap.y, 
+              width: (actualWidth / canvas.width), 
+              rotation: activeCap.rotation || 0,
+              fontSize: activeCap.fontSize || 50,
+              initialFontSize: activeCap.fontSize || 50,
+              initialWidth: activeCap.width || (actualWidth / canvas.width),
+              initialDist: Math.max(15, cornerDist)
+            };
           }
 
           if (!hitLayer && p.x >= cx - halfW && p.x <= cx + halfW && p.y >= cy - halfH && p.y <= cy + halfH) {
@@ -1324,7 +1341,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
 
       const centerX = hitLayer.x * canvas.width;
       const centerY = hitLayer.y * canvas.height;
-      const initDist = Math.hypot(coords.x - centerX, coords.y - centerY);
+      const initDist = hitLayer.initialDist || Math.hypot(coords.x - centerX, coords.y - centerY);
 
       initialLayerPos.current = { 
         x: hitLayer.x, 
@@ -1335,7 +1352,9 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         boxHeight: hitLayer.boxHeight || hitLayer.height,
         scale: hitLayer.scale || 1.0,
         rotation: hitLayer.rotation || 0,
-        initialDist: Math.max(10, initDist)
+        initialDist: Math.max(15, initDist),
+        initialFontSize: hitLayer.initialFontSize || hitLayer.fontSize || 50,
+        initialWidth: hitLayer.initialWidth || hitLayer.width || 0.9
       };
     } else {
       if (onSelectLayer) onSelectLayer(null);
@@ -1425,29 +1444,11 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
   };
 
   const handleTextOverlayPointerDown = (e) => {
-    const coords = getCanvasCoords(e);
-    if (!activeCaption) return;
-
-    hasDragged.current = false;
-    isDragging.current = true;
-    dragTarget.current = { id: activeCaption.id, type: 'caption', x: activeCaption.x, y: activeCaption.y };
-    dragStartCoords.current = coords;
-    initialLayerPos.current = { x: activeCaption.x, y: activeCaption.y };
+    handlePointerDown(e);
   };
 
   const handleTextOverlayPointerEnd = (e) => {
-    const wasCleanTap = !hasDragged.current;
-    const tappedId = activeCaption?.id;
-
-    isDragging.current = false;
-    hasDragged.current = false;
-    dragTarget.current = null;
-
-    // Single clean tap on overlay textarea — focus and ensure keyboard is visible
-    if (wasCleanTap && tappedId) {
-      focusTextarea();
-      setEditingCaptionId(tappedId);
-    }
+    handlePointerEnd(e);
   };
 
   const updateHoverCursor = (coords) => {
@@ -1497,7 +1498,9 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         const intendedWidth = activeCap.width ? (activeCap.width * canvas.width) : maxLineWidth + 40;
         const actualWidth = Math.max(intendedWidth, maxLineWidth + 40);
         const halfW = actualWidth / 2;
-        const halfH = 26;
+        const lineHeight = fontSize * 1.2;
+        const totalHeight = Math.max(lines.length * lineHeight, 45);
+        const halfH = totalHeight / 2 + 6;
 
         const topY = cy - halfH;
         const bottomY = cy + halfH;
@@ -1515,6 +1518,9 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         }
         if (Math.hypot(p.x - rightX, p.y - topY) <= 22 || Math.hypot(p.x - leftX, p.y - bottomY) <= 22) {
           canvas.style.cursor = 'nesw-resize'; return;
+        }
+        if (Math.hypot(p.x - leftX, p.y - cy) <= 22 || Math.hypot(p.x - rightX, p.y - cy) <= 22) {
+          canvas.style.cursor = 'ew-resize'; return;
         }
         if (p.x >= cx - halfW && p.x <= cx + halfW && p.y >= cy - halfH && p.y <= cy + halfH) {
           canvas.style.cursor = 'move'; return;
@@ -1791,25 +1797,40 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     }
     
     if (dragTarget.current.type.startsWith('resize_caption_')) {
-      // Distance-based resize: the new width = 2x the horizontal distance
-      // between the mouse and the text center in local rotated space!
       const id = dragTarget.current.id;
       const cap = captions.find(c => c.id === id);
       if (!cap || !onUpdateCaptionBounds) return;
 
       const centerX = initialLayerPos.current.x * canvas.width;
       const centerY = initialLayerPos.current.y * canvas.height;
-      const currentAngle = (cap.rotation || 0);
+      const handleType = dragTarget.current.type;
 
-      // Rotate pointer into text local space
-      const localCoords = rotatePoint(coords.x, coords.y, centerX, centerY, -currentAngle);
-      const horizontalDistFromCenter = Math.abs(localCoords.x - centerX);
-      
-      // Box width = 2 * dist, with comfortable padding
-      const newPixelWidth = Math.max(60, horizontalDistFromCenter * 2);
-      const newWidthPercent = newPixelWidth / canvas.width;
+      // Side handles (Left & Right): stretch/contract word-wrap width
+      if (handleType === 'resize_caption_l' || handleType === 'resize_caption_r') {
+        const currentAngle = (cap.rotation || 0);
+        const localCoords = rotatePoint(coords.x, coords.y, centerX, centerY, -currentAngle);
+        const horizontalDistFromCenter = Math.abs(localCoords.x - centerX);
+        const newPixelWidth = Math.max(60, horizontalDistFromCenter * 2);
+        const newWidthPercent = Math.min(1.0, Number((newPixelWidth / canvas.width).toFixed(3)));
+        onUpdateCaptionBounds(id, { width: newWidthPercent });
+        return;
+      }
 
-      onUpdateCaptionBounds(id, { width: newWidthPercent });
+      // Corner handles: stretch to resize text font size & box proportionally, just like sticker and image layers
+      const currentDist = Math.hypot(coords.x - centerX, coords.y - centerY);
+      const initDist = initialLayerPos.current.initialDist || 50;
+      const scaleFactor = Math.max(0.1, currentDist / initDist);
+
+      const initFontSize = initialLayerPos.current.initialFontSize || cap.fontSize || 50;
+      const newFontSize = Math.max(16, Math.min(250, Math.round(initFontSize * scaleFactor)));
+
+      const initWidth = initialLayerPos.current.initialWidth || cap.width || 0.9;
+      const newWidth = Math.max(0.15, Math.min(1.0, Number((initWidth * scaleFactor).toFixed(3))));
+
+      onUpdateCaptionBounds(id, { 
+        fontSize: newFontSize,
+        width: newWidth
+      });
       return;
     }
 
