@@ -1075,13 +1075,13 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
         </div>
       </div>
       
-      <div className="editor-main" style={{ display: 'flex', flexDirection: window.innerWidth <= 768 ? 'column' : 'row', height: 'calc(100vh - 60px)', overflow: 'hidden', gap: '16px', padding: '12px' }}>
+      <div className="editor-main">
 
 
         {/* Editor Workspace Main Area */}
-        <div className="editor-workspace" style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+        <div className="editor-workspace">
           {/* Canvas Render Area */}
-          <div className="canvas-wrapper" style={{ width: '100%', maxHeight: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, overflow: 'hidden' }}>
+          <div className="canvas-wrapper">
             <CanvasEditor
               ref={canvasRef}
               template={activeTemplate}
@@ -1144,7 +1144,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
       </div>
         
       {/* Sidebar Controls Tabs */}
-        <div className="editor-sidebar glass-card" style={{ width: '370px', flexShrink: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+        <div className="editor-sidebar glass-card">
           <div 
             ref={tabButtonsRef}
             className="tab-buttons"
