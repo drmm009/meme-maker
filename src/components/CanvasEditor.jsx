@@ -739,14 +739,13 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         for (const line of lines) {
           maxLineWidth = Math.max(maxLineWidth, ctx.measureText(line).width);
         }
-        // The visual bounding box is dynamically clamped to perfectly enclose the text.
-        // It can NEVER be physically smaller than the longest un-breakable word.
-        const intendedBoxWidth = cap.width ? (cap.width * canvas.width) : maxLineWidth + 40;
-        const boxWidth = Math.max(intendedBoxWidth, maxLineWidth + 40);
-        const maxWidth = boxWidth;
+        // The visual bounding box is sized to match the actual text
+        const padX = hasBg && cap.bgStyle !== 'banner' ? Math.max(16, fontSize * 0.35) : Math.max(8, fontSize * 0.15);
+        const padY = hasBg && cap.bgStyle !== 'banner' ? Math.max(10, fontSize * 0.2) : Math.max(4, fontSize * 0.1);
+        const boxWidth = maxLineWidth + padX * 2;
         const lineHeight = fontSize * 1.2;
-        
-        const totalHeight = Math.max(lines.length * lineHeight, 45);
+        const totalHeight = lines.length * lineHeight;
+        const boxHeight = totalHeight + padY * 2;
         const startY = - ((lines.length - 1) * lineHeight) / 2;
 
         // Draw Meme Text Background if enabled (white, black, or custom)
@@ -766,15 +765,11 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
             const bannerW = canvas.width;
             ctx.fillRect(bannerX, bannerY, bannerW, bannerH);
           } else {
-            // Default Box style: clean padded rounded rectangle enclosing the text
-            const padX = Math.max(18, fontSize * 0.38);
-            const padY = Math.max(12, fontSize * 0.22);
-            const boxW = Math.max(intendedBoxWidth, maxLineWidth + padX * 2);
-            const boxH = totalHeight + padY * 2;
-            const boxStartX = - boxW / 2;
-            const boxStartY = startY - lineHeight / 2 - padY;
+            // Box style: clean padded rounded rectangle enclosing the text
+            const boxStartX = - boxWidth / 2;
+            const boxStartY = - boxHeight / 2;
             const r = Math.min(8, fontSize * 0.15);
-            drawRoundRect(ctx, boxStartX, boxStartY, boxW, boxH, r);
+            drawRoundRect(ctx, boxStartX, boxStartY, boxWidth, boxHeight, r);
           }
           ctx.restore();
         }
@@ -812,8 +807,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
           ctx.setLineDash([6, 6]);
           
           const boxX = - boxWidth / 2;
-          const boxY = startY - lineHeight / 2 - 6;
-          const boxHeight = totalHeight + 12;
+          const boxY = - boxHeight / 2;
           
           ctx.strokeRect(boxX, boxY, boxWidth, boxHeight);
           
@@ -1082,12 +1076,14 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
           for (const line of lines) {
             maxLineWidth = Math.max(maxLineWidth, ctx.measureText(line).width);
           }
-          const intendedWidth = activeCap.width ? (activeCap.width * canvas.width) : maxLineWidth + 40;
-          const actualWidth = Math.max(intendedWidth, maxLineWidth + 40);
-          const halfW = actualWidth / 2;
-          const lineHeight = fontSize * 1.2;
-          const totalHeight = Math.max(lines.length * lineHeight, 45);
-          const halfH = totalHeight / 2 + 6;
+          const hasBg = activeCap.bgColor && activeCap.bgColor !== 'transparent' && activeCap.bgColor !== 'none';
+          const padX = hasBg && activeCap.bgStyle !== 'banner' ? Math.max(16, fontSize * 0.35) : Math.max(8, fontSize * 0.15);
+          const padY = hasBg && activeCap.bgStyle !== 'banner' ? Math.max(10, fontSize * 0.2) : Math.max(4, fontSize * 0.1);
+          const boxWidth = maxLineWidth + padX * 2;
+          const textHeight = lines.length * (fontSize * 1.2);
+          const boxHeight = textHeight + padY * 2;
+          const halfW = boxWidth / 2;
+          const halfH = boxHeight / 2;
 
           const topY = cy - halfH;
           const bottomY = cy + halfH;
@@ -1261,12 +1257,14 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         for (const line of lines) {
           maxLineWidth = Math.max(maxLineWidth, ctx.measureText(line).width);
         }
-        const intendedWidth = cap.width ? (cap.width * canvas.width) : maxLineWidth + 40;
-        const actualWidth = Math.max(intendedWidth, maxLineWidth + 40);
-        const halfW = actualWidth / 2;
-        const lineHeight = fontSize * 1.2;
-        const totalHeight = Math.max(lines.length * lineHeight, 45);
-        const halfH = totalHeight / 2 + 6;
+        const hasBg = cap.bgColor && cap.bgColor !== 'transparent' && cap.bgColor !== 'none';
+        const padX = hasBg && cap.bgStyle !== 'banner' ? Math.max(16, fontSize * 0.35) : Math.max(8, fontSize * 0.15);
+        const padY = hasBg && cap.bgStyle !== 'banner' ? Math.max(10, fontSize * 0.2) : Math.max(4, fontSize * 0.1);
+        const boxWidth = maxLineWidth + padX * 2;
+        const textHeight = lines.length * (fontSize * 1.2);
+        const boxHeight = textHeight + padY * 2;
+        const halfW = boxWidth / 2;
+        const halfH = boxHeight / 2;
 
         if (p.x >= cx - halfW && p.x <= cx + halfW && p.y >= cy - halfH && p.y <= cy + halfH) {
           hitLayer = { 
@@ -1274,7 +1272,9 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
             type: 'caption', 
             x: cap.x, 
             y: cap.y,
-            width: actualWidth / canvas.width,
+            boxWidth,
+            boxHeight,
+            width: boxWidth / canvas.width,
             rotation: cap.rotation || 0
           };
           break;
@@ -1495,12 +1495,15 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
           const lines = wrapText(ctx, activeCap.text, renderMaxWidth);
           for (const line of lines) maxLineWidth = Math.max(maxLineWidth, ctx.measureText(line).width);
         }
-        const intendedWidth = activeCap.width ? (activeCap.width * canvas.width) : maxLineWidth + 40;
-        const actualWidth = Math.max(intendedWidth, maxLineWidth + 40);
-        const halfW = actualWidth / 2;
-        const lineHeight = fontSize * 1.2;
-        const totalHeight = Math.max(lines.length * lineHeight, 45);
-        const halfH = totalHeight / 2 + 6;
+        const hasBg = activeCap.bgColor && activeCap.bgColor !== 'transparent' && activeCap.bgColor !== 'none';
+        const padX = hasBg && activeCap.bgStyle !== 'banner' ? Math.max(16, fontSize * 0.35) : Math.max(8, fontSize * 0.15);
+        const padY = hasBg && activeCap.bgStyle !== 'banner' ? Math.max(10, fontSize * 0.2) : Math.max(4, fontSize * 0.1);
+        const boxWidth = maxLineWidth + padX * 2;
+        const textHeight = lines.length * (fontSize * 1.2);
+        const boxHeight = textHeight + padY * 2;
+
+        const halfW = boxWidth / 2;
+        const halfH = boxHeight / 2;
 
         const topY = cy - halfH;
         const bottomY = cy + halfH;
