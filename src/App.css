@@ -867,7 +867,11 @@ body {
   border-radius: 16px;
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.06);
   position: relative;
-  overflow: hidden;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  -webkit-overflow-scrolling: touch !important;
+  overscroll-behavior: contain !important;
+  scrollbar-width: thin;
 }
 
 @media (min-width: 769px) {
@@ -875,7 +879,11 @@ body {
     width: 370px !important;
     min-width: 370px !important;
     max-width: 370px !important;
+    height: 100% !important;
+    max-height: 100% !important;
     flex-shrink: 0 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
   }
 }
 .editor-sidebar::before {
@@ -1901,15 +1909,20 @@ body.modal-open {
     max-width: 100vw !important;
     overflow-x: hidden !important;
     margin: 0 !important;
+    height: calc(100dvh - 56px) !important;
+    display: flex !important;
+    flex-direction: column !important;
   }
   .editor-main {
     display: flex !important;
     flex-direction: column !important;
+    flex: 1 1 0% !important;
+    min-height: 0 !important;
     height: auto !important;
-    max-height: calc(100vh - 56px) !important;
+    max-height: none !important;
     overflow: hidden !important;
-    gap: 8px !important;
-    padding: 4px 0 0 0 !important;
+    gap: 6px !important;
+    padding: 2px 0 0 0 !important;
     width: 100% !important;
     max-width: 100vw !important;
     overflow-x: hidden !important;
@@ -1919,12 +1932,19 @@ body.modal-open {
     width: 100% !important;
     padding: 0 10px !important;
     box-sizing: border-box !important;
-    flex: 1 1 auto !important;
-    gap: 8px;
+    flex: 0 0 auto !important;
+    max-height: 44vh !important;
+    height: auto !important;
+    gap: 4px;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
   }
   .editor-topbar {
     padding: 4px 8px;
     height: 48px; /* Make it more compact so it doesn't look too big */
+    min-height: 48px;
+    flex-shrink: 0;
     align-items: center; 
     margin: 0 8px !important;
   }
@@ -1937,19 +1957,24 @@ body.modal-open {
     border-radius: var(--radius-md);
     background: 0 0;
     min-height: auto;
-    max-height: 56vh;
+    max-height: 42vh !important;
+    height: auto !important;
     padding: 0;
     position: relative;
     top: 0;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
   }
   .meme-canvas {
-    width: 100%;
-    height: auto;
-    max-height: 54vh;
+    width: auto !important;
+    max-width: 100% !important;
+    height: auto !important;
+    max-height: 40vh !important;
   }
   .canvas-hint {
-    margin-top: 4px;
-    font-size: 0.72rem;
+    margin-top: 2px;
+    font-size: 0.70rem;
   }
   .editor-sidebar {
     width: 100% !important;
@@ -1961,11 +1986,16 @@ body.modal-open {
     border-bottom: none !important;
     border-radius: 18px 18px 0 0 !important;
     box-sizing: border-box !important;
-    padding: 12px 14px 24px 14px !important;
-    flex: 1 0 auto !important;
-    max-height: 46vh !important;
+    padding: 10px 14px 28px 14px !important;
+    flex: 1 1 0% !important;
+    min-height: 0 !important;
+    height: auto !important;
+    max-height: none !important;
     overflow-y: auto !important;
+    overflow-x: hidden !important;
     -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior: contain !important;
+    touch-action: pan-y !important;
     box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3) !important;
     display: flex !important;
     flex-direction: column !important;
@@ -1979,11 +2009,26 @@ body.modal-open {
     border-radius: 18px 18px 0 0 !important;
     box-shadow: 0 -2px 0 rgba(23, 19, 16, 0.9) !important;
   }
+  .tab-buttons {
+    position: sticky !important;
+    top: -10px !important;
+    z-index: 15 !important;
+    padding-top: 4px !important;
+    padding-bottom: 4px !important;
+    background: var(--bg-surface-1, #1a1613) !important;
+    border-radius: 20px !important;
+    flex-shrink: 0 !important;
+  }
+  .theme-light .tab-buttons,
+  [data-theme='light'] .tab-buttons {
+    background: #ffffff !important;
+  }
   .tab-content {
-    -webkit-overflow-scrolling: touch;
-    max-height: 34vh;
-    padding-right: 2px;
-    overflow-y: auto;
+    overflow: visible !important;
+    max-height: none !important;
+    height: auto !important;
+    flex: 0 0 auto !important;
+    padding-bottom: 24px !important;
   }
   .template-grid,
   .gallery-grid {

@@ -1144,7 +1144,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
       </div>
         
       {/* Sidebar Controls Tabs */}
-        <div className="editor-sidebar glass-card">
+        <div className="editor-sidebar glass-card" style={{ overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
           <div 
             ref={tabButtonsRef}
             className="tab-buttons"
