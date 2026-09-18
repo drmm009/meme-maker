@@ -558,7 +558,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
 
           
           if (imgLayer.id === activeLayerId && !isDrawingMode) {
-            ctx.strokeStyle = '#a855f7';
+            ctx.strokeStyle = '#f97316';
             ctx.lineWidth = 3;
             ctx.setLineDash([6, 6]);
             ctx.strokeRect(-w / 2 - 6, -h / 2 - 6, w + 12, h + 12);
@@ -578,13 +578,13 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
             
             // Rotation handle circle
             ctx.beginPath();
-            ctx.fillStyle = '#a855f7';
+            ctx.fillStyle = '#f97316';
             ctx.arc(0, -hh - 34, 16, 0, Math.PI * 2);
             ctx.fill();
             ctx.stroke();
 
             // Round handles for resizing, stretching, and cropping (4 corners + 4 middle of sides)
-            ctx.fillStyle = '#a855f7';
+            ctx.fillStyle = '#f97316';
             ctx.strokeStyle = '#000000';
             ctx.lineWidth = 2;
             const drawRoundHandle = (hx, hy) => {
@@ -637,13 +637,13 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
 
         
         if (stk.id === activeLayerId && !isDrawingMode) {
-          ctx.strokeStyle = '#a855f7';
+          ctx.strokeStyle = '#f97316';
           ctx.lineWidth = 3;
           ctx.setLineDash([6, 6]);
           ctx.strokeRect(-stkSize / 2 - 6, -stkSize / 2 - 6, stkSize + 12, stkSize + 12);
           
           ctx.setLineDash([]);
-          ctx.fillStyle = '#a855f7';
+          ctx.fillStyle = '#f97316';
           ctx.strokeStyle = '#000000';
           ctx.lineWidth = 2;
           
@@ -666,7 +666,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
           ctx.stroke();
           
           ctx.beginPath();
-          ctx.fillStyle = '#a855f7';
+          ctx.fillStyle = '#f97316';
           ctx.arc(0, -stkSize / 2 - 40, 16, 0, Math.PI * 2);
           ctx.fill();
           ctx.stroke();
