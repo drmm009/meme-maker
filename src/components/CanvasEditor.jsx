@@ -1120,11 +1120,13 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
               type: closestHandle.type, 
               x: activeCap.x, 
               y: activeCap.y, 
-              width: (actualWidth / canvas.width), 
+              boxWidth,
+              boxHeight,
+              width: (boxWidth / canvas.width), 
               rotation: activeCap.rotation || 0,
               fontSize: activeCap.fontSize || 50,
               initialFontSize: activeCap.fontSize || 50,
-              initialWidth: activeCap.width || (actualWidth / canvas.width),
+              initialWidth: activeCap.width || (boxWidth / canvas.width),
               initialDist: Math.max(15, cornerDist)
             };
           }
@@ -1135,7 +1137,9 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
               type: 'caption', 
               x: activeCap.x, 
               y: activeCap.y, 
-              width: (actualWidth / canvas.width), 
+              boxWidth,
+              boxHeight,
+              width: (boxWidth / canvas.width), 
               rotation: activeCap.rotation || 0 
             };
           }
@@ -1491,9 +1495,10 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         const fontSize = activeCap.fontSize || 50;
         const ctx = canvas.getContext('2d');
         let maxLineWidth = 0;
+        let lines = [activeCap.text || ''];
         if (ctx) {
           ctx.font = `bold ${fontSize}px ${activeCap.fontFamily || 'Impact, sans-serif'}`;
-          const lines = wrapText(ctx, activeCap.text, renderMaxWidth);
+          lines = wrapText(ctx, activeCap.text || '', renderMaxWidth);
           for (const line of lines) maxLineWidth = Math.max(maxLineWidth, ctx.measureText(line).width);
         }
         const hasBg = activeCap.bgColor && activeCap.bgColor !== 'transparent' && activeCap.bgColor !== 'none';
