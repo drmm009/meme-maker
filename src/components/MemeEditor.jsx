@@ -233,11 +233,38 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
   });
   const [slotTransforms, setSlotTransforms] = useState(template?.slotTransforms || []);
 
+  const [activeTemplate, setActiveTemplate] = useState(template);
+  const pickingTemplateRef = useRef(false);
+
+  useEffect(() => {
+    setActiveTemplate(template);
+  }, [template]);
+
+  const handleSelectNewBaseTemplate = (tmpl) => {
+    setActiveTemplate(tmpl);
+    if (tmpl.defaultCaptions && tmpl.defaultCaptions.length > 0) {
+      const nextCaps = tmpl.defaultCaptions.map((c, idx) => ({
+        fontSize: c.fontSize || 50,
+        color: c.color || '#ffffff',
+        stroke: c.stroke || '#000000',
+        align: c.align || 'center',
+        fontFamily: 'Impact, sans-serif',
+        rotation: 0,
+        ...c,
+        id: c.id || `cap-${idx}-${Date.now()}`
+      }));
+      setCaptions(nextCaps);
+    }
+    if (tmpl.aspectRatio) {
+      setAspectRatio(tmpl.aspectRatio);
+    }
+  };
+
   const [aspectRatio, setAspectRatio] = useState(template?.aspectRatio || 'original');
   const [imageFit, setImageFit] = useState(template?.imageFit || 'contain');
 
   // Open-source templates for Image Layer / Slot overlay picker
-  const [imagePickerTarget, setImagePickerTarget] = useState(null); // 'layer' | { slot: idx }
+  const [imagePickerTarget, setImagePickerTarget] = useState(null); // 'layer' | 'replaceTemplate' | { slot: idx }
   const [imagePickerSearch, setImagePickerSearch] = useState('');
   const [openSourceTemplates, setOpenSourceTemplates] = useState(MEME_TEMPLATES);
 
@@ -1076,8 +1103,8 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
           <div className="canvas-wrapper" style={{ width: '100%', maxHeight: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, overflow: 'hidden' }}>
             <CanvasEditor
               ref={canvasRef}
-              template={template}
-              imageUrl={template?.rawImageUrl || template?.imageUrl}
+              template={activeTemplate}
+              imageUrl={activeTemplate?.rawImageUrl || activeTemplate?.imageUrl}
             captions={captions}
             stickers={stickers}
             imageLayers={imageLayers}
@@ -2010,21 +2037,43 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                   <button
                     type="button"
                     className="btn btn-xs btn-secondary hover-lift"
-                    onClick={() => setImagePickerTarget('layer')}
+                    onClick={() => setImagePickerTarget('replaceTemplate')}
+                    title="Change base meme template"
                     style={{
                       flex: 1,
-                      padding: '8px 12px',
+                      padding: '8px 10px',
                       borderRadius: '8px',
-                      fontSize: '0.85rem',
+                      fontSize: '0.8rem',
                       fontWeight: 600,
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      gap: '6px',
+                      gap: '4px',
                       whiteSpace: 'nowrap'
                     }}
                   >
-                    <ImageIcon className="icon-xs" /> Pick Template
+                    <ImageIcon className="icon-xs" /> Change Template
+                  </button>
+
+                  <button
+                    type="button"
+                    className="btn btn-xs btn-secondary hover-lift"
+                    onClick={() => setImagePickerTarget('layer')}
+                    title="Add template as an overlay image"
+                    style={{
+                      flex: 1,
+                      padding: '8px 10px',
+                      borderRadius: '8px',
+                      fontSize: '0.8rem',
+                      fontWeight: 600,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '4px',
+                      whiteSpace: 'nowrap'
+                    }}
+                  >
+                    <Plus className="icon-xs" /> Add Overlay
                   </button>
 
                   {activeImageLayer && (
@@ -2383,11 +2432,51 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
             }}
           >
             <div className="modal-header flex-between" style={{ alignItems: 'center', marginBottom: '10px' }}>
-              <h3 style={{ margin: '0 auto', color: 'var(--text-main)', textAlign: 'center', flex: 1, paddingLeft: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+              <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
                 <ImageIcon size={20} style={{ color: 'var(--cyber-cyan)' }} />
-                Add Template
-              </h3>
+                <h3 style={{ margin: 0, color: 'var(--text-main)', fontSize: '1.05rem', fontWeight: 600 }}>
+                  {imagePickerTarget === 'replaceTemplate' ? 'Change Meme Template' : 'Add Template Overlay'}
+                </h3>
+              </div>
               <button className="btn-close" onClick={() => setImagePickerTarget(null)} title="Close" aria-label="Close">✕</button>
+            </div>
+
+            {/* Mode Switcher Pills */}
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px', gap: '8px' }}>
+              <button
+                type="button"
+                onClick={() => setImagePickerTarget('replaceTemplate')}
+                style={{
+                  padding: '5px 14px',
+                  borderRadius: '20px',
+                  fontSize: '0.78rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  border: imagePickerTarget === 'replaceTemplate' ? '1px solid var(--primary-accent)' : '1px solid var(--glass-border)',
+                  background: imagePickerTarget === 'replaceTemplate' ? 'var(--primary-gradient)' : 'var(--glass-bg)',
+                  color: imagePickerTarget === 'replaceTemplate' ? '#ffffff' : 'var(--text-muted)',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                Change Canvas Template
+              </button>
+              <button
+                type="button"
+                onClick={() => setImagePickerTarget('layer')}
+                style={{
+                  padding: '5px 14px',
+                  borderRadius: '20px',
+                  fontSize: '0.78rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  border: imagePickerTarget === 'layer' ? '1px solid var(--primary-accent)' : '1px solid var(--glass-border)',
+                  background: imagePickerTarget === 'layer' ? 'var(--primary-gradient)' : 'var(--glass-bg)',
+                  color: imagePickerTarget === 'layer' ? '#ffffff' : 'var(--text-muted)',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                Add as Overlay Image
+              </button>
             </div>
 
             <div className="picker-search-bar" style={{ position: 'relative', marginBottom: '14px' }}>
@@ -2509,9 +2598,15 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                       boxSizing: 'border-box'
                     }}
                     onClick={() => {
-                      if (imagePickerTarget === 'layer') {
+                      if (pickingTemplateRef.current) return;
+                      pickingTemplateRef.current = true;
+                      setTimeout(() => { pickingTemplateRef.current = false; }, 400);
+
+                      if (imagePickerTarget === 'replaceTemplate') {
+                        handleSelectNewBaseTemplate(tmpl);
+                      } else if (imagePickerTarget === 'layer') {
                         handleAddImageLayer(tmpl.imageUrl);
-                      } else if (imagePickerTarget.slot !== undefined) {
+                      } else if (imagePickerTarget?.slot !== undefined) {
                         const nextImages = [...slotImages];
                         nextImages[imagePickerTarget.slot] = tmpl.imageUrl;
                         setSlotImages(nextImages);

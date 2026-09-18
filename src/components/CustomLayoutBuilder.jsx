@@ -66,6 +66,7 @@ export default function CustomLayoutBuilder({
   
   const [dragState, setDragState] = useState(null);
   const gridRef = useRef(null);
+  const pickingTemplateRef = useRef(false);
 
   const persistState = (newStep, newLayout, newImages, newTransforms, newAspectRatio) => {
     if (onSaveState) {
@@ -803,6 +804,10 @@ export default function CustomLayoutBuilder({
                     boxSizing: 'border-box'
                   }}
                   onClick={() => {
+                    if (pickingTemplateRef.current) return;
+                    pickingTemplateRef.current = true;
+                    setTimeout(() => { pickingTemplateRef.current = false; }, 400);
+
                     const newImages = [...slotImages];
                     newImages[imagePickerTarget.slot] = templateItem.url || templateItem.imageUrl;
                     const newTransforms = [...slotTransforms];

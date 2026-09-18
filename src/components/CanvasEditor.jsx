@@ -485,11 +485,11 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
 
           if (imgRatio > canvasRatio) {
             drawH = canvas.height;
-            drawW = img.height * imgRatio;
+            drawW = canvas.height * imgRatio;
             offsetX = (canvas.width - drawW) / 2;
           } else {
             drawW = canvas.width;
-            drawH = img.width / imgRatio;
+            drawH = canvas.width / imgRatio;
             offsetY = (canvas.height - drawH) / 2;
           }
         }
@@ -739,6 +739,9 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         for (const line of lines) {
           maxLineWidth = Math.max(maxLineWidth, ctx.measureText(line).width);
         }
+        // Draw Meme Text Background if enabled (white, black, or custom)
+        const hasBg = cap.bgColor && cap.bgColor !== 'transparent' && cap.bgColor !== 'none';
+
         // The visual bounding box is sized to match the actual text
         const padX = hasBg && cap.bgStyle !== 'banner' ? Math.max(16, fontSize * 0.35) : Math.max(8, fontSize * 0.15);
         const padY = hasBg && cap.bgStyle !== 'banner' ? Math.max(10, fontSize * 0.2) : Math.max(4, fontSize * 0.1);
@@ -748,8 +751,6 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         const boxHeight = totalHeight + padY * 2;
         const startY = - ((lines.length - 1) * lineHeight) / 2;
 
-        // Draw Meme Text Background if enabled (white, black, or custom)
-        const hasBg = cap.bgColor && cap.bgColor !== 'transparent' && cap.bgColor !== 'none';
         let bgFillColor = '#ffffff';
         if (hasBg) {
           ctx.save();
@@ -940,7 +941,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     } else {
       renderCanvas(null);
     }
-  }, [captions, stickers, activeLayerId, imageLayers, slotImages, slotTransforms, activeIsNativeLayout, editingCaptionId, cursorVisible, aspectRatio, imageFit, watermark, drawings, isDrawingMode]);
+  }, [captions, stickers, activeLayerId, imageLayers, slotImages, slotTransforms, activeIsNativeLayout, editingCaptionId, cursorVisible, aspectRatio, imageFit, watermark, drawings, isDrawingMode, imgSrc]);
 
   // Helper to rotate point for hit testing
   const rotatePoint = (px, py, cx, cy, angle) => {
