@@ -1758,11 +1758,11 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         style={{
                           display: 'flex',
                           height: '38px',
-                          padding: '3px',
+                          padding: 0,
                           borderRadius: '10px',
-                          background: 'var(--bg-surface-1)',
-                          border: '1px solid var(--glass-border)',
-                          gap: '2px',
+                          background: 'transparent',
+                          border: 'none',
+                          gap: '6px',
                           boxSizing: 'border-box'
                         }}
                       >
@@ -1772,12 +1772,14 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           style={{
                             fontSize: '0.72rem',
                             fontWeight: 600,
-                            borderRadius: '7px',
+                            borderRadius: '8px',
                             padding: '0 4px',
                             height: '100%',
                             display: 'flex',
                             alignItems: 'center',
-                            justifyContent: 'center'
+                            justifyContent: 'center',
+                            background: (!activeCaption.bgColor || activeCaption.bgColor === 'transparent' || activeCaption.bgColor === 'none') ? undefined : 'var(--bg-surface-1)',
+                            border: 'none'
                           }}
                           onClick={() => handleSetCaptionBg('none')}
                         >
@@ -1789,13 +1791,15 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           style={{
                             fontSize: '0.72rem',
                             fontWeight: 600,
-                            borderRadius: '7px',
+                            borderRadius: '8px',
                             padding: '0 4px',
                             height: '100%',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            gap: '4px'
+                            gap: '4px',
+                            background: (activeCaption.bgColor === 'white' || activeCaption.bgColor === '#ffffff') ? undefined : 'var(--bg-surface-1)',
+                            border: 'none'
                           }}
                           onClick={() => handleSetCaptionBg('white')}
                         >
@@ -1808,13 +1812,15 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           style={{
                             fontSize: '0.72rem',
                             fontWeight: 600,
-                            borderRadius: '7px',
+                            borderRadius: '8px',
                             padding: '0 4px',
                             height: '100%',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            gap: '4px'
+                            gap: '4px',
+                            background: (activeCaption.bgColor === 'black' || activeCaption.bgColor === '#000000') ? undefined : 'var(--bg-surface-1)',
+                            border: 'none'
                           }}
                           onClick={() => handleSetCaptionBg('black')}
                         >

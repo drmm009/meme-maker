@@ -11,15 +11,16 @@
   --glass-border: transparent;
   --glass-border-glow: transparent;
   --glass-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
-  --primary-accent: #ff6b2c;
+  --primary-accent: #2f6bff;
   --primary-gradient: linear-gradient(
     100deg,
-    #ff6b2c 0%,
-    #ff8a3d 50%,
-    #ffc93c 100%
+    #2f6bff 0%,
+    #a03cff 50%,
+    #ff2e93 100%
   );
-  --cyber-cyan: #ffc93c;
-  --cyber-pink: #ff6b2c;
+  --cyber-cyan: #ff2e93;
+  --cyber-pink: #2f6bff;
+  --primary-glow: rgba(47, 107, 255, 0.4);
   --emerald-accent: #00e676;
   --amber-accent: #ffb300;
   --radius-sm: 10px;
@@ -3717,45 +3718,28 @@ input:checked + .slider.round:before {
   --ink-2: #1d1a17;
   --ink-3: #262220;
   --paper: #ffffff;
-  --poster-orange: #ff6b2c;
-  --poster-yellow: #ffc93c;
+  --poster-orange: var(--primary-accent);
+  --poster-yellow: var(--cyber-cyan);
   --line-dark: rgba(255, 255, 255, 0.14);
-
-  --bg-dark: var(--ink) !important;
-  --bg-gradient: none !important;
-  --bg-surface-1: var(--ink-2) !important;
-  --bg-surface-2: var(--ink-3) !important;
-  --bg-surface-3: #302b28 !important;
-  --text-main: #f7f3ef !important;
-  --text-muted: #a49c94 !important;
-  --glass-bg: var(--ink-2) !important;
-  --glass-border: var(--line-dark) !important;
-  --glass-border-glow: var(--poster-orange) !important;
-  --glass-shadow: 0 10px 26px rgba(0, 0, 0, 0.45) !important;
-  --primary-accent: var(--poster-orange) !important;
-  --primary-gradient: linear-gradient(100deg, #ff6b2c 0%, #ffc93c 100%) !important;
-  --cyber-cyan: var(--poster-yellow) !important;
-  --cyber-pink: var(--poster-orange) !important;
-  --amber-accent: var(--poster-yellow) !important;
-  --radius-sm: 8px !important;
-  --radius-md: 12px !important;
-  --radius-lg: 16px !important;
+  --text-main: #f7f3ef;
+  --text-muted: #a49c94;
+  --glass-bg: var(--bg-surface-1);
+  --glass-border: var(--line-dark);
+  --glass-border-glow: var(--primary-accent);
+  --glass-shadow: 0 10px 26px rgba(0, 0, 0, 0.45);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
 }
 
 :root[data-theme='light'],
 .theme-light {
-  --bg-dark: #e8ecf1 !important;
-  --bg-gradient: none !important;
-  --bg-surface-1: #ffffff !important;
-  --bg-surface-2: #f1f4f8 !important;
-  --bg-surface-3: #dfe3ea !important;
-  --text-main: #171310 !important;
-  --text-muted: #6b6259 !important;
-  --glass-bg: #ffffff !important;
-  --glass-border: #171310 !important;
-  --glass-border-glow: var(--poster-orange) !important;
-  --glass-shadow: 4px 4px 0 rgba(23, 19, 16, 0.9) !important;
-  --primary-accent: var(--poster-orange) !important;
+  --text-main: #171310;
+  --text-muted: #6b6259;
+  --glass-bg: var(--bg-surface-1);
+  --glass-border: rgba(0, 0, 0, 0.12);
+  --glass-border-glow: var(--primary-accent);
+  --glass-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
 }
 
 html,
@@ -3809,41 +3793,110 @@ h1, h2, h3,
 
 /* --- Hero -------------------------------------------------- */
 .hero-banner {
-  text-align: left !important;
+  text-align: center !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  position: relative !important;
+  overflow: hidden !important;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.04) 100%) !important;
+  backdrop-filter: blur(28px) saturate(220%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(220%) !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.28) !important;
+  box-shadow: 
+    0 20px 50px rgba(0, 0, 0, 0.35), 
+    0 0 45px rgba(255, 122, 0, 0.28), 
+    inset 0 1px 1px rgba(255, 255, 255, 0.55),
+    inset 0 0 30px rgba(255, 179, 0, 0.12) !important;
+  padding: 38px 24px !important;
+  border-radius: var(--radius-lg) !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+.hero-banner::before {
+  content: '' !important;
+  position: absolute !important;
+  inset: 0 !important;
   background:
-    linear-gradient(120deg, var(--poster-orange) 0%, #ff8a3d 45%, var(--poster-yellow) 100%) !important;
-  border: 2px solid var(--glass-border) !important;
-  box-shadow: var(--glass-shadow) !important;
-  padding: 34px 28px !important;
+    radial-gradient(ellipse 80% 65% at 5% 15%, rgba(255, 102, 0, 0.7) 0%, transparent 65%),
+    radial-gradient(ellipse 75% 60% at 92% 82%, rgba(255, 193, 7, 0.65) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 55% at 60% 12%, rgba(255, 136, 0, 0.52) 0%, transparent 55%),
+    radial-gradient(ellipse 60% 55% at 45% 90%, rgba(255, 214, 0, 0.48) 0%, transparent 55%) !important;
+  filter: blur(28px) !important;
+  pointer-events: none !important;
+  z-index: 0 !important;
+  opacity: 1 !important;
+}
+.hero-banner::after {
+  content: '' !important;
+  position: absolute !important;
+  inset: 0 !important;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.03) 60%, transparent 100%) !important;
+  pointer-events: none !important;
+  z-index: 0 !important;
+}
+.hero-banner > * {
+  position: relative !important;
+  z-index: 1 !important;
 }
 .hero-banner h2 {
   background: none !important;
-  -webkit-text-fill-color: #171310 !important;
-  color: #171310 !important;
+  -webkit-text-fill-color: #ffffff !important;
+  color: #ffffff !important;
   font-size: clamp(1.75rem, 4.5vw, 2.75rem) !important;
-  line-height: 1 !important;
-  max-width: 22ch;
+  line-height: 1.15 !important;
+  text-align: center !important;
+  max-width: 28ch !important;
+  margin-top: 14px !important;
+  margin-bottom: 10px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.4) !important;
 }
 .hero-banner p {
-  color: rgba(23, 19, 16, 0.82) !important;
-  margin: 0 0 22px !important;
-  max-width: 46ch !important;
-  font-weight: 600 !important;
+  color: #ffffff !important;
+  text-align: center !important;
+  margin: 0 auto 22px !important;
+  max-width: 52ch !important;
+  font-weight: 700 !important;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.4) !important;
 }
 .hero-actions {
-  justify-content: flex-start !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  flex-wrap: wrap !important;
+  gap: 12px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
 }
 .hero-badge,
 .neon-pill {
-  background: #171310 !important;
-  color: var(--poster-yellow) !important;
-  border: 2px solid #171310 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  align-self: center !important;
+  gap: 6px !important;
+  margin: 0 auto !important;
+  background: #000000 !important;
+  color: #f97316 !important;
+  font-size: 0.72rem !important;
+  padding: 4px 12px !important;
+  border: 1px solid rgba(249, 115, 22, 0.35) !important;
   border-radius: 999px !important;
-  box-shadow: none !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35) !important;
   text-shadow: none !important;
   letter-spacing: 0.08em !important;
   text-transform: uppercase !important;
   font-weight: 800 !important;
+}
+.hero-badge svg,
+.neon-pill svg {
+  color: #f97316 !important;
+  stroke: #f97316 !important;
+  width: 13px !important;
+  height: 13px !important;
 }
 
 /* --- Buttons ----------------------------------------------- */
@@ -4169,21 +4222,38 @@ select {
 }
 .theme-light .hero-banner,
 [data-theme='light'] .hero-banner {
-  background: linear-gradient(120deg, #ff6b2c 0%, #ff8a3d 45%, #ffc93c 100%) !important;
-  border: 2px solid #171310 !important;
-  box-shadow: 6px 6px 0 rgba(23, 19, 16, 0.9) !important;
-  -webkit-backdrop-filter: none !important;
-  backdrop-filter: none !important;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.82) 0%, rgba(255, 255, 255, 0.65) 100%) !important;
+  backdrop-filter: blur(28px) saturate(220%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(220%) !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.95) !important;
+  box-shadow: 0 20px 50px rgba(249, 115, 22, 0.14), 0 4px 18px rgba(0, 0, 0, 0.04), inset 0 1px 2px rgba(255, 255, 255, 1) !important;
+  border-radius: var(--radius-lg) !important;
+}
+.theme-light .hero-banner::before,
+[data-theme='light'] .hero-banner::before {
+  background:
+    radial-gradient(ellipse 80% 65% at 5% 10%, rgba(255, 122, 0, 0.42) 0%, transparent 65%),
+    radial-gradient(ellipse 75% 60% at 92% 85%, rgba(255, 193, 7, 0.42) 0%, transparent 60%),
+    radial-gradient(ellipse 55% 55% at 60% 15%, rgba(255, 140, 0, 0.32) 0%, transparent 55%),
+    radial-gradient(ellipse 60% 55% at 45% 90%, rgba(255, 214, 0, 0.32) 0%, transparent 55%) !important;
+  opacity: 1 !important;
 }
 .theme-light .hero-banner h2,
 [data-theme='light'] .hero-banner h2 {
   background: none !important;
   -webkit-text-fill-color: #171310 !important;
   color: #171310 !important;
+  text-shadow: none !important;
+  text-align: center !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
 }
 .theme-light .hero-banner p,
 [data-theme='light'] .hero-banner p {
-  color: rgba(23, 19, 16, 0.82) !important;
+  color: #574e44 !important;
+  text-shadow: none !important;
+  text-align: center !important;
+  margin: 0 auto 22px !important;
 }
 .theme-light .nav-link,
 [data-theme='light'] .nav-link {
@@ -4238,9 +4308,7 @@ select {
 .theme-light .sticker-chip-btn,
 [data-theme='light'] .sticker-chip-btn,
 .theme-light .step-badge,
-[data-theme='light'] .step-badge,
-.theme-light .tab-btn,
-[data-theme='light'] .tab-btn {
+[data-theme='light'] .step-badge {
   background: #ffffff !important;
   border: 2px solid #171310 !important;
   border-radius: 8px !important;
@@ -4254,9 +4322,7 @@ select {
 .theme-light .font-mini-chip.active,
 [data-theme='light'] .font-mini-chip.active,
 .theme-light .step-badge.active,
-[data-theme='light'] .step-badge.active,
-.theme-light .tab-btn.active,
-[data-theme='light'] .tab-btn.active {
+[data-theme='light'] .step-badge.active {
   background: var(--poster-orange) !important;
   border-color: #171310 !important;
   color: #171310 !important;
@@ -4651,3 +4717,317 @@ button:active {
 
 
 
+
+
+
+/* ============================================================
+   COLLAGE VIEW — masonry template wall
+   ============================================================ */
+.template-grid {
+  display: block !important;
+  columns: 250px 4 !important;
+  column-gap: 24px !important;
+  padding: 18px 6px 36px !important;
+}
+.template-card {
+  display: inline-block !important;
+  width: 100% !important;
+  margin: 0 0 26px !important;
+  break-inside: avoid !important;
+  position: relative !important;
+  overflow: visible !important;
+}
+/* mixed natural image heights = true collage rhythm */
+.template-image-wrapper {
+  aspect-ratio: auto !important;
+  overflow: hidden !important;
+  border-radius: inherit !important;
+  border-bottom-left-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+}
+.template-image-wrapper img {
+  height: auto !important;
+  max-height: 330px !important;
+  object-fit: cover !important;
+  display: block !important;
+}
+/* stronger scatter, collage-style */
+.template-card:nth-child(6n + 1) { transform: rotate(-2.2deg); }
+.template-card:nth-child(6n + 2) { transform: rotate(1.6deg); }
+.template-card:nth-child(6n + 3) { transform: rotate(-1.1deg); }
+.template-card:nth-child(6n + 4) { transform: rotate(2.4deg); }
+.template-card:nth-child(6n + 5) { transform: rotate(-1.8deg); }
+.template-card:nth-child(6n + 6) { transform: rotate(0.9deg); }
+/* tape strips converted to category sticker tags */
+.template-card::before {
+  display: none !important;
+}
+
+.card-sticker-tag {
+  position: absolute !important;
+  top: -10px !important;
+  left: 50% !important;
+  transform: translateX(-50%) rotate(-2deg) !important;
+  padding: 3px 12px !important;
+  font-size: 0.65rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.05em !important;
+  text-transform: uppercase !important;
+  white-space: nowrap !important;
+  color: #171310 !important;
+  background: rgba(255, 222, 60, 0.94) !important;
+  border: 1px solid rgba(0, 0, 0, 0.22) !important;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.35) !important;
+  border-radius: 3px !important;
+  z-index: 6 !important;
+  pointer-events: none !important;
+  transition: transform 0.2s ease !important;
+}
+
+/* varied tape tilt and warm palette colors for collage look */
+.template-card:nth-child(4n + 1) .card-sticker-tag {
+  transform: translateX(-50%) rotate(-2.5deg) !important;
+  background: rgba(255, 225, 77, 0.95) !important;
+  color: #171310 !important;
+}
+
+.template-card:nth-child(4n + 2) .card-sticker-tag {
+  transform: translateX(-50%) rotate(2.2deg) !important;
+  background: rgba(249, 115, 22, 0.95) !important;
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.35) !important;
+}
+
+.template-card:nth-child(4n + 3) .card-sticker-tag {
+  transform: translateX(-50%) rotate(-1.5deg) !important;
+  background: rgba(255, 183, 3, 0.95) !important;
+  color: #171310 !important;
+}
+
+.template-card:nth-child(4n + 4) .card-sticker-tag {
+  transform: translateX(-50%) rotate(2.8deg) !important;
+  background: rgba(234, 88, 12, 0.95) !important;
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.35) !important;
+}
+
+.template-card:hover .card-sticker-tag {
+  transform: translateX(-50%) rotate(0deg) scale(1.05) !important;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4) !important;
+}
+/* polaroid frame on every 3rd card */
+.template-card:nth-child(3n + 2) {
+  background: #f4f1ea !important;
+  padding: 10px 10px 0 !important;
+}
+.template-card:nth-child(3n + 2) .template-info {
+  background: transparent !important;
+  border-top: none !important;
+}
+.template-card:nth-child(3n + 2) .template-image-wrapper {
+  border: 2px solid #0d0c10 !important;
+  border-radius: 10px !important;
+}
+.template-card:nth-child(3n + 2) h4 { color: #17150f !important; }
+.template-card:nth-child(3n + 2) .template-category { color: #6b675e !important; }
+/* hover straightens the sticker */
+.template-card:hover {
+  transform: translateY(-6px) rotate(0deg) scale(1.03) !important;
+  z-index: 5 !important;
+}
+/* light mode */
+.app-root.theme-light .template-card::before,
+.theme-light .template-card::before { box-shadow: 0 2px 3px rgba(0, 0, 0, 0.15) !important; }
+
+/* mobile: 2 columns */
+@media (max-width: 640px) {
+  .template-grid { columns: 150px 2 !important; column-gap: 14px !important; }
+  .template-image-wrapper img { max-height: 220px !important; }
+}
+
+/* ============================================================
+   PERMANENT COLOR SCHEME: SUNSET ORANGE 🔥 (Sole App Palette)
+   ============================================================ */
+
+/* Dark Mode (Signature Warm Sunset Energy & Molten Amber) */
+:root,
+:root[data-theme='dark'],
+html[data-theme='dark'],
+body[data-theme='dark'],
+.theme-dark,
+[data-theme='dark'] {
+  --primary-accent: #f97316 !important;
+  --poster-orange: #f97316 !important;
+  --poster-yellow: #ffb300 !important;
+  --primary-gradient: linear-gradient(118deg, #ff4500 0%, #f97316 48%, #ffb300 100%) !important;
+  --btn-blue-grad: linear-gradient(118deg, #ff4500 0%, #f97316 48%, #ffb300 100%) !important;
+  --cyber-cyan: #ffb300 !important;
+  --cyber-pink: #ff4500 !important;
+  --primary-glow: rgba(249, 115, 22, 0.45) !important;
+  --bg-dark: #0f0d0b !important;
+  --bg-surface-1: #1a1613 !important;
+  --bg-surface-2: #241e1a !important;
+  --bg-surface-3: #302822 !important;
+  --text-main: #f7f3ef !important;
+  --text-muted: #a49c94 !important;
+  --glass-bg: #1a1613 !important;
+  --glass-border: rgba(255, 255, 255, 0.12) !important;
+  --glass-border-glow: #f97316 !important;
+}
+
+/* Light Mode (Warm Honey Cream & Sunset Glow) */
+:root[data-theme='light'],
+html[data-theme='light'],
+body[data-theme='light'],
+.theme-light,
+[data-theme='light'] {
+  --bg-dark: #fffaf5 !important;
+  --bg-surface-1: #ffffff !important;
+  --bg-surface-2: #fff5eb !important;
+  --bg-surface-3: #fee2d5 !important;
+  --text-main: #171310 !important;
+  --text-muted: #6b6259 !important;
+  --glass-bg: #ffffff !important;
+  --glass-border: rgba(0, 0, 0, 0.08) !important;
+  --primary-accent: #ea580c !important;
+  --poster-orange: #ea580c !important;
+  --poster-yellow: #d97706 !important;
+  --primary-gradient: linear-gradient(118deg, #dc2626 0%, #ea580c 50%, #ca8a04 100%) !important;
+  --btn-blue-grad: linear-gradient(118deg, #dc2626 0%, #ea580c 50%, #ca8a04 100%) !important;
+  --cyber-cyan: #d97706 !important;
+  --cyber-pink: #dc2626 !important;
+  --primary-glow: rgba(234, 88, 12, 0.35) !important;
+}
+
+/* Ensure background color updates dynamically on html, body, and app-root */
+html,
+body,
+.app-root {
+  background-color: var(--bg-dark) !important;
+  color: var(--text-main) !important;
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+/* Dynamic Primary Buttons & Active Elements */
+.btn-primary,
+button.btn-primary {
+  background: var(--primary-gradient) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px var(--primary-glow) !important;
+}
+
+.btn-primary:hover,
+button.btn-primary:hover {
+  filter: brightness(1.08) !important;
+  box-shadow: 0 6px 20px var(--primary-glow) !important;
+}
+
+.category-pill.active,
+.chip.active,
+.step-badge.active {
+  background: var(--primary-gradient) !important;
+  color: #ffffff !important;
+  border-color: transparent !important;
+  box-shadow: 0 4px 14px var(--primary-glow) !important;
+}
+
+/* --- Image Editor Tabs (Clean Minimalist with Orange Gradient Text & Highlighted Line) --- */
+.tab-buttons {
+  background: transparent !important;
+  border: none !important;
+  border-bottom: 2px solid var(--glass-border, rgba(255, 255, 255, 0.12)) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  padding: 0 4px 0 4px !important;
+  margin-bottom: 16px !important;
+  gap: 16px !important;
+  display: flex !important;
+  overflow-x: auto !important;
+  scrollbar-width: none !important;
+  position: relative !important;
+}
+.tab-buttons::-webkit-scrollbar {
+  display: none !important;
+}
+
+.tab-btn,
+.theme-light .tab-btn,
+[data-theme='light'] .tab-btn,
+body[data-palette] .tab-btn,
+[data-palette] .tab-btn {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  outline: none !important;
+  padding: 8px 8px 10px 8px !important;
+  margin-bottom: -2px !important;
+  color: var(--text-muted, rgba(255, 255, 255, 0.55)) !important;
+  font-weight: 600 !important;
+  font-size: 0.92rem !important;
+  letter-spacing: 0.02em !important;
+  text-transform: none !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  cursor: pointer !important;
+  transition: color 0.2s ease, opacity 0.2s ease !important;
+  flex: 0 0 auto !important;
+  user-select: none !important;
+  position: relative !important;
+}
+
+.tab-btn:hover {
+  background: transparent !important;
+  box-shadow: none !important;
+  color: var(--text-main, #ffffff) !important;
+}
+
+.tab-btn::after {
+  content: '' !important;
+  position: absolute !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  height: 2.5px !important;
+  border-radius: 999px !important;
+  background: transparent !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  pointer-events: none !important;
+}
+
+.tab-btn.active,
+.theme-light .tab-btn.active,
+[data-theme='light'] .tab-btn.active,
+body[data-palette] .tab-btn.active,
+[data-palette] .tab-btn.active {
+  background: linear-gradient(135deg, #ffa100 0%, #ff6e00 50%, #ea580c 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+  color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  transform: none !important;
+  font-weight: 800 !important;
+}
+
+.tab-btn.active::after,
+.theme-light .tab-btn.active::after,
+[data-theme='light'] .tab-btn.active::after,
+body[data-palette] .tab-btn.active::after,
+[data-palette] .tab-btn.active::after {
+  background: linear-gradient(90deg, #ffa100 0%, #ff6e00 50%, #ea580c 100%) !important;
+  box-shadow: 0 0 10px rgba(255, 122, 0, 0.7), 0 2px 4px rgba(234, 88, 12, 0.45) !important;
+}
+
+.tab-btn.active svg,
+.tab-btn.active .icon-xs,
+.theme-light .tab-btn.active svg,
+[data-theme='light'] .tab-btn.active svg,
+body[data-palette] .tab-btn.active svg,
+[data-palette] .tab-btn.active svg {
+  color: #ff7a00 !important;
+  stroke: #ff7a00 !important;
+  filter: drop-shadow(0 2px 5px rgba(255, 122, 0, 0.35)) !important;
+}

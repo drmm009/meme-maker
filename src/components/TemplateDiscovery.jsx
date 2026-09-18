@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { MEME_TEMPLATES, CATEGORIES } from '../data/templates';
 import { VIDEO_MEME_TEMPLATES } from '../data/videoTemplates';
-import { Search, Sparkles, Flame, PlusCircle, Crown, Image as ImageIcon, Video } from 'lucide-react';
+import { Search, Sparkles, PlusCircle, Crown, Image as ImageIcon, Video } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom }) {
@@ -46,8 +46,8 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom }) 
       <div className="discovery-header">
         {/* Prominent Big Hero Banner */}
         <div className="hero-banner glass-card">
-          <div className="hero-badge neon-pill neon-pill-cyan">
-            <Sparkles className="icon-sm" /> #1 Meme Creator Studio
+          <div className="hero-badge" style={{ margin: '0 auto', background: '#000000', color: '#f97316', fontSize: '0.72rem', padding: '4px 12px' }}>
+            <Sparkles style={{ width: '13px', height: '13px', color: '#f97316', stroke: '#f97316' }} /> #1 Meme Creator Studio
           </div>
           <h2>Unleash Your Inner Meme Lord 🚀</h2>
           <p>Pick a trending template, or compose your own custom multi-panel layout!</p>
@@ -140,6 +140,11 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom }) 
                 whileTap={{ scale: 0.97 }}
                 onClick={() => onSelectTemplate(template)}
               >
+                {template.category && (
+                  <span className="card-sticker-tag">
+                    {template.category}
+                  </span>
+                )}
                 <div className="template-image-wrapper" style={{ position: 'relative' }}>
                   <img src={template.type === 'video' ? template.thumbnailUrl : template.imageUrl} alt={template.name} loading="lazy" />
                   
@@ -162,12 +167,6 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom }) 
                       🎬 {Math.round(template.durationMs / 1000)}s
                     </div>
                   )}
-
-                  <div className="card-badges">
-                    {template.trendingScore >= 95 && (
-                      <span className="badge badge-trending"><Flame className="icon-xs" /> HOT</span>
-                    )}
-                  </div>
                 </div>
                 <div className="template-info">
                   <h4>{template.name}</h4>

@@ -8,7 +8,7 @@ import MyGallery from './components/MyGallery';
 import AccountModal from './components/AccountModal';
 import SettingsModal from './components/SettingsModal';
 import { MEME_TEMPLATES } from './data/templates';
-import { Sparkles, Grid, LayoutGrid, FolderHeart, Settings, User, Sun, Moon } from 'lucide-react';
+import { Sparkles, Grid, LayoutGrid, FolderHeart, User, Sun, Moon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import './App.css';
 
@@ -24,6 +24,8 @@ function App() {
     }
   });
 
+  const palette = 'sunset-orange';
+
   useEffect(() => {
     try {
       document.documentElement.setAttribute('data-theme', theme);
@@ -32,6 +34,18 @@ function App() {
       console.error('Failed to set theme', e);
     }
   }, [theme]);
+
+  useEffect(() => {
+    try {
+      document.documentElement.setAttribute('data-palette', palette);
+      if (document.body) {
+        document.body.setAttribute('data-palette', palette);
+      }
+      localStorage.setItem('meme_creator_palette', palette);
+    } catch (e) {
+      console.error('Failed to set palette', e);
+    }
+  }, [palette]);
 
   // Remembers the last builder page so the Builder nav button resumes it
   const [lastBuilderView, setLastBuilderView] = useState('custom-builder');
@@ -194,7 +208,11 @@ function App() {
   };
 
   return (
-    <div className={`app-root theme-${theme}`}>
+    <div
+      className={`app-root theme-${theme} palette-${palette}`}
+      data-theme={theme}
+      data-palette={palette}
+    >
       {/* Top Navbar Header - HIDDEN ON EDITOR & BUILDER VIEWS FOR BIGGER CANVAS */}
       {currentView !== 'editor' && currentView !== 'video-editor' && currentView !== 'custom-builder' && (
         <header className="app-header glass-card">
@@ -267,12 +285,12 @@ function App() {
                 {theme === 'dark' ? (
                   <>
                     <Sun className="icon-sm" style={{ width: '18px', height: '18px', color: '#ffc93c' }} />
-                    <span className="theme-toggle-text">Light Mode</span>
+                    <span className="theme-toggle-text">Light</span>
                   </>
                 ) : (
                   <>
                     <Moon className="icon-sm" style={{ width: '18px', height: '18px', color: '#ff6b2c' }} />
-                    <span className="theme-toggle-text">Dark Mode</span>
+                    <span className="theme-toggle-text">Dark</span>
                   </>
                 )}
               </motion.button>

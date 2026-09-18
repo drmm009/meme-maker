@@ -10,8 +10,8 @@
   --ink-2: #1d1a17;
   --ink-3: #262220;
   --paper: #ffffff;
-  --poster-orange: #ff6b2c;
-  --poster-yellow: #ffc93c;
+  --poster-orange: #2f6bff;
+  --poster-yellow: #ff2e93;
   --line-dark: rgba(255, 255, 255, 0.14);
 
   --bg-dark: var(--ink) !important;
@@ -26,7 +26,7 @@
   --glass-border-glow: var(--poster-orange) !important;
   --glass-shadow: 0 10px 26px rgba(0, 0, 0, 0.45) !important;
   --primary-accent: var(--poster-orange) !important;
-  --primary-gradient: linear-gradient(100deg, #ff6b2c 0%, #ffc93c 100%) !important;
+  --primary-gradient: linear-gradient(100deg, #2f6bff 0%, #ff2e93 100%) !important;
   --cyber-cyan: var(--poster-yellow) !important;
   --cyber-pink: var(--poster-orange) !important;
   --amber-accent: var(--poster-yellow) !important;
@@ -106,7 +106,7 @@ h1, h2, h3,
 .hero-banner {
   text-align: left !important;
   background:
-    linear-gradient(120deg, var(--poster-orange) 0%, #ff8a3d 45%, var(--poster-yellow) 100%) !important;
+    linear-gradient(120deg, var(--poster-orange) 0%, #a03cff 45%, var(--poster-yellow) 100%) !important;
   border: 2px solid var(--glass-border) !important;
   box-shadow: var(--glass-shadow) !important;
   padding: 34px 28px !important;
@@ -458,7 +458,7 @@ select {
 }
 .theme-light .hero-banner,
 [data-theme='light'] .hero-banner {
-  background: linear-gradient(120deg, #ff6b2c 0%, #ff8a3d 45%, #ffc93c 100%) !important;
+  background: linear-gradient(120deg, #2f6bff 0%, #a03cff 45%, #ff2e93 100%) !important;
   border: 2px solid #171310 !important;
   box-shadow: 6px 6px 0 rgba(23, 19, 16, 0.9) !important;
   -webkit-backdrop-filter: none !important;
@@ -527,9 +527,7 @@ select {
 .theme-light .sticker-chip-btn,
 [data-theme='light'] .sticker-chip-btn,
 .theme-light .step-badge,
-[data-theme='light'] .step-badge,
-.theme-light .tab-btn,
-[data-theme='light'] .tab-btn {
+[data-theme='light'] .step-badge {
   background: #ffffff !important;
   border: 2px solid #171310 !important;
   border-radius: 8px !important;
@@ -543,9 +541,7 @@ select {
 .theme-light .font-mini-chip.active,
 [data-theme='light'] .font-mini-chip.active,
 .theme-light .step-badge.active,
-[data-theme='light'] .step-badge.active,
-.theme-light .tab-btn.active,
-[data-theme='light'] .tab-btn.active {
+[data-theme='light'] .step-badge.active {
   background: var(--poster-orange) !important;
   border-color: #171310 !important;
   color: #171310 !important;
