@@ -828,8 +828,6 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
           drawHandle(boxX + boxWidth, boxY); // Top Right
           drawHandle(boxX, boxY + boxHeight); // Bottom Left
           drawHandle(boxX + boxWidth, boxY + boxHeight); // Bottom Right
-          drawHandle(boxX, boxY + boxHeight / 2); // Left Middle
-          drawHandle(boxX + boxWidth, boxY + boxHeight / 2); // Right Middle
           
           ctx.beginPath();
           ctx.moveTo(0, boxY);
@@ -1097,9 +1095,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
             { type: 'resize_caption_tl', x: leftX, y: topY, r: 24 },
             { type: 'resize_caption_tr', x: rightX, y: topY, r: 24 },
             { type: 'resize_caption_bl', x: leftX, y: bottomY, r: 24 },
-            { type: 'resize_caption_br', x: rightX, y: bottomY, r: 24 },
-            { type: 'resize_caption_l',  x: leftX, y: cy,      r: 24 },
-            { type: 'resize_caption_r',  x: rightX, y: cy,     r: 24 }
+            { type: 'resize_caption_br', x: rightX, y: bottomY, r: 24 }
           ];
 
           let closestHandle = null;
@@ -1528,9 +1524,6 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         if (Math.hypot(p.x - rightX, p.y - topY) <= 22 || Math.hypot(p.x - leftX, p.y - bottomY) <= 22) {
           canvas.style.cursor = 'nesw-resize'; return;
         }
-        if (Math.hypot(p.x - leftX, p.y - cy) <= 22 || Math.hypot(p.x - rightX, p.y - cy) <= 22) {
-          canvas.style.cursor = 'ew-resize'; return;
-        }
         if (p.x >= cx - halfW && p.x <= cx + halfW && p.y >= cy - halfH && p.y <= cy + halfH) {
           canvas.style.cursor = 'move'; return;
         }
@@ -1812,19 +1805,6 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
 
       const centerX = initialLayerPos.current.x * canvas.width;
       const centerY = initialLayerPos.current.y * canvas.height;
-      const handleType = dragTarget.current.type;
-
-      // Side handles (Left & Right): stretch/contract word-wrap width
-      if (handleType === 'resize_caption_l' || handleType === 'resize_caption_r') {
-        const currentAngle = (cap.rotation || 0);
-        const localCoords = rotatePoint(coords.x, coords.y, centerX, centerY, -currentAngle);
-        const horizontalDistFromCenter = Math.abs(localCoords.x - centerX);
-        const newPixelWidth = Math.max(60, horizontalDistFromCenter * 2);
-        const newWidthPercent = Math.min(1.0, Number((newPixelWidth / canvas.width).toFixed(3)));
-        onUpdateCaptionBounds(id, { width: newWidthPercent });
-        return;
-      }
-
       // Corner handles: stretch to resize text font size & box proportionally, just like sticker and image layers
       const currentDist = Math.hypot(coords.x - centerX, coords.y - centerY);
       const initDist = initialLayerPos.current.initialDist || 50;
