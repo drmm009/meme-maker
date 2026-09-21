@@ -419,9 +419,9 @@ export default function Timeline() {
   const sections = [
     { id: 'video', color: '#ff2a5f', icon: <Video size={16} />, onClick: () => setDropdownOpen(prev => prev === 'video' ? null : 'video'), items: videoItems.length > 0 ? videoItems : [null] },
     { id: 'image', color: '#a855f7', icon: <ImageIcon size={16} />, onClick: () => setDropdownOpen(prev => prev === 'image' ? null : 'image'), items: imageItems.length > 0 ? imageItems : [null] },
-    { id: 'sticker', color: '#fbbf24', icon: <Smile size={16} />, onClick: () => setDropdownOpen(prev => prev === 'sticker' ? null : 'sticker'), items: stickerItems.length > 0 ? stickerItems : [null] },
+    { id: 'audio', color: '#10b981', icon: <Music size={16} />, onClick: () => setDropdownOpen(prev => prev === 'audio' ? null : 'audio'), items: audioItems.length > 0 ? audioItems : [null] },
     { id: 'text', color: '#a855f7', icon: <Type size={16} />, onClick: handleAddText, items: textItems.length > 0 ? textItems : [null] },
-    { id: 'audio', color: '#10b981', icon: <Music size={16} />, onClick: () => setDropdownOpen(prev => prev === 'audio' ? null : 'audio'), items: audioItems.length > 0 ? audioItems : [null] }
+    { id: 'sticker', color: '#fbbf24', icon: <Smile size={16} />, onClick: () => setDropdownOpen(prev => prev === 'sticker' ? null : 'sticker'), items: stickerItems.length > 0 ? stickerItems : [null] }
   ];
 
   const rows = [];
@@ -525,7 +525,7 @@ export default function Timeline() {
                   </div>
                   
                   {dropdownOpen === row.sectionId && (row.sectionId === 'video' || row.sectionId === 'image') && (
-                    <div className="glass-card animate-fade-in" style={{ position: 'absolute', top: '100%', left: '100%', zIndex: 1000, display: 'flex', flexDirection: 'column', padding: '8px', gap: '4px', minWidth: '160px', marginTop: '-12px', marginLeft: '8px' }} onClick={e => e.stopPropagation()}>
+                    <div className="glass-card animate-fade-in" style={{ position: 'absolute', top: row.sectionId === 'image' ? '-22px' : '12px', left: '100%', zIndex: 1000, display: 'flex', flexDirection: 'column', padding: '8px', gap: '4px', minWidth: '160px', marginLeft: '8px' }} onClick={e => e.stopPropagation()}>
                       <button 
                         className="btn timeline-dropdown-btn timeline-dropdown-btn-custom" 
                         onClick={() => {
@@ -555,7 +555,7 @@ export default function Timeline() {
                   )}
 
                   {dropdownOpen === row.sectionId && row.sectionId === 'sticker' && (
-                    <div className="glass-card animate-fade-in" style={{ position: 'absolute', top: '100%', left: '100%', zIndex: 1000, display: 'flex', flexDirection: 'column', padding: '8px', gap: '4px', minWidth: '160px', marginTop: '-12px', marginLeft: '8px' }} onClick={e => e.stopPropagation()}>
+                    <div className="glass-card animate-fade-in" style={{ position: 'absolute', bottom: '12px', left: '100%', zIndex: 1000, display: 'flex', flexDirection: 'column', padding: '8px', gap: '4px', minWidth: '160px', marginLeft: '8px' }} onClick={e => e.stopPropagation()}>
                       <button 
                         className="btn timeline-dropdown-btn timeline-dropdown-btn-custom" 
                         onClick={() => {
@@ -580,7 +580,7 @@ export default function Timeline() {
                   )}
 
                   {dropdownOpen === row.sectionId && row.sectionId === 'audio' && (
-                    <div className="glass-card animate-fade-in" style={{ position: 'absolute', bottom: '4px', left: '100%', zIndex: 1000, display: 'flex', flexDirection: 'column', padding: '8px', gap: '4px', minWidth: '160px', marginLeft: '8px' }} onClick={e => e.stopPropagation()}>
+                    <div className="glass-card animate-fade-in" style={{ position: 'absolute', top: '-22px', left: '100%', zIndex: 1000, display: 'flex', flexDirection: 'column', padding: '8px', gap: '4px', minWidth: '160px', marginLeft: '8px' }} onClick={e => e.stopPropagation()}>
                       <button 
                         className="btn timeline-dropdown-btn timeline-dropdown-btn-custom" 
                         onClick={() => {

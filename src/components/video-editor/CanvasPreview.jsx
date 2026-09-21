@@ -623,11 +623,14 @@ const CanvasPreview = forwardRef((props, ref) => {
           display: 'flex', 
           justifyContent: 'center', 
           alignItems: 'center', 
-          backgroundColor: '#0f0f0f',
+          /* Transparent so the parent glass card shows — no black letterbox */
+          backgroundColor: 'transparent',
           overflow: 'hidden',
           position: 'relative'
         }}
       >
+        {/* Stage wrapper: shrink-wraps exactly to stage pixel size so no black gaps */}
+        <div style={{ position: 'relative', width: dimensions.width, height: dimensions.height, flexShrink: 0 }}>
         {/* MOBILE HACK: Render native videos behind the canvas so the browser compositor doesn't suspend them! */}
         <div id="video-sink" style={{ position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none' }}></div>
         
@@ -779,6 +782,7 @@ const CanvasPreview = forwardRef((props, ref) => {
           }
         }}
       />
+        </div>{/* end stage-wrapper */}
     </div>
   );
 });

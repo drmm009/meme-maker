@@ -1,31 +1,35 @@
-/* Video Editor Specific Styles */
-.canvas-container { background: transparent; position: relative; }
-.timeline-tracks { flex: 1; overflow: visible; position: relative; }
-.track { height: 50px; background: #131622; border-bottom: 1px solid transparent; box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3); position: relative; margin-bottom: 2px; border-radius: 8px; }
-.timeline-item-layer { border-radius: var(--radius-sm); overflow: hidden; box-shadow: var(--shadow-sm); transition: box-shadow 0.2s ease; }
-.timeline-item-layer:hover { box-shadow: 0 0 0 2px var(--accent-primary); }
+/* ══════════════════════════════════════════════
+   VIDEO EDITOR — Component Styles
+   ══════════════════════════════════════════════ */
 
-.aspect-ratio-wrapper {
-  display: flex;
-  align-items: center;
-  padding: 6px 12px;
-  border-radius: var(--radius-md);
-  gap: 8px;
-}
-
-.aspect-ratio-display {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+/* Base canvas container */
+.canvas-container {
   background: transparent;
-  color: var(--text-main);
-  font-size: 0.9rem;
-  cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 4px;
+  position: relative;
 }
 
-/* Video Editor Desktop Side-by-Side Layout */
+/* Timeline track row */
+.timeline-tracks { flex: 1; overflow: visible; position: relative; }
+.track {
+  height: 50px;
+  background: rgba(255,255,255,0.03);
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.25);
+  position: relative;
+  margin-bottom: 3px;
+  border-radius: 8px;
+}
+.timeline-item-layer {
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.2s ease;
+}
+.timeline-item-layer:hover {
+  box-shadow: 0 0 0 2px var(--poster-orange, #f97316);
+}
+
+/* ── Desktop Layout ─────────────────────────── */
 .video-editor-container {
   display: flex;
   flex-direction: column;
@@ -41,7 +45,7 @@
   min-height: 0;
   display: flex;
   flex-direction: row;
-  gap: 16px;
+  gap: 14px;
   padding: 8px 16px 16px;
   overflow: hidden;
   box-sizing: border-box;
@@ -59,7 +63,7 @@
   justify-content: center;
   position: relative;
   overflow: hidden;
-  padding: 12px;
+  padding: 0;
   box-sizing: border-box;
 }
 
@@ -72,35 +76,226 @@
   flex-direction: column;
   overflow: hidden;
   margin-top: 0 !important;
-  padding: 16px;
+  padding: 14px;
   box-sizing: border-box;
 }
 
+/* Timeline content wrapper (so we can hide it when folded on mobile) */
+.timeline-content-wrap {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ── Playback Controls Group ─────────────────── */
 .timeline-controls-wrap {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
   gap: 8px;
-  min-height: 38px;
+  min-height: 42px;
+  flex-shrink: 0;
+  margin-bottom: 12px;
+}
+
+.vid-playback-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  padding: 4px 0;
+}
+
+.vid-play-btn {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: var(--text-main) !important;
+  transition: color 0.2s ease, transform 0.15s ease !important;
+  border-radius: 8px !important;
+  padding: 6px !important;
+}
+.vid-play-btn:hover {
+  background: rgba(255,255,255,0.08) !important;
+  color: var(--poster-orange, #f97316) !important;
+  transform: scale(1.05);
+}
+.vid-play-btn.playing {
+  color: var(--poster-orange, #f97316) !important;
+}
+
+/* ── Fold handle (mobile only by default) ─────── */
+.timeline-fold-handle {
+  display: none;
+}
+
+/* ── Floating Context Toolbar ─────────────────── */
+.video-context-toolbar {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(14, 14, 22, 0.88);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  padding: 5px 10px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  white-space: nowrap;
+  max-width: calc(100% - 24px);
+  overflow-x: auto;
+}
+
+.vid-ctx-btn {
+  background: rgba(255,255,255,0.07) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+  border-radius: 8px !important;
+  padding: 5px 8px !important;
+  color: rgba(255,255,255,0.85) !important;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  font-size: 0.78rem;
+  font-weight: 500;
+}
+.vid-ctx-btn:hover {
+  background: rgba(255,255,255,0.14) !important;
+  color: #ffffff !important;
+}
+.vid-ctx-btn.active {
+  background: rgba(249,115,22,0.2) !important;
+  border-color: rgba(249,115,22,0.4) !important;
+  color: var(--poster-orange, #f97316) !important;
+}
+.vid-ctx-delete {
+  color: rgba(255,60,80,0.8) !important;
+  border-color: rgba(255,60,80,0.2) !important;
+}
+.vid-ctx-delete:hover {
+  background: rgba(255,60,80,0.15) !important;
+  color: #ff3c50 !important;
+}
+.vid-ctx-btn-delete {
+  background: rgba(239, 68, 68, 0.85) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(239, 68, 68, 1) !important;
+}
+.vid-ctx-btn-delete:hover {
+  background: rgba(220, 38, 38, 1) !important;
+}
+.vid-ctx-select {
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
+  padding: 4px 6px;
+  color: rgba(255,255,255,0.85);
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+.vid-ctx-divider {
+  width: 1px;
+  height: 20px;
+  background: rgba(255,255,255,0.12);
+  margin: 0 2px;
   flex-shrink: 0;
 }
 
-/* Timeline container padding */
-.timeline-section {
-  padding: 16px;
+/* ── Export Overlay ───────────────────────────── */
+.vid-export-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.82);
+  backdrop-filter: blur(8px);
+  z-index: 200;
+  border-radius: var(--radius-lg, 16px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.vid-export-overlay-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #fff;
+  width: 80%;
+}
+.vid-export-progress-track {
+  width: 100%;
+  height: 6px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 99px;
+  overflow: hidden;
+}
+.vid-export-progress-fill {
+  height: 100%;
+  background: var(--poster-orange, #f97316);
+  border-radius: 99px;
+  transition: width 0.1s linear;
 }
 
-@media (max-width: 768px) {
-  .desktop-only {
-    display: none !important;
-  }
+/* ── Export dropdown menu item ────────────────── */
+.vid-export-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 14px;
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+  color: rgba(255,255,255,0.85);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s ease;
+}
+.vid-export-menu-item:hover {
+  background: rgba(255,255,255,0.08);
 }
 
-/* Mobile & Tablet Stacked Layout (<= 900px) */
+/* ══════════════════════════════════════════════
+   MOBILE / TABLET  (≤ 900px)
+   ══════════════════════════════════════════════ */
 @media (max-width: 900px) {
-  /* 
-   * .meme-editor-container (App.css) sets position:fixed; height:100svh on mobile.
-   * .video-editor-container shares that element, so we just need to fill it correctly.
-   */
+  /* Fold handle appears on mobile */
+  .timeline-fold-handle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 6px 14px 4px;
+    cursor: pointer;
+    flex-shrink: 0;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .timeline-fold-drag-bar {
+    position: absolute;
+    top: 5px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 32px;
+    height: 3px;
+    background: rgba(255,255,255,0.18);
+    border-radius: 99px;
+  }
+  .timeline-fold-handle {
+    position: relative;
+    padding-top: 14px;
+  }
+
+  /* Full container chain */
   .video-editor-container {
     height: 100% !important;
     max-height: 100% !important;
@@ -113,7 +308,7 @@
     flex: 1 1 0% !important;
     flex-direction: column !important;
     min-height: 0 !important;
-    height: 0 !important; /* trick: forces flex children to share the flex space properly */
+    height: 0 !important;
     max-height: none !important;
     overflow: hidden !important;
     padding: 8px !important;
@@ -123,31 +318,136 @@
 
   .video-canvas-area {
     width: 100% !important;
-    /* JS-computed height based on aspect ratio */
-    height: var(--mobile-canvas-height, 40vh) !important;
+    /*
+     * Exact-fit height: container matches the Konva stage dimensions so no
+     * black letterbox bars waste space. Formula:
+     *   canvas_width  ≈ 100vw - 16px (main padding) - 12px (container padding)
+     *   canvas_height = canvas_width / aspect_ratio
+     *   container_h   = canvas_height + 12px (top+bottom padding)
+     *
+     * Capped at 52vh so portrait (9:16) doesn't eat the whole screen.
+     */
+    height: min(calc((100vw - 28px) / var(--canvas-aspect-ratio, 1.778) + 12px), 52vh) !important;
     flex: none !important;
     flex-shrink: 0 !important;
-    padding: 6px !important;
+    padding: 0 !important;
     box-sizing: border-box !important;
     overflow: hidden !important;
     min-height: 0 !important;
   }
 
+  /* Unfolded: timeline fills remaining space */
   .video-timeline-section {
     width: 100% !important;
     flex: 1 1 0% !important;
     min-height: 0 !important;
-    height: 0 !important; /* same trick as parent */
+    height: 0 !important;
     overflow: hidden !important;
     margin-top: 0 !important;
-    padding: 16px 0 !important;
+    padding: 0 !important;
     box-sizing: border-box !important;
     display: flex !important;
     flex-direction: column !important;
+    transition: flex 0.35s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  }
+
+  /* Folded: Floating pill-shaped dock */
+  .video-timeline-section.folded {
+    flex: none !important;
+    height: 56px !important;
+    min-height: 56px !important;
+    overflow: hidden !important;
+    width: fit-content !important;
+    align-self: center !important;
+    margin: 0 auto 12px !important;
+    border-radius: 28px !important;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4) !important;
+  }
+  .video-timeline-section.folded .timeline-content-wrap {
+    padding: 0 16px !important;
+    height: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  /* When timeline is folded, canvas gets more room */
+  .video-editor-main:has(.video-timeline-section.folded) .video-canvas-area {
+    flex: 1 1 0% !important;
+    height: auto !important;
+    max-height: calc(100% - 64px) !important;
+  }
+
+  .timeline-content-wrap {
+    padding: 10px 0 0 !important;
+    overflow: hidden;
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 1 0% !important;
+    min-height: 0 !important;
   }
 
   .timeline-controls-wrap {
-    padding: 0 16px;
+    margin-bottom: 8px !important;
+    padding: 0 12px !important;
+  }
+  .video-timeline-section.folded .timeline-controls-wrap {
+    margin: 0 !important;
+  }
+
+  /* Floating context toolbar: smaller on mobile, always visible above canvas */
+  .video-context-toolbar {
+    top: 6px;
+    padding: 4px 8px;
+    gap: 3px;
+    font-size: 0.72rem;
+    border-radius: 12px;
+  }
+
+  .desktop-only {
+    display: none !important;
+  }
+
+  /* Vertical toolbar for portrait videos on mobile */
+  .video-context-toolbar.portrait {
+    top: 50% !important;
+    right: 8px !important;
+    left: auto !important;
+    bottom: auto !important;
+    transform: translateY(-50%) scale(1) !important;
+    flex-direction: column !important;
+    max-height: calc(100% - 24px) !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding: 8px 4px !important;
+  }
+  .video-context-toolbar.portrait .vid-ctx-divider {
+    width: 20px !important;
+    height: 1px !important;
+    margin: 4px 0 !important;
+  }
+  
+  /* Hide font name label on portrait toolbar to keep button square */
+  .video-context-toolbar.portrait .vid-font-label {
+    display: none !important;
+  }
+  .video-context-toolbar.portrait .vid-font-icon {
+    margin-right: 0 !important;
+  }
+  .video-context-toolbar.portrait .vid-ctx-btn-font {
+    padding: 5px 8px !important;
+    max-width: none !important;
   }
 }
 
+@media (max-width: 768px) {
+  .desktop-only {
+    display: none !important;
+  }
+}
+
+@media (min-width: 901px) {
+  .mobile-only-flex {
+    display: none !important;
+  }
+}

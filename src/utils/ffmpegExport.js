@@ -109,17 +109,16 @@ export const exportVideoFFmpeg = async (items = [], durationMs = 7000, canvasAsp
         if (!item.muted) {
           let videoHasAudio = false;
           try {
-            const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
-            if (AudioCtxClass) {
-              const tempCtx = new AudioCtxClass();
-              const decoded = await tempCtx.decodeAudioData(fileData.buffer.slice(0));
-              if (decoded && decoded.numberOfChannels > 0 && decoded.length > 0) {
-                videoHasAudio = true;
-              }
-              tempCtx.close().catch(() => {});
+            // Use FFmpeg to quickly check if an audio stream exists in this file
+            const ret = await ff.exec(['-i', fileName, '-map', '0:a', '-c', 'copy', '-f', 'null', '-']);
+            if (ret === 0) {
+              videoHasAudio = true;
+            } else {
+              console.log(`[FFmpeg Export] No audio stream found in ${fileName}`);
             }
           } catch (e) {
             videoHasAudio = false;
+            console.warn(`[FFmpeg Export] FFmpeg probe for audio failed:`, e);
           }
 
           if (videoHasAudio) {
