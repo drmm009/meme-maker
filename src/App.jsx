@@ -7,8 +7,9 @@ import VideoEditor from './components/video-editor/VideoEditor';
 import MyGallery from './components/MyGallery';
 import AccountModal from './components/AccountModal';
 import SettingsModal from './components/SettingsModal';
+import ErrorBoundary from './components/ErrorBoundary';
 import { MEME_TEMPLATES } from './data/templates';
-import { Sparkles, Grid, LayoutGrid, FolderHeart, User, Sun, Moon } from 'lucide-react';
+import { Sparkles, Grid, LayoutGrid, FolderHeart, User, Sun, Moon, Settings } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import './App.css';
 
@@ -24,7 +25,13 @@ function App() {
     }
   });
 
-  const palette = 'sunset-orange';
+  const [palette, setPalette] = useState(() => {
+    try {
+      return localStorage.getItem('meme_creator_palette') || 'sunset-orange';
+    } catch {
+      return 'sunset-orange';
+    }
+  });
 
   useEffect(() => {
     try {
@@ -222,7 +229,7 @@ function App() {
                 <Sparkles className="icon-md text-cyan" />
               </motion.div>
               <div>
-                <h1 className="brand-title">Meme Creator v25</h1>
+                <h1 className="brand-title">Meme Creator</h1>
                 <span className="brand-tagline">Mobile & Web Studio</span>
               </div>
             </div>
@@ -293,6 +300,34 @@ function App() {
                     <span className="theme-toggle-text">Dark</span>
                   </>
                 )}
+              </motion.button>
+
+              <motion.button
+                className="account-header-btn"
+                whileHover={{ scale: 1.08 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setSettingsModalOpen(true)}
+                title="App Preferences"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '50%',
+                  background: theme === 'dark'
+                    ? 'linear-gradient(135deg, rgba(249, 115, 22, 0.2) 0%, rgba(234, 88, 12, 0.15) 100%)'
+                    : 'linear-gradient(135deg, rgba(249, 115, 22, 0.18) 0%, rgba(234, 88, 12, 0.22) 100%)',
+                  backdropFilter: 'blur(12px)',
+                  WebkitBackdropFilter: 'blur(12px)',
+                  border: '1px solid var(--glass-border)',
+                  boxShadow: '0 4px 12px rgba(31, 38, 135, 0.08)',
+                  cursor: 'pointer',
+                  color: 'var(--text-main)',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                <Settings className="icon-sm" style={{ width: '20px', height: '20px', color: theme === 'dark' ? '#f97316' : '#ea580c' }} />
               </motion.button>
 
               <motion.button
@@ -390,14 +425,21 @@ function App() {
           className={`persistent-builder-view ${currentView === 'editor' ? 'active-view' : 'hidden-view'}`}
         >
           {hasOpenedEditor && selectedTemplate && (
-            <MemeEditor
-              key={`${selectedTemplate?.id || 'editor'}-${editorSessionKey}`}
-              template={selectedTemplate}
+            <ErrorBoundary
+              fallbackTitle="Editor crashed"
+              fallbackMessage="Something went wrong in the meme editor. Try going back and selecting a different template."
               onBack={handleEditorBack}
-              onSaveToGallery={handleSaveToGallery}
-              theme={theme}
-              onToggleTheme={toggleTheme}
-            />
+              onReset={() => setEditorSessionKey((k) => k + 1)}
+            >
+              <MemeEditor
+                key={`${selectedTemplate?.id || 'editor'}-${editorSessionKey}`}
+                template={selectedTemplate}
+                onBack={handleEditorBack}
+                onSaveToGallery={handleSaveToGallery}
+                theme={theme}
+                onToggleTheme={toggleTheme}
+              />
+            </ErrorBoundary>
           )}
         </div>
 
@@ -405,13 +447,20 @@ function App() {
           className={`persistent-builder-view ${currentView === 'video-editor' ? 'active-view' : 'hidden-view'}`}
         >
           {hasOpenedVideoEditor && selectedTemplate && (
-            <VideoEditor
-              key={`${selectedTemplate?.id || 'video-editor'}-${videoSessionKey}`}
-              template={selectedTemplate}
+            <ErrorBoundary
+              fallbackTitle="Video editor crashed"
+              fallbackMessage="Something went wrong in the video editor. Try going back and selecting a different template."
               onBack={handleEditorBack}
-              theme={theme}
-              onToggleTheme={toggleTheme}
-            />
+              onReset={() => setVideoSessionKey((k) => k + 1)}
+            >
+              <VideoEditor
+                key={`${selectedTemplate?.id || 'video-editor'}-${videoSessionKey}`}
+                template={selectedTemplate}
+                onBack={handleEditorBack}
+                theme={theme}
+                onToggleTheme={toggleTheme}
+              />
+            </ErrorBoundary>
           )}
         </div>
       </main>
@@ -453,6 +502,8 @@ function App() {
           onClose={() => setSettingsModalOpen(false)}
           theme={theme}
           onToggleTheme={toggleTheme}
+          palette={palette}
+          onChangePalette={setPalette}
         />
       )}
     </div>

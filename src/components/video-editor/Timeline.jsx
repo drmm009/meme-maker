@@ -491,7 +491,7 @@ export default function Timeline() {
       </div>
 
       {/* Tracks Area (Internally Scrollable) */}
-      <div style={{ display: 'flex', flex: 1, minHeight: 0, overflowY: 'auto', position: 'relative' }}>
+      <div className="timeline-scroll-area" style={{ display: 'flex', flex: 1, minHeight: 0, overflowY: 'auto', position: 'relative', touchAction: 'pan-y' }}>
         
         {/* Left Sidebar for Track Icons */}
         <div style={{ width: '64px', flexShrink: 0, borderRight: '1px solid var(--glass-border)' }}>
@@ -612,10 +612,10 @@ export default function Timeline() {
         {/* Right Side: Sequence Tracks */}
         <div 
           className="timeline-tracks" 
-          style={{ flex: 1, position: 'relative', touchAction: 'none', marginRight: '15px' }}
+          style={{ flex: 1, position: 'relative', touchAction: 'pan-y', marginRight: '15px' }}
         >
           {/* Tracks */}
-          <div style={{ position: 'relative', minHeight: '100%', overflow: 'hidden' }}>
+          <div style={{ position: 'relative', minHeight: '100%', overflow: 'visible' }}>
             {/* Playhead line overlay over tracks */}
             <div style={{ position: 'absolute', top: 0, bottom: 0, left: `${getPlayheadPosition()}%`, width: '2px', background: 'var(--cyber-pink)', zIndex: 40, pointerEvents: 'none' }} />
             

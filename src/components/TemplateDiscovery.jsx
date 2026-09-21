@@ -35,8 +35,8 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom }) 
 
       return matchesSearch && matchesCategory && matchesMediaType;
     }).sort((a, b) => {
-      if (sortBy === 'trending') return b.trendingScore - a.trendingScore;
-      if (sortBy === 'name') return a.name.localeCompare(b.name);
+      if (sortBy === 'trending') return (b.trendingScore || 0) - (a.trendingScore || 0);
+      if (sortBy === 'name') return (a.name || '').localeCompare(b.name || '');
       return 0;
     });
   }, [searchQuery, selectedCategory, sortBy, mediaType, allTemplates]);

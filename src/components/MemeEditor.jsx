@@ -6,10 +6,10 @@ import { FONTS, STICKERS } from '../data/stickers';
 import { GRAPHIC_STICKERS, GRAPHIC_STICKER_CATEGORIES } from '../data/memeStickers';
 import confetti from 'canvas-confetti';
 import {
-  Type, Plus, Trash2, Undo, Redo, Download, Share2, Sparkles,
+  Type, Plus, Trash2, Undo, Redo, Download, Share2, Sparkles, Copy,
   Sliders, Smile, Sticker, ArrowLeft, Save, Check, RefreshCw,
   Image as ImageIcon, Search, X, Upload, RotateCw, ZoomIn, Crop, LayoutGrid, Scissors, Play, Pause, FolderHeart, Droplet, Monitor,
-  Paintbrush, Eraser, Palette, Sun, Moon
+  Paintbrush, Eraser, Palette, Sun, Moon, ChevronDown
 } from 'lucide-react';
 import { downloadImageHelper, recordCanvasAsVideo } from '../utils/downloadHelper';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -324,6 +324,16 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
   const [historyStep, setHistoryStep] = useState(0);
 
   const [activeTab, setActiveTab] = useState('text'); // 'text' | 'stickers' | 'images' | 'draw' | 'watermark'
+  const [isMobileTabsFolded, setIsMobileTabsFolded] = useState(false);
+
+  const handleTabClick = (tabId) => {
+    if (activeTab === tabId) {
+      setIsMobileTabsFolded(!isMobileTabsFolded);
+    } else {
+      setActiveTab(tabId);
+      setIsMobileTabsFolded(false);
+    }
+  };
   const [showMemeStickersModal, setShowMemeStickersModal] = useState(false);
   const [showEmojiModal, setShowEmojiModal] = useState(false);
   const [stickerSearchQuery, setStickerSearchQuery] = useState('');
@@ -339,6 +349,8 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const [exportedImageUri, setExportedImageUri] = useState(null);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [exportDropdownOpen, setExportDropdownOpen] = useState(false);
+  const exportDropdownRef = useRef(null);
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
   const [exportedVideoUrl, setExportedVideoUrl] = useState(null);
   const [isSaved, setIsSaved] = useState(false);
@@ -405,12 +417,56 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     }
   }, [activeTab]);
 
+  // Close export dropdown when clicking outside
+  useEffect(() => {
+    if (!exportDropdownOpen) return;
+    const handleClickOutside = (e) => {
+      if (exportDropdownRef.current && !exportDropdownRef.current.contains(e.target)) {
+        setExportDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [exportDropdownOpen]);
+
   // Synchronize history snapshot on mount
   useEffect(() => {
     if (captions.length > 0 && activeLayerId === null) {
       setActiveLayerId(captions[0].id);
     }
   }, []);
+
+  // Keyboard shortcuts: Ctrl+Z (undo), Ctrl+Y / Ctrl+Shift+Z (redo), Delete (delete layer), Escape (deselect)
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Skip if focus is inside a text input / textarea / contenteditable
+      const tag = document.activeElement?.tagName?.toLowerCase();
+      const isEditing =
+        tag === 'input' ||
+        tag === 'textarea' ||
+        document.activeElement?.isContentEditable;
+      if (isEditing) return;
+
+      const isMac = navigator.platform?.toUpperCase().includes('MAC');
+      const ctrl = isMac ? e.metaKey : e.ctrlKey;
+
+      if (ctrl && !e.shiftKey && e.key === 'z') {
+        e.preventDefault();
+        handleUndo();
+      } else if (ctrl && (e.key === 'y' || (e.shiftKey && e.key === 'z'))) {
+        e.preventDefault();
+        handleRedo();
+      } else if ((e.key === 'Delete' || e.key === 'Backspace') && activeLayerId) {
+        e.preventDefault();
+        handleDeleteLayer();
+      } else if (e.key === 'Escape') {
+        setActiveLayerId(null);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [historyStep, history, activeLayerId, captions, stickers, imageLayers, drawings]);
 
   const pushHistory = (newCaptions, newStickers, newImgLayers = imageLayers, newDrawings = drawings) => {
     const newSnapshot = {
@@ -904,6 +960,24 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     }, 50);
   };
 
+  // Renders canvas to dataURL first, then runs the callback action
+  const handleQuickExport = (action) => {
+    setActiveLayerId(null);
+    setExportDropdownOpen(false);
+    setTimeout(async () => {
+      if (canvasRef.current) {
+        const dataUrl = canvasRef.current.toDataURL('image/png');
+        setExportedImageUri(dataUrl);
+        const cleaned = cleanTemplateName(template?.name);
+        const defaultName = cleaned || (captions[0]?.text && captions[0].text !== 'TOP TEXT' ? captions[0].text : '') || 'My Meme';
+        setMemeCustomName(defaultName);
+        // Small delay so state update flushes
+        await new Promise(r => setTimeout(r, 30));
+        action(dataUrl);
+      }
+    }, 50);
+  };
+
   const handleConfirmSave = () => {
     const dataUrl = exportedImageUri || (canvasRef.current && canvasRef.current.toDataURL('image/png'));
     if (dataUrl) {
@@ -976,6 +1050,68 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     }
   };
 
+  const [clipboardCopied, setClipboardCopied] = useState(false);
+
+  const handleCopyToClipboard = async () => {
+    if (!exportedImageUri) return;
+    try {
+      const res = await fetch(exportedImageUri);
+      const blob = await res.blob();
+      if (typeof ClipboardItem !== 'undefined' && navigator.clipboard?.write) {
+        // Modern clipboard API — copies actual image, pasteable into Discord/Twitter/etc.
+        await navigator.clipboard.write([
+          new ClipboardItem({ 'image/png': blob })
+        ]);
+      } else {
+        // Fallback: copy the data URL as text
+        await navigator.clipboard.writeText(exportedImageUri);
+      }
+      setClipboardCopied(true);
+      triggerConfetti();
+      setTimeout(() => setClipboardCopied(false), 2500);
+    } catch (err) {
+      console.warn('Copy to clipboard failed:', err);
+    }
+  };
+
+  const [shareCopied, setShareCopied] = useState(false);
+
+  const handleShareImage = async () => {
+    if (!exportedImageUri) return;
+    try {
+      // Convert data URL to Blob for Web Share API
+      const res = await fetch(exportedImageUri);
+      const blob = await res.blob();
+      const file = new File([blob], `meme-${Date.now()}.png`, { type: 'image/png' });
+
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        // Native share sheet (mobile / Chrome Android / Safari iOS)
+        await navigator.share({
+          title: memeCustomName || 'My Meme',
+          text: 'Check out this meme I made! 😂',
+          files: [file],
+        });
+        triggerConfetti();
+      } else {
+        // Desktop fallback: copy data URL to clipboard
+        await navigator.clipboard.writeText(exportedImageUri);
+        setShareCopied(true);
+        setTimeout(() => setShareCopied(false), 2500);
+      }
+    } catch (err) {
+      // User cancelled share or clipboard not available — silently ignore
+      if (err.name !== 'AbortError') {
+        console.warn('Share failed:', err);
+      }
+    }
+  };
+  const getDockHeight = () => {
+    if (aspectRatio === '16:9') return '45vh';
+    if (aspectRatio === '1:1') return '40vh';
+    if (aspectRatio === '4:5') return '35vh';
+    if (aspectRatio === '9:16') return '32vh';
+    return '38vh';
+  };
 
   return (
     <AnimatePresence mode="wait">
@@ -1019,6 +1155,33 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                 <button className="btn btn-primary shadow-glow" onClick={handleDownloadImage}>
                   <Download className="icon-sm" /> <span>Download PNG</span>
                 </button>
+                <button
+                  className="btn btn-secondary hover-lift"
+                  onClick={handleCopyToClipboard}
+                  title={clipboardCopied ? 'Image copied!' : 'Copy image to clipboard — paste into Discord, Twitter, etc.'}
+                  style={{
+                    background: clipboardCopied ? 'rgba(34, 197, 94, 0.15)' : undefined,
+                    borderColor: clipboardCopied ? 'rgba(34, 197, 94, 0.4)' : undefined,
+                    color: clipboardCopied ? '#22c55e' : undefined,
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  {clipboardCopied ? <Check className="icon-sm" /> : <Copy className="icon-sm" />}
+                  <span>{clipboardCopied ? 'Copied!' : 'Copy Image'}</span>
+                </button>
+                <button
+                  className="btn btn-secondary hover-lift"
+                  onClick={handleShareImage}
+                  title={shareCopied ? 'Copied to clipboard!' : (typeof navigator !== 'undefined' && navigator.canShare ? 'Share' : 'Copy link')}
+                  style={{
+                    background: shareCopied ? 'rgba(34, 197, 94, 0.15)' : undefined,
+                    borderColor: shareCopied ? 'rgba(34, 197, 94, 0.4)' : undefined,
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  <Share2 className="icon-sm" />
+                  <span>{shareCopied ? 'Copied!' : 'Share'}</span>
+                </button>
               </div>
               <p className="export-help-text">Your meme will be safely stored in your browser's local storage gallery.</p>
             </div>
@@ -1034,20 +1197,48 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
 
         <div className="history-actions flex-gap">
           <button
-            className="btn btn-icon btn-xs"
+            className="btn btn-icon btn-xs hover-lift"
             onClick={handleUndo}
             disabled={historyStep <= 0}
             title="Undo"
-            style={{ opacity: historyStep <= 0 ? 0.6 : 1, cursor: historyStep <= 0 ? 'not-allowed' : 'pointer', background: historyStep <= 0 ? 'var(--glass-bg)' : '' }}
+            style={{ 
+              opacity: historyStep <= 0 ? 0.4 : 1, 
+              cursor: historyStep <= 0 ? 'not-allowed' : 'pointer',
+              background: 'rgba(255, 255, 255, 0.1)',
+              backdropFilter: 'blur(12px)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              borderRadius: '12px',
+              padding: '8px',
+              color: 'currentColor',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+              transition: 'all 0.3s ease',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
           >
             <Undo className="icon-xs" />
           </button>
           <button
-            className="btn btn-icon btn-xs"
+            className="btn btn-icon btn-xs hover-lift"
             onClick={handleRedo}
             disabled={historyStep >= history.length - 1}
             title="Redo"
-            style={{ opacity: historyStep >= history.length - 1 ? 0.6 : 1, cursor: historyStep >= history.length - 1 ? 'not-allowed' : 'pointer', background: historyStep >= history.length - 1 ? 'var(--glass-bg)' : '' }}
+            style={{ 
+              opacity: historyStep >= history.length - 1 ? 0.4 : 1, 
+              cursor: historyStep >= history.length - 1 ? 'not-allowed' : 'pointer',
+              background: 'rgba(255, 255, 255, 0.1)',
+              backdropFilter: 'blur(12px)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              borderRadius: '12px',
+              padding: '8px',
+              color: 'currentColor',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+              transition: 'all 0.3s ease',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
           >
             <Redo className="icon-xs" />
           </button>
@@ -1059,19 +1250,121 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
             value={aspectRatio}
             onChange={(val) => {
               setAspectRatio(val);
-              setPadding(0);
               pushHistoryDebounced(captions, stickers, imageLayers);
             }}
             options={ASPECT_RATIOS}
           />
 
-          <motion.button
-            className="btn btn-primary shadow-glow btn-xs"
-            whileTap={{ scale: 0.95 }}
-            onClick={handleExport}
-          >
-            <Sparkles className="icon-xs" /> Preview
-          </motion.button>
+          <div style={{ position: 'relative' }} ref={exportDropdownRef}>
+            <motion.button
+              className="btn btn-primary shadow-glow btn-xs"
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setExportDropdownOpen(prev => !prev)}
+              style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+            >
+              <Download className="icon-xs" />
+              <span>Export</span>
+              <ChevronDown className="icon-xs" style={{ transition: 'transform 0.2s', transform: exportDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)' }} />
+            </motion.button>
+
+            <AnimatePresence>
+              {exportDropdownOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: -8, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -8, scale: 0.95 }}
+                  transition={{ duration: 0.15, ease: 'easeOut' }}
+                  style={{
+                    position: 'absolute',
+                    top: 'calc(100% + 8px)',
+                    right: 0,
+                    minWidth: '190px',
+                    background: 'rgba(18, 18, 26, 0.92)',
+                    backdropFilter: 'blur(20px)',
+                    border: '1px solid rgba(255, 255, 255, 0.12)',
+                    borderRadius: '14px',
+                    boxShadow: '0 16px 48px rgba(0,0,0,0.6)',
+                    zIndex: 9999,
+                    overflow: 'hidden',
+                    padding: '6px'
+                  }}
+                >
+                  {[
+                    { icon: <Download style={{width:16,height:16}} />, label: 'Download PNG', action: (uri) => {
+                      const filename = `meme-${template?.id || 'custom'}-${Date.now()}.png`;
+                      downloadImageHelper(uri, filename);
+                      triggerConfetti();
+                    }},
+                    { icon: <Copy style={{width:16,height:16}} />, label: 'Copy Image', action: async (uri) => {
+                      try {
+                        const res = await fetch(uri);
+                        const blob = await res.blob();
+                        if (typeof ClipboardItem !== 'undefined' && navigator.clipboard?.write) {
+                          await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+                        } else {
+                          await navigator.clipboard.writeText(uri);
+                        }
+                        triggerConfetti();
+                      } catch(e) { console.warn(e); }
+                    }},
+                    { icon: <Share2 style={{width:16,height:16}} />, label: 'Share', action: async (uri) => {
+                      try {
+                        const res = await fetch(uri);
+                        const blob = await res.blob();
+                        const file = new File([blob], `meme-${Date.now()}.png`, { type: 'image/png' });
+                        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                          await navigator.share({ title: memeCustomName || 'My Meme', text: 'Check out this meme! 😂', files: [file] });
+                          triggerConfetti();
+                        } else {
+                          await navigator.clipboard.writeText(uri);
+                        }
+                      } catch(e) { if (e.name !== 'AbortError') console.warn(e); }
+                    }},
+                    { icon: <Save style={{width:16,height:16}} />, label: 'Save to Gallery', action: (uri) => {
+                      const finalName = memeCustomName.trim() || 'My Meme';
+                      onSaveToGallery({
+                        id: `meme-${Date.now()}`,
+                        name: finalName,
+                        imageUrl: uri,
+                        rawImageUrl: template?.rawImageUrl || template?.imageUrl,
+                        captions: JSON.parse(JSON.stringify(captions)),
+                        stickers: JSON.parse(JSON.stringify(stickers)),
+                        imageLayers: JSON.parse(JSON.stringify(imageLayers)),
+                        aspectRatio, imageFit, isNativeLayout, layoutDef, slotImages, slotTransforms,
+                        createdAt: new Date().toISOString()
+                      });
+                      triggerConfetti();
+                    }},
+                  ].map(({ icon, label, action }, i) => (
+                    <button
+                      key={i}
+                      onClick={() => handleQuickExport(action)}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px',
+                        width: '100%',
+                        padding: '10px 14px',
+                        background: 'transparent',
+                        border: 'none',
+                        borderRadius: '10px',
+                        color: 'rgba(255,255,255,0.85)',
+                        fontSize: '0.875rem',
+                        fontWeight: 500,
+                        cursor: 'pointer',
+                        textAlign: 'left',
+                        transition: 'background 0.15s ease',
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                    >
+                      {icon} {label}
+                    </button>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
       </div>
       
@@ -1144,7 +1437,10 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
       </div>
         
       {/* Sidebar Controls Tabs */}
-        <div className="editor-sidebar glass-card">
+        <div 
+          className={`editor-sidebar glass-card ${isMobileTabsFolded ? 'folded' : ''}`}
+          style={{ '--dock-height': getDockHeight() }}
+        >
           <div 
             ref={tabButtonsRef}
             className="tab-buttons"
@@ -1156,37 +1452,37 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
           >
             <button
               className={`tab-btn ${activeTab === 'text' ? 'active' : ''}`}
-              onClick={() => setActiveTab('text')}
+              onClick={() => handleTabClick('text')}
             >
-              <Type className="icon-xs" /> Text
+              <Type className="icon-xs" /> <span>Text</span>
             </button>
             <button
               className={`tab-btn ${activeTab === 'stickers' ? 'active' : ''}`}
-              onClick={() => setActiveTab('stickers')}
+              onClick={() => handleTabClick('stickers')}
             >
-              <Smile className="icon-xs" /> Stickers
+              <Smile className="icon-xs" /> <span>Stickers</span>
             </button>
             <button
               className={`tab-btn ${activeTab === 'images' ? 'active' : ''}`}
-              onClick={() => setActiveTab('images')}
+              onClick={() => handleTabClick('images')}
             >
-              <ImageIcon className="icon-xs" /> Media
+              <ImageIcon className="icon-xs" /> <span>Media</span>
             </button>
             <button
               className={`tab-btn ${activeTab === 'draw' ? 'active' : ''}`}
               onClick={() => {
-                setActiveTab('draw');
+                handleTabClick('draw');
                 setActiveLayerId(null);
                 setDrawTool('brush');
               }}
             >
-              <Paintbrush className="icon-xs" /> Draw
+              <Paintbrush className="icon-xs" /> <span>Draw</span>
             </button>
             <button
               className={`tab-btn ${activeTab === 'watermark' ? 'active' : ''}`}
-              onClick={() => setActiveTab('watermark')}
+              onClick={() => handleTabClick('watermark')}
             >
-              <Droplet className="icon-xs" /> Watermark
+              <Droplet className="icon-xs" /> <span>Watermark</span>
             </button>
           </div>
 
@@ -1200,7 +1496,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                     <label style={{ fontSize: '1.1rem', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '8px', lineHeight: 1 }}><Droplet className="icon-sm" style={{ transform: 'translateY(1px)' }} /> Watermark</label>
                     <label className="switch">
                       <input type="checkbox" checked={watermark?.enabled || false} onChange={(e) => updateWatermark('enabled', e.target.checked)} />
-                      <span className="slider round"></span>
+                      <span className="slider round watermark-toggle"></span>
                     </label>
                   </div>
                   
@@ -1297,7 +1593,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                             {watermark.position === 'bottom-left' && 'Bottom Left'}
                             {watermark.position === 'bottom-right' && 'Bottom Right'}
                           </span>
-                          <RefreshCw style={{ width: '15px', height: '15px', flexShrink: 0 }} className="text-cyan" />
+                          <RefreshCw style={{ width: '15px', height: '15px', flexShrink: 0, color: 'inherit' }} />
                         </button>
                         
                         {!watermark.imageUrl && (
@@ -1345,7 +1641,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                 </div>
 
                 {/* 1. Stroke / Eraser Thickness */}
-                <div style={{ marginBottom: '16px' }}>
+                <div style={{ marginBottom: '16px', display: drawTool ? 'block' : 'none' }}>
                   <div className="flex-between align-center" style={{ marginBottom: '6px', paddingRight: '4px' }}>
                     <label style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)' }}>
                       {drawTool === 'eraser' ? 'Eraser Thickness' : 'Stroke Thickness'} ({brushSize}px)
@@ -1370,7 +1666,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                 </div>
 
                 {/* 2. Brush Color: Buttons placed directly next to the label */}
-                {drawTool !== 'eraser' && (
+                <div style={{ display: drawTool === 'brush' ? 'block' : 'none' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px', paddingLeft: '4px', paddingRight: '4px', flexWrap: 'wrap' }}>
                     <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0, whiteSpace: 'nowrap' }}>
                       Brush/Pen Color:
@@ -1440,7 +1736,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                       </label>
                     </div>
                   </div>
-                )}
+                </div>
               </div>
             )}
 
@@ -1588,7 +1884,8 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        flexShrink: 0
+                        flexShrink: 0,
+                        marginRight: '8px'
                       }}
                     >
                       <Trash2 size={14} />
@@ -2339,7 +2636,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
               </div>
 
               {/* Emoji grid */}
-              <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(60px, 1fr))', gap: '10px', overflowY: 'auto', padding: '4px', alignContent: 'start', overscrollBehavior: 'contain', height: '100%' }}>
+              <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', overflowY: 'auto', padding: '4px', alignContent: 'start', overscrollBehavior: 'contain', height: '100%' }}>
                 {STICKERS.filter(s => {
                   if (emojiSearchQuery.trim()) {
                     const q = emojiSearchQuery.toLowerCase();
@@ -2349,9 +2646,10 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                 }).map(s => (
                   <button 
                     key={s.id} 
-                    className="sticker-chip-btn hover-lift"
+                    className="hover-lift"
                     title={s.name}
-                    onClick={() => handleAddSticker(s)} 
+                    onClick={() => handleAddSticker(s)}
+                    style={{ background: 'none', border: 'none', fontSize: '2.2rem', cursor: 'pointer', padding: '4px', textAlign: 'center', transition: 'transform 0.15s' }}
                   >
                     {s.emoji}
                   </button>
@@ -2396,7 +2694,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
               <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
                 <ImageIcon size={20} style={{ color: 'var(--cyber-cyan)' }} />
                 <h3 style={{ margin: 0, color: 'var(--text-main)', fontSize: '1.05rem', fontWeight: 600 }}>
-                  Add Template Overlay
+                  Add Template
                 </h3>
               </div>
               <button className="btn-close" onClick={() => setImagePickerTarget(null)} title="Close" aria-label="Close">✕</button>

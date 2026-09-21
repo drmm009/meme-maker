@@ -272,6 +272,13 @@ export default function VideoEditor({ template, onBack, theme, onToggleTheme }) 
               useEditorStore.getState().setActiveItem(null);
             }
           }}
+          style={{ 
+            flex: Math.max(0.4, Math.min(1.5, canvasAspectRatio)),
+            '--canvas-aspect-ratio': canvasAspectRatio,
+            // Mobile: give the container an explicit height so CanvasPreview can read clientHeight.
+            // Portrait = taller (more vh), landscape = shorter. Clamped to reasonable bounds.
+            '--mobile-canvas-height': `${Math.min(52, Math.max(28, Math.round(45 / Math.max(0.3, canvasAspectRatio))))}vh`
+          }}
         >
           <CanvasPreview ref={canvasPreviewRef} />
           
@@ -293,7 +300,10 @@ export default function VideoEditor({ template, onBack, theme, onToggleTheme }) 
         </div>
 
         {/* Timeline Area */}
-        <section className="tools-panel glass-card timeline-section video-timeline-section">
+        <section 
+          className="tools-panel glass-card timeline-section video-timeline-section"
+          style={{ flex: Math.max(0.5, Math.min(2, 1 / canvasAspectRatio)) }}
+        >
           <div className="flex-between align-center timeline-controls-wrap" style={{ marginBottom: '16px', position: 'relative' }}>
             <div className="flex-gap align-center">
               <button 

@@ -619,7 +619,7 @@ export default function CustomLayoutBuilder({
             </div>
           </div>
 
-              <div style={{ marginTop: '30px', display: 'flex', justifyContent: 'center' }}>
+              <div className="continue-btn-wrapper">
               <button
                 className="btn btn-primary shadow-glow hover-lift"
                 style={{

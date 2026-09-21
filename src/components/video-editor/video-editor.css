@@ -97,38 +97,53 @@
 
 /* Mobile & Tablet Stacked Layout (<= 900px) */
 @media (max-width: 900px) {
+  /* 
+   * .meme-editor-container (App.css) sets position:fixed; height:100svh on mobile.
+   * .video-editor-container shares that element, so we just need to fill it correctly.
+   */
   .video-editor-container {
-    height: auto;
-    max-height: none;
-    overflow: visible;
+    height: 100% !important;
+    max-height: 100% !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
   }
 
   .video-editor-main {
-    flex-direction: column;
-    height: auto;
-    max-height: none;
-    overflow: visible;
-    padding: 8px;
-    gap: 12px;
+    flex: 1 1 0% !important;
+    flex-direction: column !important;
+    min-height: 0 !important;
+    height: 0 !important; /* trick: forces flex children to share the flex space properly */
+    max-height: none !important;
+    overflow: hidden !important;
+    padding: 8px !important;
+    gap: 8px !important;
+    display: flex !important;
   }
 
   .video-canvas-area {
-    width: 100%;
-    min-height: 320px;
-    height: auto;
-    max-height: none;
-    flex: none;
-    padding: 6px;
+    width: 100% !important;
+    /* JS-computed height based on aspect ratio */
+    height: var(--mobile-canvas-height, 40vh) !important;
+    flex: none !important;
+    flex-shrink: 0 !important;
+    padding: 6px !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+    min-height: 0 !important;
   }
 
   .video-timeline-section {
-    width: 100%;
-    height: auto;
-    min-height: 380px;
-    flex: none;
-    overflow: visible;
+    width: 100% !important;
+    flex: 1 1 0% !important;
+    min-height: 0 !important;
+    height: 0 !important; /* same trick as parent */
+    overflow: hidden !important;
     margin-top: 0 !important;
-    padding: 16px 0;
+    padding: 16px 0 !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    flex-direction: column !important;
   }
 
   .timeline-controls-wrap {

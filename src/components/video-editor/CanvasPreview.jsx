@@ -565,9 +565,11 @@ const CanvasPreview = forwardRef((props, ref) => {
         let availableHeight;
 
         if (isMobile) {
-          // On mobile, restore full canvas width without restrictive container caps
-          availableWidth = Math.max(280, window.innerWidth - 20);
-          availableHeight = Math.max(340, window.innerHeight * 0.55);
+          // On mobile, use the actual parent container's dimensions so we stay within the flex layout
+          const parentArea = containerRef.current.closest('.video-canvas-area, .canvas-area') || containerRef.current.parentElement;
+          const pad = 12;
+          availableWidth = Math.max(200, (parentArea ? parentArea.clientWidth : window.innerWidth) - pad);
+          availableHeight = Math.max(150, (parentArea ? parentArea.clientHeight : window.innerHeight * 0.45) - pad);
         } else {
           // On desktop, use exact dimensions from the left side-by-side flex container
           const parentArea = containerRef.current.closest('.canvas-area, .video-canvas-area, .canvas-wrapper') || containerRef.current.parentElement;
@@ -634,7 +636,7 @@ const CanvasPreview = forwardRef((props, ref) => {
           width={dimensions.width} 
           height={dimensions.height}
           scaleX={dimensions.width / 800}
-          scaleY={dimensions.width / 800}
+          scaleY={dimensions.height / (800 / canvasAspectRatio)}
           onClick={() => setActiveItem(null)}
           onTap={() => setActiveItem(null)}
           style={{ touchAction: 'none', zIndex: 1 }}
