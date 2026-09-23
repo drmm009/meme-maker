@@ -17,42 +17,19 @@ function App() {
   const [currentView, setCurrentView] = useState('templates'); // 'templates' | 'custom-builder' | 'editor' | 'video-editor' | 'gallery'
   const [builderMode, setBuilderMode] = useState('image'); // 'image' | 'video'
   const [selectedTemplate, setSelectedTemplate] = useState(MEME_TEMPLATES[0]);
-  const [theme, setTheme] = useState(() => {
-    try {
-      return localStorage.getItem('meme_creator_theme') || 'dark';
-    } catch {
-      return 'dark';
-    }
-  });
 
-  const [palette, setPalette] = useState(() => {
-    try {
-      return localStorage.getItem('meme_creator_palette') || 'sunset-orange';
-    } catch {
-      return 'sunset-orange';
-    }
-  });
-
+  // Hardcoded premium aesthetics, removing the color palette and theme toggle feature
   useEffect(() => {
     try {
-      document.documentElement.setAttribute('data-theme', theme);
-      localStorage.setItem('meme_creator_theme', theme);
-    } catch (e) {
-      console.error('Failed to set theme', e);
-    }
-  }, [theme]);
-
-  useEffect(() => {
-    try {
-      document.documentElement.setAttribute('data-palette', palette);
+      document.documentElement.setAttribute('data-theme', 'dark');
+      document.documentElement.setAttribute('data-palette', 'sunset-orange');
       if (document.body) {
-        document.body.setAttribute('data-palette', palette);
+        document.body.setAttribute('data-palette', 'sunset-orange');
       }
-      localStorage.setItem('meme_creator_palette', palette);
     } catch (e) {
-      console.error('Failed to set palette', e);
+      console.error('Failed to set fixed theme', e);
     }
-  }, [palette]);
+  }, []);
 
   // Remembers the last builder page so the Builder nav button resumes it
   const [lastBuilderView, setLastBuilderView] = useState('custom-builder');
@@ -216,9 +193,9 @@ function App() {
 
   return (
     <div
-      className={`app-root theme-${theme} palette-${palette}`}
-      data-theme={theme}
-      data-palette={palette}
+      className="app-root theme-dark palette-sunset-orange"
+      data-theme="dark"
+      data-palette="sunset-orange"
     >
       {/* Top Navbar Header - HIDDEN ON EDITOR & BUILDER VIEWS FOR BIGGER CANVAS */}
       {currentView !== 'editor' && currentView !== 'video-editor' && currentView !== 'custom-builder' && (
@@ -260,47 +237,7 @@ function App() {
 
             {/* User Controls */}
             <div className="user-controls flex-gap" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <motion.button
-                className="theme-toggle-header-btn"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.94 }}
-                onClick={toggleTheme}
-                title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-                aria-label="Toggle Light/Dark Mode"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '7px',
-                  padding: '6px 14px',
-                  borderRadius: '20px',
-                  background: theme === 'dark'
-                    ? 'rgba(255, 255, 255, 0.08)'
-                    : '#ffffff',
-                  border: theme === 'dark'
-                    ? '1.5px solid var(--glass-border)'
-                    : '2px solid #171310',
-                  color: 'var(--text-main)',
-                  boxShadow: theme === 'dark'
-                    ? '0 2px 8px rgba(0, 0, 0, 0.2)'
-                    : '2px 2px 0 #171310',
-                  cursor: 'pointer',
-                  fontWeight: 700,
-                  fontSize: '0.82rem',
-                  transition: 'all 0.15s ease'
-                }}
-              >
-                {theme === 'dark' ? (
-                  <>
-                    <Sun className="icon-sm" style={{ width: '18px', height: '18px', color: '#ffc93c' }} />
-                    <span className="theme-toggle-text">Light</span>
-                  </>
-                ) : (
-                  <>
-                    <Moon className="icon-sm" style={{ width: '18px', height: '18px', color: '#ff6b2c' }} />
-                    <span className="theme-toggle-text">Dark</span>
-                  </>
-                )}
-              </motion.button>
+
 
               <motion.button
                 className="account-header-btn"
@@ -315,9 +252,7 @@ function App() {
                   width: '40px',
                   height: '40px',
                   borderRadius: '50%',
-                  background: theme === 'dark'
-                    ? 'linear-gradient(135deg, rgba(249, 115, 22, 0.2) 0%, rgba(234, 88, 12, 0.15) 100%)'
-                    : 'linear-gradient(135deg, rgba(249, 115, 22, 0.18) 0%, rgba(234, 88, 12, 0.22) 100%)',
+                  background: 'linear-gradient(135deg, rgba(249, 115, 22, 0.2) 0%, rgba(234, 88, 12, 0.15) 100%)',
                   backdropFilter: 'blur(12px)',
                   WebkitBackdropFilter: 'blur(12px)',
                   border: '1px solid var(--glass-border)',
@@ -327,7 +262,7 @@ function App() {
                   transition: 'all 0.2s ease'
                 }}
               >
-                <Settings className="icon-sm" style={{ width: '20px', height: '20px', color: theme === 'dark' ? '#f97316' : '#ea580c' }} />
+                <Settings className="icon-sm" style={{ width: '20px', height: '20px', color: '#f97316' }} />
               </motion.button>
 
               <motion.button
@@ -343,9 +278,7 @@ function App() {
                   width: '40px',
                   height: '40px',
                   borderRadius: '50%',
-                  background: theme === 'dark'
-                    ? 'linear-gradient(135deg, rgba(139, 92, 246, 0.25) 0%, rgba(168, 85, 247, 0.2) 100%)'
-                    : 'linear-gradient(135deg, rgba(226, 38, 90, 0.18) 0%, rgba(168, 85, 247, 0.22) 100%)',
+                  background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.25) 0%, rgba(168, 85, 247, 0.2) 100%)',
                   backdropFilter: 'blur(12px)',
                   WebkitBackdropFilter: 'blur(12px)',
                   border: '1px solid var(--glass-border)',
@@ -355,7 +288,7 @@ function App() {
                   transition: 'all 0.2s ease'
                 }}
               >
-                <User className="icon-sm" style={{ width: '20px', height: '20px', color: theme === 'dark' ? '#ffffff' : '#7c3aed' }} />
+                <User className="icon-sm" style={{ width: '20px', height: '20px', color: '#ffffff' }} />
               </motion.button>
             </div>
           </div>
@@ -436,8 +369,7 @@ function App() {
                 template={selectedTemplate}
                 onBack={handleEditorBack}
                 onSaveToGallery={handleSaveToGallery}
-                theme={theme}
-                onToggleTheme={toggleTheme}
+                theme="dark"
               />
             </ErrorBoundary>
           )}
@@ -457,8 +389,7 @@ function App() {
                 key={`${selectedTemplate?.id || 'video-editor'}-${videoSessionKey}`}
                 template={selectedTemplate}
                 onBack={handleEditorBack}
-                theme={theme}
-                onToggleTheme={toggleTheme}
+                theme="dark"
               />
             </ErrorBoundary>
           )}
@@ -500,10 +431,6 @@ function App() {
         <SettingsModal
           isOpen={true}
           onClose={() => setSettingsModalOpen(false)}
-          theme={theme}
-          onToggleTheme={toggleTheme}
-          palette={palette}
-          onChangePalette={setPalette}
         />
       )}
     </div>

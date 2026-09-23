@@ -41,7 +41,9 @@ export const exportVideoFFmpeg = async (items = [], durationMs = 7000, canvasAsp
   try {
     const ff = await loadFFmpeg();
     ff.on('progress', ({ progress }) => {
-      onProgress(progress * 100);
+      // Clamp progress between 0 and 100
+      let p = Math.max(0, Math.min(progress * 100, 100));
+      onProgress(p);
     });
 
     const safeDurationMs = (typeof durationMs === 'number' && !isNaN(durationMs) && durationMs > 0) ? durationMs : 7000;
@@ -83,16 +85,47 @@ export const exportVideoFFmpeg = async (items = [], durationMs = 7000, canvasAsp
 
     for (const item of visualItems) {
       if (!item.url) continue;
+      
+      const isVideo = item.type === 'video';
+      
+      const rawW = (item.width || 100) * (item.scaleX || item.scale || 1) * konvaRatio;
+      const rawH = (item.height || 100) * (item.scaleY || item.scale || 1) * konvaRatio;
+      const w = Math.max(2, Math.round(rawW / 2) * 2);
+      const h = Math.max(2, Math.round(rawH / 2) * 2);
+
       let fileData;
       try {
-        fileData = await fetchFile(item.url);
+        if (!isVideo && (item.url.startsWith('data:image/svg') || item.url.toLowerCase().endsWith('.svg'))) {
+          // Rasterize SVGs to PNG because FFmpeg WASM doesn't support SVG decoding natively
+          fileData = await new Promise((resolve) => {
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            img.onload = () => {
+              const canvas = document.createElement('canvas');
+              canvas.width = w;
+              canvas.height = h;
+              const ctx = canvas.getContext('2d');
+              ctx.drawImage(img, 0, 0, w, h);
+              canvas.toBlob(blob => {
+                if (blob) {
+                  blob.arrayBuffer().then(buf => resolve(new Uint8Array(buf))).catch(() => resolve(null));
+                } else {
+                  resolve(null);
+                }
+              }, 'image/png');
+            };
+            img.onerror = () => resolve(null);
+            img.src = item.url;
+          });
+        } else {
+          fileData = await fetchFile(item.url);
+        }
       } catch (err) {
         console.warn(`[FFmpeg Export] Could not fetch visual item from ${item.url}:`, err);
         continue;
       }
       if (!fileData || fileData.byteLength === 0) continue;
 
-      const isVideo = item.type === 'video';
       const fileName = isVideo ? `input_${inputIndex}.mp4` : `input_${inputIndex}.png`;
       await ff.writeFile(fileName, fileData);
       filesToDelete.push(fileName);
@@ -124,10 +157,13 @@ export const exportVideoFFmpeg = async (items = [], durationMs = 7000, canvasAsp
           if (videoHasAudio) {
             const startMs = Math.max(0, Math.round(typeof item.startMs === 'number' && !isNaN(item.startMs) ? item.startMs : 0));
             const rawEnd = typeof item.endMs === 'number' && !isNaN(item.endMs) ? item.endMs : (startMs + 3000);
-            const clipDurSec = Math.max(0.1, (rawEnd - startMs) / 1000);
+            const timelineDurSec = Math.max(0.1, (rawEnd - startMs) / 1000);
+            const pbRate = typeof item.playbackRate === 'number' && !isNaN(item.playbackRate) ? item.playbackRate : 1.0;
+            const sourceTrimSec = timelineDurSec * pbRate;
             const vol = (typeof item.volume === 'number' && !isNaN(item.volume)) ? item.volume : 1.0;
+            const atempo = pbRate !== 1.0 ? `,atempo=${pbRate}` : '';
             const delayFilter = startMs > 0 ? `,adelay=${startMs}|${startMs}` : '';
-            filterComplex += `[${inputIndex}:a]atrim=0:${clipDurSec},asetpts=PTS-STARTPTS,aformat=channel_layouts=stereo:sample_rates=44100${delayFilter},volume=${vol}[aud${inputIndex}];`;
+            filterComplex += `[${inputIndex}:a]atrim=0:${sourceTrimSec},asetpts=PTS-STARTPTS,aformat=channel_layouts=stereo:sample_rates=44100${atempo}${delayFilter},volume=${vol}[aud${inputIndex}];`;
             audioStreams.push(`[aud${inputIndex}]`);
           }
         }
@@ -136,16 +172,15 @@ export const exportVideoFFmpeg = async (items = [], durationMs = 7000, canvasAsp
       const startT = Math.max(0, (typeof item.startMs === 'number' && !isNaN(item.startMs) ? item.startMs : 0) / 1000);
       const endT = Math.max(startT + 0.05, (typeof item.endMs === 'number' && !isNaN(item.endMs) ? item.endMs : safeDurationMs) / 1000);
       
-      const rawW = (item.width || 100) * (item.scaleX || item.scale || 1) * konvaRatio;
-      const rawH = (item.height || 100) * (item.scaleY || item.scale || 1) * konvaRatio;
-      const w = Math.max(2, Math.round(rawW / 2) * 2);
-      const h = Math.max(2, Math.round(rawH / 2) * 2);
       const x = Math.round((typeof item.x === 'number' && !isNaN(item.x) ? item.x : 0) * konvaRatio);
       const y = Math.round((typeof item.y === 'number' && !isNaN(item.y) ? item.y : 0) * konvaRatio);
 
-      // Force scale and correctly offset PTS so delayed videos don't expire before their start time
-      filterComplex += `[${inputIndex}:v]setpts=PTS-STARTPTS+${startT}/TB,scale=${w}:${h}[vis${inputIndex}];`;
-      filterComplex += `[${currentBgIndex === 0 ? '0:v' : `bg${currentBgIndex}`}][vis${inputIndex}]overlay=${x}:${y}:enable='between(t,${startT},${endT})'[bg${currentBgIndex + 1}];`;
+      // Force scale and correctly offset PTS for videos so they don't expire before their start time.
+      // Images/stickers loop infinitely and do not need a PTS offset, which saves massive memory buffering.
+      const pbRate = typeof item.playbackRate === 'number' && !isNaN(item.playbackRate) ? item.playbackRate : 1.0;
+      const ptsOffset = isVideo ? `+${startT}/TB` : '';
+      filterComplex += `[${inputIndex}:v]setpts=(PTS-STARTPTS)/${pbRate}${ptsOffset},scale=${w}:${h}[vis${inputIndex}];`;
+      filterComplex += `[${currentBgIndex === 0 ? '0:v' : `bg${currentBgIndex}`}][vis${inputIndex}]overlay=${x}:${y}:enable='between(t,${startT},${endT})':eof_action=pass:shortest=0[bg${currentBgIndex + 1}];`;
       
       currentBgIndex++;
       inputIndex++;
@@ -265,7 +300,7 @@ export const exportVideoFFmpeg = async (items = [], durationMs = 7000, canvasAsp
       
       command.push('-loop', '1', '-i', fileName);
       
-      filterComplex += `[${currentBgIndex === 0 ? '0:v' : `bg${currentBgIndex}`}][${inputIndex}:v]overlay=0:0:enable='between(t,${startT},${endT})'[bg${currentBgIndex + 1}];`;
+      filterComplex += `[${currentBgIndex === 0 ? '0:v' : `bg${currentBgIndex}`}][${inputIndex}:v]overlay=0:0:enable='between(t,${startT},${endT})':eof_action=pass:shortest=0[bg${currentBgIndex + 1}];`;
       
       currentBgIndex++;
       inputIndex++;
@@ -284,7 +319,7 @@ export const exportVideoFFmpeg = async (items = [], durationMs = 7000, canvasAsp
             filesToDelete.push(fileName);
             
             command.push('-loop', '1', '-i', fileName);
-            filterComplex += `[${currentBgIndex === 0 ? '0:v' : `bg${currentBgIndex}`}][${inputIndex}:v]overlay=0:0[bg${currentBgIndex + 1}];`;
+            filterComplex += `[${currentBgIndex === 0 ? '0:v' : `bg${currentBgIndex}`}][${inputIndex}:v]overlay=0:0:eof_action=pass:shortest=0[bg${currentBgIndex + 1}];`;
             
             currentBgIndex++;
             inputIndex++;

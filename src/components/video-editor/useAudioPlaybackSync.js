@@ -1,12 +1,18 @@
 import { useEffect, useRef } from 'react';
+import { useEditorStore } from '../../store/useVideoEditorStore';
 
 /**
  * Custom hook to synchronize audio tracks on the timeline with the video editor playhead.
  * Keeps audio elements pooled and smoothly synced during playback, seeking, and scrubbing
  * without constantly resetting currentTime or spamming play() calls.
  */
-export const useAudioPlaybackSync = (items, isPlaying, playhead) => {
+export const useAudioPlaybackSync = (items) => {
   const audioPoolRef = useRef(new Map());
+  const itemsRef = useRef(items);
+
+  useEffect(() => {
+    itemsRef.current = items;
+  }, [items]);
 
   // Manage pool of HTMLAudioElements for audio items
   useEffect(() => {
@@ -80,93 +86,93 @@ export const useAudioPlaybackSync = (items, isPlaying, playhead) => {
     };
   }, [items]);
 
-  // Sync playback on isPlaying or playhead change
+  // Sync playback using Zustand subscribe to avoid 60FPS re-renders in the parent component
   useEffect(() => {
-    const audioItems = items.filter(i => i.type === 'audio' && i.url);
-    const pool = audioPoolRef.current;
+    const unsub = useEditorStore.subscribe((state) => {
+      const isPlaying = state.isPlaying;
+      const playhead = state.playhead;
+      const currentItems = itemsRef.current;
+      const audioItems = currentItems.filter(i => i.type === 'audio' && i.url);
+      const pool = audioPoolRef.current;
 
-    audioItems.forEach(item => {
-      const entry = pool.get(item.id);
-      if (!entry || !entry.audio) return;
-      const audio = entry.audio;
+      audioItems.forEach(item => {
+        const entry = pool.get(item.id);
+        if (!entry || !entry.audio) return;
+        const audio = entry.audio;
 
-      const isInside = playhead >= item.startMs && playhead < item.endMs;
-      const targetRate = item.playbackRate || 1;
-      const trimStartSec = (item.trimStartMs || 0) / 1000;
-      const mediaTimeSec = trimStartSec + (((playhead - item.startMs) / 1000) * targetRate);
+        const isInside = playhead >= item.startMs && playhead < item.endMs;
+        const targetRate = item.playbackRate || 1;
+        const trimStartSec = (item.trimStartMs || 0) / 1000;
+        const mediaTimeSec = trimStartSec + (((playhead - item.startMs) / 1000) * targetRate);
 
-      const audioDuration = audio.duration;
-      const hasDuration = Number.isFinite(audioDuration) && audioDuration > 0;
-      const isPastAudioEnd = hasDuration && mediaTimeSec >= (audioDuration - 0.05);
+        const audioDuration = audio.duration;
+        const hasDuration = Number.isFinite(audioDuration) && audioDuration > 0;
+        const isPastAudioEnd = hasDuration && mediaTimeSec >= (audioDuration - 0.05);
 
-      if (isPlaying && isInside && !isPastAudioEnd) {
-        entry.hasEnded = false;
+        if (isPlaying && isInside && !isPastAudioEnd) {
+          entry.hasEnded = false;
 
-        if (audio.paused) {
-          // Only start playback if not already waiting on a pending play() promise
-          if (!entry.playPromise && !entry.playBlockedTimeout) {
+          if (audio.paused) {
+            if (!entry.playPromise && !entry.playBlockedTimeout) {
+              if (Math.abs(audio.currentTime - mediaTimeSec) > 0.08) {
+                try {
+                  audio.currentTime = Math.max(0, mediaTimeSec);
+                } catch (e) {}
+              }
+              const p = audio.play();
+              if (p && typeof p.then === 'function') {
+                entry.playPromise = p;
+                p.then(() => {
+                  entry.playPromise = null;
+                }).catch((err) => {
+                  entry.playPromise = null;
+                  if (err && err.name === 'NotAllowedError') {
+                    entry.playBlockedTimeout = setTimeout(() => {
+                      entry.playBlockedTimeout = null;
+                    }, 1000);
+                  }
+                });
+              }
+            }
+          } else {
+            if (Math.abs(audio.currentTime - mediaTimeSec) > 1.0) {
+              try {
+                audio.currentTime = Math.max(0, mediaTimeSec);
+              } catch (e) {}
+            }
+          }
+        } else {
+          if (!audio.paused) {
+            if (entry.playPromise) {
+              entry.playPromise.then(() => {
+                try { audio.pause(); } catch (e) {}
+              }).catch(() => {});
+              entry.playPromise = null;
+            } else {
+              try {
+                audio.pause();
+              } catch (e) {}
+            }
+          }
+
+          if (!isPlaying && isInside && !isPastAudioEnd) {
             if (Math.abs(audio.currentTime - mediaTimeSec) > 0.08) {
               try {
                 audio.currentTime = Math.max(0, mediaTimeSec);
               } catch (e) {}
             }
-            const p = audio.play();
-            if (p && typeof p.then === 'function') {
-              entry.playPromise = p;
-              p.then(() => {
-                entry.playPromise = null;
-              }).catch((err) => {
-                entry.playPromise = null;
-                if (err && err.name === 'NotAllowedError') {
-                  entry.playBlockedTimeout = setTimeout(() => {
-                    entry.playBlockedTimeout = null;
-                  }, 1000);
-                }
-              });
+          } else if (!isInside && playhead < item.startMs) {
+            entry.hasEnded = false;
+            if (Math.abs(audio.currentTime - trimStartSec) > 0.08) {
+              try {
+                audio.currentTime = trimStartSec;
+              } catch (e) {}
             }
           }
-        } else {
-          // Audio is already playing smoothly!
-          // NEVER touch currentTime during normal playback unless drift is massive (> 1.0s),
-          // which happens only if the user scrubbed to a different time while playback was running.
-          if (Math.abs(audio.currentTime - mediaTimeSec) > 1.0) {
-            try {
-              audio.currentTime = Math.max(0, mediaTimeSec);
-            } catch (e) {}
-          }
         }
-      } else {
-        // Outside audio boundaries, past end of audio file, or playback paused
-        if (!audio.paused) {
-          if (entry.playPromise) {
-            entry.playPromise.then(() => {
-              try { audio.pause(); } catch (e) {}
-            }).catch(() => {});
-            entry.playPromise = null;
-          } else {
-            try {
-              audio.pause();
-            } catch (e) {}
-          }
-        }
-
-        if (!isPlaying && isInside && !isPastAudioEnd) {
-          // While paused and playhead is inside, keep audio scrubbed in sync
-          if (Math.abs(audio.currentTime - mediaTimeSec) > 0.08) {
-            try {
-              audio.currentTime = Math.max(0, mediaTimeSec);
-            } catch (e) {}
-          }
-        } else if (!isInside && playhead < item.startMs) {
-          // Reset to trimStart if playhead rewound before the audio clip
-          entry.hasEnded = false;
-          if (Math.abs(audio.currentTime - trimStartSec) > 0.08) {
-            try {
-              audio.currentTime = trimStartSec;
-            } catch (e) {}
-          }
-        }
-      }
+      });
     });
-  }, [isPlaying, playhead, items]);
+    
+    return unsub;
+  }, []);
 };

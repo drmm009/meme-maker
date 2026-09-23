@@ -38,20 +38,107 @@ const PlayheadDisplay = ({ isTimelineFolded }) => {
     <div style={{
       fontFamily: '"SF Mono", "Roboto Mono", monospace',
       fontSize: '0.85rem',
-      fontWeight: 500,
-      color: '#e2e8f0', // soft white
-      background: 'transparent',
-      padding: '0',
+      fontWeight: 600,
+      color: 'var(--text-main)',
+      background: 'var(--bg-surface-2)',
+      border: '1px solid var(--glass-border)',
+      borderRadius: '8px',
+      padding: '4px 10px',
       letterSpacing: '0.05em',
       display: 'inline-flex',
       alignItems: 'center',
       justifyContent: 'center',
-      minWidth: '60px'
+      minWidth: '70px',
+      boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.5)'
     }}>
       <span style={{ color: 'var(--cyber-cyan, #67e8f9)', marginRight: '2px' }}>
         {((draggingTime !== null ? draggingTime : playhead) / 1000).toFixed(2)}
       </span>
       <span style={{ opacity: 0.5, fontSize: '0.75rem' }}>s</span>
+    </div>
+  );
+};
+
+const FoldedProgressBar = () => {
+  const playhead = useEditorStore(state => state.playhead);
+  const items = useEditorStore(state => state.items);
+  const duration = useEditorStore(state => state.duration);
+  const maxDur = items.length > 0 ? Math.max(...items.map(i => i.endMs)) : duration;
+  const progress = Math.min(100, (playhead / Math.max(1, maxDur)) * 100);
+
+  const containerRef = useRef(null);
+
+  const handlePointerDown = (e) => {
+    e.preventDefault();
+    const container = containerRef.current;
+    if (!container) return;
+
+    const updatePlayhead = (clientX) => {
+      const rect = container.getBoundingClientRect();
+      const x = Math.max(0, Math.min(clientX - rect.left, rect.width));
+      const newTime = (x / rect.width) * maxDur;
+      useEditorStore.getState().setPlayhead(newTime);
+    };
+
+    updatePlayhead(e.clientX);
+
+    const handlePointerMove = (ev) => {
+      updatePlayhead(ev.clientX);
+    };
+
+    const handlePointerUp = () => {
+      window.removeEventListener('pointermove', handlePointerMove);
+      window.removeEventListener('pointerup', handlePointerUp);
+    };
+
+    window.addEventListener('pointermove', handlePointerMove);
+    window.addEventListener('pointerup', handlePointerUp);
+  };
+
+  return (
+    <div
+      ref={containerRef}
+      onPointerDown={handlePointerDown}
+      style={{
+        position: 'absolute',
+        top: '-16px', // Float completely above the pill dock
+        left: '4%',
+        width: '92%', // Slightly inset from the pill edges
+        height: '16px',
+        cursor: 'pointer',
+        zIndex: 10,
+        display: 'flex',
+        alignItems: 'center'
+      }}
+    >
+      <div style={{
+        width: '100%',
+        height: '4px',
+        background: 'rgba(255,255,255,0.15)',
+        position: 'relative',
+        borderRadius: '2px'
+      }}>
+        <div style={{
+          height: '100%',
+          width: `${progress}%`,
+          background: 'var(--cyber-cyan, #67e8f9)',
+          boxShadow: '0 0 8px var(--cyber-cyan, #67e8f9)',
+          position: 'relative'
+        }}>
+          <div style={{
+            position: 'absolute',
+            right: '-6px',
+            top: '50%',
+            transform: 'translateY(-50%)',
+            width: '12px',
+            height: '12px',
+            backgroundColor: '#ffffff',
+            borderRadius: '50%',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.5), 0 0 8px var(--cyber-cyan, #67e8f9)',
+            pointerEvents: 'none' // Let the container handle the drag events
+          }} />
+        </div>
+      </div>
     </div>
   );
 };
@@ -86,6 +173,18 @@ export default function VideoEditor({ template, onBack, theme, onToggleTheme }) 
   const [exportDone, setExportDone]               = useState(false);
 
   const activeItem = items.find(i => i.id === activeItemId);
+
+  const getDockHeight = () => {
+    // 16:9
+    if (Math.abs(canvasAspectRatio - 1.778) < 0.1) return '45vh';
+    // 1:1
+    if (Math.abs(canvasAspectRatio - 1) < 0.1) return '40vh';
+    // 4:5
+    if (Math.abs(canvasAspectRatio - 0.8) < 0.1) return '35vh';
+    // 9:16
+    if (Math.abs(canvasAspectRatio - 0.5625) < 0.1) return '32vh';
+    return '38vh';
+  };
 
   // Close export dropdown on outside click
   useEffect(() => {
@@ -316,6 +415,7 @@ export default function VideoEditor({ template, onBack, theme, onToggleTheme }) 
       {/* ── Main Area ───────────────────────────────── */}
       <main
         className="editor-main video-editor-main"
+        style={{ '--dock-height': getDockHeight() }}
         onPointerDown={(e) => {
           if (e.target === e.currentTarget) useEditorStore.getState().setActiveItem(null);
         }}
@@ -348,7 +448,12 @@ export default function VideoEditor({ template, onBack, theme, onToggleTheme }) 
                   <select
                     className="vid-ctx-select"
                     value={activeItem.playbackRate || 1}
-                    onChange={(e) => updateItem(activeItem.id, { playbackRate: parseFloat(e.target.value) })}
+                    onChange={(e) => {
+                      const newRate = parseFloat(e.target.value);
+                      const oldRate = activeItem.playbackRate || 1;
+                      const dur = activeItem.endMs - activeItem.startMs;
+                      updateItem(activeItem.id, { playbackRate: newRate, endMs: activeItem.startMs + (dur * (oldRate / newRate)) });
+                    }}
                     title="Speed"
                   >
                     <option value={0.5}>0.5×</option>
@@ -498,9 +603,10 @@ export default function VideoEditor({ template, onBack, theme, onToggleTheme }) 
 
 
           {/* Timeline content — hidden when folded on mobile */}
+          {isTimelineFolded && <FoldedProgressBar />}
           <div className="timeline-content-wrap">
             {/* Playback Controls */}
-            <div className="timeline-controls-wrap" style={isTimelineFolded ? { justifyContent: 'center' } : undefined}>
+            <div className="timeline-controls-wrap" style={isTimelineFolded ? { position: 'relative', width: '100%', justifyContent: 'center' } : undefined}>
               <div className="vid-playback-group">
                 <button
                   className="btn btn-icon vid-play-btn"
@@ -535,7 +641,7 @@ export default function VideoEditor({ template, onBack, theme, onToggleTheme }) 
                   className="btn btn-icon vid-play-btn mobile-only-flex"
                   onClick={() => setIsTimelineFolded(p => !p)}
                   title={isTimelineFolded ? "Unfold Timeline" : "Fold Timeline"}
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', ...(isTimelineFolded ? { position: 'absolute', right: '0' } : {}) }}
                 >
                   {isTimelineFolded ? <ChevronUp className="icon-sm" /> : <ChevronDown className="icon-sm" />}
                 </button>
@@ -549,7 +655,12 @@ export default function VideoEditor({ template, onBack, theme, onToggleTheme }) 
                       className="input-field glass-card"
                       style={{ width: '72px', padding: '4px 6px', fontSize: '0.82rem' }}
                       value={activeItem.playbackRate || 1}
-                      onChange={e => updateItem(activeItem.id, { playbackRate: parseFloat(e.target.value) })}
+                      onChange={e => {
+                        const newRate = parseFloat(e.target.value);
+                        const oldRate = activeItem.playbackRate || 1;
+                        const dur = activeItem.endMs - activeItem.startMs;
+                        updateItem(activeItem.id, { playbackRate: newRate, endMs: activeItem.startMs + (dur * (oldRate / newRate)) });
+                      }}
                       title="Speed"
                     >
                       <option value={0.5}>0.5×</option>
@@ -613,7 +724,7 @@ export default function VideoEditor({ template, onBack, theme, onToggleTheme }) 
 
                   <button
                     className="btn btn-icon"
-                    style={{ color: '#ff2a5f', borderColor: 'rgba(255,42,95,0.3)' }}
+                    style={{ background: 'rgba(239, 68, 68, 0.85)', color: '#ffffff', border: '1px solid rgba(239, 68, 68, 1)' }}
                     onClick={() => removeItem(activeItemId)}
                     title="Delete"
                   >

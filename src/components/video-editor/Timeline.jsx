@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useMemo } from 'react';
 import { Video, Type, Music, Image as ImageIcon, Smile, UploadCloud, LayoutTemplate, Search, X, Sticker } from 'lucide-react';
 import { useEditorStore } from '../../store/useVideoEditorStore';
+import { useShallow } from 'zustand/react/shallow';
 import { STICKERS } from '../../data/stickers';
 import { GRAPHIC_STICKERS, GRAPHIC_STICKER_CATEGORIES } from '../../data/memeStickers';
 import { MEME_TEMPLATES, CATEGORIES } from '../../data/templates';
@@ -36,8 +37,38 @@ const AUDIO_PALETTES = [
   { background: 'linear-gradient(90deg, #9a3412, #f97316)', color: '#ffedd5', glow: 'rgba(249, 115, 22, 0.6)', border: '#fdba74' }
 ];
 
+const PlayheadMarker = ({duration}) => {
+  const [pos, setPos] = React.useState(() => (useEditorStore.getState().playhead/duration)*100);
+  React.useEffect(() => {
+    return useEditorStore.subscribe((state) => setPos((state.playhead/duration)*100));
+  }, [duration]);
+  return (
+    <div style={{ position: 'absolute', top: 0, bottom: 0, left: `${pos}%`, width: '1px', background: 'var(--cyber-pink)', zIndex: 50, pointerEvents: 'none' }}>
+      <div style={{ position: 'absolute', top: '-6px', left: '-4.5px', width: '10px', height: '10px', background: 'var(--cyber-pink)', borderRadius: '50%', boxShadow: '0 0 8px var(--cyber-pink)', cursor: 'ew-resize' }} />
+    </div>
+  );
+};
+
+const PlayheadOverlayLine = ({duration}) => {
+  const [pos, setPos] = React.useState(() => (useEditorStore.getState().playhead/duration)*100);
+  React.useEffect(() => {
+    return useEditorStore.subscribe((state) => setPos((state.playhead/duration)*100));
+  }, [duration]);
+  return <div style={{ position: 'absolute', top: 0, bottom: 0, left: `${pos}%`, width: '2px', background: 'var(--cyber-pink)', zIndex: 40, pointerEvents: 'none' }} />;
+};
+
 export default function Timeline() {
-  const { playhead, duration, isPlaying, setPlayhead, setIsPlaying, items, activeItemId, setActiveItem } = useEditorStore();
+  const { duration, isPlaying, setPlayhead, setIsPlaying, items, activeItemId, setActiveItem } = useEditorStore(
+    useShallow(state => ({
+      duration: state.duration,
+      isPlaying: state.isPlaying,
+      setPlayhead: state.setPlayhead,
+      setIsPlaying: state.setIsPlaying,
+      items: state.items,
+      activeItemId: state.activeItemId,
+      setActiveItem: state.setActiveItem
+    }))
+  );
 
   // Map each distinct sound on the timeline to a consistent shade
   // The first sound encountered is ALWAYS assigned Index 0 (original default yellow)
@@ -208,9 +239,7 @@ export default function Timeline() {
     setPlayhead(percentage * duration);
   };
 
-  const getPlayheadPosition = () => {
-    return (playhead / duration) * 100;
-  };
+
 
   const handleItemPointerDown = (e, item, action) => {
     e.stopPropagation();
@@ -223,7 +252,7 @@ export default function Timeline() {
     const durationLimit = 100000;
 
     // Collect snap points
-    const snapPoints = [0, playhead];
+    const snapPoints = [0, useEditorStore.getState().playhead];
     items.forEach(i => {
       if (i.id !== item.id) {
         snapPoints.push(i.startMs, i.endMs);
@@ -485,9 +514,7 @@ export default function Timeline() {
         })()}
 
         {/* Playhead Marker */}
-        <div style={{ position: 'absolute', top: 0, bottom: 0, left: `${getPlayheadPosition()}%`, width: '1px', background: 'var(--cyber-pink)', zIndex: 50, pointerEvents: 'none' }}>
-          <div style={{ position: 'absolute', top: '-6px', left: '-4.5px', width: '10px', height: '10px', background: 'var(--cyber-pink)', borderRadius: '50%', boxShadow: '0 0 8px var(--cyber-pink)', cursor: 'ew-resize' }} />
-        </div>
+        <PlayheadMarker duration={duration} />
       </div>
 
       {/* Tracks Area (Internally Scrollable) */}
@@ -617,7 +644,7 @@ export default function Timeline() {
           {/* Tracks */}
           <div style={{ position: 'relative', minHeight: '100%', overflow: 'visible' }}>
             {/* Playhead line overlay over tracks */}
-            <div style={{ position: 'absolute', top: 0, bottom: 0, left: `${getPlayheadPosition()}%`, width: '2px', background: 'var(--cyber-pink)', zIndex: 40, pointerEvents: 'none' }} />
+            <PlayheadOverlayLine duration={duration} />
             
             {/* Alignment Guide Line while dragging */}
             {(() => {
@@ -1290,8 +1317,8 @@ export default function Timeline() {
                   onClick={() => {
                     useEditorStore.getState().addItem({
                       type: 'image',
-                      startMs: playhead,
-                      endMs: playhead + 3000,
+                      startMs: useEditorStore.getState().playhead,
+                      endMs: useEditorStore.getState().playhead + 3000,
                       url: tmpl.imageUrl,
                     });
                     setShowImageTemplatePicker(false);
@@ -1359,8 +1386,8 @@ export default function Timeline() {
       onSelect={(template) => {
         useEditorStore.getState().addItem({
           type: 'video',
-          startMs: playhead,
-          endMs: playhead + template.durationMs,
+          startMs: useEditorStore.getState().playhead,
+          endMs: useEditorStore.getState().playhead + template.durationMs,
           url: template.videoUrl,
           thumbnailUrl: template.thumbnailUrl,
           name: template.name,

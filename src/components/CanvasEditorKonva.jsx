@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
 import Konva from 'konva';
 import { Stage, Layer, Rect, Image as KonvaImage, Text as KonvaText, Transformer, Group } from 'react-konva';
-import { useEditorStore } from '../store/useEditorStore';
+import { useEditorStore } from '../store/useVideoEditorStore';
 
 export const getCleanMediaUrl = (url) => {
   if (!url || typeof url !== 'string') return '';

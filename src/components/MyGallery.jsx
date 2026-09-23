@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { createPortal } from 'react-dom';
+import ModalPortal from './ModalPortal';
 import { Download, Trash2, Edit3, X, Sparkles } from 'lucide-react';
 import { downloadImageHelper } from '../utils/downloadHelper';
 
@@ -81,13 +81,12 @@ export default function MyGallery({ savedMemes, onDeleteMeme, onSelectMeme }) {
                 </div>
                 <button
                   style={{
-                    background: 'rgba(255, 51, 102, 0.14)',
-                    border: '1px solid rgba(255, 51, 102, 0.35)',
-                    color: '#a855f7',
+                    background: 'rgba(239, 68, 68, 0.85)',
+                    border: '1px solid rgba(239, 68, 68, 1)',
+                    color: '#ffffff',
                     borderRadius: '8px',
                     width: '32px',
                     height: '32px',
-                    padding: 0,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -96,11 +95,11 @@ export default function MyGallery({ savedMemes, onDeleteMeme, onSelectMeme }) {
                     flexShrink: 0
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'rgba(255, 51, 102, 0.28)';
-                    e.currentTarget.style.boxShadow = '0 0 10px rgba(255, 51, 102, 0.4)';
+                    e.currentTarget.style.background = 'rgba(239, 68, 68, 1)';
+                    e.currentTarget.style.boxShadow = '0 0 10px rgba(239, 68, 68, 0.4)';
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'rgba(255, 51, 102, 0.14)';
+                    e.currentTarget.style.background = 'rgba(239, 68, 68, 0.85)';
                     e.currentTarget.style.boxShadow = 'none';
                   }}
                   onClick={(e) => handleDelete(meme.id, e)}
@@ -122,75 +121,76 @@ export default function MyGallery({ savedMemes, onDeleteMeme, onSelectMeme }) {
       )}
 
       {/* PORTAL RENDERED TOP-LEVEL MODAL PREVIEW */}
-      {selectedMemeForView && createPortal(
-        <div className="modal-backdrop animate-fade-in" onClick={() => setSelectedMemeForView(null)}>
-          <div
-            className="modal-content glass-card modal-md animate-scale-up"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="modal-header flex-between margin-bottom-xs">
-              <h3><Sparkles className="icon-sm text-cyan" /> {selectedMemeForView.name}</h3>
-              <button className="btn-close" onClick={() => setSelectedMemeForView(null)} title="Close" aria-label="Close">
-                <X size={18} />
-              </button>
-            </div>
-
-            <div className="modal-body text-center">
-              <img
-                src={selectedMemeForView.imageUrl}
-                alt={selectedMemeForView.name}
-                decoding="async"
-                className="export-preview-img margin-bottom"
-                style={{ maxHeight: '52vh', width: 'auto', margin: '0 auto 14px auto', display: 'block' }}
-              />
-
-              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '16px', flexWrap: 'wrap', marginTop: '12px' }}>
-                <button
-                  className="btn btn-xs btn-primary shadow-glow"
-                  onClick={(e) => handleEdit(selectedMemeForView, e)}
-                >
-                  <Edit3 className="icon-xs" /> Edit
+      {selectedMemeForView && (
+        <ModalPortal>
+          <div className="modal-backdrop animate-fade-in" onClick={() => setSelectedMemeForView(null)}>
+            <div
+              className="modal-content glass-card modal-md animate-scale-up"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="modal-header flex-between margin-bottom-xs">
+                <h3><Sparkles className="icon-sm text-cyan" /> {selectedMemeForView.name}</h3>
+                <button className="btn-close" onClick={() => setSelectedMemeForView(null)} title="Close" aria-label="Close">
+                  <X size={18} />
                 </button>
+              </div>
 
-                <button
-                  className="btn btn-xs btn-secondary"
-                  onClick={(e) => handleDownload(selectedMemeForView, e)}
-                >
-                  <Download className="icon-xs" /> Download
-                </button>
+              <div className="modal-body text-center">
+                <img
+                  src={selectedMemeForView.imageUrl}
+                  alt={selectedMemeForView.name}
+                  decoding="async"
+                  className="export-preview-img margin-bottom"
+                  style={{ maxHeight: '52vh', width: 'auto', margin: '0 auto 14px auto', display: 'block' }}
+                />
 
-                <button
-                  style={{
-                    background: 'rgba(255, 51, 102, 0.15)',
-                    border: '1px solid rgba(255, 51, 102, 0.35)',
-                    color: '#a855f7',
-                    borderRadius: '8px',
-                    padding: '6px 14px',
-                    fontWeight: 600,
-                    fontSize: '0.85rem',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'rgba(255, 51, 102, 0.3)';
-                    e.currentTarget.style.boxShadow = '0 0 12px rgba(255, 51, 102, 0.5)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'rgba(255, 51, 102, 0.15)';
-                    e.currentTarget.style.boxShadow = 'none';
-                  }}
-                  onClick={(e) => handleDelete(selectedMemeForView.id, e)}
-                >
-                  <Trash2 className="icon-xs" /> Delete
-                </button>
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '16px', flexWrap: 'wrap', marginTop: '12px' }}>
+                  <button
+                    className="btn btn-xs btn-primary shadow-glow"
+                    onClick={(e) => handleEdit(selectedMemeForView, e)}
+                  >
+                    <Edit3 className="icon-xs" /> Edit
+                  </button>
+
+                  <button
+                    className="btn btn-xs btn-secondary"
+                    onClick={(e) => handleDownload(selectedMemeForView, e)}
+                  >
+                    <Download className="icon-xs" /> Download
+                  </button>
+
+                  <button
+                    style={{
+                      background: 'rgba(239, 68, 68, 0.85)',
+                      border: '1px solid rgba(239, 68, 68, 1)',
+                      color: '#ffffff',
+                      borderRadius: '8px',
+                      padding: '6px 14px',
+                      fontWeight: 600,
+                      fontSize: '0.85rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = 'rgba(239, 68, 68, 1)';
+                      e.currentTarget.style.boxShadow = '0 0 12px rgba(239, 68, 68, 0.5)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'rgba(239, 68, 68, 0.85)';
+                      e.currentTarget.style.boxShadow = 'none';
+                    }}
+                    onClick={(e) => handleDelete(selectedMemeForView.id, e)}
+                  >
+                    <Trash2 className="icon-xs" /> Delete
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-        </div>,
-        document.body
+        </ModalPortal>
       )}
     </div>
   );

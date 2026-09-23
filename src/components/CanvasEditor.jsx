@@ -323,7 +323,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
 
       const drawDeleteHandle = (hx, hy) => {
         ctx.beginPath();
-        ctx.fillStyle = '#ff4444';
+        ctx.fillStyle = '#ef4444';
         ctx.strokeStyle = '#ffffff';
         ctx.lineWidth = 3;
         ctx.arc(hx, hy, 22, 0, Math.PI * 2);

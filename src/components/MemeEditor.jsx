@@ -1878,9 +1878,9 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         width: '32px',
                         height: '32px',
                         borderRadius: '50%',
-                        background: 'rgba(255, 51, 85, 0.12)',
-                        border: '1px solid rgba(255, 51, 85, 0.25)',
-                        color: '#ff3355',
+                        background: 'rgba(239, 68, 68, 0.85)',
+                        border: '1px solid rgba(239, 68, 68, 1)',
+                        color: '#ffffff',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -2247,7 +2247,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                     className="btn btn-icon btn-xs text-danger hover-lift"
                     onClick={handleDeleteLayer}
                     title="Delete Sticker"
-                    style={{ flexShrink: 0 }}
+                    style={{ flexShrink: 0, background: 'rgba(239, 68, 68, 0.85)', color: '#ffffff', border: '1px solid rgba(239, 68, 68, 1)' }}
                   >
                     <Trash2 className="icon-xs" />
                   </button>
@@ -2340,7 +2340,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                       className="btn btn-icon btn-xs text-danger hover-lift"
                       onClick={handleDeleteLayer}
                       title="Delete Media Layer"
-                      style={{ flexShrink: 0 }}
+                      style={{ flexShrink: 0, background: 'rgba(239, 68, 68, 0.85)', color: '#ffffff', border: '1px solid rgba(239, 68, 68, 1)' }}
                     >
                       <Trash2 className="icon-xs" />
                     </button>

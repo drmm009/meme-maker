@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle, us
 import Konva from 'konva';
 import { Stage, Layer, Rect, Image as KonvaImage, Text as KonvaText, Transformer, Line, Group } from 'react-konva';
 import { useEditorStore } from '../../store/useVideoEditorStore';
+import { useShallow } from 'zustand/react/shallow';
 
 // Custom component to handle Image and Video rendering on Konva Canvas
 const CanvasMedia = ({ item, isSelected, onSelect, onChange, canvasDimensions }) => {
@@ -82,6 +83,7 @@ const CanvasMedia = ({ item, isSelected, onSelect, onChange, canvasDimensions })
       vid.muted = true;
       vid.playsInline = true;
       vid.autoplay = true; 
+      vid.preservesPitch = false; // Prevents severe audio-resampling lag when playbackRate != 1
       
       vid.addEventListener('loadedmetadata', () => {
         positionMedia(vid.videoWidth, vid.videoHeight);
@@ -138,8 +140,7 @@ const CanvasMedia = ({ item, isSelected, onSelect, onChange, canvasDimensions })
       
       // Animation loop strictly for syncing time and visibility
       // We still need a lightweight animation loop to sync currentTime with playhead
-      const anim = new Konva.Animation(() => {
-        const state = useEditorStore.getState();
+      const unsub = useEditorStore.subscribe((state) => {
         const latestItem = itemRef.current;
         
         const targetRate = latestItem.playbackRate || 1;
@@ -210,9 +211,7 @@ const CanvasMedia = ({ item, isSelected, onSelect, onChange, canvasDimensions })
             vid.pause();
           }
         }
-
-        return needsRedraw;
-      }, undefined); // pass undefined instead of unbound layer!
+      });
       
       // Ensure first frame draws when video is ready
       vid.onloadedmetadata = () => {
@@ -227,12 +226,11 @@ const CanvasMedia = ({ item, isSelected, onSelect, onChange, canvasDimensions })
         if (layer) layer.batchDraw();
       };
 
-      anim.start();
       return () => {
+        unsub();
         if (rvfcId && 'cancelVideoFrameCallback' in vid) {
           vid.cancelVideoFrameCallback(rvfcId);
         }
-        anim.stop();
         vid.pause();
         vid.removeAttribute('src'); // cleanup
         vid.load();
@@ -246,8 +244,7 @@ const CanvasMedia = ({ item, isSelected, onSelect, onChange, canvasDimensions })
   // Generic visibility loop for non-video items (video handles its own visibility above)
   useEffect(() => {
     if (item.type === 'video') return;
-    const anim = new Konva.Animation(() => {
-      const state = useEditorStore.getState();
+    const unsub = useEditorStore.subscribe((state) => {
       const latestItem = itemRef.current;
       const isVisible = state.playhead >= latestItem.startMs && state.playhead <= latestItem.endMs;
       
@@ -258,8 +255,7 @@ const CanvasMedia = ({ item, isSelected, onSelect, onChange, canvasDimensions })
         node.getLayer()?.batchDraw();
       }
     });
-    anim.start();
-    return () => anim.stop();
+    return unsub;
   }, [item.type, item.startMs, item.endMs]);
 
   // Setup Transformer when selected
@@ -357,8 +353,7 @@ const CanvasText = ({ item, isSelected, onSelect, onChange, onEditStart, isEditi
   }, [item]);
 
   useEffect(() => {
-    const anim = new Konva.Animation(() => {
-      const state = useEditorStore.getState();
+    const unsub = useEditorStore.subscribe((state) => {
       const latestItem = itemRef.current;
       const isVisible = state.playhead >= latestItem.startMs && state.playhead <= latestItem.endMs;
       
@@ -370,8 +365,7 @@ const CanvasText = ({ item, isSelected, onSelect, onChange, onEditStart, isEditi
         node.getLayer()?.batchDraw();
       }
     });
-    anim.start();
-    return () => anim.stop();
+    return unsub;
   }, [item.startMs, item.endMs]);
 
   useEffect(() => {
@@ -536,7 +530,17 @@ const GridOverlay = ({ layoutId, width, height }) => {
 };
 
 const CanvasPreview = forwardRef((props, ref) => {
-  const { items, activeItemId, setActiveItem, updateItem, canvasAspectRatio, setCanvasDimensions, layoutId } = useEditorStore();
+  const { items, activeItemId, setActiveItem, updateItem, canvasAspectRatio, setCanvasDimensions, layoutId } = useEditorStore(
+    useShallow(state => ({
+      items: state.items,
+      activeItemId: state.activeItemId,
+      setActiveItem: state.setActiveItem,
+      updateItem: state.updateItem,
+      canvasAspectRatio: state.canvasAspectRatio,
+      setCanvasDimensions: state.setCanvasDimensions,
+      layoutId: state.layoutId
+    }))
+  );
   const containerRef = useRef(null);
   const stageRef = useRef(null);
   const hiddenInputRef = useRef(null);
@@ -587,10 +591,24 @@ const CanvasPreview = forwardRef((props, ref) => {
           newWidth = newHeight * canvasAspectRatio;
         }
 
-        // setDimensions is the ACTUAL physical pixels of the container
-        setDimensions({ width: newWidth, height: newHeight });
-        // setCanvasDimensions is the LOGICAL dimensions the elements use (fixed 800 width)
-        setCanvasDimensions({ width: 800, height: 800 / canvasAspectRatio });
+        const logicalWidth = 800;
+        const scale = newWidth / logicalWidth;
+
+        // BYPASS REACT STATE FOR 60FPS SMOOTHNESS DURING GRID TRANSITION
+        if (stageRef.current) {
+          stageRef.current.width(newWidth);
+          stageRef.current.height(newHeight);
+          stageRef.current.scale({ x: scale, y: scale });
+        }
+        
+        const wrapper = document.getElementById('stage-sink-wrapper');
+        if (wrapper) {
+          wrapper.style.width = `${newWidth}px`;
+          wrapper.style.height = `${newHeight}px`;
+        }
+
+        // Only update React state occasionally or just let initial render handle it
+        // We'll update the ref so it has the latest without triggering a slow VDOM re-render
       }
     };
     
@@ -630,7 +648,7 @@ const CanvasPreview = forwardRef((props, ref) => {
         }}
       >
         {/* Stage wrapper: shrink-wraps exactly to stage pixel size so no black gaps */}
-        <div style={{ position: 'relative', width: dimensions.width, height: dimensions.height, flexShrink: 0 }}>
+        <div id="stage-sink-wrapper" style={{ position: 'relative', width: dimensions.width, height: dimensions.height, flexShrink: 0, borderRadius: '12px', overflow: 'hidden', boxShadow: 'var(--shadow-md)' }}>
         {/* MOBILE HACK: Render native videos behind the canvas so the browser compositor doesn't suspend them! */}
         <div id="video-sink" style={{ position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none' }}></div>
         

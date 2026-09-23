@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useMemo } from 'react';
 import { Video, Type, Music, Image as ImageIcon, Smile, Play, Pause } from 'lucide-react';
-import { useEditorStore } from '../store/useEditorStore';
+import { useEditorStore } from '../store/useVideoEditorStore';
 
 const TIMELINE_WIDTH_PX = 1000; // Fixed visual width for the timeline track
 
