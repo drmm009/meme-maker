@@ -3151,23 +3151,7 @@ button:active {
   .template-image-wrapper img { max-height: 220px !important; }
 }
 
-  --bg-dark: #fffaf5 !important;
-  --bg-surface-1: #ffffff !important;
-  --bg-surface-2: #fff5eb !important;
-  --bg-surface-3: #fee2d5 !important;
-  --text-main: #171310 !important;
-  --text-muted: #6b6259 !important;
-  --glass-bg: #ffffff !important;
-  --glass-border: rgba(0, 0, 0, 0.08) !important;
-  --primary-accent: #ea580c !important;
-  --poster-orange: #ea580c !important;
-  --poster-yellow: #d97706 !important;
-  --primary-gradient: linear-gradient(118deg, #dc2626 0%, #ea580c 50%, #ca8a04 100%) !important;
-  --btn-blue-grad: linear-gradient(118deg, #dc2626 0%, #ea580c 50%, #ca8a04 100%) !important;
-  --cyber-cyan: #d97706 !important;
-  --cyber-pink: #dc2626 !important;
-  --primary-glow: rgba(234, 88, 12, 0.35) !important;
-}
+
 
 /* Ensure background color updates dynamically on html, body, and app-root */
 html,
