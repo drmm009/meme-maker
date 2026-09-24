@@ -1,33 +1,33 @@
 @import "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Montserrat:wght@800;900&family=Oswald:wght@700&family=Comic+Neue:wght@400;700&family=Anton&family=Archivo+Black&display=swap";
 
 :root {
-  /* Slate Blue / Sunset Orange Theme */
-  --primary-accent: #f97316;
-  --poster-orange: #f97316;
-  --poster-yellow: #ffb300;
-  --primary-gradient: linear-gradient(118deg, #ff4500 0%, #f97316 48%, #ffb300 100%);
-  --btn-blue-grad: linear-gradient(118deg, #ff4500 0%, #f97316 48%, #ffb300 100%);
-  --cyber-cyan: #ffb300;
-  --cyber-pink: #ff4500;
-  --primary-glow: transparent;
+  /* Cyber Obsidian Theme */
+  --primary-accent: #FF5E36;
+  --poster-orange: #FF5E36;
+  --poster-yellow: #FF2E63;
+  --primary-gradient: linear-gradient(135deg, #FF5E36 0%, #FF2E63 50%, #7C3AED 100%);
+  --btn-blue-grad: linear-gradient(135deg, #FF5E36 0%, #FF2E63 50%, #7C3AED 100%);
+  --cyber-cyan: #06B6D4;
+  --cyber-pink: #FF2E63;
+  --primary-glow: linear-gradient(135deg, rgba(255, 94, 54, 0.3), rgba(124, 58, 237, 0.3));
   
-  --bg-dark: #090e17;
-  --bg-gradient: radial-gradient(circle at top right, rgba(249, 115, 22, 0.05) 0%, transparent 40%), radial-gradient(circle at bottom left, rgba(56, 189, 248, 0.04) 0%, transparent 40%);
-  --bg-surface-1: #1e293b;
-  --bg-surface-2: #1e293b;
-  --bg-surface-3: #1e293b;
+  --bg-dark: #080B11;
+  --bg-gradient: radial-gradient(circle at top right, rgba(255, 94, 54, 0.08) 0%, transparent 40%), radial-gradient(circle at bottom left, rgba(124, 58, 237, 0.08) 0%, transparent 40%);
+  --bg-surface-1: rgba(18, 24, 38, 0.75);
+  --bg-surface-2: #111726;
+  --bg-surface-3: #111726;
   
-  --text-main: #f8fafc;
-  --text-muted: #94a3b8;
+  --text-main: #F9FAFB;
+  --text-muted: #9CA3AF;
   
-  --glass-bg: rgba(30, 41, 59, 0.45);
-  --glass-border: rgba(148, 163, 184, 0.15);
-  --glass-border-glow: rgba(249, 115, 22, 0.5);
-  --glass-shadow: none;
+  --glass-bg: rgba(17, 23, 38, 0.6);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-border-glow: rgba(255, 94, 54, 0.4);
+  --glass-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
 
   --emerald-accent: #00e676;
   --amber-accent: #ffb300;
-  --radius-sm: 10px;
+  --radius-sm: 8px;
   --radius-md: 14px;
   --radius-lg: 20px;
 }

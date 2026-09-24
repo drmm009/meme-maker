@@ -22,17 +22,17 @@ body {
 .glass-card {
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
-  border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
-  backdrop-filter: blur(24px) saturate(180%);
-  transition: transform 0.2s, border-color 0.2s, background-color 0.2s;
+  border-radius: var(--radius-md);
+  box-shadow: var(--glass-shadow);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
 }
 .glass-card.hover-lift:hover {
   border-color: var(--glass-border-glow);
-  background: rgba(36, 36, 36, 0.75);
+  background: rgba(255, 255, 255, 0.05);
   transform: translateY(-2px);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
 }
 .flex-between {
   justify-content: space-between;
@@ -90,21 +90,33 @@ body {
   -webkit-tap-highlight-color: transparent !important;
 }
 .btn-primary {
-  background: var(--primary-accent);
+  background: var(--primary-gradient);
   color: #FFFFFF !important;
   font-weight: 700;
   border: 1px solid transparent;
   box-shadow: none;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
+  position: relative;
+  z-index: 1;
+}
+.btn-primary::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  border-radius: inherit;
+  background: var(--primary-glow);
+  filter: blur(8px);
+  opacity: 0;
+  z-index: -1;
+  transition: opacity 0.3s ease;
+}
+.btn-primary:hover::before {
+  opacity: 1;
 }
 .btn-primary:hover {
-  background: var(--primary-accent);
-  filter: brightness(1.1);
   color: #FFFFFF !important;
-  opacity: 1;
   border-color: transparent;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.4);
 }
 .btn-secondary {
   color: var(--text-main);
