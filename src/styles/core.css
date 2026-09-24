@@ -12,6 +12,7 @@ body {
   background-attachment: fixed;
   overflow-y: scroll;
   font-family:
+    'Plus Jakarta Sans',
     Inter,
     system-ui,
     -apple-system,
@@ -19,10 +20,14 @@ body {
   line-height: 1.5;
 }
 
+h1, h2, h3, h4, h5, h6, .display-font {
+  font-family: 'Syne', sans-serif;
+}
+
 .glass-card {
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   box-shadow: var(--glass-shadow);
   -webkit-backdrop-filter: blur(16px);
   backdrop-filter: blur(16px);
@@ -65,7 +70,7 @@ body {
   color: #ef4444;
 }
 .btn {
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-pill);
   cursor: pointer;
   -webkit-user-select: none;
   user-select: none;
@@ -91,11 +96,11 @@ body {
 }
 .btn-primary {
   background: var(--primary-gradient);
-  color: #FFFFFF !important;
+  color: #0d0e12 !important;
   font-weight: 700;
   border: 1px solid transparent;
   box-shadow: none;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-pill);
   position: relative;
   z-index: 1;
 }
@@ -114,7 +119,7 @@ body {
   opacity: 1;
 }
 .btn-primary:hover {
-  color: #FFFFFF !important;
+  color: #0d0e12 !important;
   border-color: transparent;
   transform: translateY(-2px);
 }

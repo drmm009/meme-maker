@@ -1,35 +1,42 @@
-@import "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Montserrat:wght@800;900&family=Oswald:wght@700&family=Comic+Neue:wght@400;700&family=Anton&family=Archivo+Black&display=swap";
+@import "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Syne:wght@400;500;600;700;800&family=Montserrat:wght@800;900&family=Oswald:wght@700&family=Comic+Neue:wght@400;700&family=Anton&family=Archivo+Black&display=swap";
 
 :root {
-  /* Cyber Obsidian Theme */
-  --primary-accent: #FF5E36;
-  --poster-orange: #FF5E36;
-  --poster-yellow: #FF2E63;
-  --primary-gradient: linear-gradient(135deg, #FF5E36 0%, #FF2E63 50%, #7C3AED 100%);
-  --btn-blue-grad: linear-gradient(135deg, #FF5E36 0%, #FF2E63 50%, #7C3AED 100%);
-  --cyber-cyan: #06B6D4;
-  --cyber-pink: #FF2E63;
-  --primary-glow: linear-gradient(135deg, rgba(255, 94, 54, 0.3), rgba(124, 58, 237, 0.3));
+  /* Stitch Gen Z Lumina Theme */
+  --primary-accent: #ff6b4a; /* Electric Sunset Tangerine */
+  --secondary-accent: #9d7bff; /* Soft Lavender-Violet */
+  --tertiary-accent: #2fe695; /* Vibrant Lime Mint */
   
-  --bg-dark: #080B11;
-  --bg-gradient: radial-gradient(circle at top right, rgba(255, 94, 54, 0.08) 0%, transparent 40%), radial-gradient(circle at bottom left, rgba(124, 58, 237, 0.08) 0%, transparent 40%);
-  --bg-surface-1: rgba(18, 24, 38, 0.75);
-  --bg-surface-2: #111726;
-  --bg-surface-3: #111726;
+  --poster-orange: #ff6b4a;
+  --poster-yellow: #9d7bff;
+  --primary-gradient: linear-gradient(135deg, #ff6b4a 0%, #9d7bff 100%);
+  --btn-blue-grad: linear-gradient(135deg, #ff6b4a 0%, #9d7bff 100%);
+  --cyber-cyan: #2fe695;
+  --cyber-pink: #ff6b4a;
+  --primary-glow: linear-gradient(135deg, rgba(255, 107, 74, 0.35), rgba(157, 123, 255, 0.35));
   
-  --text-main: #F9FAFB;
-  --text-muted: #9CA3AF;
+  --bg-dark: #0d0e12;
+  --bg-gradient: radial-gradient(circle at top right, rgba(255, 107, 74, 0.05) 0%, transparent 40%), radial-gradient(circle at bottom left, rgba(157, 123, 255, 0.05) 0%, transparent 40%);
+  --bg-surface-1: #16181f;
+  --bg-surface-2: #1c1e26;
+  --bg-surface-3: #20232e;
   
-  --glass-bg: rgba(17, 23, 38, 0.6);
+  --text-main: #f5f5f7;
+  --text-muted: #8b8f9e;
+  --text-tertiary: #565a69;
+  
+  --glass-bg: rgba(22, 24, 31, 0.70);
   --glass-border: rgba(255, 255, 255, 0.08);
-  --glass-border-glow: rgba(255, 94, 54, 0.4);
-  --glass-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+  --glass-border-glow: rgba(255, 107, 74, 0.4);
+  --glass-shadow: 0 20px 48px -12px rgba(0, 0, 0, 0.65);
 
-  --emerald-accent: #00e676;
-  --amber-accent: #ffb300;
+  --emerald-accent: #2fe695;
+  --amber-accent: #ff6b4a;
+  
+  /* Geometry */
   --radius-sm: 8px;
-  --radius-md: 14px;
-  --radius-lg: 20px;
+  --radius-md: 1.25rem;
+  --radius-lg: 1.75rem; /* 28px for cards */
+  --radius-pill: 9999px;
 }
 
 :root[data-theme='light'] {
