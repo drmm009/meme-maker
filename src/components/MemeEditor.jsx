@@ -18,6 +18,7 @@ import { fetchOpenSourceMemes } from '../services/memeService';
 import VideoTrimmer from './VideoTrimmer';
 import AspectRatioDropdown from './AspectRatioDropdown';
 import GiphyTab from './GiphyTab';
+import './MemeEditor.css';
 
 const PRESET_PHRASES = [
   'WHEN YOU...',

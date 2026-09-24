@@ -4,7 +4,7 @@ import { fetchOpenSourceMemes } from '../services/memeService';
 import { Upload, ArrowRight, ArrowLeft, Move, ZoomIn, ZoomOut, RefreshCw, Sparkles, Image as ImageIcon, X, Search, Plus, Minus, Type, Square, Smartphone, Monitor, RectangleVertical, Grid } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ModalPortal from './ModalPortal';
-
+import './CustomLayoutBuilder.css';
 const isVideoUrl = (url) => {
   if (!url || typeof url !== 'string') return false;
   if (url.includes('#type=video')) return true;

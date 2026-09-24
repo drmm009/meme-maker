@@ -3,7 +3,7 @@ import { MEME_TEMPLATES, CATEGORIES } from '../data/templates';
 import { VIDEO_MEME_TEMPLATES } from '../data/videoTemplates';
 import { Search, Sparkles, PlusCircle, Crown, Image as ImageIcon, Video } from 'lucide-react';
 import { motion } from 'framer-motion';
-
+import './TemplateDiscovery.css';
 export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');

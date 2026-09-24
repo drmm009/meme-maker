@@ -1,0 +1,206 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+html,
+body {
+  background-color: var(--bg-dark);
+  background-image: var(--bg-gradient);
+  color: var(--text-main);
+  -webkit-tap-highlight-color: transparent;
+  background-attachment: fixed;
+  overflow-y: scroll;
+  font-family:
+    Inter,
+    system-ui,
+    -apple-system,
+    sans-serif;
+  line-height: 1.5;
+}
+
+.glass-card {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  backdrop-filter: blur(24px) saturate(180%);
+  transition: transform 0.2s, border-color 0.2s, background-color 0.2s;
+}
+.glass-card.hover-lift:hover {
+  border-color: var(--glass-border-glow);
+  background: rgba(36, 36, 36, 0.75);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+.flex-between {
+  justify-content: space-between;
+  align-items: center;
+  display: flex;
+}
+.flex-center {
+  justify-content: center;
+  align-items: center;
+  display: flex;
+}
+.flex-gap {
+  align-items: center;
+  gap: 10px;
+  display: flex;
+}
+.margin-bottom {
+  margin-bottom: 16px;
+}
+.margin-bottom-xs {
+  margin-bottom: 8px;
+}
+.margin-top {
+  margin-top: 16px;
+}
+.text-cyan {
+  color: var(--cyber-cyan);
+}
+.text-danger {
+  color: #ef4444;
+}
+.btn {
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: manipulation;
+  border: none;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  display: inline-flex;
+  will-change: transform, box-shadow;
+}
+.btn:focus {
+  outline: none;
+}
+.btn:active {
+  outline: none !important;
+  transform: scale(0.97) translateY(0) !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+.btn-primary {
+  background: var(--primary-accent);
+  color: #FFFFFF !important;
+  font-weight: 700;
+  border: 1px solid transparent;
+  box-shadow: none;
+  border-radius: 4px;
+}
+.btn-primary:hover {
+  background: var(--primary-accent);
+  filter: brightness(1.1);
+  color: #FFFFFF !important;
+  opacity: 1;
+  border-color: transparent;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.4);
+}
+.btn-secondary {
+  color: var(--text-main);
+  border: 1px solid transparent;
+  background: transparent;
+  box-shadow: none;
+  border-radius: 4px;
+}
+.btn-secondary:hover {
+  background: var(--bg-surface-2) !important;
+  border-color: var(--glass-border) !important;
+  color: #fff !important;
+  transform: translateY(-2px);
+  box-shadow: none;
+}
+.btn-ghost {
+  color: var(--text-muted);
+  background: 0 0;
+  border: 1px solid #0000;
+  border-radius: var(--radius-sm);
+}
+.btn-ghost:hover {
+  color: #ffffff;
+  background: rgba(255,255,255,0.08);
+  backdrop-filter: blur(4px);
+}
+[data-theme='light'] .btn-primary {
+  border-radius: 999px;
+  box-shadow: 0 4px 20px rgba(124, 92, 252, 0.3);
+}
+[data-theme='light'] .btn-primary:hover {
+  box-shadow: 0 8px 24px rgba(79, 134, 247, 0.35);
+}
+[data-theme='light'] .btn-secondary {
+  border-radius: 999px;
+  background: #0f1115;
+  color: #ffffff;
+  box-shadow: none;
+}
+[data-theme='light'] .btn-secondary:hover {
+  background: #1c1f26 !important;
+  border-color: transparent !important;
+  color: #fff !important;
+}
+.btn-xs {
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 0.78rem;
+}
+.btn-sm {
+  padding: 8px 14px;
+  font-size: 0.82rem;
+}
+.btn-icon {
+  border-radius: 50%;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+}
+.icon-xs {
+  width: 14px;
+  height: 14px;
+}
+.icon-sm {
+  width: 18px;
+  height: 18px;
+}
+.icon-md {
+  width: 22px;
+  height: 22px;
+}
+.animate-fade-in {
+  animation: 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards fadeIn;
+}
+.animate-scale-up {
+  will-change: transform, opacity;
+  animation: 0.15s cubic-bezier(0.16, 1, 0.3, 1) forwards scaleUp;
+  transform: translateZ(0);
+}
+@keyframes scaleUp {
+  0% {
+    opacity: 0;
+    transform: scale(0.96) translateZ(0);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateZ(0);
+  }
+}
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}

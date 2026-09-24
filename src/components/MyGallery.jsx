@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import ModalPortal from './ModalPortal';
 import { Download, Trash2, Edit3, X, Sparkles } from 'lucide-react';
 import { downloadImageHelper } from '../utils/downloadHelper';
+import './MyGallery.css';
 
 export default function MyGallery({ savedMemes, onDeleteMeme, onSelectMeme }) {
   const [selectedMemeForView, setSelectedMemeForView] = useState(null);
