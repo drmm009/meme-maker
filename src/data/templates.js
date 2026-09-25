@@ -3368,8 +3368,8 @@ export const LAYOUT_OPTIONS = [
   { id: '1-panel', name: 'Blank Canvas', slots: 1 },
   { id: '2-vert', name: '2 Panels (Top/Bottom)', slots: 2 },
   { id: '2-horiz', name: '2 Panels (Side-by-Side)', slots: 2 },
-  { id: '3-stacked', name: '3 Panels (Horizontal)', slots: 3 },
-  { id: '3-horiz', name: '3 Panels (Vertical)', slots: 3 },
+  { id: '3-stacked', name: '3 Panels (Top/Bottom)', slots: 3 },
+  { id: '3-horiz', name: '3 Panels (Side-by-Side)', slots: 3 },
   { id: '4-grid', name: '4 Panels (2x2 Grid)', slots: 4 },
   { id: '3-hybrid', name: '3 Panels (1 Top / 2 Bottom)', slots: 3 }
 ];

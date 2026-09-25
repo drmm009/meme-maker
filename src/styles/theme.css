@@ -1,41 +1,46 @@
 @import "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Syne:wght@400;500;600;700;800&family=Montserrat:wght@800;900&family=Oswald:wght@700&family=Comic+Neue:wght@400;700&family=Anton&family=Archivo+Black&display=swap";
 
 :root {
-  /* Stitch Gen Z Lumina Theme */
-  --primary-accent: #ff6b4a; /* Electric Sunset Tangerine */
-  --secondary-accent: #9d7bff; /* Soft Lavender-Violet */
-  --tertiary-accent: #2fe695; /* Vibrant Lime Mint */
-  
-  --poster-orange: #ff6b4a;
-  --poster-yellow: #9d7bff;
-  --primary-gradient: linear-gradient(135deg, #ff6b4a 0%, #9d7bff 100%);
-  --btn-blue-grad: linear-gradient(135deg, #ff6b4a 0%, #9d7bff 100%);
-  --cyber-cyan: #2fe695;
-  --cyber-pink: #ff6b4a;
-  --primary-glow: linear-gradient(135deg, rgba(255, 107, 74, 0.35), rgba(157, 123, 255, 0.35));
-  
-  --bg-dark: #0d0e12;
-  --bg-gradient: radial-gradient(circle at top right, rgba(255, 107, 74, 0.05) 0%, transparent 40%), radial-gradient(circle at bottom left, rgba(157, 123, 255, 0.05) 0%, transparent 40%);
+  /* Vibrant Coral Flame Theme (#ff3b60 to #ff5e36) */
+  --primary-accent: #ff5e36; /* Warm Flame Orange for solid icons/text/accents */
+  --primary-accent-end: #ff5e36;
+  --secondary-accent: #ff5e36;
+  --tertiary-accent: #ff5e36;
+
+  --poster-orange: #ff5e36;
+  --poster-yellow: #ff9100;
+  --primary-gradient: linear-gradient(90deg, #ff3b60, #ff5e36);
+  --btn-blue-grad: linear-gradient(90deg, #ff3b60, #ff5e36);
+  --cyber-cyan: #ff5e36;
+  --cyber-pink: #ff5e36;
+  --primary-glow: linear-gradient(90deg, rgba(255, 59, 96, 0.35), rgba(255, 94, 54, 0.35));
+
+  --bg-dark: #141c2b;
+  --bg-gradient:
+    radial-gradient(ellipse 75% 65% at 5% 5%, rgba(249, 115, 22, 0.22) 0%, transparent 68%),
+    radial-gradient(ellipse 70% 60% at 85% 35%, rgba(99, 102, 241, 0.25) 0%, transparent 65%),
+    radial-gradient(ellipse 75% 60% at 50% 95%, rgba(6, 182, 212, 0.16) 0%, transparent 70%);
   --bg-surface-1: #16181f;
   --bg-surface-2: #1c1e26;
   --bg-surface-3: #20232e;
-  
+
   --text-main: #f5f5f7;
   --text-muted: #8b8f9e;
   --text-tertiary: #565a69;
-  
-  --glass-bg: rgba(22, 24, 31, 0.70);
-  --glass-border: rgba(255, 255, 255, 0.08);
-  --glass-border-glow: rgba(255, 107, 74, 0.4);
+
+  --glass-bg: rgba(255, 255, 255, 0.04);
+  --glass-border: rgba(255, 255, 255, 0.12);
+  --glass-border-glow: rgba(255, 59, 96, 0.45);
   --glass-shadow: 0 20px 48px -12px rgba(0, 0, 0, 0.65);
 
-  --emerald-accent: #2fe695;
-  --amber-accent: #ff6b4a;
-  
+  --emerald-accent: #ff5e36;
+  --amber-accent: #ff5e36;
+
   /* Geometry */
   --radius-sm: 8px;
   --radius-md: 1.25rem;
-  --radius-lg: 1.75rem; /* 28px for cards */
+  --radius-lg: 1.75rem;
+  /* 28px for cards */
   --radius-pill: 9999px;
 }
 

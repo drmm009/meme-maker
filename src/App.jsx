@@ -236,59 +236,15 @@ function App() {
             </nav>
 
             {/* User Controls */}
-            <div className="user-controls flex-gap" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-
-
-              <motion.button
-                className="account-header-btn"
-                whileHover={{ scale: 1.08 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setSettingsModalOpen(true)}
-                title="App Preferences"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: '40px',
-                  height: '40px',
-                  borderRadius: '50%',
-                  background: 'linear-gradient(135deg, rgba(249, 115, 22, 0.2) 0%, rgba(234, 88, 12, 0.15) 100%)',
-                  backdropFilter: 'blur(12px)',
-                  WebkitBackdropFilter: 'blur(12px)',
-                  border: '1px solid var(--glass-border)',
-                  boxShadow: '0 4px 12px rgba(31, 38, 135, 0.08)',
-                  cursor: 'pointer',
-                  color: 'var(--text-main)',
-                  transition: 'all 0.2s ease'
-                }}
-              >
-                <Settings className="icon-sm" style={{ width: '20px', height: '20px', color: '#f97316' }} />
-              </motion.button>
-
+            <div className="user-controls flex-gap" style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
               <motion.button
                 className="account-header-btn"
                 whileHover={{ scale: 1.08 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setAccountModalOpen(true)}
                 title="Account & Sync"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: '40px',
-                  height: '40px',
-                  borderRadius: '50%',
-                  background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.25) 0%, rgba(168, 85, 247, 0.2) 100%)',
-                  backdropFilter: 'blur(12px)',
-                  WebkitBackdropFilter: 'blur(12px)',
-                  border: '1px solid var(--glass-border)',
-                  boxShadow: '0 4px 12px rgba(31, 38, 135, 0.08), inset 0 1px 1px rgba(255, 255, 255, 0.8)',
-                  cursor: 'pointer',
-                  color: 'var(--text-main)',
-                  transition: 'all 0.2s ease'
-                }}
               >
-                <User className="icon-sm" style={{ width: '20px', height: '20px', color: '#ffffff' }} />
+                <User className="icon-sm" />
               </motion.button>
             </div>
           </div>
