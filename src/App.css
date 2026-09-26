@@ -4005,7 +4005,7 @@ input:checked + .slider.round.watermark-toggle {
     align-items: center !important;
     justify-content: center !important;
     gap: 6px !important;
-    background: transparent !important;
+    background: rgba(255, 255, 255, 0.08) !important;
     border: 1px solid rgba(255, 255, 255, 0.22) !important;
     border-radius: 8px !important;
     color: var(--text-main, #ffffff) !important;
@@ -4014,7 +4014,7 @@ input:checked + .slider.round.watermark-toggle {
     font-weight: 600 !important;
     -webkit-backdrop-filter: blur(10px) !important;
     backdrop-filter: blur(10px) !important;
-    box-shadow: none !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
     transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
     flex-shrink: 0 !important;
     min-height: 32px !important;
@@ -4039,7 +4039,7 @@ input:checked + .slider.round.watermark-toggle {
   .export-back-btn:active,
   .editor-topbar button:has(svg.lucide-arrow-left):active,
   .editor-topbar > button:first-child:has(svg):active {
-    background: rgba(255, 255, 255, 0.1) !important;
+    background: rgba(255, 255, 255, 0.16) !important;
     border-color: rgba(255, 255, 255, 0.45) !important;
     transform: scale(0.96) !important;
   }
@@ -4049,16 +4049,16 @@ input:checked + .slider.round.watermark-toggle {
   [data-theme='light'] .export-back-btn,
   [data-theme='light'] .editor-topbar button:has(svg.lucide-arrow-left),
   [data-theme='light'] .editor-topbar > button:first-child:has(svg) {
-    background: transparent !important;
+    background: rgba(0, 0, 0, 0.04) !important;
     border: 1px solid rgba(0, 0, 0, 0.18) !important;
     color: #0f172a !important;
-    box-shadow: none !important;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06) !important;
   }
 
   [data-theme='light'] .back-btn:active,
   [data-theme='light'] .wizard-back-btn:active,
   [data-theme='light'] .export-back-btn:active {
-    background: rgba(0, 0, 0, 0.06) !important;
+    background: rgba(0, 0, 0, 0.09) !important;
     border-color: rgba(0, 0, 0, 0.3) !important;
   }
 }
