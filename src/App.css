@@ -1826,6 +1826,12 @@ input:checked + .slider.round:before {
 
 [data-theme='light'] .aspect-ratio-display {
   color: #0f172a !important;
+  background: rgba(0, 0, 0, 0.04) !important;
+  border: 1px solid rgba(0, 0, 0, 0.14) !important;
+}
+[data-theme='light'] .aspect-ratio-display.active,
+[data-theme='light'] .aspect-ratio-display:hover {
+  background: rgba(0, 0, 0, 0.08) !important;
 }
 
 [data-theme='light'] .btn-timeline-add {
@@ -3053,7 +3059,8 @@ select {
     color: var(--text-main);
   }
   .aspect-ratio-display {
-    padding: 4px 8px !important;
+    padding: 5px 8px !important;
+    border-radius: 8px !important;
     justify-content: center;
   }
 }
