@@ -733,6 +733,57 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     pushHistory(nextCaps, nextStickers, nextImgLayers);
   };
 
+  const handleDuplicateLayer = () => {
+    if (!activeLayerId) return;
+    if (activeCaption) {
+      const newCap = {
+        ...activeCaption,
+        id: `cap-${Date.now()}`,
+        x: (activeCaption.x || 50) + 20,
+        y: (activeCaption.y || 50) + 20
+      };
+      const nextCaps = [...captions, newCap];
+      setCaptions(nextCaps);
+      setActiveLayerId(newCap.id);
+      pushHistory(nextCaps, stickers, imageLayers);
+    } else if (activeSticker) {
+      const newStk = {
+        ...activeSticker,
+        id: `stk-${Date.now()}`,
+        x: (activeSticker.x || 50) + 20,
+        y: (activeSticker.y || 50) + 20
+      };
+      const nextStk = [...stickers, newStk];
+      setStickers(nextStk);
+      setActiveLayerId(newStk.id);
+      pushHistory(captions, nextStk, imageLayers);
+    } else if (activeImageLayer) {
+      const newImg = {
+        ...activeImageLayer,
+        id: `layer-${Date.now()}`,
+        x: (activeImageLayer.x || 50) + 20,
+        y: (activeImageLayer.y || 50) + 20
+      };
+      const nextImg = [...imageLayers, newImg];
+      setImageLayers(nextImg);
+      setActiveLayerId(newImg.id);
+      pushHistory(captions, stickers, nextImg);
+    }
+  };
+
+  const handleRotateImageLayer = () => {
+    if (!activeImageLayer) return;
+    const nextRot = ((activeImageLayer.rotation || 0) + 90) % 360;
+    const nextImg = imageLayers.map(l => l.id === activeImageLayer.id ? { ...l, rotation: nextRot } : l);
+    setImageLayers(nextImg);
+    pushHistoryDebounced(captions, stickers, nextImg);
+  };
+
+  const getContrastStroke = (hex) => {
+    if (!hex) return '#000000';
+    return hex.toLowerCase() === '#ffffff' ? '#000000' : 'transparent';
+  };
+
   const handleFileUploadSlot = (slotIndex, e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -1376,6 +1427,128 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
         <div className="editor-workspace">
           {/* Canvas Render Area */}
           <div className="canvas-wrapper">
+            {/* Floating Context Toolbar whenever dock container is folded */}
+            <AnimatePresence>
+              {(activeCaption || activeSticker || activeImageLayer) && isMobileTabsFolded && (
+                <motion.div
+                  className={`editor-floating-toolbar video-context-toolbar ${aspectRatio === '9:16' || aspectRatio === '4:5' ? 'portrait' : ''}`}
+                  initial={{ opacity: 0, y: -10, x: '-50%' }}
+                  animate={{ opacity: 1, y: 0, x: '-50%' }}
+                  exit={{ opacity: 0, y: -10, x: '-50%' }}
+                  transition={{ duration: 0.2, ease: 'easeOut' }}
+                >
+                  {/* Text controls */}
+                  {activeCaption && (
+                    <>
+                      <button
+                        className="btn btn-xs vid-ctx-btn vid-ctx-btn-font"
+                        title="Next Font"
+                        onClick={handleCycleFont}
+                        style={{
+                          fontFamily: activeCaption.fontFamily || 'Impact, sans-serif',
+                          fontSize: '0.75rem',
+                          padding: '4px 10px',
+                          maxWidth: 90,
+                          overflow: 'hidden',
+                          whiteSpace: 'nowrap',
+                          textOverflow: 'ellipsis'
+                        }}
+                      >
+                        <Type className="vid-font-icon" style={{ width: 12, height: 12, marginRight: 4, flexShrink: 0 }} />
+                        <span className="vid-font-label">{activeFontObj.name.split(' ')[0]}</span>
+                      </button>
+
+                      <div
+                        className="vid-ctx-btn"
+                        style={{
+                          position: 'relative',
+                          overflow: 'hidden',
+                          width: 32,
+                          height: 32,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          borderRadius: 8
+                        }}
+                        title="Text Color"
+                      >
+                        <div
+                          style={{
+                            width: 16,
+                            height: 16,
+                            borderRadius: '50%',
+                            background: activeCaption.color || '#fff',
+                            border: '1.5px solid rgba(255,255,255,0.4)'
+                          }}
+                        />
+                        <input
+                          type="color"
+                          value={activeCaption.color || '#ffffff'}
+                          onChange={(e) => {
+                            const hex = e.target.value;
+                            updateActiveCaptionProps({ color: hex, stroke: getContrastStroke(hex) });
+                          }}
+                          style={{ position: 'absolute', opacity: 0, inset: 0, cursor: 'pointer' }}
+                        />
+                      </div>
+
+                      <button
+                        className="btn btn-xs vid-ctx-btn"
+                        title="Toggle Background"
+                        onClick={() => {
+                          if (!activeCaption.bgColor || activeCaption.bgColor === 'none') {
+                            handleSetCaptionBg('white');
+                          } else if (activeCaption.bgColor === 'white') {
+                            handleSetCaptionBg('black');
+                          } else {
+                            handleSetCaptionBg('none');
+                          }
+                        }}
+                        style={{
+                          padding: '4px 8px',
+                          fontSize: '0.72rem',
+                          background: activeCaption.bgColor === 'white' ? '#fff' : activeCaption.bgColor === 'black' ? '#000' : undefined,
+                          color: activeCaption.bgColor === 'white' ? '#000' : activeCaption.bgColor === 'black' ? '#fff' : undefined,
+                          fontWeight: 700
+                        }}
+                      >
+                        BG
+                      </button>
+                    </>
+                  )}
+
+                  {/* Image controls */}
+                  {activeImageLayer && (
+                    <button
+                      className="btn btn-icon btn-xs vid-ctx-btn"
+                      title="Rotate 90°"
+                      onClick={handleRotateImageLayer}
+                    >
+                      <RotateCw style={{ width: 14, height: 14 }} />
+                    </button>
+                  )}
+
+                  {/* Shared Duplicate / Delete */}
+                  <div className="vid-ctx-divider" style={{ width: 1, height: 20, background: 'rgba(255,255,255,0.2)', margin: '0 4px' }} />
+                  <button
+                    className="btn btn-icon btn-xs vid-ctx-btn"
+                    title="Duplicate"
+                    onClick={handleDuplicateLayer}
+                  >
+                    <Copy style={{ width: 14, height: 14 }} />
+                  </button>
+                  <button
+                    className="btn btn-icon btn-xs vid-ctx-btn vid-ctx-btn-delete"
+                    style={{ background: 'rgba(239, 68, 68, 0.85)', color: '#ffffff', border: '1px solid rgba(239, 68, 68, 1)' }}
+                    title="Delete"
+                    onClick={handleDeleteLayer}
+                  >
+                    <Trash2 style={{ width: 14, height: 14 }} />
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             <CanvasEditor
               ref={canvasRef}
               template={activeTemplate}
