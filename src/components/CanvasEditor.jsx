@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState, useLayoutEffect } from 'react';
 import { Image as ImageIcon, Sparkles, Type } from 'lucide-react';
+import { getFilterCss } from '../data/photoFilters';
 
 const wrapText = (ctx, text, maxWidth) => {
   if (!text) return [];
@@ -364,12 +365,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
 
       // Apply Image Filters
       ctx.save();
-      const b = activeFilters.brightness ?? 100;
-      const c = activeFilters.contrast ?? 100;
-      const s = activeFilters.saturation ?? 100;
-      const g = activeFilters.grayscale ?? 0;
-      const bl = activeFilters.blur ?? 0;
-      ctx.filter = `brightness(${b}%) contrast(${c}%) saturate(${s}%) grayscale(${g}%) blur(${bl}px)`;
+      ctx.filter = getFilterCss(activeFilters);
 
       // Draw Base Image or Native Layout Slots
       if (activeIsNativeLayout && activeLayoutDef) {
@@ -511,6 +507,9 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
           ctx.translate(cx, cy);
           if (imgLayer.rotation) {
             ctx.rotate((imgLayer.rotation * Math.PI) / 180);
+          }
+          if (imgLayer.filter || imgLayer.filters) {
+            ctx.filter = getFilterCss(imgLayer.filter || imgLayer.filters);
           }
           const scale = imgLayer.scale || 1.0;
           const baseW = cached.width || 200;
@@ -939,7 +938,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     } else {
       renderCanvas(null);
     }
-  }, [captions, stickers, activeLayerId, imageLayers, slotImages, slotTransforms, activeIsNativeLayout, editingCaptionId, cursorVisible, aspectRatio, imageFit, watermark, drawings, isDrawingMode, imgSrc]);
+  }, [captions, stickers, activeLayerId, imageLayers, slotImages, slotTransforms, activeIsNativeLayout, editingCaptionId, cursorVisible, aspectRatio, imageFit, watermark, drawings, isDrawingMode, imgSrc, filters]);
 
   // Helper to rotate point for hit testing
   const rotatePoint = (px, py, cx, cy, angle) => {

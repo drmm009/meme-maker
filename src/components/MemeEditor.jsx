@@ -18,6 +18,7 @@ import { fetchOpenSourceMemes } from '../services/memeService';
 import VideoTrimmer from './VideoTrimmer';
 import AspectRatioDropdown from './AspectRatioDropdown';
 import GiphyTab from './GiphyTab';
+import { PHOTO_FILTERS } from '../data/photoFilters';
 import './MemeEditor.css';
 
 const PRESET_PHRASES = [
@@ -326,6 +327,19 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
 
   const [activeTab, setActiveTab] = useState('text'); // 'text' | 'stickers' | 'images' | 'draw' | 'watermark'
   const [isMobileTabsFolded, setIsMobileTabsFolded] = useState(false);
+  const [imageFilters, setImageFilters] = useState({
+    preset: 'original',
+    brightness: 100,
+    contrast: 100,
+    saturation: 100,
+    grayscale: 0,
+    sepia: 0,
+    invert: 0,
+    hueRotate: 0,
+    blur: 0,
+    filterString: 'none'
+  });
+  const [filterTarget, setFilterTarget] = useState('canvas'); // 'canvas' | 'layer'
 
   const handleTabClick = (tabId) => {
     if (activeTab === tabId) {
@@ -1577,6 +1591,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
             imageLayers={imageLayers}
             aspectRatio={aspectRatio}
             imageFit={imageFit}
+            filters={imageFilters}
             isNativeLayout={isNativeLayout}
             layoutDef={layoutDef}
             slotImages={slotImages}
@@ -2540,7 +2555,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                   )}
                 </div>
                 
-                {activeImageLayer ? (
+                {activeImageLayer && (
                   <div className="form-group margin-bottom-sm glass-card" style={{ padding: '8px 12px' }}>
                     <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '8px', display: 'block' }}>Media Fit Mode</label>
                     <div className="size-control-group" style={{ display: 'flex', gap: '4px', width: '100%' }}>
@@ -2567,11 +2582,73 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                       </button>
                     </div>
                   </div>
-                ) : (
-                  <div style={{ textAlign: 'center', padding: '16px 12px', color: 'var(--text-muted)', fontSize: '0.8rem', background: 'rgba(255,255,255,0.02)', borderRadius: '10px', border: '1px dashed var(--glass-border)' }}>
-                    Upload an image or pick a template overlay to place on your canvas.
-                  </div>
                 )}
+
+                {/* PHOTO GRADING & EFFECTS */}
+                <div className="photo-grading-card">
+                  <div className="photo-grading-header">
+                    <h4 className="photo-grading-title">Photo Grading & Effects</h4>
+                    <span className="photo-grading-badge">
+                      {(() => {
+                        const currentPresetId = (activeImageLayer && filterTarget === 'layer')
+                          ? (activeImageLayer.filterId || 'original')
+                          : (imageFilters.preset || 'original');
+                        const found = PHOTO_FILTERS.find(f => f.id === currentPresetId);
+                        return found ? found.badge : 'ORIGINAL';
+                      })()}
+                    </span>
+                  </div>
+
+                  {activeImageLayer && (
+                    <div className="photo-grading-target-bar">
+                      <button
+                        type="button"
+                        className={`photo-grading-target-btn ${filterTarget === 'canvas' ? 'active' : ''}`}
+                        onClick={() => setFilterTarget('canvas')}
+                      >
+                        Canvas Photo
+                      </button>
+                      <button
+                        type="button"
+                        className={`photo-grading-target-btn ${filterTarget === 'layer' ? 'active' : ''}`}
+                        onClick={() => setFilterTarget('layer')}
+                      >
+                        Selected Overlay
+                      </button>
+                    </div>
+                  )}
+
+                  <div className="photo-grading-grid">
+                    {PHOTO_FILTERS.map((filterItem) => {
+                      const isFilterActive = (activeImageLayer && filterTarget === 'layer')
+                        ? (activeImageLayer.filterId || 'original') === filterItem.id
+                        : (imageFilters.preset || 'original') === filterItem.id;
+
+                      return (
+                        <button
+                          key={filterItem.id}
+                          type="button"
+                          className={`photo-grading-btn ${isFilterActive ? 'active' : ''}`}
+                          onClick={() => {
+                            if (activeImageLayer && filterTarget === 'layer') {
+                              updateActiveImageLayer('filterId', filterItem.id);
+                              updateActiveImageLayer('filter', filterItem.filterString);
+                              updateActiveImageLayer('filters', filterItem.values);
+                            } else {
+                              setImageFilters({
+                                preset: filterItem.id,
+                                filterString: filterItem.filterString,
+                                ...filterItem.values
+                              });
+                            }
+                          }}
+                        >
+                          {filterItem.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
 
                 {/* VideoTrimmer Modal — rendered as portal to escape canvas z-index stacking context */}
                 {pendingVideoLayer && createPortal(
