@@ -359,9 +359,9 @@ export default function CustomLayoutBuilder({
 
       {/* STEP 1: CLEAN 3 COLUMNS x 2 ROWS LAYOUT SELECTOR WITH SPACING BELOW HEADER */}
       {step === 1 && (
-        <div className="step-selection-area">
-          <div className="step-header text-center step-header-spaced">
-            <h3><span className="step-prefix-highlight">Step 1:</span> Select Layout<span className="layout-structure-word">&nbsp;Structure</span></h3>
+        <div className="step-selection-area animate-fade-in">
+          <div className="flex-center margin-bottom-sm step-header-spaced">
+            <h3 style={{ margin: 0 }}><span className="step-prefix-highlight">Step 1:</span> Choose Layout</h3>
           </div>
 
           <div style={{ marginBottom: '24px' }}>
