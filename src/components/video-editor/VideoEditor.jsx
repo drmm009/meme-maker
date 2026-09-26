@@ -291,8 +291,8 @@ export default function VideoEditor({ template, onBack, theme, onToggleTheme }) 
 
         {/* Left: Back + Undo/Redo */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <button className="btn btn-ghost btn-xs" onClick={onBack}>
-            <ArrowLeft className="icon-sm" /> <span className="desktop-only">Back</span>
+          <button className="btn btn-ghost btn-xs back-btn" onClick={onBack}>
+            <ArrowLeft className="icon-sm" /> <span>Back</span>
           </button>
           <div style={{ display: 'flex', gap: '6px' }}>
             <button

@@ -3992,5 +3992,74 @@ input:checked + .slider.round.watermark-toggle {
     border-right: none !important;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06) !important;
   }
+
+  /* ============================================================
+     MOBILE VIEW: LIGHT BORDER TYPE BUTTON FOR ALL BACK BUTTONS
+     ============================================================ */
+  .back-btn,
+  .wizard-back-btn,
+  .export-back-btn,
+  .editor-topbar button:has(svg.lucide-arrow-left),
+  .editor-topbar > button:first-child:has(svg) {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(255, 255, 255, 0.22) !important;
+    border-radius: 9999px !important;
+    color: var(--text-main, #ffffff) !important;
+    padding: 6px 14px !important;
+    font-size: 0.82rem !important;
+    font-weight: 600 !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    backdrop-filter: blur(10px) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    flex-shrink: 0 !important;
+    min-height: 32px !important;
+    cursor: pointer !important;
+    user-select: none !important;
+    -webkit-tap-highlight-color: transparent !important;
+  }
+
+  .back-btn svg,
+  .wizard-back-btn svg,
+  .export-back-btn svg,
+  .editor-topbar button:has(svg.lucide-arrow-left) svg,
+  .editor-topbar > button:first-child:has(svg) svg {
+    width: 16px !important;
+    height: 16px !important;
+    color: inherit !important;
+    stroke: currentColor !important;
+  }
+
+  .back-btn:active,
+  .wizard-back-btn:active,
+  .export-back-btn:active,
+  .editor-topbar button:has(svg.lucide-arrow-left):active,
+  .editor-topbar > button:first-child:has(svg):active {
+    background: rgba(255, 255, 255, 0.16) !important;
+    border-color: rgba(255, 255, 255, 0.45) !important;
+    transform: scale(0.96) !important;
+  }
+
+  [data-theme='light'] .back-btn,
+  [data-theme='light'] .wizard-back-btn,
+  [data-theme='light'] .export-back-btn,
+  [data-theme='light'] .editor-topbar button:has(svg.lucide-arrow-left),
+  [data-theme='light'] .editor-topbar > button:first-child:has(svg) {
+    background: rgba(0, 0, 0, 0.04) !important;
+    border: 1px solid rgba(0, 0, 0, 0.18) !important;
+    color: #0f172a !important;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06) !important;
+  }
+
+  [data-theme='light'] .back-btn:active,
+  [data-theme='light'] .wizard-back-btn:active,
+  [data-theme='light'] .export-back-btn:active {
+    background: rgba(0, 0, 0, 0.09) !important;
+    border-color: rgba(0, 0, 0, 0.3) !important;
+  }
 }
 

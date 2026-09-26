@@ -108,9 +108,11 @@
   flex-shrink: 0;
   width: 70px;
 }
-/* Completely remove Back button from mobile view */
+/* Mobile view: display Back button as light border button */
 @media (max-width: 768px) {
-  .wizard-back-btn,
+  .wizard-back-btn {
+    display: inline-flex !important;
+  }
   .wizard-back-spacer {
     display: none !important;
   }

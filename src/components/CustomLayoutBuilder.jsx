@@ -312,7 +312,7 @@ export default function CustomLayoutBuilder({
       <div className="wizard-progress-bar glass-card flex-between margin-bottom" style={{ padding: '10px 14px', position: 'relative' }}>
         {onBack ? (
           <button
-            className="wizard-back-btn"
+            className="wizard-back-btn back-btn"
             onClick={step === 1 ? onBack : () => setStep(1)}
             title={step === 1 ? 'Back to templates' : 'Back to Step 1'}
           >

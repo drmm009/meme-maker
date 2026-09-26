@@ -1121,7 +1121,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
           {/* Header */}
           <div className="editor-topbar glass-card flex-between" style={{ gap: '4px' }}>
             <div className="header-left" style={{ flex: 1, display: 'flex', justifyContent: 'flex-start' }}>
-              <button className="btn btn-ghost btn-xs export-back-btn" onClick={() => setIsExportModalOpen(false)}>
+              <button className="btn btn-ghost btn-xs export-back-btn back-btn" onClick={() => setIsExportModalOpen(false)}>
                 <ArrowLeft className="icon-sm" /> <span>Back</span>
               </button>
             </div>
@@ -1192,7 +1192,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     <div className="meme-editor-container animate-fade-in">
       {/* Editor Top Bar (Mobile-Friendly Compact) */}
       <div className="editor-topbar glass-card flex-between">
-        <button className="btn btn-ghost btn-xs" onClick={onBack}>
+        <button className="btn btn-ghost btn-xs back-btn" onClick={onBack}>
           <ArrowLeft className="icon-sm" /> Back
         </button>
 

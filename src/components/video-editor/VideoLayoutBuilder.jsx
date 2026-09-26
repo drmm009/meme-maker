@@ -132,7 +132,7 @@ export default function VideoLayoutBuilder({ onLayoutComplete, onBack }) {
   return (
     <div className="custom-layout-builder animate-fade-in" style={{ maxWidth: '800px', margin: '0 auto', minHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
       <div className="editor-topbar glass-card flex-between margin-bottom" style={{ paddingLeft: 0 }}>
-        <button className="btn btn-ghost btn-xs" onClick={onBack}>
+        <button className="btn btn-ghost btn-xs back-btn" onClick={onBack}>
           <ArrowLeft className="icon-sm" /> Back
         </button>
         <h2 className="choose-layout-heading" style={{ display: 'flex', alignItems: 'center', margin: 0, color: 'var(--text-main)', fontWeight: 'bold' }}>
