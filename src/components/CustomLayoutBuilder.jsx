@@ -410,7 +410,7 @@ export default function CustomLayoutBuilder({
                   onClick={() => setIsConfiguringCustom(true)}
                   style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100px' }}
                 >
-                  <Grid className="icon-sm" style={{ color: 'rgba(6, 182, 212, 0.85)', marginBottom: '8px', filter: 'drop-shadow(0 0 5px rgba(6, 182, 212, 0.35))', width: '38px', height: '38px' }} />
+                  <Grid className="icon-sm" style={{ color: 'var(--poster-orange)', marginBottom: '8px', filter: 'drop-shadow(0 0 6px rgba(255, 94, 54, 0.4))', width: '38px', height: '38px' }} />
                   <span className="icon-layout-label" style={{ fontWeight: 'bold' }}>Custom Grid</span>
                 </div>
               </>
