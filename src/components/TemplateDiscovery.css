@@ -19,21 +19,17 @@
 }
 
 .hero-glow-orb-1 {
-  width: 480px;
-  height: 380px;
-  top: -50px;
-  left: -30px;
-  background: radial-gradient(circle, rgba(255, 94, 54, 0.40) 0%, rgba(249, 115, 22, 0.22) 45%, transparent 70%);
-  filter: blur(60px);
+  width: 620px;
+  height: 320px;
+  top: -70px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: radial-gradient(ellipse 80% 60% at 50% 25%, rgba(255, 94, 54, 0.40) 0%, rgba(249, 115, 22, 0.18) 50%, transparent 75%);
+  filter: blur(65px);
 }
 
 .hero-glow-orb-2 {
-  width: 260px;
-  height: 190px;
-  bottom: -15px;
-  right: 0px;
-  background: radial-gradient(circle, rgba(129, 140, 248, 0.05) 0%, transparent 65%);
-  filter: blur(60px);
+  display: none;
 }
 
 .hero-glow-orb-3 {
