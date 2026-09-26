@@ -95,242 +95,132 @@
   font-size: 0.95rem;
   line-height: 1.55;
 }
+/* --- Ultra-Sleek Studio Pills (Apple / Linear Style) --- */
 .hero-actions {
   display: flex;
   gap: 14px;
   justify-content: center;
   align-items: center;
   flex-wrap: wrap;
-}
-
-/* --- High-End Hero Action CTA Buttons --- */
-.hero-actions {
-  display: flex;
-  gap: 16px;
-  justify-content: center;
-  align-items: center;
-  flex-wrap: wrap;
   margin-top: 14px;
 }
 
-.hero-action-btn {
+.studio-pill-btn {
   position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 13px;
-  width: 250px;
-  min-width: 230px;
-  height: 56px;
-  padding: 0 16px 0 12px;
-  border-radius: 18px;
+  justify-content: center;
+  gap: 9px;
+  height: 48px;
+  padding: 0 28px;
+  border-radius: 9999px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
   cursor: pointer;
   overflow: hidden;
   box-sizing: border-box;
   text-decoration: none;
-  border: 1px solid transparent;
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   user-select: none;
+  border: 1px solid transparent;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Shimmer gleam animation */
-.hero-btn-shimmer {
+/* Luminous glass shine overlay */
+.studio-pill-btn::before {
+  content: '';
   position: absolute;
-  top: -50%;
-  left: -60%;
-  width: 50%;
-  height: 200%;
-  background: linear-gradient(
-    90deg,
-    rgba(255, 255, 255, 0) 0%,
-    rgba(255, 255, 255, 0.22) 50%,
-    rgba(255, 255, 255, 0) 100%
-  );
-  transform: rotate(25deg);
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 50%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.20) 0%, rgba(255, 255, 255, 0) 100%);
+  border-top-left-radius: inherit;
+  border-top-right-radius: inherit;
   pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.3s ease;
+  opacity: 0.85;
+  transition: opacity 0.2s ease;
 }
 
-.hero-action-btn:hover .hero-btn-shimmer {
+.studio-pill-btn:hover::before {
   opacity: 1;
-  animation: shimmerSweep 1.2s infinite;
 }
 
-@keyframes shimmerSweep {
-  0% { left: -60%; }
-  100% { left: 140%; }
-}
-
-/* Icon Box */
-.hero-btn-icon-box {
-  width: 38px;
-  height: 38px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.studio-pill-icon {
   flex-shrink: 0;
-  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease;
-}
-
-.hero-action-btn:hover .hero-btn-icon-box {
-  transform: scale(1.08) rotate(3deg);
-}
-
-/* Typography Group */
-.hero-btn-text-group {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
-  flex: 1;
-  min-width: 0;
-  text-align: left;
-}
-
-.hero-btn-title-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.hero-btn-title {
-  font-size: 0.95rem;
-  font-weight: 800;
-  letter-spacing: -0.015em;
-  line-height: 1.2;
-}
-
-.hero-btn-subtitle {
-  font-size: 0.72rem;
-  font-weight: 500;
-  letter-spacing: 0.01em;
-  line-height: 1.25;
-  margin-top: 2px;
-}
-
-/* Micro Badge */
-.hero-btn-micro-badge {
-  font-size: 0.62rem;
-  font-weight: 900;
-  padding: 1px 6px;
-  border-radius: 9999px;
-  letter-spacing: 0.04em;
-  line-height: 1.2;
-}
-
-/* Arrow Wrap */
-.hero-btn-arrow-wrap {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  opacity: 0.55;
-  transition: opacity 0.2s ease, transform 0.2s ease;
-}
-
-.hero-btn-arrow {
   transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.hero-action-btn:hover .hero-btn-arrow-wrap {
-  opacity: 1;
+.studio-pill-btn:hover .studio-pill-icon {
+  transform: scale(1.12);
 }
 
-.hero-action-btn:hover .hero-btn-arrow {
-  transform: translateX(3px);
-}
-
-/* Primary Button: Custom Image */
-.hero-action-btn-primary {
-  background: linear-gradient(135deg, #ff3358 0%, #ff5e36 50%, #ff8538 100%) !important;
+/* Studio Pill Primary (Custom Image) */
+.studio-pill-primary {
+  background: linear-gradient(135deg, #ff3358 0%, #ff5e36 55%, #ff8238 100%) !important;
   color: #ffffff !important;
-  border: 1px solid rgba(255, 255, 255, 0.22) !important;
-  border-top: 1.5px solid rgba(255, 255, 255, 0.42) !important;
+  border: 1px solid rgba(255, 255, 255, 0.28) !important;
+  border-top: 1.5px solid rgba(255, 255, 255, 0.55) !important;
   box-shadow: 
-    0 8px 26px -4px rgba(255, 60, 90, 0.45),
+    0 8px 24px -4px rgba(255, 60, 90, 0.45),
     0 2px 6px rgba(0, 0, 0, 0.2),
-    inset 0 1px 1px rgba(255, 255, 255, 0.35) !important;
+    inset 0 1px 1px rgba(255, 255, 255, 0.4) !important;
 }
 
-.hero-action-btn-primary:hover {
+.studio-pill-primary:hover {
   box-shadow: 
-    0 12px 34px -4px rgba(255, 60, 90, 0.6),
-    0 4px 14px rgba(255, 94, 54, 0.35),
-    inset 0 1.5px 2px rgba(255, 255, 255, 0.5) !important;
-  border-color: rgba(255, 255, 255, 0.4) !important;
+    0 12px 30px -4px rgba(255, 60, 90, 0.65),
+    0 0 20px rgba(255, 94, 54, 0.4),
+    inset 0 1.5px 2px rgba(255, 255, 255, 0.55) !important;
+  border-color: rgba(255, 255, 255, 0.45) !important;
 }
 
-.hero-action-btn-primary .primary-icon-box {
-  background: rgba(255, 255, 255, 0.22);
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15), inset 0 1px 1px rgba(255, 255, 255, 0.4);
+.studio-pill-primary .studio-pill-icon {
   color: #ffffff;
 }
 
-.hero-action-btn-primary .hero-btn-title {
+.studio-pill-primary .studio-pill-text {
   color: #ffffff;
+  font-weight: 700;
 }
 
-.hero-action-btn-primary .hero-btn-subtitle {
-  color: rgba(255, 255, 255, 0.84);
-}
-
-.hero-action-btn-primary .hero-btn-arrow {
-  color: #ffffff;
-}
-
-/* Secondary Button: Video Builder */
-.hero-action-btn-video {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.10) 0%, rgba(18, 24, 40, 0.72) 100%) !important;
+/* Studio Pill Video (Video Builder) */
+.studio-pill-video {
+  background: rgba(20, 28, 44, 0.55) !important;
   backdrop-filter: blur(24px) saturate(180%) !important;
   -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
-  color: #ffffff !important;
+  color: #f8fafc !important;
   border: 1px solid rgba(255, 255, 255, 0.16) !important;
-  border-top: 1.5px solid rgba(255, 255, 255, 0.30) !important;
+  border-top: 1.5px solid rgba(255, 255, 255, 0.32) !important;
   box-shadow: 
     0 8px 24px -4px rgba(0, 0, 0, 0.45),
     inset 0 1px 1px rgba(255, 255, 255, 0.16),
     inset 0 -1px 2px rgba(0, 0, 0, 0.2) !important;
 }
 
-.hero-action-btn-video:hover {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.16) 0%, rgba(24, 32, 54, 0.85) 100%) !important;
+.studio-pill-video::before {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0) 100%);
+  opacity: 0.6;
+}
+
+.studio-pill-video:hover {
+  background: rgba(28, 38, 62, 0.72) !important;
   border-color: rgba(255, 94, 54, 0.45) !important;
-  border-top-color: rgba(255, 255, 255, 0.45) !important;
+  border-top-color: rgba(255, 255, 255, 0.5) !important;
   box-shadow: 
-    0 12px 30px -4px rgba(0, 0, 0, 0.55),
-    0 0 20px rgba(255, 94, 54, 0.22),
+    0 12px 28px -4px rgba(0, 0, 0, 0.55),
+    0 0 18px rgba(255, 94, 54, 0.25),
     inset 0 1.5px 2px rgba(255, 255, 255, 0.25) !important;
 }
 
-.hero-action-btn-video .video-icon-box {
-  background: linear-gradient(135deg, rgba(255, 94, 54, 0.22) 0%, rgba(255, 59, 96, 0.12) 100%);
-  border: 1px solid rgba(255, 94, 54, 0.38);
-  box-shadow: 0 0 14px rgba(255, 94, 54, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.25);
+.studio-pill-video .video-accent-icon {
   color: #ff5e36;
+  filter: drop-shadow(0 2px 8px rgba(255, 94, 54, 0.6));
 }
 
-.hero-action-btn-video .hero-btn-title {
-  color: #ffffff;
-}
-
-.hero-action-btn-video .hero-btn-subtitle {
-  color: #94a3b8;
-}
-
-.hero-action-btn-video .hero-btn-micro-badge {
-  background: linear-gradient(90deg, #ff5e36, #ec4899);
-  color: #ffffff;
-  box-shadow: 0 2px 6px rgba(255, 94, 54, 0.35);
-}
-
-.hero-action-btn-video .hero-btn-arrow {
-  color: #94a3b8;
-}
-
-.hero-action-btn-video:hover .hero-btn-arrow {
-  color: #ff5e36;
+.studio-pill-video .studio-pill-text {
+  color: #f8fafc;
+  font-weight: 700;
 }
 
 @media (max-width: 640px) {
@@ -341,13 +231,12 @@
   .hero-actions {
     flex-direction: column;
     width: 100%;
-    gap: 12px;
+    gap: 10px;
   }
-  .hero-action-btn {
+  .studio-pill-btn {
     width: 100% !important;
-    min-width: 0 !important;
-    max-width: 100% !important;
-    height: 54px !important;
+    height: 48px !important;
+    padding: 0 20px !important;
   }
   .hero-perks-row {
     gap: 8px;

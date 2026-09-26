@@ -251,44 +251,23 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom }) 
 
             <div className="hero-actions">
               <motion.button
-                className="hero-action-btn hero-action-btn-primary"
-                whileHover={{ scale: 1.025, y: -2 }}
+                className="studio-pill-btn studio-pill-primary"
+                whileHover={{ scale: 1.04, y: -1 }}
                 whileTap={{ scale: 0.97 }}
                 onClick={() => onCreateCustom('image')}
               >
-                <span className="hero-btn-shimmer" aria-hidden="true" />
-                <div className="hero-btn-icon-box primary-icon-box">
-                  <ImageIcon className="hero-btn-icon" size={20} />
-                </div>
-                <div className="hero-btn-text-group">
-                  <span className="hero-btn-title">Custom Image</span>
-                  <span className="hero-btn-subtitle">Multi-panel & Canvas</span>
-                </div>
-                <div className="hero-btn-arrow-wrap">
-                  <ArrowRight size={16} className="hero-btn-arrow" />
-                </div>
+                <ImageIcon size={19} className="studio-pill-icon" />
+                <span className="studio-pill-text">Custom Image</span>
               </motion.button>
 
               <motion.button
-                className="hero-action-btn hero-action-btn-video"
-                whileHover={{ scale: 1.025, y: -2 }}
+                className="studio-pill-btn studio-pill-video"
+                whileHover={{ scale: 1.04, y: -1 }}
                 whileTap={{ scale: 0.97 }}
                 onClick={() => onCreateCustom('video')}
               >
-                <span className="hero-btn-shimmer" aria-hidden="true" />
-                <div className="hero-btn-icon-box video-icon-box">
-                  <Video className="hero-btn-icon" size={20} />
-                </div>
-                <div className="hero-btn-text-group">
-                  <div className="hero-btn-title-row">
-                    <span className="hero-btn-title">Video Builder</span>
-                    <span className="hero-btn-micro-badge">HD</span>
-                  </div>
-                  <span className="hero-btn-subtitle">Clips & GIF Memes</span>
-                </div>
-                <div className="hero-btn-arrow-wrap">
-                  <ArrowRight size={16} className="hero-btn-arrow" />
-                </div>
+                <Video size={19} className="studio-pill-icon video-accent-icon" />
+                <span className="studio-pill-text">Video Builder</span>
               </motion.button>
             </div>
           </div>
