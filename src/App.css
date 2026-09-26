@@ -3910,7 +3910,7 @@ input:checked + .slider.round.watermark-toggle {
   border-radius: 9999px !important;
   color: var(--poster-orange, #ff5e36) !important;
   -webkit-text-fill-color: var(--poster-orange, #ff5e36) !important;
-  box-shadow: 0 0 16px rgba(255, 94, 54, 0.25) !important;
+  box-shadow: none !important;
 }
 
 :root .editor-sidebar.folded .tab-btn.active svg,
@@ -3919,7 +3919,7 @@ input:checked + .slider.round.watermark-toggle {
 :root:not([data-theme='light']) .editor-sidebar.folded .tab-btn.active .icon-xs {
   color: var(--poster-orange, #ff5e36) !important;
   stroke: var(--poster-orange, #ff5e36) !important;
-  filter: drop-shadow(0 2px 8px rgba(255, 94, 54, 0.5)) !important;
+  filter: none !important;
 }
 
 :root .editor-sidebar.folded .tab-btn::after,
