@@ -81,41 +81,9 @@
   margin: 0 auto;
   text-align: center !important;
 }
-.wizard-back-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-weight: 600;
-  font-size: 0.88rem;
-  color: var(--text-muted);
-  background: transparent !important;
-  border: none !important;
-  outline: none !important;
-  box-shadow: none !important;
-  padding: 4px 6px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  flex-shrink: 0;
-  z-index: 2;
-  user-select: none;
-}
-.wizard-back-btn:hover {
-  background: transparent !important;
-  color: var(--cyber-cyan);
-  transform: translateX(-3px);
-}
+.wizard-back-btn,
 .wizard-back-spacer {
-  flex-shrink: 0;
-  width: 70px;
-}
-/* Mobile view: display Back button as light border button */
-@media (max-width: 768px) {
-  .wizard-back-btn {
-    display: inline-flex !important;
-  }
-  .wizard-back-spacer {
-    display: none !important;
-  }
+  display: none !important;
 }
 .step-prefix-highlight {
   color: var(--poster-orange);

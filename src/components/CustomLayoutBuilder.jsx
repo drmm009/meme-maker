@@ -308,20 +308,8 @@ export default function CustomLayoutBuilder({
       onTouchMove={handleSlotPointerMove}
       onTouchEnd={handleSlotPointerUp}
     >
-      {/* TOP NAVIGATION PANEL WITH BACK BUTTON ON LEFT-MOST SIDE (DESKTOP ONLY) */}
-      <div className="wizard-progress-bar glass-card flex-between margin-bottom" style={{ padding: '10px 14px', position: 'relative' }}>
-        {onBack ? (
-          <button
-            className="wizard-back-btn back-btn"
-            onClick={step === 1 ? onBack : () => setStep(1)}
-            title={step === 1 ? 'Back to templates' : 'Back to Step 1'}
-          >
-            <ArrowLeft className="icon-sm" /> <span>Back</span>
-          </button>
-        ) : (
-          <div className="wizard-back-spacer" />
-        )}
-
+      {/* TOP NAVIGATION PANEL */}
+      <div className="wizard-progress-bar glass-card flex-center margin-bottom" style={{ padding: '10px 14px' }}>
         <div className="step-indicator flex-center" style={{ gap: '14px', margin: '0 auto' }}>
           <span
             className={`step-badge ${step === 1 ? 'active' : 'completed'}`}
@@ -329,7 +317,7 @@ export default function CustomLayoutBuilder({
             style={{ cursor: step === 2 ? 'pointer' : 'default' }}
             title={step === 2 ? 'Back to Step 1: Select Layout' : 'Step 1: Layout Structure'}
           >
-            {step === 2 ? <ArrowLeft className="icon-xs" /> : null} 1. Layout
+            1. Layout
           </span>
 
           <span className="step-divider">→</span>
@@ -353,8 +341,6 @@ export default function CustomLayoutBuilder({
             3. Editor <ArrowRight className="icon-xs" />
           </span>
         </div>
-
-        <div className="wizard-back-spacer" style={{ width: '70px' }} />
       </div>
 
       {/* STEP 1: CLEAN 3 COLUMNS x 2 ROWS LAYOUT SELECTOR WITH SPACING BELOW HEADER */}
