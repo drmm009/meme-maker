@@ -50,7 +50,7 @@
   color: #ffffff;
   border-color: transparent;
   font-weight: 800;
-  box-shadow: 0 4px 14px var(--primary-glow);
+  box-shadow: none !important;
 }
 .step-badge.action-cta {
   color: var(--cyber-cyan);
@@ -117,7 +117,7 @@
 }
 .step-prefix-highlight {
   color: var(--poster-orange);
-  text-shadow: 0 0 10px rgba(255, 94, 54, 0.4);
+  text-shadow: none !important;
   margin-right: 4px;
   font-weight: 800;
 }

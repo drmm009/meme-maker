@@ -3564,12 +3564,23 @@ button.btn-primary:hover {
   box-shadow: 0 6px 20px var(--primary-glow) !important;
 }
 
-.category-pill.active,
-.step-badge.active {
+.category-pill.active {
   background: var(--primary-gradient) !important;
   color: #ffffff !important;
   border-color: transparent !important;
   box-shadow: 0 4px 14px var(--primary-glow) !important;
+}
+
+.step-badge.active {
+  background: var(--primary-gradient) !important;
+  color: #ffffff !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.step-prefix-highlight {
+  text-shadow: none !important;
+  filter: none !important;
 }
 
 /* --- Dark Mode Image Editor Tabs (Clean Minimalist with Orange Gradient Text & Highlighted Line) --- */
