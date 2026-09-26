@@ -4,7 +4,7 @@ import {
   Play, Pause, SkipBack, Download, Trash2, VolumeX, Volume2,
   ArrowLeft, Maximize, Crop, Minimize, Undo, Redo,
   ChevronDown, ChevronUp, Type, Share2, Copy, Save, Check,
-  Video as VideoIcon
+  Video as VideoIcon, RotateCw
 } from 'lucide-react';
 import Timeline from './Timeline';
 import CanvasPreview from './CanvasPreview';
@@ -521,8 +521,32 @@ export default function VideoEditor({ template, onBack, theme, onToggleTheme }) 
                   </button>
                 </>)}
 
+                {/* Sticker / Emoji controls */}
+                {activeItem.type === 'sticker' && (
+                  <button
+                    className="btn btn-icon btn-xs vid-ctx-btn"
+                    title="Rotate 90°"
+                    onClick={() => {
+                      const nextRot = ((activeItem.rotation || 0) + 90) % 360;
+                      updateItem(activeItem.id, { rotation: nextRot });
+                    }}
+                  >
+                    <RotateCw style={{ width: 14, height: 14 }} />
+                  </button>
+                )}
+
                 {/* Image controls */}
                 {activeItem.type === 'image' && (<>
+                  <button
+                    className="btn btn-icon btn-xs vid-ctx-btn"
+                    title="Rotate 90°"
+                    onClick={() => {
+                      const nextRot = ((activeItem.rotation || 0) + 90) % 360;
+                      updateItem(activeItem.id, { rotation: nextRot });
+                    }}
+                  >
+                    <RotateCw style={{ width: 14, height: 14 }} />
+                  </button>
                   <button
                     className="btn btn-icon btn-xs vid-ctx-btn"
                     title="Fit"

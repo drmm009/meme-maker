@@ -779,6 +779,14 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     pushHistoryDebounced(captions, stickers, nextImg);
   };
 
+  const handleRotateSticker = () => {
+    if (!activeSticker) return;
+    const nextRot = ((activeSticker.rotation || 0) + 90) % 360;
+    const nextStickers = stickers.map(s => s.id === activeSticker.id ? { ...s, rotation: nextRot } : s);
+    setStickers(nextStickers);
+    pushHistoryDebounced(captions, nextStickers, imageLayers);
+  };
+
   const getContrastStroke = (hex) => {
     if (!hex) return '#000000';
     return hex.toLowerCase() === '#ffffff' ? '#000000' : 'transparent';
@@ -1515,6 +1523,17 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         BG
                       </button>
                     </>
+                  )}
+
+                  {/* Sticker / Emoji controls */}
+                  {activeSticker && (
+                    <button
+                      className="btn btn-icon btn-xs vid-ctx-btn"
+                      title="Rotate 90°"
+                      onClick={handleRotateSticker}
+                    >
+                      <RotateCw style={{ width: 14, height: 14 }} />
+                    </button>
                   )}
 
                   {/* Image controls */}
