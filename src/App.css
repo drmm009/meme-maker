@@ -2240,10 +2240,6 @@ input:checked + .slider.round:before {
 html,
 body {
   background-color: var(--bg-dark) !important;
-  background-image: var(--bg-gradient) !important;
-  background-attachment: fixed !important;
-  background-size: cover !important;
-  background-repeat: no-repeat !important;
   color: var(--text-main) !important;
 }
 
@@ -2417,28 +2413,35 @@ h1, h2, h3,
 }
 .hero-actions .btn.hero-btn-video,
 .hero-btn-video {
-  background: #111217 !important;
-  border: 1px solid rgba(255, 255, 255, 0.14) !important;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45) !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  border-top: 1.5px solid rgba(255, 255, 255, 0.28) !important;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.14) !important;
   color: #ffffff !important;
 }
 .hero-btn-video .hero-btn-video-text {
   color: #ffffff !important;
   background: none !important;
   -webkit-text-fill-color: #ffffff !important;
-  font-weight: 600 !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.01em;
   display: inline-block;
 }
 .hero-btn-video .hero-btn-video-icon {
   color: #ff5e36 !important;
   stroke: #ff5e36 !important;
   flex-shrink: 0;
+  filter: drop-shadow(0 2px 6px rgba(255, 94, 54, 0.45));
+  transition: transform 0.2s ease;
 }
 .hero-actions .btn.hero-btn-video:hover,
 .hero-btn-video:hover {
-  background: #14161f !important;
-  border-color: rgba(255, 255, 255, 0.4) !important;
-  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.6) !important;
+  background: rgba(255, 255, 255, 0.14) !important;
+  border-color: rgba(255, 255, 255, 0.28) !important;
+  border-top-color: rgba(255, 255, 255, 0.45) !important;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35), 0 0 18px rgba(255, 94, 54, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.25) !important;
 }
 .btn-primary {
   background: var(--poster-orange) !important;
@@ -3561,18 +3564,39 @@ button:active {
 html,
 body {
   background-color: var(--bg-dark) !important;
-  background-image: var(--bg-gradient) !important;
-  background-attachment: fixed !important;
-  background-size: cover !important;
-  background-repeat: no-repeat !important;
   color: var(--text-main) !important;
   transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+/* Truly static fixed background across all mobile and desktop devices */
+.app-static-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  background-color: var(--bg-dark);
+  background-image: var(--bg-gradient);
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+  pointer-events: none;
+  z-index: 0;
+  transform: translate3d(0, 0, 0);
+  -webkit-transform: translate3d(0, 0, 0);
+  will-change: transform;
 }
 
 .app-root {
   background: transparent !important;
   color: var(--text-main) !important;
   min-height: 100vh;
+  min-height: 100dvh;
+  position: relative;
+  z-index: 1;
 }
 
 /* Dynamic Primary Buttons & Active Elements */

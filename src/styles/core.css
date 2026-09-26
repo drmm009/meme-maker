@@ -6,10 +6,8 @@
 html,
 body {
   background-color: var(--bg-dark);
-  background-image: var(--bg-gradient);
   color: var(--text-main);
   -webkit-tap-highlight-color: transparent;
-  background-attachment: fixed;
   overflow-y: scroll;
   font-family:
     'Plus Jakarta Sans',

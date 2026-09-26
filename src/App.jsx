@@ -197,6 +197,9 @@ function App() {
       data-theme="dark"
       data-palette="sunset-orange"
     >
+      {/* Hardware-accelerated static fixed background for seamless mobile & desktop rendering */}
+      <div className="app-static-bg" aria-hidden="true" />
+
       {/* Top Navbar Header - HIDDEN ON EDITOR & BUILDER VIEWS FOR BIGGER CANVAS */}
       {currentView !== 'editor' && currentView !== 'video-editor' && currentView !== 'custom-builder' && (
         <header className="app-header glass-card">
