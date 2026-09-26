@@ -4007,7 +4007,7 @@ input:checked + .slider.round.watermark-toggle {
     gap: 6px !important;
     background: rgba(255, 255, 255, 0.08) !important;
     border: 1px solid rgba(255, 255, 255, 0.22) !important;
-    border-radius: 9999px !important;
+    border-radius: 8px !important;
     color: var(--text-main, #ffffff) !important;
     padding: 6px 14px !important;
     font-size: 0.82rem !important;
