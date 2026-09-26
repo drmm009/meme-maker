@@ -103,89 +103,251 @@
   flex-wrap: wrap;
 }
 
-.hero-actions .btn {
-  width: 210px !important;
-  min-width: 190px !important;
-  max-width: 230px !important;
-  height: 48px !important;
-  padding: 0 20px !important;
-  box-sizing: border-box !important;
-  border-radius: 9999px !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  gap: 9px !important;
-  font-size: 0.95rem !important;
-  font-weight: 700 !important;
-  border: 1px solid transparent !important;
-  transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1) !important;
-  cursor: pointer !important;
+/* --- High-End Hero Action CTA Buttons --- */
+.hero-actions {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 14px;
 }
 
-.hero-actions .btn.btn-primary {
-  background: linear-gradient(135deg, #ff3b60 0%, #ff5e36 100%) !important;
-  color: #ffffff !important;
-  box-shadow: 0 4px 18px rgba(255, 59, 96, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.25) !important;
-  border: 1px solid rgba(255, 255, 255, 0.18) !important;
-  border-top: 1.5px solid rgba(255, 255, 255, 0.35) !important;
+.hero-action-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 13px;
+  width: 250px;
+  min-width: 230px;
+  height: 56px;
+  padding: 0 16px 0 12px;
+  border-radius: 18px;
+  cursor: pointer;
+  overflow: hidden;
+  box-sizing: border-box;
+  text-decoration: none;
+  border: 1px solid transparent;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
 }
 
-.hero-actions .btn.btn-primary:hover {
-  box-shadow: 0 6px 24px rgba(255, 59, 96, 0.6), inset 0 1px 1px rgba(255, 255, 255, 0.35) !important;
+/* Shimmer gleam animation */
+.hero-btn-shimmer {
+  position: absolute;
+  top: -50%;
+  left: -60%;
+  width: 50%;
+  height: 200%;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.22) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: rotate(25deg);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
 }
 
-.hero-actions .btn.hero-btn-video,
-.hero-btn-video {
-  background: rgba(255, 255, 255, 0.08) !important;
-  backdrop-filter: blur(20px) !important;
-  -webkit-backdrop-filter: blur(20px) !important;
-  border: 1px solid rgba(255, 255, 255, 0.16) !important;
-  border-top: 1.5px solid rgba(255, 255, 255, 0.28) !important;
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.14) !important;
-  color: #ffffff !important;
+.hero-action-btn:hover .hero-btn-shimmer {
+  opacity: 1;
+  animation: shimmerSweep 1.2s infinite;
 }
 
-.hero-btn-video .hero-btn-video-text {
-  color: #ffffff !important;
-  background: none !important;
-  -webkit-text-fill-color: #ffffff !important;
-  font-weight: 700 !important;
-  letter-spacing: -0.01em;
-  display: inline-block;
+@keyframes shimmerSweep {
+  0% { left: -60%; }
+  100% { left: 140%; }
 }
 
-.hero-btn-video .hero-btn-video-icon {
-  color: #ff5e36 !important;
-  stroke: #ff5e36 !important;
+/* Icon Box */
+.hero-btn-icon-box {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
-  filter: drop-shadow(0 2px 6px rgba(255, 94, 54, 0.45));
-  transition: transform 0.2s ease;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease;
 }
 
-.hero-actions .btn.hero-btn-video:hover,
-.hero-btn-video:hover {
-  background: rgba(255, 255, 255, 0.14) !important;
-  border-color: rgba(255, 255, 255, 0.28) !important;
-  border-top-color: rgba(255, 255, 255, 0.45) !important;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35), 0 0 18px rgba(255, 94, 54, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.25) !important;
+.hero-action-btn:hover .hero-btn-icon-box {
+  transform: scale(1.08) rotate(3deg);
+}
+
+/* Typography Group */
+.hero-btn-text-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+}
+
+.hero-btn-title-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.hero-btn-title {
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: -0.015em;
+  line-height: 1.2;
+}
+
+.hero-btn-subtitle {
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  line-height: 1.25;
+  margin-top: 2px;
+}
+
+/* Micro Badge */
+.hero-btn-micro-badge {
+  font-size: 0.62rem;
+  font-weight: 900;
+  padding: 1px 6px;
+  border-radius: 9999px;
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+}
+
+/* Arrow Wrap */
+.hero-btn-arrow-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  opacity: 0.55;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.hero-btn-arrow {
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hero-action-btn:hover .hero-btn-arrow-wrap {
+  opacity: 1;
+}
+
+.hero-action-btn:hover .hero-btn-arrow {
+  transform: translateX(3px);
+}
+
+/* Primary Button: Custom Image */
+.hero-action-btn-primary {
+  background: linear-gradient(135deg, #ff3358 0%, #ff5e36 50%, #ff8538 100%) !important;
   color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.22) !important;
+  border-top: 1.5px solid rgba(255, 255, 255, 0.42) !important;
+  box-shadow: 
+    0 8px 26px -4px rgba(255, 60, 90, 0.45),
+    0 2px 6px rgba(0, 0, 0, 0.2),
+    inset 0 1px 1px rgba(255, 255, 255, 0.35) !important;
 }
 
-.hero-actions .btn.hero-btn-video:hover .hero-btn-video-icon,
-.hero-btn-video:hover .hero-btn-video-icon {
-  transform: scale(1.12);
+.hero-action-btn-primary:hover {
+  box-shadow: 
+    0 12px 34px -4px rgba(255, 60, 90, 0.6),
+    0 4px 14px rgba(255, 94, 54, 0.35),
+    inset 0 1.5px 2px rgba(255, 255, 255, 0.5) !important;
+  border-color: rgba(255, 255, 255, 0.4) !important;
+}
+
+.hero-action-btn-primary .primary-icon-box {
+  background: rgba(255, 255, 255, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15), inset 0 1px 1px rgba(255, 255, 255, 0.4);
+  color: #ffffff;
+}
+
+.hero-action-btn-primary .hero-btn-title {
+  color: #ffffff;
+}
+
+.hero-action-btn-primary .hero-btn-subtitle {
+  color: rgba(255, 255, 255, 0.84);
+}
+
+.hero-action-btn-primary .hero-btn-arrow {
+  color: #ffffff;
+}
+
+/* Secondary Button: Video Builder */
+.hero-action-btn-video {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.10) 0%, rgba(18, 24, 40, 0.72) 100%) !important;
+  backdrop-filter: blur(24px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  border-top: 1.5px solid rgba(255, 255, 255, 0.30) !important;
+  box-shadow: 
+    0 8px 24px -4px rgba(0, 0, 0, 0.45),
+    inset 0 1px 1px rgba(255, 255, 255, 0.16),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.2) !important;
+}
+
+.hero-action-btn-video:hover {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.16) 0%, rgba(24, 32, 54, 0.85) 100%) !important;
+  border-color: rgba(255, 94, 54, 0.45) !important;
+  border-top-color: rgba(255, 255, 255, 0.45) !important;
+  box-shadow: 
+    0 12px 30px -4px rgba(0, 0, 0, 0.55),
+    0 0 20px rgba(255, 94, 54, 0.22),
+    inset 0 1.5px 2px rgba(255, 255, 255, 0.25) !important;
+}
+
+.hero-action-btn-video .video-icon-box {
+  background: linear-gradient(135deg, rgba(255, 94, 54, 0.22) 0%, rgba(255, 59, 96, 0.12) 100%);
+  border: 1px solid rgba(255, 94, 54, 0.38);
+  box-shadow: 0 0 14px rgba(255, 94, 54, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.25);
+  color: #ff5e36;
+}
+
+.hero-action-btn-video .hero-btn-title {
+  color: #ffffff;
+}
+
+.hero-action-btn-video .hero-btn-subtitle {
+  color: #94a3b8;
+}
+
+.hero-action-btn-video .hero-btn-micro-badge {
+  background: linear-gradient(90deg, #ff5e36, #ec4899);
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(255, 94, 54, 0.35);
+}
+
+.hero-action-btn-video .hero-btn-arrow {
+  color: #94a3b8;
+}
+
+.hero-action-btn-video:hover .hero-btn-arrow {
+  color: #ff5e36;
 }
 
 @media (max-width: 640px) {
   .hero-banner {
     padding: 28px 16px 22px !important;
-    border-radius: 16px !important;
+    border-radius: 20px !important;
   }
-  .hero-actions .btn {
+  .hero-actions {
+    flex-direction: column;
+    width: 100%;
+    gap: 12px;
+  }
+  .hero-action-btn {
     width: 100% !important;
     min-width: 0 !important;
     max-width: 100% !important;
-    height: 44px !important;
+    height: 54px !important;
   }
   .hero-perks-row {
     gap: 8px;

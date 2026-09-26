@@ -2390,59 +2390,7 @@ h1, h2, h3,
   font-weight: 800 !important;
   transition: transform 0.12s ease, box-shadow 0.12s ease !important;
 }
-.hero-actions .btn {
-  width: 250px !important;
-  min-width: 250px !important;
-  max-width: 250px !important;
-  height: 48px !important;
-  padding: 0 20px !important;
-  box-sizing: border-box !important;
-  border-radius: 18px !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  font-size: 0.95rem !important;
-  font-weight: 700 !important;
-  border: 1px solid transparent !important;
-}
-.hero-actions .btn.btn-primary {
-  background: linear-gradient(90deg, #ff5e36 0%, #ec4899 100%) !important;
-  color: #ffffff !important;
-  box-shadow: 0 6px 20px rgba(255, 94, 54, 0.4) !important;
-  border: 1px solid rgba(255, 255, 255, 0.15) !important;
-}
-.hero-actions .btn.hero-btn-video,
-.hero-btn-video {
-  background: rgba(255, 255, 255, 0.08) !important;
-  backdrop-filter: blur(20px) !important;
-  -webkit-backdrop-filter: blur(20px) !important;
-  border: 1px solid rgba(255, 255, 255, 0.16) !important;
-  border-top: 1.5px solid rgba(255, 255, 255, 0.28) !important;
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.14) !important;
-  color: #ffffff !important;
-}
-.hero-btn-video .hero-btn-video-text {
-  color: #ffffff !important;
-  background: none !important;
-  -webkit-text-fill-color: #ffffff !important;
-  font-weight: 700 !important;
-  letter-spacing: -0.01em;
-  display: inline-block;
-}
-.hero-btn-video .hero-btn-video-icon {
-  color: #ff5e36 !important;
-  stroke: #ff5e36 !important;
-  flex-shrink: 0;
-  filter: drop-shadow(0 2px 6px rgba(255, 94, 54, 0.45));
-  transition: transform 0.2s ease;
-}
-.hero-actions .btn.hero-btn-video:hover,
-.hero-btn-video:hover {
-  background: rgba(255, 255, 255, 0.14) !important;
-  border-color: rgba(255, 255, 255, 0.28) !important;
-  border-top-color: rgba(255, 255, 255, 0.45) !important;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35), 0 0 18px rgba(255, 94, 54, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.25) !important;
-}
+
 .btn-primary {
   background: var(--poster-orange) !important;
   color: #171310 !important;

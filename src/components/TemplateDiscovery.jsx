@@ -4,7 +4,7 @@ import { VIDEO_MEME_TEMPLATES } from '../data/videoTemplates';
 import { 
   Search, Sparkles, Image as ImageIcon, Video,
   Flame, Star, Drama, Clapperboard, Scale, LayoutGrid, Layers, ChevronDown, Check,
-  Compass, Smile, ArrowDownAZ, Zap, ShieldCheck
+  Compass, Smile, ArrowDownAZ, Zap, ShieldCheck, ArrowRight
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import './TemplateDiscovery.css';
@@ -251,21 +251,44 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom }) 
 
             <div className="hero-actions">
               <motion.button
-                className="btn btn-primary shadow-glow"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                className="hero-action-btn hero-action-btn-primary"
+                whileHover={{ scale: 1.025, y: -2 }}
+                whileTap={{ scale: 0.97 }}
                 onClick={() => onCreateCustom('image')}
               >
-                <ImageIcon className="icon-md" /> Custom Image
+                <span className="hero-btn-shimmer" aria-hidden="true" />
+                <div className="hero-btn-icon-box primary-icon-box">
+                  <ImageIcon className="hero-btn-icon" size={20} />
+                </div>
+                <div className="hero-btn-text-group">
+                  <span className="hero-btn-title">Custom Image</span>
+                  <span className="hero-btn-subtitle">Multi-panel & Canvas</span>
+                </div>
+                <div className="hero-btn-arrow-wrap">
+                  <ArrowRight size={16} className="hero-btn-arrow" />
+                </div>
               </motion.button>
+
               <motion.button
-                className="btn btn-outline hero-btn-video"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                className="hero-action-btn hero-action-btn-video"
+                whileHover={{ scale: 1.025, y: -2 }}
+                whileTap={{ scale: 0.97 }}
                 onClick={() => onCreateCustom('video')}
               >
-                <Video className="icon-md hero-btn-video-icon" />
-                <span className="hero-btn-video-text">Video Builder</span>
+                <span className="hero-btn-shimmer" aria-hidden="true" />
+                <div className="hero-btn-icon-box video-icon-box">
+                  <Video className="hero-btn-icon" size={20} />
+                </div>
+                <div className="hero-btn-text-group">
+                  <div className="hero-btn-title-row">
+                    <span className="hero-btn-title">Video Builder</span>
+                    <span className="hero-btn-micro-badge">HD</span>
+                  </div>
+                  <span className="hero-btn-subtitle">Clips & GIF Memes</span>
+                </div>
+                <div className="hero-btn-arrow-wrap">
+                  <ArrowRight size={16} className="hero-btn-arrow" />
+                </div>
               </motion.button>
             </div>
           </div>
