@@ -558,6 +558,8 @@ body.modal-open {
     -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
     backdrop-filter: blur(24px) saturate(180%) !important;
     box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5) !important;
+    position: relative !important;
+    z-index: 500 !important;
   }
   .editor-topbar .btn {
     padding: 5px 10px;

@@ -3,10 +3,22 @@ import { Monitor } from 'lucide-react';
 
 const AspectRatioDropdown = ({ value, onChange, options }) => {
   const [isOpen, setIsOpen] = React.useState(false);
+  const dropdownRef = React.useRef(null);
   const selected = options.find(o => o.value === value) || options[0];
 
+  React.useEffect(() => {
+    if (!isOpen) return;
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('pointerdown', handleClickOutside);
+    return () => document.removeEventListener('pointerdown', handleClickOutside);
+  }, [isOpen]);
+
   return (
-    <div style={{ position: 'relative' }}>
+    <div ref={dropdownRef} style={{ position: 'relative', zIndex: isOpen ? 1000 : 'auto' }}>
       <div 
         onClick={() => setIsOpen(!isOpen)}
         className="aspect-ratio-display glass-card shadow-glow"
@@ -30,8 +42,26 @@ const AspectRatioDropdown = ({ value, onChange, options }) => {
       
       {isOpen && (
         <>
-          <div style={{ position: 'fixed', inset: 0, zIndex: 90 }} onClick={() => setIsOpen(false)} />
-          <div className="glass-card" style={{ position: 'absolute', top: '100%', right: 0, marginTop: '8px', zIndex: 100, display: 'flex', flexDirection: 'column', minWidth: '160px', padding: '8px', borderRadius: 'var(--radius-md)', background: 'rgba(15, 15, 20, 0.95)', border: '1px solid var(--glass-border)', boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }}>
+          <div style={{ position: 'fixed', inset: 0, zIndex: 99998 }} onClick={() => setIsOpen(false)} />
+          <div 
+            className="glass-card aspect-ratio-menu" 
+            style={{ 
+              position: 'absolute', 
+              top: 'calc(100% + 8px)', 
+              right: 0, 
+              zIndex: 99999, 
+              display: 'flex', 
+              flexDirection: 'column', 
+              minWidth: '160px', 
+              padding: '8px', 
+              borderRadius: 'var(--radius-md)', 
+              background: 'rgba(15, 15, 20, 0.96)', 
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)',
+              border: '1px solid var(--glass-border)', 
+              boxShadow: '0 16px 48px rgba(0,0,0,0.6)' 
+            }}
+          >
             {options.map(opt => (
               <div 
                 key={opt.value}
