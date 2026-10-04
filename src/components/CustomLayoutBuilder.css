@@ -50,7 +50,7 @@
   color: #ffffff;
   border-color: transparent;
   font-weight: 800;
-  box-shadow: none !important;
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.45) !important;
 }
 .step-badge.action-cta {
   color: var(--cyber-cyan);

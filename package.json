@@ -18,6 +18,8 @@
     "@ffmpeg/util": "^0.12.2",
     "@giphy/js-fetch-api": "^5.8.0",
     "@giphy/react-components": "^10.1.2",
+    "@imgly/background-removal": "^1.7.0",
+    "@imgly/background-removal-data": "^1.4.5",
     "canvas-confetti": "^1.9.4",
     "framer-motion": "^12.43.0",
     "gifler": "^0.1.0",

@@ -7,7 +7,7 @@
 .editor-topbar {
   position: relative;
   z-index: 500;
-  padding: 8px 14px;
+  padding: 6px 10px;
   background: rgba(18, 20, 29, 0.82) !important;
   background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0) 100%) !important;
   -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
@@ -78,7 +78,7 @@
   background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0) 100%);
   backdrop-filter: blur(24px) saturate(180%);
   -webkit-backdrop-filter: blur(24px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 16px;
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08);
   position: relative;
@@ -108,12 +108,13 @@
 .tab-buttons {
   border-radius: 24px;
   background: rgba(18, 18, 22, 0.9);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  gap: 6px;
+  border: none;
+  gap: 8px;
   margin-bottom: 18px;
   padding: 6px;
   display: flex;
   overflow-x: auto;
+  justify-content: flex-start !important;
   white-space: nowrap;
   position: relative;
   z-index: 1;
@@ -125,7 +126,7 @@
 .tab-btn {
   color: var(--text-muted);
   cursor: pointer;
-  background: transparent;
+  background: rgba(255, 255, 255, 0.16);
   border: none;
   border-radius: 20px;
   flex: 1 0 auto;
@@ -133,7 +134,7 @@
   align-items: center;
   gap: 8px;
   padding: 10px 16px;
-  font-size: 0.85rem;
+  font-size: 0.78rem;
   font-weight: 700;
   display: flex;
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
@@ -145,10 +146,12 @@
   background: rgba(255, 255, 255, 0.06);
 }
 .tab-btn.active {
-  background: var(--primary-gradient);
-  color: #000000;
+  background: var(--primary-gradient) !important;
+  border-color: transparent !important; box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.45);
+  
+  color: #ffffff !important;
   font-weight: 800;
-  box-shadow: 0 4px 16px var(--primary-glow);
+  
   transform: translateY(-1px);
 }
 .tab-content {
@@ -173,7 +176,7 @@
   width: 4px;
 }
 .tab-content::-webkit-scrollbar-track {
-  background: transparent;
+  background: #23252b;
 }
 .tab-content::-webkit-scrollbar-thumb {
   background: rgba(255, 94, 54, 0.4);
@@ -182,7 +185,7 @@
 .tab-content .glass-card {
   background: #171a27;
   border: 1px solid transparent;
-  border-radius: 12px;
+  border-radius: 999px;
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
   transition: all 0.3s ease;
 }
@@ -197,7 +200,7 @@
 }
 .compact-inline-swatches {
   align-items: center;
-  gap: 4px;
+  gap: 8px;
   display: flex;
 }
 .preset-chips-scroll {
@@ -220,6 +223,7 @@
   .preset-chips-scroll {
     flex-wrap: nowrap;
     overflow-x: auto;
+  justify-content: flex-start !important;
   }
 }
 .phrase-chip {
@@ -230,7 +234,8 @@
   border-radius: 16px;
   flex-shrink: 0;
   padding: 5px 12px;
-  font-size: 0.78rem;
+  font-size: 0.85rem;
+  justify-content: center;
   transition: all 0.2s;
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
 }
@@ -261,7 +266,7 @@
 }
 .form-field {
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
   display: flex;
 }
 .form-field label,
@@ -297,47 +302,65 @@
   z-index: 100;
   display: flex;
   align-items: center;
-  gap: 4px;
-  background: rgba(14, 14, 22, 0.88);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 14px;
-  padding: 5px 10px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  gap: 8px;
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 999px;
+  scrollbar-width: none;
+  padding: 6px 10px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12), 0 16px 48px rgba(0, 0, 0, 0.5);
   white-space: nowrap;
   max-width: calc(100% - 24px);
   overflow-x: auto;
+  justify-content: flex-start !important;
 }
 
+/* ─── Unified Toolbar Button System ──────────────────────────
+   All toolbar buttons: 34px height, 8px h-padding, 8px radius.
+   Icon-only buttons: 34×34px square, no h-padding.
+   ─────────────────────────────────────────────────────────── */
 .vid-ctx-btn {
-  background: rgba(255, 255, 255, 0.07) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  background: #23252b;
+  border: 1px solid transparent !important;
   border-radius: 8px !important;
-  padding: 5px 8px !important;
-  color: rgba(255, 255, 255, 0.85) !important;
+  height: 34px !important;
+  min-height: 34px !important;
+  max-height: 34px !important;
+  padding: 0 12px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  box-sizing: border-box !important;
+  color: rgba(255, 255, 255, 0.85);
   cursor: pointer;
-  transition: all 0.15s ease;
-  display: flex;
-  align-items: center;
-  font-size: 0.78rem;
-  font-weight: 500;
+  transition: background 0.15s ease, transform 0.1s ease;
+  font-size: 0.8rem !important;
+  font-weight: 600 !important;
+  white-space: nowrap;
+  flex-shrink: 0;
   box-shadow: none !important;
+  line-height: 1 !important;
+  vertical-align: middle;
 }
 
 .vid-ctx-btn:hover {
-  background: rgba(255, 255, 255, 0.14) !important;
+  background: rgba(255, 255, 255, 0.08);
   color: #ffffff !important;
 }
 
 .vid-ctx-btn:active {
-  transform: scale(0.96);
+  transform: scale(0.94);
 }
 
 .vid-ctx-btn.active {
-  background: rgba(249, 115, 22, 0.2) !important;
-  border-color: rgba(249, 115, 22, 0.4) !important;
-  color: var(--poster-orange, #f97316) !important;
+  background: var(--primary-gradient, linear-gradient(135deg, #6366f1, #8b5cf6)) !important;
+  border-color: transparent !important;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4) !important;
+  color: #ffffff !important;
 }
 
 .vid-ctx-btn-delete {
@@ -387,7 +410,7 @@
     padding: 4px 8px;
     gap: 3px;
     font-size: 0.72rem;
-    border-radius: 12px;
+    border-radius: 999px;
   }
 
   .editor-floating-toolbar.portrait {
@@ -472,7 +495,7 @@
   flex: 1;
   padding: 5px 8px;
   border: none;
-  background: transparent;
+  background: #23252b;
   color: #94a3b8;
   font-size: 0.75rem;
   font-weight: 600;
@@ -487,7 +510,7 @@
 
 .photo-grading-target-btn.active {
   background: rgba(255, 255, 255, 0.1);
-  color: #ffffff;
+  color: #ffffff !important;
   font-weight: 700;
 }
 
@@ -519,7 +542,7 @@
 
 .photo-grading-btn:hover {
   background: rgba(255, 255, 255, 0.12);
-  color: #ffffff;
+  color: #ffffff !important;
   border-color: rgba(255, 255, 255, 0.14);
   transform: translateY(-1px);
 }
@@ -572,4 +595,67 @@
 [data-theme='light'] .photo-grading-btn.active {
   background: #ff5e36 !important;
   color: #ffffff !important;
+}
+
+
+
+
+
+/* MOBILE OVERRIDE FOR FLOATING TOOLBAR (IN-FLOW) */
+@media (max-width: 768px) {
+  .editor-floating-toolbar,
+  .video-context-toolbar,
+  .editor-floating-toolbar.portrait,
+  .video-context-toolbar.portrait {
+    position: relative !important;
+    order: 2 !important;
+    top: auto !important;
+    bottom: auto !important;
+    left: auto !important;
+    right: auto !important;
+    transform: none !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: none !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+    flex-direction: row !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    /* Margins and Paddings handled by Framer Motion for smooth animation! */
+  }
+  
+  .editor-floating-toolbar.portrait .vid-ctx-divider {
+    width: 1px !important;
+    height: 20px !important;
+    margin: 0 4px !important;
+  }
+}
+
+
+/* Fix for delete button in light mode */
+[data-theme=\'light\'] .vid-ctx-btn-delete {
+  background: rgba(239, 68, 68, 0.9) !important;
+  border-color: rgba(239, 68, 68, 1) !important;
+  color: #ffffff !important;
+}
+[data-theme=\'light\'] .vid-ctx-btn-delete:hover {
+  background: rgba(220, 38, 38, 1) !important;
+}
+
+
+.vid-ctx-btn.btn-icon {
+  width: 34px !important;
+  min-width: 34px !important;
+  padding: 0 !important;
+}
+
+
+/* MOBILE OVERRIDE FOR FLOATING TOOLBAR */
+@media (max-width: 768px) {
+  .editor-floating-toolbar,
+  .video-context-toolbar {
+    top: auto !important;
+    bottom: 4px !important;
+  }
 }

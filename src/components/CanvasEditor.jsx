@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState, useLayoutEffect } from 'react';
 import { Image as ImageIcon, Sparkles, Type } from 'lucide-react';
-import { getFilterCss } from '../data/photoFilters';
+import { getFilterCss, drawImageFiltered } from '../data/photoFilters';
 
 const wrapText = (ctx, text, maxWidth) => {
   if (!text) return [];
@@ -96,6 +96,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     onUpdateSlotTransform,
     isVideoPlaying = true,
     watermark,
+    canvasBgColor = '#ffffff',
     drawings = [],
     onAddDrawing,
     isDrawingMode = false,
@@ -105,6 +106,20 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
   },
   ref
 ) {
+  
+  const [liveBgColor, setLiveBgColor] = useState(canvasBgColor);
+  useEffect(() => {
+    setLiveBgColor(canvasBgColor);
+  }, [canvasBgColor]);
+  
+  useEffect(() => {
+    const handler = (e) => {
+      setLiveBgColor(e.detail);
+    };
+    window.addEventListener('liveCanvasBgColor', handler);
+    return () => window.removeEventListener('liveCanvasBgColor', handler);
+  }, []);
+
   const internalRef = useRef(null);
   const canvasRef = ref || internalRef;
   const activeIsNativeLayout = isNativeLayout;
@@ -139,6 +154,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
   const [naturalSize, setNaturalSize] = useState({ w: 800, h: 800 });
 
   const isDragging = useRef(false);
+  const snappingLines = useRef({ horizontal: null, vertical: null });
   const hasDragged = useRef(false);
   const dragTarget = useRef(null);
   const dragStartCoords = useRef({ x: 0, y: 0 });
@@ -188,6 +204,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
   // Normalize canvas internal resolution to max dimension 1080
   // This keeps font sizes consistent relative to the canvas across all aspect ratios
   // and prevents performance issues from huge original image resolutions
+  
   const maxDim = Math.max(rawW, rawH);
   if (maxDim > 0) {
     canvasW = Math.round((rawW / maxDim) * 1080);
@@ -311,7 +328,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas || (!imgSrc && !activeIsNativeLayout)) return;
+    if (!canvas) return;
     const ctx = canvas.getContext('2d');
 
     const renderCanvas = (img) => {
@@ -319,7 +336,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         if (canvas.height !== canvasH) canvas.height = canvasH;
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = '#ffffff';
+      ctx.fillStyle = liveBgColor;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       const drawDeleteHandle = (hx, hy) => {
@@ -362,10 +379,6 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         ctx.stroke();
         ctx.restore();
       };
-
-      // Apply Image Filters
-      ctx.save();
-      ctx.filter = getFilterCss(activeFilters);
 
       // Draw Base Image or Native Layout Slots
       if (activeIsNativeLayout && activeLayoutDef) {
@@ -419,7 +432,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
               ctx.rect(x, y, slotW, slotH);
               ctx.clip();
               try {
-                ctx.drawImage(cached, nx, ny, nw, nh);
+                drawImageFiltered(ctx, cached, getFilterCss(activeFilters), nx, ny, nw, nh);
               } catch (err) {
                 console.warn('Failed to draw slot image:', err);
               }
@@ -427,18 +440,18 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
             } else {
               // Load image and re-render
               const newImg = new Image();
-              newImg.crossOrigin = 'anonymous';
+              if (src && !src.startsWith('blob:') && !src.startsWith('data:')) newImg.crossOrigin = 'anonymous';
               newImg.onload = () => {
                 imageCacheRef.current[src] = newImg;
                 if (baseImgRef.current || activeIsNativeLayout) renderCanvas(baseImgRef.current);
               };
               newImg.src = src;
               
-              ctx.fillStyle = '#ffffff';
+              ctx.fillStyle = liveBgColor;
               ctx.fillRect(x, y, slotW, slotH);
             }
           } else {
-            ctx.fillStyle = '#ffffff';
+            ctx.fillStyle = liveBgColor;
             ctx.fillRect(x, y, slotW, slotH);
           }
 
@@ -448,7 +461,6 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
             ctx.strokeRect(x, y, slotW, slotH);
           }
         }
-        ctx.restore();
       } else if (img && !isNativeLayout) {
         let drawW = canvas.width;
         let drawH = canvas.height;
@@ -489,12 +501,13 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
             offsetY = (canvas.height - drawH) / 2;
           }
         }
-        ctx.drawImage(img, offsetX, offsetY, drawW, drawH);
+        ctx.save();
+        drawImageFiltered(ctx, img, getFilterCss(activeFilters), offsetX, offsetY, drawW, drawH);
         ctx.restore();
       }
 
-      // Reset filter for text/stickers/image-layers overlay
-      ctx.filter = 'none';
+      // Reset filter for text/stickers/image-layers overlay (safe on all browsers)
+      try { ctx.filter = 'none'; } catch(e) {}
 
       // Render Custom Image Overlay Layers
       (imageLayers || []).forEach((imgLayer) => {
@@ -503,17 +516,31 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         const cached = imageCacheRef.current[imgLayer.url];
 
         if (cached) {
+          const baseW = cached.width || 200;
+          const baseH = cached.height || 200;
+          let drawSource = cached;
+
+          if (imgLayer.filters || imgLayer.filter) {
+            const filterObj = imgLayer.filters || imgLayer.filter;
+            const filterCss = getFilterCss(filterObj);
+            if (filterCss !== 'none') {
+              const tempCanvas = document.createElement('canvas');
+              tempCanvas.width = baseW;
+              tempCanvas.height = baseH;
+              const tempCtx = tempCanvas.getContext('2d');
+              // iOS-safe: uses pixel-level fallback on iOS Safari
+              drawImageFiltered(tempCtx, cached, filterCss, 0, 0, baseW, baseH);
+              drawSource = tempCanvas;
+            }
+          }
+
           ctx.save();
           ctx.translate(cx, cy);
           if (imgLayer.rotation) {
             ctx.rotate((imgLayer.rotation * Math.PI) / 180);
           }
-          if (imgLayer.filter || imgLayer.filters) {
-            ctx.filter = getFilterCss(imgLayer.filter || imgLayer.filters);
-          }
+          
           const scale = imgLayer.scale || 1.0;
-          const baseW = cached.width || 200;
-          const baseH = cached.height || 200;
           const maxDim = 320;
           const fitScale = Math.min(maxDim / baseW, maxDim / baseH);
           const w = imgLayer.boxWidth || imgLayer.width || (baseW * fitScale * scale);
@@ -522,7 +549,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
           const mode = imgLayer.fitMode || 'fit';
           
           if (mode === 'stretch') {
-            ctx.drawImage(cached, -w / 2, -h / 2, w, h);
+            ctx.drawImage(drawSource, -w / 2, -h / 2, w, h);
           } else {
             const imgAspect = baseW / baseH;
             const boxAspect = w / h;
@@ -551,7 +578,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
             ctx.beginPath();
             ctx.rect(-w / 2, -h / 2, w, h);
             ctx.clip();
-            ctx.drawImage(cached, -drawW / 2, -drawH / 2, drawW, drawH);
+            ctx.drawImage(drawSource, -drawW / 2, -drawH / 2, drawW, drawH);
             ctx.restore();
           }
 
@@ -572,13 +599,13 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
             ctx.strokeStyle = '#000000';
             ctx.lineWidth = 2;
             ctx.moveTo(0, -hh);
-            ctx.lineTo(0, -hh - 34);
+            ctx.lineTo(0, -hh - 60);
             ctx.stroke();
             
             // Rotation handle circle
             ctx.beginPath();
             ctx.fillStyle = '#f97316';
-            ctx.arc(0, -hh - 34, 16, 0, Math.PI * 2);
+            ctx.arc(0, -hh - 60, 16, 0, Math.PI * 2);
             ctx.fill();
             ctx.stroke();
 
@@ -611,7 +638,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
           ctx.restore();
         } else {
           const newImg = new Image();
-          newImg.crossOrigin = 'anonymous';
+          if (imgLayer.url && !imgLayer.url.startsWith('blob:') && !imgLayer.url.startsWith('data:')) newImg.crossOrigin = 'anonymous';
           newImg.onload = () => {
             imageCacheRef.current[imgLayer.url] = newImg;
             renderCanvas(baseImgRef.current);
@@ -685,7 +712,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
             if (!loadingMediaRef.current[imgUrl]) {
               loadingMediaRef.current[imgUrl] = true;
               const newImg = new Image();
-              newImg.crossOrigin = 'anonymous';
+              if (imgUrl && !imgUrl.startsWith('blob:') && !imgUrl.startsWith('data:')) newImg.crossOrigin = 'anonymous';
               newImg.onload = () => {
                 imageCacheRef.current[imgUrl] = newImg;
                 renderCanvas(baseImgRef.current);
@@ -920,13 +947,39 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         
         ctx.restore();
       }
+
+      // Draw Snapping Guides
+      if (isDragging.current && snappingLines.current && (snappingLines.current.horizontal !== null || snappingLines.current.vertical !== null)) {
+        const { horizontal, vertical } = snappingLines.current;
+        ctx.save();
+        ctx.strokeStyle = '#f97316';
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([4, 4]);
+        
+        if (horizontal !== null) {
+          const y = horizontal * canvas.height;
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          ctx.lineTo(canvas.width, y);
+          ctx.stroke();
+        }
+        
+        if (vertical !== null) {
+          const x = vertical * canvas.width;
+          ctx.beginPath();
+          ctx.moveTo(x, 0);
+          ctx.lineTo(x, canvas.height);
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
     };
 
     if (baseImgRef.current && baseImgRef.current.src === imgSrc) {
       renderCanvas(baseImgRef.current);
     } else if (imgSrc) {
         const baseImg = new Image();
-        baseImg.crossOrigin = 'anonymous';
+        if (imgSrc && !imgSrc.startsWith('blob:') && !imgSrc.startsWith('data:')) baseImg.crossOrigin = 'anonymous';
         baseImg.onload = () => {
           if (baseImg.width && baseImg.height && (naturalSize.w !== baseImg.width || naturalSize.h !== baseImg.height)) {
             setNaturalSize({ w: baseImg.width, h: baseImg.height });
@@ -938,7 +991,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     } else {
       renderCanvas(null);
     }
-  }, [captions, stickers, activeLayerId, imageLayers, slotImages, slotTransforms, activeIsNativeLayout, editingCaptionId, cursorVisible, aspectRatio, imageFit, watermark, drawings, isDrawingMode, imgSrc, filters]);
+  }, [captions, stickers, activeLayerId, imageLayers, slotImages, slotTransforms, activeIsNativeLayout, editingCaptionId, cursorVisible, aspectRatio, imageFit, watermark, drawings, isDrawingMode, imgSrc, filters, liveBgColor]);
 
   // Helper to rotate point for hit testing
   const rotatePoint = (px, py, cx, cy, angle) => {
@@ -1162,7 +1215,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
 
             const handles = [
               { type: 'delete_layer', x: cx - hw - 36, y: cy - hh - 36, r: 26 },
-              { type: 'rotate_imageLayer', x: cx, y: cy - hh - 34, r: 22 },
+              { type: 'rotate_imageLayer', x: cx, y: cy - hh - 60, r: 22 },
               { type: 'resize_imageLayer_tl', x: cx - hw, y: cy - hh, r: 22 },
               { type: 'resize_imageLayer_tr', x: cx + hw, y: cy - hh, r: 22 },
               { type: 'resize_imageLayer_bl', x: cx - hw, y: cy + hh, r: 22 },
@@ -1547,7 +1600,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
           if (Math.hypot(p.x - (cx - hw - 36), p.y - (cy - hh - 36)) <= 26) {
             canvas.style.cursor = 'pointer'; return;
           }
-          if (Math.hypot(p.x - cx, p.y - (cy - hh - 34)) <= 22) {
+          if (Math.hypot(p.x - cx, p.y - (cy - hh - 60)) <= 22) {
             canvas.style.cursor = 'grab'; return;
           }
           if (Math.hypot(p.x - (cx - hw), p.y - (cy - hh)) <= 22 || Math.hypot(p.x - (cx + hw), p.y - (cy + hh)) <= 22) {
@@ -1829,23 +1882,28 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
 
     const SNAP_DIST = 0.015;
 
+    let snapH = null;
+    let snapV = null;
+    
     // 1. Center Snapping
-    if (Math.abs(newX - 0.5) < SNAP_DIST) newX = 0.5;
-    if (Math.abs(newY - 0.5) < SNAP_DIST) newY = 0.5;
+    if (Math.abs(newX - 0.5) < SNAP_DIST) { newX = 0.5; snapV = 0.5; }
+    if (Math.abs(newY - 0.5) < SNAP_DIST) { newY = 0.5; snapH = 0.5; }
 
     // 2. Layer-to-Layer Snapping
     captions.forEach((c) => {
       if (c.id !== targetId) {
-        if (Math.abs(newX - c.x) < SNAP_DIST) newX = c.x;
-        if (Math.abs(newY - c.y) < SNAP_DIST) newY = c.y;
+        if (Math.abs(newX - c.x) < SNAP_DIST) { newX = c.x; snapV = c.x; }
+        if (Math.abs(newY - c.y) < SNAP_DIST) { newY = c.y; snapH = c.y; }
       }
     });
     stickers.forEach((s) => {
       if (s.id !== targetId) {
-        if (Math.abs(newX - s.x) < SNAP_DIST) newX = s.x;
-        if (Math.abs(newY - s.y) < SNAP_DIST) newY = s.y;
+        if (Math.abs(newX - s.x) < SNAP_DIST) { newX = s.x; snapV = s.x; }
+        if (Math.abs(newY - s.y) < SNAP_DIST) { newY = s.y; snapH = s.y; }
       }
     });
+    
+    snappingLines.current = { horizontal: snapH, vertical: snapV };
 
     if (dragTarget.current.type === 'caption' && onUpdateCaptionBounds) {
       onUpdateCaptionBounds(dragTarget.current.id, { x: newX, y: newY });
@@ -1878,6 +1936,10 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     isDragging.current = false;
     hasDragged.current = false;
     dragTarget.current = null;
+    if (snappingLines.current.horizontal !== null || snappingLines.current.vertical !== null) {
+      snappingLines.current = { horizontal: null, vertical: null };
+      if (baseImgRef.current) renderCanvas(baseImgRef.current);
+    }
   };
 
   // Global window listeners so fast mouse or touch drags don't freeze when leaving the canvas element
@@ -1906,7 +1968,21 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     };
   }, [captions, stickers, imageLayers, activeLayerId]);
 
-  // Keep focus on active caption whenever selected
+  
+  useEffect(() => {
+    if (baseImgRef.current || isNativeLayout) {
+      // Just force a re-render. To force a re-render in CanvasEditor we just call renderCanvas.
+      // But renderCanvas is inside the component body, so it is accessible.
+      // Let's check if renderCanvas is defined in the body... yes.
+      // We will inject a dummy state update to force the component to re-execute and thus call renderCanvas via the existing mechanisms, OR just call renderCanvas directly.
+      // Wait, renderCanvas takes the image. 
+      if (typeof renderCanvas === 'function') {
+         renderCanvas(baseImgRef.current);
+      }
+    }
+  }, [liveBgColor, isNativeLayout]);
+  
+// Keep focus on active caption whenever selected
   useEffect(() => {
     if (activeCaption && editingCaptionId === activeCaption.id) {
       focusTextarea();
@@ -1961,7 +2037,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     <div
       ref={wrapperRef}
       className="canvas-interactive-wrapper"
-      style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center', touchAction: 'none', width: '100%', height: '100%' }}
+      style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center', touchAction: 'none', width: '100%', flex: 1, minHeight: 0 }}
       onMouseDown={handlePointerDown}
       onMouseMove={handlePointerMove}
       onMouseUp={handlePointerEnd}

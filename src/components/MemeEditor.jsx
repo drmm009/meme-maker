@@ -6,10 +6,10 @@ import { FONTS, STICKERS } from '../data/stickers';
 import { GRAPHIC_STICKERS, GRAPHIC_STICKER_CATEGORIES } from '../data/memeStickers';
 import confetti from 'canvas-confetti';
 import {
-  Type, Plus, Trash2, Undo, Redo, Download, Share2, Sparkles, Copy,
+  Type, Plus, Trash2, Undo, Redo, Download, Share2, Sparkles, Copy, Blend,
   Sliders, Smile, Sticker, ArrowLeft, Save, Check, RefreshCw,
   Image as ImageIcon, Search, X, Upload, RotateCw, ZoomIn, Crop, LayoutGrid, Scissors, Play, Pause, FolderHeart, Droplet, Monitor,
-  Paintbrush, Eraser, Palette, Sun, Moon, ChevronDown
+  Paintbrush, Eraser, Palette, Sun, Moon, ChevronDown, ChevronLeft, PencilLine, Move, ArrowDownRight, Quote, Wand2
 } from 'lucide-react';
 import { downloadImageHelper, recordCanvasAsVideo } from '../utils/downloadHelper';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -19,6 +19,7 @@ import VideoTrimmer from './VideoTrimmer';
 import AspectRatioDropdown from './AspectRatioDropdown';
 import GiphyTab from './GiphyTab';
 import { PHOTO_FILTERS } from '../data/photoFilters';
+import { removeBackground } from '@imgly/background-removal';
 import './MemeEditor.css';
 
 const PRESET_PHRASES = [
@@ -153,6 +154,39 @@ const getNonOverlappingPosition = (type, captions = [], stickers = [], imageLaye
   };
 };
 
+
+function CanvasColorPicker({ canvasBgColor, setCanvasBgColor }) {
+  const [localColor, setLocalColor] = React.useState(canvasBgColor);
+  const timerRef = React.useRef(null);
+
+  React.useEffect(() => {
+    setLocalColor(canvasBgColor);
+  }, [canvasBgColor]);
+
+  const handleChange = (e) => {
+    const val = e.target.value;
+    setLocalColor(val);
+    window.dispatchEvent(new CustomEvent('liveCanvasBgColor', { detail: val }));
+    
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => {
+      setCanvasBgColor(val);
+    }, 150); // debounce setting main state
+  };
+
+  return (
+    <div
+      className="btn btn-xs vid-ctx-btn"
+      style={{ position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '4px 10px' }}
+      title="Canvas Color"
+    >
+      <div style={{ width: 14, height: 14, borderRadius: '50%', background: localColor || '#ffffff', border: '2px solid rgba(255,255,255,0.4)' }} />
+      <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#fff' }}>Canvas Color</span>
+      <input type="color" value={localColor || '#ffffff'} onChange={handleChange} style={{ position: 'absolute', opacity: 0, inset: 0, cursor: 'pointer', width: '100%', height: '100%' }} />
+    </div>
+  );
+}
+
 export default function MemeEditor({ template, onBack, onSaveToGallery, theme, onToggleTheme }) {
   const [captions, setCaptions] = useState(() => {
     let initialCaps = [];
@@ -244,6 +278,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
 
 
   const [aspectRatio, setAspectRatio] = useState(template?.aspectRatio || 'original');
+  
   const [imageFit, setImageFit] = useState(template?.imageFit || 'contain');
 
   // Open-source templates for Image Layer / Slot overlay picker
@@ -326,7 +361,13 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
   const [historyStep, setHistoryStep] = useState(0);
 
   const [activeTab, setActiveTab] = useState('text'); // 'text' | 'stickers' | 'images' | 'draw' | 'watermark'
-  const [isMobileTabsFolded, setIsMobileTabsFolded] = useState(false);
+  const [isMobileTabsFolded, setIsMobileTabsFolded] = useState(true);
+  const [showWatermarkMenu, setShowWatermarkMenu] = useState(false);
+  const [canvasBgColor, setCanvasBgColor] = useState('#ffffff');
+  const [showFontMenu, setShowFontMenu] = useState(false);
+  const [showOpacityMenu, setShowOpacityMenu] = useState(false);
+  const [showImageFilterMenu, setShowImageFilterMenu] = useState(false);
+  const [showQuickPhrasesMenu, setShowQuickPhrasesMenu] = useState(false);
   const [imageFilters, setImageFilters] = useState({
     preset: 'original',
     brightness: 100,
@@ -342,10 +383,11 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
   const [filterTarget, setFilterTarget] = useState('canvas'); // 'canvas' | 'layer'
 
   const handleTabClick = (tabId) => {
-    if (activeTab === tabId) {
-      setIsMobileTabsFolded(!isMobileTabsFolded);
+    setActiveTab(tabId);
+    setActiveLayerId(null);
+    if (window.innerWidth <= 768) {
+      setIsMobileTabsFolded(true);
     } else {
-      setActiveTab(tabId);
       setIsMobileTabsFolded(false);
     }
   };
@@ -354,6 +396,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
   const [stickerSearchQuery, setStickerSearchQuery] = useState('');
   const [emojiSearchQuery, setEmojiSearchQuery] = useState('');
   const [activeStickerCategory, setActiveStickerCategory] = useState('faces');
+  const [isRemovingBg, setIsRemovingBg] = useState(false);
   const [activeGraphicStickerCategory, setActiveGraphicStickerCategory] = useState('memes');
 
   // Freehand Drawing state
@@ -474,6 +517,38 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
       } else if ((e.key === 'Delete' || e.key === 'Backspace') && activeLayerId) {
         e.preventDefault();
         handleDeleteLayer();
+      } else if (ctrl && e.key === 'd' && activeLayerId) {
+        e.preventDefault();
+        handleDuplicateLayer();
+      } else if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) && activeLayerId) {
+        e.preventDefault();
+        const moveAmount = e.shiftKey ? 10 : 1;
+        const dx = e.key === 'ArrowLeft' ? -moveAmount : (e.key === 'ArrowRight' ? moveAmount : 0);
+        const dy = e.key === 'ArrowUp' ? -moveAmount : (e.key === 'ArrowDown' ? moveAmount : 0);
+        
+        const cIdx = captions.findIndex(c => c.id === activeLayerId);
+        if (cIdx > -1) {
+           const newCaps = [...captions];
+           newCaps[cIdx] = { ...newCaps[cIdx], x: newCaps[cIdx].x + dx, y: newCaps[cIdx].y + dy };
+           setCaptions(newCaps);
+           pushHistoryDebounced(newCaps, stickers, imageLayers, drawings);
+        } else {
+           const sIdx = stickers.findIndex(s => s.id === activeLayerId);
+           if (sIdx > -1) {
+             const newStks = [...stickers];
+             newStks[sIdx] = { ...newStks[sIdx], x: newStks[sIdx].x + dx, y: newStks[sIdx].y + dy };
+             setStickers(newStks);
+             pushHistoryDebounced(captions, newStks, imageLayers, drawings);
+           } else {
+             const iIdx = imageLayers.findIndex(i => i.id === activeLayerId);
+             if (iIdx > -1) {
+               const newImgs = [...imageLayers];
+               newImgs[iIdx] = { ...newImgs[iIdx], x: newImgs[iIdx].x + dx, y: newImgs[iIdx].y + dy };
+               setImageLayers(newImgs);
+               pushHistoryDebounced(captions, stickers, newImgs, drawings);
+             }
+           }
+        }
       } else if (e.key === 'Escape') {
         setActiveLayerId(null);
       }
@@ -574,16 +649,19 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
   // Caption Handlers
   const handleAddCaption = () => {
     const pos = getNonOverlappingPosition('caption', captions, stickers, imageLayers);
+    const referenceCap = captions.find(c => c.id === activeLayerId) || (captions.length > 0 ? captions[captions.length - 1] : null);
     const newCap = {
       id: `cap-${Date.now()}`,
       text: 'NEW TEXT',
       x: pos.x,
       y: pos.y,
-      fontSize: 50,
-      color: '#ffffff',
-      stroke: '#000000',
-      align: 'center',
-      fontFamily: 'Impact, sans-serif',
+      fontSize: referenceCap ? referenceCap.fontSize : 50,
+      color: referenceCap ? referenceCap.color : '#ffffff',
+      stroke: referenceCap ? referenceCap.stroke : '#000000',
+      align: referenceCap ? referenceCap.align : 'center',
+      fontFamily: referenceCap ? referenceCap.fontFamily : 'Impact, sans-serif',
+      bgColor: referenceCap ? referenceCap.bgColor : undefined,
+      opacity: referenceCap !== null && referenceCap.opacity !== undefined ? referenceCap.opacity : 1,
       rotation: 0
     };
     const nextCaps = [...captions, newCap];
@@ -594,16 +672,19 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
 
   const handleAddPresetPhrase = (phraseText) => {
     const pos = getNonOverlappingPosition('phrase', captions, stickers, imageLayers);
+    const referenceCap = captions.find(c => c.id === activeLayerId) || (captions.length > 0 ? captions[captions.length - 1] : null);
     const newCap = {
       id: `cap-${Date.now()}`,
       text: phraseText,
       x: pos.x,
       y: pos.y,
-      fontSize: 50,
-      color: '#ffffff',
-      stroke: '#000000',
-      align: 'center',
-      fontFamily: 'Impact, sans-serif',
+      fontSize: referenceCap ? referenceCap.fontSize : 50,
+      color: referenceCap ? referenceCap.color : '#ffffff',
+      stroke: referenceCap ? referenceCap.stroke : '#000000',
+      align: referenceCap ? referenceCap.align : 'center',
+      fontFamily: referenceCap ? referenceCap.fontFamily : 'Impact, sans-serif',
+      bgColor: referenceCap ? referenceCap.bgColor : undefined,
+      opacity: referenceCap !== null && referenceCap.opacity !== undefined ? referenceCap.opacity : 1,
       rotation: 0,
       width: 0.9
     };
@@ -718,6 +799,9 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     if (!activeLayerId) return;
     const nextImgLayers = imageLayers.map((layer) => {
       if (layer.id === activeLayerId) {
+        if (typeof key === 'object') {
+          return { ...layer, ...key };
+        }
         return { ...layer, [key]: value };
       }
       return layer;
@@ -747,14 +831,88 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     pushHistory(nextCaps, nextStickers, nextImgLayers);
   };
 
+  
+  const handleRemoveBackground = async () => {
+    const processImg = async (url) => {
+       const res = await fetch(url);
+       const blob = await res.blob();
+       return await removeBackground(blob);
+    };
+
+    if (activeImageLayer) {
+        if (activeImageLayer.originalUrl) {
+          updateActiveImageLayer({
+            url: activeImageLayer.originalUrl,
+            originalUrl: null
+          });
+          return;
+        }
+
+        try {
+          setIsRemovingBg(true);
+          const imgBlob = await processImg(activeImageLayer.url);
+          const newUrl = URL.createObjectURL(imgBlob);
+          updateActiveImageLayer({
+            url: newUrl,
+            originalUrl: activeImageLayer.url
+          });
+        } catch (err) {
+          console.error('Failed to remove background:', err);
+          alert('Failed to remove background: ' + (err.message || err.toString()));
+        } finally {
+          setIsRemovingBg(false);
+        }
+    } else if (activeSticker) {
+        if (activeSticker.originalUrl) {
+          const nextStks = stickers.map((s) => (s.id === activeSticker.id ? { ...s, src: activeSticker.originalUrl, url: activeSticker.originalUrl, originalUrl: null } : s));
+          setStickers(nextStks);
+          pushHistoryDebounced(captions, nextStks, imageLayers);
+          return;
+        }
+
+        try {
+          setIsRemovingBg(true);
+          const oldUrl = activeSticker.url || activeSticker.src;
+          const imgBlob = await processImg(oldUrl);
+          const newUrl = URL.createObjectURL(imgBlob);
+          const nextStks = stickers.map((s) => (s.id === activeSticker.id ? { ...s, src: newUrl, url: newUrl, originalUrl: oldUrl } : s));
+          setStickers(nextStks);
+          pushHistoryDebounced(captions, nextStks, imageLayers);
+        } catch (err) {
+          console.error('Failed to remove background:', err);
+          alert('Failed to remove background: ' + (err.message || err.toString()));
+        } finally {
+          setIsRemovingBg(false);
+        }
+    } else if (activeTemplate && (activeTemplate.rawImageUrl || activeTemplate.imageUrl)) {
+        if (activeTemplate.originalUrl) {
+          setActiveTemplate({ ...activeTemplate, rawImageUrl: activeTemplate.originalUrl, imageUrl: activeTemplate.originalUrl, originalUrl: null });
+          return;
+        }
+
+        try {
+          setIsRemovingBg(true);
+          const oldUrl = activeTemplate.rawImageUrl || activeTemplate.imageUrl;
+          const imgBlob = await processImg(oldUrl);
+          const newUrl = URL.createObjectURL(imgBlob);
+          setActiveTemplate({ ...activeTemplate, rawImageUrl: newUrl, imageUrl: newUrl, originalUrl: oldUrl });
+        } catch (err) {
+          console.error('Failed to remove background:', err);
+          alert('Failed to remove background: ' + (err.message || err.toString()));
+        } finally {
+          setIsRemovingBg(false);
+        }
+    }
+  };
+
   const handleDuplicateLayer = () => {
     if (!activeLayerId) return;
     if (activeCaption) {
       const newCap = {
         ...activeCaption,
         id: `cap-${Date.now()}`,
-        x: (activeCaption.x || 50) + 20,
-        y: (activeCaption.y || 50) + 20
+        x: (activeCaption.x || 0.5) + 0.05,
+        y: (activeCaption.y || 0.5) + 0.05
       };
       const nextCaps = [...captions, newCap];
       setCaptions(nextCaps);
@@ -764,8 +922,8 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
       const newStk = {
         ...activeSticker,
         id: `stk-${Date.now()}`,
-        x: (activeSticker.x || 50) + 20,
-        y: (activeSticker.y || 50) + 20
+        x: (activeSticker.x || 0.5) + 0.05,
+        y: (activeSticker.y || 0.5) + 0.05
       };
       const nextStk = [...stickers, newStk];
       setStickers(nextStk);
@@ -775,8 +933,8 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
       const newImg = {
         ...activeImageLayer,
         id: `layer-${Date.now()}`,
-        x: (activeImageLayer.x || 50) + 20,
-        y: (activeImageLayer.y || 50) + 20
+        x: (activeImageLayer.x || 0.5) + 0.05,
+        y: (activeImageLayer.y || 0.5) + 0.05
       };
       const nextImg = [...imageLayers, newImg];
       setImageLayers(nextImg);
@@ -928,7 +1086,32 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
   };
 
   const activeCaption = captions.find((c) => c.id === activeLayerId);
+
+  useEffect(() => {
+    if (showFontMenu && activeCaption?.fontFamily) {
+      setTimeout(() => {
+        const id = 'font-item-' + activeCaption.fontFamily.replace(/\\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '');
+        const el = document.getElementById(id);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        }
+      }, 50);
+    }
+  }, [showFontMenu, activeCaption?.fontFamily]);
   const activeSticker = stickers.find((s) => s.id === activeLayerId);
+
+  useEffect(() => {
+    const isFiltersOpen = (!activeCaption && !activeSticker && activeTab === 'filters') || (activeImageLayer && showImageFilterMenu);
+    if (isFiltersOpen) {
+      setTimeout(() => {
+        const activeFilterId = activeImageLayer ? (activeImageLayer.filterId || 'original') : (imageFilters.preset || 'original');
+        const el = document.getElementById('filter-item-' + activeFilterId);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        }
+      }, 50);
+    }
+  }, [activeTab, activeImageLayer?.id, activeImageLayer?.filterId, imageFilters.preset]);
 
   const activeFontObj = FONTS.find((f) => f.family === (activeCaption?.fontFamily || 'Impact, sans-serif'))
     || FONTS.find((f) => activeCaption?.fontFamily?.toLowerCase().includes('comic') && f.id.toLowerCase().includes('comic'))
@@ -944,6 +1127,17 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     }
     const nextIndex = ((currentIndex >= 0 ? currentIndex : 0) + 1) % FONTS.length;
     updateActiveCaption('fontFamily', FONTS[nextIndex].family);
+  };
+
+  const handleCycleOpacity = () => {
+    if (!activeCaption) return;
+    const currentOpacity = activeCaption.opacity !== undefined ? Number(activeCaption.opacity) : 1;
+    let nextOpacity = 1;
+    if (currentOpacity >= 0.9) nextOpacity = 0.75;
+    else if (currentOpacity >= 0.7) nextOpacity = 0.5;
+    else if (currentOpacity >= 0.4) nextOpacity = 0.25;
+    else nextOpacity = 1;
+    updateActiveCaption('opacity', nextOpacity);
   };
 
   const ASPECT_RATIOS = [
@@ -1451,58 +1645,97 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
           <div className="canvas-wrapper">
             {/* Floating Context Toolbar whenever dock container is folded */}
             <AnimatePresence>
-              {(activeCaption || activeSticker || activeImageLayer) && isMobileTabsFolded && (
+              {((activeCaption || activeSticker || activeImageLayer) || (isMobileTabsFolded && !activeCaption && !activeSticker && !activeImageLayer)) && isMobileTabsFolded && (
                 <motion.div
-                  className={`editor-floating-toolbar video-context-toolbar ${aspectRatio === '9:16' || aspectRatio === '4:5' ? 'portrait' : ''}`}
-                  initial={{ opacity: 0, y: -10, x: '-50%' }}
-                  animate={{ opacity: 1, y: 0, x: '-50%' }}
-                  exit={{ opacity: 0, y: -10, x: '-50%' }}
-                  transition={{ duration: 0.2, ease: 'easeOut' }}
+                  className={`editor-floating-toolbar video-context-toolbar`}
+                  initial={{ opacity: 0, height: 0, paddingTop: 0, paddingBottom: 0, marginTop: 0, marginBottom: 0, overflow: 'hidden' }}
+                  animate={{ opacity: 1, height: 46, paddingTop: 5, paddingBottom: 0, marginTop: 2, marginBottom: 0 }}
+                  exit={{ opacity: 0, height: 0, paddingTop: 0, paddingBottom: 0, marginTop: 0, marginBottom: 0, overflow: 'hidden' }}
+                  transition={{ duration: 0.25, ease: 'easeInOut' }}
                 >
                   {/* Text controls */}
-                  {activeCaption && (
+                  {activeCaption && showFontMenu && (
+                    <>
+                      <button onClick={() => setShowFontMenu(false)} className="btn btn-icon btn-xs vid-ctx-btn" >
+                        <ArrowLeft style={{ width: 14, height: 14 }} />
+                      </button>
+                      <div className="vid-ctx-divider"  />
+                      {FONTS.map(f => (
+                        <button
+                          key={f.id || f.family}
+                          id={`font-item-${f.family.replace(/\\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '')}`}
+                          className={`btn btn-xs vid-ctx-btn ${activeCaption.fontFamily === f.family ? 'active' : ''}`}
+                          style={{
+                            fontFamily: f.family,
+                            whiteSpace: 'nowrap'
+                          }}
+                          onClick={() => {
+                            updateActiveCaption('fontFamily', f.family);
+                            setShowFontMenu(false);
+                          }}
+                        >
+                          {f.name.split(' ')[0]}
+                        </button>
+                      ))}
+                    </>
+                  )}
+                  {activeCaption && showOpacityMenu && (
+                    <>
+                      <button onClick={() => setShowOpacityMenu(false)} className="btn btn-icon btn-xs vid-ctx-btn" >
+                        <ArrowLeft style={{ width: 16, height: 16 }} />
+                      </button>
+                      <div className="vid-ctx-divider"  />
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '0 8px', width: '160px' }}>
+                        <Droplet style={{ width: 14, height: 14, color: '#fff', flexShrink: 0 }} />
+                        <input
+                          type="range"
+                          className="range range-xs"
+                          min="0"
+                          max="1"
+                          step="0.05"
+                          value={activeCaption.opacity !== undefined ? activeCaption.opacity : 1}
+                          onChange={(e) => updateActiveCaptionProps({ opacity: parseFloat(e.target.value) })}
+                          title="Text Opacity"
+                          style={{ '--range-shdw': 'var(--primary-gradient)' }}
+                        />
+                        <span style={{ fontSize: '11px', fontWeight: 600, minWidth: '30px', textAlign: 'right' }}>
+                          {Math.round((activeCaption.opacity !== undefined ? Number(activeCaption.opacity) : 1) * 100)}%
+                        </span>
+                      </div>
+                    </>
+                  )}
+                  {activeCaption && !showFontMenu && !showOpacityMenu && (
                     <>
                       <button
                         className="btn btn-xs vid-ctx-btn vid-ctx-btn-font"
-                        title="Next Font"
-                        onClick={handleCycleFont}
-                        style={{
-                          fontFamily: activeCaption.fontFamily || 'Impact, sans-serif',
-                          fontSize: '0.75rem',
-                          padding: '4px 10px',
-                          maxWidth: 90,
-                          overflow: 'hidden',
-                          whiteSpace: 'nowrap',
-                          textOverflow: 'ellipsis'
-                        }}
+                        title="Change Font"
+                        onClick={() => setShowFontMenu(true)}
                       >
-                        <Type className="vid-font-icon" style={{ width: 12, height: 12, marginRight: 4, flexShrink: 0 }} />
-                        <span className="vid-font-label">{activeFontObj.name.split(' ')[0]}</span>
+                        <Type className="vid-font-icon" style={{ width: 16, height: 16 }} />
+                        <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#fff' }}>{(activeCaption.fontFamily || 'Anton').split(/[\s,]+/)[0].replace(/['"]/g, '')}</span>
                       </button>
 
                       <div
-                        className="vid-ctx-btn"
+                        className="btn btn-xs vid-ctx-btn"
                         style={{
                           position: 'relative',
                           overflow: 'hidden',
-                          width: 32,
-                          height: 32,
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          borderRadius: 8
                         }}
                         title="Text Color"
                       >
                         <div
                           style={{
-                            width: 16,
-                            height: 16,
+                            width: 14,
+                            height: 14,
                             borderRadius: '50%',
                             background: activeCaption.color || '#fff',
-                            border: '1.5px solid rgba(255,255,255,0.4)'
+                            border: '2px solid rgba(255,255,255,0.4)',
                           }}
                         />
+                        <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#fff' }}>Color</span>
                         <input
                           type="color"
                           value={activeCaption.color || '#ffffff'}
@@ -1510,12 +1743,12 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                             const hex = e.target.value;
                             updateActiveCaptionProps({ color: hex, stroke: getContrastStroke(hex) });
                           }}
-                          style={{ position: 'absolute', opacity: 0, inset: 0, cursor: 'pointer' }}
+                          style={{ position: 'absolute', opacity: 0, inset: 0, cursor: 'pointer', width: '100%', height: '100%' }}
                         />
                       </div>
 
                       <button
-                        className="btn btn-xs vid-ctx-btn"
+                        className={`btn btn-xs vid-ctx-btn ${activeCaption.bgColor && activeCaption.bgColor !== 'none' && activeCaption.bgColor !== 'transparent' ? 'active' : ''}`}
                         title="Toggle Background"
                         onClick={() => {
                           if (!activeCaption.bgColor || activeCaption.bgColor === 'none') {
@@ -1526,61 +1759,455 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                             handleSetCaptionBg('none');
                           }
                         }}
-                        style={{
-                          padding: '4px 8px',
-                          fontSize: '0.72rem',
-                          background: activeCaption.bgColor === 'white' ? '#fff' : activeCaption.bgColor === 'black' ? '#000' : undefined,
-                          color: activeCaption.bgColor === 'white' ? '#000' : activeCaption.bgColor === 'black' ? '#fff' : undefined,
-                          fontWeight: 700
-                        }}
                       >
                         BG
                       </button>
+
+                      <button
+                        className="btn btn-xs vid-ctx-btn"
+                        title="Text Opacity"
+                        onClick={() => setShowOpacityMenu(true)}
+                        style={{ padding: '0 8px', fontSize: '11px', fontWeight: 600, flexShrink: 0, display: 'flex', alignItems: 'center', gap: '4px' }}
+                      >
+                        <Droplet style={{ width: 12, height: 12 }} /> Blur
+                      </button>
+                      
                     </>
                   )}
 
                   {/* Sticker / Emoji controls */}
                   {activeSticker && (
+                    <>
                     <button
                       className="btn btn-icon btn-xs vid-ctx-btn"
                       title="Rotate 90°"
                       onClick={handleRotateSticker}
                     >
                       <RotateCw style={{ width: 14, height: 14 }} />
-                    </button>
+                      </button>
+                      
+                    </>
                   )}
 
                   {/* Image controls */}
-                  {activeImageLayer && (
-                    <button
-                      className="btn btn-icon btn-xs vid-ctx-btn"
-                      title="Rotate 90°"
-                      onClick={handleRotateImageLayer}
-                    >
-                      <RotateCw style={{ width: 14, height: 14 }} />
-                    </button>
+                  {activeImageLayer && !showImageFilterMenu && (
+                    <>
+                      <button
+                        className="btn btn-xs vid-ctx-btn"
+                        title="Filters"
+                        onClick={() => setShowImageFilterMenu(true)}
+                        style={{ padding: '0 8px', fontSize: '11px', fontWeight: 600, flexShrink: 0, display: 'flex', alignItems: 'center', gap: '4px' }}
+                      >
+                        <Sparkles style={{ width: 14, height: 14 }} /> Filters
+                      </button>
+                      <button
+                        className="btn btn-xs vid-ctx-btn"
+                        title="Magic Eraser (Remove Background)"
+                        onClick={handleRemoveBackground}
+                        disabled={isRemovingBg}
+                        style={{ padding: '0 8px', fontSize: '11px', fontWeight: 600, flexShrink: 0, display: 'flex', alignItems: 'center', gap: '4px', background: isRemovingBg ? 'rgba(255,255,255,0.1)' : 'var(--primary-gradient)', color: '#fff', border: 'none' }}
+                      >
+                        <Wand2 style={{ width: 14, height: 14 }} className={isRemovingBg ? "spin" : ""} /> {activeImageLayer?.originalUrl ? 'Undo BG' : 'BG Eraser'}
+                      </button>
+                      <button
+                        className={`btn btn-xs vid-ctx-btn ${activeImageLayer.fitMode === 'crop' ? 'active' : ''}`}
+                        title="Crop"
+                        onClick={() => updateActiveImageLayer('fitMode', activeImageLayer.fitMode === 'crop' ? 'fit' : 'crop')}
+                      >
+                        <Crop style={{ width: 14, height: 14 }} /> Crop
+                      </button>
+
+                      <button
+                        className="btn btn-icon btn-xs vid-ctx-btn"
+                        title="Rotate 90°"
+                        onClick={handleRotateImageLayer}
+                      >
+                        <RotateCw style={{ width: 14, height: 14 }} />
+                      </button>
+                      <button
+                        className="btn btn-icon btn-xs vid-ctx-btn"
+                        title="Duplicate"
+                        onClick={handleDuplicateLayer}
+                      >
+                        <Copy style={{ width: 14, height: 14 }} />
+                      </button>
+                      <div className="vid-ctx-divider"  />
+                      <button
+                        className="btn btn-icon btn-xs vid-ctx-btn vid-ctx-btn-delete"
+                        style={{ background: 'rgba(239, 68, 68, 0.85)', color: '#ffffff', border: '1px solid rgba(239, 68, 68, 1)' }}
+                        title="Delete"
+                        onClick={handleDeleteLayer}
+                      >
+                        <Trash2 style={{ width: 14, height: 14 }} />
+                      </button>
+                    </>
                   )}
 
                   {/* Shared Duplicate / Delete */}
-                  <div className="vid-ctx-divider" style={{ width: 1, height: 20, background: 'rgba(255,255,255,0.2)', margin: '0 4px' }} />
-                  <button
-                    className="btn btn-icon btn-xs vid-ctx-btn"
-                    title="Duplicate"
-                    onClick={handleDuplicateLayer}
-                  >
-                    <Copy style={{ width: 14, height: 14 }} />
-                  </button>
-                  <button
-                    className="btn btn-icon btn-xs vid-ctx-btn vid-ctx-btn-delete"
-                    style={{ background: 'rgba(239, 68, 68, 0.85)', color: '#ffffff', border: '1px solid rgba(239, 68, 68, 1)' }}
-                    title="Delete"
-                    onClick={handleDeleteLayer}
-                  >
-                    <Trash2 style={{ width: 14, height: 14 }} />
-                  </button>
+                  {((activeCaption && !showFontMenu && !showOpacityMenu) || activeSticker) && (
+                    <>
+                      <button
+                        className="btn btn-icon btn-xs vid-ctx-btn"
+                        title="Duplicate"
+                        onClick={handleDuplicateLayer}
+                      >
+                        <Copy style={{ width: 14, height: 14 }} />
+                      </button>
+                      <div className="vid-ctx-divider"  />
+                      <button
+                        className="btn btn-icon btn-xs vid-ctx-btn vid-ctx-btn-delete"
+                        style={{ background: 'rgba(239, 68, 68, 0.85)', color: '#ffffff', border: '1px solid rgba(239, 68, 68, 1)' }}
+                        title="Delete"
+                        onClick={handleDeleteLayer}
+                      >
+                        <Trash2 style={{ width: 14, height: 14 }} />
+                      </button>
+                    </>
+                  )}
+
+                  {/* TAB SPECIFIC TOOLS (when nothing selected) */}
+                  {!showQuickPhrasesMenu && !(activeCaption || activeSticker || activeImageLayer) && activeTab === "text" && (
+                    <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                      <button
+                        className="btn btn-xs vid-ctx-btn"
+                        onClick={handleAddCaption}
+                        style={{ padding: "4px 8px", fontSize: "0.75rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "4px" }}
+                      >
+                        <Plus style={{ width: 14, height: 14 }} /> Add Text
+                      </button>
+                      
+                      <div className="vid-ctx-divider"  />
+
+                      <button
+                        className="btn btn-xs vid-ctx-btn"
+                        onClick={() => setShowQuickPhrasesMenu(true)}
+                        style={{ padding: "4px 8px", fontSize: "0.75rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "4px" }}
+                      >
+                        <Quote style={{ width: 14, height: 14 }} /> Quick Phrases
+                      </button>
+                    </div>
+                  )}
+                  {showQuickPhrasesMenu && !(activeCaption || activeSticker || activeImageLayer) && activeTab === "text" && (
+                    <div style={{ display: "flex", alignItems: "center", gap: "4px", width: "100%", overflowX: "auto", paddingBottom: "4px", scrollbarWidth: "none" }}>
+                      <button onClick={() => setShowQuickPhrasesMenu(false)} className="btn btn-icon btn-xs vid-ctx-btn" >
+                        <ArrowLeft style={{ width: 14, height: 14 }} />
+                      </button>
+                      <div className="vid-ctx-divider"  />
+                      {PRESET_PHRASES.map(phrase => (
+                        <button
+                          key={phrase}
+                          className="btn btn-xs vid-ctx-btn"
+                          onClick={() => { handleAddPresetPhrase(phrase); setShowQuickPhrasesMenu(false); }}
+                          style={{ flexShrink: 0, padding: "4px 10px", fontSize: "0.75rem", fontWeight: 600, whiteSpace: "nowrap", borderRadius: "14px", border: "1px solid rgba(255,255,255,0.1)" }}
+                        >
+                          {phrase}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {!(activeCaption || activeSticker || activeImageLayer) && activeTab === 'images' && (
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', width: '100%', overflowX: 'auto', paddingBottom: '4px', scrollbarWidth: 'none' }}>
+                      <label
+                        className="btn btn-xs vid-ctx-btn"
+                        style={{ flexShrink: 0, padding: '4px 8px', fontSize: '0.75rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', margin: 0 }}
+                      >
+                        <Upload style={{ width: 14, height: 14 }} /> Upload
+                        <input
+                          type="file"
+                          accept="image/*,video/*"
+                          style={{ display: 'none' }}
+                          onChange={handleFileUploadImageLayer}
+                        />
+                      </label>
+                      <button
+                        className="btn btn-xs vid-ctx-btn"
+                        onClick={() => setImagePickerTarget('layer')}
+                        style={{ flexShrink: 0, padding: '4px 8px', fontSize: '0.75rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}
+                      >
+                        <LayoutGrid style={{ width: 14, height: 14 }} /> Template
+                      </button>
+                      <div className="vid-ctx-divider" style={{ width: 1, height: 20, background: 'rgba(255,255,255,0.2)', margin: '0 4px', flexShrink: 0 }} />
+                      <button
+                        className="btn btn-icon btn-xs vid-ctx-btn"
+                        onClick={() => setShowMemeStickersModal(true)}
+                        title="Add Sticker"
+                      >
+                        <Sticker style={{ width: 16, height: 16 }} />
+                      </button>
+                      <button
+                        className="btn btn-icon btn-xs vid-ctx-btn"
+                        onClick={() => setShowEmojiModal(true)}
+                        title="Add Emoji"
+                      >
+                        <Smile style={{ width: 16, height: 16 }} />
+                      </button>
+                    </div>
+                  )}
+
+                  {!(activeCaption || activeSticker || activeImageLayer) && activeTab === 'draw' && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', width: '100%' }}>
+                      <div style={{ display: 'flex', background: 'rgba(0,0,0,0.2)', borderRadius: '999px', padding: '2px', gap: '2px', flexShrink: 0 }}>
+                        <button
+                          className={`btn btn-icon btn-xs vid-ctx-btn ${drawTool === 'brush' ? 'active' : ''}`}
+                          onClick={() => setDrawTool('brush')}
+                          style={{ margin: 0, border: 'none', background: drawTool === 'brush' ? 'var(--primary-gradient)' : 'transparent' }}
+                          title="Brush"
+                        >
+                          <Paintbrush style={{ width: 16, height: 16 }} />
+                        </button>
+                        <button
+                          className={`btn btn-icon btn-xs vid-ctx-btn ${drawTool === 'eraser' ? 'active' : ''}`}
+                          onClick={() => setDrawTool('eraser')}
+                          style={{ margin: 0, border: 'none', background: drawTool === 'eraser' ? 'var(--primary-gradient)' : 'transparent' }}
+                          title="Eraser"
+                        >
+                          <Eraser style={{ width: 16, height: 16 }} />
+                        </button>
+                      </div>
+                      
+                      <div className="vid-ctx-divider" style={{ width: 1, height: 20, background: 'rgba(255,255,255,0.2)', margin: '0 4px', flexShrink: 0 }} />
+
+                      {drawTool !== 'eraser' && (
+                        <div
+                          className="btn btn-icon btn-xs vid-ctx-btn"
+                          style={{
+                            position: 'relative',
+                            overflow: 'hidden',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                          title="Brush Color"
+                        >
+                          <div
+                            style={{
+                              width: 18,
+                              height: 18,
+                              borderRadius: '50%',
+                              background: brushColor || '#fff',
+                              border: '2px solid rgba(255,255,255,0.4)',
+                            }}
+                          />
+                          <input 
+                            type="color" 
+                            value={brushColor} 
+                            onChange={(e) => setBrushColor(e.target.value)} 
+                            style={{ position: 'absolute', opacity: 0, inset: 0, cursor: 'pointer', width: '100%', height: '100%' }} 
+                          />
+                        </div>
+                      )}
+                      
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: 1, margin: '0 4px', minWidth: 60 }}>
+                        {drawTool !== 'eraser' && (
+                          <div style={{ width: 14, height: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            <div style={{ width: `${Math.max(2, (brushSize / 50) * 14)}px`, height: `${Math.max(2, (brushSize / 50) * 14)}px`, borderRadius: '50%', background: brushColor, transition: 'all 0.1s' }} />
+                          </div>
+                        )}
+                        <input 
+                          type="range" 
+                          min="1" max="50" 
+                          value={brushSize} 
+                          onChange={(e) => setBrushSize(parseInt(e.target.value))}
+                          style={{ width: '100%', minWidth: '40px' }}
+                        />
+                      </div>
+                      
+                      <div className="vid-ctx-divider" style={{ width: 1, height: 20, background: 'rgba(255,255,255,0.2)', margin: '0 4px', flexShrink: 0 }} />
+                      <button
+                        className="btn btn-icon btn-xs vid-ctx-btn vid-ctx-btn-delete"
+                        onClick={() => setDrawings([])}
+                        title="Clear Drawing"
+                        style={{ flexShrink: 0 }}
+                      >
+                        <Trash2 style={{ width: 14, height: 14 }} />
+                      </button>
+                    </div>
+                  )}
+
+                  {!(activeCaption || activeSticker || activeImageLayer) && activeTab === 'watermark' && (
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', width: '100%', flexWrap: 'nowrap', overflowX: 'auto', paddingBottom: '2px', scrollbarWidth: 'none' }}>
+                      {!showWatermarkMenu ? (
+                        <>
+                          <CanvasColorPicker canvasBgColor={canvasBgColor} setCanvasBgColor={setCanvasBgColor} />
+
+                          <div className="vid-ctx-divider"  />
+                          
+                          <button
+                            className="btn btn-xs vid-ctx-btn"
+                            onClick={() => {
+                                setShowWatermarkMenu(true);
+                                if (!watermark?.enabled) updateWatermark('enabled', true);
+                            }}
+                            style={{ padding: '4px 8px', fontSize: '0.75rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}
+                          >
+                            <Droplet style={{ width: 14, height: 14 }} /> Watermark
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button onClick={() => setShowWatermarkMenu(false)} className="btn btn-icon btn-xs vid-ctx-btn" >
+                            <ArrowLeft style={{ width: 16, height: 16 }} />
+                          </button>
+                          <div className="vid-ctx-divider"  />
+                          
+                          <button
+                            className="btn btn-icon btn-xs vid-ctx-btn"
+                            style={{ position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                            title="Watermark Color"
+                          >
+                            <div style={{ width: 18, height: 18, borderRadius: '50%', background: watermark?.color || '#ffffff', border: '2px solid rgba(255,255,255,0.4)' }} />
+                            <input type="color" value={watermark?.color || '#ffffff'} onChange={(e) => updateWatermark('color', e.target.value)} style={{ position: 'absolute', opacity: 0, inset: 0, cursor: 'pointer', width: '100%', height: '100%' }} />
+                          </button>
+
+                          <input
+                            type="text"
+                            value={(watermark?.text || '').replace(/^@/, '')}
+                            onChange={(e) => {
+                               const raw = e.target.value.replace(/^@+/, '');
+                               updateWatermark('text', raw ? `@${raw}` : '');
+                               if (raw) updateWatermark('imageUrl', null);
+                            }}
+                            placeholder="username"
+                            style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', padding: '0 16px', borderRadius: '999px', fontSize: '0.85rem', width: '105px', outline: 'none', height: '40px', boxSizing: 'border-box' }}
+                          />
+
+                          <button
+                            className="btn btn-icon btn-xs vid-ctx-btn"
+                            onClick={() => {
+                               const sizes = [12, 16, 24, 32, 48];
+                               const nextIdx = (sizes.indexOf(watermark?.size || 24) + 1) % sizes.length;
+                               updateWatermark('size', sizes[nextIdx]);
+                            }}
+                            title="Size"
+                          >
+                            <Type style={{ width: 16, height: 16, transform: `scale(${(watermark?.size || 24) / 24})`, transition: 'transform 0.2s' }} />
+                          </button>
+
+                          <button
+                            className="btn btn-icon btn-xs vid-ctx-btn"
+                            onClick={() => {
+                               const ops = [1, 0.75, 0.5, 0.25];
+                               const nextIdx = (ops.indexOf(watermark?.opacity || 0.5) + 1) % ops.length;
+                               updateWatermark('opacity', ops[nextIdx]);
+                            }}
+                            title="Opacity"
+                          >
+                            <Blend style={{ width: 16, height: 16, opacity: watermark?.opacity || 0.5, transition: 'opacity 0.2s' }} />
+                          </button>
+
+                          <button
+                            className="btn btn-icon btn-xs vid-ctx-btn"
+                            onClick={() => {
+                               const pos = ['bottom-right', 'bottom-left', 'top-left', 'top-right'];
+                               const nextIdx = (pos.indexOf(watermark?.position || 'bottom-right') + 1) % pos.length;
+                               updateWatermark('position', pos[nextIdx]);
+                            }}
+                            title="Position"
+                          >
+                            <ArrowDownRight 
+                              style={{ 
+                                width: 16, 
+                                height: 16, 
+                                transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                transform: `rotate(${
+                                  watermark?.position === 'bottom-left' ? 90 :
+                                  watermark?.position === 'top-left' ? 180 :
+                                  watermark?.position === 'top-right' ? 270 :
+                                  0
+                                }deg)`
+                              }} 
+                            />
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  )}
+
+                  {((!activeCaption && !activeSticker && activeTab === 'filters') || (activeImageLayer && showImageFilterMenu)) && (
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: '6px', width: '100%', overflowX: 'auto', paddingBottom: '4px', scrollbarWidth: 'none' }}>
+
+                      {activeImageLayer && showImageFilterMenu && (
+                        <>
+                          <button onClick={() => setShowImageFilterMenu(false)} className="btn btn-icon btn-xs vid-ctx-btn" >
+                            <ArrowLeft style={{ width: 16, height: 16 }} />
+                          </button>
+                          <div className="vid-ctx-divider"  />
+                        </>
+                      )}
+
+                      {(() => {
+                        let previewImage = 'https://images.unsplash.com/photo-1555685812-4b943f1cb0eb?w=100&q=80'; // fallback
+                        if (activeImageLayer) {
+                          previewImage = activeImageLayer.originalUrl || activeImageLayer.url || activeImageLayer.src || previewImage;
+                        } else if (imageLayers && imageLayers.length > 0) {
+                          previewImage = imageLayers[0].originalUrl || imageLayers[0].url || imageLayers[0].src || previewImage;
+                        }
+
+                        return PHOTO_FILTERS.map((filterItem) => {
+                          const isFilterActive = activeImageLayer 
+                            ? (activeImageLayer.filterId || 'original') === filterItem.id
+                            : (imageFilters.preset || 'original') === filterItem.id;
+                          return (
+                            <button
+                              key={filterItem.id}
+                              id={`filter-item-${filterItem.id}`}
+                              className={`btn btn-xs vid-ctx-btn ${isFilterActive ? 'active' : ''}`}
+                              onClick={() => {
+                                if (activeImageLayer) {
+                                  updateActiveImageLayer({
+                                    filterId: filterItem.id,
+                                    filter: filterItem.filterString,
+                                    filters: filterItem.values
+                                  });
+                                  setShowImageFilterMenu(false);
+                                } else {
+                                  setImageFilters({
+                                    preset: filterItem.id,
+                                    filterString: filterItem.filterString,
+                                    ...filterItem.values
+                                  });
+                                }
+                              }}
+                              style={{ 
+                                flexShrink: 0, 
+                                padding: '4px 10px 4px 4px', 
+                                borderRadius: '20px',
+                                background: isFilterActive ? 'var(--primary-gradient)' : 'rgba(255, 255, 255, 0.05)', 
+                                border: isFilterActive ? '1px solid rgba(249, 115, 22, 0.5)' : '1px solid rgba(255,255,255,0.1)',
+                                display: 'flex',
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                gap: '8px',
+                                width: 'auto',
+                                overflow: 'hidden'
+                              }}
+                            >
+                              <div style={{
+                                width: '28px',
+                                height: '28px',
+                                borderRadius: '50%',
+                                backgroundImage: `url(${previewImage})`,
+                                backgroundSize: 'cover',
+                                backgroundPosition: 'center',
+                                filter: filterItem.filterString,
+                                flexShrink: 0
+                              }} />
+                              <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#fff', whiteSpace: 'nowrap' }}>
+                                {filterItem.name}
+                              </span>
+                            </button>
+                          );
+                        });
+                      })()}
+                    </div>
+                  )}
+
                 </motion.div>
               )}
             </AnimatePresence>
+
+
+            
 
             <CanvasEditor
               ref={canvasRef}
@@ -1590,6 +2217,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
             stickers={stickers}
             imageLayers={imageLayers}
             aspectRatio={aspectRatio}
+            
             imageFit={imageFit}
             filters={imageFilters}
             isNativeLayout={isNativeLayout}
@@ -1634,6 +2262,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
             }}
             isVideoPlaying={isVideoPlaying}
             watermark={watermark}
+              canvasBgColor={canvasBgColor}
             drawings={drawings}
             onAddDrawing={handleAddDrawing}
             isDrawingMode={activeTab === 'draw' && Boolean(drawTool)}
@@ -1641,6 +2270,20 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
             brushColor={brushColor}
             brushSize={brushSize}
           />
+          {isRemovingBg && (
+            <div style={{
+              position: 'absolute',
+              top: 0, left: 0, right: 0, bottom: 0,
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+              background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)',
+              color: '#fff', zIndex: 50, borderRadius: '12px'
+            }}>
+              <RefreshCw className="spin" style={{ width: 40, height: 40, color: 'var(--primary-accent)', marginBottom: '12px' }} />
+              <span style={{ fontSize: '1rem', fontWeight: 600 }}>Removing Background...</span>
+              <span style={{ fontSize: '0.8rem', opacity: 0.8, marginTop: '4px' }}>This may take a moment</span>
+            </div>
+          )}
+
         </div>
       </div>
         
@@ -1659,24 +2302,6 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
             }}
           >
             <button
-              className={`tab-btn ${activeTab === 'text' ? 'active' : ''}`}
-              onClick={() => handleTabClick('text')}
-            >
-              <Type className="icon-xs" /> <span>Text</span>
-            </button>
-            <button
-              className={`tab-btn ${activeTab === 'stickers' ? 'active' : ''}`}
-              onClick={() => handleTabClick('stickers')}
-            >
-              <Smile className="icon-xs" /> <span>Stickers</span>
-            </button>
-            <button
-              className={`tab-btn ${activeTab === 'images' ? 'active' : ''}`}
-              onClick={() => handleTabClick('images')}
-            >
-              <ImageIcon className="icon-xs" /> <span>Media</span>
-            </button>
-            <button
               className={`tab-btn ${activeTab === 'draw' ? 'active' : ''}`}
               onClick={() => {
                 handleTabClick('draw');
@@ -1684,14 +2309,33 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                 setDrawTool('brush');
               }}
             >
-              <Paintbrush className="icon-xs" /> <span>Draw</span>
+              <PencilLine className="icon-xs" /> <span>Draw</span>
+            </button>
+            <button
+              className={`tab-btn ${activeTab === 'images' ? 'active' : ''}`}
+              onClick={() => handleTabClick('images')}
+            >
+              <Copy className="icon-xs" /> <span>Media</span>
+            </button>
+            <button
+              className={`tab-btn ${activeTab === 'text' ? 'active' : ''}`}
+              onClick={() => handleTabClick('text')}
+            >
+              <Type className="icon-xs" /> <span>Text</span>
+            </button>
+            <button
+              className={`tab-btn ${activeTab === 'filters' ? 'active' : ''}`}
+              onClick={() => handleTabClick('filters')}
+            >
+              <Sparkles className="icon-xs" /> <span>Filters</span>
             </button>
             <button
               className={`tab-btn ${activeTab === 'watermark' ? 'active' : ''}`}
               onClick={() => handleTabClick('watermark')}
             >
-              <Droplet className="icon-xs" /> <span>Watermark</span>
+              <LayoutGrid className="icon-xs" /> <span>Canvas</span>
             </button>
+            
           </div>
 
 
@@ -1962,23 +2606,50 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                   flexWrap: 'wrap'
                 }}
               >
-                {/* + Text Button */}
-                <button
-                  type="button"
-                  className="btn btn-xs btn-primary hover-lift"
-                  onClick={handleAddCaption}
-                  style={{
-                    padding: '7px 14px',
-                    borderRadius: '20px',
-                    fontSize: '0.82rem',
-                    fontWeight: 700,
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '6px'
-                  }}
-                >
-                  <Plus size={15} /> {activeCaption ? 'Text' : 'Add Text'}
-                </button>
+                {!showQuickPhrasesMenu ? (
+                  <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                    {/* + Text Button */}
+                    <button
+                      type="button"
+                      className="btn btn-xs btn-primary hover-lift"
+                      onClick={handleAddCaption}
+                      style={{
+                        padding: "7px 14px",
+                        borderRadius: "20px",
+                        fontSize: "0.82rem",
+                        fontWeight: 700,
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "6px"
+                      }}
+                    >
+                      <Plus size={15} /> {activeCaption ? "Text" : "Add Text"}
+                    </button>
+
+                    {/* Quick Phrases Button */}
+                    <button type="button" className="btn btn-xs btn-secondary hover-lift" onClick={() => setShowQuickPhrasesMenu(true)} style={{ padding: "7px 14px", borderRadius: "20px", fontSize: "0.82rem", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                      <Quote size={15} /> Quick Phrases
+                    </button>
+                  </div>
+                ) : (
+                  <div className="animate-fade-in" style={{ display: "flex", gap: "6px", overflowX: "auto", paddingBottom: "4px", scrollbarWidth: "none", width: "100%", alignItems: "center" }}>
+                    <button type="button" className="btn btn-icon btn-xs btn-secondary hover-lift" onClick={() => setShowQuickPhrasesMenu(false)} style={{ flexShrink: 0, borderRadius: "50%", width: "32px", height: "32px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <ArrowLeft size={16} />
+                    </button>
+                    <div  />
+                    {PRESET_PHRASES.map(phrase => (
+                      <button
+                        key={phrase}
+                        type="button"
+                        className="btn btn-xs btn-secondary hover-lift"
+                        onClick={() => { handleAddPresetPhrase(phrase); setShowQuickPhrasesMenu(false); }}
+                        style={{ flexShrink: 0, padding: "6px 12px", fontSize: "0.78rem", borderRadius: "14px", whiteSpace: "nowrap", fontWeight: 600 }}
+                      >
+                        {phrase}
+                      </button>
+                    ))}
+                  </div>
+                )}
 
                 {/* Color Swatches Bar + Delete Button (When activeCaption exists) */}
                 {activeCaption && (
@@ -2285,7 +2956,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           style={{
                             fontSize: '0.72rem',
                             fontWeight: 600,
-                            borderRadius: '8px',
+                            borderRadius: '999px',
                             padding: '0 4px',
                             height: '100%',
                             display: 'flex',
@@ -2304,7 +2975,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           style={{
                             fontSize: '0.72rem',
                             fontWeight: 600,
-                            borderRadius: '8px',
+                            borderRadius: '999px',
                             padding: '0 4px',
                             height: '100%',
                             display: 'flex',
@@ -2325,7 +2996,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           style={{
                             fontSize: '0.72rem',
                             fontWeight: 600,
-                            borderRadius: '8px',
+                            borderRadius: '999px',
                             padding: '0 4px',
                             height: '100%',
                             display: 'flex',
@@ -2400,92 +3071,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
             </div>
           )}
 
-          {/* TAB 2: STICKERS & EMOJIS */}
-          {activeTab === 'stickers' && (
-            <div className="tab-content animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {/* Compact Action Buttons: Sticker & Emoji (+ Delete if a sticker is selected) */}
-              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                <button
-                  type="button"
-                  className="btn btn-xs btn-primary hover-lift"
-                  onClick={() => {
-                    setShowMemeStickersModal(true);
-                    setStickerSearchQuery('');
-                  }}
-                  style={{
-                    flex: 1,
-                    padding: '8px 12px',
-                    borderRadius: '8px',
-                    fontSize: '0.85rem',
-                    fontWeight: 600,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '6px'
-                  }}
-                >
-                  <Sticker className="icon-xs" /> Sticker
-                </button>
 
-                <button
-                  type="button"
-                  className="btn btn-xs btn-secondary hover-lift"
-                  onClick={() => {
-                    setShowEmojiModal(true);
-                    setEmojiSearchQuery('');
-                  }}
-                  style={{
-                    flex: 1,
-                    padding: '8px 12px',
-                    borderRadius: '8px',
-                    fontSize: '0.85rem',
-                    fontWeight: 600,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '6px'
-                  }}
-                >
-                  <Smile className="icon-xs" /> Emoji
-                </button>
-
-                {activeSticker && (
-                  <button
-                    type="button"
-                    className="btn btn-icon btn-xs text-danger hover-lift"
-                    onClick={handleDeleteLayer}
-                    title="Delete Sticker"
-                    style={{ flexShrink: 0, background: 'rgba(239, 68, 68, 0.85)', color: '#ffffff', border: '1px solid rgba(239, 68, 68, 1)' }}
-                  >
-                    <Trash2 className="icon-xs" />
-                  </button>
-                )}
-              </div>
-
-              {/* Helpful hint or active sticker indicator */}
-              {!activeSticker ? (
-                <div style={{ textAlign: 'center', padding: '16px 12px', color: 'var(--text-muted)', fontSize: '0.8rem', background: 'var(--bg-surface-1)', borderRadius: '10px', border: '1px dashed var(--glass-border)' }}>
-                  Click a button above to choose a sticker or emoji.
-                </div>
-              ) : (
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'var(--bg-surface-1)', borderRadius: '10px', border: '1px solid var(--glass-border)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    {activeSticker.url ? (
-                      <img src={activeSticker.url} alt={activeSticker.name || 'Sticker'} style={{ width: '24px', height: '24px', objectFit: 'contain' }} />
-                    ) : (
-                      <span style={{ fontSize: '1.2rem', lineHeight: 1 }}>{activeSticker.emoji}</span>
-                    )}
-                    <span style={{ fontSize: '0.85rem', color: 'var(--text-main)', fontWeight: 600 }}>
-                      {activeSticker.name || 'Selected Sticker'}
-                    </span>
-                  </div>
-                  <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                    Resize via canvas handles
-                  </span>
-                </div>
-              )}
-            </div>
-          )}
           {/* TAB 3: MEDIA OVERLAY CONTROLS */}
           {activeTab === 'images' && (() => {
             const isVideoLayer = activeImageLayer && isVideoUrl(activeImageLayer.url);
@@ -2499,7 +3085,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                     style={{
                       flex: 1,
                       padding: '8px 12px',
-                      borderRadius: '8px',
+                      borderRadius: '999px',
                       fontSize: '0.85rem',
                       fontWeight: 600,
                       display: 'flex',
@@ -2529,7 +3115,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                     style={{
                       flex: 1,
                       padding: '8px 10px',
-                      borderRadius: '8px',
+                      borderRadius: '999px',
                       fontSize: '0.8rem',
                       fontWeight: 600,
                       display: 'flex',
@@ -2583,72 +3169,6 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                     </div>
                   </div>
                 )}
-
-                {/* PHOTO GRADING & EFFECTS */}
-                <div className="photo-grading-card">
-                  <div className="photo-grading-header">
-                    <h4 className="photo-grading-title">Photo Grading & Effects</h4>
-                    <span className="photo-grading-badge">
-                      {(() => {
-                        const currentPresetId = (activeImageLayer && filterTarget === 'layer')
-                          ? (activeImageLayer.filterId || 'original')
-                          : (imageFilters.preset || 'original');
-                        const found = PHOTO_FILTERS.find(f => f.id === currentPresetId);
-                        return found ? found.badge : 'ORIGINAL';
-                      })()}
-                    </span>
-                  </div>
-
-                  {activeImageLayer && (
-                    <div className="photo-grading-target-bar">
-                      <button
-                        type="button"
-                        className={`photo-grading-target-btn ${filterTarget === 'canvas' ? 'active' : ''}`}
-                        onClick={() => setFilterTarget('canvas')}
-                      >
-                        Canvas Photo
-                      </button>
-                      <button
-                        type="button"
-                        className={`photo-grading-target-btn ${filterTarget === 'layer' ? 'active' : ''}`}
-                        onClick={() => setFilterTarget('layer')}
-                      >
-                        Selected Overlay
-                      </button>
-                    </div>
-                  )}
-
-                  <div className="photo-grading-grid">
-                    {PHOTO_FILTERS.map((filterItem) => {
-                      const isFilterActive = (activeImageLayer && filterTarget === 'layer')
-                        ? (activeImageLayer.filterId || 'original') === filterItem.id
-                        : (imageFilters.preset || 'original') === filterItem.id;
-
-                      return (
-                        <button
-                          key={filterItem.id}
-                          type="button"
-                          className={`photo-grading-btn ${isFilterActive ? 'active' : ''}`}
-                          onClick={() => {
-                            if (activeImageLayer && filterTarget === 'layer') {
-                              updateActiveImageLayer('filterId', filterItem.id);
-                              updateActiveImageLayer('filter', filterItem.filterString);
-                              updateActiveImageLayer('filters', filterItem.values);
-                            } else {
-                              setImageFilters({
-                                preset: filterItem.id,
-                                filterString: filterItem.filterString,
-                                ...filterItem.values
-                              });
-                            }
-                          }}
-                        >
-                          {filterItem.name}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
 
                 {/* VideoTrimmer Modal — rendered as portal to escape canvas z-index stacking context */}
                 {pendingVideoLayer && createPortal(

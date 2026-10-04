@@ -9,11 +9,11 @@
 
   --poster-orange: #ff5e36;
   --poster-yellow: #ff9100;
-  --primary-gradient: linear-gradient(90deg, #ff3b60, #ff5e36);
+  --primary-gradient: linear-gradient(90deg, #ff5e36 0%, #ec4899 100%);
   --btn-blue-grad: linear-gradient(90deg, #ff3b60, #ff5e36);
   --cyber-cyan: #ff5e36;
   --cyber-pink: #ff5e36;
-  --primary-glow: linear-gradient(90deg, rgba(255, 59, 96, 0.35), rgba(255, 94, 54, 0.35));
+  --primary-glow: transparent;
 
   --bg-dark: #0f131d;
   --bg-gradient:
@@ -61,6 +61,6 @@
   --glass-border: rgba(255, 255, 255, 0.85);
   --glass-border-glow: rgba(139, 92, 246, 0.3);
   --glass-shadow: 0 16px 40px -8px rgba(139, 92, 246, 0.15), 0 4px 12px -2px rgba(15, 23, 42, 0.05), inset 0 1px 2px 0 rgba(255, 255, 255, 0.8);
-  --primary-accent: #7c3aed;
-  --primary-gradient: linear-gradient(100deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%);
+  --primary-accent: #ff5e36;
+  --primary-gradient: linear-gradient(90deg, #ff5e36 0%, #ec4899 100%);
 }

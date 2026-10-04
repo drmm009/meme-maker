@@ -562,7 +562,7 @@ body.modal-open {
     z-index: 500 !important;
   }
   .editor-topbar .btn {
-    padding: 5px 10px;
+    padding: 5px 999px;
     font-size: 0.78rem;
   }
   .canvas-wrapper {
@@ -919,7 +919,7 @@ body.modal-open {
 .tab-content .glass-card {
   background: rgba(255, 255, 255, 0.03) !important;
   border: 1px solid var(--glass-border) !important;
-  border-radius: 8px !important;
+  border-radius: 999px !important;
   box-shadow: none !important;
   padding: 16px !important;
 }
@@ -996,26 +996,28 @@ input[type="range"] {
   -webkit-appearance: none;
   appearance: none;
   width: 100%;
-  height: 4px;
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 2px;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
   outline: none;
   margin: 12px 0;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.3);
 }
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
-  background: var(--text-main);
+  background: var(--poster-orange, #f97316);
   cursor: pointer;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(215, 220, 230, 0.65);
-  transition: transform 0.1s;
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.3), 0 2px 5px rgba(0, 0, 0, 0.5);
+  border: 2px solid #ffffff;
+  transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.15s;
 }
 input[type="range"]::-webkit-slider-thumb:hover {
   transform: scale(1.15);
+  box-shadow: 0 0 0 5px rgba(249, 115, 22, 0.4), 0 2px 8px rgba(0, 0, 0, 0.6);
 }
 
 /* Buttons inside editor */
@@ -1024,7 +1026,7 @@ input[type="range"]::-webkit-slider-thumb:hover {
   background: rgba(255, 255, 255, 0.05) !important;
   border: 1px solid var(--glass-border) !important;
   color: var(--text-main) !important;
-  border-radius: 6px !important;
+  border-radius: 999px !important;
   box-shadow: none !important;
 }
 .size-control-group .btn-secondary:hover,
@@ -1039,7 +1041,7 @@ input[type="range"]::-webkit-slider-thumb:hover {
   border: 2px solid var(--poster-orange) !important;
   box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.45) !important;
   font-weight: 700 !important;
-  border-radius: 8px !important;
+  border-radius: 999px !important;
 }
 .editor-sidebar .btn-primary:hover,
 .editor-sidebar .btn-primary:active,
@@ -2393,7 +2395,7 @@ h1, h2, h3,
 
 /* --- Buttons ----------------------------------------------- */
 .btn {
-  border-radius: 10px !important;
+  border-radius: 999px !important;
   letter-spacing: 0.02em !important;
   font-weight: 800 !important;
   transition: transform 0.12s ease, box-shadow 0.12s ease !important;
@@ -2457,7 +2459,7 @@ h1, h2, h3,
 .category-pill {
   background: transparent !important;
   border: 2px solid var(--glass-border) !important;
-  border-radius: 8px !important;
+  border-radius: 999px !important;
   color: var(--text-main) !important;
   padding: 7px 14px !important;
   letter-spacing: 0.03em !important;
@@ -2543,7 +2545,7 @@ h1, h2, h3,
   background: var(--poster-orange) !important;
   color: #171310 !important;
   border: 2px solid #171310 !important;
-  border-radius: 6px !important;
+  border-radius: 999px !important;
   box-shadow: none !important;
   letter-spacing: 0.06em !important;
   font-size: 0.6rem !important;
@@ -2553,7 +2555,7 @@ h1, h2, h3,
   background: var(--poster-yellow) !important;
   color: #171310 !important;
   border: 2px solid #171310 !important;
-  border-radius: 6px !important;
+  border-radius: 999px !important;
 }
 
 /* --- Nav, header controls, mobile bar --------------------- */
@@ -2614,14 +2616,14 @@ textarea,
 select {
   background: var(--bg-surface-2) !important;
   border: 2px solid var(--glass-border) !important;
-  border-radius: 8px !important;
+  border-radius: 999px !important;
   color: var(--text-main) !important;
 }
 
 .phrase-chip,
 .sticker-chip-btn,
 .step-badge {
-  border-radius: 8px !important;
+  border-radius: 999px !important;
   border: 2px solid var(--glass-border) !important;
   background: var(--bg-surface-2) !important;
   color: var(--text-main) !important;
@@ -2774,7 +2776,7 @@ select {
 [data-theme='light'] .tab-btn {
   background: #ffffff !important;
   border: 2px solid #171310 !important;
-  border-radius: 8px !important;
+  border-radius: 999px !important;
   color: #171310 !important;
   box-shadow: none !important;
 }
@@ -3060,7 +3062,7 @@ select {
   }
   .aspect-ratio-display {
     padding: 5px 8px !important;
-    border-radius: 8px !important;
+    border-radius: 999px !important;
     justify-content: center;
   }
 }
@@ -3126,7 +3128,7 @@ button:active,
 .tab-buttons button:active,
 .btn:active,
 button:active {
-  background-image: none !important;
+  
   outline: none !important;
   -webkit-tap-highlight-color: transparent !important;
 }
@@ -3155,7 +3157,7 @@ button:active {
   padding: 0 12px !important;
   background: var(--bg-surface-2) !important;
   border: 2px solid var(--glass-border) !important;
-  border-radius: 8px !important;
+  border-radius: 999px !important;
   transition: all 0.2s ease !important;
   cursor: text !important;
   box-sizing: border-box !important;
@@ -3372,7 +3374,7 @@ button:active {
   background: linear-gradient(135deg, #ff5e36 0%, #ff8934 100%) !important;
   border: 1px solid rgba(255, 255, 255, 0.35) !important;
   box-shadow: 0 4px 12px rgba(255, 94, 54, 0.45), 0 2px 4px rgba(0, 0, 0, 0.25) !important;
-  border-radius: 6px !important;
+  border-radius: 999px !important;
   z-index: 6 !important;
   pointer-events: none !important;
 }
@@ -3710,7 +3712,7 @@ button.btn-primary:hover {
 [data-theme='light'] .tab-btn {
   background: #ffffff !important;
   border: 2px solid #171310 !important;
-  border-radius: 8px !important;
+  border-radius: 999px !important;
   color: #171310 !important;
   -webkit-text-fill-color: #171310 !important;
   background-clip: border-box !important;
@@ -3744,7 +3746,7 @@ button.btn-primary:hover {
 [data-theme='light'] .tab-btn.active {
   background: var(--poster-orange, #ea580c) !important;
   border: 2px solid #171310 !important;
-  border-radius: 8px !important;
+  border-radius: 999px !important;
   color: #171310 !important;
   -webkit-text-fill-color: #171310 !important;
   background-clip: border-box !important;
@@ -3780,73 +3782,6 @@ button.btn-primary:hover {
   filter: none !important;
 }
 
-/* OVERRIDES FOR MOBILE FOLDED TABS */
-@media (max-width: 768px) {
-  :root .editor-sidebar.folded {
-    padding: 0 4px !important;
-  }
-
-  /* DEFAULT / LIGHT THEME */
-  :root .editor-sidebar.folded .tab-btn {
-    background: transparent !important;
-    border: 2px solid transparent !important;
-    border-radius: 50% !important;
-    width: 52px !important;
-    height: 52px !important;
-    padding: 0 !important;
-    margin: 0 2px !important;
-  }
-  
-  :root:not([data-theme='light']) .editor-sidebar.folded .tab-btn svg,
-  :root:not([data-theme='light']) .editor-sidebar.folded .tab-btn .icon-xs {
-    color: var(--poster-orange, #f97316) !important;
-    stroke: var(--poster-orange, #f97316) !important;
-    width: 24px !important;
-    height: 24px !important;
-  }
-  
-  :root:not([data-theme='light']) .editor-sidebar.folded .tab-btn.active {
-    background: transparent !important;
-    color: var(--text-muted, rgba(255, 255, 255, 0.55)) !important;
-    -webkit-text-fill-color: var(--text-muted, rgba(255, 255, 255, 0.55)) !important;
-    border: 2px solid transparent !important;
-    box-shadow: none !important;
-    transform: none !important;
-  }
-  
-  :root:not([data-theme='light']) .editor-sidebar.folded .tab-btn.active svg,
-  :root:not([data-theme='light']) .editor-sidebar.folded .tab-btn.active .icon-xs {
-    color: var(--poster-orange, #f97316) !important;
-    stroke: var(--poster-orange, #f97316) !important;
-    width: 24px !important;
-    height: 24px !important;
-  }
-  
-  :root .editor-sidebar.folded .tab-btn.active::after {
-    display: none !important;
-  }
-  
-  /* Remove horizontal line below buttons when folded */
-  :root .editor-sidebar.folded .tab-buttons {
-    border-bottom: none !important;
-    display: flex !important;
-    flex-wrap: nowrap !important;
-    overflow-x: auto !important;
-    width: 100% !important;
-    height: 100% !important;
-    justify-content: center !important;
-    align-items: center !important;
-    gap: 12px !important;
-    padding: 0 4px !important;
-    margin: 0 !important;
-    scrollbar-width: none !important; /* Hide scrollbar Firefox */
-  }
-  :root .editor-sidebar.folded .tab-buttons::-webkit-scrollbar {
-    display: none !important; /* Hide scrollbar Webkit */
-  }
-}
-
-
 
 
 .continue-btn-wrapper {
@@ -3867,18 +3802,35 @@ input:checked + .slider.round.watermark-toggle {
 }
 
 
+
 /* Theme-aligned styling for folded dock buttons */
 :root .editor-sidebar.folded .tab-btn,
-:root:not([data-theme='light']) .editor-sidebar.folded .tab-btn {
+:root:not([data-theme='light']) .editor-sidebar.folded .tab-btn,
+[data-theme='light'] .editor-sidebar.folded .tab-btn {
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
-  border-radius: 9999px !important;
+  border-radius: 20px !important;
   transform: none !important;
-  color: var(--text-muted, rgba(255, 255, 255, 0.6)) !important;
-  -webkit-text-fill-color: var(--text-muted, rgba(255, 255, 255, 0.6)) !important;
-  padding: 8px 12px !important;
+  color: #9CA3AF !important;
+  -webkit-text-fill-color: #9CA3AF !important;
+  padding: 6px 14px !important;
+  margin: 0 !important;
   transition: all 0.2s ease !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 4px !important;
+  height: 90% !important;
+  width: 60px !important;
+}
+
+:root .editor-sidebar.folded .tab-btn span {
+  display: block !important;
+  font-size: 0.65rem !important;
+  font-weight: 600 !important;
+  line-height: 1 !important;
 }
 
 :root .editor-sidebar.folded .tab-btn:hover,
@@ -3892,10 +3844,14 @@ input:checked + .slider.round.watermark-toggle {
 :root .editor-sidebar.folded .tab-btn .icon-xs,
 :root:not([data-theme='light']) .editor-sidebar.folded .tab-btn svg,
 :root:not([data-theme='light']) .editor-sidebar.folded .tab-btn .icon-xs {
-  color: var(--text-muted, rgba(255, 255, 255, 0.6)) !important;
-  stroke: var(--text-muted, rgba(255, 255, 255, 0.6)) !important;
+  color: #9CA3AF !important;
+  stroke: #9CA3AF !important;
   filter: none !important;
   transition: all 0.2s ease !important;
+  width: 22px !important;
+  height: 22px !important;
+  stroke-width: 2.5px !important;
+  margin: 0 !important;
 }
 
 :root .editor-sidebar.folded .tab-btn:hover svg,
@@ -3907,14 +3863,14 @@ input:checked + .slider.round.watermark-toggle {
 :root .editor-sidebar.folded .tab-btn.active,
 :root:not([data-theme='light']) .editor-sidebar.folded .tab-btn.active,
 [data-theme='light'] .editor-sidebar.folded .tab-btn.active {
-  background: transparent !important;
-  background-image: none !important;
+  background: var(--primary-gradient) !important;
+  
   border: none !important;
   box-shadow: none !important;
   outline: none !important;
   transform: none !important;
-  color: var(--poster-orange, #ff5e36) !important;
-  -webkit-text-fill-color: var(--poster-orange, #ff5e36) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
 }
 
 :root .editor-sidebar.folded .tab-btn.active svg,
@@ -3923,8 +3879,8 @@ input:checked + .slider.round.watermark-toggle {
 :root:not([data-theme='light']) .editor-sidebar.folded .tab-btn.active .icon-xs,
 [data-theme='light'] .editor-sidebar.folded .tab-btn.active svg,
 [data-theme='light'] .editor-sidebar.folded .tab-btn.active .icon-xs {
-  color: var(--poster-orange, #ff5e36) !important;
-  stroke: var(--poster-orange, #ff5e36) !important;
+  color: #ffffff !important;
+  stroke: #ffffff !important;
   filter: none !important;
   box-shadow: none !important;
 }
@@ -3936,6 +3892,7 @@ input:checked + .slider.round.watermark-toggle {
   display: none !important;
   content: none !important;
 }
+
 
 .mobile-bottom-bar {
   display: none; /* Desktop hidden */
@@ -4026,7 +3983,7 @@ input:checked + .slider.round.watermark-toggle {
     gap: 6px !important;
     background: rgba(255, 255, 255, 0.08) !important;
     border: 1px solid rgba(255, 255, 255, 0.22) !important;
-    border-radius: 8px !important;
+    border-radius: 999px !important;
     color: var(--text-main, #ffffff) !important;
     padding: 6px 14px !important;
     font-size: 0.82rem !important;
@@ -4082,3 +4039,132 @@ input:checked + .slider.round.watermark-toggle {
   }
 }
 
+
+
+/* ADDITIONAL PILL DOCK FIXES */
+:root .editor-sidebar.folded .tab-buttons {
+  border-bottom: none !important;
+  width: 100% !important;
+  padding: 0 !important;
+  gap: 2px !important;
+}
+
+:root .editor-sidebar.folded .tab-btn {
+  width: auto !important;
+  flex: 1 1 0 !important;
+  min-width: 0 !important;
+}
+
+:root .editor-sidebar.folded .tab-btn span {
+  max-width: none !important;
+  opacity: 1 !important;
+  display: block !important;
+  font-size: 0.65rem !important;
+  font-weight: 600 !important;
+  line-height: 1 !important;
+}
+
+
+
+
+
+
+/* --- PILL DOCK OVERRIDES V2 --- */
+:root .editor-sidebar.folded {
+  padding: 6px !important;
+  background: #23252b !important;
+  border: 1px solid rgba(255, 255, 255, 0.02) !important;
+  border-radius: 9999px !important;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5) !important;
+  height: 64px !important;
+  min-height: 64px !important;
+  width: min(360px, calc(100% - 32px)) !important;
+  backdrop-filter: blur(12px) !important;
+}
+
+:root .editor-sidebar.folded .tab-buttons {
+  border: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 4px !important;
+}
+
+:root .editor-sidebar.folded .tab-btn {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 9999px !important;
+  transform: none !important;
+  color: #9CA3AF !important;
+  -webkit-text-fill-color: #9CA3AF !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 4px !important;
+  height: 100% !important;
+  flex: 1 1 0 !important;
+  min-width: 0 !important;
+}
+
+:root .editor-sidebar.folded .tab-btn span {
+  display: block !important;
+  font-size: 0.65rem !important;
+  font-weight: 600 !important;
+  line-height: 1 !important;
+  max-width: none !important;
+  opacity: 1 !important;
+  letter-spacing: 0.3px !important;
+  transition: all 0.25s ease !important;
+}
+
+:root .editor-sidebar.folded .tab-btn svg,
+:root .editor-sidebar.folded .tab-btn .icon-xs {
+  color: #9CA3AF !important;
+  stroke: #9CA3AF !important;
+  filter: none !important;
+  width: 20px !important;
+  height: 20px !important;
+  margin: 0 !important;
+  stroke-width: 2px !important;
+  transition: all 0.25s ease !important;
+}
+
+:root .editor-sidebar.folded .tab-btn:hover {
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+:root .editor-sidebar.folded .tab-btn.active {
+  background: var(--primary-gradient) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  flex: 1.6 1 0 !important;
+}
+
+:root .editor-sidebar.folded .tab-btn.active svg,
+:root .editor-sidebar.folded .tab-btn.active .icon-xs {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+  stroke-width: 2.5px !important;
+  width: 22px !important;
+  height: 22px !important;
+}
+
+:root .editor-sidebar.folded .tab-btn.active span {
+  font-size: 0.7rem !important;
+  font-weight: 700 !important;
+}
+
+:root .editor-sidebar.folded .tab-btn::after,
+:root .editor-sidebar.folded .tab-btn::before {
+  display: none !important;
+}
+/* --- END PILL DOCK OVERRIDES V2 --- */

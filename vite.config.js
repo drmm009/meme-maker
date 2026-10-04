@@ -14,7 +14,7 @@ export default defineConfig({
       registerType: 'autoUpdate',
       workbox: {
         maximumFileSizeToCacheInBytes: 5000000,
-        globIgnores: ["**/ffmpeg-core.wasm"]
+        globIgnores: ["**/ffmpeg-core.wasm", "**/*.wasm"]
       },
       manifest: {
         name: 'Meme Maker',

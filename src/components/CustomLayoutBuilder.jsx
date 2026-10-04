@@ -167,8 +167,7 @@ export default function CustomLayoutBuilder({
     canvas.height = height;
     const ctx = canvas.getContext('2d');
 
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, width, height);
+    ctx.clearRect(0, 0, width, height);
 
     const totalSlots = selectedLayout.slots;
     const isVert = selectedLayout.id === '2-vert' || selectedLayout.id === '3-stacked';
@@ -249,8 +248,7 @@ export default function CustomLayoutBuilder({
         ctx.drawImage(img, nx, ny, nw, nh);
         ctx.restore();
       } else {
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(x, y, slotW, slotH);
+        ctx.clearRect(x, y, slotW, slotH);
 
         if (selectedLayout.id !== 'custom-grid') {
           generatedCaptions.push({

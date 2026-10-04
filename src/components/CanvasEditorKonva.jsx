@@ -43,7 +43,7 @@ const CanvasMedia = ({ item, isSelected, onSelect, onChange }) => {
     if (isVideoUrl(cleanSrc)) {
       const vid = document.createElement('video');
       vid.src = cleanSrc;
-      vid.crossOrigin = 'anonymous';
+      if (cleanSrc && !cleanSrc.startsWith('blob:') && !cleanSrc.startsWith('data:')) vid.crossOrigin = 'anonymous';
       vid.loop = true;
       vid.muted = true; // allow sound logic later if needed
       vid.playsInline = true;
@@ -117,7 +117,7 @@ const CanvasMedia = ({ item, isSelected, onSelect, onChange }) => {
       };
     } else {
       const img = new window.Image();
-      img.crossOrigin = 'anonymous';
+      if (cleanSrc && !cleanSrc.startsWith('blob:') && !cleanSrc.startsWith('data:')) img.crossOrigin = 'anonymous';
       img.src = cleanSrc;
       img.onload = () => {
         setImage(img);
@@ -176,6 +176,14 @@ const CanvasMedia = ({ item, isSelected, onSelect, onChange }) => {
       {isSelected && (
         <Transformer 
           ref={trRef} 
+          anchorSize={14}
+          anchorCornerRadius={7}
+          anchorStroke="#ffffff"
+          anchorStrokeWidth={2}
+          anchorFill="#f97316"
+          borderStroke="#f97316"
+          borderStrokeWidth={2}
+          borderDash={[4, 4]}
           enabledAnchors={['top-left', 'top-center', 'top-right', 'middle-right', 'bottom-right', 'bottom-center', 'bottom-left', 'middle-left']}
           keepRatio={false}
           boundBoxFunc={(oldBox, newBox) => newBox.width < 10 ? oldBox : newBox} 
@@ -237,7 +245,21 @@ const CanvasCaption = ({ item, isSelected, onSelect, onChange }) => {
           node.scaleX(1); node.scaleY(1);
         }}
       />
-      {isSelected && <Transformer ref={trRef} keepRatio={true} enabledAnchors={['top-left', 'top-right', 'bottom-left', 'bottom-right']} />}
+      {isSelected && (
+        <Transformer 
+          ref={trRef} 
+          keepRatio={true} 
+          anchorSize={14}
+          anchorCornerRadius={7}
+          anchorStroke="#ffffff"
+          anchorStrokeWidth={2}
+          anchorFill="#f97316"
+          borderStroke="#f97316"
+          borderStrokeWidth={2}
+          borderDash={[4, 4]}
+          enabledAnchors={['top-left', 'top-right', 'bottom-left', 'bottom-right']} 
+        />
+      )}
     </React.Fragment>
   );
 };
@@ -290,7 +312,21 @@ const CanvasSticker = ({ item, isSelected, onSelect, onChange }) => {
           });
         }}
       />
-      {isSelected && <Transformer ref={trRef} keepRatio={true} enabledAnchors={['top-left', 'top-right', 'bottom-left', 'bottom-right']} />}
+      {isSelected && (
+        <Transformer 
+          ref={trRef} 
+          keepRatio={true} 
+          anchorSize={14}
+          anchorCornerRadius={7}
+          anchorStroke="#ffffff"
+          anchorStrokeWidth={2}
+          anchorFill="#f97316"
+          borderStroke="#f97316"
+          borderStrokeWidth={2}
+          borderDash={[4, 4]}
+          enabledAnchors={['top-left', 'top-right', 'bottom-left', 'bottom-right']} 
+        />
+      )}
     </React.Fragment>
   );
 };
