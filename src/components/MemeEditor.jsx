@@ -11,7 +11,7 @@ import {
   Image as ImageIcon, Search, X, Upload, RotateCw, ZoomIn, Crop, LayoutGrid, Scissors, Play, Pause, FolderHeart, Droplet, Monitor,
   Paintbrush, Eraser, Palette, Sun, Moon, ChevronDown, ChevronLeft, PencilLine, Move, ArrowDownRight, Quote, Wand2,
   Layers, ArrowUp, ArrowDown, ChevronsUp, ChevronsDown, Eye, EyeOff, Lock, Unlock, FlipHorizontal,
-  PanelTop
+  PanelTop, PanelBottom
 } from 'lucide-react';
 import { downloadImageHelper, recordCanvasAsVideo } from '../utils/downloadHelper';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -372,6 +372,11 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
           enabled: false,
           bgColor: '#ffffff',
           height: 140
+        },
+        canvasFooter: template?.canvasFooter || {
+          enabled: false,
+          bgColor: '#ffffff',
+          height: 140
         }
       }
     ];
@@ -380,6 +385,14 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
 
   const [canvasHeader, setCanvasHeader] = useState(() => {
     return template?.canvasHeader || {
+      enabled: false,
+      bgColor: '#ffffff',
+      height: 140
+    };
+  });
+
+  const [canvasFooter, setCanvasFooter] = useState(() => {
+    return template?.canvasFooter || {
       enabled: false,
       bgColor: '#ffffff',
       height: 140
@@ -631,13 +644,14 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     return () => window.removeEventListener('paste', handlePaste);
   }, [captions, stickers, imageLayers]);
 
-  const pushHistory = (newCaptions, newStickers, newImgLayers = imageLayers, newDrawings = drawings, newCanvasHeader = canvasHeader) => {
+  const pushHistory = (newCaptions, newStickers, newImgLayers = imageLayers, newDrawings = drawings, newCanvasHeader = canvasHeader, newCanvasFooter = canvasFooter) => {
     const newSnapshot = {
       captions: JSON.parse(JSON.stringify(newCaptions)),
       stickers: JSON.parse(JSON.stringify(newStickers)),
       imageLayers: JSON.parse(JSON.stringify(newImgLayers)),
       drawings: JSON.parse(JSON.stringify(newDrawings)),
-      canvasHeader: JSON.parse(JSON.stringify(newCanvasHeader))
+      canvasHeader: JSON.parse(JSON.stringify(newCanvasHeader)),
+      canvasFooter: JSON.parse(JSON.stringify(newCanvasFooter))
     };
     const updatedHistory = history.slice(0, historyStep + 1);
     updatedHistory.push(newSnapshot);
@@ -646,10 +660,10 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
   };
 
   // Debounced version — used for text typing so history isn't pushed on every keypress
-  const pushHistoryDebounced = (newCaptions, newStickers, newImgLayers = imageLayers, newDrawings = drawings, newCanvasHeader = canvasHeader) => {
+  const pushHistoryDebounced = (newCaptions, newStickers, newImgLayers = imageLayers, newDrawings = drawings, newCanvasHeader = canvasHeader, newCanvasFooter = canvasFooter) => {
     if (historyTimerRef.current) clearTimeout(historyTimerRef.current);
     historyTimerRef.current = setTimeout(() => {
-      pushHistory(newCaptions, newStickers, newImgLayers, newDrawings, newCanvasHeader);
+      pushHistory(newCaptions, newStickers, newImgLayers, newDrawings, newCanvasHeader, newCanvasFooter);
     }, 800);
   };
 
@@ -663,6 +677,9 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
       setDrawings(JSON.parse(JSON.stringify(snapshot.drawings || [])));
       if (snapshot.canvasHeader) {
         setCanvasHeader(JSON.parse(JSON.stringify(snapshot.canvasHeader)));
+      }
+      if (snapshot.canvasFooter) {
+        setCanvasFooter(JSON.parse(JSON.stringify(snapshot.canvasFooter)));
       }
       setHistoryStep(prevStep);
     }
@@ -678,6 +695,9 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
       setDrawings(JSON.parse(JSON.stringify(snapshot.drawings || [])));
       if (snapshot.canvasHeader) {
         setCanvasHeader(JSON.parse(JSON.stringify(snapshot.canvasHeader)));
+      }
+      if (snapshot.canvasFooter) {
+        setCanvasFooter(JSON.parse(JSON.stringify(snapshot.canvasFooter)));
       }
       setHistoryStep(nextStep);
     }
@@ -813,7 +833,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
         setCaptions(nextCaps);
         setActiveLayerId(newHeaderCap.id);
         setActiveTab('text');
-        pushHistory(nextCaps, stickers, imageLayers, drawings, nextHeader);
+        pushHistory(nextCaps, stickers, imageLayers, drawings, nextHeader, canvasFooter);
       }
     } else {
       const headerCap = captions.find(c => c.isHeaderCaption);
@@ -822,10 +842,59 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
       if (activeLayerId === headerCap?.id) {
         setActiveLayerId(null);
       }
-      pushHistory(nextCaps, stickers, imageLayers, drawings, nextHeader);
+      pushHistory(nextCaps, stickers, imageLayers, drawings, nextHeader, canvasFooter);
     }
   };
   const handleAddModernHeader = handleToggleCanvasHeader;
+
+  // 1-Tap Modern Meme Footer Extension (Canvas extension below meme image with normal caption layer)
+  const handleToggleCanvasFooter = () => {
+    const nextState = !canvasFooter.enabled;
+    const nextFooter = {
+      ...canvasFooter,
+      enabled: nextState,
+      bgColor: canvasFooter.bgColor || '#ffffff'
+    };
+    setCanvasFooter(nextFooter);
+
+    if (nextState) {
+      const existingFooterCap = captions.find(c => c.isFooterCaption);
+      if (existingFooterCap) {
+        setActiveLayerId(existingFooterCap.id);
+        setActiveTab('text');
+        pushHistory(captions, stickers, imageLayers, drawings, canvasHeader, nextFooter);
+      } else {
+        const newFooterCap = {
+          id: `caption-footer-${Date.now()}`,
+          text: '...and then realize you were in the wrong branch',
+          x: 0.5,
+          y: 0.95,
+          fontSize: 36,
+          fontFamily: 'Montserrat, sans-serif',
+          color: nextFooter.bgColor === '#000000' ? '#ffffff' : '#000000',
+          stroke: 'transparent',
+          strokeWidth: 0,
+          align: 'left',
+          width: 0.92,
+          isFooterCaption: true
+        };
+        const nextCaps = [...captions, newFooterCap];
+        setCaptions(nextCaps);
+        setActiveLayerId(newFooterCap.id);
+        setActiveTab('text');
+        pushHistory(nextCaps, stickers, imageLayers, drawings, canvasHeader, nextFooter);
+      }
+    } else {
+      const footerCap = captions.find(c => c.isFooterCaption);
+      const nextCaps = captions.filter(c => !c.isFooterCaption);
+      setCaptions(nextCaps);
+      if (activeLayerId === footerCap?.id) {
+        setActiveLayerId(null);
+      }
+      pushHistory(nextCaps, stickers, imageLayers, drawings, canvasHeader, nextFooter);
+    }
+  };
+  const handleAddModernFooter = handleToggleCanvasFooter;
 
   // Toggle Text Case: ALL CAPS <-> Sentence Case <-> lowercase
   const handleToggleTextCase = () => {
@@ -1002,7 +1071,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
   };
 
   // Re-indexes list and applies state + history
-  const commitLayerStack = (orderedList, currentDrawings = drawings, currentCanvasHeader = canvasHeader) => {
+  const commitLayerStack = (orderedList, currentDrawings = drawings, currentCanvasHeader = canvasHeader, currentCanvasFooter = canvasFooter) => {
     orderedList.forEach((item, index) => {
       item.zIndex = index;
     });
@@ -1014,7 +1083,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     setCaptions(nextCaps);
     setStickers(nextStks);
     setImageLayers(nextImgs);
-    pushHistory(nextCaps, nextStks, nextImgs, currentDrawings, currentCanvasHeader);
+    pushHistory(nextCaps, nextStks, nextImgs, currentDrawings, currentCanvasHeader, currentCanvasFooter);
   };
 
   const moveLayer = (id, action) => {
@@ -1109,21 +1178,28 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     if (!idToDelete) return;
     const capToDelete = captions.find(c => c.id === idToDelete);
     const isHeader = capToDelete?.isHeaderCaption || idToDelete === 'header' || (activeCaption?.isHeaderCaption && idToDelete === activeCaption?.id);
+    const isFooter = capToDelete?.isFooterCaption || idToDelete === 'footer' || (activeCaption?.isFooterCaption && idToDelete === activeCaption?.id);
 
     let nextHeader = canvasHeader;
     if (isHeader) {
       nextHeader = { ...canvasHeader, enabled: false };
       setCanvasHeader(nextHeader);
     }
-    if (activeLayerId === idToDelete || (isHeader && activeCaption?.isHeaderCaption)) {
+    let nextFooter = canvasFooter;
+    if (isFooter) {
+      nextFooter = { ...canvasFooter, enabled: false };
+      setCanvasFooter(nextFooter);
+    }
+    if (activeLayerId === idToDelete || (isHeader && activeCaption?.isHeaderCaption) || (isFooter && activeCaption?.isFooterCaption)) {
       setActiveLayerId(null);
     }
     const list = getOrderedLayers().filter(i => {
       if (i.id === idToDelete) return false;
       if (isHeader && (i.isHeaderCaption || i.id === capToDelete?.id)) return false;
+      if (isFooter && (i.isFooterCaption || i.id === capToDelete?.id)) return false;
       return true;
     });
-    commitLayerStack(list, drawings, nextHeader);
+    commitLayerStack(list, drawings, nextHeader, nextFooter);
   };
 
   const handleDuplicateLayer = (targetId) => {
@@ -2251,6 +2327,28 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         <PanelTop style={{ width: 13, height: 13, color: canvasHeader.enabled ? '#fff' : "var(--cyber-cyan)" }} />
                         <span>{canvasHeader.enabled ? 'Header (On)' : 'Header'}</span>
                       </button>
+
+                      <button
+                        className={`btn btn-xs vid-ctx-btn ${canvasFooter.enabled ? 'active' : ''}`}
+                        onClick={handleToggleCanvasFooter}
+                        title="Toggle Modern Canvas Footer Extension (Twitter / Reddit meme style)"
+                        style={{
+                          padding: "4px 9px",
+                          fontSize: "0.75rem",
+                          fontWeight: 700,
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "4px",
+                          background: canvasFooter.enabled
+                            ? "var(--primary-gradient)"
+                            : "linear-gradient(135deg, rgba(168, 85, 247, 0.3) 0%, rgba(6, 182, 212, 0.3) 100%)",
+                          border: "1px solid rgba(168, 85, 247, 0.5)",
+                          color: "#ffffff"
+                        }}
+                      >
+                        <PanelBottom style={{ width: 13, height: 13, color: canvasFooter.enabled ? '#fff' : "var(--cyber-cyan)" }} />
+                        <span>{canvasFooter.enabled ? 'Footer (On)' : 'Footer'}</span>
+                      </button>
                       
                       <div className="vid-ctx-divider"  />
 
@@ -2714,7 +2812,15 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
             onUpdateCanvasHeader={(props) => {
               setCanvasHeader((prev) => {
                 const upd = { ...prev, ...props };
-                pushHistoryDebounced(captions, stickers, imageLayers, drawings, upd);
+                pushHistoryDebounced(captions, stickers, imageLayers, drawings, upd, canvasFooter);
+                return upd;
+              });
+            }}
+            canvasFooter={canvasFooter}
+            onUpdateCanvasFooter={(props) => {
+              setCanvasFooter((prev) => {
+                const upd = { ...prev, ...props };
+                pushHistoryDebounced(captions, stickers, imageLayers, drawings, canvasHeader, upd);
                 return upd;
               });
             }}
@@ -3101,6 +3207,36 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                       >
                         <PanelTop size={15} style={{ color: "var(--cyber-cyan)" }} />
                         {canvasHeader.enabled ? "Header (On)" : "Header"}
+                      </button>
+                    )}
+
+                    {/* Modern Footer Extension Button (Shown only when no text layer is selected) */}
+                    {!activeCaption && (
+                      <button
+                        type="button"
+                        className={`btn btn-xs hover-lift ${canvasFooter.enabled ? 'active' : ''}`}
+                        onClick={handleToggleCanvasFooter}
+                        title="Toggle Modern Footer Extension (Twitter / Reddit style bottom canvas extension)"
+                        style={{
+                          padding: "7px 14px",
+                          borderRadius: "20px",
+                          fontSize: "0.82rem",
+                          fontWeight: 700,
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "6px",
+                          background: canvasFooter.enabled
+                            ? "linear-gradient(135deg, rgba(6, 182, 212, 0.35) 0%, rgba(59, 130, 246, 0.35) 100%)"
+                            : "linear-gradient(135deg, rgba(168, 85, 247, 0.25) 0%, rgba(6, 182, 212, 0.25) 100%)",
+                          border: canvasFooter.enabled
+                            ? "1px solid var(--cyber-cyan)"
+                            : "1px solid rgba(168, 85, 247, 0.5)",
+                          boxShadow: canvasFooter.enabled ? "0 0 10px rgba(6, 182, 212, 0.3)" : "none",
+                          color: "#ffffff"
+                        }}
+                      >
+                        <PanelBottom size={15} style={{ color: "var(--cyber-cyan)" }} />
+                        {canvasFooter.enabled ? "Footer (On)" : "Footer"}
                       </button>
                     )}
 
@@ -3502,64 +3638,129 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                     </div>
                   </div>
                 </div>
-              ) : canvasHeader.enabled ? (
-                <div
-                  style={{
-                    padding: '12px 14px',
-                    background: 'var(--bg-surface-1)',
-                    borderRadius: '10px',
-                    border: '1px dashed var(--glass-border)',
-                    textAlign: 'center',
-                    color: 'var(--text-muted)',
-                    fontSize: '0.8rem',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: '8px'
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <PanelTop size={15} style={{ color: 'var(--cyber-cyan)' }} />
-                    <span>Header Extension is active.</span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <button
-                      type="button"
-                      className="btn btn-xs btn-secondary"
-                      onClick={() => {
-                        const isLight = canvasHeader.bgColor === '#ffffff';
-                        const nextBg = isLight ? '#000000' : '#ffffff';
-                        const nextColor = isLight ? '#ffffff' : '#000000';
-                        const nextHeader = { ...canvasHeader, bgColor: nextBg };
-                        setCanvasHeader(nextHeader);
-                        const hCap = captions.find(c => c.isHeaderCaption);
-                        if (hCap) {
-                          const nextCaps = captions.map(c => c.id === hCap.id ? { ...c, color: nextColor, stroke: 'transparent' } : c);
-                          setCaptions(nextCaps);
-                          pushHistory(nextCaps, stickers, imageLayers, drawings, nextHeader);
-                        } else {
-                          pushHistory(captions, stickers, imageLayers, drawings, nextHeader);
-                        }
+              ) : (canvasHeader.enabled || canvasFooter.enabled) ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {canvasHeader.enabled && (
+                    <div
+                      style={{
+                        padding: '10px 14px',
+                        background: 'var(--bg-surface-1)',
+                        borderRadius: '10px',
+                        border: '1px dashed var(--glass-border)',
+                        textAlign: 'center',
+                        color: 'var(--text-muted)',
+                        fontSize: '0.8rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: '8px'
                       }}
-                      style={{ fontSize: '0.72rem', padding: '3px 8px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}
-                      title="Toggle Header Theme (Light / Dark)"
                     >
-                      <div style={{ width: 8, height: 8, borderRadius: '50%', background: canvasHeader.bgColor || '#ffffff', border: '1px solid #fff' }} />
-                      <span>{canvasHeader.bgColor === '#ffffff' ? 'Light' : 'Dark'}</span>
-                    </button>
-                    <button
-                      type="button"
-                      className="btn btn-xs btn-primary"
-                      onClick={() => {
-                        const hCap = captions.find(c => c.isHeaderCaption);
-                        if (hCap) setActiveLayerId(hCap.id);
-                        else handleToggleCanvasHeader();
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <PanelTop size={15} style={{ color: 'var(--cyber-cyan)' }} />
+                        <span>Header Extension is active.</span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <button
+                          type="button"
+                          className="btn btn-xs btn-secondary"
+                          onClick={() => {
+                            const isLight = canvasHeader.bgColor === '#ffffff';
+                            const nextBg = isLight ? '#000000' : '#ffffff';
+                            const nextColor = isLight ? '#ffffff' : '#000000';
+                            const nextHeader = { ...canvasHeader, bgColor: nextBg };
+                            setCanvasHeader(nextHeader);
+                            const hCap = captions.find(c => c.isHeaderCaption);
+                            if (hCap) {
+                              const nextCaps = captions.map(c => c.id === hCap.id ? { ...c, color: nextColor, stroke: 'transparent' } : c);
+                              setCaptions(nextCaps);
+                              pushHistory(nextCaps, stickers, imageLayers, drawings, nextHeader, canvasFooter);
+                            } else {
+                              pushHistory(captions, stickers, imageLayers, drawings, nextHeader, canvasFooter);
+                            }
+                          }}
+                          style={{ fontSize: '0.72rem', padding: '3px 8px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}
+                          title="Toggle Header Theme (Light / Dark)"
+                        >
+                          <div style={{ width: 8, height: 8, borderRadius: '50%', background: canvasHeader.bgColor || '#ffffff', border: '1px solid #fff' }} />
+                          <span>{canvasHeader.bgColor === '#ffffff' ? 'Light' : 'Dark'}</span>
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-xs btn-primary"
+                          onClick={() => {
+                            const hCap = captions.find(c => c.isHeaderCaption);
+                            if (hCap) setActiveLayerId(hCap.id);
+                            else handleToggleCanvasHeader();
+                          }}
+                          style={{ fontSize: '0.75rem', padding: '4px 10px', borderRadius: '12px' }}
+                        >
+                          Select Text
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {canvasFooter.enabled && (
+                    <div
+                      style={{
+                        padding: '10px 14px',
+                        background: 'var(--bg-surface-1)',
+                        borderRadius: '10px',
+                        border: '1px dashed var(--glass-border)',
+                        textAlign: 'center',
+                        color: 'var(--text-muted)',
+                        fontSize: '0.8rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: '8px'
                       }}
-                      style={{ fontSize: '0.75rem', padding: '4px 10px', borderRadius: '12px' }}
                     >
-                      Select Text
-                    </button>
-                  </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <PanelBottom size={15} style={{ color: 'var(--cyber-cyan)' }} />
+                        <span>Footer Extension is active.</span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <button
+                          type="button"
+                          className="btn btn-xs btn-secondary"
+                          onClick={() => {
+                            const isLight = canvasFooter.bgColor === '#ffffff';
+                            const nextBg = isLight ? '#000000' : '#ffffff';
+                            const nextColor = isLight ? '#ffffff' : '#000000';
+                            const nextFooter = { ...canvasFooter, bgColor: nextBg };
+                            setCanvasFooter(nextFooter);
+                            const fCap = captions.find(c => c.isFooterCaption);
+                            if (fCap) {
+                              const nextCaps = captions.map(c => c.id === fCap.id ? { ...c, color: nextColor, stroke: 'transparent' } : c);
+                              setCaptions(nextCaps);
+                              pushHistory(nextCaps, stickers, imageLayers, drawings, canvasHeader, nextFooter);
+                            } else {
+                              pushHistory(captions, stickers, imageLayers, drawings, canvasHeader, nextFooter);
+                            }
+                          }}
+                          style={{ fontSize: '0.72rem', padding: '3px 8px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}
+                          title="Toggle Footer Theme (Light / Dark)"
+                        >
+                          <div style={{ width: 8, height: 8, borderRadius: '50%', background: canvasFooter.bgColor || '#ffffff', border: '1px solid #fff' }} />
+                          <span>{canvasFooter.bgColor === '#ffffff' ? 'Light' : 'Dark'}</span>
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-xs btn-primary"
+                          onClick={() => {
+                            const fCap = captions.find(c => c.isFooterCaption);
+                            if (fCap) setActiveLayerId(fCap.id);
+                            else handleToggleCanvasFooter();
+                          }}
+                          style={{ fontSize: '0.75rem', padding: '4px 10px', borderRadius: '12px' }}
+                        >
+                          Select Text
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : (
                 /* EMPTY STATE (When no caption is selected) */
@@ -3579,7 +3780,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                   }}
                 >
                   <Type size={15} style={{ color: 'var(--cyber-cyan)', opacity: 0.8 }} />
-                  <span>Tap text or header on canvas to customize font, size, opacity & colors.</span>
+                  <span>Tap text, header, or footer on canvas to customize font, size, opacity & colors.</span>
                 </div>
               )}
 

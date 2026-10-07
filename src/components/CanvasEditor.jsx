@@ -104,7 +104,9 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     brushColor = '#a855f7',
     brushSize = 10,
     canvasHeader,
-    onUpdateCanvasHeader
+    onUpdateCanvasHeader,
+    canvasFooter,
+    onUpdateCanvasFooter
   },
   ref
 ) {
@@ -238,7 +240,34 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
       headerExtH = canvasHeader?.height || 140;
     }
   }
-  const totalCanvasH = canvasH + headerExtH;
+
+  // Footer Canvas Extension calculations
+  const isFooterEnabled = !!canvasFooter?.enabled;
+  const footerCap = captions.find(c => c.isFooterCaption);
+  let footerExtH = 0;
+  if (isFooterEnabled) {
+    if (footerCap) {
+      const fFontSize = footerCap.fontSize || 36;
+      const fFontFamily = footerCap.fontFamily || 'Montserrat, sans-serif';
+      let linesCount = 1;
+      if (typeof document !== 'undefined') {
+        const tempCanvas = document.createElement('canvas');
+        const tempCtx = tempCanvas.getContext('2d');
+        if (tempCtx) {
+          tempCtx.font = `bold ${fFontSize}px ${fFontFamily}`;
+          const wrapped = wrapText(tempCtx, footerCap.text || '', (footerCap.width || 0.92) * canvasW);
+          linesCount = Math.max(1, wrapped.length);
+        }
+      }
+      const fLineHeight = fFontSize * 1.35;
+      const fPadY = Math.max(22, Math.round(fFontSize * 0.6));
+      footerExtH = Math.max(110, Math.round(linesCount * fLineHeight + fPadY * 2));
+    } else {
+      footerExtH = canvasFooter?.height || 140;
+    }
+  }
+
+  const totalCanvasH = canvasH + headerExtH + footerExtH;
   
   const activeFilters = filters || { brightness: 100, contrast: 100, saturation: 100, grayscale: 0, blur: 0 };
 
@@ -581,6 +610,24 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         targetCtx.restore();
       }
 
+      // Draw Footer Extension (Banner extending below canvas)
+      if (isFooterEnabled && footerExtH > 0) {
+        targetCtx.save();
+        const footerY = headerExtH + canvasH;
+        // 1. Solid background for footer extension
+        targetCtx.fillStyle = canvasFooter?.bgColor || '#ffffff';
+        targetCtx.fillRect(0, footerY, canvasW, footerExtH);
+
+        // 2. Crisp boundary divider line between meme image and footer extension
+        targetCtx.strokeStyle = canvasFooter?.bgColor === '#000000' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.08)';
+        targetCtx.lineWidth = 1;
+        targetCtx.beginPath();
+        targetCtx.moveTo(0, footerY);
+        targetCtx.lineTo(canvasW, footerY);
+        targetCtx.stroke();
+        targetCtx.restore();
+      }
+
       // Reset filter for text/stickers/image-layers overlay (safe on all browsers)
       try { targetCtx.filter = 'none'; } catch(e) {}
 
@@ -856,6 +903,8 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         const cx = cap.x * canvas.width;
         const cy = (cap.isHeaderCaption && !cap.hasCustomPos)
           ? (headerExtH / 2)
+          : (cap.isFooterCaption && !cap.hasCustomPos)
+          ? (headerExtH + canvasH + (footerExtH / 2))
           : (cap.y * canvas.height);
         
         targetCtx.save();
@@ -1004,7 +1053,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
             drawHandle(boxX, boxY + boxHeight); // Bottom Left
             drawHandle(boxX + boxWidth, boxY + boxHeight); // Bottom Right
             
-            if (!cap.isHeaderCaption) {
+            if (!cap.isHeaderCaption && !cap.isFooterCaption) {
               uiCtx.beginPath();
               uiCtx.moveTo(0, boxY);
               uiCtx.lineTo(0, boxY - 34);
@@ -1164,7 +1213,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     } else {
       renderCanvas(null);
     }
-  }, [captions, stickers, activeLayerId, imageLayers, slotImages, slotTransforms, activeIsNativeLayout, editingCaptionId, cursorVisible, aspectRatio, imageFit, watermark, drawings, isDrawingMode, imgSrc, filters, liveBgColor, canvasHeader]);
+  }, [captions, stickers, activeLayerId, imageLayers, slotImages, slotTransforms, activeIsNativeLayout, editingCaptionId, cursorVisible, aspectRatio, imageFit, watermark, drawings, isDrawingMode, imgSrc, filters, liveBgColor, canvasHeader, canvasFooter]);
 
   // Helper to rotate point for hit testing
   const rotatePoint = (px, py, cx, cy, angle) => {
@@ -1277,7 +1326,11 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         const activeCap = captions.find(c => c.id === activeLayerId);
         if (activeCap && !activeCap.locked) {
           const cx = activeCap.x * canvas.width;
-          const cy = (activeCap.isHeaderCaption && !activeCap.hasCustomPos) ? (headerExtH / 2) : (activeCap.y * canvas.height);
+          const cy = (activeCap.isHeaderCaption && !activeCap.hasCustomPos)
+            ? (headerExtH / 2)
+            : (activeCap.isFooterCaption && !activeCap.hasCustomPos)
+            ? (headerExtH + canvasH + (footerExtH / 2))
+            : (activeCap.y * canvas.height);
           const p = rotatePoint(coords.x, coords.y, cx, cy, -(activeCap.rotation || 0));
 
           const renderMaxWidth = (activeCap.width || 0.9) * canvas.width;
@@ -1303,8 +1356,8 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
           const rightX = cx + halfW;
 
           const handles = [
-            ...(!activeCap.isHeaderCaption ? [{ type: 'delete_layer', x: leftX - 36, y: topY - 36, r: 26 }] : []),
-            ...(!activeCap.isHeaderCaption ? [{ type: 'rotate_caption', x: cx, y: topY - 34, r: 24 }] : []),
+            ...((!activeCap.isHeaderCaption && !activeCap.isFooterCaption) ? [{ type: 'delete_layer', x: leftX - 36, y: topY - 36, r: 26 }] : []),
+            ...((!activeCap.isHeaderCaption && !activeCap.isFooterCaption) ? [{ type: 'rotate_caption', x: cx, y: topY - 34, r: 24 }] : []),
             { type: 'resize_caption_tl', x: leftX, y: topY, r: 24 },
             { type: 'resize_caption_tr', x: rightX, y: topY, r: 24 },
             { type: 'resize_caption_bl', x: leftX, y: bottomY, r: 24 },
@@ -1328,8 +1381,13 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
               id: activeCap.id, 
               type: closestHandle.type, 
               x: activeCap.x, 
-              y: (activeCap.isHeaderCaption && !activeCap.hasCustomPos) ? ((headerExtH / 2) / canvas.height) : activeCap.y,
+              y: (activeCap.isHeaderCaption && !activeCap.hasCustomPos)
+                ? ((headerExtH / 2) / canvas.height)
+                : (activeCap.isFooterCaption && !activeCap.hasCustomPos)
+                ? ((headerExtH + canvasH + (footerExtH / 2)) / canvas.height)
+                : activeCap.y,
               isHeaderCaption: !!activeCap.isHeaderCaption, 
+              isFooterCaption: !!activeCap.isFooterCaption, 
               boxWidth,
               boxHeight,
               width: (boxWidth / canvas.width), 
@@ -1469,8 +1527,13 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
               id: cap.id, 
               type: 'caption', 
               x: cap.x, 
-              y: (cap.isHeaderCaption && !cap.hasCustomPos) ? ((headerExtH / 2) / canvas.height) : cap.y,
+              y: (cap.isHeaderCaption && !cap.hasCustomPos)
+                ? ((headerExtH / 2) / canvas.height)
+                : (cap.isFooterCaption && !cap.hasCustomPos)
+                ? ((headerExtH + canvasH + (footerExtH / 2)) / canvas.height)
+                : cap.y,
               isHeaderCaption: !!cap.isHeaderCaption,
+              isFooterCaption: !!cap.isFooterCaption,
               boxWidth,
               boxHeight,
               width: (boxWidth / canvas.width),
@@ -1526,6 +1589,20 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
           y: (hCap.isHeaderCaption && !hCap.hasCustomPos) ? ((headerExtH / 2) / canvas.height) : hCap.y,
           isHeaderCaption: true,
           locked: !!hCap.locked
+        };
+      }
+    }
+
+    if (!hitLayer && isFooterEnabled && coords.y >= (headerExtH + canvasH)) {
+      const fCap = captions.find(c => c.isFooterCaption);
+      if (fCap) {
+        hitLayer = {
+          id: fCap.id,
+          type: 'caption',
+          x: fCap.x,
+          y: (fCap.isFooterCaption && !fCap.hasCustomPos) ? ((headerExtH + canvasH + (footerExtH / 2)) / canvas.height) : fCap.y,
+          isFooterCaption: true,
+          locked: !!fCap.locked
         };
       }
     }
@@ -1690,7 +1767,11 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
       const activeCap = captions.find(c => c.id === activeLayerId);
       if (activeCap && !activeCap.locked) {
         const cx = activeCap.x * canvas.width;
-        const cy = (activeCap.isHeaderCaption && !activeCap.hasCustomPos) ? (headerExtH / 2) : (activeCap.y * canvas.height);
+        const cy = (activeCap.isHeaderCaption && !activeCap.hasCustomPos)
+          ? (headerExtH / 2)
+          : (activeCap.isFooterCaption && !activeCap.hasCustomPos)
+          ? (headerExtH + canvasH + (footerExtH / 2))
+          : (activeCap.y * canvas.height);
         const p = rotatePoint(coords.x, coords.y, cx, cy, -(activeCap.rotation || 0));
         const renderMaxWidth = (activeCap.width || 0.9) * canvas.width;
         const fontSize = activeCap.fontSize || 50;
@@ -1717,10 +1798,10 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         const leftX = cx - halfW;
         const rightX = cx + halfW;
 
-        if (!activeCap.isHeaderCaption && Math.hypot(p.x - (leftX - 36), p.y - (topY - 36)) <= 26) {
+        if (!activeCap.isHeaderCaption && !activeCap.isFooterCaption && Math.hypot(p.x - (leftX - 36), p.y - (topY - 36)) <= 26) {
           canvas.style.cursor = 'pointer'; return;
         }
-        if (!activeCap.isHeaderCaption && Math.hypot(p.x - cx, p.y - (topY - 34)) <= 24) {
+        if (!activeCap.isHeaderCaption && !activeCap.isFooterCaption && Math.hypot(p.x - cx, p.y - (topY - 34)) <= 24) {
           canvas.style.cursor = 'grab'; return;
         }
         if (Math.hypot(p.x - leftX, p.y - topY) <= 22 || Math.hypot(p.x - rightX, p.y - bottomY) <= 22) {
@@ -2271,6 +2352,8 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
             top: activeCaption
               ? (activeCaption.isHeaderCaption && !activeCaption.hasCustomPos
                   ? `${((headerExtH / 2) / Math.max(1, totalCanvasH)) * 100}%`
+                  : (activeCaption.isFooterCaption && !activeCaption.hasCustomPos)
+                  ? `${(((headerExtH + canvasH + (footerExtH / 2))) / Math.max(1, totalCanvasH)) * 100}%`
                   : `${activeCaption.y * 100}%`)
               : '-9999px',
             transform: activeCaption ? `translate(-50%, -50%) rotate(${activeCaption.rotation || 0}deg)` : 'translate(-50%, -50%)',
