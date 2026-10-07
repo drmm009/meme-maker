@@ -1004,16 +1004,18 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
             drawHandle(boxX, boxY + boxHeight); // Bottom Left
             drawHandle(boxX + boxWidth, boxY + boxHeight); // Bottom Right
             
-            uiCtx.beginPath();
-            uiCtx.moveTo(0, boxY);
-            uiCtx.lineTo(0, boxY - 34);
-            uiCtx.stroke();
-            
-            uiCtx.beginPath();
-            uiCtx.fillStyle = '#f97316';
-            uiCtx.arc(0, boxY - 34, 16, 0, Math.PI * 2);
-            uiCtx.fill();
-            uiCtx.stroke();
+            if (!cap.isHeaderCaption) {
+              uiCtx.beginPath();
+              uiCtx.moveTo(0, boxY);
+              uiCtx.lineTo(0, boxY - 34);
+              uiCtx.stroke();
+              
+              uiCtx.beginPath();
+              uiCtx.fillStyle = '#f97316';
+              uiCtx.arc(0, boxY - 34, 16, 0, Math.PI * 2);
+              uiCtx.fill();
+              uiCtx.stroke();
+            }
             
             drawDeleteHandle(uiCtx, boxX - 36, boxY - 36);
             uiCtx.restore();
@@ -1302,7 +1304,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
 
           const handles = [
             { type: 'delete_layer', x: leftX - 36, y: topY - 36, r: 26 },
-            { type: 'rotate_caption', x: cx, y: topY - 34, r: 24 },
+            ...(!activeCap.isHeaderCaption ? [{ type: 'rotate_caption', x: cx, y: topY - 34, r: 24 }] : []),
             { type: 'resize_caption_tl', x: leftX, y: topY, r: 24 },
             { type: 'resize_caption_tr', x: rightX, y: topY, r: 24 },
             { type: 'resize_caption_bl', x: leftX, y: bottomY, r: 24 },
@@ -1718,7 +1720,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         if (Math.hypot(p.x - (leftX - 36), p.y - (topY - 36)) <= 26) {
           canvas.style.cursor = 'pointer'; return;
         }
-        if (Math.hypot(p.x - cx, p.y - (topY - 34)) <= 24) {
+        if (!activeCap.isHeaderCaption && Math.hypot(p.x - cx, p.y - (topY - 34)) <= 24) {
           canvas.style.cursor = 'grab'; return;
         }
         if (Math.hypot(p.x - leftX, p.y - topY) <= 22 || Math.hypot(p.x - rightX, p.y - bottomY) <= 22) {
