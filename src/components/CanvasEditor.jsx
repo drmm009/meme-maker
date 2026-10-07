@@ -570,6 +570,9 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
           if (imgLayer.rotation) {
             targetCtx.rotate((imgLayer.rotation * Math.PI) / 180);
           }
+          if (imgLayer.flipX) {
+            targetCtx.scale(-1, 1);
+          }
           
           const scale = imgLayer.scale || 1.0;
           const maxDim = 320;
@@ -705,6 +708,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         targetCtx.save();
         targetCtx.translate(sx, sy);
         if (stk.rotation) targetCtx.rotate(stk.rotation * Math.PI / 180);
+        if (stk.flipX) targetCtx.scale(-1, 1);
         
         const stkSize = (stk.scale || 1.0) * 52;
         targetCtx.font = `${stkSize}px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif`;
@@ -1053,12 +1057,15 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
       if (isDragging.current && snappingLines.current && (snappingLines.current.horizontal !== null || snappingLines.current.vertical !== null)) {
         const { horizontal, vertical } = snappingLines.current;
         ctx.save();
-        ctx.strokeStyle = '#f97316';
-        ctx.lineWidth = 1.5;
-        ctx.setLineDash([4, 4]);
+        ctx.setLineDash([6, 6]);
         
         if (horizontal !== null) {
           const y = horizontal * canvas.height;
+          const isCenter = Math.abs(horizontal - 0.5) < 0.002;
+          ctx.strokeStyle = isCenter ? '#00f0ff' : '#a855f7';
+          ctx.lineWidth = isCenter ? 2 : 1.5;
+          ctx.shadowColor = isCenter ? 'rgba(0, 240, 255, 0.7)' : 'rgba(168, 85, 247, 0.7)';
+          ctx.shadowBlur = 6;
           ctx.beginPath();
           ctx.moveTo(0, y);
           ctx.lineTo(canvas.width, y);
@@ -1067,6 +1074,11 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         
         if (vertical !== null) {
           const x = vertical * canvas.width;
+          const isCenter = Math.abs(vertical - 0.5) < 0.002;
+          ctx.strokeStyle = isCenter ? '#00f0ff' : '#a855f7';
+          ctx.lineWidth = isCenter ? 2 : 1.5;
+          ctx.shadowColor = isCenter ? 'rgba(0, 240, 255, 0.7)' : 'rgba(168, 85, 247, 0.7)';
+          ctx.shadowBlur = 6;
           ctx.beginPath();
           ctx.moveTo(x, 0);
           ctx.lineTo(x, canvas.height);
@@ -1993,6 +2005,12 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
       if (s.id !== targetId) {
         if (Math.abs(newX - s.x) < SNAP_DIST) { newX = s.x; snapV = s.x; }
         if (Math.abs(newY - s.y) < SNAP_DIST) { newY = s.y; snapH = s.y; }
+      }
+    });
+    (imageLayers || []).forEach((img) => {
+      if (img.id !== targetId) {
+        if (Math.abs(newX - img.x) < SNAP_DIST) { newX = img.x; snapV = img.x; }
+        if (Math.abs(newY - img.y) < SNAP_DIST) { newY = img.y; snapH = img.y; }
       }
     });
     

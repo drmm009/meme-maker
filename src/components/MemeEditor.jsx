@@ -10,7 +10,7 @@ import {
   Sliders, Smile, Sticker, ArrowLeft, Save, Check, RefreshCw,
   Image as ImageIcon, Search, X, Upload, RotateCw, ZoomIn, Crop, LayoutGrid, Scissors, Play, Pause, FolderHeart, Droplet, Monitor,
   Paintbrush, Eraser, Palette, Sun, Moon, ChevronDown, ChevronLeft, PencilLine, Move, ArrowDownRight, Quote, Wand2,
-  Layers, ArrowUp, ArrowDown, ChevronsUp, ChevronsDown, Eye, EyeOff, Lock, Unlock
+  Layers, ArrowUp, ArrowDown, ChevronsUp, ChevronsDown, Eye, EyeOff, Lock, Unlock, FlipHorizontal
 } from 'lucide-react';
 import { downloadImageHelper, recordCanvasAsVideo } from '../utils/downloadHelper';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -381,6 +381,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
   const [showImageFilterMenu, setShowImageFilterMenu] = useState(false);
   const [showLayerMenu, setShowLayerMenu] = useState(false);
   const [showQuickPhrasesMenu, setShowQuickPhrasesMenu] = useState(false);
+  const [pasteToast, setPasteToast] = useState(false);
   const [imageFilters, setImageFilters] = useState({
     preset: 'original',
     brightness: 100,
@@ -586,6 +587,36 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [historyStep, history, activeLayerId, captions, stickers, imageLayers, drawings]);
 
+  // Global clipboard paste listener (Ctrl+V image/gif onto canvas)
+  useEffect(() => {
+    const handlePaste = (e) => {
+      const tag = document.activeElement?.tagName?.toLowerCase();
+      const isEditing = tag === 'input' || tag === 'textarea' || document.activeElement?.isContentEditable;
+      if (isEditing) return;
+
+      const items = e.clipboardData?.items;
+      if (!items) return;
+
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        if (item.type && item.type.indexOf('image') !== -1) {
+          e.preventDefault();
+          const file = item.getAsFile();
+          if (file) {
+            const url = URL.createObjectURL(file);
+            commitAddImageLayer(url);
+            setPasteToast(true);
+            setTimeout(() => setPasteToast(false), 2600);
+          }
+          break;
+        }
+      }
+    };
+
+    window.addEventListener('paste', handlePaste);
+    return () => window.removeEventListener('paste', handlePaste);
+  }, [captions, stickers, imageLayers]);
+
   const pushHistory = (newCaptions, newStickers, newImgLayers = imageLayers, newDrawings = drawings) => {
     const newSnapshot = {
       captions: JSON.parse(JSON.stringify(newCaptions)),
@@ -726,6 +757,69 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     pushHistory(nextCaps, stickers, imageLayers);
   };
 
+  // 1-Tap Modern Meme Header Preset (Twitter / Reddit style banner)
+  const handleAddModernHeader = () => {
+    const maxZ = Math.max(-1, ...captions.map(c => c.zIndex ?? -1), ...stickers.map(s => s.zIndex ?? -1), ...(imageLayers || []).map(i => i.zIndex ?? -1));
+    const newCap = {
+      id: `cap-${Date.now()}`,
+      text: 'When you finally solve the bug after 4 hours:',
+      x: 0.5,
+      y: 0.08,
+      fontSize: 34,
+      color: '#000000',
+      stroke: 'transparent',
+      align: 'left',
+      fontFamily: 'Montserrat, sans-serif',
+      bgColor: 'white',
+      bgStyle: 'banner',
+      width: 0.96,
+      opacity: 1,
+      rotation: 0,
+      zIndex: maxZ + 1
+    };
+    const nextCaps = [...captions, newCap];
+    setCaptions(nextCaps);
+    setActiveLayerId(newCap.id);
+    setActiveTab('text');
+    pushHistory(nextCaps, stickers, imageLayers, drawings);
+  };
+
+  // Toggle Text Case: ALL CAPS <-> Sentence Case <-> lowercase
+  const handleToggleTextCase = () => {
+    if (!activeCaption || !activeCaption.text) return;
+    const txt = activeCaption.text;
+    const isUpper = txt === txt.toUpperCase() && txt !== txt.toLowerCase();
+    const isLower = txt === txt.toLowerCase() && txt !== txt.toUpperCase();
+
+    let nextText = txt;
+    if (isUpper) {
+      nextText = txt.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+    } else if (!isLower) {
+      nextText = txt.toLowerCase();
+    } else {
+      nextText = txt.toUpperCase();
+    }
+
+    updateActiveCaption('text', nextText);
+  };
+
+  // Horizontal Flip / Mirror for Stickers & Media Overlays
+  const handleFlipActiveLayer = () => {
+    if (!activeLayerId) return;
+    const isStk = stickers.some(s => s.id === activeLayerId);
+    const isImg = (imageLayers || []).some(i => i.id === activeLayerId);
+
+    if (isStk) {
+      const nextStks = stickers.map(s => s.id === activeLayerId ? { ...s, flipX: !s.flipX } : s);
+      setStickers(nextStks);
+      pushHistory(captions, nextStks, imageLayers, drawings);
+    } else if (isImg) {
+      const nextImgs = (imageLayers || []).map(i => i.id === activeLayerId ? { ...i, flipX: !i.flipX } : i);
+      setImageLayers(nextImgs);
+      pushHistory(captions, stickers, nextImgs, drawings);
+    }
+  };
+
   const updateActiveCaption = (key, value) => {
     if (!activeLayerId) return;
     const nextCaps = captions.map((cap) => {
@@ -752,13 +846,22 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
 
   const handleSetCaptionBg = (bg) => {
     if (!activeCaption) return;
-    if (bg === 'none' || activeCaption.bgColor === bg) {
+    if (bg === 'none' || (activeCaption.bgColor === bg && activeCaption.bgStyle !== 'banner')) {
       // Toggle off / reset to transparent background
       const nextColor = (activeCaption.color === '#000000' || activeCaption.color === 'black') ? '#ffffff' : (activeCaption.color || '#ffffff');
       updateActiveCaptionProps({
         bgColor: 'none',
+        bgStyle: 'box',
         color: nextColor,
         stroke: '#000000'
+      });
+    } else if (bg === 'banner') {
+      updateActiveCaptionProps({
+        bgColor: 'white',
+        color: '#000000',
+        stroke: 'transparent',
+        bgStyle: 'banner',
+        align: 'left'
       });
     } else if (bg === 'white') {
       // White Background: crisp black text with transparent stroke
@@ -1895,6 +1998,15 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                       >
                         <Droplet style={{ width: 12, height: 12 }} /> Blur
                       </button>
+
+                      <button
+                        className="btn btn-xs vid-ctx-btn"
+                        title="Toggle Text Case (ALL CAPS / Sentence case / lowercase)"
+                        onClick={handleToggleTextCase}
+                        style={{ padding: '0 8px', fontSize: '11px', fontWeight: 700, flexShrink: 0 }}
+                      >
+                        Aa
+                      </button>
                       
                     </>
                   )}
@@ -1902,14 +2014,21 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                   {/* Sticker / Emoji controls */}
                   {activeSticker && (
                     <>
-                    <button
-                      className="btn btn-icon btn-xs vid-ctx-btn"
-                      title="Rotate 90°"
-                      onClick={handleRotateSticker}
-                    >
-                      <RotateCw style={{ width: 14, height: 14 }} />
+                      <button
+                        className="btn btn-icon btn-xs vid-ctx-btn"
+                        title="Rotate 90°"
+                        onClick={handleRotateSticker}
+                      >
+                        <RotateCw style={{ width: 14, height: 14 }} />
                       </button>
-                      
+
+                      <button
+                        className={`btn btn-icon btn-xs vid-ctx-btn ${activeSticker.flipX ? 'active' : ''}`}
+                        title="Flip Horizontal (Mirror)"
+                        onClick={handleFlipActiveLayer}
+                      >
+                        <FlipHorizontal style={{ width: 14, height: 14 }} />
+                      </button>
                     </>
                   )}
 
@@ -1939,6 +2058,14 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         onClick={() => updateActiveImageLayer('fitMode', activeImageLayer.fitMode === 'crop' ? 'fit' : 'crop')}
                       >
                         <Crop style={{ width: 14, height: 14 }} /> Crop
+                      </button>
+
+                      <button
+                        className={`btn btn-icon btn-xs vid-ctx-btn ${activeImageLayer.flipX ? 'active' : ''}`}
+                        title="Flip Horizontal (Mirror)"
+                        onClick={handleFlipActiveLayer}
+                      >
+                        <FlipHorizontal style={{ width: 14, height: 14 }} />
                       </button>
 
                       
@@ -2412,6 +2539,38 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
 
             
 
+            {/* Clipboard Paste Toast */}
+            <AnimatePresence>
+              {pasteToast && (
+                <motion.div
+                  initial={{ opacity: 0, y: -16, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -16, scale: 0.95 }}
+                  transition={{ duration: 0.2 }}
+                  style={{
+                    position: 'absolute',
+                    top: '14px',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    zIndex: 9999,
+                    background: 'rgba(16, 185, 129, 0.95)',
+                    color: '#ffffff',
+                    padding: '8px 18px',
+                    borderRadius: '24px',
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    fontSize: '0.85rem',
+                    fontWeight: 700,
+                    pointerEvents: 'none'
+                  }}
+                >
+                  <Check size={16} /> Image pasted from clipboard!
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             <CanvasEditor
               ref={canvasRef}
               template={activeTemplate}
@@ -2828,6 +2987,25 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                       <Plus size={15} /> {activeCaption ? "Text" : "Add Text"}
                     </button>
 
+                    {/* Modern Header Button */}
+                    <button
+                      type="button"
+                      className="btn btn-xs btn-secondary hover-lift"
+                      onClick={handleAddModernHeader}
+                      title="Add Modern White Header Banner (Twitter / Reddit style)"
+                      style={{
+                        padding: "7px 14px",
+                        borderRadius: "20px",
+                        fontSize: "0.82rem",
+                        fontWeight: 700,
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "6px"
+                      }}
+                    >
+                      <LayoutGrid size={15} /> Header
+                    </button>
+
                     {/* Quick Phrases Button */}
                     <button type="button" className="btn btn-xs btn-secondary hover-lift" onClick={() => setShowQuickPhrasesMenu(true)} style={{ padding: "7px 14px", borderRadius: "20px", fontSize: "0.82rem", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: "6px" }}>
                       <Quote size={15} /> Quick Phrases
@@ -3099,9 +3277,20 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                   >
                     {/* Font Selector Card */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0 }}>
-                      <label style={{ margin: 0, fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)' }}>
-                        Font
-                      </label>
+                      <div className="flex-between align-center" style={{ minHeight: '16px' }}>
+                        <label style={{ margin: 0, fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)' }}>
+                          Font
+                        </label>
+                        <button
+                          type="button"
+                          className="btn btn-xs btn-ghost"
+                          onClick={handleToggleTextCase}
+                          title="Toggle Text Case (ALL CAPS / Sentence case / lowercase)"
+                          style={{ padding: '0 6px', height: '18px', fontSize: '0.7rem', fontWeight: 700, borderRadius: '6px', color: 'var(--cyber-cyan)' }}
+                        >
+                          Aa Case
+                        </button>
+                      </div>
                       <button
                         type="button"
                         className="btn btn-xs btn-secondary font-cycle-btn hover-lift"
@@ -3139,7 +3328,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         </label>
                       </div>
 
-                      {/* Segmented Button Group: None, White, Black */}
+                      {/* Segmented Button Group: None, White, Black, Banner */}
                       <div
                         style={{
                           display: 'flex',
@@ -3148,7 +3337,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           borderRadius: '10px',
                           background: 'transparent',
                           border: 'none',
-                          gap: '6px',
+                          gap: '4px',
                           boxSizing: 'border-box'
                         }}
                       >
@@ -3156,10 +3345,10 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           type="button"
                           className={`btn btn-xs flex-1 ${(!activeCaption.bgColor || activeCaption.bgColor === 'transparent' || activeCaption.bgColor === 'none') ? 'btn-primary' : 'btn-ghost'}`}
                           style={{
-                            fontSize: '0.72rem',
+                            fontSize: '0.7rem',
                             fontWeight: 600,
                             borderRadius: '999px',
-                            padding: '0 4px',
+                            padding: '0 2px',
                             height: '100%',
                             display: 'flex',
                             alignItems: 'center',
@@ -3173,45 +3362,63 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         </button>
                         <button
                           type="button"
-                          className={`btn btn-xs flex-1 ${(activeCaption.bgColor === 'white' || activeCaption.bgColor === '#ffffff') ? 'btn-primary' : 'btn-ghost'}`}
+                          className={`btn btn-xs flex-1 ${(activeCaption.bgColor === 'white' && activeCaption.bgStyle !== 'banner') ? 'btn-primary' : 'btn-ghost'}`}
                           style={{
-                            fontSize: '0.72rem',
+                            fontSize: '0.7rem',
                             fontWeight: 600,
                             borderRadius: '999px',
-                            padding: '0 4px',
+                            padding: '0 2px',
                             height: '100%',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            gap: '4px',
-                            background: (activeCaption.bgColor === 'white' || activeCaption.bgColor === '#ffffff') ? undefined : 'var(--bg-surface-1)',
+                            gap: '3px',
+                            background: (activeCaption.bgColor === 'white' && activeCaption.bgStyle !== 'banner') ? undefined : 'var(--bg-surface-1)',
                             border: 'none'
                           }}
                           onClick={() => handleSetCaptionBg('white')}
                         >
-                          <span style={{ width: '8px', height: '8px', borderRadius: '2px', background: '#fff', display: 'inline-block' }} />
-                          White
+                          Box
+                        </button>
+                        <button
+                          type="button"
+                          className={`btn btn-xs flex-1 ${activeCaption.bgStyle === 'banner' ? 'btn-primary' : 'btn-ghost'}`}
+                          style={{
+                            fontSize: '0.7rem',
+                            fontWeight: 600,
+                            borderRadius: '999px',
+                            padding: '0 2px',
+                            height: '100%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            background: activeCaption.bgStyle === 'banner' ? undefined : 'var(--bg-surface-1)',
+                            border: 'none'
+                          }}
+                          onClick={() => handleSetCaptionBg('banner')}
+                          title="Full-width modern meme banner"
+                        >
+                          Banner
                         </button>
                         <button
                           type="button"
                           className={`btn btn-xs flex-1 ${(activeCaption.bgColor === 'black' || activeCaption.bgColor === '#000000') ? 'btn-primary' : 'btn-ghost'}`}
                           style={{
-                            fontSize: '0.72rem',
+                            fontSize: '0.7rem',
                             fontWeight: 600,
                             borderRadius: '999px',
-                            padding: '0 4px',
+                            padding: '0 2px',
                             height: '100%',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            gap: '4px',
+                            gap: '3px',
                             background: (activeCaption.bgColor === 'black' || activeCaption.bgColor === '#000000') ? undefined : 'var(--bg-surface-1)',
                             border: 'none'
                           }}
                           onClick={() => handleSetCaptionBg('black')}
                         >
-                          <span style={{ width: '8px', height: '8px', borderRadius: '2px', background: '#000', border: '1px solid #777', display: 'inline-block' }} />
-                          Black
+                          Dark
                         </button>
                       </div>
                     </div>
