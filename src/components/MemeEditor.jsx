@@ -10,7 +10,8 @@ import {
   Sliders, Smile, Sticker, ArrowLeft, Save, Check, RefreshCw,
   Image as ImageIcon, Search, X, Upload, RotateCw, ZoomIn, Crop, LayoutGrid, Scissors, Play, Pause, FolderHeart, Droplet, Monitor,
   Paintbrush, Eraser, Palette, Sun, Moon, ChevronDown, ChevronLeft, PencilLine, Move, ArrowDownRight, Quote, Wand2,
-  Layers, ArrowUp, ArrowDown, ChevronsUp, ChevronsDown, Eye, EyeOff, Lock, Unlock, FlipHorizontal
+  Layers, ArrowUp, ArrowDown, ChevronsUp, ChevronsDown, Eye, EyeOff, Lock, Unlock, FlipHorizontal,
+  PanelTop
 } from 'lucide-react';
 import { downloadImageHelper, recordCanvasAsVideo } from '../utils/downloadHelper';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -1991,6 +1992,37 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                       </button>
 
                       <button
+                        className={`btn btn-xs vid-ctx-btn ${activeCaption.bgStyle === 'banner' ? 'active' : ''}`}
+                        title="Toggle Modern Header Banner (Full-width clean banner style)"
+                        onClick={() => {
+                          if (activeCaption.bgStyle === 'banner') {
+                            updateActiveCaptionProps({ bgStyle: 'box' });
+                          } else {
+                            updateActiveCaptionProps({
+                              bgStyle: 'banner',
+                              bgColor: 'white',
+                              color: '#000000',
+                              stroke: 'transparent',
+                              align: 'left',
+                              width: 0.96
+                            });
+                          }
+                        }}
+                        style={{
+                          padding: '0 8px',
+                          fontSize: '11px',
+                          fontWeight: 700,
+                          flexShrink: 0,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '3px',
+                          background: activeCaption.bgStyle === 'banner' ? 'var(--primary-gradient)' : undefined
+                        }}
+                      >
+                        <PanelTop style={{ width: 12, height: 12 }} /> Header
+                      </button>
+
+                      <button
                         className="btn btn-xs vid-ctx-btn"
                         title="Text Opacity"
                         onClick={() => setShowOpacityMenu(true)}
@@ -2164,13 +2196,32 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
 
                   {/* TAB SPECIFIC TOOLS (when nothing selected) */}
                   {!showQuickPhrasesMenu && !(activeCaption || activeSticker || activeImageLayer) && activeTab === "text" && (
-                    <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                       <button
                         className="btn btn-xs vid-ctx-btn"
                         onClick={handleAddCaption}
                         style={{ padding: "4px 8px", fontSize: "0.75rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "4px" }}
                       >
                         <Plus style={{ width: 14, height: 14 }} /> Add Text
+                      </button>
+
+                      <button
+                        className="btn btn-xs vid-ctx-btn"
+                        onClick={handleAddModernHeader}
+                        title="Add Modern Header Banner (Twitter / Reddit meme style)"
+                        style={{
+                          padding: "4px 9px",
+                          fontSize: "0.75rem",
+                          fontWeight: 700,
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "4px",
+                          background: "linear-gradient(135deg, rgba(168, 85, 247, 0.3) 0%, rgba(6, 182, 212, 0.3) 100%)",
+                          border: "1px solid rgba(168, 85, 247, 0.5)",
+                          color: "#ffffff"
+                        }}
+                      >
+                        <PanelTop style={{ width: 13, height: 13, color: "var(--cyber-cyan)" }} /> Header
                       </button>
                       
                       <div className="vid-ctx-divider"  />
@@ -2990,7 +3041,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                     {/* Modern Header Button */}
                     <button
                       type="button"
-                      className="btn btn-xs btn-secondary hover-lift"
+                      className="btn btn-xs hover-lift"
                       onClick={handleAddModernHeader}
                       title="Add Modern White Header Banner (Twitter / Reddit style)"
                       style={{
@@ -3000,10 +3051,13 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         fontWeight: 700,
                         display: "inline-flex",
                         alignItems: "center",
-                        gap: "6px"
+                        gap: "6px",
+                        background: "linear-gradient(135deg, rgba(168, 85, 247, 0.25) 0%, rgba(6, 182, 212, 0.25) 100%)",
+                        border: "1px solid rgba(168, 85, 247, 0.5)",
+                        color: "#ffffff"
                       }}
                     >
-                      <LayoutGrid size={15} /> Header
+                      <PanelTop size={15} style={{ color: "var(--cyber-cyan)" }} /> Header
                     </button>
 
                     {/* Quick Phrases Button */}
