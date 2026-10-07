@@ -1002,7 +1002,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
   };
 
   // Re-indexes list and applies state + history
-  const commitLayerStack = (orderedList, currentDrawings = drawings) => {
+  const commitLayerStack = (orderedList, currentDrawings = drawings, currentCanvasHeader = canvasHeader) => {
     orderedList.forEach((item, index) => {
       item.zIndex = index;
     });
@@ -1014,7 +1014,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     setCaptions(nextCaps);
     setStickers(nextStks);
     setImageLayers(nextImgs);
-    pushHistory(nextCaps, nextStks, nextImgs, currentDrawings);
+    pushHistory(nextCaps, nextStks, nextImgs, currentDrawings, currentCanvasHeader);
   };
 
   const moveLayer = (id, action) => {
@@ -1104,21 +1104,30 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     pushHistory(nextCaps, nextStks, nextImgs, drawings);
   };
 
-  const handleDeleteLayer = (idToDelete = activeLayerId) => {
+  const handleDeleteLayer = (targetId) => {
+    const idToDelete = (typeof targetId === 'string' && targetId) ? targetId : activeLayerId;
     if (!idToDelete) return;
     const capToDelete = captions.find(c => c.id === idToDelete);
-    if (capToDelete?.isHeaderCaption || idToDelete === 'header') {
-      const nextHeader = { ...canvasHeader, enabled: false };
+    const isHeader = capToDelete?.isHeaderCaption || idToDelete === 'header' || (activeCaption?.isHeaderCaption && idToDelete === activeCaption?.id);
+
+    let nextHeader = canvasHeader;
+    if (isHeader) {
+      nextHeader = { ...canvasHeader, enabled: false };
       setCanvasHeader(nextHeader);
     }
-    if (activeLayerId === idToDelete || (idToDelete === 'header' && activeCaption?.isHeaderCaption)) {
+    if (activeLayerId === idToDelete || (isHeader && activeCaption?.isHeaderCaption)) {
       setActiveLayerId(null);
     }
-    const list = getOrderedLayers().filter(i => i.id !== idToDelete && (!capToDelete?.isHeaderCaption || i.id !== capToDelete.id));
-    commitLayerStack(list);
+    const list = getOrderedLayers().filter(i => {
+      if (i.id === idToDelete) return false;
+      if (isHeader && (i.isHeaderCaption || i.id === capToDelete?.id)) return false;
+      return true;
+    });
+    commitLayerStack(list, drawings, nextHeader);
   };
 
-  const handleDuplicateLayer = (idToDup = activeLayerId) => {
+  const handleDuplicateLayer = (targetId) => {
+    const idToDup = (typeof targetId === 'string' && targetId) ? targetId : activeLayerId;
     if (!idToDup) return;
     const list = getOrderedLayers();
     const idx = list.findIndex(i => i.id === idToDup);
@@ -2155,7 +2164,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         className="btn btn-icon btn-xs vid-ctx-btn vid-ctx-btn-delete"
                         style={{ background: 'rgba(239, 68, 68, 0.85)', color: '#ffffff', border: '1px solid rgba(239, 68, 68, 1)' }}
                         title="Delete"
-                        onClick={handleDeleteLayer}
+                        onClick={() => handleDeleteLayer()}
                       >
                         <Trash2 style={{ width: 14, height: 14 }} />
                       </button>
@@ -2168,7 +2177,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                       <button
                         className="btn btn-icon btn-xs vid-ctx-btn"
                         title="Duplicate"
-                        onClick={handleDuplicateLayer}
+                        onClick={() => handleDuplicateLayer()}
                       >
                         <Copy style={{ width: 14, height: 14 }} />
                       </button>
@@ -2203,7 +2212,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         className="btn btn-icon btn-xs vid-ctx-btn vid-ctx-btn-delete"
                         style={{ background: 'rgba(239, 68, 68, 0.85)', color: '#ffffff', border: '1px solid rgba(239, 68, 68, 1)' }}
                         title="Delete"
-                        onClick={handleDeleteLayer}
+                        onClick={() => handleDeleteLayer()}
                       >
                         <Trash2 style={{ width: 14, height: 14 }} />
                       </button>
@@ -3220,7 +3229,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                     <button
                       type="button"
                       className="btn btn-icon btn-xs hover-lift"
-                      onClick={handleDeleteLayer}
+                      onClick={() => handleDeleteLayer()}
                       title="Delete Text"
                       style={{
                         width: '32px',
@@ -3669,7 +3678,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                     <button
                       type="button"
                       className="btn btn-icon btn-xs text-danger hover-lift"
-                      onClick={handleDeleteLayer}
+                      onClick={() => handleDeleteLayer()}
                       title="Delete Media Layer"
                       style={{ flexShrink: 0, background: 'rgba(239, 68, 68, 0.85)', color: '#ffffff', border: '1px solid rgba(239, 68, 68, 1)' }}
                     >
