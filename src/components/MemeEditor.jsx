@@ -367,11 +367,32 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
       {
         captions: JSON.parse(JSON.stringify(initialCaptions)),
         stickers: JSON.parse(JSON.stringify(initialStickers)),
-        imageLayers: JSON.parse(JSON.stringify(initialImageLayers))
+        imageLayers: JSON.parse(JSON.stringify(initialImageLayers)),
+        canvasHeader: template?.canvasHeader || {
+          enabled: false,
+          text: 'When you finally solve the bug after 4 hours:',
+          fontSize: 36,
+          fontFamily: 'Montserrat, sans-serif',
+          color: '#000000',
+          bgColor: '#ffffff',
+          align: 'left'
+        }
       }
     ];
   });
   const [historyStep, setHistoryStep] = useState(0);
+
+  const [canvasHeader, setCanvasHeader] = useState(() => {
+    return template?.canvasHeader || {
+      enabled: false,
+      text: 'When you finally solve the bug after 4 hours:',
+      fontSize: 36,
+      fontFamily: 'Montserrat, sans-serif',
+      color: '#000000',
+      bgColor: '#ffffff',
+      align: 'left'
+    };
+  });
 
   const [activeTab, setActiveTab] = useState('text'); // 'text' | 'stickers' | 'images' | 'draw' | 'watermark'
   const [isMobileTabsFolded, setIsMobileTabsFolded] = useState(true);
@@ -618,12 +639,13 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     return () => window.removeEventListener('paste', handlePaste);
   }, [captions, stickers, imageLayers]);
 
-  const pushHistory = (newCaptions, newStickers, newImgLayers = imageLayers, newDrawings = drawings) => {
+  const pushHistory = (newCaptions, newStickers, newImgLayers = imageLayers, newDrawings = drawings, newCanvasHeader = canvasHeader) => {
     const newSnapshot = {
       captions: JSON.parse(JSON.stringify(newCaptions)),
       stickers: JSON.parse(JSON.stringify(newStickers)),
       imageLayers: JSON.parse(JSON.stringify(newImgLayers)),
-      drawings: JSON.parse(JSON.stringify(newDrawings))
+      drawings: JSON.parse(JSON.stringify(newDrawings)),
+      canvasHeader: JSON.parse(JSON.stringify(newCanvasHeader))
     };
     const updatedHistory = history.slice(0, historyStep + 1);
     updatedHistory.push(newSnapshot);
@@ -632,10 +654,10 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
   };
 
   // Debounced version — used for text typing so history isn't pushed on every keypress
-  const pushHistoryDebounced = (newCaptions, newStickers, newImgLayers = imageLayers, newDrawings = drawings) => {
+  const pushHistoryDebounced = (newCaptions, newStickers, newImgLayers = imageLayers, newDrawings = drawings, newCanvasHeader = canvasHeader) => {
     if (historyTimerRef.current) clearTimeout(historyTimerRef.current);
     historyTimerRef.current = setTimeout(() => {
-      pushHistory(newCaptions, newStickers, newImgLayers, newDrawings);
+      pushHistory(newCaptions, newStickers, newImgLayers, newDrawings, newCanvasHeader);
     }, 800);
   };
 
@@ -647,6 +669,9 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
       setStickers(JSON.parse(JSON.stringify(snapshot.stickers)));
       setImageLayers(JSON.parse(JSON.stringify(snapshot.imageLayers || [])));
       setDrawings(JSON.parse(JSON.stringify(snapshot.drawings || [])));
+      if (snapshot.canvasHeader) {
+        setCanvasHeader(JSON.parse(JSON.stringify(snapshot.canvasHeader)));
+      }
       setHistoryStep(prevStep);
     }
   };
@@ -659,6 +684,9 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
       setStickers(JSON.parse(JSON.stringify(snapshot.stickers)));
       setImageLayers(JSON.parse(JSON.stringify(snapshot.imageLayers || [])));
       setDrawings(JSON.parse(JSON.stringify(snapshot.drawings || [])));
+      if (snapshot.canvasHeader) {
+        setCanvasHeader(JSON.parse(JSON.stringify(snapshot.canvasHeader)));
+      }
       setHistoryStep(nextStep);
     }
   };
@@ -758,32 +786,23 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     pushHistory(nextCaps, stickers, imageLayers);
   };
 
-  // 1-Tap Modern Meme Header Preset (Twitter / Reddit style banner)
-  const handleAddModernHeader = () => {
-    const maxZ = Math.max(-1, ...captions.map(c => c.zIndex ?? -1), ...stickers.map(s => s.zIndex ?? -1), ...(imageLayers || []).map(i => i.zIndex ?? -1));
-    const newCap = {
-      id: `cap-${Date.now()}`,
-      text: 'When you finally solve the bug after 4 hours:',
-      x: 0.5,
-      y: 0.08,
-      fontSize: 34,
-      color: '#000000',
-      stroke: 'transparent',
-      align: 'left',
-      fontFamily: 'Montserrat, sans-serif',
-      bgColor: 'white',
-      bgStyle: 'banner',
-      width: 0.96,
-      opacity: 1,
-      rotation: 0,
-      zIndex: maxZ + 1
+  // 1-Tap Modern Meme Header Extension (Canvas extension above meme image)
+  const handleToggleCanvasHeader = () => {
+    const nextState = !canvasHeader.enabled;
+    const nextHeader = {
+      ...canvasHeader,
+      enabled: nextState
     };
-    const nextCaps = [...captions, newCap];
-    setCaptions(nextCaps);
-    setActiveLayerId(newCap.id);
-    setActiveTab('text');
-    pushHistory(nextCaps, stickers, imageLayers, drawings);
+    setCanvasHeader(nextHeader);
+    if (nextState) {
+      setActiveLayerId('header');
+      setActiveTab('text');
+    } else if (activeLayerId === 'header') {
+      setActiveLayerId(null);
+    }
+    pushHistory(captions, stickers, imageLayers, drawings, nextHeader);
   };
+  const handleAddModernHeader = handleToggleCanvasHeader;
 
   // Toggle Text Case: ALL CAPS <-> Sentence Case <-> lowercase
   const handleToggleTextCase = () => {
@@ -1064,6 +1083,13 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
 
   const handleDeleteLayer = (idToDelete = activeLayerId) => {
     if (!idToDelete) return;
+    if (idToDelete === 'header') {
+      const nextHeader = { ...canvasHeader, enabled: false };
+      setCanvasHeader(nextHeader);
+      setActiveLayerId(null);
+      pushHistory(captions, stickers, imageLayers, drawings, nextHeader);
+      return;
+    }
     if (activeLayerId === idToDelete) {
       setActiveLayerId(null);
     }
@@ -1873,7 +1899,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
           <div className="canvas-wrapper">
             {/* Floating Context Toolbar whenever dock container is folded */}
             <AnimatePresence>
-              {((activeCaption || activeSticker || activeImageLayer) || (isMobileTabsFolded && !activeCaption && !activeSticker && !activeImageLayer)) && isMobileTabsFolded && (
+              {((activeCaption || activeSticker || activeImageLayer || activeLayerId === 'header') || (isMobileTabsFolded && !activeCaption && !activeSticker && !activeImageLayer && activeLayerId !== 'header')) && isMobileTabsFolded && (
                 <motion.div
                   className={`editor-floating-toolbar video-context-toolbar`}
                   initial={{ opacity: 0, height: 0, paddingTop: 0, paddingBottom: 0, marginTop: 0, marginBottom: 0, overflow: 'hidden' }}
@@ -1881,6 +1907,138 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                   exit={{ opacity: 0, height: 0, paddingTop: 0, paddingBottom: 0, marginTop: 0, marginBottom: 0, overflow: 'hidden' }}
                   transition={{ duration: 0.25, ease: 'easeInOut' }}
                 >
+                  {/* Header Extension controls */}
+                  {activeLayerId === 'header' && showFontMenu && (
+                    <>
+                      <button onClick={() => setShowFontMenu(false)} className="btn btn-icon btn-xs vid-ctx-btn" >
+                        <ArrowLeft style={{ width: 14, height: 14 }} />
+                      </button>
+                      <div className="vid-ctx-divider"  />
+                      {FONTS.map(f => (
+                        <button
+                          key={f.id || f.family}
+                          className={`btn btn-xs vid-ctx-btn ${canvasHeader.fontFamily === f.family ? 'active' : ''}`}
+                          style={{ fontFamily: f.family, whiteSpace: 'nowrap' }}
+                          onClick={() => {
+                            const nextH = { ...canvasHeader, fontFamily: f.family };
+                            setCanvasHeader(nextH);
+                            pushHistory(captions, stickers, imageLayers, drawings, nextH);
+                            setShowFontMenu(false);
+                          }}
+                        >
+                          {f.name.split(' ')[0]}
+                        </button>
+                      ))}
+                    </>
+                  )}
+                  {activeLayerId === 'header' && !showFontMenu && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '5px', width: '100%', overflowX: 'auto', paddingBottom: '2px', scrollbarWidth: 'none' }}>
+                      <input
+                        type="text"
+                        value={canvasHeader.text}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setCanvasHeader(prev => {
+                            const nextH = { ...prev, text: val };
+                            pushHistoryDebounced(captions, stickers, imageLayers, drawings, nextH);
+                            return nextH;
+                          });
+                        }}
+                        placeholder="Header text..."
+                        style={{
+                          background: 'rgba(255,255,255,0.15)',
+                          border: '1px solid rgba(255,255,255,0.3)',
+                          borderRadius: '16px',
+                          color: '#fff',
+                          padding: '4px 10px',
+                          fontSize: '0.78rem',
+                          fontWeight: 600,
+                          minWidth: '150px',
+                          maxWidth: '220px',
+                          outline: 'none'
+                        }}
+                      />
+
+                      <button
+                        className="btn btn-xs vid-ctx-btn"
+                        title="Header Font"
+                        onClick={() => setShowFontMenu(true)}
+                        style={{ display: 'flex', alignItems: 'center', gap: '3px', flexShrink: 0 }}
+                      >
+                        <Type style={{ width: 13, height: 13 }} />
+                        <span style={{ fontSize: '11px' }}>{(canvasHeader.fontFamily || 'Montserrat').split(/[\s,]+/)[0]}</span>
+                      </button>
+
+                      <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.1)', borderRadius: '16px', padding: '2px 5px', gap: '3px', flexShrink: 0 }}>
+                        <button
+                          type="button"
+                          className="btn btn-xs btn-ghost"
+                          style={{ padding: '0 3px', height: '20px', fontSize: '12px', color: '#fff' }}
+                          onClick={() => {
+                            const nextH = { ...canvasHeader, fontSize: Math.max(18, canvasHeader.fontSize - 4) };
+                            setCanvasHeader(nextH);
+                            pushHistory(captions, stickers, imageLayers, drawings, nextH);
+                          }}
+                        >-</button>
+                        <span style={{ fontSize: '11px', fontWeight: 600, color: '#fff' }}>{canvasHeader.fontSize}px</span>
+                        <button
+                          type="button"
+                          className="btn btn-xs btn-ghost"
+                          style={{ padding: '0 3px', height: '20px', fontSize: '12px', color: '#fff' }}
+                          onClick={() => {
+                            const nextH = { ...canvasHeader, fontSize: Math.min(80, canvasHeader.fontSize + 4) };
+                            setCanvasHeader(nextH);
+                            pushHistory(captions, stickers, imageLayers, drawings, nextH);
+                          }}
+                        >+</button>
+                      </div>
+
+                      <button
+                        type="button"
+                        className={`btn btn-xs vid-ctx-btn ${canvasHeader.align === 'center' ? 'active' : ''}`}
+                        title={canvasHeader.align === 'center' ? "Align Left" : "Align Center"}
+                        onClick={() => {
+                          const nextH = { ...canvasHeader, align: canvasHeader.align === 'center' ? 'left' : 'center' };
+                          setCanvasHeader(nextH);
+                          pushHistory(captions, stickers, imageLayers, drawings, nextH);
+                        }}
+                        style={{ padding: '0 6px', fontSize: '11px', flexShrink: 0 }}
+                      >
+                        {canvasHeader.align === 'center' ? 'Center' : 'Left'}
+                      </button>
+
+                      <button
+                        type="button"
+                        className="btn btn-xs vid-ctx-btn"
+                        title="Toggle Banner Theme (White / Dark)"
+                        onClick={() => {
+                          const isLight = canvasHeader.bgColor === '#ffffff';
+                          const nextH = {
+                            ...canvasHeader,
+                            bgColor: isLight ? '#000000' : '#ffffff',
+                            color: isLight ? '#ffffff' : '#000000'
+                          };
+                          setCanvasHeader(nextH);
+                          pushHistory(captions, stickers, imageLayers, drawings, nextH);
+                        }}
+                        style={{ display: 'flex', alignItems: 'center', gap: '3px', padding: '0 6px', flexShrink: 0 }}
+                      >
+                        <div style={{ width: 10, height: 10, borderRadius: '50%', background: canvasHeader.bgColor, border: '1px solid #fff' }} />
+                        <span style={{ fontSize: '11px' }}>{canvasHeader.bgColor === '#ffffff' ? 'Light' : 'Dark'}</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        className="btn btn-icon btn-xs vid-ctx-btn vid-ctx-btn-delete"
+                        style={{ background: 'rgba(239, 68, 68, 0.85)', color: '#fff', flexShrink: 0 }}
+                        title="Remove Header Extension"
+                        onClick={() => handleDeleteLayer('header')}
+                      >
+                        <Trash2 style={{ width: 13, height: 13 }} />
+                      </button>
+                    </div>
+                  )}
+
                   {/* Text controls */}
                   {activeCaption && showFontMenu && (
                     <>
@@ -2195,7 +2353,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                   )}
 
                   {/* TAB SPECIFIC TOOLS (when nothing selected) */}
-                  {!showQuickPhrasesMenu && !(activeCaption || activeSticker || activeImageLayer) && activeTab === "text" && (
+                  {!showQuickPhrasesMenu && !(activeCaption || activeSticker || activeImageLayer || activeLayerId === 'header') && activeTab === "text" && (
                     <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                       <button
                         className="btn btn-xs vid-ctx-btn"
@@ -2206,9 +2364,9 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                       </button>
 
                       <button
-                        className="btn btn-xs vid-ctx-btn"
-                        onClick={handleAddModernHeader}
-                        title="Add Modern Header Banner (Twitter / Reddit meme style)"
+                        className={`btn btn-xs vid-ctx-btn ${canvasHeader.enabled ? 'active' : ''}`}
+                        onClick={handleToggleCanvasHeader}
+                        title="Toggle Modern Canvas Header Extension (Twitter / Reddit meme style)"
                         style={{
                           padding: "4px 9px",
                           fontSize: "0.75rem",
@@ -2216,12 +2374,15 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           display: "flex",
                           alignItems: "center",
                           gap: "4px",
-                          background: "linear-gradient(135deg, rgba(168, 85, 247, 0.3) 0%, rgba(6, 182, 212, 0.3) 100%)",
+                          background: canvasHeader.enabled
+                            ? "var(--primary-gradient)"
+                            : "linear-gradient(135deg, rgba(168, 85, 247, 0.3) 0%, rgba(6, 182, 212, 0.3) 100%)",
                           border: "1px solid rgba(168, 85, 247, 0.5)",
                           color: "#ffffff"
                         }}
                       >
-                        <PanelTop style={{ width: 13, height: 13, color: "var(--cyber-cyan)" }} /> Header
+                        <PanelTop style={{ width: 13, height: 13, color: canvasHeader.enabled ? '#fff' : "var(--cyber-cyan)" }} />
+                        <span>{canvasHeader.enabled ? 'Header (On)' : 'Header'}</span>
                       </button>
                       
                       <div className="vid-ctx-divider"  />
@@ -2682,6 +2843,14 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
             drawTool={drawTool}
             brushColor={brushColor}
             brushSize={brushSize}
+            canvasHeader={canvasHeader}
+            onUpdateCanvasHeader={(props) => {
+              setCanvasHeader((prev) => {
+                const upd = { ...prev, ...props };
+                pushHistoryDebounced(captions, stickers, imageLayers, drawings, upd);
+                return upd;
+              });
+            }}
           />
           {isRemovingBg && (
             <div style={{
@@ -3038,12 +3207,20 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                       <Plus size={15} /> {activeCaption ? "Text" : "Add Text"}
                     </button>
 
-                    {/* Modern Header Button */}
+                    {/* Modern Header Extension Button */}
                     <button
                       type="button"
-                      className="btn btn-xs hover-lift"
-                      onClick={handleAddModernHeader}
-                      title="Add Modern White Header Banner (Twitter / Reddit style)"
+                      className={`btn btn-xs hover-lift ${canvasHeader.enabled ? 'active' : ''}`}
+                      onClick={() => {
+                        if (!canvasHeader.enabled) {
+                          handleToggleCanvasHeader();
+                        } else if (activeLayerId !== 'header') {
+                          setActiveLayerId('header');
+                        } else {
+                          handleToggleCanvasHeader();
+                        }
+                      }}
+                      title="Toggle Modern Header Extension (Twitter / Reddit style top canvas extension)"
                       style={{
                         padding: "7px 14px",
                         borderRadius: "20px",
@@ -3052,12 +3229,18 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         display: "inline-flex",
                         alignItems: "center",
                         gap: "6px",
-                        background: "linear-gradient(135deg, rgba(168, 85, 247, 0.25) 0%, rgba(6, 182, 212, 0.25) 100%)",
-                        border: "1px solid rgba(168, 85, 247, 0.5)",
+                        background: canvasHeader.enabled
+                          ? "linear-gradient(135deg, rgba(6, 182, 212, 0.35) 0%, rgba(59, 130, 246, 0.35) 100%)"
+                          : "linear-gradient(135deg, rgba(168, 85, 247, 0.25) 0%, rgba(6, 182, 212, 0.25) 100%)",
+                        border: canvasHeader.enabled
+                          ? "1px solid var(--cyber-cyan)"
+                          : "1px solid rgba(168, 85, 247, 0.5)",
+                        boxShadow: canvasHeader.enabled ? "0 0 10px rgba(6, 182, 212, 0.3)" : "none",
                         color: "#ffffff"
                       }}
                     >
-                      <PanelTop size={15} style={{ color: "var(--cyber-cyan)" }} /> Header
+                      <PanelTop size={15} style={{ color: "var(--cyber-cyan)" }} />
+                      {canvasHeader.enabled ? (activeLayerId === 'header' ? "Header (Active)" : "Header (On)") : "Header"}
                     </button>
 
                     {/* Quick Phrases Button */}
@@ -3478,6 +3661,245 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                     </div>
                   </div>
                 </div>
+              ) : (activeLayerId === 'header' || (canvasHeader.enabled && !activeCaption)) ? (
+                /* HEADER EXTENSION CONTROLS */
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {/* ROW 1: HEADER BADGE + THEME + REMOVE BUTTON */}
+                  <div className="flex-between align-center" style={{ gap: '8px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span
+                        style={{
+                          fontSize: '0.72rem',
+                          fontWeight: 700,
+                          padding: '3px 8px',
+                          borderRadius: '12px',
+                          background: 'rgba(6, 182, 212, 0.2)',
+                          color: 'var(--cyber-cyan)',
+                          border: '1px solid rgba(6, 182, 212, 0.4)',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px'
+                        }}
+                      >
+                        <PanelTop size={12} /> Top Canvas Header Extension
+                      </span>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      {/* Theme Toggle Button */}
+                      <button
+                        type="button"
+                        className="btn btn-xs btn-secondary"
+                        onClick={() => {
+                          const isLight = canvasHeader.bgColor === '#ffffff';
+                          const nextH = {
+                            ...canvasHeader,
+                            bgColor: isLight ? '#000000' : '#ffffff',
+                            color: isLight ? '#ffffff' : '#000000'
+                          };
+                          setCanvasHeader(nextH);
+                          pushHistory(captions, stickers, imageLayers, drawings, nextH);
+                        }}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '5px',
+                          fontSize: '0.75rem',
+                          padding: '4px 10px',
+                          borderRadius: '8px'
+                        }}
+                        title="Toggle Header Theme (Light / Dark)"
+                      >
+                        <div
+                          style={{
+                            width: 10,
+                            height: 10,
+                            borderRadius: '50%',
+                            background: canvasHeader.bgColor || '#ffffff',
+                            border: '1px solid #fff'
+                          }}
+                        />
+                        <span>{canvasHeader.bgColor === '#ffffff' ? 'Light Theme' : 'Dark Theme'}</span>
+                      </button>
+
+                      {/* Remove Header Button */}
+                      <button
+                        type="button"
+                        className="btn btn-icon btn-xs hover-lift"
+                        onClick={() => handleDeleteLayer('header')}
+                        title="Remove Header Extension"
+                        style={{
+                          width: '28px',
+                          height: '28px',
+                          borderRadius: '50%',
+                          background: 'rgba(239, 68, 68, 0.85)',
+                          border: '1px solid rgba(239, 68, 68, 1)',
+                          color: '#ffffff',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0
+                        }}
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* ROW 2: HEADER TEXT INPUT */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <label style={{ margin: 0, fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)' }}>
+                      Header Caption Text
+                    </label>
+                    <textarea
+                      rows={2}
+                      value={canvasHeader.text}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setCanvasHeader((prev) => {
+                          const nextH = { ...prev, text: val };
+                          pushHistoryDebounced(captions, stickers, imageLayers, drawings, nextH);
+                          return nextH;
+                        });
+                      }}
+                      placeholder="Write header text..."
+                      style={{
+                        background: 'var(--bg-surface-1)',
+                        border: '1px solid var(--glass-border)',
+                        borderRadius: '10px',
+                        color: 'var(--text-main)',
+                        padding: '8px 12px',
+                        fontSize: '0.85rem',
+                        fontWeight: 600,
+                        resize: 'none',
+                        outline: 'none',
+                        width: '100%',
+                        boxSizing: 'border-box'
+                      }}
+                    />
+                  </div>
+
+                  {/* ROW 3: FONT, SIZE & ALIGNMENT */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 0.8fr', gap: '8px', alignItems: 'center' }}>
+                    {/* Font Dropdown */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0 }}>
+                      <label style={{ margin: 0, fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)' }}>
+                        Font
+                      </label>
+                      <select
+                        value={canvasHeader.fontFamily}
+                        onChange={(e) => {
+                          const nextH = { ...canvasHeader, fontFamily: e.target.value };
+                          setCanvasHeader(nextH);
+                          pushHistory(captions, stickers, imageLayers, drawings, nextH);
+                        }}
+                        style={{
+                          height: '36px',
+                          background: 'var(--bg-surface-1)',
+                          border: '1px solid var(--glass-border)',
+                          borderRadius: '10px',
+                          color: 'var(--text-main)',
+                          padding: '0 8px',
+                          fontSize: '0.78rem',
+                          fontWeight: 600,
+                          outline: 'none',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        {FONTS.map((f) => (
+                          <option key={f.id || f.family} value={f.family}>
+                            {f.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Font Size */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0 }}>
+                      <label style={{ margin: 0, fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)' }}>
+                        Size ({canvasHeader.fontSize || 36}px)
+                      </label>
+                      <div
+                        className="size-control-group flex-between gap-xs"
+                        style={{
+                          height: '36px',
+                          padding: '0 6px',
+                          borderRadius: '10px',
+                          background: 'var(--bg-surface-1)',
+                          border: '1px solid var(--glass-border)',
+                          alignItems: 'center'
+                        }}
+                      >
+                        <button
+                          type="button"
+                          className="btn btn-xs btn-ghost"
+                          style={{ width: '22px', height: '22px', borderRadius: '50%', padding: 0, fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-main)' }}
+                          onClick={() => {
+                            const nextH = { ...canvasHeader, fontSize: Math.max(18, (canvasHeader.fontSize || 36) - 4) };
+                            setCanvasHeader(nextH);
+                            pushHistory(captions, stickers, imageLayers, drawings, nextH);
+                          }}
+                          title="Decrease size"
+                        >
+                          -
+                        </button>
+                        <input
+                          type="range"
+                          min={18}
+                          max={80}
+                          style={{ flex: 1, margin: '0 4px', minWidth: 0, accentColor: 'var(--cyber-cyan)' }}
+                          value={canvasHeader.fontSize || 36}
+                          onChange={(e) => {
+                            const nextH = { ...canvasHeader, fontSize: Number(e.target.value) };
+                            setCanvasHeader(nextH);
+                            pushHistoryDebounced(captions, stickers, imageLayers, drawings, nextH);
+                          }}
+                        />
+                        <button
+                          type="button"
+                          className="btn btn-xs btn-ghost"
+                          style={{ width: '22px', height: '22px', borderRadius: '50%', padding: 0, fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-main)' }}
+                          onClick={() => {
+                            const nextH = { ...canvasHeader, fontSize: Math.min(80, (canvasHeader.fontSize || 36) + 4) };
+                            setCanvasHeader(nextH);
+                            pushHistory(captions, stickers, imageLayers, drawings, nextH);
+                          }}
+                          title="Increase size"
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Alignment */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0 }}>
+                      <label style={{ margin: 0, fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)' }}>
+                        Align
+                      </label>
+                      <button
+                        type="button"
+                        className={`btn btn-xs ${canvasHeader.align === 'center' ? 'btn-primary' : 'btn-secondary'}`}
+                        onClick={() => {
+                          const nextH = { ...canvasHeader, align: canvasHeader.align === 'center' ? 'left' : 'center' };
+                          setCanvasHeader(nextH);
+                          pushHistory(captions, stickers, imageLayers, drawings, nextH);
+                        }}
+                        style={{
+                          height: '36px',
+                          borderRadius: '10px',
+                          fontSize: '0.75rem',
+                          fontWeight: 600,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '4px'
+                        }}
+                      >
+                        {canvasHeader.align === 'center' ? 'Center' : 'Left'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
               ) : (
                 /* EMPTY STATE (When no caption is selected) */
                 <div
@@ -3496,7 +3918,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                   }}
                 >
                   <Type size={15} style={{ color: 'var(--cyber-cyan)', opacity: 0.8 }} />
-                  <span>Tap text on canvas to customize font, size, opacity & colors.</span>
+                  <span>Tap text or header on canvas to customize font, size, opacity & colors.</span>
                 </div>
               )}
 

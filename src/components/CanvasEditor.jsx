@@ -102,7 +102,9 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     isDrawingMode = false,
     drawTool = 'brush',
     brushColor = '#a855f7',
-    brushSize = 10
+    brushSize = 10,
+    canvasHeader,
+    onUpdateCanvasHeader
   },
   ref
 ) {
@@ -210,6 +212,35 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     canvasW = Math.round((rawW / maxDim) * 1080);
     canvasH = Math.round((rawH / maxDim) * 1080);
   }
+
+  // Header Canvas Extension calculations
+  const isHeaderEnabled = !!canvasHeader?.enabled;
+  const headerFontSize = canvasHeader?.fontSize || 36;
+  const headerFontFamily = canvasHeader?.fontFamily || 'Montserrat, sans-serif';
+  const headerFont = `600 ${headerFontSize}px ${headerFontFamily}`;
+
+  let headerLines = [];
+  if (isHeaderEnabled) {
+    const textToWrap = canvasHeader?.text || 'When you finally solve the bug after 4 hours:';
+    if (typeof document !== 'undefined') {
+      const tempCanvas = document.createElement('canvas');
+      const tempCtx = tempCanvas.getContext('2d');
+      if (tempCtx) {
+        tempCtx.font = headerFont;
+        headerLines = wrapText(tempCtx, textToWrap, canvasW * 0.92);
+      }
+    }
+    if (!headerLines || headerLines.length === 0) {
+      headerLines = [textToWrap];
+    }
+  }
+
+  const headerLineHeight = headerFontSize * 1.35;
+  const headerPadY = Math.max(24, Math.round(headerFontSize * 0.7));
+  const headerExtH = isHeaderEnabled
+    ? Math.max(90, Math.round(headerLines.length * headerLineHeight + headerPadY * 2))
+    : 0;
+  const totalCanvasH = canvasH + headerExtH;
   
   const activeFilters = filters || { brightness: 100, contrast: 100, saturation: 100, grayscale: 0, blur: 0 };
 
@@ -227,7 +258,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
 
   useLayoutEffect(() => {
     updateScaleSync();
-  }, [canvasW, imgSrc]);
+  }, [canvasW, imgSrc, totalCanvasH]);
 
   useEffect(() => {
     updateScaleSync();
@@ -334,7 +365,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
 
     const renderCanvas = (img) => {
       if (canvas.width !== canvasW) canvas.width = canvasW;
-        if (canvas.height !== canvasH) canvas.height = canvasH;
+      if (canvas.height !== totalCanvasH) canvas.height = totalCanvasH;
 
       const filterScope = activeFilters?.filterScope || 'all';
       const filterCss = getFilterCss(activeFilters);
@@ -350,7 +381,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         }
         compCanvas = compCanvasRef.current;
         if (compCanvas.width !== canvasW) compCanvas.width = canvasW;
-        if (compCanvas.height !== canvasH) compCanvas.height = canvasH;
+        if (compCanvas.height !== totalCanvasH) compCanvas.height = totalCanvasH;
         targetCtx = compCanvas.getContext('2d');
       }
 
@@ -401,6 +432,12 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         uiCtx.restore();
       };
 
+      // Available image area (below header extension if active)
+      const imageAreaX = 0;
+      const imageAreaY = headerExtH;
+      const imageAreaW = canvasW;
+      const imageAreaH = canvasH;
+
       // Draw Base Image or Native Layout Slots
       if (activeIsNativeLayout && activeLayoutDef) {
         const totalSlots = activeLayoutDef.slots;
@@ -410,30 +447,30 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         const isHybrid = activeLayoutDef.id === '3-hybrid';
 
         for (let idx = 0; idx < totalSlots; idx++) {
-          let x = 0, y = 0, slotW = canvas.width, slotH = canvas.height;
+          let x = 0, y = 0, slotW = imageAreaW, slotH = imageAreaH;
 
           if (isVert) {
-            slotH = canvas.height / totalSlots;
+            slotH = imageAreaH / totalSlots;
             y = idx * slotH;
           } else if (isHoriz) {
-            slotW = canvas.width / totalSlots;
+            slotW = imageAreaW / totalSlots;
             x = idx * slotW;
           } else if (isGrid) {
-            slotW = canvas.width / 2;
-            slotH = canvas.height / 2;
+            slotW = imageAreaW / 2;
+            slotH = imageAreaH / 2;
             x = (idx % 2) * slotW;
             y = Math.floor(idx / 2) * slotH;
           } else if (isHybrid) {
             if (idx === 0) {
-              slotW = canvas.width;
-              slotH = canvas.height / 2;
+              slotW = imageAreaW;
+              slotH = imageAreaH / 2;
               x = 0;
               y = 0;
             } else {
-              slotW = canvas.width / 2;
-              slotH = canvas.height / 2;
+              slotW = imageAreaW / 2;
+              slotH = imageAreaH / 2;
               x = (idx - 1) * slotW;
-              y = canvas.height / 2;
+              y = imageAreaH / 2;
             }
           }
 
@@ -446,11 +483,11 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
               const nw = cached.width * scale;
               const nh = cached.height * scale;
               const nx = x + (slotW - nw) / 2 + (tx.offsetX * slotW);
-              const ny = y + (slotH - nh) / 2 + (tx.offsetY * slotH);
+              const ny = imageAreaY + y + (slotH - nh) / 2 + (tx.offsetY * slotH);
 
               targetCtx.save();
               targetCtx.beginPath();
-              targetCtx.rect(x, y, slotW, slotH);
+              targetCtx.rect(x, imageAreaY + y, slotW, slotH);
               targetCtx.clip();
               try {
                 drawImageFiltered(targetCtx, cached, bgFilterCss, nx, ny, nw, nh);
@@ -469,61 +506,115 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
               newImg.src = src;
               
               targetCtx.fillStyle = liveBgColor;
-              targetCtx.fillRect(x, y, slotW, slotH);
+              targetCtx.fillRect(x, imageAreaY + y, slotW, slotH);
             }
           } else {
             targetCtx.fillStyle = liveBgColor;
-            targetCtx.fillRect(x, y, slotW, slotH);
+            targetCtx.fillRect(x, imageAreaY + y, slotW, slotH);
           }
 
           if (activeLayoutDef.id !== '1-panel' && totalSlots > 1) {
             targetCtx.strokeStyle = '#000000';
             targetCtx.lineWidth = 2;
-            targetCtx.strokeRect(x, y, slotW, slotH);
+            targetCtx.strokeRect(x, imageAreaY + y, slotW, slotH);
           }
         }
       } else if (img && !isNativeLayout) {
-        let drawW = canvas.width;
-        let drawH = canvas.height;
+        let drawW = imageAreaW;
+        let drawH = imageAreaH;
         let offsetX = 0;
-        let offsetY = 0;
+        let offsetY = imageAreaY;
 
         if (imageFit === 'stretch') {
-          drawW = canvas.width;
-          drawH = canvas.height;
+          drawW = imageAreaW;
+          drawH = imageAreaH;
           offsetX = 0;
-          offsetY = 0;
+          offsetY = imageAreaY;
         } else if (imageFit === 'contain') {
           const imgRatio = img.width / img.height;
-          const canvasRatio = canvas.width / canvas.height;
+          const canvasRatio = imageAreaW / imageAreaH;
 
           if (imgRatio > canvasRatio) {
-            drawW = canvas.width;
-            drawH = canvas.width / imgRatio;
+            drawW = imageAreaW;
+            drawH = imageAreaW / imgRatio;
             offsetX = 0;
-            offsetY = (canvas.height - drawH) / 2;
+            offsetY = imageAreaY + (imageAreaH - drawH) / 2;
           } else {
-            drawH = canvas.height;
-            drawW = canvas.height * imgRatio;
-            offsetY = 0;
-            offsetX = (canvas.width - drawW) / 2;
+            drawH = imageAreaH;
+            drawW = imageAreaH * imgRatio;
+            offsetY = imageAreaY;
+            offsetX = (imageAreaW - drawW) / 2;
           }
         } else {
           const imgRatio = img.width / img.height;
-          const canvasRatio = canvas.width / canvas.height;
+          const canvasRatio = imageAreaW / imageAreaH;
 
           if (imgRatio > canvasRatio) {
-            drawH = canvas.height;
-            drawW = canvas.height * imgRatio;
-            offsetX = (canvas.width - drawW) / 2;
+            drawH = imageAreaH;
+            drawW = imageAreaH * imgRatio;
+            offsetX = (imageAreaW - drawW) / 2;
+            offsetY = imageAreaY;
           } else {
-            drawW = canvas.width;
-            drawH = canvas.width / imgRatio;
-            offsetY = (canvas.height - drawH) / 2;
+            drawW = imageAreaW;
+            drawH = imageAreaW / imgRatio;
+            offsetY = imageAreaY + (imageAreaH - drawH) / 2;
+            offsetX = 0;
           }
         }
         targetCtx.save();
         drawImageFiltered(targetCtx, img, bgFilterCss, offsetX, offsetY, drawW, drawH);
+        targetCtx.restore();
+      }
+
+      // Draw Header Extension (Banner extending above canvas)
+      if (isHeaderEnabled && headerExtH > 0) {
+        targetCtx.save();
+        // 1. Solid background for header extension
+        targetCtx.fillStyle = canvasHeader.bgColor || '#ffffff';
+        targetCtx.fillRect(0, 0, canvasW, headerExtH);
+
+        // 2. Crisp boundary divider line between header extension and meme image
+        targetCtx.strokeStyle = canvasHeader.bgColor === '#000000' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.08)';
+        targetCtx.lineWidth = 1;
+        targetCtx.beginPath();
+        targetCtx.moveTo(0, headerExtH);
+        targetCtx.lineTo(canvasW, headerExtH);
+        targetCtx.stroke();
+
+        // 3. Draw Header Text
+        targetCtx.fillStyle = canvasHeader.color || (canvasHeader.bgColor === '#000000' ? '#ffffff' : '#000000');
+        targetCtx.font = headerFont;
+        targetCtx.textBaseline = 'top';
+        const isCenter = canvasHeader.align === 'center';
+        targetCtx.textAlign = isCenter ? 'center' : 'left';
+        
+        const textPadX = Math.round(canvasW * 0.04);
+        const textX = isCenter ? canvasW / 2 : textPadX;
+
+        const linesToDraw = [...headerLines];
+        if (activeLayerId === 'header' && editingCaptionId === 'header' && cursorVisible && !isDrawingMode && linesToDraw.length > 0) {
+          linesToDraw[linesToDraw.length - 1] += '|';
+        }
+
+        linesToDraw.forEach((line, idx) => {
+          const textY = headerPadY + idx * headerLineHeight;
+          targetCtx.fillText(line, textX, textY);
+        });
+
+        // 4. Active selection indicator
+        if (activeLayerId === 'header') {
+          targetCtx.strokeStyle = '#00f0ff';
+          targetCtx.lineWidth = 2.5;
+          targetCtx.setLineDash([6, 6]);
+          targetCtx.strokeRect(2, 2, canvasW - 4, headerExtH - 4);
+          
+          targetCtx.setLineDash([]);
+          targetCtx.fillStyle = '#00f0ff';
+          targetCtx.font = 'bold 12px sans-serif';
+          targetCtx.textAlign = 'right';
+          targetCtx.textBaseline = 'top';
+          targetCtx.fillText('HEADER EXTENSION', canvasW - 10, 6);
+        }
         targetCtx.restore();
       }
 
@@ -1104,7 +1195,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     } else {
       renderCanvas(null);
     }
-  }, [captions, stickers, activeLayerId, imageLayers, slotImages, slotTransforms, activeIsNativeLayout, editingCaptionId, cursorVisible, aspectRatio, imageFit, watermark, drawings, isDrawingMode, imgSrc, filters, liveBgColor]);
+  }, [captions, stickers, activeLayerId, imageLayers, slotImages, slotTransforms, activeIsNativeLayout, editingCaptionId, cursorVisible, aspectRatio, imageFit, watermark, drawings, isDrawingMode, imgSrc, filters, liveBgColor, canvasHeader]);
 
   // Helper to rotate point for hit testing
   const rotatePoint = (px, py, cx, cy, angle) => {
@@ -1170,6 +1261,16 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         ctx.arc(coords.x, coords.y, brushSize / 2, 0, Math.PI * 2);
         ctx.fill();
         ctx.restore();
+      }
+      return;
+    }
+
+    if (!isDrawingMode && isHeaderEnabled && coords.y <= headerExtH) {
+      if (onSelectLayer) onSelectLayer('header');
+      if (editableRef.current) {
+        setTimeout(() => {
+          editableRef.current?.focus();
+        }, 50);
       }
       return;
     }
@@ -1454,6 +1555,14 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
       }
     }
 
+    if (!hitLayer && isHeaderEnabled && coords.y <= headerExtH) {
+      hitLayer = {
+        id: 'header',
+        type: 'header',
+        locked: true
+      };
+    }
+
     if (hitLayer) {
       if (hitLayer.type === 'delete_layer') {
         if (onDeleteLayer) onDeleteLayer();
@@ -1563,12 +1672,17 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
       // Slot actions are now handled by DOM overlays on the canvas
     }
 
-    // Clean tap on caption: select layer, activate editing mode and open keyboard immediately
+    // Clean tap on caption or header: select layer, activate editing mode and open keyboard immediately
     if (wasCleanTap && tappedType === 'caption' && tappedId) {
       if (onSelectLayer) onSelectLayer(tappedId);
       setEditingCaptionId(tappedId);
       const activeCap = captions.find(c => c.id === tappedId);
       setEditingCaptionText(activeCap ? activeCap.text : '');
+      focusTextarea();
+    } else if (wasCleanTap && tappedType === 'header') {
+      if (onSelectLayer) onSelectLayer('header');
+      setEditingCaptionId('header');
+      setEditingCaptionText(canvasHeader?.text || '');
       focusTextarea();
     }
   };
@@ -1697,6 +1811,11 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
           }
         }
       }
+    }
+
+    if (isHeaderEnabled && coords.y <= headerExtH) {
+      canvas.style.cursor = 'pointer';
+      return;
     }
 
     for (const stk of stickers) {
@@ -2094,12 +2213,12 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     }
   }, [liveBgColor, isNativeLayout]);
   
-// Keep focus on active caption whenever selected
+// Keep focus on active caption or header whenever selected
   useEffect(() => {
-    if (activeCaption && editingCaptionId === activeCaption.id) {
+    if ((activeCaption && editingCaptionId === activeCaption.id) || (activeLayerId === 'header' && editingCaptionId === 'header')) {
       focusTextarea();
     }
-  }, [activeCaption?.id, editingCaptionId]);
+  }, [activeCaption?.id, activeLayerId, editingCaptionId]);
 
   const handleWheel = (e) => {
     if (!activeIsNativeLayout || !activeLayoutDef || !onUpdateSlotTransform) return;
@@ -2186,20 +2305,20 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
           autoCapitalize="off"
           style={{
             position: 'absolute',
-            left: activeCaption ? `${activeCaption.x * 100}%` : '-9999px',
-            top: activeCaption ? `${activeCaption.y * 100}%` : '-9999px',
-            transform: activeCaption ? `translate(-50%, -50%) rotate(${activeCaption.rotation || 0}deg)` : 'none',
-            width: activeCaption ? `${Math.min(95, Math.max(35, (activeCaption.width || 0.8) * 100))}%` : '1px',
-            minHeight: activeCaption ? '44px' : '1px',
+            left: activeCaption ? `${activeCaption.x * 100}%` : (activeLayerId === 'header' ? '50%' : '-9999px'),
+            top: activeCaption ? `${activeCaption.y * 100}%` : (activeLayerId === 'header' ? `${((headerExtH / 2) / Math.max(1, totalCanvasH)) * 100}%` : '-9999px'),
+            transform: activeCaption ? `translate(-50%, -50%) rotate(${activeCaption.rotation || 0}deg)` : 'translate(-50%, -50%)',
+            width: activeCaption ? `${Math.min(95, Math.max(35, (activeCaption.width || 0.8) * 100))}%` : (activeLayerId === 'header' ? '92%' : '1px'),
+            minHeight: activeCaption ? '44px' : (activeLayerId === 'header' ? '36px' : '1px'),
             opacity: 0.001,
-            pointerEvents: activeCaption ? 'auto' : 'none',
+            pointerEvents: (activeCaption || activeLayerId === 'header') ? 'auto' : 'none',
             color: 'transparent',
             caretColor: 'transparent',
             background: 'transparent',
             border: 'none',
             outline: 'none',
             resize: 'none',
-            zIndex: activeCaption ? 15 : -1,
+            zIndex: (activeCaption || activeLayerId === 'header') ? 15 : -1,
             padding: '0',
             margin: '0',
             fontSize: '16px',
@@ -2207,10 +2326,12 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
             overflow: 'hidden'
           }}
           rows={2}
-          value={activeCaption?.text || ''}
+          value={activeCaption ? (activeCaption.text || '') : (activeLayerId === 'header' ? (canvasHeader?.text || '') : '')}
           onChange={(e) => {
             if (activeCaption && onUpdateCaptionText) {
               onUpdateCaptionText(activeCaption.id, e.target.value);
+            } else if (activeLayerId === 'header' && onUpdateCanvasHeader) {
+              onUpdateCanvasHeader({ text: e.target.value });
             }
           }}
           onFocus={(e) => {
