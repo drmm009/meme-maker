@@ -1015,9 +1015,9 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
               uiCtx.arc(0, boxY - 34, 16, 0, Math.PI * 2);
               uiCtx.fill();
               uiCtx.stroke();
+
+              drawDeleteHandle(uiCtx, boxX - 36, boxY - 36);
             }
-            
-            drawDeleteHandle(uiCtx, boxX - 36, boxY - 36);
             uiCtx.restore();
           };
         }
@@ -1303,7 +1303,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
           const rightX = cx + halfW;
 
           const handles = [
-            { type: 'delete_layer', x: leftX - 36, y: topY - 36, r: 26 },
+            ...(!activeCap.isHeaderCaption ? [{ type: 'delete_layer', x: leftX - 36, y: topY - 36, r: 26 }] : []),
             ...(!activeCap.isHeaderCaption ? [{ type: 'rotate_caption', x: cx, y: topY - 34, r: 24 }] : []),
             { type: 'resize_caption_tl', x: leftX, y: topY, r: 24 },
             { type: 'resize_caption_tr', x: rightX, y: topY, r: 24 },
@@ -1717,7 +1717,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         const leftX = cx - halfW;
         const rightX = cx + halfW;
 
-        if (Math.hypot(p.x - (leftX - 36), p.y - (topY - 36)) <= 26) {
+        if (!activeCap.isHeaderCaption && Math.hypot(p.x - (leftX - 36), p.y - (topY - 36)) <= 26) {
           canvas.style.cursor = 'pointer'; return;
         }
         if (!activeCap.isHeaderCaption && Math.hypot(p.x - cx, p.y - (topY - 34)) <= 24) {
