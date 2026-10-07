@@ -562,6 +562,7 @@ export default function Timeline({ items, activeItemId, setActiveItem, onUpdateI
                         backgroundPosition: 'center',
                         backgroundRepeat: 'no-repeat'
                       } : {})
+                    }}>
                       {item.type !== 'image' && item.type !== 'sticker' && (
                         <span style={{ background: item.thumbnailUrl ? 'rgba(0,0,0,0.6)' : 'transparent', padding: '2px 6px', borderRadius: '4px' }}>
                           {item.type === 'audio' ? (item.name || 'AUDIO') : item.type.toUpperCase()}

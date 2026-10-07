@@ -510,7 +510,16 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
       try { ctx.filter = 'none'; } catch(e) {}
 
       // Render Custom Image Overlay Layers
-      (imageLayers || []).forEach((imgLayer) => {
+            const allLayers = [
+        ...(imageLayers || []).map(l => ({ ...l, _type: 'imageLayer', zIndex: l.zIndex || 0 })),
+        ...(stickers || []).map(l => ({ ...l, _type: 'sticker', zIndex: l.zIndex || 0 })),
+        ...(captions || []).map(l => ({ ...l, _type: 'caption', zIndex: l.zIndex || 0 }))
+      ];
+      allLayers.sort((a, b) => a.zIndex - b.zIndex);
+
+      allLayers.forEach((layer) => {
+        if (layer._type === 'imageLayer') {
+          const imgLayer = layer;
         const cx = imgLayer.x * canvas.width;
         const cy = imgLayer.y * canvas.height;
         const cached = imageCacheRef.current[imgLayer.url];
@@ -645,10 +654,8 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
           };
           newImg.src = imgLayer.url;
         }
-      });
-
-      // Render Stickers / Emojis
-      stickers.forEach((stk) => {
+              } else if (layer._type === 'sticker') {
+          const stk = layer;
         
         const sx = stk.x * canvas.width;
         const sy = stk.y * canvas.height;
@@ -724,9 +731,8 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
           ctx.fillText(stk.emoji, 0, 0);
         }
         ctx.restore();
-      });
-
-      captions.forEach((cap) => {
+              } else if (layer._type === 'caption') {
+          const cap = layer;
         const cx = cap.x * canvas.width;
         const cy = cap.y * canvas.height;
         
@@ -870,6 +876,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         }
 
         ctx.restore();
+        }
       });
 
       // --- RENDER FREEHAND DRAWINGS ---
@@ -1273,112 +1280,94 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
       }
     }
 
-    // B. Priority 2: Non-active layers (Stickers top-most, then Captions, then ImageLayers)
+    // B. Priority 2: Non-active layers
     if (!hitLayer) {
-      for (let i = stickers.length - 1; i >= 0; i--) {
-        const stk = stickers[i];
-        const cx = stk.x * canvas.width;
-        const cy = stk.y * canvas.height;
-        const stkSize = (stk.scale || 1.0) * 52;
-        const p = rotatePoint(coords.x, coords.y, cx, cy, -(stk.rotation || 0));
-        if (p.x >= cx - stkSize / 2 && p.x <= cx + stkSize / 2 && p.y >= cy - stkSize / 2 && p.y <= cy + stkSize / 2) {
-          hitLayer = { 
-            id: stk.id, 
-            type: 'sticker', 
-            x: stk.x, 
-            y: stk.y, 
-            scale: stk.scale || 1.0, 
-            rotation: stk.rotation || 0 
-          };
-          break;
+      const allLayersRev = [
+        ...(imageLayers || []).map(l => ({ ...l, _type: 'imageLayer', zIndex: l.zIndex || 0 })),
+        ...(stickers || []).map(l => ({ ...l, _type: 'sticker', zIndex: l.zIndex || 0 })),
+        ...(captions || []).map(l => ({ ...l, _type: 'caption', zIndex: l.zIndex || 0 }))
+      ];
+      allLayersRev.sort((a, b) => b.zIndex - a.zIndex); // Descending for hit test
+
+      for (const layer of allLayersRev) {
+        if (hitLayer) break;
+
+        if (layer._type === 'sticker') {
+          const stk = layer;
+          const cx = stk.x * canvas.width;
+          const cy = stk.y * canvas.height;
+          const stkSize = (stk.scale || 1.0) * 52;
+          const p = rotatePoint(coords.x, coords.y, cx, cy, -(stk.rotation || 0));
+          if (p.x >= cx - stkSize / 2 && p.x <= cx + stkSize / 2 && p.y >= cy - stkSize / 2 && p.y <= cy + stkSize / 2) {
+            hitLayer = { 
+              id: stk.id, 
+              type: 'sticker', 
+              x: stk.x, 
+              y: stk.y, 
+              scale: stk.scale || 1.0, 
+              rotation: stk.rotation || 0 
+            };
+          }
+        } else if (layer._type === 'caption') {
+          const cap = layer;
+          const cx = cap.x * canvas.width;
+          const cy = cap.y * canvas.height;
+          const p = rotatePoint(coords.x, coords.y, cx, cy, -(cap.rotation || 0));
+          const fontSize = cap.fontSize || 50;
+          ctx.font = `bold ${fontSize}px ${cap.fontFamily || 'Impact, sans-serif'}`;
+          const renderMaxWidth = (cap.width || 0.9) * canvas.width;
+          const lines = wrapText(ctx, cap.text || '', renderMaxWidth);
+          let maxLineWidth = 0;
+          for (const line of lines) {
+            maxLineWidth = Math.max(maxLineWidth, ctx.measureText(line).width);
+          }
+          const hasBg = cap.bgColor && cap.bgColor !== 'transparent' && cap.bgColor !== 'none';
+          const padX = hasBg && cap.bgStyle !== 'banner' ? Math.max(16, fontSize * 0.35) : Math.max(8, fontSize * 0.15);
+          const padY = hasBg && cap.bgStyle !== 'banner' ? Math.max(10, fontSize * 0.2) : Math.max(4, fontSize * 0.1);
+          const boxWidth = maxLineWidth + padX * 2;
+          const lineHeight = fontSize * 1.2;
+          const boxHeight = lines.length * lineHeight + padY * 2;
+
+          let hitBox = false;
+          if (hasBg && cap.bgStyle === 'banner') {
+             const bannerY = - ((lines.length - 1) * lineHeight) / 2 - lineHeight / 2 - padY;
+             hitBox = (p.y >= cy + bannerY && p.y <= cy + bannerY + boxHeight);
+          } else {
+             hitBox = (p.x >= cx - boxWidth / 2 && p.x <= cx + boxWidth / 2 && p.y >= cy - boxHeight / 2 && p.y <= cy + boxHeight / 2);
+          }
+
+          if (hitBox) {
+            hitLayer = { id: cap.id, type: 'caption', x: cap.x, y: cap.y };
+          }
+        } else if (layer._type === 'imageLayer') {
+          const imgLayer = layer;
+          const cx = imgLayer.x * canvas.width;
+          const cy = imgLayer.y * canvas.height;
+          const cached = imageCacheRef.current[imgLayer.url];
+          
+          if (cached) {
+            const baseW = cached.width || 200;
+            const baseH = cached.height || 200;
+            const scale = imgLayer.scale || 1.0;
+            const maxDim = 320;
+            const fitScale = Math.min(maxDim / baseW, maxDim / baseH);
+            const w = imgLayer.boxWidth || imgLayer.width || (baseW * fitScale * scale);
+            const h = imgLayer.boxHeight || imgLayer.height || (baseH * fitScale * scale);
+
+            const p = rotatePoint(coords.x, coords.y, cx, cy, -(imgLayer.rotation || 0));
+            if (p.x >= cx - w / 2 && p.x <= cx + w / 2 && p.y >= cy - h / 2 && p.y <= cy + h / 2) {
+              hitLayer = { 
+                id: imgLayer.id, 
+                type: 'imageLayer', 
+                x: imgLayer.x, 
+                y: imgLayer.y, 
+                scale: imgLayer.scale || 1.0, 
+                rotation: imgLayer.rotation || 0 
+              };
+            }
+          }
         }
       }
-    }
-
-    if (!hitLayer) {
-      for (let i = captions.length - 1; i >= 0; i--) {
-        const cap = captions[i];
-        const cx = cap.x * canvas.width;
-        const cy = cap.y * canvas.height;
-        const p = rotatePoint(coords.x, coords.y, cx, cy, -(cap.rotation || 0));
-
-        const renderMaxWidth = (cap.width || 0.9) * canvas.width;
-        const fontSize = cap.fontSize || 50;
-        ctx.font = `bold ${fontSize}px ${cap.fontFamily || 'Impact, sans-serif'}`;
-        const lines = wrapText(ctx, cap.text, renderMaxWidth);
-        let maxLineWidth = 0;
-        for (const line of lines) {
-          maxLineWidth = Math.max(maxLineWidth, ctx.measureText(line).width);
-        }
-        const hasBg = cap.bgColor && cap.bgColor !== 'transparent' && cap.bgColor !== 'none';
-        const padX = hasBg && cap.bgStyle !== 'banner' ? Math.max(16, fontSize * 0.35) : Math.max(8, fontSize * 0.15);
-        const padY = hasBg && cap.bgStyle !== 'banner' ? Math.max(10, fontSize * 0.2) : Math.max(4, fontSize * 0.1);
-        const boxWidth = maxLineWidth + padX * 2;
-        const textHeight = lines.length * (fontSize * 1.2);
-        const boxHeight = textHeight + padY * 2;
-        const halfW = boxWidth / 2;
-        const halfH = boxHeight / 2;
-
-        if (p.x >= cx - halfW && p.x <= cx + halfW && p.y >= cy - halfH && p.y <= cy + halfH) {
-          hitLayer = { 
-            id: cap.id, 
-            type: 'caption', 
-            x: cap.x, 
-            y: cap.y,
-            boxWidth,
-            boxHeight,
-            width: boxWidth / canvas.width,
-            rotation: cap.rotation || 0
-          };
-          break;
-        }
-      }
-    }
-
-    if (!hitLayer) {
-      for (let i = imageLayers.length - 1; i >= 0; i--) {
-        const l = imageLayers[i];
-        const cx = l.x * canvas.width;
-        const cy = l.y * canvas.height;
-        const cached = imageCacheRef.current[l.url];
-        if (!cached) continue;
-        const scale = l.scale || 1.0;
-        const baseW = cached.width || 200;
-        const baseH = cached.height || 200;
-        const fitScale = Math.min(320 / baseW, 320 / baseH);
-        const w = l.boxWidth || l.width || (baseW * fitScale * scale);
-        const h = l.boxHeight || l.height || (baseH * fitScale * scale);
-        const p = rotatePoint(coords.x, coords.y, cx, cy, -(l.rotation || 0));
-
-        if (p.x >= cx - w / 2 && p.x <= cx + w / 2 && p.y >= cy - h / 2 && p.y <= cy + h / 2) {
-          hitLayer = { 
-            id: l.id, 
-            type: 'imageLayer', 
-            x: l.x, 
-            y: l.y,
-            scale,
-            rotation: l.rotation || 0,
-            baseW, baseH, fitScale,
-            boxWidth: w,
-            boxHeight: h,
-            width: w,
-            height: h
-          };
-          break;
-        }
-      }
-    }
-
-    if (hitLayer && hitLayer.type === 'caption') {
-      setEditingCaptionId(hitLayer.id);
-      const activeCap = captions.find(c => c.id === hitLayer.id);
-      setEditingCaptionText(activeCap ? activeCap.text : '');
-      focusTextarea();
-      lastTapRef.current = { id: hitLayer.id, time: Date.now() };
-    } else {
-      setEditingCaptionId(null);
-      setCursorVisible(false);
-      if (editableRef.current) editableRef.current.blur();
     }
 
     if (hitLayer) {

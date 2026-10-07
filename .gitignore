@@ -29,3 +29,7 @@ __pycache__/
 *.zip
 *.exe
 src-best-version/
+archive/
+meme-maker/
+public/imgly/
+lint*.txt

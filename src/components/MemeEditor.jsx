@@ -9,7 +9,8 @@ import {
   Type, Plus, Trash2, Undo, Redo, Download, Share2, Sparkles, Copy, Blend,
   Sliders, Smile, Sticker, ArrowLeft, Save, Check, RefreshCw,
   Image as ImageIcon, Search, X, Upload, RotateCw, ZoomIn, Crop, LayoutGrid, Scissors, Play, Pause, FolderHeart, Droplet, Monitor,
-  Paintbrush, Eraser, Palette, Sun, Moon, ChevronDown, ChevronLeft, PencilLine, Move, ArrowDownRight, Quote, Wand2
+  Paintbrush, Eraser, Palette, Sun, Moon, ChevronDown, ChevronLeft, PencilLine, Move, ArrowDownRight, Quote, Wand2,
+  Layers, ArrowUp, ArrowDown
 } from 'lucide-react';
 import { downloadImageHelper, recordCanvasAsVideo } from '../utils/downloadHelper';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -328,7 +329,6 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
       { text: 'BOTTOM TEXT', x: 0.5, y: 0.85, fontSize: 50, color: '#ffffff', stroke: '#000000', align: 'center', fontFamily: 'Impact, sans-serif',
       rotation: 0 }
     ]).map((c, idx) => ({
-      fontSize: 50,
       color: '#ffffff',
       stroke: '#000000',
       align: 'center',
@@ -367,6 +367,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
   const [showFontMenu, setShowFontMenu] = useState(false);
   const [showOpacityMenu, setShowOpacityMenu] = useState(false);
   const [showImageFilterMenu, setShowImageFilterMenu] = useState(false);
+  const [showLayerMenu, setShowLayerMenu] = useState(false);
   const [showQuickPhrasesMenu, setShowQuickPhrasesMenu] = useState(false);
   const [imageFilters, setImageFilters] = useState({
     preset: 'original',
@@ -808,6 +809,40 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     });
     setImageLayers(nextImgLayers);
     pushHistory(captions, stickers, nextImgLayers);
+  };
+
+  const handleZIndex = (dir) => {
+    if (!activeLayerId) return;
+
+    const isSticker = stickers.some(s => s.id === activeLayerId);
+    const isCap = captions.some(c => c.id === activeLayerId);
+    const isImg = (imageLayers || []).some(img => img.id === activeLayerId);
+
+    if (isSticker) {
+      const idx = stickers.findIndex(s => s.id === activeLayerId);
+      if (idx !== -1) {
+        const nextStickers = [...stickers];
+        nextStickers[idx] = { ...nextStickers[idx], zIndex: (nextStickers[idx].zIndex || 0) + dir };
+        setStickers(nextStickers);
+        pushHistory(captions, nextStickers, imageLayers, drawings);
+      }
+    } else if (isCap) {
+      const idx = captions.findIndex(c => c.id === activeLayerId);
+      if (idx !== -1) {
+        const nextCaps = [...captions];
+        nextCaps[idx] = { ...nextCaps[idx], zIndex: (nextCaps[idx].zIndex || 0) + dir };
+        setCaptions(nextCaps);
+        pushHistory(nextCaps, stickers, imageLayers, drawings);
+      }
+    } else if (isImg) {
+      const idx = (imageLayers || []).findIndex(img => img.id === activeLayerId);
+      if (idx !== -1) {
+        const nextImgLayers = [...imageLayers];
+        nextImgLayers[idx] = { ...nextImgLayers[idx], zIndex: (nextImgLayers[idx].zIndex || 0) + dir };
+        setImageLayers(nextImgLayers);
+        pushHistory(captions, stickers, nextImgLayers, drawings);
+      }
+    }
   };
 
   const handleDeleteLayer = () => {
@@ -1817,13 +1852,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         <Crop style={{ width: 14, height: 14 }} /> Crop
                       </button>
 
-                      <button
-                        className="btn btn-icon btn-xs vid-ctx-btn"
-                        title="Rotate 90°"
-                        onClick={handleRotateImageLayer}
-                      >
-                        <RotateCw style={{ width: 14, height: 14 }} />
-                      </button>
+                      
                       <button
                         className="btn btn-icon btn-xs vid-ctx-btn"
                         title="Duplicate"
@@ -1832,6 +1861,33 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         <Copy style={{ width: 14, height: 14 }} />
                       </button>
                       <div className="vid-ctx-divider"  />
+                      <button
+                        className={`btn btn-icon btn-xs vid-ctx-btn ${showLayerMenu ? 'active' : ''}`}
+                        title="Layer Management"
+                        onClick={() => setShowLayerMenu(!showLayerMenu)}
+                      >
+                        <Layers style={{ width: 14, height: 14 }} />
+                      </button>
+                      
+                      {showLayerMenu && (
+                        <div style={{ display: 'flex' }}>
+                          <button
+                            className="btn btn-icon btn-xs vid-ctx-btn"
+                            title="Bring Forward"
+                            onClick={() => handleZIndex(1)}
+                            style={{ marginRight: '2px' }}
+                          >
+                            <ArrowUp style={{ width: 14, height: 14 }} />
+                          </button>
+                          <button
+                            className="btn btn-icon btn-xs vid-ctx-btn"
+                            title="Send Backward"
+                            onClick={() => handleZIndex(-1)}
+                          >
+                            <ArrowDown style={{ width: 14, height: 14 }} />
+                          </button>
+                        </div>
+                      )}
                       <button
                         className="btn btn-icon btn-xs vid-ctx-btn vid-ctx-btn-delete"
                         style={{ background: 'rgba(239, 68, 68, 0.85)', color: '#ffffff', border: '1px solid rgba(239, 68, 68, 1)' }}
@@ -1854,6 +1910,33 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         <Copy style={{ width: 14, height: 14 }} />
                       </button>
                       <div className="vid-ctx-divider"  />
+                      <button
+                        className={`btn btn-icon btn-xs vid-ctx-btn ${showLayerMenu ? 'active' : ''}`}
+                        title="Layer Management"
+                        onClick={() => setShowLayerMenu(!showLayerMenu)}
+                      >
+                        <Layers style={{ width: 14, height: 14 }} />
+                      </button>
+                      
+                      {showLayerMenu && (
+                        <div style={{ display: 'flex' }}>
+                          <button
+                            className="btn btn-icon btn-xs vid-ctx-btn"
+                            title="Bring Forward"
+                            onClick={() => handleZIndex(1)}
+                            style={{ marginRight: '2px' }}
+                          >
+                            <ArrowUp style={{ width: 14, height: 14 }} />
+                          </button>
+                          <button
+                            className="btn btn-icon btn-xs vid-ctx-btn"
+                            title="Send Backward"
+                            onClick={() => handleZIndex(-1)}
+                          >
+                            <ArrowDown style={{ width: 14, height: 14 }} />
+                          </button>
+                        </div>
+                      )}
                       <button
                         className="btn btn-icon btn-xs vid-ctx-btn vid-ctx-btn-delete"
                         style={{ background: 'rgba(239, 68, 68, 0.85)', color: '#ffffff', border: '1px solid rgba(239, 68, 68, 1)' }}
