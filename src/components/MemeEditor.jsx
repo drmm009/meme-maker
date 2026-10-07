@@ -1498,7 +1498,6 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     }
   };
   const getDockHeight = () => {
-    if (activeTab === 'layers') return '44vh';
     if (aspectRatio === '16:9') return '45vh';
     if (aspectRatio === '1:1') return '40vh';
     if (aspectRatio === '4:5') return '35vh';
@@ -1997,16 +1996,6 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           >
                             {activeImageLayer?.locked ? <Lock style={{ width: 14, height: 14, color: '#f59e0b' }} /> : <Unlock style={{ width: 14, height: 14 }} />}
                           </button>
-                          <button
-                            className="btn btn-icon btn-xs vid-ctx-btn"
-                            title="Open Layers Panel"
-                            onClick={() => {
-                              handleTabClick('layers');
-                              setShowLayerMenu(false);
-                            }}
-                          >
-                            <Layers style={{ width: 14, height: 14 }} />
-                          </button>
                         </div>
                       )}
                       <button
@@ -2076,16 +2065,6 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                             onClick={() => toggleLayerLock(activeLayerId)}
                           >
                             {(activeCaption?.locked || activeSticker?.locked) ? <Lock style={{ width: 14, height: 14, color: '#f59e0b' }} /> : <Unlock style={{ width: 14, height: 14 }} />}
-                          </button>
-                          <button
-                            className="btn btn-icon btn-xs vid-ctx-btn"
-                            title="Open Layers Panel"
-                            onClick={() => {
-                              handleTabClick('layers');
-                              setShowLayerMenu(false);
-                            }}
-                          >
-                            <Layers style={{ width: 14, height: 14 }} />
                           </button>
                         </div>
                       )}
@@ -2592,17 +2571,6 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
               <Type className="icon-xs" /> <span>Text</span>
             </button>
             <button
-              className={`tab-btn ${activeTab === 'layers' ? 'active' : ''}`}
-              onClick={() => handleTabClick('layers')}
-            >
-              <Layers className="icon-xs" /> <span>Layers</span>
-              {(captions.length + stickers.length + (imageLayers?.length || 0)) > 0 && (
-                <span className="layers-count-badge" style={{ marginLeft: '4px', padding: '1px 5px', fontSize: '0.65rem' }}>
-                  {captions.length + stickers.length + (imageLayers?.length || 0)}
-                </span>
-              )}
-            </button>
-            <button
               className={`tab-btn ${activeTab === 'filters' ? 'active' : ''}`}
               onClick={() => handleTabClick('filters')}
             >
@@ -2747,241 +2715,6 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                 </div>
               </div>
             )}
-
-            {/* TAB: LAYERS STACK */}
-            {activeTab === 'layers' && (() => {
-              const ordered = getOrderedLayers();
-              const reversed = [...ordered].reverse(); // Highest zIndex at the top of list
-              return (
-                <div className="tab-content animate-fade-in">
-                  <div className="layers-panel-container">
-                    <div className="layers-panel-header">
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <Layers size={16} style={{ color: 'var(--cyber-cyan)' }} />
-                          Layers Stack
-                        </span>
-                        <span className="layers-count-badge">
-                          {ordered.length} {ordered.length === 1 ? 'layer' : 'layers'}
-                        </span>
-                      </div>
-
-                      {activeLayerId && (
-                        <div className="layers-quick-bar">
-                          <button
-                            type="button"
-                            className="layers-quick-btn"
-                            onClick={() => moveLayer(activeLayerId, 'front')}
-                            title="Bring to Front"
-                          >
-                            <ChevronsUp size={14} /> Top
-                          </button>
-                          <button
-                            type="button"
-                            className="layers-quick-btn"
-                            onClick={() => moveLayer(activeLayerId, 'forward')}
-                            title="Bring Forward (1 step)"
-                          >
-                            <ArrowUp size={14} /> Up
-                          </button>
-                          <button
-                            type="button"
-                            className="layers-quick-btn"
-                            onClick={() => moveLayer(activeLayerId, 'backward')}
-                            title="Send Backward (1 step)"
-                          >
-                            <ArrowDown size={14} /> Down
-                          </button>
-                          <button
-                            type="button"
-                            className="layers-quick-btn"
-                            onClick={() => moveLayer(activeLayerId, 'back')}
-                            title="Send to Back"
-                          >
-                            <ChevronsDown size={14} /> Bottom
-                          </button>
-                        </div>
-                      )}
-                    </div>
-
-                    {ordered.length === 0 ? (
-                      <div className="layers-empty-state">
-                        <Layers size={32} style={{ color: 'var(--text-muted)', opacity: 0.5 }} />
-                        <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                          No layers on canvas yet
-                        </span>
-                        <div className="layers-empty-actions">
-                          <button
-                            type="button"
-                            className="btn btn-xs btn-primary hover-lift"
-                            onClick={handleAddCaption}
-                            style={{ display: 'flex', alignItems: 'center', gap: '5px' }}
-                          >
-                            <Plus size={14} /> Add Text
-                          </button>
-                          <button
-                            type="button"
-                            className="btn btn-xs btn-secondary hover-lift"
-                            onClick={() => setShowMemeStickersModal(true)}
-                            style={{ display: 'flex', alignItems: 'center', gap: '5px' }}
-                          >
-                            <Sticker size={14} /> Add Sticker
-                          </button>
-                          <label
-                            className="btn btn-xs btn-secondary hover-lift"
-                            style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer', margin: 0 }}
-                          >
-                            <Upload size={14} /> Add Media
-                            <input
-                              type="file"
-                              accept="image/*,video/*"
-                              style={{ display: 'none' }}
-                              onChange={handleFileUploadImageLayer}
-                            />
-                          </label>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="layers-list">
-                        {reversed.map((layer, revIdx) => {
-                          const isTop = revIdx === 0;
-                          const isBottom = revIdx === reversed.length - 1;
-                          const isSelected = activeLayerId === layer.id;
-
-                          let title = 'Layer';
-                          let typeLabel = 'Layer';
-                          let previewContent = null;
-
-                          if (layer._type === 'caption') {
-                            title = layer.text || 'Text Layer';
-                            typeLabel = 'Text';
-                            previewContent = (
-                              <span style={{ fontFamily: layer.fontFamily || 'Impact', fontWeight: 'bold', fontSize: '1rem', color: layer.color || '#fff' }}>
-                                T
-                              </span>
-                            );
-                          } else if (layer._type === 'sticker') {
-                            if (layer.emoji) {
-                              title = layer.name || `Emoji (${layer.emoji})`;
-                              typeLabel = 'Emoji';
-                              previewContent = <span style={{ fontSize: '1.2rem', lineHeight: 1 }}>{layer.emoji}</span>;
-                            } else {
-                              title = layer.name || 'Graphic Sticker';
-                              typeLabel = 'Sticker';
-                              previewContent = <img src={layer.url || layer.src} alt="sticker" />;
-                            }
-                          } else if (layer._type === 'imageLayer') {
-                            const isVid = isVideoUrl(layer.url);
-                            title = isVid ? 'Video Layer' : 'Image Overlay';
-                            typeLabel = isVid ? 'Video' : 'Image';
-                            previewContent = isVid ? (
-                              <Play size={16} style={{ color: 'var(--cyber-cyan)' }} />
-                            ) : (
-                              <img src={layer.url} alt="layer" />
-                            );
-                          }
-
-                          return (
-                            <div
-                              key={layer.id}
-                              className={`layer-card ${isSelected ? 'active' : ''} ${layer.locked ? 'locked' : ''} ${layer.hidden ? 'hidden-layer' : ''}`}
-                              onClick={() => {
-                                if (activeLayerId !== layer.id) {
-                                  setActiveLayerId(layer.id);
-                                }
-                              }}
-                            >
-                              <div className="layer-preview-box">
-                                {previewContent}
-                              </div>
-
-                              <div className="layer-details">
-                                <span className="layer-title-text" title={title}>
-                                  {title}
-                                </span>
-                                <span className="layer-meta-text">
-                                  <span style={{ textTransform: 'uppercase', fontSize: '0.66rem', fontWeight: 700, opacity: 0.8 }}>{typeLabel}</span>
-                                  <span>•</span>
-                                  <span>Z: {layer.zIndex}</span>
-                                  {layer.locked && (
-                                    <>
-                                      <span>•</span>
-                                      <span style={{ color: '#f59e0b', display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
-                                        <Lock size={10} /> Locked
-                                      </span>
-                                    </>
-                                  )}
-                                  {layer.hidden && (
-                                    <>
-                                      <span>•</span>
-                                      <span style={{ color: 'var(--text-muted)' }}>Hidden</span>
-                                    </>
-                                  )}
-                                </span>
-                              </div>
-
-                              <div className="layer-actions-group" onClick={(e) => e.stopPropagation()}>
-                                <button
-                                  type="button"
-                                  className="layer-action-icon-btn"
-                                  disabled={isTop}
-                                  onClick={() => moveLayer(layer.id, 'forward')}
-                                  title="Move Up (Bring Forward)"
-                                >
-                                  <ArrowUp size={13} />
-                                </button>
-                                <button
-                                  type="button"
-                                  className="layer-action-icon-btn"
-                                  disabled={isBottom}
-                                  onClick={() => moveLayer(layer.id, 'backward')}
-                                  title="Move Down (Send Backward)"
-                                >
-                                  <ArrowDown size={13} />
-                                </button>
-                                <button
-                                  type="button"
-                                  className={`layer-action-icon-btn ${layer.locked ? 'active-lock' : ''}`}
-                                  onClick={() => toggleLayerLock(layer.id)}
-                                  title={layer.locked ? "Unlock Layer" : "Lock Layer"}
-                                >
-                                  {layer.locked ? <Lock size={13} /> : <Unlock size={13} />}
-                                </button>
-                                <button
-                                  type="button"
-                                  className="layer-action-icon-btn"
-                                  onClick={() => toggleLayerVisibility(layer.id)}
-                                  title={layer.hidden ? "Show Layer" : "Hide Layer"}
-                                >
-                                  {layer.hidden ? <EyeOff size={13} /> : <Eye size={13} />}
-                                </button>
-                                <button
-                                  type="button"
-                                  className="layer-action-icon-btn"
-                                  onClick={() => handleDuplicateLayer(layer.id)}
-                                  title="Duplicate Layer"
-                                >
-                                  <Copy size={13} />
-                                </button>
-                                <button
-                                  type="button"
-                                  className="layer-action-icon-btn danger-btn"
-                                  onClick={() => handleDeleteLayer(layer.id)}
-                                  title="Delete Layer"
-                                >
-                                  <Trash2 size={13} />
-                                </button>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })()}
-
             {/* TAB 4: FREEHAND DRAWING */}
             {activeTab === 'draw' && (
               <div className="tab-content animate-fade-in">
