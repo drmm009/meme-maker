@@ -2040,37 +2040,6 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                       </button>
 
                       <button
-                        className={`btn btn-xs vid-ctx-btn ${activeCaption.bgStyle === 'banner' ? 'active' : ''}`}
-                        title="Toggle Modern Header Banner (Full-width clean banner style)"
-                        onClick={() => {
-                          if (activeCaption.bgStyle === 'banner') {
-                            updateActiveCaptionProps({ bgStyle: 'box' });
-                          } else {
-                            updateActiveCaptionProps({
-                              bgStyle: 'banner',
-                              bgColor: 'white',
-                              color: '#000000',
-                              stroke: 'transparent',
-                              align: 'left',
-                              width: 0.96
-                            });
-                          }
-                        }}
-                        style={{
-                          padding: '0 8px',
-                          fontSize: '11px',
-                          fontWeight: 700,
-                          flexShrink: 0,
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '3px',
-                          background: activeCaption.bgStyle === 'banner' ? 'var(--primary-gradient)' : undefined
-                        }}
-                      >
-                        <PanelTop style={{ width: 12, height: 12 }} /> Header
-                      </button>
-
-                      <button
                         className="btn btn-xs vid-ctx-btn"
                         title="Text Opacity"
                         onClick={() => setShowOpacityMenu(true)}
@@ -2087,27 +2056,6 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                       >
                         Aa
                       </button>
-
-                      {activeCaption.isHeaderCaption && (
-                        <button
-                          type="button"
-                          className="btn btn-xs vid-ctx-btn"
-                          title="Toggle Header Theme (White / Dark)"
-                          onClick={() => {
-                            const isLight = canvasHeader.bgColor === '#ffffff';
-                            const nextBg = isLight ? '#000000' : '#ffffff';
-                            const nextColor = isLight ? '#ffffff' : '#000000';
-                            const nextH = { ...canvasHeader, bgColor: nextBg };
-                            setCanvasHeader(nextH);
-                            updateActiveCaptionProps({ color: nextColor, stroke: 'transparent' });
-                            pushHistory(captions, stickers, imageLayers, drawings, nextH);
-                          }}
-                          style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '0 6px', flexShrink: 0 }}
-                        >
-                          <div style={{ width: 10, height: 10, borderRadius: '50%', background: canvasHeader.bgColor || '#ffffff', border: '1px solid #fff' }} />
-                          <span style={{ fontSize: '11px' }}>{canvasHeader.bgColor === '#ffffff' ? 'Light' : 'Dark'}</span>
-                        </button>
-                      )}
                     </>
                   )}
 
@@ -3117,33 +3065,35 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                       <Plus size={15} /> {activeCaption ? "Text" : "Add Text"}
                     </button>
 
-                    {/* Modern Header Extension Button */}
-                    <button
-                      type="button"
-                      className={`btn btn-xs hover-lift ${canvasHeader.enabled ? 'active' : ''}`}
-                      onClick={handleToggleCanvasHeader}
-                      title="Toggle Modern Header Extension (Twitter / Reddit style top canvas extension)"
-                      style={{
-                        padding: "7px 14px",
-                        borderRadius: "20px",
-                        fontSize: "0.82rem",
-                        fontWeight: 700,
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: "6px",
-                        background: canvasHeader.enabled
-                          ? "linear-gradient(135deg, rgba(6, 182, 212, 0.35) 0%, rgba(59, 130, 246, 0.35) 100%)"
-                          : "linear-gradient(135deg, rgba(168, 85, 247, 0.25) 0%, rgba(6, 182, 212, 0.25) 100%)",
-                        border: canvasHeader.enabled
-                          ? "1px solid var(--cyber-cyan)"
-                          : "1px solid rgba(168, 85, 247, 0.5)",
-                        boxShadow: canvasHeader.enabled ? "0 0 10px rgba(6, 182, 212, 0.3)" : "none",
-                        color: "#ffffff"
-                      }}
-                    >
-                      <PanelTop size={15} style={{ color: "var(--cyber-cyan)" }} />
-                      {canvasHeader.enabled ? (activeCaption?.isHeaderCaption ? "Header (Active)" : "Header (On)") : "Header"}
-                    </button>
+                    {/* Modern Header Extension Button (Shown only when no text layer is selected) */}
+                    {!activeCaption && (
+                      <button
+                        type="button"
+                        className={`btn btn-xs hover-lift ${canvasHeader.enabled ? 'active' : ''}`}
+                        onClick={handleToggleCanvasHeader}
+                        title="Toggle Modern Header Extension (Twitter / Reddit style top canvas extension)"
+                        style={{
+                          padding: "7px 14px",
+                          borderRadius: "20px",
+                          fontSize: "0.82rem",
+                          fontWeight: 700,
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "6px",
+                          background: canvasHeader.enabled
+                            ? "linear-gradient(135deg, rgba(6, 182, 212, 0.35) 0%, rgba(59, 130, 246, 0.35) 100%)"
+                            : "linear-gradient(135deg, rgba(168, 85, 247, 0.25) 0%, rgba(6, 182, 212, 0.25) 100%)",
+                          border: canvasHeader.enabled
+                            ? "1px solid var(--cyber-cyan)"
+                            : "1px solid rgba(168, 85, 247, 0.5)",
+                          boxShadow: canvasHeader.enabled ? "0 0 10px rgba(6, 182, 212, 0.3)" : "none",
+                          color: "#ffffff"
+                        }}
+                      >
+                        <PanelTop size={15} style={{ color: "var(--cyber-cyan)" }} />
+                        {canvasHeader.enabled ? "Header (On)" : "Header"}
+                      </button>
+                    )}
 
                     {/* Quick Phrases Button */}
                     <button type="button" className="btn btn-xs btn-secondary hover-lift" onClick={() => setShowQuickPhrasesMenu(true)} style={{ padding: "7px 14px", borderRadius: "20px", fontSize: "0.82rem", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: "6px" }}>
@@ -3295,55 +3245,6 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
               {/* ACTIVE CAPTION CONTROLS */}
               {activeCaption ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  {/* Extended Header Banner Settings Bar if activeCaption is the header caption */}
-                  {activeCaption.isHeaderCaption && (
-                    <div
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        padding: '6px 12px',
-                        background: 'rgba(6, 182, 212, 0.12)',
-                        border: '1px solid rgba(6, 182, 212, 0.3)',
-                        borderRadius: '10px'
-                      }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <PanelTop size={14} style={{ color: 'var(--cyber-cyan)' }} />
-                        <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#fff' }}>Extended Header Banner</span>
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <button
-                          type="button"
-                          className="btn btn-xs btn-secondary"
-                          onClick={() => {
-                            const isLight = canvasHeader.bgColor === '#ffffff';
-                            const nextBg = isLight ? '#000000' : '#ffffff';
-                            const nextColor = isLight ? '#ffffff' : '#000000';
-                            const nextHeader = { ...canvasHeader, bgColor: nextBg };
-                            setCanvasHeader(nextHeader);
-                            updateActiveCaptionProps({ color: nextColor, stroke: 'transparent' });
-                            pushHistory(captions, stickers, imageLayers, drawings, nextHeader);
-                          }}
-                          style={{ fontSize: '0.72rem', padding: '3px 8px', borderRadius: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}
-                          title="Toggle Header Theme (Light / Dark)"
-                        >
-                          <div style={{ width: 8, height: 8, borderRadius: '50%', background: canvasHeader.bgColor || '#ffffff', border: '1px solid #fff' }} />
-                          <span>{canvasHeader.bgColor === '#ffffff' ? 'Light Banner' : 'Dark Banner'}</span>
-                        </button>
-                        <button
-                          type="button"
-                          className="btn btn-xs btn-ghost"
-                          onClick={() => handleToggleCanvasHeader()}
-                          style={{ fontSize: '0.72rem', color: '#ef4444', padding: '3px 6px' }}
-                          title="Remove Header Extension"
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
                   {/* ROW 1: SIZE & OPACITY SIDE BY SIDE */}
                   {(() => {
                     const currentOpacityNum = activeCaption.opacity !== undefined && activeCaption.opacity !== null
@@ -3550,7 +3451,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         </button>
                         <button
                           type="button"
-                          className={`btn btn-xs flex-1 ${(activeCaption.bgColor === 'white' && activeCaption.bgStyle !== 'banner') ? 'btn-primary' : 'btn-ghost'}`}
+                          className={`btn btn-xs flex-1 ${activeCaption.bgColor === 'white' ? 'btn-primary' : 'btn-ghost'}`}
                           style={{
                             fontSize: '0.7rem',
                             fontWeight: 600,
@@ -3561,32 +3462,12 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                             alignItems: 'center',
                             justifyContent: 'center',
                             gap: '3px',
-                            background: (activeCaption.bgColor === 'white' && activeCaption.bgStyle !== 'banner') ? undefined : 'var(--bg-surface-1)',
+                            background: activeCaption.bgColor === 'white' ? undefined : 'var(--bg-surface-1)',
                             border: 'none'
                           }}
                           onClick={() => handleSetCaptionBg('white')}
                         >
-                          Box
-                        </button>
-                        <button
-                          type="button"
-                          className={`btn btn-xs flex-1 ${activeCaption.bgStyle === 'banner' ? 'btn-primary' : 'btn-ghost'}`}
-                          style={{
-                            fontSize: '0.7rem',
-                            fontWeight: 600,
-                            borderRadius: '999px',
-                            padding: '0 2px',
-                            height: '100%',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            background: activeCaption.bgStyle === 'banner' ? undefined : 'var(--bg-surface-1)',
-                            border: 'none'
-                          }}
-                          onClick={() => handleSetCaptionBg('banner')}
-                          title="Full-width modern meme banner"
-                        >
-                          Banner
+                          White
                         </button>
                         <button
                           type="button"
@@ -3632,18 +3513,44 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                     <PanelTop size={15} style={{ color: 'var(--cyber-cyan)' }} />
                     <span>Header Extension is active.</span>
                   </div>
-                  <button
-                    type="button"
-                    className="btn btn-xs btn-primary"
-                    onClick={() => {
-                      const hCap = captions.find(c => c.isHeaderCaption);
-                      if (hCap) setActiveLayerId(hCap.id);
-                      else handleToggleCanvasHeader();
-                    }}
-                    style={{ fontSize: '0.75rem', padding: '4px 10px', borderRadius: '12px' }}
-                  >
-                    Select Header Text
-                  </button>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <button
+                      type="button"
+                      className="btn btn-xs btn-secondary"
+                      onClick={() => {
+                        const isLight = canvasHeader.bgColor === '#ffffff';
+                        const nextBg = isLight ? '#000000' : '#ffffff';
+                        const nextColor = isLight ? '#ffffff' : '#000000';
+                        const nextHeader = { ...canvasHeader, bgColor: nextBg };
+                        setCanvasHeader(nextHeader);
+                        const hCap = captions.find(c => c.isHeaderCaption);
+                        if (hCap) {
+                          const nextCaps = captions.map(c => c.id === hCap.id ? { ...c, color: nextColor, stroke: 'transparent' } : c);
+                          setCaptions(nextCaps);
+                          pushHistory(nextCaps, stickers, imageLayers, drawings, nextHeader);
+                        } else {
+                          pushHistory(captions, stickers, imageLayers, drawings, nextHeader);
+                        }
+                      }}
+                      style={{ fontSize: '0.72rem', padding: '3px 8px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}
+                      title="Toggle Header Theme (Light / Dark)"
+                    >
+                      <div style={{ width: 8, height: 8, borderRadius: '50%', background: canvasHeader.bgColor || '#ffffff', border: '1px solid #fff' }} />
+                      <span>{canvasHeader.bgColor === '#ffffff' ? 'Light' : 'Dark'}</span>
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-xs btn-primary"
+                      onClick={() => {
+                        const hCap = captions.find(c => c.isHeaderCaption);
+                        if (hCap) setActiveLayerId(hCap.id);
+                        else handleToggleCanvasHeader();
+                      }}
+                      style={{ fontSize: '0.75rem', padding: '4px 10px', borderRadius: '12px' }}
+                    >
+                      Select Text
+                    </button>
+                  </div>
                 </div>
               ) : (
                 /* EMPTY STATE (When no caption is selected) */
