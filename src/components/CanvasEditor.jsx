@@ -1057,31 +1057,19 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         }
         // Draw Meme Text Background if enabled (white, black, or custom)
         const isBubble = !!cap.bubbleStyle;
-        const hasBg = (cap.bgColor && cap.bgColor !== 'transparent' && cap.bgColor !== 'none') || cap.isCensorBar || isBubble;
+        const hasBg = (cap.bgColor && cap.bgColor !== 'transparent' && cap.bgColor !== 'none') || isBubble;
 
         // The visual bounding box is sized to match the actual text
         const padX = isBubble ? Math.max(24, fontSize * 0.5) : (hasBg && cap.bgStyle !== 'banner' ? Math.max(16, fontSize * 0.35) : Math.max(8, fontSize * 0.15));
         const padY = isBubble ? Math.max(18, fontSize * 0.4) : (hasBg && cap.bgStyle !== 'banner' ? Math.max(10, fontSize * 0.2) : Math.max(4, fontSize * 0.1));
-        const boxWidth = cap.isCensorBar ? Math.max(140, maxLineWidth + 40, (cap.width || 0.4) * canvas.width) : (maxLineWidth + padX * 2);
+        const boxWidth = maxLineWidth + padX * 2;
         const lineHeight = fontSize * 1.2;
         const totalHeight = lines.length * lineHeight;
-        const boxHeight = cap.isCensorBar ? Math.max(36, fontSize * 1.4) : (totalHeight + padY * 2);
+        const boxHeight = totalHeight + padY * 2;
         const startY = - ((lines.length - 1) * lineHeight) / 2;
 
         let bgFillColor = '#ffffff';
-        if (cap.isCensorBar) {
-          targetCtx.save();
-          const boxStartX = - boxWidth / 2;
-          const boxStartY = - boxHeight / 2;
-          targetCtx.fillStyle = cap.bgColor || '#000000';
-          targetCtx.fillRect(boxStartX, boxStartY, boxWidth, boxHeight);
-          if (cap.stroke && cap.stroke !== 'transparent') {
-            targetCtx.strokeStyle = cap.stroke;
-            targetCtx.lineWidth = cap.strokeWidth || 2;
-            targetCtx.strokeRect(boxStartX, boxStartY, boxWidth, boxHeight);
-          }
-          targetCtx.restore();
-        } else if (isBubble) {
+        if (isBubble) {
           const boxStartX = - boxWidth / 2;
           const boxStartY = - boxHeight / 2;
           const bubbleFill = cap.bgColor === 'black' ? '#000000' : (cap.bgColor || '#ffffff');
@@ -1111,11 +1099,9 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
           targetCtx.restore();
         }
 
-        // Determine text color with smart contrast for White / Black BG, Bubbles, and Censor Bar
+        // Determine text color with smart contrast for White / Black BG and Bubbles
         let textColor = cap.color || '#ffffff';
-        if (cap.isCensorBar) {
-          textColor = cap.color || (cap.bgColor === '#ffffff' ? '#000000' : '#ffffff');
-        } else if (isBubble) {
+        if (isBubble) {
           const bubbleFill = cap.bgColor === 'black' ? '#000000' : (cap.bgColor || '#ffffff');
           textColor = isColorDark(bubbleFill) ? '#ffffff' : '#000000';
         } else if (cap.bgColor === 'white' && (textColor.toLowerCase() === '#ffffff' || textColor.toLowerCase() === '#fff' || textColor === 'white')) {
@@ -1479,12 +1465,12 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
             maxLineWidth = Math.max(maxLineWidth, ctx.measureText(line).width);
           }
           const isBubble = !!activeCap.bubbleStyle;
-          const hasBg = (activeCap.bgColor && activeCap.bgColor !== 'transparent' && activeCap.bgColor !== 'none') || activeCap.isCensorBar || isBubble;
+          const hasBg = (activeCap.bgColor && activeCap.bgColor !== 'transparent' && activeCap.bgColor !== 'none') || isBubble;
           const padX = isBubble ? Math.max(24, fontSize * 0.5) : (hasBg && activeCap.bgStyle !== 'banner' ? Math.max(16, fontSize * 0.35) : Math.max(8, fontSize * 0.15));
           const padY = isBubble ? Math.max(18, fontSize * 0.4) : (hasBg && activeCap.bgStyle !== 'banner' ? Math.max(10, fontSize * 0.2) : Math.max(4, fontSize * 0.1));
-          const boxWidth = activeCap.isCensorBar ? Math.max(140, maxLineWidth + 40, (activeCap.width || 0.4) * canvas.width) : (maxLineWidth + padX * 2);
+          const boxWidth = maxLineWidth + padX * 2;
           const textHeight = lines.length * (fontSize * 1.2);
-          const boxHeight = activeCap.isCensorBar ? Math.max(36, fontSize * 1.4) : (textHeight + padY * 2);
+          const boxHeight = textHeight + padY * 2;
           const halfW = boxWidth / 2;
           const halfH = boxHeight / 2;
 
@@ -1646,12 +1632,12 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
             maxLineWidth = Math.max(maxLineWidth, ctx.measureText(line).width);
           }
           const isBubble = !!cap.bubbleStyle;
-          const hasBg = (cap.bgColor && cap.bgColor !== 'transparent' && cap.bgColor !== 'none') || cap.isCensorBar || isBubble;
+          const hasBg = (cap.bgColor && cap.bgColor !== 'transparent' && cap.bgColor !== 'none') || isBubble;
           const padX = isBubble ? Math.max(24, fontSize * 0.5) : (hasBg && cap.bgStyle !== 'banner' ? Math.max(16, fontSize * 0.35) : Math.max(8, fontSize * 0.15));
           const padY = isBubble ? Math.max(18, fontSize * 0.4) : (hasBg && cap.bgStyle !== 'banner' ? Math.max(10, fontSize * 0.2) : Math.max(4, fontSize * 0.1));
-          const boxWidth = cap.isCensorBar ? Math.max(140, maxLineWidth + 40, (cap.width || 0.4) * canvas.width) : (maxLineWidth + padX * 2);
+          const boxWidth = maxLineWidth + padX * 2;
           const lineHeight = fontSize * 1.2;
-          const boxHeight = cap.isCensorBar ? Math.max(36, fontSize * 1.4) : (lines.length * lineHeight + padY * 2);
+          const boxHeight = lines.length * lineHeight + padY * 2;
 
           let hitBox = false;
           if (hasBg && cap.bgStyle === 'banner') {
@@ -1923,12 +1909,12 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
           for (const line of lines) maxLineWidth = Math.max(maxLineWidth, ctx.measureText(line).width);
         }
         const isBubble = !!activeCap.bubbleStyle;
-        const hasBg = (activeCap.bgColor && activeCap.bgColor !== 'transparent' && activeCap.bgColor !== 'none') || activeCap.isCensorBar || isBubble;
+        const hasBg = (activeCap.bgColor && activeCap.bgColor !== 'transparent' && activeCap.bgColor !== 'none') || isBubble;
         const padX = isBubble ? Math.max(24, fontSize * 0.5) : (hasBg && activeCap.bgStyle !== 'banner' ? Math.max(16, fontSize * 0.35) : Math.max(8, fontSize * 0.15));
         const padY = isBubble ? Math.max(18, fontSize * 0.4) : (hasBg && activeCap.bgStyle !== 'banner' ? Math.max(10, fontSize * 0.2) : Math.max(4, fontSize * 0.1));
-        const boxWidth = activeCap.isCensorBar ? Math.max(140, maxLineWidth + 40, (activeCap.width || 0.4) * canvas.width) : (maxLineWidth + padX * 2);
+        const boxWidth = maxLineWidth + padX * 2;
         const textHeight = lines.length * (fontSize * 1.2);
-        const boxHeight = activeCap.isCensorBar ? Math.max(36, fontSize * 1.4) : (textHeight + padY * 2);
+        const boxHeight = textHeight + padY * 2;
 
         const halfW = boxWidth / 2;
         const halfH = boxHeight / 2;

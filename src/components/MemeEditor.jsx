@@ -9,9 +9,9 @@ import {
   Type, Plus, Trash2, Undo, Redo, Download, Share2, Sparkles, Copy, Blend,
   Sliders, Smile, Sticker, ArrowLeft, Save, Check, RefreshCw,
   Image as ImageIcon, Search, X, Upload, RotateCw, ZoomIn, Crop, LayoutGrid, Scissors, Play, Pause, FolderHeart, Droplet, Monitor,
-  Paintbrush, Eraser, Palette, Sun, Moon, ChevronDown, ChevronLeft, PencilLine, Move, ArrowDownRight, Quote, Wand2,
+  Paintbrush, Eraser, Palette, Sun, Moon, ChevronDown, ChevronLeft, PencilLine, Move, ArrowDownRight, Wand2,
   Layers, ArrowUp, ArrowDown, ChevronsUp, ChevronsDown, Eye, EyeOff, Lock, Unlock, FlipHorizontal,
-  PanelTop, PanelBottom, MessageSquare, ShieldAlert
+  PanelTop, PanelBottom, MessageSquare
 } from 'lucide-react';
 import AiCaptionModal from './AiCaptionModal';
 import { downloadImageHelper, recordCanvasAsVideo } from '../utils/downloadHelper';
@@ -453,7 +453,6 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
   const [showOpacityMenu, setShowOpacityMenu] = useState(false);
   const [showImageFilterMenu, setShowImageFilterMenu] = useState(false);
   const [showLayerMenu, setShowLayerMenu] = useState(false);
-  const [showQuickPhrasesMenu, setShowQuickPhrasesMenu] = useState(false);
   const [pasteToast, setPasteToast] = useState(false);
   const [imageFilters, setImageFilters] = useState({
     preset: 'original',
@@ -831,33 +830,6 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
         setIsExportModalOpen(true);
       }
     }, 50);
-  };
-
-  // 1-Tap Censor / Redaction Bar
-  const handleAddCensorBar = (text = '[CENSORED]') => {
-    const pos = getNonOverlappingPosition('censor', captions, stickers, imageLayers);
-    const maxZ = Math.max(-1, ...captions.map(c => c.zIndex ?? -1), ...stickers.map(s => s.zIndex ?? -1), ...(imageLayers || []).map(i => i.zIndex ?? -1));
-    const newCap = {
-      id: `censor-${Date.now()}`,
-      text: text,
-      x: pos.x,
-      y: pos.y,
-      fontSize: 22,
-      fontFamily: 'Impact, sans-serif',
-      color: '#ffffff',
-      bgColor: '#000000',
-      stroke: 'transparent',
-      strokeWidth: 0,
-      align: 'center',
-      width: 0.45,
-      zIndex: maxZ + 1,
-      isCensorBar: true
-    };
-    const nextCaps = [...captions, newCap];
-    setCaptions(nextCaps);
-    setActiveLayerId(newCap.id);
-    setActiveTab('text');
-    pushHistory(nextCaps, stickers, imageLayers);
   };
 
   // 1-Tap Comic Speech Bubble
@@ -2597,7 +2569,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                   )}
 
                   {/* TAB SPECIFIC TOOLS (when nothing selected) */}
-                  {!showQuickPhrasesMenu && !(activeCaption || activeSticker || activeImageLayer) && activeTab === "text" && (
+                  {!(activeCaption || activeSticker || activeImageLayer) && activeTab === "text" && (
                     <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                       <button
                         className="btn btn-xs vid-ctx-btn"
@@ -2655,16 +2627,6 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
 
                       <CanvasColorPicker canvasBgColor={canvasBgColor} setCanvasBgColor={handleSetCanvasBgColor} />
                       
-                      <div className="vid-ctx-divider"  />
-
-                      <button
-                        className="btn btn-xs vid-ctx-btn"
-                        onClick={() => setShowQuickPhrasesMenu(true)}
-                        style={{ padding: "4px 8px", fontSize: "0.75rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "4px" }}
-                      >
-                        <Quote style={{ width: 14, height: 14 }} /> Quick Phrases
-                      </button>
-
                       <div className="vid-ctx-divider" />
 
                       <button
@@ -2678,17 +2640,8 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
 
                       <button
                         className="btn btn-xs vid-ctx-btn"
-                        onClick={() => handleAddCensorBar('[CENSORED]')}
-                        title="Add Censor / Redaction Bar"
-                        style={{ padding: "4px 8px", fontSize: "0.75rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "4px" }}
-                      >
-                        <ShieldAlert style={{ width: 13, height: 13, color: "#f59e0b" }} /> Censor
-                      </button>
-
-                      <button
-                        className="btn btn-xs vid-ctx-btn"
                         onClick={() => setShowAiModal(true)}
-                        title="AI Meme Caption Ideas"
+                        title="AI Meme Captions"
                         style={{
                           padding: "4px 8px",
                           fontSize: "0.75rem",
@@ -2701,26 +2654,8 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           color: "#ffffff"
                         }}
                       >
-                        <Sparkles style={{ width: 13, height: 13, color: "#ec4899" }} /> AI
+                        <Sparkles style={{ width: 13, height: 13, color: "#ec4899" }} /> AI Captions
                       </button>
-                    </div>
-                  )}
-                  {showQuickPhrasesMenu && !(activeCaption || activeSticker || activeImageLayer) && activeTab === "text" && (
-                    <div style={{ display: "flex", alignItems: "center", gap: "4px", width: "100%", overflowX: "auto", paddingBottom: "4px", scrollbarWidth: "none" }}>
-                      <button onClick={() => setShowQuickPhrasesMenu(false)} className="btn btn-icon btn-xs vid-ctx-btn" >
-                        <ArrowLeft style={{ width: 14, height: 14 }} />
-                      </button>
-                      <div className="vid-ctx-divider"  />
-                      {PRESET_PHRASES.map(phrase => (
-                        <button
-                          key={phrase}
-                          className="btn btn-xs vid-ctx-btn"
-                          onClick={() => { handleAddPresetPhrase(phrase); setShowQuickPhrasesMenu(false); }}
-                          style={{ flexShrink: 0, padding: "4px 10px", fontSize: "0.75rem", fontWeight: 600, whiteSpace: "nowrap", borderRadius: "14px", border: "1px solid rgba(255,255,255,0.1)" }}
-                        >
-                          {phrase}
-                        </button>
-                      ))}
                     </div>
                   )}
                   {!(activeCaption || activeSticker || activeImageLayer) && activeTab === 'images' && (
@@ -3504,8 +3439,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                   flexWrap: 'wrap'
                 }}
               >
-                {!showQuickPhrasesMenu ? (
-                  <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                  <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
                     {/* + Text Button */}
                     <button
                       type="button"
@@ -3584,11 +3518,6 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                       </button>
                     )}
 
-                    {/* Quick Phrases Button */}
-                    <button type="button" className="btn btn-xs btn-secondary hover-lift" onClick={() => setShowQuickPhrasesMenu(true)} style={{ padding: "7px 14px", borderRadius: "20px", fontSize: "0.82rem", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: "6px" }}>
-                      <Quote size={15} /> Quick Phrases
-                    </button>
-
                     {/* Speech Bubble Button */}
                     {!activeCaption && (
                       <button
@@ -3599,19 +3528,6 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         style={{ padding: "7px 14px", borderRadius: "20px", fontSize: "0.82rem", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: "6px" }}
                       >
                         <MessageSquare size={15} style={{ color: "var(--cyber-cyan)" }} /> Bubble
-                      </button>
-                    )}
-
-                    {/* Censor Bar Button */}
-                    {!activeCaption && (
-                      <button
-                        type="button"
-                        className="btn btn-xs btn-secondary hover-lift"
-                        onClick={() => handleAddCensorBar('[CENSORED]')}
-                        title="Add redaction / censor bar overlay"
-                        style={{ padding: "7px 14px", borderRadius: "20px", fontSize: "0.82rem", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: "6px" }}
-                      >
-                        <ShieldAlert size={15} style={{ color: "#f59e0b" }} /> Censor
                       </button>
                     )}
 
@@ -3635,29 +3551,10 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           color: "#ffffff"
                         }}
                       >
-                        <Sparkles size={15} style={{ color: "#ec4899" }} /> AI Ideas
+                        <Sparkles size={15} style={{ color: "#ec4899" }} /> AI Captions
                       </button>
                     )}
                   </div>
-                ) : (
-                  <div className="animate-fade-in" style={{ display: "flex", gap: "6px", overflowX: "auto", paddingBottom: "4px", scrollbarWidth: "none", width: "100%", alignItems: "center" }}>
-                    <button type="button" className="btn btn-icon btn-xs btn-secondary hover-lift" onClick={() => setShowQuickPhrasesMenu(false)} style={{ flexShrink: 0, borderRadius: "50%", width: "32px", height: "32px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <ArrowLeft size={16} />
-                    </button>
-                    <div  />
-                    {PRESET_PHRASES.map(phrase => (
-                      <button
-                        key={phrase}
-                        type="button"
-                        className="btn btn-xs btn-secondary hover-lift"
-                        onClick={() => { handleAddPresetPhrase(phrase); setShowQuickPhrasesMenu(false); }}
-                        style={{ flexShrink: 0, padding: "6px 12px", fontSize: "0.78rem", borderRadius: "14px", whiteSpace: "nowrap", fontWeight: 600 }}
-                      >
-                        {phrase}
-                      </button>
-                    ))}
-                  </div>
-                )}
 
                 {/* Color Swatches Bar + Delete Button (When activeCaption exists) */}
                 {activeCaption && (
@@ -4053,33 +3950,6 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                             onClick={() => updateActiveCaption('bubbleStyle', style.id)}
                           >
                             {style.label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Censor Bar Presets (if this is a censor bar) */}
-                  {activeCaption.isCensorBar && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '4px' }}>
-                      <label style={{ margin: 0, fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)' }}>
-                        Censor Label Presets
-                      </label>
-                      <div style={{ display: 'flex', gap: '4px' }}>
-                        {[
-                          { label: '[CENSORED]', text: '[CENSORED]' },
-                          { label: '[REDACTED]', text: '[REDACTED]' },
-                          { label: '[TOP SECRET]', text: '[TOP SECRET]' },
-                          { label: 'Solid Black', text: '' },
-                        ].map(item => (
-                          <button
-                            key={item.label}
-                            type="button"
-                            className={`btn btn-xs flex-1 ${activeCaption.text === item.text ? 'btn-primary' : 'btn-ghost'}`}
-                            style={{ fontSize: '0.68rem', padding: '5px 2px', borderRadius: '8px', border: activeCaption.text === item.text ? 'none' : '1px solid var(--glass-border)', whiteSpace: 'nowrap' }}
-                            onClick={() => updateActiveCaption('text', item.text)}
-                          >
-                            {item.label}
                           </button>
                         ))}
                       </div>
