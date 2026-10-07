@@ -1962,39 +1962,17 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
                           <button
                             className="btn btn-icon btn-xs vid-ctx-btn"
-                            title="Bring to Front (Top)"
-                            onClick={() => moveLayer(activeLayerId, 'front')}
-                          >
-                            <ChevronsUp style={{ width: 14, height: 14 }} />
-                          </button>
-                          <button
-                            className="btn btn-icon btn-xs vid-ctx-btn"
-                            title="Bring Forward (1 step)"
+                            title="Bring Forward"
                             onClick={() => moveLayer(activeLayerId, 'forward')}
                           >
                             <ArrowUp style={{ width: 14, height: 14 }} />
                           </button>
                           <button
                             className="btn btn-icon btn-xs vid-ctx-btn"
-                            title="Send Backward (1 step)"
+                            title="Send Backward"
                             onClick={() => moveLayer(activeLayerId, 'backward')}
                           >
                             <ArrowDown style={{ width: 14, height: 14 }} />
-                          </button>
-                          <button
-                            className="btn btn-icon btn-xs vid-ctx-btn"
-                            title="Send to Back (Bottom)"
-                            onClick={() => moveLayer(activeLayerId, 'back')}
-                          >
-                            <ChevronsDown style={{ width: 14, height: 14 }} />
-                          </button>
-                          <div className="vid-ctx-divider" style={{ margin: '0 2px' }} />
-                          <button
-                            className={`btn btn-icon btn-xs vid-ctx-btn ${activeImageLayer?.locked ? 'active' : ''}`}
-                            title={activeImageLayer?.locked ? "Unlock Layer" : "Lock Layer"}
-                            onClick={() => toggleLayerLock(activeLayerId)}
-                          >
-                            {activeImageLayer?.locked ? <Lock style={{ width: 14, height: 14, color: '#f59e0b' }} /> : <Unlock style={{ width: 14, height: 14 }} />}
                           </button>
                         </div>
                       )}
@@ -2032,39 +2010,17 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
                           <button
                             className="btn btn-icon btn-xs vid-ctx-btn"
-                            title="Bring to Front (Top)"
-                            onClick={() => moveLayer(activeLayerId, 'front')}
-                          >
-                            <ChevronsUp style={{ width: 14, height: 14 }} />
-                          </button>
-                          <button
-                            className="btn btn-icon btn-xs vid-ctx-btn"
-                            title="Bring Forward (1 step)"
+                            title="Bring Forward"
                             onClick={() => moveLayer(activeLayerId, 'forward')}
                           >
                             <ArrowUp style={{ width: 14, height: 14 }} />
                           </button>
                           <button
                             className="btn btn-icon btn-xs vid-ctx-btn"
-                            title="Send Backward (1 step)"
+                            title="Send Backward"
                             onClick={() => moveLayer(activeLayerId, 'backward')}
                           >
                             <ArrowDown style={{ width: 14, height: 14 }} />
-                          </button>
-                          <button
-                            className="btn btn-icon btn-xs vid-ctx-btn"
-                            title="Send to Back (Bottom)"
-                            onClick={() => moveLayer(activeLayerId, 'back')}
-                          >
-                            <ChevronsDown style={{ width: 14, height: 14 }} />
-                          </button>
-                          <div className="vid-ctx-divider" style={{ margin: '0 2px' }} />
-                          <button
-                            className={`btn btn-icon btn-xs vid-ctx-btn ${(activeCaption?.locked || activeSticker?.locked) ? 'active' : ''}`}
-                            title={(activeCaption?.locked || activeSticker?.locked) ? "Unlock Layer" : "Lock Layer"}
-                            onClick={() => toggleLayerLock(activeLayerId)}
-                          >
-                            {(activeCaption?.locked || activeSticker?.locked) ? <Lock style={{ width: 14, height: 14, color: '#f59e0b' }} /> : <Unlock style={{ width: 14, height: 14 }} />}
                           </button>
                         </div>
                       )}
