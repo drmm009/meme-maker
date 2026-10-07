@@ -156,6 +156,30 @@ const getNonOverlappingPosition = (type, captions = [], stickers = [], imageLaye
   };
 };
 
+const isColorDark = (colorStr) => {
+  if (!colorStr) return false;
+  const str = String(colorStr).trim().toLowerCase();
+  if (str === 'black' || str === '#000' || str === '#000000') return true;
+  if (str === 'white' || str === '#fff' || str === '#ffffff' || str === 'transparent' || str === 'none') return false;
+  if (str.startsWith('#')) {
+    let hex = str.slice(1);
+    if (hex.length === 3) hex = hex.split('').map(c => c + c).join('');
+    if (hex.length >= 6) {
+      const r = parseInt(hex.slice(0, 2), 16) || 0;
+      const g = parseInt(hex.slice(2, 4), 16) || 0;
+      const b = parseInt(hex.slice(4, 6), 16) || 0;
+      return (r * 299 + g * 587 + b * 114) / 1000 < 128;
+    }
+  }
+  const rgbMatch = str.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/i);
+  if (rgbMatch) {
+    const r = parseInt(rgbMatch[1], 10) || 0;
+    const g = parseInt(rgbMatch[2], 10) || 0;
+    const b = parseInt(rgbMatch[3], 10) || 0;
+    return (r * 299 + g * 587 + b * 114) / 1000 < 128;
+  }
+  return false;
+};
 
 function CanvasColorPicker({ canvasBgColor, setCanvasBgColor }) {
   const [localColor, setLocalColor] = React.useState(canvasBgColor);
@@ -383,10 +407,12 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
   });
   const [historyStep, setHistoryStep] = useState(0);
 
+  const [canvasBgColor, setCanvasBgColor] = useState(template?.canvasBgColor || '#ffffff');
+
   const [canvasHeader, setCanvasHeader] = useState(() => {
     return template?.canvasHeader || {
       enabled: false,
-      bgColor: '#ffffff',
+      bgColor: template?.canvasBgColor || '#ffffff',
       height: 140
     };
   });
@@ -394,15 +420,34 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
   const [canvasFooter, setCanvasFooter] = useState(() => {
     return template?.canvasFooter || {
       enabled: false,
-      bgColor: '#ffffff',
+      bgColor: template?.canvasBgColor || '#ffffff',
       height: 140
     };
   });
 
+  const handleSetCanvasBgColor = (val) => {
+    setCanvasBgColor(val);
+    window.dispatchEvent(new CustomEvent('liveCanvasBgColor', { detail: val }));
+    const isDark = isColorDark(val);
+    const nextTextColor = isDark ? '#ffffff' : '#000000';
+
+    setCanvasHeader(prev => ({ ...prev, bgColor: val }));
+    setCanvasFooter(prev => ({ ...prev, bgColor: val }));
+
+    // Auto adapt text color for header / footer captions to ensure contrast against canvas bg
+    setCaptions(prev => prev.map(c => {
+      if (c.isHeaderCaption || c.isFooterCaption) {
+        if (c.color === '#000000' || c.color === '#ffffff' || c.color === 'black' || c.color === 'white') {
+          return { ...c, color: nextTextColor, stroke: 'transparent' };
+        }
+      }
+      return c;
+    }));
+  };
+
   const [activeTab, setActiveTab] = useState('text'); // 'text' | 'stickers' | 'images' | 'draw' | 'watermark'
   const [isMobileTabsFolded, setIsMobileTabsFolded] = useState(true);
   const [showWatermarkMenu, setShowWatermarkMenu] = useState(false);
-  const [canvasBgColor, setCanvasBgColor] = useState('#ffffff');
   const [showFontMenu, setShowFontMenu] = useState(false);
   const [showOpacityMenu, setShowOpacityMenu] = useState(false);
   const [showImageFilterMenu, setShowImageFilterMenu] = useState(false);
@@ -801,10 +846,12 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
   // 1-Tap Modern Meme Header Extension (Canvas extension above meme image with normal caption layer)
   const handleToggleCanvasHeader = () => {
     const nextState = !canvasHeader.enabled;
+    const currentBg = canvasBgColor || '#ffffff';
+    const isDark = isColorDark(currentBg);
     const nextHeader = {
       ...canvasHeader,
       enabled: nextState,
-      bgColor: canvasHeader.bgColor || '#ffffff'
+      bgColor: currentBg
     };
     setCanvasHeader(nextHeader);
 
@@ -813,7 +860,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
       if (existingHeaderCap) {
         setActiveLayerId(existingHeaderCap.id);
         setActiveTab('text');
-        pushHistory(captions, stickers, imageLayers, drawings, nextHeader);
+        pushHistory(captions, stickers, imageLayers, drawings, nextHeader, canvasFooter);
       } else {
         const newHeaderCap = {
           id: `caption-header-${Date.now()}`,
@@ -822,7 +869,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
           y: 0.05,
           fontSize: 36,
           fontFamily: 'Montserrat, sans-serif',
-          color: nextHeader.bgColor === '#000000' ? '#ffffff' : '#000000',
+          color: isDark ? '#ffffff' : '#000000',
           stroke: 'transparent',
           strokeWidth: 0,
           align: 'left',
@@ -850,10 +897,12 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
   // 1-Tap Modern Meme Footer Extension (Canvas extension below meme image with normal caption layer)
   const handleToggleCanvasFooter = () => {
     const nextState = !canvasFooter.enabled;
+    const currentBg = canvasBgColor || '#ffffff';
+    const isDark = isColorDark(currentBg);
     const nextFooter = {
       ...canvasFooter,
       enabled: nextState,
-      bgColor: canvasFooter.bgColor || '#ffffff'
+      bgColor: currentBg
     };
     setCanvasFooter(nextFooter);
 
@@ -871,7 +920,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
           y: 0.95,
           fontSize: 36,
           fontFamily: 'Montserrat, sans-serif',
-          color: nextFooter.bgColor === '#000000' ? '#ffffff' : '#000000',
+          color: isDark ? '#ffffff' : '#000000',
           stroke: 'transparent',
           strokeWidth: 0,
           align: 'left',
@@ -2349,6 +2398,10 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         <PanelBottom style={{ width: 13, height: 13, color: canvasFooter.enabled ? '#fff' : "var(--cyber-cyan)" }} />
                         <span>{canvasFooter.enabled ? 'Footer (On)' : 'Footer'}</span>
                       </button>
+
+                      <div className="vid-ctx-divider"  />
+
+                      <CanvasColorPicker canvasBgColor={canvasBgColor} setCanvasBgColor={handleSetCanvasBgColor} />
                       
                       <div className="vid-ctx-divider"  />
 
@@ -2502,7 +2555,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', width: '100%', flexWrap: 'nowrap', overflowX: 'auto', paddingBottom: '2px', scrollbarWidth: 'none' }}>
                       {!showWatermarkMenu ? (
                         <>
-                          <CanvasColorPicker canvasBgColor={canvasBgColor} setCanvasBgColor={setCanvasBgColor} />
+                          <CanvasColorPicker canvasBgColor={canvasBgColor} setCanvasBgColor={handleSetCanvasBgColor} />
 
                           <div className="vid-ctx-divider"  />
                           
@@ -3665,26 +3718,30 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           type="button"
                           className="btn btn-xs btn-secondary"
                           onClick={() => {
-                            const isLight = canvasHeader.bgColor === '#ffffff';
-                            const nextBg = isLight ? '#000000' : '#ffffff';
-                            const nextColor = isLight ? '#ffffff' : '#000000';
-                            const nextHeader = { ...canvasHeader, bgColor: nextBg };
-                            setCanvasHeader(nextHeader);
-                            const hCap = captions.find(c => c.isHeaderCaption);
-                            if (hCap) {
-                              const nextCaps = captions.map(c => c.id === hCap.id ? { ...c, color: nextColor, stroke: 'transparent' } : c);
-                              setCaptions(nextCaps);
-                              pushHistory(nextCaps, stickers, imageLayers, drawings, nextHeader, canvasFooter);
-                            } else {
-                              pushHistory(captions, stickers, imageLayers, drawings, nextHeader, canvasFooter);
-                            }
+                            const isDark = isColorDark(canvasBgColor || '#ffffff');
+                            const nextBg = isDark ? '#ffffff' : '#000000';
+                            handleSetCanvasBgColor(nextBg);
+                            pushHistory(captions, stickers, imageLayers, drawings, { ...canvasHeader, bgColor: nextBg }, { ...canvasFooter, bgColor: nextBg });
                           }}
                           style={{ fontSize: '0.72rem', padding: '3px 8px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}
-                          title="Toggle Header Theme (Light / Dark)"
+                          title="Toggle Canvas & Header Theme (Light / Dark)"
                         >
-                          <div style={{ width: 8, height: 8, borderRadius: '50%', background: canvasHeader.bgColor || '#ffffff', border: '1px solid #fff' }} />
-                          <span>{canvasHeader.bgColor === '#ffffff' ? 'Light' : 'Dark'}</span>
+                          <div style={{ width: 8, height: 8, borderRadius: '50%', background: canvasBgColor || '#ffffff', border: '1px solid #fff' }} />
+                          <span>{isColorDark(canvasBgColor || '#ffffff') ? 'Dark' : 'Light'}</span>
                         </button>
+                        <div
+                          style={{ position: 'relative', overflow: 'hidden', width: 22, height: 22, borderRadius: '6px', border: '1px solid var(--glass-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', background: canvasBgColor || '#ffffff', cursor: 'pointer', flexShrink: 0 }}
+                          title="Pick Custom Canvas Background Color"
+                        >
+                          <input
+                            type="color"
+                            value={canvasBgColor || '#ffffff'}
+                            onChange={(e) => {
+                              handleSetCanvasBgColor(e.target.value);
+                            }}
+                            style={{ position: 'absolute', opacity: 0, inset: 0, cursor: 'pointer', width: '100%', height: '100%' }}
+                          />
+                        </div>
                         <button
                           type="button"
                           className="btn btn-xs btn-primary"
@@ -3726,26 +3783,30 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           type="button"
                           className="btn btn-xs btn-secondary"
                           onClick={() => {
-                            const isLight = canvasFooter.bgColor === '#ffffff';
-                            const nextBg = isLight ? '#000000' : '#ffffff';
-                            const nextColor = isLight ? '#ffffff' : '#000000';
-                            const nextFooter = { ...canvasFooter, bgColor: nextBg };
-                            setCanvasFooter(nextFooter);
-                            const fCap = captions.find(c => c.isFooterCaption);
-                            if (fCap) {
-                              const nextCaps = captions.map(c => c.id === fCap.id ? { ...c, color: nextColor, stroke: 'transparent' } : c);
-                              setCaptions(nextCaps);
-                              pushHistory(nextCaps, stickers, imageLayers, drawings, canvasHeader, nextFooter);
-                            } else {
-                              pushHistory(captions, stickers, imageLayers, drawings, canvasHeader, nextFooter);
-                            }
+                            const isDark = isColorDark(canvasBgColor || '#ffffff');
+                            const nextBg = isDark ? '#ffffff' : '#000000';
+                            handleSetCanvasBgColor(nextBg);
+                            pushHistory(captions, stickers, imageLayers, drawings, { ...canvasHeader, bgColor: nextBg }, { ...canvasFooter, bgColor: nextBg });
                           }}
                           style={{ fontSize: '0.72rem', padding: '3px 8px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}
-                          title="Toggle Footer Theme (Light / Dark)"
+                          title="Toggle Canvas & Footer Theme (Light / Dark)"
                         >
-                          <div style={{ width: 8, height: 8, borderRadius: '50%', background: canvasFooter.bgColor || '#ffffff', border: '1px solid #fff' }} />
-                          <span>{canvasFooter.bgColor === '#ffffff' ? 'Light' : 'Dark'}</span>
+                          <div style={{ width: 8, height: 8, borderRadius: '50%', background: canvasBgColor || '#ffffff', border: '1px solid #fff' }} />
+                          <span>{isColorDark(canvasBgColor || '#ffffff') ? 'Dark' : 'Light'}</span>
                         </button>
+                        <div
+                          style={{ position: 'relative', overflow: 'hidden', width: 22, height: 22, borderRadius: '6px', border: '1px solid var(--glass-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', background: canvasBgColor || '#ffffff', cursor: 'pointer', flexShrink: 0 }}
+                          title="Pick Custom Canvas Background Color"
+                        >
+                          <input
+                            type="color"
+                            value={canvasBgColor || '#ffffff'}
+                            onChange={(e) => {
+                              handleSetCanvasBgColor(e.target.value);
+                            }}
+                            style={{ position: 'absolute', opacity: 0, inset: 0, cursor: 'pointer', width: '100%', height: '100%' }}
+                          />
+                        </div>
                         <button
                           type="button"
                           className="btn btn-xs btn-primary"

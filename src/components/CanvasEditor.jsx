@@ -51,6 +51,31 @@ const wrapText = (ctx, text, maxWidth) => {
   return lines;
 };
 
+const isColorDark = (colorStr) => {
+  if (!colorStr) return false;
+  const str = String(colorStr).trim().toLowerCase();
+  if (str === 'black' || str === '#000' || str === '#000000') return true;
+  if (str === 'white' || str === '#fff' || str === '#ffffff' || str === 'transparent' || str === 'none') return false;
+  if (str.startsWith('#')) {
+    let hex = str.slice(1);
+    if (hex.length === 3) hex = hex.split('').map(c => c + c).join('');
+    if (hex.length >= 6) {
+      const r = parseInt(hex.slice(0, 2), 16) || 0;
+      const g = parseInt(hex.slice(2, 4), 16) || 0;
+      const b = parseInt(hex.slice(4, 6), 16) || 0;
+      return (r * 299 + g * 587 + b * 114) / 1000 < 128;
+    }
+  }
+  const rgbMatch = str.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/i);
+  if (rgbMatch) {
+    const r = parseInt(rgbMatch[1], 10) || 0;
+    const g = parseInt(rgbMatch[2], 10) || 0;
+    const b = parseInt(rgbMatch[3], 10) || 0;
+    return (r * 299 + g * 587 + b * 114) / 1000 < 128;
+  }
+  return false;
+};
+
 const drawRoundRect = (ctx, x, y, width, height, radius) => {
   if (width <= 0 || height <= 0) return;
   const r = Math.min(radius, width / 2, height / 2);
@@ -596,12 +621,14 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
       // Draw Header Extension (Banner extending above canvas)
       if (isHeaderEnabled && headerExtH > 0) {
         targetCtx.save();
-        // 1. Solid background for header extension
-        targetCtx.fillStyle = canvasHeader.bgColor || '#ffffff';
+        // 1. Solid background for header extension (matches canvas background color)
+        const extBg = liveBgColor || canvasBgColor || canvasHeader?.bgColor || '#ffffff';
+        targetCtx.fillStyle = extBg;
         targetCtx.fillRect(0, 0, canvasW, headerExtH);
 
         // 2. Crisp boundary divider line between header extension and meme image
-        targetCtx.strokeStyle = canvasHeader.bgColor === '#000000' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.08)';
+        const isDark = isColorDark(extBg);
+        targetCtx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.08)';
         targetCtx.lineWidth = 1;
         targetCtx.beginPath();
         targetCtx.moveTo(0, headerExtH);
@@ -614,12 +641,14 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
       if (isFooterEnabled && footerExtH > 0) {
         targetCtx.save();
         const footerY = headerExtH + canvasH;
-        // 1. Solid background for footer extension
-        targetCtx.fillStyle = canvasFooter?.bgColor || '#ffffff';
+        // 1. Solid background for footer extension (matches canvas background color)
+        const extBg = liveBgColor || canvasBgColor || canvasFooter?.bgColor || '#ffffff';
+        targetCtx.fillStyle = extBg;
         targetCtx.fillRect(0, footerY, canvasW, footerExtH);
 
         // 2. Crisp boundary divider line between meme image and footer extension
-        targetCtx.strokeStyle = canvasFooter?.bgColor === '#000000' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.08)';
+        const isDark = isColorDark(extBg);
+        targetCtx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.08)';
         targetCtx.lineWidth = 1;
         targetCtx.beginPath();
         targetCtx.moveTo(0, footerY);
