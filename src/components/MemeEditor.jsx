@@ -379,7 +379,8 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     invert: 0,
     hueRotate: 0,
     blur: 0,
-    filterString: 'none'
+    filterString: 'none',
+    filterScope: 'all'
   });
   const [filterTarget, setFilterTarget] = useState('canvas'); // 'canvas' | 'layer'
 
@@ -2218,6 +2219,38 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         </>
                       )}
 
+                      {!activeImageLayer && activeTab === 'filters' && (
+                        <>
+                          <button
+                            className="btn btn-xs vid-ctx-btn"
+                            title={imageFilters.filterScope === 'background' ? "Filter Canvas Only" : "Filter Entire Meme (Canvas + Elements)"}
+                            onClick={() => {
+                              setImageFilters(prev => ({
+                                ...prev,
+                                filterScope: prev.filterScope === 'background' ? 'all' : 'background'
+                              }));
+                            }}
+                            style={{
+                              flexShrink: 0,
+                              padding: '5px 12px',
+                              borderRadius: '20px',
+                              fontSize: '0.75rem',
+                              fontWeight: 600,
+                              background: imageFilters.filterScope === 'background' ? 'rgba(255, 255, 255, 0.08)' : 'var(--primary-gradient)',
+                              color: '#fff',
+                              border: imageFilters.filterScope === 'background' ? '1px solid rgba(255, 255, 255, 0.15)' : '1px solid rgba(249, 115, 22, 0.5)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '6px'
+                            }}
+                          >
+                            <Layers style={{ width: 13, height: 13 }} />
+                            <span>{imageFilters.filterScope === 'background' ? 'Canvas Only' : 'All Elements'}</span>
+                          </button>
+                          <div className="vid-ctx-divider" />
+                        </>
+                      )}
+
                       {(() => {
                         let previewImage = 'https://images.unsplash.com/photo-1555685812-4b943f1cb0eb?w=100&q=80'; // fallback
                         if (activeImageLayer) {
@@ -2244,11 +2277,12 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                                   });
                                   setShowImageFilterMenu(false);
                                 } else {
-                                  setImageFilters({
+                                  setImageFilters(prev => ({
+                                    ...prev,
                                     preset: filterItem.id,
                                     filterString: filterItem.filterString,
                                     ...filterItem.values
-                                  });
+                                  }));
                                 }
                               }}
                               style={{ 

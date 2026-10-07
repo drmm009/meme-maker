@@ -325,6 +325,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
   }, []);
 
   const baseImgRef = useRef(null);
+  const compCanvasRef = useRef(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -335,49 +336,69 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
       if (canvas.width !== canvasW) canvas.width = canvasW;
         if (canvas.height !== canvasH) canvas.height = canvasH;
 
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = liveBgColor;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      const filterScope = activeFilters?.filterScope || 'all';
+      const filterCss = getFilterCss(activeFilters);
+      const applyGlobalFilter = filterScope === 'all' && filterCss !== 'none';
+      const bgFilterCss = applyGlobalFilter ? 'none' : (filterScope === 'background' ? filterCss : 'none');
 
-      const drawDeleteHandle = (hx, hy) => {
-        ctx.beginPath();
-        ctx.fillStyle = '#ef4444';
-        ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 3;
-        ctx.arc(hx, hy, 22, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
+      let targetCtx = ctx;
+      let compCanvas = null;
+
+      if (applyGlobalFilter) {
+        if (!compCanvasRef.current) {
+          compCanvasRef.current = document.createElement('canvas');
+        }
+        compCanvas = compCanvasRef.current;
+        if (compCanvas.width !== canvasW) compCanvas.width = canvasW;
+        if (compCanvas.height !== canvasH) compCanvas.height = canvasH;
+        targetCtx = compCanvas.getContext('2d');
+      }
+
+      targetCtx.clearRect(0, 0, canvas.width, canvas.height);
+      targetCtx.fillStyle = liveBgColor;
+      targetCtx.fillRect(0, 0, canvas.width, canvas.height);
+
+      let activeHandleDrawer = null;
+
+      const drawDeleteHandle = (uiCtx, hx, hy) => {
+        uiCtx.beginPath();
+        uiCtx.fillStyle = '#ef4444';
+        uiCtx.strokeStyle = '#ffffff';
+        uiCtx.lineWidth = 3;
+        uiCtx.arc(hx, hy, 22, 0, Math.PI * 2);
+        uiCtx.fill();
+        uiCtx.stroke();
         
-        ctx.save();
-        ctx.translate(hx, hy);
+        uiCtx.save();
+        uiCtx.translate(hx, hy);
         // Draw Trash Icon
-        ctx.beginPath();
-        ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 2.5;
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
+        uiCtx.beginPath();
+        uiCtx.strokeStyle = '#ffffff';
+        uiCtx.lineWidth = 2.5;
+        uiCtx.lineCap = 'round';
+        uiCtx.lineJoin = 'round';
         
         // Lid
-        ctx.moveTo(-7, -5);
-        ctx.lineTo(7, -5);
+        uiCtx.moveTo(-7, -5);
+        uiCtx.lineTo(7, -5);
         // Handle
-        ctx.moveTo(-3, -5);
-        ctx.lineTo(-3, -8);
-        ctx.lineTo(3, -8);
-        ctx.lineTo(3, -5);
+        uiCtx.moveTo(-3, -5);
+        uiCtx.lineTo(-3, -8);
+        uiCtx.lineTo(3, -8);
+        uiCtx.lineTo(3, -5);
         // Bin
-        ctx.moveTo(-6, -5);
-        ctx.lineTo(-5, 7);
-        ctx.lineTo(5, 7);
-        ctx.lineTo(6, -5);
+        uiCtx.moveTo(-6, -5);
+        uiCtx.lineTo(-5, 7);
+        uiCtx.lineTo(5, 7);
+        uiCtx.lineTo(6, -5);
         // Lines
-        ctx.moveTo(-2, -1);
-        ctx.lineTo(-2, 4);
-        ctx.moveTo(2, -1);
-        ctx.lineTo(2, 4);
+        uiCtx.moveTo(-2, -1);
+        uiCtx.lineTo(-2, 4);
+        uiCtx.moveTo(2, -1);
+        uiCtx.lineTo(2, 4);
         
-        ctx.stroke();
-        ctx.restore();
+        uiCtx.stroke();
+        uiCtx.restore();
       };
 
       // Draw Base Image or Native Layout Slots
@@ -427,16 +448,16 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
               const nx = x + (slotW - nw) / 2 + (tx.offsetX * slotW);
               const ny = y + (slotH - nh) / 2 + (tx.offsetY * slotH);
 
-              ctx.save();
-              ctx.beginPath();
-              ctx.rect(x, y, slotW, slotH);
-              ctx.clip();
+              targetCtx.save();
+              targetCtx.beginPath();
+              targetCtx.rect(x, y, slotW, slotH);
+              targetCtx.clip();
               try {
-                drawImageFiltered(ctx, cached, getFilterCss(activeFilters), nx, ny, nw, nh);
+                drawImageFiltered(targetCtx, cached, bgFilterCss, nx, ny, nw, nh);
               } catch (err) {
                 console.warn('Failed to draw slot image:', err);
               }
-              ctx.restore();
+              targetCtx.restore();
             } else {
               // Load image and re-render
               const newImg = new Image();
@@ -447,18 +468,18 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
               };
               newImg.src = src;
               
-              ctx.fillStyle = liveBgColor;
-              ctx.fillRect(x, y, slotW, slotH);
+              targetCtx.fillStyle = liveBgColor;
+              targetCtx.fillRect(x, y, slotW, slotH);
             }
           } else {
-            ctx.fillStyle = liveBgColor;
-            ctx.fillRect(x, y, slotW, slotH);
+            targetCtx.fillStyle = liveBgColor;
+            targetCtx.fillRect(x, y, slotW, slotH);
           }
 
           if (activeLayoutDef.id !== '1-panel' && totalSlots > 1) {
-            ctx.strokeStyle = '#000000';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(x, y, slotW, slotH);
+            targetCtx.strokeStyle = '#000000';
+            targetCtx.lineWidth = 2;
+            targetCtx.strokeRect(x, y, slotW, slotH);
           }
         }
       } else if (img && !isNativeLayout) {
@@ -501,13 +522,13 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
             offsetY = (canvas.height - drawH) / 2;
           }
         }
-        ctx.save();
-        drawImageFiltered(ctx, img, getFilterCss(activeFilters), offsetX, offsetY, drawW, drawH);
-        ctx.restore();
+        targetCtx.save();
+        drawImageFiltered(targetCtx, img, bgFilterCss, offsetX, offsetY, drawW, drawH);
+        targetCtx.restore();
       }
 
       // Reset filter for text/stickers/image-layers overlay (safe on all browsers)
-      try { ctx.filter = 'none'; } catch(e) {}
+      try { targetCtx.filter = 'none'; } catch(e) {}
 
       // Render Custom Image Overlay Layers
             const allLayers = [
@@ -543,10 +564,10 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
             }
           }
 
-          ctx.save();
-          ctx.translate(cx, cy);
+          targetCtx.save();
+          targetCtx.translate(cx, cy);
           if (imgLayer.rotation) {
-            ctx.rotate((imgLayer.rotation * Math.PI) / 180);
+            targetCtx.rotate((imgLayer.rotation * Math.PI) / 180);
           }
           
           const scale = imgLayer.scale || 1.0;
@@ -558,7 +579,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
           const mode = imgLayer.fitMode || 'fit';
           
           if (mode === 'stretch') {
-            ctx.drawImage(drawSource, -w / 2, -h / 2, w, h);
+            targetCtx.drawImage(drawSource, -w / 2, -h / 2, w, h);
           } else {
             const imgAspect = baseW / baseH;
             const boxAspect = w / h;
@@ -578,73 +599,81 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
                 drawH = h;
                 drawW = h * imgAspect;
               } else {
-                drawW = w;
+                drawH = w;
                 drawH = w / imgAspect;
               }
             }
             
-            ctx.save();
-            ctx.beginPath();
-            ctx.rect(-w / 2, -h / 2, w, h);
-            ctx.clip();
-            ctx.drawImage(drawSource, -drawW / 2, -drawH / 2, drawW, drawH);
-            ctx.restore();
+            targetCtx.save();
+            targetCtx.beginPath();
+            targetCtx.rect(-w / 2, -h / 2, w, h);
+            targetCtx.clip();
+            targetCtx.drawImage(drawSource, -drawW / 2, -drawH / 2, drawW, drawH);
+            targetCtx.restore();
           }
 
-          
           if (imgLayer.id === activeLayerId && !isDrawingMode) {
-            ctx.strokeStyle = '#f97316';
-            ctx.lineWidth = 3;
-            ctx.setLineDash([6, 6]);
-            ctx.strokeRect(-w / 2 - 6, -h / 2 - 6, w + 12, h + 12);
-            
-            ctx.setLineDash([]);
-            
             const hw = w / 2 + 6;
             const hh = h / 2 + 6;
+            const rot = imgLayer.rotation || 0;
 
-            // Rotation handle stem
-            ctx.beginPath();
-            ctx.strokeStyle = '#000000';
-            ctx.lineWidth = 2;
-            ctx.moveTo(0, -hh);
-            ctx.lineTo(0, -hh - 60);
-            ctx.stroke();
-            
-            // Rotation handle circle
-            ctx.beginPath();
-            ctx.fillStyle = '#f97316';
-            ctx.arc(0, -hh - 60, 16, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.stroke();
+            activeHandleDrawer = (uiCtx) => {
+              uiCtx.save();
+              uiCtx.translate(cx, cy);
+              if (rot) {
+                uiCtx.rotate((rot * Math.PI) / 180);
+              }
+              uiCtx.strokeStyle = '#f97316';
+              uiCtx.lineWidth = 3;
+              uiCtx.setLineDash([6, 6]);
+              uiCtx.strokeRect(-w / 2 - 6, -h / 2 - 6, w + 12, h + 12);
+              
+              uiCtx.setLineDash([]);
 
-            // Round handles for resizing, stretching, and cropping (4 corners + 4 middle of sides)
-            ctx.fillStyle = '#f97316';
-            ctx.strokeStyle = '#000000';
-            ctx.lineWidth = 2;
-            const drawRoundHandle = (hx, hy) => {
-              ctx.beginPath();
-              ctx.arc(hx, hy, 14, 0, Math.PI * 2);
-              ctx.fill();
-              ctx.stroke();
+              // Rotation handle stem
+              uiCtx.beginPath();
+              uiCtx.strokeStyle = '#000000';
+              uiCtx.lineWidth = 2;
+              uiCtx.moveTo(0, -hh);
+              uiCtx.lineTo(0, -hh - 60);
+              uiCtx.stroke();
+              
+              // Rotation handle circle
+              uiCtx.beginPath();
+              uiCtx.fillStyle = '#f97316';
+              uiCtx.arc(0, -hh - 60, 16, 0, Math.PI * 2);
+              uiCtx.fill();
+              uiCtx.stroke();
+
+              // Round handles for resizing, stretching, and cropping (4 corners + 4 middle of sides)
+              uiCtx.fillStyle = '#f97316';
+              uiCtx.strokeStyle = '#000000';
+              uiCtx.lineWidth = 2;
+              const drawRoundHandle = (hx, hy) => {
+                uiCtx.beginPath();
+                uiCtx.arc(hx, hy, 14, 0, Math.PI * 2);
+                uiCtx.fill();
+                uiCtx.stroke();
+              };
+
+              // 4 Corner handles
+              drawRoundHandle(-hw, -hh); // TL
+              drawRoundHandle(hw, -hh);  // TR
+              drawRoundHandle(-hw, hh);  // BL
+              drawRoundHandle(hw, hh);   // BR
+
+              // 4 Middle-of-side handles
+              drawRoundHandle(0, -hh);  // Top middle
+              drawRoundHandle(0, hh);   // Bottom middle
+              drawRoundHandle(-hw, 0);  // Left middle
+              drawRoundHandle(hw, 0);   // Right middle
+              
+              drawDeleteHandle(uiCtx, -hw - 36, -hh - 36);
+              uiCtx.restore();
             };
-
-            // 4 Corner handles
-            drawRoundHandle(-hw, -hh); // TL
-            drawRoundHandle(hw, -hh);  // TR
-            drawRoundHandle(-hw, hh);  // BL
-            drawRoundHandle(hw, hh);   // BR
-
-            // 4 Middle-of-side handles
-            drawRoundHandle(0, -hh);  // Top middle
-            drawRoundHandle(0, hh);   // Bottom middle
-            drawRoundHandle(-hw, 0);  // Left middle
-            drawRoundHandle(hw, 0);   // Right middle
-            
-            drawDeleteHandle(-hw - 36, -hh - 36);
           }
 
-          ctx.restore();
+          targetCtx.restore();
         } else {
           const newImg = new Image();
           if (imgLayer.url && !imgLayer.url.startsWith('blob:') && !imgLayer.url.startsWith('data:')) newImg.crossOrigin = 'anonymous';
@@ -659,52 +688,58 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         
         const sx = stk.x * canvas.width;
         const sy = stk.y * canvas.height;
-        ctx.save();
-        ctx.translate(sx, sy);
-        if (stk.rotation) ctx.rotate(stk.rotation * Math.PI / 180);
+        targetCtx.save();
+        targetCtx.translate(sx, sy);
+        if (stk.rotation) targetCtx.rotate(stk.rotation * Math.PI / 180);
         
         const stkSize = (stk.scale || 1.0) * 52;
-        ctx.font = `${stkSize}px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
+        targetCtx.font = `${stkSize}px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif`;
+        targetCtx.textAlign = 'center';
+        targetCtx.textBaseline = 'middle';
 
-        
         if (stk.id === activeLayerId && !isDrawingMode) {
-          ctx.strokeStyle = '#f97316';
-          ctx.lineWidth = 3;
-          ctx.setLineDash([6, 6]);
-          ctx.strokeRect(-stkSize / 2 - 6, -stkSize / 2 - 6, stkSize + 12, stkSize + 12);
-          
-          ctx.setLineDash([]);
-          ctx.fillStyle = '#f97316';
-          ctx.strokeStyle = '#000000';
-          ctx.lineWidth = 2;
-          
-          const drawHandle = (x, y) => {
-            ctx.beginPath();
-            ctx.arc(x, y, 14, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.stroke();
+          const rot = stk.rotation || 0;
+          activeHandleDrawer = (uiCtx) => {
+            uiCtx.save();
+            uiCtx.translate(sx, sy);
+            if (rot) uiCtx.rotate(rot * Math.PI / 180);
+            uiCtx.strokeStyle = '#f97316';
+            uiCtx.lineWidth = 3;
+            uiCtx.setLineDash([6, 6]);
+            uiCtx.strokeRect(-stkSize / 2 - 6, -stkSize / 2 - 6, stkSize + 12, stkSize + 12);
+            
+            uiCtx.setLineDash([]);
+            uiCtx.fillStyle = '#f97316';
+            uiCtx.strokeStyle = '#000000';
+            uiCtx.lineWidth = 2;
+            
+            const drawHandle = (x, y) => {
+              uiCtx.beginPath();
+              uiCtx.arc(x, y, 14, 0, Math.PI * 2);
+              uiCtx.fill();
+              uiCtx.stroke();
+            };
+            
+            const hs = stkSize / 2 + 6;
+            drawHandle(-hs, -hs); // TL
+            drawHandle(hs, -hs); // TR
+            drawHandle(-hs, hs); // BL
+            drawHandle(hs, hs); // BR
+            
+            uiCtx.beginPath();
+            uiCtx.moveTo(0, -stkSize / 2 - 6);
+            uiCtx.lineTo(0, -stkSize / 2 - 40);
+            uiCtx.stroke();
+            
+            uiCtx.beginPath();
+            uiCtx.fillStyle = '#f97316';
+            uiCtx.arc(0, -stkSize / 2 - 40, 16, 0, Math.PI * 2);
+            uiCtx.fill();
+            uiCtx.stroke();
+            
+            drawDeleteHandle(uiCtx, -hs - 36, -hs - 36);
+            uiCtx.restore();
           };
-          
-          const hs = stkSize / 2 + 6;
-          drawHandle(-hs, -hs); // TL
-          drawHandle(hs, -hs); // TR
-          drawHandle(-hs, hs); // BL
-          drawHandle(hs, hs); // BR
-          
-          ctx.beginPath();
-          ctx.moveTo(0, -stkSize / 2 - 6);
-          ctx.lineTo(0, -stkSize / 2 - 40);
-          ctx.stroke();
-          
-          ctx.beginPath();
-          ctx.fillStyle = '#f97316';
-          ctx.arc(0, -stkSize / 2 - 40, 16, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.stroke();
-          
-          drawDeleteHandle(-hs - 36, -hs - 36);
         }
 
         if (stk.url || stk.imageUrl) {
@@ -714,7 +749,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
             const aspect = (cached.naturalWidth || cached.width) / ((cached.naturalHeight || cached.height) || 1);
             const drawW = aspect >= 1 ? stkSize : stkSize * aspect;
             const drawH = aspect >= 1 ? stkSize / aspect : stkSize;
-            ctx.drawImage(cached, -drawW / 2, -drawH / 2, drawW, drawH);
+            targetCtx.drawImage(cached, -drawW / 2, -drawH / 2, drawW, drawH);
           } else {
             if (!loadingMediaRef.current[imgUrl]) {
               loadingMediaRef.current[imgUrl] = true;
@@ -728,17 +763,17 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
             }
           }
         } else if (stk.emoji) {
-          ctx.fillText(stk.emoji, 0, 0);
+          targetCtx.fillText(stk.emoji, 0, 0);
         }
-        ctx.restore();
+        targetCtx.restore();
               } else if (layer._type === 'caption') {
           const cap = layer;
         const cx = cap.x * canvas.width;
         const cy = cap.y * canvas.height;
         
-        ctx.save();
-        ctx.translate(cx, cy);
-        if (cap.rotation) ctx.rotate(cap.rotation * Math.PI / 180);
+        targetCtx.save();
+        targetCtx.translate(cx, cy);
+        if (cap.rotation) targetCtx.rotate(cap.rotation * Math.PI / 180);
 
         // Text opacity support (0.0 to 1.0)
         let opacity = 1;
@@ -749,13 +784,13 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
             opacity = Math.max(0, Math.min(1, opacity));
           }
         }
-        ctx.globalAlpha = opacity;
+        targetCtx.globalAlpha = opacity;
 
         const fontSize = cap.fontSize || 50;
         const fontFamily = cap.fontFamily || 'Impact, sans-serif';
-        ctx.font = `bold ${fontSize}px ${fontFamily}`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
+        targetCtx.font = `bold ${fontSize}px ${fontFamily}`;
+        targetCtx.textAlign = 'center';
+        targetCtx.textBaseline = 'middle';
 
         const renderMaxWidth = (cap.width || 0.9) * canvas.width;
         
@@ -765,11 +800,11 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         }
         
         // Use the SAME global wrapText for rendering and hit-testing
-        const lines = wrapText(ctx, displayString, renderMaxWidth);
+        const lines = wrapText(targetCtx, displayString, renderMaxWidth);
         
         let maxLineWidth = 0;
         for (const line of lines) {
-          maxLineWidth = Math.max(maxLineWidth, ctx.measureText(line).width);
+          maxLineWidth = Math.max(maxLineWidth, targetCtx.measureText(line).width);
         }
         // Draw Meme Text Background if enabled (white, black, or custom)
         const hasBg = cap.bgColor && cap.bgColor !== 'transparent' && cap.bgColor !== 'none';
@@ -785,9 +820,9 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
 
         let bgFillColor = '#ffffff';
         if (hasBg) {
-          ctx.save();
+          targetCtx.save();
           bgFillColor = cap.bgColor === 'white' ? '#ffffff' : (cap.bgColor === 'black' ? '#000000' : cap.bgColor);
-          ctx.fillStyle = bgFillColor;
+          targetCtx.fillStyle = bgFillColor;
 
           if (cap.bgStyle === 'banner') {
             // Full-width edge-to-edge banner across the canvas
@@ -796,15 +831,15 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
             const bannerY = startY - lineHeight / 2 - bannerPadY;
             const bannerX = -cx;
             const bannerW = canvas.width;
-            ctx.fillRect(bannerX, bannerY, bannerW, bannerH);
+            targetCtx.fillRect(bannerX, bannerY, bannerW, bannerH);
           } else {
             // Box style: clean padded rounded rectangle enclosing the text
             const boxStartX = - boxWidth / 2;
             const boxStartY = - boxHeight / 2;
             const r = Math.min(8, fontSize * 0.15);
-            drawRoundRect(ctx, boxStartX, boxStartY, boxWidth, boxHeight, r);
+            drawRoundRect(targetCtx, boxStartX, boxStartY, boxWidth, boxHeight, r);
           }
-          ctx.restore();
+          targetCtx.restore();
         }
 
         // Determine text color with smart contrast for White / Black BG
@@ -821,86 +856,93 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
           const ly = startY + index * lineHeight;
 
           if (shouldStroke) {
-            ctx.strokeStyle = cap.stroke;
-            ctx.lineWidth = cap.strokeWidth || Math.max(3, fontSize / 7);
-            ctx.lineJoin = 'miter';
-            ctx.miterLimit = 2;
-            ctx.setLineDash([]);
-            ctx.strokeText(line, 0, ly);
+            targetCtx.strokeStyle = cap.stroke;
+            targetCtx.lineWidth = cap.strokeWidth || Math.max(3, fontSize / 7);
+            targetCtx.lineJoin = 'miter';
+            targetCtx.miterLimit = 2;
+            targetCtx.setLineDash([]);
+            targetCtx.strokeText(line, 0, ly);
           }
 
-          ctx.fillStyle = textColor;
-          ctx.fillText(line, 0, ly);
+          targetCtx.fillStyle = textColor;
+          targetCtx.fillText(line, 0, ly);
         });
 
         if (cap.id === activeLayerId && !isDrawingMode) {
-          ctx.globalAlpha = 1.0;
-          ctx.strokeStyle = '#f97316';
-          ctx.lineWidth = 3;
-          ctx.setLineDash([6, 6]);
-          
-          const boxX = - boxWidth / 2;
-          const boxY = - boxHeight / 2;
-          
-          ctx.strokeRect(boxX, boxY, boxWidth, boxHeight);
-          
-          ctx.setLineDash([]);
-          ctx.fillStyle = '#f97316';
-          ctx.strokeStyle = '#000000';
-          ctx.lineWidth = 2;
-          
-          const drawHandle = (x, y) => {
-            ctx.beginPath();
-            ctx.arc(x, y, 14, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.stroke();
+          const rot = cap.rotation || 0;
+          activeHandleDrawer = (uiCtx) => {
+            uiCtx.save();
+            uiCtx.translate(cx, cy);
+            if (rot) uiCtx.rotate((rot * Math.PI) / 180);
+            uiCtx.globalAlpha = 1.0;
+            uiCtx.strokeStyle = '#f97316';
+            uiCtx.lineWidth = 3;
+            uiCtx.setLineDash([6, 6]);
+            
+            const boxX = - boxWidth / 2;
+            const boxY = - boxHeight / 2;
+            
+            uiCtx.strokeRect(boxX, boxY, boxWidth, boxHeight);
+            
+            uiCtx.setLineDash([]);
+            uiCtx.fillStyle = '#f97316';
+            uiCtx.strokeStyle = '#000000';
+            uiCtx.lineWidth = 2;
+            
+            const drawHandle = (x, y) => {
+              uiCtx.beginPath();
+              uiCtx.arc(x, y, 14, 0, Math.PI * 2);
+              uiCtx.fill();
+              uiCtx.stroke();
+            };
+            
+            drawHandle(boxX, boxY); // Top Left
+            drawHandle(boxX + boxWidth, boxY); // Top Right
+            drawHandle(boxX, boxY + boxHeight); // Bottom Left
+            drawHandle(boxX + boxWidth, boxY + boxHeight); // Bottom Right
+            
+            uiCtx.beginPath();
+            uiCtx.moveTo(0, boxY);
+            uiCtx.lineTo(0, boxY - 34);
+            uiCtx.stroke();
+            
+            uiCtx.beginPath();
+            uiCtx.fillStyle = '#f97316';
+            uiCtx.arc(0, boxY - 34, 16, 0, Math.PI * 2);
+            uiCtx.fill();
+            uiCtx.stroke();
+            
+            drawDeleteHandle(uiCtx, boxX - 36, boxY - 36);
+            uiCtx.restore();
           };
-          
-          drawHandle(boxX, boxY); // Top Left
-          drawHandle(boxX + boxWidth, boxY); // Top Right
-          drawHandle(boxX, boxY + boxHeight); // Bottom Left
-          drawHandle(boxX + boxWidth, boxY + boxHeight); // Bottom Right
-          
-          ctx.beginPath();
-          ctx.moveTo(0, boxY);
-          ctx.lineTo(0, boxY - 34);
-          ctx.stroke();
-          
-          ctx.beginPath();
-          ctx.fillStyle = '#f97316';
-          ctx.arc(0, boxY - 34, 16, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.stroke();
-          
-          drawDeleteHandle(boxX - 36, boxY - 36);
         }
 
-        ctx.restore();
+        targetCtx.restore();
         }
       });
 
       // --- RENDER FREEHAND DRAWINGS ---
       const drawBrushStroke = (stroke) => {
         if (!stroke || !stroke.points || stroke.points.length === 0) return;
-        ctx.save();
-        ctx.strokeStyle = stroke.color || '#a855f7';
-        ctx.lineWidth = stroke.size || 8;
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
+        targetCtx.save();
+        targetCtx.strokeStyle = stroke.color || '#a855f7';
+        targetCtx.lineWidth = stroke.size || 8;
+        targetCtx.lineCap = 'round';
+        targetCtx.lineJoin = 'round';
 
-        ctx.beginPath();
+        targetCtx.beginPath();
         if (stroke.points.length === 1) {
-          ctx.arc(stroke.points[0].x, stroke.points[0].y, (stroke.size || 8) / 2, 0, Math.PI * 2);
-          ctx.fillStyle = stroke.color || '#a855f7';
-          ctx.fill();
+          targetCtx.arc(stroke.points[0].x, stroke.points[0].y, (stroke.size || 8) / 2, 0, Math.PI * 2);
+          targetCtx.fillStyle = stroke.color || '#a855f7';
+          targetCtx.fill();
         } else {
-          ctx.moveTo(stroke.points[0].x, stroke.points[0].y);
+          targetCtx.moveTo(stroke.points[0].x, stroke.points[0].y);
           for (let i = 1; i < stroke.points.length; i++) {
-            ctx.lineTo(stroke.points[i].x, stroke.points[i].y);
+            targetCtx.lineTo(stroke.points[i].x, stroke.points[i].y);
           }
-          ctx.stroke();
+          targetCtx.stroke();
         }
-        ctx.restore();
+        targetCtx.restore();
       };
 
       (drawings || []).forEach((d) => {
@@ -911,8 +953,8 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
       
       // Render Watermark
       if (watermark?.enabled) {
-        ctx.save();
-        ctx.globalAlpha = watermark.opacity || 0.5;
+        targetCtx.save();
+        targetCtx.globalAlpha = watermark.opacity || 0.5;
         
         const pad = 20;
         let wx = 0;
@@ -933,26 +975,37 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
           const drawW = wmImg.width * scale;
           const drawH = wmImg.height * scale;
           const { x, y } = getPositions(drawW, drawH);
-          ctx.drawImage(wmImg, x, y, drawW, drawH);
+          targetCtx.drawImage(wmImg, x, y, drawW, drawH);
         } else if (watermark.text) {
-          ctx.font = `bold ${watermark.size || 24}px Impact, sans-serif`;
+          targetCtx.font = `bold ${watermark.size || 24}px Impact, sans-serif`;
           const fillColor = watermark.color || '#ffffff';
-          ctx.fillStyle = fillColor;
-          ctx.strokeStyle = fillColor === '#000000' ? '#ffffff' : '#000000';
-          ctx.lineWidth = Math.max(2, (watermark.size || 24) / 10);
-          ctx.textBaseline = 'top';
-          ctx.textAlign = 'left';
+          targetCtx.fillStyle = fillColor;
+          targetCtx.strokeStyle = fillColor === '#000000' ? '#ffffff' : '#000000';
+          targetCtx.lineWidth = Math.max(2, (watermark.size || 24) / 10);
+          targetCtx.textBaseline = 'top';
+          targetCtx.textAlign = 'left';
           
-          const textMetrics = ctx.measureText(watermark.text);
+          const textMetrics = targetCtx.measureText(watermark.text);
           const w = textMetrics.width;
           const h = watermark.size || 24;
           const { x, y } = getPositions(w, h);
           
-          ctx.strokeText(watermark.text, x, y);
-          ctx.fillText(watermark.text, x, y);
+          targetCtx.strokeText(watermark.text, x, y);
+          targetCtx.fillText(watermark.text, x, y);
         }
         
-        ctx.restore();
+        targetCtx.restore();
+      }
+
+      // If global composition filter is enabled, draw the rendered composition canvas with the filter
+      if (applyGlobalFilter && compCanvas) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawImageFiltered(ctx, compCanvas, filterCss, 0, 0, canvas.width, canvas.height);
+      }
+
+      // Draw active layer selection handles and rotation knob on the screen canvas (unfiltered and sharp)
+      if (activeHandleDrawer) {
+        activeHandleDrawer(ctx);
       }
 
       // Draw Snapping Guides
