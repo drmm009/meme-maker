@@ -11,8 +11,9 @@ import {
   Image as ImageIcon, Search, X, Upload, RotateCw, ZoomIn, Crop, LayoutGrid, Scissors, Play, Pause, FolderHeart, Droplet, Monitor,
   Paintbrush, Eraser, Palette, Sun, Moon, ChevronDown, ChevronLeft, PencilLine, Move, ArrowDownRight, Quote, Wand2,
   Layers, ArrowUp, ArrowDown, ChevronsUp, ChevronsDown, Eye, EyeOff, Lock, Unlock, FlipHorizontal,
-  PanelTop, PanelBottom
+  PanelTop, PanelBottom, MessageSquare, ShieldAlert
 } from 'lucide-react';
+import AiCaptionModal from './AiCaptionModal';
 import { downloadImageHelper, recordCanvasAsVideo } from '../utils/downloadHelper';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MEME_TEMPLATES, CATEGORIES } from '../data/templates';
@@ -494,6 +495,11 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const [exportedImageUri, setExportedImageUri] = useState(null);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [showAiModal, setShowAiModal] = useState(false);
+  const [exportFormat, setExportFormat] = useState('png'); // 'png' | 'jpeg' | 'webp'
+  const [exportQuality, setExportQuality] = useState(0.92);
+  const [exportPreset, setExportPreset] = useState('hd'); // 'hd' | 'discord' | 'compact'
+  const [exportFileSize, setExportFileSize] = useState(null);
   const [exportDropdownOpen, setExportDropdownOpen] = useState(false);
   const exportDropdownRef = useRef(null);
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
@@ -780,15 +786,168 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     }, 50);
   };
 
+  const updateExportUriAndSize = (format = exportFormat, quality = exportQuality) => {
+    if (!canvasRef.current) return;
+    const mimeType = format === 'jpeg' ? 'image/jpeg' : (format === 'webp' ? 'image/webp' : 'image/png');
+    const q = format === 'png' ? undefined : quality;
+    const dataUrl = canvasRef.current.toDataURL(mimeType, q);
+    setExportedImageUri(dataUrl);
+    // Base64 size estimation
+    const bytes = Math.round((dataUrl.length * 3) / 4);
+    setExportFileSize(bytes);
+  };
+
+  const handleSelectExportFormat = (fmt) => {
+    setExportFormat(fmt);
+    updateExportUriAndSize(fmt, exportQuality);
+  };
+
+  const handleSelectExportQuality = (q) => {
+    setExportQuality(q);
+    updateExportUriAndSize(exportFormat, q);
+  };
+
+  const handleSelectExportPreset = (preset) => {
+    setExportPreset(preset);
+    if (preset === 'hd') {
+      setExportFormat('png');
+      updateExportUriAndSize('png', 1.0);
+    } else if (preset === 'discord') {
+      setExportFormat('jpeg');
+      setExportQuality(0.85);
+      updateExportUriAndSize('jpeg', 0.85);
+    } else if (preset === 'compact') {
+      setExportFormat('webp');
+      setExportQuality(0.75);
+      updateExportUriAndSize('webp', 0.75);
+    }
+  };
+
   const handleExport = () => {
     setActiveLayerId(null);
     setTimeout(() => {
       if (canvasRef.current) {
-        const dataUrl = canvasRef.current.toDataURL('image/png');
-        setExportedImageUri(dataUrl);
+        updateExportUriAndSize(exportFormat, exportQuality);
         setIsExportModalOpen(true);
       }
     }, 50);
+  };
+
+  // 1-Tap Censor / Redaction Bar
+  const handleAddCensorBar = (text = '[CENSORED]') => {
+    const pos = getNonOverlappingPosition('censor', captions, stickers, imageLayers);
+    const maxZ = Math.max(-1, ...captions.map(c => c.zIndex ?? -1), ...stickers.map(s => s.zIndex ?? -1), ...(imageLayers || []).map(i => i.zIndex ?? -1));
+    const newCap = {
+      id: `censor-${Date.now()}`,
+      text: text,
+      x: pos.x,
+      y: pos.y,
+      fontSize: 22,
+      fontFamily: 'Impact, sans-serif',
+      color: '#ffffff',
+      bgColor: '#000000',
+      stroke: 'transparent',
+      strokeWidth: 0,
+      align: 'center',
+      width: 0.45,
+      zIndex: maxZ + 1,
+      isCensorBar: true
+    };
+    const nextCaps = [...captions, newCap];
+    setCaptions(nextCaps);
+    setActiveLayerId(newCap.id);
+    setActiveTab('text');
+    pushHistory(nextCaps, stickers, imageLayers);
+  };
+
+  // 1-Tap Comic Speech Bubble
+  const handleAddSpeechBubble = (style = 'speech-left') => {
+    const pos = getNonOverlappingPosition('bubble', captions, stickers, imageLayers);
+    const maxZ = Math.max(-1, ...captions.map(c => c.zIndex ?? -1), ...stickers.map(s => s.zIndex ?? -1), ...(imageLayers || []).map(i => i.zIndex ?? -1));
+    const newCap = {
+      id: `bubble-${Date.now()}`,
+      text: 'Wait a minute...',
+      x: pos.x,
+      y: Math.max(0.2, pos.y - 0.1),
+      fontSize: 26,
+      fontFamily: 'Montserrat, sans-serif',
+      color: '#000000',
+      bgColor: '#ffffff',
+      stroke: '#000000',
+      strokeWidth: 3,
+      align: 'center',
+      width: 0.55,
+      zIndex: maxZ + 1,
+      bubbleStyle: style
+    };
+    const nextCaps = [...captions, newCap];
+    setCaptions(nextCaps);
+    setActiveLayerId(newCap.id);
+    setActiveTab('text');
+    pushHistory(nextCaps, stickers, imageLayers);
+  };
+
+  // AI Meme Caption Application
+  const handleApplyAiCaption = (captionText, target = 'caption') => {
+    if (target === 'header') {
+      if (!canvasHeader.enabled) {
+        handleToggleCanvasHeader();
+      }
+      const existing = captions.find(c => c.isHeaderCaption);
+      if (existing) {
+        const nextCaps = captions.map(c => c.id === existing.id ? { ...c, text: captionText } : c);
+        setCaptions(nextCaps);
+        setActiveLayerId(existing.id);
+        pushHistory(nextCaps, stickers, imageLayers, drawings, canvasHeader, canvasFooter);
+      } else {
+        const newHCap = {
+          id: `caption-header-${Date.now()}`,
+          text: captionText,
+          x: 0.5,
+          y: 0.05,
+          fontSize: 34,
+          fontFamily: 'Montserrat, sans-serif',
+          color: isColorDark(canvasBgColor || '#ffffff') ? '#ffffff' : '#000000',
+          stroke: 'transparent',
+          strokeWidth: 0,
+          align: 'left',
+          width: 0.92,
+          isHeaderCaption: true
+        };
+        const nextCaps = [newHCap, ...captions];
+        setCaptions(nextCaps);
+        setActiveLayerId(newHCap.id);
+        pushHistory(nextCaps, stickers, imageLayers, drawings, canvasHeader, canvasFooter);
+      }
+    } else {
+      // Standard caption
+      if (activeCaption) {
+        const nextCaps = captions.map(c => c.id === activeCaption.id ? { ...c, text: captionText } : c);
+        setCaptions(nextCaps);
+        pushHistory(nextCaps, stickers, imageLayers);
+      } else {
+        const pos = getNonOverlappingPosition('caption', captions, stickers, imageLayers);
+        const maxZ = Math.max(-1, ...captions.map(c => c.zIndex ?? -1), ...stickers.map(s => s.zIndex ?? -1), ...(imageLayers || []).map(i => i.zIndex ?? -1));
+        const newCap = {
+          id: `cap-${Date.now()}`,
+          text: captionText,
+          x: pos.x,
+          y: pos.y,
+          fontSize: 36,
+          fontFamily: 'Montserrat, sans-serif',
+          color: '#ffffff',
+          stroke: '#000000',
+          strokeWidth: 4,
+          align: 'center',
+          width: 0.85,
+          zIndex: maxZ + 1
+        };
+        const nextCaps = [...captions, newCap];
+        setCaptions(nextCaps);
+        setActiveLayerId(newCap.id);
+        pushHistory(nextCaps, stickers, imageLayers);
+      }
+    }
   };
 
   // Caption Handlers
@@ -1721,7 +1880,8 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
 
   const handleDownloadImage = async () => {
     if (exportedImageUri) {
-      const filename = `meme-${template?.id || 'custom'}-${Date.now()}.png`;
+      const ext = exportFormat === 'jpeg' ? 'jpg' : exportFormat;
+      const filename = `meme-${template?.id || 'custom'}-${Date.now()}.${ext}`;
       await downloadImageHelper(exportedImageUri, filename);
       triggerConfetti();
     }
@@ -1759,7 +1919,9 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
       // Convert data URL to Blob for Web Share API
       const res = await fetch(exportedImageUri);
       const blob = await res.blob();
-      const file = new File([blob], `meme-${Date.now()}.png`, { type: 'image/png' });
+      const ext = exportFormat === 'jpeg' ? 'jpg' : exportFormat;
+      const mimeType = exportFormat === 'jpeg' ? 'image/jpeg' : (exportFormat === 'webp' ? 'image/webp' : 'image/png');
+      const file = new File([blob], `meme-${Date.now()}.${ext}`, { type: mimeType });
 
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         // Native share sheet (mobile / Chrome Android / Safari iOS)
@@ -1825,12 +1987,102 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
               )}
             </div>
             <div className="export-controls-panel">
+              {/* Format & File Size / Discord Optimizer Panel */}
+              <div
+                style={{
+                  background: 'var(--bg-surface-1)',
+                  padding: '12px 14px',
+                  borderRadius: '12px',
+                  border: '1px solid var(--glass-border)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '10px',
+                  width: '100%',
+                  marginBottom: '12px'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-muted)' }}>Format:</span>
+                    <div style={{ display: 'flex', background: 'var(--bg-surface-2)', borderRadius: '8px', padding: '2px', border: '1px solid var(--glass-border)' }}>
+                      {['png', 'jpeg', 'webp'].map(fmt => (
+                        <button
+                          key={fmt}
+                          type="button"
+                          className={`btn btn-xs ${exportFormat === fmt ? 'btn-primary' : 'btn-ghost'}`}
+                          onClick={() => handleSelectExportFormat(fmt)}
+                          style={{ fontSize: '0.72rem', textTransform: 'uppercase', padding: '3px 8px', borderRadius: '6px', fontWeight: 600 }}
+                        >
+                          {fmt === 'jpeg' ? 'JPG' : fmt}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Presets */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <button
+                      type="button"
+                      className={`btn btn-xs ${exportPreset === 'hd' ? 'btn-primary' : 'btn-secondary'}`}
+                      onClick={() => handleSelectExportPreset('hd')}
+                      style={{ fontSize: '0.72rem', borderRadius: '8px', padding: '3px 8px' }}
+                    >
+                      HD Lossless
+                    </button>
+                    <button
+                      type="button"
+                      className={`btn btn-xs ${exportPreset === 'discord' ? 'btn-primary' : 'btn-secondary'}`}
+                      onClick={() => handleSelectExportPreset('discord')}
+                      title="Optimized to upload under Discord's 8MB limit"
+                      style={{ fontSize: '0.72rem', borderRadius: '8px', padding: '3px 8px' }}
+                    >
+                      Discord &lt;8MB
+                    </button>
+                    <button
+                      type="button"
+                      className={`btn btn-xs ${exportPreset === 'compact' ? 'btn-primary' : 'btn-secondary'}`}
+                      onClick={() => handleSelectExportPreset('compact')}
+                      title="Fast compressed WebP/JPG"
+                      style={{ fontSize: '0.72rem', borderRadius: '8px', padding: '3px 8px' }}
+                    >
+                      Compact
+                    </button>
+                  </div>
+                </div>
+
+                {/* Quality & Estimated Size Bar */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
+                  {exportFormat !== 'png' ? (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1 }}>
+                      <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>Quality: {Math.round(exportQuality * 100)}%</span>
+                      <input
+                        type="range"
+                        min="0.3"
+                        max="1.0"
+                        step="0.05"
+                        value={exportQuality}
+                        onChange={(e) => handleSelectExportQuality(parseFloat(e.target.value))}
+                        style={{ flex: 1, accentColor: 'var(--cyber-cyan)', height: '4px' }}
+                      />
+                    </div>
+                  ) : (
+                    <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Pixel-perfect sharp graphics & text</span>
+                  )}
+
+                  {exportFileSize && (
+                    <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--cyber-cyan)', background: 'rgba(6, 182, 212, 0.12)', padding: '2px 8px', borderRadius: '6px', whiteSpace: 'nowrap' }}>
+                      Size: {exportFileSize > 1024 * 1024 ? `${(exportFileSize / (1024 * 1024)).toFixed(2)} MB` : `${Math.round(exportFileSize / 1024)} KB`}
+                    </span>
+                  )}
+                </div>
+              </div>
+
               <div className="export-actions">
                 <button className={`btn ${isSaved ? 'btn-success' : 'btn-secondary'} hover-lift`} onClick={() => { handleConfirmSave(); }}>
                   {isSaved ? <><Check className="icon-sm" /> <span>Saved to Gallery</span></> : <><Save className="icon-sm" /> <span>Save to Gallery</span></>}
                 </button>
                 <button className="btn btn-primary shadow-glow" onClick={handleDownloadImage}>
-                  <Download className="icon-sm" /> <span>Download PNG</span>
+                  <Download className="icon-sm" /> <span>Download {exportFormat.toUpperCase() === 'JPEG' ? 'JPG' : exportFormat.toUpperCase()}</span>
                 </button>
                 <button
                   className="btn btn-secondary hover-lift"
@@ -2411,6 +2663,45 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         style={{ padding: "4px 8px", fontSize: "0.75rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "4px" }}
                       >
                         <Quote style={{ width: 14, height: 14 }} /> Quick Phrases
+                      </button>
+
+                      <div className="vid-ctx-divider" />
+
+                      <button
+                        className="btn btn-xs vid-ctx-btn"
+                        onClick={() => handleAddSpeechBubble('speech-left')}
+                        title="Add Comic Speech Bubble"
+                        style={{ padding: "4px 8px", fontSize: "0.75rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "4px" }}
+                      >
+                        <MessageSquare style={{ width: 13, height: 13, color: "var(--cyber-cyan)" }} /> Bubble
+                      </button>
+
+                      <button
+                        className="btn btn-xs vid-ctx-btn"
+                        onClick={() => handleAddCensorBar('[CENSORED]')}
+                        title="Add Censor / Redaction Bar"
+                        style={{ padding: "4px 8px", fontSize: "0.75rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "4px" }}
+                      >
+                        <ShieldAlert style={{ width: 13, height: 13, color: "#f59e0b" }} /> Censor
+                      </button>
+
+                      <button
+                        className="btn btn-xs vid-ctx-btn"
+                        onClick={() => setShowAiModal(true)}
+                        title="AI Meme Caption Ideas"
+                        style={{
+                          padding: "4px 8px",
+                          fontSize: "0.75rem",
+                          fontWeight: 600,
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "4px",
+                          background: "linear-gradient(135deg, rgba(168, 85, 247, 0.3) 0%, rgba(236, 72, 153, 0.3) 100%)",
+                          border: "1px solid rgba(236, 72, 153, 0.5)",
+                          color: "#ffffff"
+                        }}
+                      >
+                        <Sparkles style={{ width: 13, height: 13, color: "#ec4899" }} /> AI
                       </button>
                     </div>
                   )}
@@ -3297,6 +3588,56 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                     <button type="button" className="btn btn-xs btn-secondary hover-lift" onClick={() => setShowQuickPhrasesMenu(true)} style={{ padding: "7px 14px", borderRadius: "20px", fontSize: "0.82rem", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: "6px" }}>
                       <Quote size={15} /> Quick Phrases
                     </button>
+
+                    {/* Speech Bubble Button */}
+                    {!activeCaption && (
+                      <button
+                        type="button"
+                        className="btn btn-xs btn-secondary hover-lift"
+                        onClick={() => handleAddSpeechBubble('speech-left')}
+                        title="Add comic speech bubble callout"
+                        style={{ padding: "7px 14px", borderRadius: "20px", fontSize: "0.82rem", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: "6px" }}
+                      >
+                        <MessageSquare size={15} style={{ color: "var(--cyber-cyan)" }} /> Bubble
+                      </button>
+                    )}
+
+                    {/* Censor Bar Button */}
+                    {!activeCaption && (
+                      <button
+                        type="button"
+                        className="btn btn-xs btn-secondary hover-lift"
+                        onClick={() => handleAddCensorBar('[CENSORED]')}
+                        title="Add redaction / censor bar overlay"
+                        style={{ padding: "7px 14px", borderRadius: "20px", fontSize: "0.82rem", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: "6px" }}
+                      >
+                        <ShieldAlert size={15} style={{ color: "#f59e0b" }} /> Censor
+                      </button>
+                    )}
+
+                    {/* AI Meme Caption Generator Button */}
+                    {!activeCaption && (
+                      <button
+                        type="button"
+                        className="btn btn-xs hover-lift"
+                        onClick={() => setShowAiModal(true)}
+                        title="Generate AI meme captions or browse funny ideas"
+                        style={{
+                          padding: "7px 14px",
+                          borderRadius: "20px",
+                          fontSize: "0.82rem",
+                          fontWeight: 700,
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "6px",
+                          background: "linear-gradient(135deg, rgba(168, 85, 247, 0.35) 0%, rgba(236, 72, 153, 0.35) 100%)",
+                          border: "1px solid rgba(236, 72, 153, 0.6)",
+                          color: "#ffffff"
+                        }}
+                      >
+                        <Sparkles size={15} style={{ color: "#ec4899" }} /> AI Ideas
+                      </button>
+                    )}
                   </div>
                 ) : (
                   <div className="animate-fade-in" style={{ display: "flex", gap: "6px", overflowX: "auto", paddingBottom: "4px", scrollbarWidth: "none", width: "100%", alignItems: "center" }}>
@@ -3690,6 +4031,60 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                       </div>
                     </div>
                   </div>
+
+                  {/* Bubble Style Switcher (if this is a speech bubble) */}
+                  {activeCaption.bubbleStyle && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '4px' }}>
+                      <label style={{ margin: 0, fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)' }}>
+                        Bubble Style
+                      </label>
+                      <div style={{ display: 'flex', gap: '4px' }}>
+                        {[
+                          { id: 'speech-left', label: 'Tail Left' },
+                          { id: 'speech-right', label: 'Tail Right' },
+                          { id: 'thought', label: 'Thought' },
+                          { id: 'shout', label: 'Shout' },
+                        ].map(style => (
+                          <button
+                            key={style.id}
+                            type="button"
+                            className={`btn btn-xs flex-1 ${activeCaption.bubbleStyle === style.id ? 'btn-primary' : 'btn-ghost'}`}
+                            style={{ fontSize: '0.7rem', padding: '5px 2px', borderRadius: '8px', border: activeCaption.bubbleStyle === style.id ? 'none' : '1px solid var(--glass-border)' }}
+                            onClick={() => updateActiveCaption('bubbleStyle', style.id)}
+                          >
+                            {style.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Censor Bar Presets (if this is a censor bar) */}
+                  {activeCaption.isCensorBar && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '4px' }}>
+                      <label style={{ margin: 0, fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)' }}>
+                        Censor Label Presets
+                      </label>
+                      <div style={{ display: 'flex', gap: '4px' }}>
+                        {[
+                          { label: '[CENSORED]', text: '[CENSORED]' },
+                          { label: '[REDACTED]', text: '[REDACTED]' },
+                          { label: '[TOP SECRET]', text: '[TOP SECRET]' },
+                          { label: 'Solid Black', text: '' },
+                        ].map(item => (
+                          <button
+                            key={item.label}
+                            type="button"
+                            className={`btn btn-xs flex-1 ${activeCaption.text === item.text ? 'btn-primary' : 'btn-ghost'}`}
+                            style={{ fontSize: '0.68rem', padding: '5px 2px', borderRadius: '8px', border: activeCaption.text === item.text ? 'none' : '1px solid var(--glass-border)', whiteSpace: 'nowrap' }}
+                            onClick={() => updateActiveCaption('text', item.text)}
+                          >
+                            {item.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : (canvasHeader.enabled || canvasFooter.enabled) ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -4478,6 +4873,14 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
           </div>
         </ModalPortal>
       )}
+
+      {/* AI Meme Caption Generator Modal */}
+      <AiCaptionModal
+        isOpen={showAiModal}
+        onClose={() => setShowAiModal(false)}
+        onApplyCaption={handleApplyAiCaption}
+        templateName={template?.name}
+      />
     </div>
       )}
     </AnimatePresence>
