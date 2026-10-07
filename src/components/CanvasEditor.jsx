@@ -536,9 +536,10 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         ...(stickers || []).map(l => ({ ...l, _type: 'sticker', zIndex: l.zIndex || 0 })),
         ...(captions || []).map(l => ({ ...l, _type: 'caption', zIndex: l.zIndex || 0 }))
       ];
-      allLayers.sort((a, b) => a.zIndex - b.zIndex);
+      allLayers.sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0));
 
       allLayers.forEach((layer) => {
+        if (layer.hidden) return;
         if (layer._type === 'imageLayer') {
           const imgLayer = layer;
         const cx = imgLayer.x * canvas.width;
@@ -623,6 +624,19 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
               if (rot) {
                 uiCtx.rotate((rot * Math.PI) / 180);
               }
+              if (imgLayer.locked) {
+                uiCtx.strokeStyle = '#f59e0b';
+                uiCtx.lineWidth = 2.5;
+                uiCtx.setLineDash([4, 4]);
+                uiCtx.strokeRect(-w / 2 - 6, -h / 2 - 6, w + 12, h + 12);
+                uiCtx.setLineDash([]);
+                uiCtx.fillStyle = '#f59e0b';
+                uiCtx.font = 'bold 12px sans-serif';
+                uiCtx.textAlign = 'center';
+                uiCtx.fillText('🔒 LOCKED', 0, -hh - 14);
+                uiCtx.restore();
+                return;
+              }
               uiCtx.strokeStyle = '#f97316';
               uiCtx.lineWidth = 3;
               uiCtx.setLineDash([6, 6]);
@@ -703,6 +717,19 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
             uiCtx.save();
             uiCtx.translate(sx, sy);
             if (rot) uiCtx.rotate(rot * Math.PI / 180);
+            if (stk.locked) {
+              uiCtx.strokeStyle = '#f59e0b';
+              uiCtx.lineWidth = 2.5;
+              uiCtx.setLineDash([4, 4]);
+              uiCtx.strokeRect(-stkSize / 2 - 6, -stkSize / 2 - 6, stkSize + 12, stkSize + 12);
+              uiCtx.setLineDash([]);
+              uiCtx.fillStyle = '#f59e0b';
+              uiCtx.font = 'bold 12px sans-serif';
+              uiCtx.textAlign = 'center';
+              uiCtx.fillText('🔒 LOCKED', 0, -stkSize / 2 - 14);
+              uiCtx.restore();
+              return;
+            }
             uiCtx.strokeStyle = '#f97316';
             uiCtx.lineWidth = 3;
             uiCtx.setLineDash([6, 6]);
@@ -875,12 +902,26 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
             uiCtx.translate(cx, cy);
             if (rot) uiCtx.rotate((rot * Math.PI) / 180);
             uiCtx.globalAlpha = 1.0;
+            const boxX = - boxWidth / 2;
+            const boxY = - boxHeight / 2;
+
+            if (cap.locked) {
+              uiCtx.strokeStyle = '#f59e0b';
+              uiCtx.lineWidth = 2.5;
+              uiCtx.setLineDash([4, 4]);
+              uiCtx.strokeRect(boxX, boxY, boxWidth, boxHeight);
+              uiCtx.setLineDash([]);
+              uiCtx.fillStyle = '#f59e0b';
+              uiCtx.font = 'bold 12px sans-serif';
+              uiCtx.textAlign = 'center';
+              uiCtx.fillText('🔒 LOCKED', 0, boxY - 14);
+              uiCtx.restore();
+              return;
+            }
+
             uiCtx.strokeStyle = '#f97316';
             uiCtx.lineWidth = 3;
             uiCtx.setLineDash([6, 6]);
-            
-            const boxX = - boxWidth / 2;
-            const boxY = - boxHeight / 2;
             
             uiCtx.strokeRect(boxX, boxY, boxWidth, boxHeight);
             
@@ -1124,11 +1165,11 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     const ctx = canvas.getContext('2d');
     let hitLayer = null;
 
-    // A. Priority 1: Check Active Layer (Handles first, then Body)
+    // A. Priority 1: Check Active Layer interactive handles (only if layer is unlocked)
     if (activeLayerId) {
-      // 1. Active Sticker
+      // 1. Active Sticker handles
       const activeStk = stickers.find(s => s.id === activeLayerId);
-      if (activeStk) {
+      if (activeStk && !activeStk.locked) {
         const cx = activeStk.x * canvas.width;
         const cy = activeStk.y * canvas.height;
         const stkSize = (activeStk.scale || 1.0) * 52;
@@ -1157,24 +1198,12 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
             break;
           }
         }
-
-        // Active sticker body
-        if (!hitLayer && p.x >= cx - stkSize / 2 - 6 && p.x <= cx + stkSize / 2 + 6 && p.y >= cy - stkSize / 2 - 6 && p.y <= cy + stkSize / 2 + 6) {
-          hitLayer = { 
-            id: activeStk.id, 
-            type: 'sticker', 
-            x: activeStk.x, 
-            y: activeStk.y, 
-            scale: activeStk.scale || 1.0, 
-            rotation: activeStk.rotation || 0 
-          };
-        }
       }
 
-      // 2. Active Caption
+      // 2. Active Caption handles
       if (!hitLayer) {
         const activeCap = captions.find(c => c.id === activeLayerId);
-        if (activeCap) {
+        if (activeCap && !activeCap.locked) {
           const cx = activeCap.x * canvas.width;
           const cy = activeCap.y * canvas.height;
           const p = rotatePoint(coords.x, coords.y, cx, cy, -(activeCap.rotation || 0));
@@ -1238,26 +1267,13 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
               initialDist: Math.max(15, cornerDist)
             };
           }
-
-          if (!hitLayer && p.x >= cx - halfW && p.x <= cx + halfW && p.y >= cy - halfH && p.y <= cy + halfH) {
-            hitLayer = { 
-              id: activeCap.id, 
-              type: 'caption', 
-              x: activeCap.x, 
-              y: activeCap.y, 
-              boxWidth,
-              boxHeight,
-              width: (boxWidth / canvas.width), 
-              rotation: activeCap.rotation || 0 
-            };
-          }
         }
       }
 
-      // 3. Active Image Layer
+      // 3. Active Image Layer handles
       if (!hitLayer) {
         const activeImg = imageLayers.find(l => l.id === activeLayerId);
-        if (activeImg) {
+        if (activeImg && !activeImg.locked) {
           const cached = imageCacheRef.current[activeImg.url];
           if (cached) {
             const cx = activeImg.x * canvas.width;
@@ -1307,25 +1323,9 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
                 rotation: activeImg.rotation || 0, 
                 baseW, baseH, fitScale, 
                 boxWidth: w, 
-                boxHeight: h,
-                width: w,
-                height: h
-              };
-            }
-
-            if (!hitLayer && p.x >= cx - w / 2 && p.x <= cx + w / 2 && p.y >= cy - h / 2 && p.y <= cy + h / 2) {
-              hitLayer = { 
-                id: activeImg.id, 
-                type: 'imageLayer', 
-                x: activeImg.x, 
-                y: activeImg.y,
-                scale,
-                rotation: activeImg.rotation || 0,
-                baseW, baseH, fitScale,
-                boxWidth: w,
-                boxHeight: h,
-                width: w,
-                height: h
+                boxHeight: h, 
+                width: w, 
+                height: h 
               };
             }
           }
@@ -1333,17 +1333,18 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
       }
     }
 
-    // B. Priority 2: Non-active layers
+    // B. Priority 2: Check ALL layers in Descending Stack Order (top-most layer under pointer wins)
     if (!hitLayer) {
       const allLayersRev = [
-        ...(imageLayers || []).map(l => ({ ...l, _type: 'imageLayer', zIndex: l.zIndex || 0 })),
-        ...(stickers || []).map(l => ({ ...l, _type: 'sticker', zIndex: l.zIndex || 0 })),
-        ...(captions || []).map(l => ({ ...l, _type: 'caption', zIndex: l.zIndex || 0 }))
+        ...(imageLayers || []).map(l => ({ ...l, _type: 'imageLayer', zIndex: l.zIndex ?? 0 })),
+        ...(stickers || []).map(l => ({ ...l, _type: 'sticker', zIndex: l.zIndex ?? 0 })),
+        ...(captions || []).map(l => ({ ...l, _type: 'caption', zIndex: l.zIndex ?? 0 }))
       ];
-      allLayersRev.sort((a, b) => b.zIndex - a.zIndex); // Descending for hit test
+      allLayersRev.sort((a, b) => (b.zIndex ?? 0) - (a.zIndex ?? 0)); // Descending: topmost first
 
       for (const layer of allLayersRev) {
         if (hitLayer) break;
+        if (layer.hidden) continue; // Skip hidden layers
 
         if (layer._type === 'sticker') {
           const stk = layer;
@@ -1351,14 +1352,15 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
           const cy = stk.y * canvas.height;
           const stkSize = (stk.scale || 1.0) * 52;
           const p = rotatePoint(coords.x, coords.y, cx, cy, -(stk.rotation || 0));
-          if (p.x >= cx - stkSize / 2 && p.x <= cx + stkSize / 2 && p.y >= cy - stkSize / 2 && p.y <= cy + stkSize / 2) {
+          if (p.x >= cx - stkSize / 2 - 6 && p.x <= cx + stkSize / 2 + 6 && p.y >= cy - stkSize / 2 - 6 && p.y <= cy + stkSize / 2 + 6) {
             hitLayer = { 
               id: stk.id, 
               type: 'sticker', 
               x: stk.x, 
               y: stk.y, 
               scale: stk.scale || 1.0, 
-              rotation: stk.rotation || 0 
+              rotation: stk.rotation || 0,
+              locked: !!stk.locked
             };
           }
         } else if (layer._type === 'caption') {
@@ -1390,7 +1392,18 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
           }
 
           if (hitBox) {
-            hitLayer = { id: cap.id, type: 'caption', x: cap.x, y: cap.y };
+            hitLayer = { 
+              id: cap.id, 
+              type: 'caption', 
+              x: cap.x, 
+              y: cap.y,
+              boxWidth,
+              boxHeight,
+              width: (boxWidth / canvas.width),
+              rotation: cap.rotation || 0,
+              fontSize: cap.fontSize || 50,
+              locked: !!cap.locked
+            };
           }
         } else if (layer._type === 'imageLayer') {
           const imgLayer = layer;
@@ -1415,7 +1428,13 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
                 x: imgLayer.x, 
                 y: imgLayer.y, 
                 scale: imgLayer.scale || 1.0, 
-                rotation: imgLayer.rotation || 0 
+                rotation: imgLayer.rotation || 0,
+                baseW, baseH, fitScale,
+                boxWidth: w,
+                boxHeight: h,
+                width: w,
+                height: h,
+                locked: !!imgLayer.locked
               };
             }
           }
@@ -1430,27 +1449,31 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
       }
       
       if (onSelectLayer) onSelectLayer(hitLayer.id);
-      isDragging.current = true;
-      dragTarget.current = hitLayer;
-      dragStartCoords.current = coords;
 
-      const centerX = hitLayer.x * canvas.width;
-      const centerY = hitLayer.y * canvas.height;
-      const initDist = hitLayer.initialDist || Math.hypot(coords.x - centerX, coords.y - centerY);
+      // Only begin dragging if the layer is not locked
+      if (!hitLayer.locked) {
+        isDragging.current = true;
+        dragTarget.current = hitLayer;
+        dragStartCoords.current = coords;
 
-      initialLayerPos.current = { 
-        x: hitLayer.x, 
-        y: hitLayer.y, 
-        width: hitLayer.boxWidth || hitLayer.width,
-        height: hitLayer.boxHeight || hitLayer.height,
-        boxWidth: hitLayer.boxWidth || hitLayer.width,
-        boxHeight: hitLayer.boxHeight || hitLayer.height,
-        scale: hitLayer.scale || 1.0,
-        rotation: hitLayer.rotation || 0,
-        initialDist: Math.max(15, initDist),
-        initialFontSize: hitLayer.initialFontSize || hitLayer.fontSize || 50,
-        initialWidth: hitLayer.initialWidth || hitLayer.width || 0.9
-      };
+        const centerX = hitLayer.x * canvas.width;
+        const centerY = hitLayer.y * canvas.height;
+        const initDist = hitLayer.initialDist || Math.hypot(coords.x - centerX, coords.y - centerY);
+
+        initialLayerPos.current = { 
+          x: hitLayer.x, 
+          y: hitLayer.y, 
+          width: hitLayer.boxWidth || hitLayer.width,
+          height: hitLayer.boxHeight || hitLayer.height,
+          boxWidth: hitLayer.boxWidth || hitLayer.width,
+          boxHeight: hitLayer.boxHeight || hitLayer.height,
+          scale: hitLayer.scale || 1.0,
+          rotation: hitLayer.rotation || 0,
+          initialDist: Math.max(15, initDist),
+          initialFontSize: hitLayer.initialFontSize || hitLayer.fontSize || 50,
+          initialWidth: hitLayer.initialWidth || hitLayer.width || 0.9
+        };
+      }
     } else {
       if (onSelectLayer) onSelectLayer(null);
       setEditingCaptionId(null);
@@ -1552,7 +1575,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
 
     if (activeLayerId) {
       const activeStk = stickers.find(s => s.id === activeLayerId);
-      if (activeStk) {
+      if (activeStk && !activeStk.locked) {
         const cx = activeStk.x * canvas.width;
         const cy = activeStk.y * canvas.height;
         const stkSize = (activeStk.scale || 1.0) * 52;
@@ -1577,7 +1600,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
       }
 
       const activeCap = captions.find(c => c.id === activeLayerId);
-      if (activeCap) {
+      if (activeCap && !activeCap.locked) {
         const cx = activeCap.x * canvas.width;
         const cy = activeCap.y * canvas.height;
         const p = rotatePoint(coords.x, coords.y, cx, cy, -(activeCap.rotation || 0));
@@ -1624,7 +1647,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
       }
 
       const activeImg = imageLayers.find(l => l.id === activeLayerId);
-      if (activeImg) {
+      if (activeImg && !activeImg.locked) {
         const cached = imageCacheRef.current[activeImg.url];
         if (cached) {
           const cx = activeImg.x * canvas.width;
@@ -1665,6 +1688,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     }
 
     for (const stk of stickers) {
+      if (stk.hidden) continue;
       const cx = stk.x * canvas.width;
       const cy = stk.y * canvas.height;
       const stkSize = (stk.scale || 1.0) * 52;
@@ -1676,6 +1700,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     }
 
     for (const l of imageLayers) {
+      if (l.hidden) continue;
       const cx = l.x * canvas.width;
       const cy = l.y * canvas.height;
       const cached = imageCacheRef.current[l.url];
@@ -1688,6 +1713,32 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         const h = l.boxHeight || l.height || (baseH * fitScale * scale);
         const p = rotatePoint(coords.x, coords.y, cx, cy, -(l.rotation || 0));
         if (p.x >= cx - w / 2 && p.x <= cx + w / 2 && p.y >= cy - h / 2 && p.y <= cy + h / 2) {
+          canvas.style.cursor = 'pointer';
+          return;
+        }
+      }
+    }
+
+    for (const cap of captions) {
+      if (cap.hidden) continue;
+      const cx = cap.x * canvas.width;
+      const cy = cap.y * canvas.height;
+      const p = rotatePoint(coords.x, coords.y, cx, cy, -(cap.rotation || 0));
+      const fontSize = cap.fontSize || 50;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.font = `bold ${fontSize}px ${cap.fontFamily || 'Impact, sans-serif'}`;
+        const renderMaxWidth = (cap.width || 0.9) * canvas.width;
+        const lines = wrapText(ctx, cap.text || '', renderMaxWidth);
+        let maxLineWidth = 0;
+        for (const line of lines) maxLineWidth = Math.max(maxLineWidth, ctx.measureText(line).width);
+        const hasBg = cap.bgColor && cap.bgColor !== 'transparent' && cap.bgColor !== 'none';
+        const padX = hasBg && cap.bgStyle !== 'banner' ? Math.max(16, fontSize * 0.35) : Math.max(8, fontSize * 0.15);
+        const padY = hasBg && cap.bgStyle !== 'banner' ? Math.max(10, fontSize * 0.2) : Math.max(4, fontSize * 0.1);
+        const boxWidth = maxLineWidth + padX * 2;
+        const lineHeight = fontSize * 1.2;
+        const boxHeight = lines.length * lineHeight + padY * 2;
+        if (p.x >= cx - boxWidth / 2 && p.x <= cx + boxWidth / 2 && p.y >= cy - boxHeight / 2 && p.y <= cy + boxHeight / 2) {
           canvas.style.cursor = 'pointer';
           return;
         }
@@ -1987,13 +2038,14 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
   // Global window listeners so fast mouse or touch drags don't freeze when leaving the canvas element
   useEffect(() => {
     const handleGlobalMove = (e) => {
-      if (isDragging.current) {
-        handlePointerMove(e);
+      if (isDragging.current && handlePointerMoveRef.current) {
+        handlePointerMoveRef.current(e);
       }
     };
     const handleGlobalUp = (e) => {
       if (isDragging.current || isDrawingActive.current) {
-        handlePointerUp();
+        if (handlePointerEndRef.current) handlePointerEndRef.current(e);
+        else handlePointerUp();
       }
     };
     window.addEventListener('mousemove', handleGlobalMove);
@@ -2008,7 +2060,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
       window.removeEventListener('touchend', handleGlobalUp);
       window.removeEventListener('touchcancel', handleGlobalUp);
     };
-  }, [captions, stickers, imageLayers, activeLayerId]);
+  }, []);
 
   
   useEffect(() => {

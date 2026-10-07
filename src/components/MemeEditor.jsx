@@ -10,7 +10,7 @@ import {
   Sliders, Smile, Sticker, ArrowLeft, Save, Check, RefreshCw,
   Image as ImageIcon, Search, X, Upload, RotateCw, ZoomIn, Crop, LayoutGrid, Scissors, Play, Pause, FolderHeart, Droplet, Monitor,
   Paintbrush, Eraser, Palette, Sun, Moon, ChevronDown, ChevronLeft, PencilLine, Move, ArrowDownRight, Quote, Wand2,
-  Layers, ArrowUp, ArrowDown
+  Layers, ArrowUp, ArrowDown, ChevronsUp, ChevronsDown, Eye, EyeOff, Lock, Unlock
 } from 'lucide-react';
 import { downloadImageHelper, recordCanvasAsVideo } from '../utils/downloadHelper';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -189,15 +189,34 @@ function CanvasColorPicker({ canvasBgColor, setCanvasBgColor }) {
 }
 
 export default function MemeEditor({ template, onBack, onSaveToGallery, theme, onToggleTheme }) {
+  const [imageLayers, setImageLayers] = useState(() => {
+    return (template?.imageLayers || []).map((img, idx) => ({
+      ...img,
+      id: img.id || `img-${idx}-${Date.now()}`,
+      zIndex: idx
+    }));
+  });
+
+  const [stickers, setStickers] = useState(() => {
+    const baseZ = (template?.imageLayers || []).length;
+    return (template?.defaultStickers || template?.stickers || []).map((s, idx) => ({
+      ...s,
+      id: s.id || `stk-${idx}-${Date.now()}`,
+      zIndex: baseZ + idx
+    }));
+  });
+
   const [captions, setCaptions] = useState(() => {
+    const baseZ = (template?.imageLayers || []).length + (template?.defaultStickers || template?.stickers || []).length;
     let initialCaps = [];
     const rawCaps = template?.defaultCaptions || template?.captions;
 
     if (rawCaps) {
       initialCaps = rawCaps.map((c, idx) => ({
         fontSize: 50, color: '#ffffff', stroke: '#000000', align: 'center', fontFamily: 'Impact, sans-serif',
-      rotation: 0,
-        ...c, id: c.id || `cap-${idx}-${Date.now()}`
+        rotation: 0,
+        ...c, id: c.id || `cap-${idx}-${Date.now()}`,
+        zIndex: baseZ + idx
       }));
     } else if (template?.isNativeLayout && template?.layoutDef) {
       const layoutDef = template.layoutDef;
@@ -227,36 +246,23 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
           }
           initialCaps.push({
             text: 'ADD TEXT', x: cx, y: cy, fontSize: 45, color: '#000000', stroke: 'transparent', align: 'center', fontFamily: 'Impact, sans-serif',
-      rotation: 0, width: undefined, id: `cap-slot-${idx}-${Date.now()}`
+            rotation: 0, width: undefined, id: `cap-slot-${idx}-${Date.now()}`,
+            zIndex: baseZ + initialCaps.length
           });
         }
       });
     } else {
       initialCaps = [
         { text: 'TOP TEXT', x: 0.5, y: 0.15, fontSize: 50, color: '#ffffff', stroke: '#000000', align: 'center', fontFamily: 'Impact, sans-serif',
-      rotation: 0, id: `cap-top-${Date.now()}` },
+          rotation: 0, id: `cap-top-${Date.now()}`, zIndex: baseZ },
         { text: 'BOTTOM TEXT', x: 0.5, y: 0.85, fontSize: 50, color: '#ffffff', stroke: '#000000', align: 'center', fontFamily: 'Impact, sans-serif',
-      rotation: 0, id: `cap-bot-${Date.now()}` }
+          rotation: 0, id: `cap-bot-${Date.now()}`, zIndex: baseZ + 1 }
       ];
     }
     return initialCaps;
   });
 
-  const [stickers, setStickers] = useState(() => {
-    return (template?.defaultStickers || template?.stickers || []).map((s, idx) => ({
-      ...s,
-      id: s.id || `stk-${idx}-${Date.now()}`
-    }));
-  });
-
   const [activeLayerId, setActiveLayerId] = useState(null);
-
-  const [imageLayers, setImageLayers] = useState(() => {
-    return (template?.imageLayers || []).map((img, idx) => ({
-      ...img,
-      id: img.id || `img-${idx}-${Date.now()}`
-    }));
-  });
 
   // Native Multi-Panel Layout Support
   const isNativeLayout = template?.isNativeLayout || false;
@@ -323,6 +329,21 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
 
   // History stack for Undo / Redo
   const [history, setHistory] = useState(() => {
+    const baseImgZ = 0;
+    const initialImageLayers = (template?.imageLayers || []).map((img, idx) => ({
+      ...img,
+      id: img.id || `img-${idx}-${Date.now()}`,
+      zIndex: baseImgZ + idx
+    }));
+
+    const baseStkZ = initialImageLayers.length;
+    const initialStickers = (template?.defaultStickers || template?.stickers || []).map((s, idx) => ({
+      ...s,
+      id: s.id || `stk-${idx}-${Date.now()}`,
+      zIndex: baseStkZ + idx
+    }));
+
+    const baseCapZ = baseStkZ + initialStickers.length;
     const initialCaptions = (template?.defaultCaptions || template?.captions || [
       { text: 'TOP TEXT', x: 0.5, y: 0.15, fontSize: 50, color: '#ffffff', stroke: '#000000', align: 'center', fontFamily: 'Impact, sans-serif',
       rotation: 0 },
@@ -337,17 +358,8 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
       ...c,
       width: undefined, // Clear template width to force tight hugging initially
       fontSize: 45, // Set default text size to exactly 45px
-      id: c.id || `cap-${idx}-${Date.now()}`
-    }));
-
-    const initialStickers = (template?.defaultStickers || template?.stickers || []).map((s, idx) => ({
-      ...s,
-      id: s.id || `stk-${idx}-${Date.now()}`
-    }));
-
-    const initialImageLayers = (template?.imageLayers || []).map((img, idx) => ({
-      ...img,
-      id: img.id || `img-${idx}-${Date.now()}`
+      id: c.id || `cap-${idx}-${Date.now()}`,
+      zIndex: baseCapZ + idx
     }));
 
     return [
@@ -551,6 +563,20 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
              }
            }
         }
+      } else if ((e.key === ']' || e.key === '}') && activeLayerId) {
+        e.preventDefault();
+        if (ctrl && e.shiftKey) {
+          moveLayer(activeLayerId, 'front');
+        } else {
+          moveLayer(activeLayerId, 'forward');
+        }
+      } else if ((e.key === '[' || e.key === '{') && activeLayerId) {
+        e.preventDefault();
+        if (ctrl && e.shiftKey) {
+          moveLayer(activeLayerId, 'back');
+        } else {
+          moveLayer(activeLayerId, 'backward');
+        }
       } else if (e.key === 'Escape') {
         setActiveLayerId(null);
       }
@@ -652,6 +678,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
   const handleAddCaption = () => {
     const pos = getNonOverlappingPosition('caption', captions, stickers, imageLayers);
     const referenceCap = captions.find(c => c.id === activeLayerId) || (captions.length > 0 ? captions[captions.length - 1] : null);
+    const maxZ = Math.max(-1, ...captions.map(c => c.zIndex ?? -1), ...stickers.map(s => s.zIndex ?? -1), ...(imageLayers || []).map(i => i.zIndex ?? -1));
     const newCap = {
       id: `cap-${Date.now()}`,
       text: 'NEW TEXT',
@@ -664,7 +691,8 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
       fontFamily: referenceCap ? referenceCap.fontFamily : 'Impact, sans-serif',
       bgColor: referenceCap ? referenceCap.bgColor : undefined,
       opacity: referenceCap !== null && referenceCap.opacity !== undefined ? referenceCap.opacity : 1,
-      rotation: 0
+      rotation: 0,
+      zIndex: maxZ + 1
     };
     const nextCaps = [...captions, newCap];
     setCaptions(nextCaps);
@@ -675,6 +703,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
   const handleAddPresetPhrase = (phraseText) => {
     const pos = getNonOverlappingPosition('phrase', captions, stickers, imageLayers);
     const referenceCap = captions.find(c => c.id === activeLayerId) || (captions.length > 0 ? captions[captions.length - 1] : null);
+    const maxZ = Math.max(-1, ...captions.map(c => c.zIndex ?? -1), ...stickers.map(s => s.zIndex ?? -1), ...(imageLayers || []).map(i => i.zIndex ?? -1));
     const newCap = {
       id: `cap-${Date.now()}`,
       text: phraseText,
@@ -688,7 +717,8 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
       bgColor: referenceCap ? referenceCap.bgColor : undefined,
       opacity: referenceCap !== null && referenceCap.opacity !== undefined ? referenceCap.opacity : 1,
       rotation: 0,
-      width: 0.9
+      width: 0.9,
+      zIndex: maxZ + 1
     };
     const nextCaps = [...captions, newCap];
     setCaptions(nextCaps);
@@ -763,6 +793,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
 
   const commitAddImageLayer = (src, trimStart, trimEnd) => {
     const pos = getNonOverlappingPosition('image', captions, stickers, imageLayers);
+    const maxZ = Math.max(-1, ...captions.map(c => c.zIndex ?? -1), ...stickers.map(s => s.zIndex ?? -1), ...(imageLayers || []).map(i => i.zIndex ?? -1));
     const newImgLayer = {
       id: `img-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
       url: src,
@@ -771,6 +802,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
       scale: 1.5,
       rotation: 0,
       fitMode: 'stretch',
+      zIndex: maxZ + 1,
       ...(trimStart !== undefined ? { trimStart } : {}),
       ...(trimEnd !== undefined ? { trimEnd } : {})
     };
@@ -812,59 +844,147 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     pushHistory(captions, stickers, nextImgLayers);
   };
 
-  const handleZIndex = (dir) => {
-    if (!activeLayerId) return;
-
-    const isSticker = stickers.some(s => s.id === activeLayerId);
-    const isCap = captions.some(c => c.id === activeLayerId);
-    const isImg = (imageLayers || []).some(img => img.id === activeLayerId);
-
-    if (isSticker) {
-      const idx = stickers.findIndex(s => s.id === activeLayerId);
-      if (idx !== -1) {
-        const nextStickers = [...stickers];
-        nextStickers[idx] = { ...nextStickers[idx], zIndex: (nextStickers[idx].zIndex || 0) + dir };
-        setStickers(nextStickers);
-        pushHistory(captions, nextStickers, imageLayers, drawings);
-      }
-    } else if (isCap) {
-      const idx = captions.findIndex(c => c.id === activeLayerId);
-      if (idx !== -1) {
-        const nextCaps = [...captions];
-        nextCaps[idx] = { ...nextCaps[idx], zIndex: (nextCaps[idx].zIndex || 0) + dir };
-        setCaptions(nextCaps);
-        pushHistory(nextCaps, stickers, imageLayers, drawings);
-      }
-    } else if (isImg) {
-      const idx = (imageLayers || []).findIndex(img => img.id === activeLayerId);
-      if (idx !== -1) {
-        const nextImgLayers = [...imageLayers];
-        nextImgLayers[idx] = { ...nextImgLayers[idx], zIndex: (nextImgLayers[idx].zIndex || 0) + dir };
-        setImageLayers(nextImgLayers);
-        pushHistory(captions, stickers, nextImgLayers, drawings);
-      }
-    }
+  // Get all layers sorted in ascending visual stack order (0 = back, length-1 = front)
+  const getOrderedLayers = (caps = captions, stks = stickers, imgs = imageLayers) => {
+    const list = [
+      ...(imgs || []).map(l => ({ ...l, _type: 'imageLayer', zIndex: l.zIndex ?? 0 })),
+      ...(stks || []).map(s => ({ ...s, _type: 'sticker', zIndex: s.zIndex ?? 0 })),
+      ...(caps || []).map(c => ({ ...c, _type: 'caption', zIndex: c.zIndex ?? 0 }))
+    ];
+    list.sort((a, b) => (a.zIndex ?? 0) - (b.zIndex ?? 0));
+    return list;
   };
 
-  const handleDeleteLayer = () => {
-    if (!activeLayerId) return;
-    const layerIdToRemove = activeLayerId;
-    
-    // First, immediately clear the active layer to hide the properties panel and force UI update
-    setActiveLayerId(null);
-    
-    // Then compute next state
-    const nextCaps = captions.filter((c) => c.id !== layerIdToRemove);
-    const nextStickers = stickers.filter((s) => s.id !== layerIdToRemove);
-    const nextImgLayers = imageLayers.filter((i) => i.id !== layerIdToRemove);
-    
-    // Update state
+  // Re-indexes list and applies state + history
+  const commitLayerStack = (orderedList, currentDrawings = drawings) => {
+    orderedList.forEach((item, index) => {
+      item.zIndex = index;
+    });
+
+    const nextCaps = orderedList.filter(i => i._type === 'caption').map(({ _type, ...rest }) => rest);
+    const nextStks = orderedList.filter(i => i._type === 'sticker').map(({ _type, ...rest }) => rest);
+    const nextImgs = orderedList.filter(i => i._type === 'imageLayer').map(({ _type, ...rest }) => rest);
+
     setCaptions(nextCaps);
-    setStickers(nextStickers);
-    setImageLayers(nextImgLayers);
-    
-    // Push history
-    pushHistory(nextCaps, nextStickers, nextImgLayers);
+    setStickers(nextStks);
+    setImageLayers(nextImgs);
+    pushHistory(nextCaps, nextStks, nextImgs, currentDrawings);
+  };
+
+  const moveLayer = (id, action) => {
+    if (!id) return;
+    const list = getOrderedLayers();
+    const idx = list.findIndex(i => i.id === id);
+    if (idx === -1) return;
+
+    if (action === 'forward') {
+      if (idx >= list.length - 1) return;
+      const temp = list[idx];
+      list[idx] = list[idx + 1];
+      list[idx + 1] = temp;
+    } else if (action === 'backward') {
+      if (idx <= 0) return;
+      const temp = list[idx];
+      list[idx] = list[idx - 1];
+      list[idx - 1] = temp;
+    } else if (action === 'front') {
+      if (idx >= list.length - 1) return;
+      const [item] = list.splice(idx, 1);
+      list.push(item);
+    } else if (action === 'back') {
+      if (idx <= 0) return;
+      const [item] = list.splice(idx, 1);
+      list.unshift(item);
+    }
+
+    commitLayerStack(list);
+  };
+
+  const handleZIndex = (dir) => {
+    if (!activeLayerId) return;
+    moveLayer(activeLayerId, dir === 1 ? 'forward' : 'backward');
+  };
+
+  const toggleLayerVisibility = (id) => {
+    if (!id) return;
+    const isCap = captions.some(c => c.id === id);
+    const isStk = stickers.some(s => s.id === id);
+    const isImg = imageLayers.some(i => i.id === id);
+
+    let nextCaps = captions;
+    let nextStks = stickers;
+    let nextImgs = imageLayers;
+
+    if (isCap) {
+      nextCaps = captions.map(c => c.id === id ? { ...c, hidden: !c.hidden } : c);
+      setCaptions(nextCaps);
+    } else if (isStk) {
+      nextStks = stickers.map(s => s.id === id ? { ...s, hidden: !s.hidden } : s);
+      setStickers(nextStks);
+    } else if (isImg) {
+      nextImgs = imageLayers.map(i => i.id === id ? { ...i, hidden: !i.hidden } : i);
+      setImageLayers(nextImgs);
+    }
+
+    if (activeLayerId === id) {
+      const target = [...nextCaps, ...nextStks, ...nextImgs].find(i => i.id === id);
+      if (target?.hidden) setActiveLayerId(null);
+    }
+
+    pushHistory(nextCaps, nextStks, nextImgs, drawings);
+  };
+
+  const toggleLayerLock = (id) => {
+    if (!id) return;
+    const isCap = captions.some(c => c.id === id);
+    const isStk = stickers.some(s => s.id === id);
+    const isImg = imageLayers.some(i => i.id === id);
+
+    let nextCaps = captions;
+    let nextStks = stickers;
+    let nextImgs = imageLayers;
+
+    if (isCap) {
+      nextCaps = captions.map(c => c.id === id ? { ...c, locked: !c.locked } : c);
+      setCaptions(nextCaps);
+    } else if (isStk) {
+      nextStks = stickers.map(s => s.id === id ? { ...s, locked: !s.locked } : s);
+      setStickers(nextStks);
+    } else if (isImg) {
+      nextImgs = imageLayers.map(i => i.id === id ? { ...i, locked: !i.locked } : i);
+      setImageLayers(nextImgs);
+    }
+
+    pushHistory(nextCaps, nextStks, nextImgs, drawings);
+  };
+
+  const handleDeleteLayer = (idToDelete = activeLayerId) => {
+    if (!idToDelete) return;
+    if (activeLayerId === idToDelete) {
+      setActiveLayerId(null);
+    }
+    const list = getOrderedLayers().filter(i => i.id !== idToDelete);
+    commitLayerStack(list);
+  };
+
+  const handleDuplicateLayer = (idToDup = activeLayerId) => {
+    if (!idToDup) return;
+    const list = getOrderedLayers();
+    const idx = list.findIndex(i => i.id === idToDup);
+    if (idx === -1) return;
+
+    const source = list[idx];
+    const newId = `${source._type === 'caption' ? 'cap' : source._type === 'sticker' ? 'stk' : 'img'}-${Date.now()}`;
+    const clone = {
+      ...source,
+      id: newId,
+      x: Math.min(0.9, (source.x || 0.5) + 0.04),
+      y: Math.min(0.9, (source.y || 0.5) + 0.04)
+    };
+
+    list.splice(idx + 1, 0, clone);
+    commitLayerStack(list);
+    setActiveLayerId(newId);
   };
 
   
@@ -941,43 +1061,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     }
   };
 
-  const handleDuplicateLayer = () => {
-    if (!activeLayerId) return;
-    if (activeCaption) {
-      const newCap = {
-        ...activeCaption,
-        id: `cap-${Date.now()}`,
-        x: (activeCaption.x || 0.5) + 0.05,
-        y: (activeCaption.y || 0.5) + 0.05
-      };
-      const nextCaps = [...captions, newCap];
-      setCaptions(nextCaps);
-      setActiveLayerId(newCap.id);
-      pushHistory(nextCaps, stickers, imageLayers);
-    } else if (activeSticker) {
-      const newStk = {
-        ...activeSticker,
-        id: `stk-${Date.now()}`,
-        x: (activeSticker.x || 0.5) + 0.05,
-        y: (activeSticker.y || 0.5) + 0.05
-      };
-      const nextStk = [...stickers, newStk];
-      setStickers(nextStk);
-      setActiveLayerId(newStk.id);
-      pushHistory(captions, nextStk, imageLayers);
-    } else if (activeImageLayer) {
-      const newImg = {
-        ...activeImageLayer,
-        id: `layer-${Date.now()}`,
-        x: (activeImageLayer.x || 0.5) + 0.05,
-        y: (activeImageLayer.y || 0.5) + 0.05
-      };
-      const nextImg = [...imageLayers, newImg];
-      setImageLayers(nextImg);
-      setActiveLayerId(newImg.id);
-      pushHistory(captions, stickers, nextImg);
-    }
-  };
+
 
   const handleRotateImageLayer = () => {
     if (!activeImageLayer) return;
@@ -1086,13 +1170,15 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
   // Emoji & Sticker Handlers
   const handleAddSticker = (stickerObj) => {
     const pos = getNonOverlappingPosition('sticker', captions, stickers, imageLayers);
+    const maxZ = Math.max(-1, ...captions.map(c => c.zIndex ?? -1), ...stickers.map(s => s.zIndex ?? -1), ...(imageLayers || []).map(i => i.zIndex ?? -1));
     const newSticker = {
       id: `stk-${Date.now()}`,
       emoji: stickerObj.emoji,
       x: pos.x,
       y: pos.y,
       scale: 2.5,
-      rotation: 0
+      rotation: 0,
+      zIndex: maxZ + 1
     };
     const nextStickers = [...stickers, newSticker];
     setStickers(nextStickers);
@@ -1104,6 +1190,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
 
   const handleAddGraphicSticker = (stickerObj) => {
     const pos = getNonOverlappingPosition('sticker', captions, stickers, imageLayers);
+    const maxZ = Math.max(-1, ...captions.map(c => c.zIndex ?? -1), ...stickers.map(s => s.zIndex ?? -1), ...(imageLayers || []).map(i => i.zIndex ?? -1));
     const newSticker = {
       id: `stk-graphic-${Date.now()}`,
       name: stickerObj.name,
@@ -1111,7 +1198,8 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
       x: pos.x,
       y: pos.y,
       scale: 2.2,
-      rotation: 0
+      rotation: 0,
+      zIndex: maxZ + 1
     };
     const nextStickers = [...stickers, newSticker];
     setStickers(nextStickers);
@@ -1410,6 +1498,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     }
   };
   const getDockHeight = () => {
+    if (activeTab === 'layers') return '44vh';
     if (aspectRatio === '16:9') return '45vh';
     if (aspectRatio === '1:1') return '40vh';
     if (aspectRatio === '4:5') return '35vh';
@@ -1871,21 +1960,52 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                       </button>
                       
                       {showLayerMenu && (
-                        <div style={{ display: 'flex' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
                           <button
                             className="btn btn-icon btn-xs vid-ctx-btn"
-                            title="Bring Forward"
-                            onClick={() => handleZIndex(1)}
-                            style={{ marginRight: '2px' }}
+                            title="Bring to Front (Top)"
+                            onClick={() => moveLayer(activeLayerId, 'front')}
+                          >
+                            <ChevronsUp style={{ width: 14, height: 14 }} />
+                          </button>
+                          <button
+                            className="btn btn-icon btn-xs vid-ctx-btn"
+                            title="Bring Forward (1 step)"
+                            onClick={() => moveLayer(activeLayerId, 'forward')}
                           >
                             <ArrowUp style={{ width: 14, height: 14 }} />
                           </button>
                           <button
                             className="btn btn-icon btn-xs vid-ctx-btn"
-                            title="Send Backward"
-                            onClick={() => handleZIndex(-1)}
+                            title="Send Backward (1 step)"
+                            onClick={() => moveLayer(activeLayerId, 'backward')}
                           >
                             <ArrowDown style={{ width: 14, height: 14 }} />
+                          </button>
+                          <button
+                            className="btn btn-icon btn-xs vid-ctx-btn"
+                            title="Send to Back (Bottom)"
+                            onClick={() => moveLayer(activeLayerId, 'back')}
+                          >
+                            <ChevronsDown style={{ width: 14, height: 14 }} />
+                          </button>
+                          <div className="vid-ctx-divider" style={{ margin: '0 2px' }} />
+                          <button
+                            className={`btn btn-icon btn-xs vid-ctx-btn ${activeImageLayer?.locked ? 'active' : ''}`}
+                            title={activeImageLayer?.locked ? "Unlock Layer" : "Lock Layer"}
+                            onClick={() => toggleLayerLock(activeLayerId)}
+                          >
+                            {activeImageLayer?.locked ? <Lock style={{ width: 14, height: 14, color: '#f59e0b' }} /> : <Unlock style={{ width: 14, height: 14 }} />}
+                          </button>
+                          <button
+                            className="btn btn-icon btn-xs vid-ctx-btn"
+                            title="Open Layers Panel"
+                            onClick={() => {
+                              handleTabClick('layers');
+                              setShowLayerMenu(false);
+                            }}
+                          >
+                            <Layers style={{ width: 14, height: 14 }} />
                           </button>
                         </div>
                       )}
@@ -1920,21 +2040,52 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                       </button>
                       
                       {showLayerMenu && (
-                        <div style={{ display: 'flex' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
                           <button
                             className="btn btn-icon btn-xs vid-ctx-btn"
-                            title="Bring Forward"
-                            onClick={() => handleZIndex(1)}
-                            style={{ marginRight: '2px' }}
+                            title="Bring to Front (Top)"
+                            onClick={() => moveLayer(activeLayerId, 'front')}
+                          >
+                            <ChevronsUp style={{ width: 14, height: 14 }} />
+                          </button>
+                          <button
+                            className="btn btn-icon btn-xs vid-ctx-btn"
+                            title="Bring Forward (1 step)"
+                            onClick={() => moveLayer(activeLayerId, 'forward')}
                           >
                             <ArrowUp style={{ width: 14, height: 14 }} />
                           </button>
                           <button
                             className="btn btn-icon btn-xs vid-ctx-btn"
-                            title="Send Backward"
-                            onClick={() => handleZIndex(-1)}
+                            title="Send Backward (1 step)"
+                            onClick={() => moveLayer(activeLayerId, 'backward')}
                           >
                             <ArrowDown style={{ width: 14, height: 14 }} />
+                          </button>
+                          <button
+                            className="btn btn-icon btn-xs vid-ctx-btn"
+                            title="Send to Back (Bottom)"
+                            onClick={() => moveLayer(activeLayerId, 'back')}
+                          >
+                            <ChevronsDown style={{ width: 14, height: 14 }} />
+                          </button>
+                          <div className="vid-ctx-divider" style={{ margin: '0 2px' }} />
+                          <button
+                            className={`btn btn-icon btn-xs vid-ctx-btn ${(activeCaption?.locked || activeSticker?.locked) ? 'active' : ''}`}
+                            title={(activeCaption?.locked || activeSticker?.locked) ? "Unlock Layer" : "Lock Layer"}
+                            onClick={() => toggleLayerLock(activeLayerId)}
+                          >
+                            {(activeCaption?.locked || activeSticker?.locked) ? <Lock style={{ width: 14, height: 14, color: '#f59e0b' }} /> : <Unlock style={{ width: 14, height: 14 }} />}
+                          </button>
+                          <button
+                            className="btn btn-icon btn-xs vid-ctx-btn"
+                            title="Open Layers Panel"
+                            onClick={() => {
+                              handleTabClick('layers');
+                              setShowLayerMenu(false);
+                            }}
+                          >
+                            <Layers style={{ width: 14, height: 14 }} />
                           </button>
                         </div>
                       )}
@@ -2441,6 +2592,17 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
               <Type className="icon-xs" /> <span>Text</span>
             </button>
             <button
+              className={`tab-btn ${activeTab === 'layers' ? 'active' : ''}`}
+              onClick={() => handleTabClick('layers')}
+            >
+              <Layers className="icon-xs" /> <span>Layers</span>
+              {(captions.length + stickers.length + (imageLayers?.length || 0)) > 0 && (
+                <span className="layers-count-badge" style={{ marginLeft: '4px', padding: '1px 5px', fontSize: '0.65rem' }}>
+                  {captions.length + stickers.length + (imageLayers?.length || 0)}
+                </span>
+              )}
+            </button>
+            <button
               className={`tab-btn ${activeTab === 'filters' ? 'active' : ''}`}
               onClick={() => handleTabClick('filters')}
             >
@@ -2585,6 +2747,240 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                 </div>
               </div>
             )}
+
+            {/* TAB: LAYERS STACK */}
+            {activeTab === 'layers' && (() => {
+              const ordered = getOrderedLayers();
+              const reversed = [...ordered].reverse(); // Highest zIndex at the top of list
+              return (
+                <div className="tab-content animate-fade-in">
+                  <div className="layers-panel-container">
+                    <div className="layers-panel-header">
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <Layers size={16} style={{ color: 'var(--cyber-cyan)' }} />
+                          Layers Stack
+                        </span>
+                        <span className="layers-count-badge">
+                          {ordered.length} {ordered.length === 1 ? 'layer' : 'layers'}
+                        </span>
+                      </div>
+
+                      {activeLayerId && (
+                        <div className="layers-quick-bar">
+                          <button
+                            type="button"
+                            className="layers-quick-btn"
+                            onClick={() => moveLayer(activeLayerId, 'front')}
+                            title="Bring to Front"
+                          >
+                            <ChevronsUp size={14} /> Top
+                          </button>
+                          <button
+                            type="button"
+                            className="layers-quick-btn"
+                            onClick={() => moveLayer(activeLayerId, 'forward')}
+                            title="Bring Forward (1 step)"
+                          >
+                            <ArrowUp size={14} /> Up
+                          </button>
+                          <button
+                            type="button"
+                            className="layers-quick-btn"
+                            onClick={() => moveLayer(activeLayerId, 'backward')}
+                            title="Send Backward (1 step)"
+                          >
+                            <ArrowDown size={14} /> Down
+                          </button>
+                          <button
+                            type="button"
+                            className="layers-quick-btn"
+                            onClick={() => moveLayer(activeLayerId, 'back')}
+                            title="Send to Back"
+                          >
+                            <ChevronsDown size={14} /> Bottom
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    {ordered.length === 0 ? (
+                      <div className="layers-empty-state">
+                        <Layers size={32} style={{ color: 'var(--text-muted)', opacity: 0.5 }} />
+                        <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                          No layers on canvas yet
+                        </span>
+                        <div className="layers-empty-actions">
+                          <button
+                            type="button"
+                            className="btn btn-xs btn-primary hover-lift"
+                            onClick={handleAddCaption}
+                            style={{ display: 'flex', alignItems: 'center', gap: '5px' }}
+                          >
+                            <Plus size={14} /> Add Text
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btn-xs btn-secondary hover-lift"
+                            onClick={() => setShowMemeStickersModal(true)}
+                            style={{ display: 'flex', alignItems: 'center', gap: '5px' }}
+                          >
+                            <Sticker size={14} /> Add Sticker
+                          </button>
+                          <label
+                            className="btn btn-xs btn-secondary hover-lift"
+                            style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer', margin: 0 }}
+                          >
+                            <Upload size={14} /> Add Media
+                            <input
+                              type="file"
+                              accept="image/*,video/*"
+                              style={{ display: 'none' }}
+                              onChange={handleFileUploadImageLayer}
+                            />
+                          </label>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="layers-list">
+                        {reversed.map((layer, revIdx) => {
+                          const isTop = revIdx === 0;
+                          const isBottom = revIdx === reversed.length - 1;
+                          const isSelected = activeLayerId === layer.id;
+
+                          let title = 'Layer';
+                          let typeLabel = 'Layer';
+                          let previewContent = null;
+
+                          if (layer._type === 'caption') {
+                            title = layer.text || 'Text Layer';
+                            typeLabel = 'Text';
+                            previewContent = (
+                              <span style={{ fontFamily: layer.fontFamily || 'Impact', fontWeight: 'bold', fontSize: '1rem', color: layer.color || '#fff' }}>
+                                T
+                              </span>
+                            );
+                          } else if (layer._type === 'sticker') {
+                            if (layer.emoji) {
+                              title = layer.name || `Emoji (${layer.emoji})`;
+                              typeLabel = 'Emoji';
+                              previewContent = <span style={{ fontSize: '1.2rem', lineHeight: 1 }}>{layer.emoji}</span>;
+                            } else {
+                              title = layer.name || 'Graphic Sticker';
+                              typeLabel = 'Sticker';
+                              previewContent = <img src={layer.url || layer.src} alt="sticker" />;
+                            }
+                          } else if (layer._type === 'imageLayer') {
+                            const isVid = isVideoUrl(layer.url);
+                            title = isVid ? 'Video Layer' : 'Image Overlay';
+                            typeLabel = isVid ? 'Video' : 'Image';
+                            previewContent = isVid ? (
+                              <Play size={16} style={{ color: 'var(--cyber-cyan)' }} />
+                            ) : (
+                              <img src={layer.url} alt="layer" />
+                            );
+                          }
+
+                          return (
+                            <div
+                              key={layer.id}
+                              className={`layer-card ${isSelected ? 'active' : ''} ${layer.locked ? 'locked' : ''} ${layer.hidden ? 'hidden-layer' : ''}`}
+                              onClick={() => {
+                                if (activeLayerId !== layer.id) {
+                                  setActiveLayerId(layer.id);
+                                }
+                              }}
+                            >
+                              <div className="layer-preview-box">
+                                {previewContent}
+                              </div>
+
+                              <div className="layer-details">
+                                <span className="layer-title-text" title={title}>
+                                  {title}
+                                </span>
+                                <span className="layer-meta-text">
+                                  <span style={{ textTransform: 'uppercase', fontSize: '0.66rem', fontWeight: 700, opacity: 0.8 }}>{typeLabel}</span>
+                                  <span>•</span>
+                                  <span>Z: {layer.zIndex}</span>
+                                  {layer.locked && (
+                                    <>
+                                      <span>•</span>
+                                      <span style={{ color: '#f59e0b', display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
+                                        <Lock size={10} /> Locked
+                                      </span>
+                                    </>
+                                  )}
+                                  {layer.hidden && (
+                                    <>
+                                      <span>•</span>
+                                      <span style={{ color: 'var(--text-muted)' }}>Hidden</span>
+                                    </>
+                                  )}
+                                </span>
+                              </div>
+
+                              <div className="layer-actions-group" onClick={(e) => e.stopPropagation()}>
+                                <button
+                                  type="button"
+                                  className="layer-action-icon-btn"
+                                  disabled={isTop}
+                                  onClick={() => moveLayer(layer.id, 'forward')}
+                                  title="Move Up (Bring Forward)"
+                                >
+                                  <ArrowUp size={13} />
+                                </button>
+                                <button
+                                  type="button"
+                                  className="layer-action-icon-btn"
+                                  disabled={isBottom}
+                                  onClick={() => moveLayer(layer.id, 'backward')}
+                                  title="Move Down (Send Backward)"
+                                >
+                                  <ArrowDown size={13} />
+                                </button>
+                                <button
+                                  type="button"
+                                  className={`layer-action-icon-btn ${layer.locked ? 'active-lock' : ''}`}
+                                  onClick={() => toggleLayerLock(layer.id)}
+                                  title={layer.locked ? "Unlock Layer" : "Lock Layer"}
+                                >
+                                  {layer.locked ? <Lock size={13} /> : <Unlock size={13} />}
+                                </button>
+                                <button
+                                  type="button"
+                                  className="layer-action-icon-btn"
+                                  onClick={() => toggleLayerVisibility(layer.id)}
+                                  title={layer.hidden ? "Show Layer" : "Hide Layer"}
+                                >
+                                  {layer.hidden ? <EyeOff size={13} /> : <Eye size={13} />}
+                                </button>
+                                <button
+                                  type="button"
+                                  className="layer-action-icon-btn"
+                                  onClick={() => handleDuplicateLayer(layer.id)}
+                                  title="Duplicate Layer"
+                                >
+                                  <Copy size={13} />
+                                </button>
+                                <button
+                                  type="button"
+                                  className="layer-action-icon-btn danger-btn"
+                                  onClick={() => handleDeleteLayer(layer.id)}
+                                  title="Delete Layer"
+                                >
+                                  <Trash2 size={13} />
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* TAB 4: FREEHAND DRAWING */}
             {activeTab === 'draw' && (
