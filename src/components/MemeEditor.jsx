@@ -11,9 +11,10 @@ import {
   Image as ImageIcon, Search, X, Upload, RotateCw, ZoomIn, Crop, LayoutGrid, Scissors, Play, Pause, FolderHeart, Droplet, Monitor,
   Paintbrush, Eraser, Palette, Sun, Moon, ChevronDown, ChevronLeft, PencilLine, Move, ArrowDownRight, Wand2,
   Layers, ArrowUp, ArrowDown, ChevronsUp, ChevronsDown, Eye, EyeOff, Lock, Unlock, FlipHorizontal,
-  PanelTop, PanelBottom, MessageSquare
+  PanelTop, PanelBottom, MessageSquare, Flame, Tv, MessageCircle
 } from 'lucide-react';
 import AiCaptionModal from './AiCaptionModal';
+import MemeStylesModal from './MemeStylesModal';
 import { downloadImageHelper, recordCanvasAsVideo } from '../utils/downloadHelper';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MEME_TEMPLATES, CATEGORIES } from '../data/templates';
@@ -402,6 +403,11 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
           enabled: false,
           bgColor: '#ffffff',
           height: 140
+        },
+        demotivational: template?.demotivational || {
+          enabled: false,
+          title: 'PROCRASTINATION',
+          subtitle: 'Hard work pays off in the future, laziness pays off now.'
         }
       }
     ];
@@ -425,6 +431,15 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
       height: 140
     };
   });
+
+  const [demotivational, setDemotivational] = useState(() => {
+    return template?.demotivational || {
+      enabled: false,
+      title: 'PROCRASTINATION',
+      subtitle: 'Hard work pays off in the future, laziness pays off now.'
+    };
+  });
+  const [showStylesModal, setShowStylesModal] = useState(false);
 
   const handleSetCanvasBgColor = (val) => {
     setCanvasBgColor(val);
@@ -694,14 +709,15 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     return () => window.removeEventListener('paste', handlePaste);
   }, [captions, stickers, imageLayers]);
 
-  const pushHistory = (newCaptions, newStickers, newImgLayers = imageLayers, newDrawings = drawings, newCanvasHeader = canvasHeader, newCanvasFooter = canvasFooter) => {
+  const pushHistory = (newCaptions, newStickers, newImgLayers = imageLayers, newDrawings = drawings, newCanvasHeader = canvasHeader, newCanvasFooter = canvasFooter, newDemotivational = demotivational) => {
     const newSnapshot = {
       captions: JSON.parse(JSON.stringify(newCaptions)),
       stickers: JSON.parse(JSON.stringify(newStickers)),
       imageLayers: JSON.parse(JSON.stringify(newImgLayers)),
       drawings: JSON.parse(JSON.stringify(newDrawings)),
       canvasHeader: JSON.parse(JSON.stringify(newCanvasHeader)),
-      canvasFooter: JSON.parse(JSON.stringify(newCanvasFooter))
+      canvasFooter: JSON.parse(JSON.stringify(newCanvasFooter)),
+      demotivational: JSON.parse(JSON.stringify(newDemotivational))
     };
     const updatedHistory = history.slice(0, historyStep + 1);
     updatedHistory.push(newSnapshot);
@@ -710,10 +726,10 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
   };
 
   // Debounced version — used for text typing so history isn't pushed on every keypress
-  const pushHistoryDebounced = (newCaptions, newStickers, newImgLayers = imageLayers, newDrawings = drawings, newCanvasHeader = canvasHeader, newCanvasFooter = canvasFooter) => {
+  const pushHistoryDebounced = (newCaptions, newStickers, newImgLayers = imageLayers, newDrawings = drawings, newCanvasHeader = canvasHeader, newCanvasFooter = canvasFooter, newDemotivational = demotivational) => {
     if (historyTimerRef.current) clearTimeout(historyTimerRef.current);
     historyTimerRef.current = setTimeout(() => {
-      pushHistory(newCaptions, newStickers, newImgLayers, newDrawings, newCanvasHeader, newCanvasFooter);
+      pushHistory(newCaptions, newStickers, newImgLayers, newDrawings, newCanvasHeader, newCanvasFooter, newDemotivational);
     }, 800);
   };
 
@@ -730,6 +746,9 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
       }
       if (snapshot.canvasFooter) {
         setCanvasFooter(JSON.parse(JSON.stringify(snapshot.canvasFooter)));
+      }
+      if (snapshot.demotivational) {
+        setDemotivational(JSON.parse(JSON.stringify(snapshot.demotivational)));
       }
       setHistoryStep(prevStep);
     }
@@ -748,6 +767,9 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
       }
       if (snapshot.canvasFooter) {
         setCanvasFooter(JSON.parse(JSON.stringify(snapshot.canvasFooter)));
+      }
+      if (snapshot.demotivational) {
+        setDemotivational(JSON.parse(JSON.stringify(snapshot.demotivational)));
       }
       setHistoryStep(nextStep);
     }
@@ -1075,6 +1097,209 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     }
   };
   const handleAddModernFooter = handleToggleCanvasFooter;
+
+  // Meme Culture Staples & Social Formats Handlers
+  const handleToggleDemotivational = (data = {}) => {
+    const willEnable = !demotivational.enabled;
+    const titleText = (data.title || demotivational.title || 'PROCRASTINATION').toUpperCase();
+    const subtitleText = data.subtitle || demotivational.subtitle || 'Hard work pays off in the future, laziness pays off now.';
+
+    const nextDemo = {
+      enabled: willEnable,
+      title: titleText,
+      subtitle: subtitleText
+    };
+    setDemotivational(nextDemo);
+
+    if (willEnable) {
+      setCanvasBgColor('#000000');
+      window.dispatchEvent(new CustomEvent('liveCanvasBgColor', { detail: '#000000' }));
+
+      // Clean existing demotivational captions
+      const cleanCaps = captions.filter(c => !c.isDemotivationalTitle && !c.isDemotivationalSubtitle);
+      const maxZ = Math.max(-1, ...cleanCaps.map(c => c.zIndex ?? -1), ...stickers.map(s => s.zIndex ?? -1), ...(imageLayers || []).map(i => i.zIndex ?? -1));
+
+      const titleCap = {
+        id: `cap-demo-title-${Date.now()}`,
+        text: titleText,
+        x: 0.5,
+        y: 0.82,
+        fontSize: 48,
+        fontFamily: '"Times New Roman", Times, serif',
+        color: '#ffffff',
+        stroke: 'transparent',
+        strokeWidth: 0,
+        align: 'center',
+        width: 0.88,
+        isDemotivationalTitle: true,
+        zIndex: maxZ + 1
+      };
+
+      const subtitleCap = {
+        id: `cap-demo-sub-${Date.now() + 1}`,
+        text: subtitleText,
+        x: 0.5,
+        y: 0.90,
+        fontSize: 22,
+        fontFamily: 'Georgia, serif',
+        color: '#ffffff',
+        stroke: 'transparent',
+        strokeWidth: 0,
+        align: 'center',
+        width: 0.84,
+        isDemotivationalSubtitle: true,
+        zIndex: maxZ + 2
+      };
+
+      const nextCaps = [...cleanCaps, titleCap, subtitleCap];
+      setCaptions(nextCaps);
+      setActiveLayerId(titleCap.id);
+      setActiveTab('text');
+      pushHistory(nextCaps, stickers, imageLayers, drawings, canvasHeader, canvasFooter, nextDemo);
+    } else {
+      const nextCaps = captions.filter(c => !c.isDemotivationalTitle && !c.isDemotivationalSubtitle);
+      setCaptions(nextCaps);
+      if (activeCaption?.isDemotivationalTitle || activeCaption?.isDemotivationalSubtitle) {
+        setActiveLayerId(null);
+      }
+      pushHistory(nextCaps, stickers, imageLayers, drawings, canvasHeader, canvasFooter, nextDemo);
+    }
+  };
+
+  const handleAddBreakingNews = (data = {}) => {
+    const headline = data.headline || "LOCAL MAN ADMITS HE HAS NO IDEA WHAT HE'S DOING";
+    const channel = data.channel || "MEME NEWS 24";
+    const ticker = data.ticker || "DEVELOPING STORY - DETAILS TO FOLLOW";
+    const maxZ = Math.max(-1, ...captions.map(c => c.zIndex ?? -1), ...stickers.map(s => s.zIndex ?? -1), ...(imageLayers || []).map(i => i.zIndex ?? -1));
+
+    const newCap = {
+      id: `cap-news-${Date.now()}`,
+      text: headline,
+      newsHeadline: headline,
+      newsChannel: channel,
+      newsTicker: ticker,
+      isBreakingNews: true,
+      x: 0.5,
+      y: 0.88,
+      width: 0.96,
+      fontSize: 28,
+      color: '#facc15',
+      stroke: 'transparent',
+      strokeWidth: 0,
+      zIndex: maxZ + 1
+    };
+
+    const nextCaps = [...captions, newCap];
+    setCaptions(nextCaps);
+    setActiveLayerId(newCap.id);
+    setActiveTab('text');
+    pushHistory(nextCaps, stickers, imageLayers, drawings, canvasHeader, canvasFooter, demotivational);
+  };
+
+  const handleAddTweetCard = (data = {}) => {
+    const name = data.name || 'Elon Musk';
+    const handle = data.handle || '@elonmusk';
+    const text = data.text || 'thinking about deleting the database and moving to the woods';
+    const verified = data.verified !== false;
+    const theme = data.theme || 'dark';
+    const maxZ = Math.max(-1, ...captions.map(c => c.zIndex ?? -1), ...stickers.map(s => s.zIndex ?? -1), ...(imageLayers || []).map(i => i.zIndex ?? -1));
+
+    const newCap = {
+      id: `cap-tweet-${Date.now()}`,
+      text: text,
+      tweetName: name,
+      tweetHandle: handle,
+      tweetVerified: verified,
+      tweetTheme: theme,
+      tweetTime: '10:42 PM · Oct 7, 2026',
+      isTweetCard: true,
+      x: 0.5,
+      y: 0.5,
+      width: 0.88,
+      fontSize: 18,
+      color: theme === 'light' ? '#0f1419' : '#ffffff',
+      stroke: 'transparent',
+      strokeWidth: 0,
+      zIndex: maxZ + 1
+    };
+
+    const nextCaps = [...captions, newCap];
+    setCaptions(nextCaps);
+    setActiveLayerId(newCap.id);
+    setActiveTab('text');
+    pushHistory(nextCaps, stickers, imageLayers, drawings, canvasHeader, canvasFooter, demotivational);
+  };
+
+  const handleAddChatBubble = (data = {}) => {
+    const style = data.style || 'imessage-send';
+    const text = data.text || 'are you free to hop on a quick 5-min call?';
+    const maxZ = Math.max(-1, ...captions.map(c => c.zIndex ?? -1), ...stickers.map(s => s.zIndex ?? -1), ...(imageLayers || []).map(i => i.zIndex ?? -1));
+
+    let bgColor = '#007aff';
+    let textColor = '#ffffff';
+    if (style === 'imessage-receive') {
+      bgColor = '#e9e9eb';
+      textColor = '#000000';
+    } else if (style === 'whatsapp-send') {
+      bgColor = '#005c4b';
+      textColor = '#ffffff';
+    } else if (style === 'whatsapp-receive') {
+      bgColor = '#202c33';
+      textColor = '#ffffff';
+    }
+
+    const pos = getNonOverlappingPosition('phrase', captions, stickers, imageLayers);
+
+    const newCap = {
+      id: `cap-chat-${Date.now()}`,
+      text: text,
+      bubbleStyle: style,
+      bgColor: bgColor,
+      color: textColor,
+      stroke: 'transparent',
+      strokeWidth: 0,
+      x: pos.x,
+      y: pos.y,
+      fontSize: 26,
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      width: 0.72,
+      zIndex: maxZ + 1
+    };
+
+    const nextCaps = [...captions, newCap];
+    setCaptions(nextCaps);
+    setActiveLayerId(newCap.id);
+    setActiveTab('text');
+    pushHistory(nextCaps, stickers, imageLayers, drawings, canvasHeader, canvasFooter, demotivational);
+  };
+
+  const handleAddLaserEyes = (color = 'red') => {
+    const targetId = color === 'blue' ? 'laser_eyes_blue' : 'laser_eyes_red';
+    const stickerDef = (GRAPHIC_STICKERS || []).find(s => s.id === targetId);
+    if (!stickerDef) return;
+
+    const dataUrl = `data:image/svg+xml;utf8,${encodeURIComponent(stickerDef.svg.trim())}`;
+    const maxZ = Math.max(-1, ...captions.map(c => c.zIndex ?? -1), ...stickers.map(s => s.zIndex ?? -1), ...(imageLayers || []).map(i => i.zIndex ?? -1));
+
+    const newSticker = {
+      id: `laser-eyes-${Date.now()}`,
+      url: dataUrl,
+      src: dataUrl,
+      name: stickerDef.name,
+      x: 0.5,
+      y: 0.4,
+      scale: 1.4,
+      rotation: 0,
+      opacity: 1,
+      zIndex: maxZ + 1
+    };
+
+    const nextStickers = [...stickers, newSticker];
+    setStickers(nextStickers);
+    setActiveLayerId(newSticker.id);
+    setActiveTab('stickers');
+    pushHistory(captions, nextStickers, imageLayers, drawings, canvasHeader, canvasFooter, demotivational);
+  };
 
   // Toggle Text Case: ALL CAPS <-> Sentence Case <-> lowercase
   const handleToggleTextCase = () => {
@@ -2640,6 +2865,27 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
 
                       <button
                         className="btn btn-xs vid-ctx-btn"
+                        onClick={() => setShowStylesModal(true)}
+                        title="Meme Culture Staples & Social Formats (Demotivational, News, Fake Tweet, Chat Bubbles)"
+                        style={{
+                          padding: "4px 8px",
+                          fontSize: "0.75rem",
+                          fontWeight: 600,
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "4px",
+                          background: demotivational.enabled
+                            ? "linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)"
+                            : "linear-gradient(135deg, rgba(245, 158, 11, 0.25) 0%, rgba(239, 68, 68, 0.25) 100%)",
+                          border: "1px solid rgba(245, 158, 11, 0.4)",
+                          color: "#ffffff"
+                        }}
+                      >
+                        <Flame style={{ width: 13, height: 13, color: "#f59e0b" }} /> Styles
+                      </button>
+
+                      <button
+                        className="btn btn-xs vid-ctx-btn"
                         onClick={() => setShowAiModal(true)}
                         title="AI Meme Captions"
                         style={{
@@ -3073,7 +3319,19 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
             }}
             onUpdateCaptionText={(id, text) => {
               setCaptions((prevCaps) => {
-                const nextCaps = prevCaps.map((c) => (c.id === id ? { ...c, text } : c));
+                const nextCaps = prevCaps.map((c) => {
+                  if (c.id === id) {
+                    if (typeof text === 'object') {
+                      return { ...c, ...text };
+                    }
+                    const updated = { ...c, text };
+                    if (c.isBreakingNews) {
+                      updated.newsHeadline = text;
+                    }
+                    return updated;
+                  }
+                  return c;
+                });
                 pushHistoryDebounced(nextCaps, stickers, imageLayers);
                 return nextCaps;
               });
@@ -3103,6 +3361,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                 return upd;
               });
             }}
+            demotivational={demotivational}
           />
           {isRemovingBg && (
             <div style={{
@@ -3554,6 +3813,32 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         <Sparkles size={15} style={{ color: "#ec4899" }} /> AI Captions
                       </button>
                     )}
+
+                    {/* Meme Styles & Social Formats Button */}
+                    {!activeCaption && (
+                      <button
+                        type="button"
+                        className="btn btn-xs hover-lift"
+                        onClick={() => setShowStylesModal(true)}
+                        title="Demotivational poster, breaking news, fake tweet card, or chat bubbles"
+                        style={{
+                          padding: "7px 14px",
+                          borderRadius: "20px",
+                          fontSize: "0.82rem",
+                          fontWeight: 700,
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "6px",
+                          background: demotivational.enabled
+                            ? "linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)"
+                            : "linear-gradient(135deg, rgba(245, 158, 11, 0.3) 0%, rgba(239, 68, 68, 0.3) 100%)",
+                          border: "1px solid rgba(245, 158, 11, 0.6)",
+                          color: "#ffffff"
+                        }}
+                      >
+                        <Flame size={15} style={{ color: "#f59e0b" }} /> Meme Styles
+                      </button>
+                    )}
                   </div>
 
                 {/* Color Swatches Bar + Delete Button (When activeCaption exists) */}
@@ -3931,28 +4216,193 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
 
                   {/* Bubble Style Switcher (if this is a speech bubble) */}
                   {activeCaption.bubbleStyle && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '4px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '4px' }}>
                       <label style={{ margin: 0, fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)' }}>
                         Bubble Style
                       </label>
-                      <div style={{ display: 'flex', gap: '4px' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '4px' }}>
                         {[
-                          { id: 'speech-left', label: 'Tail Left' },
-                          { id: 'speech-right', label: 'Tail Right' },
+                          { id: 'speech-left', label: 'Tail L' },
+                          { id: 'speech-right', label: 'Tail R' },
                           { id: 'thought', label: 'Thought' },
                           { id: 'shout', label: 'Shout' },
+                          { id: 'imessage-send', label: 'iMsg 📤' },
+                          { id: 'imessage-receive', label: 'iMsg 📥' },
+                          { id: 'whatsapp-send', label: 'WA 📤' },
+                          { id: 'whatsapp-receive', label: 'WA 📥' },
                         ].map(style => (
                           <button
                             key={style.id}
                             type="button"
-                            className={`btn btn-xs flex-1 ${activeCaption.bubbleStyle === style.id ? 'btn-primary' : 'btn-ghost'}`}
-                            style={{ fontSize: '0.7rem', padding: '5px 2px', borderRadius: '8px', border: activeCaption.bubbleStyle === style.id ? 'none' : '1px solid var(--glass-border)' }}
-                            onClick={() => updateActiveCaption('bubbleStyle', style.id)}
+                            className={`btn btn-xs ${activeCaption.bubbleStyle === style.id ? 'btn-primary' : 'btn-ghost'}`}
+                            style={{ fontSize: '0.68rem', padding: '5px 2px', borderRadius: '8px', border: activeCaption.bubbleStyle === style.id ? 'none' : '1px solid var(--glass-border)' }}
+                            onClick={() => {
+                              let nextBg = activeCaption.bgColor;
+                              let nextColor = activeCaption.color;
+                              if (style.id === 'imessage-send') { nextBg = '#007aff'; nextColor = '#ffffff'; }
+                              else if (style.id === 'imessage-receive') { nextBg = '#e9e9eb'; nextColor = '#000000'; }
+                              else if (style.id === 'whatsapp-send') { nextBg = '#005c4b'; nextColor = '#ffffff'; }
+                              else if (style.id === 'whatsapp-receive') { nextBg = '#202c33'; nextColor = '#ffffff'; }
+                              updateActiveCaptionProps({ bubbleStyle: style.id, bgColor: nextBg, color: nextColor });
+                            }}
                           >
                             {style.label}
                           </button>
                         ))}
                       </div>
+                    </div>
+                  )}
+
+                  {/* Breaking News Chyron Customizer */}
+                  {activeCaption.isBreakingNews && (
+                    <div
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '8px',
+                        background: 'var(--bg-surface-1)',
+                        padding: '10px',
+                        borderRadius: '10px',
+                        border: '1px solid var(--glass-border)',
+                        marginTop: '4px'
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <Tv size={14} style={{ color: '#ef4444' }} />
+                        <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#fff' }}>TV Chyron Overlay</span>
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                        <div>
+                          <label style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>Channel / Bug</label>
+                          <input
+                            type="text"
+                            className="form-input"
+                            value={activeCaption.newsChannel || 'BREAKING NEWS'}
+                            onChange={(e) => updateActiveCaption('newsChannel', e.target.value)}
+                            style={{ width: '100%', fontSize: '0.8rem', padding: '4px 8px' }}
+                          />
+                        </div>
+                        <div>
+                          <label style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>Bottom Ticker</label>
+                          <input
+                            type="text"
+                            className="form-input"
+                            value={activeCaption.newsTicker || 'DEVELOPING STORY - DETAILS TO FOLLOW'}
+                            onChange={(e) => updateActiveCaption('newsTicker', e.target.value)}
+                            style={{ width: '100%', fontSize: '0.8rem', padding: '4px 8px' }}
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>Headline</label>
+                        <input
+                          type="text"
+                          className="form-input"
+                          value={activeCaption.newsHeadline || activeCaption.text || ''}
+                          onChange={(e) => updateActiveCaptionProps({ text: e.target.value, newsHeadline: e.target.value })}
+                          style={{ width: '100%', fontSize: '0.82rem', padding: '4px 8px' }}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Fake Tweet Post Customizer */}
+                  {activeCaption.isTweetCard && (
+                    <div
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '8px',
+                        background: 'var(--bg-surface-1)',
+                        padding: '10px',
+                        borderRadius: '10px',
+                        border: '1px solid var(--glass-border)',
+                        marginTop: '4px'
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span style={{ fontSize: '0.9rem', fontWeight: 900 }}>𝕏</span>
+                          <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#fff' }}>X / Tweet Card</span>
+                        </div>
+                        <div style={{ display: 'flex', gap: '3px' }}>
+                          {['dark', 'dim', 'light'].map((th) => (
+                            <button
+                              key={th}
+                              type="button"
+                              className={`btn btn-xs ${(activeCaption.tweetTheme || 'dark') === th ? 'btn-primary' : 'btn-ghost'}`}
+                              onClick={() => {
+                                const newColor = th === 'light' ? '#0f1419' : '#ffffff';
+                                updateActiveCaptionProps({ tweetTheme: th, color: newColor });
+                              }}
+                              style={{ fontSize: '0.65rem', padding: '2px 6px', textTransform: 'capitalize' }}
+                            >
+                              {th}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '8px' }}>
+                        <div>
+                          <label style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>Display Name</label>
+                          <input
+                            type="text"
+                            className="form-input"
+                            value={activeCaption.tweetName || 'Elon Musk'}
+                            onChange={(e) => updateActiveCaption('tweetName', e.target.value)}
+                            style={{ width: '100%', fontSize: '0.8rem', padding: '4px 8px' }}
+                          />
+                        </div>
+                        <div>
+                          <label style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>Handle</label>
+                          <input
+                            type="text"
+                            className="form-input"
+                            value={activeCaption.tweetHandle || '@elonmusk'}
+                            onChange={(e) => updateActiveCaption('tweetHandle', e.target.value)}
+                            style={{ width: '100%', fontSize: '0.8rem', padding: '4px 8px' }}
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
+                          <label style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)' }}>Tweet Content</label>
+                          <label style={{ fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', color: '#38bdf8' }}>
+                            <input
+                              type="checkbox"
+                              checked={activeCaption.tweetVerified !== false}
+                              onChange={(e) => updateActiveCaption('tweetVerified', e.target.checked)}
+                            />
+                            Verified
+                          </label>
+                        </div>
+                        <textarea
+                          className="form-input"
+                          rows={2}
+                          value={activeCaption.text || ''}
+                          onChange={(e) => updateActiveCaption('text', e.target.value)}
+                          style={{ width: '100%', fontSize: '0.82rem', padding: '4px 8px', resize: 'vertical' }}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Standard / Demotivational Caption Textarea */}
+                  {(!activeCaption.isBreakingNews && !activeCaption.isTweetCard) && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '4px' }}>
+                      <div className="flex-between align-center">
+                        <label style={{ margin: 0, fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)' }}>
+                          {activeCaption.isDemotivationalTitle ? 'Demotivational Title' : (activeCaption.isDemotivationalSubtitle ? 'Demotivational Subtitle' : 'Caption Text')}
+                        </label>
+                      </div>
+                      <textarea
+                        className="form-input"
+                        rows={2}
+                        value={activeCaption.text || ''}
+                        onChange={(e) => updateActiveCaption('text', e.target.value)}
+                        placeholder="Enter text..."
+                        style={{ width: '100%', fontSize: '0.85rem', resize: 'vertical' }}
+                      />
                     </div>
                   )}
                 </div>
@@ -4750,6 +5200,18 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
         onClose={() => setShowAiModal(false)}
         onApplyCaption={handleApplyAiCaption}
         templateName={template?.name}
+      />
+
+      {/* Meme Culture Staples & Social Formats Modal */}
+      <MemeStylesModal
+        isOpen={showStylesModal}
+        onClose={() => setShowStylesModal(false)}
+        demotivational={demotivational}
+        onToggleDemotivational={handleToggleDemotivational}
+        onAddBreakingNews={handleAddBreakingNews}
+        onAddTweetCard={handleAddTweetCard}
+        onAddChatBubble={handleAddChatBubble}
+        onAddLaserEyes={handleAddLaserEyes}
       />
     </div>
       )}

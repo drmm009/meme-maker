@@ -172,11 +172,234 @@ const drawSpeechBubble = (ctx, x, y, width, height, style, fillColor = '#ffffff'
     ctx.closePath();
     ctx.fill();
     ctx.stroke();
+  } else if (style === 'imessage-send') {
+    ctx.fillStyle = '#007aff';
+    drawRoundRect(ctx, x, y, width, height, 16);
+    ctx.beginPath();
+    ctx.moveTo(x + width - 6, y + height);
+    ctx.quadraticCurveTo(x + width + 8, y + height, x + width + 6, y + height + 6);
+    ctx.quadraticCurveTo(x + width, y + height + 2, x + width - 14, y + height);
+    ctx.fill();
+  } else if (style === 'imessage-receive') {
+    const isDark = isColorDark(fillColor);
+    ctx.fillStyle = isDark ? '#262628' : '#e9e9eb';
+    drawRoundRect(ctx, x, y, width, height, 16);
+    ctx.beginPath();
+    ctx.moveTo(x + 6, y + height);
+    ctx.quadraticCurveTo(x - 8, y + height, x - 6, y + height + 6);
+    ctx.quadraticCurveTo(x, y + height + 2, x + 14, y + height);
+    ctx.fill();
+  } else if (style === 'whatsapp-send') {
+    ctx.fillStyle = '#005c4b';
+    drawRoundRect(ctx, x, y, width, height, 10);
+    ctx.beginPath();
+    ctx.moveTo(x + width, y + height - 12);
+    ctx.lineTo(x + width + 6, y + height);
+    ctx.lineTo(x + width - 8, y + height);
+    ctx.closePath();
+    ctx.fill();
+  } else if (style === 'whatsapp-receive') {
+    const isDark = isColorDark(fillColor);
+    ctx.fillStyle = isDark ? '#202c33' : '#ffffff';
+    drawRoundRect(ctx, x, y, width, height, 10);
+    ctx.beginPath();
+    ctx.moveTo(x, y + height - 12);
+    ctx.lineTo(x - 6, y + height);
+    ctx.lineTo(x + 8, y + height);
+    ctx.closePath();
+    ctx.fill();
   } else {
     drawRoundRect(ctx, x, y, width, height, r);
     ctx.fill();
     ctx.stroke();
   }
+  ctx.restore();
+};
+
+const getBreakingNewsHeight = (cap) => {
+  const topH = 26;
+  const midH = Math.max(52, (cap.fontSize || 26) * 1.5);
+  const botH = 22;
+  return topH + midH + botH;
+};
+
+const drawBreakingNewsChyron = (ctx, barW, cap) => {
+  ctx.save();
+  const headline = cap.text || 'BREAKING NEWS HEADLINE';
+  const channel = cap.newsChannel || 'MEME NEWS 24';
+  const ticker = cap.newsTicker || 'DEVELOPING STORY: MORE DETAILS TO FOLLOW';
+
+  const topH = 26;
+  const midH = Math.max(52, (cap.fontSize || 26) * 1.5);
+  const botH = 22;
+  const totalH = topH + midH + botH;
+
+  const startX = - barW / 2;
+  const startY = - totalH / 2;
+
+  // 1. Top strap: Red LIVE tag + Slate channel banner
+  ctx.fillStyle = '#dc2626';
+  ctx.fillRect(startX, startY, 130, topH);
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 13px Arial, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('● BREAKING', startX + 65, startY + topH / 2);
+
+  ctx.fillStyle = '#1e293b';
+  ctx.fillRect(startX + 130, startY, barW - 130, topH);
+  ctx.fillStyle = '#f8fafc';
+  ctx.font = 'bold 12px Arial, sans-serif';
+  ctx.textAlign = 'right';
+  ctx.fillText(channel.toUpperCase(), startX + barW - 14, startY + topH / 2);
+
+  // 2. Middle banner: Headline on navy black
+  ctx.fillStyle = '#0f172a';
+  ctx.fillRect(startX, startY + topH, barW, midH);
+  ctx.fillStyle = '#facc15'; // Yellow accent bar
+  ctx.fillRect(startX, startY + topH, 6, midH);
+
+  ctx.fillStyle = cap.color || '#facc15';
+  ctx.font = `900 ${cap.fontSize || 26}px "Arial Black", Impact, sans-serif`;
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(headline.toUpperCase(), startX + 16, startY + topH + midH / 2, barW - 32);
+
+  // 3. Bottom ticker
+  ctx.fillStyle = '#eab308';
+  ctx.fillRect(startX, startY + topH + midH, barW, botH);
+  ctx.fillStyle = '#000000';
+  ctx.font = 'bold 12px Arial, sans-serif';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(`LIVE  ▶  ${ticker.toUpperCase()}`, startX + 14, startY + topH + midH + botH / 2, barW - 28);
+
+  ctx.restore();
+};
+
+const getTweetCardHeight = (ctx, cap, cardW) => {
+  const pad = 18;
+  const bodyFontSize = cap.fontSize ? Math.min(24, Math.max(16, cap.fontSize)) : 18;
+  ctx.save();
+  ctx.font = `normal ${bodyFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+  const wrappedLines = wrapText(ctx, cap.text || '', cardW - pad * 2);
+  ctx.restore();
+  const bodyH = wrappedLines.length * (bodyFontSize * 1.35);
+  return Math.round(pad + 44 + 10 + bodyH + 12 + 16 + 12 + 24 + pad);
+};
+
+const drawTweetCard = (ctx, cardW, cap) => {
+  ctx.save();
+  const theme = cap.tweetTheme || 'dark';
+  const isDark = theme !== 'light';
+  const cardBg = theme === 'dim' ? '#15202b' : (isDark ? '#000000' : '#ffffff');
+  const textColor = isDark ? '#ffffff' : '#0f1419';
+  const mutedColor = isDark ? '#71767b' : '#536471';
+  const borderColor = isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.1)';
+
+  const name = cap.tweetName || 'Elon Musk';
+  const handle = cap.tweetHandle || '@elonmusk';
+  const text = cap.text || "thinking about deleting the database and moving to the woods";
+  const time = cap.tweetTime || '10:42 PM · Oct 7, 2026';
+  const isVerified = cap.tweetVerified !== false;
+
+  const pad = 18;
+  const avatarR = 20;
+  const bodyFontSize = cap.fontSize ? Math.min(24, Math.max(16, cap.fontSize)) : 18;
+
+  ctx.font = `normal ${bodyFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+  const wrappedLines = wrapText(ctx, text, cardW - pad * 2);
+  const bodyH = wrappedLines.length * (bodyFontSize * 1.35);
+
+  const cardH = Math.round(pad + 44 + 10 + bodyH + 12 + 16 + 12 + 24 + pad);
+  const startX = - cardW / 2;
+  const startY = - cardH / 2;
+
+  ctx.fillStyle = cardBg;
+  drawRoundRect(ctx, startX, startY, cardW, cardH, 16);
+  ctx.strokeStyle = borderColor;
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // Avatar circle
+  const avX = startX + pad + avatarR;
+  const avY = startY + pad + avatarR;
+  ctx.beginPath();
+  ctx.arc(avX, avY, avatarR, 0, Math.PI * 2);
+  ctx.fillStyle = isDark ? '#27272a' : '#e4e4e7';
+  ctx.fill();
+  ctx.fillStyle = isDark ? '#a1a1aa' : '#71717a';
+  ctx.font = 'bold 16px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(name.charAt(0).toUpperCase() || 'U', avX, avY);
+
+  // Name & Handle
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'top';
+  ctx.fillStyle = textColor;
+  ctx.font = 'bold 16px -apple-system, BlinkMacSystemFont, sans-serif';
+  const nameY = startY + pad + 2;
+  ctx.fillText(name, startX + pad + 50, nameY);
+
+  const nameWidth = ctx.measureText(name).width;
+  if (isVerified) {
+    const badgeX = startX + pad + 54 + nameWidth;
+    ctx.beginPath();
+    ctx.arc(badgeX + 7, nameY + 9, 8, 0, Math.PI * 2);
+    ctx.fillStyle = '#1d9bf0';
+    ctx.fill();
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 10px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('✓', badgeX + 7, nameY + 9);
+  }
+
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'top';
+  ctx.fillStyle = mutedColor;
+  ctx.font = 'normal 14px -apple-system, BlinkMacSystemFont, sans-serif';
+  ctx.fillText(handle, startX + pad + 50, nameY + 20);
+
+  // X Logo top-right
+  ctx.font = 'bold 16px sans-serif';
+  ctx.fillStyle = isDark ? '#ffffff' : '#000000';
+  ctx.textAlign = 'right';
+  ctx.fillText('𝕏', startX + cardW - pad, startY + pad + 4);
+
+  // Body text
+  let curY = startY + pad + 44 + 10;
+  ctx.fillStyle = textColor;
+  ctx.font = `normal ${bodyFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'top';
+  for (const line of wrappedLines) {
+    ctx.fillText(line, startX + pad, curY);
+    curY += (bodyFontSize * 1.35);
+  }
+
+  // Timestamp
+  curY += 8;
+  ctx.fillStyle = mutedColor;
+  ctx.font = 'normal 13px -apple-system, BlinkMacSystemFont, sans-serif';
+  ctx.fillText(time, startX + pad, curY);
+
+  // Divider
+  curY += 22;
+  ctx.strokeStyle = borderColor;
+  ctx.beginPath();
+  ctx.moveTo(startX + pad, curY);
+  ctx.lineTo(startX + cardW - pad, curY);
+  ctx.stroke();
+
+  // Metrics
+  curY += 10;
+  ctx.fillStyle = mutedColor;
+  ctx.font = 'normal 13px -apple-system, BlinkMacSystemFont, sans-serif';
+  const metrics = `💬 1.2K    🔁 42.8K    ❤️ 189.5K    📊 3.2M`;
+  ctx.fillText(metrics, startX + pad, curY);
+
   ctx.restore();
 };
 
@@ -214,7 +437,8 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     canvasHeader,
     onUpdateCanvasHeader,
     canvasFooter,
-    onUpdateCanvasFooter
+    onUpdateCanvasFooter,
+    demotivational
   },
   ref
 ) {
@@ -521,7 +745,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
       }
 
       targetCtx.clearRect(0, 0, canvas.width, canvas.height);
-      targetCtx.fillStyle = liveBgColor;
+      targetCtx.fillStyle = demotivational?.enabled ? '#000000' : liveBgColor;
       targetCtx.fillRect(0, 0, canvas.width, canvas.height);
 
       let activeHandleDrawer = null;
@@ -568,10 +792,20 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
       };
 
       // Available image area (below header extension if active)
-      const imageAreaX = 0;
-      const imageAreaY = headerExtH;
-      const imageAreaW = canvasW;
-      const imageAreaH = canvasH;
+      let imageAreaX = 0;
+      let imageAreaY = headerExtH;
+      let imageAreaW = canvasW;
+      let imageAreaH = canvasH;
+
+      if (demotivational?.enabled) {
+        const sidePad = Math.round(canvasW * 0.08);
+        const topPad = Math.round(canvasH * 0.08);
+        const botPad = Math.max(160, Math.round(canvasH * 0.28));
+        imageAreaX = sidePad;
+        imageAreaY = headerExtH + topPad;
+        imageAreaW = canvasW - sidePad * 2;
+        imageAreaH = canvasH - topPad - botPad;
+      }
 
       // Draw Base Image or Native Layout Slots
       if (activeIsNativeLayout && activeLayoutDef) {
@@ -663,7 +897,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         if (imageFit === 'stretch') {
           drawW = imageAreaW;
           drawH = imageAreaH;
-          offsetX = 0;
+          offsetX = imageAreaX;
           offsetY = imageAreaY;
         } else if (imageFit === 'contain') {
           const imgRatio = img.width / img.height;
@@ -672,13 +906,13 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
           if (imgRatio > canvasRatio) {
             drawW = imageAreaW;
             drawH = imageAreaW / imgRatio;
-            offsetX = 0;
+            offsetX = imageAreaX;
             offsetY = imageAreaY + (imageAreaH - drawH) / 2;
           } else {
             drawH = imageAreaH;
             drawW = imageAreaH * imgRatio;
             offsetY = imageAreaY;
-            offsetX = (imageAreaW - drawW) / 2;
+            offsetX = imageAreaX + (imageAreaW - drawW) / 2;
           }
         } else {
           const imgRatio = img.width / img.height;
@@ -687,18 +921,31 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
           if (imgRatio > canvasRatio) {
             drawH = imageAreaH;
             drawW = imageAreaH * imgRatio;
-            offsetX = (imageAreaW - drawW) / 2;
+            offsetX = imageAreaX + (imageAreaW - drawW) / 2;
             offsetY = imageAreaY;
           } else {
             drawW = imageAreaW;
             drawH = imageAreaW / imgRatio;
             offsetY = imageAreaY + (imageAreaH - drawH) / 2;
-            offsetX = 0;
+            offsetX = imageAreaX;
           }
         }
         targetCtx.save();
+        if (demotivational?.enabled) {
+          targetCtx.beginPath();
+          targetCtx.rect(imageAreaX, imageAreaY, imageAreaW, imageAreaH);
+          targetCtx.clip();
+        }
         drawImageFiltered(targetCtx, img, bgFilterCss, offsetX, offsetY, drawW, drawH);
         targetCtx.restore();
+
+        if (demotivational?.enabled) {
+          targetCtx.save();
+          targetCtx.strokeStyle = '#ffffff';
+          targetCtx.lineWidth = 2;
+          targetCtx.strokeRect(imageAreaX - 5, imageAreaY - 5, imageAreaW + 10, imageAreaH + 10);
+          targetCtx.restore();
+        }
       }
 
       // Draw Header Extension (Banner extending above canvas)
@@ -1062,72 +1309,90 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         // The visual bounding box is sized to match the actual text
         const padX = isBubble ? Math.max(24, fontSize * 0.5) : (hasBg && cap.bgStyle !== 'banner' ? Math.max(16, fontSize * 0.35) : Math.max(8, fontSize * 0.15));
         const padY = isBubble ? Math.max(18, fontSize * 0.4) : (hasBg && cap.bgStyle !== 'banner' ? Math.max(10, fontSize * 0.2) : Math.max(4, fontSize * 0.1));
-        const boxWidth = maxLineWidth + padX * 2;
+        let boxWidth = maxLineWidth + padX * 2;
         const lineHeight = fontSize * 1.2;
         const totalHeight = lines.length * lineHeight;
-        const boxHeight = totalHeight + padY * 2;
+        let boxHeight = totalHeight + padY * 2;
         const startY = - ((lines.length - 1) * lineHeight) / 2;
 
-        let bgFillColor = '#ffffff';
-        if (isBubble) {
-          const boxStartX = - boxWidth / 2;
-          const boxStartY = - boxHeight / 2;
-          const bubbleFill = cap.bgColor === 'black' ? '#000000' : (cap.bgColor || '#ffffff');
-          const bubbleBorder = cap.stroke && cap.stroke !== 'transparent' ? cap.stroke : (bubbleFill === '#000000' ? '#ffffff' : '#000000');
-          const bubbleStrokeWidth = cap.strokeWidth || 3;
-          drawSpeechBubble(targetCtx, boxStartX, boxStartY, boxWidth, boxHeight, cap.bubbleStyle, bubbleFill, bubbleBorder, bubbleStrokeWidth);
-        } else if (hasBg) {
-          targetCtx.save();
-          bgFillColor = cap.bgColor === 'white' ? '#ffffff' : (cap.bgColor === 'black' ? '#000000' : cap.bgColor);
-          targetCtx.fillStyle = bgFillColor;
-
-          if (cap.bgStyle === 'banner') {
-            // Full-width edge-to-edge banner across the canvas
-            const bannerPadY = Math.max(14, fontSize * 0.28);
-            const bannerH = totalHeight + bannerPadY * 2;
-            const bannerY = startY - lineHeight / 2 - bannerPadY;
-            const bannerX = -cx;
-            const bannerW = canvas.width;
-            targetCtx.fillRect(bannerX, bannerY, bannerW, bannerH);
-          } else {
-            // Box style: clean padded rounded rectangle enclosing the text
+        if (cap.isBreakingNews) {
+          boxWidth = Math.max(300, (cap.width || 0.94) * canvas.width);
+          boxHeight = getBreakingNewsHeight(cap);
+          drawBreakingNewsChyron(targetCtx, boxWidth, cap);
+        } else if (cap.isTweetCard) {
+          boxWidth = Math.min(540, (cap.width || 0.88) * canvas.width);
+          boxHeight = getTweetCardHeight(targetCtx, cap, boxWidth);
+          drawTweetCard(targetCtx, boxWidth, cap);
+        } else {
+          let bgFillColor = '#ffffff';
+          if (isBubble) {
             const boxStartX = - boxWidth / 2;
             const boxStartY = - boxHeight / 2;
-            const r = Math.min(8, fontSize * 0.15);
-            drawRoundRect(targetCtx, boxStartX, boxStartY, boxWidth, boxHeight, r);
-          }
-          targetCtx.restore();
-        }
+            const bubbleFill = cap.bgColor === 'black' ? '#000000' : (cap.bgColor || '#ffffff');
+            const bubbleBorder = cap.stroke && cap.stroke !== 'transparent' ? cap.stroke : (bubbleFill === '#000000' ? '#ffffff' : '#000000');
+            const bubbleStrokeWidth = cap.strokeWidth || 3;
+            drawSpeechBubble(targetCtx, boxStartX, boxStartY, boxWidth, boxHeight, cap.bubbleStyle, bubbleFill, bubbleBorder, bubbleStrokeWidth);
+          } else if (hasBg) {
+            targetCtx.save();
+            bgFillColor = cap.bgColor === 'white' ? '#ffffff' : (cap.bgColor === 'black' ? '#000000' : cap.bgColor);
+            targetCtx.fillStyle = bgFillColor;
 
-        // Determine text color with smart contrast for White / Black BG and Bubbles
-        let textColor = cap.color || '#ffffff';
-        if (isBubble) {
-          const bubbleFill = cap.bgColor === 'black' ? '#000000' : (cap.bgColor || '#ffffff');
-          textColor = isColorDark(bubbleFill) ? '#ffffff' : '#000000';
-        } else if (cap.bgColor === 'white' && (textColor.toLowerCase() === '#ffffff' || textColor.toLowerCase() === '#fff' || textColor === 'white')) {
-          textColor = '#000000';
-        } else if (cap.bgColor === 'black' && (textColor.toLowerCase() === '#000000' || textColor.toLowerCase() === '#000' || textColor === 'black')) {
-          textColor = '#ffffff';
-        }
-
-        const shouldStroke = cap.stroke && cap.stroke !== 'transparent' && (!hasBg || (cap.stroke !== cap.bgColor && cap.stroke !== bgFillColor));
-        const textAnchorX = align === 'left' ? (-boxWidth / 2 + padX) : (align === 'right' ? (boxWidth / 2 - padX) : 0);
-
-        lines.forEach((line, index) => {
-          const ly = startY + index * lineHeight;
-
-          if (shouldStroke) {
-            targetCtx.strokeStyle = cap.stroke;
-            targetCtx.lineWidth = cap.strokeWidth || Math.max(3, fontSize / 7);
-            targetCtx.lineJoin = 'miter';
-            targetCtx.miterLimit = 2;
-            targetCtx.setLineDash([]);
-            targetCtx.strokeText(line, textAnchorX, ly);
+            if (cap.bgStyle === 'banner') {
+              // Full-width edge-to-edge banner across the canvas
+              const bannerPadY = Math.max(14, fontSize * 0.28);
+              const bannerH = totalHeight + bannerPadY * 2;
+              const bannerY = startY - lineHeight / 2 - bannerPadY;
+              const bannerX = -cx;
+              const bannerW = canvas.width;
+              targetCtx.fillRect(bannerX, bannerY, bannerW, bannerH);
+            } else {
+              // Box style: clean padded rounded rectangle enclosing the text
+              const boxStartX = - boxWidth / 2;
+              const boxStartY = - boxHeight / 2;
+              const r = Math.min(8, fontSize * 0.15);
+              drawRoundRect(targetCtx, boxStartX, boxStartY, boxWidth, boxHeight, r);
+            }
+            targetCtx.restore();
           }
 
-          targetCtx.fillStyle = textColor;
-          targetCtx.fillText(line, textAnchorX, ly);
-        });
+          // Determine text color with smart contrast for White / Black BG and Bubbles
+          let textColor = cap.color || '#ffffff';
+          if (isBubble) {
+            if (cap.bubbleStyle === 'imessage-send' || cap.bubbleStyle === 'whatsapp-send') {
+              textColor = '#ffffff';
+            } else if (cap.bubbleStyle === 'imessage-receive') {
+              textColor = isColorDark(cap.bgColor) ? '#ffffff' : '#000000';
+            } else if (cap.bubbleStyle === 'whatsapp-receive') {
+              textColor = isColorDark(cap.bgColor) ? '#ffffff' : '#111b21';
+            } else {
+              const bubbleFill = cap.bgColor === 'black' ? '#000000' : (cap.bgColor || '#ffffff');
+              textColor = isColorDark(bubbleFill) ? '#ffffff' : '#000000';
+            }
+          } else if (cap.bgColor === 'white' && (textColor.toLowerCase() === '#ffffff' || textColor.toLowerCase() === '#fff' || textColor === 'white')) {
+            textColor = '#000000';
+          } else if (cap.bgColor === 'black' && (textColor.toLowerCase() === '#000000' || textColor.toLowerCase() === '#000' || textColor === 'black')) {
+            textColor = '#ffffff';
+          }
+
+          const shouldStroke = cap.stroke && cap.stroke !== 'transparent' && (!hasBg || (cap.stroke !== cap.bgColor && cap.stroke !== bgFillColor));
+          const textAnchorX = align === 'left' ? (-boxWidth / 2 + padX) : (align === 'right' ? (boxWidth / 2 - padX) : 0);
+
+          lines.forEach((line, index) => {
+            const ly = startY + index * lineHeight;
+
+            if (shouldStroke) {
+              targetCtx.strokeStyle = cap.stroke;
+              targetCtx.lineWidth = cap.strokeWidth || Math.max(3, fontSize / 7);
+              targetCtx.lineJoin = 'miter';
+              targetCtx.miterLimit = 2;
+              targetCtx.setLineDash([]);
+              targetCtx.strokeText(line, textAnchorX, ly);
+            }
+
+            targetCtx.fillStyle = textColor;
+            targetCtx.fillText(line, textAnchorX, ly);
+          });
+        }
 
         if (cap.id === activeLayerId && !isDrawingMode) {
           const rot = cap.rotation || 0;
@@ -1336,7 +1601,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     } else {
       renderCanvas(null);
     }
-  }, [captions, stickers, activeLayerId, imageLayers, slotImages, slotTransforms, activeIsNativeLayout, editingCaptionId, cursorVisible, aspectRatio, imageFit, watermark, drawings, isDrawingMode, imgSrc, filters, liveBgColor, canvasHeader, canvasFooter]);
+  }, [captions, stickers, activeLayerId, imageLayers, slotImages, slotTransforms, activeIsNativeLayout, editingCaptionId, cursorVisible, aspectRatio, imageFit, watermark, drawings, isDrawingMode, imgSrc, filters, liveBgColor, canvasHeader, canvasFooter, demotivational]);
 
   // Helper to rotate point for hit testing
   const rotatePoint = (px, py, cx, cy, angle) => {
@@ -1468,9 +1733,17 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
           const hasBg = (activeCap.bgColor && activeCap.bgColor !== 'transparent' && activeCap.bgColor !== 'none') || isBubble;
           const padX = isBubble ? Math.max(24, fontSize * 0.5) : (hasBg && activeCap.bgStyle !== 'banner' ? Math.max(16, fontSize * 0.35) : Math.max(8, fontSize * 0.15));
           const padY = isBubble ? Math.max(18, fontSize * 0.4) : (hasBg && activeCap.bgStyle !== 'banner' ? Math.max(10, fontSize * 0.2) : Math.max(4, fontSize * 0.1));
-          const boxWidth = maxLineWidth + padX * 2;
+          let boxWidth = maxLineWidth + padX * 2;
           const textHeight = lines.length * (fontSize * 1.2);
-          const boxHeight = textHeight + padY * 2;
+          let boxHeight = textHeight + padY * 2;
+
+          if (activeCap.isBreakingNews) {
+            boxWidth = Math.max(300, (activeCap.width || 0.94) * canvas.width);
+            boxHeight = getBreakingNewsHeight(activeCap);
+          } else if (activeCap.isTweetCard) {
+            boxWidth = Math.min(540, (activeCap.width || 0.88) * canvas.width);
+            boxHeight = getTweetCardHeight(ctx, activeCap, boxWidth);
+          }
           const halfW = boxWidth / 2;
           const halfH = boxHeight / 2;
 
@@ -1634,10 +1907,17 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
           const isBubble = !!cap.bubbleStyle;
           const hasBg = (cap.bgColor && cap.bgColor !== 'transparent' && cap.bgColor !== 'none') || isBubble;
           const padX = isBubble ? Math.max(24, fontSize * 0.5) : (hasBg && cap.bgStyle !== 'banner' ? Math.max(16, fontSize * 0.35) : Math.max(8, fontSize * 0.15));
-          const padY = isBubble ? Math.max(18, fontSize * 0.4) : (hasBg && cap.bgStyle !== 'banner' ? Math.max(10, fontSize * 0.2) : Math.max(4, fontSize * 0.1));
-          const boxWidth = maxLineWidth + padX * 2;
+          let boxWidth = maxLineWidth + padX * 2;
           const lineHeight = fontSize * 1.2;
-          const boxHeight = lines.length * lineHeight + padY * 2;
+          let boxHeight = lines.length * lineHeight + padY * 2;
+
+          if (cap.isBreakingNews) {
+            boxWidth = Math.max(300, (cap.width || 0.94) * canvas.width);
+            boxHeight = getBreakingNewsHeight(cap);
+          } else if (cap.isTweetCard) {
+            boxWidth = Math.min(540, (cap.width || 0.88) * canvas.width);
+            boxHeight = getTweetCardHeight(ctx, cap, boxWidth);
+          }
 
           let hitBox = false;
           if (hasBg && cap.bgStyle === 'banner') {
@@ -1912,9 +2192,17 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         const hasBg = (activeCap.bgColor && activeCap.bgColor !== 'transparent' && activeCap.bgColor !== 'none') || isBubble;
         const padX = isBubble ? Math.max(24, fontSize * 0.5) : (hasBg && activeCap.bgStyle !== 'banner' ? Math.max(16, fontSize * 0.35) : Math.max(8, fontSize * 0.15));
         const padY = isBubble ? Math.max(18, fontSize * 0.4) : (hasBg && activeCap.bgStyle !== 'banner' ? Math.max(10, fontSize * 0.2) : Math.max(4, fontSize * 0.1));
-        const boxWidth = maxLineWidth + padX * 2;
+        let boxWidth = maxLineWidth + padX * 2;
         const textHeight = lines.length * (fontSize * 1.2);
-        const boxHeight = textHeight + padY * 2;
+        let boxHeight = textHeight + padY * 2;
+
+        if (activeCap.isBreakingNews) {
+          boxWidth = Math.max(300, (activeCap.width || 0.94) * canvas.width);
+          boxHeight = getBreakingNewsHeight(activeCap);
+        } else if (activeCap.isTweetCard) {
+          boxWidth = Math.min(540, (activeCap.width || 0.88) * canvas.width);
+          boxHeight = getTweetCardHeight(ctx, activeCap, boxWidth);
+        }
 
         const halfW = boxWidth / 2;
         const halfH = boxHeight / 2;
