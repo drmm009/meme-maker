@@ -10,19 +10,10 @@ const TwitterVerifiedBadge = () => (
 export default function MemeStylesModal({
   isOpen,
   onClose,
-  demotivational,
-  onToggleDemotivational,
   onAddTweetCard,
   onAddChatBubble
 }) {
-  // Unified 3-Style Selector (All in One - no separate category divisions)
-  const [selectedStyle, setSelectedStyle] = useState('demotivational'); // 'demotivational' | 'tweet' | 'chat'
-
-  // 1. Demotivational state
-  const [demoTitle, setDemoTitle] = useState(demotivational?.title || 'PROCRASTINATION');
-  const [demoSubtitle, setDemoSubtitle] = useState(
-    demotivational?.subtitle || 'Hard work pays off in the future, laziness pays off now.'
-  );
+  const [selectedStyle, setSelectedStyle] = useState('tweet'); // 'tweet' | 'chat'
 
   // 2. Fake Tweet state
   const [tweetName, setTweetName] = useState('Elon Musk');
@@ -116,7 +107,7 @@ export default function MemeStylesModal({
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
+              gridTemplateColumns: 'repeat(2, 1fr)',
               gap: '6px',
               padding: '4px',
               background: 'rgba(0,0,0,0.3)',
@@ -124,55 +115,7 @@ export default function MemeStylesModal({
               border: '1px solid rgba(255,255,255,0.08)'
             }}
           >
-            {/* 1. Demotivational Frame */}
-            <button
-              type="button"
-              onClick={() => setSelectedStyle('demotivational')}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '6px',
-                padding: '8px 10px',
-                borderRadius: '9px',
-                fontSize: '0.8rem',
-                fontWeight: 700,
-                border: 'none',
-                cursor: 'pointer',
-                background: selectedStyle === 'demotivational' ? 'var(--primary-gradient)' : 'transparent',
-                color: selectedStyle === 'demotivational' ? '#ffffff' : 'rgba(255,255,255,0.65)',
-                boxShadow: selectedStyle === 'demotivational' ? '0 4px 12px rgba(249, 115, 22, 0.3)' : 'none',
-                transition: 'all 0.15s ease'
-              }}
-            >
-              <div
-                style={{
-                  width: 12,
-                  height: 12,
-                  border: '1.5px solid currentColor',
-                  background: '#000',
-                  borderRadius: '2px',
-                  flexShrink: 0
-                }}
-              />
-              <span>Poster Frame</span>
-              {demotivational?.enabled && (
-                <span
-                  style={{
-                    fontSize: '9px',
-                    padding: '1px 5px',
-                    borderRadius: '999px',
-                    background: '#22c55e',
-                    color: '#000',
-                    fontWeight: 800
-                  }}
-                >
-                  ON
-                </span>
-              )}
-            </button>
-
-            {/* 2. Tweet Card */}
+            {/* 1. Tweet Card */}
             <button
               type="button"
               onClick={() => setSelectedStyle('tweet')}
@@ -227,146 +170,7 @@ export default function MemeStylesModal({
 
         {/* Scrollable Modal Content */}
         <div style={{ padding: '20px', overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', gap: '18px' }}>
-          {/* FORMAT 1: DEMOTIVATIONAL POSTER FRAME */}
-          {selectedStyle === 'demotivational' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {/* Live Visual Preview */}
-              <div
-                style={{
-                  background: 'rgba(0,0,0,0.5)',
-                  borderRadius: '14px',
-                  border: '1px dashed rgba(255,255,255,0.2)',
-                  padding: '16px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: '8px'
-                }}
-              >
-                <div style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)', alignSelf: 'flex-start', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  Live Preview
-                </div>
-                <div
-                  style={{
-                    width: '100%',
-                    maxWidth: '380px',
-                    background: '#000000',
-                    border: '1px solid #27272a',
-                    borderRadius: '8px',
-                    padding: '14px 16px',
-                    textAlign: 'center',
-                    boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.2), 0 8px 24px rgba(0,0,0,0.6)'
-                  }}
-                >
-                  <div
-                    style={{
-                      width: '75%',
-                      height: '64px',
-                      margin: '0 auto 10px',
-                      background: 'rgba(255,255,255,0.06)',
-                      border: '1px solid rgba(255,255,255,0.2)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: 'rgba(255,255,255,0.4)',
-                      fontSize: '0.72rem',
-                      borderRadius: '4px'
-                    }}
-                  >
-                    [ Canvas Meme Content ]
-                  </div>
-                  <div
-                    style={{
-                      fontFamily: 'Georgia, serif',
-                      fontSize: '1.05rem',
-                      fontWeight: 700,
-                      letterSpacing: '2px',
-                      color: '#ffffff',
-                      textTransform: 'uppercase',
-                      marginBottom: '3px'
-                    }}
-                  >
-                    {demoTitle || 'TITLE'}
-                  </div>
-                  <div
-                    style={{
-                      fontFamily: 'Georgia, serif',
-                      fontSize: '0.76rem',
-                      color: '#e4e4e7',
-                      fontStyle: 'italic',
-                      lineHeight: 1.3
-                    }}
-                  >
-                    {demoSubtitle || 'Subtitle punchline here'}
-                  </div>
-                </div>
-              </div>
-
-              {/* Form Controls */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                <div>
-                  <label style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>
-                    Main Title (Serif Uppercase)
-                  </label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    value={demoTitle}
-                    onChange={(e) => setDemoTitle(e.target.value)}
-                    placeholder="e.g. PROCRASTINATION, MOTIVATION"
-                    style={{ width: '100%', fontSize: '0.85rem', background: 'rgba(255,255,255,0.05)', borderRadius: '10px' }}
-                  />
-                </div>
-                <div>
-                  <label style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>
-                    Subtitle / Punchline
-                  </label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    value={demoSubtitle}
-                    onChange={(e) => setDemoSubtitle(e.target.value)}
-                    placeholder="e.g. Hard work pays off in the future, laziness pays off now."
-                    style={{ width: '100%', fontSize: '0.85rem', background: 'rgba(255,255,255,0.05)', borderRadius: '10px' }}
-                  />
-                </div>
-              </div>
-
-              {/* CTA */}
-              <button
-                type="button"
-                className={`btn btn-sm ${demotivational?.enabled ? 'btn-secondary' : 'btn-primary'}`}
-                onClick={() => {
-                  onToggleDemotivational({ title: demoTitle, subtitle: demoSubtitle });
-                  onClose();
-                }}
-                style={{
-                  fontWeight: 700,
-                  padding: '10px',
-                  borderRadius: '10px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '6px',
-                  background: demotivational?.enabled ? 'rgba(239, 68, 68, 0.85)' : undefined,
-                  borderColor: demotivational?.enabled ? '#ef4444' : undefined,
-                  color: '#ffffff'
-                }}
-              >
-                {demotivational?.enabled ? (
-                  <>
-                    <X size={15} /> Remove Poster Frame
-                  </>
-                ) : (
-                  <>
-                    <Sparkles size={15} /> Apply Demotivational Frame
-                  </>
-                )}
-              </button>
-            </div>
-          )}
-
-          {/* FORMAT 2: FAKE TWEET / X POST CARD */}
+          {/* FORMAT 1: FAKE TWEET / X POST CARD */}
           {selectedStyle === 'tweet' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {/* Live Visual Preview */}

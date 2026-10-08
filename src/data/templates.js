@@ -1,5 +1,49 @@
 export const MEME_TEMPLATES = [
   {
+    "id": "demotivational-poster",
+    "name": "Demotivational Poster",
+    "category": "popular",
+    "tag": "trending",
+    "imageUrl": "./images/demotivational-poster.svg",
+    "fallbackUrl": "./images/demotivational-poster.svg",
+    "rawImageUrl": "./images/demotivational-inner.svg",
+    "width": 1000,
+    "height": 1000,
+    "trendingScore": 120,
+    "aspectRatio": "1:1",
+    "canvasBgColor": "#000000",
+    "demotivational": {
+      "enabled": true,
+      "title": "PROCRASTINATION",
+      "subtitle": "Hard work pays off in the future, laziness pays off now."
+    },
+    "defaultCaptions": [
+      {
+        "text": "PROCRASTINATION",
+        "x": 0.5,
+        "y": 0.81,
+        "fontSize": 44,
+        "color": "#ffffff",
+        "stroke": "transparent",
+        "align": "center",
+        "fontFamily": "Times New Roman, serif",
+        "isDemotivationalTitle": true
+      },
+      {
+        "text": "Hard work pays off in the future, laziness pays off now.",
+        "x": 0.5,
+        "y": 0.90,
+        "fontSize": 18,
+        "fontStyle": "italic",
+        "color": "#cccccc",
+        "stroke": "transparent",
+        "align": "center",
+        "fontFamily": "Georgia, serif",
+        "isDemotivationalSubtitle": true
+      }
+    ]
+  },
+  {
     "id": "vs-comparison-split",
     "name": "VS / Comparison (Split Screen)",
     "category": "comparison",

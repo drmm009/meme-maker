@@ -384,7 +384,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
       rotation: 0,
       ...c,
       width: undefined, // Clear template width to force tight hugging initially
-      fontSize: 45, // Set default text size to exactly 45px
+      fontSize: c.fontSize || 45, // Respect template font size or fallback to 45px
       id: c.id || `cap-${idx}-${Date.now()}`,
       zIndex: baseCapZ + idx
     }));
@@ -3213,7 +3213,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                       <button
                         className="btn btn-xs vid-ctx-btn"
                         onClick={() => setShowStylesModal(true)}
-                        title="Meme Culture Staples & Social Formats"
+                        title="Meme Style (Tweet Card, Chat Bubbles)"
                         style={{
                           flexShrink: 0,
                           padding: "4px 9px",
@@ -3223,9 +3223,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           alignItems: "center",
                           gap: "4px",
                           borderRadius: '10px',
-                          background: demotivational.enabled
-                            ? "linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)"
-                            : "linear-gradient(135deg, rgba(245, 158, 11, 0.25) 0%, rgba(239, 68, 68, 0.25) 100%)",
+                          background: "linear-gradient(135deg, rgba(245, 158, 11, 0.25) 0%, rgba(239, 68, 68, 0.25) 100%)",
                           border: "1px solid rgba(245, 158, 11, 0.4)",
                           color: "#ffffff"
                         }}
@@ -5328,7 +5326,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                     type="button"
                     className="btn btn-xs hover-lift"
                     onClick={() => setShowStylesModal(true)}
-                    title="Meme Culture Staples & Social Formats (Demotivational, News Chyron, Tweet Card, Chat)"
+                    title="Meme Style (Tweet Card, Chat Bubbles)"
                     style={{
                       flex: 1,
                       padding: '8px 10px',
@@ -5340,9 +5338,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                       justifyContent: 'center',
                       gap: '5px',
                       whiteSpace: 'nowrap',
-                      background: demotivational.enabled
-                        ? 'linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)'
-                        : 'linear-gradient(135deg, rgba(245, 158, 11, 0.25) 0%, rgba(239, 68, 68, 0.25) 100%)',
+                      background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.25) 0%, rgba(239, 68, 68, 0.25) 100%)',
                       border: '1px solid rgba(245, 158, 11, 0.5)',
                       color: '#ffffff'
                     }}
@@ -5901,13 +5897,10 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
         templateName={template?.name}
       />
 
-      {/* Meme Culture Staples & Social Formats Modal */}
+      {/* Meme Style Modal */}
       <MemeStylesModal
         isOpen={showStylesModal}
         onClose={() => setShowStylesModal(false)}
-        demotivational={demotivational}
-        onToggleDemotivational={handleToggleDemotivational}
-        onAddBreakingNews={handleAddBreakingNews}
         onAddTweetCard={handleAddTweetCard}
         onAddChatBubble={handleAddChatBubble}
       />
