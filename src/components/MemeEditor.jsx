@@ -3249,7 +3249,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                   )}
 
                   {/* UNIFIED ACTIONS CLUSTER (Duplicate / Layers / Delete for All Elements) */}
-                  {((activeCaption && !showFontMenu && !showTextEffectsMenu) || activeSticker || (activeImageLayer && !showImageFilterMenu)) && (
+                  {((activeCaption && !showFontMenu && !showTextEffectsMenu && !showBubbleLayouts) || activeSticker || (activeImageLayer && !showImageFilterMenu)) && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: '3px', marginLeft: 'auto', flexShrink: 0 }}>
                       <button
                         className="btn btn-icon btn-xs vid-ctx-btn"
