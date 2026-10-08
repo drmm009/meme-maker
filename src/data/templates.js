@@ -1,5 +1,62 @@
 export const MEME_TEMPLATES = [
   {
+    "id": "vs-comparison-split",
+    "name": "VS / Comparison (Split Screen)",
+    "category": "comparison",
+    "tag": "trending",
+    "imageUrl": "./images/vs-comparison.svg",
+    "fallbackUrl": "./images/vs-comparison.svg",
+    "defaultCaptions": [
+      {
+        "text": "EXPECTATION",
+        "x": 0.25,
+        "y": 0.12,
+        "width": 0.42,
+        "height": 0.15,
+        "fontSize": 48,
+        "color": "#ffffff",
+        "stroke": "#000000",
+        "align": "center"
+      },
+      {
+        "text": "REALITY",
+        "x": 0.75,
+        "y": 0.12,
+        "width": 0.42,
+        "height": 0.15,
+        "fontSize": 48,
+        "color": "#ffffff",
+        "stroke": "#000000",
+        "align": "center"
+      },
+      {
+        "text": "How I planned it",
+        "x": 0.25,
+        "y": 0.88,
+        "width": 0.44,
+        "height": 0.15,
+        "fontSize": 38,
+        "color": "#ffffff",
+        "stroke": "#000000",
+        "align": "center"
+      },
+      {
+        "text": "How it actually shipped",
+        "x": 0.75,
+        "y": 0.88,
+        "width": 0.44,
+        "height": 0.15,
+        "fontSize": 38,
+        "color": "#ffffff",
+        "stroke": "#000000",
+        "align": "center"
+      }
+    ],
+    "width": 1200,
+    "height": 700,
+    "trendingScore": 100
+  },
+  {
     "id": "181913649",
     "name": "Drake Hotline Bling",
     "category": "popular",

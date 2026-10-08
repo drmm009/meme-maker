@@ -1,0 +1,124 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 700" width="1200" height="700">
+  <defs>
+    <!-- Left Background Gradient (Cyan / Deep Tech Slate) -->
+    <linearGradient id="leftBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="50%" stop-color="#1e293b" />
+      <stop offset="100%" stop-color="#0e2338" />
+    </linearGradient>
+
+    <!-- Right Background Gradient (Crimson / Deep Dark Fire) -->
+    <linearGradient id="rightBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2a0818" />
+      <stop offset="50%" stop-color="#3d1429" />
+      <stop offset="100%" stop-color="#180512" />
+    </linearGradient>
+
+    <!-- VS Badge Gold Gradient -->
+    <linearGradient id="vsGold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fef08a" />
+      <stop offset="40%" stop-color="#f59e0b" />
+      <stop offset="100%" stop-color="#b45309" />
+    </linearGradient>
+
+    <!-- VS Badge Fire Glow -->
+    <radialGradient id="vsFire" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ef4444" stop-opacity="0.8" />
+      <stop offset="60%" stop-color="#f59e0b" stop-opacity="0.3" />
+      <stop offset="100%" stop-color="#000000" stop-opacity="0" />
+    </radialGradient>
+
+    <!-- Center Line Glow -->
+    <linearGradient id="centerLineGlow" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#06b6d4" />
+      <stop offset="35%" stop-color="#ffffff" />
+      <stop offset="50%" stop-color="#f59e0b" />
+      <stop offset="65%" stop-color="#ffffff" />
+      <stop offset="100%" stop-color="#ef4444" />
+    </linearGradient>
+
+    <!-- Drop Shadows -->
+    <filter id="badgeShadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#000000" flood-opacity="0.75" />
+    </filter>
+    <filter id="textGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#000000" flood-opacity="0.9" />
+    </filter>
+  </defs>
+
+  <!-- Left Half -->
+  <rect x="0" y="0" width="600" height="700" fill="url(#leftBg)" />
+
+  <!-- Left Subtle Grid Pattern & Card Outline -->
+  <g opacity="0.12" stroke="#38bdf8" stroke-width="1">
+    <line x1="60" y1="0" x2="60" y2="700" />
+    <line x1="180" y1="0" x2="180" y2="700" />
+    <line x1="300" y1="0" x2="300" y2="700" />
+    <line x1="420" y1="0" x2="420" y2="700" />
+    <line x1="540" y1="0" x2="540" y2="700" />
+    <line x1="0" y1="140" x2="600" y2="140" />
+    <line x1="0" y1="280" x2="600" y2="280" />
+    <line x1="0" y1="420" x2="600" y2="420" />
+    <line x1="0" y1="560" x2="600" y2="560" />
+  </g>
+  <rect x="40" y="40" width="520" height="620" rx="16" fill="none" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="8 6" opacity="0.3" />
+
+  <!-- Right Half -->
+  <rect x="600" y="0" width="600" height="700" fill="url(#rightBg)" />
+
+  <!-- Right Subtle Grid Pattern & Card Outline -->
+  <g opacity="0.12" stroke="#f43f5e" stroke-width="1">
+    <line x1="660" y1="0" x2="660" y2="700" />
+    <line x1="780" y1="0" x2="780" y2="700" />
+    <line x1="900" y1="0" x2="900" y2="700" />
+    <line x1="1020" y1="0" x2="1020" y2="700" />
+    <line x1="1140" y1="0" x2="1140" y2="700" />
+    <line x1="600" y1="140" x2="1200" y2="140" />
+    <line x1="600" y1="280" x2="1200" y2="280" />
+    <line x1="600" y1="420" x2="1200" y2="420" />
+    <line x1="600" y1="560" x2="1200" y2="560" />
+  </g>
+  <rect x="640" y="40" width="520" height="620" rx="16" fill="none" stroke="#f43f5e" stroke-width="1.5" stroke-dasharray="8 6" opacity="0.3" />
+
+  <!-- Vertical Splitter Line with Neon Accent -->
+  <line x1="596" y1="0" x2="596" y2="700" stroke="#000000" stroke-width="8" opacity="0.7" />
+  <line x1="600" y1="0" x2="600" y2="700" stroke="url(#centerLineGlow)" stroke-width="5" />
+  <line x1="600" y1="0" x2="600" y2="700" stroke="#ffffff" stroke-width="1.5" opacity="0.9" />
+
+  <!-- Center Energy Radial Behind Badge -->
+  <circle cx="600" cy="350" r="140" fill="url(#vsFire)" />
+
+  <!-- VS Center Emblem Badge -->
+  <g filter="url(#badgeShadow)">
+    <!-- Outer Ring -->
+    <circle cx="600" cy="350" r="68" fill="#090d16" stroke="url(#vsGold)" stroke-width="5" />
+    <!-- Inner Ring -->
+    <circle cx="600" cy="350" r="58" fill="#18181b" stroke="#ffffff" stroke-width="1.5" opacity="0.6" />
+    
+    <!-- Diagonal Energy Slash Across Badge -->
+    <path d="M 565 315 L 635 385" stroke="#ef4444" stroke-width="3" stroke-linecap="round" opacity="0.7" />
+
+    <!-- "VS" Text -->
+    <text x="600" y="367"
+          font-family="'Impact', 'Arial Black', sans-serif"
+          font-size="52"
+          font-weight="900"
+          font-style="italic"
+          letter-spacing="2"
+          text-anchor="middle"
+          fill="url(#vsGold)"
+          stroke="#000000"
+          stroke-width="3.5"
+          filter="url(#textGlow)">
+      VS
+    </text>
+  </g>
+
+  <!-- Left / Right Subtle Placeholder Prompts -->
+  <text x="300" y="355" font-family="'Inter', sans-serif" font-size="16" font-weight="700" fill="#38bdf8" text-anchor="middle" opacity="0.35" letter-spacing="3">
+    [ DROP IMAGE / MEME HERE ]
+  </text>
+  <text x="900" y="355" font-family="'Inter', sans-serif" font-size="16" font-weight="700" fill="#f43f5e" text-anchor="middle" opacity="0.35" letter-spacing="3">
+    [ DROP IMAGE / MEME HERE ]
+  </text>
+</svg>

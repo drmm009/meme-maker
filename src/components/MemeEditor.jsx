@@ -11,7 +11,7 @@ import {
   Image as ImageIcon, Search, X, Upload, RotateCw, ZoomIn, Crop, LayoutGrid, Scissors, Play, Pause, FolderHeart, Droplet, Monitor,
   Paintbrush, Eraser, Palette, Sun, Moon, ChevronDown, ChevronLeft, PencilLine, Move, ArrowDownRight, Wand2,
   Layers, ArrowUp, ArrowDown, ChevronsUp, ChevronsDown, Eye, EyeOff, Lock, Unlock, FlipHorizontal,
-  PanelTop, PanelBottom, MessageSquare, Flame, Tv, MessageCircle
+  PanelTop, PanelBottom, MessageSquare, Flame, Tv, MessageCircle, Shield
 } from 'lucide-react';
 import AiCaptionModal from './AiCaptionModal';
 import MemeStylesModal from './MemeStylesModal';
@@ -408,13 +408,15 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
           enabled: false,
           title: 'PROCRASTINATION',
           subtitle: 'Hard work pays off in the future, laziness pays off now.'
-        }
+        },
+        canvasFlipX: template?.canvasFlipX || false
       }
     ];
   });
   const [historyStep, setHistoryStep] = useState(0);
 
   const [canvasBgColor, setCanvasBgColor] = useState(template?.canvasBgColor || '#ffffff');
+  const [canvasFlipX, setCanvasFlipX] = useState(template?.canvasFlipX || false);
 
   const [canvasHeader, setCanvasHeader] = useState(() => {
     return template?.canvasHeader || {
@@ -466,6 +468,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
   const [showWatermarkMenu, setShowWatermarkMenu] = useState(false);
   const [showFontMenu, setShowFontMenu] = useState(false);
   const [showOpacityMenu, setShowOpacityMenu] = useState(false);
+  const [showCurveMenu, setShowCurveMenu] = useState(false);
   const [showImageFilterMenu, setShowImageFilterMenu] = useState(false);
   const [showLayerMenu, setShowLayerMenu] = useState(false);
   const [pasteToast, setPasteToast] = useState(false);
@@ -710,7 +713,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     return () => window.removeEventListener('paste', handlePaste);
   }, [captions, stickers, imageLayers]);
 
-  const pushHistory = (newCaptions, newStickers, newImgLayers = imageLayers, newDrawings = drawings, newCanvasHeader = canvasHeader, newCanvasFooter = canvasFooter, newDemotivational = demotivational) => {
+  const pushHistory = (newCaptions, newStickers, newImgLayers = imageLayers, newDrawings = drawings, newCanvasHeader = canvasHeader, newCanvasFooter = canvasFooter, newDemotivational = demotivational, newCanvasFlipX = canvasFlipX) => {
     const newSnapshot = {
       captions: JSON.parse(JSON.stringify(newCaptions)),
       stickers: JSON.parse(JSON.stringify(newStickers)),
@@ -718,7 +721,8 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
       drawings: JSON.parse(JSON.stringify(newDrawings)),
       canvasHeader: JSON.parse(JSON.stringify(newCanvasHeader)),
       canvasFooter: JSON.parse(JSON.stringify(newCanvasFooter)),
-      demotivational: JSON.parse(JSON.stringify(newDemotivational))
+      demotivational: JSON.parse(JSON.stringify(newDemotivational)),
+      canvasFlipX: Boolean(newCanvasFlipX)
     };
     const updatedHistory = history.slice(0, historyStep + 1);
     updatedHistory.push(newSnapshot);
@@ -727,11 +731,17 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
   };
 
   // Debounced version — used for text typing so history isn't pushed on every keypress
-  const pushHistoryDebounced = (newCaptions, newStickers, newImgLayers = imageLayers, newDrawings = drawings, newCanvasHeader = canvasHeader, newCanvasFooter = canvasFooter, newDemotivational = demotivational) => {
+  const pushHistoryDebounced = (newCaptions, newStickers, newImgLayers = imageLayers, newDrawings = drawings, newCanvasHeader = canvasHeader, newCanvasFooter = canvasFooter, newDemotivational = demotivational, newCanvasFlipX = canvasFlipX) => {
     if (historyTimerRef.current) clearTimeout(historyTimerRef.current);
     historyTimerRef.current = setTimeout(() => {
-      pushHistory(newCaptions, newStickers, newImgLayers, newDrawings, newCanvasHeader, newCanvasFooter, newDemotivational);
+      pushHistory(newCaptions, newStickers, newImgLayers, newDrawings, newCanvasHeader, newCanvasFooter, newDemotivational, newCanvasFlipX);
     }, 800);
+  };
+
+  const handleToggleCanvasFlip = () => {
+    const nextFlip = !canvasFlipX;
+    setCanvasFlipX(nextFlip);
+    pushHistory(captions, stickers, imageLayers, drawings, canvasHeader, canvasFooter, demotivational, nextFlip);
   };
 
   const handleUndo = () => {
@@ -750,6 +760,9 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
       }
       if (snapshot.demotivational) {
         setDemotivational(JSON.parse(JSON.stringify(snapshot.demotivational)));
+      }
+      if (snapshot.canvasFlipX !== undefined) {
+        setCanvasFlipX(Boolean(snapshot.canvasFlipX));
       }
       setHistoryStep(prevStep);
     }
@@ -771,6 +784,9 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
       }
       if (snapshot.demotivational) {
         setDemotivational(JSON.parse(JSON.stringify(snapshot.demotivational)));
+      }
+      if (snapshot.canvasFlipX !== undefined) {
+        setCanvasFlipX(Boolean(snapshot.canvasFlipX));
       }
       setHistoryStep(nextStep);
     }
@@ -1726,6 +1742,50 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     const nextStickers = stickers.map(s => s.id === activeSticker.id ? { ...s, rotation: nextRot } : s);
     setStickers(nextStickers);
     pushHistoryDebounced(captions, nextStickers, imageLayers);
+  };
+
+  const handleToggleDieCutSticker = (color = '#ffffff') => {
+    if (activeSticker) {
+      const nextDieCut = !activeSticker.dieCut;
+      const nextStickers = stickers.map(s => s.id === activeSticker.id ? {
+        ...s,
+        dieCut: nextDieCut,
+        dieCutColor: s.dieCutColor || color,
+        dieCutWidth: s.dieCutWidth || 6
+      } : s);
+      setStickers(nextStickers);
+      pushHistory(captions, nextStickers, imageLayers);
+    } else if (activeImageLayer) {
+      const nextDieCut = !activeImageLayer.dieCut;
+      const nextImg = imageLayers.map(l => l.id === activeImageLayer.id ? {
+        ...l,
+        dieCut: nextDieCut,
+        dieCutColor: l.dieCutColor || color,
+        dieCutWidth: l.dieCutWidth || 6
+      } : l);
+      setImageLayers(nextImg);
+      pushHistory(captions, stickers, nextImg);
+    }
+  };
+
+  const handleSetDieCutColor = (color) => {
+    if (activeSticker) {
+      const nextStickers = stickers.map(s => s.id === activeSticker.id ? {
+        ...s,
+        dieCut: true,
+        dieCutColor: color
+      } : s);
+      setStickers(nextStickers);
+      pushHistory(captions, nextStickers, imageLayers);
+    } else if (activeImageLayer) {
+      const nextImg = imageLayers.map(l => l.id === activeImageLayer.id ? {
+        ...l,
+        dieCut: true,
+        dieCutColor: color
+      } : l);
+      setImageLayers(nextImg);
+      pushHistory(captions, stickers, nextImg);
+    }
   };
 
   const getContrastStroke = (hex) => {
@@ -2745,6 +2805,51 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                       >
                         <FlipHorizontal style={{ width: 14, height: 14 }} />
                       </button>
+
+                      <button
+                        className={`btn btn-xs vid-ctx-btn ${activeSticker.dieCut ? 'active' : ''}`}
+                        title="Die-Cut Sticker Border (White Vinyl Outline)"
+                        onClick={() => handleToggleDieCutSticker()}
+                        style={{
+                          padding: '0 8px',
+                          fontSize: '11px',
+                          fontWeight: 600,
+                          flexShrink: 0,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          background: activeSticker.dieCut ? 'linear-gradient(135deg, rgba(6,182,212,0.3), rgba(168,85,247,0.3))' : undefined,
+                          borderColor: activeSticker.dieCut ? 'var(--cyber-cyan)' : undefined,
+                          color: activeSticker.dieCut ? 'var(--cyber-cyan)' : '#ffffff'
+                        }}
+                      >
+                        <Shield style={{ width: 13, height: 13 }} />
+                        <span>Die-Cut</span>
+                      </button>
+
+                      {activeSticker.dieCut && (
+                        <div
+                          style={{
+                            position: 'relative',
+                            overflow: 'hidden',
+                            width: 20,
+                            height: 20,
+                            borderRadius: '50%',
+                            border: '2px solid rgba(255,255,255,0.4)',
+                            background: activeSticker.dieCutColor || '#ffffff',
+                            cursor: 'pointer',
+                            flexShrink: 0
+                          }}
+                          title="Die-Cut Border Color"
+                        >
+                          <input
+                            type="color"
+                            value={activeSticker.dieCutColor || '#ffffff'}
+                            onChange={(e) => handleSetDieCutColor(e.target.value)}
+                            style={{ position: 'absolute', opacity: 0, inset: 0, cursor: 'pointer', width: '100%', height: '100%' }}
+                          />
+                        </div>
+                      )}
                     </>
                   )}
 
@@ -2783,6 +2888,51 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                       >
                         <FlipHorizontal style={{ width: 14, height: 14 }} />
                       </button>
+
+                      <button
+                        className={`btn btn-xs vid-ctx-btn ${activeImageLayer.dieCut ? 'active' : ''}`}
+                        title="Die-Cut Sticker Border (White Vinyl Outline)"
+                        onClick={() => handleToggleDieCutSticker()}
+                        style={{
+                          padding: '0 8px',
+                          fontSize: '11px',
+                          fontWeight: 600,
+                          flexShrink: 0,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          background: activeImageLayer.dieCut ? 'linear-gradient(135deg, rgba(6,182,212,0.3), rgba(168,85,247,0.3))' : undefined,
+                          borderColor: activeImageLayer.dieCut ? 'var(--cyber-cyan)' : undefined,
+                          color: activeImageLayer.dieCut ? 'var(--cyber-cyan)' : '#ffffff'
+                        }}
+                      >
+                        <Shield style={{ width: 13, height: 13 }} />
+                        <span>Die-Cut</span>
+                      </button>
+
+                      {activeImageLayer.dieCut && (
+                        <div
+                          style={{
+                            position: 'relative',
+                            overflow: 'hidden',
+                            width: 20,
+                            height: 20,
+                            borderRadius: '50%',
+                            border: '2px solid rgba(255,255,255,0.4)',
+                            background: activeImageLayer.dieCutColor || '#ffffff',
+                            cursor: 'pointer',
+                            flexShrink: 0
+                          }}
+                          title="Die-Cut Border Color"
+                        >
+                          <input
+                            type="color"
+                            value={activeImageLayer.dieCutColor || '#ffffff'}
+                            onChange={(e) => handleSetDieCutColor(e.target.value)}
+                            style={{ position: 'absolute', opacity: 0, inset: 0, cursor: 'pointer', width: '100%', height: '100%' }}
+                          />
+                        </div>
+                      )}
 
                       
                       <button
@@ -3109,10 +3259,32 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                   )}
 
                   {!(activeCaption || activeSticker || activeImageLayer) && activeTab === 'watermark' && (
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', width: '100%', flexWrap: 'nowrap', overflowX: 'auto', paddingBottom: '2px', scrollbarWidth: 'none' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', width: '100%', flexWrap: 'nowrap', overflowX: 'auto', paddingBottom: '2px', scrollbarWidth: 'none' }}>
                       {!showWatermarkMenu ? (
                         <>
                           <CanvasColorPicker canvasBgColor={canvasBgColor} setCanvasBgColor={handleSetCanvasBgColor} />
+
+                          <div className="vid-ctx-divider"  />
+
+                          <button
+                            className={`btn btn-xs vid-ctx-btn ${canvasFlipX ? 'active' : ''}`}
+                            title="Flip Canvas Horizontal (Mirror Background Template)"
+                            onClick={handleToggleCanvasFlip}
+                            style={{
+                              padding: '4px 10px',
+                              fontSize: '0.75rem',
+                              fontWeight: 600,
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              background: canvasFlipX ? 'rgba(6, 182, 212, 0.2)' : undefined,
+                              borderColor: canvasFlipX ? 'var(--cyber-cyan)' : undefined,
+                              color: canvasFlipX ? 'var(--cyber-cyan)' : '#ffffff'
+                            }}
+                          >
+                            <FlipHorizontal style={{ width: 14, height: 14 }} />
+                            <span>{canvasFlipX ? 'Flipped' : 'Flip Canvas'}</span>
+                          </button>
 
                           <div className="vid-ctx-divider"  />
                           
@@ -3447,6 +3619,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
               });
             }}
             demotivational={demotivational}
+            canvasFlipX={canvasFlipX}
           />
           {isRemovingBg && (
             <div style={{
@@ -3518,9 +3691,30 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
 
 
 
-            {/* TAB 5: WATERMARK */}
+            {/* TAB 5: CANVAS & WATERMARK */}
             {activeTab === 'watermark' && (
               <div className="tab-content">
+                {/* Canvas Orientation & Settings */}
+                <div className="form-group margin-bottom-md" style={{ background: 'var(--bg-surface-1)', padding: '14px', borderRadius: '14px', border: '1px solid var(--glass-border)', marginBottom: '16px' }}>
+                  <label style={{ fontSize: '0.95rem', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', color: 'var(--text-main)' }}>
+                    <LayoutGrid className="icon-sm" style={{ color: 'var(--cyber-cyan)' }} /> Canvas &amp; Template
+                  </label>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                    <button
+                      type="button"
+                      className={`btn btn-sm ${canvasFlipX ? 'btn-primary' : 'btn-secondary'} hover-lift`}
+                      onClick={handleToggleCanvasFlip}
+                      title="Flip base template horizontally (Mirror)"
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '8px 10px', fontSize: '0.8rem', fontWeight: 600 }}
+                    >
+                      <FlipHorizontal size={16} />
+                      <span>{canvasFlipX ? 'Flipped' : 'Flip Canvas'}</span>
+                    </button>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <CanvasColorPicker canvasBgColor={canvasBgColor} setCanvasBgColor={handleSetCanvasBgColor} />
+                    </div>
+                  </div>
+                </div>
                 <div className="form-group margin-bottom-md">
                   <div className="flex-between align-center" style={{ marginBottom: '12px' }}>
                     <label style={{ fontSize: '1.1rem', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '8px', lineHeight: 1 }}><Droplet className="icon-sm" style={{ transform: 'translateY(1px)' }} /> Watermark</label>

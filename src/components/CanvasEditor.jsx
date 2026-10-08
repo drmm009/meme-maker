@@ -460,6 +460,121 @@ const drawTweetCard = (ctx, cardW, cap) => {
   ctx.restore();
 };
 
+const dieCutSilhouetteCache = new Map();
+
+function getOrCreateDieCutSilhouette(imgSource, color, width, height) {
+  const w = Math.max(1, Math.round(width));
+  const h = Math.max(1, Math.round(height));
+  const srcKey = imgSource.src || imgSource.currentSrc || (imgSource.toDataURL ? 'canvas' : 'img');
+  const key = `${srcKey}_${color}_${w}_${h}`;
+  if (dieCutSilhouetteCache.has(key)) {
+    return dieCutSilhouetteCache.get(key);
+  }
+  const silCanvas = document.createElement('canvas');
+  silCanvas.width = w;
+  silCanvas.height = h;
+  const sCtx = silCanvas.getContext('2d');
+  sCtx.drawImage(imgSource, 0, 0, w, h);
+  sCtx.globalCompositeOperation = 'source-in';
+  sCtx.fillStyle = color;
+  sCtx.fillRect(0, 0, w, h);
+
+  if (dieCutSilhouetteCache.size > 80) {
+    const firstKey = dieCutSilhouetteCache.keys().next().value;
+    dieCutSilhouetteCache.delete(firstKey);
+  }
+  dieCutSilhouetteCache.set(key, silCanvas);
+  return silCanvas;
+}
+
+function renderDieCutImage(ctx, img, drawW, drawH, borderColor = '#ffffff', borderWidth = 6) {
+  const sil = getOrCreateDieCutSilhouette(img, borderColor, drawW, drawH);
+  const R = Math.max(2, borderWidth);
+  const steps = Math.min(24, Math.max(12, Math.round(R * 3)));
+
+  // 1. Soft realistic vinyl sticker drop shadow
+  ctx.save();
+  ctx.shadowColor = 'rgba(0, 0, 0, 0.35)';
+  ctx.shadowBlur = 6;
+  ctx.shadowOffsetY = 3;
+  ctx.drawImage(sil, -drawW / 2, -drawH / 2, drawW, drawH);
+  ctx.restore();
+
+  // 2. Multi-angle radial dilation stamp for solid, crisp, opaque vinyl border
+  ctx.save();
+  for (let i = 0; i < steps; i++) {
+    const angle = (i * 2 * Math.PI) / steps;
+    const ox = Math.cos(angle) * R;
+    const oy = Math.sin(angle) * R;
+    ctx.drawImage(sil, -drawW / 2 + ox, -drawH / 2 + oy, drawW, drawH);
+  }
+  if (R > 3) {
+    const midR = R * 0.55;
+    const midSteps = Math.min(16, Math.max(8, Math.round(steps * 0.6)));
+    for (let i = 0; i < midSteps; i++) {
+      const angle = (i * 2 * Math.PI) / midSteps;
+      const ox = Math.cos(angle) * midR;
+      const oy = Math.sin(angle) * midR;
+      ctx.drawImage(sil, -drawW / 2 + ox, -drawH / 2 + oy, drawW, drawH);
+    }
+  }
+  ctx.restore();
+
+  // 3. Draw the original graphic on top
+  ctx.drawImage(img, -drawW / 2, -drawH / 2, drawW, drawH);
+}
+
+function renderDieCutEmoji(ctx, emoji, fontSize, borderColor = '#ffffff', borderWidth = 6) {
+  const pad = Math.ceil(fontSize * 0.4);
+  const fullW = Math.ceil(fontSize * 1.5 + pad * 2);
+  const fullH = Math.ceil(fontSize * 1.5 + pad * 2);
+
+  const offCanvas = document.createElement('canvas');
+  offCanvas.width = fullW;
+  offCanvas.height = fullH;
+  const oCtx = offCanvas.getContext('2d');
+  oCtx.font = `${fontSize}px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif`;
+  oCtx.textAlign = 'center';
+  oCtx.textBaseline = 'middle';
+  oCtx.fillText(emoji, fullW / 2, fullH / 2);
+
+  const sil = getOrCreateDieCutSilhouette(offCanvas, borderColor, fullW, fullH);
+  const R = Math.max(2, borderWidth);
+  const steps = Math.min(24, Math.max(12, Math.round(R * 3)));
+  const cx = -fullW / 2;
+  const cy = -fullH / 2;
+
+  // 1. Soft shadow
+  ctx.save();
+  ctx.shadowColor = 'rgba(0, 0, 0, 0.35)';
+  ctx.shadowBlur = 6;
+  ctx.shadowOffsetY = 3;
+  ctx.drawImage(sil, cx, cy);
+  ctx.restore();
+
+  // 2. Radial stamp
+  ctx.save();
+  for (let i = 0; i < steps; i++) {
+    const angle = (i * 2 * Math.PI) / steps;
+    const ox = Math.cos(angle) * R;
+    const oy = Math.sin(angle) * R;
+    ctx.drawImage(sil, cx + ox, cy + oy);
+  }
+  if (R > 3) {
+    const midR = R * 0.55;
+    for (let i = 0; i < 8; i++) {
+      const angle = (i * 2 * Math.PI) / 8;
+      const ox = Math.cos(angle) * midR;
+      const oy = Math.sin(angle) * midR;
+      ctx.drawImage(sil, cx + ox, cy + oy);
+    }
+  }
+  ctx.restore();
+
+  // 3. Draw emoji on top
+  ctx.drawImage(offCanvas, cx, cy);
+}
+
 const CanvasEditor = React.forwardRef(function CanvasEditor(
   {
     template,
@@ -495,7 +610,8 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     onUpdateCanvasHeader,
     canvasFooter,
     onUpdateCanvasFooter,
-    demotivational
+    demotivational,
+    canvasFlipX = false
   },
   ref
 ) {
@@ -915,6 +1031,11 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
               targetCtx.beginPath();
               targetCtx.rect(x, imageAreaY + y, slotW, slotH);
               targetCtx.clip();
+              if (canvasFlipX) {
+                targetCtx.translate(x + slotW / 2, 0);
+                targetCtx.scale(-1, 1);
+                targetCtx.translate(-(x + slotW / 2), 0);
+              }
               try {
                 drawImageFiltered(targetCtx, cached, bgFilterCss, nx, ny, nw, nh);
               } catch (err) {
@@ -988,6 +1109,11 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
           }
         }
         targetCtx.save();
+        if (canvasFlipX) {
+          targetCtx.translate(imageAreaX + imageAreaW / 2, 0);
+          targetCtx.scale(-1, 1);
+          targetCtx.translate(-(imageAreaX + imageAreaW / 2), 0);
+        }
         if (demotivational?.enabled) {
           targetCtx.beginPath();
           targetCtx.rect(imageAreaX, imageAreaY, imageAreaW, imageAreaH);
@@ -1297,7 +1423,11 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
             const aspect = (cached.naturalWidth || cached.width) / ((cached.naturalHeight || cached.height) || 1);
             const drawW = aspect >= 1 ? stkSize : stkSize * aspect;
             const drawH = aspect >= 1 ? stkSize / aspect : stkSize;
-            targetCtx.drawImage(cached, -drawW / 2, -drawH / 2, drawW, drawH);
+            if (stk.dieCut) {
+              renderDieCutImage(targetCtx, cached, drawW, drawH, stk.dieCutColor || '#ffffff', stk.dieCutWidth || 6);
+            } else {
+              targetCtx.drawImage(cached, -drawW / 2, -drawH / 2, drawW, drawH);
+            }
           } else {
             if (!loadingMediaRef.current[imgUrl]) {
               loadingMediaRef.current[imgUrl] = true;
@@ -1311,7 +1441,11 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
             }
           }
         } else if (stk.emoji) {
-          targetCtx.fillText(stk.emoji, 0, 0);
+          if (stk.dieCut) {
+            renderDieCutEmoji(targetCtx, stk.emoji, stkSize, stk.dieCutColor || '#ffffff', stk.dieCutWidth || 6);
+          } else {
+            targetCtx.fillText(stk.emoji, 0, 0);
+          }
         }
         targetCtx.restore();
               } else if (layer._type === 'caption') {
@@ -1676,7 +1810,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     } else {
       renderCanvas(null);
     }
-  }, [captions, stickers, activeLayerId, imageLayers, slotImages, slotTransforms, activeIsNativeLayout, editingCaptionId, cursorVisible, aspectRatio, imageFit, watermark, drawings, isDrawingMode, imgSrc, filters, liveBgColor, canvasHeader, canvasFooter, demotivational]);
+  }, [captions, stickers, activeLayerId, imageLayers, slotImages, slotTransforms, activeIsNativeLayout, editingCaptionId, cursorVisible, aspectRatio, imageFit, watermark, drawings, isDrawingMode, imgSrc, filters, liveBgColor, canvasHeader, canvasFooter, demotivational, canvasFlipX]);
 
   // Helper to rotate point for hit testing
   const rotatePoint = (px, py, cx, cy, angle) => {
