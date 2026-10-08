@@ -3397,10 +3397,25 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                     </div>
                   )}
                   {!(activeCaption || activeSticker || activeImageLayer) && activeTab === 'images' && (
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', width: '100%', overflowX: 'auto', paddingBottom: '4px', scrollbarWidth: 'none' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', width: '100%', overflowX: 'auto', scrollbarWidth: 'none', padding: '0 4px' }}>
                       {/* 1. UPLOAD */}
                       <label
-                        className="media-ctx-btn"
+                        className="btn btn-xs vid-ctx-btn"
+                        style={{
+                          padding: '5px 14px',
+                          fontSize: '0.8rem',
+                          fontWeight: 600,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          borderRadius: '12px',
+                          background: 'rgba(255,255,255,0.08)',
+                          color: '#ffffff',
+                          border: '1px solid var(--glass-border)',
+                          flexShrink: 0,
+                          cursor: 'pointer',
+                          margin: 0
+                        }}
                         title="Upload Image or Video"
                       >
                         <Upload style={{ width: 14, height: 14, color: 'var(--cyber-cyan)' }} />
@@ -3415,8 +3430,21 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
 
                       {/* 2. TEMPLATE */}
                       <button
-                        className="media-ctx-btn"
+                        className="btn btn-xs vid-ctx-btn"
                         onClick={() => setImagePickerTarget('layer')}
+                        style={{
+                          padding: '5px 14px',
+                          fontSize: '0.8rem',
+                          fontWeight: 600,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          borderRadius: '12px',
+                          background: 'rgba(255,255,255,0.08)',
+                          color: '#ffffff',
+                          border: '1px solid var(--glass-border)',
+                          flexShrink: 0
+                        }}
                         title="Add Image from Templates"
                       >
                         <LayoutGrid style={{ width: 14, height: 14, color: 'var(--cyber-cyan)' }} />
@@ -3425,18 +3453,44 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
 
                       {/* 3. TWEET CARD */}
                       <button
-                        className="media-ctx-btn"
+                        className="btn btn-xs vid-ctx-btn"
                         onClick={() => setShowStylesModal(true)}
+                        style={{
+                          padding: '5px 14px',
+                          fontSize: '0.8rem',
+                          fontWeight: 600,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          borderRadius: '12px',
+                          background: 'rgba(255,255,255,0.08)',
+                          color: '#ffffff',
+                          border: '1px solid var(--glass-border)',
+                          flexShrink: 0
+                        }}
                         title="Add Tweet Card (Fake Twitter / X Post)"
                       >
-                        <span style={{ fontSize: '0.85rem', fontWeight: 900, color: '#1d9bf0', lineHeight: 1 }}>𝕏</span>
+                        <span style={{ fontSize: '0.9rem', fontWeight: 900, color: '#1d9bf0', lineHeight: 1 }}>𝕏</span>
                         <span>Tweet Card</span>
                       </button>
 
                       {/* 4. STICKER */}
                       <button
-                        className="media-ctx-btn"
+                        className="btn btn-xs vid-ctx-btn"
                         onClick={() => setShowMemeStickersModal(true)}
+                        style={{
+                          padding: '5px 14px',
+                          fontSize: '0.8rem',
+                          fontWeight: 600,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          borderRadius: '12px',
+                          background: 'rgba(255,255,255,0.08)',
+                          color: '#ffffff',
+                          border: '1px solid var(--glass-border)',
+                          flexShrink: 0
+                        }}
                         title="Add Sticker"
                       >
                         <Sticker style={{ width: 14, height: 14, color: 'var(--cyber-cyan)' }} />
@@ -3445,8 +3499,21 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
 
                       {/* 5. EMOJI */}
                       <button
-                        className="media-ctx-btn"
+                        className="btn btn-xs vid-ctx-btn"
                         onClick={() => setShowEmojiModal(true)}
+                        style={{
+                          padding: '5px 14px',
+                          fontSize: '0.8rem',
+                          fontWeight: 600,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          borderRadius: '12px',
+                          background: 'rgba(255,255,255,0.08)',
+                          color: '#ffffff',
+                          border: '1px solid var(--glass-border)',
+                          flexShrink: 0
+                        }}
                         title="Add Emoji"
                       >
                         <Smile style={{ width: 14, height: 14, color: '#facc15' }} />
