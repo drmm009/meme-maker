@@ -363,6 +363,40 @@
   color: #ffffff !important;
 }
 
+/* Individual transparent buttons for Media tab toolbar (no background) */
+.media-ctx-btn {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: #ffffff !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  padding: 0 10px !important;
+  height: 34px !important;
+  min-height: 34px !important;
+  max-height: 34px !important;
+  font-size: 0.8rem !important;
+  font-weight: 600 !important;
+  cursor: pointer;
+  border-radius: 8px !important;
+  transition: background 0.15s ease, transform 0.1s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+  line-height: 1 !important;
+  box-sizing: border-box !important;
+}
+
+.media-ctx-btn:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #ffffff !important;
+}
+
+.media-ctx-btn:active {
+  transform: scale(0.94);
+}
+
 .vid-ctx-btn-delete {
   background: rgba(239, 68, 68, 0.85) !important;
   color: #ffffff !important;

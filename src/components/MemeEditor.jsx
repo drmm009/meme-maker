@@ -3397,71 +3397,61 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                     </div>
                   )}
                   {!(activeCaption || activeSticker || activeImageLayer) && activeTab === 'images' && (
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', width: '100%', overflowX: 'auto', paddingBottom: '4px', scrollbarWidth: 'none' }}>
-                      {/* CLUSTER 1: MEDIA SOURCES (Upload & Template) */}
-                      <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.08)', borderRadius: '10px', padding: '2px', gap: '2px', flexShrink: 0 }}>
-                        <label
-                          className="btn btn-xs vid-ctx-btn"
-                          style={{ flexShrink: 0, padding: '3px 8px', fontSize: '0.75rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', margin: 0, border: 'none', background: 'transparent', borderRadius: '8px' }}
-                        >
-                          <Upload style={{ width: 13, height: 13 }} /> Upload
-                          <input
-                            type="file"
-                            accept="image/*,video/*"
-                            style={{ display: 'none' }}
-                            onChange={handleFileUploadImageLayer}
-                          />
-                        </label>
-                        <button
-                          className="btn btn-xs vid-ctx-btn"
-                          onClick={() => setImagePickerTarget('layer')}
-                          style={{ flexShrink: 0, padding: '3px 8px', fontSize: '0.75rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px', border: 'none', background: 'transparent', borderRadius: '8px' }}
-                        >
-                          <LayoutGrid style={{ width: 13, height: 13 }} /> Template
-                        </button>
-                      </div>
-
-                      {/* CLUSTER 2: MEME STYLES */}
-                      <button
-                        className="btn btn-xs vid-ctx-btn"
-                        onClick={() => setShowStylesModal(true)}
-                        title="Meme Style (Tweet Card, Chat Bubbles)"
-                        style={{
-                          flexShrink: 0,
-                          padding: "4px 9px",
-                          fontSize: "0.75rem",
-                          fontWeight: 600,
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "4px",
-                          borderRadius: '10px',
-                          background: "linear-gradient(135deg, rgba(245, 158, 11, 0.25) 0%, rgba(239, 68, 68, 0.25) 100%)",
-                          border: "1px solid rgba(245, 158, 11, 0.4)",
-                          color: "#ffffff"
-                        }}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', width: '100%', overflowX: 'auto', paddingBottom: '4px', scrollbarWidth: 'none' }}>
+                      {/* 1. UPLOAD */}
+                      <label
+                        className="media-ctx-btn"
+                        title="Upload Image or Video"
                       >
-                        <Flame style={{ width: 13, height: 13, color: "#f59e0b" }} /> Styles
+                        <Upload style={{ width: 14, height: 14, color: 'var(--cyber-cyan)' }} />
+                        <span>Upload</span>
+                        <input
+                          type="file"
+                          accept="image/*,video/*"
+                          style={{ display: 'none' }}
+                          onChange={handleFileUploadImageLayer}
+                        />
+                      </label>
+
+                      {/* 2. TEMPLATE */}
+                      <button
+                        className="media-ctx-btn"
+                        onClick={() => setImagePickerTarget('layer')}
+                        title="Add Image from Templates"
+                      >
+                        <LayoutGrid style={{ width: 14, height: 14, color: 'var(--cyber-cyan)' }} />
+                        <span>Template</span>
                       </button>
 
-                      {/* CLUSTER 3: QUICK STICKERS & EMOJIS */}
-                      <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.08)', borderRadius: '10px', padding: '2px', gap: '2px', flexShrink: 0 }}>
-                        <button
-                          className="btn btn-icon btn-xs vid-ctx-btn"
-                          onClick={() => setShowMemeStickersModal(true)}
-                          title="Add Sticker"
-                          style={{ border: 'none', background: 'transparent', borderRadius: '8px' }}
-                        >
-                          <Sticker style={{ width: 15, height: 15 }} />
-                        </button>
-                        <button
-                          className="btn btn-icon btn-xs vid-ctx-btn"
-                          onClick={() => setShowEmojiModal(true)}
-                          title="Add Emoji"
-                          style={{ border: 'none', background: 'transparent', borderRadius: '8px' }}
-                        >
-                          <Smile style={{ width: 15, height: 15 }} />
-                        </button>
-                      </div>
+                      {/* 3. TWEET CARD */}
+                      <button
+                        className="media-ctx-btn"
+                        onClick={() => setShowStylesModal(true)}
+                        title="Add Tweet Card (Fake Twitter / X Post)"
+                      >
+                        <span style={{ fontSize: '0.85rem', fontWeight: 900, color: '#1d9bf0', lineHeight: 1 }}>𝕏</span>
+                        <span>Tweet Card</span>
+                      </button>
+
+                      {/* 4. STICKER */}
+                      <button
+                        className="media-ctx-btn"
+                        onClick={() => setShowMemeStickersModal(true)}
+                        title="Add Sticker"
+                      >
+                        <Sticker style={{ width: 14, height: 14, color: 'var(--cyber-cyan)' }} />
+                        <span>Sticker</span>
+                      </button>
+
+                      {/* 5. EMOJI */}
+                      <button
+                        className="media-ctx-btn"
+                        onClick={() => setShowEmojiModal(true)}
+                        title="Add Emoji"
+                      >
+                        <Smile style={{ width: 14, height: 14, color: '#facc15' }} />
+                        <span>Emoji</span>
+                      </button>
                     </div>
                   )}
 
@@ -5527,7 +5517,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                     type="button"
                     className="btn btn-xs hover-lift"
                     onClick={() => setShowStylesModal(true)}
-                    title="Meme Style (Tweet Card, Chat Bubbles)"
+                    title="Add Tweet Card (Fake Twitter / X Post)"
                     style={{
                       flex: 1,
                       padding: '8px 10px',
@@ -5539,12 +5529,12 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                       justifyContent: 'center',
                       gap: '5px',
                       whiteSpace: 'nowrap',
-                      background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.25) 0%, rgba(239, 68, 68, 0.25) 100%)',
-                      border: '1px solid rgba(245, 158, 11, 0.5)',
+                      background: 'rgba(29, 155, 240, 0.15)',
+                      border: '1px solid rgba(29, 155, 240, 0.4)',
                       color: '#ffffff'
                     }}
                   >
-                    <Flame size={14} style={{ color: '#f59e0b' }} /> Styles
+                    <span style={{ fontSize: '0.9rem', fontWeight: 900, color: '#1d9bf0', lineHeight: 1 }}>𝕏</span> Tweet Card
                   </button>
 
                   {activeImageLayer && (
@@ -6098,12 +6088,11 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
         templateName={template?.name}
       />
 
-      {/* Meme Style Modal */}
+      {/* Meme Style Modal (Tweet Card) */}
       <MemeStylesModal
         isOpen={showStylesModal}
         onClose={() => setShowStylesModal(false)}
         onAddTweetCard={handleAddTweetCard}
-        onAddChatBubble={handleAddChatBubble}
       />
 
     </div>
