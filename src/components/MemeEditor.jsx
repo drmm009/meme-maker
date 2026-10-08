@@ -3278,10 +3278,10 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                             border: drawTool === 'brush' ? '1px solid var(--cyber-cyan)' : '1px solid var(--glass-border)',
                             flexShrink: 0
                           }}
-                          title="Pen: Solid clean brush stroke (Tap for colors & size)"
+                          title="Brush: Solid clean brush stroke (Tap for colors & size)"
                         >
                           <Paintbrush style={{ width: 14, height: 14 }} />
-                          <span>Pen</span>
+                          <span>Brush</span>
                         </button>
 
                         <button
@@ -3374,10 +3374,30 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
 
                         <div className="vid-ctx-divider" style={{ width: 1, height: 20, background: 'rgba(255,255,255,0.2)', margin: '0 2px', flexShrink: 0 }} />
 
-                        {/* 2. ACTIVE TOOL BADGE */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '3px 8px', borderRadius: '8px', background: 'rgba(255,255,255,0.1)', fontSize: '11px', fontWeight: 700, color: '#fff', flexShrink: 0 }}>
-                          {drawTool === 'eraser' ? <Eraser style={{ width: 12, height: 12 }} /> : (drawTool === 'highlighter' ? <Highlighter style={{ width: 12, height: 12 }} /> : (drawTool === 'glow' ? <Sparkles style={{ width: 12, height: 12, color: '#ffe600' }} /> : <Paintbrush style={{ width: 12, height: 12 }} />))}
-                          <span>{drawTool === 'eraser' ? 'Eraser' : (drawTool === 'highlighter' ? 'Marker' : (drawTool === 'glow' ? 'Glow' : 'Pen'))}</span>
+                        {/* 2. ACTIVE TOOL ICON (No text label) */}
+                        <div
+                          title={drawTool === 'eraser' ? 'Eraser' : (drawTool === 'highlighter' ? 'Marker' : (drawTool === 'glow' ? 'Glow' : 'Brush'))}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            width: 26,
+                            height: 26,
+                            borderRadius: '8px',
+                            background: 'rgba(255,255,255,0.12)',
+                            color: '#ffffff',
+                            flexShrink: 0
+                          }}
+                        >
+                          {drawTool === 'eraser' ? (
+                            <Eraser style={{ width: 14, height: 14 }} />
+                          ) : drawTool === 'highlighter' ? (
+                            <Highlighter style={{ width: 14, height: 14 }} />
+                          ) : drawTool === 'glow' ? (
+                            <Sparkles style={{ width: 14, height: 14, color: '#ffe600' }} />
+                          ) : (
+                            <Paintbrush style={{ width: 14, height: 14 }} />
+                          )}
                         </div>
 
                         {/* 3. COLOR BAR (When not erasing) */}
@@ -4107,10 +4127,10 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                     className={`btn ${drawTool === 'brush' ? 'btn-primary' : 'btn-secondary'}`}
                     onClick={() => setDrawTool('brush')}
                     style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '7px 4px', gap: '4px', borderRadius: '10px', fontSize: '0.72rem', fontWeight: 600 }}
-                    title="Solid Pen / Brush"
+                    title="Solid Brush"
                   >
                     <Paintbrush className="icon-xs" style={{ width: '14px', height: '14px' }} />
-                    <span>Pen</span>
+                    <span>Brush</span>
                   </button>
                   <button
                     className={`btn ${drawTool === 'highlighter' ? 'btn-primary' : 'btn-secondary'}`}
