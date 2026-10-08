@@ -971,6 +971,41 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     pushHistory(nextCaps, stickers, imageLayers);
   };
 
+  const handleAddCurvedText = () => {
+    if (activeCaption) {
+      const current = activeCaption.curve || 0;
+      let nextCurve = 40;
+      if (current === 0) nextCurve = 40;
+      else if (current === 40) nextCurve = 75;
+      else if (current === 75) nextCurve = -40;
+      else if (current === -40) nextCurve = -75;
+      else nextCurve = 0;
+      updateActiveCaption('curve', nextCurve);
+      return;
+    }
+    const pos = getNonOverlappingPosition('caption', captions, stickers, imageLayers);
+    const maxZ = Math.max(-1, ...captions.map(c => c.zIndex ?? -1), ...stickers.map(s => s.zIndex ?? -1), ...(imageLayers || []).map(i => i.zIndex ?? -1));
+    const newCap = {
+      id: `cap-curved-${Date.now()}`,
+      text: 'CURVED TEXT',
+      x: pos.x,
+      y: pos.y,
+      fontSize: 50,
+      color: '#ffffff',
+      stroke: '#000000',
+      align: 'center',
+      fontFamily: 'Impact, sans-serif',
+      rotation: 0,
+      curve: 40,
+      zIndex: maxZ + 1
+    };
+    const nextCaps = [...captions, newCap];
+    setCaptions(nextCaps);
+    setActiveLayerId(newCap.id);
+    setActiveTab('text');
+    pushHistory(nextCaps, stickers, imageLayers);
+  };
+
   const handleAddPresetPhrase = (phraseText) => {
     const pos = getNonOverlappingPosition('phrase', captions, stickers, imageLayers);
     const referenceCap = captions.find(c => c.id === activeLayerId) || (captions.length > 0 ? captions[captions.length - 1] : null);
@@ -2677,6 +2712,18 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                       >
                         Aa
                       </button>
+
+                      <button
+                        className={`btn btn-xs vid-ctx-btn ${activeCaption.curve && activeCaption.curve !== 0 ? 'active' : ''}`}
+                        title="Curve / Arc Text"
+                        onClick={handleAddCurvedText}
+                        style={{ padding: '0 8px', fontSize: '11px', fontWeight: 600, flexShrink: 0, display: 'flex', alignItems: 'center', gap: '4px' }}
+                      >
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: activeCaption.curve ? '#06b6d4' : '#fff' }}>
+                          <path d="M4 18C4 11.3726 9.37258 6 16 6H20" />
+                        </svg>
+                        <span>{activeCaption.curve ? `${activeCaption.curve > 0 ? '+' : ''}${activeCaption.curve}°` : 'Arc'}</span>
+                      </button>
                     </>
                   )}
 
@@ -3755,6 +3802,29 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                       <Plus size={15} /> {activeCaption ? "Text" : "Add Text"}
                     </button>
 
+                    {/* Curved / Arc Text Button */}
+                    <button
+                      type="button"
+                      className={`btn btn-xs hover-lift ${(activeCaption?.curve && activeCaption.curve !== 0) ? 'btn-primary' : 'btn-secondary'}`}
+                      onClick={handleAddCurvedText}
+                      title={activeCaption ? "Toggle or adjust text curve / arc" : "Add curved / arched meme text"}
+                      style={{
+                        padding: "7px 14px",
+                        borderRadius: "20px",
+                        fontSize: "0.82rem",
+                        fontWeight: 700,
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "6px"
+                      }}
+                    >
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: (activeCaption?.curve && activeCaption.curve !== 0) ? "#ffffff" : "var(--cyber-cyan)" }}>
+                        <path d="M4 18C4 11.3726 9.37258 6 16 6H20" />
+                        <path d="M16 2L20 6L16 10" />
+                      </svg>
+                      <span>{activeCaption ? (activeCaption.curve ? `Arc (${activeCaption.curve > 0 ? '+' : ''}${activeCaption.curve}°)` : 'Curve') : 'Curved Text'}</span>
+                    </button>
+
                     {/* Modern Header Extension Button (Shown only when no text layer is selected) */}
                     {!activeCaption && (
                       <button
@@ -4226,6 +4296,91 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                     </div>
                   </div>
 
+                  {/* ROW 3: TEXT CURVE / ARC CONTROL */}
+                  {(!activeCaption.isBreakingNews && !activeCaption.isTweetCard) && (
+                    <div
+                      style={{
+                        background: 'var(--bg-surface-1)',
+                        padding: '10px 12px',
+                        borderRadius: '12px',
+                        border: '1px solid var(--glass-border)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '8px'
+                      }}
+                    >
+                      <div className="flex-between align-center">
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--cyber-cyan)" }}>
+                            <path d="M4 18C4 11.3726 9.37258 6 16 6H20" />
+                            <path d="M16 2L20 6L16 10" />
+                          </svg>
+                          <span style={{ fontSize: '0.74rem', fontWeight: 600, color: 'var(--text-muted)' }}>Curved / Arc Text</span>
+                          <span style={{ fontSize: '0.72rem', fontWeight: 700, color: (activeCaption.curve && activeCaption.curve !== 0) ? 'var(--cyber-cyan)' : 'var(--text-muted)' }}>
+                            {activeCaption.curve ? `${activeCaption.curve > 0 ? '+' : ''}${activeCaption.curve}°` : 'Flat'}
+                          </span>
+                        </div>
+                        {(activeCaption.curve !== undefined && activeCaption.curve !== 0) && (
+                          <button
+                            type="button"
+                            className="btn btn-xs btn-ghost"
+                            onClick={() => updateActiveCaption('curve', 0)}
+                            style={{ fontSize: '0.68rem', padding: '1px 6px', height: '18px', color: 'var(--text-muted)' }}
+                          >
+                            Reset Flat
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Preset Pills */}
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '4px' }}>
+                        {[
+                          { label: 'Flat', val: 0 },
+                          { label: 'Arch', val: 40 },
+                          { label: 'Deep Arch', val: 75 },
+                          { label: 'Smile', val: -40 },
+                          { label: 'Deep Smile', val: -75 },
+                        ].map((preset) => {
+                          const isActive = (activeCaption.curve || 0) === preset.val;
+                          return (
+                            <button
+                              key={preset.label}
+                              type="button"
+                              className={`btn btn-xs ${isActive ? 'btn-primary' : 'btn-ghost'}`}
+                              style={{
+                                fontSize: '0.66rem',
+                                padding: '4px 2px',
+                                borderRadius: '6px',
+                                border: isActive ? 'none' : '1px solid var(--glass-border)',
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis'
+                              }}
+                              onClick={() => updateActiveCaption('curve', preset.val)}
+                            >
+                              {preset.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      {/* Slider */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', width: '38px', textAlign: 'right' }}>Smile</span>
+                        <input
+                          type="range"
+                          min={-100}
+                          max={100}
+                          step={2}
+                          value={activeCaption.curve || 0}
+                          onChange={(e) => updateActiveCaption('curve', Number(e.target.value))}
+                          style={{ flex: 1, height: '4px', accentColor: 'var(--cyber-cyan)', margin: 0 }}
+                        />
+                        <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', width: '38px' }}>Arch</span>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Bubble Style Switcher (if this is a speech bubble) */}
                   {activeCaption.bubbleStyle && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '4px' }}>
@@ -4415,88 +4570,6 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         placeholder="Enter text..."
                         style={{ width: '100%', fontSize: '0.85rem', resize: 'vertical' }}
                       />
-                    </div>
-                  )}
-
-                  {/* Curved / Arc Text Control */}
-                  {(!activeCaption.isBreakingNews && !activeCaption.isTweetCard) && (
-                    <div
-                      style={{
-                        background: 'var(--bg-surface-1)',
-                        padding: '10px 12px',
-                        borderRadius: '12px',
-                        border: '1px solid var(--glass-border)',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '8px',
-                        marginTop: '4px'
-                      }}
-                    >
-                      <div className="flex-between align-center">
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <span style={{ fontSize: '0.74rem', fontWeight: 600, color: 'var(--text-muted)' }}>Text Curve / Arc</span>
-                          <span style={{ fontSize: '0.72rem', fontWeight: 700, color: (activeCaption.curve && activeCaption.curve !== 0) ? 'var(--cyber-cyan)' : 'var(--text-muted)' }}>
-                            {activeCaption.curve ? `${activeCaption.curve > 0 ? '+' : ''}${activeCaption.curve}°` : 'Flat'}
-                          </span>
-                        </div>
-                        {(activeCaption.curve !== undefined && activeCaption.curve !== 0) && (
-                          <button
-                            type="button"
-                            className="btn btn-xs btn-ghost"
-                            onClick={() => updateActiveCaption('curve', 0)}
-                            style={{ fontSize: '0.68rem', padding: '1px 6px', height: '18px', color: 'var(--text-muted)' }}
-                          >
-                            Reset Flat
-                          </button>
-                        )}
-                      </div>
-
-                      {/* Preset Pills */}
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '4px' }}>
-                        {[
-                          { label: 'Flat', val: 0 },
-                          { label: 'Arch', val: 40 },
-                          { label: 'Deep Arch', val: 75 },
-                          { label: 'Smile', val: -40 },
-                          { label: 'Deep Smile', val: -75 },
-                        ].map((preset) => {
-                          const isActive = (activeCaption.curve || 0) === preset.val;
-                          return (
-                            <button
-                              key={preset.label}
-                              type="button"
-                              className={`btn btn-xs ${isActive ? 'btn-primary' : 'btn-ghost'}`}
-                              style={{
-                                fontSize: '0.66rem',
-                                padding: '4px 2px',
-                                borderRadius: '6px',
-                                border: isActive ? 'none' : '1px solid var(--glass-border)',
-                                whiteSpace: 'nowrap',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis'
-                              }}
-                              onClick={() => updateActiveCaption('curve', preset.val)}
-                            >
-                              {preset.label}
-                            </button>
-                          );
-                        })}
-                      </div>
-
-                      {/* Slider */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', width: '38px', textAlign: 'right' }}>Smile</span>
-                        <input
-                          type="range"
-                          min={-100}
-                          max={100}
-                          step={2}
-                          value={activeCaption.curve || 0}
-                          onChange={(e) => updateActiveCaption('curve', Number(e.target.value))}
-                          style={{ flex: 1, height: '4px', accentColor: 'var(--cyber-cyan)', margin: 0 }}
-                        />
-                        <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', width: '38px' }}>Arch</span>
-                      </div>
                     </div>
                   )}
                 </div>
