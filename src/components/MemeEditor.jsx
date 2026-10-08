@@ -3489,21 +3489,8 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           </span>
                         </div>
 
-                        {/* 5. ACTIONS: UNDO & CLEAR */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '3px', marginLeft: 'auto', flexShrink: 0 }}>
-                          <button
-                            className="btn btn-icon btn-xs vid-ctx-btn"
-                            title={drawings.length > 0 ? `Undo Stroke (${drawings.length})` : "Undo Stroke (No strokes)"}
-                            onClick={handleUndoDrawing}
-                            disabled={drawings.length === 0}
-                            style={{
-                              borderRadius: '8px',
-                              opacity: drawings.length === 0 ? 0.35 : 1,
-                              cursor: drawings.length === 0 ? 'default' : 'pointer'
-                            }}
-                          >
-                            <Undo style={{ width: 14, height: 14 }} />
-                          </button>
+                        {/* 5. ACTIONS: CLEAR */}
+                        <div style={{ display: 'flex', alignItems: 'center', marginLeft: 'auto', flexShrink: 0 }}>
                           <button
                             className="btn btn-icon btn-xs vid-ctx-btn vid-ctx-btn-delete"
                             title={drawings.length > 0 ? "Clear All Drawings" : "Clear Drawings (Empty)"}
