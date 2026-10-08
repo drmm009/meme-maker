@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import AiCaptionModal from './AiCaptionModal';
 import MemeStylesModal from './MemeStylesModal';
+import BubblePickerModal from './BubblePickerModal';
 import { downloadImageHelper, recordCanvasAsVideo } from '../utils/downloadHelper';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MEME_TEMPLATES, CATEGORIES } from '../data/templates';
@@ -514,6 +515,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
   const [exportedImageUri, setExportedImageUri] = useState(null);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [showAiModal, setShowAiModal] = useState(false);
+  const [showBubblePickerModal, setShowBubblePickerModal] = useState(false);
   const [exportFormat, setExportFormat] = useState('png'); // 'png' | 'jpeg' | 'webp'
   const [exportQuality, setExportQuality] = useState(0.92);
   const [exportPreset, setExportPreset] = useState('hd'); // 'hd' | 'discord' | 'compact'
@@ -872,32 +874,100 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     }, 50);
   };
 
-  // 1-Tap Comic Speech Bubble
-  const handleAddSpeechBubble = (style = 'speech-left') => {
-    const pos = getNonOverlappingPosition('bubble', captions, stickers, imageLayers);
+  // Chat & Speech Bubble Generator (iPhone, WhatsApp, Comic)
+  const handleAddBubble = (data = {}) => {
+    const style = typeof data === 'string' ? data : (data.style || 'imessage-send');
+    const text = (typeof data === 'object' && data.text) ? data.text : (
+      style.startsWith('imessage') || style.startsWith('whatsapp')
+        ? 'are you free to hop on a quick 5-min call?'
+        : 'Wait a minute...'
+    );
+
     const maxZ = Math.max(-1, ...captions.map(c => c.zIndex ?? -1), ...stickers.map(s => s.zIndex ?? -1), ...(imageLayers || []).map(i => i.zIndex ?? -1));
+
+    let bgColor = '#007aff';
+    let textColor = '#ffffff';
+    let fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    let stroke = 'transparent';
+    let strokeWidth = 0;
+    let width = 0.65;
+
+    if (style === 'imessage-send') {
+      bgColor = '#007aff';
+      textColor = '#ffffff';
+    } else if (style === 'imessage-receive') {
+      bgColor = '#e9e9eb';
+      textColor = '#000000';
+    } else if (style === 'whatsapp-send') {
+      bgColor = '#005c4b';
+      textColor = '#ffffff';
+    } else if (style === 'whatsapp-receive') {
+      bgColor = '#202c33';
+      textColor = '#ffffff';
+    } else if (style === 'speech-left' || style === 'speech-right') {
+      bgColor = '#ffffff';
+      textColor = '#000000';
+      fontFamily = 'Montserrat, sans-serif';
+      stroke = '#000000';
+      strokeWidth = 3;
+      width = 0.55;
+    } else if (style === 'thought') {
+      bgColor = '#ffffff';
+      textColor = '#000000';
+      fontFamily = 'Montserrat, sans-serif';
+      stroke = '#000000';
+      strokeWidth = 3;
+      width = 0.55;
+    } else if (style === 'shout') {
+      bgColor = '#ffe600';
+      textColor = '#000000';
+      fontFamily = 'Impact, sans-serif';
+      stroke = '#000000';
+      strokeWidth = 3;
+      width = 0.60;
+    }
+
+    if (activeCaption && activeCaption.bubbleStyle) {
+      updateActiveCaptionProps({
+        bubbleStyle: style,
+        text: text,
+        bgColor: bgColor,
+        color: textColor,
+        stroke: stroke,
+        strokeWidth: strokeWidth,
+        fontFamily: fontFamily,
+        width: width
+      });
+      return;
+    }
+
+    const pos = getNonOverlappingPosition('phrase', captions, stickers, imageLayers);
+
     const newCap = {
       id: `bubble-${Date.now()}`,
-      text: 'Wait a minute...',
-      x: pos.x,
-      y: Math.max(0.2, pos.y - 0.1),
-      fontSize: 26,
-      fontFamily: 'Montserrat, sans-serif',
-      color: '#000000',
-      bgColor: '#ffffff',
-      stroke: '#000000',
-      strokeWidth: 3,
+      text: text,
+      bubbleStyle: style,
+      bgColor: bgColor,
+      color: textColor,
+      stroke: stroke,
+      strokeWidth: strokeWidth,
       align: 'center',
-      width: 0.55,
-      zIndex: maxZ + 1,
-      bubbleStyle: style
+      x: pos.x,
+      y: pos.y,
+      fontSize: 26,
+      fontFamily: fontFamily,
+      width: width,
+      zIndex: maxZ + 1
     };
+
     const nextCaps = [...captions, newCap];
     setCaptions(nextCaps);
     setActiveLayerId(newCap.id);
     setActiveTab('text');
-    pushHistory(nextCaps, stickers, imageLayers);
+    pushHistory(nextCaps, stickers, imageLayers, drawings, canvasHeader, canvasFooter, demotivational);
   };
+
+  const handleAddSpeechBubble = handleAddBubble;
 
   // AI Meme Caption Application
   const handleApplyAiCaption = (captionText, target = 'caption') => {
@@ -2840,6 +2910,31 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           <Sparkles style={{ width: 13, height: 13, color: hasActiveEffects ? 'var(--cyber-cyan)' : '#ec4899' }} />
                           <span>Effects{activeCaption.curve ? ` (${activeCaption.curve > 0 ? '+' : ''}${activeCaption.curve}°)` : ''}</span>
                         </button>
+
+                        {/* CLUSTER 4: BUBBLE LAYOUT SWITCHER (iPhone, WhatsApp, Comic) */}
+                        {activeCaption.bubbleStyle && (
+                          <button
+                            className="btn btn-xs vid-ctx-btn"
+                            title="Change Bubble Layout (WhatsApp, iPhone, Comic)"
+                            onClick={() => setShowBubblePickerModal(true)}
+                            style={{
+                              padding: '4px 10px',
+                              fontSize: '0.75rem',
+                              fontWeight: 600,
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '5px',
+                              borderRadius: '10px',
+                              flexShrink: 0,
+                              background: 'rgba(0, 122, 255, 0.18)',
+                              borderColor: '#007aff',
+                              color: '#ffffff'
+                            }}
+                          >
+                            <MessageSquare style={{ width: 13, height: 13, color: '#007aff' }} />
+                            <span>Layout</span>
+                          </button>
+                        )}
                       </>
                     );
                   })()}
@@ -3121,8 +3216,8 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                       <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
                         <button
                           className="btn btn-xs vid-ctx-btn"
-                          onClick={() => handleAddSpeechBubble('speech-left')}
-                          title="Add Comic Speech Bubble"
+                          onClick={() => setShowBubblePickerModal(true)}
+                          title="Add Chat & Speech Bubble (iPhone, WhatsApp, Comic)"
                           style={{ padding: "4px 8px", fontSize: "0.75rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "4px", borderRadius: "10px" }}
                         >
                           <MessageSquare style={{ width: 13, height: 13, color: "var(--cyber-cyan)" }} /> Bubble
@@ -4355,18 +4450,16 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                       </button>
                     )}
 
-                    {/* Speech Bubble Button */}
-                    {!activeCaption && (
-                      <button
-                        type="button"
-                        className="btn btn-xs btn-secondary hover-lift"
-                        onClick={() => handleAddSpeechBubble('speech-left')}
-                        title="Add comic speech bubble callout"
-                        style={{ padding: "7px 14px", borderRadius: "20px", fontSize: "0.82rem", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: "6px" }}
-                      >
-                        <MessageSquare size={15} style={{ color: "var(--cyber-cyan)" }} /> Bubble
-                      </button>
-                    )}
+                    {/* Speech & Chat Bubble Button */}
+                    <button
+                      type="button"
+                      className={`btn btn-xs hover-lift ${activeCaption?.bubbleStyle ? 'btn-primary' : 'btn-secondary'}`}
+                      onClick={() => setShowBubblePickerModal(true)}
+                      title={activeCaption?.bubbleStyle ? "Change Chat or Speech Bubble Layout (iPhone, WhatsApp, Comic)" : "Add Chat or Speech Bubble (iPhone, WhatsApp, Comic)"}
+                      style={{ padding: "7px 14px", borderRadius: "20px", fontSize: "0.82rem", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: "6px" }}
+                    >
+                      <MessageSquare size={15} style={{ color: activeCaption?.bubbleStyle ? "#ffffff" : "var(--cyber-cyan)" }} /> Bubble
+                    </button>
 
                     {/* AI Meme Caption Generator Button */}
                     {!activeCaption && (
@@ -4851,22 +4944,32 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                     </div>
                   )}
 
-                  {/* Bubble Style Switcher (if this is a speech bubble) */}
+                  {/* Bubble Style Switcher (if this is a speech or chat bubble) */}
                   {activeCaption.bubbleStyle && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '4px' }}>
-                      <label style={{ margin: 0, fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)' }}>
-                        Bubble Style
-                      </label>
+                      <div className="flex-between align-center">
+                        <label style={{ margin: 0, fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)' }}>
+                          Bubble Layout & Style
+                        </label>
+                        <button
+                          type="button"
+                          className="btn btn-ghost btn-xs"
+                          onClick={() => setShowBubblePickerModal(true)}
+                          style={{ fontSize: '0.68rem', padding: '2px 6px', color: 'var(--cyber-cyan)' }}
+                        >
+                          More Layouts...
+                        </button>
+                      </div>
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '4px' }}>
                         {[
-                          { id: 'speech-left', label: 'Tail L' },
-                          { id: 'speech-right', label: 'Tail R' },
-                          { id: 'thought', label: 'Thought' },
-                          { id: 'shout', label: 'Shout' },
-                          { id: 'imessage-send', label: 'iMsg 📤' },
-                          { id: 'imessage-receive', label: 'iMsg 📥' },
+                          { id: 'imessage-send', label: 'iPhone 📤' },
+                          { id: 'imessage-receive', label: 'iPhone 📥' },
                           { id: 'whatsapp-send', label: 'WA 📤' },
                           { id: 'whatsapp-receive', label: 'WA 📥' },
+                          { id: 'speech-left', label: 'Tail Left' },
+                          { id: 'speech-right', label: 'Tail Right' },
+                          { id: 'thought', label: 'Thought' },
+                          { id: 'shout', label: 'Shout 💥' },
                         ].map(style => (
                           <button
                             key={style.id}
@@ -4876,11 +4979,16 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                             onClick={() => {
                               let nextBg = activeCaption.bgColor;
                               let nextColor = activeCaption.color;
-                              if (style.id === 'imessage-send') { nextBg = '#007aff'; nextColor = '#ffffff'; }
-                              else if (style.id === 'imessage-receive') { nextBg = '#e9e9eb'; nextColor = '#000000'; }
-                              else if (style.id === 'whatsapp-send') { nextBg = '#005c4b'; nextColor = '#ffffff'; }
-                              else if (style.id === 'whatsapp-receive') { nextBg = '#202c33'; nextColor = '#ffffff'; }
-                              updateActiveCaptionProps({ bubbleStyle: style.id, bgColor: nextBg, color: nextColor });
+                              let nextFont = activeCaption.fontFamily;
+                              let nextStroke = activeCaption.stroke;
+                              let nextStrokeWidth = activeCaption.strokeWidth;
+                              if (style.id === 'imessage-send') { nextBg = '#007aff'; nextColor = '#ffffff'; nextFont = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'; nextStroke = 'transparent'; nextStrokeWidth = 0; }
+                              else if (style.id === 'imessage-receive') { nextBg = '#e9e9eb'; nextColor = '#000000'; nextFont = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'; nextStroke = 'transparent'; nextStrokeWidth = 0; }
+                              else if (style.id === 'whatsapp-send') { nextBg = '#005c4b'; nextColor = '#ffffff'; nextFont = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'; nextStroke = 'transparent'; nextStrokeWidth = 0; }
+                              else if (style.id === 'whatsapp-receive') { nextBg = '#202c33'; nextColor = '#ffffff'; nextFont = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'; nextStroke = 'transparent'; nextStrokeWidth = 0; }
+                              else if (style.id === 'speech-left' || style.id === 'speech-right' || style.id === 'thought') { nextBg = '#ffffff'; nextColor = '#000000'; nextFont = 'Montserrat, sans-serif'; nextStroke = '#000000'; nextStrokeWidth = 3; }
+                              else if (style.id === 'shout') { nextBg = '#ffe600'; nextColor = '#000000'; nextFont = 'Impact, sans-serif'; nextStroke = '#000000'; nextStrokeWidth = 3; }
+                              updateActiveCaptionProps({ bubbleStyle: style.id, bgColor: nextBg, color: nextColor, fontFamily: nextFont, stroke: nextStroke, strokeWidth: nextStrokeWidth });
                             }}
                           >
                             {style.label}
@@ -5869,6 +5977,16 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
         onClose={() => setShowStylesModal(false)}
         onAddTweetCard={handleAddTweetCard}
         onAddChatBubble={handleAddChatBubble}
+      />
+
+      {/* Bubble Style & Layout Picker Modal */}
+      <BubblePickerModal
+        isOpen={showBubblePickerModal}
+        onClose={() => setShowBubblePickerModal(false)}
+        onAddBubble={handleAddBubble}
+        initialStyle={activeCaption?.bubbleStyle || 'imessage-send'}
+        initialText={activeCaption?.bubbleStyle ? activeCaption.text : 'are you free to hop on a quick 5-min call?'}
+        isEditing={Boolean(activeCaption?.bubbleStyle)}
       />
     </div>
       )}

@@ -173,7 +173,7 @@ const drawSpeechBubble = (ctx, x, y, width, height, style, fillColor = '#ffffff'
     ctx.fill();
     ctx.stroke();
   } else if (style === 'imessage-send') {
-    ctx.fillStyle = '#007aff';
+    ctx.fillStyle = fillColor || '#007aff';
     drawRoundRect(ctx, x, y, width, height, 16);
     ctx.beginPath();
     ctx.moveTo(x + width - 6, y + height);
@@ -182,7 +182,7 @@ const drawSpeechBubble = (ctx, x, y, width, height, style, fillColor = '#ffffff'
     ctx.fill();
   } else if (style === 'imessage-receive') {
     const isDark = isColorDark(fillColor);
-    ctx.fillStyle = isDark ? '#262628' : '#e9e9eb';
+    ctx.fillStyle = fillColor || (isDark ? '#262628' : '#e9e9eb');
     drawRoundRect(ctx, x, y, width, height, 16);
     ctx.beginPath();
     ctx.moveTo(x + 6, y + height);
@@ -190,7 +190,7 @@ const drawSpeechBubble = (ctx, x, y, width, height, style, fillColor = '#ffffff'
     ctx.quadraticCurveTo(x, y + height + 2, x + 14, y + height);
     ctx.fill();
   } else if (style === 'whatsapp-send') {
-    ctx.fillStyle = '#005c4b';
+    ctx.fillStyle = fillColor || '#005c4b';
     drawRoundRect(ctx, x, y, width, height, 10);
     ctx.beginPath();
     ctx.moveTo(x + width, y + height - 12);
@@ -200,7 +200,7 @@ const drawSpeechBubble = (ctx, x, y, width, height, style, fillColor = '#ffffff'
     ctx.fill();
   } else if (style === 'whatsapp-receive') {
     const isDark = isColorDark(fillColor);
-    ctx.fillStyle = isDark ? '#202c33' : '#ffffff';
+    ctx.fillStyle = fillColor || (isDark ? '#202c33' : '#ffffff');
     drawRoundRect(ctx, x, y, width, height, 10);
     ctx.beginPath();
     ctx.moveTo(x, y + height - 12);
