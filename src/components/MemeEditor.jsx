@@ -205,7 +205,7 @@ function CanvasColorPicker({ canvasBgColor, setCanvasBgColor }) {
   return (
     <div
       className="btn btn-xs vid-ctx-btn"
-      style={{ position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '4px 10px' }}
+      style={{ position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '4px 10px', borderRadius: '10px' }}
       title="Canvas Color"
     >
       <div style={{ width: 14, height: 14, borderRadius: '50%', background: localColor || '#ffffff', border: '2px solid rgba(255,255,255,0.4)' }} />
@@ -467,8 +467,6 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
   const [isMobileTabsFolded, setIsMobileTabsFolded] = useState(true);
   const [showWatermarkMenu, setShowWatermarkMenu] = useState(false);
   const [showFontMenu, setShowFontMenu] = useState(false);
-  const [showOpacityMenu, setShowOpacityMenu] = useState(false);
-  const [showCurveMenu, setShowCurveMenu] = useState(false);
   const [showTextEffectsMenu, setShowTextEffectsMenu] = useState(false);
   const [showImageFilterMenu, setShowImageFilterMenu] = useState(false);
   const [showLayerMenu, setShowLayerMenu] = useState(false);
@@ -3096,126 +3094,133 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                   {/* TAB SPECIFIC TOOLS (when nothing selected) */}
                   {!(activeCaption || activeSticker || activeImageLayer) && activeTab === "text" && (
                     <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                      {/* CLUSTER 1: PRIMARY ACTION (+ Add Text) */}
                       <button
                         className="btn btn-xs vid-ctx-btn"
                         onClick={handleAddCaption}
-                        style={{ padding: "4px 8px", fontSize: "0.75rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "4px" }}
+                        style={{ padding: "4px 10px", fontSize: "0.75rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "5px", borderRadius: "10px", background: 'var(--primary-gradient)', color: '#fff', border: 'none', flexShrink: 0 }}
                       >
                         <Plus style={{ width: 14, height: 14 }} /> Add Text
                       </button>
 
-                      <button
-                        className={`btn btn-xs vid-ctx-btn ${canvasHeader.enabled ? 'active' : ''}`}
-                        onClick={handleToggleCanvasHeader}
-                        title="Toggle Modern Canvas Header Extension (Twitter / Reddit meme style)"
-                        style={{
-                          padding: "4px 9px",
-                          fontSize: "0.75rem",
-                          fontWeight: 700,
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "4px",
-                          background: canvasHeader.enabled
-                            ? "var(--primary-gradient)"
-                            : "linear-gradient(135deg, rgba(168, 85, 247, 0.3) 0%, rgba(6, 182, 212, 0.3) 100%)",
-                          border: "1px solid rgba(168, 85, 247, 0.5)",
-                          color: "#ffffff"
-                        }}
-                      >
-                        <PanelTop style={{ width: 13, height: 13, color: canvasHeader.enabled ? '#fff' : "var(--cyber-cyan)" }} />
-                        <span>{canvasHeader.enabled ? 'Header (On)' : 'Header'}</span>
-                      </button>
-
-                      <button
-                        className={`btn btn-xs vid-ctx-btn ${canvasFooter.enabled ? 'active' : ''}`}
-                        onClick={handleToggleCanvasFooter}
-                        title="Toggle Modern Canvas Footer Extension (Twitter / Reddit meme style)"
-                        style={{
-                          padding: "4px 9px",
-                          fontSize: "0.75rem",
-                          fontWeight: 700,
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "4px",
-                          background: canvasFooter.enabled
-                            ? "var(--primary-gradient)"
-                            : "linear-gradient(135deg, rgba(168, 85, 247, 0.3) 0%, rgba(6, 182, 212, 0.3) 100%)",
-                          border: "1px solid rgba(168, 85, 247, 0.5)",
-                          color: "#ffffff"
-                        }}
-                      >
-                        <PanelBottom style={{ width: 13, height: 13, color: canvasFooter.enabled ? '#fff' : "var(--cyber-cyan)" }} />
-                        <span>{canvasFooter.enabled ? 'Footer (On)' : 'Footer'}</span>
-                      </button>
-
-                      <div className="vid-ctx-divider"  />
+                      {/* CLUSTER 2: CANVAS BANNERS (Header & Footer Segmented Pill) */}
+                      <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.08)', borderRadius: '10px', padding: '2px', gap: '2px', flexShrink: 0 }}>
+                        <button
+                          className={`btn btn-xs vid-ctx-btn ${canvasHeader.enabled ? 'active' : ''}`}
+                          onClick={handleToggleCanvasHeader}
+                          title="Toggle Canvas Header Extension"
+                          style={{
+                            padding: "3px 8px",
+                            fontSize: "0.75rem",
+                            fontWeight: 600,
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "4px",
+                            border: 'none',
+                            background: canvasHeader.enabled ? 'var(--primary-gradient)' : 'transparent',
+                            color: "#ffffff",
+                            borderRadius: '8px'
+                          }}
+                        >
+                          <PanelTop style={{ width: 13, height: 13 }} />
+                          <span>{canvasHeader.enabled ? 'Header (On)' : 'Header'}</span>
+                        </button>
+                        <button
+                          className={`btn btn-xs vid-ctx-btn ${canvasFooter.enabled ? 'active' : ''}`}
+                          onClick={handleToggleCanvasFooter}
+                          title="Toggle Canvas Footer Extension"
+                          style={{
+                            padding: "3px 8px",
+                            fontSize: "0.75rem",
+                            fontWeight: 600,
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "4px",
+                            border: 'none',
+                            background: canvasFooter.enabled ? 'var(--primary-gradient)' : 'transparent',
+                            color: "#ffffff",
+                            borderRadius: '8px'
+                          }}
+                        >
+                          <PanelBottom style={{ width: 13, height: 13 }} />
+                          <span>{canvasFooter.enabled ? 'Footer (On)' : 'Footer'}</span>
+                        </button>
+                      </div>
 
                       <CanvasColorPicker canvasBgColor={canvasBgColor} setCanvasBgColor={handleSetCanvasBgColor} />
-                      
-                      <div className="vid-ctx-divider" />
 
-                      <button
-                        className="btn btn-xs vid-ctx-btn"
-                        onClick={() => handleAddSpeechBubble('speech-left')}
-                        title="Add Comic Speech Bubble"
-                        style={{ padding: "4px 8px", fontSize: "0.75rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "4px" }}
-                      >
-                        <MessageSquare style={{ width: 13, height: 13, color: "var(--cyber-cyan)" }} /> Bubble
-                      </button>
+                      {/* CLUSTER 3: CREATIVE TOOLS (Bubble & AI Captions) */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
+                        <button
+                          className="btn btn-xs vid-ctx-btn"
+                          onClick={() => handleAddSpeechBubble('speech-left')}
+                          title="Add Comic Speech Bubble"
+                          style={{ padding: "4px 8px", fontSize: "0.75rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "4px", borderRadius: "10px" }}
+                        >
+                          <MessageSquare style={{ width: 13, height: 13, color: "var(--cyber-cyan)" }} /> Bubble
+                        </button>
 
-                      <button
-                        className="btn btn-xs vid-ctx-btn"
-                        onClick={() => setShowAiModal(true)}
-                        title="AI Meme Captions"
-                        style={{
-                          padding: "4px 8px",
-                          fontSize: "0.75rem",
-                          fontWeight: 600,
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "4px",
-                          background: "linear-gradient(135deg, rgba(168, 85, 247, 0.3) 0%, rgba(236, 72, 153, 0.3) 100%)",
-                          border: "1px solid rgba(236, 72, 153, 0.5)",
-                          color: "#ffffff"
-                        }}
-                      >
-                        <Sparkles style={{ width: 13, height: 13, color: "#ec4899" }} /> AI Captions
-                      </button>
+                        <button
+                          className="btn btn-xs vid-ctx-btn"
+                          onClick={() => setShowAiModal(true)}
+                          title="AI Meme Captions"
+                          style={{
+                            padding: "4px 9px",
+                            fontSize: "0.75rem",
+                            fontWeight: 600,
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "4px",
+                            borderRadius: "10px",
+                            background: "linear-gradient(135deg, rgba(168, 85, 247, 0.3) 0%, rgba(236, 72, 153, 0.3) 100%)",
+                            border: "1px solid rgba(236, 72, 153, 0.5)",
+                            color: "#ffffff"
+                          }}
+                        >
+                          <Sparkles style={{ width: 13, height: 13, color: "#ec4899" }} /> AI Captions
+                        </button>
+                      </div>
                     </div>
                   )}
                   {!(activeCaption || activeSticker || activeImageLayer) && activeTab === 'images' && (
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', width: '100%', overflowX: 'auto', paddingBottom: '4px', scrollbarWidth: 'none' }}>
-                      <label
-                        className="btn btn-xs vid-ctx-btn"
-                        style={{ flexShrink: 0, padding: '4px 8px', fontSize: '0.75rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', margin: 0 }}
-                      >
-                        <Upload style={{ width: 14, height: 14 }} /> Upload
-                        <input
-                          type="file"
-                          accept="image/*,video/*"
-                          style={{ display: 'none' }}
-                          onChange={handleFileUploadImageLayer}
-                        />
-                      </label>
-                      <button
-                        className="btn btn-xs vid-ctx-btn"
-                        onClick={() => setImagePickerTarget('layer')}
-                        style={{ flexShrink: 0, padding: '4px 8px', fontSize: '0.75rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}
-                      >
-                        <LayoutGrid style={{ width: 14, height: 14 }} /> Template
-                      </button>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', width: '100%', overflowX: 'auto', paddingBottom: '4px', scrollbarWidth: 'none' }}>
+                      {/* CLUSTER 1: MEDIA SOURCES (Upload & Template) */}
+                      <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.08)', borderRadius: '10px', padding: '2px', gap: '2px', flexShrink: 0 }}>
+                        <label
+                          className="btn btn-xs vid-ctx-btn"
+                          style={{ flexShrink: 0, padding: '3px 8px', fontSize: '0.75rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', margin: 0, border: 'none', background: 'transparent', borderRadius: '8px' }}
+                        >
+                          <Upload style={{ width: 13, height: 13 }} /> Upload
+                          <input
+                            type="file"
+                            accept="image/*,video/*"
+                            style={{ display: 'none' }}
+                            onChange={handleFileUploadImageLayer}
+                          />
+                        </label>
+                        <button
+                          className="btn btn-xs vid-ctx-btn"
+                          onClick={() => setImagePickerTarget('layer')}
+                          style={{ flexShrink: 0, padding: '3px 8px', fontSize: '0.75rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px', border: 'none', background: 'transparent', borderRadius: '8px' }}
+                        >
+                          <LayoutGrid style={{ width: 13, height: 13 }} /> Template
+                        </button>
+                      </div>
+
+                      {/* CLUSTER 2: MEME STYLES */}
                       <button
                         className="btn btn-xs vid-ctx-btn"
                         onClick={() => setShowStylesModal(true)}
                         title="Meme Culture Staples & Social Formats"
                         style={{
                           flexShrink: 0,
-                          padding: "4px 8px",
+                          padding: "4px 9px",
                           fontSize: "0.75rem",
                           fontWeight: 600,
                           display: "flex",
                           alignItems: "center",
                           gap: "4px",
+                          borderRadius: '10px',
                           background: demotivational.enabled
                             ? "linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)"
                             : "linear-gradient(135deg, rgba(245, 158, 11, 0.25) 0%, rgba(239, 68, 68, 0.25) 100%)",
@@ -3225,21 +3230,26 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                       >
                         <Flame style={{ width: 13, height: 13, color: "#f59e0b" }} /> Styles
                       </button>
-                      <div className="vid-ctx-divider" style={{ width: 1, height: 20, background: 'rgba(255,255,255,0.2)', margin: '0 4px', flexShrink: 0 }} />
-                      <button
-                        className="btn btn-icon btn-xs vid-ctx-btn"
-                        onClick={() => setShowMemeStickersModal(true)}
-                        title="Add Sticker"
-                      >
-                        <Sticker style={{ width: 16, height: 16 }} />
-                      </button>
-                      <button
-                        className="btn btn-icon btn-xs vid-ctx-btn"
-                        onClick={() => setShowEmojiModal(true)}
-                        title="Add Emoji"
-                      >
-                        <Smile style={{ width: 16, height: 16 }} />
-                      </button>
+
+                      {/* CLUSTER 3: QUICK STICKERS & EMOJIS */}
+                      <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.08)', borderRadius: '10px', padding: '2px', gap: '2px', flexShrink: 0 }}>
+                        <button
+                          className="btn btn-icon btn-xs vid-ctx-btn"
+                          onClick={() => setShowMemeStickersModal(true)}
+                          title="Add Sticker"
+                          style={{ border: 'none', background: 'transparent', borderRadius: '8px' }}
+                        >
+                          <Sticker style={{ width: 15, height: 15 }} />
+                        </button>
+                        <button
+                          className="btn btn-icon btn-xs vid-ctx-btn"
+                          onClick={() => setShowEmojiModal(true)}
+                          title="Add Emoji"
+                          style={{ border: 'none', background: 'transparent', borderRadius: '8px' }}
+                        >
+                          <Smile style={{ width: 15, height: 15 }} />
+                        </button>
+                      </div>
                     </div>
                   )}
 
@@ -3327,41 +3337,52 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', width: '100%', flexWrap: 'nowrap', overflowX: 'auto', paddingBottom: '2px', scrollbarWidth: 'none' }}>
                       {!showWatermarkMenu ? (
                         <>
-                          <CanvasColorPicker canvasBgColor={canvasBgColor} setCanvasBgColor={handleSetCanvasBgColor} />
+                          {/* CLUSTER 1: CANVAS SETTINGS (Color & Flip Canvas) */}
+                          <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.08)', borderRadius: '10px', padding: '2px', gap: '3px', flexShrink: 0 }}>
+                            <CanvasColorPicker canvasBgColor={canvasBgColor} setCanvasBgColor={handleSetCanvasBgColor} />
+                            <button
+                              className={`btn btn-xs vid-ctx-btn ${canvasFlipX ? 'active' : ''}`}
+                              title="Flip Canvas Horizontal (Mirror Background Template)"
+                              onClick={handleToggleCanvasFlip}
+                              style={{
+                                padding: '3px 8px',
+                                fontSize: '0.75rem',
+                                fontWeight: 600,
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                                border: 'none',
+                                background: canvasFlipX ? 'rgba(6, 182, 212, 0.25)' : 'transparent',
+                                color: canvasFlipX ? 'var(--cyber-cyan)' : '#ffffff',
+                                borderRadius: '8px'
+                              }}
+                            >
+                              <FlipHorizontal style={{ width: 13, height: 13 }} />
+                              <span>{canvasFlipX ? 'Flipped' : 'Flip Canvas'}</span>
+                            </button>
+                          </div>
 
-                          <div className="vid-ctx-divider"  />
-
+                          {/* CLUSTER 2: WATERMARK BRANDING */}
                           <button
-                            className={`btn btn-xs vid-ctx-btn ${canvasFlipX ? 'active' : ''}`}
-                            title="Flip Canvas Horizontal (Mirror Background Template)"
-                            onClick={handleToggleCanvasFlip}
+                            className={`btn btn-xs vid-ctx-btn ${watermark?.enabled ? 'active' : ''}`}
+                            onClick={() => {
+                                setShowWatermarkMenu(true);
+                                if (!watermark?.enabled) updateWatermark('enabled', true);
+                            }}
                             style={{
                               padding: '4px 10px',
                               fontSize: '0.75rem',
                               fontWeight: 600,
                               display: 'flex',
                               alignItems: 'center',
-                              gap: '6px',
-                              background: canvasFlipX ? 'rgba(6, 182, 212, 0.2)' : undefined,
-                              borderColor: canvasFlipX ? 'var(--cyber-cyan)' : undefined,
-                              color: canvasFlipX ? 'var(--cyber-cyan)' : '#ffffff'
+                              gap: '5px',
+                              borderRadius: '10px',
+                              background: watermark?.enabled ? 'var(--primary-gradient)' : undefined,
+                              color: '#ffffff',
+                              flexShrink: 0
                             }}
                           >
-                            <FlipHorizontal style={{ width: 14, height: 14 }} />
-                            <span>{canvasFlipX ? 'Flipped' : 'Flip Canvas'}</span>
-                          </button>
-
-                          <div className="vid-ctx-divider"  />
-                          
-                          <button
-                            className="btn btn-xs vid-ctx-btn"
-                            onClick={() => {
-                                setShowWatermarkMenu(true);
-                                if (!watermark?.enabled) updateWatermark('enabled', true);
-                            }}
-                            style={{ padding: '4px 8px', fontSize: '0.75rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}
-                          >
-                            <Droplet style={{ width: 14, height: 14 }} /> Watermark
+                            <Droplet style={{ width: 13, height: 13 }} /> Watermark
                           </button>
                         </>
                       ) : (
