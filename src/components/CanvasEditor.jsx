@@ -454,7 +454,7 @@ const drawTweetCard = (ctx, cardW, cap) => {
   curY += 10;
   ctx.fillStyle = mutedColor;
   ctx.font = 'normal 13px -apple-system, BlinkMacSystemFont, sans-serif';
-  const metrics = `💬 1.2K    🔁 42.8K    ❤️ 189.5K    📊 3.2M`;
+  const metrics = cap.tweetMetrics || `💬 1.2K    🔁 42.8K    ❤️ 189.5K    📊 3.2M`;
   ctx.fillText(metrics, startX + pad, curY);
 
   ctx.restore();
