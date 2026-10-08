@@ -1050,6 +1050,32 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     });
   };
 
+  const handleConvertToBubble = () => {
+    if (!activeCaption) return;
+    if (activeCaption.bubbleStyle) {
+      setShowBubbleLayouts(true);
+      return;
+    }
+
+    const nextBg = '#007aff';
+    const nextColor = '#ffffff';
+    const nextFont = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    const nextStroke = 'transparent';
+    const nextStrokeWidth = 0;
+    const nextWidth = activeCaption.width || 0.65;
+
+    updateActiveCaptionProps({
+      bubbleStyle: 'imessage-send',
+      bgColor: nextBg,
+      color: nextColor,
+      fontFamily: nextFont,
+      stroke: nextStroke,
+      strokeWidth: nextStrokeWidth,
+      width: nextWidth
+    });
+    setShowBubbleLayouts(true);
+  };
+
   const handleAddSpeechBubble = handleAddBubble;
 
   // AI Meme Caption Application
@@ -3036,30 +3062,30 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           <span>Effects{activeCaption.curve ? ` (${activeCaption.curve > 0 ? '+' : ''}${activeCaption.curve}°)` : ''}</span>
                         </button>
 
-                        {/* CLUSTER 4: BUBBLE LAYOUT SWITCHER (iPhone, WhatsApp, Comic) */}
-                        {activeCaption.bubbleStyle && (
-                          <button
-                            className="btn btn-xs vid-ctx-btn"
-                            title="Change Bubble Layout (WhatsApp, iPhone, Comic)"
-                            onClick={() => setShowBubbleLayouts(true)}
-                            style={{
-                              padding: '4px 10px',
-                              fontSize: '0.75rem',
-                              fontWeight: 600,
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '5px',
-                              borderRadius: '10px',
-                              flexShrink: 0,
-                              background: 'rgba(0, 122, 255, 0.18)',
-                              borderColor: '#007aff',
-                              color: '#ffffff'
-                            }}
-                          >
-                            <MessageSquare style={{ width: 13, height: 13, color: '#007aff' }} />
-                            <span>Layout</span>
-                          </button>
-                        )}
+                        {/* CLUSTER 4: BUBBLE BUTTON (Available for all text layers to convert or change layout) */}
+                        <button
+                          className={`btn btn-xs vid-ctx-btn ${activeCaption.bubbleStyle ? 'active' : ''}`}
+                          title={activeCaption.bubbleStyle ? "Change Bubble Layout (iPhone, WhatsApp, Comic)" : "Convert to Chat / Speech Bubble (iPhone, WhatsApp, Comic)"}
+                          onClick={handleConvertToBubble}
+                          style={{
+                            padding: '4px 10px',
+                            fontSize: '0.75rem',
+                            fontWeight: 600,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '5px',
+                            borderRadius: '10px',
+                            flexShrink: 0,
+                            background: activeCaption.bubbleStyle
+                              ? 'linear-gradient(135deg, rgba(0, 122, 255, 0.35) 0%, rgba(6, 182, 212, 0.35) 100%)'
+                              : undefined,
+                            borderColor: activeCaption.bubbleStyle ? '#007aff' : undefined,
+                            color: '#ffffff'
+                          }}
+                        >
+                          <MessageSquare style={{ width: 13, height: 13, color: activeCaption.bubbleStyle ? '#007aff' : 'var(--cyber-cyan)' }} />
+                          <span>Bubble</span>
+                        </button>
                       </>
                     );
                   })()}
@@ -4580,8 +4606,8 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                       type="button"
                       className={`btn btn-xs hover-lift ${activeCaption?.bubbleStyle ? 'btn-primary' : 'btn-secondary'}`}
                       onClick={() => {
-                        if (activeCaption?.bubbleStyle) {
-                          setShowBubbleLayouts(true);
+                        if (activeCaption) {
+                          handleConvertToBubble();
                         } else {
                           handleAddBubble();
                         }
