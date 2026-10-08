@@ -1681,6 +1681,14 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         targetCtx.lineCap = 'round';
         targetCtx.lineJoin = 'round';
 
+        const strokeMode = stroke.mode || (stroke.type === 'highlighter' ? 'highlighter' : (stroke.type === 'glow' ? 'glow' : (stroke.type === 'eraser' ? 'eraser' : 'pen')));
+        if (strokeMode === 'highlighter') {
+          targetCtx.globalAlpha = 0.45;
+        } else if (strokeMode === 'glow') {
+          targetCtx.shadowColor = stroke.color || '#00f0ff';
+          targetCtx.shadowBlur = Math.max(8, (stroke.size || 8) * 1.5);
+        }
+
         targetCtx.beginPath();
         if (stroke.points.length === 1) {
           targetCtx.arc(stroke.points[0].x, stroke.points[0].y, (stroke.size || 8) / 2, 0, Math.PI * 2);
@@ -1697,9 +1705,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
       };
 
       (drawings || []).forEach((d) => {
-        if (d.type === 'brush' || d.type === 'eraser') {
-          drawBrushStroke(d);
-        }
+        drawBrushStroke(d);
       });
       
       // Render Watermark
@@ -1856,10 +1862,13 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
 
     if (isDrawingMode) {
       isDrawingActive.current = true;
-      const strokeColor = drawTool === 'eraser' ? '#ffffff' : brushColor;
+      const isEraser = drawTool === 'eraser';
+      const strokeColor = isEraser ? (canvasBgColor || '#ffffff') : brushColor;
+      const strokeMode = drawTool === 'highlighter' ? 'highlighter' : (drawTool === 'glow' ? 'glow' : (isEraser ? 'eraser' : 'pen'));
       const initialStroke = {
         id: `brush-${Date.now()}`,
-        type: drawTool,
+        type: isEraser ? 'eraser' : (drawTool || 'brush'),
+        mode: strokeMode,
         color: strokeColor,
         size: brushSize,
         points: [{ x: coords.x, y: coords.y }]
@@ -1872,6 +1881,12 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
       if (ctx) {
         ctx.save();
         ctx.fillStyle = strokeColor;
+        if (strokeMode === 'highlighter') {
+          ctx.globalAlpha = 0.45;
+        } else if (strokeMode === 'glow') {
+          ctx.shadowColor = strokeColor;
+          ctx.shadowBlur = Math.max(8, brushSize * 1.5);
+        }
         ctx.beginPath();
         ctx.arc(coords.x, coords.y, brushSize / 2, 0, Math.PI * 2);
         ctx.fill();
@@ -2595,6 +2610,12 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
             ctx.lineWidth = stroke.size;
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
+            if (stroke.mode === 'highlighter') {
+              ctx.globalAlpha = 0.45;
+            } else if (stroke.mode === 'glow') {
+              ctx.shadowColor = stroke.color;
+              ctx.shadowBlur = Math.max(8, stroke.size * 1.5);
+            }
             ctx.beginPath();
             ctx.moveTo(lastPt.x, lastPt.y);
             ctx.lineTo(coords.x, coords.y);
