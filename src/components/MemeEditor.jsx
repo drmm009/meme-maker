@@ -470,6 +470,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
   const [showTextEffectsMenu, setShowTextEffectsMenu] = useState(false);
   const [showImageFilterMenu, setShowImageFilterMenu] = useState(false);
   const [showLayerMenu, setShowLayerMenu] = useState(false);
+  const [showDrawSettings, setShowDrawSettings] = useState(false);
   const [pasteToast, setPasteToast] = useState(false);
   const [imageFilters, setImageFilters] = useState({
     preset: 'original',
@@ -489,6 +490,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
   const handleTabClick = (tabId) => {
     setActiveTab(tabId);
     setActiveLayerId(null);
+    setShowDrawSettings(false);
     if (window.innerWidth <= 768) {
       setIsMobileTabsFolded(true);
     } else {
@@ -3254,213 +3256,253 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                   )}
 
                   {!(activeCaption || activeSticker || activeImageLayer) && activeTab === 'draw' && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', width: '100%', overflowX: 'auto', scrollbarWidth: 'none', padding: '0 2px' }}>
-                      {/* CLUSTER 1: INSTRUMENTS (Pen, Marker, Glow, Eraser) */}
-                      <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.08)', borderRadius: '10px', padding: '2px', gap: '2px', flexShrink: 0 }}>
+                    !showDrawSettings ? (
+                      /* ROOT 4-BUTTON BAR */
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', width: '100%', overflowX: 'auto', scrollbarWidth: 'none', padding: '0 4px' }}>
                         <button
                           className={`btn btn-xs vid-ctx-btn ${drawTool === 'brush' ? 'active' : ''}`}
-                          onClick={() => setDrawTool('brush')}
+                          onClick={() => {
+                            setDrawTool('brush');
+                            setShowDrawSettings(true);
+                          }}
                           style={{
-                            border: 'none',
-                            background: drawTool === 'brush' ? 'var(--primary-gradient)' : 'transparent',
-                            color: '#fff',
-                            padding: '3px 8px',
-                            fontSize: '11px',
+                            padding: '5px 14px',
+                            fontSize: '0.8rem',
                             fontWeight: 600,
                             display: 'flex',
                             alignItems: 'center',
-                            gap: '4px',
-                            borderRadius: '8px'
+                            gap: '6px',
+                            borderRadius: '12px',
+                            background: drawTool === 'brush' ? 'var(--primary-gradient)' : 'rgba(255,255,255,0.08)',
+                            color: '#ffffff',
+                            border: drawTool === 'brush' ? '1px solid var(--cyber-cyan)' : '1px solid var(--glass-border)',
+                            flexShrink: 0
                           }}
-                          title="Solid Pen / Brush"
+                          title="Pen: Solid clean brush stroke (Tap for colors & size)"
                         >
-                          <Paintbrush style={{ width: 13, height: 13 }} />
+                          <Paintbrush style={{ width: 14, height: 14 }} />
                           <span>Pen</span>
                         </button>
+
                         <button
                           className={`btn btn-xs vid-ctx-btn ${drawTool === 'highlighter' ? 'active' : ''}`}
-                          onClick={() => setDrawTool('highlighter')}
+                          onClick={() => {
+                            setDrawTool('highlighter');
+                            setShowDrawSettings(true);
+                          }}
                           style={{
-                            border: 'none',
-                            background: drawTool === 'highlighter' ? 'var(--primary-gradient)' : 'transparent',
-                            color: '#fff',
-                            padding: '3px 8px',
-                            fontSize: '11px',
+                            padding: '5px 14px',
+                            fontSize: '0.8rem',
                             fontWeight: 600,
                             display: 'flex',
                             alignItems: 'center',
-                            gap: '4px',
-                            borderRadius: '8px'
+                            gap: '6px',
+                            borderRadius: '12px',
+                            background: drawTool === 'highlighter' ? 'var(--primary-gradient)' : 'rgba(255,255,255,0.08)',
+                            color: '#ffffff',
+                            border: drawTool === 'highlighter' ? '1px solid var(--cyber-cyan)' : '1px solid var(--glass-border)',
+                            flexShrink: 0
                           }}
-                          title="Marker: Translucent highlighter for text & punchlines"
+                          title="Marker: Translucent highlighter (Tap for colors & size)"
                         >
-                          <Highlighter style={{ width: 13, height: 13 }} />
+                          <Highlighter style={{ width: 14, height: 14 }} />
                           <span>Marker</span>
                         </button>
+
                         <button
                           className={`btn btn-xs vid-ctx-btn ${drawTool === 'glow' ? 'active' : ''}`}
-                          onClick={() => setDrawTool('glow')}
+                          onClick={() => {
+                            setDrawTool('glow');
+                            setShowDrawSettings(true);
+                          }}
                           style={{
-                            border: 'none',
-                            background: drawTool === 'glow' ? 'linear-gradient(135deg, rgba(6,182,212,0.8), rgba(168,85,247,0.8))' : 'transparent',
-                            color: '#fff',
-                            padding: '3px 8px',
-                            fontSize: '11px',
+                            padding: '5px 14px',
+                            fontSize: '0.8rem',
                             fontWeight: 600,
                             display: 'flex',
                             alignItems: 'center',
-                            gap: '4px',
-                            borderRadius: '8px'
+                            gap: '6px',
+                            borderRadius: '12px',
+                            background: drawTool === 'glow' ? 'linear-gradient(135deg, rgba(6,182,212,0.7), rgba(168,85,247,0.7))' : 'rgba(255,255,255,0.08)',
+                            color: '#ffffff',
+                            border: drawTool === 'glow' ? '1px solid var(--cyber-cyan)' : '1px solid var(--glass-border)',
+                            flexShrink: 0
                           }}
-                          title="Neon Glow: Glowing laser line for laser eyes & accents"
+                          title="Glow: Neon laser glow (Tap for colors & size)"
                         >
-                          <Sparkles style={{ width: 13, height: 13, color: drawTool === 'glow' ? '#ffe600' : 'var(--cyber-cyan)' }} />
+                          <Sparkles style={{ width: 14, height: 14, color: '#ffe600' }} />
                           <span>Glow</span>
                         </button>
+
                         <button
                           className={`btn btn-xs vid-ctx-btn ${drawTool === 'eraser' ? 'active' : ''}`}
-                          onClick={() => setDrawTool('eraser')}
+                          onClick={() => {
+                            setDrawTool('eraser');
+                            setShowDrawSettings(true);
+                          }}
                           style={{
-                            border: 'none',
-                            background: drawTool === 'eraser' ? 'var(--primary-gradient)' : 'transparent',
-                            color: '#fff',
-                            padding: '3px 8px',
-                            fontSize: '11px',
+                            padding: '5px 14px',
+                            fontSize: '0.8rem',
                             fontWeight: 600,
                             display: 'flex',
                             alignItems: 'center',
-                            gap: '4px',
-                            borderRadius: '8px'
+                            gap: '6px',
+                            borderRadius: '12px',
+                            background: drawTool === 'eraser' ? 'var(--primary-gradient)' : 'rgba(255,255,255,0.08)',
+                            color: '#ffffff',
+                            border: drawTool === 'eraser' ? '1px solid var(--cyber-cyan)' : '1px solid var(--glass-border)',
+                            flexShrink: 0
                           }}
-                          title="Eraser: Erase freehand strokes"
+                          title="Eraser: Erase freehand strokes (Tap for eraser size)"
                         >
-                          <Eraser style={{ width: 13, height: 13 }} />
+                          <Eraser style={{ width: 14, height: 14 }} />
                           <span>Eraser</span>
                         </button>
                       </div>
+                    ) : (
+                      /* INSTRUMENT COLOR & SETTINGS SUB-BAR WITH BACK BUTTON */
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', width: '100%', overflowX: 'auto', scrollbarWidth: 'none', padding: '0 2px' }}>
+                        {/* 1. BACK BUTTON */}
+                        <button
+                          onClick={() => setShowDrawSettings(false)}
+                          className="btn btn-icon btn-xs vid-ctx-btn"
+                          title="Back to Draw Tools"
+                          style={{ borderRadius: '8px', flexShrink: 0 }}
+                        >
+                          <ArrowLeft style={{ width: 15, height: 15 }} />
+                        </button>
 
-                      {/* CLUSTER 2: COLOR PALETTE & MEME SWATCHES (When not erasing) */}
-                      {drawTool !== 'eraser' && (
-                        <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.08)', borderRadius: '10px', padding: '2px 5px', gap: '5px', flexShrink: 0 }}>
-                          {['#ffffff', '#ff2a5f', '#ffe600', '#00f0ff', '#000000'].map((c) => (
-                            <button
-                              key={c}
-                              type="button"
-                              title={`Set color ${c}`}
-                              onClick={() => setBrushColor(c)}
+                        <div className="vid-ctx-divider" style={{ width: 1, height: 20, background: 'rgba(255,255,255,0.2)', margin: '0 2px', flexShrink: 0 }} />
+
+                        {/* 2. ACTIVE TOOL BADGE */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '3px 8px', borderRadius: '8px', background: 'rgba(255,255,255,0.1)', fontSize: '11px', fontWeight: 700, color: '#fff', flexShrink: 0 }}>
+                          {drawTool === 'eraser' ? <Eraser style={{ width: 12, height: 12 }} /> : (drawTool === 'highlighter' ? <Highlighter style={{ width: 12, height: 12 }} /> : (drawTool === 'glow' ? <Sparkles style={{ width: 12, height: 12, color: '#ffe600' }} /> : <Paintbrush style={{ width: 12, height: 12 }} />))}
+                          <span>{drawTool === 'eraser' ? 'Eraser' : (drawTool === 'highlighter' ? 'Marker' : (drawTool === 'glow' ? 'Glow' : 'Pen'))}</span>
+                        </div>
+
+                        {/* 3. COLOR BAR (When not erasing) */}
+                        {drawTool !== 'eraser' && (
+                          <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.08)', borderRadius: '10px', padding: '2px 5px', gap: '5px', flexShrink: 0 }}>
+                            {['#ffffff', '#ff2a5f', '#ffe600', '#00f0ff', '#22c55e', '#a855f7', '#000000'].map((c) => (
+                              <button
+                                key={c}
+                                type="button"
+                                title={`Set color ${c}`}
+                                onClick={() => setBrushColor(c)}
+                                style={{
+                                  width: 16,
+                                  height: 16,
+                                  borderRadius: '50%',
+                                  background: c,
+                                  border: brushColor === c ? '2px solid #ffffff' : '1px solid rgba(255,255,255,0.3)',
+                                  boxShadow: brushColor === c ? (drawTool === 'glow' ? `0 0 8px ${c}` : '0 0 6px rgba(255,255,255,0.6)') : 'none',
+                                  cursor: 'pointer',
+                                  padding: 0,
+                                  transform: brushColor === c ? 'scale(1.2)' : 'scale(1)',
+                                  transition: 'all 0.15s ease',
+                                  flexShrink: 0
+                                }}
+                              />
+                            ))}
+                            <div
                               style={{
-                                width: 15,
-                                height: 15,
+                                position: 'relative',
+                                overflow: 'hidden',
+                                width: 18,
+                                height: 18,
                                 borderRadius: '50%',
-                                background: c,
-                                border: brushColor === c ? '2px solid #ffffff' : '1px solid rgba(255,255,255,0.3)',
-                                boxShadow: brushColor === c ? (drawTool === 'glow' ? `0 0 8px ${c}` : '0 0 6px rgba(255,255,255,0.6)') : 'none',
+                                background: 'linear-gradient(135deg, #ff007f, #00f0ff, #ffe600, #00ff66)',
+                                border: '1.5px solid rgba(255,255,255,0.6)',
                                 cursor: 'pointer',
-                                padding: 0,
-                                transform: brushColor === c ? 'scale(1.2)' : 'scale(1)',
-                                transition: 'all 0.15s ease',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
                                 flexShrink: 0
                               }}
-                            />
-                          ))}
+                              title="Custom Color Palette"
+                            >
+                              <input
+                                type="color"
+                                value={brushColor}
+                                onChange={(e) => setBrushColor(e.target.value)}
+                                style={{ position: 'absolute', opacity: 0, inset: 0, cursor: 'pointer', width: '100%', height: '100%' }}
+                              />
+                            </div>
+                          </div>
+                        )}
+
+                        {/* 4. SIZE BAR */}
+                        <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.08)', borderRadius: '10px', padding: '2px 8px', gap: '6px', flexShrink: 0 }}>
                           <div
                             style={{
-                              position: 'relative',
-                              overflow: 'hidden',
-                              width: 17,
-                              height: 17,
-                              borderRadius: '50%',
-                              background: 'linear-gradient(135deg, #ff007f, #00f0ff, #ffe600, #00ff66)',
-                              border: '1.5px solid rgba(255,255,255,0.6)',
-                              cursor: 'pointer',
+                              width: 14,
+                              height: 14,
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
                               flexShrink: 0
                             }}
-                            title="Custom Color Palette"
+                            title={`Stroke Size: ${brushSize}px`}
                           >
-                            <input
-                              type="color"
-                              value={brushColor}
-                              onChange={(e) => setBrushColor(e.target.value)}
-                              style={{ position: 'absolute', opacity: 0, inset: 0, cursor: 'pointer', width: '100%', height: '100%' }}
+                            <div
+                              style={{
+                                width: Math.min(14, Math.max(3, (brushSize / 48) * 14)),
+                                height: Math.min(14, Math.max(3, (brushSize / 48) * 14)),
+                                borderRadius: '50%',
+                                background: drawTool === 'eraser' ? '#ffffff' : brushColor,
+                                boxShadow: drawTool === 'glow' ? `0 0 6px ${brushColor}` : 'none',
+                                transition: 'all 0.1s ease'
+                              }}
                             />
                           </div>
-                        </div>
-                      )}
-
-                      {/* CLUSTER 3: STROKE THICKNESS */}
-                      <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.08)', borderRadius: '10px', padding: '2px 8px', gap: '6px', flexShrink: 0 }}>
-                        <div
-                          style={{
-                            width: 14,
-                            height: 14,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            flexShrink: 0
-                          }}
-                          title={`Stroke Size: ${brushSize}px`}
-                        >
-                          <div
-                            style={{
-                              width: Math.min(14, Math.max(3, (brushSize / 48) * 14)),
-                              height: Math.min(14, Math.max(3, (brushSize / 48) * 14)),
-                              borderRadius: '50%',
-                              background: drawTool === 'eraser' ? '#ffffff' : brushColor,
-                              boxShadow: drawTool === 'glow' ? `0 0 6px ${brushColor}` : 'none',
-                              transition: 'all 0.1s ease'
-                            }}
+                          <input
+                            type="range"
+                            min="2"
+                            max="48"
+                            value={brushSize}
+                            onChange={(e) => setBrushSize(parseInt(e.target.value, 10))}
+                            style={{ width: '56px', accentColor: 'var(--cyber-cyan)', height: '4px', cursor: 'pointer' }}
+                            title={`Brush Size: ${brushSize}px`}
                           />
+                          <span style={{ fontSize: '10px', fontWeight: 700, color: '#fff', minWidth: '24px' }}>
+                            {brushSize}px
+                          </span>
                         </div>
-                        <input
-                          type="range"
-                          min="2"
-                          max="48"
-                          value={brushSize}
-                          onChange={(e) => setBrushSize(parseInt(e.target.value, 10))}
-                          style={{ width: '56px', accentColor: 'var(--cyber-cyan)', height: '4px', cursor: 'pointer' }}
-                          title={`Brush Size: ${brushSize}px`}
-                        />
-                        <span style={{ fontSize: '10px', fontWeight: 700, color: '#fff', minWidth: '24px' }}>
-                          {brushSize}px
-                        </span>
-                      </div>
 
-                      {/* CLUSTER 4: ACTIONS (Undo Last Stroke & Clear All) */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '3px', marginLeft: 'auto', flexShrink: 0 }}>
-                        <button
-                          className="btn btn-icon btn-xs vid-ctx-btn"
-                          title={drawings.length > 0 ? `Undo Stroke (${drawings.length})` : "Undo Stroke (No strokes)"}
-                          onClick={handleUndoDrawing}
-                          disabled={drawings.length === 0}
-                          style={{
-                            borderRadius: '8px',
-                            opacity: drawings.length === 0 ? 0.35 : 1,
-                            cursor: drawings.length === 0 ? 'default' : 'pointer'
-                          }}
-                        >
-                          <Undo style={{ width: 14, height: 14 }} />
-                        </button>
-                        <button
-                          className="btn btn-icon btn-xs vid-ctx-btn vid-ctx-btn-delete"
-                          title={drawings.length > 0 ? "Clear All Drawings" : "Clear Drawings (Empty)"}
-                          onClick={handleClearDrawings}
-                          disabled={drawings.length === 0}
-                          style={{
-                            borderRadius: '8px',
-                            background: drawings.length > 0 ? 'rgba(239, 68, 68, 0.85)' : 'rgba(255,255,255,0.08)',
-                            color: '#ffffff',
-                            border: drawings.length > 0 ? '1px solid rgba(239, 68, 68, 1)' : '1px solid transparent',
-                            opacity: drawings.length === 0 ? 0.35 : 1,
-                            cursor: drawings.length === 0 ? 'default' : 'pointer'
-                          }}
-                        >
-                          <Trash2 style={{ width: 14, height: 14 }} />
-                        </button>
+                        {/* 5. ACTIONS: UNDO & CLEAR */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '3px', marginLeft: 'auto', flexShrink: 0 }}>
+                          <button
+                            className="btn btn-icon btn-xs vid-ctx-btn"
+                            title={drawings.length > 0 ? `Undo Stroke (${drawings.length})` : "Undo Stroke (No strokes)"}
+                            onClick={handleUndoDrawing}
+                            disabled={drawings.length === 0}
+                            style={{
+                              borderRadius: '8px',
+                              opacity: drawings.length === 0 ? 0.35 : 1,
+                              cursor: drawings.length === 0 ? 'default' : 'pointer'
+                            }}
+                          >
+                            <Undo style={{ width: 14, height: 14 }} />
+                          </button>
+                          <button
+                            className="btn btn-icon btn-xs vid-ctx-btn vid-ctx-btn-delete"
+                            title={drawings.length > 0 ? "Clear All Drawings" : "Clear Drawings (Empty)"}
+                            onClick={handleClearDrawings}
+                            disabled={drawings.length === 0}
+                            style={{
+                              borderRadius: '8px',
+                              background: drawings.length > 0 ? 'rgba(239, 68, 68, 0.85)' : 'rgba(255,255,255,0.08)',
+                              color: '#ffffff',
+                              border: drawings.length > 0 ? '1px solid rgba(239, 68, 68, 1)' : '1px solid transparent',
+                              opacity: drawings.length === 0 ? 0.35 : 1,
+                              cursor: drawings.length === 0 ? 'default' : 'pointer'
+                            }}
+                          >
+                            <Trash2 style={{ width: 14, height: 14 }} />
+                          </button>
+                        </div>
                       </div>
-                    </div>
+                    )
                   )}
 
                   {!(activeCaption || activeSticker || activeImageLayer) && activeTab === 'watermark' && (
