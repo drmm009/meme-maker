@@ -97,11 +97,8 @@ export default function MemeStylesModal({
             </div>
             <div>
               <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800, color: '#ffffff', letterSpacing: '-0.01em' }}>
-                Meme Styles & Formats
+                Meme Style
               </h3>
-              <p style={{ margin: 0, fontSize: '0.74rem', color: 'var(--text-muted, #a1a1aa)' }}>
-                Apply classic meme frames, viral tweet cards & authentic chat bubbles
-              </p>
             </div>
           </div>
           <button
