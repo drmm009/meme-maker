@@ -3330,7 +3330,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           }}
                           title="Glow: Neon laser glow (Tap for colors & size)"
                         >
-                          <Sparkles style={{ width: 14, height: 14, color: '#ffe600' }} />
+                          <Sparkles style={{ width: 14, height: 14 }} />
                           <span>Glow</span>
                         </button>
 
@@ -3394,7 +3394,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           ) : drawTool === 'highlighter' ? (
                             <Highlighter style={{ width: 14, height: 14 }} />
                           ) : drawTool === 'glow' ? (
-                            <Sparkles style={{ width: 14, height: 14, color: '#ffe600' }} />
+                            <Sparkles style={{ width: 14, height: 14 }} />
                           ) : (
                             <Paintbrush style={{ width: 14, height: 14 }} />
                           )}
@@ -4134,7 +4134,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                     style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '7px 4px', gap: '4px', borderRadius: '10px', fontSize: '0.72rem', fontWeight: 600 }}
                     title="Neon Glow / Laser Line"
                   >
-                    <Sparkles className="icon-xs" style={{ width: '14px', height: '14px', color: drawTool === 'glow' ? '#ffe600' : 'var(--cyber-cyan)' }} />
+                    <Sparkles className="icon-xs" style={{ width: '14px', height: '14px' }} />
                     <span>Glow</span>
                   </button>
                   <button
