@@ -2837,27 +2837,6 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
 
                       <button
                         className="btn btn-xs vid-ctx-btn"
-                        onClick={() => setShowStylesModal(true)}
-                        title="Meme Culture Staples & Social Formats (Demotivational, News, Fake Tweet, Chat Bubbles)"
-                        style={{
-                          padding: "4px 8px",
-                          fontSize: "0.75rem",
-                          fontWeight: 600,
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "4px",
-                          background: demotivational.enabled
-                            ? "linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)"
-                            : "linear-gradient(135deg, rgba(245, 158, 11, 0.25) 0%, rgba(239, 68, 68, 0.25) 100%)",
-                          border: "1px solid rgba(245, 158, 11, 0.4)",
-                          color: "#ffffff"
-                        }}
-                      >
-                        <Flame style={{ width: 13, height: 13, color: "#f59e0b" }} /> Styles
-                      </button>
-
-                      <button
-                        className="btn btn-xs vid-ctx-btn"
                         onClick={() => setShowAiModal(true)}
                         title="AI Meme Captions"
                         style={{
@@ -2896,6 +2875,27 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         style={{ flexShrink: 0, padding: '4px 8px', fontSize: '0.75rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}
                       >
                         <LayoutGrid style={{ width: 14, height: 14 }} /> Template
+                      </button>
+                      <button
+                        className="btn btn-xs vid-ctx-btn"
+                        onClick={() => setShowStylesModal(true)}
+                        title="Meme Culture Staples & Social Formats"
+                        style={{
+                          flexShrink: 0,
+                          padding: "4px 8px",
+                          fontSize: "0.75rem",
+                          fontWeight: 600,
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "4px",
+                          background: demotivational.enabled
+                            ? "linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)"
+                            : "linear-gradient(135deg, rgba(245, 158, 11, 0.25) 0%, rgba(239, 68, 68, 0.25) 100%)",
+                          border: "1px solid rgba(245, 158, 11, 0.4)",
+                          color: "#ffffff"
+                        }}
+                      >
+                        <Flame style={{ width: 13, height: 13, color: "#f59e0b" }} /> Styles
                       </button>
                       <div className="vid-ctx-divider" style={{ width: 1, height: 20, background: 'rgba(255,255,255,0.2)', margin: '0 4px', flexShrink: 0 }} />
                       <button
@@ -3785,32 +3785,6 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         <Sparkles size={15} style={{ color: "#ec4899" }} /> AI Captions
                       </button>
                     )}
-
-                    {/* Meme Styles & Social Formats Button */}
-                    {!activeCaption && (
-                      <button
-                        type="button"
-                        className="btn btn-xs hover-lift"
-                        onClick={() => setShowStylesModal(true)}
-                        title="Demotivational poster, breaking news, fake tweet card, or chat bubbles"
-                        style={{
-                          padding: "7px 14px",
-                          borderRadius: "20px",
-                          fontSize: "0.82rem",
-                          fontWeight: 700,
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: "6px",
-                          background: demotivational.enabled
-                            ? "linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)"
-                            : "linear-gradient(135deg, rgba(245, 158, 11, 0.3) 0%, rgba(239, 68, 68, 0.3) 100%)",
-                          border: "1px solid rgba(245, 158, 11, 0.6)",
-                          color: "#ffffff"
-                        }}
-                      >
-                        <Flame size={15} style={{ color: "#f59e0b" }} /> Meme Styles
-                      </button>
-                    )}
                   </div>
 
                 {/* Color Swatches Bar + Delete Button (When activeCaption exists) */}
@@ -4621,6 +4595,32 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                     }}
                   >
                     <Plus className="icon-xs" /> Add Overlay
+                  </button>
+
+                  <button
+                    type="button"
+                    className="btn btn-xs hover-lift"
+                    onClick={() => setShowStylesModal(true)}
+                    title="Meme Culture Staples & Social Formats (Demotivational, News Chyron, Tweet Card, Chat)"
+                    style={{
+                      flex: 1,
+                      padding: '8px 10px',
+                      borderRadius: '999px',
+                      fontSize: '0.8rem',
+                      fontWeight: 600,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '5px',
+                      whiteSpace: 'nowrap',
+                      background: demotivational.enabled
+                        ? 'linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)'
+                        : 'linear-gradient(135deg, rgba(245, 158, 11, 0.25) 0%, rgba(239, 68, 68, 0.25) 100%)',
+                      border: '1px solid rgba(245, 158, 11, 0.5)',
+                      color: '#ffffff'
+                    }}
+                  >
+                    <Flame size={14} style={{ color: '#f59e0b' }} /> Styles
                   </button>
 
                   {activeImageLayer && (
