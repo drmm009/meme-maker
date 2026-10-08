@@ -2916,26 +2916,6 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
 
                       <div className="vid-ctx-divider" style={{ width: 1, height: 20, background: 'rgba(255,255,255,0.2)', margin: '0 2px', flexShrink: 0 }} />
 
-                      {/* Active Bubble Tool Icon */}
-                      <div
-                        title="Bubble Layouts"
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          width: 26,
-                          height: 26,
-                          borderRadius: '8px',
-                          background: 'rgba(0, 122, 255, 0.2)',
-                          color: '#007aff',
-                          flexShrink: 0
-                        }}
-                      >
-                        <MessageSquare style={{ width: 14, height: 14 }} />
-                      </div>
-
-                      <div className="vid-ctx-divider" style={{ width: 1, height: 20, background: 'rgba(255,255,255,0.2)', margin: '0 2px', flexShrink: 0 }} />
-
                       {/* Layout Options */}
                       {BUBBLE_LAYOUT_OPTIONS.map(opt => (
                         <button
