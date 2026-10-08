@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Sparkles, MessageCircle, Tv, Flame, X, Check, Eye, Plus, ChevronRight } from 'lucide-react';
+import { Sparkles, MessageCircle, Tv, Flame, X, Check, Plus, ChevronRight } from 'lucide-react';
 
 export default function MemeStylesModal({
   isOpen,
@@ -8,8 +8,7 @@ export default function MemeStylesModal({
   onToggleDemotivational,
   onAddBreakingNews,
   onAddTweetCard,
-  onAddChatBubble,
-  onAddLaserEyes
+  onAddChatBubble
 }) {
   const [activeTab, setActiveTab] = useState('staples'); // 'staples' | 'social'
 
@@ -299,47 +298,6 @@ export default function MemeStylesModal({
                 >
                   <Plus size={16} /> Add Breaking News Overlay
                 </button>
-              </div>
-
-              {/* 3. Laser Eyes Snap */}
-              <div
-                style={{
-                  background: 'var(--bg-surface-1, rgba(255,255,255,0.03))',
-                  borderRadius: '12px',
-                  border: '1px solid var(--glass-border)',
-                  padding: '16px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  gap: '12px'
-                }}
-              >
-                <div>
-                  <span style={{ fontWeight: 700, fontSize: '0.92rem', color: '#fff', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <Eye size={16} style={{ color: '#ef4444' }} /> Laser Eyes / Lens Flare
-                  </span>
-                  <p style={{ margin: '2px 0 0', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                    Slap glowing "Triggered" laser eyes onto faces
-                  </p>
-                </div>
-                <div style={{ display: 'flex', gap: '6px' }}>
-                  <button
-                    type="button"
-                    className="btn btn-xs btn-secondary"
-                    onClick={() => { onAddLaserEyes('red'); onClose(); }}
-                    style={{ padding: '6px 12px', fontWeight: 700, color: '#ef4444', border: '1px solid rgba(239,68,68,0.4)' }}
-                  >
-                    🔴 Red Lasers
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-xs btn-secondary"
-                    onClick={() => { onAddLaserEyes('blue'); onClose(); }}
-                    style={{ padding: '6px 12px', fontWeight: 700, color: '#06b6d4', border: '1px solid rgba(6,182,212,0.4)' }}
-                  >
-                    🔵 Cyan Lasers
-                  </button>
-                </div>
               </div>
             </>
           )}

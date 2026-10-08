@@ -1894,7 +1894,11 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         } else if (layer._type === 'caption') {
           const cap = layer;
           const cx = cap.x * canvas.width;
-          const cy = cap.y * canvas.height;
+          const cy = (cap.isHeaderCaption && !cap.hasCustomPos)
+            ? (headerExtH / 2)
+            : (cap.isFooterCaption && !cap.hasCustomPos)
+            ? (headerExtH + canvasH + (footerExtH / 2))
+            : (cap.y * canvas.height);
           const p = rotatePoint(coords.x, coords.y, cx, cy, -(cap.rotation || 0));
           const fontSize = cap.fontSize || 50;
           ctx.font = `bold ${fontSize}px ${cap.fontFamily || 'Impact, sans-serif'}`;
@@ -1907,6 +1911,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
           const isBubble = !!cap.bubbleStyle;
           const hasBg = (cap.bgColor && cap.bgColor !== 'transparent' && cap.bgColor !== 'none') || isBubble;
           const padX = isBubble ? Math.max(24, fontSize * 0.5) : (hasBg && cap.bgStyle !== 'banner' ? Math.max(16, fontSize * 0.35) : Math.max(8, fontSize * 0.15));
+          const padY = isBubble ? Math.max(18, fontSize * 0.4) : (hasBg && cap.bgStyle !== 'banner' ? Math.max(10, fontSize * 0.2) : Math.max(4, fontSize * 0.1));
           let boxWidth = maxLineWidth + padX * 2;
           const lineHeight = fontSize * 1.2;
           let boxHeight = lines.length * lineHeight + padY * 2;
@@ -2310,7 +2315,11 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     for (const cap of captions) {
       if (cap.hidden) continue;
       const cx = cap.x * canvas.width;
-      const cy = cap.y * canvas.height;
+      const cy = (cap.isHeaderCaption && !cap.hasCustomPos)
+        ? (headerExtH / 2)
+        : (cap.isFooterCaption && !cap.hasCustomPos)
+        ? (headerExtH + canvasH + (footerExtH / 2))
+        : (cap.y * canvas.height);
       const p = rotatePoint(coords.x, coords.y, cx, cy, -(cap.rotation || 0));
       const fontSize = cap.fontSize || 50;
       const ctx = canvas.getContext('2d');
@@ -2320,12 +2329,20 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         const lines = wrapText(ctx, cap.text || '', renderMaxWidth);
         let maxLineWidth = 0;
         for (const line of lines) maxLineWidth = Math.max(maxLineWidth, ctx.measureText(line).width);
-        const hasBg = cap.bgColor && cap.bgColor !== 'transparent' && cap.bgColor !== 'none';
-        const padX = hasBg && cap.bgStyle !== 'banner' ? Math.max(16, fontSize * 0.35) : Math.max(8, fontSize * 0.15);
-        const padY = hasBg && cap.bgStyle !== 'banner' ? Math.max(10, fontSize * 0.2) : Math.max(4, fontSize * 0.1);
-        const boxWidth = maxLineWidth + padX * 2;
+        const isBubble = !!cap.bubbleStyle;
+        const hasBg = (cap.bgColor && cap.bgColor !== 'transparent' && cap.bgColor !== 'none') || isBubble;
+        const padX = isBubble ? Math.max(24, fontSize * 0.5) : (hasBg && cap.bgStyle !== 'banner' ? Math.max(16, fontSize * 0.35) : Math.max(8, fontSize * 0.15));
+        const padY = isBubble ? Math.max(18, fontSize * 0.4) : (hasBg && cap.bgStyle !== 'banner' ? Math.max(10, fontSize * 0.2) : Math.max(4, fontSize * 0.1));
+        let boxWidth = maxLineWidth + padX * 2;
         const lineHeight = fontSize * 1.2;
-        const boxHeight = lines.length * lineHeight + padY * 2;
+        let boxHeight = lines.length * lineHeight + padY * 2;
+        if (cap.isBreakingNews) {
+          boxWidth = Math.max(300, (cap.width || 0.94) * canvas.width);
+          boxHeight = getBreakingNewsHeight(cap);
+        } else if (cap.isTweetCard) {
+          boxWidth = Math.min(540, (cap.width || 0.88) * canvas.width);
+          boxHeight = getTweetCardHeight(ctx, cap, boxWidth);
+        }
         if (p.x >= cx - boxWidth / 2 && p.x <= cx + boxWidth / 2 && p.y >= cy - boxHeight / 2 && p.y <= cy + boxHeight / 2) {
           canvas.style.cursor = 'pointer';
           return;

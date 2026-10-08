@@ -1273,34 +1273,6 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     pushHistory(nextCaps, stickers, imageLayers, drawings, canvasHeader, canvasFooter, demotivational);
   };
 
-  const handleAddLaserEyes = (color = 'red') => {
-    const targetId = color === 'blue' ? 'laser_eyes_blue' : 'laser_eyes_red';
-    const stickerDef = (GRAPHIC_STICKERS || []).find(s => s.id === targetId);
-    if (!stickerDef) return;
-
-    const dataUrl = `data:image/svg+xml;utf8,${encodeURIComponent(stickerDef.svg.trim())}`;
-    const maxZ = Math.max(-1, ...captions.map(c => c.zIndex ?? -1), ...stickers.map(s => s.zIndex ?? -1), ...(imageLayers || []).map(i => i.zIndex ?? -1));
-
-    const newSticker = {
-      id: `laser-eyes-${Date.now()}`,
-      url: dataUrl,
-      src: dataUrl,
-      name: stickerDef.name,
-      x: 0.5,
-      y: 0.4,
-      scale: 1.4,
-      rotation: 0,
-      opacity: 1,
-      zIndex: maxZ + 1
-    };
-
-    const nextStickers = [...stickers, newSticker];
-    setStickers(nextStickers);
-    setActiveLayerId(newSticker.id);
-    setActiveTab('stickers');
-    pushHistory(captions, nextStickers, imageLayers, drawings, canvasHeader, canvasFooter, demotivational);
-  };
-
   // Toggle Text Case: ALL CAPS <-> Sentence Case <-> lowercase
   const handleToggleTextCase = () => {
     if (!activeCaption || !activeCaption.text) return;
@@ -5211,7 +5183,6 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
         onAddBreakingNews={handleAddBreakingNews}
         onAddTweetCard={handleAddTweetCard}
         onAddChatBubble={handleAddChatBubble}
-        onAddLaserEyes={handleAddLaserEyes}
       />
     </div>
       )}
