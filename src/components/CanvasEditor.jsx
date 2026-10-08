@@ -216,6 +216,63 @@ const drawSpeechBubble = (ctx, x, y, width, height, style, fillColor = '#ffffff'
   ctx.restore();
 };
 
+const getCurveSagitta = (width, curve) => {
+  if (!curve || Math.abs(curve) < 1) return 0;
+  const clamped = Math.max(-100, Math.min(100, Math.abs(curve)));
+  const spanRad = (clamped / 100) * (Math.PI * 0.72);
+  const R = Math.max(10, width / spanRad);
+  return R * (1 - Math.cos(spanRad / 2));
+};
+
+const drawCurvedText = (ctx, line, curve, baseLy, textAnchorX, fontSize, shouldStroke, strokeColor, strokeWidth, textColor) => {
+  if (!line) return;
+  const chars = Array.from(line);
+  if (chars.length === 0) return;
+  const widths = chars.map(ch => ctx.measureText(ch).width);
+  const totalW = widths.reduce((sum, w) => sum + w, 0);
+  if (totalW <= 0) return;
+
+  const clampedCurve = Math.max(-100, Math.min(100, curve));
+  const curveSign = clampedCurve >= 0 ? 1 : -1;
+  const absCurve = Math.abs(clampedCurve);
+  const spanRad = (absCurve / 100) * (Math.PI * 0.72);
+  const R = Math.max(10, totalW / spanRad);
+  const sagitta = R * (1 - Math.cos(spanRad / 2));
+
+  ctx.save();
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  if (shouldStroke) {
+    ctx.strokeStyle = strokeColor;
+    ctx.lineWidth = strokeWidth || Math.max(3, fontSize / 7);
+    ctx.lineJoin = 'miter';
+    ctx.miterLimit = 2;
+    ctx.setLineDash([]);
+  }
+  ctx.fillStyle = textColor;
+
+  chars.forEach((ch, idx) => {
+    let currentDist = 0;
+    for (let j = 0; j < idx; j++) currentDist += widths[j];
+    currentDist += widths[idx] / 2;
+    const t = (currentDist / totalW) - 0.5;
+    const phi = t * spanRad;
+    const charX = textAnchorX + R * Math.sin(phi);
+    const charY = baseLy + curveSign * (R * (1 - Math.cos(phi)) - sagitta / 2);
+    const charRot = curveSign * phi;
+
+    ctx.save();
+    ctx.translate(charX, charY);
+    ctx.rotate(charRot);
+    if (shouldStroke) {
+      ctx.strokeText(ch, 0, 0);
+    }
+    ctx.fillText(ch, 0, 0);
+    ctx.restore();
+  });
+  ctx.restore();
+};
+
 const getBreakingNewsHeight = (cap) => {
   const topH = 26;
   const midH = Math.max(52, (cap.fontSize || 26) * 1.5);
@@ -1313,6 +1370,9 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         const lineHeight = fontSize * 1.2;
         const totalHeight = lines.length * lineHeight;
         let boxHeight = totalHeight + padY * 2;
+        if (cap.curve && Math.abs(cap.curve) > 0) {
+          boxHeight += Math.round(getCurveSagitta(maxLineWidth, cap.curve));
+        }
         const startY = - ((lines.length - 1) * lineHeight) / 2;
 
         if (cap.isBreakingNews) {
@@ -1380,17 +1440,32 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
           lines.forEach((line, index) => {
             const ly = startY + index * lineHeight;
 
-            if (shouldStroke) {
-              targetCtx.strokeStyle = cap.stroke;
-              targetCtx.lineWidth = cap.strokeWidth || Math.max(3, fontSize / 7);
-              targetCtx.lineJoin = 'miter';
-              targetCtx.miterLimit = 2;
-              targetCtx.setLineDash([]);
-              targetCtx.strokeText(line, textAnchorX, ly);
-            }
+            if (cap.curve && Math.abs(cap.curve) > 0) {
+              drawCurvedText(
+                targetCtx,
+                line,
+                cap.curve,
+                ly,
+                textAnchorX,
+                fontSize,
+                shouldStroke,
+                cap.stroke,
+                cap.strokeWidth || Math.max(3, fontSize / 7),
+                textColor
+              );
+            } else {
+              if (shouldStroke) {
+                targetCtx.strokeStyle = cap.stroke;
+                targetCtx.lineWidth = cap.strokeWidth || Math.max(3, fontSize / 7);
+                targetCtx.lineJoin = 'miter';
+                targetCtx.miterLimit = 2;
+                targetCtx.setLineDash([]);
+                targetCtx.strokeText(line, textAnchorX, ly);
+              }
 
-            targetCtx.fillStyle = textColor;
-            targetCtx.fillText(line, textAnchorX, ly);
+              targetCtx.fillStyle = textColor;
+              targetCtx.fillText(line, textAnchorX, ly);
+            }
           });
         }
 
@@ -1736,6 +1811,9 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
           let boxWidth = maxLineWidth + padX * 2;
           const textHeight = lines.length * (fontSize * 1.2);
           let boxHeight = textHeight + padY * 2;
+          if (activeCap.curve && Math.abs(activeCap.curve) > 0) {
+            boxHeight += Math.round(getCurveSagitta(maxLineWidth, activeCap.curve));
+          }
 
           if (activeCap.isBreakingNews) {
             boxWidth = Math.max(300, (activeCap.width || 0.94) * canvas.width);
@@ -1915,6 +1993,9 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
           let boxWidth = maxLineWidth + padX * 2;
           const lineHeight = fontSize * 1.2;
           let boxHeight = lines.length * lineHeight + padY * 2;
+          if (cap.curve && Math.abs(cap.curve) > 0) {
+            boxHeight += Math.round(getCurveSagitta(maxLineWidth, cap.curve));
+          }
 
           if (cap.isBreakingNews) {
             boxWidth = Math.max(300, (cap.width || 0.94) * canvas.width);
@@ -2200,6 +2281,9 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         let boxWidth = maxLineWidth + padX * 2;
         const textHeight = lines.length * (fontSize * 1.2);
         let boxHeight = textHeight + padY * 2;
+        if (activeCap.curve && Math.abs(activeCap.curve) > 0) {
+          boxHeight += Math.round(getCurveSagitta(maxLineWidth, activeCap.curve));
+        }
 
         if (activeCap.isBreakingNews) {
           boxWidth = Math.max(300, (activeCap.width || 0.94) * canvas.width);
@@ -2336,6 +2420,9 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         let boxWidth = maxLineWidth + padX * 2;
         const lineHeight = fontSize * 1.2;
         let boxHeight = lines.length * lineHeight + padY * 2;
+        if (cap.curve && Math.abs(cap.curve) > 0) {
+          boxHeight += Math.round(getCurveSagitta(maxLineWidth, cap.curve));
+        }
         if (cap.isBreakingNews) {
           boxWidth = Math.max(300, (cap.width || 0.94) * canvas.width);
           boxHeight = getBreakingNewsHeight(cap);

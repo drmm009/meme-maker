@@ -516,6 +516,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
   const [exportFileSize, setExportFileSize] = useState(null);
   const [exportDropdownOpen, setExportDropdownOpen] = useState(false);
   const exportDropdownRef = useRef(null);
+  const [directCopyStatus, setDirectCopyStatus] = useState(false);
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
   const [exportedVideoUrl, setExportedVideoUrl] = useState(null);
   const [isSaved, setIsSaved] = useState(false);
@@ -1983,6 +1984,35 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     }, 50);
   };
 
+  const handleDirectCopyImage = () => {
+    handleQuickExport(async (dataUrl) => {
+      try {
+        const res = await fetch(dataUrl);
+        const blob = await res.blob();
+        if (typeof ClipboardItem !== 'undefined' && navigator.clipboard?.write) {
+          await navigator.clipboard.write([
+            new ClipboardItem({ 'image/png': blob })
+          ]);
+        } else {
+          await navigator.clipboard.writeText(dataUrl);
+        }
+        setDirectCopyStatus(true);
+        triggerConfetti();
+        setTimeout(() => setDirectCopyStatus(false), 2200);
+      } catch (e) {
+        console.warn('Direct image copy failed, trying writeText fallback:', e);
+        try {
+          await navigator.clipboard.writeText(dataUrl);
+          setDirectCopyStatus(true);
+          triggerConfetti();
+          setTimeout(() => setDirectCopyStatus(false), 2200);
+        } catch (err2) {
+          console.error('Direct copy failed completely:', err2);
+        }
+      }
+    });
+  };
+
   const handleConfirmSave = () => {
     const dataUrl = exportedImageUri || (canvasRef.current && canvasRef.current.toDataURL('image/png'));
     if (dataUrl) {
@@ -2353,6 +2383,40 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
             options={ASPECT_RATIOS}
           />
 
+          {/* 1-Click Direct Copy Image to Clipboard */}
+          <motion.button
+            type="button"
+            className={`btn ${directCopyStatus ? 'btn-success' : 'btn-secondary'} btn-xs hover-lift`}
+            whileTap={{ scale: 0.95 }}
+            onClick={handleDirectCopyImage}
+            title="Copy rendered meme directly to clipboard (Ctrl+V into Discord, Slack, WhatsApp, Twitter)"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              fontWeight: 600,
+              borderRadius: '10px',
+              padding: '6px 12px',
+              border: directCopyStatus ? '1px solid #22c55e' : '1px solid rgba(255, 255, 255, 0.2)',
+              background: directCopyStatus ? 'rgba(34, 197, 94, 0.25)' : 'rgba(255, 255, 255, 0.1)',
+              color: directCopyStatus ? '#4ade80' : 'currentColor',
+              boxShadow: directCopyStatus ? '0 0 16px rgba(34, 197, 94, 0.4)' : '0 4px 12px rgba(0,0,0,0.1)',
+              transition: 'all 0.25s ease'
+            }}
+          >
+            {directCopyStatus ? (
+              <>
+                <Check className="icon-xs" style={{ color: '#4ade80' }} />
+                <span style={{ fontWeight: 700 }}>Copied!</span>
+              </>
+            ) : (
+              <>
+                <Copy className="icon-xs" />
+                <span>Copy</span>
+              </>
+            )}
+          </motion.button>
+
           <div style={{ position: 'relative' }} ref={exportDropdownRef}>
             <motion.button
               className="btn btn-primary shadow-glow btn-xs"
@@ -2402,7 +2466,9 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         } else {
                           await navigator.clipboard.writeText(uri);
                         }
+                        setDirectCopyStatus(true);
                         triggerConfetti();
+                        setTimeout(() => setDirectCopyStatus(false), 2200);
                       } catch(e) { console.warn(e); }
                     }},
                     { icon: <Share2 style={{width:16,height:16}} />, label: 'Share', action: async (uri) => {
@@ -4349,6 +4415,88 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         placeholder="Enter text..."
                         style={{ width: '100%', fontSize: '0.85rem', resize: 'vertical' }}
                       />
+                    </div>
+                  )}
+
+                  {/* Curved / Arc Text Control */}
+                  {(!activeCaption.isBreakingNews && !activeCaption.isTweetCard) && (
+                    <div
+                      style={{
+                        background: 'var(--bg-surface-1)',
+                        padding: '10px 12px',
+                        borderRadius: '12px',
+                        border: '1px solid var(--glass-border)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '8px',
+                        marginTop: '4px'
+                      }}
+                    >
+                      <div className="flex-between align-center">
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span style={{ fontSize: '0.74rem', fontWeight: 600, color: 'var(--text-muted)' }}>Text Curve / Arc</span>
+                          <span style={{ fontSize: '0.72rem', fontWeight: 700, color: (activeCaption.curve && activeCaption.curve !== 0) ? 'var(--cyber-cyan)' : 'var(--text-muted)' }}>
+                            {activeCaption.curve ? `${activeCaption.curve > 0 ? '+' : ''}${activeCaption.curve}°` : 'Flat'}
+                          </span>
+                        </div>
+                        {(activeCaption.curve !== undefined && activeCaption.curve !== 0) && (
+                          <button
+                            type="button"
+                            className="btn btn-xs btn-ghost"
+                            onClick={() => updateActiveCaption('curve', 0)}
+                            style={{ fontSize: '0.68rem', padding: '1px 6px', height: '18px', color: 'var(--text-muted)' }}
+                          >
+                            Reset Flat
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Preset Pills */}
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '4px' }}>
+                        {[
+                          { label: 'Flat', val: 0 },
+                          { label: 'Arch', val: 40 },
+                          { label: 'Deep Arch', val: 75 },
+                          { label: 'Smile', val: -40 },
+                          { label: 'Deep Smile', val: -75 },
+                        ].map((preset) => {
+                          const isActive = (activeCaption.curve || 0) === preset.val;
+                          return (
+                            <button
+                              key={preset.label}
+                              type="button"
+                              className={`btn btn-xs ${isActive ? 'btn-primary' : 'btn-ghost'}`}
+                              style={{
+                                fontSize: '0.66rem',
+                                padding: '4px 2px',
+                                borderRadius: '6px',
+                                border: isActive ? 'none' : '1px solid var(--glass-border)',
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis'
+                              }}
+                              onClick={() => updateActiveCaption('curve', preset.val)}
+                            >
+                              {preset.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      {/* Slider */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', width: '38px', textAlign: 'right' }}>Smile</span>
+                        <input
+                          type="range"
+                          min={-100}
+                          max={100}
+                          step={2}
+                          value={activeCaption.curve || 0}
+                          onChange={(e) => updateActiveCaption('curve', Number(e.target.value))}
+                          style={{ flex: 1, height: '4px', accentColor: 'var(--cyber-cyan)', margin: 0 }}
+                        />
+                        <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', width: '38px' }}>Arch</span>
+                      </div>
                     </div>
                   )}
                 </div>
