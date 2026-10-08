@@ -2479,40 +2479,6 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
             options={ASPECT_RATIOS}
           />
 
-          {/* 1-Click Direct Copy Image to Clipboard */}
-          <motion.button
-            type="button"
-            className={`btn ${directCopyStatus ? 'btn-success' : 'btn-secondary'} btn-xs hover-lift`}
-            whileTap={{ scale: 0.95 }}
-            onClick={handleDirectCopyImage}
-            title="Copy rendered meme directly to clipboard (Ctrl+V into Discord, Slack, WhatsApp, Twitter)"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              fontWeight: 600,
-              borderRadius: '10px',
-              padding: '6px 12px',
-              border: directCopyStatus ? '1px solid #22c55e' : '1px solid rgba(255, 255, 255, 0.2)',
-              background: directCopyStatus ? 'rgba(34, 197, 94, 0.25)' : 'rgba(255, 255, 255, 0.1)',
-              color: directCopyStatus ? '#4ade80' : 'currentColor',
-              boxShadow: directCopyStatus ? '0 0 16px rgba(34, 197, 94, 0.4)' : '0 4px 12px rgba(0,0,0,0.1)',
-              transition: 'all 0.25s ease'
-            }}
-          >
-            {directCopyStatus ? (
-              <>
-                <Check className="icon-xs" style={{ color: '#4ade80' }} />
-                <span style={{ fontWeight: 700 }}>Copied!</span>
-              </>
-            ) : (
-              <>
-                <Copy className="icon-xs" />
-                <span>Copy</span>
-              </>
-            )}
-          </motion.button>
-
           <div style={{ position: 'relative' }} ref={exportDropdownRef}>
             <motion.button
               className="btn btn-primary shadow-glow btn-xs"
