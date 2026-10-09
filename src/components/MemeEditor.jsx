@@ -11,7 +11,7 @@ import {
   Image as ImageIcon, Search, X, Upload, RotateCw, ZoomIn, Crop, LayoutGrid, Scissors, Play, Pause, FolderHeart, Droplet, Monitor,
   Paintbrush, Eraser, Highlighter, Palette, Sun, Moon, ChevronDown, ChevronLeft, PencilLine, Move, ArrowDownRight, Wand2,
   Layers, ArrowUp, ArrowDown, ChevronsUp, ChevronsDown, Eye, EyeOff, Lock, Unlock, FlipHorizontal,
-  PanelTop, PanelBottom, MessageSquare, Flame, Tv, MessageCircle, Shield, Circle, TrendingDown
+  PanelTop, PanelBottom, MessageSquare, Flame, Tv, MessageCircle, Shield, Circle, TrendingDown, Ban
 } from 'lucide-react';
 import AiCaptionModal from './AiCaptionModal';
 import MemeStylesModal, { TwitterVerifiedBadge } from './MemeStylesModal';
@@ -2960,94 +2960,166 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                   )}
 
                   {/* Text Controls - 3. Bg Submenu */}
-                  {activeCaption && showTextBgMenu && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-                      <button
-                        onClick={() => setShowTextBgMenu(false)}
-                        className="btn btn-icon btn-xs vid-ctx-btn"
-                        title="Back to text toolbar"
-                        style={{ borderRadius: '8px', flexShrink: 0 }}
-                      >
-                        <ArrowLeft style={{ width: 14, height: 14 }} />
-                      </button>
-                      <div className="vid-ctx-divider" />
-                      
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
-                        <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>Bg:</span>
-                        <button
-                          type="button"
-                          className={`btn btn-xs ${(!activeCaption.bgColor || activeCaption.bgColor === 'none' || activeCaption.bgColor === 'transparent') ? 'btn-primary' : 'btn-ghost'}`}
-                          onClick={() => handleSetCaptionBg('none')}
-                          style={{ padding: '2px 8px', fontSize: '11px', height: '24px', borderRadius: '6px' }}
-                        >
-                          None
-                        </button>
-                        <button
-                          type="button"
-                          className={`btn btn-xs ${activeCaption.bgColor === 'black' ? 'btn-primary' : 'btn-ghost'}`}
-                          onClick={() => handleSetCaptionBg('black')}
-                          style={{ padding: '2px 8px', fontSize: '11px', height: '24px', borderRadius: '6px' }}
-                        >
-                          Black
-                        </button>
-                        <button
-                          type="button"
-                          className={`btn btn-xs ${activeCaption.bgColor === 'white' ? 'btn-primary' : 'btn-ghost'}`}
-                          onClick={() => handleSetCaptionBg('white')}
-                          style={{ padding: '2px 8px', fontSize: '11px', height: '24px', borderRadius: '6px' }}
-                        >
-                          White
-                        </button>
-                        <button
-                          type="button"
-                          className={`btn btn-xs ${activeCaption.bgStyle === 'banner' ? 'btn-primary' : 'btn-ghost'}`}
-                          onClick={() => handleSetCaptionBg('banner')}
-                          style={{ padding: '2px 8px', fontSize: '11px', height: '24px', borderRadius: '6px' }}
-                        >
-                          Banner
-                        </button>
+                  {activeCaption && showTextBgMenu && (() => {
+                    const isNone = !activeCaption.bgColor || activeCaption.bgColor === 'none' || activeCaption.bgColor === 'transparent';
+                    const isBlack = (activeCaption.bgColor === 'black' || activeCaption.bgColor === '#000000') && activeCaption.bgStyle !== 'banner';
+                    const isWhite = (activeCaption.bgColor === 'white' || activeCaption.bgColor === '#ffffff') && activeCaption.bgStyle !== 'banner';
+                    const isBanner = activeCaption.bgStyle === 'banner';
+                    const isCustom = !isNone && !isBlack && !isWhite && !isBanner;
 
-                        {/* Custom Bg Color Picker */}
-                        <div
-                          className="btn btn-xs vid-ctx-btn"
-                          style={{
-                            position: 'relative',
-                            overflow: 'hidden',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '4px',
-                            padding: '2px 8px',
-                            height: '24px',
-                            borderRadius: '6px',
-                            background: 'rgba(255, 255, 255, 0.08)',
-                            border: '1px solid rgba(255, 255, 255, 0.1)',
-                            cursor: 'pointer'
-                          }}
-                          title="Custom Background Color"
+                    return (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+                        <button
+                          onClick={() => setShowTextBgMenu(false)}
+                          className="btn btn-icon btn-xs vid-ctx-btn"
+                          title="Back to text toolbar"
+                          style={{ borderRadius: '8px', flexShrink: 0 }}
                         >
-                          <div
+                          <ArrowLeft style={{ width: 14, height: 14 }} />
+                        </button>
+                        <div className="vid-ctx-divider" />
+
+                        {/* Minimalist Swatches & Banner */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+                          {/* 1. None (transparent) Swatch */}
+                          <button
+                            type="button"
+                            onClick={() => handleSetCaptionBg('none')}
+                            title="No background"
                             style={{
-                              width: 12,
-                              height: 12,
+                              width: 22,
+                              height: 22,
                               borderRadius: '50%',
-                              background: (activeCaption.bgColor && activeCaption.bgColor !== 'none' && activeCaption.bgColor !== 'transparent') ? activeCaption.bgColor : '#ffffff',
-                              border: '2px solid rgba(255,255,255,0.4)'
+                              border: isNone ? '2px solid var(--cyber-cyan)' : '1.5px solid rgba(255, 255, 255, 0.25)',
+                              background: isNone ? 'rgba(6, 182, 212, 0.2)' : 'rgba(255, 255, 255, 0.06)',
+                              boxShadow: isNone ? '0 0 8px rgba(6, 182, 212, 0.5)' : 'none',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              padding: 0,
+                              cursor: 'pointer',
+                              transform: isNone ? 'scale(1.1)' : 'scale(1)',
+                              transition: 'all 0.15s ease'
+                            }}
+                          >
+                            <Ban style={{ width: 12, height: 12, color: isNone ? 'var(--cyber-cyan)' : 'rgba(255, 255, 255, 0.6)' }} />
+                          </button>
+
+                          {/* 2. Black Swatch */}
+                          <button
+                            type="button"
+                            onClick={() => handleSetCaptionBg('black')}
+                            title="Black background"
+                            style={{
+                              width: 22,
+                              height: 22,
+                              borderRadius: '50%',
+                              backgroundColor: '#000000',
+                              border: isBlack ? '2px solid var(--cyber-cyan)' : '1.5px solid rgba(255, 255, 255, 0.35)',
+                              boxShadow: isBlack ? '0 0 8px rgba(6, 182, 212, 0.5)' : 'none',
+                              padding: 0,
+                              cursor: 'pointer',
+                              transform: isBlack ? 'scale(1.1)' : 'scale(1)',
+                              transition: 'all 0.15s ease'
                             }}
                           />
-                          <span style={{ fontSize: '11px', fontWeight: 600, color: '#ffffff' }}>Color</span>
-                          <input
-                            type="color"
-                            value={(activeCaption.bgColor && activeCaption.bgColor !== 'none' && activeCaption.bgColor !== 'transparent') ? (activeCaption.bgColor === 'black' ? '#000000' : (activeCaption.bgColor === 'white' ? '#ffffff' : activeCaption.bgColor)) : '#ffffff'}
-                            onChange={(e) => {
-                              const hex = e.target.value;
-                              updateActiveCaptionProps({ bgColor: hex, bgStyle: 'box' });
+
+                          {/* 3. White Swatch */}
+                          <button
+                            type="button"
+                            onClick={() => handleSetCaptionBg('white')}
+                            title="White background"
+                            style={{
+                              width: 22,
+                              height: 22,
+                              borderRadius: '50%',
+                              backgroundColor: '#ffffff',
+                              border: isWhite ? '2px solid var(--cyber-cyan)' : '1.5px solid rgba(255, 255, 255, 0.35)',
+                              boxShadow: isWhite ? '0 0 8px rgba(6, 182, 212, 0.5)' : 'none',
+                              padding: 0,
+                              cursor: 'pointer',
+                              transform: isWhite ? 'scale(1.1)' : 'scale(1)',
+                              transition: 'all 0.15s ease'
                             }}
-                            style={{ position: 'absolute', opacity: 0, inset: 0, cursor: 'pointer', width: '100%', height: '100%' }}
                           />
+
+                          {/* 4. Custom Color Swatch with Color Picker */}
+                          <div
+                            title="Custom background color"
+                            style={{
+                              position: 'relative',
+                              width: 22,
+                              height: 22,
+                              borderRadius: '50%',
+                              background: isCustom
+                                ? activeCaption.bgColor
+                                : 'conic-gradient(from 180deg at 50% 50%, #ff0055, #ffaa00, #00ff66, #00bbff, #aa00ff, #ff0055)',
+                              border: isCustom ? '2px solid var(--cyber-cyan)' : '1.5px solid rgba(255, 255, 255, 0.35)',
+                              boxShadow: isCustom ? '0 0 8px rgba(6, 182, 212, 0.5)' : 'none',
+                              transform: isCustom ? 'scale(1.1)' : 'scale(1)',
+                              cursor: 'pointer',
+                              overflow: 'hidden',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              transition: 'all 0.15s ease'
+                            }}
+                          >
+                            <input
+                              type="color"
+                              value={isCustom ? activeCaption.bgColor : '#ffffff'}
+                              onChange={(e) => {
+                                const hex = e.target.value;
+                                updateActiveCaptionProps({ bgColor: hex, bgStyle: 'box' });
+                              }}
+                              style={{
+                                position: 'absolute',
+                                opacity: 0,
+                                inset: 0,
+                                cursor: 'pointer',
+                                width: '100%',
+                                height: '100%'
+                              }}
+                            />
+                          </div>
+
+                          <div className="vid-ctx-divider" style={{ margin: '0 2px' }} />
+
+                          {/* 5. Minimal Banner Toggle */}
+                          <button
+                            type="button"
+                            className={`btn btn-xs vid-ctx-btn ${isBanner ? 'active' : ''}`}
+                            onClick={() => {
+                              if (isBanner) {
+                                updateActiveCaptionProps({ bgStyle: 'box' });
+                              } else if (!activeCaption.bgColor || activeCaption.bgColor === 'none' || activeCaption.bgColor === 'transparent') {
+                                handleSetCaptionBg('banner');
+                              } else {
+                                updateActiveCaptionProps({ bgStyle: 'banner' });
+                              }
+                            }}
+                            title={isBanner ? "Full-width Banner active (Click to return to box)" : "Toggle full-width Banner"}
+                            style={{
+                              padding: '2px 8px',
+                              fontSize: '11px',
+                              height: '24px',
+                              borderRadius: '6px',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              background: isBanner ? 'var(--primary-gradient)' : 'rgba(255, 255, 255, 0.08)',
+                              border: isBanner ? '1px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.1)',
+                              color: '#ffffff',
+                              fontWeight: 600
+                            }}
+                          >
+                            <PanelTop style={{ width: 12, height: 12, color: isBanner ? '#ffffff' : 'rgba(255, 255, 255, 0.85)' }} />
+                            <span>Banner</span>
+                          </button>
                         </div>
                       </div>
-                    </div>
-                  )}
+                    );
+                  })()}
 
                   {/* Bubble Layout Selector Bar with Back button */}
                   {activeCaption && activeCaption.bubbleStyle && showBubbleLayouts && (
