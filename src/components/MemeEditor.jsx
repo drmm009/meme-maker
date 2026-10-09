@@ -526,6 +526,8 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [showAiModal, setShowAiModal] = useState(false);
   const [showBubbleLayouts, setShowBubbleLayouts] = useState(false);
+  const [showTweetThemeMenu, setShowTweetThemeMenu] = useState(false);
+  const [showTweetTrendMenu, setShowTweetTrendMenu] = useState(false);
   const [exportFormat, setExportFormat] = useState('png'); // 'png' | 'jpeg' | 'webp'
   const [exportQuality, setExportQuality] = useState(0.92);
   const [exportPreset, setExportPreset] = useState('hd'); // 'hd' | 'discord' | 'compact'
@@ -617,6 +619,12 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
       setActiveLayerId(captions[0].id);
     }
   }, []);
+
+  // Reset tweet toolbar submenus on active layer change
+  useEffect(() => {
+    setShowTweetThemeMenu(false);
+    setShowTweetTrendMenu(false);
+  }, [activeLayerId]);
 
   // Keyboard shortcuts: Ctrl+Z (undo), Ctrl+Y / Ctrl+Shift+Z (redo), Delete (delete layer), Escape (deselect)
   useEffect(() => {
@@ -2971,62 +2979,124 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                     </div>
                   )}
 
-                  {activeCaption && !showFontMenu && !showTextEffectsMenu && !showBubbleLayouts && (() => {
+                  {/* Tweet Card Theme Selector Bar with Back button */}
+                  {activeCaption && activeCaption.isTweetCard && showTweetThemeMenu && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', width: '100%', overflowX: 'auto', scrollbarWidth: 'none', padding: '0 2px' }}>
+                      {/* Back Button */}
+                      <button
+                        onClick={() => setShowTweetThemeMenu(false)}
+                        className="btn btn-icon btn-xs vid-ctx-btn"
+                        title="Back to tweet toolbar"
+                        style={{ borderRadius: '8px', flexShrink: 0 }}
+                      >
+                        <ArrowLeft style={{ width: 14, height: 14 }} />
+                      </button>
+
+                      <div className="vid-ctx-divider" style={{ width: 1, height: 20, background: 'rgba(255,255,255,0.2)', margin: '0 2px', flexShrink: 0 }} />
+
+                      {/* 3 buttons: Dim, Dark, White */}
+                      {[
+                        { id: 'dim', label: 'Dim', icon: '🌌' },
+                        { id: 'dark', label: 'Dark', icon: '🌑' },
+                        { id: 'white', label: 'White', icon: '☀️' }
+                      ].map((th) => {
+                        const currentTheme = activeCaption.tweetTheme || 'dark';
+                        const isActive = currentTheme === th.id || (th.id === 'white' && currentTheme === 'light');
+                        return (
+                          <button
+                            key={th.id}
+                            type="button"
+                            className={`btn btn-xs vid-ctx-btn ${isActive ? 'active' : ''}`}
+                            onClick={() => {
+                              const newColor = th.id === 'white' ? '#0f1419' : '#ffffff';
+                              updateActiveCaptionProps({ tweetTheme: th.id, color: newColor });
+                            }}
+                            title={`${th.label} theme`}
+                            style={{
+                              padding: '4px 10px',
+                              fontSize: '0.75rem',
+                              fontWeight: 600,
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '5px',
+                              borderRadius: '8px',
+                              flexShrink: 0,
+                              background: isActive ? 'var(--primary-gradient)' : 'rgba(255, 255, 255, 0.08)',
+                              color: '#ffffff',
+                              border: isActive ? '1px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.1)'
+                            }}
+                          >
+                            <span>{th.icon}</span>
+                            <span>{th.label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {/* Tweet Card Trend Selector Bar with Back button */}
+                  {activeCaption && activeCaption.isTweetCard && showTweetTrendMenu && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', width: '100%', overflowX: 'auto', scrollbarWidth: 'none', padding: '0 2px' }}>
+                      {/* Back Button */}
+                      <button
+                        onClick={() => setShowTweetTrendMenu(false)}
+                        className="btn btn-icon btn-xs vid-ctx-btn"
+                        title="Back to tweet toolbar"
+                        style={{ borderRadius: '8px', flexShrink: 0 }}
+                      >
+                        <ArrowLeft style={{ width: 14, height: 14 }} />
+                      </button>
+
+                      <div className="vid-ctx-divider" style={{ width: 1, height: 20, background: 'rgba(255,255,255,0.2)', margin: '0 2px', flexShrink: 0 }} />
+
+                      {/* 3 buttons: Viral, Casual, Ratioed */}
+                      {[
+                        { id: 'viral', label: 'Viral', icon: '🔥', text: '💬 14.2K    🔁 62.8K    ❤️ 420.5K    📊 18.2M' },
+                        { id: 'casual', label: 'Casual', icon: '💬', text: '💬 142    🔁 890    ❤️ 4.6K    📊 72K' },
+                        { id: 'ratio', label: 'Ratioed', icon: '📉', text: '💬 84.1K    🔁 412    ❤️ 1.2K    📊 6.4M' }
+                      ].map((tr) => {
+                        const currentMetricsText = activeCaption.tweetMetrics || '';
+                        const isSelected = activeCaption.tweetMetricsId === tr.id || (!activeCaption.tweetMetricsId && (
+                          tr.id === 'viral' ? (currentMetricsText.includes('14.2K') || currentMetricsText.includes('1.2K')) :
+                          tr.id === 'ratio' ? currentMetricsText.includes('84.1K') :
+                          tr.id === 'casual' ? currentMetricsText.includes('142') : false
+                        ));
+                        return (
+                          <button
+                            key={tr.id}
+                            type="button"
+                            className={`btn btn-xs vid-ctx-btn ${isSelected ? 'active' : ''}`}
+                            onClick={() => updateActiveCaptionProps({ tweetMetrics: tr.text, tweetMetricsId: tr.id })}
+                            title={`${tr.label} metrics`}
+                            style={{
+                              padding: '4px 10px',
+                              fontSize: '0.75rem',
+                              fontWeight: 600,
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '5px',
+                              borderRadius: '8px',
+                              flexShrink: 0,
+                              background: isSelected ? 'var(--primary-gradient)' : 'rgba(255, 255, 255, 0.08)',
+                              color: '#ffffff',
+                              border: isSelected ? '1px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.1)'
+                            }}
+                          >
+                            <span>{tr.icon}</span>
+                            <span>{tr.label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {activeCaption && !showFontMenu && !showTextEffectsMenu && !showBubbleLayouts && !showTweetThemeMenu && !showTweetTrendMenu && (() => {
                     if (activeCaption.isTweetCard) {
-                      const currentTheme = activeCaption.tweetTheme || 'dark';
-                      const currentMetricsText = activeCaption.tweetMetrics || '';
                       const isVerified = activeCaption.tweetVerified !== false;
 
-                      const themeOptions = [
-                        { id: 'dark', label: 'Dark', icon: '🌑' },
-                        { id: 'dim', label: 'Dim', icon: '🌌' },
-                        { id: 'light', label: 'Light', icon: '☀️' }
-                      ];
-
-                      const metricsOptions = [
-                        { id: 'viral', label: '🔥 Viral', text: '💬 14.2K    🔁 62.8K    ❤️ 420.5K    📊 18.2M' },
-                        { id: 'ratio', label: '📉 Ratioed', text: '💬 84.1K    🔁 412    ❤️ 1.2K    📊 6.4M' },
-                        { id: 'casual', label: '💬 Casual', text: '💬 142    🔁 890    ❤️ 4.6K    📊 72K' }
-                      ];
-
                       return (
-                        <>
-                          {/* Theme Switcher: Dark, Dim, Light */}
-                          {themeOptions.map((th) => {
-                            const isActive = currentTheme === th.id;
-                            return (
-                              <button
-                                key={th.id}
-                                type="button"
-                                className={`btn btn-xs vid-ctx-btn ${isActive ? 'active' : ''}`}
-                                onClick={() => {
-                                  const newColor = th.id === 'light' ? '#0f1419' : '#ffffff';
-                                  updateActiveCaptionProps({ tweetTheme: th.id, color: newColor });
-                                }}
-                                title={`${th.label} theme`}
-                                style={{
-                                  padding: '4px 9px',
-                                  fontSize: '0.75rem',
-                                  fontWeight: 600,
-                                  display: 'inline-flex',
-                                  alignItems: 'center',
-                                  gap: '4px',
-                                  borderRadius: '8px',
-                                  flexShrink: 0,
-                                  background: isActive ? 'var(--primary-gradient)' : 'rgba(255, 255, 255, 0.08)',
-                                  color: '#ffffff',
-                                  border: isActive ? '1px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.1)'
-                                }}
-                              >
-                                <span>{th.icon}</span>
-                                <span>{th.label}</span>
-                              </button>
-                            );
-                          })}
-
-                          <div className="vid-ctx-divider" style={{ width: 1, height: 18, background: 'rgba(255,255,255,0.15)', margin: '0 2px', flexShrink: 0 }} />
-
-                          {/* Verified Badge Toggle */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          {/* Verified button */}
                           <button
                             type="button"
                             className={`btn btn-xs vid-ctx-btn ${isVerified ? 'active' : ''}`}
@@ -3050,41 +3120,60 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                             <span>Verified</span>
                           </button>
 
-                          <div className="vid-ctx-divider" style={{ width: 1, height: 18, background: 'rgba(255,255,255,0.15)', margin: '0 2px', flexShrink: 0 }} />
+                          {/* Theme button */}
+                          <button
+                            type="button"
+                            className="btn btn-xs vid-ctx-btn"
+                            onClick={() => {
+                              setShowTweetTrendMenu(false);
+                              setShowTweetThemeMenu(true);
+                            }}
+                            title="Change Theme (Dim, Dark, White)"
+                            style={{
+                              padding: '4px 10px',
+                              fontSize: '0.75rem',
+                              fontWeight: 600,
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '5px',
+                              borderRadius: '8px',
+                              flexShrink: 0,
+                              background: 'rgba(255, 255, 255, 0.08)',
+                              border: '1px solid rgba(255, 255, 255, 0.1)',
+                              color: '#ffffff'
+                            }}
+                          >
+                            <Palette style={{ width: 13, height: 13, color: 'var(--cyber-cyan)' }} />
+                            <span>Theme</span>
+                          </button>
 
-                          {/* Metrics Presets: Viral, Ratioed, Casual */}
-                          {metricsOptions.map((m) => {
-                            const isSelected = activeCaption.tweetMetricsId === m.id || (!activeCaption.tweetMetricsId && (
-                              m.id === 'viral' ? (currentMetricsText.includes('14.2K') || currentMetricsText.includes('1.2K')) :
-                              m.id === 'ratio' ? currentMetricsText.includes('84.1K') :
-                              m.id === 'casual' ? currentMetricsText.includes('142') : false
-                            ));
-                            return (
-                              <button
-                                key={m.id}
-                                type="button"
-                                className={`btn btn-xs vid-ctx-btn ${isSelected ? 'active' : ''}`}
-                                onClick={() => updateActiveCaptionProps({ tweetMetrics: m.text, tweetMetricsId: m.id })}
-                                title={`${m.label} metrics`}
-                                style={{
-                                  padding: '4px 9px',
-                                  fontSize: '0.75rem',
-                                  fontWeight: 600,
-                                  display: 'inline-flex',
-                                  alignItems: 'center',
-                                  gap: '4px',
-                                  borderRadius: '8px',
-                                  flexShrink: 0,
-                                  background: isSelected ? 'var(--primary-gradient)' : 'rgba(255, 255, 255, 0.08)',
-                                  color: '#ffffff',
-                                  border: isSelected ? '1px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.1)'
-                                }}
-                              >
-                                <span>{m.label}</span>
-                              </button>
-                            );
-                          })}
-                        </>
+                          {/* Trend button */}
+                          <button
+                            type="button"
+                            className="btn btn-xs vid-ctx-btn"
+                            onClick={() => {
+                              setShowTweetThemeMenu(false);
+                              setShowTweetTrendMenu(true);
+                            }}
+                            title="Change Trend Metrics (Viral, Casual, Ratioed)"
+                            style={{
+                              padding: '4px 10px',
+                              fontSize: '0.75rem',
+                              fontWeight: 600,
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '5px',
+                              borderRadius: '8px',
+                              flexShrink: 0,
+                              background: 'rgba(255, 255, 255, 0.08)',
+                              border: '1px solid rgba(255, 255, 255, 0.1)',
+                              color: '#ffffff'
+                            }}
+                          >
+                            <Flame style={{ width: 13, height: 13, color: '#f97316' }} />
+                            <span>Trend</span>
+                          </button>
+                        </div>
                       );
                     }
 
@@ -3373,7 +3462,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                   )}
 
                   {/* UNIFIED ACTIONS CLUSTER (Duplicate / Layers / Delete for All Elements) */}
-                  {((activeCaption && !showFontMenu && !showTextEffectsMenu && !showBubbleLayouts) || activeSticker || (activeImageLayer && !showImageFilterMenu)) && (
+                  {((activeCaption && !showFontMenu && !showTextEffectsMenu && !showBubbleLayouts && !showTweetThemeMenu && !showTweetTrendMenu) || activeSticker || (activeImageLayer && !showImageFilterMenu)) && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: '3px', marginLeft: 'auto', flexShrink: 0 }}>
                       <button
                         className="btn btn-icon btn-xs vid-ctx-btn"
