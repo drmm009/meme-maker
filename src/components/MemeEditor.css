@@ -388,6 +388,129 @@
   justify-content: flex-start !important;
 }
 
+/* Authentic Chat Bubble Layout Buttons */
+.bubble-layout-btn {
+  flex-shrink: 0;
+  white-space: nowrap;
+  padding: 5px 12px !important;
+  font-size: 0.75rem !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 4px !important;
+  cursor: pointer !important;
+  position: relative !important;
+  transition: transform 0.16s ease, box-shadow 0.16s ease, filter 0.16s ease !important;
+  line-height: 1.2 !important;
+  user-select: none;
+}
+
+.bubble-layout-btn:hover {
+  filter: brightness(1.12);
+  transform: translateY(-1px);
+}
+
+.bubble-layout-btn:active {
+  transform: scale(0.96);
+}
+
+.bubble-layout-btn.bubble-active {
+  outline: 2.5px solid var(--cyber-cyan, #00f0ff) !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 14px rgba(0, 240, 255, 0.75), 0 3px 8px rgba(0, 0, 0, 0.5) !important;
+  transform: scale(1.05) !important;
+  z-index: 2;
+}
+
+/* 1. iPhone Send Bubble (iOS outgoing blue bubble with bottom-right tail) */
+.bubble-layout-btn-imessage-send {
+  background: linear-gradient(180deg, #1886fe 0%, #007aff 100%) !important;
+  color: #ffffff !important;
+  border-radius: 14px 14px 2px 14px !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  font-weight: 600 !important;
+  box-shadow: 0 2px 5px rgba(0, 122, 255, 0.35);
+}
+
+/* 2. iPhone Receive Bubble (iOS incoming gray bubble with bottom-left tail) */
+.bubble-layout-btn-imessage-receive {
+  background: #e9e9eb !important;
+  color: #000000 !important;
+  border-radius: 14px 14px 14px 2px !important;
+  border: 1px solid rgba(0, 0, 0, 0.12) !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  font-weight: 600 !important;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.25);
+}
+
+/* 3. WhatsApp Send Bubble (WhatsApp outgoing emerald bubble with top-right tail) */
+.bubble-layout-btn-whatsapp-send {
+  background: #005c4b !important;
+  color: #e9edef !important;
+  border-radius: 10px 2px 10px 10px !important;
+  border: 1px solid #007a65 !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  font-weight: 600 !important;
+  box-shadow: 0 2px 5px rgba(0, 92, 75, 0.4);
+}
+
+/* 4. WhatsApp Receive Bubble (WhatsApp incoming dark bubble with top-left tail) */
+.bubble-layout-btn-whatsapp-receive {
+  background: #202c33 !important;
+  color: #e9edef !important;
+  border-radius: 2px 10px 10px 10px !important;
+  border: 1px solid #2a3942 !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  font-weight: 600 !important;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+/* 5. Comic Speech Bubble Left Tail */
+.bubble-layout-btn-speech-left {
+  background: #ffffff !important;
+  color: #000000 !important;
+  border-radius: 12px 12px 12px 2px !important;
+  border: 2px solid #000000 !important;
+  font-family: Montserrat, sans-serif !important;
+  font-weight: 700 !important;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.35);
+}
+
+/* 6. Comic Speech Bubble Right Tail */
+.bubble-layout-btn-speech-right {
+  background: #ffffff !important;
+  color: #000000 !important;
+  border-radius: 12px 12px 2px 12px !important;
+  border: 2px solid #000000 !important;
+  font-family: Montserrat, sans-serif !important;
+  font-weight: 700 !important;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.35);
+}
+
+/* 7. Thought Bubble (Cloud outline) */
+.bubble-layout-btn-thought {
+  background: #ffffff !important;
+  color: #000000 !important;
+  border-radius: 18px !important;
+  border: 2px dashed #000000 !important;
+  font-family: Montserrat, sans-serif !important;
+  font-weight: 700 !important;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.35);
+}
+
+/* 8. Comic Shout Bubble (Yellow starburst/explosive style) */
+.bubble-layout-btn-shout {
+  background: #ffe600 !important;
+  color: #000000 !important;
+  border-radius: 3px !important;
+  border: 2px solid #000000 !important;
+  font-family: Impact, "Arial Black", sans-serif !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.5px !important;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+}
+
 .vid-ctx-btn-delete {
   background: rgba(239, 68, 68, 0.85) !important;
   color: #ffffff !important;

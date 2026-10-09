@@ -41,9 +41,9 @@ const BUBBLE_LAYOUT_OPTIONS = [
   { id: 'imessage-receive', label: 'iPhone 📥' },
   { id: 'whatsapp-send', label: 'WhatsApp 📤' },
   { id: 'whatsapp-receive', label: 'WhatsApp 📥' },
-  { id: 'speech-left', label: 'Tail Left' },
-  { id: 'speech-right', label: 'Tail Right' },
-  { id: 'thought', label: 'Thought' },
+  { id: 'speech-left', label: 'Tail Left ◂' },
+  { id: 'speech-right', label: 'Tail Right ▸' },
+  { id: 'thought', label: 'Thought 💭' },
   { id: 'shout', label: 'Shout 💥' },
 ];
 
@@ -3162,29 +3162,19 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                       <div className="vid-ctx-divider" style={{ width: 1, height: 20, background: 'rgba(255,255,255,0.2)', margin: '0 2px', flexShrink: 0 }} />
 
                       {/* Layout Options */}
-                      {BUBBLE_LAYOUT_OPTIONS.map(opt => (
-                        <button
-                          key={opt.id}
-                          className={`btn btn-xs vid-ctx-btn ${activeCaption.bubbleStyle === opt.id ? 'active' : ''}`}
-                          onClick={() => handleApplyBubbleStyle(opt.id)}
-                          style={{
-                            flexShrink: 0,
-                            whiteSpace: 'nowrap',
-                            padding: '4px 10px',
-                            borderRadius: '8px',
-                            fontSize: '0.75rem',
-                            fontWeight: 600,
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '4px',
-                            background: activeCaption.bubbleStyle === opt.id ? 'var(--primary-gradient)' : 'rgba(255,255,255,0.08)',
-                            color: '#ffffff',
-                            border: activeCaption.bubbleStyle === opt.id ? '1px solid var(--cyber-cyan)' : '1px solid rgba(255,255,255,0.1)'
-                          }}
-                        >
-                          <span>{opt.label}</span>
-                        </button>
-                      ))}
+                      {BUBBLE_LAYOUT_OPTIONS.map(opt => {
+                        const isSelected = activeCaption.bubbleStyle === opt.id;
+                        return (
+                          <button
+                            key={opt.id}
+                            className={`btn btn-xs bubble-layout-btn bubble-layout-btn-${opt.id} ${isSelected ? 'bubble-active' : ''}`}
+                            onClick={() => handleApplyBubbleStyle(opt.id)}
+                            title={`Switch to ${opt.label} bubble`}
+                          >
+                            <span>{opt.label}</span>
+                          </button>
+                        );
+                      })}
                     </div>
                   )}
 
@@ -5761,9 +5751,10 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           <button
                             key={style.id}
                             type="button"
-                            className={`btn btn-xs ${activeCaption.bubbleStyle === style.id ? 'btn-primary' : 'btn-ghost'}`}
-                            style={{ fontSize: '0.68rem', padding: '5px 2px', borderRadius: '8px', border: activeCaption.bubbleStyle === style.id ? 'none' : '1px solid var(--glass-border)' }}
+                            className={`btn btn-xs bubble-layout-btn bubble-layout-btn-${style.id} ${activeCaption.bubbleStyle === style.id ? 'bubble-active' : ''}`}
+                            style={{ fontSize: '0.68rem', padding: '5px 2px' }}
                             onClick={() => handleApplyBubbleStyle(style.id)}
+                            title={`Switch to ${style.label} bubble`}
                           >
                             {style.label}
                           </button>
