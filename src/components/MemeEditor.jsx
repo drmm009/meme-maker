@@ -583,6 +583,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
   const [isPinpointingFace, setIsPinpointingFace] = useState(false);
   const [faceTarget, setFaceTarget] = useState({ x: 0.5, y: 0.38, radius: 0.14 });
   const [sampledFaceLighting, setSampledFaceLighting] = useState(null);
+  const [extractedMemeFace, setExtractedMemeFace] = useState(null);
 
   const handleSetCanvasBgColor = (val) => {
     setCanvasBgColor(val);
@@ -1952,6 +1953,15 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
 
   const handleStartMorphFace = () => {
     if (activeImageLayer && activeImageLayer.isFaceMorph) {
+      if (canvasRef.current?.extractFacePatch) {
+        const patch = canvasRef.current.extractFacePatch(
+          activeImageLayer.x !== undefined ? activeImageLayer.x : 0.5,
+          activeImageLayer.y !== undefined ? activeImageLayer.y : 0.38,
+          0.14,
+          400
+        );
+        setExtractedMemeFace(patch);
+      }
       setShowFaceMorphModal(true);
       return;
     }
@@ -1972,9 +1982,14 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
   const handleConfirmPinpoint = () => {
     setIsPinpointingFace(false);
     let lighting = null;
+    let patch = null;
     if (canvasRef.current?.sampleFaceLighting) {
       lighting = canvasRef.current.sampleFaceLighting(faceTarget.x, faceTarget.y, faceTarget.radius);
       setSampledFaceLighting(lighting);
+    }
+    if (canvasRef.current?.extractFacePatch) {
+      patch = canvasRef.current.extractFacePatch(faceTarget.x, faceTarget.y, faceTarget.radius, 400);
+      setExtractedMemeFace(patch);
     }
     if (activeImageLayer && activeImageLayer.isFaceMorph) {
       updateActiveImageLayer({
@@ -2006,7 +2021,19 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     pushHistory(captions, stickers, nextImgLayers);
   };
 
-  const handleApplyFaceMorph = ({ url, originalFaceUrl, faceName, opacity, flipX, feather, brightness, contrast, warmth, saturation }) => {
+  const handleApplyFaceMorph = ({
+    url,
+    originalFaceUrl,
+    faceName,
+    opacity,
+    flipX,
+    brightness,
+    contrast,
+    warmth,
+    morphProgress,
+    landmarksA,
+    landmarksB
+  }) => {
     if (activeImageLayer && activeImageLayer.isFaceMorph) {
       updateActiveImageLayer({
         url,
@@ -2014,11 +2041,12 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
         faceName: faceName || activeImageLayer.faceName || 'Face Morph',
         opacity: opacity !== undefined ? opacity : activeImageLayer.opacity,
         flipX: flipX !== undefined ? flipX : activeImageLayer.flipX,
-        feather: feather || activeImageLayer.feather || 14,
         brightness: brightness || activeImageLayer.brightness || 100,
         contrast: contrast || activeImageLayer.contrast || 100,
         warmth: warmth !== undefined ? warmth : (activeImageLayer.warmth || 0),
-        saturation: saturation || activeImageLayer.saturation || 100
+        morphProgress: morphProgress !== undefined ? morphProgress : activeImageLayer.morphProgress,
+        landmarksA: landmarksA || activeImageLayer.landmarksA,
+        landmarksB: landmarksB || activeImageLayer.landmarksB
       });
       return;
     }
@@ -2037,11 +2065,12 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
       rotation: 0,
       opacity: opacity !== undefined ? opacity : 1,
       flipX: !!flipX,
-      feather: feather || 14,
       brightness: brightness || 100,
       contrast: contrast || 100,
       warmth: warmth || 0,
-      saturation: saturation || 100,
+      morphProgress: morphProgress !== undefined ? morphProgress : 0.75,
+      landmarksA,
+      landmarksB,
       fitMode: 'fit',
       zIndex: maxZ + 1
     };
@@ -4192,7 +4221,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           <button
                             className="btn btn-xs vid-ctx-btn active"
                             title="Tune Face in Studio"
-                            onClick={() => setShowFaceMorphModal(true)}
+                            onClick={handleStartMorphFace}
                             style={{
                               padding: '4px 10px',
                               fontSize: '0.75rem',
@@ -7069,7 +7098,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                       <button
                         type="button"
                         className="btn btn-xs btn-ghost"
-                        onClick={() => setShowFaceMorphModal(true)}
+                        onClick={handleStartMorphFace}
                         style={{ fontSize: '0.7rem', color: 'var(--cyber-cyan)', padding: '2px 8px', borderRadius: '6px' }}
                       >
                         Change Face
@@ -7698,6 +7727,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
           onClose={() => setShowFaceMorphModal(false)}
           onApplyFaceMorph={handleApplyFaceMorph}
           initialLighting={sampledFaceLighting}
+          memeFacePatch={extractedMemeFace}
         />
       )}
 

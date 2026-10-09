@@ -1238,6 +1238,28 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
       return sampleFaceLighting(ctx, cx, cy, r);
     };
 
+    canvas.extractFacePatch = (normX, normY, normRadius = 0.14, outputSize = 400) => {
+      const cx = normX * canvasW;
+      const cy = headerExtH + normY * canvasH;
+      const r = normRadius * canvasW;
+      const side = Math.max(80, r * 2.3);
+      const sx = Math.max(0, Math.min(canvasW - side, cx - side / 2));
+      const sy = Math.max(0, Math.min(totalCanvasH - side, cy - side / 2));
+      const sw = Math.min(side, canvasW - sx);
+      const sh = Math.min(side, totalCanvasH - sy);
+
+      const patchCanvas = document.createElement('canvas');
+      patchCanvas.width = outputSize;
+      patchCanvas.height = outputSize;
+      const pCtx = patchCanvas.getContext('2d');
+      pCtx.drawImage(canvas, sx, sy, sw, sh, 0, 0, outputSize, outputSize);
+      return {
+        canvas: patchCanvas,
+        dataUrl: patchCanvas.toDataURL('image/png'),
+        sx, sy, sw, sh
+      };
+    };
+
     canvas.bakeLayerIntoBase = (layerId) => {
       const layer = (imageLayers || []).find((l) => l.id === layerId);
       if (!layer) return null;
