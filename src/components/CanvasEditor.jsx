@@ -1677,7 +1677,9 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         // The visual bounding box is sized to match the actual text
         const padX = isBubble ? Math.max(24, fontSize * 0.5) : (hasBg && cap.bgStyle !== 'banner' ? Math.max(16, fontSize * 0.35) : Math.max(8, fontSize * 0.15));
         const padY = isBubble ? Math.max(18, fontSize * 0.4) : (hasBg && cap.bgStyle !== 'banner' ? Math.max(10, fontSize * 0.2) : Math.max(4, fontSize * 0.1));
-        let boxWidth = maxLineWidth + padX * 2;
+        let boxWidth = (cap.hasCustomWidth && cap.width)
+          ? Math.max(maxLineWidth + padX * 2, cap.width * canvas.width)
+          : (maxLineWidth + padX * 2);
         const lineHeight = fontSize * 1.2;
         const totalHeight = lines.length * lineHeight;
         let boxHeight = totalHeight + padY * 2;
@@ -1804,48 +1806,185 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
               return;
             }
 
-            uiCtx.strokeStyle = '#f97316';
-            uiCtx.lineWidth = 3;
-            uiCtx.setLineDash([6, 6]);
-            
-            uiCtx.strokeRect(boxX, boxY, boxWidth, boxHeight);
-            
-            uiCtx.setLineDash([]);
-            uiCtx.fillStyle = '#f97316';
-            uiCtx.strokeStyle = '#000000';
+            // Upgraded Modern Text Box Bounding Layer
+            // 1. Dual-tone crisp outline with subtle shadow for high contrast on light/dark images
+            uiCtx.save();
+            uiCtx.shadowColor = 'rgba(0, 0, 0, 0.4)';
+            uiCtx.shadowBlur = 4;
+            uiCtx.shadowOffsetY = 1;
+            uiCtx.strokeStyle = '#0284c7'; // Modern sky-600 accent
             uiCtx.lineWidth = 2;
-            
-            const drawHandle = (x, y) => {
+            uiCtx.strokeRect(boxX, boxY, boxWidth, boxHeight);
+            uiCtx.restore();
+
+            // Inner crisp hairline
+            uiCtx.save();
+            uiCtx.strokeStyle = 'rgba(255, 255, 255, 0.75)';
+            uiCtx.lineWidth = 1;
+            uiCtx.strokeRect(boxX + 1, boxY + 1, Math.max(1, boxWidth - 2), Math.max(1, boxHeight - 2));
+            uiCtx.restore();
+
+            // Helper: Draw Corner Scale Handle (Proportional sizing knob)
+            const drawCornerHandle = (hx, hy) => {
+              uiCtx.save();
+              uiCtx.shadowColor = 'rgba(0, 0, 0, 0.35)';
+              uiCtx.shadowBlur = 4;
+              uiCtx.shadowOffsetY = 1;
               uiCtx.beginPath();
-              uiCtx.arc(x, y, 14, 0, Math.PI * 2);
+              uiCtx.arc(hx, hy, 7.5, 0, Math.PI * 2);
+              uiCtx.fillStyle = '#ffffff';
               uiCtx.fill();
+              uiCtx.strokeStyle = '#0284c7';
+              uiCtx.lineWidth = 2.5;
               uiCtx.stroke();
+              uiCtx.restore();
             };
-            
-            drawHandle(boxX, 0); // Middle Left
-            drawHandle(boxX + boxWidth, 0); // Middle Right
-            drawHandle(boxX, boxY); // Top Left
-            drawHandle(boxX + boxWidth, boxY); // Top Right
+
+            // Helper: Draw Side Width Handle (Vertical capsule pill for wrap width stretching)
+            const drawSidePillHandle = (hx, hy) => {
+              uiCtx.save();
+              uiCtx.shadowColor = 'rgba(0, 0, 0, 0.35)';
+              uiCtx.shadowBlur = 4;
+              uiCtx.shadowOffsetY = 1;
+              const pillW = 6;
+              const pillH = 18;
+              const px = hx - pillW / 2;
+              const py = hy - pillH / 2;
+              uiCtx.beginPath();
+              if (uiCtx.roundRect) {
+                uiCtx.roundRect(px, py, pillW, pillH, 3);
+              } else {
+                uiCtx.rect(px, py, pillW, pillH);
+              }
+              uiCtx.fillStyle = '#ffffff';
+              uiCtx.fill();
+              uiCtx.strokeStyle = '#0284c7';
+              uiCtx.lineWidth = 2;
+              uiCtx.stroke();
+              uiCtx.restore();
+            };
+
+            // Side Handles: Left & Right (Wrap width adjusters)
+            drawSidePillHandle(boxX, 0); // Middle Left
+            drawSidePillHandle(boxX + boxWidth, 0); // Middle Right
+
+            // Corner Handles: TL, TR, BL, BR (Proportional size scale)
+            drawCornerHandle(boxX, boxY); // Top Left
+            drawCornerHandle(boxX + boxWidth, boxY); // Top Right
             if (cap.bubbleStyle !== 'imessage-receive') {
-              drawHandle(boxX, boxY + boxHeight); // Bottom Left
+              drawCornerHandle(boxX, boxY + boxHeight); // Bottom Left
             }
             if (cap.bubbleStyle !== 'imessage-send') {
-              drawHandle(boxX + boxWidth, boxY + boxHeight); // Bottom Right
+              drawCornerHandle(boxX + boxWidth, boxY + boxHeight); // Bottom Right
             }
-            
+
+            // Top Rotation Stem & Handle + Delete Handle
             if (!cap.isHeaderCaption && !cap.isFooterCaption) {
+              // Rotation stem
+              uiCtx.save();
+              uiCtx.strokeStyle = '#0284c7';
+              uiCtx.lineWidth = 2;
               uiCtx.beginPath();
               uiCtx.moveTo(0, boxY);
-              uiCtx.lineTo(0, boxY - 34);
-              uiCtx.stroke();
-              
-              uiCtx.beginPath();
-              uiCtx.fillStyle = '#f97316';
-              uiCtx.arc(0, boxY - 34, 16, 0, Math.PI * 2);
-              uiCtx.fill();
+              uiCtx.lineTo(0, boxY - 26);
               uiCtx.stroke();
 
-              drawDeleteHandle(uiCtx, boxX - 36, boxY - 36);
+              // Rotation knob
+              uiCtx.shadowColor = 'rgba(0, 0, 0, 0.35)';
+              uiCtx.shadowBlur = 4;
+              uiCtx.shadowOffsetY = 1;
+              uiCtx.beginPath();
+              uiCtx.arc(0, boxY - 26, 9, 0, Math.PI * 2);
+              uiCtx.fillStyle = '#ffffff';
+              uiCtx.fill();
+              uiCtx.strokeStyle = '#0284c7';
+              uiCtx.lineWidth = 2;
+              uiCtx.stroke();
+
+              // Circular rotate icon inside knob
+              uiCtx.strokeStyle = '#0284c7';
+              uiCtx.lineWidth = 1.5;
+              uiCtx.lineCap = 'round';
+              uiCtx.beginPath();
+              uiCtx.arc(0, boxY - 26, 4.5, -Math.PI * 0.7, Math.PI * 0.8);
+              uiCtx.stroke();
+              // Arrowhead
+              uiCtx.fillStyle = '#0284c7';
+              uiCtx.beginPath();
+              uiCtx.moveTo(3, boxY - 23);
+              uiCtx.lineTo(5.5, boxY - 26);
+              uiCtx.lineTo(2.5, boxY - 27.5);
+              uiCtx.fill();
+              uiCtx.restore();
+
+              // Delete handle at top-left
+              drawDeleteHandle(uiCtx, boxX - 32, boxY - 32);
+            }
+
+            // Live Dimension / Size pill feedback during drag
+            if (isDragging.current && dragTarget.current?.id === cap.id && dragTarget.current?.type?.startsWith('resize_caption_')) {
+              uiCtx.save();
+              const isWidthResize = dragTarget.current.type === 'resize_caption_l' || dragTarget.current.type === 'resize_caption_r';
+              const label = isWidthResize
+                ? `Width: ${Math.round(boxWidth)}px`
+                : `Font: ${Math.round(cap.fontSize || 50)}px`;
+              uiCtx.font = 'bold 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+              const tw = uiCtx.measureText(label).width;
+              const pw = tw + 18;
+              const ph = 24;
+              const py = boxY + boxHeight + 14;
+              
+              uiCtx.shadowColor = 'rgba(0, 0, 0, 0.4)';
+              uiCtx.shadowBlur = 6;
+              uiCtx.shadowOffsetY = 2;
+              uiCtx.fillStyle = '#0f172a';
+              uiCtx.beginPath();
+              if (uiCtx.roundRect) {
+                uiCtx.roundRect(-pw / 2, py, pw, ph, 12);
+              } else {
+                uiCtx.rect(-pw / 2, py, pw, ph);
+              }
+              uiCtx.fill();
+
+              uiCtx.strokeStyle = '#38bdf8';
+              uiCtx.lineWidth = 1.5;
+              uiCtx.stroke();
+
+              uiCtx.fillStyle = '#f8fafc';
+              uiCtx.textAlign = 'center';
+              uiCtx.textBaseline = 'middle';
+              uiCtx.fillText(label, 0, py + ph / 2);
+              uiCtx.restore();
+            } else if (isDragging.current && dragTarget.current?.id === cap.id && dragTarget.current?.type === 'rotate_caption') {
+              uiCtx.save();
+              const label = `${Math.round(((rot % 360) + 360) % 360)}°`;
+              uiCtx.font = 'bold 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+              const tw = uiCtx.measureText(label).width;
+              const pw = tw + 18;
+              const ph = 24;
+              const py = boxY - 54;
+              
+              uiCtx.shadowColor = 'rgba(0, 0, 0, 0.4)';
+              uiCtx.shadowBlur = 6;
+              uiCtx.shadowOffsetY = 2;
+              uiCtx.fillStyle = '#0f172a';
+              uiCtx.beginPath();
+              if (uiCtx.roundRect) {
+                uiCtx.roundRect(-pw / 2, py, pw, ph, 12);
+              } else {
+                uiCtx.rect(-pw / 2, py, pw, ph);
+              }
+              uiCtx.fill();
+
+              uiCtx.strokeStyle = '#38bdf8';
+              uiCtx.lineWidth = 1.5;
+              uiCtx.stroke();
+
+              uiCtx.fillStyle = '#38bdf8';
+              uiCtx.textAlign = 'center';
+              uiCtx.textBaseline = 'middle';
+              uiCtx.fillText(label, 0, py + ph / 2);
+              uiCtx.restore();
             }
             uiCtx.restore();
           };
@@ -2140,7 +2279,9 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
           const hasBg = (activeCap.bgColor && activeCap.bgColor !== 'transparent' && activeCap.bgColor !== 'none') || isBubble;
           const padX = isBubble ? Math.max(24, fontSize * 0.5) : (hasBg && activeCap.bgStyle !== 'banner' ? Math.max(16, fontSize * 0.35) : Math.max(8, fontSize * 0.15));
           const padY = isBubble ? Math.max(18, fontSize * 0.4) : (hasBg && activeCap.bgStyle !== 'banner' ? Math.max(10, fontSize * 0.2) : Math.max(4, fontSize * 0.1));
-          let boxWidth = maxLineWidth + padX * 2;
+          let boxWidth = (activeCap.hasCustomWidth && activeCap.width)
+            ? Math.max(maxLineWidth + padX * 2, activeCap.width * canvas.width)
+            : (maxLineWidth + padX * 2);
           const textHeight = lines.length * (fontSize * 1.2);
           let boxHeight = textHeight + padY * 2;
           if (activeCap.curve && Math.abs(activeCap.curve) > 0) {
@@ -2163,10 +2304,10 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
           const rightX = cx + halfW;
 
           const handles = [
-            ...((!activeCap.isHeaderCaption && !activeCap.isFooterCaption) ? [{ type: 'delete_layer', x: leftX - 36, y: topY - 36, r: 26 }] : []),
-            ...((!activeCap.isHeaderCaption && !activeCap.isFooterCaption) ? [{ type: 'rotate_caption', x: cx, y: topY - 34, r: 24 }] : []),
-            { type: 'resize_caption_l', x: leftX, y: cy, r: 22 },
-            { type: 'resize_caption_r', x: rightX, y: cy, r: 22 },
+            ...((!activeCap.isHeaderCaption && !activeCap.isFooterCaption) ? [{ type: 'delete_layer', x: leftX - 32, y: topY - 32, r: 26 }] : []),
+            ...((!activeCap.isHeaderCaption && !activeCap.isFooterCaption) ? [{ type: 'rotate_caption', x: cx, y: topY - 26, r: 24 }] : []),
+            { type: 'resize_caption_l', x: leftX, y: cy, r: 24 },
+            { type: 'resize_caption_r', x: rightX, y: cy, r: 24 },
             { type: 'resize_caption_tl', x: leftX, y: topY, r: 24 },
             { type: 'resize_caption_tr', x: rightX, y: topY, r: 24 },
             { type: 'resize_caption_bl', x: leftX, y: bottomY, r: 24 },
@@ -2185,6 +2326,17 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
           }
 
           if (closestHandle) {
+            // Check double-click on side handles to quickly reset back to auto-fit width
+            if (closestHandle.type === 'resize_caption_l' || closestHandle.type === 'resize_caption_r') {
+              const now = Date.now();
+              if (lastTapRef.current.id === `${activeCap.id}-${closestHandle.type}` && (now - lastTapRef.current.time) < 350) {
+                lastTapRef.current = { id: null, time: 0 };
+                onUpdateCaptionBounds(activeCap.id, { hasCustomWidth: false, width: 0.9 });
+                return;
+              }
+              lastTapRef.current = { id: `${activeCap.id}-${closestHandle.type}`, time: now };
+            }
+
             const cornerDist = Math.hypot(closestHandle.x - cx, closestHandle.y - cy);
             hitLayer = { 
               id: activeCap.id, 
@@ -2199,12 +2351,17 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
               isFooterCaption: !!activeCap.isFooterCaption, 
               boxWidth,
               boxHeight,
-              width: (boxWidth / canvas.width), 
+              width: activeCap.width || (boxWidth / canvas.width), 
               rotation: activeCap.rotation || 0,
               fontSize: activeCap.fontSize || 50,
               initialFontSize: activeCap.fontSize || 50,
               initialWidth: activeCap.width || (boxWidth / canvas.width),
-              initialDist: Math.max(15, cornerDist)
+              initialBoxWidth: boxWidth,
+              initialBoxHeight: boxHeight,
+              initialDist: Math.max(15, cornerDist),
+              handleRelX: closestHandle.x - cx,
+              handleRelY: closestHandle.y - cy,
+              hasCustomWidth: !!activeCap.hasCustomWidth
             };
           }
         }
@@ -2324,7 +2481,9 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
           const hasBg = (cap.bgColor && cap.bgColor !== 'transparent' && cap.bgColor !== 'none') || isBubble;
           const padX = isBubble ? Math.max(24, fontSize * 0.5) : (hasBg && cap.bgStyle !== 'banner' ? Math.max(16, fontSize * 0.35) : Math.max(8, fontSize * 0.15));
           const padY = isBubble ? Math.max(18, fontSize * 0.4) : (hasBg && cap.bgStyle !== 'banner' ? Math.max(10, fontSize * 0.2) : Math.max(4, fontSize * 0.1));
-          let boxWidth = maxLineWidth + padX * 2;
+          let boxWidth = (cap.hasCustomWidth && cap.width)
+            ? Math.max(maxLineWidth + padX * 2, cap.width * canvas.width)
+            : (maxLineWidth + padX * 2);
           const lineHeight = fontSize * 1.2;
           let boxHeight = lines.length * lineHeight + padY * 2;
           if (cap.curve && Math.abs(cap.curve) > 0) {
@@ -2361,9 +2520,14 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
               isFooterCaption: !!cap.isFooterCaption,
               boxWidth,
               boxHeight,
-              width: (boxWidth / canvas.width),
+              width: cap.width || (boxWidth / canvas.width),
               rotation: cap.rotation || 0,
               fontSize: cap.fontSize || 50,
+              initialFontSize: cap.fontSize || 50,
+              initialWidth: cap.width || 0.9,
+              initialBoxWidth: boxWidth,
+              initialBoxHeight: boxHeight,
+              hasCustomWidth: !!cap.hasCustomWidth,
               locked: !!cap.locked
             };
           }
@@ -2438,6 +2602,15 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         return;
       }
       
+      if (hitLayer.type === 'caption') {
+        const now = Date.now();
+        if (lastTapRef.current.id === hitLayer.id && (now - lastTapRef.current.time) < 350) {
+          setEditingCaptionId(hitLayer.id);
+          focusTextarea();
+        }
+        lastTapRef.current = { id: hitLayer.id, time: now };
+      }
+
       if (onSelectLayer) onSelectLayer(hitLayer.id);
 
       // Only begin dragging if the layer is not locked
@@ -2461,7 +2634,12 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
           rotation: hitLayer.rotation || 0,
           initialDist: Math.max(15, initDist),
           initialFontSize: hitLayer.initialFontSize || hitLayer.fontSize || 50,
-          initialWidth: hitLayer.initialWidth || hitLayer.width || 0.9
+          initialWidth: hitLayer.initialWidth || hitLayer.width || 0.9,
+          initialBoxWidth: hitLayer.initialBoxWidth || hitLayer.boxWidth,
+          initialBoxHeight: hitLayer.initialBoxHeight || hitLayer.boxHeight,
+          handleRelX: hitLayer.handleRelX,
+          handleRelY: hitLayer.handleRelY,
+          hasCustomWidth: hitLayer.hasCustomWidth
         };
       }
     } else {
@@ -2612,7 +2790,9 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         const hasBg = (activeCap.bgColor && activeCap.bgColor !== 'transparent' && activeCap.bgColor !== 'none') || isBubble;
         const padX = isBubble ? Math.max(24, fontSize * 0.5) : (hasBg && activeCap.bgStyle !== 'banner' ? Math.max(16, fontSize * 0.35) : Math.max(8, fontSize * 0.15));
         const padY = isBubble ? Math.max(18, fontSize * 0.4) : (hasBg && activeCap.bgStyle !== 'banner' ? Math.max(10, fontSize * 0.2) : Math.max(4, fontSize * 0.1));
-        let boxWidth = maxLineWidth + padX * 2;
+        let boxWidth = (activeCap.hasCustomWidth && activeCap.width)
+          ? Math.max(maxLineWidth + padX * 2, activeCap.width * canvas.width)
+          : (maxLineWidth + padX * 2);
         const textHeight = lines.length * (fontSize * 1.2);
         let boxHeight = textHeight + padY * 2;
         if (activeCap.curve && Math.abs(activeCap.curve) > 0) {
@@ -2635,19 +2815,19 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         const leftX = cx - halfW;
         const rightX = cx + halfW;
 
-        if (!activeCap.isHeaderCaption && !activeCap.isFooterCaption && Math.hypot(p.x - (leftX - 36), p.y - (topY - 36)) <= 26) {
+        if (!activeCap.isHeaderCaption && !activeCap.isFooterCaption && Math.hypot(p.x - (leftX - 32), p.y - (topY - 32)) <= 26) {
           canvas.style.cursor = 'pointer'; return;
         }
-        if (!activeCap.isHeaderCaption && !activeCap.isFooterCaption && Math.hypot(p.x - cx, p.y - (topY - 34)) <= 24) {
+        if (!activeCap.isHeaderCaption && !activeCap.isFooterCaption && Math.hypot(p.x - cx, p.y - (topY - 26)) <= 24) {
           canvas.style.cursor = 'grab'; return;
         }
-        if (Math.hypot(p.x - leftX, p.y - cy) <= 22 || Math.hypot(p.x - rightX, p.y - cy) <= 22) {
+        if (Math.hypot(p.x - leftX, p.y - cy) <= 24 || Math.hypot(p.x - rightX, p.y - cy) <= 24) {
           canvas.style.cursor = 'ew-resize'; return;
         }
-        if (Math.hypot(p.x - leftX, p.y - topY) <= 22 || Math.hypot(p.x - rightX, p.y - bottomY) <= 22) {
+        if (Math.hypot(p.x - leftX, p.y - topY) <= 24 || Math.hypot(p.x - rightX, p.y - bottomY) <= 24) {
           canvas.style.cursor = 'nwse-resize'; return;
         }
-        if (Math.hypot(p.x - rightX, p.y - topY) <= 22 || Math.hypot(p.x - leftX, p.y - bottomY) <= 22) {
+        if (Math.hypot(p.x - rightX, p.y - topY) <= 24 || Math.hypot(p.x - leftX, p.y - bottomY) <= 24) {
           canvas.style.cursor = 'nesw-resize'; return;
         }
         if (p.x >= cx - halfW && p.x <= cx + halfW && p.y >= cy - halfH && p.y <= cy + halfH) {
@@ -2754,7 +2934,9 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         const hasBg = (cap.bgColor && cap.bgColor !== 'transparent' && cap.bgColor !== 'none') || isBubble;
         const padX = isBubble ? Math.max(24, fontSize * 0.5) : (hasBg && cap.bgStyle !== 'banner' ? Math.max(16, fontSize * 0.35) : Math.max(8, fontSize * 0.15));
         const padY = isBubble ? Math.max(18, fontSize * 0.4) : (hasBg && cap.bgStyle !== 'banner' ? Math.max(10, fontSize * 0.2) : Math.max(4, fontSize * 0.1));
-        let boxWidth = maxLineWidth + padX * 2;
+        let boxWidth = (cap.hasCustomWidth && cap.width)
+          ? Math.max(maxLineWidth + padX * 2, cap.width * canvas.width)
+          : (maxLineWidth + padX * 2);
         const lineHeight = fontSize * 1.2;
         let boxHeight = lines.length * lineHeight + padY * 2;
         if (cap.curve && Math.abs(cap.curve) > 0) {
@@ -2880,6 +3062,16 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
       const angleRad = Math.atan2(coords.y - centerY, coords.x - centerX);
       let angleDeg = (angleRad * 180 / Math.PI) + 90; // offset since handle is at top (-90 deg)
       
+      let normalizedAngle = ((angleDeg % 360) + 360) % 360;
+      // Clean snapping to 0, 90, 180, 270, 360 degrees within 3.5 degrees threshold
+      const snapAngles = [0, 90, 180, 270, 360];
+      for (const snap of snapAngles) {
+        if (Math.abs(normalizedAngle - snap) < 3.5) {
+          angleDeg = snap === 360 ? 0 : snap;
+          break;
+        }
+      }
+
       const newRotation = angleDeg;
       const id = dragTarget.current.id;
 
@@ -2985,25 +3177,43 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
 
       const centerX = initialLayerPos.current.x * canvas.width;
       const centerY = initialLayerPos.current.y * canvas.height;
+      const rot = initialLayerPos.current.rotation || 0;
       const handleType = dragTarget.current.type;
 
+      // Transform pointer coordinates into layer's local rotated coordinate space!
+      const localCoords = rotatePoint(coords.x, coords.y, centerX, centerY, -rot);
+
       if (handleType === 'resize_caption_l' || handleType === 'resize_caption_r') {
-        const horizontalDist = Math.abs(coords.x - centerX);
-        const newWidth = Math.max(0.15, Math.min(3.0, Number(((horizontalDist * 2) / canvas.width).toFixed(3))));
-        onUpdateCaptionBounds(id, { width: newWidth });
+        const localDx = localCoords.x - centerX;
+        const halfWidth = handleType === 'resize_caption_r'
+          ? Math.max(30, localDx)
+          : Math.max(30, -localDx);
+        const newBoxWidthPx = halfWidth * 2;
+        const newWidth = Math.max(0.15, Math.min(3.5, Number((newBoxWidthPx / canvas.width).toFixed(3))));
+
+        onUpdateCaptionBounds(id, { 
+          width: newWidth,
+          hasCustomWidth: true
+        });
         return;
       }
 
-      // Corner handles: stretch to resize text font size & box proportionally, just like sticker and image layers
-      const currentDist = Math.hypot(coords.x - centerX, coords.y - centerY);
+      // Corner handles: proportional scaling
+      const localDx = localCoords.x - centerX;
+      const localDy = localCoords.y - centerY;
       const initDist = initialLayerPos.current.initialDist || 50;
-      const scaleFactor = Math.max(0.1, currentDist / initDist);
+
+      // Projection along the corner diagonal vector for natural, smooth scaling
+      const initRelX = initialLayerPos.current.handleRelX || (handleType.includes('r') ? 50 : -50);
+      const initRelY = initialLayerPos.current.handleRelY || (handleType.includes('b') ? 50 : -50);
+      const proj = (localDx * initRelX + localDy * initRelY) / (initDist * initDist);
+      const scaleFactor = Math.max(0.1, Math.min(8.0, proj));
 
       const initFontSize = initialLayerPos.current.initialFontSize || cap.fontSize || (cap.isTweetCard ? 18 : 50);
       const newFontSize = Math.max(10, Math.min(250, Math.round(initFontSize * scaleFactor)));
 
       const initWidth = initialLayerPos.current.initialWidth || cap.width || (cap.isTweetCard ? 0.88 : 0.9);
-      const maxCapWidth = cap.isTweetCard ? 3.0 : 1.5;
+      const maxCapWidth = cap.isTweetCard ? 3.0 : 4.0;
       const newWidth = Math.max(0.15, Math.min(maxCapWidth, Number((initWidth * scaleFactor).toFixed(3))));
 
       onUpdateCaptionBounds(id, { 
@@ -3082,8 +3292,8 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     dragTarget.current = null;
     if (snappingLines.current.horizontal !== null || snappingLines.current.vertical !== null) {
       snappingLines.current = { horizontal: null, vertical: null };
-      if (baseImgRef.current) renderCanvas(baseImgRef.current);
     }
+    if (baseImgRef.current) renderCanvas(baseImgRef.current);
   };
 
   // Global window listeners so fast mouse or touch drags don't freeze when leaving the canvas element
