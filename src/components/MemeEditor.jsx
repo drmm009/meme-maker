@@ -2829,7 +2829,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                   )}
                   {/* Text controls - Unified 3-Cluster Toolbar */}
                   {activeCaption && showTextEffectsMenu && (
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'safe center', gap: '6px', width: '100%', overflowX: 'auto', scrollbarWidth: 'none', padding: '0 2px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
                       <button onClick={() => setShowTextEffectsMenu(false)} className="btn btn-icon btn-xs vid-ctx-btn" title="Back to main toolbar">
                         <ArrowLeft style={{ width: 14, height: 14 }} />
                       </button>
@@ -2939,7 +2939,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
 
                   {/* Bubble Layout Selector Bar with Back button */}
                   {activeCaption && activeCaption.bubbleStyle && showBubbleLayouts && (
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'safe center', gap: '6px', width: '100%', overflowX: 'auto', scrollbarWidth: 'none', padding: '0 2px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
                       {/* Back Button */}
                       <button
                         onClick={() => setShowBubbleLayouts(false)}
@@ -2981,7 +2981,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
 
                   {/* Tweet Card Theme Selector Bar with Back button */}
                   {activeCaption && activeCaption.isTweetCard && showTweetThemeMenu && (
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'safe center', gap: '6px', width: '100%', overflowX: 'auto', scrollbarWidth: 'none', padding: '0 2px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
                       {/* Back Button */}
                       <button
                         onClick={() => setShowTweetThemeMenu(false)}
@@ -3036,7 +3036,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
 
                   {/* Tweet Card Trend Selector Bar with Back button */}
                   {activeCaption && activeCaption.isTweetCard && showTweetTrendMenu && (
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'safe center', gap: '6px', width: '100%', overflowX: 'auto', scrollbarWidth: 'none', padding: '0 2px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
                       {/* Back Button */}
                       <button
                         onClick={() => setShowTweetTrendMenu(false)}
@@ -3515,7 +3515,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
 
                   {/* TAB SPECIFIC TOOLS (when nothing selected) */}
                   {!(activeCaption || activeSticker || activeImageLayer) && activeTab === "text" && (
-                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}>
                       {/* CLUSTER 1: PRIMARY ACTION (+ Add Text) */}
                       <button
                         className="btn btn-xs vid-ctx-btn"
@@ -3605,7 +3605,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                     </div>
                   )}
                   {!(activeCaption || activeSticker || activeImageLayer) && activeTab === 'images' && (
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', width: '100%', overflowX: 'auto', scrollbarWidth: 'none', padding: '0 4px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
                       {/* 1. UPLOAD */}
                       <label
                         className="btn btn-xs vid-ctx-btn"
@@ -3733,7 +3733,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                   {!(activeCaption || activeSticker || activeImageLayer) && activeTab === 'draw' && (
                     !showDrawSettings ? (
                       /* ROOT 4-BUTTON BAR */
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', width: '100%', overflowX: 'auto', scrollbarWidth: 'none', padding: '0 4px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
                         <button
                           className={`btn btn-xs vid-ctx-btn ${drawTool === 'brush' ? 'active' : ''}`}
                           onClick={() => {
@@ -3836,7 +3836,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                       </div>
                     ) : (
                       /* INSTRUMENT COLOR & SETTINGS SUB-BAR WITH BACK BUTTON */
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'safe center', gap: '6px', width: '100%', overflowX: 'auto', scrollbarWidth: 'none', padding: '0 2px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
                         {/* 1. BACK BUTTON */}
                         <button
                           onClick={() => setShowDrawSettings(false)}
@@ -3988,7 +3988,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                   )}
 
                   {!(activeCaption || activeSticker || activeImageLayer) && activeTab === 'watermark' && (
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', width: '100%', flexWrap: 'nowrap', overflowX: 'auto', paddingBottom: '2px', scrollbarWidth: 'none' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
                       {!showWatermarkMenu ? (
                         <>
                           {/* CLUSTER 1: CANVAS SETTINGS (Color & Flip Canvas) */}
@@ -4120,7 +4120,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                   )}
 
                   {((!activeCaption && !activeSticker && activeTab === 'filters') || (activeImageLayer && showImageFilterMenu)) && (
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'safe center', gap: '6px', width: '100%', overflowX: 'auto', paddingBottom: '4px', scrollbarWidth: 'none' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
 
                       {activeImageLayer && showImageFilterMenu && (
                         <>
