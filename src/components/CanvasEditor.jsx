@@ -1048,6 +1048,29 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
   }
 
   const totalCanvasH = canvasH + headerExtH + footerExtH;
+
+  // Layer Center Y position in canvas pixels (anchors meme image layers to the image area below header)
+  const getCaptionCenterY = (cap) => {
+    if (!cap) return 0;
+    if (cap.isHeaderCaption && !cap.hasCustomPos) {
+      return headerExtH / 2;
+    }
+    if (cap.isFooterCaption && !cap.hasCustomPos) {
+      return headerExtH + canvasH + (footerExtH / 2);
+    }
+    if (cap.isHeaderCaption || cap.isFooterCaption) {
+      return (cap.y || 0) * (canvasRef.current?.height || totalCanvasH);
+    }
+    return headerExtH + (cap.y || 0) * canvasH;
+  };
+
+  const getStickerCenterY = (stk) => {
+    return headerExtH + ((stk?.y) || 0) * canvasH;
+  };
+
+  const getImageLayerCenterY = (img) => {
+    return headerExtH + ((img?.y) || 0) * canvasH;
+  };
   
   const activeFilters = filters || { brightness: 100, contrast: 100, saturation: 100, grayscale: 0, blur: 0 };
 
@@ -1461,7 +1484,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         if (layer._type === 'imageLayer') {
           const imgLayer = layer;
         const cx = imgLayer.x * canvas.width;
-        const cy = imgLayer.y * canvas.height;
+        const cy = getImageLayerCenterY(imgLayer);
         const cached = imageCacheRef.current[imgLayer.url];
 
         if (cached) {
@@ -1622,7 +1645,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
           const stk = layer;
         
         const sx = stk.x * canvas.width;
-        const sy = stk.y * canvas.height;
+        const sy = getStickerCenterY(stk);
         targetCtx.save();
         targetCtx.translate(sx, sy);
         if (stk.rotation) targetCtx.rotate(stk.rotation * Math.PI / 180);
@@ -1726,11 +1749,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
               } else if (layer._type === 'caption') {
           const cap = layer;
         const cx = cap.x * canvas.width;
-        const cy = (cap.isHeaderCaption && !cap.hasCustomPos)
-          ? (headerExtH / 2)
-          : (cap.isFooterCaption && !cap.hasCustomPos)
-          ? (headerExtH + canvasH + (footerExtH / 2))
-          : (cap.y * canvas.height);
+        const cy = getCaptionCenterY(cap);
         
         targetCtx.save();
         targetCtx.translate(cx, cy);
@@ -2178,7 +2197,8 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         ctx.setLineDash([6, 6]);
         
         if (horizontal !== null) {
-          const y = horizontal * canvas.height;
+          const isHeaderOrFooter = activeCaption?.isHeaderCaption || activeCaption?.isFooterCaption;
+          const y = isHeaderOrFooter ? (horizontal * canvas.height) : (headerExtH + horizontal * canvasH);
           const isCenter = Math.abs(horizontal - 0.5) < 0.002;
           ctx.strokeStyle = isCenter ? '#00f0ff' : '#a855f7';
           ctx.lineWidth = isCenter ? 2 : 1.5;
@@ -2310,7 +2330,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
       const activeStk = stickers.find(s => s.id === activeLayerId);
       if (activeStk && !activeStk.locked) {
         const cx = activeStk.x * canvas.width;
-        const cy = activeStk.y * canvas.height;
+        const cy = getStickerCenterY(activeStk);
         const stkSize = (activeStk.scale || 1.0) * 52;
         const p = rotatePoint(coords.x, coords.y, cx, cy, -(activeStk.rotation || 0));
         const hs = stkSize / 2 + 6;
@@ -2344,11 +2364,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         const activeCap = captions.find(c => c.id === activeLayerId);
         if (activeCap && !activeCap.locked) {
           const cx = activeCap.x * canvas.width;
-          const cy = (activeCap.isHeaderCaption && !activeCap.hasCustomPos)
-            ? (headerExtH / 2)
-            : (activeCap.isFooterCaption && !activeCap.hasCustomPos)
-            ? (headerExtH + canvasH + (footerExtH / 2))
-            : (activeCap.y * canvas.height);
+          const cy = getCaptionCenterY(activeCap);
           const p = rotatePoint(coords.x, coords.y, cx, cy, -(activeCap.rotation || 0));
 
           const renderMaxWidth = (activeCap.width || 0.9) * canvas.width;
@@ -2434,11 +2450,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
               id: activeCap.id, 
               type: closestHandle.type, 
               x: activeCap.x, 
-              y: (activeCap.isHeaderCaption && !activeCap.hasCustomPos)
-                ? ((headerExtH / 2) / canvas.height)
-                : (activeCap.isFooterCaption && !activeCap.hasCustomPos)
-                ? ((headerExtH + canvasH + (footerExtH / 2)) / canvas.height)
-                : activeCap.y,
+              y: activeCap.y,
               isHeaderCaption: !!activeCap.isHeaderCaption, 
               isFooterCaption: !!activeCap.isFooterCaption, 
               boxWidth,
@@ -2466,7 +2478,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
           const cached = imageCacheRef.current[activeImg.url];
           if (cached) {
             const cx = activeImg.x * canvas.width;
-            const cy = activeImg.y * canvas.height;
+            const cy = getImageLayerCenterY(activeImg);
             const scale = activeImg.scale || 1.0;
             const baseW = cached.width || 200;
             const baseH = cached.height || 200;
@@ -2538,7 +2550,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         if (layer._type === 'sticker') {
           const stk = layer;
           const cx = stk.x * canvas.width;
-          const cy = stk.y * canvas.height;
+          const cy = getStickerCenterY(stk);
           const stkSize = (stk.scale || 1.0) * 52;
           const p = rotatePoint(coords.x, coords.y, cx, cy, -(stk.rotation || 0));
           if (p.x >= cx - stkSize / 2 - 6 && p.x <= cx + stkSize / 2 + 6 && p.y >= cy - stkSize / 2 - 6 && p.y <= cy + stkSize / 2 + 6) {
@@ -2555,11 +2567,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         } else if (layer._type === 'caption') {
           const cap = layer;
           const cx = cap.x * canvas.width;
-          const cy = (cap.isHeaderCaption && !cap.hasCustomPos)
-            ? (headerExtH / 2)
-            : (cap.isFooterCaption && !cap.hasCustomPos)
-            ? (headerExtH + canvasH + (footerExtH / 2))
-            : (cap.y * canvas.height);
+          const cy = getCaptionCenterY(cap);
           const p = rotatePoint(coords.x, coords.y, cx, cy, -(cap.rotation || 0));
           const fontSize = cap.fontSize || 50;
           ctx.font = `bold ${fontSize}px ${cap.fontFamily || 'Impact, sans-serif'}`;
@@ -2604,11 +2612,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
               id: cap.id, 
               type: 'caption', 
               x: cap.x, 
-              y: (cap.isHeaderCaption && !cap.hasCustomPos)
-                ? ((headerExtH / 2) / canvas.height)
-                : (cap.isFooterCaption && !cap.hasCustomPos)
-                ? ((headerExtH + canvasH + (footerExtH / 2)) / canvas.height)
-                : cap.y,
+              y: cap.y,
               isHeaderCaption: !!cap.isHeaderCaption,
               isFooterCaption: !!cap.isFooterCaption,
               boxWidth,
@@ -2627,7 +2631,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         } else if (layer._type === 'imageLayer') {
           const imgLayer = layer;
           const cx = imgLayer.x * canvas.width;
-          const cy = imgLayer.y * canvas.height;
+          const cy = getImageLayerCenterY(imgLayer);
           const cached = imageCacheRef.current[imgLayer.url];
           
           if (cached) {
@@ -2668,7 +2672,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
           id: hCap.id,
           type: 'caption',
           x: hCap.x,
-          y: (hCap.isHeaderCaption && !hCap.hasCustomPos) ? ((headerExtH / 2) / canvas.height) : hCap.y,
+          y: hCap.y,
           isHeaderCaption: true,
           locked: !!hCap.locked
         };
@@ -2682,7 +2686,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
           id: fCap.id,
           type: 'caption',
           x: fCap.x,
-          y: (fCap.isFooterCaption && !fCap.hasCustomPos) ? ((headerExtH + canvasH + (footerExtH / 2)) / canvas.height) : fCap.y,
+          y: fCap.y,
           isFooterCaption: true,
           locked: !!fCap.locked
         };
@@ -2712,13 +2716,25 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         dragTarget.current = hitLayer;
         dragStartCoords.current = coords;
 
+        const isCap = hitLayer.type === 'caption' || hitLayer.type?.startsWith('resize_caption_') || hitLayer.type === 'rotate_caption';
+        const isStk = hitLayer.type === 'sticker' || hitLayer.type?.startsWith('resize_sticker_') || hitLayer.type === 'rotate_sticker';
+        const isImg = hitLayer.type === 'imageLayer' || hitLayer.type?.startsWith('resize_imageLayer_') || hitLayer.type === 'rotate_imageLayer';
+
         const centerX = hitLayer.x * canvas.width;
-        const centerY = hitLayer.y * canvas.height;
+        const centerY = isCap
+          ? getCaptionCenterY(hitLayer)
+          : isStk
+          ? getStickerCenterY(hitLayer)
+          : isImg
+          ? getImageLayerCenterY(hitLayer)
+          : (headerExtH + (hitLayer.y || 0) * canvasH);
         const initDist = hitLayer.initialDist || Math.hypot(coords.x - centerX, coords.y - centerY);
 
         initialLayerPos.current = { 
           x: hitLayer.x, 
           y: hitLayer.y, 
+          centerX,
+          centerY,
           width: hitLayer.boxWidth || hitLayer.width,
           height: hitLayer.boxHeight || hitLayer.height,
           boxWidth: hitLayer.boxWidth || hitLayer.width,
@@ -2751,13 +2767,13 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
 
         let hitSlotIdx = -1;
         for (let idx = 0; idx < totalSlots; idx++) {
-          let x = 0, y = 0, slotW = canvas.width, slotH = canvas.height;
-          if (isVert) { slotH = canvas.height / totalSlots; y = idx * slotH; }
-          else if (isHoriz) { slotW = canvas.width / totalSlots; x = idx * slotW; }
-          else if (isGrid) { slotW = canvas.width / 2; slotH = canvas.height / 2; x = (idx % 2) * slotW; y = Math.floor(idx / 2) * slotH; }
+          let x = 0, y = headerExtH, slotW = canvasW, slotH = canvasH;
+          if (isVert) { slotH = canvasH / totalSlots; y = headerExtH + idx * slotH; }
+          else if (isHoriz) { slotW = canvasW / totalSlots; x = idx * slotW; y = headerExtH; }
+          else if (isGrid) { slotW = canvasW / 2; slotH = canvasH / 2; x = (idx % 2) * slotW; y = headerExtH + Math.floor(idx / 2) * slotH; }
           else if (isHybrid) {
-            if (idx === 0) { slotW = canvas.width; slotH = canvas.height / 2; x = 0; y = 0; }
-            else { slotW = canvas.width / 2; slotH = canvas.height / 2; x = (idx - 1) * slotW; y = canvas.height / 2; }
+            if (idx === 0) { slotW = canvasW; slotH = canvasH / 2; x = 0; y = headerExtH; }
+            else { slotW = canvasW / 2; slotH = canvasH / 2; x = (idx - 1) * slotW; y = headerExtH + canvasH / 2; }
           }
           if (coords.x >= x && coords.x <= x + slotW && coords.y >= y && coords.y <= y + slotH) {
             hitSlotIdx = idx;
@@ -2838,7 +2854,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
       const activeStk = stickers.find(s => s.id === activeLayerId);
       if (activeStk && !activeStk.locked) {
         const cx = activeStk.x * canvas.width;
-        const cy = activeStk.y * canvas.height;
+        const cy = getStickerCenterY(activeStk);
         const stkSize = (activeStk.scale || 1.0) * 52;
         const p = rotatePoint(coords.x, coords.y, cx, cy, -(activeStk.rotation || 0));
         const hs = stkSize / 2 + 6;
@@ -2863,11 +2879,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
       const activeCap = captions.find(c => c.id === activeLayerId);
       if (activeCap && !activeCap.locked) {
         const cx = activeCap.x * canvas.width;
-        const cy = (activeCap.isHeaderCaption && !activeCap.hasCustomPos)
-          ? (headerExtH / 2)
-          : (activeCap.isFooterCaption && !activeCap.hasCustomPos)
-          ? (headerExtH + canvasH + (footerExtH / 2))
-          : (activeCap.y * canvas.height);
+        const cy = getCaptionCenterY(activeCap);
         const p = rotatePoint(coords.x, coords.y, cx, cy, -(activeCap.rotation || 0));
         const renderMaxWidth = (activeCap.width || 0.9) * canvas.width;
         const fontSize = activeCap.fontSize || 50;
@@ -2940,7 +2952,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         const cached = imageCacheRef.current[activeImg.url];
         if (cached) {
           const cx = activeImg.x * canvas.width;
-          const cy = activeImg.y * canvas.height;
+          const cy = getImageLayerCenterY(activeImg);
           const scale = activeImg.scale || 1.0;
           const baseW = cached.width || 200;
           const baseH = cached.height || 200;
@@ -2984,7 +2996,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     for (const stk of stickers) {
       if (stk.hidden) continue;
       const cx = stk.x * canvas.width;
-      const cy = stk.y * canvas.height;
+      const cy = getStickerCenterY(stk);
       const stkSize = (stk.scale || 1.0) * 52;
       const p = rotatePoint(coords.x, coords.y, cx, cy, -(stk.rotation || 0));
       if (p.x >= cx - stkSize / 2 && p.x <= cx + stkSize / 2 && p.y >= cy - stkSize / 2 && p.y <= cy + stkSize / 2) {
@@ -2996,7 +3008,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     for (const l of imageLayers) {
       if (l.hidden) continue;
       const cx = l.x * canvas.width;
-      const cy = l.y * canvas.height;
+      const cy = getImageLayerCenterY(l);
       const cached = imageCacheRef.current[l.url];
       if (cached) {
         const scale = l.scale || 1.0;
@@ -3016,11 +3028,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     for (const cap of captions) {
       if (cap.hidden) continue;
       const cx = cap.x * canvas.width;
-      const cy = (cap.isHeaderCaption && !cap.hasCustomPos)
-        ? (headerExtH / 2)
-        : (cap.isFooterCaption && !cap.hasCustomPos)
-        ? (headerExtH + canvasH + (footerExtH / 2))
-        : (cap.y * canvas.height);
+      const cy = getCaptionCenterY(cap);
       const p = rotatePoint(coords.x, coords.y, cx, cy, -(cap.rotation || 0));
       const fontSize = cap.fontSize || 50;
       const ctx = canvas.getContext('2d');
@@ -3109,7 +3117,10 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     }
 
     const dx = (coords.x - dragStartCoords.current.x) / canvas.width;
-    const dy = (coords.y - dragStartCoords.current.y) / canvas.height;
+    const isHeaderOrFooter = dragTarget.current?.isHeaderCaption || dragTarget.current?.isFooterCaption;
+    const dy = isHeaderOrFooter
+      ? ((coords.y - dragStartCoords.current.y) / canvas.height)
+      : ((coords.y - dragStartCoords.current.y) / canvasH);
 
     // Mark as dragged if moved more than threshold (prevents accidental drag on tap on touchscreens)
     const pixelDx = Math.abs(coords.x - dragStartCoords.current.x);
@@ -3158,8 +3169,8 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     }
 
     if (dragTarget.current.type.startsWith('rotate_')) {
-      const centerX = initialLayerPos.current.x * canvas.width;
-      const centerY = initialLayerPos.current.y * canvas.height;
+      const centerX = initialLayerPos.current.centerX ?? (initialLayerPos.current.x * canvas.width);
+      const centerY = initialLayerPos.current.centerY ?? (headerExtH + initialLayerPos.current.y * canvasH);
       const angleRad = Math.atan2(coords.y - centerY, coords.x - centerX);
       let angleDeg = (angleRad * 180 / Math.PI) + 90; // offset since handle is at top (-90 deg)
       
@@ -3191,8 +3202,8 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
       const imgLayer = imageLayers.find(l => l.id === id);
       if (!imgLayer || !onUpdateImageLayerBounds) return;
 
-      const centerX = initialLayerPos.current.x * canvas.width;
-      const centerY = initialLayerPos.current.y * canvas.height;
+      const centerX = initialLayerPos.current.centerX ?? (initialLayerPos.current.x * canvas.width);
+      const centerY = initialLayerPos.current.centerY ?? (headerExtH + initialLayerPos.current.y * canvasH);
       const handleType = dragTarget.current.type;
 
       const initW = initialLayerPos.current.boxWidth || initialLayerPos.current.width || 160;
@@ -3258,8 +3269,8 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
       const stk = stickers.find(s => s.id === id);
       if (!stk || !onUpdateStickerBounds) return;
 
-      const centerX = initialLayerPos.current.x * canvas.width;
-      const centerY = initialLayerPos.current.y * canvas.height;
+      const centerX = initialLayerPos.current.centerX ?? (initialLayerPos.current.x * canvas.width);
+      const centerY = initialLayerPos.current.centerY ?? (headerExtH + initialLayerPos.current.y * canvasH);
 
       const currentDist = Math.hypot(coords.x - centerX, coords.y - centerY);
       const initDist = initialLayerPos.current.initialDist || Math.max(10, (stk.scale || 1.0) * 52 * 0.7);
@@ -3276,8 +3287,8 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
       const cap = captions.find(c => c.id === id);
       if (!cap || !onUpdateCaptionBounds) return;
 
-      const centerX = initialLayerPos.current.x * canvas.width;
-      const centerY = initialLayerPos.current.y * canvas.height;
+      const centerX = initialLayerPos.current.centerX ?? (initialLayerPos.current.x * canvas.width);
+      const centerY = initialLayerPos.current.centerY ?? (headerExtH + initialLayerPos.current.y * canvasH);
       const rot = initialLayerPos.current.rotation || 0;
       const handleType = dragTarget.current.type;
 
@@ -3372,8 +3383,10 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
       const edgePad = 8;
       const minX = Math.min(0.5, (halfExtX + edgePad) / canvas.width);
       const maxX = Math.max(0.5, (canvas.width - halfExtX - edgePad) / canvas.width);
-      const minY = Math.min(0.5, (halfExtY + edgePad) / canvas.height);
-      const maxY = Math.max(0.5, (canvas.height - halfExtY - edgePad) / canvas.height);
+      const isHeaderOrFooter = dragTarget.current?.isHeaderCaption || dragTarget.current?.isFooterCaption;
+      const effectiveCanvasH = isHeaderOrFooter ? canvas.height : canvasH;
+      const minY = Math.min(0.5, (halfExtY + edgePad) / effectiveCanvasH);
+      const maxY = Math.max(0.5, (effectiveCanvasH - halfExtY - edgePad) / effectiveCanvasH);
       newX = Math.max(minX, Math.min(maxX, newX));
       newY = Math.max(minY, Math.min(maxY, newY));
     }
@@ -3508,13 +3521,13 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
 
     let hitSlotIdx = -1;
     for (let idx = 0; idx < totalSlots; idx++) {
-      let x = 0, y = 0, slotW = canvas.width, slotH = canvas.height;
-      if (isVert) { slotH = canvas.height / totalSlots; y = idx * slotH; }
-      else if (isHoriz) { slotW = canvas.width / totalSlots; x = idx * slotW; }
-      else if (isGrid) { slotW = canvas.width / 2; slotH = canvas.height / 2; x = (idx % 2) * slotW; y = Math.floor(idx / 2) * slotH; }
+      let x = 0, y = headerExtH, slotW = canvasW, slotH = canvasH;
+      if (isVert) { slotH = canvasH / totalSlots; y = headerExtH + idx * slotH; }
+      else if (isHoriz) { slotW = canvasW / totalSlots; x = idx * slotW; y = headerExtH; }
+      else if (isGrid) { slotW = canvasW / 2; slotH = canvasH / 2; x = (idx % 2) * slotW; y = headerExtH + Math.floor(idx / 2) * slotH; }
       else if (isHybrid) {
-        if (idx === 0) { slotW = canvas.width; slotH = canvas.height / 2; x = 0; y = 0; }
-        else { slotW = canvas.width / 2; slotH = canvas.height / 2; x = (idx - 1) * slotW; y = canvas.height / 2; }
+        if (idx === 0) { slotW = canvasW; slotH = canvasH / 2; x = 0; y = headerExtH; }
+        else { slotW = canvasW / 2; slotH = canvasH / 2; x = (idx - 1) * slotW; y = headerExtH + canvasH / 2; }
       }
       if (coords.x >= x && coords.x <= x + slotW && coords.y >= y && coords.y <= y + slotH) {
         hitSlotIdx = idx;
@@ -3585,7 +3598,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
                   ? `${((headerExtH / 2) / Math.max(1, totalCanvasH)) * 100}%`
                   : (activeCaption.isFooterCaption && !activeCaption.hasCustomPos)
                   ? `${(((headerExtH + canvasH + (footerExtH / 2))) / Math.max(1, totalCanvasH)) * 100}%`
-                  : `${activeCaption.y * 100}%`)
+                  : `${(((headerExtH + activeCaption.y * canvasH) / Math.max(1, totalCanvasH)) * 100)}%`)
               : '-9999px',
             transform: activeCaption ? `translate(-50%, -50%) rotate(${activeCaption.rotation || 0}deg)` : 'translate(-50%, -50%)',
             width: activeCaption ? `${Math.min(95, Math.max(35, (activeCaption.width || 0.8) * 100))}%` : '1px',

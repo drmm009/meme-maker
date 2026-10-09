@@ -191,7 +191,7 @@ const getNonOverlappingPosition = (type, captions = [], stickers = [], imageLaye
 
   // Collect all existing elements on canvas with normalized bounds
   const existing = [
-    ...captions.map((c) => ({
+    ...captions.filter(c => !c.isHeaderCaption && !c.isFooterCaption).map((c) => ({
       x: typeof c.x === 'number' ? c.x : 0.5,
       y: typeof c.y === 'number' ? c.y : 0.5,
       w: c.width ? Math.min(Math.max(c.width, 0.35), 0.8) : 0.38,
@@ -5627,96 +5627,94 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                       <span>{activeCaption ? (activeCaption.curve ? `Arc (${activeCaption.curve > 0 ? '+' : ''}${activeCaption.curve}°)` : 'Curve') : 'Curved Text'}</span>
                     </button>
 
-                    {/* Unified Header & Footer Segmented Control (Shown only when no text layer is selected) */}
-                    {!activeCaption && (
-                      <div
+                    {/* Unified Header & Footer Segmented Control */}
+                    <div
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        background: 'rgba(255, 255, 255, 0.05)',
+                        borderRadius: '20px',
+                        padding: '3px',
+                        border: '1px solid rgba(255, 255, 255, 0.12)',
+                        gap: '2px'
+                      }}
+                    >
+                      <button
+                        type="button"
+                        className={`btn btn-xs hover-lift ${canvasHeader.enabled ? 'active' : ''}`}
+                        onClick={handleToggleCanvasHeader}
+                        title="Toggle Modern Header Extension (Twitter / Reddit style top canvas extension)"
                         style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          background: 'rgba(255, 255, 255, 0.05)',
-                          borderRadius: '20px',
-                          padding: '3px',
-                          border: '1px solid rgba(255, 255, 255, 0.12)',
-                          gap: '2px'
+                          padding: "5px 12px",
+                          borderRadius: "16px",
+                          fontSize: "0.8rem",
+                          fontWeight: 700,
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "5px",
+                          background: canvasHeader.enabled
+                            ? "var(--primary-gradient)"
+                            : "transparent",
+                          border: canvasHeader.enabled
+                            ? "1px solid var(--cyber-cyan)"
+                            : "1px solid transparent",
+                          color: "#ffffff"
                         }}
                       >
-                        <button
-                          type="button"
-                          className={`btn btn-xs hover-lift ${canvasHeader.enabled ? 'active' : ''}`}
-                          onClick={handleToggleCanvasHeader}
-                          title="Toggle Modern Header Extension (Twitter / Reddit style top canvas extension)"
-                          style={{
-                            padding: "5px 12px",
-                            borderRadius: "16px",
-                            fontSize: "0.8rem",
-                            fontWeight: 700,
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: "5px",
-                            background: canvasHeader.enabled
-                              ? "var(--primary-gradient)"
-                              : "transparent",
-                            border: canvasHeader.enabled
-                              ? "1px solid var(--cyber-cyan)"
-                              : "1px solid transparent",
-                            color: "#ffffff"
-                          }}
-                        >
-                          <PanelTop size={14} style={{ color: canvasHeader.enabled ? "#ffffff" : "var(--cyber-cyan)" }} />
-                          <span>Header</span>
-                        </button>
-                        <button
-                          type="button"
-                          className={`btn btn-xs hover-lift ${canvasFooter.enabled ? 'active' : ''}`}
-                          onClick={handleToggleCanvasFooter}
-                          title="Toggle Modern Footer Extension (Twitter / Reddit style bottom canvas extension)"
-                          style={{
-                            padding: "5px 12px",
-                            borderRadius: "16px",
-                            fontSize: "0.8rem",
-                            fontWeight: 700,
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: "5px",
-                            background: canvasFooter.enabled
-                              ? "var(--primary-gradient)"
-                              : "transparent",
-                            border: canvasFooter.enabled
-                              ? "1px solid var(--cyber-cyan)"
-                              : "1px solid transparent",
-                            color: "#ffffff"
-                          }}
-                        >
-                          <PanelBottom size={14} style={{ color: canvasFooter.enabled ? "#ffffff" : "var(--cyber-cyan)" }} />
-                          <span>Footer</span>
-                        </button>
-                        <button
-                          type="button"
-                          className={`btn btn-xs hover-lift ${(canvasHeader.enabled && canvasFooter.enabled) ? 'active' : ''}`}
-                          onClick={handleToggleCanvasBoth}
-                          title="Toggle Both Header & Footer Extensions"
-                          style={{
-                            padding: "5px 12px",
-                            borderRadius: "16px",
-                            fontSize: "0.8rem",
-                            fontWeight: 700,
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: "5px",
-                            background: (canvasHeader.enabled && canvasFooter.enabled)
-                              ? "var(--primary-gradient)"
-                              : "transparent",
-                            border: (canvasHeader.enabled && canvasFooter.enabled)
-                              ? "1px solid var(--cyber-cyan)"
-                              : "1px solid transparent",
-                            color: "#ffffff"
-                          }}
-                        >
-                          <PanelsTopBottom size={14} style={{ color: (canvasHeader.enabled && canvasFooter.enabled) ? "#ffffff" : "var(--cyber-cyan)" }} />
-                          <span>Both</span>
-                        </button>
-                      </div>
-                    )}
+                        <PanelTop size={14} style={{ color: canvasHeader.enabled ? "#ffffff" : "var(--cyber-cyan)" }} />
+                        <span>Header</span>
+                      </button>
+                      <button
+                        type="button"
+                        className={`btn btn-xs hover-lift ${canvasFooter.enabled ? 'active' : ''}`}
+                        onClick={handleToggleCanvasFooter}
+                        title="Toggle Modern Footer Extension (Twitter / Reddit style bottom canvas extension)"
+                        style={{
+                          padding: "5px 12px",
+                          borderRadius: "16px",
+                          fontSize: "0.8rem",
+                          fontWeight: 700,
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "5px",
+                          background: canvasFooter.enabled
+                            ? "var(--primary-gradient)"
+                            : "transparent",
+                          border: canvasFooter.enabled
+                            ? "1px solid var(--cyber-cyan)"
+                            : "1px solid transparent",
+                          color: "#ffffff"
+                        }}
+                      >
+                        <PanelBottom size={14} style={{ color: canvasFooter.enabled ? "#ffffff" : "var(--cyber-cyan)" }} />
+                        <span>Footer</span>
+                      </button>
+                      <button
+                        type="button"
+                        className={`btn btn-xs hover-lift ${(canvasHeader.enabled && canvasFooter.enabled) ? 'active' : ''}`}
+                        onClick={handleToggleCanvasBoth}
+                        title="Toggle Both Header & Footer Extensions"
+                        style={{
+                          padding: "5px 12px",
+                          borderRadius: "16px",
+                          fontSize: "0.8rem",
+                          fontWeight: 700,
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "5px",
+                          background: (canvasHeader.enabled && canvasFooter.enabled)
+                            ? "var(--primary-gradient)"
+                            : "transparent",
+                          border: (canvasHeader.enabled && canvasFooter.enabled)
+                            ? "1px solid var(--cyber-cyan)"
+                            : "1px solid transparent",
+                          color: "#ffffff"
+                        }}
+                      >
+                        <PanelsTopBottom size={14} style={{ color: (canvasHeader.enabled && canvasFooter.enabled) ? "#ffffff" : "var(--cyber-cyan)" }} />
+                        <span>Both</span>
+                      </button>
+                    </div>
 
                     {/* Speech & Chat Bubble Button */}
                     <button
@@ -5736,28 +5734,26 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                     </button>
 
                     {/* AI Meme Caption Generator Button */}
-                    {!activeCaption && (
-                      <button
-                        type="button"
-                        className="btn btn-xs hover-lift"
-                        onClick={() => setShowAiModal(true)}
-                        title="Generate AI meme captions or browse funny ideas"
-                        style={{
-                          padding: "7px 14px",
-                          borderRadius: "20px",
-                          fontSize: "0.82rem",
-                          fontWeight: 700,
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: "6px",
-                          background: "linear-gradient(135deg, rgba(168, 85, 247, 0.35) 0%, rgba(236, 72, 153, 0.35) 100%)",
-                          border: "1px solid rgba(236, 72, 153, 0.6)",
-                          color: "#ffffff"
-                        }}
-                      >
-                        <Sparkles size={15} style={{ color: "#ec4899" }} /> AI Captions
-                      </button>
-                    )}
+                    <button
+                      type="button"
+                      className="btn btn-xs hover-lift"
+                      onClick={() => setShowAiModal(true)}
+                      title="Generate AI meme captions or browse funny ideas"
+                      style={{
+                        padding: "7px 14px",
+                        borderRadius: "20px",
+                        fontSize: "0.82rem",
+                        fontWeight: 700,
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "6px",
+                        background: "linear-gradient(135deg, rgba(168, 85, 247, 0.35) 0%, rgba(236, 72, 153, 0.35) 100%)",
+                        border: "1px solid rgba(236, 72, 153, 0.6)",
+                        color: "#ffffff"
+                      }}
+                    >
+                      <Sparkles size={15} style={{ color: "#ec4899" }} /> AI Captions
+                    </button>
                   </div>
 
                 {/* Color Swatches Bar + Delete Button (When activeCaption exists) */}
