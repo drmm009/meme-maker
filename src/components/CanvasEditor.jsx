@@ -1256,8 +1256,11 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
       return {
         canvas: patchCanvas,
         dataUrl: patchCanvas.toDataURL('image/png'),
-        sx, sy, sw, sh
       };
+    };
+
+    canvas.getBaseImageElement = () => {
+      return baseImgRef.current;
     };
 
     canvas.bakeLayerIntoBase = (layerId) => {

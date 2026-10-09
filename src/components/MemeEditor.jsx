@@ -18,6 +18,7 @@ import AiCaptionModal from './AiCaptionModal';
 import MemeStylesModal, { TwitterVerifiedBadge } from './MemeStylesModal';
 import FaceMorphModal from './FaceMorphModal';
 import FacePinpointOverlay from './FacePinpointOverlay';
+import { fuseFaceIntoTemplate } from '../utils/faceGraftEngine';
 import { downloadImageHelper, recordCanvasAsVideo } from '../utils/downloadHelper';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MEME_TEMPLATES, CATEGORIES } from '../data/templates';
@@ -584,6 +585,8 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
   const [faceTarget, setFaceTarget] = useState({ x: 0.5, y: 0.38, radius: 0.14 });
   const [sampledFaceLighting, setSampledFaceLighting] = useState(null);
   const [extractedMemeFace, setExtractedMemeFace] = useState(null);
+  const [templateFaceMorph, setTemplateFaceMorph] = useState(null);
+  const originalTemplateImgRef = useRef(null);
 
   const handleSetCanvasBgColor = (val) => {
     setCanvasBgColor(val);
@@ -1952,30 +1955,10 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
   };
 
   const handleStartMorphFace = () => {
-    if (activeImageLayer && activeImageLayer.isFaceMorph) {
-      if (canvasRef.current?.extractFacePatch) {
-        const patch = canvasRef.current.extractFacePatch(
-          activeImageLayer.x !== undefined ? activeImageLayer.x : 0.5,
-          activeImageLayer.y !== undefined ? activeImageLayer.y : 0.38,
-          0.14,
-          400
-        );
-        setExtractedMemeFace(patch);
-      }
-      setShowFaceMorphModal(true);
-      return;
-    }
     setIsPinpointingFace(true);
   };
 
   const handleRetargetFace = () => {
-    if (activeImageLayer && activeImageLayer.isFaceMorph) {
-      setFaceTarget({
-        x: activeImageLayer.x !== undefined ? activeImageLayer.x : 0.5,
-        y: activeImageLayer.y !== undefined ? activeImageLayer.y : 0.38,
-        radius: 0.14
-      });
-    }
     setIsPinpointingFace(true);
   };
 
@@ -1991,94 +1974,110 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
       patch = canvasRef.current.extractFacePatch(faceTarget.x, faceTarget.y, faceTarget.radius, 400);
       setExtractedMemeFace(patch);
     }
-    if (activeImageLayer && activeImageLayer.isFaceMorph) {
-      updateActiveImageLayer({
-        x: faceTarget.x,
-        y: faceTarget.y,
-        scale: ((faceTarget.radius || 0.14) / 0.12) * 1.05
-      });
-    } else {
-      setShowFaceMorphModal(true);
-    }
+    setShowFaceMorphModal(true);
   };
 
-  const handleBakeFaceMorph = () => {
-    if (!activeImageLayer || !canvasRef.current?.bakeLayerIntoBase) return;
-    const mergedDataUrl = canvasRef.current.bakeLayerIntoBase(activeImageLayer.id);
-    if (!mergedDataUrl) return;
-
-    const oldUrl = activeTemplate?.rawImageUrl || activeTemplate?.imageUrl;
-    setActiveTemplate(prev => ({
-      ...prev,
-      rawImageUrl: mergedDataUrl,
-      imageUrl: mergedDataUrl,
-      originalUrl: prev?.originalUrl || oldUrl
-    }));
-
-    const nextImgLayers = imageLayers.filter(l => l.id !== activeImageLayer.id);
-    setImageLayers(nextImgLayers);
-    setActiveLayerId(null);
-    pushHistory(captions, stickers, nextImgLayers);
-  };
-
-  const handleApplyFaceMorph = ({
+  const handleApplyFaceMorph = async ({
     url,
     originalFaceUrl,
     faceName,
-    opacity,
     flipX,
     brightness,
     contrast,
     warmth,
-    morphProgress,
-    landmarksA,
-    landmarksB
+    morphProgress
   }) => {
-    if (activeImageLayer && activeImageLayer.isFaceMorph) {
-      updateActiveImageLayer({
-        url,
-        originalFaceUrl,
-        faceName: faceName || activeImageLayer.faceName || 'Face Morph',
-        opacity: opacity !== undefined ? opacity : activeImageLayer.opacity,
-        flipX: flipX !== undefined ? flipX : activeImageLayer.flipX,
-        brightness: brightness || activeImageLayer.brightness || 100,
-        contrast: contrast || activeImageLayer.contrast || 100,
-        warmth: warmth !== undefined ? warmth : (activeImageLayer.warmth || 0),
-        morphProgress: morphProgress !== undefined ? morphProgress : activeImageLayer.morphProgress,
-        landmarksA: landmarksA || activeImageLayer.landmarksA,
-        landmarksB: landmarksB || activeImageLayer.landmarksB
-      });
-      return;
-    }
+    setShowFaceMorphModal(false);
+    const cleanOriginalUrl = activeTemplate?.originalUrl || activeTemplate?.rawImageUrl || activeTemplate?.imageUrl;
+    originalTemplateImgRef.current = cleanOriginalUrl;
 
-    const maxZ = Math.max(-1, ...captions.map(c => c.zIndex ?? -1), ...stickers.map(s => s.zIndex ?? -1), ...(imageLayers || []).map(i => i.zIndex ?? -1));
-    const targetScale = faceTarget ? ((faceTarget.radius || 0.14) / 0.12) * 1.05 : 1.15;
-    const newFaceLayer = {
-      id: `face-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-      url,
-      originalFaceUrl,
-      faceName: faceName || 'Face Morph',
-      isFaceMorph: true,
-      x: faceTarget ? faceTarget.x : 0.5,
-      y: faceTarget ? faceTarget.y : 0.38,
-      scale: targetScale,
-      rotation: 0,
-      opacity: opacity !== undefined ? opacity : 1,
-      flipX: !!flipX,
-      brightness: brightness || 100,
-      contrast: contrast || 100,
+    const baseImg = canvasRef.current?.getBaseImageElement?.() || cleanOriginalUrl;
+
+    const fusedDataUrl = await fuseFaceIntoTemplate({
+      baseImg,
+      faceTarget,
+      photoImg: url || originalFaceUrl,
+      morphProgress: morphProgress !== undefined ? morphProgress : 0.85,
       warmth: warmth || 0,
-      morphProgress: morphProgress !== undefined ? morphProgress : 0.75,
-      landmarksA,
-      landmarksB,
-      fitMode: 'fit',
-      zIndex: maxZ + 1
-    };
-    const nextImgLayers = [...imageLayers, newFaceLayer];
-    setImageLayers(nextImgLayers);
-    setActiveLayerId(newFaceLayer.id);
-    setActiveTab('images');
-    pushHistory(captions, stickers, nextImgLayers);
+      brightness: brightness || 0,
+      flipX: !!flipX
+    });
+
+    if (fusedDataUrl) {
+      setActiveTemplate(prev => ({
+        ...prev,
+        rawImageUrl: fusedDataUrl,
+        imageUrl: fusedDataUrl,
+        originalUrl: prev?.originalUrl || cleanOriginalUrl
+      }));
+
+      setTemplateFaceMorph({
+        faceTarget: { ...faceTarget },
+        photoUrl: url || originalFaceUrl,
+        originalFaceUrl,
+        faceName: faceName || 'Face Morph',
+        morphProgress: morphProgress !== undefined ? morphProgress : 0.85,
+        warmth: warmth || 0,
+        brightness: brightness || 0,
+        contrast: contrast || 100,
+        flipX: !!flipX,
+        cleanOriginalUrl
+      });
+
+      setActiveLayerId(null);
+    }
+  };
+
+  const handleUpdateTemplateMorphProgress = async (newVal) => {
+    if (!templateFaceMorph) return;
+    const progress = Math.max(0, Math.min(1, newVal));
+    setTemplateFaceMorph(prev => ({ ...prev, morphProgress: progress }));
+
+    const cleanUrl = templateFaceMorph.cleanOriginalUrl || activeTemplate?.originalUrl;
+    const fusedDataUrl = await fuseFaceIntoTemplate({
+      baseImg: cleanUrl,
+      faceTarget: templateFaceMorph.faceTarget,
+      photoImg: templateFaceMorph.photoUrl || templateFaceMorph.originalFaceUrl,
+      morphProgress: progress,
+      warmth: templateFaceMorph.warmth || 0,
+      brightness: templateFaceMorph.brightness || 0,
+      flipX: templateFaceMorph.flipX
+    });
+
+    if (fusedDataUrl) {
+      setActiveTemplate(prev => ({
+        ...prev,
+        rawImageUrl: fusedDataUrl,
+        imageUrl: fusedDataUrl,
+        originalUrl: prev?.originalUrl || cleanUrl
+      }));
+    }
+  };
+
+  const handleChangeFace = () => {
+    setShowFaceMorphModal(true);
+  };
+
+  const handleRevertTemplateFace = () => {
+    if (!templateFaceMorph) return;
+    const cleanUrl = templateFaceMorph.cleanOriginalUrl || activeTemplate?.originalUrl;
+    if (cleanUrl) {
+      setActiveTemplate(prev => ({
+        ...prev,
+        rawImageUrl: cleanUrl,
+        imageUrl: cleanUrl,
+        originalUrl: null
+      }));
+    }
+    setTemplateFaceMorph(null);
+  };
+
+  const handleFinalizeTemplateFace = () => {
+    setActiveTemplate(prev => ({
+      ...prev,
+      originalUrl: null
+    }));
+    setTemplateFaceMorph(null);
   };
 
   const updateActiveImageLayer = (key, value) => {
@@ -3238,7 +3237,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
           >
             {/* Floating Context Toolbar whenever dock container is folded */}
             <AnimatePresence>
-              {((activeCaption || activeSticker || activeImageLayer) || (isMobileTabsFolded && !activeCaption && !activeSticker && !activeImageLayer)) && isMobileTabsFolded && (
+              {((activeCaption || activeSticker || activeImageLayer || templateFaceMorph) || (isMobileTabsFolded && !activeCaption && !activeSticker && !activeImageLayer)) && (isMobileTabsFolded || templateFaceMorph) && (
                 <motion.div
                   ref={contextToolbarRef}
                   className={`editor-floating-toolbar video-context-toolbar ${showBubbleLayouts ? 'bubble-mode-left' : ''}`}
@@ -4215,148 +4214,26 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                   {/* Image controls */}
                   {activeImageLayer && !showImageFilterMenu && (
                     <>
-                      {activeImageLayer.isFaceMorph ? (
-                        <>
-                          {/* Face Morph: 1. Tune Face in Studio */}
-                          <button
-                            className="btn btn-xs vid-ctx-btn active"
-                            title="Tune Face in Studio"
-                            onClick={handleStartMorphFace}
-                            style={{
-                              padding: '4px 10px',
-                              fontSize: '0.75rem',
-                              fontWeight: 600,
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '4px',
-                              borderRadius: '8px',
-                              flexShrink: 0,
-                              background: 'rgba(6, 182, 212, 0.2)',
-                              border: '1px solid var(--cyber-cyan)',
-                              color: '#ffffff'
-                            }}
-                          >
-                            <Smile style={{ width: 13, height: 13, color: 'var(--cyber-cyan)' }} />
-                            <span>{activeImageLayer.faceName || 'Tune Face'}</span>
-                          </button>
-
-                          {/* Face Morph: 2. Morph Blend % Slider */}
-                          <div
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '6px',
-                              padding: '0 8px',
-                              background: 'rgba(255, 255, 255, 0.08)',
-                              borderRadius: '8px',
-                              height: '28px',
-                              flexShrink: 0
-                            }}
-                            title="Morph Blend % (crossfade with original meme face)"
-                          >
-                            <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.7)', fontWeight: 600 }}>Blend</span>
-                            <input
-                              type="range"
-                              min="0.2"
-                              max="1"
-                              step="0.05"
-                              value={activeImageLayer.opacity !== undefined ? activeImageLayer.opacity : 1}
-                              onChange={(e) => updateActiveImageLayer('opacity', parseFloat(e.target.value))}
-                              style={{ width: '56px', accentColor: 'var(--cyber-cyan)', height: '4px', cursor: 'pointer' }}
-                            />
-                            <span style={{ fontSize: '0.72rem', color: 'var(--cyber-cyan)', fontWeight: 700, minWidth: '32px' }}>
-                              {Math.round((activeImageLayer.opacity !== undefined ? activeImageLayer.opacity : 1) * 100)}%
-                            </span>
-                          </div>
-
-                          {/* Face Morph: 3. Bake into Meme Button */}
-                          <button
-                            className="btn btn-xs vid-ctx-btn"
-                            title="Permanently fuse face into template pixels (removes all handles and sticker boxes)"
-                            onClick={handleBakeFaceMorph}
-                            style={{
-                              padding: '4px 10px',
-                              fontSize: '0.75rem',
-                              fontWeight: 700,
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '5px',
-                              borderRadius: '8px',
-                              background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.3), rgba(6, 182, 212, 0.35))',
-                              border: '1px solid rgba(52, 211, 153, 0.8)',
-                              color: '#34d399',
-                              boxShadow: '0 0 10px rgba(16, 185, 129, 0.25)',
-                              flexShrink: 0
-                            }}
-                          >
-                            <Check style={{ width: 13, height: 13 }} />
-                            <span>Bake into Meme</span>
-                          </button>
-
-                          {/* Face Morph: 4. Retarget Reticle */}
-                          <button
-                            className="btn btn-xs vid-ctx-btn"
-                            title="Reposition face target reticle on canvas"
-                            onClick={handleRetargetFace}
-                            style={{
-                              padding: '4px 8px',
-                              fontSize: '0.75rem',
-                              fontWeight: 600,
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '4px',
-                              borderRadius: '8px',
-                              background: 'rgba(255,255,255,0.08)',
-                              flexShrink: 0
-                            }}
-                          >
-                            <Crosshair style={{ width: 13, height: 13, color: 'var(--cyber-cyan)' }} />
-                            <span>Retarget</span>
-                          </button>
-
-                          {/* Face Morph: 5. Flip */}
-                          <button
-                            className={activeImageLayer.flipX ? 'btn btn-xs vid-ctx-btn active' : 'btn btn-icon btn-xs vid-ctx-btn'}
-                            title="Flip Horizontal (Mirror)"
-                            onClick={handleFlipActiveLayer}
-                            style={{
-                              padding: activeImageLayer.flipX ? '4px 8px' : undefined,
-                              fontSize: '0.75rem',
-                              fontWeight: 600,
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '4px',
-                              background: activeImageLayer.flipX ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.08)',
-                              borderRadius: '8px',
-                              flexShrink: 0
-                            }}
-                          >
-                            <FlipHorizontal style={{ width: 14, height: 14 }} />
-                            {activeImageLayer.flipX && <span>Flip</span>}
-                          </button>
-                        </>
-                      ) : (
-                        <>
-                          {/* Normal Image: Morph Face button */}
-                          <button
-                            className="btn btn-xs vid-ctx-btn"
-                            title="Open Face Morph Studio"
-                            onClick={handleStartMorphFace}
-                            style={{
-                              padding: '4px 10px',
-                              fontSize: '0.75rem',
-                              fontWeight: 600,
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '4px',
-                              borderRadius: '8px',
-                              background: 'rgba(255,255,255,0.08)',
-                              flexShrink: 0
-                            }}
-                          >
-                            <Smile style={{ width: 13, height: 13, color: 'var(--cyber-cyan)' }} />
-                            <span>Morph Face</span>
-                          </button>
+                      {/* Normal Image: Morph Face button */}
+                      <button
+                        className="btn btn-xs vid-ctx-btn"
+                        title="Open Face Morph Studio"
+                        onClick={handleStartMorphFace}
+                        style={{
+                          padding: '4px 10px',
+                          fontSize: '0.75rem',
+                          fontWeight: 600,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          borderRadius: '8px',
+                          background: 'rgba(255,255,255,0.08)',
+                          flexShrink: 0
+                        }}
+                      >
+                        <Smile style={{ width: 13, height: 13, color: 'var(--cyber-cyan)' }} />
+                        <span>Morph Face</span>
+                      </button>
 
                           {/* 1. BG Eraser */}
                           <button
@@ -4443,8 +4320,6 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                             <FlipHorizontal style={{ width: 14, height: 14 }} />
                             {activeImageLayer.flipX && <span>Flip</span>}
                           </button>
-                        </>
-                      )}
                     </>
                   )}
 
@@ -4500,8 +4375,155 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                     </div>
                   )}
 
-                  {/* TAB SPECIFIC TOOLS (when nothing selected) */}
-                  {!(activeCaption || activeSticker || activeImageLayer) && activeTab === "text" && (
+                  {/* ON-TEMPLATE FACE MORPH TOOLBAR (when template face morph is active & no layer selected) */}
+                  {templateFaceMorph && !(activeCaption || activeSticker || activeImageLayer) && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+                      {/* 1. Face Badge / Name */}
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          padding: '4px 10px',
+                          borderRadius: '8px',
+                          background: 'rgba(6, 182, 212, 0.2)',
+                          border: '1px solid var(--cyber-cyan)',
+                          color: '#ffffff',
+                          fontSize: '0.75rem',
+                          fontWeight: 700,
+                          flexShrink: 0
+                        }}
+                      >
+                        <Smile style={{ width: 14, height: 14, color: 'var(--cyber-cyan)' }} />
+                        <span>{templateFaceMorph.faceName || 'Face Morph'}</span>
+                      </div>
+
+                      {/* 2. Live Morph % Slider */}
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          padding: '0 10px',
+                          background: 'rgba(255, 255, 255, 0.08)',
+                          borderRadius: '8px',
+                          height: '28px',
+                          flexShrink: 0
+                        }}
+                        title="Morph Blend % (adjusts face morph directly in template pixels)"
+                      >
+                        <span style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.7)', fontWeight: 600 }}>Morph</span>
+                        <input
+                          type="range"
+                          min="0"
+                          max="1"
+                          step="0.05"
+                          value={templateFaceMorph.morphProgress !== undefined ? templateFaceMorph.morphProgress : 0.85}
+                          onChange={(e) => handleUpdateTemplateMorphProgress(parseFloat(e.target.value))}
+                          style={{ width: '65px', accentColor: 'var(--cyber-cyan)', height: '4px', cursor: 'pointer' }}
+                        />
+                        <span style={{ fontSize: '0.75rem', color: 'var(--cyber-cyan)', fontWeight: 700, minWidth: '34px' }}>
+                          {Math.round((templateFaceMorph.morphProgress !== undefined ? templateFaceMorph.morphProgress : 0.85) * 100)}%
+                        </span>
+                      </div>
+
+                      {/* 3. Change Face Button */}
+                      <button
+                        className="btn btn-xs vid-ctx-btn"
+                        title="Pick a different face or photo"
+                        onClick={handleChangeFace}
+                        style={{
+                          padding: '4px 10px',
+                          fontSize: '0.75rem',
+                          fontWeight: 600,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '5px',
+                          borderRadius: '8px',
+                          background: 'rgba(255, 255, 255, 0.08)',
+                          color: '#ffffff',
+                          border: '1px solid var(--glass-border)',
+                          flexShrink: 0
+                        }}
+                      >
+                        <RefreshCw style={{ width: 12, height: 12, color: 'var(--cyber-cyan)' }} />
+                        <span>Change Face</span>
+                      </button>
+
+                      {/* 4. Retarget Reticle Button */}
+                      <button
+                        className="btn btn-xs vid-ctx-btn"
+                        title="Reposition face target reticle on the canvas"
+                        onClick={handleRetargetFace}
+                        style={{
+                          padding: '4px 10px',
+                          fontSize: '0.75rem',
+                          fontWeight: 600,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '5px',
+                          borderRadius: '8px',
+                          background: 'rgba(255, 255, 255, 0.08)',
+                          color: '#ffffff',
+                          border: '1px solid var(--glass-border)',
+                          flexShrink: 0
+                        }}
+                      >
+                        <Crosshair style={{ width: 12, height: 12, color: 'var(--cyber-cyan)' }} />
+                        <span>Retarget</span>
+                      </button>
+
+                      {/* 5. Revert to Original Button */}
+                      <button
+                        className="btn btn-xs vid-ctx-btn"
+                        title="Revert template face back to original"
+                        onClick={handleRevertTemplateFace}
+                        style={{
+                          padding: '4px 10px',
+                          fontSize: '0.75rem',
+                          fontWeight: 600,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '5px',
+                          borderRadius: '8px',
+                          background: 'rgba(239, 68, 68, 0.15)',
+                          color: '#f87171',
+                          border: '1px solid rgba(239, 68, 68, 0.4)',
+                          flexShrink: 0
+                        }}
+                      >
+                        <X style={{ width: 12, height: 12 }} />
+                        <span>Revert</span>
+                      </button>
+
+                      {/* 6. Fuse Permanently Button */}
+                      <button
+                        className="btn btn-xs vid-ctx-btn"
+                        title="Permanently fuse face into template image"
+                        onClick={handleFinalizeTemplateFace}
+                        style={{
+                          padding: '4px 12px',
+                          fontSize: '0.75rem',
+                          fontWeight: 700,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '5px',
+                          borderRadius: '8px',
+                          background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.3), rgba(6, 182, 212, 0.35))',
+                          border: '1px solid rgba(52, 211, 153, 0.8)',
+                          color: '#34d399',
+                          boxShadow: '0 0 10px rgba(16, 185, 129, 0.25)',
+                          flexShrink: 0
+                        }}
+                      >
+                        <Check style={{ width: 12, height: 12 }} />
+                        <span>Fuse Permanently</span>
+                      </button>
+                    </div>
+                  )}
+
+                  {/* TAB SPECIFIC TOOLS (when nothing selected and not in template face morph) */}
+                  {!(activeCaption || activeSticker || activeImageLayer) && !templateFaceMorph && activeTab === "text" && (
                     showHeaderFooterMenu ? (
                       <div style={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0, justifyContent: "flex-start", width: "100%" }}>
                         {/* Back Button */}
@@ -4658,7 +4680,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                       </div>
                     )
                   )}
-                  {!(activeCaption || activeSticker || activeImageLayer) && activeTab === 'images' && (
+                  {!(activeCaption || activeSticker || activeImageLayer) && !templateFaceMorph && activeTab === 'images' && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
                       {/* 1. UPLOAD */}
                       <label
@@ -7088,17 +7110,17 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                   )}
                 </div>
 
-                {activeImageLayer && activeImageLayer.isFaceMorph && (
+                {templateFaceMorph && (
                   <div className="form-group margin-bottom-sm glass-card" style={{ padding: '10px 14px', borderRadius: '14px', border: '1px solid rgba(6, 182, 212, 0.3)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                       <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#ffffff', display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <Smile size={14} style={{ color: 'var(--cyber-cyan)' }} />
-                        {activeImageLayer.faceName || 'Face Morph'}
+                        {templateFaceMorph.faceName || 'Face Morph'}
                       </span>
                       <button
                         type="button"
                         className="btn btn-xs btn-ghost"
-                        onClick={handleStartMorphFace}
+                        onClick={handleChangeFace}
                         style={{ fontSize: '0.7rem', color: 'var(--cyber-cyan)', padding: '2px 8px', borderRadius: '6px' }}
                       >
                         Change Face
@@ -7107,16 +7129,18 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '10px' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', fontWeight: 600 }}>
-                        <span style={{ color: 'var(--text-muted)' }}>Morph Blend / Opacity</span>
-                        <span style={{ color: 'var(--cyber-cyan)' }}>{Math.round((activeImageLayer.opacity !== undefined ? activeImageLayer.opacity : 1) * 100)}%</span>
+                        <span style={{ color: 'var(--text-muted)' }}>Morph Intensity / Blend</span>
+                        <span style={{ color: 'var(--cyber-cyan)' }}>
+                          {Math.round((templateFaceMorph.morphProgress !== undefined ? templateFaceMorph.morphProgress : 0.85) * 100)}%
+                        </span>
                       </div>
                       <input
                         type="range"
-                        min="0.2"
+                        min="0"
                         max="1"
                         step="0.05"
-                        value={activeImageLayer.opacity !== undefined ? activeImageLayer.opacity : 1}
-                        onChange={(e) => updateActiveImageLayer('opacity', parseFloat(e.target.value))}
+                        value={templateFaceMorph.morphProgress !== undefined ? templateFaceMorph.morphProgress : 0.85}
+                        onChange={(e) => handleUpdateTemplateMorphProgress(parseFloat(e.target.value))}
                         style={{ accentColor: 'var(--cyber-cyan)', height: '4px' }}
                       />
                     </div>
@@ -7125,8 +7149,8 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                       <button
                         type="button"
                         className="btn btn-xs hover-lift"
-                        onClick={handleBakeFaceMorph}
-                        title="Fuse face seamlessly into the meme template pixels (removes layer handles)"
+                        onClick={handleFinalizeTemplateFace}
+                        title="Fuse face permanently into the meme template"
                         style={{
                           flex: 1,
                           padding: '6px 10px',
@@ -7143,14 +7167,14 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           boxShadow: '0 0 10px rgba(16, 185, 129, 0.2)'
                         }}
                       >
-                        <Check size={13} /> Bake into Meme
+                        <Check size={13} /> Fuse Permanently
                       </button>
 
                       <button
                         type="button"
                         className="btn btn-xs hover-lift"
-                        onClick={handleRetargetFace}
-                        title="Reposition face target reticle on canvas"
+                        onClick={handleRevertTemplateFace}
+                        title="Revert template face to original"
                         style={{
                           padding: '6px 10px',
                           borderRadius: '8px',
@@ -7160,12 +7184,12 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           alignItems: 'center',
                           justifyContent: 'center',
                           gap: '4px',
-                          background: 'rgba(255,255,255,0.08)',
-                          border: '1px solid rgba(255,255,255,0.15)',
-                          color: '#ffffff'
+                          background: 'rgba(239, 68, 68, 0.15)',
+                          border: '1px solid rgba(239, 68, 68, 0.4)',
+                          color: '#f87171'
                         }}
                       >
-                        <Crosshair size={13} style={{ color: 'var(--cyber-cyan)' }} /> Retarget
+                        <X size={13} /> Revert
                       </button>
                     </div>
                   </div>
