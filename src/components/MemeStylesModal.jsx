@@ -483,8 +483,8 @@ export default function MemeStylesModal({
 
             {/* Tweet Textarea with Random Idea button */}
             <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                <label style={{ fontSize: '0.74rem', fontWeight: 700, color: 'var(--text-muted)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                <label style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)' }}>
                   Tweet Text ({tweetText.length}/280)
                 </label>
                 <button
@@ -494,24 +494,24 @@ export default function MemeStylesModal({
                     display: 'flex',
                     alignItems: 'center',
                     gap: '4px',
-                    fontSize: '0.72rem',
+                    fontSize: '0.7rem',
                     fontWeight: 700,
                     color: 'var(--cyber-cyan)',
                     background: 'rgba(6, 182, 212, 0.12)',
                     border: '1px solid rgba(6, 182, 212, 0.25)',
-                    borderRadius: '8px',
-                    padding: '3px 8px',
+                    borderRadius: '7px',
+                    padding: '2px 7px',
                     cursor: 'pointer',
                     transition: 'all 0.15s ease'
                   }}
                   title="Insert a funny viral meme tweet"
                 >
-                  <Dices size={13} /> Surprise Me
+                  <Dices size={12} /> Surprise Me
                 </button>
               </div>
               <textarea
                 className="form-input"
-                rows={3}
+                rows={2}
                 value={tweetText}
                 onChange={(e) => {
                   setTweetText(e.target.value);
@@ -520,13 +520,15 @@ export default function MemeStylesModal({
                 placeholder="What is happening?!"
                 style={{
                   width: '100%',
-                  fontSize: '0.88rem',
-                  lineHeight: 1.45,
+                  fontSize: '0.82rem',
+                  lineHeight: 1.35,
+                  minHeight: '48px',
+                  maxHeight: '90px',
                   resize: 'vertical',
                   background: 'rgba(255, 255, 255, 0.05)',
-                  borderRadius: '12px',
+                  borderRadius: '10px',
                   border: '1px solid rgba(255, 255, 255, 0.1)',
-                  padding: '10px 12px',
+                  padding: '6px 10px',
                   color: '#ffffff',
                   fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
                 }}
