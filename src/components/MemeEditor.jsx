@@ -11,7 +11,7 @@ import {
   Image as ImageIcon, Search, X, Upload, RotateCw, ZoomIn, Crop, LayoutGrid, Scissors, Play, Pause, FolderHeart, Droplet, Monitor,
   Paintbrush, Eraser, Highlighter, Palette, Sun, Moon, ChevronDown, ChevronLeft, PencilLine, Move, ArrowDownRight, Wand2,
   Layers, ArrowUp, ArrowDown, ChevronsUp, ChevronsDown, Eye, EyeOff, Lock, Unlock, FlipHorizontal,
-  PanelTop, PanelBottom, MessageSquare, Flame, Tv, MessageCircle, Shield, Circle, TrendingDown, Ban
+  PanelTop, PanelBottom, PanelsTopBottom, MessageSquare, Flame, Tv, MessageCircle, Shield, Circle, TrendingDown, Ban
 } from 'lucide-react';
 import AiCaptionModal from './AiCaptionModal';
 import MemeStylesModal, { TwitterVerifiedBadge } from './MemeStylesModal';
@@ -532,6 +532,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [showAiModal, setShowAiModal] = useState(false);
   const [showBubbleLayouts, setShowBubbleLayouts] = useState(false);
+  const [showHeaderFooterMenu, setShowHeaderFooterMenu] = useState(false);
   const [lastUsedSettingButton, setLastUsedSettingButton] = useState(null);
   const contextToolbarRef = useRef(null);
   const [showTweetThemeMenu, setShowTweetThemeMenu] = useState(false);
@@ -3867,71 +3868,121 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
 
                   {/* TAB SPECIFIC TOOLS (when nothing selected) */}
                   {!(activeCaption || activeSticker || activeImageLayer) && activeTab === "text" && (
-                    <div style={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}>
-                      {/* CLUSTER 1: PRIMARY ACTION (+ Add Text) */}
-                      <button
-                        className="btn btn-xs vid-ctx-btn"
-                        onClick={handleAddCaption}
-                        style={{ padding: "4px 10px", fontSize: "0.75rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "5px", borderRadius: "10px", background: 'var(--primary-gradient)', color: '#fff', border: 'none', flexShrink: 0 }}
-                      >
-                        <Plus style={{ width: 14, height: 14 }} /> Add Text
-                      </button>
-
-                      {/* CLUSTER 2: CANVAS BANNERS (Header & Footer Segmented Pill) */}
-                      <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.08)', borderRadius: '10px', padding: '2px', gap: '2px', flexShrink: 0 }}>
+                    showHeaderFooterMenu ? (
+                      <div style={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0, justifyContent: "flex-start", width: "100%" }}>
+                        {/* Back Button */}
                         <button
+                          onClick={() => { setShowHeaderFooterMenu(false); setLastUsedSettingButton('banner'); }}
+                          className="btn btn-icon btn-xs vid-ctx-btn"
+                          title="Back to text toolbar"
+                          style={{ borderRadius: "8px", flexShrink: 0 }}
+                        >
+                          <ArrowLeft style={{ width: 14, height: 14, color: "#ffffff" }} />
+                        </button>
+
+                        <div className="vid-ctx-divider" style={{ width: 1, height: 20, background: "rgba(255,255,255,0.2)", margin: "0 2px", flexShrink: 0 }} />
+
+                        {/* Top Header Toggle */}
+                        <button
+                          type="button"
                           className={`btn btn-xs vid-ctx-btn ${canvasHeader.enabled ? 'active' : ''}`}
                           onClick={handleToggleCanvasHeader}
-                          title="Toggle Canvas Header Extension"
+                          title="Toggle Top Header Extension"
                           style={{
-                            padding: "3px 8px",
+                            padding: "4px 12px",
                             fontSize: "0.75rem",
                             fontWeight: 600,
-                            display: "flex",
+                            display: "inline-flex",
                             alignItems: "center",
-                            gap: "4px",
-                            border: 'none',
-                            background: canvasHeader.enabled ? 'var(--primary-gradient)' : 'transparent',
-                            color: "#ffffff",
-                            borderRadius: '8px'
+                            gap: "5px",
+                            borderRadius: "8px",
+                            flexShrink: 0,
+                            background: canvasHeader.enabled ? 'var(--primary-gradient)' : 'rgba(255, 255, 255, 0.08)',
+                            border: canvasHeader.enabled ? '1px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.1)',
+                            color: "#ffffff"
                           }}
                         >
-                          <PanelTop style={{ width: 13, height: 13 }} />
-                          <span>{canvasHeader.enabled ? 'Header (On)' : 'Header'}</span>
+                          <PanelTop style={{ width: 13, height: 13, color: "#ffffff" }} />
+                          <span>{canvasHeader.enabled ? 'Top Header (On)' : 'Top Header'}</span>
                         </button>
+
+                        {/* Bottom Footer Toggle */}
                         <button
+                          type="button"
                           className={`btn btn-xs vid-ctx-btn ${canvasFooter.enabled ? 'active' : ''}`}
                           onClick={handleToggleCanvasFooter}
-                          title="Toggle Canvas Footer Extension"
+                          title="Toggle Bottom Footer Extension"
                           style={{
-                            padding: "3px 8px",
+                            padding: "4px 12px",
                             fontSize: "0.75rem",
                             fontWeight: 600,
-                            display: "flex",
+                            display: "inline-flex",
                             alignItems: "center",
-                            gap: "4px",
-                            border: 'none',
-                            background: canvasFooter.enabled ? 'var(--primary-gradient)' : 'transparent',
-                            color: "#ffffff",
-                            borderRadius: '8px'
+                            gap: "5px",
+                            borderRadius: "8px",
+                            flexShrink: 0,
+                            background: canvasFooter.enabled ? 'var(--primary-gradient)' : 'rgba(255, 255, 255, 0.08)',
+                            border: canvasFooter.enabled ? '1px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.1)',
+                            color: "#ffffff"
                           }}
                         >
-                          <PanelBottom style={{ width: 13, height: 13 }} />
-                          <span>{canvasFooter.enabled ? 'Footer (On)' : 'Footer'}</span>
+                          <PanelBottom style={{ width: 13, height: 13, color: "#ffffff" }} />
+                          <span>{canvasFooter.enabled ? 'Bottom Footer (On)' : 'Bottom Footer'}</span>
                         </button>
                       </div>
+                    ) : (
+                      <div style={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}>
+                        {/* 1. Add Text */}
+                        <button
+                          className="btn btn-xs vid-ctx-btn"
+                          onClick={handleAddCaption}
+                          style={{ padding: "4px 10px", fontSize: "0.75rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "5px", borderRadius: "8px", background: 'var(--primary-gradient)', color: '#fff', border: 'none', flexShrink: 0 }}
+                        >
+                          <Plus style={{ width: 14, height: 14 }} /> <span>Add Text</span>
+                        </button>
 
-                      <CanvasColorPicker canvasBgColor={canvasBgColor} setCanvasBgColor={handleSetCanvasBgColor} />
+                        {/* 2. Unified Header / Footer Button */}
+                        <button
+                          type="button"
+                          data-setting-btn="banner"
+                          className={`btn btn-xs vid-ctx-btn ${(canvasHeader.enabled || canvasFooter.enabled || lastUsedSettingButton === 'banner') ? 'active' : ''}`}
+                          onClick={() => setShowHeaderFooterMenu(true)}
+                          title="Header & Footer Canvas Extensions (Top / Bottom)"
+                          style={{
+                            padding: "4px 10px",
+                            fontSize: "0.75rem",
+                            fontWeight: 600,
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "5px",
+                            borderRadius: "8px",
+                            background: (canvasHeader.enabled || canvasFooter.enabled || lastUsedSettingButton === 'banner') ? 'var(--primary-gradient)' : 'rgba(255, 255, 255, 0.08)',
+                            border: (canvasHeader.enabled || canvasFooter.enabled || lastUsedSettingButton === 'banner') ? '1px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.1)',
+                            boxShadow: (canvasHeader.enabled || canvasFooter.enabled || lastUsedSettingButton === 'banner') ? '0 2px 10px rgba(6, 182, 212, 0.4), 0 0 8px rgba(99, 102, 241, 0.4)' : 'none',
+                            color: "#ffffff",
+                            flexShrink: 0
+                          }}
+                        >
+                          <PanelsTopBottom style={{ width: 13, height: 13, color: "#ffffff" }} />
+                          <span>
+                            {canvasHeader.enabled && canvasFooter.enabled
+                              ? 'Header & Footer (On)'
+                              : canvasHeader.enabled
+                              ? 'Header (On)'
+                              : canvasFooter.enabled
+                              ? 'Footer (On)'
+                              : 'Header / Footer'}
+                          </span>
+                        </button>
 
-                      {/* CLUSTER 3: CREATIVE TOOLS (Bubble & AI Captions) */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
+                        {/* 3. Creative Tools: Bubble & AI Captions */}
                         <button
                           className="btn btn-xs vid-ctx-btn"
                           onClick={() => handleAddBubble()}
                           title="Add Chat & Speech Bubble (iPhone, WhatsApp, Comic)"
-                          style={{ padding: "4px 8px", fontSize: "0.75rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "4px", borderRadius: "10px" }}
+                          style={{ padding: "4px 10px", fontSize: "0.75rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "5px", borderRadius: "8px", flexShrink: 0 }}
                         >
-                          <MessageSquare style={{ width: 13, height: 13, color: "var(--cyber-cyan)" }} /> Bubble
+                          <MessageSquare style={{ width: 13, height: 13, color: "var(--cyber-cyan)" }} /> <span>Bubble</span>
                         </button>
 
                         <button
@@ -3939,22 +3990,23 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           onClick={() => setShowAiModal(true)}
                           title="AI Meme Captions"
                           style={{
-                            padding: "4px 9px",
+                            padding: "4px 10px",
                             fontSize: "0.75rem",
                             fontWeight: 600,
                             display: "flex",
                             alignItems: "center",
-                            gap: "4px",
-                            borderRadius: "10px",
+                            gap: "5px",
+                            borderRadius: "8px",
                             background: "linear-gradient(135deg, rgba(168, 85, 247, 0.3) 0%, rgba(236, 72, 153, 0.3) 100%)",
                             border: "1px solid rgba(236, 72, 153, 0.5)",
-                            color: "#ffffff"
+                            color: "#ffffff",
+                            flexShrink: 0
                           }}
                         >
-                          <Sparkles style={{ width: 13, height: 13, color: "#ec4899" }} /> AI Captions
+                          <Sparkles style={{ width: 13, height: 13, color: "#ec4899" }} /> <span>AI Captions</span>
                         </button>
                       </div>
-                    </div>
+                    )
                   )}
                   {!(activeCaption || activeSticker || activeImageLayer) && activeTab === 'images' && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
@@ -4648,6 +4700,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
               setShowBubbleLayouts(false);
               setShowTweetThemeMenu(false);
               setShowTweetTrendMenu(false);
+              setShowHeaderFooterMenu(false);
               if (!id) {
                 const prevSticker = stickers.find((s) => s.id === activeLayerId);
                 const prevCaption = captions.find((c) => c.id === activeLayerId);
@@ -5178,64 +5231,70 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                       <span>{activeCaption ? (activeCaption.curve ? `Arc (${activeCaption.curve > 0 ? '+' : ''}${activeCaption.curve}°)` : 'Curve') : 'Curved Text'}</span>
                     </button>
 
-                    {/* Modern Header Extension Button (Shown only when no text layer is selected) */}
+                    {/* Unified Header & Footer Segmented Control (Shown only when no text layer is selected) */}
                     {!activeCaption && (
-                      <button
-                        type="button"
-                        className={`btn btn-xs hover-lift ${canvasHeader.enabled ? 'active' : ''}`}
-                        onClick={handleToggleCanvasHeader}
-                        title="Toggle Modern Header Extension (Twitter / Reddit style top canvas extension)"
+                      <div
                         style={{
-                          padding: "7px 14px",
-                          borderRadius: "20px",
-                          fontSize: "0.82rem",
-                          fontWeight: 700,
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: "6px",
-                          background: canvasHeader.enabled
-                            ? "linear-gradient(135deg, rgba(6, 182, 212, 0.35) 0%, rgba(59, 130, 246, 0.35) 100%)"
-                            : "linear-gradient(135deg, rgba(168, 85, 247, 0.25) 0%, rgba(6, 182, 212, 0.25) 100%)",
-                          border: canvasHeader.enabled
-                            ? "1px solid var(--cyber-cyan)"
-                            : "1px solid rgba(168, 85, 247, 0.5)",
-                          boxShadow: canvasHeader.enabled ? "0 0 10px rgba(6, 182, 212, 0.3)" : "none",
-                          color: "#ffffff"
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          background: 'rgba(255, 255, 255, 0.05)',
+                          borderRadius: '20px',
+                          padding: '3px',
+                          border: '1px solid rgba(255, 255, 255, 0.12)',
+                          gap: '2px'
                         }}
                       >
-                        <PanelTop size={15} style={{ color: "var(--cyber-cyan)" }} />
-                        {canvasHeader.enabled ? "Header (On)" : "Header"}
-                      </button>
-                    )}
-
-                    {/* Modern Footer Extension Button (Shown only when no text layer is selected) */}
-                    {!activeCaption && (
-                      <button
-                        type="button"
-                        className={`btn btn-xs hover-lift ${canvasFooter.enabled ? 'active' : ''}`}
-                        onClick={handleToggleCanvasFooter}
-                        title="Toggle Modern Footer Extension (Twitter / Reddit style bottom canvas extension)"
-                        style={{
-                          padding: "7px 14px",
-                          borderRadius: "20px",
-                          fontSize: "0.82rem",
-                          fontWeight: 700,
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: "6px",
-                          background: canvasFooter.enabled
-                            ? "linear-gradient(135deg, rgba(6, 182, 212, 0.35) 0%, rgba(59, 130, 246, 0.35) 100%)"
-                            : "linear-gradient(135deg, rgba(168, 85, 247, 0.25) 0%, rgba(6, 182, 212, 0.25) 100%)",
-                          border: canvasFooter.enabled
-                            ? "1px solid var(--cyber-cyan)"
-                            : "1px solid rgba(168, 85, 247, 0.5)",
-                          boxShadow: canvasFooter.enabled ? "0 0 10px rgba(6, 182, 212, 0.3)" : "none",
-                          color: "#ffffff"
-                        }}
-                      >
-                        <PanelBottom size={15} style={{ color: "var(--cyber-cyan)" }} />
-                        {canvasFooter.enabled ? "Footer (On)" : "Footer"}
-                      </button>
+                        <button
+                          type="button"
+                          className={`btn btn-xs hover-lift ${canvasHeader.enabled ? 'active' : ''}`}
+                          onClick={handleToggleCanvasHeader}
+                          title="Toggle Modern Header Extension (Twitter / Reddit style top canvas extension)"
+                          style={{
+                            padding: "5px 12px",
+                            borderRadius: "16px",
+                            fontSize: "0.8rem",
+                            fontWeight: 700,
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "5px",
+                            background: canvasHeader.enabled
+                              ? "var(--primary-gradient)"
+                              : "transparent",
+                            border: canvasHeader.enabled
+                              ? "1px solid var(--cyber-cyan)"
+                              : "1px solid transparent",
+                            color: "#ffffff"
+                          }}
+                        >
+                          <PanelTop size={14} style={{ color: canvasHeader.enabled ? "#ffffff" : "var(--cyber-cyan)" }} />
+                          <span>{canvasHeader.enabled ? "Header (On)" : "Header"}</span>
+                        </button>
+                        <button
+                          type="button"
+                          className={`btn btn-xs hover-lift ${canvasFooter.enabled ? 'active' : ''}`}
+                          onClick={handleToggleCanvasFooter}
+                          title="Toggle Modern Footer Extension (Twitter / Reddit style bottom canvas extension)"
+                          style={{
+                            padding: "5px 12px",
+                            borderRadius: "16px",
+                            fontSize: "0.8rem",
+                            fontWeight: 700,
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "5px",
+                            background: canvasFooter.enabled
+                              ? "var(--primary-gradient)"
+                              : "transparent",
+                            border: canvasFooter.enabled
+                              ? "1px solid var(--cyber-cyan)"
+                              : "1px solid transparent",
+                            color: "#ffffff"
+                          }}
+                        >
+                          <PanelBottom size={14} style={{ color: canvasFooter.enabled ? "#ffffff" : "var(--cyber-cyan)" }} />
+                          <span>{canvasFooter.enabled ? "Footer (On)" : "Footer"}</span>
+                        </button>
+                      </div>
                     )}
 
                     {/* Speech & Chat Bubble Button */}
