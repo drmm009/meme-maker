@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X, Plus, User, AtSign, Sparkles, Dices, Check, MessageCircle, Repeat, Heart, Bookmark, Share2 } from 'lucide-react';
 
-const TwitterVerifiedBadge = ({ size = 16 }) => (
+export const TwitterVerifiedBadge = ({ size = 16 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="#1d9bf0" style={{ flexShrink: 0, display: 'inline-block' }}>
     <path d="M22.25 12c0-1.43-.88-2.67-2.19-3.34.46-1.39.2-2.9-.81-3.91s-2.52-1.27-3.91-.81c-.67-1.31-1.91-2.19-3.34-2.19s-2.67.88-3.34 2.19c-1.39-.46-2.9-.2-3.91.81s-1.27 2.52-.81 3.91c-1.31.67-2.19 1.91-2.19 3.34s.88 2.67 2.19 3.34c-.46 1.39-.2 2.9.81 3.91s2.52 1.27 3.91.81c.67 1.31 1.91 2.19 3.34 2.19s2.67-.88 3.34-2.19c1.39.46 2.9.2 3.91-.81s1.27-2.52.81-3.91c1.31-.67 2.19-1.91 2.19-3.34zm-11.72 4.28-3.53-3.53 1.41-1.41 2.12 2.12 5.66-5.66 1.41 1.41-7.07 7.07z" />
   </svg>
@@ -90,9 +90,7 @@ export default function MemeStylesModal({
   const [tweetHandle, setTweetHandle] = useState('@elonmusk');
   const [tweetText, setTweetText] = useState('thinking about deleting the database and moving to the woods');
   const [tweetVerified, setTweetVerified] = useState(true);
-  const [tweetTheme, setTweetTheme] = useState('dark'); // 'dark' | 'dim' | 'light'
   const [avatarBg, setAvatarBg] = useState('linear-gradient(135deg, #0ea5e9, #38bdf8)');
-  const [selectedMetrics, setSelectedMetrics] = useState('viral');
 
   if (!isOpen) return null;
 
@@ -111,14 +109,12 @@ export default function MemeStylesModal({
     setTweetText(pick);
   };
 
-  const currentMetricsObj = METRICS_PRESETS.find(m => m.id === selectedMetrics) || METRICS_PRESETS[0];
+  const previewMetrics = METRICS_PRESETS[0];
+  const cardBg = '#000000';
+  const cardBorder = 'rgba(255, 255, 255, 0.12)';
+  const cardText = '#ffffff';
+  const cardMuted = '#71767b';
 
-  const isLight = tweetTheme === 'light';
-  const isDim = tweetTheme === 'dim';
-  const cardBg = isLight ? '#ffffff' : (isDim ? '#15202b' : '#000000');
-  const cardBorder = isLight ? '#cfd9de' : (isDim ? '#38444d' : '#2f3336');
-  const cardText = isLight ? '#0f1419' : '#ffffff';
-  const cardMuted = isLight ? '#536471' : '#71767b';
 
   return (
     <div
@@ -207,6 +203,12 @@ export default function MemeStylesModal({
 
         {/* Persona Quick-Presets Carousel */}
         <div
+          className="horizontal-scroll-only"
+          onWheel={(e) => {
+            if (e.deltaY !== 0) {
+              e.currentTarget.scrollLeft += e.deltaY;
+            }
+          }}
           style={{
             padding: '10px 20px',
             background: 'rgba(0, 0, 0, 0.25)',
@@ -215,10 +217,15 @@ export default function MemeStylesModal({
             alignItems: 'center',
             gap: '8px',
             overflowX: 'auto',
-            scrollbarWidth: 'none'
+            overflowY: 'hidden',
+            flexWrap: 'nowrap',
+            whiteSpace: 'nowrap',
+            WebkitOverflowScrolling: 'touch',
+            scrollbarWidth: 'none',
+            msOverflowStyle: 'none'
           }}
         >
-          <span style={{ fontSize: '0.66rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap', marginRight: '2px' }}>
+          <span style={{ fontSize: '0.66rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap', marginRight: '2px', flexShrink: 0 }}>
             Presets:
           </span>
           {PERSONA_PRESETS.map((p) => {
@@ -229,7 +236,7 @@ export default function MemeStylesModal({
                 type="button"
                 onClick={() => handleApplyPersona(p)}
                 style={{
-                  padding: '5px 10px',
+                  padding: '5px 12px',
                   borderRadius: '999px',
                   fontSize: '0.73rem',
                   fontWeight: 600,
@@ -272,62 +279,9 @@ export default function MemeStylesModal({
               padding: '16px',
               display: 'flex',
               flexDirection: 'column',
-              gap: '12px',
               boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.06)'
             }}
           >
-            {/* Live Preview Top Bar: Status dot + Theme selector */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#10b981', display: 'inline-block', boxShadow: '0 0 8px #10b981' }} />
-                <span style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                  Live Preview
-                </span>
-              </div>
-
-              {/* Theme Segmented Switcher */}
-              <div
-                style={{
-                  display: 'flex',
-                  gap: '2px',
-                  background: 'rgba(0, 0, 0, 0.4)',
-                  borderRadius: '10px',
-                  padding: '3px',
-                  border: '1px solid rgba(255, 255, 255, 0.08)'
-                }}
-              >
-                {[
-                  { id: 'dark', label: 'Dark', icon: '🌑' },
-                  { id: 'dim', label: 'Dim', icon: '🌌' },
-                  { id: 'light', label: 'Light', icon: '☀️' }
-                ].map((th) => (
-                  <button
-                    key={th.id}
-                    type="button"
-                    onClick={() => setTweetTheme(th.id)}
-                    style={{
-                      border: 'none',
-                      borderRadius: '8px',
-                      padding: '3px 9px',
-                      fontSize: '0.7rem',
-                      fontWeight: 700,
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '4px',
-                      background: tweetTheme === th.id ? (th.id === 'light' ? '#ffffff' : 'rgba(255, 255, 255, 0.16)') : 'transparent',
-                      color: tweetTheme === th.id ? (th.id === 'light' ? '#0f1419' : '#ffffff') : 'rgba(255, 255, 255, 0.55)',
-                      boxShadow: tweetTheme === th.id ? '0 2px 6px rgba(0, 0, 0, 0.3)' : 'none',
-                      transition: 'all 0.15s ease'
-                    }}
-                  >
-                    <span>{th.icon}</span>
-                    <span>{th.label}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
             {/* The Actual Rendered Tweet Card */}
             <div
               style={{
@@ -336,7 +290,7 @@ export default function MemeStylesModal({
                 border: `1px solid ${cardBorder}`,
                 borderRadius: '16px',
                 padding: '16px 18px',
-                boxShadow: isLight ? '0 8px 30px rgba(0, 0, 0, 0.15)' : '0 12px 36px rgba(0, 0, 0, 0.45)',
+                boxShadow: '0 12px 36px rgba(0, 0, 0, 0.45)',
                 transition: 'all 0.2s ease',
                 fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif'
               }}
@@ -398,7 +352,7 @@ export default function MemeStylesModal({
 
                 {/* 𝕏 Logo */}
                 <div style={{ paddingLeft: '8px' }}>
-                  <XLogo size={18} color={isLight ? '#0f1419' : '#ffffff'} />
+                  <XLogo size={18} color="#ffffff" />
                 </div>
               </div>
 
@@ -426,13 +380,13 @@ export default function MemeStylesModal({
                   alignItems: 'center',
                   gap: '6px',
                   paddingBottom: '10px',
-                  borderBottom: `1px solid ${isLight ? '#eff3f4' : (isDim ? '#2f3b44' : '#222528')}`
+                  borderBottom: '1px solid #222528'
                 }}
               >
                 <span>10:42 PM · Oct 8, 2026</span>
                 <span>·</span>
-                <span style={{ fontWeight: 600, color: isLight ? '#0f1419' : '#e7e9ea' }}>
-                  {currentMetricsObj.display.views} Views
+                <span style={{ fontWeight: 600, color: '#e7e9ea' }}>
+                  {previewMetrics.display.views} Views
                 </span>
               </div>
 
@@ -449,15 +403,15 @@ export default function MemeStylesModal({
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                   <MessageCircle size={14} style={{ opacity: 0.85 }} />
-                  <span>{currentMetricsObj.display.replies}</span>
+                  <span>{previewMetrics.display.replies}</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                   <Repeat size={14} style={{ opacity: 0.85 }} />
-                  <span>{currentMetricsObj.display.retweets}</span>
+                  <span>{previewMetrics.display.retweets}</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                   <Heart size={14} style={{ opacity: 0.85 }} />
-                  <span>{currentMetricsObj.display.likes}</span>
+                  <span>{previewMetrics.display.likes}</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                   <Bookmark size={14} style={{ opacity: 0.85 }} />
@@ -525,72 +479,7 @@ export default function MemeStylesModal({
               </div>
             </div>
 
-            {/* Badges & Metrics Row */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.3fr', gap: '10px', alignItems: 'center' }}>
-              {/* Verified Badge Toggle Card */}
-              <button
-                type="button"
-                onClick={() => setTweetVerified(!tweetVerified)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '9px 12px',
-                  borderRadius: '12px',
-                  border: tweetVerified ? '1px solid rgba(29, 155, 240, 0.5)' : '1px solid rgba(255, 255, 255, 0.08)',
-                  background: tweetVerified ? 'rgba(29, 155, 240, 0.12)' : 'rgba(255, 255, 255, 0.04)',
-                  cursor: 'pointer',
-                  transition: 'all 0.15s ease'
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <TwitterVerifiedBadge size={16} />
-                  <span style={{ fontSize: '0.76rem', fontWeight: 700, color: tweetVerified ? '#38bdf8' : 'rgba(255,255,255,0.7)' }}>
-                    Verified
-                  </span>
-                </div>
-                <div
-                  style={{
-                    width: 18,
-                    height: 18,
-                    borderRadius: '6px',
-                    background: tweetVerified ? '#1d9bf0' : 'rgba(255, 255, 255, 0.1)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}
-                >
-                  {tweetVerified && <Check size={12} color="#ffffff" strokeWidth={3} />}
-                </div>
-              </button>
 
-              {/* Engagement Metrics Presets */}
-              <div style={{ display: 'flex', gap: '4px', background: 'rgba(0,0,0,0.3)', borderRadius: '12px', padding: '3px', border: '1px solid rgba(255,255,255,0.06)' }}>
-                {METRICS_PRESETS.map((m) => (
-                  <button
-                    key={m.id}
-                    type="button"
-                    onClick={() => setSelectedMetrics(m.id)}
-                    style={{
-                      flex: 1,
-                      border: 'none',
-                      borderRadius: '8px',
-                      padding: '7px 4px',
-                      fontSize: '0.71rem',
-                      fontWeight: 700,
-                      cursor: 'pointer',
-                      whiteSpace: 'nowrap',
-                      background: selectedMetrics === m.id ? 'var(--primary-gradient)' : 'transparent',
-                      color: selectedMetrics === m.id ? '#ffffff' : 'rgba(255, 255, 255, 0.6)',
-                      boxShadow: selectedMetrics === m.id ? '0 2px 8px rgba(249, 115, 22, 0.3)' : 'none',
-                      transition: 'all 0.15s ease'
-                    }}
-                  >
-                    {m.label}
-                  </button>
-                ))}
-              </div>
-            </div>
 
             {/* Tweet Textarea with Random Idea button */}
             <div>
@@ -665,9 +554,9 @@ export default function MemeStylesModal({
                 handle: tweetHandle,
                 text: tweetText,
                 verified: tweetVerified,
-                theme: tweetTheme,
+                theme: 'dark',
                 time: '10:42 PM · Oct 8, 2026',
-                metrics: currentMetricsObj.text
+                metrics: '💬 14.2K    🔁 62.8K    ❤️ 420.5K    📊 18.2M'
               });
               onClose();
             }}

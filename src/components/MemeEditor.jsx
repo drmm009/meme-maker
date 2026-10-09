@@ -14,7 +14,7 @@ import {
   PanelTop, PanelBottom, MessageSquare, Flame, Tv, MessageCircle, Shield
 } from 'lucide-react';
 import AiCaptionModal from './AiCaptionModal';
-import MemeStylesModal from './MemeStylesModal';
+import MemeStylesModal, { TwitterVerifiedBadge } from './MemeStylesModal';
 import { downloadImageHelper, recordCanvasAsVideo } from '../utils/downloadHelper';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MEME_TEMPLATES, CATEGORIES } from '../data/templates';
@@ -1444,7 +1444,8 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
       tweetVerified: verified,
       tweetTheme: theme,
       tweetTime: data.time || '10:42 PM · Oct 8, 2026',
-      tweetMetrics: data.metrics || '💬 1.2K    🔁 42.8K    ❤️ 189.5K    📊 3.2M',
+      tweetMetrics: data.metrics || '💬 14.2K    🔁 62.8K    ❤️ 420.5K    📊 18.2M',
+      tweetMetricsId: 'viral',
       isTweetCard: true,
       x: 0.5,
       y: 0.5,
@@ -2971,6 +2972,122 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                   )}
 
                   {activeCaption && !showFontMenu && !showTextEffectsMenu && !showBubbleLayouts && (() => {
+                    if (activeCaption.isTweetCard) {
+                      const currentTheme = activeCaption.tweetTheme || 'dark';
+                      const currentMetricsText = activeCaption.tweetMetrics || '';
+                      const isVerified = activeCaption.tweetVerified !== false;
+
+                      const themeOptions = [
+                        { id: 'dark', label: 'Dark', icon: '🌑' },
+                        { id: 'dim', label: 'Dim', icon: '🌌' },
+                        { id: 'light', label: 'Light', icon: '☀️' }
+                      ];
+
+                      const metricsOptions = [
+                        { id: 'viral', label: '🔥 Viral', text: '💬 14.2K    🔁 62.8K    ❤️ 420.5K    📊 18.2M' },
+                        { id: 'ratio', label: '📉 Ratioed', text: '💬 84.1K    🔁 412    ❤️ 1.2K    📊 6.4M' },
+                        { id: 'casual', label: '💬 Casual', text: '💬 142    🔁 890    ❤️ 4.6K    📊 72K' }
+                      ];
+
+                      return (
+                        <>
+                          {/* Theme Switcher: Dark, Dim, Light */}
+                          {themeOptions.map((th) => {
+                            const isActive = currentTheme === th.id;
+                            return (
+                              <button
+                                key={th.id}
+                                type="button"
+                                className={`btn btn-xs vid-ctx-btn ${isActive ? 'active' : ''}`}
+                                onClick={() => {
+                                  const newColor = th.id === 'light' ? '#0f1419' : '#ffffff';
+                                  updateActiveCaptionProps({ tweetTheme: th.id, color: newColor });
+                                }}
+                                title={`${th.label} theme`}
+                                style={{
+                                  padding: '4px 9px',
+                                  fontSize: '0.75rem',
+                                  fontWeight: 600,
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '4px',
+                                  borderRadius: '8px',
+                                  flexShrink: 0,
+                                  background: isActive ? 'var(--primary-gradient)' : 'rgba(255, 255, 255, 0.08)',
+                                  color: '#ffffff',
+                                  border: isActive ? '1px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.1)'
+                                }}
+                              >
+                                <span>{th.icon}</span>
+                                <span>{th.label}</span>
+                              </button>
+                            );
+                          })}
+
+                          <div className="vid-ctx-divider" style={{ width: 1, height: 18, background: 'rgba(255,255,255,0.15)', margin: '0 2px', flexShrink: 0 }} />
+
+                          {/* Verified Badge Toggle */}
+                          <button
+                            type="button"
+                            className={`btn btn-xs vid-ctx-btn ${isVerified ? 'active' : ''}`}
+                            onClick={() => updateActiveCaptionProps({ tweetVerified: !isVerified })}
+                            title="Toggle Verified Badge"
+                            style={{
+                              padding: '4px 10px',
+                              fontSize: '0.75rem',
+                              fontWeight: 600,
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '5px',
+                              borderRadius: '8px',
+                              flexShrink: 0,
+                              background: isVerified ? 'rgba(29, 155, 240, 0.22)' : 'rgba(255, 255, 255, 0.08)',
+                              border: isVerified ? '1px solid #1d9bf0' : '1px solid rgba(255, 255, 255, 0.1)',
+                              color: isVerified ? '#38bdf8' : 'rgba(255, 255, 255, 0.8)'
+                            }}
+                          >
+                            <TwitterVerifiedBadge size={14} />
+                            <span>Verified</span>
+                          </button>
+
+                          <div className="vid-ctx-divider" style={{ width: 1, height: 18, background: 'rgba(255,255,255,0.15)', margin: '0 2px', flexShrink: 0 }} />
+
+                          {/* Metrics Presets: Viral, Ratioed, Casual */}
+                          {metricsOptions.map((m) => {
+                            const isSelected = activeCaption.tweetMetricsId === m.id || (!activeCaption.tweetMetricsId && (
+                              m.id === 'viral' ? (currentMetricsText.includes('14.2K') || currentMetricsText.includes('1.2K')) :
+                              m.id === 'ratio' ? currentMetricsText.includes('84.1K') :
+                              m.id === 'casual' ? currentMetricsText.includes('142') : false
+                            ));
+                            return (
+                              <button
+                                key={m.id}
+                                type="button"
+                                className={`btn btn-xs vid-ctx-btn ${isSelected ? 'active' : ''}`}
+                                onClick={() => updateActiveCaptionProps({ tweetMetrics: m.text, tweetMetricsId: m.id })}
+                                title={`${m.label} metrics`}
+                                style={{
+                                  padding: '4px 9px',
+                                  fontSize: '0.75rem',
+                                  fontWeight: 600,
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '4px',
+                                  borderRadius: '8px',
+                                  flexShrink: 0,
+                                  background: isSelected ? 'var(--primary-gradient)' : 'rgba(255, 255, 255, 0.08)',
+                                  color: '#ffffff',
+                                  border: isSelected ? '1px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.1)'
+                                }}
+                              >
+                                <span>{m.label}</span>
+                              </button>
+                            );
+                          })}
+                        </>
+                      );
+                    }
+
                     const hasActiveEffects = Boolean(
                       (activeCaption.curve && activeCaption.curve !== 0) ||
                       (activeCaption.opacity !== undefined && Number(activeCaption.opacity) < 1) ||

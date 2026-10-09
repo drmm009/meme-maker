@@ -4168,3 +4168,19 @@ input:checked + .slider.round.watermark-toggle {
   display: none !important;
 }
 /* --- END PILL DOCK OVERRIDES V2 --- */
+
+/* Horizontal scroll helper */
+.horizontal-scroll-only {
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  white-space: nowrap !important;
+  flex-wrap: nowrap !important;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+.horizontal-scroll-only::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
