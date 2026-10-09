@@ -334,19 +334,115 @@ const drawBreakingNewsChyron = (ctx, barW, cap) => {
   ctx.restore();
 };
 
+// Path2D vector paths for tweet card icons matching the live preview modal
+const twitterStarBadgePath = new Path2D("M22.25 12c0-1.43-.88-2.67-2.19-3.34.46-1.39.2-2.9-.81-3.91s-2.52-1.27-3.91-.81c-.67-1.31-1.91-2.19-3.34-2.19s-2.67.88-3.34 2.19c-1.39-.46-2.9-.2-3.91.81s-1.27 2.52-.81 3.91c-1.31.67-2.19 1.91-2.19 3.34zm-11.72 4.28-3.53-3.53 1.41-1.41 2.12 2.12 5.66-5.66 1.41 1.41-7.07 7.07z");
+const twitterCheckPath = new Path2D("M10.53 16.28l-3.53-3.53 1.41-1.41 2.12 2.12 5.66-5.66 1.41 1.41-7.07 7.07z");
+const tweetXLogoPath = new Path2D("M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z");
+const tweetCommentPath = new Path2D("M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z");
+const tweetRepeatPath = new Path2D("M17 2l4 4-4 4M3 11v-1a4 4 0 0 1 4-4h14M7 22l-4-4 4-4M21 13v1a4 4 0 0 1-4 4H3");
+const tweetHeartPath = new Path2D("M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z");
+const tweetBookmarkPath = new Path2D("M19 21l-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z");
+const tweetSharePath = new Path2D("M18 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM6 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM18 22a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98");
+
+const parseTweetMetrics = (metricsStr) => {
+  if (!metricsStr) {
+    return { replies: '14.2K', retweets: '62.8K', likes: '420.5K', views: '18.2M' };
+  }
+  if (typeof metricsStr === 'object') {
+    return {
+      replies: metricsStr.replies || '14.2K',
+      retweets: metricsStr.retweets || '62.8K',
+      likes: metricsStr.likes || '420.5K',
+      views: metricsStr.views || '18.2M'
+    };
+  }
+  if (metricsStr.includes('84.1K') || metricsStr.includes('Ratioed')) {
+    return { replies: '84.1K', retweets: '412', likes: '1.2K', views: '6.4M' };
+  }
+  if (metricsStr.includes('142') || metricsStr.includes('Casual')) {
+    return { replies: '142', retweets: '890', likes: '4.6K', views: '72K' };
+  }
+  const matches = metricsStr.match(/[0-9]+(\.[0-9]+)?[KkMmBb]?/g);
+  if (matches && matches.length >= 4) {
+    return { replies: matches[0], retweets: matches[1], likes: matches[2], views: matches[3] };
+  }
+  return { replies: '14.2K', retweets: '62.8K', likes: '420.5K', views: '18.2M' };
+};
+
+const drawTweetVectorStrokeIcon = (ctx, path, x, y, size, strokeColor) => {
+  ctx.save();
+  ctx.translate(x, y);
+  const s = size / 24;
+  ctx.scale(s, s);
+  ctx.strokeStyle = strokeColor;
+  ctx.lineWidth = 1.9;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.stroke(path);
+  ctx.restore();
+};
+
+const drawTweetVerifiedBadge = (ctx, x, y, size) => {
+  ctx.save();
+  ctx.translate(x, y);
+  const s = size / 24;
+  ctx.scale(s, s);
+  ctx.fillStyle = '#1d9bf0';
+  ctx.fill(twitterStarBadgePath);
+  ctx.fillStyle = '#ffffff';
+  ctx.fill(twitterCheckPath);
+  ctx.restore();
+};
+
+const drawTweetXLogo = (ctx, x, y, size, color) => {
+  ctx.save();
+  ctx.translate(x, y);
+  const s = size / 24;
+  ctx.scale(s, s);
+  ctx.fillStyle = color;
+  ctx.fill(tweetXLogoPath);
+  ctx.restore();
+};
+
 const getTweetCardHeight = (ctx, cap, cardW) => {
-  const pad = 18;
-  const bodyFontSize = cap.fontSize ? Math.min(24, Math.max(16, cap.fontSize)) : 18;
+  const scale = Math.max(0.4, Math.min(3.5, cardW / 480));
+  const pad = Math.round(18 * scale);
+  const avatarSize = Math.round(40 * scale);
+  const bodyFontSize = Math.round(Math.max(12, (cap.fontSize || 18) * scale));
+  const timeFontSize = Math.round(13 * scale);
+  const metricsFontSize = Math.round(13 * scale);
+  const iconSize = Math.round(15 * scale);
+
   ctx.save();
   ctx.font = `normal ${bodyFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
   const wrappedLines = wrapText(ctx, cap.text || '', cardW - pad * 2);
   ctx.restore();
+
   const bodyH = wrappedLines.length * (bodyFontSize * 1.35);
-  return Math.round(pad + 44 + 10 + bodyH + 12 + 16 + 12 + 24 + pad);
+  const headerH = Math.max(avatarSize, Math.round(44 * scale));
+  const timeH = Math.round(16 * scale);
+  const dividerGap = Math.round(16 * scale);
+  const metricsH = Math.max(iconSize, metricsFontSize);
+
+  const totalH = Math.round(pad + headerH + Math.round(10 * scale) + bodyH + Math.round(12 * scale) + timeH + dividerGap + metricsH + pad);
+  return totalH;
 };
 
 const drawTweetCard = (ctx, cardW, cap) => {
   ctx.save();
+  const scale = Math.max(0.4, Math.min(3.5, cardW / 480));
+  const pad = Math.round(18 * scale);
+  const avatarR = Math.round(20 * scale);
+  const nameFontSize = Math.round(16 * scale);
+  const handleFontSize = Math.round(14 * scale);
+  const bodyFontSize = Math.round(Math.max(12, (cap.fontSize || 18) * scale));
+  const timeFontSize = Math.round(13 * scale);
+  const metricsFontSize = Math.round(13 * scale);
+  const iconSize = Math.round(15 * scale);
+  const badgeSize = Math.round(16 * scale);
+  const xLogoSize = Math.round(17 * scale);
+  const cornerRadius = Math.round(16 * scale);
+
   const theme = cap.tweetTheme || 'dark';
   const isDark = theme !== 'light';
   const cardBg = theme === 'dim' ? '#15202b' : (isDark ? '#000000' : '#ffffff');
@@ -357,23 +453,20 @@ const drawTweetCard = (ctx, cardW, cap) => {
   const name = cap.tweetName || 'Elon Musk';
   const handle = cap.tweetHandle || '@elonmusk';
   const text = cap.text || "thinking about deleting the database and moving to the woods";
-  const time = cap.tweetTime || '10:42 PM · Oct 7, 2026';
+  const time = cap.tweetTime || '10:42 PM · Oct 8, 2026';
   const isVerified = cap.tweetVerified !== false;
-
-  const pad = 18;
-  const avatarR = 20;
-  const bodyFontSize = cap.fontSize ? Math.min(24, Math.max(16, cap.fontSize)) : 18;
+  const parsedMetrics = parseTweetMetrics(cap.tweetMetrics);
 
   ctx.font = `normal ${bodyFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
   const wrappedLines = wrapText(ctx, text, cardW - pad * 2);
-  const bodyH = wrappedLines.length * (bodyFontSize * 1.35);
 
-  const cardH = Math.round(pad + 44 + 10 + bodyH + 12 + 16 + 12 + 24 + pad);
+  const cardH = getTweetCardHeight(ctx, cap, cardW);
   const startX = - cardW / 2;
   const startY = - cardH / 2;
 
+  // Background card with rounded corners
   ctx.fillStyle = cardBg;
-  drawRoundRect(ctx, startX, startY, cardW, cardH, 16);
+  drawRoundRect(ctx, startX, startY, cardW, cardH, cornerRadius);
   ctx.strokeStyle = borderColor;
   ctx.lineWidth = 1;
   ctx.stroke();
@@ -383,10 +476,10 @@ const drawTweetCard = (ctx, cardW, cap) => {
   const avY = startY + pad + avatarR;
   ctx.beginPath();
   ctx.arc(avX, avY, avatarR, 0, Math.PI * 2);
-  ctx.fillStyle = isDark ? '#27272a' : '#e4e4e7';
+  ctx.fillStyle = isDark ? '#0ea5e9' : '#38bdf8';
   ctx.fill();
-  ctx.fillStyle = isDark ? '#a1a1aa' : '#71717a';
-  ctx.font = 'bold 16px sans-serif';
+  ctx.fillStyle = '#ffffff';
+  ctx.font = `bold ${Math.round(16 * scale)}px -apple-system, BlinkMacSystemFont, sans-serif`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(name.charAt(0).toUpperCase() || 'U', avX, avY);
@@ -395,38 +488,32 @@ const drawTweetCard = (ctx, cardW, cap) => {
   ctx.textAlign = 'left';
   ctx.textBaseline = 'top';
   ctx.fillStyle = textColor;
-  ctx.font = 'bold 16px -apple-system, BlinkMacSystemFont, sans-serif';
-  const nameY = startY + pad + 2;
-  ctx.fillText(name, startX + pad + 50, nameY);
+  ctx.font = `bold ${nameFontSize}px -apple-system, BlinkMacSystemFont, sans-serif`;
+  const nameX = startX + pad + (avatarR * 2) + Math.round(10 * scale);
+  const nameY = startY + pad + Math.round(2 * scale);
+  ctx.fillText(name, nameX, nameY);
 
   const nameWidth = ctx.measureText(name).width;
   if (isVerified) {
-    const badgeX = startX + pad + 54 + nameWidth;
-    ctx.beginPath();
-    ctx.arc(badgeX + 7, nameY + 9, 8, 0, Math.PI * 2);
-    ctx.fillStyle = '#1d9bf0';
-    ctx.fill();
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 10px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('✓', badgeX + 7, nameY + 9);
+    const badgeX = nameX + nameWidth + Math.round(4 * scale);
+    const badgeY = nameY + Math.round((nameFontSize - badgeSize) / 2);
+    drawTweetVerifiedBadge(ctx, badgeX, badgeY, badgeSize);
   }
 
+  // Handle
   ctx.textAlign = 'left';
   ctx.textBaseline = 'top';
   ctx.fillStyle = mutedColor;
-  ctx.font = 'normal 14px -apple-system, BlinkMacSystemFont, sans-serif';
-  ctx.fillText(handle, startX + pad + 50, nameY + 20);
+  ctx.font = `normal ${handleFontSize}px -apple-system, BlinkMacSystemFont, sans-serif`;
+  ctx.fillText(handle, nameX, nameY + nameFontSize + Math.round(4 * scale));
 
-  // X Logo top-right
-  ctx.font = 'bold 16px sans-serif';
-  ctx.fillStyle = isDark ? '#ffffff' : '#000000';
-  ctx.textAlign = 'right';
-  ctx.fillText('𝕏', startX + cardW - pad, startY + pad + 4);
+  // 𝕏 Logo top-right
+  const xLogoX = startX + cardW - pad - xLogoSize;
+  const xLogoY = startY + pad + Math.round(2 * scale);
+  drawTweetXLogo(ctx, xLogoX, xLogoY, xLogoSize, isDark ? '#ffffff' : '#0f1419');
 
   // Body text
-  let curY = startY + pad + 44 + 10;
+  let curY = startY + pad + Math.max(avatarR * 2, Math.round(44 * scale)) + Math.round(10 * scale);
   ctx.fillStyle = textColor;
   ctx.font = `normal ${bodyFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
   ctx.textAlign = 'left';
@@ -436,26 +523,55 @@ const drawTweetCard = (ctx, cardW, cap) => {
     curY += (bodyFontSize * 1.35);
   }
 
-  // Timestamp
-  curY += 8;
+  // Timestamp & Views (above divider, matching modal exactly)
+  curY += Math.round(10 * scale);
   ctx.fillStyle = mutedColor;
-  ctx.font = 'normal 13px -apple-system, BlinkMacSystemFont, sans-serif';
-  ctx.fillText(time, startX + pad, curY);
+  ctx.font = `normal ${timeFontSize}px -apple-system, BlinkMacSystemFont, sans-serif`;
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'top';
+  const timeStr = `${time}  ·  `;
+  ctx.fillText(timeStr, startX + pad, curY);
+  const timeW = ctx.measureText(timeStr).width;
 
-  // Divider
-  curY += 22;
+  ctx.font = `bold ${timeFontSize}px -apple-system, BlinkMacSystemFont, sans-serif`;
+  ctx.fillStyle = isDark ? '#e7e9ea' : '#0f1419';
+  ctx.fillText(`${parsedMetrics.views} Views`, startX + pad + timeW, curY);
+
+  // Divider line
+  curY += timeFontSize + Math.round(10 * scale);
   ctx.strokeStyle = borderColor;
+  ctx.lineWidth = 1;
   ctx.beginPath();
   ctx.moveTo(startX + pad, curY);
   ctx.lineTo(startX + cardW - pad, curY);
   ctx.stroke();
 
-  // Metrics
-  curY += 10;
+  // Metrics engagement row (vector icons + counts, matching modal exactly)
+  curY += Math.round(10 * scale);
+  const availW = cardW - pad * 2;
+  const colW = availW / 5;
+  ctx.font = `normal ${metricsFontSize}px -apple-system, BlinkMacSystemFont, sans-serif`;
   ctx.fillStyle = mutedColor;
-  ctx.font = 'normal 13px -apple-system, BlinkMacSystemFont, sans-serif';
-  const metrics = cap.tweetMetrics || `💬 1.2K    🔁 42.8K    ❤️ 189.5K    📊 3.2M`;
-  ctx.fillText(metrics, startX + pad, curY);
+  ctx.textBaseline = 'middle';
+  const iconCenterOffset = iconSize / 2;
+
+  // 1. Comment icon + replies
+  drawTweetVectorStrokeIcon(ctx, tweetCommentPath, startX + pad, curY, iconSize, mutedColor);
+  ctx.fillText(parsedMetrics.replies, startX + pad + iconSize + Math.round(5 * scale), curY + iconCenterOffset);
+
+  // 2. Retweet icon + retweets
+  drawTweetVectorStrokeIcon(ctx, tweetRepeatPath, startX + pad + colW, curY, iconSize, mutedColor);
+  ctx.fillText(parsedMetrics.retweets, startX + pad + colW + iconSize + Math.round(5 * scale), curY + iconCenterOffset);
+
+  // 3. Like icon + likes
+  drawTweetVectorStrokeIcon(ctx, tweetHeartPath, startX + pad + colW * 2, curY, iconSize, mutedColor);
+  ctx.fillText(parsedMetrics.likes, startX + pad + colW * 2 + iconSize + Math.round(5 * scale), curY + iconCenterOffset);
+
+  // 4. Bookmark icon
+  drawTweetVectorStrokeIcon(ctx, tweetBookmarkPath, startX + pad + colW * 3.3, curY, iconSize, mutedColor);
+
+  // 5. Share icon
+  drawTweetVectorStrokeIcon(ctx, tweetSharePath, startX + cardW - pad - iconSize, curY, iconSize, mutedColor);
 
   ctx.restore();
 };
@@ -1514,7 +1630,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
           boxHeight = getBreakingNewsHeight(cap);
           drawBreakingNewsChyron(targetCtx, boxWidth, cap);
         } else if (cap.isTweetCard) {
-          boxWidth = Math.min(540, (cap.width || 0.88) * canvas.width);
+          boxWidth = Math.max(180, (cap.width || 0.88) * canvas.width);
           boxHeight = getTweetCardHeight(targetCtx, cap, boxWidth);
           drawTweetCard(targetCtx, boxWidth, cap);
         } else {
@@ -1645,6 +1761,8 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
               uiCtx.stroke();
             };
             
+            drawHandle(boxX, 0); // Middle Left
+            drawHandle(boxX + boxWidth, 0); // Middle Right
             drawHandle(boxX, boxY); // Top Left
             drawHandle(boxX + boxWidth, boxY); // Top Right
             drawHandle(boxX, boxY + boxHeight); // Bottom Left
@@ -1968,7 +2086,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
             boxWidth = Math.max(300, (activeCap.width || 0.94) * canvas.width);
             boxHeight = getBreakingNewsHeight(activeCap);
           } else if (activeCap.isTweetCard) {
-            boxWidth = Math.min(540, (activeCap.width || 0.88) * canvas.width);
+            boxWidth = Math.max(180, (activeCap.width || 0.88) * canvas.width);
             boxHeight = getTweetCardHeight(ctx, activeCap, boxWidth);
           }
           const halfW = boxWidth / 2;
@@ -1982,6 +2100,8 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
           const handles = [
             ...((!activeCap.isHeaderCaption && !activeCap.isFooterCaption) ? [{ type: 'delete_layer', x: leftX - 36, y: topY - 36, r: 26 }] : []),
             ...((!activeCap.isHeaderCaption && !activeCap.isFooterCaption) ? [{ type: 'rotate_caption', x: cx, y: topY - 34, r: 24 }] : []),
+            { type: 'resize_caption_l', x: leftX, y: cy, r: 22 },
+            { type: 'resize_caption_r', x: rightX, y: cy, r: 22 },
             { type: 'resize_caption_tl', x: leftX, y: topY, r: 24 },
             { type: 'resize_caption_tr', x: rightX, y: topY, r: 24 },
             { type: 'resize_caption_bl', x: leftX, y: bottomY, r: 24 },
@@ -2150,7 +2270,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
             boxWidth = Math.max(300, (cap.width || 0.94) * canvas.width);
             boxHeight = getBreakingNewsHeight(cap);
           } else if (cap.isTweetCard) {
-            boxWidth = Math.min(540, (cap.width || 0.88) * canvas.width);
+            boxWidth = Math.max(180, (cap.width || 0.88) * canvas.width);
             boxHeight = getTweetCardHeight(ctx, cap, boxWidth);
           }
 
@@ -2438,7 +2558,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
           boxWidth = Math.max(300, (activeCap.width || 0.94) * canvas.width);
           boxHeight = getBreakingNewsHeight(activeCap);
         } else if (activeCap.isTweetCard) {
-          boxWidth = Math.min(540, (activeCap.width || 0.88) * canvas.width);
+          boxWidth = Math.max(180, (activeCap.width || 0.88) * canvas.width);
           boxHeight = getTweetCardHeight(ctx, activeCap, boxWidth);
         }
 
@@ -2455,6 +2575,9 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         }
         if (!activeCap.isHeaderCaption && !activeCap.isFooterCaption && Math.hypot(p.x - cx, p.y - (topY - 34)) <= 24) {
           canvas.style.cursor = 'grab'; return;
+        }
+        if (Math.hypot(p.x - leftX, p.y - cy) <= 22 || Math.hypot(p.x - rightX, p.y - cy) <= 22) {
+          canvas.style.cursor = 'ew-resize'; return;
         }
         if (Math.hypot(p.x - leftX, p.y - topY) <= 22 || Math.hypot(p.x - rightX, p.y - bottomY) <= 22) {
           canvas.style.cursor = 'nwse-resize'; return;
@@ -2576,7 +2699,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
           boxWidth = Math.max(300, (cap.width || 0.94) * canvas.width);
           boxHeight = getBreakingNewsHeight(cap);
         } else if (cap.isTweetCard) {
-          boxWidth = Math.min(540, (cap.width || 0.88) * canvas.width);
+          boxWidth = Math.max(180, (cap.width || 0.88) * canvas.width);
           boxHeight = getTweetCardHeight(ctx, cap, boxWidth);
         }
         if (p.x >= cx - boxWidth / 2 && p.x <= cx + boxWidth / 2 && p.y >= cy - boxHeight / 2 && p.y <= cy + boxHeight / 2) {
@@ -2797,16 +2920,26 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
 
       const centerX = initialLayerPos.current.x * canvas.width;
       const centerY = initialLayerPos.current.y * canvas.height;
+      const handleType = dragTarget.current.type;
+
+      if (handleType === 'resize_caption_l' || handleType === 'resize_caption_r') {
+        const horizontalDist = Math.abs(coords.x - centerX);
+        const newWidth = Math.max(0.15, Math.min(3.0, Number(((horizontalDist * 2) / canvas.width).toFixed(3))));
+        onUpdateCaptionBounds(id, { width: newWidth });
+        return;
+      }
+
       // Corner handles: stretch to resize text font size & box proportionally, just like sticker and image layers
       const currentDist = Math.hypot(coords.x - centerX, coords.y - centerY);
       const initDist = initialLayerPos.current.initialDist || 50;
       const scaleFactor = Math.max(0.1, currentDist / initDist);
 
-      const initFontSize = initialLayerPos.current.initialFontSize || cap.fontSize || 50;
-      const newFontSize = Math.max(16, Math.min(250, Math.round(initFontSize * scaleFactor)));
+      const initFontSize = initialLayerPos.current.initialFontSize || cap.fontSize || (cap.isTweetCard ? 18 : 50);
+      const newFontSize = Math.max(10, Math.min(250, Math.round(initFontSize * scaleFactor)));
 
-      const initWidth = initialLayerPos.current.initialWidth || cap.width || 0.9;
-      const newWidth = Math.max(0.15, Math.min(1.0, Number((initWidth * scaleFactor).toFixed(3))));
+      const initWidth = initialLayerPos.current.initialWidth || cap.width || (cap.isTweetCard ? 0.88 : 0.9);
+      const maxCapWidth = cap.isTweetCard ? 3.0 : 1.5;
+      const newWidth = Math.max(0.15, Math.min(maxCapWidth, Number((initWidth * scaleFactor).toFixed(3))));
 
       onUpdateCaptionBounds(id, { 
         fontSize: newFontSize,
