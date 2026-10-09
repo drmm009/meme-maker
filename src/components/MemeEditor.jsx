@@ -2949,30 +2949,12 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           step="0.05"
                           value={activeCaption.opacity !== undefined ? activeCaption.opacity : 1}
                           onChange={(e) => updateActiveCaptionProps({ opacity: parseFloat(e.target.value) })}
-                          style={{ width: '100px', accentColor: 'var(--cyber-cyan)', height: '4px' }}
+                          style={{ width: '110px', accentColor: 'var(--cyber-cyan)', height: '4px' }}
                           title="Text Opacity (10% - 100%)"
                         />
                         <span style={{ fontSize: '11px', fontWeight: 700, minWidth: '34px', color: (activeCaption.opacity !== undefined && Number(activeCaption.opacity) < 1) ? 'var(--cyber-cyan)' : '#ffffff' }}>
                           {Math.round((activeCaption.opacity !== undefined ? Number(activeCaption.opacity) : 1) * 100)}%
                         </span>
-                        <div style={{ display: 'flex', gap: '3px' }}>
-                          <button
-                            type="button"
-                            className={`btn btn-xs ${(activeCaption.opacity === undefined || Number(activeCaption.opacity) === 1) ? 'btn-primary' : 'btn-ghost'}`}
-                            onClick={() => updateActiveCaptionProps({ opacity: 1 })}
-                            style={{ padding: '2px 8px', fontSize: '11px', height: '24px', borderRadius: '6px' }}
-                          >
-                            100%
-                          </button>
-                          <button
-                            type="button"
-                            className={`btn btn-xs ${Number(activeCaption.opacity) === 0.5 ? 'btn-primary' : 'btn-ghost'}`}
-                            onClick={() => updateActiveCaptionProps({ opacity: 0.5 })}
-                            style={{ padding: '2px 8px', fontSize: '11px', height: '24px', borderRadius: '6px' }}
-                          >
-                            50%
-                          </button>
-                        </div>
                       </div>
                     </div>
                   )}
@@ -3314,7 +3296,30 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
 
                     return (
                       <>
-                        {/* 1. Font dropdown */}
+                        {/* 1. Case toggle Aa */}
+                        <button
+                          type="button"
+                          className="btn btn-xs vid-ctx-btn"
+                          title="Toggle Text Case (ALL CAPS / Sentence case / lowercase)"
+                          onClick={handleToggleTextCase}
+                          style={{
+                            padding: '4px 10px',
+                            fontSize: '0.75rem',
+                            fontWeight: 700,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            borderRadius: '8px',
+                            background: 'rgba(255, 255, 255, 0.08)',
+                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                            color: '#ffffff',
+                            flexShrink: 0
+                          }}
+                        >
+                          Aa
+                        </button>
+
+                        {/* 2. Font dropdown */}
                         <button
                           type="button"
                           className="btn btn-xs vid-ctx-btn vid-ctx-btn-font"
@@ -3344,7 +3349,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           <span>{(activeCaption.fontFamily || 'Anton').split(/[\s,]+/)[0].replace(/['"]/g, '')}</span>
                         </button>
 
-                        {/* 2. Color button (placed beside Font button) */}
+                        {/* 3. Color button (beside Font button) */}
                         <div
                           className="btn btn-xs vid-ctx-btn"
                           style={{
@@ -3385,29 +3390,6 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                             style={{ position: 'absolute', opacity: 0, inset: 0, cursor: 'pointer', width: '100%', height: '100%' }}
                           />
                         </div>
-
-                        {/* 3. Case toggle Aa */}
-                        <button
-                          type="button"
-                          className="btn btn-xs vid-ctx-btn"
-                          title="Toggle Text Case (ALL CAPS / Sentence case / lowercase)"
-                          onClick={handleToggleTextCase}
-                          style={{
-                            padding: '4px 10px',
-                            fontSize: '0.75rem',
-                            fontWeight: 700,
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            borderRadius: '8px',
-                            background: 'rgba(255, 255, 255, 0.08)',
-                            border: '1px solid rgba(255, 255, 255, 0.1)',
-                            color: '#ffffff',
-                            flexShrink: 0
-                          }}
-                        >
-                          Aa
-                        </button>
 
                         {/* 4. Curv Button */}
                         <button
