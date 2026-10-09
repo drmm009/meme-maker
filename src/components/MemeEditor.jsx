@@ -2275,6 +2275,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
 
   const activeFontObj = FONTS.find((f) => f.family === (activeCaption?.fontFamily || 'Impact, sans-serif'))
     || FONTS.find((f) => activeCaption?.fontFamily?.toLowerCase().includes('comic') && f.id.toLowerCase().includes('comic'))
+    || FONTS.find((f) => (activeCaption?.fontFamily?.toLowerCase().includes('apple') || activeCaption?.fontFamily?.toLowerCase().includes('system')) && f.id.toLowerCase().includes('apple'))
     || FONTS.find((f) => activeCaption?.fontFamily?.toLowerCase().includes(f.id.toLowerCase()))
     || FONTS[0];
 
@@ -2974,7 +2975,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                             setLastUsedSettingButton('font');
                           }}
                         >
-                          {f.name.split(' ')[0]}
+                          {f.id || f.name.split(' ')[0]}
                         </button>
                       ))}
                     </>
@@ -3617,7 +3618,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           }}
                         >
                           <Type className="vid-font-icon" style={{ width: 14, height: 14, color: '#ffffff' }} />
-                          <span>{(activeCaption.fontFamily || 'Anton').split(/[\s,]+/)[0].replace(/['"]/g, '')}</span>
+                          <span>{activeFontObj ? activeFontObj.id : (activeCaption.fontFamily || 'Impact').split(/[\s,]+/)[0].replace(/^[-'"]+|['"]+$/g, '')}</span>
                         </button>
 
                         {/* 3. Color button (beside Font button) */}
@@ -5890,7 +5891,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                       >
                         <span style={{ display: 'flex', alignItems: 'center', gap: '5px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                           <Type size={13} style={{ color: 'var(--cyber-cyan)', flexShrink: 0 }} />
-                          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{activeFontObj.name.split(' ')[0]}</span>
+                          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{activeFontObj.id || activeFontObj.name.split(' ')[0]}</span>
                         </span>
                         <RefreshCw size={12} style={{ color: 'var(--cyber-cyan)', flexShrink: 0, opacity: 0.8 }} />
                       </button>

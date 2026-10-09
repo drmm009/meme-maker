@@ -148,8 +148,9 @@ export const STICKERS = [
 export const FONTS = [
   { id: 'Impact', name: 'Impact (Classic Meme)', family: 'Impact, sans-serif' },
   { id: 'Arial', name: 'Arial (Clean)', family: 'Arial, sans-serif' },
-  { id: 'Comic Sans', name: 'Comic Sans (Fun)', family: '"Comic Sans MS", "Comic Neue", "Chalkboard SE", sans-serif' },
+  { id: 'Apple System', name: 'Apple System (iOS / Clean)', family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' },
   { id: 'Montserrat', name: 'Montserrat (Modern)', family: 'Montserrat, sans-serif' },
+  { id: 'Comic Sans', name: 'Comic Sans (Fun)', family: '"Comic Sans MS", "Comic Neue", "Chalkboard SE", sans-serif' },
   { id: 'Oswald', name: 'Oswald (Bold Condensed)', family: 'Oswald, sans-serif' },
   { id: 'Courier New', name: 'Courier New (Code/Retro)', family: '"Courier New", monospace' }
 ];

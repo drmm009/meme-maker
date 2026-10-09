@@ -485,7 +485,7 @@ export default function VideoEditor({ template, onBack, theme, onToggleTheme }) 
                     style={{ fontFamily: activeItem.fontFamily, fontSize: '0.75rem', padding: '4px 10px', maxWidth: 90, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}
                   >
                     <Type className="vid-font-icon" style={{ width: 12, height: 12, marginRight: 4, flexShrink: 0 }} />
-                    <span className="vid-font-label">{(FONTS.find(f => f.family === activeItem.fontFamily) || FONTS[0]).name.split(' ')[0]}</span>
+                    <span className="vid-font-label">{(FONTS.find(f => f.family === activeItem.fontFamily) || FONTS[0]).id || (FONTS.find(f => f.family === activeItem.fontFamily) || FONTS[0]).name.split(' ')[0]}</span>
                   </button>
 
                   <div className="vid-ctx-btn" style={{ position: 'relative', overflow: 'hidden', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 8 }}>
@@ -713,7 +713,7 @@ export default function VideoEditor({ template, onBack, theme, onToggleTheme }) 
                       }}
                     >
                       <Type className="icon-xs" style={{ marginRight: 4 }} />
-                      {(FONTS.find(f => f.family === activeItem.fontFamily) || FONTS[0]).name.split(' ')[0]}
+                      {(FONTS.find(f => f.family === activeItem.fontFamily) || FONTS[0]).id || (FONTS.find(f => f.family === activeItem.fontFamily) || FONTS[0]).name.split(' ')[0]}
                     </button>
                     <div className="btn btn-icon btn-secondary" style={{ position: 'relative', overflow: 'hidden' }}>
                       <div style={{ width: 16, height: 16, borderRadius: '50%', background: activeItem.color || '#fff', border: '1px solid rgba(255,255,255,0.5)' }} />
