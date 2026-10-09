@@ -1588,6 +1588,13 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         }
         targetCtx.globalAlpha = opacity;
 
+        // Text blur support (px)
+        if (cap.blur && Number(cap.blur) > 0) {
+          targetCtx.filter = `blur(${Number(cap.blur)}px)`;
+        } else {
+          targetCtx.filter = 'none';
+        }
+
         const fontSize = cap.fontSize || 50;
         const fontFamily = cap.fontFamily || 'Impact, sans-serif';
         targetCtx.font = `bold ${fontSize}px ${fontFamily}`;

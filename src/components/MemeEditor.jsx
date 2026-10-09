@@ -478,7 +478,9 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
   const [isMobileTabsFolded, setIsMobileTabsFolded] = useState(true);
   const [showWatermarkMenu, setShowWatermarkMenu] = useState(false);
   const [showFontMenu, setShowFontMenu] = useState(false);
-  const [showTextEffectsMenu, setShowTextEffectsMenu] = useState(false);
+  const [showTextCurveMenu, setShowTextCurveMenu] = useState(false);
+  const [showTextBlurMenu, setShowTextBlurMenu] = useState(false);
+  const [showTextBgMenu, setShowTextBgMenu] = useState(false);
   const [showImageFilterMenu, setShowImageFilterMenu] = useState(false);
   const [showLayerMenu, setShowLayerMenu] = useState(false);
   const [showDrawSettings, setShowDrawSettings] = useState(false);
@@ -502,6 +504,10 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     setActiveTab(tabId);
     setActiveLayerId(null);
     setShowDrawSettings(false);
+    setShowFontMenu(false);
+    setShowTextCurveMenu(false);
+    setShowTextBlurMenu(false);
+    setShowTextBgMenu(false);
     if (window.innerWidth <= 768) {
       setIsMobileTabsFolded(true);
     } else {
@@ -2854,19 +2860,25 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                       ))}
                     </>
                   )}
-                  {/* Text controls - Unified 3-Cluster Toolbar */}
-                  {activeCaption && showTextEffectsMenu && (
+                  {/* Text Controls - 1. Curv Submenu */}
+                  {activeCaption && showTextCurveMenu && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-                      <button onClick={() => setShowTextEffectsMenu(false)} className="btn btn-icon btn-xs vid-ctx-btn" title="Back to main toolbar">
+                      <button
+                        onClick={() => setShowTextCurveMenu(false)}
+                        className="btn btn-icon btn-xs vid-ctx-btn"
+                        title="Back to text toolbar"
+                        style={{ borderRadius: '8px', flexShrink: 0 }}
+                      >
                         <ArrowLeft style={{ width: 14, height: 14 }} />
                       </button>
                       <div className="vid-ctx-divider" />
                       
-                      {/* 1. Curve / Arc Angle Slider & Presets */}
                       <div style={{ display: 'flex', alignItems: 'center', gap: '5px', flexShrink: 0 }}>
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: activeCaption.curve ? '#06b6d4' : '#fff' }}>
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: activeCaption.curve ? 'var(--cyber-cyan)' : '#ffffff' }}>
                           <path d="M4 18C4 11.3726 9.37258 6 16 6H20" />
+                          <path d="M16 2L20 6L16 10" />
                         </svg>
+                        <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>Curv:</span>
                         <input
                           type="range"
                           min="-100"
@@ -2874,19 +2886,19 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           step="5"
                           value={activeCaption.curve || 0}
                           onChange={(e) => updateActiveCaption('curve', parseInt(e.target.value, 10))}
-                          style={{ width: '75px', accentColor: 'var(--cyber-cyan)', height: '4px' }}
-                          title="Curve Angle (-100° to +100°)"
+                          style={{ width: '80px', accentColor: 'var(--cyber-cyan)', height: '4px' }}
+                          title="Curvature Angle (-100° to +100°)"
                         />
-                        <span style={{ fontSize: '11px', fontWeight: 700, minWidth: '30px', color: activeCaption.curve ? 'var(--cyber-cyan)' : '#fff' }}>
+                        <span style={{ fontSize: '11px', fontWeight: 700, minWidth: '32px', color: activeCaption.curve ? 'var(--cyber-cyan)' : '#ffffff' }}>
                           {activeCaption.curve ? `${activeCaption.curve > 0 ? '+' : ''}${activeCaption.curve}°` : '0°'}
                         </span>
-                        <div style={{ display: 'flex', gap: '2px' }}>
+                        <div style={{ display: 'flex', gap: '3px' }}>
                           <button
                             type="button"
                             className={`btn btn-xs ${!activeCaption.curve ? 'btn-primary' : 'btn-ghost'}`}
                             onClick={() => updateActiveCaption('curve', 0)}
-                            style={{ padding: '2px 5px', fontSize: '10px', height: '22px' }}
-                            title="Flat"
+                            style={{ padding: '2px 7px', fontSize: '11px', height: '24px', borderRadius: '6px' }}
+                            title="Flat (0°)"
                           >
                             Flat
                           </button>
@@ -2894,7 +2906,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                             type="button"
                             className={`btn btn-xs ${activeCaption.curve === 40 ? 'btn-primary' : 'btn-ghost'}`}
                             onClick={() => updateActiveCaption('curve', 40)}
-                            style={{ padding: '2px 5px', fontSize: '10px', height: '22px' }}
+                            style={{ padding: '2px 7px', fontSize: '11px', height: '24px', borderRadius: '6px' }}
                             title="Arch (+40°)"
                           >
                             Arch
@@ -2903,50 +2915,80 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                             type="button"
                             className={`btn btn-xs ${activeCaption.curve === -40 ? 'btn-primary' : 'btn-ghost'}`}
                             onClick={() => updateActiveCaption('curve', -40)}
-                            style={{ padding: '2px 5px', fontSize: '10px', height: '22px' }}
+                            style={{ padding: '2px 7px', fontSize: '11px', height: '24px', borderRadius: '6px' }}
                             title="Smile (-40°)"
                           >
                             Smile
                           </button>
                         </div>
                       </div>
+                    </div>
+                  )}
 
+                  {/* Text Controls - 2. Blur Submenu */}
+                  {activeCaption && showTextBlurMenu && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+                      <button
+                        onClick={() => setShowTextBlurMenu(false)}
+                        className="btn btn-icon btn-xs vid-ctx-btn"
+                        title="Back to text toolbar"
+                        style={{ borderRadius: '8px', flexShrink: 0 }}
+                      >
+                        <ArrowLeft style={{ width: 14, height: 14 }} />
+                      </button>
                       <div className="vid-ctx-divider" />
-
-                      {/* 2. Text Background Box Chips */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '3px', flexShrink: 0 }}>
-                        <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>Box:</span>
-                        <button
-                          type="button"
-                          className={`btn btn-xs ${(!activeCaption.bgColor || activeCaption.bgColor === 'none' || activeCaption.bgColor === 'transparent') ? 'btn-primary' : 'btn-ghost'}`}
-                          onClick={() => handleSetCaptionBg('none')}
-                          style={{ padding: '2px 6px', fontSize: '10px', height: '22px' }}
-                        >
-                          None
-                        </button>
-                        <button
-                          type="button"
-                          className={`btn btn-xs ${activeCaption.bgColor === 'black' ? 'btn-primary' : 'btn-ghost'}`}
-                          onClick={() => handleSetCaptionBg('black')}
-                          style={{ padding: '2px 6px', fontSize: '10px', height: '22px' }}
-                        >
-                          Black
-                        </button>
-                        <button
-                          type="button"
-                          className={`btn btn-xs ${activeCaption.bgColor === 'white' ? 'btn-primary' : 'btn-ghost'}`}
-                          onClick={() => handleSetCaptionBg('white')}
-                          style={{ padding: '2px 6px', fontSize: '10px', height: '22px' }}
-                        >
-                          White
-                        </button>
+                      
+                      {/* Blur Slider */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '5px', flexShrink: 0 }}>
+                        <EyeOff style={{ width: 13, height: 13, color: (activeCaption.blur && activeCaption.blur > 0) ? 'var(--cyber-cyan)' : '#ffffff' }} />
+                        <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>Blur:</span>
+                        <input
+                          type="range"
+                          min="0"
+                          max="20"
+                          step="1"
+                          value={activeCaption.blur || 0}
+                          onChange={(e) => updateActiveCaptionProps({ blur: parseInt(e.target.value, 10) })}
+                          style={{ width: '70px', accentColor: 'var(--cyber-cyan)', height: '4px' }}
+                          title="Blur Radius (0px - 20px)"
+                        />
+                        <span style={{ fontSize: '11px', fontWeight: 700, minWidth: '28px', color: (activeCaption.blur && activeCaption.blur > 0) ? 'var(--cyber-cyan)' : '#ffffff' }}>
+                          {activeCaption.blur || 0}px
+                        </span>
+                        <div style={{ display: 'flex', gap: '3px' }}>
+                          <button
+                            type="button"
+                            className={`btn btn-xs ${!activeCaption.blur ? 'btn-primary' : 'btn-ghost'}`}
+                            onClick={() => updateActiveCaptionProps({ blur: 0 })}
+                            style={{ padding: '2px 7px', fontSize: '11px', height: '24px', borderRadius: '6px' }}
+                          >
+                            None
+                          </button>
+                          <button
+                            type="button"
+                            className={`btn btn-xs ${activeCaption.blur === 4 ? 'btn-primary' : 'btn-ghost'}`}
+                            onClick={() => updateActiveCaptionProps({ blur: 4 })}
+                            style={{ padding: '2px 7px', fontSize: '11px', height: '24px', borderRadius: '6px' }}
+                          >
+                            Soft
+                          </button>
+                          <button
+                            type="button"
+                            className={`btn btn-xs ${activeCaption.blur === 10 ? 'btn-primary' : 'btn-ghost'}`}
+                            onClick={() => updateActiveCaptionProps({ blur: 10 })}
+                            style={{ padding: '2px 7px', fontSize: '11px', height: '24px', borderRadius: '6px' }}
+                          >
+                            Heavy
+                          </button>
+                        </div>
                       </div>
 
                       <div className="vid-ctx-divider" />
 
-                      {/* 3. Text Opacity Slider */}
+                      {/* Opacity Slider */}
                       <div style={{ display: 'flex', alignItems: 'center', gap: '5px', flexShrink: 0 }}>
-                        <Droplet style={{ width: 12, height: 12, color: '#fff' }} />
+                        <Droplet style={{ width: 12, height: 12, color: '#ffffff' }} />
+                        <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>Opacity:</span>
                         <input
                           type="range"
                           min="0.1"
@@ -2955,11 +2997,101 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           value={activeCaption.opacity !== undefined ? activeCaption.opacity : 1}
                           onChange={(e) => updateActiveCaptionProps({ opacity: parseFloat(e.target.value) })}
                           style={{ width: '60px', accentColor: 'var(--cyber-cyan)', height: '4px' }}
-                          title="Text Opacity"
+                          title="Text Opacity (10% - 100%)"
                         />
-                        <span style={{ fontSize: '10px', fontWeight: 600, minWidth: '26px' }}>
+                        <span style={{ fontSize: '11px', fontWeight: 600, minWidth: '28px' }}>
                           {Math.round((activeCaption.opacity !== undefined ? Number(activeCaption.opacity) : 1) * 100)}%
                         </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Text Controls - 3. Bg Submenu */}
+                  {activeCaption && showTextBgMenu && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+                      <button
+                        onClick={() => setShowTextBgMenu(false)}
+                        className="btn btn-icon btn-xs vid-ctx-btn"
+                        title="Back to text toolbar"
+                        style={{ borderRadius: '8px', flexShrink: 0 }}
+                      >
+                        <ArrowLeft style={{ width: 14, height: 14 }} />
+                      </button>
+                      <div className="vid-ctx-divider" />
+                      
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
+                        <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>Bg:</span>
+                        <button
+                          type="button"
+                          className={`btn btn-xs ${(!activeCaption.bgColor || activeCaption.bgColor === 'none' || activeCaption.bgColor === 'transparent') ? 'btn-primary' : 'btn-ghost'}`}
+                          onClick={() => handleSetCaptionBg('none')}
+                          style={{ padding: '2px 8px', fontSize: '11px', height: '24px', borderRadius: '6px' }}
+                        >
+                          None
+                        </button>
+                        <button
+                          type="button"
+                          className={`btn btn-xs ${activeCaption.bgColor === 'black' ? 'btn-primary' : 'btn-ghost'}`}
+                          onClick={() => handleSetCaptionBg('black')}
+                          style={{ padding: '2px 8px', fontSize: '11px', height: '24px', borderRadius: '6px' }}
+                        >
+                          Black
+                        </button>
+                        <button
+                          type="button"
+                          className={`btn btn-xs ${activeCaption.bgColor === 'white' ? 'btn-primary' : 'btn-ghost'}`}
+                          onClick={() => handleSetCaptionBg('white')}
+                          style={{ padding: '2px 8px', fontSize: '11px', height: '24px', borderRadius: '6px' }}
+                        >
+                          White
+                        </button>
+                        <button
+                          type="button"
+                          className={`btn btn-xs ${activeCaption.bgStyle === 'banner' ? 'btn-primary' : 'btn-ghost'}`}
+                          onClick={() => handleSetCaptionBg('banner')}
+                          style={{ padding: '2px 8px', fontSize: '11px', height: '24px', borderRadius: '6px' }}
+                        >
+                          Banner
+                        </button>
+
+                        {/* Custom Bg Color Picker */}
+                        <div
+                          className="btn btn-xs vid-ctx-btn"
+                          style={{
+                            position: 'relative',
+                            overflow: 'hidden',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            padding: '2px 8px',
+                            height: '24px',
+                            borderRadius: '6px',
+                            background: 'rgba(255, 255, 255, 0.08)',
+                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                            cursor: 'pointer'
+                          }}
+                          title="Custom Background Color"
+                        >
+                          <div
+                            style={{
+                              width: 12,
+                              height: 12,
+                              borderRadius: '50%',
+                              background: (activeCaption.bgColor && activeCaption.bgColor !== 'none' && activeCaption.bgColor !== 'transparent') ? activeCaption.bgColor : '#ffffff',
+                              border: '2px solid rgba(255,255,255,0.4)'
+                            }}
+                          />
+                          <span style={{ fontSize: '11px', fontWeight: 600, color: '#ffffff' }}>Color</span>
+                          <input
+                            type="color"
+                            value={(activeCaption.bgColor && activeCaption.bgColor !== 'none' && activeCaption.bgColor !== 'transparent') ? (activeCaption.bgColor === 'black' ? '#000000' : (activeCaption.bgColor === 'white' ? '#ffffff' : activeCaption.bgColor)) : '#ffffff'}
+                            onChange={(e) => {
+                              const hex = e.target.value;
+                              updateActiveCaptionProps({ bgColor: hex, bgStyle: 'box' });
+                            }}
+                            style={{ position: 'absolute', opacity: 0, inset: 0, cursor: 'pointer', width: '100%', height: '100%' }}
+                          />
+                        </div>
                       </div>
                     </div>
                   )}
@@ -3117,7 +3249,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                     </div>
                   )}
 
-                  {activeCaption && !showFontMenu && !showTextEffectsMenu && !showBubbleLayouts && !showTweetThemeMenu && !showTweetTrendMenu && (() => {
+                  {activeCaption && !showFontMenu && !showTextCurveMenu && !showTextBlurMenu && !showTextBgMenu && !showBubbleLayouts && !showTweetThemeMenu && !showTweetTrendMenu && (() => {
                     if (activeCaption.isTweetCard) {
                       const isVerified = activeCaption.tweetVerified !== false;
 
@@ -3204,11 +3336,11 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                       );
                     }
 
-                    const hasActiveEffects = Boolean(
-                      (activeCaption.curve && activeCaption.curve !== 0) ||
-                      (activeCaption.opacity !== undefined && Number(activeCaption.opacity) < 1) ||
-                      (activeCaption.bgColor && activeCaption.bgColor !== 'none' && activeCaption.bgColor !== 'transparent')
-                    );
+                    const hasCurve = Boolean(activeCaption.curve && activeCaption.curve !== 0);
+                    const hasBlur = Boolean(activeCaption.blur && activeCaption.blur > 0);
+                    const hasOpacity = Boolean(activeCaption.opacity !== undefined && Number(activeCaption.opacity) < 1);
+                    const hasBg = Boolean(activeCaption.bgColor && activeCaption.bgColor !== 'none' && activeCaption.bgColor !== 'transparent');
+
                     return (
                       <>
                         {/* 1. Font dropdown */}
@@ -3216,7 +3348,13 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           type="button"
                           className="btn btn-xs vid-ctx-btn vid-ctx-btn-font"
                           title="Change Font"
-                          onClick={() => setShowFontMenu(true)}
+                          onClick={() => {
+                            setShowFontMenu(true);
+                            setShowTextCurveMenu(false);
+                            setShowTextBlurMenu(false);
+                            setShowTextBgMenu(false);
+                            setShowBubbleLayouts(false);
+                          }}
                           style={{
                             padding: '4px 10px',
                             fontSize: '0.75rem',
@@ -3235,7 +3373,49 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           <span>{(activeCaption.fontFamily || 'Anton').split(/[\s,]+/)[0].replace(/['"]/g, '')}</span>
                         </button>
 
-                        {/* 2. Case toggle Aa */}
+                        {/* 2. Color button (placed beside Font button) */}
+                        <div
+                          className="btn btn-xs vid-ctx-btn"
+                          style={{
+                            position: 'relative',
+                            overflow: 'hidden',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '5px',
+                            padding: '4px 10px',
+                            fontSize: '0.75rem',
+                            fontWeight: 600,
+                            borderRadius: '8px',
+                            background: 'rgba(255, 255, 255, 0.08)',
+                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                            color: '#ffffff',
+                            flexShrink: 0,
+                            cursor: 'pointer'
+                          }}
+                          title="Text Fill Color"
+                        >
+                          <div
+                            style={{
+                              width: 14,
+                              height: 14,
+                              borderRadius: '50%',
+                              background: activeCaption.color || '#fff',
+                              border: '2px solid rgba(255,255,255,0.4)',
+                            }}
+                          />
+                          <span>Color</span>
+                          <input
+                            type="color"
+                            value={activeCaption.color || '#ffffff'}
+                            onChange={(e) => {
+                              const hex = e.target.value;
+                              updateActiveCaptionProps({ color: hex, stroke: getContrastStroke(hex) });
+                            }}
+                            style={{ position: 'absolute', opacity: 0, inset: 0, cursor: 'pointer', width: '100%', height: '100%' }}
+                          />
+                        </div>
+
+                        {/* 3. Case toggle Aa */}
                         <button
                           type="button"
                           className="btn btn-xs vid-ctx-btn"
@@ -3258,71 +3438,100 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           Aa
                         </button>
 
-                        {/* CLUSTER 2: COLOR */}
-                        <div
-                          className="btn btn-xs vid-ctx-btn"
-                          style={{
-                            position: 'relative',
-                            overflow: 'hidden',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '6px',
-                            padding: '4px 8px',
-                            borderRadius: '10px',
-                            flexShrink: 0
-                          }}
-                          title="Text Fill Color"
-                        >
-                          <div
-                            style={{
-                              width: 14,
-                              height: 14,
-                              borderRadius: '50%',
-                              background: activeCaption.color || '#fff',
-                              border: '2px solid rgba(255,255,255,0.4)',
-                            }}
-                          />
-                          <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#fff' }}>Color</span>
-                          <input
-                            type="color"
-                            value={activeCaption.color || '#ffffff'}
-                            onChange={(e) => {
-                              const hex = e.target.value;
-                              updateActiveCaptionProps({ color: hex, stroke: getContrastStroke(hex) });
-                            }}
-                            style={{ position: 'absolute', opacity: 0, inset: 0, cursor: 'pointer', width: '100%', height: '100%' }}
-                          />
-                        </div>
-
-                        {/* CLUSTER 3: ✨ EFFECTS (Curve, Opacity & Box) */}
+                        {/* 4. Curv Button */}
                         <button
-                          className={`btn btn-xs vid-ctx-btn ${hasActiveEffects ? 'active' : ''}`}
-                          title="Text Effects: Curve / Arc, Opacity & Background Box"
+                          type="button"
+                          className={`btn btn-xs vid-ctx-btn ${hasCurve ? 'active' : ''}`}
+                          title="Curve / Arc text angle"
                           onClick={() => {
-                            setShowTextEffectsMenu(true);
+                            setShowTextCurveMenu(true);
+                            setShowTextBlurMenu(false);
+                            setShowTextBgMenu(false);
                             setShowFontMenu(false);
+                            setShowBubbleLayouts(false);
                           }}
                           style={{
                             padding: '4px 10px',
                             fontSize: '0.75rem',
                             fontWeight: 600,
-                            display: 'flex',
+                            display: 'inline-flex',
                             alignItems: 'center',
                             gap: '5px',
-                            borderRadius: '10px',
-                            flexShrink: 0,
-                            background: hasActiveEffects
-                              ? 'linear-gradient(135deg, rgba(6,182,212,0.25), rgba(168,85,247,0.25))'
-                              : undefined,
-                            borderColor: hasActiveEffects ? 'var(--cyber-cyan)' : undefined,
-                            color: hasActiveEffects ? 'var(--cyber-cyan)' : '#ffffff'
+                            borderRadius: '8px',
+                            background: hasCurve ? 'rgba(6,182,212,0.25)' : 'rgba(255, 255, 255, 0.08)',
+                            border: hasCurve ? '1px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.1)',
+                            color: hasCurve ? 'var(--cyber-cyan)' : '#ffffff',
+                            flexShrink: 0
                           }}
                         >
-                          <Sparkles style={{ width: 13, height: 13, color: hasActiveEffects ? 'var(--cyber-cyan)' : '#ec4899' }} />
-                          <span>Effects{activeCaption.curve ? ` (${activeCaption.curve > 0 ? '+' : ''}${activeCaption.curve}°)` : ''}</span>
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: hasCurve ? 'var(--cyber-cyan)' : '#ffffff' }}>
+                            <path d="M4 18C4 11.3726 9.37258 6 16 6H20" />
+                            <path d="M16 2L20 6L16 10" />
+                          </svg>
+                          <span>Curv{activeCaption.curve ? ` (${activeCaption.curve > 0 ? '+' : ''}${activeCaption.curve}°)` : ''}</span>
                         </button>
 
-                        {/* CLUSTER 4: BUBBLE BUTTON (Available for all text layers to convert or change layout) */}
+                        {/* 5. Blur Button */}
+                        <button
+                          type="button"
+                          className={`btn btn-xs vid-ctx-btn ${(hasBlur || hasOpacity) ? 'active' : ''}`}
+                          title="Text Blur & Opacity settings"
+                          onClick={() => {
+                            setShowTextBlurMenu(true);
+                            setShowTextCurveMenu(false);
+                            setShowTextBgMenu(false);
+                            setShowFontMenu(false);
+                            setShowBubbleLayouts(false);
+                          }}
+                          style={{
+                            padding: '4px 10px',
+                            fontSize: '0.75rem',
+                            fontWeight: 600,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '5px',
+                            borderRadius: '8px',
+                            background: (hasBlur || hasOpacity) ? 'rgba(6,182,212,0.25)' : 'rgba(255, 255, 255, 0.08)',
+                            border: (hasBlur || hasOpacity) ? '1px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.1)',
+                            color: (hasBlur || hasOpacity) ? 'var(--cyber-cyan)' : '#ffffff',
+                            flexShrink: 0
+                          }}
+                        >
+                          <EyeOff style={{ width: 13, height: 13, color: (hasBlur || hasOpacity) ? 'var(--cyber-cyan)' : '#ffffff' }} />
+                          <span>Blur{activeCaption.blur ? ` (${activeCaption.blur}px)` : ''}</span>
+                        </button>
+
+                        {/* 6. Bg Button */}
+                        <button
+                          type="button"
+                          className={`btn btn-xs vid-ctx-btn ${hasBg ? 'active' : ''}`}
+                          title="Text Background Box / Banner settings"
+                          onClick={() => {
+                            setShowTextBgMenu(true);
+                            setShowTextCurveMenu(false);
+                            setShowTextBlurMenu(false);
+                            setShowFontMenu(false);
+                            setShowBubbleLayouts(false);
+                          }}
+                          style={{
+                            padding: '4px 10px',
+                            fontSize: '0.75rem',
+                            fontWeight: 600,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '5px',
+                            borderRadius: '8px',
+                            background: hasBg ? 'rgba(6,182,212,0.25)' : 'rgba(255, 255, 255, 0.08)',
+                            border: hasBg ? '1px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.1)',
+                            color: hasBg ? 'var(--cyber-cyan)' : '#ffffff',
+                            flexShrink: 0
+                          }}
+                        >
+                          <PanelTop style={{ width: 13, height: 13, color: hasBg ? 'var(--cyber-cyan)' : '#ffffff' }} />
+                          <span>Bg</span>
+                        </button>
+
+                        {/* 7. Bubble Button */}
                         <button
                           className={`btn btn-xs vid-ctx-btn ${activeCaption.bubbleStyle ? 'active' : ''}`}
                           title={activeCaption.bubbleStyle ? "Change Bubble Layout (iPhone, WhatsApp, Comic)" : "Convert to Chat / Speech Bubble (iPhone, WhatsApp, Comic)"}
@@ -3331,19 +3540,17 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                             padding: '4px 10px',
                             fontSize: '0.75rem',
                             fontWeight: 600,
-                            display: 'flex',
+                            display: 'inline-flex',
                             alignItems: 'center',
                             gap: '5px',
-                            borderRadius: '10px',
+                            borderRadius: '8px',
                             flexShrink: 0,
-                            background: activeCaption.bubbleStyle
-                              ? 'linear-gradient(135deg, rgba(0, 122, 255, 0.35) 0%, rgba(6, 182, 212, 0.35) 100%)'
-                              : undefined,
-                            borderColor: activeCaption.bubbleStyle ? '#007aff' : undefined,
+                            background: activeCaption.bubbleStyle ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.08)',
+                            border: '1px solid rgba(255,255,255,0.1)',
                             color: '#ffffff'
                           }}
                         >
-                          <MessageSquare style={{ width: 13, height: 13, color: activeCaption.bubbleStyle ? '#007aff' : 'var(--cyber-cyan)' }} />
+                          <MessageSquare style={{ width: 13, height: 13, color: "var(--cyber-cyan)" }} />
                           <span>Bubble</span>
                         </button>
                       </>
@@ -3556,7 +3763,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                   )}
 
                   {/* UNIFIED ACTIONS CLUSTER (Duplicate / Layers / Delete for All Elements) */}
-                  {((activeCaption && !showFontMenu && !showTextEffectsMenu && !showBubbleLayouts && !showTweetThemeMenu && !showTweetTrendMenu) || activeSticker || (activeImageLayer && !showImageFilterMenu)) && (
+                  {((activeCaption && !showFontMenu && !showTextCurveMenu && !showTextBlurMenu && !showTextBgMenu && !showBubbleLayouts && !showTweetThemeMenu && !showTweetTrendMenu) || activeSticker || (activeImageLayer && !showImageFilterMenu)) && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: '3px', flexShrink: 0 }}>
                       <div className="vid-ctx-divider" style={{ width: 1, height: 18, background: 'rgba(255,255,255,0.15)', margin: '0 2px', flexShrink: 0 }} />
                       <button
@@ -4383,6 +4590,13 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
             activeLayerId={activeLayerId}
             onDeleteLayer={handleDeleteLayer}
             onSelectLayer={(id) => {
+              setShowFontMenu(false);
+              setShowTextCurveMenu(false);
+              setShowTextBlurMenu(false);
+              setShowTextBgMenu(false);
+              setShowBubbleLayouts(false);
+              setShowTweetThemeMenu(false);
+              setShowTweetTrendMenu(false);
               if (!id) {
                 const prevSticker = stickers.find((s) => s.id === activeLayerId);
                 const prevCaption = captions.find((c) => c.id === activeLayerId);
