@@ -3211,26 +3211,52 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                     );
                     return (
                       <>
-                        {/* CLUSTER 1: TYPOGRAPHY (Font dropdown + Case toggle Aa) */}
-                        <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.08)', borderRadius: '10px', padding: '2px', gap: '2px', flexShrink: 0 }}>
-                          <button
-                            className="btn btn-xs vid-ctx-btn vid-ctx-btn-font"
-                            title="Change Font"
-                            onClick={() => setShowFontMenu(true)}
-                            style={{ border: 'none', background: 'transparent', padding: '2px 8px', borderRadius: '8px' }}
-                          >
-                            <Type className="vid-font-icon" style={{ width: 14, height: 14 }} />
-                            <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#fff' }}>{(activeCaption.fontFamily || 'Anton').split(/[\s,]+/)[0].replace(/['"]/g, '')}</span>
-                          </button>
-                          <button
-                            className="btn btn-xs vid-ctx-btn"
-                            title="Toggle Text Case (ALL CAPS / Sentence case / lowercase)"
-                            onClick={handleToggleTextCase}
-                            style={{ border: 'none', background: 'rgba(255,255,255,0.12)', padding: '2px 7px', fontSize: '11px', fontWeight: 700, borderRadius: '6px' }}
-                          >
-                            Aa
-                          </button>
-                        </div>
+                        {/* 1. Font dropdown */}
+                        <button
+                          type="button"
+                          className="btn btn-xs vid-ctx-btn vid-ctx-btn-font"
+                          title="Change Font"
+                          onClick={() => setShowFontMenu(true)}
+                          style={{
+                            padding: '4px 10px',
+                            fontSize: '0.75rem',
+                            fontWeight: 600,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '5px',
+                            borderRadius: '8px',
+                            background: 'rgba(255, 255, 255, 0.08)',
+                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                            color: '#ffffff',
+                            flexShrink: 0
+                          }}
+                        >
+                          <Type className="vid-font-icon" style={{ width: 14, height: 14, color: '#ffffff' }} />
+                          <span>{(activeCaption.fontFamily || 'Anton').split(/[\s,]+/)[0].replace(/['"]/g, '')}</span>
+                        </button>
+
+                        {/* 2. Case toggle Aa */}
+                        <button
+                          type="button"
+                          className="btn btn-xs vid-ctx-btn"
+                          title="Toggle Text Case (ALL CAPS / Sentence case / lowercase)"
+                          onClick={handleToggleTextCase}
+                          style={{
+                            padding: '4px 10px',
+                            fontSize: '0.75rem',
+                            fontWeight: 700,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            borderRadius: '8px',
+                            background: 'rgba(255, 255, 255, 0.08)',
+                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                            color: '#ffffff',
+                            flexShrink: 0
+                          }}
+                        >
+                          Aa
+                        </button>
 
                         {/* CLUSTER 2: COLOR */}
                         <div
