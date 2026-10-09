@@ -1468,7 +1468,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     const nextCaps = [...captions, newCap];
     setCaptions(nextCaps);
     setActiveLayerId(newCap.id);
-    setActiveTab('text');
+    setActiveTab('images');
     pushHistory(nextCaps, stickers, imageLayers, drawings, canvasHeader, canvasFooter, demotivational);
   };
 
@@ -1762,7 +1762,15 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
 
     if (activeLayerId === id) {
       const target = [...nextCaps, ...nextStks, ...nextImgs].find(i => i.id === id);
-      if (target?.hidden) setActiveLayerId(null);
+      if (target?.hidden) {
+        const prevSticker = stickers.find((s) => s.id === id);
+        const prevCaption = captions.find((c) => c.id === id);
+        const prevImg = imageLayers.find((img) => img.id === id);
+        if (prevSticker || (prevCaption && prevCaption.isTweetCard) || prevImg) {
+          setActiveTab('images');
+        }
+        setActiveLayerId(null);
+      }
     }
 
     pushHistory(nextCaps, nextStks, nextImgs, drawings);
@@ -1810,6 +1818,12 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
       setCanvasFooter(nextFooter);
     }
     if (activeLayerId === idToDelete || (isHeader && activeCaption?.isHeaderCaption) || (isFooter && activeCaption?.isFooterCaption)) {
+      const prevSticker = stickers.find((s) => s.id === idToDelete);
+      const prevCaption = captions.find((c) => c.id === idToDelete);
+      const prevImg = imageLayers.find((img) => img.id === idToDelete);
+      if (prevSticker || (prevCaption && prevCaption.isTweetCard) || prevImg) {
+        setActiveTab('images');
+      }
       setActiveLayerId(null);
     }
     const list = getOrderedLayers().filter(i => {
@@ -2082,7 +2096,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     const nextStickers = [...stickers, newSticker];
     setStickers(nextStickers);
     setActiveLayerId(newSticker.id);
-    setActiveTab('stickers');
+    setActiveTab('images');
     setShowEmojiModal(false);
     pushHistory(captions, nextStickers, imageLayers);
   };
@@ -2103,7 +2117,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     const nextStickers = [...stickers, newSticker];
     setStickers(nextStickers);
     setActiveLayerId(newSticker.id);
-    setActiveTab('stickers');
+    setActiveTab('images');
     setShowMemeStickersModal(false);
     pushHistory(captions, nextStickers, imageLayers);
   };
@@ -2789,7 +2803,20 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
         {/* Editor Workspace Main Area */}
         <div className="editor-workspace">
           {/* Canvas Render Area */}
-          <div className="canvas-wrapper">
+          <div
+            className="canvas-wrapper"
+            onPointerDown={(e) => {
+              if (e.target === e.currentTarget && activeLayerId) {
+                const prevSticker = stickers.find((s) => s.id === activeLayerId);
+                const prevCaption = captions.find((c) => c.id === activeLayerId);
+                const prevImg = imageLayers.find((img) => img.id === activeLayerId);
+                if (prevSticker || (prevCaption && prevCaption.isTweetCard) || prevImg) {
+                  setActiveTab('images');
+                }
+                setActiveLayerId(null);
+              }
+            }}
+          >
             {/* Floating Context Toolbar whenever dock container is folded */}
             <AnimatePresence>
               {((activeCaption || activeSticker || activeImageLayer) || (isMobileTabsFolded && !activeCaption && !activeSticker && !activeImageLayer)) && isMobileTabsFolded && (
@@ -4330,11 +4357,24 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
             activeLayerId={activeLayerId}
             onDeleteLayer={handleDeleteLayer}
             onSelectLayer={(id) => {
+              if (!id) {
+                const prevSticker = stickers.find((s) => s.id === activeLayerId);
+                const prevCaption = captions.find((c) => c.id === activeLayerId);
+                const prevImg = imageLayers.find((img) => img.id === activeLayerId);
+                if (prevSticker || (prevCaption && prevCaption.isTweetCard) || prevImg) {
+                  setActiveTab('images');
+                }
+                setActiveLayerId(null);
+                return;
+              }
               setActiveLayerId(id);
               const stk = stickers.find((s) => s.id === id);
+              const cap = captions.find((c) => c.id === id);
               if (stk) {
-                setActiveTab('stickers');
+                setActiveTab('images');
               } else if (imageLayers.some((img) => img.id === id)) {
+                setActiveTab('images');
+              } else if (cap && cap.isTweetCard) {
                 setActiveTab('images');
               } else if (id) {
                 setActiveTab('text');
