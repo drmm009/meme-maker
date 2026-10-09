@@ -3415,7 +3415,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         <button
                           type="button"
                           data-setting-btn="font"
-                          className={`btn btn-xs vid-ctx-btn vid-ctx-btn-font ${lastUsedSettingButton === 'font' ? 'vid-ctx-btn-last-used' : ''}`}
+                          className={`btn btn-xs vid-ctx-btn vid-ctx-btn-font ${lastUsedSettingButton === 'font' ? 'active' : ''}`}
                           title="Change Font"
                           onClick={() => {
                             setShowFontMenu(true);
@@ -3432,10 +3432,9 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                             alignItems: 'center',
                             gap: '5px',
                             borderRadius: '8px',
-                            background: lastUsedSettingButton === 'font' ? 'rgba(255, 255, 255, 0.18)' : 'rgba(255, 255, 255, 0.08)',
+                            background: lastUsedSettingButton === 'font' ? 'var(--primary-gradient)' : 'rgba(255, 255, 255, 0.08)',
                             border: lastUsedSettingButton === 'font' ? '1px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.1)',
-                            boxShadow: lastUsedSettingButton === 'font' ? '0 0 10px rgba(6, 182, 212, 0.45)' : 'none',
-                            transform: lastUsedSettingButton === 'font' ? 'translateY(-1px)' : 'none',
+                            boxShadow: lastUsedSettingButton === 'font' ? '0 2px 10px rgba(6, 182, 212, 0.4), 0 0 8px rgba(99, 102, 241, 0.4)' : 'none',
                             transition: 'all 0.2s ease',
                             color: '#ffffff',
                             flexShrink: 0
@@ -3491,7 +3490,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         <button
                           type="button"
                           data-setting-btn="bg"
-                          className={`btn btn-xs vid-ctx-btn ${lastUsedSettingButton === 'bg' ? 'vid-ctx-btn-last-used' : ''}`}
+                          className={`btn btn-xs vid-ctx-btn ${lastUsedSettingButton === 'bg' ? 'active' : ''}`}
                           title="Text Background Box / Banner settings"
                           onClick={() => {
                             setShowTextBgMenu(true);
@@ -3508,10 +3507,9 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                             alignItems: 'center',
                             gap: '5px',
                             borderRadius: '8px',
-                            background: lastUsedSettingButton === 'bg' ? 'rgba(255, 255, 255, 0.18)' : 'rgba(255, 255, 255, 0.08)',
+                            background: lastUsedSettingButton === 'bg' ? 'var(--primary-gradient)' : 'rgba(255, 255, 255, 0.08)',
                             border: lastUsedSettingButton === 'bg' ? '1px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.1)',
-                            boxShadow: lastUsedSettingButton === 'bg' ? '0 0 10px rgba(6, 182, 212, 0.45)' : 'none',
-                            transform: lastUsedSettingButton === 'bg' ? 'translateY(-1px)' : 'none',
+                            boxShadow: lastUsedSettingButton === 'bg' ? '0 2px 10px rgba(6, 182, 212, 0.4), 0 0 8px rgba(99, 102, 241, 0.4)' : 'none',
                             transition: 'all 0.2s ease',
                             color: '#ffffff',
                             flexShrink: 0
@@ -3525,7 +3523,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         <button
                           type="button"
                           data-setting-btn="blur"
-                          className={`btn btn-xs vid-ctx-btn ${lastUsedSettingButton === 'blur' ? 'vid-ctx-btn-last-used' : ''}`}
+                          className={`btn btn-xs vid-ctx-btn ${lastUsedSettingButton === 'blur' ? 'active' : ''}`}
                           title="Text Blur & Opacity settings"
                           onClick={() => {
                             setShowTextBlurMenu(true);
@@ -3542,10 +3540,9 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                             alignItems: 'center',
                             gap: '5px',
                             borderRadius: '8px',
-                            background: lastUsedSettingButton === 'blur' ? 'rgba(255, 255, 255, 0.18)' : 'rgba(255, 255, 255, 0.08)',
+                            background: lastUsedSettingButton === 'blur' ? 'var(--primary-gradient)' : 'rgba(255, 255, 255, 0.08)',
                             border: lastUsedSettingButton === 'blur' ? '1px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.1)',
-                            boxShadow: lastUsedSettingButton === 'blur' ? '0 0 10px rgba(6, 182, 212, 0.45)' : 'none',
-                            transform: lastUsedSettingButton === 'blur' ? 'translateY(-1px)' : 'none',
+                            boxShadow: lastUsedSettingButton === 'blur' ? '0 2px 10px rgba(6, 182, 212, 0.4), 0 0 8px rgba(99, 102, 241, 0.4)' : 'none',
                             transition: 'all 0.2s ease',
                             color: '#ffffff',
                             flexShrink: 0
@@ -3559,7 +3556,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         <button
                           type="button"
                           data-setting-btn="curv"
-                          className={`btn btn-xs vid-ctx-btn ${lastUsedSettingButton === 'curv' ? 'vid-ctx-btn-last-used' : ''}`}
+                          className={`btn btn-xs vid-ctx-btn ${lastUsedSettingButton === 'curv' ? 'active' : ''}`}
                           title="Curve / Arc text angle"
                           onClick={() => {
                             setShowTextCurveMenu(true);
@@ -3576,10 +3573,9 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                             alignItems: 'center',
                             gap: '5px',
                             borderRadius: '8px',
-                            background: lastUsedSettingButton === 'curv' ? 'rgba(255, 255, 255, 0.18)' : 'rgba(255, 255, 255, 0.08)',
+                            background: lastUsedSettingButton === 'curv' ? 'var(--primary-gradient)' : 'rgba(255, 255, 255, 0.08)',
                             border: lastUsedSettingButton === 'curv' ? '1px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.1)',
-                            boxShadow: lastUsedSettingButton === 'curv' ? '0 0 10px rgba(6, 182, 212, 0.45)' : 'none',
-                            transform: lastUsedSettingButton === 'curv' ? 'translateY(-1px)' : 'none',
+                            boxShadow: lastUsedSettingButton === 'curv' ? '0 2px 10px rgba(6, 182, 212, 0.4), 0 0 8px rgba(99, 102, 241, 0.4)' : 'none',
                             transition: 'all 0.2s ease',
                             color: '#ffffff',
                             flexShrink: 0
@@ -3596,7 +3592,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         <button
                           type="button"
                           data-setting-btn="bubble"
-                          className={`btn btn-xs vid-ctx-btn ${lastUsedSettingButton === 'bubble' ? 'vid-ctx-btn-last-used' : ''}`}
+                          className={`btn btn-xs vid-ctx-btn ${lastUsedSettingButton === 'bubble' ? 'active' : ''}`}
                           title={activeCaption.bubbleStyle ? "Change Bubble Layout (iPhone, WhatsApp, Comic)" : "Convert to Chat / Speech Bubble (iPhone, WhatsApp, Comic)"}
                           onClick={handleConvertToBubble}
                           style={{
@@ -3608,10 +3604,9 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                             gap: '5px',
                             borderRadius: '8px',
                             flexShrink: 0,
-                            background: lastUsedSettingButton === 'bubble' ? 'rgba(255, 255, 255, 0.18)' : 'rgba(255, 255, 255, 0.08)',
+                            background: lastUsedSettingButton === 'bubble' ? 'var(--primary-gradient)' : 'rgba(255, 255, 255, 0.08)',
                             border: lastUsedSettingButton === 'bubble' ? '1px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.1)',
-                            boxShadow: lastUsedSettingButton === 'bubble' ? '0 0 10px rgba(6, 182, 212, 0.45)' : 'none',
-                            transform: lastUsedSettingButton === 'bubble' ? 'translateY(-1px)' : 'none',
+                            boxShadow: lastUsedSettingButton === 'bubble' ? '0 2px 10px rgba(6, 182, 212, 0.4), 0 0 8px rgba(99, 102, 241, 0.4)' : 'none',
                             transition: 'all 0.2s ease',
                             color: '#ffffff'
                           }}
