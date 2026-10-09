@@ -3142,7 +3142,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                   {activeCaption && showTextEffectsMenu && (() => {
                     const currentEffect = getActiveTextEffectId(activeCaption);
                     return (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0, maxWidth: '100%' }}>
+                      <>
                         <button
                           onClick={() => { setShowTextEffectsMenu(false); setLastUsedSettingButton('effects'); }}
                           className="btn btn-icon btn-xs vid-ctx-btn"
@@ -3153,50 +3153,21 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         </button>
                         <div className="vid-ctx-divider" />
 
-                        <div style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '5px',
-                          flexShrink: 0,
-                          overflowX: 'auto',
-                          scrollbarWidth: 'none',
-                          msOverflowStyle: 'none',
-                          padding: '2px 0'
-                        }}>
-                          <Sparkles style={{ width: 13, height: 13, color: currentEffect !== 'flat' ? 'var(--cyber-cyan)' : '#ffffff', flexShrink: 0, marginLeft: '2px', marginRight: '2px' }} />
-                          <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, flexShrink: 0, marginRight: '2px' }}>Effects:</span>
-                          <div style={{ display: 'flex', gap: '4px', alignItems: 'center', flexShrink: 0 }}>
-                            {TEXT_EFFECTS.map((eff) => {
-                              const isActive = currentEffect === eff.id;
-                              return (
-                                <button
-                                  key={eff.id}
-                                  type="button"
-                                  onClick={() => handleApplyTextEffect(eff.id)}
-                                  className={`btn btn-xs ${isActive ? 'btn-primary' : 'btn-ghost'}`}
-                                  style={{
-                                    padding: '2px 8px',
-                                    height: '25px',
-                                    borderRadius: '6px',
-                                    fontSize: '11px',
-                                    flexShrink: 0,
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    border: isActive ? '1px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.14)',
-                                    background: isActive ? 'var(--primary-gradient)' : 'rgba(255, 255, 255, 0.08)',
-                                    boxShadow: isActive ? '0 0 10px rgba(6, 182, 212, 0.5)' : 'none',
-                                    cursor: 'pointer'
-                                  }}
-                                  title={eff.title}
-                                >
-                                  {eff.renderLabel()}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      </div>
+                        {TEXT_EFFECTS.map((eff) => {
+                          const isActive = currentEffect === eff.id;
+                          return (
+                            <button
+                              key={eff.id}
+                              type="button"
+                              onClick={() => handleApplyTextEffect(eff.id)}
+                              className={`btn btn-xs vid-ctx-btn ${isActive ? 'active' : ''}`}
+                              title={eff.title}
+                            >
+                              {eff.renderLabel()}
+                            </button>
+                          );
+                        })}
+                      </>
                     );
                   })()}
 
