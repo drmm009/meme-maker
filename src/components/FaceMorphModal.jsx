@@ -20,7 +20,7 @@ import { MEME_FACE_PRESETS, getMemeFaceDataUrl } from '../data/memeFaces';
 import { removeBackground } from '@imgly/background-removal';
 import ModalPortal from './ModalPortal';
 
-export default function FaceMorphModal({ isOpen, onClose, onApplyFaceMorph }) {
+export default function FaceMorphModal({ isOpen, onClose, onApplyFaceMorph, initialLighting }) {
   const [activeTab, setActiveTab] = useState('presets'); // 'presets' | 'upload'
   const [selectedPresetId, setSelectedPresetId] = useState(MEME_FACE_PRESETS[0].id);
   const [selectedImageSrc, setSelectedImageSrc] = useState(getMemeFaceDataUrl(MEME_FACE_PRESETS[0]));
@@ -62,6 +62,14 @@ export default function FaceMorphModal({ isOpen, onClose, onApplyFaceMorph }) {
     };
     img.src = selectedImageSrc;
   }, [selectedImageSrc]);
+
+  // Apply auto-sampled meme lighting when modal opens
+  useEffect(() => {
+    if (initialLighting && isOpen) {
+      if (initialLighting.brightness !== undefined) setBrightness(initialLighting.brightness);
+      if (initialLighting.warmth !== undefined) setWarmth(initialLighting.warmth);
+    }
+  }, [initialLighting, isOpen]);
 
   // Re-render preview whenever controls change
   useEffect(() => {

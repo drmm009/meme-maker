@@ -97,6 +97,43 @@ const drawRoundRect = (ctx, x, y, width, height, radius) => {
   ctx.fill();
 };
 
+export const sampleFaceLighting = (ctx, cx, cy, radius) => {
+  try {
+    const r = Math.max(12, Math.round(radius * 0.75));
+    const x = Math.max(0, Math.round(cx - r));
+    const y = Math.max(0, Math.round(cy - r));
+    const size = Math.min(r * 2, ctx.canvas.width - x, ctx.canvas.height - y);
+    if (size <= 0) return { brightness: 100, warmth: 0 };
+
+    const imgData = ctx.getImageData(x, y, size, size);
+    const data = imgData.data;
+    let totalR = 0, totalG = 0, totalB = 0, count = 0;
+
+    for (let i = 0; i < data.length; i += 16) {
+      if (data[i + 3] > 128) {
+        totalR += data[i];
+        totalG += data[i + 1];
+        totalB += data[i + 2];
+        count++;
+      }
+    }
+
+    if (count === 0) return { brightness: 100, warmth: 0 };
+    const avgR = totalR / count;
+    const avgG = totalG / count;
+    const avgB = totalB / count;
+
+    const lum = 0.299 * avgR + 0.587 * avgG + 0.114 * avgB;
+    const brightness = Math.round(Math.min(135, Math.max(70, (lum / 128) * 100)));
+    const redExcess = Math.max(0, avgR - avgB);
+    const warmth = Math.min(35, Math.round((redExcess / 90) * 25));
+
+    return { brightness, warmth, avgR, avgG, avgB };
+  } catch (e) {
+    return { brightness: 100, warmth: 0 };
+  }
+};
+
 const drawSpeechBubble = (ctx, x, y, width, height, style, fillColor = '#ffffff', strokeColor = '#000000', strokeWidth = 3) => {
   ctx.save();
   ctx.fillStyle = fillColor;
@@ -1193,6 +1230,78 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
 
+    // Methods for Face Morphing Studio
+    canvas.sampleFaceLighting = (normX, normY, normRadius = 0.14) => {
+      const cx = normX * canvasW;
+      const cy = headerExtH + normY * canvasH;
+      const r = normRadius * canvasW;
+      return sampleFaceLighting(ctx, cx, cy, r);
+    };
+
+    canvas.bakeLayerIntoBase = (layerId) => {
+      const layer = (imageLayers || []).find((l) => l.id === layerId);
+      if (!layer) return null;
+
+      const baseImg = baseImgRef.current;
+      const bW = baseImg ? (baseImg.naturalWidth || baseImg.width || 800) : canvasW;
+      const bH = baseImg ? (baseImg.naturalHeight || baseImg.height || 800) : canvasH;
+
+      const offCanvas = document.createElement('canvas');
+      offCanvas.width = bW;
+      offCanvas.height = bH;
+      const oCtx = offCanvas.getContext('2d');
+
+      if (baseImg) {
+        oCtx.drawImage(baseImg, 0, 0, bW, bH);
+      } else {
+        oCtx.fillStyle = '#ffffff';
+        oCtx.fillRect(0, 0, bW, bH);
+      }
+
+      const cached = imageCacheRef.current[layer.url];
+      if (cached) {
+        const lX = (layer.x !== undefined ? layer.x : 0.5) * bW;
+        const lY = (layer.y !== undefined ? layer.y : 0.38) * bH;
+        const lScale = layer.scale || 1.0;
+        const maxDim = 320;
+        const cW = cached.naturalWidth || cached.width || 200;
+        const cH = cached.naturalHeight || cached.height || 200;
+        const fitScale = Math.min(maxDim / cW, maxDim / cH);
+        const w = (layer.boxWidth || layer.width || (cW * fitScale * lScale)) * (bW / canvasW);
+        const h = (layer.boxHeight || layer.height || (cH * fitScale * lScale)) * (bH / canvasH);
+
+        const imgAspect = cW / cH;
+        const boxAspect = w / h;
+        let drawW = w;
+        let drawH = h;
+        if (boxAspect > imgAspect) {
+          drawH = h;
+          drawW = h * imgAspect;
+        } else {
+          drawW = w;
+          drawH = w / imgAspect;
+        }
+
+        oCtx.save();
+        oCtx.translate(lX, lY);
+        if (layer.rotation) oCtx.rotate((layer.rotation * Math.PI) / 180);
+        if (layer.flipX) oCtx.scale(-1, 1);
+        if (layer.opacity !== undefined) oCtx.globalAlpha = layer.opacity;
+
+        oCtx.beginPath();
+        if (layer.isFaceMorph) {
+          oCtx.ellipse(0, 0, w / 2, h / 2, 0, 0, Math.PI * 2);
+        } else {
+          oCtx.rect(-w / 2, -h / 2, w, h);
+        }
+        oCtx.clip();
+        oCtx.drawImage(cached, -drawW / 2, -drawH / 2, drawW, drawH);
+        oCtx.restore();
+      }
+
+      return offCanvas.toDataURL('image/png');
+    };
+
     const renderCanvas = (img) => {
       if (canvas.width !== canvasW) canvas.width = canvasW;
       if (canvas.height !== totalCanvasH) canvas.height = totalCanvasH;
@@ -1554,7 +1663,11 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
             
             targetCtx.save();
             targetCtx.beginPath();
-            targetCtx.rect(-w / 2, -h / 2, w, h);
+            if (imgLayer.isFaceMorph) {
+              targetCtx.ellipse(0, 0, w / 2, h / 2, 0, 0, Math.PI * 2);
+            } else {
+              targetCtx.rect(-w / 2, -h / 2, w, h);
+            }
             targetCtx.clip();
             targetCtx.drawImage(drawSource, -drawW / 2, -drawH / 2, drawW, drawH);
             targetCtx.restore();
@@ -1584,6 +1697,71 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
                 uiCtx.restore();
                 return;
               }
+
+              if (imgLayer.isFaceMorph) {
+                // Sleek, glowing face reticle (not a rectangular sticker box!)
+                uiCtx.strokeStyle = '#06b6d4';
+                uiCtx.lineWidth = 2.5;
+                uiCtx.setLineDash([5, 5]);
+                uiCtx.beginPath();
+                uiCtx.ellipse(0, 0, hw, hh, 0, 0, Math.PI * 2);
+                uiCtx.stroke();
+                uiCtx.setLineDash([]);
+
+                // Rotation handle stem & circle
+                uiCtx.beginPath();
+                uiCtx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+                uiCtx.lineWidth = 1.5;
+                uiCtx.moveTo(0, -hh);
+                uiCtx.lineTo(0, -hh - 40);
+                uiCtx.stroke();
+
+                uiCtx.beginPath();
+                uiCtx.fillStyle = '#06b6d4';
+                uiCtx.strokeStyle = '#ffffff';
+                uiCtx.lineWidth = 2;
+                uiCtx.arc(0, -hh - 40, 14, 0, Math.PI * 2);
+                uiCtx.fill();
+                uiCtx.stroke();
+
+                // Round size handles (Bottom corners)
+                const drawRoundFaceHandle = (hx, hy) => {
+                  uiCtx.beginPath();
+                  uiCtx.fillStyle = '#06b6d4';
+                  uiCtx.strokeStyle = '#ffffff';
+                  uiCtx.lineWidth = 2;
+                  uiCtx.arc(hx, hy, 14, 0, Math.PI * 2);
+                  uiCtx.fill();
+                  uiCtx.stroke();
+                };
+                drawRoundFaceHandle(hw * 0.72, hh * 0.72);
+                drawRoundFaceHandle(-hw * 0.72, hh * 0.72);
+
+                // Delete handle (Top Right)
+                drawDeleteHandle(uiCtx, hw * 0.8, -hh * 0.8);
+
+                // Floating badge
+                uiCtx.save();
+                uiCtx.fillStyle = 'rgba(0, 0, 0, 0.88)';
+                uiCtx.strokeStyle = 'rgba(6, 182, 212, 0.5)';
+                uiCtx.lineWidth = 1;
+                const badgeText = `🎭 ${imgLayer.faceName || 'Face Morph'} (${Math.round((imgLayer.opacity !== undefined ? imgLayer.opacity : 1) * 100)}%)`;
+                uiCtx.font = 'bold 12px sans-serif';
+                const textW = uiCtx.measureText(badgeText).width;
+                uiCtx.beginPath();
+                uiCtx.roundRect(-textW / 2 - 8, hh + 12, textW + 16, 24, 12);
+                uiCtx.fill();
+                uiCtx.stroke();
+                uiCtx.fillStyle = '#06b6d4';
+                uiCtx.textAlign = 'center';
+                uiCtx.textBaseline = 'middle';
+                uiCtx.fillText(badgeText, 0, hh + 24);
+                uiCtx.restore();
+
+                uiCtx.restore();
+                return;
+              }
+
               uiCtx.strokeStyle = '#f97316';
               uiCtx.lineWidth = 3;
               uiCtx.setLineDash([6, 6]);
@@ -2493,7 +2671,12 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
             const hw = w / 2 + 6;
             const hh = h / 2 + 6;
 
-            const handles = [
+            const handles = activeImg.isFaceMorph ? [
+              { type: 'delete_layer', x: cx + hw * 0.8, y: cy - hh * 0.8, r: 26 },
+              { type: 'rotate_imageLayer', x: cx, y: cy - hh - 40, r: 24 },
+              { type: 'resize_imageLayer_br', x: cx + hw * 0.72, y: cy + hh * 0.72, r: 24 },
+              { type: 'resize_imageLayer_bl', x: cx - hw * 0.72, y: cy + hh * 0.72, r: 24 }
+            ] : [
               { type: 'delete_layer', x: cx - hw - 36, y: cy - hh - 36, r: 26 },
               { type: 'rotate_imageLayer', x: cx, y: cy - hh - 60, r: 22 },
               { type: 'resize_imageLayer_tl', x: cx - hw, y: cy - hh, r: 22 },
