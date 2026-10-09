@@ -1829,14 +1829,14 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
             const drawRoundHandle = (hx, hy) => {
               uiCtx.save();
               uiCtx.shadowColor = 'rgba(0, 0, 0, 0.35)';
-              uiCtx.shadowBlur = 4;
-              uiCtx.shadowOffsetY = 1;
+              uiCtx.shadowBlur = 5;
+              uiCtx.shadowOffsetY = 1.5;
               uiCtx.beginPath();
-              uiCtx.arc(hx, hy, 10.5, 0, Math.PI * 2);
+              uiCtx.arc(hx, hy, 16.5, 0, Math.PI * 2);
               uiCtx.fillStyle = '#ffffff';
               uiCtx.fill();
               uiCtx.strokeStyle = '#f97316';
-              uiCtx.lineWidth = 2.5;
+              uiCtx.lineWidth = 3;
               uiCtx.stroke();
               uiCtx.restore();
             };
@@ -1860,37 +1860,37 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
               // Rotation stem
               uiCtx.save();
               uiCtx.strokeStyle = '#f97316';
-              uiCtx.lineWidth = 2;
+              uiCtx.lineWidth = 2.5;
               uiCtx.beginPath();
               uiCtx.moveTo(0, boxY);
-              uiCtx.lineTo(0, boxY - 28);
+              uiCtx.lineTo(0, boxY - 34);
               uiCtx.stroke();
 
               // Rotation knob
               uiCtx.shadowColor = 'rgba(0, 0, 0, 0.35)';
-              uiCtx.shadowBlur = 4;
-              uiCtx.shadowOffsetY = 1;
+              uiCtx.shadowBlur = 5;
+              uiCtx.shadowOffsetY = 1.5;
               uiCtx.beginPath();
-              uiCtx.arc(0, boxY - 28, 11, 0, Math.PI * 2);
+              uiCtx.arc(0, boxY - 34, 15.5, 0, Math.PI * 2);
               uiCtx.fillStyle = '#ffffff';
               uiCtx.fill();
               uiCtx.strokeStyle = '#f97316';
-              uiCtx.lineWidth = 2.5;
+              uiCtx.lineWidth = 3;
               uiCtx.stroke();
 
               // Circular rotate icon inside knob
               uiCtx.strokeStyle = '#f97316';
-              uiCtx.lineWidth = 1.75;
+              uiCtx.lineWidth = 2;
               uiCtx.lineCap = 'round';
               uiCtx.beginPath();
-              uiCtx.arc(0, boxY - 28, 5.5, -Math.PI * 0.7, Math.PI * 0.8);
+              uiCtx.arc(0, boxY - 34, 7.5, -Math.PI * 0.7, Math.PI * 0.8);
               uiCtx.stroke();
               // Arrowhead
               uiCtx.fillStyle = '#f97316';
               uiCtx.beginPath();
-              uiCtx.moveTo(4, boxY - 28 + 3.5);
-              uiCtx.lineTo(7, boxY - 28);
-              uiCtx.lineTo(3.5, boxY - 28 - 2);
+              uiCtx.moveTo(5.5, boxY - 34 + 5);
+              uiCtx.lineTo(9.5, boxY - 34);
+              uiCtx.lineTo(5, boxY - 34 - 3);
               uiCtx.fill();
               uiCtx.restore();
 
@@ -2281,15 +2281,22 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
           const leftX = cx - halfW;
           const rightX = cx + halfW;
 
+          // Screen scale factor ensures touch target is at least 44px on user's physical screen
+          const screenScale = canvasRef.current
+            ? (canvas.width / Math.max(1, canvasRef.current.getBoundingClientRect().width))
+            : 2.5;
+          const touchHitRadius = Math.max(48, Math.round(22 * screenScale));
+          const deleteHitRadius = Math.max(52, Math.round(24 * screenScale));
+
           const handles = [
-            ...((!activeCap.isHeaderCaption && !activeCap.isFooterCaption) ? [{ type: 'delete_layer', x: leftX - 32, y: topY - 32, r: 26 }] : []),
-            ...((!activeCap.isHeaderCaption && !activeCap.isFooterCaption) ? [{ type: 'rotate_caption', x: cx, y: topY - 28, r: 26 }] : []),
-            { type: 'resize_caption_l', x: leftX, y: cy, r: 26 },
-            { type: 'resize_caption_r', x: rightX, y: cy, r: 26 },
-            { type: 'resize_caption_tl', x: leftX, y: topY, r: 26 },
-            { type: 'resize_caption_tr', x: rightX, y: topY, r: 26 },
-            { type: 'resize_caption_bl', x: leftX, y: bottomY, r: 26 },
-            { type: 'resize_caption_br', x: rightX, y: bottomY, r: 26 }
+            ...((!activeCap.isHeaderCaption && !activeCap.isFooterCaption) ? [{ type: 'delete_layer', x: leftX - 32, y: topY - 32, r: deleteHitRadius }] : []),
+            ...((!activeCap.isHeaderCaption && !activeCap.isFooterCaption) ? [{ type: 'rotate_caption', x: cx, y: topY - 34, r: touchHitRadius }] : []),
+            { type: 'resize_caption_l', x: leftX, y: cy, r: touchHitRadius },
+            { type: 'resize_caption_r', x: rightX, y: cy, r: touchHitRadius },
+            { type: 'resize_caption_tl', x: leftX, y: topY, r: touchHitRadius },
+            { type: 'resize_caption_tr', x: rightX, y: topY, r: touchHitRadius },
+            { type: 'resize_caption_bl', x: leftX, y: bottomY, r: touchHitRadius },
+            { type: 'resize_caption_br', x: rightX, y: bottomY, r: touchHitRadius }
           ];
 
           let closestHandle = null;
@@ -2795,19 +2802,25 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         const leftX = cx - halfW;
         const rightX = cx + halfW;
 
-        if (!activeCap.isHeaderCaption && !activeCap.isFooterCaption && Math.hypot(p.x - (leftX - 32), p.y - (topY - 32)) <= 26) {
+        const screenScale = canvasRef.current
+          ? (canvas.width / Math.max(1, canvasRef.current.getBoundingClientRect().width))
+          : 2.5;
+        const hoverHitRadius = Math.max(38, Math.round(18 * screenScale));
+        const deleteHoverRadius = Math.max(42, Math.round(20 * screenScale));
+
+        if (!activeCap.isHeaderCaption && !activeCap.isFooterCaption && Math.hypot(p.x - (leftX - 32), p.y - (topY - 32)) <= deleteHoverRadius) {
           canvas.style.cursor = 'pointer'; return;
         }
-        if (!activeCap.isHeaderCaption && !activeCap.isFooterCaption && Math.hypot(p.x - cx, p.y - (topY - 28)) <= 26) {
+        if (!activeCap.isHeaderCaption && !activeCap.isFooterCaption && Math.hypot(p.x - cx, p.y - (topY - 34)) <= hoverHitRadius) {
           canvas.style.cursor = 'grab'; return;
         }
-        if (Math.hypot(p.x - leftX, p.y - cy) <= 26 || Math.hypot(p.x - rightX, p.y - cy) <= 26) {
+        if (Math.hypot(p.x - leftX, p.y - cy) <= hoverHitRadius || Math.hypot(p.x - rightX, p.y - cy) <= hoverHitRadius) {
           canvas.style.cursor = 'ew-resize'; return;
         }
-        if (Math.hypot(p.x - leftX, p.y - topY) <= 26 || Math.hypot(p.x - rightX, p.y - bottomY) <= 26) {
+        if (Math.hypot(p.x - leftX, p.y - topY) <= hoverHitRadius || Math.hypot(p.x - rightX, p.y - bottomY) <= hoverHitRadius) {
           canvas.style.cursor = 'nwse-resize'; return;
         }
-        if (Math.hypot(p.x - rightX, p.y - topY) <= 26 || Math.hypot(p.x - leftX, p.y - bottomY) <= 26) {
+        if (Math.hypot(p.x - rightX, p.y - topY) <= hoverHitRadius || Math.hypot(p.x - leftX, p.y - bottomY) <= hoverHitRadius) {
           canvas.style.cursor = 'nesw-resize'; return;
         }
         if (p.x >= cx - halfW && p.x <= cx + halfW && p.y >= cy - halfH && p.y <= cy + halfH) {
