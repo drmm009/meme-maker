@@ -2925,7 +2925,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                     </div>
                   )}
 
-                  {/* Text Controls - 2. Blur Submenu */}
+                  {/* Text Controls - 2. Blur (Opacity Bar) Submenu */}
                   {activeCaption && showTextBlurMenu && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
                       <button
@@ -2938,56 +2938,9 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                       </button>
                       <div className="vid-ctx-divider" />
                       
-                      {/* Blur Slider */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '5px', flexShrink: 0 }}>
-                        <EyeOff style={{ width: 13, height: 13, color: (activeCaption.blur && activeCaption.blur > 0) ? 'var(--cyber-cyan)' : '#ffffff' }} />
-                        <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>Blur:</span>
-                        <input
-                          type="range"
-                          min="0"
-                          max="20"
-                          step="1"
-                          value={activeCaption.blur || 0}
-                          onChange={(e) => updateActiveCaptionProps({ blur: parseInt(e.target.value, 10) })}
-                          style={{ width: '70px', accentColor: 'var(--cyber-cyan)', height: '4px' }}
-                          title="Blur Radius (0px - 20px)"
-                        />
-                        <span style={{ fontSize: '11px', fontWeight: 700, minWidth: '28px', color: (activeCaption.blur && activeCaption.blur > 0) ? 'var(--cyber-cyan)' : '#ffffff' }}>
-                          {activeCaption.blur || 0}px
-                        </span>
-                        <div style={{ display: 'flex', gap: '3px' }}>
-                          <button
-                            type="button"
-                            className={`btn btn-xs ${!activeCaption.blur ? 'btn-primary' : 'btn-ghost'}`}
-                            onClick={() => updateActiveCaptionProps({ blur: 0 })}
-                            style={{ padding: '2px 7px', fontSize: '11px', height: '24px', borderRadius: '6px' }}
-                          >
-                            None
-                          </button>
-                          <button
-                            type="button"
-                            className={`btn btn-xs ${activeCaption.blur === 4 ? 'btn-primary' : 'btn-ghost'}`}
-                            onClick={() => updateActiveCaptionProps({ blur: 4 })}
-                            style={{ padding: '2px 7px', fontSize: '11px', height: '24px', borderRadius: '6px' }}
-                          >
-                            Soft
-                          </button>
-                          <button
-                            type="button"
-                            className={`btn btn-xs ${activeCaption.blur === 10 ? 'btn-primary' : 'btn-ghost'}`}
-                            onClick={() => updateActiveCaptionProps({ blur: 10 })}
-                            style={{ padding: '2px 7px', fontSize: '11px', height: '24px', borderRadius: '6px' }}
-                          >
-                            Heavy
-                          </button>
-                        </div>
-                      </div>
-
-                      <div className="vid-ctx-divider" />
-
-                      {/* Opacity Slider */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '5px', flexShrink: 0 }}>
-                        <Droplet style={{ width: 12, height: 12, color: '#ffffff' }} />
+                      {/* Opacity Bar */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+                        <Droplet style={{ width: 13, height: 13, color: (activeCaption.opacity !== undefined && Number(activeCaption.opacity) < 1) ? 'var(--cyber-cyan)' : '#ffffff' }} />
                         <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>Opacity:</span>
                         <input
                           type="range"
@@ -2996,12 +2949,30 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           step="0.05"
                           value={activeCaption.opacity !== undefined ? activeCaption.opacity : 1}
                           onChange={(e) => updateActiveCaptionProps({ opacity: parseFloat(e.target.value) })}
-                          style={{ width: '60px', accentColor: 'var(--cyber-cyan)', height: '4px' }}
+                          style={{ width: '100px', accentColor: 'var(--cyber-cyan)', height: '4px' }}
                           title="Text Opacity (10% - 100%)"
                         />
-                        <span style={{ fontSize: '11px', fontWeight: 600, minWidth: '28px' }}>
+                        <span style={{ fontSize: '11px', fontWeight: 700, minWidth: '34px', color: (activeCaption.opacity !== undefined && Number(activeCaption.opacity) < 1) ? 'var(--cyber-cyan)' : '#ffffff' }}>
                           {Math.round((activeCaption.opacity !== undefined ? Number(activeCaption.opacity) : 1) * 100)}%
                         </span>
+                        <div style={{ display: 'flex', gap: '3px' }}>
+                          <button
+                            type="button"
+                            className={`btn btn-xs ${(activeCaption.opacity === undefined || Number(activeCaption.opacity) === 1) ? 'btn-primary' : 'btn-ghost'}`}
+                            onClick={() => updateActiveCaptionProps({ opacity: 1 })}
+                            style={{ padding: '2px 8px', fontSize: '11px', height: '24px', borderRadius: '6px' }}
+                          >
+                            100%
+                          </button>
+                          <button
+                            type="button"
+                            className={`btn btn-xs ${Number(activeCaption.opacity) === 0.5 ? 'btn-primary' : 'btn-ghost'}`}
+                            onClick={() => updateActiveCaptionProps({ opacity: 0.5 })}
+                            style={{ padding: '2px 8px', fontSize: '11px', height: '24px', borderRadius: '6px' }}
+                          >
+                            50%
+                          </button>
+                        </div>
                       </div>
                     </div>
                   )}
@@ -3491,14 +3462,14 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                             alignItems: 'center',
                             gap: '5px',
                             borderRadius: '8px',
-                            background: (hasBlur || hasOpacity) ? 'rgba(6,182,212,0.25)' : 'rgba(255, 255, 255, 0.08)',
-                            border: (hasBlur || hasOpacity) ? '1px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.1)',
-                            color: (hasBlur || hasOpacity) ? 'var(--cyber-cyan)' : '#ffffff',
+                            background: hasOpacity ? 'rgba(6,182,212,0.25)' : 'rgba(255, 255, 255, 0.08)',
+                            border: hasOpacity ? '1px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.1)',
+                            color: hasOpacity ? 'var(--cyber-cyan)' : '#ffffff',
                             flexShrink: 0
                           }}
                         >
-                          <EyeOff style={{ width: 13, height: 13, color: (hasBlur || hasOpacity) ? 'var(--cyber-cyan)' : '#ffffff' }} />
-                          <span>Blur{activeCaption.blur ? ` (${activeCaption.blur}px)` : ''}</span>
+                          <Droplet style={{ width: 13, height: 13, color: hasOpacity ? 'var(--cyber-cyan)' : '#ffffff' }} />
+                          <span>Blur{hasOpacity ? ` (${Math.round(Number(activeCaption.opacity) * 100)}%)` : ''}</span>
                         </button>
 
                         {/* 6. Bg Button */}
