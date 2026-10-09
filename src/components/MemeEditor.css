@@ -374,6 +374,25 @@
   color: #ffffff !important;
 }
 
+.vid-ctx-btn.vid-ctx-btn-last-used {
+  background: rgba(255, 255, 255, 0.18) !important;
+  border: 1px solid var(--cyber-cyan) !important;
+  box-shadow: 0 0 10px rgba(6, 182, 212, 0.45) !important;
+  transform: translateY(-1px);
+}
+
+[data-theme='light'] .vid-ctx-btn.vid-ctx-btn-last-used {
+  background: rgba(6, 182, 212, 0.15) !important;
+  border: 1px solid var(--cyber-cyan) !important;
+  box-shadow: 0 0 8px rgba(6, 182, 212, 0.35) !important;
+  color: #0f172a !important;
+}
+
+.editor-floating-toolbar.bubble-mode-left,
+.video-context-toolbar.bubble-mode-left {
+  justify-content: flex-start !important;
+}
+
 .vid-ctx-btn-delete {
   background: rgba(239, 68, 68, 0.85) !important;
   color: #ffffff !important;

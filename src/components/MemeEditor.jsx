@@ -532,6 +532,8 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [showAiModal, setShowAiModal] = useState(false);
   const [showBubbleLayouts, setShowBubbleLayouts] = useState(false);
+  const [lastUsedSettingButton, setLastUsedSettingButton] = useState(null);
+  const contextToolbarRef = useRef(null);
   const [showTweetThemeMenu, setShowTweetThemeMenu] = useState(false);
   const [showTweetTrendMenu, setShowTweetTrendMenu] = useState(false);
   const [exportFormat, setExportFormat] = useState('png'); // 'png' | 'jpeg' | 'webp'
@@ -630,7 +632,28 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
   useEffect(() => {
     setShowTweetThemeMenu(false);
     setShowTweetTrendMenu(false);
+    setLastUsedSettingButton(null);
   }, [activeLayerId]);
+
+  // When bubble layout opens, scroll to the beginning (left)
+  useEffect(() => {
+    if (showBubbleLayouts && contextToolbarRef.current) {
+      contextToolbarRef.current.scrollLeft = 0;
+    }
+  }, [showBubbleLayouts]);
+
+  // Scroll to last used setting button when returning to text toolbar and keep hover effect
+  useEffect(() => {
+    if (lastUsedSettingButton && !showFontMenu && !showTextCurveMenu && !showTextBlurMenu && !showTextBgMenu && !showBubbleLayouts) {
+      const timer = setTimeout(() => {
+        const btn = contextToolbarRef.current?.querySelector(`[data-setting-btn="${lastUsedSettingButton}"]`);
+        if (btn) {
+          btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+        }
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [lastUsedSettingButton, showFontMenu, showTextCurveMenu, showTextBlurMenu, showTextBgMenu, showBubbleLayouts]);
 
   // Keyboard shortcuts: Ctrl+Z (undo), Ctrl+Y / Ctrl+Shift+Z (redo), Delete (delete layer), Escape (deselect)
   useEffect(() => {
@@ -2827,7 +2850,8 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
             <AnimatePresence>
               {((activeCaption || activeSticker || activeImageLayer) || (isMobileTabsFolded && !activeCaption && !activeSticker && !activeImageLayer)) && isMobileTabsFolded && (
                 <motion.div
-                  className={`editor-floating-toolbar video-context-toolbar`}
+                  ref={contextToolbarRef}
+                  className={`editor-floating-toolbar video-context-toolbar ${showBubbleLayouts ? 'bubble-mode-left' : ''}`}
                   initial={{ opacity: 0, height: 0, paddingTop: 0, paddingBottom: 0, marginTop: 0, marginBottom: 0, overflow: 'hidden' }}
                   animate={{ opacity: 1, height: 46, paddingTop: 5, paddingBottom: 0, marginTop: 2, marginBottom: 0 }}
                   exit={{ opacity: 0, height: 0, paddingTop: 0, paddingBottom: 0, marginTop: 0, marginBottom: 0, overflow: 'hidden' }}
@@ -2837,7 +2861,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                   {/* Text controls */}
                   {activeCaption && showFontMenu && (
                     <>
-                      <button onClick={() => setShowFontMenu(false)} className="btn btn-icon btn-xs vid-ctx-btn" >
+                      <button onClick={() => { setShowFontMenu(false); setLastUsedSettingButton('font'); }} className="btn btn-icon btn-xs vid-ctx-btn" title="Back to text toolbar">
                         <ArrowLeft style={{ width: 14, height: 14 }} />
                       </button>
                       <div className="vid-ctx-divider"  />
@@ -2853,6 +2877,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           onClick={() => {
                             updateActiveCaption('fontFamily', f.family);
                             setShowFontMenu(false);
+                            setLastUsedSettingButton('font');
                           }}
                         >
                           {f.name.split(' ')[0]}
@@ -2864,7 +2889,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                   {activeCaption && showTextCurveMenu && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
                       <button
-                        onClick={() => setShowTextCurveMenu(false)}
+                        onClick={() => { setShowTextCurveMenu(false); setLastUsedSettingButton('curv'); }}
                         className="btn btn-icon btn-xs vid-ctx-btn"
                         title="Back to text toolbar"
                         style={{ borderRadius: '8px', flexShrink: 0 }}
@@ -2929,7 +2954,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                   {activeCaption && showTextBlurMenu && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
                       <button
-                        onClick={() => setShowTextBlurMenu(false)}
+                        onClick={() => { setShowTextBlurMenu(false); setLastUsedSettingButton('blur'); }}
                         className="btn btn-icon btn-xs vid-ctx-btn"
                         title="Back to text toolbar"
                         style={{ borderRadius: '8px', flexShrink: 0 }}
@@ -2970,7 +2995,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                     return (
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
                         <button
-                          onClick={() => setShowTextBgMenu(false)}
+                          onClick={() => { setShowTextBgMenu(false); setLastUsedSettingButton('bg'); }}
                           className="btn btn-icon btn-xs vid-ctx-btn"
                           title="Back to text toolbar"
                           style={{ borderRadius: '8px', flexShrink: 0 }}
@@ -3123,10 +3148,10 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
 
                   {/* Bubble Layout Selector Bar with Back button */}
                   {activeCaption && activeCaption.bubbleStyle && showBubbleLayouts && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0, justifyContent: 'flex-start', width: '100%' }}>
                       {/* Back Button */}
                       <button
-                        onClick={() => setShowBubbleLayouts(false)}
+                        onClick={() => { setShowBubbleLayouts(false); setLastUsedSettingButton('bubble'); }}
                         className="btn btn-icon btn-xs vid-ctx-btn"
                         title="Back to text toolbar"
                         style={{ borderRadius: '8px', flexShrink: 0 }}
@@ -3389,7 +3414,8 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         {/* 2. Font dropdown */}
                         <button
                           type="button"
-                          className="btn btn-xs vid-ctx-btn vid-ctx-btn-font"
+                          data-setting-btn="font"
+                          className={`btn btn-xs vid-ctx-btn vid-ctx-btn-font ${lastUsedSettingButton === 'font' ? 'vid-ctx-btn-last-used' : ''}`}
                           title="Change Font"
                           onClick={() => {
                             setShowFontMenu(true);
@@ -3406,8 +3432,11 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                             alignItems: 'center',
                             gap: '5px',
                             borderRadius: '8px',
-                            background: 'rgba(255, 255, 255, 0.08)',
-                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                            background: lastUsedSettingButton === 'font' ? 'rgba(255, 255, 255, 0.18)' : 'rgba(255, 255, 255, 0.08)',
+                            border: lastUsedSettingButton === 'font' ? '1px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.1)',
+                            boxShadow: lastUsedSettingButton === 'font' ? '0 0 10px rgba(6, 182, 212, 0.45)' : 'none',
+                            transform: lastUsedSettingButton === 'font' ? 'translateY(-1px)' : 'none',
+                            transition: 'all 0.2s ease',
                             color: '#ffffff',
                             flexShrink: 0
                           }}
@@ -3461,7 +3490,8 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         {/* 4. Bg Button (Interchanged with Curv) */}
                         <button
                           type="button"
-                          className="btn btn-xs vid-ctx-btn"
+                          data-setting-btn="bg"
+                          className={`btn btn-xs vid-ctx-btn ${lastUsedSettingButton === 'bg' ? 'vid-ctx-btn-last-used' : ''}`}
                           title="Text Background Box / Banner settings"
                           onClick={() => {
                             setShowTextBgMenu(true);
@@ -3478,8 +3508,11 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                             alignItems: 'center',
                             gap: '5px',
                             borderRadius: '8px',
-                            background: 'rgba(255, 255, 255, 0.08)',
-                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                            background: lastUsedSettingButton === 'bg' ? 'rgba(255, 255, 255, 0.18)' : 'rgba(255, 255, 255, 0.08)',
+                            border: lastUsedSettingButton === 'bg' ? '1px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.1)',
+                            boxShadow: lastUsedSettingButton === 'bg' ? '0 0 10px rgba(6, 182, 212, 0.45)' : 'none',
+                            transform: lastUsedSettingButton === 'bg' ? 'translateY(-1px)' : 'none',
+                            transition: 'all 0.2s ease',
                             color: '#ffffff',
                             flexShrink: 0
                           }}
@@ -3491,7 +3524,8 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         {/* 5. Blur Button */}
                         <button
                           type="button"
-                          className="btn btn-xs vid-ctx-btn"
+                          data-setting-btn="blur"
+                          className={`btn btn-xs vid-ctx-btn ${lastUsedSettingButton === 'blur' ? 'vid-ctx-btn-last-used' : ''}`}
                           title="Text Blur & Opacity settings"
                           onClick={() => {
                             setShowTextBlurMenu(true);
@@ -3508,8 +3542,11 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                             alignItems: 'center',
                             gap: '5px',
                             borderRadius: '8px',
-                            background: 'rgba(255, 255, 255, 0.08)',
-                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                            background: lastUsedSettingButton === 'blur' ? 'rgba(255, 255, 255, 0.18)' : 'rgba(255, 255, 255, 0.08)',
+                            border: lastUsedSettingButton === 'blur' ? '1px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.1)',
+                            boxShadow: lastUsedSettingButton === 'blur' ? '0 0 10px rgba(6, 182, 212, 0.45)' : 'none',
+                            transform: lastUsedSettingButton === 'blur' ? 'translateY(-1px)' : 'none',
+                            transition: 'all 0.2s ease',
                             color: '#ffffff',
                             flexShrink: 0
                           }}
@@ -3521,7 +3558,8 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         {/* 6. Curv Button (Interchanged with Bg) */}
                         <button
                           type="button"
-                          className="btn btn-xs vid-ctx-btn"
+                          data-setting-btn="curv"
+                          className={`btn btn-xs vid-ctx-btn ${lastUsedSettingButton === 'curv' ? 'vid-ctx-btn-last-used' : ''}`}
                           title="Curve / Arc text angle"
                           onClick={() => {
                             setShowTextCurveMenu(true);
@@ -3538,8 +3576,11 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                             alignItems: 'center',
                             gap: '5px',
                             borderRadius: '8px',
-                            background: 'rgba(255, 255, 255, 0.08)',
-                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                            background: lastUsedSettingButton === 'curv' ? 'rgba(255, 255, 255, 0.18)' : 'rgba(255, 255, 255, 0.08)',
+                            border: lastUsedSettingButton === 'curv' ? '1px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.1)',
+                            boxShadow: lastUsedSettingButton === 'curv' ? '0 0 10px rgba(6, 182, 212, 0.45)' : 'none',
+                            transform: lastUsedSettingButton === 'curv' ? 'translateY(-1px)' : 'none',
+                            transition: 'all 0.2s ease',
                             color: '#ffffff',
                             flexShrink: 0
                           }}
@@ -3553,7 +3594,9 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
 
                         {/* 7. Bubble Button */}
                         <button
-                          className="btn btn-xs vid-ctx-btn"
+                          type="button"
+                          data-setting-btn="bubble"
+                          className={`btn btn-xs vid-ctx-btn ${lastUsedSettingButton === 'bubble' ? 'vid-ctx-btn-last-used' : ''}`}
                           title={activeCaption.bubbleStyle ? "Change Bubble Layout (iPhone, WhatsApp, Comic)" : "Convert to Chat / Speech Bubble (iPhone, WhatsApp, Comic)"}
                           onClick={handleConvertToBubble}
                           style={{
@@ -3565,8 +3608,11 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                             gap: '5px',
                             borderRadius: '8px',
                             flexShrink: 0,
-                            background: 'rgba(255, 255, 255, 0.08)',
-                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                            background: lastUsedSettingButton === 'bubble' ? 'rgba(255, 255, 255, 0.18)' : 'rgba(255, 255, 255, 0.08)',
+                            border: lastUsedSettingButton === 'bubble' ? '1px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.1)',
+                            boxShadow: lastUsedSettingButton === 'bubble' ? '0 0 10px rgba(6, 182, 212, 0.45)' : 'none',
+                            transform: lastUsedSettingButton === 'bubble' ? 'translateY(-1px)' : 'none',
+                            transition: 'all 0.2s ease',
                             color: '#ffffff'
                           }}
                         >
