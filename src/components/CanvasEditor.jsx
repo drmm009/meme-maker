@@ -1514,6 +1514,9 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
           if (imgLayer.flipX) {
             targetCtx.scale(-1, 1);
           }
+          if (imgLayer.opacity !== undefined) {
+            targetCtx.globalAlpha = imgLayer.opacity;
+          }
           
           const scale = imgLayer.scale || 1.0;
           const maxDim = 320;

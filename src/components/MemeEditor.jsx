@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import AiCaptionModal from './AiCaptionModal';
 import MemeStylesModal, { TwitterVerifiedBadge } from './MemeStylesModal';
+import FaceMorphModal from './FaceMorphModal';
 import { downloadImageHelper, recordCanvasAsVideo } from '../utils/downloadHelper';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MEME_TEMPLATES, CATEGORIES } from '../data/templates';
@@ -577,6 +578,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     };
   });
   const [showStylesModal, setShowStylesModal] = useState(false);
+  const [showFaceMorphModal, setShowFaceMorphModal] = useState(false);
 
   const handleSetCanvasBgColor = (val) => {
     setCanvasBgColor(val);
@@ -1942,6 +1944,35 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     const url = URL.createObjectURL(file);
     handleAddImageLayer(url);
     e.target.value = '';
+  };
+
+  const handleApplyFaceMorph = ({ url, originalFaceUrl, faceName, opacity, flipX, feather, brightness, contrast, warmth, saturation }) => {
+    const maxZ = Math.max(-1, ...captions.map(c => c.zIndex ?? -1), ...stickers.map(s => s.zIndex ?? -1), ...(imageLayers || []).map(i => i.zIndex ?? -1));
+    const newFaceLayer = {
+      id: `face-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      url,
+      originalFaceUrl,
+      faceName: faceName || 'Face Morph',
+      isFaceMorph: true,
+      x: 0.5,
+      y: 0.38,
+      scale: 1.15,
+      rotation: 0,
+      opacity: opacity !== undefined ? opacity : 1,
+      flipX: !!flipX,
+      feather: feather || 14,
+      brightness: brightness || 100,
+      contrast: contrast || 100,
+      warmth: warmth || 0,
+      saturation: saturation || 100,
+      fitMode: 'fit',
+      zIndex: maxZ + 1
+    };
+    const nextImgLayers = [...imageLayers, newFaceLayer];
+    setImageLayers(nextImgLayers);
+    setActiveLayerId(newFaceLayer.id);
+    setActiveTab('images');
+    pushHistory(captions, stickers, nextImgLayers);
   };
 
   const updateActiveImageLayer = (key, value) => {
@@ -4078,6 +4109,48 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                   {/* Image controls */}
                   {activeImageLayer && !showImageFilterMenu && (
                     <>
+                      {/* Face Morph button */}
+                      {activeImageLayer.isFaceMorph ? (
+                        <button
+                          className="btn btn-xs vid-ctx-btn active"
+                          title="Tune Face Morph in Studio"
+                          onClick={() => setShowFaceMorphModal(true)}
+                          style={{
+                            padding: '4px 10px',
+                            fontSize: '0.75rem',
+                            fontWeight: 600,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            borderRadius: '8px',
+                            flexShrink: 0
+                          }}
+                        >
+                          <Smile style={{ width: 13, height: 13 }} />
+                          <span>Tune Face</span>
+                        </button>
+                      ) : (
+                        <button
+                          className="btn btn-xs vid-ctx-btn"
+                          title="Open Face Morph Studio"
+                          onClick={() => setShowFaceMorphModal(true)}
+                          style={{
+                            padding: '4px 10px',
+                            fontSize: '0.75rem',
+                            fontWeight: 600,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            borderRadius: '8px',
+                            background: 'rgba(255,255,255,0.08)',
+                            flexShrink: 0
+                          }}
+                        >
+                          <Smile style={{ width: 13, height: 13, color: 'var(--cyber-cyan)' }} />
+                          <span>Morph Face</span>
+                        </button>
+                      )}
+
                       {/* 1. BG Eraser */}
                       <button
                         className="btn btn-xs vid-ctx-btn"
@@ -4408,7 +4481,30 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         />
                       </label>
 
-                      {/* 2. TEMPLATE */}
+                      {/* 2. MORPH FACE */}
+                      <button
+                        className="btn btn-xs vid-ctx-btn"
+                        onClick={() => setShowFaceMorphModal(true)}
+                        style={{
+                          padding: '5px 14px',
+                          fontSize: '0.8rem',
+                          fontWeight: 600,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          borderRadius: '12px',
+                          background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(6, 182, 212, 0.25))',
+                          border: '1px solid var(--cyber-cyan)',
+                          color: '#ffffff',
+                          flexShrink: 0
+                        }}
+                        title="Morph Face onto Meme Template"
+                      >
+                        <Smile style={{ width: 14, height: 14, color: 'var(--cyber-cyan)' }} />
+                        <span>Morph Face</span>
+                      </button>
+
+                      {/* 3. TEMPLATE */}
                       <button
                         className="btn btn-xs vid-ctx-btn"
                         onClick={() => setImagePickerTarget('layer')}
@@ -6736,6 +6832,31 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                     <span style={{ fontSize: '0.9rem', fontWeight: 900, color: '#1d9bf0', lineHeight: 1 }}>𝕏</span> Tweet Card
                   </button>
 
+                  <button
+                    type="button"
+                    className="btn btn-xs hover-lift"
+                    onClick={() => setShowFaceMorphModal(true)}
+                    title="Morph / Swap Face onto Meme Template"
+                    style={{
+                      flex: 1,
+                      padding: '8px 10px',
+                      borderRadius: '999px',
+                      fontSize: '0.8rem',
+                      fontWeight: 600,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '5px',
+                      whiteSpace: 'nowrap',
+                      background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(6, 182, 212, 0.25))',
+                      border: '1px solid var(--cyber-cyan)',
+                      color: '#ffffff',
+                      boxShadow: '0 0 12px rgba(6, 182, 212, 0.25)'
+                    }}
+                  >
+                    <Smile className="icon-xs" style={{ color: 'var(--cyber-cyan)' }} /> Morph Face
+                  </button>
+
                   {activeImageLayer && (
                     <button
                       type="button"
@@ -6748,6 +6869,41 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                     </button>
                   )}
                 </div>
+
+                {activeImageLayer && activeImageLayer.isFaceMorph && (
+                  <div className="form-group margin-bottom-sm glass-card" style={{ padding: '10px 14px', borderRadius: '14px', border: '1px solid rgba(6, 182, 212, 0.3)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                      <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#ffffff', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <Smile size={14} style={{ color: 'var(--cyber-cyan)' }} />
+                        {activeImageLayer.faceName || 'Face Morph'}
+                      </span>
+                      <button
+                        type="button"
+                        className="btn btn-xs btn-ghost"
+                        onClick={() => setShowFaceMorphModal(true)}
+                        style={{ fontSize: '0.7rem', color: 'var(--cyber-cyan)', padding: '2px 8px', borderRadius: '6px' }}
+                      >
+                        Change Face
+                      </button>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', fontWeight: 600 }}>
+                        <span style={{ color: 'var(--text-muted)' }}>Morph Blend / Opacity</span>
+                        <span style={{ color: 'var(--cyber-cyan)' }}>{Math.round((activeImageLayer.opacity !== undefined ? activeImageLayer.opacity : 1) * 100)}%</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0.2"
+                        max="1"
+                        step="0.05"
+                        value={activeImageLayer.opacity !== undefined ? activeImageLayer.opacity : 1}
+                        onChange={(e) => updateActiveImageLayer('opacity', parseFloat(e.target.value))}
+                        style={{ accentColor: 'var(--cyber-cyan)', height: '4px' }}
+                      />
+                    </div>
+                  </div>
+                )}
                 
                 {activeImageLayer && (
                   <div className="form-group margin-bottom-sm glass-card" style={{ padding: '8px 12px' }}>
@@ -7296,6 +7452,15 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
             onAddTweetCard={handleAddTweetCard}
           />
         </ModalPortal>
+      )}
+
+      {/* Face Morph & Swap Studio Modal */}
+      {showFaceMorphModal && (
+        <FaceMorphModal
+          isOpen={showFaceMorphModal}
+          onClose={() => setShowFaceMorphModal(false)}
+          onApplyFaceMorph={handleApplyFaceMorph}
+        />
       )}
 
     </div>
