@@ -278,7 +278,66 @@ const getCurveSagitta = (width, curve) => {
   return R * (1 - Math.cos(spanRad / 2));
 };
 
-const drawCurvedText = (ctx, line, curve, baseLy, textAnchorX, fontSize, shouldStroke, strokeColor, strokeWidth, textColor) => {
+const drawTextLineWithEffect = (ctx, line, textAnchorX, ly, fontSize, shouldStroke, strokeColor, strokeWidth, textColor, effect) => {
+  ctx.save();
+  const eff = effect || 'flat';
+
+  if (eff === 'shadow') {
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.85)';
+    ctx.shadowBlur = Math.max(2, Math.round(fontSize * 0.08));
+    ctx.shadowOffsetX = Math.max(3, Math.round(fontSize * 0.07));
+    ctx.shadowOffsetY = Math.max(3, Math.round(fontSize * 0.07));
+  } else if (eff === 'glow') {
+    ctx.shadowColor = '#00f0ff';
+    ctx.shadowBlur = Math.max(12, Math.round(fontSize * 0.35));
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 0;
+  } else if (eff === 'glitch') {
+    const gOff = Math.max(2, Math.round(fontSize * 0.05));
+    ctx.fillStyle = '#ff0055';
+    ctx.fillText(line, textAnchorX - gOff, ly);
+    ctx.fillStyle = '#00f0ff';
+    ctx.fillText(line, textAnchorX + gOff, ly);
+  } else if (eff === '3d') {
+    const depth = Math.max(3, Math.min(6, Math.round(fontSize * 0.07)));
+    const isLightText = !isColorDark(textColor);
+    for (let s = depth; s >= 1; s--) {
+      ctx.fillStyle = s === depth ? '#000000' : (isLightText ? '#ea580c' : '#0284c7');
+      ctx.fillText(line, textAnchorX + s * 1.5, ly + s * 1.5);
+    }
+  }
+
+  if (eff === 'hollow') {
+    const hollowStrokeColor = strokeColor && strokeColor !== 'transparent'
+      ? strokeColor
+      : (textColor && textColor !== 'transparent' ? textColor : '#ffffff');
+    ctx.strokeStyle = hollowStrokeColor;
+    ctx.lineWidth = strokeWidth || Math.max(3, Math.round(fontSize * 0.07));
+    ctx.lineJoin = 'round';
+    ctx.setLineDash([]);
+    ctx.strokeText(line, textAnchorX, ly);
+  } else {
+    if (shouldStroke) {
+      ctx.strokeStyle = strokeColor;
+      ctx.lineWidth = strokeWidth || Math.max(3, fontSize / 7);
+      ctx.lineJoin = 'miter';
+      ctx.miterLimit = 2;
+      ctx.setLineDash([]);
+      ctx.strokeText(line, textAnchorX, ly);
+    }
+    ctx.fillStyle = textColor;
+    ctx.fillText(line, textAnchorX, ly);
+
+    if (eff === 'glow') {
+      ctx.shadowBlur = Math.max(4, Math.round(fontSize * 0.12));
+      ctx.fillText(line, textAnchorX, ly);
+    }
+  }
+
+  ctx.restore();
+};
+
+const drawCurvedText = (ctx, line, curve, baseLy, textAnchorX, fontSize, shouldStroke, strokeColor, strokeWidth, textColor, effect) => {
   if (!line) return;
   const chars = Array.from(line);
   if (chars.length === 0) return;
@@ -305,6 +364,8 @@ const drawCurvedText = (ctx, line, curve, baseLy, textAnchorX, fontSize, shouldS
   }
   ctx.fillStyle = textColor;
 
+  const eff = effect || 'flat';
+
   chars.forEach((ch, idx) => {
     let currentDist = 0;
     for (let j = 0; j < idx; j++) currentDist += widths[j];
@@ -318,10 +379,54 @@ const drawCurvedText = (ctx, line, curve, baseLy, textAnchorX, fontSize, shouldS
     ctx.save();
     ctx.translate(charX, charY);
     ctx.rotate(charRot);
-    if (shouldStroke) {
-      ctx.strokeText(ch, 0, 0);
+
+    if (eff === 'shadow') {
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.85)';
+      ctx.shadowBlur = Math.max(2, Math.round(fontSize * 0.08));
+      ctx.shadowOffsetX = Math.max(3, Math.round(fontSize * 0.07));
+      ctx.shadowOffsetY = Math.max(3, Math.round(fontSize * 0.07));
+    } else if (eff === 'glow') {
+      ctx.shadowColor = '#00f0ff';
+      ctx.shadowBlur = Math.max(12, Math.round(fontSize * 0.35));
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 0;
+    } else if (eff === 'glitch') {
+      const gOff = Math.max(2, Math.round(fontSize * 0.05));
+      ctx.fillStyle = '#ff0055';
+      ctx.fillText(ch, -gOff, 0);
+      ctx.fillStyle = '#00f0ff';
+      ctx.fillText(ch, gOff, 0);
+    } else if (eff === '3d') {
+      const depth = Math.max(3, Math.min(6, Math.round(fontSize * 0.07)));
+      const isLightText = !isColorDark(textColor);
+      for (let s = depth; s >= 1; s--) {
+        ctx.fillStyle = s === depth ? '#000000' : (isLightText ? '#ea580c' : '#0284c7');
+        ctx.fillText(ch, s * 1.5, s * 1.5);
+      }
     }
-    ctx.fillText(ch, 0, 0);
+
+    if (eff === 'hollow') {
+      const hollowStrokeColor = strokeColor && strokeColor !== 'transparent'
+        ? strokeColor
+        : (textColor && textColor !== 'transparent' ? textColor : '#ffffff');
+      ctx.strokeStyle = hollowStrokeColor;
+      ctx.lineWidth = strokeWidth || Math.max(3, Math.round(fontSize * 0.07));
+      ctx.lineJoin = 'round';
+      ctx.setLineDash([]);
+      ctx.strokeText(ch, 0, 0);
+    } else {
+      if (shouldStroke) {
+        ctx.strokeText(ch, 0, 0);
+      }
+      ctx.fillStyle = textColor;
+      ctx.fillText(ch, 0, 0);
+
+      if (eff === 'glow') {
+        ctx.shadowBlur = Math.max(4, Math.round(fontSize * 0.12));
+        ctx.fillText(ch, 0, 0);
+      }
+    }
+
     ctx.restore();
   });
   ctx.restore();
@@ -1765,20 +1870,22 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
                 shouldStroke,
                 cap.stroke,
                 cap.strokeWidth || Math.max(3, fontSize / 7),
-                textColor
+                textColor,
+                cap.effect
               );
             } else {
-              if (shouldStroke) {
-                targetCtx.strokeStyle = cap.stroke;
-                targetCtx.lineWidth = cap.strokeWidth || Math.max(3, fontSize / 7);
-                targetCtx.lineJoin = 'miter';
-                targetCtx.miterLimit = 2;
-                targetCtx.setLineDash([]);
-                targetCtx.strokeText(line, textAnchorX, ly);
-              }
-
-              targetCtx.fillStyle = textColor;
-              targetCtx.fillText(line, textAnchorX, ly);
+              drawTextLineWithEffect(
+                targetCtx,
+                line,
+                textAnchorX,
+                ly,
+                fontSize,
+                shouldStroke,
+                cap.stroke,
+                cap.strokeWidth || Math.max(3, fontSize / 7),
+                textColor,
+                cap.effect
+              );
             }
           });
         }

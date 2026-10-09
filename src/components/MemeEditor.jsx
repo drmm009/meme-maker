@@ -48,6 +48,129 @@ const BUBBLE_LAYOUT_OPTIONS = [
   { id: 'shout', label: 'Shout 💥' },
 ];
 
+export const TEXT_EFFECTS = [
+  {
+    id: 'flat',
+    name: 'Flat',
+    title: 'Flat (Classic standard text)',
+    curve: 0,
+    renderLabel: () => (
+      <span style={{ fontWeight: 800, color: '#ffffff', letterSpacing: '0.3px' }}>
+        Flat
+      </span>
+    )
+  },
+  {
+    id: 'arch',
+    name: 'Arch',
+    title: 'Arch (Curved upward text)',
+    curve: 40,
+    renderLabel: () => (
+      <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, color: '#ffffff' }}>
+        <span style={{ display: 'inline-block', transform: 'translateY(1.5px)' }}>A</span>
+        <span style={{ display: 'inline-block', transform: 'translateY(-1.5px)' }}>r</span>
+        <span style={{ display: 'inline-block', transform: 'translateY(-1.5px)' }}>c</span>
+        <span style={{ display: 'inline-block', transform: 'translateY(1.5px)' }}>h</span>
+      </span>
+    )
+  },
+  {
+    id: 'smile',
+    name: 'Smile',
+    title: 'Smile (Curved downward text)',
+    curve: -40,
+    renderLabel: () => (
+      <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, color: '#ffffff' }}>
+        <span style={{ display: 'inline-block', transform: 'translateY(-1.5px)' }}>S</span>
+        <span style={{ display: 'inline-block', transform: 'translateY(0px)' }}>m</span>
+        <span style={{ display: 'inline-block', transform: 'translateY(1.8px)' }}>i</span>
+        <span style={{ display: 'inline-block', transform: 'translateY(0px)' }}>l</span>
+        <span style={{ display: 'inline-block', transform: 'translateY(-1.5px)' }}>e</span>
+      </span>
+    )
+  },
+  {
+    id: 'shadow',
+    name: 'Shadow',
+    title: 'Shadow (Bold meme drop shadow)',
+    curve: 0,
+    renderLabel: () => (
+      <span style={{
+        fontWeight: 800,
+        color: '#ffffff',
+        textShadow: '2px 2px 0px #000000, 3px 3px 2px rgba(0,0,0,0.85)',
+        letterSpacing: '0.3px'
+      }}>
+        Shadow
+      </span>
+    )
+  },
+  {
+    id: 'glow',
+    name: 'Glow',
+    title: 'Glow (Neon cyan electric aura)',
+    curve: 0,
+    renderLabel: () => (
+      <span style={{
+        fontWeight: 800,
+        color: '#ffffff',
+        textShadow: '0 0 4px #00f0ff, 0 0 10px #00f0ff, 0 0 16px #00f0ff',
+        letterSpacing: '0.3px'
+      }}>
+        Glow
+      </span>
+    )
+  },
+  {
+    id: 'glitch',
+    name: 'Glitch',
+    title: 'Glitch (Chromatic aberration red/cyan split)',
+    curve: 0,
+    renderLabel: () => (
+      <span style={{
+        fontWeight: 800,
+        color: '#ffffff',
+        textShadow: '-1.5px 0 #ff0055, 1.5px 0 #00ffff',
+        letterSpacing: '0.5px'
+      }}>
+        Glitch
+      </span>
+    )
+  },
+  {
+    id: '3d',
+    name: '3D',
+    title: '3D (Extruded pop layered shadow)',
+    curve: 0,
+    renderLabel: () => (
+      <span style={{
+        fontWeight: 800,
+        color: '#ffffff',
+        textShadow: '1px 1px 0 #ea580c, 2px 2px 0 #c2410c, 3px 3px 0 #000000',
+        letterSpacing: '0.5px'
+      }}>
+        3D
+      </span>
+    )
+  },
+  {
+    id: 'hollow',
+    name: 'Hollow',
+    title: 'Hollow (Transparent outline text)',
+    curve: 0,
+    renderLabel: () => (
+      <span style={{
+        fontWeight: 900,
+        color: 'transparent',
+        WebkitTextStroke: '1px #ffffff',
+        letterSpacing: '0.5px'
+      }}>
+        Hollow
+      </span>
+    )
+  }
+];
+
 const COLOR_SWATCHES = ['#ffffff', '#ffff00', '#a855f7', '#ff0055', '#00ff66', '#000000'];
 
 // Calculates a default canvas position (normalized 0..1) that avoids overlapping existing elements
@@ -479,7 +602,9 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
   const [isMobileTabsFolded, setIsMobileTabsFolded] = useState(true);
   const [showWatermarkMenu, setShowWatermarkMenu] = useState(false);
   const [showFontMenu, setShowFontMenu] = useState(false);
-  const [showTextCurveMenu, setShowTextCurveMenu] = useState(false);
+  const [showTextEffectsMenu, setShowTextEffectsMenu] = useState(false);
+  const showTextCurveMenu = showTextEffectsMenu;
+  const setShowTextCurveMenu = setShowTextEffectsMenu;
   const [showTextBlurMenu, setShowTextBlurMenu] = useState(false);
   const [showTextBgMenu, setShowTextBgMenu] = useState(false);
   const [showImageFilterMenu, setShowImageFilterMenu] = useState(false);
@@ -506,7 +631,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     setActiveLayerId(null);
     setShowDrawSettings(false);
     setShowFontMenu(false);
-    setShowTextCurveMenu(false);
+    setShowTextEffectsMenu(false);
     setShowTextBlurMenu(false);
     setShowTextBgMenu(false);
     if (window.innerWidth <= 768) {
@@ -1216,7 +1341,10 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
       else if (current === 75) nextCurve = -40;
       else if (current === -40) nextCurve = -75;
       else nextCurve = 0;
-      updateActiveCaption('curve', nextCurve);
+      updateActiveCaptionProps({
+        curve: nextCurve,
+        effect: nextCurve === 0 ? 'flat' : (nextCurve > 0 ? 'arch' : 'smile')
+      });
       return;
     }
     const pos = getNonOverlappingPosition('caption', captions, stickers, imageLayers);
@@ -1233,6 +1361,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
       fontFamily: 'Impact, sans-serif',
       rotation: 0,
       curve: 40,
+      effect: 'arch',
       zIndex: maxZ + 1
     };
     const nextCaps = [...captions, newCap];
@@ -1696,6 +1825,35 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     });
     setCaptions(nextCaps);
     pushHistory(nextCaps, stickers);
+  };
+
+  const getActiveTextEffectId = (cap) => {
+    if (!cap) return 'flat';
+    if (cap.effect) return cap.effect;
+    if (cap.curve > 0) return 'arch';
+    if (cap.curve < 0) return 'smile';
+    return 'flat';
+  };
+
+  const handleApplyTextEffect = (effectId) => {
+    if (!activeCaption) return;
+    const current = getActiveTextEffectId(activeCaption);
+
+    // Clicking active effect toggles back to flat
+    if (current === effectId && effectId !== 'flat') {
+      updateActiveCaptionProps({ curve: 0, effect: 'flat' });
+      return;
+    }
+
+    if (effectId === 'flat') {
+      updateActiveCaptionProps({ curve: 0, effect: 'flat' });
+    } else if (effectId === 'arch') {
+      updateActiveCaptionProps({ curve: 40, effect: 'arch' });
+    } else if (effectId === 'smile') {
+      updateActiveCaptionProps({ curve: -40, effect: 'smile' });
+    } else {
+      updateActiveCaptionProps({ curve: 0, effect: effectId });
+    }
   };
 
   const handleSetCaptionBg = (bg) => {
@@ -2980,70 +3138,67 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                       ))}
                     </>
                   )}
-                  {/* Text Controls - 1. Curv Submenu */}
-                  {activeCaption && showTextCurveMenu && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-                      <button
-                        onClick={() => { setShowTextCurveMenu(false); setLastUsedSettingButton('curv'); }}
-                        className="btn btn-icon btn-xs vid-ctx-btn"
-                        title="Back to text toolbar"
-                        style={{ borderRadius: '8px', flexShrink: 0 }}
-                      >
-                        <ArrowLeft style={{ width: 14, height: 14 }} />
-                      </button>
-                      <div className="vid-ctx-divider" />
-                      
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '5px', flexShrink: 0 }}>
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: activeCaption.curve ? 'var(--cyber-cyan)' : '#ffffff' }}>
-                          <path d="M4 18C4 11.3726 9.37258 6 16 6H20" />
-                          <path d="M16 2L20 6L16 10" />
-                        </svg>
-                        <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>Curv:</span>
-                        <input
-                          type="range"
-                          min="-100"
-                          max="100"
-                          step="5"
-                          value={activeCaption.curve || 0}
-                          onChange={(e) => updateActiveCaption('curve', parseInt(e.target.value, 10))}
-                          style={{ width: '80px', accentColor: 'var(--cyber-cyan)', height: '4px' }}
-                          title="Curvature Angle (-100° to +100°)"
-                        />
-                        <span style={{ fontSize: '11px', fontWeight: 700, minWidth: '32px', color: activeCaption.curve ? 'var(--cyber-cyan)' : '#ffffff' }}>
-                          {activeCaption.curve ? `${activeCaption.curve > 0 ? '+' : ''}${activeCaption.curve}°` : '0°'}
-                        </span>
-                        <div style={{ display: 'flex', gap: '3px' }}>
-                          <button
-                            type="button"
-                            className={`btn btn-xs ${!activeCaption.curve ? 'btn-primary' : 'btn-ghost'}`}
-                            onClick={() => updateActiveCaption('curve', 0)}
-                            style={{ padding: '2px 7px', fontSize: '11px', height: '24px', borderRadius: '6px' }}
-                            title="Flat (0°)"
-                          >
-                            Flat
-                          </button>
-                          <button
-                            type="button"
-                            className={`btn btn-xs ${activeCaption.curve === 40 ? 'btn-primary' : 'btn-ghost'}`}
-                            onClick={() => updateActiveCaption('curve', 40)}
-                            style={{ padding: '2px 7px', fontSize: '11px', height: '24px', borderRadius: '6px' }}
-                            title="Arch (+40°)"
-                          >
-                            Arch
-                          </button>
-                          <button
-                            type="button"
-                            className={`btn btn-xs ${activeCaption.curve === -40 ? 'btn-primary' : 'btn-ghost'}`}
-                            onClick={() => updateActiveCaption('curve', -40)}
-                            style={{ padding: '2px 7px', fontSize: '11px', height: '24px', borderRadius: '6px' }}
-                            title="Smile (-40°)"
-                          >
-                            Smile
-                          </button>
+                  {/* Text Controls - 1. Effects Submenu */}
+                  {activeCaption && showTextEffectsMenu && (() => {
+                    const currentEffect = getActiveTextEffectId(activeCaption);
+                    return (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0, maxWidth: '100%' }}>
+                        <button
+                          onClick={() => { setShowTextEffectsMenu(false); setLastUsedSettingButton('effects'); }}
+                          className="btn btn-icon btn-xs vid-ctx-btn"
+                          title="Back to text toolbar"
+                          style={{ borderRadius: '8px', flexShrink: 0 }}
+                        >
+                          <ArrowLeft style={{ width: 14, height: 14 }} />
+                        </button>
+                        <div className="vid-ctx-divider" />
+
+                        <div style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '5px',
+                          flexShrink: 0,
+                          overflowX: 'auto',
+                          scrollbarWidth: 'none',
+                          msOverflowStyle: 'none',
+                          padding: '2px 0'
+                        }}>
+                          <Sparkles style={{ width: 13, height: 13, color: currentEffect !== 'flat' ? 'var(--cyber-cyan)' : '#ffffff', flexShrink: 0, marginLeft: '2px', marginRight: '2px' }} />
+                          <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, flexShrink: 0, marginRight: '2px' }}>Effects:</span>
+                          <div style={{ display: 'flex', gap: '4px', alignItems: 'center', flexShrink: 0 }}>
+                            {TEXT_EFFECTS.map((eff) => {
+                              const isActive = currentEffect === eff.id;
+                              return (
+                                <button
+                                  key={eff.id}
+                                  type="button"
+                                  onClick={() => handleApplyTextEffect(eff.id)}
+                                  className={`btn btn-xs ${isActive ? 'btn-primary' : 'btn-ghost'}`}
+                                  style={{
+                                    padding: '2px 8px',
+                                    height: '25px',
+                                    borderRadius: '6px',
+                                    fontSize: '11px',
+                                    flexShrink: 0,
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    border: isActive ? '1px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.14)',
+                                    background: isActive ? 'var(--primary-gradient)' : 'rgba(255, 255, 255, 0.08)',
+                                    boxShadow: isActive ? '0 0 10px rgba(6, 182, 212, 0.5)' : 'none',
+                                    cursor: 'pointer'
+                                  }}
+                                  title={eff.title}
+                                >
+                                  {eff.renderLabel()}
+                                </button>
+                              );
+                            })}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  )}
+                    );
+                  })()}
 
                   {/* Text Controls - 2. Blur (Opacity Bar) Submenu */}
                   {activeCaption && showTextBlurMenu && (
@@ -3771,14 +3926,14 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           <span>Blur</span>
                         </button>
 
-                        {/* 7. Curv Button (Interchanged with Bg) */}
+                        {/* 7. Effects Button (Replaced Curv) */}
                         <button
                           type="button"
-                          data-setting-btn="curv"
-                          className={`btn btn-xs vid-ctx-btn ${lastUsedSettingButton === 'curv' ? 'active' : ''}`}
-                          title="Curve / Arc text angle"
+                          data-setting-btn="effects"
+                          className={`btn btn-xs vid-ctx-btn ${lastUsedSettingButton === 'effects' ? 'active' : ''}`}
+                          title="Text Effects (Arch, Smile, Shadow, Glow, Glitch, 3D, Hollow)"
                           onClick={() => {
-                            setShowTextCurveMenu(true);
+                            setShowTextEffectsMenu(true);
                             setShowTextAlignMenu(false);
                             setShowTextBlurMenu(false);
                             setShowTextBgMenu(false);
@@ -3793,19 +3948,16 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                             alignItems: 'center',
                             gap: '5px',
                             borderRadius: '8px',
-                            background: lastUsedSettingButton === 'curv' ? 'var(--primary-gradient)' : 'rgba(255, 255, 255, 0.08)',
-                            border: lastUsedSettingButton === 'curv' ? '1px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.1)',
-                            boxShadow: lastUsedSettingButton === 'curv' ? '0 2px 10px rgba(6, 182, 212, 0.4), 0 0 8px rgba(99, 102, 241, 0.4)' : 'none',
+                            background: (lastUsedSettingButton === 'effects' || (activeCaption.effect && activeCaption.effect !== 'flat') || activeCaption.curve) ? 'var(--primary-gradient)' : 'rgba(255, 255, 255, 0.08)',
+                            border: (lastUsedSettingButton === 'effects' || (activeCaption.effect && activeCaption.effect !== 'flat') || activeCaption.curve) ? '1px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.1)',
+                            boxShadow: (lastUsedSettingButton === 'effects' || (activeCaption.effect && activeCaption.effect !== 'flat') || activeCaption.curve) ? '0 2px 10px rgba(6, 182, 212, 0.4), 0 0 8px rgba(99, 102, 241, 0.4)' : 'none',
                             transition: 'all 0.2s ease',
                             color: '#ffffff',
                             flexShrink: 0
                           }}
                         >
-                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#ffffff' }}>
-                            <path d="M4 18C4 11.3726 9.37258 6 16 6H20" />
-                            <path d="M16 2L20 6L16 10" />
-                          </svg>
-                          <span>Curv</span>
+                          <Sparkles style={{ width: 13, height: 13, color: '#ffffff' }} />
+                          <span>Effects</span>
                         </button>
 
                         {/* 7. Bubble Button */}
@@ -6102,90 +6254,73 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                     </div>
                   </div>
 
-                  {/* ROW 3: TEXT CURVE / ARC CONTROL */}
-                  {(!activeCaption.isBreakingNews && !activeCaption.isTweetCard) && (
-                    <div
-                      style={{
-                        background: 'var(--bg-surface-1)',
-                        padding: '10px 12px',
-                        borderRadius: '12px',
-                        border: '1px solid var(--glass-border)',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '8px'
-                      }}
-                    >
-                      <div className="flex-between align-center">
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--cyber-cyan)" }}>
-                            <path d="M4 18C4 11.3726 9.37258 6 16 6H20" />
-                            <path d="M16 2L20 6L16 10" />
-                          </svg>
-                          <span style={{ fontSize: '0.74rem', fontWeight: 600, color: 'var(--text-muted)' }}>Curved / Arc Text</span>
-                          <span style={{ fontSize: '0.72rem', fontWeight: 700, color: (activeCaption.curve && activeCaption.curve !== 0) ? 'var(--cyber-cyan)' : 'var(--text-muted)' }}>
-                            {activeCaption.curve ? `${activeCaption.curve > 0 ? '+' : ''}${activeCaption.curve}°` : 'Flat'}
-                          </span>
-                        </div>
-                        {(activeCaption.curve !== undefined && activeCaption.curve !== 0) && (
-                          <button
-                            type="button"
-                            className="btn btn-xs btn-ghost"
-                            onClick={() => updateActiveCaption('curve', 0)}
-                            style={{ fontSize: '0.68rem', padding: '1px 6px', height: '18px', color: 'var(--text-muted)' }}
-                          >
-                            Reset Flat
-                          </button>
-                        )}
-                      </div>
-
-                      {/* Preset Pills */}
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '4px' }}>
-                        {[
-                          { label: 'Flat', val: 0 },
-                          { label: 'Arch', val: 40 },
-                          { label: 'Deep Arch', val: 75 },
-                          { label: 'Smile', val: -40 },
-                          { label: 'Deep Smile', val: -75 },
-                        ].map((preset) => {
-                          const isActive = (activeCaption.curve || 0) === preset.val;
-                          return (
+                  {/* ROW 3: TEXT EFFECTS CONTROL */}
+                  {(!activeCaption.isBreakingNews && !activeCaption.isTweetCard) && (() => {
+                    const currentEffect = getActiveTextEffectId(activeCaption);
+                    return (
+                      <div
+                        style={{
+                          background: 'var(--bg-surface-1)',
+                          padding: '10px 12px',
+                          borderRadius: '12px',
+                          border: '1px solid var(--glass-border)',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '8px'
+                        }}
+                      >
+                        <div className="flex-between align-center">
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <Sparkles style={{ width: 14, height: 14, color: "var(--cyber-cyan)" }} />
+                            <span style={{ fontSize: '0.74rem', fontWeight: 600, color: 'var(--text-muted)' }}>Text Effects</span>
+                            <span style={{ fontSize: '0.72rem', fontWeight: 700, color: (currentEffect !== 'flat') ? 'var(--cyber-cyan)' : 'var(--text-muted)', textTransform: 'capitalize' }}>
+                              {currentEffect}
+                            </span>
+                          </div>
+                          {currentEffect !== 'flat' && (
                             <button
-                              key={preset.label}
                               type="button"
-                              className={`btn btn-xs ${isActive ? 'btn-primary' : 'btn-ghost'}`}
-                              style={{
-                                fontSize: '0.66rem',
-                                padding: '4px 2px',
-                                borderRadius: '6px',
-                                border: isActive ? 'none' : '1px solid var(--glass-border)',
-                                whiteSpace: 'nowrap',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis'
-                              }}
-                              onClick={() => updateActiveCaption('curve', preset.val)}
+                              className="btn btn-xs btn-ghost"
+                              onClick={() => handleApplyTextEffect('flat')}
+                              style={{ fontSize: '0.68rem', padding: '1px 6px', height: '18px', color: 'var(--text-muted)' }}
                             >
-                              {preset.label}
+                              Reset Flat
                             </button>
-                          );
-                        })}
-                      </div>
+                          )}
+                        </div>
 
-                      {/* Slider */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', width: '38px', textAlign: 'right' }}>Smile</span>
-                        <input
-                          type="range"
-                          min={-100}
-                          max={100}
-                          step={2}
-                          value={activeCaption.curve || 0}
-                          onChange={(e) => updateActiveCaption('curve', Number(e.target.value))}
-                          style={{ flex: 1, height: '4px', accentColor: 'var(--cyber-cyan)', margin: 0 }}
-                        />
-                        <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', width: '38px' }}>Arch</span>
+                        {/* Preset Effect Buttons with stylized labels */}
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '5px' }}>
+                          {TEXT_EFFECTS.map((eff) => {
+                            const isActive = currentEffect === eff.id;
+                            return (
+                              <button
+                                key={eff.id}
+                                type="button"
+                                className={`btn btn-xs ${isActive ? 'btn-primary' : 'btn-ghost'}`}
+                                style={{
+                                  fontSize: '0.72rem',
+                                  padding: '5px 2px',
+                                  borderRadius: '6px',
+                                  border: isActive ? '1px solid var(--cyber-cyan)' : '1px solid var(--glass-border)',
+                                  background: isActive ? 'var(--primary-gradient)' : 'rgba(255, 255, 255, 0.05)',
+                                  boxShadow: isActive ? '0 0 10px rgba(6, 182, 212, 0.4)' : 'none',
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  height: '28px'
+                                }}
+                                onClick={() => handleApplyTextEffect(eff.id)}
+                                title={eff.title}
+                              >
+                                {eff.renderLabel()}
+                              </button>
+                            );
+                          })}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    );
+                  })()}
 
                   {/* Bubble Style Switcher (if this is a speech or chat bubble) */}
                   {activeCaption.bubbleStyle && (
