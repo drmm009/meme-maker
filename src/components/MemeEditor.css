@@ -300,8 +300,9 @@
   left: 50%;
   transform: translateX(-50%);
   z-index: 100;
-  display: flex;
-  align-items: center;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: safe center !important;
   gap: 8px;
   background: transparent !important;
   backdrop-filter: none !important;
@@ -309,13 +310,23 @@
   border: none !important;
   box-shadow: none !important;
   border-radius: 999px;
-  scrollbar-width: none;
-  padding: 6px 10px;
+  scrollbar-width: none !important;
+  padding: 6px 12px;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12), 0 16px 48px rgba(0, 0, 0, 0.5);
   white-space: nowrap;
   max-width: calc(100% - 24px);
-  overflow: visible;
-  justify-content: flex-start !important;
+  width: 100%;
+  box-sizing: border-box;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+.editor-floating-toolbar::-webkit-scrollbar,
+.video-context-toolbar::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 
 /* ─── Unified Toolbar Button System ──────────────────────────

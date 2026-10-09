@@ -11,7 +11,7 @@ import {
   Image as ImageIcon, Search, X, Upload, RotateCw, ZoomIn, Crop, LayoutGrid, Scissors, Play, Pause, FolderHeart, Droplet, Monitor,
   Paintbrush, Eraser, Highlighter, Palette, Sun, Moon, ChevronDown, ChevronLeft, PencilLine, Move, ArrowDownRight, Wand2,
   Layers, ArrowUp, ArrowDown, ChevronsUp, ChevronsDown, Eye, EyeOff, Lock, Unlock, FlipHorizontal,
-  PanelTop, PanelBottom, MessageSquare, Flame, Tv, MessageCircle, Shield
+  PanelTop, PanelBottom, MessageSquare, Flame, Tv, MessageCircle, Shield, Circle, TrendingDown
 } from 'lucide-react';
 import AiCaptionModal from './AiCaptionModal';
 import MemeStylesModal, { TwitterVerifiedBadge } from './MemeStylesModal';
@@ -2829,7 +2829,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                   )}
                   {/* Text controls - Unified 3-Cluster Toolbar */}
                   {activeCaption && showTextEffectsMenu && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', width: '100%', overflowX: 'auto', scrollbarWidth: 'none', padding: '0 2px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'safe center', gap: '6px', width: '100%', overflowX: 'auto', scrollbarWidth: 'none', padding: '0 2px' }}>
                       <button onClick={() => setShowTextEffectsMenu(false)} className="btn btn-icon btn-xs vid-ctx-btn" title="Back to main toolbar">
                         <ArrowLeft style={{ width: 14, height: 14 }} />
                       </button>
@@ -2939,7 +2939,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
 
                   {/* Bubble Layout Selector Bar with Back button */}
                   {activeCaption && activeCaption.bubbleStyle && showBubbleLayouts && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', width: '100%', overflowX: 'auto', scrollbarWidth: 'none', padding: '0 2px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'safe center', gap: '6px', width: '100%', overflowX: 'auto', scrollbarWidth: 'none', padding: '0 2px' }}>
                       {/* Back Button */}
                       <button
                         onClick={() => setShowBubbleLayouts(false)}
@@ -2981,7 +2981,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
 
                   {/* Tweet Card Theme Selector Bar with Back button */}
                   {activeCaption && activeCaption.isTweetCard && showTweetThemeMenu && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', width: '100%', overflowX: 'auto', scrollbarWidth: 'none', padding: '0 2px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'safe center', gap: '6px', width: '100%', overflowX: 'auto', scrollbarWidth: 'none', padding: '0 2px' }}>
                       {/* Back Button */}
                       <button
                         onClick={() => setShowTweetThemeMenu(false)}
@@ -2989,16 +2989,16 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         title="Back to tweet toolbar"
                         style={{ borderRadius: '8px', flexShrink: 0 }}
                       >
-                        <ArrowLeft style={{ width: 14, height: 14 }} />
+                        <ArrowLeft style={{ width: 14, height: 14, color: '#ffffff' }} />
                       </button>
 
                       <div className="vid-ctx-divider" style={{ width: 1, height: 20, background: 'rgba(255,255,255,0.2)', margin: '0 2px', flexShrink: 0 }} />
 
-                      {/* 3 buttons: Dim, Dark, White */}
+                      {/* 3 buttons: Dim, Dark, White with white icons */}
                       {[
-                        { id: 'dim', label: 'Dim', icon: '🌌' },
-                        { id: 'dark', label: 'Dark', icon: '🌑' },
-                        { id: 'white', label: 'White', icon: '☀️' }
+                        { id: 'dim', label: 'Dim', icon: <Moon style={{ width: 13, height: 13, color: '#ffffff' }} /> },
+                        { id: 'dark', label: 'Dark', icon: <Circle style={{ width: 12, height: 12, color: '#ffffff', fill: '#ffffff' }} /> },
+                        { id: 'white', label: 'White', icon: <Sun style={{ width: 13, height: 13, color: '#ffffff' }} /> }
                       ].map((th) => {
                         const currentTheme = activeCaption.tweetTheme || 'dark';
                         const isActive = currentTheme === th.id || (th.id === 'white' && currentTheme === 'light');
@@ -3026,7 +3026,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                               border: isActive ? '1px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.1)'
                             }}
                           >
-                            <span>{th.icon}</span>
+                            {th.icon}
                             <span>{th.label}</span>
                           </button>
                         );
@@ -3036,7 +3036,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
 
                   {/* Tweet Card Trend Selector Bar with Back button */}
                   {activeCaption && activeCaption.isTweetCard && showTweetTrendMenu && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', width: '100%', overflowX: 'auto', scrollbarWidth: 'none', padding: '0 2px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'safe center', gap: '6px', width: '100%', overflowX: 'auto', scrollbarWidth: 'none', padding: '0 2px' }}>
                       {/* Back Button */}
                       <button
                         onClick={() => setShowTweetTrendMenu(false)}
@@ -3044,16 +3044,16 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         title="Back to tweet toolbar"
                         style={{ borderRadius: '8px', flexShrink: 0 }}
                       >
-                        <ArrowLeft style={{ width: 14, height: 14 }} />
+                        <ArrowLeft style={{ width: 14, height: 14, color: '#ffffff' }} />
                       </button>
 
                       <div className="vid-ctx-divider" style={{ width: 1, height: 20, background: 'rgba(255,255,255,0.2)', margin: '0 2px', flexShrink: 0 }} />
 
-                      {/* 3 buttons: Viral, Casual, Ratioed */}
+                      {/* 3 buttons: Viral, Casual, Ratioed with white icons */}
                       {[
-                        { id: 'viral', label: 'Viral', icon: '🔥', text: '💬 14.2K    🔁 62.8K    ❤️ 420.5K    📊 18.2M' },
-                        { id: 'casual', label: 'Casual', icon: '💬', text: '💬 142    🔁 890    ❤️ 4.6K    📊 72K' },
-                        { id: 'ratio', label: 'Ratioed', icon: '📉', text: '💬 84.1K    🔁 412    ❤️ 1.2K    📊 6.4M' }
+                        { id: 'viral', label: 'Viral', icon: <Flame style={{ width: 13, height: 13, color: '#ffffff' }} />, text: '💬 14.2K    🔁 62.8K    ❤️ 420.5K    📊 18.2M' },
+                        { id: 'casual', label: 'Casual', icon: <MessageSquare style={{ width: 13, height: 13, color: '#ffffff' }} />, text: '💬 142    🔁 890    ❤️ 4.6K    📊 72K' },
+                        { id: 'ratio', label: 'Ratioed', icon: <TrendingDown style={{ width: 13, height: 13, color: '#ffffff' }} />, text: '💬 84.1K    🔁 412    ❤️ 1.2K    📊 6.4M' }
                       ].map((tr) => {
                         const currentMetricsText = activeCaption.tweetMetrics || '';
                         const isSelected = activeCaption.tweetMetricsId === tr.id || (!activeCaption.tweetMetricsId && (
@@ -3082,7 +3082,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                               border: isSelected ? '1px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.1)'
                             }}
                           >
-                            <span>{tr.icon}</span>
+                            {tr.icon}
                             <span>{tr.label}</span>
                           </button>
                         );
@@ -3095,8 +3095,8 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                       const isVerified = activeCaption.tweetVerified !== false;
 
                       return (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          {/* Verified button */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+                          {/* Verified button with white icon */}
                           <button
                             type="button"
                             className={`btn btn-xs vid-ctx-btn ${isVerified ? 'active' : ''}`}
@@ -3111,16 +3111,16 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                               gap: '5px',
                               borderRadius: '8px',
                               flexShrink: 0,
-                              background: isVerified ? 'rgba(29, 155, 240, 0.22)' : 'rgba(255, 255, 255, 0.08)',
+                              background: isVerified ? 'rgba(29, 155, 240, 0.28)' : 'rgba(255, 255, 255, 0.08)',
                               border: isVerified ? '1px solid #1d9bf0' : '1px solid rgba(255, 255, 255, 0.1)',
-                              color: isVerified ? '#38bdf8' : 'rgba(255, 255, 255, 0.8)'
+                              color: isVerified ? '#ffffff' : 'rgba(255, 255, 255, 0.85)'
                             }}
                           >
-                            <TwitterVerifiedBadge size={14} />
+                            <TwitterVerifiedBadge size={14} color="#ffffff" checkColor={isVerified ? "#1d9bf0" : "#0f172a"} />
                             <span>Verified</span>
                           </button>
 
-                          {/* Theme button */}
+                          {/* Theme button with white icon */}
                           <button
                             type="button"
                             className="btn btn-xs vid-ctx-btn"
@@ -3143,11 +3143,11 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                               color: '#ffffff'
                             }}
                           >
-                            <Palette style={{ width: 13, height: 13, color: 'var(--cyber-cyan)' }} />
+                            <Palette style={{ width: 13, height: 13, color: '#ffffff' }} />
                             <span>Theme</span>
                           </button>
 
-                          {/* Trend button */}
+                          {/* Trend button with white icon */}
                           <button
                             type="button"
                             className="btn btn-xs vid-ctx-btn"
@@ -3170,7 +3170,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                               color: '#ffffff'
                             }}
                           >
-                            <Flame style={{ width: 13, height: 13, color: '#f97316' }} />
+                            <Flame style={{ width: 13, height: 13, color: '#ffffff' }} />
                             <span>Trend</span>
                           </button>
                         </div>
@@ -3463,7 +3463,8 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
 
                   {/* UNIFIED ACTIONS CLUSTER (Duplicate / Layers / Delete for All Elements) */}
                   {((activeCaption && !showFontMenu && !showTextEffectsMenu && !showBubbleLayouts && !showTweetThemeMenu && !showTweetTrendMenu) || activeSticker || (activeImageLayer && !showImageFilterMenu)) && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '3px', marginLeft: 'auto', flexShrink: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '3px', flexShrink: 0 }}>
+                      <div className="vid-ctx-divider" style={{ width: 1, height: 18, background: 'rgba(255,255,255,0.15)', margin: '0 2px', flexShrink: 0 }} />
                       <button
                         className="btn btn-icon btn-xs vid-ctx-btn"
                         title="Duplicate"
@@ -3835,7 +3836,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                       </div>
                     ) : (
                       /* INSTRUMENT COLOR & SETTINGS SUB-BAR WITH BACK BUTTON */
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', width: '100%', overflowX: 'auto', scrollbarWidth: 'none', padding: '0 2px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'safe center', gap: '6px', width: '100%', overflowX: 'auto', scrollbarWidth: 'none', padding: '0 2px' }}>
                         {/* 1. BACK BUTTON */}
                         <button
                           onClick={() => setShowDrawSettings(false)}
@@ -4119,7 +4120,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                   )}
 
                   {((!activeCaption && !activeSticker && activeTab === 'filters') || (activeImageLayer && showImageFilterMenu)) && (
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: '6px', width: '100%', overflowX: 'auto', paddingBottom: '4px', scrollbarWidth: 'none' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'safe center', gap: '6px', width: '100%', overflowX: 'auto', paddingBottom: '4px', scrollbarWidth: 'none' }}>
 
                       {activeImageLayer && showImageFilterMenu && (
                         <>
