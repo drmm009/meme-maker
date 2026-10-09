@@ -3395,7 +3395,28 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         <span>{activeImageLayer?.originalUrl ? 'Undo BG' : 'BG Eraser'}</span>
                       </button>
 
-                      {/* 2. Crop */}
+                      {/* 2. Filters */}
+                      <button
+                        className="btn btn-xs vid-ctx-btn"
+                        title="Filters"
+                        onClick={() => setShowImageFilterMenu(true)}
+                        style={{
+                          padding: '4px 10px',
+                          fontSize: '0.75rem',
+                          fontWeight: 600,
+                          flexShrink: 0,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          borderRadius: '8px',
+                          background: 'rgba(255,255,255,0.08)'
+                        }}
+                      >
+                        <Sparkles style={{ width: 13, height: 13 }} />
+                        <span>Filters</span>
+                      </button>
+
+                      {/* 3. Crop */}
                       <button
                         className={activeImageLayer.fitMode === 'crop' ? 'btn btn-xs vid-ctx-btn active' : 'btn btn-icon btn-xs vid-ctx-btn'}
                         title={activeImageLayer.fitMode === 'crop' ? 'Exit Crop' : 'Crop'}
@@ -3416,7 +3437,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         {activeImageLayer.fitMode === 'crop' && <span>Crop</span>}
                       </button>
 
-                      {/* 3. Flip */}
+                      {/* 4. Flip */}
                       <button
                         className={activeImageLayer.flipX ? 'btn btn-xs vid-ctx-btn active' : 'btn btn-icon btn-xs vid-ctx-btn'}
                         title="Flip Horizontal (Mirror)"
@@ -3435,27 +3456,6 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                       >
                         <FlipHorizontal style={{ width: 14, height: 14 }} />
                         {activeImageLayer.flipX && <span>Flip</span>}
-                      </button>
-
-                      {/* 4. Filters */}
-                      <button
-                        className="btn btn-xs vid-ctx-btn"
-                        title="Filters"
-                        onClick={() => setShowImageFilterMenu(true)}
-                        style={{
-                          padding: '4px 10px',
-                          fontSize: '0.75rem',
-                          fontWeight: 600,
-                          flexShrink: 0,
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '4px',
-                          borderRadius: '8px',
-                          background: 'rgba(255,255,255,0.08)'
-                        }}
-                      >
-                        <Sparkles style={{ width: 13, height: 13 }} />
-                        <span>Filters</span>
                       </button>
                     </>
                   )}
