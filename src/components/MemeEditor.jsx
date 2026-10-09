@@ -3361,11 +3361,6 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                       );
                     }
 
-                    const hasCurve = Boolean(activeCaption.curve && activeCaption.curve !== 0);
-                    const hasBlur = Boolean(activeCaption.blur && activeCaption.blur > 0);
-                    const hasOpacity = Boolean(activeCaption.opacity !== undefined && Number(activeCaption.opacity) < 1);
-                    const hasBg = Boolean(activeCaption.bgColor && activeCaption.bgColor !== 'none' && activeCaption.bgColor !== 'transparent');
-
                     return (
                       <>
                         {/* 1. Case toggle Aa */}
@@ -3463,73 +3458,10 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           />
                         </div>
 
-                        {/* 4. Curv Button */}
+                        {/* 4. Bg Button (Interchanged with Curv) */}
                         <button
                           type="button"
-                          className={`btn btn-xs vid-ctx-btn ${hasCurve ? 'active' : ''}`}
-                          title="Curve / Arc text angle"
-                          onClick={() => {
-                            setShowTextCurveMenu(true);
-                            setShowTextBlurMenu(false);
-                            setShowTextBgMenu(false);
-                            setShowFontMenu(false);
-                            setShowBubbleLayouts(false);
-                          }}
-                          style={{
-                            padding: '4px 10px',
-                            fontSize: '0.75rem',
-                            fontWeight: 600,
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '5px',
-                            borderRadius: '8px',
-                            background: hasCurve ? 'rgba(6,182,212,0.25)' : 'rgba(255, 255, 255, 0.08)',
-                            border: hasCurve ? '1px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.1)',
-                            color: hasCurve ? 'var(--cyber-cyan)' : '#ffffff',
-                            flexShrink: 0
-                          }}
-                        >
-                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: hasCurve ? 'var(--cyber-cyan)' : '#ffffff' }}>
-                            <path d="M4 18C4 11.3726 9.37258 6 16 6H20" />
-                            <path d="M16 2L20 6L16 10" />
-                          </svg>
-                          <span>Curv{activeCaption.curve ? ` (${activeCaption.curve > 0 ? '+' : ''}${activeCaption.curve}°)` : ''}</span>
-                        </button>
-
-                        {/* 5. Blur Button */}
-                        <button
-                          type="button"
-                          className={`btn btn-xs vid-ctx-btn ${(hasBlur || hasOpacity) ? 'active' : ''}`}
-                          title="Text Blur & Opacity settings"
-                          onClick={() => {
-                            setShowTextBlurMenu(true);
-                            setShowTextCurveMenu(false);
-                            setShowTextBgMenu(false);
-                            setShowFontMenu(false);
-                            setShowBubbleLayouts(false);
-                          }}
-                          style={{
-                            padding: '4px 10px',
-                            fontSize: '0.75rem',
-                            fontWeight: 600,
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '5px',
-                            borderRadius: '8px',
-                            background: hasOpacity ? 'rgba(6,182,212,0.25)' : 'rgba(255, 255, 255, 0.08)',
-                            border: hasOpacity ? '1px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.1)',
-                            color: hasOpacity ? 'var(--cyber-cyan)' : '#ffffff',
-                            flexShrink: 0
-                          }}
-                        >
-                          <Droplet style={{ width: 13, height: 13, color: hasOpacity ? 'var(--cyber-cyan)' : '#ffffff' }} />
-                          <span>Blur{hasOpacity ? ` (${Math.round(Number(activeCaption.opacity) * 100)}%)` : ''}</span>
-                        </button>
-
-                        {/* 6. Bg Button */}
-                        <button
-                          type="button"
-                          className={`btn btn-xs vid-ctx-btn ${hasBg ? 'active' : ''}`}
+                          className="btn btn-xs vid-ctx-btn"
                           title="Text Background Box / Banner settings"
                           onClick={() => {
                             setShowTextBgMenu(true);
@@ -3546,19 +3478,82 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                             alignItems: 'center',
                             gap: '5px',
                             borderRadius: '8px',
-                            background: hasBg ? 'rgba(6,182,212,0.25)' : 'rgba(255, 255, 255, 0.08)',
-                            border: hasBg ? '1px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.1)',
-                            color: hasBg ? 'var(--cyber-cyan)' : '#ffffff',
+                            background: 'rgba(255, 255, 255, 0.08)',
+                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                            color: '#ffffff',
                             flexShrink: 0
                           }}
                         >
-                          <PanelTop style={{ width: 13, height: 13, color: hasBg ? 'var(--cyber-cyan)' : '#ffffff' }} />
+                          <PanelTop style={{ width: 13, height: 13, color: '#ffffff' }} />
                           <span>Bg</span>
+                        </button>
+
+                        {/* 5. Blur Button */}
+                        <button
+                          type="button"
+                          className="btn btn-xs vid-ctx-btn"
+                          title="Text Blur & Opacity settings"
+                          onClick={() => {
+                            setShowTextBlurMenu(true);
+                            setShowTextCurveMenu(false);
+                            setShowTextBgMenu(false);
+                            setShowFontMenu(false);
+                            setShowBubbleLayouts(false);
+                          }}
+                          style={{
+                            padding: '4px 10px',
+                            fontSize: '0.75rem',
+                            fontWeight: 600,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '5px',
+                            borderRadius: '8px',
+                            background: 'rgba(255, 255, 255, 0.08)',
+                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                            color: '#ffffff',
+                            flexShrink: 0
+                          }}
+                        >
+                          <Droplet style={{ width: 13, height: 13, color: '#ffffff' }} />
+                          <span>Blur</span>
+                        </button>
+
+                        {/* 6. Curv Button (Interchanged with Bg) */}
+                        <button
+                          type="button"
+                          className="btn btn-xs vid-ctx-btn"
+                          title="Curve / Arc text angle"
+                          onClick={() => {
+                            setShowTextCurveMenu(true);
+                            setShowTextBlurMenu(false);
+                            setShowTextBgMenu(false);
+                            setShowFontMenu(false);
+                            setShowBubbleLayouts(false);
+                          }}
+                          style={{
+                            padding: '4px 10px',
+                            fontSize: '0.75rem',
+                            fontWeight: 600,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '5px',
+                            borderRadius: '8px',
+                            background: 'rgba(255, 255, 255, 0.08)',
+                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                            color: '#ffffff',
+                            flexShrink: 0
+                          }}
+                        >
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#ffffff' }}>
+                            <path d="M4 18C4 11.3726 9.37258 6 16 6H20" />
+                            <path d="M16 2L20 6L16 10" />
+                          </svg>
+                          <span>Curv</span>
                         </button>
 
                         {/* 7. Bubble Button */}
                         <button
-                          className={`btn btn-xs vid-ctx-btn ${activeCaption.bubbleStyle ? 'active' : ''}`}
+                          className="btn btn-xs vid-ctx-btn"
                           title={activeCaption.bubbleStyle ? "Change Bubble Layout (iPhone, WhatsApp, Comic)" : "Convert to Chat / Speech Bubble (iPhone, WhatsApp, Comic)"}
                           onClick={handleConvertToBubble}
                           style={{
@@ -3570,12 +3565,12 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                             gap: '5px',
                             borderRadius: '8px',
                             flexShrink: 0,
-                            background: activeCaption.bubbleStyle ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.08)',
-                            border: '1px solid rgba(255,255,255,0.1)',
+                            background: 'rgba(255, 255, 255, 0.08)',
+                            border: '1px solid rgba(255, 255, 255, 0.1)',
                             color: '#ffffff'
                           }}
                         >
-                          <MessageSquare style={{ width: 13, height: 13, color: "var(--cyber-cyan)" }} />
+                          <MessageSquare style={{ width: 13, height: 13, color: '#ffffff' }} />
                           <span>Bubble</span>
                         </button>
                       </>
