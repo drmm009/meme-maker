@@ -3372,89 +3372,77 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                   {/* Image controls */}
                   {activeImageLayer && !showImageFilterMenu && (
                     <>
-                      {/* CLUSTER 1: AI & EDIT (Magic BG Eraser & Crop) */}
-                      <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.08)', borderRadius: '10px', padding: '2px', gap: '3px', flexShrink: 0 }}>
-                        <button
-                          className="btn btn-xs vid-ctx-btn"
-                          title="Magic Eraser (Remove Background)"
-                          onClick={handleRemoveBackground}
-                          disabled={isRemovingBg}
-                          style={{ border: 'none', padding: '2px 8px', fontSize: '11px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px', background: isRemovingBg ? 'rgba(255,255,255,0.1)' : 'var(--primary-gradient)', color: '#fff', borderRadius: '8px' }}
-                        >
-                          <Wand2 style={{ width: 13, height: 13 }} className={isRemovingBg ? "spin" : ""} /> {activeImageLayer?.originalUrl ? 'Undo BG' : 'BG Eraser'}
-                        </button>
-                        <button
-                          className={`btn btn-xs vid-ctx-btn ${activeImageLayer.fitMode === 'crop' ? 'active' : ''}`}
-                          title="Crop"
-                          onClick={() => updateActiveImageLayer('fitMode', activeImageLayer.fitMode === 'crop' ? 'fit' : 'crop')}
-                          style={{ border: 'none', padding: '2px 7px', fontSize: '11px', background: activeImageLayer.fitMode === 'crop' ? 'rgba(255,255,255,0.2)' : 'transparent', borderRadius: '8px' }}
-                        >
-                          <Crop style={{ width: 13, height: 13 }} /> Crop
-                        </button>
-                      </div>
+                      {/* 1. BG Eraser */}
+                      <button
+                        className="btn btn-xs vid-ctx-btn"
+                        title="Magic Eraser (Remove Background)"
+                        onClick={handleRemoveBackground}
+                        disabled={isRemovingBg}
+                        style={{
+                          padding: '4px 10px',
+                          fontSize: '0.75rem',
+                          fontWeight: 600,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          background: isRemovingBg ? 'rgba(255,255,255,0.1)' : 'var(--primary-gradient)',
+                          color: '#fff',
+                          borderRadius: '8px',
+                          flexShrink: 0
+                        }}
+                      >
+                        <Wand2 style={{ width: 13, height: 13 }} className={isRemovingBg ? "spin" : ""} />
+                        <span>{activeImageLayer?.originalUrl ? 'Undo BG' : 'BG Eraser'}</span>
+                      </button>
 
-                      {/* CLUSTER 2: STYLE (Filters & Die-Cut) */}
+                      {/* 2. Crop */}
+                      <button
+                        className={`btn btn-xs vid-ctx-btn ${activeImageLayer.fitMode === 'crop' ? 'active' : ''}`}
+                        title="Crop"
+                        onClick={() => updateActiveImageLayer('fitMode', activeImageLayer.fitMode === 'crop' ? 'fit' : 'crop')}
+                        style={{
+                          padding: '4px 10px',
+                          fontSize: '0.75rem',
+                          fontWeight: 600,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          background: activeImageLayer.fitMode === 'crop' ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.08)',
+                          borderRadius: '8px',
+                          flexShrink: 0
+                        }}
+                      >
+                        <Crop style={{ width: 13, height: 13 }} />
+                        <span>Crop</span>
+                      </button>
+
+                      {/* 3. Filters */}
                       <button
                         className="btn btn-xs vid-ctx-btn"
                         title="Filters"
                         onClick={() => setShowImageFilterMenu(true)}
-                        style={{ padding: '4px 8px', fontSize: '11px', fontWeight: 600, flexShrink: 0, display: 'flex', alignItems: 'center', gap: '4px', borderRadius: '10px' }}
+                        style={{
+                          padding: '4px 10px',
+                          fontSize: '0.75rem',
+                          fontWeight: 600,
+                          flexShrink: 0,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          borderRadius: '8px',
+                          background: 'rgba(255,255,255,0.08)'
+                        }}
                       >
-                        <Sparkles style={{ width: 13, height: 13 }} /> Filters
+                        <Sparkles style={{ width: 13, height: 13 }} />
+                        <span>Filters</span>
                       </button>
 
-                      <div style={{ display: 'flex', alignItems: 'center', background: activeImageLayer.dieCut ? 'rgba(6,182,212,0.15)' : 'rgba(255,255,255,0.08)', border: `1px solid ${activeImageLayer.dieCut ? 'var(--cyber-cyan)' : 'var(--glass-border)'}`, borderRadius: '10px', padding: '2px 5px', gap: '5px', flexShrink: 0 }}>
-                        <button
-                          className="btn btn-xs vid-ctx-btn"
-                          title="Die-Cut Sticker Border (White Vinyl Outline)"
-                          onClick={() => handleToggleDieCutSticker()}
-                          style={{
-                            border: 'none',
-                            background: 'transparent',
-                            padding: '2px 5px',
-                            fontSize: '11px',
-                            fontWeight: 600,
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '4px',
-                            color: activeImageLayer.dieCut ? 'var(--cyber-cyan)' : '#ffffff'
-                          }}
-                        >
-                          <Shield style={{ width: 13, height: 13 }} />
-                          <span>Die-Cut</span>
-                        </button>
-
-                        {activeImageLayer.dieCut && (
-                          <div
-                            style={{
-                              position: 'relative',
-                              overflow: 'hidden',
-                              width: 18,
-                              height: 18,
-                              borderRadius: '50%',
-                              border: '2px solid rgba(255,255,255,0.6)',
-                              background: activeImageLayer.dieCutColor || '#ffffff',
-                              cursor: 'pointer',
-                              flexShrink: 0
-                            }}
-                            title="Die-Cut Border Color"
-                          >
-                            <input
-                              type="color"
-                              value={activeImageLayer.dieCutColor || '#ffffff'}
-                              onChange={(e) => handleSetDieCutColor(e.target.value)}
-                              style={{ position: 'absolute', opacity: 0, inset: 0, cursor: 'pointer', width: '100%', height: '100%' }}
-                            />
-                          </div>
-                        )}
-                      </div>
-
-                      {/* CLUSTER 3: TRANSFORMS (Flip) */}
+                      {/* 4. Flip */}
                       <button
                         className={`btn btn-icon btn-xs vid-ctx-btn ${activeImageLayer.flipX ? 'active' : ''}`}
                         title="Flip Horizontal (Mirror)"
                         onClick={handleFlipActiveLayer}
-                        style={{ borderRadius: '10px' }}
+                        style={{ borderRadius: '8px', flexShrink: 0 }}
                       >
                         <FlipHorizontal style={{ width: 14, height: 14 }} />
                       </button>
@@ -3659,30 +3647,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         <span>Template</span>
                       </button>
 
-                      {/* 3. TWEET CARD */}
-                      <button
-                        className="btn btn-xs vid-ctx-btn"
-                        onClick={() => setShowStylesModal(true)}
-                        style={{
-                          padding: '5px 14px',
-                          fontSize: '0.8rem',
-                          fontWeight: 600,
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '6px',
-                          borderRadius: '12px',
-                          background: 'rgba(255,255,255,0.08)',
-                          color: '#ffffff',
-                          border: '1px solid var(--glass-border)',
-                          flexShrink: 0
-                        }}
-                        title="Add Tweet Card (Fake Twitter / X Post)"
-                      >
-                        <span style={{ fontSize: '0.9rem', fontWeight: 900, color: '#1d9bf0', lineHeight: 1 }}>𝕏</span>
-                        <span>Tweet Card</span>
-                      </button>
-
-                      {/* 4. STICKER */}
+                      {/* 3. STICKER */}
                       <button
                         className="btn btn-xs vid-ctx-btn"
                         onClick={() => setShowMemeStickersModal(true)}
@@ -3705,7 +3670,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         <span>Sticker</span>
                       </button>
 
-                      {/* 5. EMOJI */}
+                      {/* 4. EMOJI */}
                       <button
                         className="btn btn-xs vid-ctx-btn"
                         onClick={() => setShowEmojiModal(true)}
@@ -3726,6 +3691,29 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                       >
                         <Smile style={{ width: 14, height: 14, color: '#facc15' }} />
                         <span>Emoji</span>
+                      </button>
+
+                      {/* 5. TWEET CARD */}
+                      <button
+                        className="btn btn-xs vid-ctx-btn"
+                        onClick={() => setShowStylesModal(true)}
+                        style={{
+                          padding: '5px 14px',
+                          fontSize: '0.8rem',
+                          fontWeight: 600,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          borderRadius: '12px',
+                          background: 'rgba(255,255,255,0.08)',
+                          color: '#ffffff',
+                          border: '1px solid var(--glass-border)',
+                          flexShrink: 0
+                        }}
+                        title="Add Tweet Card (Fake Twitter / X Post)"
+                      >
+                        <span style={{ fontSize: '0.9rem', fontWeight: 900, color: '#1d9bf0', lineHeight: 1 }}>𝕏</span>
+                        <span>Tweet Card</span>
                       </button>
                     </div>
                   )}
