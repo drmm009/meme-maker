@@ -1141,7 +1141,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
           color: isColorDark(canvasBgColor || '#ffffff') ? '#ffffff' : '#000000',
           stroke: 'transparent',
           strokeWidth: 0,
-          align: 'left',
+          align: 'center',
           width: 0.92,
           isHeaderCaption: true
         };
@@ -1297,7 +1297,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
           color: isDark ? '#ffffff' : '#000000',
           stroke: 'transparent',
           strokeWidth: 0,
-          align: 'left',
+          align: 'center',
           width: 0.92,
           isHeaderCaption: true
         };
@@ -1348,7 +1348,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
           color: isDark ? '#ffffff' : '#000000',
           stroke: 'transparent',
           strokeWidth: 0,
-          align: 'left',
+          align: 'center',
           width: 0.92,
           isFooterCaption: true
         };
@@ -1426,7 +1426,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
           color: isDark ? '#ffffff' : '#000000',
           stroke: 'transparent',
           strokeWidth: 0,
-          align: 'left',
+          align: 'center',
           width: 0.92,
           isHeaderCaption: true
         };
@@ -1447,7 +1447,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
           color: isDark ? '#ffffff' : '#000000',
           stroke: 'transparent',
           strokeWidth: 0,
-          align: 'left',
+          align: 'center',
           width: 0.92,
           isFooterCaption: true
         };
@@ -1715,7 +1715,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
         color: '#000000',
         stroke: 'transparent',
         bgStyle: 'banner',
-        align: 'left'
+        align: 'center'
       });
     } else if (bg === 'white') {
       // White Background: crisp black text with transparent stroke
