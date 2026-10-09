@@ -1812,81 +1812,57 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
             uiCtx.shadowColor = 'rgba(0, 0, 0, 0.4)';
             uiCtx.shadowBlur = 4;
             uiCtx.shadowOffsetY = 1;
-            uiCtx.strokeStyle = '#0284c7'; // Modern sky-600 accent
-            uiCtx.lineWidth = 2;
+            uiCtx.strokeStyle = '#f97316'; // App theme orange accent
+            uiCtx.lineWidth = 2.5;
             uiCtx.strokeRect(boxX, boxY, boxWidth, boxHeight);
             uiCtx.restore();
 
-            // Inner crisp hairline
+            // Inner crisp hairline for contrast against dark backgrounds
             uiCtx.save();
             uiCtx.strokeStyle = 'rgba(255, 255, 255, 0.75)';
             uiCtx.lineWidth = 1;
             uiCtx.strokeRect(boxX + 1, boxY + 1, Math.max(1, boxWidth - 2), Math.max(1, boxHeight - 2));
             uiCtx.restore();
 
-            // Helper: Draw Corner Scale Handle (Proportional sizing knob)
-            const drawCornerHandle = (hx, hy) => {
+            // Helper: Draw Circular Handle (Enlarged comfortable rounded control knob for corners and side stretch handles)
+            const drawRoundHandle = (hx, hy) => {
               uiCtx.save();
               uiCtx.shadowColor = 'rgba(0, 0, 0, 0.35)';
               uiCtx.shadowBlur = 4;
               uiCtx.shadowOffsetY = 1;
               uiCtx.beginPath();
-              uiCtx.arc(hx, hy, 7.5, 0, Math.PI * 2);
+              uiCtx.arc(hx, hy, 10.5, 0, Math.PI * 2);
               uiCtx.fillStyle = '#ffffff';
               uiCtx.fill();
-              uiCtx.strokeStyle = '#0284c7';
+              uiCtx.strokeStyle = '#f97316';
               uiCtx.lineWidth = 2.5;
               uiCtx.stroke();
               uiCtx.restore();
             };
 
-            // Helper: Draw Side Width Handle (Vertical capsule pill for wrap width stretching)
-            const drawSidePillHandle = (hx, hy) => {
-              uiCtx.save();
-              uiCtx.shadowColor = 'rgba(0, 0, 0, 0.35)';
-              uiCtx.shadowBlur = 4;
-              uiCtx.shadowOffsetY = 1;
-              const pillW = 6;
-              const pillH = 18;
-              const px = hx - pillW / 2;
-              const py = hy - pillH / 2;
-              uiCtx.beginPath();
-              if (uiCtx.roundRect) {
-                uiCtx.roundRect(px, py, pillW, pillH, 3);
-              } else {
-                uiCtx.rect(px, py, pillW, pillH);
-              }
-              uiCtx.fillStyle = '#ffffff';
-              uiCtx.fill();
-              uiCtx.strokeStyle = '#0284c7';
-              uiCtx.lineWidth = 2;
-              uiCtx.stroke();
-              uiCtx.restore();
-            };
+            // Side Handles: Left & Right (Now rounded circular knobs matching corner handles)
+            drawRoundHandle(boxX, 0); // Middle Left
+            drawRoundHandle(boxX + boxWidth, 0); // Middle Right
 
-            // Side Handles: Left & Right (Wrap width adjusters)
-            drawSidePillHandle(boxX, 0); // Middle Left
-            drawSidePillHandle(boxX + boxWidth, 0); // Middle Right
-
-            // Corner Handles: TL, TR, BL, BR (Proportional size scale)
-            drawCornerHandle(boxX, boxY); // Top Left
-            drawCornerHandle(boxX + boxWidth, boxY); // Top Right
+            // Corner Handles: TL, TR, BL, BR (Enlarged rounded control knobs)
+            drawRoundHandle(boxX, boxY); // Top Left
+            drawRoundHandle(boxX + boxWidth, boxY); // Top Right
             if (cap.bubbleStyle !== 'imessage-receive') {
-              drawCornerHandle(boxX, boxY + boxHeight); // Bottom Left
+              drawRoundHandle(boxX, boxY + boxHeight); // Bottom Left
             }
             if (cap.bubbleStyle !== 'imessage-send') {
-              drawCornerHandle(boxX + boxWidth, boxY + boxHeight); // Bottom Right
+              drawRoundHandle(boxX + boxWidth, boxY + boxHeight); // Bottom Right
             }
 
             // Top Rotation Stem & Handle + Delete Handle
             if (!cap.isHeaderCaption && !cap.isFooterCaption) {
               // Rotation stem
               uiCtx.save();
-              uiCtx.strokeStyle = '#0284c7';
+              uiCtx.strokeStyle = '#f97316';
               uiCtx.lineWidth = 2;
               uiCtx.beginPath();
               uiCtx.moveTo(0, boxY);
-              uiCtx.lineTo(0, boxY - 26);
+              uiCtx.lineTo(0, boxY - 28);
               uiCtx.stroke();
 
               // Rotation knob
@@ -1894,26 +1870,26 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
               uiCtx.shadowBlur = 4;
               uiCtx.shadowOffsetY = 1;
               uiCtx.beginPath();
-              uiCtx.arc(0, boxY - 26, 9, 0, Math.PI * 2);
+              uiCtx.arc(0, boxY - 28, 11, 0, Math.PI * 2);
               uiCtx.fillStyle = '#ffffff';
               uiCtx.fill();
-              uiCtx.strokeStyle = '#0284c7';
-              uiCtx.lineWidth = 2;
+              uiCtx.strokeStyle = '#f97316';
+              uiCtx.lineWidth = 2.5;
               uiCtx.stroke();
 
               // Circular rotate icon inside knob
-              uiCtx.strokeStyle = '#0284c7';
-              uiCtx.lineWidth = 1.5;
+              uiCtx.strokeStyle = '#f97316';
+              uiCtx.lineWidth = 1.75;
               uiCtx.lineCap = 'round';
               uiCtx.beginPath();
-              uiCtx.arc(0, boxY - 26, 4.5, -Math.PI * 0.7, Math.PI * 0.8);
+              uiCtx.arc(0, boxY - 28, 5.5, -Math.PI * 0.7, Math.PI * 0.8);
               uiCtx.stroke();
               // Arrowhead
-              uiCtx.fillStyle = '#0284c7';
+              uiCtx.fillStyle = '#f97316';
               uiCtx.beginPath();
-              uiCtx.moveTo(3, boxY - 23);
-              uiCtx.lineTo(5.5, boxY - 26);
-              uiCtx.lineTo(2.5, boxY - 27.5);
+              uiCtx.moveTo(4, boxY - 28 + 3.5);
+              uiCtx.lineTo(7, boxY - 28);
+              uiCtx.lineTo(3.5, boxY - 28 - 2);
               uiCtx.fill();
               uiCtx.restore();
 
@@ -1932,7 +1908,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
               const tw = uiCtx.measureText(label).width;
               const pw = tw + 18;
               const ph = 24;
-              const py = boxY + boxHeight + 14;
+              const py = boxY + boxHeight + 16;
               
               uiCtx.shadowColor = 'rgba(0, 0, 0, 0.4)';
               uiCtx.shadowBlur = 6;
@@ -1946,7 +1922,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
               }
               uiCtx.fill();
 
-              uiCtx.strokeStyle = '#38bdf8';
+              uiCtx.strokeStyle = '#f97316';
               uiCtx.lineWidth = 1.5;
               uiCtx.stroke();
 
@@ -1962,7 +1938,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
               const tw = uiCtx.measureText(label).width;
               const pw = tw + 18;
               const ph = 24;
-              const py = boxY - 54;
+              const py = boxY - 58;
               
               uiCtx.shadowColor = 'rgba(0, 0, 0, 0.4)';
               uiCtx.shadowBlur = 6;
@@ -1976,11 +1952,11 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
               }
               uiCtx.fill();
 
-              uiCtx.strokeStyle = '#38bdf8';
+              uiCtx.strokeStyle = '#f97316';
               uiCtx.lineWidth = 1.5;
               uiCtx.stroke();
 
-              uiCtx.fillStyle = '#38bdf8';
+              uiCtx.fillStyle = '#fb923c';
               uiCtx.textAlign = 'center';
               uiCtx.textBaseline = 'middle';
               uiCtx.fillText(label, 0, py + ph / 2);
@@ -2305,13 +2281,13 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
 
           const handles = [
             ...((!activeCap.isHeaderCaption && !activeCap.isFooterCaption) ? [{ type: 'delete_layer', x: leftX - 32, y: topY - 32, r: 26 }] : []),
-            ...((!activeCap.isHeaderCaption && !activeCap.isFooterCaption) ? [{ type: 'rotate_caption', x: cx, y: topY - 26, r: 24 }] : []),
-            { type: 'resize_caption_l', x: leftX, y: cy, r: 24 },
-            { type: 'resize_caption_r', x: rightX, y: cy, r: 24 },
-            { type: 'resize_caption_tl', x: leftX, y: topY, r: 24 },
-            { type: 'resize_caption_tr', x: rightX, y: topY, r: 24 },
-            { type: 'resize_caption_bl', x: leftX, y: bottomY, r: 24 },
-            { type: 'resize_caption_br', x: rightX, y: bottomY, r: 24 }
+            ...((!activeCap.isHeaderCaption && !activeCap.isFooterCaption) ? [{ type: 'rotate_caption', x: cx, y: topY - 28, r: 26 }] : []),
+            { type: 'resize_caption_l', x: leftX, y: cy, r: 26 },
+            { type: 'resize_caption_r', x: rightX, y: cy, r: 26 },
+            { type: 'resize_caption_tl', x: leftX, y: topY, r: 26 },
+            { type: 'resize_caption_tr', x: rightX, y: topY, r: 26 },
+            { type: 'resize_caption_bl', x: leftX, y: bottomY, r: 26 },
+            { type: 'resize_caption_br', x: rightX, y: bottomY, r: 26 }
           ];
 
           let closestHandle = null;
@@ -2818,16 +2794,16 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         if (!activeCap.isHeaderCaption && !activeCap.isFooterCaption && Math.hypot(p.x - (leftX - 32), p.y - (topY - 32)) <= 26) {
           canvas.style.cursor = 'pointer'; return;
         }
-        if (!activeCap.isHeaderCaption && !activeCap.isFooterCaption && Math.hypot(p.x - cx, p.y - (topY - 26)) <= 24) {
+        if (!activeCap.isHeaderCaption && !activeCap.isFooterCaption && Math.hypot(p.x - cx, p.y - (topY - 28)) <= 26) {
           canvas.style.cursor = 'grab'; return;
         }
-        if (Math.hypot(p.x - leftX, p.y - cy) <= 24 || Math.hypot(p.x - rightX, p.y - cy) <= 24) {
+        if (Math.hypot(p.x - leftX, p.y - cy) <= 26 || Math.hypot(p.x - rightX, p.y - cy) <= 26) {
           canvas.style.cursor = 'ew-resize'; return;
         }
-        if (Math.hypot(p.x - leftX, p.y - topY) <= 24 || Math.hypot(p.x - rightX, p.y - bottomY) <= 24) {
+        if (Math.hypot(p.x - leftX, p.y - topY) <= 26 || Math.hypot(p.x - rightX, p.y - bottomY) <= 26) {
           canvas.style.cursor = 'nwse-resize'; return;
         }
-        if (Math.hypot(p.x - rightX, p.y - topY) <= 24 || Math.hypot(p.x - leftX, p.y - bottomY) <= 24) {
+        if (Math.hypot(p.x - rightX, p.y - topY) <= 26 || Math.hypot(p.x - leftX, p.y - bottomY) <= 26) {
           canvas.style.cursor = 'nesw-resize'; return;
         }
         if (p.x >= cx - halfW && p.x <= cx + halfW && p.y >= cy - halfH && p.y <= cy + halfH) {
