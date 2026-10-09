@@ -1680,6 +1680,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         let boxWidth = (cap.hasCustomWidth && cap.width)
           ? Math.max(maxLineWidth + padX * 2, cap.width * canvas.width)
           : (maxLineWidth + padX * 2);
+        boxWidth = Math.min(canvas.width - 16, boxWidth);
         const lineHeight = fontSize * 1.2;
         const totalHeight = lines.length * lineHeight;
         let boxHeight = totalHeight + padY * 2;
@@ -2258,6 +2259,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
           let boxWidth = (activeCap.hasCustomWidth && activeCap.width)
             ? Math.max(maxLineWidth + padX * 2, activeCap.width * canvas.width)
             : (maxLineWidth + padX * 2);
+          boxWidth = Math.min(canvas.width - 16, boxWidth);
           const textHeight = lines.length * (fontSize * 1.2);
           let boxHeight = textHeight + padY * 2;
           if (activeCap.curve && Math.abs(activeCap.curve) > 0) {
@@ -2460,6 +2462,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
           let boxWidth = (cap.hasCustomWidth && cap.width)
             ? Math.max(maxLineWidth + padX * 2, cap.width * canvas.width)
             : (maxLineWidth + padX * 2);
+          boxWidth = Math.min(canvas.width - 16, boxWidth);
           const lineHeight = fontSize * 1.2;
           let boxHeight = lines.length * lineHeight + padY * 2;
           if (cap.curve && Math.abs(cap.curve) > 0) {
@@ -2769,6 +2772,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         let boxWidth = (activeCap.hasCustomWidth && activeCap.width)
           ? Math.max(maxLineWidth + padX * 2, activeCap.width * canvas.width)
           : (maxLineWidth + padX * 2);
+        boxWidth = Math.min(canvas.width - 16, boxWidth);
         const textHeight = lines.length * (fontSize * 1.2);
         let boxHeight = textHeight + padY * 2;
         if (activeCap.curve && Math.abs(activeCap.curve) > 0) {
@@ -2913,6 +2917,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         let boxWidth = (cap.hasCustomWidth && cap.width)
           ? Math.max(maxLineWidth + padX * 2, cap.width * canvas.width)
           : (maxLineWidth + padX * 2);
+        boxWidth = Math.min(canvas.width - 16, boxWidth);
         const lineHeight = fontSize * 1.2;
         let boxHeight = lines.length * lineHeight + padY * 2;
         if (cap.curve && Math.abs(cap.curve) > 0) {
@@ -3159,13 +3164,36 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
       // Transform pointer coordinates into layer's local rotated coordinate space!
       const localCoords = rotatePoint(coords.x, coords.y, centerX, centerY, -rot);
 
+      // Safe bounds limit inside canvas box with safety margin (8px)
+      const edgePad = 8;
+      const rad = Math.abs((rot * Math.PI) / 180);
+      const cosR = Math.abs(Math.cos(rad));
+      const sinR = Math.abs(Math.sin(rad));
+      const maxAvailX = Math.max(20, Math.min(centerX - edgePad, canvas.width - centerX - edgePad));
+      const maxAvailY = Math.max(20, Math.min(centerY - edgePad, canvas.height - centerY - edgePad));
+
       if (handleType === 'resize_caption_l' || handleType === 'resize_caption_r') {
         const localDx = localCoords.x - centerX;
-        const halfWidth = handleType === 'resize_caption_r'
+        const rawHalfWidth = handleType === 'resize_caption_r'
           ? Math.max(30, localDx)
           : Math.max(30, -localDx);
+
+        // Clamp width so box never expands outside the canvas box
+        const currentH = initialLayerPos.current.initialBoxHeight || initialLayerPos.current.boxHeight || 60;
+        let maxAllowedHalfW = canvas.width / 2 - edgePad;
+
+        if (cosR > 0.08) {
+          const limitFromX = (maxAvailX - (currentH / 2) * sinR) / cosR;
+          maxAllowedHalfW = Math.min(maxAllowedHalfW, Math.max(30, limitFromX));
+        }
+        if (sinR > 0.08) {
+          const limitFromY = (maxAvailY - (currentH / 2) * cosR) / sinR;
+          maxAllowedHalfW = Math.min(maxAllowedHalfW, Math.max(30, limitFromY));
+        }
+
+        const halfWidth = Math.max(30, Math.min(maxAllowedHalfW, rawHalfWidth));
         const newBoxWidthPx = halfWidth * 2;
-        const newWidth = Math.max(0.15, Math.min(3.5, Number((newBoxWidthPx / canvas.width).toFixed(3))));
+        const newWidth = Math.max(0.15, Math.min(0.98, Number((newBoxWidthPx / canvas.width).toFixed(3))));
 
         onUpdateCaptionBounds(id, { 
           width: newWidth,
@@ -3183,14 +3211,24 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
       const initRelX = initialLayerPos.current.handleRelX || (handleType.includes('r') ? 50 : -50);
       const initRelY = initialLayerPos.current.handleRelY || (handleType.includes('b') ? 50 : -50);
       const proj = (localDx * initRelX + localDy * initRelY) / (initDist * initDist);
-      const scaleFactor = Math.max(0.1, Math.min(8.0, proj));
+
+      // Clamp scaleFactor so the resized text element box stays strictly inside canvas boundaries
+      const initW = initialLayerPos.current.initialBoxWidth || initialLayerPos.current.boxWidth || 100;
+      const initH = initialLayerPos.current.initialBoxHeight || initialLayerPos.current.boxHeight || 60;
+      const initHalfExtentX = Math.max(20, (initW / 2) * cosR + (initH / 2) * sinR);
+      const initHalfExtentY = Math.max(20, (initW / 2) * sinR + (initH / 2) * cosR);
+
+      const maxScaleX = maxAvailX / initHalfExtentX;
+      const maxScaleY = maxAvailY / initHalfExtentY;
+      const maxAllowedScale = Math.max(0.35, Math.min(maxScaleX, maxScaleY));
+
+      const scaleFactor = Math.max(0.1, Math.min(maxAllowedScale, proj));
 
       const initFontSize = initialLayerPos.current.initialFontSize || cap.fontSize || (cap.isTweetCard ? 18 : 50);
-      const newFontSize = Math.max(10, Math.min(250, Math.round(initFontSize * scaleFactor)));
+      const newFontSize = Math.max(10, Math.min(220, Math.round(initFontSize * scaleFactor)));
 
       const initWidth = initialLayerPos.current.initialWidth || cap.width || (cap.isTweetCard ? 0.88 : 0.9);
-      const maxCapWidth = cap.isTweetCard ? 3.0 : 4.0;
-      const newWidth = Math.max(0.15, Math.min(maxCapWidth, Number((initWidth * scaleFactor).toFixed(3))));
+      const newWidth = Math.max(0.15, Math.min(0.98, Number((initWidth * scaleFactor).toFixed(3))));
 
       onUpdateCaptionBounds(id, { 
         fontSize: newFontSize,
@@ -3203,6 +3241,22 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     const targetId = dragTarget.current.id;
     let newX = initialLayerPos.current.x + dx;
     let newY = initialLayerPos.current.y + dy;
+
+    if (dragTarget.current.type === 'caption') {
+      const rot = initialLayerPos.current.rotation || 0;
+      const rad = Math.abs((rot * Math.PI) / 180);
+      const bW = initialLayerPos.current.boxWidth || ((initialLayerPos.current.width || 0.5) * canvas.width) || 100;
+      const bH = initialLayerPos.current.boxHeight || 60;
+      const halfExtX = (bW / 2) * Math.abs(Math.cos(rad)) + (bH / 2) * Math.abs(Math.sin(rad));
+      const halfExtY = (bW / 2) * Math.abs(Math.sin(rad)) + (bH / 2) * Math.abs(Math.cos(rad));
+      const edgePad = 8;
+      const minX = Math.min(0.5, (halfExtX + edgePad) / canvas.width);
+      const maxX = Math.max(0.5, (canvas.width - halfExtX - edgePad) / canvas.width);
+      const minY = Math.min(0.5, (halfExtY + edgePad) / canvas.height);
+      const maxY = Math.max(0.5, (canvas.height - halfExtY - edgePad) / canvas.height);
+      newX = Math.max(minX, Math.min(maxX, newX));
+      newY = Math.max(minY, Math.min(maxY, newY));
+    }
 
     const SNAP_DIST = 0.015;
 
