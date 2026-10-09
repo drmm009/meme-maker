@@ -4502,30 +4502,28 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
                       {!showWatermarkMenu ? (
                         <>
-                          {/* CLUSTER 1: CANVAS SETTINGS (Color & Flip Canvas) */}
-                          <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.08)', borderRadius: '10px', padding: '2px', gap: '3px', flexShrink: 0 }}>
-                            <CanvasColorPicker canvasBgColor={canvasBgColor} setCanvasBgColor={handleSetCanvasBgColor} />
-                            <button
-                              className={`btn btn-xs vid-ctx-btn ${canvasFlipX ? 'active' : ''}`}
-                              title="Flip Canvas Horizontal (Mirror Background Template)"
-                              onClick={handleToggleCanvasFlip}
-                              style={{
-                                padding: '3px 8px',
-                                fontSize: '0.75rem',
-                                fontWeight: 600,
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '4px',
-                                border: 'none',
-                                background: canvasFlipX ? 'rgba(6, 182, 212, 0.25)' : 'transparent',
-                                color: canvasFlipX ? 'var(--cyber-cyan)' : '#ffffff',
-                                borderRadius: '8px'
-                              }}
-                            >
-                              <FlipHorizontal style={{ width: 13, height: 13 }} />
-                              <span>{canvasFlipX ? 'Flipped' : 'Flip Canvas'}</span>
-                            </button>
-                          </div>
+                          {/* Canvas Color & Flip Canvas */}
+                          <CanvasColorPicker canvasBgColor={canvasBgColor} setCanvasBgColor={handleSetCanvasBgColor} />
+                          <button
+                            className={`btn btn-xs vid-ctx-btn ${canvasFlipX ? 'active' : ''}`}
+                            title="Flip Canvas Horizontal (Mirror Background Template)"
+                            onClick={handleToggleCanvasFlip}
+                            style={{
+                              padding: '4px 10px',
+                              fontSize: '0.75rem',
+                              fontWeight: 600,
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '5px',
+                              borderRadius: '10px',
+                              background: canvasFlipX ? 'var(--primary-gradient)' : undefined,
+                              color: '#ffffff',
+                              flexShrink: 0
+                            }}
+                          >
+                            <FlipHorizontal style={{ width: 13, height: 13 }} />
+                            <span>Flip Canvas</span>
+                          </button>
 
                           {/* CLUSTER 2: WATERMARK BRANDING */}
                           <button
