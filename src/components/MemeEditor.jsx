@@ -3336,50 +3336,78 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                       </button>
 
                       {/* 3. Die-Cut */}
-                      <button
+                      <div
+                        role="button"
+                        tabIndex={0}
                         className={`btn btn-xs vid-ctx-btn ${activeSticker.dieCut ? 'active' : ''}`}
-                        title="Die-Cut Sticker Border (White Vinyl Outline)"
+                        title={activeSticker.dieCut ? "Die-Cut Border (Active - click to disable, or click color circle to change color)" : "Die-Cut Sticker Border (White Vinyl Outline)"}
                         onClick={() => handleToggleDieCutSticker()}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            handleToggleDieCutSticker();
+                          }
+                        }}
                         style={{
                           padding: '4px 10px',
                           fontSize: '0.75rem',
                           fontWeight: 600,
                           display: 'flex',
                           alignItems: 'center',
-                          gap: '4px',
+                          gap: '6px',
                           borderRadius: '8px',
                           background: activeSticker.dieCut ? 'var(--primary-gradient)' : 'rgba(255,255,255,0.08)',
                           color: '#ffffff',
-                          flexShrink: 0
+                          flexShrink: 0,
+                          cursor: 'pointer',
+                          userSelect: 'none'
                         }}
                       >
                         <Shield style={{ width: 13, height: 13 }} />
                         <span>Die-Cut</span>
-                      </button>
-
-                      {activeSticker.dieCut && (
-                        <div
-                          style={{
-                            position: 'relative',
-                            overflow: 'hidden',
-                            width: 22,
-                            height: 22,
-                            borderRadius: '50%',
-                            border: '2px solid rgba(255,255,255,0.6)',
-                            background: activeSticker.dieCutColor || '#ffffff',
-                            cursor: 'pointer',
-                            flexShrink: 0
-                          }}
-                          title="Die-Cut Border Color"
-                        >
-                          <input
-                            type="color"
-                            value={activeSticker.dieCutColor || '#ffffff'}
-                            onChange={(e) => handleSetDieCutColor(e.target.value)}
-                            style={{ position: 'absolute', opacity: 0, inset: 0, cursor: 'pointer', width: '100%', height: '100%' }}
-                          />
-                        </div>
-                      )}
+                        {activeSticker.dieCut && (
+                          <span
+                            onClick={(e) => e.stopPropagation()}
+                            title="Change Die-Cut Border Color"
+                            style={{
+                              position: 'relative',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              width: 15,
+                              height: 15,
+                              borderRadius: '50%',
+                              border: '2px solid rgba(255,255,255,0.9)',
+                              background: activeSticker.dieCutColor || '#ffffff',
+                              boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
+                              cursor: 'pointer',
+                              overflow: 'hidden',
+                              marginLeft: '2px',
+                              flexShrink: 0
+                            }}
+                          >
+                            <input
+                              type="color"
+                              value={activeSticker.dieCutColor || '#ffffff'}
+                              onChange={(e) => {
+                                e.stopPropagation();
+                                handleSetDieCutColor(e.target.value);
+                              }}
+                              onClick={(e) => e.stopPropagation()}
+                              style={{
+                                position: 'absolute',
+                                opacity: 0,
+                                inset: 0,
+                                cursor: 'pointer',
+                                width: '100%',
+                                height: '100%',
+                                padding: 0,
+                                border: 'none'
+                              }}
+                            />
+                          </span>
+                        )}
+                      </div>
                     </>
                   )}
 
