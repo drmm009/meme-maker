@@ -128,7 +128,8 @@ export default function MemeStylesModal({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '16px',
+        padding: '20px 16px',
+        overflowY: 'auto',
         backdropFilter: 'blur(12px)',
         WebkitBackdropFilter: 'blur(12px)'
       }}
@@ -148,7 +149,8 @@ export default function MemeStylesModal({
           overflow: 'hidden',
           display: 'flex',
           flexDirection: 'column',
-          maxHeight: '90vh'
+          maxHeight: 'min(90vh, 740px)',
+          margin: 'auto'
         }}
       >
         {/* Header */}
@@ -179,31 +181,9 @@ export default function MemeStylesModal({
             >
               <XLogo size={18} color="#ffffff" />
             </div>
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800, color: '#ffffff', letterSpacing: '-0.01em' }}>
-                  Tweet Card Generator
-                </h3>
-                <span
-                  style={{
-                    fontSize: '0.62rem',
-                    fontWeight: 700,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.04em',
-                    padding: '2px 6px',
-                    borderRadius: '6px',
-                    background: 'rgba(29, 155, 240, 0.18)',
-                    color: '#38bdf8',
-                    border: '1px solid rgba(56, 189, 248, 0.3)'
-                  }}
-                >
-                  X Post
-                </span>
-              </div>
-              <p style={{ margin: '2px 0 0', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                Create authentic viral fake X / Twitter posts for your memes
-              </p>
-            </div>
+            <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800, color: '#ffffff', letterSpacing: '-0.01em' }}>
+              Tweet Card
+            </h3>
           </div>
           <button
             className="btn btn-icon btn-ghost btn-xs"

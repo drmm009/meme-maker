@@ -6157,11 +6157,15 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
       />
 
       {/* Meme Style Modal (Tweet Card) */}
-      <MemeStylesModal
-        isOpen={showStylesModal}
-        onClose={() => setShowStylesModal(false)}
-        onAddTweetCard={handleAddTweetCard}
-      />
+      {showStylesModal && (
+        <ModalPortal>
+          <MemeStylesModal
+            isOpen={showStylesModal}
+            onClose={() => setShowStylesModal(false)}
+            onAddTweetCard={handleAddTweetCard}
+          />
+        </ModalPortal>
+      )}
 
     </div>
       )}
