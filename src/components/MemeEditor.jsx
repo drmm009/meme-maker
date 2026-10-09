@@ -1368,6 +1368,97 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
   };
   const handleAddModernFooter = handleToggleCanvasFooter;
 
+  // 1-Tap Toggle Both Modern Header & Footer Extensions
+  const handleToggleCanvasBoth = () => {
+    const bothAlreadyEnabled = canvasHeader.enabled && canvasFooter.enabled;
+    const currentBg = canvasBgColor || '#ffffff';
+    const isDark = isColorDark(currentBg);
+
+    if (bothAlreadyEnabled) {
+      const nextHeader = {
+        ...canvasHeader,
+        enabled: false
+      };
+      const nextFooter = {
+        ...canvasFooter,
+        enabled: false
+      };
+      setCanvasHeader(nextHeader);
+      setCanvasFooter(nextFooter);
+
+      const headerCap = captions.find(c => c.isHeaderCaption);
+      const footerCap = captions.find(c => c.isFooterCaption);
+      const nextCaps = captions.filter(c => !c.isHeaderCaption && !c.isFooterCaption);
+      setCaptions(nextCaps);
+      if (activeLayerId === headerCap?.id || activeLayerId === footerCap?.id) {
+        setActiveLayerId(null);
+      }
+      pushHistory(nextCaps, stickers, imageLayers, drawings, nextHeader, nextFooter);
+    } else {
+      const nextHeader = {
+        ...canvasHeader,
+        enabled: true,
+        bgColor: currentBg
+      };
+      const nextFooter = {
+        ...canvasFooter,
+        enabled: true,
+        bgColor: currentBg
+      };
+      setCanvasHeader(nextHeader);
+      setCanvasFooter(nextFooter);
+
+      let nextCaps = [...captions];
+      let targetActiveId = null;
+
+      // Header caption
+      let existingHeaderCap = nextCaps.find(c => c.isHeaderCaption);
+      if (!existingHeaderCap) {
+        existingHeaderCap = {
+          id: `caption-header-${Date.now()}`,
+          text: 'When you finally solve the bug after 4 hours:',
+          x: 0.5,
+          y: 0.05,
+          fontSize: 36,
+          fontFamily: 'Montserrat, sans-serif',
+          color: isDark ? '#ffffff' : '#000000',
+          stroke: 'transparent',
+          strokeWidth: 0,
+          align: 'left',
+          width: 0.92,
+          isHeaderCaption: true
+        };
+        nextCaps = [existingHeaderCap, ...nextCaps];
+      }
+      targetActiveId = existingHeaderCap.id;
+
+      // Footer caption
+      let existingFooterCap = nextCaps.find(c => c.isFooterCaption);
+      if (!existingFooterCap) {
+        existingFooterCap = {
+          id: `caption-footer-${Date.now() + 1}`,
+          text: '...and then realize you were in the wrong branch',
+          x: 0.5,
+          y: 0.95,
+          fontSize: 36,
+          fontFamily: 'Montserrat, sans-serif',
+          color: isDark ? '#ffffff' : '#000000',
+          stroke: 'transparent',
+          strokeWidth: 0,
+          align: 'left',
+          width: 0.92,
+          isFooterCaption: true
+        };
+        nextCaps = [...nextCaps, existingFooterCap];
+      }
+
+      setCaptions(nextCaps);
+      setActiveLayerId(targetActiveId);
+      setActiveTab('text');
+      pushHistory(nextCaps, stickers, imageLayers, drawings, nextHeader, nextFooter);
+    }
+  };
+
   // Meme Culture Staples & Social Formats Handlers
   const handleToggleDemotivational = (data = {}) => {
     const willEnable = !demotivational.enabled;
@@ -3882,12 +3973,12 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
 
                         <div className="vid-ctx-divider" style={{ width: 1, height: 20, background: "rgba(255,255,255,0.2)", margin: "0 2px", flexShrink: 0 }} />
 
-                        {/* Top Header Toggle */}
+                        {/* Header Toggle */}
                         <button
                           type="button"
                           className={`btn btn-xs vid-ctx-btn ${canvasHeader.enabled ? 'active' : ''}`}
                           onClick={handleToggleCanvasHeader}
-                          title="Toggle Top Header Extension"
+                          title="Toggle Header Extension"
                           style={{
                             padding: "4px 12px",
                             fontSize: "0.75rem",
@@ -3903,15 +3994,15 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           }}
                         >
                           <PanelTop style={{ width: 13, height: 13, color: "#ffffff" }} />
-                          <span>{canvasHeader.enabled ? 'Top Header (On)' : 'Top Header'}</span>
+                          <span>Header</span>
                         </button>
 
-                        {/* Bottom Footer Toggle */}
+                        {/* Footer Toggle */}
                         <button
                           type="button"
                           className={`btn btn-xs vid-ctx-btn ${canvasFooter.enabled ? 'active' : ''}`}
                           onClick={handleToggleCanvasFooter}
-                          title="Toggle Bottom Footer Extension"
+                          title="Toggle Footer Extension"
                           style={{
                             padding: "4px 12px",
                             fontSize: "0.75rem",
@@ -3927,7 +4018,31 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           }}
                         >
                           <PanelBottom style={{ width: 13, height: 13, color: "#ffffff" }} />
-                          <span>{canvasFooter.enabled ? 'Bottom Footer (On)' : 'Bottom Footer'}</span>
+                          <span>Footer</span>
+                        </button>
+
+                        {/* Both Header & Footer Toggle */}
+                        <button
+                          type="button"
+                          className={`btn btn-xs vid-ctx-btn ${(canvasHeader.enabled && canvasFooter.enabled) ? 'active' : ''}`}
+                          onClick={handleToggleCanvasBoth}
+                          title="Toggle Both Header & Footer Extensions"
+                          style={{
+                            padding: "4px 12px",
+                            fontSize: "0.75rem",
+                            fontWeight: 600,
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "5px",
+                            borderRadius: "8px",
+                            flexShrink: 0,
+                            background: (canvasHeader.enabled && canvasFooter.enabled) ? 'var(--primary-gradient)' : 'rgba(255, 255, 255, 0.08)',
+                            border: (canvasHeader.enabled && canvasFooter.enabled) ? '1px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.1)',
+                            color: "#ffffff"
+                          }}
+                        >
+                          <PanelsTopBottom style={{ width: 13, height: 13, color: "#ffffff" }} />
+                          <span>Both</span>
                         </button>
                       </div>
                     ) : (
@@ -3964,15 +4079,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           }}
                         >
                           <PanelsTopBottom style={{ width: 13, height: 13, color: "#ffffff" }} />
-                          <span>
-                            {canvasHeader.enabled && canvasFooter.enabled
-                              ? 'Header & Footer (On)'
-                              : canvasHeader.enabled
-                              ? 'Header (On)'
-                              : canvasFooter.enabled
-                              ? 'Footer (On)'
-                              : 'Header / Footer'}
-                          </span>
+                          <span>Header / Footer</span>
                         </button>
 
                         {/* 3. Creative Tools: Bubble & AI Captions */}
@@ -5267,7 +5374,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           }}
                         >
                           <PanelTop size={14} style={{ color: canvasHeader.enabled ? "#ffffff" : "var(--cyber-cyan)" }} />
-                          <span>{canvasHeader.enabled ? "Header (On)" : "Header"}</span>
+                          <span>Header</span>
                         </button>
                         <button
                           type="button"
@@ -5292,7 +5399,32 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           }}
                         >
                           <PanelBottom size={14} style={{ color: canvasFooter.enabled ? "#ffffff" : "var(--cyber-cyan)" }} />
-                          <span>{canvasFooter.enabled ? "Footer (On)" : "Footer"}</span>
+                          <span>Footer</span>
+                        </button>
+                        <button
+                          type="button"
+                          className={`btn btn-xs hover-lift ${(canvasHeader.enabled && canvasFooter.enabled) ? 'active' : ''}`}
+                          onClick={handleToggleCanvasBoth}
+                          title="Toggle Both Header & Footer Extensions"
+                          style={{
+                            padding: "5px 12px",
+                            borderRadius: "16px",
+                            fontSize: "0.8rem",
+                            fontWeight: 700,
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "5px",
+                            background: (canvasHeader.enabled && canvasFooter.enabled)
+                              ? "var(--primary-gradient)"
+                              : "transparent",
+                            border: (canvasHeader.enabled && canvasFooter.enabled)
+                              ? "1px solid var(--cyber-cyan)"
+                              : "1px solid transparent",
+                            color: "#ffffff"
+                          }}
+                        >
+                          <PanelsTopBottom size={14} style={{ color: (canvasHeader.enabled && canvasFooter.enabled) ? "#ffffff" : "var(--cyber-cyan)" }} />
+                          <span>Both</span>
                         </button>
                       </div>
                     )}
