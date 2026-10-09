@@ -896,7 +896,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
   let headerExtH = 0;
   if (isHeaderEnabled) {
     if (headerCap) {
-      const hFontSize = headerCap.fontSize || 36;
+      const hFontSize = headerCap.fontSize || 50;
       const hFontFamily = headerCap.fontFamily || 'Montserrat, sans-serif';
       let linesCount = 1;
       if (typeof document !== 'undefined') {
@@ -922,7 +922,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
   let footerExtH = 0;
   if (isFooterEnabled) {
     if (footerCap) {
-      const fFontSize = footerCap.fontSize || 36;
+      const fFontSize = footerCap.fontSize || 50;
       const fFontFamily = footerCap.fontFamily || 'Montserrat, sans-serif';
       let linesCount = 1;
       if (typeof document !== 'undefined') {
