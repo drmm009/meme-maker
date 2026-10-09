@@ -3397,11 +3397,11 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
 
                       {/* 2. Crop */}
                       <button
-                        className={`btn btn-xs vid-ctx-btn ${activeImageLayer.fitMode === 'crop' ? 'active' : ''}`}
-                        title="Crop"
+                        className={activeImageLayer.fitMode === 'crop' ? 'btn btn-xs vid-ctx-btn active' : 'btn btn-icon btn-xs vid-ctx-btn'}
+                        title={activeImageLayer.fitMode === 'crop' ? 'Exit Crop' : 'Crop'}
                         onClick={() => updateActiveImageLayer('fitMode', activeImageLayer.fitMode === 'crop' ? 'fit' : 'crop')}
                         style={{
-                          padding: '4px 10px',
+                          padding: activeImageLayer.fitMode === 'crop' ? '4px 10px' : undefined,
                           fontSize: '0.75rem',
                           fontWeight: 600,
                           display: 'flex',
@@ -3412,11 +3412,32 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           flexShrink: 0
                         }}
                       >
-                        <Crop style={{ width: 13, height: 13 }} />
-                        <span>Crop</span>
+                        <Crop style={{ width: 14, height: 14 }} />
+                        {activeImageLayer.fitMode === 'crop' && <span>Crop</span>}
                       </button>
 
-                      {/* 3. Filters */}
+                      {/* 3. Flip */}
+                      <button
+                        className={activeImageLayer.flipX ? 'btn btn-xs vid-ctx-btn active' : 'btn btn-icon btn-xs vid-ctx-btn'}
+                        title="Flip Horizontal (Mirror)"
+                        onClick={handleFlipActiveLayer}
+                        style={{
+                          padding: activeImageLayer.flipX ? '4px 10px' : undefined,
+                          fontSize: '0.75rem',
+                          fontWeight: 600,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          background: activeImageLayer.flipX ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.08)',
+                          borderRadius: '8px',
+                          flexShrink: 0
+                        }}
+                      >
+                        <FlipHorizontal style={{ width: 14, height: 14 }} />
+                        {activeImageLayer.flipX && <span>Flip</span>}
+                      </button>
+
+                      {/* 4. Filters */}
                       <button
                         className="btn btn-xs vid-ctx-btn"
                         title="Filters"
@@ -3435,16 +3456,6 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                       >
                         <Sparkles style={{ width: 13, height: 13 }} />
                         <span>Filters</span>
-                      </button>
-
-                      {/* 4. Flip */}
-                      <button
-                        className={`btn btn-icon btn-xs vid-ctx-btn ${activeImageLayer.flipX ? 'active' : ''}`}
-                        title="Flip Horizontal (Mirror)"
-                        onClick={handleFlipActiveLayer}
-                        style={{ borderRadius: '8px', flexShrink: 0 }}
-                      >
-                        <FlipHorizontal style={{ width: 14, height: 14 }} />
                       </button>
                     </>
                   )}
