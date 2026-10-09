@@ -174,40 +174,94 @@ const drawSpeechBubble = (ctx, x, y, width, height, style, fillColor = '#ffffff'
     ctx.stroke();
   } else if (style === 'imessage-send') {
     ctx.fillStyle = fillColor || '#007aff';
-    drawRoundRect(ctx, x, y, width, height, 16);
+    const r = Math.min(20, width * 0.25, height * 0.35);
+    const tw = Math.max(14, Math.min(24, height * 0.25));
+    const th = Math.max(20, Math.min(32, height * 0.38));
+    const tb = Math.max(20, Math.min(32, height * 0.38));
+
     ctx.beginPath();
-    ctx.moveTo(x + width - 6, y + height);
-    ctx.quadraticCurveTo(x + width + 8, y + height, x + width + 6, y + height + 6);
-    ctx.quadraticCurveTo(x + width, y + height + 2, x + width - 14, y + height);
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + width - r, y);
+    ctx.quadraticCurveTo(x + width, y, x + width, y + r);
+    ctx.lineTo(x + width, y + height - th);
+    // Beak flare to signature iPhone outgoing tail tip
+    ctx.bezierCurveTo(x + width, y + height - th * 0.35, x + width + tw * 0.3, y + height + 3, x + width + tw, y + height + 3);
+    // Underside curve from tail tip back into flat bottom edge
+    ctx.bezierCurveTo(x + width + tw * 0.2, y + height + 3, x + width - tb * 0.3, y + height, x + width - tb, y + height);
+    ctx.lineTo(x + r, y + height);
+    ctx.quadraticCurveTo(x, y + height, x, y + height - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
     ctx.fill();
+    if (strokeWidth > 0 && strokeColor && strokeColor !== 'transparent') {
+      ctx.stroke();
+    }
   } else if (style === 'imessage-receive') {
     const isDark = isColorDark(fillColor);
     ctx.fillStyle = fillColor || (isDark ? '#262628' : '#e9e9eb');
-    drawRoundRect(ctx, x, y, width, height, 16);
+    const r = Math.min(20, width * 0.25, height * 0.35);
+    const tw = Math.max(14, Math.min(24, height * 0.25));
+    const th = Math.max(20, Math.min(32, height * 0.38));
+    const tb = Math.max(20, Math.min(32, height * 0.38));
+
     ctx.beginPath();
-    ctx.moveTo(x + 6, y + height);
-    ctx.quadraticCurveTo(x - 8, y + height, x - 6, y + height + 6);
-    ctx.quadraticCurveTo(x, y + height + 2, x + 14, y + height);
-    ctx.fill();
-  } else if (style === 'whatsapp-send') {
-    ctx.fillStyle = fillColor || '#005c4b';
-    drawRoundRect(ctx, x, y, width, height, 10);
-    ctx.beginPath();
-    ctx.moveTo(x + width, y + height - 12);
-    ctx.lineTo(x + width + 6, y + height);
-    ctx.lineTo(x + width - 8, y + height);
+    ctx.moveTo(x + tb, y + height);
+    // Underside curve to signature iPhone incoming tail tip
+    ctx.bezierCurveTo(x + tb * 0.3, y + height, x - tw * 0.2, y + height + 3, x - tw, y + height + 3);
+    // Inward flare back into left edge
+    ctx.bezierCurveTo(x - tw * 0.3, y + height + 3, x, y + height - th * 0.35, x, y + height - th);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.lineTo(x + width - r, y);
+    ctx.quadraticCurveTo(x + width, y, x + width, y + r);
+    ctx.lineTo(x + width, y + height - r);
+    ctx.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
+    ctx.lineTo(x + tb, y + height);
     ctx.closePath();
     ctx.fill();
+    if (strokeWidth > 0 && strokeColor && strokeColor !== 'transparent') {
+      ctx.stroke();
+    }
+  } else if (style === 'whatsapp-send') {
+    ctx.fillStyle = fillColor || '#005c4b';
+    const r = Math.min(10, width * 0.15, height * 0.25);
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + width - r, y);
+    ctx.quadraticCurveTo(x + width, y, x + width, y + r);
+    ctx.lineTo(x + width, y + height - 12);
+    ctx.lineTo(x + width + 7, y + height);
+    ctx.lineTo(x + width - 10, y + height);
+    ctx.lineTo(x + r, y + height);
+    ctx.quadraticCurveTo(x, y + height, x, y + height - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+    ctx.fill();
+    if (strokeWidth > 0 && strokeColor && strokeColor !== 'transparent') {
+      ctx.stroke();
+    }
   } else if (style === 'whatsapp-receive') {
     const isDark = isColorDark(fillColor);
     ctx.fillStyle = fillColor || (isDark ? '#202c33' : '#ffffff');
-    drawRoundRect(ctx, x, y, width, height, 10);
+    const r = Math.min(10, width * 0.15, height * 0.25);
     ctx.beginPath();
-    ctx.moveTo(x, y + height - 12);
-    ctx.lineTo(x - 6, y + height);
-    ctx.lineTo(x + 8, y + height);
+    ctx.moveTo(x + 10, y + height);
+    ctx.lineTo(x - 7, y + height);
+    ctx.lineTo(x, y + height - 12);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.lineTo(x + width - r, y);
+    ctx.quadraticCurveTo(x + width, y, x + width, y + r);
+    ctx.lineTo(x + width, y + height - r);
+    ctx.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
+    ctx.lineTo(x + 10, y + height);
     ctx.closePath();
     ctx.fill();
+    if (strokeWidth > 0 && strokeColor && strokeColor !== 'transparent') {
+      ctx.stroke();
+    }
   } else {
     drawRoundRect(ctx, x, y, width, height, r);
     ctx.fill();
@@ -1772,8 +1826,12 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
             drawHandle(boxX + boxWidth, 0); // Middle Right
             drawHandle(boxX, boxY); // Top Left
             drawHandle(boxX + boxWidth, boxY); // Top Right
-            drawHandle(boxX, boxY + boxHeight); // Bottom Left
-            drawHandle(boxX + boxWidth, boxY + boxHeight); // Bottom Right
+            if (cap.bubbleStyle !== 'imessage-receive') {
+              drawHandle(boxX, boxY + boxHeight); // Bottom Left
+            }
+            if (cap.bubbleStyle !== 'imessage-send') {
+              drawHandle(boxX + boxWidth, boxY + boxHeight); // Bottom Right
+            }
             
             if (!cap.isHeaderCaption && !cap.isFooterCaption) {
               uiCtx.beginPath();
