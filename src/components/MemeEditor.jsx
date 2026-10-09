@@ -11,7 +11,8 @@ import {
   Image as ImageIcon, Search, X, Upload, RotateCw, ZoomIn, Crop, LayoutGrid, Scissors, Play, Pause, FolderHeart, Droplet, Monitor,
   Paintbrush, Eraser, Highlighter, Palette, Sun, Moon, ChevronDown, ChevronLeft, PencilLine, Move, ArrowDownRight, Wand2,
   Layers, ArrowUp, ArrowDown, ChevronsUp, ChevronsDown, Eye, EyeOff, Lock, Unlock, FlipHorizontal,
-  PanelTop, PanelBottom, PanelsTopBottom, MessageSquare, Flame, Tv, MessageCircle, Shield, Circle, TrendingDown, Ban
+  PanelTop, PanelBottom, PanelsTopBottom, MessageSquare, Flame, Tv, MessageCircle, Shield, Circle, TrendingDown, Ban,
+  AlignLeft, AlignCenter, AlignRight
 } from 'lucide-react';
 import AiCaptionModal from './AiCaptionModal';
 import MemeStylesModal, { TwitterVerifiedBadge } from './MemeStylesModal';
@@ -533,6 +534,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
   const [showAiModal, setShowAiModal] = useState(false);
   const [showBubbleLayouts, setShowBubbleLayouts] = useState(false);
   const [showHeaderFooterMenu, setShowHeaderFooterMenu] = useState(false);
+  const [showTextAlignMenu, setShowTextAlignMenu] = useState(false);
   const [lastUsedSettingButton, setLastUsedSettingButton] = useState(null);
   const contextToolbarRef = useRef(null);
   const [showTweetThemeMenu, setShowTweetThemeMenu] = useState(false);
@@ -3238,6 +3240,97 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                     );
                   })()}
 
+                  {/* Text Controls - Alignment Submenu */}
+                  {activeCaption && showTextAlignMenu && (() => {
+                    const currentAlign = activeCaption.align || 'center';
+
+                    return (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+                        <button
+                          onClick={() => { setShowTextAlignMenu(false); setLastUsedSettingButton('align'); }}
+                          className="btn btn-icon btn-xs vid-ctx-btn"
+                          title="Back to text toolbar"
+                          style={{ borderRadius: '8px', flexShrink: 0 }}
+                        >
+                          <ArrowLeft style={{ width: 14, height: 14 }} />
+                        </button>
+                        <div className="vid-ctx-divider" />
+
+                        {/* Alignment Buttons: Left, Center, Right */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
+                          <button
+                            type="button"
+                            className={`btn btn-xs vid-ctx-btn ${currentAlign === 'left' ? 'active' : ''}`}
+                            onClick={() => updateActiveCaption('align', 'left')}
+                            title="Align Left"
+                            style={{
+                              padding: '4px 10px',
+                              fontSize: '0.75rem',
+                              fontWeight: 600,
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              borderRadius: '8px',
+                              background: currentAlign === 'left' ? 'var(--primary-gradient)' : 'rgba(255, 255, 255, 0.08)',
+                              border: currentAlign === 'left' ? '1px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.1)',
+                              color: '#ffffff',
+                              flexShrink: 0
+                            }}
+                          >
+                            <AlignLeft style={{ width: 13, height: 13, color: '#ffffff' }} />
+                            <span>Left</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            className={`btn btn-xs vid-ctx-btn ${currentAlign === 'center' ? 'active' : ''}`}
+                            onClick={() => updateActiveCaption('align', 'center')}
+                            title="Align Center"
+                            style={{
+                              padding: '4px 10px',
+                              fontSize: '0.75rem',
+                              fontWeight: 600,
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              borderRadius: '8px',
+                              background: currentAlign === 'center' ? 'var(--primary-gradient)' : 'rgba(255, 255, 255, 0.08)',
+                              border: currentAlign === 'center' ? '1px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.1)',
+                              color: '#ffffff',
+                              flexShrink: 0
+                            }}
+                          >
+                            <AlignCenter style={{ width: 13, height: 13, color: '#ffffff' }} />
+                            <span>Center</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            className={`btn btn-xs vid-ctx-btn ${currentAlign === 'right' ? 'active' : ''}`}
+                            onClick={() => updateActiveCaption('align', 'right')}
+                            title="Align Right"
+                            style={{
+                              padding: '4px 10px',
+                              fontSize: '0.75rem',
+                              fontWeight: 600,
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              borderRadius: '8px',
+                              background: currentAlign === 'right' ? 'var(--primary-gradient)' : 'rgba(255, 255, 255, 0.08)',
+                              border: currentAlign === 'right' ? '1px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.1)',
+                              color: '#ffffff',
+                              flexShrink: 0
+                            }}
+                          >
+                            <AlignRight style={{ width: 13, height: 13, color: '#ffffff' }} />
+                            <span>Right</span>
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })()}
+
                   {/* Bubble Layout Selector Bar with Back button */}
                   {activeCaption && activeCaption.bubbleStyle && showBubbleLayouts && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0, justifyContent: 'flex-start', width: '100%' }}>
@@ -3381,7 +3474,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                     </div>
                   )}
 
-                  {activeCaption && !showFontMenu && !showTextCurveMenu && !showTextBlurMenu && !showTextBgMenu && !showBubbleLayouts && !showTweetThemeMenu && !showTweetTrendMenu && (() => {
+                  {activeCaption && !showFontMenu && !showTextAlignMenu && !showTextCurveMenu && !showTextBlurMenu && !showTextBgMenu && !showBubbleLayouts && !showTweetThemeMenu && !showTweetTrendMenu && (() => {
                     if (activeCaption.isTweetCard) {
                       const isVerified = activeCaption.tweetVerified !== false;
 
@@ -3501,6 +3594,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           title="Change Font"
                           onClick={() => {
                             setShowFontMenu(true);
+                            setShowTextAlignMenu(false);
                             setShowTextCurveMenu(false);
                             setShowTextBlurMenu(false);
                             setShowTextBgMenu(false);
@@ -3568,7 +3662,47 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           />
                         </div>
 
-                        {/* 4. Bg Button (Interchanged with Curv) */}
+                        {/* 4. Align Button */}
+                        <button
+                          type="button"
+                          data-setting-btn="align"
+                          className={`btn btn-xs vid-ctx-btn ${lastUsedSettingButton === 'align' ? 'active' : ''}`}
+                          title={`Text Alignment: ${activeCaption.align || 'center'}`}
+                          onClick={() => {
+                            setShowTextAlignMenu(true);
+                            setShowTextCurveMenu(false);
+                            setShowTextBlurMenu(false);
+                            setShowTextBgMenu(false);
+                            setShowFontMenu(false);
+                            setShowBubbleLayouts(false);
+                          }}
+                          style={{
+                            padding: '4px 10px',
+                            fontSize: '0.75rem',
+                            fontWeight: 600,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '5px',
+                            borderRadius: '8px',
+                            background: lastUsedSettingButton === 'align' ? 'var(--primary-gradient)' : 'rgba(255, 255, 255, 0.08)',
+                            border: lastUsedSettingButton === 'align' ? '1px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.1)',
+                            boxShadow: lastUsedSettingButton === 'align' ? '0 2px 10px rgba(6, 182, 212, 0.4), 0 0 8px rgba(99, 102, 241, 0.4)' : 'none',
+                            transition: 'all 0.2s ease',
+                            color: '#ffffff',
+                            flexShrink: 0
+                          }}
+                        >
+                          {(activeCaption.align === 'left') ? (
+                            <AlignLeft style={{ width: 13, height: 13, color: '#ffffff' }} />
+                          ) : (activeCaption.align === 'right') ? (
+                            <AlignRight style={{ width: 13, height: 13, color: '#ffffff' }} />
+                          ) : (
+                            <AlignCenter style={{ width: 13, height: 13, color: '#ffffff' }} />
+                          )}
+                          <span>Align</span>
+                        </button>
+
+                        {/* 5. Bg Button (Interchanged with Curv) */}
                         <button
                           type="button"
                           data-setting-btn="bg"
@@ -3576,6 +3710,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           title="Text Background Box / Banner settings"
                           onClick={() => {
                             setShowTextBgMenu(true);
+                            setShowTextAlignMenu(false);
                             setShowTextCurveMenu(false);
                             setShowTextBlurMenu(false);
                             setShowFontMenu(false);
@@ -3601,7 +3736,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           <span>Bg</span>
                         </button>
 
-                        {/* 5. Blur Button */}
+                        {/* 6. Blur Button */}
                         <button
                           type="button"
                           data-setting-btn="blur"
@@ -3609,6 +3744,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           title="Text Blur & Opacity settings"
                           onClick={() => {
                             setShowTextBlurMenu(true);
+                            setShowTextAlignMenu(false);
                             setShowTextCurveMenu(false);
                             setShowTextBgMenu(false);
                             setShowFontMenu(false);
@@ -3634,7 +3770,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           <span>Blur</span>
                         </button>
 
-                        {/* 6. Curv Button (Interchanged with Bg) */}
+                        {/* 7. Curv Button (Interchanged with Bg) */}
                         <button
                           type="button"
                           data-setting-btn="curv"
@@ -3642,6 +3778,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           title="Curve / Arc text angle"
                           onClick={() => {
                             setShowTextCurveMenu(true);
+                            setShowTextAlignMenu(false);
                             setShowTextBlurMenu(false);
                             setShowTextBgMenu(false);
                             setShowFontMenu(false);
@@ -3906,7 +4043,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                   )}
 
                   {/* UNIFIED ACTIONS CLUSTER (Duplicate / Layers / Delete for All Elements) */}
-                  {((activeCaption && !showFontMenu && !showTextCurveMenu && !showTextBlurMenu && !showTextBgMenu && !showBubbleLayouts && !showTweetThemeMenu && !showTweetTrendMenu) || activeSticker || (activeImageLayer && !showImageFilterMenu)) && (
+                  {((activeCaption && !showFontMenu && !showTextAlignMenu && !showTextCurveMenu && !showTextBlurMenu && !showTextBgMenu && !showBubbleLayouts && !showTweetThemeMenu && !showTweetTrendMenu) || activeSticker || (activeImageLayer && !showImageFilterMenu)) && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: '3px', flexShrink: 0 }}>
                       <div className="vid-ctx-divider" style={{ width: 1, height: 18, background: 'rgba(255,255,255,0.15)', margin: '0 2px', flexShrink: 0 }} />
                       <button
@@ -4806,6 +4943,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
               setShowTweetThemeMenu(false);
               setShowTweetTrendMenu(false);
               setShowHeaderFooterMenu(false);
+              setShowTextAlignMenu(false);
               if (!id) {
                 const prevSticker = stickers.find((s) => s.id === activeLayerId);
                 const prevCaption = captions.find((c) => c.id === activeLayerId);
@@ -5839,6 +5977,127 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           Dark
                         </button>
                       </div>
+                    </div>
+                  </div>
+
+                  {/* ROW: ALIGNMENT & TEXT CASE */}
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: '1fr 1fr',
+                      gap: '10px',
+                      alignItems: 'center'
+                    }}
+                  >
+                    {/* Alignment Control */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0 }}>
+                      <label style={{ margin: 0, fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)' }}>
+                        Alignment
+                      </label>
+                      <div
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          background: 'var(--bg-surface-1)',
+                          borderRadius: '10px',
+                          padding: '3px',
+                          border: '1px solid var(--glass-border)',
+                          gap: '3px',
+                          height: '36px'
+                        }}
+                      >
+                        <button
+                          type="button"
+                          className={`btn btn-xs flex-1 ${(activeCaption.align === 'left') ? 'btn-primary' : 'btn-ghost'}`}
+                          onClick={() => updateActiveCaption('align', 'left')}
+                          style={{
+                            borderRadius: '7px',
+                            height: '100%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '4px',
+                            fontSize: '0.72rem',
+                            fontWeight: 600,
+                            background: activeCaption.align === 'left' ? 'var(--primary-gradient)' : 'transparent',
+                            border: 'none',
+                            color: '#ffffff'
+                          }}
+                          title="Align Left"
+                        >
+                          <AlignLeft size={13} />
+                          <span>Left</span>
+                        </button>
+                        <button
+                          type="button"
+                          className={`btn btn-xs flex-1 ${(activeCaption.align === 'center' || !activeCaption.align) ? 'btn-primary' : 'btn-ghost'}`}
+                          onClick={() => updateActiveCaption('align', 'center')}
+                          style={{
+                            borderRadius: '7px',
+                            height: '100%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '4px',
+                            fontSize: '0.72rem',
+                            fontWeight: 600,
+                            background: (activeCaption.align === 'center' || !activeCaption.align) ? 'var(--primary-gradient)' : 'transparent',
+                            border: 'none',
+                            color: '#ffffff'
+                          }}
+                          title="Align Center"
+                        >
+                          <AlignCenter size={13} />
+                          <span>Center</span>
+                        </button>
+                        <button
+                          type="button"
+                          className={`btn btn-xs flex-1 ${(activeCaption.align === 'right') ? 'btn-primary' : 'btn-ghost'}`}
+                          onClick={() => updateActiveCaption('align', 'right')}
+                          style={{
+                            borderRadius: '7px',
+                            height: '100%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '4px',
+                            fontSize: '0.72rem',
+                            fontWeight: 600,
+                            background: activeCaption.align === 'right' ? 'var(--primary-gradient)' : 'transparent',
+                            border: 'none',
+                            color: '#ffffff'
+                          }}
+                          title="Align Right"
+                        >
+                          <AlignRight size={13} />
+                          <span>Right</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Case Control */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0 }}>
+                      <label style={{ margin: 0, fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)' }}>
+                        Text Case
+                      </label>
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-secondary hover-lift"
+                        onClick={handleToggleTextCase}
+                        style={{
+                          height: '36px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '6px',
+                          borderRadius: '10px',
+                          fontSize: '0.8rem',
+                          fontWeight: 700
+                        }}
+                      >
+                        <span style={{ fontSize: '0.85rem', fontWeight: 800 }}>Aa</span>
+                        <span>Toggle Case</span>
+                      </button>
                     </div>
                   </div>
 
