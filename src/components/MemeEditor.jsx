@@ -3300,72 +3300,86 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                   {/* Sticker / Emoji controls */}
                   {activeSticker && (
                     <>
-                      {/* CLUSTER 1: TRANSFORMS (Rotate & Flip) */}
-                      <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.08)', borderRadius: '10px', padding: '2px', gap: '2px', flexShrink: 0 }}>
-                        <button
-                          className="btn btn-icon btn-xs vid-ctx-btn"
-                          title="Rotate 90°"
-                          onClick={handleRotateSticker}
-                          style={{ border: 'none', background: 'transparent' }}
-                        >
-                          <RotateCw style={{ width: 14, height: 14 }} />
-                        </button>
-                        <button
-                          className={`btn btn-icon btn-xs vid-ctx-btn ${activeSticker.flipX ? 'active' : ''}`}
-                          title="Flip Horizontal (Mirror)"
-                          onClick={handleFlipActiveLayer}
-                          style={{ border: 'none', background: activeSticker.flipX ? 'var(--primary-gradient)' : 'transparent' }}
-                        >
-                          <FlipHorizontal style={{ width: 14, height: 14 }} />
-                        </button>
-                      </div>
+                      {/* 1. Rotate */}
+                      <button
+                        className="btn btn-icon btn-xs vid-ctx-btn"
+                        title="Rotate 90°"
+                        onClick={handleRotateSticker}
+                        style={{
+                          borderRadius: '8px',
+                          flexShrink: 0,
+                          background: 'rgba(255,255,255,0.08)'
+                        }}
+                      >
+                        <RotateCw style={{ width: 14, height: 14 }} />
+                      </button>
 
-                      {/* CLUSTER 2: STYLE (Die-Cut & Color) */}
-                      <div style={{ display: 'flex', alignItems: 'center', background: activeSticker.dieCut ? 'rgba(6,182,212,0.15)' : 'rgba(255,255,255,0.08)', border: `1px solid ${activeSticker.dieCut ? 'var(--cyber-cyan)' : 'var(--glass-border)'}`, borderRadius: '10px', padding: '2px 5px', gap: '5px', flexShrink: 0 }}>
-                        <button
-                          className="btn btn-xs vid-ctx-btn"
-                          title="Die-Cut Sticker Border (White Vinyl Outline)"
-                          onClick={() => handleToggleDieCutSticker()}
+                      {/* 2. Flip */}
+                      <button
+                        className={activeSticker.flipX ? 'btn btn-xs vid-ctx-btn active' : 'btn btn-icon btn-xs vid-ctx-btn'}
+                        title="Flip Horizontal (Mirror)"
+                        onClick={handleFlipActiveLayer}
+                        style={{
+                          padding: activeSticker.flipX ? '4px 10px' : undefined,
+                          fontSize: '0.75rem',
+                          fontWeight: 600,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          background: activeSticker.flipX ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.08)',
+                          borderRadius: '8px',
+                          flexShrink: 0
+                        }}
+                      >
+                        <FlipHorizontal style={{ width: 14, height: 14 }} />
+                        {activeSticker.flipX && <span>Flip</span>}
+                      </button>
+
+                      {/* 3. Die-Cut */}
+                      <button
+                        className={`btn btn-xs vid-ctx-btn ${activeSticker.dieCut ? 'active' : ''}`}
+                        title="Die-Cut Sticker Border (White Vinyl Outline)"
+                        onClick={() => handleToggleDieCutSticker()}
+                        style={{
+                          padding: '4px 10px',
+                          fontSize: '0.75rem',
+                          fontWeight: 600,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          borderRadius: '8px',
+                          background: activeSticker.dieCut ? 'var(--primary-gradient)' : 'rgba(255,255,255,0.08)',
+                          color: '#ffffff',
+                          flexShrink: 0
+                        }}
+                      >
+                        <Shield style={{ width: 13, height: 13 }} />
+                        <span>Die-Cut</span>
+                      </button>
+
+                      {activeSticker.dieCut && (
+                        <div
                           style={{
-                            border: 'none',
-                            background: 'transparent',
-                            padding: '2px 5px',
-                            fontSize: '11px',
-                            fontWeight: 600,
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '4px',
-                            color: activeSticker.dieCut ? 'var(--cyber-cyan)' : '#ffffff'
+                            position: 'relative',
+                            overflow: 'hidden',
+                            width: 22,
+                            height: 22,
+                            borderRadius: '50%',
+                            border: '2px solid rgba(255,255,255,0.6)',
+                            background: activeSticker.dieCutColor || '#ffffff',
+                            cursor: 'pointer',
+                            flexShrink: 0
                           }}
+                          title="Die-Cut Border Color"
                         >
-                          <Shield style={{ width: 13, height: 13 }} />
-                          <span>Die-Cut</span>
-                        </button>
-
-                        {activeSticker.dieCut && (
-                          <div
-                            style={{
-                              position: 'relative',
-                              overflow: 'hidden',
-                              width: 18,
-                              height: 18,
-                              borderRadius: '50%',
-                              border: '2px solid rgba(255,255,255,0.6)',
-                              background: activeSticker.dieCutColor || '#ffffff',
-                              cursor: 'pointer',
-                              flexShrink: 0
-                            }}
-                            title="Die-Cut Border Color"
-                          >
-                            <input
-                              type="color"
-                              value={activeSticker.dieCutColor || '#ffffff'}
-                              onChange={(e) => handleSetDieCutColor(e.target.value)}
-                              style={{ position: 'absolute', opacity: 0, inset: 0, cursor: 'pointer', width: '100%', height: '100%' }}
-                            />
-                          </div>
-                        )}
-                      </div>
+                          <input
+                            type="color"
+                            value={activeSticker.dieCutColor || '#ffffff'}
+                            onChange={(e) => handleSetDieCutColor(e.target.value)}
+                            style={{ position: 'absolute', opacity: 0, inset: 0, cursor: 'pointer', width: '100%', height: '100%' }}
+                          />
+                        </div>
+                      )}
                     </>
                   )}
 
