@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Sparkles, RefreshCw, Check, Copy, Key, ArrowRight, X, Type, PanelTop } from 'lucide-react';
 import { AI_MEME_CATEGORIES, generateMemeCaptionsWithGemini } from '../data/aiMemeCaptions';
+import BottomSheet from './BottomSheet';
 
 export default function AiCaptionModal({ isOpen, onClose, onApplyCaption, templateName }) {
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -56,130 +57,117 @@ export default function AiCaptionModal({ isOpen, onClose, onApplyCaption, templa
   if (!isOpen) return null;
 
   return (
-    <div
-      className="modal-backdrop animate-fade-in"
-      style={{
-        zIndex: 9999,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '16px',
-        backdropFilter: 'blur(12px)',
-        background: 'rgba(0, 0, 0, 0.72)'
-      }}
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
-    >
-      <div
-        className="modal-card"
-        style={{
-          width: '100%',
-          maxWidth: '430px',
-          background: 'rgba(18, 18, 22, 0.98)',
-          borderRadius: '16px',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-          boxShadow: '0 24px 60px rgba(0, 0, 0, 0.75)',
-          overflow: 'hidden',
-          display: 'flex',
-          flexDirection: 'column',
-          maxHeight: '85vh'
-        }}
-      >
-        {/* Top Header Row */}
+    <BottomSheet
+      isOpen={isOpen}
+      onClose={onClose}
+      title="AI Captions"
+      icon={<Sparkles size={16} style={{ color: 'var(--cyber-cyan)' }} />}
+      badge={
         <div
           style={{
-            padding: '14px 18px',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.07)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: '12px'
+            display: 'inline-flex',
+            background: 'rgba(255, 255, 255, 0.06)',
+            borderRadius: '8px',
+            padding: '2px',
+            border: '1px solid rgba(255, 255, 255, 0.08)'
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Sparkles size={16} style={{ color: 'var(--cyber-cyan)' }} />
-            <span style={{ fontSize: '0.92rem', fontWeight: 600, color: '#ffffff' }}>
-              AI Captions
+          <button
+            type="button"
+            onClick={() => setTargetMode('caption')}
+            style={{
+              padding: '3px 8px',
+              borderRadius: '6px',
+              fontSize: '0.7rem',
+              fontWeight: targetMode === 'caption' ? 600 : 500,
+              border: 'none',
+              cursor: 'pointer',
+              background: targetMode === 'caption' ? 'var(--primary-gradient)' : 'transparent',
+              color: targetMode === 'caption' ? '#ffffff' : 'rgba(255, 255, 255, 0.6)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px'
+            }}
+          >
+            <Type size={11} />
+            <span>Caption</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setTargetMode('header')}
+            style={{
+              padding: '3px 8px',
+              borderRadius: '6px',
+              fontSize: '0.7rem',
+              fontWeight: targetMode === 'header' ? 600 : 500,
+              border: 'none',
+              cursor: 'pointer',
+              background: targetMode === 'header' ? 'var(--primary-gradient)' : 'transparent',
+              color: targetMode === 'header' ? '#ffffff' : 'rgba(255, 255, 255, 0.6)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px'
+            }}
+          >
+            <PanelTop size={11} />
+            <span>Header</span>
+          </button>
+        </div>
+      }
+      maxHeight="82vh"
+      footer={
+        <div>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between'
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => setShowKeyInput(!showKeyInput)}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: geminiApiKey ? 'var(--cyber-cyan)' : 'rgba(255, 255, 255, 0.4)',
+                fontSize: '0.68rem',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+                cursor: 'pointer',
+                padding: 0
+              }}
+            >
+              <Key size={11} />
+              <span>{geminiApiKey ? 'Gemini Key Configured' : 'Custom Gemini Key (Optional)'}</span>
+            </button>
+            <span style={{ fontSize: '0.66rem', color: 'rgba(255, 255, 255, 0.35)' }}>
+              1-tap to apply
             </span>
           </div>
 
-          {/* Minimalist Target Switcher: Caption vs Header */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          {showKeyInput && (
             <div
               style={{
-                display: 'inline-flex',
-                background: 'rgba(255, 255, 255, 0.06)',
-                borderRadius: '8px',
-                padding: '2px',
-                border: '1px solid rgba(255, 255, 255, 0.08)'
+                marginTop: '8px',
+                display: 'flex',
+                gap: '6px'
               }}
             >
-              <button
-                type="button"
-                onClick={() => setTargetMode('caption')}
-                style={{
-                  padding: '3px 8px',
-                  borderRadius: '6px',
-                  fontSize: '0.7rem',
-                  fontWeight: targetMode === 'caption' ? 600 : 500,
-                  border: 'none',
-                  cursor: 'pointer',
-                  background: targetMode === 'caption' ? 'var(--primary-gradient)' : 'transparent',
-                  color: targetMode === 'caption' ? '#ffffff' : 'rgba(255, 255, 255, 0.6)',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '4px'
-                }}
-              >
-                <Type size={11} />
-                <span>Caption</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setTargetMode('header')}
-                style={{
-                  padding: '3px 8px',
-                  borderRadius: '6px',
-                  fontSize: '0.7rem',
-                  fontWeight: targetMode === 'header' ? 600 : 500,
-                  border: 'none',
-                  cursor: 'pointer',
-                  background: targetMode === 'header' ? 'var(--primary-gradient)' : 'transparent',
-                  color: targetMode === 'header' ? '#ffffff' : 'rgba(255, 255, 255, 0.6)',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '4px'
-                }}
-              >
-                <PanelTop size={11} />
-                <span>Header</span>
-              </button>
+              <input
+                type="password"
+                className="form-input"
+                placeholder="Paste Google Gemini API Key..."
+                value={geminiApiKey}
+                onChange={(e) => handleSaveApiKey(e.target.value)}
+                style={{ fontSize: '0.75rem', padding: '6px 8px', borderRadius: '6px', flex: 1 }}
+              />
             </div>
-
-            <button
-              type="button"
-              className="btn btn-icon btn-ghost btn-xs"
-              onClick={onClose}
-              title="Close"
-              style={{ borderRadius: '8px', color: 'rgba(255, 255, 255, 0.6)', width: '26px', height: '26px' }}
-            >
-              <X size={15} />
-            </button>
-          </div>
+          )}
         </div>
-
-        {/* Content Body */}
-        <div
-          style={{
-            padding: '14px 18px',
-            overflowY: 'auto',
-            flex: 1,
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '12px'
-          }}
-        >
+      }
+    >
           {/* Minimal Prompt Input with integrated Generate Button */}
           <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
             <input
@@ -361,64 +349,6 @@ export default function AiCaptionModal({ isOpen, onClose, onApplyCaption, templa
               </div>
             )}
           </div>
-        </div>
-
-        {/* Quiet Footer: Gemini API Key */}
-        <div
-          style={{
-            padding: '8px 18px',
-            borderTop: '1px solid rgba(255, 255, 255, 0.05)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            background: 'rgba(0, 0, 0, 0.2)'
-          }}
-        >
-          <button
-            type="button"
-            onClick={() => setShowKeyInput(!showKeyInput)}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: geminiApiKey ? 'var(--cyber-cyan)' : 'rgba(255, 255, 255, 0.4)',
-              fontSize: '0.68rem',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '4px',
-              cursor: 'pointer',
-              padding: 0
-            }}
-          >
-            <Key size={11} />
-            <span>{geminiApiKey ? 'Gemini Key Configured' : 'Custom Gemini Key (Optional)'}</span>
-          </button>
-          <span style={{ fontSize: '0.66rem', color: 'rgba(255, 255, 255, 0.35)' }}>
-            1-tap to apply
-          </span>
-        </div>
-
-        {/* Collapsible Key Input */}
-        {showKeyInput && (
-          <div
-            style={{
-              padding: '8px 18px 12px',
-              background: 'rgba(0, 0, 0, 0.3)',
-              borderTop: '1px solid rgba(255, 255, 255, 0.05)',
-              display: 'flex',
-              gap: '6px'
-            }}
-          >
-            <input
-              type="password"
-              className="form-input"
-              placeholder="Paste Google Gemini API Key..."
-              value={geminiApiKey}
-              onChange={(e) => handleSaveApiKey(e.target.value)}
-              style={{ fontSize: '0.75rem', padding: '5px 8px', borderRadius: '6px', flex: 1 }}
-            />
-          </div>
-        )}
-      </div>
-    </div>
+    </BottomSheet>
   );
 }

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X, Plus, User, AtSign, Sparkles, Dices, Check, MessageCircle, Repeat, Heart, Bookmark, Share2 } from 'lucide-react';
+import BottomSheet from './BottomSheet';
 
 export const TwitterVerifiedBadge = ({ size = 16, color = '#1d9bf0', checkColor = '#ffffff' }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" style={{ flexShrink: 0, display: 'inline-block' }}>
@@ -118,89 +119,62 @@ export default function MemeStylesModal({
 
 
   return (
-    <div
-      className="modal-backdrop animate-fade-in"
-      style={{
-        zIndex: 9999,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '20px 16px',
-        overflowY: 'auto',
-        backdropFilter: 'blur(12px)',
-        WebkitBackdropFilter: 'blur(12px)'
-      }}
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
-    >
-      <div
-        className="modal-card"
-        style={{
-          width: '100%',
-          maxWidth: '560px',
-          background: 'linear-gradient(180deg, rgba(24, 24, 34, 0.98) 0%, rgba(16, 16, 24, 0.99) 100%)',
-          borderRadius: '24px',
-          border: '1px solid rgba(255, 255, 255, 0.14)',
-          boxShadow: '0 32px 80px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.08), 0 0 40px rgba(29, 155, 240, 0.1)',
-          overflow: 'hidden',
-          display: 'flex',
-          flexDirection: 'column',
-          maxHeight: 'min(90vh, 740px)',
-          margin: 'auto'
-        }}
-      >
-        {/* Header */}
+    <BottomSheet
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Tweet Card"
+      icon={
         <div
           style={{
-            padding: '16px 22px',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+            width: 28,
+            height: 28,
+            borderRadius: '8px',
+            background: '#000000',
+            border: '1px solid rgba(255, 255, 255, 0.18)',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'space-between',
-            background: 'rgba(255, 255, 255, 0.02)'
+            justifyContent: 'center',
+            flexShrink: 0
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div
-              style={{
-                width: 38,
-                height: 38,
-                borderRadius: '12px',
-                background: '#000000',
-                border: '1px solid rgba(255, 255, 255, 0.18)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.2)',
-                flexShrink: 0
-              }}
-            >
-              <XLogo size={18} color="#ffffff" />
-            </div>
-            <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800, color: '#ffffff', letterSpacing: '-0.01em' }}>
-              Tweet Card
-            </h3>
-          </div>
-          <button
-            className="btn btn-icon btn-ghost btn-xs"
-            onClick={onClose}
-            style={{
-              borderRadius: '50%',
-              width: 30,
-              height: 30,
-              color: 'var(--text-muted)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              background: 'rgba(255, 255, 255, 0.04)',
-              border: '1px solid rgba(255, 255, 255, 0.06)'
-            }}
-            title="Close"
-          >
-            <X size={15} />
-          </button>
+          <XLogo size={14} color="#ffffff" />
         </div>
+      }
+      maxHeight="86vh"
+      contentStyle={{ padding: '6px 16px 16px 16px', gap: '12px' }}
+      footer={
+        <button
+          type="button"
+          className="btn btn-sm btn-primary hover-lift"
+          onClick={() => {
+            onAddTweetCard({
+              name: tweetName,
+              handle: tweetHandle,
+              text: tweetText,
+              verified: tweetVerified,
+              theme: 'dark',
+              time: '10:42 PM · Oct 8, 2026',
+              metrics: '💬 14.2K    🔁 62.8K    ❤️ 420.5K    📊 18.2M'
+            });
+            onClose();
+          }}
+          style={{
+            width: '100%',
+            fontWeight: 800,
+            padding: '12px 18px',
+            borderRadius: '14px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+            fontSize: '0.92rem',
+            boxShadow: '0 8px 24px rgba(249, 115, 22, 0.35)'
+          }}
+        >
+          <Plus size={18} strokeWidth={2.5} /> Add Tweet Card to Meme
+        </button>
+      }
+    >
 
         {/* Persona Quick-Presets Carousel */}
         <div
@@ -537,49 +511,6 @@ export default function MemeStylesModal({
             </div>
           </div>
         </div>
-
-        {/* Pinned Sticky Footer CTA */}
-        <div
-          style={{
-            padding: '14px 20px',
-            borderTop: '1px solid rgba(255, 255, 255, 0.08)',
-            background: 'rgba(16, 16, 24, 0.98)',
-            display: 'flex',
-            alignItems: 'center'
-          }}
-        >
-          <button
-            type="button"
-            className="btn btn-sm btn-primary hover-lift"
-            onClick={() => {
-              onAddTweetCard({
-                name: tweetName,
-                handle: tweetHandle,
-                text: tweetText,
-                verified: tweetVerified,
-                theme: 'dark',
-                time: '10:42 PM · Oct 8, 2026',
-                metrics: '💬 14.2K    🔁 62.8K    ❤️ 420.5K    📊 18.2M'
-              });
-              onClose();
-            }}
-            style={{
-              width: '100%',
-              fontWeight: 800,
-              padding: '12px 18px',
-              borderRadius: '14px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px',
-              fontSize: '0.92rem',
-              boxShadow: '0 8px 24px rgba(249, 115, 22, 0.35)'
-            }}
-          >
-            <Plus size={18} strokeWidth={2.5} /> Add Tweet Card to Meme
-          </button>
-        </div>
-      </div>
-    </div>
+      </BottomSheet>
   );
 }

@@ -17,6 +17,7 @@ import {
 import AiCaptionModal from './AiCaptionModal';
 import MemeStylesModal, { TwitterVerifiedBadge } from './MemeStylesModal';
 import FaceMorphModal from './FaceMorphModal';
+import BottomSheet from './BottomSheet';
 import FacePinpointOverlay from './FacePinpointOverlay';
 import { fuseFaceIntoTemplate } from '../utils/faceGraftEngine';
 import { detectFaceOnTemplate } from '../utils/faceLandmarkerService';
@@ -7725,35 +7726,16 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
 
 
 
-      {/* Meme Stickers & Overlays Modal */}
-      {showMemeStickersModal && (
-        <ModalPortal>
-          <div
-            className="modal-backdrop animate-fade-in"
-            style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-            onClick={() => setShowMemeStickersModal(false)}
-          >
-          <div
-            className="modal-content glass-card modal-lg animate-scale-up"
-            onClick={(e) => e.stopPropagation()}
-            style={{ position: 'relative', width: '90%', maxWidth: '680px', height: '80vh', maxHeight: '85vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
-          >
-            <div className="modal-header flex-between" style={{ alignItems: 'center', marginBottom: '8px' }}>
-              <h3 style={{ margin: '0 auto', color: 'var(--text-main)', textAlign: 'center', flex: 1, paddingLeft: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                <Sticker size={20} style={{ color: 'var(--cyber-cyan)' }} />
-                Choose a Sticker
-              </h3>
-              <button
-                className="btn-close"
-                onClick={() => setShowMemeStickersModal(false)}
-                title="Close"
-                aria-label="Close"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="search-bar-wrapper margin-bottom-md" style={{ position: 'relative', marginTop: '12px', marginBottom: '14px' }}>
+      {/* Meme Stickers & Overlays Bottom Sheet */}
+      <BottomSheet
+        isOpen={showMemeStickersModal}
+        onClose={() => setShowMemeStickersModal(false)}
+        title="Choose a Sticker"
+        icon={<Sticker size={18} style={{ color: 'var(--cyber-cyan)' }} />}
+        maxHeight="78vh"
+        contentStyle={{ padding: '6px 16px 16px 16px', overflow: 'hidden' }}
+      >
+        <div className="search-bar-wrapper margin-bottom-md" style={{ position: 'relative', marginTop: '2px', marginBottom: '12px' }}>
               <Search className="search-icon" size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
               <input 
                 type="text" 
@@ -7863,40 +7845,18 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                 )}
               </div>
             </div>
-          </div>
-          </div>
-        </ModalPortal>
-      )}
+      </BottomSheet>
 
-      {/* Emoji Stickers Modal */}
-      {showEmojiModal && (
-        <ModalPortal>
-          <div
-            className="modal-backdrop animate-fade-in"
-            style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-            onClick={() => setShowEmojiModal(false)}
-          >
-          <div
-            className="modal-content glass-card modal-lg animate-scale-up"
-            onClick={(e) => e.stopPropagation()}
-            style={{ position: 'relative', width: '90%', maxWidth: '680px', height: '80vh', maxHeight: '85vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
-          >
-            <div className="modal-header flex-between" style={{ alignItems: 'center', marginBottom: '8px' }}>
-              <h3 style={{ margin: '0 auto', color: 'var(--text-main)', textAlign: 'center', flex: 1, paddingLeft: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                <Smile size={20} style={{ color: 'var(--cyber-cyan)' }} />
-                Choose an Emoji
-              </h3>
-              <button
-                className="btn-close"
-                onClick={() => setShowEmojiModal(false)}
-                title="Close"
-                aria-label="Close"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="search-bar-wrapper margin-bottom-md" style={{ position: 'relative', marginTop: '12px', marginBottom: '14px' }}>
+      {/* Emoji Stickers Bottom Sheet */}
+      <BottomSheet
+        isOpen={showEmojiModal}
+        onClose={() => setShowEmojiModal(false)}
+        title="Choose an Emoji"
+        icon={<Smile size={18} style={{ color: 'var(--cyber-cyan)' }} />}
+        maxHeight="78vh"
+        contentStyle={{ padding: '6px 16px 16px 16px', overflow: 'hidden' }}
+      >
+        <div className="search-bar-wrapper margin-bottom-md" style={{ position: 'relative', marginTop: '2px', marginBottom: '12px' }}>
               <Search className="search-icon" size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
               <input 
                 type="text" 
@@ -7991,40 +7951,18 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                 )}
               </div>
             </div>
-          </div>
-          </div>
-        </ModalPortal>
-      )}
+      </BottomSheet>
 
-      {/* Image Layer Template Picker Modal */}
-      {imagePickerTarget !== null && (
-        <ModalPortal>
-          <div className="modal-backdrop animate-fade-in" onClick={() => setImagePickerTarget(null)}>
-          <div 
-            className="modal-content glass-card modal-lg animate-scale-up" 
-            onClick={(e) => e.stopPropagation()} 
-            style={{ 
-              position: 'relative', 
-              width: '90%', 
-              maxWidth: '680px', 
-              height: '80vh', 
-              maxHeight: '85vh', 
-              display: 'flex', 
-              flexDirection: 'column', 
-              overflow: 'hidden' 
-            }}
-          >
-            <div className="modal-header flex-between" style={{ alignItems: 'center', marginBottom: '10px' }}>
-              <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                <ImageIcon size={20} style={{ color: 'var(--cyber-cyan)' }} />
-                <h3 style={{ margin: 0, color: 'var(--text-main)', fontSize: '1.05rem', fontWeight: 600 }}>
-                  Add Template
-                </h3>
-              </div>
-              <button className="btn-close" onClick={() => setImagePickerTarget(null)} title="Close" aria-label="Close">✕</button>
-            </div>
-
-            <div className="picker-search-bar" style={{ position: 'relative', marginBottom: '14px' }}>
+      {/* Image Layer Template Picker Bottom Sheet */}
+      <BottomSheet
+        isOpen={imagePickerTarget !== null}
+        onClose={() => setImagePickerTarget(null)}
+        title="Add Template"
+        icon={<ImageIcon size={18} style={{ color: 'var(--cyber-cyan)' }} />}
+        maxHeight="82vh"
+        contentStyle={{ padding: '8px 16px 16px 16px', overflow: 'hidden' }}
+      >
+        <div className="picker-search-bar" style={{ position: 'relative', marginBottom: '12px' }}>
               <Search className="search-icon" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: 'var(--text-muted)' }} />
               <input
                 type="text"
@@ -8200,10 +8138,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                 </div>
               )}
             </div>
-          </div>
-          </div>
-        </ModalPortal>
-      )}
+      </BottomSheet>
 
       {/* AI Meme Caption Generator Modal */}
       <AiCaptionModal
@@ -8214,15 +8149,11 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
       />
 
       {/* Meme Style Modal (Tweet Card) */}
-      {showStylesModal && (
-        <ModalPortal>
-          <MemeStylesModal
-            isOpen={showStylesModal}
-            onClose={() => setShowStylesModal(false)}
-            onAddTweetCard={handleAddTweetCard}
-          />
-        </ModalPortal>
-      )}
+      <MemeStylesModal
+        isOpen={showStylesModal}
+        onClose={() => setShowStylesModal(false)}
+        onAddTweetCard={handleAddTweetCard}
+      />
 
       {/* Face Morph & Swap Studio Modal */}
       {showFaceMorphModal && (

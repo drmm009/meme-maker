@@ -10,7 +10,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { MEME_FACE_PRESETS, getMemeFaceDataUrl } from '../data/memeFaces';
-import ModalPortal from './ModalPortal';
+import BottomSheet from './BottomSheet';
 
 // Helper to convert any image URL/blob to a base64 data URL
 async function ensureDataUrl(src) {
@@ -271,104 +271,69 @@ export default function FaceMorphModal({
     : (previewType === 'crop' ? (neuralCropPreview || neuralFullImage) : neuralFullImage);
 
   return (
-    <ModalPortal>
-      <div
-        className="modal-backdrop animate-fade-in"
-        onClick={(e) => {
-          if (e.target === e.currentTarget) onClose();
-        }}
-        style={{
-          zIndex: 99999,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '16px',
-          backdropFilter: 'blur(12px)',
-          background: 'rgba(0, 0, 0, 0.75)'
-        }}
-      >
-        <div
-          className="modal-card animate-scale-up"
-          onClick={(e) => e.stopPropagation()}
+    <BottomSheet
+      isOpen={isOpen}
+      onClose={onClose}
+      title="AI Face Swap"
+      icon={<Sparkles size={16} style={{ color: 'var(--cyber-cyan)' }} />}
+      badge={targetLabel ? (
+        <span
           style={{
-            width: '100%',
-            maxWidth: '430px',
-            background: 'rgba(18, 18, 24, 0.98)',
-            borderRadius: '16px',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            boxShadow: '0 24px 60px rgba(0, 0, 0, 0.8)',
-            overflow: 'hidden',
-            display: 'flex',
-            flexDirection: 'column',
-            maxHeight: 'min(90vh, 760px)'
+            fontSize: '0.64rem',
+            fontWeight: 600,
+            padding: '2px 8px',
+            borderRadius: '999px',
+            background: 'rgba(6, 182, 212, 0.15)',
+            color: 'var(--cyber-cyan)',
+            border: '1px solid rgba(6, 182, 212, 0.3)'
           }}
         >
-          {/* 1. Header (Matching AiCaptionModal & App Design) */}
-          <div
+          {targetLabel}
+        </span>
+      ) : null}
+      maxHeight="82vh"
+      footer={
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '10px'
+          }}
+        >
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm"
+            onClick={onClose}
+            style={{ fontSize: '0.8rem', padding: '7px 14px', borderRadius: '10px' }}
+          >
+            Cancel
+          </button>
+
+          <button
+            type="button"
+            className="btn btn-primary btn-sm"
+            onClick={handleApply}
+            disabled={isNeuralProcessing || (!neuralFullImage && !neuralCropPreview)}
             style={{
-              padding: '14px 18px',
-              borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+              flex: 1,
+              fontSize: '0.82rem',
+              fontWeight: 700,
+              padding: '8px 16px',
+              borderRadius: '10px',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: '10px'
+              justifyContent: 'center',
+              gap: '6px'
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Sparkles size={16} style={{ color: 'var(--cyber-cyan)' }} />
-              <span style={{ fontSize: '0.92rem', fontWeight: 700, color: '#ffffff' }}>
-                AI Face Swap
-              </span>
-              {targetLabel && (
-                <span
-                  style={{
-                    fontSize: '0.64rem',
-                    fontWeight: 600,
-                    padding: '2px 8px',
-                    borderRadius: '999px',
-                    background: 'rgba(6, 182, 212, 0.15)',
-                    color: 'var(--cyber-cyan)',
-                    border: '1px solid rgba(6, 182, 212, 0.3)'
-                  }}
-                >
-                  {targetLabel}
-                </span>
-              )}
-            </div>
-
-            <button
-              type="button"
-              className="btn btn-icon btn-ghost btn-xs"
-              onClick={onClose}
-              title="Close"
-              aria-label="Close"
-              style={{
-                borderRadius: '8px',
-                color: 'rgba(255, 255, 255, 0.6)',
-                width: '26px',
-                height: '26px',
-                padding: 0,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
-            >
-              <X size={15} />
-            </button>
-          </div>
-
-          {/* 2. Scrollable Body */}
-          <div
-            style={{
-              padding: '14px 18px',
-              overflowY: 'auto',
-              flex: 1,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '12px'
-            }}
-          >
-            {/* Visual Preview Box */}
+            <Check size={14} />
+            <span>Apply to Meme</span>
+          </button>
+        </div>
+      }
+    >
+      {/* Visual Preview Box */}
             <div
               style={{
                 position: 'relative',
@@ -710,52 +675,7 @@ export default function FaceMorphModal({
                 </div>
               </div>
             )}
-          </div>
 
-          {/* 3. Footer Actions (Matching App's standard modal action footer) */}
-          <div
-            style={{
-              padding: '12px 18px',
-              borderTop: '1px solid rgba(255, 255, 255, 0.08)',
-              background: 'rgba(0, 0, 0, 0.25)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: '10px'
-            }}
-          >
-            <button
-              type="button"
-              className="btn btn-ghost btn-sm"
-              onClick={onClose}
-              style={{ fontSize: '0.8rem', padding: '7px 14px', borderRadius: '10px' }}
-            >
-              Cancel
-            </button>
-
-            <button
-              type="button"
-              className="btn btn-primary btn-sm"
-              onClick={handleApply}
-              disabled={isNeuralProcessing || (!neuralFullImage && !neuralCropPreview)}
-              style={{
-                flex: 1,
-                fontSize: '0.82rem',
-                fontWeight: 700,
-                padding: '8px 16px',
-                borderRadius: '10px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '6px'
-              }}
-            >
-              <Check size={14} />
-              <span>Apply to Meme</span>
-            </button>
-          </div>
-        </div>
-      </div>
-    </ModalPortal>
+    </BottomSheet>
   );
 }
