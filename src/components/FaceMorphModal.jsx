@@ -1,940 +1,757 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   Sparkles,
-  Wand2,
   Upload,
   Camera,
-  Smile,
   RefreshCw,
   Check,
   X,
-  Sliders,
-  Sun,
-  Palette,
-  FlipHorizontal,
   Eye,
-  EyeOff,
-  Play,
-  Pause,
-  RotateCcw,
-  Move
+  AlertCircle
 } from 'lucide-react';
 import { MEME_FACE_PRESETS, getMemeFaceDataUrl } from '../data/memeFaces';
 import ModalPortal from './ModalPortal';
-import {
-  CANONICAL_LANDMARKS,
-  CANONICAL_TRIANGLES,
-  getDefaultLandmarks,
-  getLandmarkPreset,
-  morphFaceMesh,
-  drawLandmarkMeshOverlay
-} from '../utils/faceMorphEngine';
+
+// Helper to convert any image URL/blob to a base64 data URL
+async function ensureDataUrl(src) {
+  if (!src) return '';
+  if (src.startsWith('data:')) return src;
+
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      try {
+        const c = document.createElement('canvas');
+        c.width = img.naturalWidth || 600;
+        c.height = img.naturalHeight || 600;
+        const ctx = c.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        resolve(c.toDataURL('image/jpeg', 0.92));
+      } catch (err) {
+        resolve(src);
+      }
+    };
+    img.onerror = () => resolve(src);
+    img.src = src;
+  });
+}
 
 export default function FaceMorphModal({
   isOpen,
   onClose,
   onApplyFaceMorph,
-  initialLighting,
-  memeFacePatch
+  memeFacePatch,
+  memeTemplateUrl,
+  faceTarget,
+  targetLabel
 }) {
-  const [activeTab, setActiveTab] = useState('presets'); // 'presets' | 'upload'
+  // Preset or custom uploaded face
   const [selectedPresetId, setSelectedPresetId] = useState(MEME_FACE_PRESETS[0].id);
   const [selectedImageSrc, setSelectedImageSrc] = useState(getMemeFaceDataUrl(MEME_FACE_PRESETS[0]));
   const [faceName, setFaceName] = useState(MEME_FACE_PRESETS[0].name);
 
-  // Landmark meshes for Face A (meme) and Face B (photo)
-  const [landmarksA, setLandmarksA] = useState(() => getDefaultLandmarks());
-  const [landmarksB, setLandmarksB] = useState(() => getDefaultLandmarks());
-  const [activeAnglePreset, setActiveAnglePreset] = useState('front');
+  // Neural Swap Engine State
+  const [isNeuralAvailable, setIsNeuralAvailable] = useState(false);
+  const [isNeuralProcessing, setIsNeuralProcessing] = useState(false);
+  const [neuralError, setNeuralError] = useState(null);
 
-  // Morph animation & progress (0 = 100% meme, 1 = 100% photo)
-  const [morphProgress, setMorphProgress] = useState(0.75); // default 75% morph
-  const [isPlaying, setIsPlaying] = useState(false);
-  const animFrameRef = useRef(null);
-  const animStartTimeRef = useRef(null);
+  // Generated Results
+  const [neuralFullImage, setNeuralFullImage] = useState(null);
+  const [neuralCropPreview, setNeuralCropPreview] = useState(null);
+  const [originalCropPreview, setOriginalCropPreview] = useState(null);
+  const [previewType, setPreviewType] = useState('crop'); // 'crop' | 'full'
 
-  // Mesh tuning & visual controls
-  const [showMesh, setShowMesh] = useState(false);
-  const [activePinId, setActivePinId] = useState(null);
-  const isDraggingPinRef = useRef(false);
+  // Hold to Compare State
+  const [isComparing, setIsComparing] = useState(false);
 
-  // Lighting & Tone matching controls
-  const [brightness, setBrightness] = useState(100);
-  const [warmth, setWarmth] = useState(0);
-  const [contrast, setContrast] = useState(100);
-  const [flipX, setFlipX] = useState(false);
-  const [featherEdge, setFeatherEdge] = useState(true);
+  // Target Face Selection (defaults to all faces if > 1)
+  const [detectedFaces, setDetectedFaces] = useState([]);
+  const [selectedTargetIndex, setSelectedTargetIndex] = useState(null);
+  const [swapAllFaces, setSwapAllFaces] = useState(true);
 
-  // Canvases & Image refs
-  const previewCanvasRef = useRef(null);
+  // Custom uploaded face
+  const [customFace, setCustomFace] = useState(null);
+
+  // Refs
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
 
-  const memeImageRef = useRef(null);
-  const targetPhotoRef = useRef(null);
-
-  // 1. Load Meme Face Patch (Face A)
+  // 1. Initialize Server Status & Auto-Detect Meme Faces
   useEffect(() => {
-    const memeImg = new Image();
-    memeImg.crossOrigin = 'anonymous';
-    memeImg.onload = () => {
-      memeImageRef.current = memeImg;
-      renderCurrentFrame();
-    };
-    if (memeFacePatch?.dataUrl) {
-      memeImg.src = memeFacePatch.dataUrl;
-    } else {
-      // Fallback if opened without patch
-      memeImg.src = getMemeFaceDataUrl(MEME_FACE_PRESETS[1]); // Wojak fallback
-    }
-  }, [memeFacePatch]);
+    let isMounted = true;
+    const initServer = async () => {
+      let isOnline = false;
+      try {
+        const res = await fetch('/api/face-swap/status');
+        const data = await res.json();
+        if (data.status === 'online' && data.model_available) {
+          isOnline = true;
+        }
+      } catch (e) {
+        try {
+          const res2 = await fetch('http://127.0.0.1:5174/api/face-swap/status');
+          const data2 = await res2.json();
+          if (data2.status === 'online') isOnline = true;
+        } catch (e2) {}
+      }
 
-  // 2. Load Selected Photo / Preset Face (Face B)
-  useEffect(() => {
-    if (!selectedImageSrc) return;
-    const photoImg = new Image();
-    photoImg.crossOrigin = 'anonymous';
-    photoImg.onload = () => {
-      targetPhotoRef.current = photoImg;
-      renderCurrentFrame();
-    };
-    photoImg.src = selectedImageSrc;
-  }, [selectedImageSrc]);
+      if (isMounted) {
+        setIsNeuralAvailable(isOnline);
+        if (!isOnline) {
+          setNeuralError('AI Face Swap server is offline. Please launch face_swap_server.py.');
+        }
+      }
 
-  // 3. Initialize lighting from sampled canvas pixels
-  useEffect(() => {
-    if (initialLighting && isOpen) {
-      if (initialLighting.brightness !== undefined) setBrightness(initialLighting.brightness);
-      if (initialLighting.warmth !== undefined) setWarmth(initialLighting.warmth);
-    }
-  }, [initialLighting, isOpen]);
-
-  // 4. Render Morphed Frame at current progress
-  const renderCurrentFrame = useCallback(() => {
-    const canvas = previewCanvasRef.current;
-    if (!canvas) return;
-
-    const memeImg = memeImageRef.current;
-    const photoImg = targetPhotoRef.current;
-    if (!memeImg || !photoImg) return;
-
-    const size = 380;
-    canvas.width = size;
-    canvas.height = size;
-
-    // Prepare Source Canvas A (Meme face)
-    const canvasA = document.createElement('canvas');
-    canvasA.width = size;
-    canvasA.height = size;
-    const ctxA = canvasA.getContext('2d');
-    ctxA.drawImage(memeImg, 0, 0, size, size);
-
-    // Prepare Source Canvas B (Photo face with tone filters & flip)
-    const canvasB = document.createElement('canvas');
-    canvasB.width = size;
-    canvasB.height = size;
-    const ctxB = canvasB.getContext('2d');
-
-    ctxB.save();
-    ctxB.filter = `brightness(${brightness}%) contrast(${contrast}%) sepia(${warmth}%)`;
-    if (flipX) {
-      ctxB.translate(size, 0);
-      ctxB.scale(-1, 1);
-    }
-    ctxB.drawImage(photoImg, 0, 0, size, size);
-    ctxB.restore();
-
-    // Execute true landmark mesh morph
-    morphFaceMesh({
-      sourceCanvasA: canvasA,
-      landmarksA,
-      sourceCanvasB: canvasB,
-      landmarksB,
-      morphProgress,
-      outputCanvas: canvas,
-      featherEdge
-    });
-
-    // Optionally overlay wireframe triangulation mesh & pins
-    if (showMesh) {
-      const outCtx = canvas.getContext('2d');
-      // Draw intermediate morphed landmarks
-      const currentPts = landmarksA.map((ptA, idx) => {
-        const ptB = landmarksB[idx] || ptA;
-        return {
-          id: ptA.id,
-          name: ptA.name,
-          x: (1 - morphProgress) * ptA.x + morphProgress * ptB.x,
-          y: (1 - morphProgress) * ptA.y + morphProgress * ptB.y,
-          isAnchor: ptA.isAnchor,
-          isKeyPin: ptA.isKeyPin
-        };
-      });
-      drawLandmarkMeshOverlay(outCtx, currentPts, size, {
-        showTriangles: true,
-        showPins: true,
-        activePinId,
-        color: '#06b6d4'
-      });
-    }
-  }, [
-    landmarksA,
-    landmarksB,
-    morphProgress,
-    showMesh,
-    activePinId,
-    brightness,
-    contrast,
-    warmth,
-    flipX,
-    featherEdge
-  ]);
-
-  // Re-render frame when any parameter updates
-  useEffect(() => {
-    renderCurrentFrame();
-  }, [renderCurrentFrame]);
-
-  // 5. Morph animation loop (smooth sine oscillation between 0 and 1)
-  useEffect(() => {
-    if (!isPlaying) {
-      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
-      animStartTimeRef.current = null;
-      return;
-    }
-
-    const animate = (time) => {
-      if (!animStartTimeRef.current) animStartTimeRef.current = time;
-      const elapsed = (time - animStartTimeRef.current) / 1000;
-      // 2.5 second oscillation period
-      const t = (Math.sin(elapsed * (Math.PI * 2) / 2.5 - Math.PI / 2) + 1) / 2;
-      setMorphProgress(t);
-      animFrameRef.current = requestAnimationFrame(animate);
+      // Auto-detect faces in the meme template
+      if (isOnline && (memeTemplateUrl || memeFacePatch?.dataUrl)) {
+        try {
+          const targetUrl = await ensureDataUrl(memeTemplateUrl || memeFacePatch?.dataUrl);
+          let detectRes;
+          try {
+            detectRes = await fetch('/api/face-swap/detect-faces', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ image: targetUrl })
+            });
+          } catch (e) {
+            detectRes = await fetch('http://127.0.0.1:5174/api/face-swap/detect-faces', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ image: targetUrl })
+            });
+          }
+          const dData = await detectRes.json();
+          if (isMounted && dData.success && dData.faces?.length > 0) {
+            setDetectedFaces(dData.faces);
+            if (dData.faces.length > 1) {
+              setSwapAllFaces(true);
+              setSelectedTargetIndex(null);
+            } else {
+              setSwapAllFaces(false);
+              setSelectedTargetIndex(0);
+            }
+          }
+        } catch (err) {
+          console.warn('Face detection error:', err);
+        }
+      }
     };
 
-    animFrameRef.current = requestAnimationFrame(animate);
+    if (isOpen) {
+      initServer();
+    }
+    return () => { isMounted = false; };
+  }, [isOpen, memeTemplateUrl, memeFacePatch, faceTarget]);
 
-    return () => {
-      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
-    };
-  }, [isPlaying]);
+  // 2. Execute Neural Face Swap
+  const runNeuralFaceSwap = useCallback(async (sourceImgUrl, faceIdx = selectedTargetIndex, allFaces = swapAllFaces) => {
+    if (!sourceImgUrl) return;
+    setIsNeuralProcessing(true);
+    setNeuralError(null);
 
-  // Preset switching
+    try {
+      const srcDataUrl = await ensureDataUrl(sourceImgUrl);
+      const targetBase = memeTemplateUrl || memeFacePatch?.dataUrl;
+      const targetDataUrl = await ensureDataUrl(targetBase);
+      const targetCenter = faceTarget ? [faceTarget.x, faceTarget.y] : [0.5, 0.5];
+
+      const isAll = allFaces || (faceIdx === null);
+      const payload = {
+        source_image: srcDataUrl,
+        target_image: targetDataUrl,
+        target_center: (!isAll && faceIdx === null) ? targetCenter : null,
+        target_face_index: isAll ? null : faceIdx,
+        swap_all: isAll,
+        blend_ratio: 1.0,
+        crop_only: true
+      };
+
+      let resp;
+      try {
+        resp = await fetch('/api/face-swap', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      } catch (err) {
+        resp = await fetch('http://127.0.0.1:5174/api/face-swap', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      }
+
+      const data = await resp.json();
+      if (data.success) {
+        setNeuralFullImage(data.image);
+        setNeuralCropPreview(data.crop_image || data.image);
+        if (data.original_crop_image) {
+          setOriginalCropPreview(data.original_crop_image);
+        }
+        if (data.detected_faces && data.detected_faces.length > 0) {
+          setDetectedFaces(data.detected_faces);
+          if (data.detected_faces.length > 1 && selectedTargetIndex === null) {
+            setSwapAllFaces(true);
+          }
+        }
+      } else {
+        setNeuralError(data.error || 'Face swap failed. Please use a clear portrait photo.');
+      }
+    } catch (err) {
+      console.warn('Neural face swap error:', err);
+      setNeuralError('Offline AI swap server not reachable.');
+    } finally {
+      setIsNeuralProcessing(false);
+    }
+  }, [memeTemplateUrl, memeFacePatch, faceTarget, selectedTargetIndex, swapAllFaces]);
+
+  // Trigger Neural Face Swap when selection changes
+  useEffect(() => {
+    if (isNeuralAvailable && selectedImageSrc && isOpen) {
+      runNeuralFaceSwap(selectedImageSrc, selectedTargetIndex, swapAllFaces);
+    }
+  }, [isNeuralAvailable, selectedImageSrc, selectedTargetIndex, swapAllFaces, isOpen]);
+
+  // Handle Preset Selection
   const handleSelectPreset = (preset) => {
     setSelectedPresetId(preset.id);
     setSelectedImageSrc(getMemeFaceDataUrl(preset));
     setFaceName(preset.name);
   };
 
+  // Handle File Upload
   const handleFileUpload = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const url = URL.createObjectURL(file);
-    setSelectedImageSrc(url);
-    setSelectedPresetId(null);
-    setFaceName(file.name.replace(/\.[^/.]+$/, '').slice(0, 16));
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const dataUrl = event.target.result;
+      setSelectedImageSrc(dataUrl);
+      setSelectedPresetId('custom_upload');
+      setFaceName('Your Photo');
+      setCustomFace({
+        id: 'custom_upload',
+        name: 'Your Photo',
+        dataUrl
+      });
+    };
+    reader.readAsDataURL(file);
     e.target.value = '';
   };
 
-  const handleAnglePresetChange = (presetName) => {
-    setActiveAnglePreset(presetName);
-    const newLandmarks = getLandmarkPreset(presetName);
-    setLandmarksA(newLandmarks);
-    setLandmarksB(getDefaultLandmarks());
+  // Compare gesture handlers
+  const handleStartComparing = (e) => {
+    e.preventDefault();
+    setIsComparing(true);
   };
 
-  const handleResetMesh = () => {
-    setLandmarksA(getDefaultLandmarks());
-    setLandmarksB(getDefaultLandmarks());
-    setActiveAnglePreset('front');
+  const handleStopComparing = (e) => {
+    e.preventDefault();
+    setIsComparing(false);
   };
 
-  // Interactive landmark pin dragging on the preview canvas
-  const handlePointerDownCanvas = (e) => {
-    if (!showMesh) return;
-    const canvas = previewCanvasRef.current;
-    if (!canvas) return;
-
-    const rect = canvas.getBoundingClientRect();
-    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-
-    const normX = (clientX - rect.left) / rect.width;
-    const normY = (clientY - rect.top) / rect.height;
-
-    // Find closest landmark pin (within threshold)
-    const threshold = 0.08;
-    let closestId = null;
-    let closestDist = Infinity;
-
-    landmarksA.forEach((p) => {
-      if (p.isAnchor) return;
-      const dist = Math.hypot(p.x - normX, p.y - normY);
-      if (dist < threshold && dist < closestDist) {
-        closestDist = dist;
-        closestId = p.id;
-      }
-    });
-
-    if (closestId) {
-      setActivePinId(closestId);
-      isDraggingPinRef.current = true;
-      e.preventDefault();
-      e.stopPropagation();
+  // Apply to Meme
+  const handleApply = () => {
+    if (neuralFullImage) {
+      onApplyFaceMorph({
+        isNeuralSwap: true,
+        neuralSwappedFullImage: neuralFullImage,
+        originalFaceUrl: selectedImageSrc,
+        faceName: `${faceName || 'Face'} Swap`
+      });
+      onClose();
     }
   };
 
-  const handlePointerMoveCanvas = (e) => {
-    if (!isDraggingPinRef.current || !activePinId) return;
-    const canvas = previewCanvasRef.current;
-    if (!canvas) return;
-
-    const rect = canvas.getBoundingClientRect();
-    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-
-    const normX = Math.max(0.05, Math.min(0.95, (clientX - rect.left) / rect.width));
-    const normY = Math.max(0.05, Math.min(0.95, (clientY - rect.top) / rect.height));
-
-    // Update landmark in both meshes (or mesh A)
-    setLandmarksA((prev) =>
-      prev.map((p) => (p.id === activePinId ? { ...p, x: normX, y: normY } : p))
-    );
-    e.preventDefault();
-    e.stopPropagation();
-  };
-
-  const handlePointerUpCanvas = () => {
-    isDraggingPinRef.current = false;
-  };
-
-  const handleApply = () => {
-    const canvas = previewCanvasRef.current;
-    if (!canvas) return;
-
-    // Render pure morphed face (without wireframe overlays)
-    setShowMesh(false);
-
-    // Give a brief tick for render without mesh, then export
-    setTimeout(() => {
-      const finalCanvas = document.createElement('canvas');
-      finalCanvas.width = 400;
-      finalCanvas.height = 400;
-
-      const memeImg = memeImageRef.current;
-      const photoImg = targetPhotoRef.current;
-
-      if (memeImg && photoImg) {
-        const cA = document.createElement('canvas');
-        cA.width = 400;
-        cA.height = 400;
-        cA.getContext('2d').drawImage(memeImg, 0, 0, 400, 400);
-
-        const cB = document.createElement('canvas');
-        cB.width = 400;
-        cB.height = 400;
-        const ctxB = cB.getContext('2d');
-        ctxB.save();
-        ctxB.filter = `brightness(${brightness}%) contrast(${contrast}%) sepia(${warmth}%)`;
-        if (flipX) {
-          ctxB.translate(400, 0);
-          ctxB.scale(-1, 1);
-        }
-        ctxB.drawImage(photoImg, 0, 0, 400, 400);
-        ctxB.restore();
-
-        morphFaceMesh({
-          sourceCanvasA: cA,
-          landmarksA,
-          sourceCanvasB: cB,
-          landmarksB,
-          morphProgress,
-          outputCanvas: finalCanvas,
-          featherEdge
-        });
-      }
-
-      const finalDataUrl = finalCanvas.toDataURL('image/png');
-
-      onApplyFaceMorph({
-        url: finalDataUrl,
-        originalFaceUrl: selectedImageSrc,
-        faceName: `${faceName || 'Face'} Morph (${Math.round(morphProgress * 100)}%)`,
-        opacity: 1.0,
-        flipX,
-        brightness,
-        contrast,
-        warmth,
-        morphProgress,
-        landmarksA,
-        landmarksB
-      });
-
-      onClose();
-    }, 50);
-  };
-
   if (!isOpen) return null;
+
+  const currentPreview = isComparing
+    ? (originalCropPreview || memeFacePatch?.dataUrl || memeTemplateUrl)
+    : (previewType === 'crop' ? (neuralCropPreview || neuralFullImage) : neuralFullImage);
 
   return (
     <ModalPortal>
       <div
         className="modal-backdrop animate-fade-in"
-        onClick={onClose}
+        onClick={(e) => {
+          if (e.target === e.currentTarget) onClose();
+        }}
         style={{
-          position: 'fixed',
-          inset: 0,
-          background: 'rgba(0, 0, 0, 0.82)',
-          backdropFilter: 'blur(10px)',
-          WebkitBackdropFilter: 'blur(10px)',
+          zIndex: 99999,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          zIndex: 10000,
-          padding: '12px'
+          padding: '16px',
+          backdropFilter: 'blur(12px)',
+          background: 'rgba(0, 0, 0, 0.75)'
         }}
       >
         <div
           className="modal-card animate-scale-up"
           onClick={(e) => e.stopPropagation()}
           style={{
-            background: 'var(--bg-surface-2, #181a20)',
-            border: '1px solid var(--glass-border, rgba(255, 255, 255, 0.12))',
-            borderRadius: '20px',
             width: '100%',
-            maxWidth: '720px',
-            maxHeight: '94vh',
+            maxWidth: '430px',
+            background: 'rgba(18, 18, 24, 0.98)',
+            borderRadius: '16px',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            boxShadow: '0 24px 60px rgba(0, 0, 0, 0.8)',
+            overflow: 'hidden',
             display: 'flex',
             flexDirection: 'column',
-            overflow: 'hidden',
-            boxShadow: '0 24px 60px rgba(0, 0, 0, 0.8), 0 0 40px rgba(6, 182, 212, 0.25)'
+            maxHeight: 'min(90vh, 760px)'
           }}
         >
-          {/* Header */}
+          {/* 1. Header (Matching AiCaptionModal & App Design) */}
           <div
             style={{
+              padding: '14px 18px',
+              borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
-              padding: '14px 20px',
-              borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-              background: 'linear-gradient(90deg, rgba(6, 182, 212, 0.12), transparent)'
+              gap: '10px'
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <div
-                style={{
-                  width: '32px',
-                  height: '32px',
-                  borderRadius: '10px',
-                  background: 'linear-gradient(135deg, #06b6d4, #3b82f6)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  boxShadow: '0 0 12px rgba(6, 182, 212, 0.5)'
-                }}
-              >
-                <Sparkles size={18} color="#ffffff" />
-              </div>
-              <div>
-                <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 800, color: '#ffffff', letterSpacing: '0.4px' }}>
-                  LANDMARK MESH FACE MORPH
-                </h3>
-                <p style={{ margin: 0, fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                  Warps & transforms the canvas meme face directly into your chosen photo
-                </p>
-              </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Sparkles size={16} style={{ color: 'var(--cyber-cyan)' }} />
+              <span style={{ fontSize: '0.92rem', fontWeight: 700, color: '#ffffff' }}>
+                AI Face Swap
+              </span>
+              {targetLabel && (
+                <span
+                  style={{
+                    fontSize: '0.64rem',
+                    fontWeight: 600,
+                    padding: '2px 8px',
+                    borderRadius: '999px',
+                    background: 'rgba(6, 182, 212, 0.15)',
+                    color: 'var(--cyber-cyan)',
+                    border: '1px solid rgba(6, 182, 212, 0.3)'
+                  }}
+                >
+                  {targetLabel}
+                </span>
+              )}
             </div>
 
             <button
               type="button"
+              className="btn btn-icon btn-ghost btn-xs"
               onClick={onClose}
-              className="btn btn-icon btn-xs btn-ghost"
-              style={{ borderRadius: '50%', width: '28px', height: '28px', padding: 0 }}
+              title="Close"
+              aria-label="Close"
+              style={{
+                borderRadius: '8px',
+                color: 'rgba(255, 255, 255, 0.6)',
+                width: '26px',
+                height: '26px',
+                padding: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
             >
-              <X size={16} />
+              <X size={15} />
             </button>
           </div>
 
-          {/* Modal Body */}
-          <div style={{ display: 'flex', flexDirection: 'column', overflowY: 'auto', padding: '16px 20px', gap: '14px' }}>
-            {/* Top Interactive Canvas & Morph Controls */}
+          {/* 2. Scrollable Body */}
+          <div
+            style={{
+              padding: '14px 18px',
+              overflowY: 'auto',
+              flex: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '12px'
+            }}
+          >
+            {/* Visual Preview Box */}
             <div
               style={{
-                display: 'grid',
-                gridTemplateColumns: 'minmax(280px, 340px) 1fr',
-                gap: '16px',
-                alignItems: 'center'
+                position: 'relative',
+                width: '100%',
+                height: '210px',
+                borderRadius: '12px',
+                background: '#090a0f',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+                overflow: 'hidden',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
               }}
             >
-              {/* Preview Canvas Container */}
-              <div
+              {isNeuralProcessing ? (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                  <RefreshCw className="spin" size={24} style={{ color: 'var(--cyber-cyan)' }} />
+                  <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'rgba(255, 255, 255, 0.9)' }}>
+                    Swapping face...
+                  </span>
+                </div>
+              ) : neuralError ? (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', padding: '12px', textAlign: 'center', color: '#f87171' }}>
+                  <AlertCircle size={22} />
+                  <span style={{ fontSize: '0.74rem' }}>{neuralError}</span>
+                  <button
+                    type="button"
+                    className="btn btn-xs btn-primary"
+                    onClick={() => runNeuralFaceSwap(selectedImageSrc)}
+                    style={{ fontSize: '0.7rem', padding: '3px 10px', marginTop: '4px' }}
+                  >
+                    Retry
+                  </button>
+                </div>
+              ) : currentPreview ? (
+                <>
+                  <img
+                    src={currentPreview}
+                    alt="Swapped Face"
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'contain',
+                      display: 'block',
+                      userSelect: 'none',
+                      pointerEvents: 'none'
+                    }}
+                  />
+
+                  {/* Minimal "Hold to Compare" Button */}
+                  <button
+                    type="button"
+                    onPointerDown={handleStartComparing}
+                    onPointerUp={handleStopComparing}
+                    onPointerLeave={handleStopComparing}
+                    onPointerCancel={handleStopComparing}
+                    onTouchStart={handleStartComparing}
+                    onTouchEnd={handleStopComparing}
+                    onTouchCancel={handleStopComparing}
+                    onContextMenu={(e) => e.preventDefault()}
+                    style={{
+                      position: 'absolute',
+                      top: '8px',
+                      left: '8px',
+                      padding: '3px 9px',
+                      borderRadius: '999px',
+                      fontSize: '0.66rem',
+                      fontWeight: 600,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      cursor: 'pointer',
+                      border: isComparing ? '1px solid #ef4444' : '1px solid rgba(255, 255, 255, 0.15)',
+                      background: isComparing ? '#ef4444' : 'rgba(15, 18, 25, 0.85)',
+                      backdropFilter: 'blur(6px)',
+                      color: '#ffffff',
+                      userSelect: 'none',
+                      touchAction: 'manipulation'
+                    }}
+                  >
+                    <Eye size={10} />
+                    <span>{isComparing ? 'Original' : 'Hold to Compare'}</span>
+                  </button>
+
+                  {/* Subtle Face / Full Zoom Toggle */}
+                  <div
+                    style={{
+                      position: 'absolute',
+                      bottom: '8px',
+                      right: '8px',
+                      display: 'inline-flex',
+                      background: 'rgba(15, 18, 25, 0.85)',
+                      backdropFilter: 'blur(6px)',
+                      borderRadius: '6px',
+                      padding: '2px',
+                      border: '1px solid rgba(255, 255, 255, 0.12)'
+                    }}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setPreviewType('crop')}
+                      style={{
+                        padding: '2px 7px',
+                        borderRadius: '4px',
+                        fontSize: '0.64rem',
+                        fontWeight: previewType === 'crop' ? 700 : 500,
+                        border: 'none',
+                        background: previewType === 'crop' ? 'var(--cyber-cyan)' : 'transparent',
+                        color: previewType === 'crop' ? '#000000' : 'rgba(255, 255, 255, 0.7)',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Face
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPreviewType('full')}
+                      style={{
+                        padding: '2px 7px',
+                        borderRadius: '4px',
+                        fontSize: '0.64rem',
+                        fontWeight: previewType === 'full' ? 700 : 500,
+                        border: 'none',
+                        background: previewType === 'full' ? 'var(--cyber-cyan)' : 'transparent',
+                        color: previewType === 'full' ? '#000000' : 'rgba(255, 255, 255, 0.7)',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Full
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <span style={{ fontSize: '0.76rem', color: 'rgba(255, 255, 255, 0.4)' }}>
+                  Select a face to preview
+                </span>
+              )}
+            </div>
+
+            {/* Upload Buttons */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleFileUpload}
+              style={{ display: 'none' }}
+            />
+            <input
+              ref={cameraInputRef}
+              type="file"
+              accept="image/*"
+              capture="user"
+              onChange={handleFileUpload}
+              style={{ display: 'none' }}
+            />
+
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="btn btn-secondary btn-sm"
                 style={{
-                  position: 'relative',
-                  width: '100%',
-                  aspectRatio: '1',
-                  background: '#0b0d13',
-                  borderRadius: '16px',
-                  overflow: 'hidden',
-                  border: '1.5px solid rgba(6, 182, 212, 0.3)',
-                  boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+                  flex: 1,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  cursor: showMesh ? 'crosshair' : 'default'
+                  gap: '6px',
+                  fontSize: '0.78rem',
+                  fontWeight: 600,
+                  padding: '8px 12px',
+                  borderRadius: '10px'
                 }}
-                onPointerDown={handlePointerDownCanvas}
-                onPointerMove={handlePointerMoveCanvas}
-                onPointerUp={handlePointerUpCanvas}
-                onTouchStart={handlePointerDownCanvas}
-                onTouchMove={handlePointerMoveCanvas}
-                onTouchEnd={handlePointerUpCanvas}
               >
-                <canvas
-                  ref={previewCanvasRef}
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'contain',
-                    display: 'block'
-                  }}
-                />
+                <Upload size={14} style={{ color: 'var(--cyber-cyan)' }} />
+                <span>Upload Photo</span>
+              </button>
 
-                {/* Floating Morph % Badge */}
-                <div
-                  style={{
-                    position: 'absolute',
-                    top: '10px',
-                    left: '10px',
-                    background: 'rgba(0, 0, 0, 0.75)',
-                    backdropFilter: 'blur(6px)',
-                    border: '1px solid rgba(6, 182, 212, 0.4)',
-                    padding: '3px 8px',
-                    borderRadius: '999px',
-                    fontSize: '0.7rem',
-                    fontWeight: 700,
-                    color: 'var(--cyber-cyan)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '5px'
-                  }}
-                >
-                  <span>Morph:</span>
-                  <span>{Math.round(morphProgress * 100)}%</span>
-                </div>
-
-                {/* Mesh Toggle & Reset pill */}
-                <div
-                  style={{
-                    position: 'absolute',
-                    bottom: '10px',
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '4px',
-                    background: 'rgba(15, 17, 23, 0.85)',
-                    backdropFilter: 'blur(8px)',
-                    padding: '3px 8px',
-                    borderRadius: '999px',
-                    border: '1px solid rgba(255, 255, 255, 0.15)'
-                  }}
-                >
-                  <button
-                    type="button"
-                    className={`btn btn-xs ${showMesh ? 'btn-primary' : 'btn-ghost'}`}
-                    onClick={() => setShowMesh(!showMesh)}
-                    style={{ fontSize: '0.68rem', padding: '2px 8px', borderRadius: '999px', height: '22px' }}
-                    title="Toggle wireframe mesh & draggable landmark pins"
-                  >
-                    {showMesh ? <EyeOff size={11} style={{ marginRight: 3 }} /> : <Eye size={11} style={{ marginRight: 3 }} />}
-                    {showMesh ? 'Hide Mesh' : 'Show Mesh & Pins'}
-                  </button>
-                  {showMesh && (
-                    <button
-                      type="button"
-                      className="btn btn-xs btn-ghost"
-                      onClick={handleResetMesh}
-                      style={{ fontSize: '0.68rem', padding: '2px 6px', borderRadius: '999px', height: '22px' }}
-                      title="Reset landmark pins to canonical position"
-                    >
-                      <RotateCcw size={11} />
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {/* Right Side: Morph Animation & Sliders */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {/* 1. Main Morph Progress Slider & Play Button */}
-                <div
-                  className="glass-card"
-                  style={{
-                    padding: '12px 14px',
-                    borderRadius: '14px',
-                    border: '1px solid rgba(6, 182, 212, 0.3)',
-                    background: 'rgba(6, 182, 212, 0.05)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '8px'
-                  }}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '0.8rem', fontWeight: 800, color: '#ffffff', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                      <Wand2 size={13} style={{ color: 'var(--cyber-cyan)' }} />
-                      Morph Transformation
-                    </span>
-
-                    {/* Play / Pause Animated Morph */}
-                    <button
-                      type="button"
-                      className={`btn btn-xs ${isPlaying ? 'btn-primary' : 'btn-ghost'}`}
-                      onClick={() => setIsPlaying(!isPlaying)}
-                      style={{
-                        padding: '3px 10px',
-                        fontSize: '0.72rem',
-                        fontWeight: 700,
-                        borderRadius: '999px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '4px'
-                      }}
-                      title="Animate morph oscillation smoothly"
-                    >
-                      {isPlaying ? <Pause size={12} /> : <Play size={12} />}
-                      <span>{isPlaying ? 'Pause' : 'Play Morph'}</span>
-                    </button>
-                  </div>
-
-                  {/* Morph Slider: 0% Meme Face -> 100% Photo Face */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', fontWeight: 600 }}>
-                      <span style={{ color: morphProgress < 0.5 ? 'var(--cyber-cyan)' : 'var(--text-muted)' }}>
-                        0% Original Meme Face
-                      </span>
-                      <span style={{ color: morphProgress >= 0.5 ? 'var(--cyber-cyan)' : 'var(--text-muted)' }}>
-                        100% Target Photo Face
-                      </span>
-                    </div>
-
-                    <input
-                      type="range"
-                      min="0"
-                      max="1"
-                      step="0.01"
-                      value={morphProgress}
-                      onChange={(e) => {
-                        setIsPlaying(false);
-                        setMorphProgress(parseFloat(e.target.value));
-                      }}
-                      style={{
-                        accentColor: 'var(--cyber-cyan)',
-                        height: '6px',
-                        width: '100%',
-                        cursor: 'pointer'
-                      }}
-                    />
-                  </div>
-                </div>
-
-                {/* 2. Quick Angle & Expression Alignment Presets */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)' }}>
-                    Meme Head Angle & Alignment
-                  </span>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '4px' }}>
-                    {[
-                      { id: 'front', label: 'Frontal' },
-                      { id: 'left', label: 'Turned Left' },
-                      { id: 'right', label: 'Turned Right' },
-                      { id: 'smile', label: 'Big Smile' }
-                    ].map((ang) => (
-                      <button
-                        key={ang.id}
-                        type="button"
-                        className={`btn btn-xs ${activeAnglePreset === ang.id ? 'btn-primary' : 'btn-ghost'}`}
-                        onClick={() => handleAnglePresetChange(ang.id)}
-                        style={{
-                          fontSize: '0.68rem',
-                          fontWeight: 600,
-                          padding: '4px 6px',
-                          borderRadius: '8px',
-                          whiteSpace: 'nowrap'
-                        }}
-                      >
-                        {ang.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* 3. Lighting & Skin Tone Match Sliders */}
-                <div
-                  className="glass-card"
-                  style={{
-                    padding: '8px 12px',
-                    borderRadius: '12px',
-                    display: 'grid',
-                    gridTemplateColumns: '1fr 1fr',
-                    gap: '8px'
-                  }}
-                >
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.68rem', fontWeight: 600 }}>
-                      <span style={{ color: 'var(--text-muted)' }}>Warmth / Skin Tint</span>
-                      <span style={{ color: 'var(--cyber-cyan)' }}>{warmth}%</span>
-                    </div>
-                    <input
-                      type="range"
-                      min="0"
-                      max="45"
-                      step="5"
-                      value={warmth}
-                      onChange={(e) => setWarmth(Number(e.target.value))}
-                      style={{ accentColor: 'var(--cyber-cyan)', height: '4px' }}
-                    />
-                  </div>
-
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.68rem', fontWeight: 600 }}>
-                      <span style={{ color: 'var(--text-muted)' }}>Brightness</span>
-                      <span style={{ color: 'var(--cyber-cyan)' }}>{brightness}%</span>
-                    </div>
-                    <input
-                      type="range"
-                      min="65"
-                      max="140"
-                      step="5"
-                      value={brightness}
-                      onChange={(e) => setBrightness(Number(e.target.value))}
-                      style={{ accentColor: 'var(--cyber-cyan)', height: '4px' }}
-                    />
-                  </div>
-                </div>
-
-                {/* Toggles: Flip Horizontal & Perimeter Feather */}
-                <div style={{ display: 'flex', gap: '6px' }}>
-                  <button
-                    type="button"
-                    className={`btn btn-xs ${flipX ? 'active' : 'btn-ghost'}`}
-                    onClick={() => setFlipX(!flipX)}
-                    style={{ flex: 1, fontSize: '0.72rem', borderRadius: '8px', padding: '5px' }}
-                  >
-                    <FlipHorizontal size={13} style={{ marginRight: 4 }} /> Flip Mirror
-                  </button>
-                  <button
-                    type="button"
-                    className={`btn btn-xs ${featherEdge ? 'active' : 'btn-ghost'}`}
-                    onClick={() => setFeatherEdge(!featherEdge)}
-                    style={{ flex: 1, fontSize: '0.72rem', borderRadius: '8px', padding: '5px' }}
-                    title="Seamlessly feather boundary into meme background"
-                  >
-                    <Sparkles size={13} style={{ marginRight: 4 }} /> Edge Feather
-                  </button>
-                </div>
-              </div>
+              <button
+                type="button"
+                onClick={() => cameraInputRef.current?.click()}
+                className="btn btn-secondary btn-sm"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                  fontSize: '0.78rem',
+                  fontWeight: 600,
+                  padding: '8px 14px',
+                  borderRadius: '10px'
+                }}
+              >
+                <Camera size={14} />
+                <span>Selfie</span>
+              </button>
             </div>
 
-            {/* Target Face Source Selection (Meme Faces & Upload Photo) */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '12px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#ffffff' }}>
-                  Select Target Face Photo
+            {/* Quick Face Presets Strip */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                overflowX: 'auto',
+                paddingBottom: '2px',
+                scrollbarWidth: 'none',
+                WebkitOverflowScrolling: 'touch'
+              }}
+            >
+              {customFace && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedPresetId(customFace.id);
+                    setSelectedImageSrc(customFace.dataUrl);
+                    setFaceName(customFace.name);
+                  }}
+                  style={{
+                    flexShrink: 0,
+                    width: '42px',
+                    height: '42px',
+                    borderRadius: '50%',
+                    padding: 0,
+                    overflow: 'hidden',
+                    background: '#0d1017',
+                    border: selectedPresetId === customFace.id ? '2px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.15)',
+                    boxShadow: selectedPresetId === customFace.id ? '0 0 10px rgba(6, 182, 212, 0.5)' : 'none',
+                    cursor: 'pointer'
+                  }}
+                  title="Your Uploaded Photo"
+                >
+                  <img src={customFace.dataUrl} alt="Your Photo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                </button>
+              )}
+
+              {MEME_FACE_PRESETS.map((preset) => {
+                const isSelected = selectedPresetId === preset.id;
+                return (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    onClick={() => handleSelectPreset(preset)}
+                    style={{
+                      flexShrink: 0,
+                      width: '42px',
+                      height: '42px',
+                      borderRadius: '50%',
+                      padding: 0,
+                      overflow: 'hidden',
+                      background: '#0d1017',
+                      border: isSelected ? '2px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.15)',
+                      boxShadow: isSelected ? '0 0 10px rgba(6, 182, 212, 0.5)' : 'none',
+                      cursor: 'pointer'
+                    }}
+                    title={preset.name}
+                  >
+                    <img
+                      src={getMemeFaceDataUrl(preset)}
+                      alt={preset.name}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* If multiple faces detected: Segmented selector matching AiCaptionModal */}
+            {detectedFaces.length > 1 && (
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '8px 12px',
+                  borderRadius: '10px',
+                  background: 'rgba(255, 255, 255, 0.04)',
+                  border: '1px solid rgba(255, 255, 255, 0.07)'
+                }}
+              >
+                <span style={{ fontSize: '0.72rem', color: 'rgba(255, 255, 255, 0.7)', fontWeight: 600 }}>
+                  Target:
                 </span>
 
-                {/* Tab Switcher */}
-                <div style={{ display: 'flex', gap: '4px', background: 'rgba(255, 255, 255, 0.06)', borderRadius: '999px', padding: '2px' }}>
-                  <button
-                    type="button"
-                    className={`btn btn-xs ${activeTab === 'presets' ? 'btn-primary' : 'btn-ghost'}`}
-                    onClick={() => setActiveTab('presets')}
-                    style={{ borderRadius: '999px', fontSize: '0.72rem', padding: '2px 10px' }}
-                  >
-                    Meme Presets
-                  </button>
-                  <button
-                    type="button"
-                    className={`btn btn-xs ${activeTab === 'upload' ? 'btn-primary' : 'btn-ghost'}`}
-                    onClick={() => setActiveTab('upload')}
-                    style={{ borderRadius: '999px', fontSize: '0.72rem', padding: '2px 10px' }}
-                  >
-                    Upload / Selfie
-                  </button>
-                </div>
-              </div>
-
-              {/* Presets List */}
-              {activeTab === 'presets' ? (
                 <div
                   style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(70px, 1fr))',
-                    gap: '8px',
-                    maxHeight: '140px',
-                    overflowY: 'auto',
-                    padding: '4px 0'
+                    display: 'inline-flex',
+                    background: 'rgba(255, 255, 255, 0.06)',
+                    borderRadius: '8px',
+                    padding: '2px',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    gap: '2px'
                   }}
                 >
-                  {MEME_FACE_PRESETS.map((preset) => {
-                    const isSelected = selectedPresetId === preset.id;
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSwapAllFaces(true);
+                      setSelectedTargetIndex(null);
+                    }}
+                    style={{
+                      padding: '3px 8px',
+                      borderRadius: '6px',
+                      fontSize: '0.68rem',
+                      fontWeight: swapAllFaces ? 700 : 500,
+                      border: 'none',
+                      cursor: 'pointer',
+                      background: swapAllFaces ? 'var(--primary-gradient)' : 'transparent',
+                      color: swapAllFaces ? '#ffffff' : 'rgba(255, 255, 255, 0.65)'
+                    }}
+                  >
+                    All Faces ({detectedFaces.length})
+                  </button>
+
+                  {detectedFaces.map((f, i) => {
+                    const isSelected = !swapAllFaces && selectedTargetIndex === f.index;
                     return (
                       <button
-                        key={preset.id}
+                        key={f.index}
                         type="button"
-                        onClick={() => handleSelectPreset(preset)}
-                        className={`hover-lift ${isSelected ? 'selected' : ''}`}
+                        onClick={() => {
+                          setSwapAllFaces(false);
+                          setSelectedTargetIndex(f.index);
+                        }}
                         style={{
-                          display: 'flex',
-                          flexDirection: 'column',
-                          alignItems: 'center',
-                          gap: '4px',
-                          background: isSelected ? 'rgba(6, 182, 212, 0.25)' : 'rgba(255, 255, 255, 0.04)',
-                          border: isSelected ? '1.5px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.08)',
-                          borderRadius: '12px',
-                          padding: '6px 4px',
+                          padding: '3px 8px',
+                          borderRadius: '6px',
+                          fontSize: '0.68rem',
+                          fontWeight: isSelected ? 700 : 500,
+                          border: 'none',
                           cursor: 'pointer',
-                          transition: 'all 0.15s ease'
+                          background: isSelected ? 'var(--primary-gradient)' : 'transparent',
+                          color: isSelected ? '#ffffff' : 'rgba(255, 255, 255, 0.65)'
                         }}
                       >
-                        <div
-                          style={{
-                            width: '42px',
-                            height: '42px',
-                            borderRadius: '50%',
-                            overflow: 'hidden',
-                            background: '#1f2430',
-                            border: '1px solid rgba(255, 255, 255, 0.15)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center'
-                          }}
-                        >
-                          <img
-                            src={getMemeFaceDataUrl(preset)}
-                            alt={preset.name}
-                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                          />
-                        </div>
-                        <span
-                          style={{
-                            fontSize: '0.65rem',
-                            fontWeight: 600,
-                            color: isSelected ? '#ffffff' : 'var(--text-muted)',
-                            whiteSpace: 'nowrap',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            maxWidth: '65px'
-                          }}
-                        >
-                          {preset.name}
-                        </span>
+                        Face {i + 1}
                       </button>
                     );
                   })}
                 </div>
-              ) : (
-                /* Upload Photo / Camera Selfie */
-                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    accept="image/*"
-                    style={{ display: 'none' }}
-                    onChange={handleFileUpload}
-                  />
-                  <input
-                    type="file"
-                    ref={cameraInputRef}
-                    accept="image/*"
-                    capture="user"
-                    style={{ display: 'none' }}
-                    onChange={handleFileUpload}
-                  />
-
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="btn btn-xs hover-lift"
-                    style={{
-                      flex: 1,
-                      padding: '12px',
-                      borderRadius: '12px',
-                      background: 'rgba(255, 255, 255, 0.06)',
-                      border: '1px dashed rgba(6, 182, 212, 0.4)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '8px',
-                      color: '#ffffff',
-                      fontWeight: 600
-                    }}
-                  >
-                    <Upload size={16} style={{ color: 'var(--cyber-cyan)' }} />
-                    <span>Upload Face Photo</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => cameraInputRef.current?.click()}
-                    className="btn btn-xs hover-lift"
-                    style={{
-                      flex: 1,
-                      padding: '12px',
-                      borderRadius: '12px',
-                      background: 'rgba(255, 255, 255, 0.06)',
-                      border: '1px dashed rgba(6, 182, 212, 0.4)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '8px',
-                      color: '#ffffff',
-                      fontWeight: 600
-                    }}
-                  >
-                    <Camera size={16} style={{ color: 'var(--cyber-cyan)' }} />
-                    <span>Take Selfie</span>
-                  </button>
-                </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
 
-          {/* Modal Footer */}
+          {/* 3. Footer Actions (Matching App's standard modal action footer) */}
           <div
             style={{
+              padding: '12px 18px',
+              borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+              background: 'rgba(0, 0, 0, 0.25)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
-              padding: '12px 20px',
-              borderTop: '1px solid rgba(255, 255, 255, 0.08)',
-              background: 'rgba(0, 0, 0, 0.3)'
+              gap: '10px'
             }}
           >
             <button
               type="button"
+              className="btn btn-ghost btn-sm"
               onClick={onClose}
-              className="btn btn-xs btn-ghost"
-              style={{ borderRadius: '8px', padding: '6px 14px', fontSize: '0.78rem' }}
+              style={{ fontSize: '0.8rem', padding: '7px 14px', borderRadius: '10px' }}
             >
               Cancel
             </button>
 
             <button
               type="button"
+              className="btn btn-primary btn-sm"
               onClick={handleApply}
-              className="btn btn-xs btn-primary shadow-glow"
+              disabled={isNeuralProcessing || (!neuralFullImage && !neuralCropPreview)}
               style={{
-                borderRadius: '999px',
-                padding: '8px 24px',
-                fontSize: '0.85rem',
+                flex: 1,
+                fontSize: '0.82rem',
                 fontWeight: 700,
+                padding: '8px 16px',
+                borderRadius: '10px',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '8px',
-                background: 'linear-gradient(135deg, #06b6d4, #3b82f6)'
+                justifyContent: 'center',
+                gap: '6px'
               }}
             >
-              <Check size={16} /> Apply Morph to Meme
+              <Check size={14} />
+              <span>Apply to Meme</span>
             </button>
           </div>
         </div>

@@ -5,6 +5,13 @@ const svgToDataUrl = (svg) => `data:image/svg+xml;utf8,${encodeURIComponent(svg.
 
 export const MEME_FACE_PRESETS = [
   {
+    id: 'user_face',
+    name: 'Your Photo',
+    category: 'Photos',
+    tag: 'Uploaded Portrait',
+    url: '/user_face.jpg'
+  },
+  {
     id: 'gigachad',
     name: 'Gigachad',
     category: 'Chad',

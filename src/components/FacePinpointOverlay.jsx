@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Crosshair, Check, X, Move, Plus, Minus } from 'lucide-react';
+import { Crosshair, Check, X, Move, Plus, Minus, Sparkles, User } from 'lucide-react';
 
 export default function FacePinpointOverlay({
   isOpen,
@@ -7,15 +7,58 @@ export default function FacePinpointOverlay({
   onUpdateTarget,
   onConfirm,
   onCancel,
-  canvasRef
+  canvasRef,
+  templateImageUrl
 }) {
   const [isDragging, setIsDragging] = useState(false);
   const dragStartRef = useRef({ x: 0, y: 0 });
   const initialPosRef = useRef({ x: 0.5, y: 0.38 });
+  const [detectedFaces, setDetectedFaces] = useState([]);
+
+  // Auto-detect faces on the meme template
+  useEffect(() => {
+    if (!isOpen) return;
+    let isMounted = true;
+    (async () => {
+      try {
+        const imgUrl = templateImageUrl || (canvasRef.current?.getCanvas ? canvasRef.current.getCanvas()?.toDataURL('image/jpeg', 0.85) : null);
+        if (!imgUrl) return;
+
+        let res;
+        try {
+          res = await fetch('/api/face-swap/detect-faces', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ image: imgUrl })
+          });
+        } catch (e) {
+          res = await fetch('http://127.0.0.1:5174/api/face-swap/detect-faces', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ image: imgUrl })
+          });
+        }
+
+        const data = await res.json();
+        if (isMounted && data.success && data.faces?.length > 0) {
+          setDetectedFaces(data.faces);
+        }
+      } catch (err) {
+        console.warn('Pinpoint face detection error:', err);
+      }
+    })();
+
+    return () => { isMounted = false; };
+  }, [isOpen, templateImageUrl, canvasRef]);
 
   if (!isOpen) return null;
 
   const handlePointerDown = (e) => {
+    // If clicking on the floating toolbar or any button, prevent dragging and stop propagation
+    if (e.target && (e.target.closest('[data-pinpoint-toolbar]') || e.target.closest('button'))) {
+      e.stopPropagation();
+      return;
+    }
     e.stopPropagation();
     e.preventDefault();
     setIsDragging(true);
@@ -101,17 +144,18 @@ export default function FacePinpointOverlay({
     >
       {/* Top Floating Instruction Pill */}
       <div
+        data-pinpoint-toolbar="true"
         style={{
           position: 'absolute',
           top: '14px',
           left: '50%',
           transform: 'translateX(-50%)',
           zIndex: 60,
-          background: 'rgba(15, 17, 23, 0.94)',
+          background: 'rgba(15, 17, 23, 0.96)',
           backdropFilter: 'blur(10px)',
           WebkitBackdropFilter: 'blur(10px)',
           border: '1.5px solid var(--cyber-cyan, #06b6d4)',
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.7), 0 0 16px rgba(6, 182, 212, 0.35)',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.8), 0 0 16px rgba(6, 182, 212, 0.4)',
           padding: '6px 14px',
           borderRadius: '999px',
           display: 'flex',
@@ -121,7 +165,13 @@ export default function FacePinpointOverlay({
           whiteSpace: 'nowrap',
           pointerEvents: 'auto'
         }}
-        onClick={(e) => e.stopPropagation()}
+        onPointerDown={(e) => { e.stopPropagation(); }}
+        onPointerUp={(e) => { e.stopPropagation(); }}
+        onMouseDown={(e) => { e.stopPropagation(); }}
+        onMouseUp={(e) => { e.stopPropagation(); }}
+        onTouchStart={(e) => { e.stopPropagation(); }}
+        onTouchEnd={(e) => { e.stopPropagation(); }}
+        onClick={(e) => { e.stopPropagation(); }}
       >
         <span
           style={{
@@ -133,15 +183,25 @@ export default function FacePinpointOverlay({
           }}
         >
           <Crosshair size={15} style={{ color: 'var(--cyber-cyan)' }} />
-          <span>Tap or drag circle over meme face</span>
+          <span>{detectedFaces.length > 0 ? 'Tap face badge or drag circle' : 'Drag circle over face'}</span>
         </span>
 
         {/* Size buttons */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '3px', background: 'rgba(255,255,255,0.08)', borderRadius: '999px', padding: '2px 4px' }}>
+        <div 
+          style={{ display: 'flex', alignItems: 'center', gap: '3px', background: 'rgba(255,255,255,0.08)', borderRadius: '999px', padding: '2px 4px' }}
+          onPointerDown={(e) => e.stopPropagation()}
+          onMouseDown={(e) => e.stopPropagation()}
+        >
           <button
             type="button"
             className="btn btn-icon btn-xs"
-            onClick={(e) => handleAdjustRadius(-0.02, e)}
+            onPointerDown={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              handleAdjustRadius(-0.02, e);
+            }}
             style={{ width: '22px', height: '22px', minHeight: '22px', borderRadius: '50%', padding: 0 }}
             title="Smaller Face Circle"
           >
@@ -150,7 +210,13 @@ export default function FacePinpointOverlay({
           <button
             type="button"
             className="btn btn-icon btn-xs"
-            onClick={(e) => handleAdjustRadius(0.02, e)}
+            onPointerDown={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              handleAdjustRadius(0.02, e);
+            }}
             style={{ width: '22px', height: '22px', minHeight: '22px', borderRadius: '50%', padding: 0 }}
             title="Larger Face Circle"
           >
@@ -162,9 +228,16 @@ export default function FacePinpointOverlay({
         <button
           type="button"
           className="btn btn-xs btn-primary shadow-glow"
+          onPointerDown={(e) => { e.stopPropagation(); }}
+          onMouseDown={(e) => { e.stopPropagation(); }}
+          onPointerUp={(e) => { e.stopPropagation(); }}
+          onMouseUp={(e) => { e.stopPropagation(); }}
           onClick={(e) => {
             e.stopPropagation();
-            onConfirm();
+            e.preventDefault();
+            setTimeout(() => {
+              onConfirm();
+            }, 50);
           }}
           style={{
             borderRadius: '999px',
@@ -184,9 +257,16 @@ export default function FacePinpointOverlay({
         <button
           type="button"
           className="btn btn-icon btn-xs btn-ghost"
+          onPointerDown={(e) => { e.stopPropagation(); }}
+          onMouseDown={(e) => { e.stopPropagation(); }}
+          onPointerUp={(e) => { e.stopPropagation(); }}
+          onMouseUp={(e) => { e.stopPropagation(); }}
           onClick={(e) => {
             e.stopPropagation();
-            onCancel();
+            e.preventDefault();
+            setTimeout(() => {
+              onCancel();
+            }, 50);
           }}
           style={{
             borderRadius: '50%',
@@ -202,6 +282,61 @@ export default function FacePinpointOverlay({
         </button>
       </div>
 
+      {/* Auto-detected Face Badges (Tap to snap reticle directly!) */}
+      {detectedFaces.map((f, i) => {
+        const isTargeted = Math.hypot((f.center[0] * 100) - posX, (f.center[1] * 100) - posY) < 8;
+        return (
+          <button
+            key={f.index}
+            type="button"
+            onPointerDown={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              onUpdateTarget({
+                ...faceTarget,
+                x: f.center[0],
+                y: f.center[1]
+              });
+            }}
+            style={{
+              position: 'absolute',
+              left: `${f.center[0] * 100}%`,
+              top: `${f.center[1] * 100}%`,
+              transform: 'translate(-50%, -50%)',
+              zIndex: 55,
+              padding: '3px 8px 3px 4px',
+              borderRadius: '999px',
+              background: isTargeted ? 'rgba(6, 182, 212, 0.95)' : 'rgba(15, 17, 23, 0.92)',
+              border: isTargeted ? '1.5px solid #ffffff' : '1.5px solid var(--cyber-cyan)',
+              color: isTargeted ? '#000000' : '#ffffff',
+              fontSize: '0.68rem',
+              fontWeight: 800,
+              boxShadow: isTargeted ? '0 0 16px rgba(6, 182, 212, 0.9)' : '0 4px 12px rgba(0, 0, 0, 0.7)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '5px',
+              cursor: 'pointer',
+              pointerEvents: 'auto',
+              transition: 'all 0.15s ease'
+            }}
+            title={`Select Face ${i + 1}`}
+          >
+            {f.thumb ? (
+              <img
+                src={f.thumb}
+                alt={`Face ${i + 1}`}
+                style={{ width: '18px', height: '18px', borderRadius: '50%', objectFit: 'cover' }}
+              />
+            ) : (
+              <User size={12} />
+            )}
+            <span>Face {i + 1}</span>
+          </button>
+        );
+      })}
+
       {/* Glowing Target Face Reticle */}
       <div
         style={{
@@ -209,7 +344,7 @@ export default function FacePinpointOverlay({
           left: `${posX}%`,
           top: `${posY}%`,
           width: `${radiusPercent * 2}%`,
-          height: `${radiusPercent * 2.3}%`, // slightly oval to match human head shape
+          height: `${radiusPercent * 2.3}%`,
           transform: 'translate(-50%, -50%)',
           borderRadius: '50%',
           border: '2.5px dashed var(--cyber-cyan, #06b6d4)',

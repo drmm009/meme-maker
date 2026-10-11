@@ -4,6 +4,8 @@
  * with 100% offline color transfer, organic anatomical masking, and zero sticker handles.
  */
 
+import { morphFaceMesh } from './faceMorphEngine';
+
 /**
  * Loads an image from a URL, Image element, or Canvas element asynchronously.
  */
@@ -114,14 +116,14 @@ export function createFeatureGraftMask(width, height = width, options = {}) {
 
   const cx = width / 2;
   const cy = h * 0.48;
-  const rx = width * 0.36;
-  const ry = h * 0.40 * mouthExtend;
+  const rx = width * 0.42;
+  const ry = h * 0.48 * mouthExtend;
 
-  // Use radial gradient for soft organic skin melt
-  const grad = ctx.createRadialGradient(cx, cy, rx * 0.20, cx, cy, rx);
+  // Solid-core radial gradient: 100% opaque across eyes, nose, and mouth, fading only at skin perimeter
+  const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, rx);
   grad.addColorStop(0, 'rgba(0, 0, 0, 1.0)');
-  grad.addColorStop(0.50, 'rgba(0, 0, 0, 0.95)');
-  grad.addColorStop(0.75, 'rgba(0, 0, 0, 0.55)');
+  grad.addColorStop(0.70, 'rgba(0, 0, 0, 1.0)'); // SOLID CORE - NO GHOSTING
+  grad.addColorStop(0.85, 'rgba(0, 0, 0, 0.75)');
   grad.addColorStop(1, 'rgba(0, 0, 0, 0.0)');
 
   ctx.fillStyle = grad;
@@ -130,13 +132,13 @@ export function createFeatureGraftMask(width, height = width, options = {}) {
   ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // Extra softening blur
+  // Subtle boundary softening
   if (feather > 0) {
     const blurCanvas = document.createElement('canvas');
     blurCanvas.width = width;
     blurCanvas.height = h;
     const bCtx = blurCanvas.getContext('2d');
-    bCtx.filter = `blur(${feather}px)`;
+    bCtx.filter = `blur(${Math.min(8, Math.max(3, feather))}px)`;
     bCtx.drawImage(maskCanvas, 0, 0);
     return blurCanvas;
   }
@@ -210,23 +212,96 @@ export function applySkinColorTransfer(canvas, targetStats, { warmthShift = 0, b
 }
 
 /**
+ * Frames and crops an uploaded portrait photo to focus squarely on the face
+ * with automatic skin cluster detection, eliminating suits, shoulders, and background.
+ */
+export function frameFaceSquare(img, size = 400) {
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d');
+
+  if (!img) return canvas;
+
+  const w = img.naturalWidth || img.width || size;
+  const h = img.naturalHeight || img.height || size;
+
+  // If already square (e.g. SVG presets, patch canvases), draw directly
+  if (Math.abs(w - h) < 6) {
+    ctx.drawImage(img, 0, 0, size, size);
+    return canvas;
+  }
+
+  // Detect skin cluster to center directly on facial features
+  let cx = w * 0.5;
+  let cy = h * 0.42;
+  let cropSize = Math.min(w, h) * 0.82;
+
+  try {
+    const tempC = document.createElement('canvas');
+    tempC.width = w;
+    tempC.height = h;
+    const tCtx = tempC.getContext('2d');
+    tCtx.drawImage(img, 0, 0);
+    const data = tCtx.getImageData(0, 0, w, h).data;
+
+    let sumX = 0, sumY = 0, count = 0;
+    let minX = w, maxX = 0, minY = h, maxY = 0;
+    const step = Math.max(2, Math.round(w / 180));
+
+    for (let y = 0; y < h; y += step) {
+      for (let x = 0; x < w; x += step) {
+        const i = (y * w + x) * 4;
+        const r = data[i], g = data[i + 1], b = data[i + 2];
+        if (r > 85 && g > 45 && b > 25 && (r - g > 12) && (r > b) && (Math.max(r, g, b) - Math.min(r, g, b) > 12)) {
+          sumX += x; sumY += y; count++;
+          if (x < minX) minX = x; if (x > maxX) maxX = x;
+          if (y < minY) minY = y; if (y > maxY) maxY = y;
+        }
+      }
+    }
+
+    if (count > 80) {
+      cx = (minX + maxX) / 2;
+      cy = minY + (maxY - minY) * 0.38;
+      const cW = maxX - minX;
+      cropSize = cW * 1.08;
+    }
+  } catch (e) {
+    // Cross-origin fallback: upper-center crop
+  }
+
+  cropSize = Math.min(cropSize, Math.min(w, h));
+  const sx = Math.max(0, Math.min(w - cropSize, cx - cropSize / 2));
+  const sy = Math.max(0, Math.min(h - cropSize, cy - cropSize / 2));
+
+  ctx.drawImage(img, sx, sy, cropSize, cropSize, 0, 0, size, size);
+  return canvas;
+}
+
+/**
  * Fuses the target face photo directly into the base template canvas image.
+ * Uses true anatomical Delaunay mesh warping and skin tone transfer.
  * Returns a high-res data URL of the modified template with the face morphed in place.
  */
 export async function fuseFaceIntoTemplate({
   baseImg,
   faceTarget, // { x, y, radius } normalized [0, 1]
   photoImg,
+  morphedPatch = null,
+  landmarksA = null,
+  landmarksB = null,
+  triangles = null,
   morphProgress = 0.85, // 0 = original meme, 1 = full morph
   warmth = 0,
   brightness = 0,
-  flipX = false
+  flipX = false,
+  rotation = 0
 }) {
-  if (!baseImg || !photoImg || !faceTarget) return null;
+  if (!baseImg || (!photoImg && !morphedPatch) || !faceTarget) return null;
 
   const base = await loadImg(baseImg);
-  const photo = await loadImg(photoImg);
-  if (!base || !photo) return null;
+  if (!base) return null;
 
   const bW = base.naturalWidth || base.width || 800;
   const bH = base.naturalHeight || base.height || 800;
@@ -253,49 +328,114 @@ export async function fuseFaceIntoTemplate({
   // Sample template skin tone under the face
   const skinStats = sampleSkinStats(ctx, cx, cy, r);
 
-  // 2. Prepare photo face buffer
-  const photoCanvas = document.createElement('canvas');
-  photoCanvas.width = faceSize;
-  photoCanvas.height = faceSize;
-  const pCtx = photoCanvas.getContext('2d');
+  let warpedFaceCanvas = null;
 
-  pCtx.save();
-  if (flipX) {
-    pCtx.translate(faceSize, 0);
-    pCtx.scale(-1, 1);
+  // Case A: Dynamic Landmark Grafting on pristine base image (Option 1 Laplacian Blend)
+  if (landmarksA && landmarksB && photoImg) {
+    const photo = await loadImg(photoImg);
+    if (photo) {
+      // 1. Extract clean patch A directly from base image
+      const patchA = document.createElement('canvas');
+      patchA.width = faceSize;
+      patchA.height = faceSize;
+      const pCtxA = patchA.getContext('2d');
+      pCtxA.drawImage(
+        base,
+        cx - faceSize / 2,
+        cy - faceSize / 2,
+        faceSize,
+        faceSize,
+        0,
+        0,
+        faceSize,
+        faceSize
+      );
+
+      // 2. Prepare patch B from user photo
+      const patchB = document.createElement('canvas');
+      patchB.width = faceSize;
+      patchB.height = faceSize;
+      const pCtxB = patchB.getContext('2d');
+      pCtxB.save();
+      pCtxB.translate(faceSize / 2, faceSize / 2);
+      if (rotation) pCtxB.rotate((rotation * Math.PI) / 180);
+      if (flipX) pCtxB.scale(-1, 1);
+      const framedPhoto = frameFaceSquare(photo, faceSize);
+      pCtxB.drawImage(framedPhoto, -faceSize / 2, -faceSize / 2, faceSize, faceSize);
+      pCtxB.restore();
+
+      // 3. Multi-Band Laplacian Pyramid & Inner Feature Grafting
+      warpedFaceCanvas = document.createElement('canvas');
+      warpedFaceCanvas.width = faceSize;
+      warpedFaceCanvas.height = faceSize;
+
+      morphFaceMesh({
+        sourceCanvasA: patchA,
+        landmarksA,
+        sourceCanvasB: patchB,
+        landmarksB,
+        morphProgress,
+        outputCanvas: warpedFaceCanvas,
+        triangles,
+        featherEdge: true,
+        solidCore: true,
+        blendMode: 'laplacian'
+      });
+    }
   }
 
-  // Draw photo fitted to face square
-  const pW = photo.naturalWidth || photo.width || faceSize;
-  const pH = photo.naturalHeight || photo.height || faceSize;
-  const pAspect = pW / pH;
-  let dw = faceSize;
-  let dh = faceSize;
-  if (pAspect > 1) {
-    dh = faceSize / pAspect;
-  } else {
-    dw = faceSize * pAspect;
+  // Case B: Pre-morphed patch fallback if landmarks not available
+  if (!warpedFaceCanvas && morphedPatch) {
+    const loadedPatch = await loadImg(morphedPatch);
+    if (loadedPatch) {
+      warpedFaceCanvas = document.createElement('canvas');
+      warpedFaceCanvas.width = faceSize;
+      warpedFaceCanvas.height = faceSize;
+      const wCtx = warpedFaceCanvas.getContext('2d');
+      wCtx.drawImage(loadedPatch, 0, 0, faceSize, faceSize);
+    }
   }
-  pCtx.drawImage(photo, (faceSize - dw) / 2, (faceSize - dh) / 2, dw, dh);
-  pCtx.restore();
 
-  // 3. Match skin tone and lighting
-  applySkinColorTransfer(photoCanvas, skinStats, {
-    warmthShift: warmth,
-    brightnessShift: brightness
-  });
+  // Case C: Standard feature fusion fallback if no landmarks/patch
+  if (!warpedFaceCanvas && photoImg) {
+    const photo = await loadImg(photoImg);
+    if (photo) {
+      warpedFaceCanvas = document.createElement('canvas');
+      warpedFaceCanvas.width = faceSize;
+      warpedFaceCanvas.height = faceSize;
+      const pCtx = warpedFaceCanvas.getContext('2d');
 
-  // 4. Apply organic anatomical feature mask
-  const mask = createFeatureGraftMask(faceSize, faceSize, { feather: Math.max(4, Math.round(faceSize * 0.10)) });
-  pCtx.globalCompositeOperation = 'destination-in';
-  pCtx.drawImage(mask, 0, 0);
-  pCtx.globalCompositeOperation = 'source-over';
+      pCtx.save();
+      pCtx.translate(faceSize / 2, faceSize / 2);
+      if (rotation) pCtx.rotate((rotation * Math.PI) / 180);
+      if (flipX) pCtx.scale(-1, 1);
+      const framedPhoto = frameFaceSquare(photo, faceSize);
+      pCtx.drawImage(framedPhoto, -faceSize / 2, -faceSize / 2, faceSize, faceSize);
+      pCtx.restore();
 
-  // 5. Blend directly into the template at face position
-  ctx.save();
-  ctx.globalAlpha = Math.min(1.0, Math.max(0.0, morphProgress));
-  ctx.drawImage(photoCanvas, cx - faceSize / 2, cy - faceSize / 2, faceSize, faceSize);
-  ctx.restore();
+      applySkinColorTransfer(warpedFaceCanvas, skinStats, {
+        warmthShift: warmth,
+        brightnessShift: brightness
+      });
+
+      const mask = createFeatureGraftMask(faceSize, faceSize, {
+        feather: Math.max(4, Math.round(faceSize * 0.10))
+      });
+      pCtx.globalCompositeOperation = 'destination-in';
+      pCtx.drawImage(mask, 0, 0);
+      pCtx.globalCompositeOperation = 'source-over';
+    }
+  }
+
+  // Blend warped face directly into template pixels
+  if (warpedFaceCanvas) {
+    ctx.save();
+    // Solid core feature overlay prevents ghosting under original features
+    const effectiveAlpha = morphProgress >= 0.70 ? 1.0 : Math.max(0.0, morphProgress / 0.70);
+    ctx.globalAlpha = effectiveAlpha;
+    ctx.drawImage(warpedFaceCanvas, cx - faceSize / 2, cy - faceSize / 2, faceSize, faceSize);
+    ctx.restore();
+  }
 
   return canvas.toDataURL('image/png');
 }

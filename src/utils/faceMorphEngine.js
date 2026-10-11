@@ -79,11 +79,14 @@ export const CANONICAL_TRIANGLES = (() => {
   return triIndices;
 })();
 
+import { getDefaultLandmarks as getUnifiedLandmarks, createAnatomicalFaceMask, createInnerFeatureMask } from './faceLandmarkerService';
+import { blendLaplacianMultiBand } from './laplacianBlendEngine';
+
 /**
- * Returns a deep copy of default landmarks
+ * Returns a deep copy of default landmarks (unified 78-point mesh)
  */
 export function getDefaultLandmarks() {
-  return CANONICAL_LANDMARKS.map(p => ({ ...p }));
+  return getUnifiedLandmarks();
 }
 
 /**
@@ -201,10 +204,13 @@ export function morphFaceMesh({
   landmarksB,
   morphProgress = 0.5,
   outputCanvas,
-  triangles = CANONICAL_TRIANGLES,
-  featherEdge = true
+  triangles = null,
+  featherEdge = true,
+  solidCore = true,
+  blendMode = 'laplacian' // 'laplacian' | 'classical'
 }) {
   if (!outputCanvas || !sourceCanvasA || !sourceCanvasB) return;
+  if (!landmarksA || !landmarksB || landmarksA.length === 0) return;
 
   const size = outputCanvas.width;
   const outCtx = outputCanvas.getContext('2d');
@@ -212,9 +218,32 @@ export function morphFaceMesh({
 
   const t = Math.max(0, Math.min(1, morphProgress));
 
+  // For Laplacian mode: exclude 8 outer box anchors to prevent elf-ear/neck distortion
+  const isLaplacian = blendMode === 'laplacian';
+  const effectiveLandmarksA = isLaplacian ? landmarksA.filter(p => !p.isAnchor) : landmarksA;
+  const effectiveLandmarksB = isLaplacian ? landmarksB.filter(p => !p.isAnchor) : landmarksB;
+
+  // Dynamically compute Delaunay triangles on anatomical facial features
+  let activeTriangles = triangles;
+  if (!activeTriangles || activeTriangles.length === 0 || isLaplacian || effectiveLandmarksA.length !== CANONICAL_LANDMARKS.length) {
+    const pts = effectiveLandmarksA.map((p, i) => {
+      const pB = effectiveLandmarksB[i] || p;
+      return [(p.x + pB.x) / 2, (p.y + pB.y) / 2];
+    });
+    const delaunay = Delaunay.from(pts);
+    activeTriangles = [];
+    for (let i = 0; i < delaunay.triangles.length; i += 3) {
+      activeTriangles.push([
+        delaunay.triangles[i],
+        delaunay.triangles[i + 1],
+        delaunay.triangles[i + 2]
+      ]);
+    }
+  }
+
   // Compute interpolated target landmark coordinates at progress t
-  const currentPoints = landmarksA.map((ptA, idx) => {
-    const ptB = landmarksB[idx] || ptA;
+  const currentPoints = effectiveLandmarksA.map((ptA, idx) => {
+    const ptB = effectiveLandmarksB[idx] || ptA;
     const normX = (1 - t) * ptA.x + t * ptB.x;
     const normY = (1 - t) * ptA.y + t * ptB.y;
     return {
@@ -223,29 +252,36 @@ export function morphFaceMesh({
     };
   });
 
-  const scaledPtsA = landmarksA.map(p => ({ x: p.x * size, y: p.y * size }));
-  const scaledPtsB = landmarksB.map(p => ({ x: p.x * size, y: p.y * size }));
+  const scaledPtsA = effectiveLandmarksA.map(p => ({ x: p.x * size, y: p.y * size }));
+  const scaledPtsB = effectiveLandmarksB.map(p => ({ x: p.x * size, y: p.y * size }));
 
   // Offscreen buffer for Warped Face A (Meme Face)
   const bufferA = document.createElement('canvas');
   bufferA.width = size;
   bufferA.height = size;
   const ctxA = bufferA.getContext('2d');
+  ctxA.drawImage(sourceCanvasA, 0, 0, size, size);
 
   // Offscreen buffer for Warped Face B (Photo Face)
   const bufferB = document.createElement('canvas');
   bufferB.width = size;
   bufferB.height = size;
   const ctxB = bufferB.getContext('2d');
+  // Initialize bufferB with sourceCanvasA so outer non-warped region is continuous skin, not black
+  if (isLaplacian) {
+    ctxB.drawImage(sourceCanvasA, 0, 0, size, size);
+  }
 
   // Warp all triangles for both faces into the shared intermediate geometry
-  for (let i = 0; i < triangles.length; i++) {
-    const [i1, i2, i3] = triangles[i];
+  for (let i = 0; i < activeTriangles.length; i++) {
+    const [i1, i2, i3] = activeTriangles[i];
+    if (i1 >= currentPoints.length || i2 >= currentPoints.length || i3 >= currentPoints.length) continue;
+
     const q1 = currentPoints[i1];
     const q2 = currentPoints[i2];
     const q3 = currentPoints[i3];
 
-    if (t < 1) {
+    if (t < 1 && !isLaplacian) {
       warpTriangle(ctxA, sourceCanvasA, scaledPtsA[i1], scaledPtsA[i2], scaledPtsA[i3], q1, q2, q3);
     }
     if (t > 0) {
@@ -253,31 +289,53 @@ export function morphFaceMesh({
     }
   }
 
-  // Cross-fade the two warped textures
+  // Option 1: Multi-Band Laplacian Pyramid & Inner Feature Inset Grafting
+  if (isLaplacian) {
+    const maskLandmarks = currentPoints.map((p, i) => ({
+      x: p.x / size,
+      y: p.y / size,
+      meshIdx: effectiveLandmarksA[i]?.meshIdx,
+      id: effectiveLandmarksA[i]?.id
+    }));
+
+    // Create organic inner feature mask strictly protecting hair, forehead, ears, beard outline
+    const innerMask = createInnerFeatureMask(maskLandmarks, size, Math.max(8, Math.round(size * 0.040)));
+
+    // Re-light and harmonize user features with meme illumination
+    const harmonizedCanvas = blendLaplacianMultiBand({
+      targetCanvas: bufferA,
+      warpedCanvas: bufferB,
+      maskCanvas: innerMask,
+      width: size,
+      height: size,
+      blendStrength: t,
+      detailStrength: 1.25,
+      albedoWeight: 0.10
+    });
+
+    outCtx.drawImage(harmonizedCanvas, 0, 0);
+    return;
+  }
+
+  // Classical fallback blend mode
   if (t < 1) {
     outCtx.globalAlpha = 1 - t;
     outCtx.drawImage(bufferA, 0, 0);
   }
   if (t > 0) {
-    outCtx.globalAlpha = t;
+    outCtx.globalAlpha = solidCore && t >= 0.70 ? 1.0 : t;
     outCtx.drawImage(bufferB, 0, 0);
   }
   outCtx.globalAlpha = 1.0;
 
-  // Feather outer border so the face morph melts seamlessly into the meme background
   if (featherEdge) {
-    const maskCanvas = document.createElement('canvas');
-    maskCanvas.width = size;
-    maskCanvas.height = size;
-    const mCtx = maskCanvas.getContext('2d');
-
-    const featherPx = Math.round(size * 0.08); // 8% smooth perimeter feather
-    mCtx.filter = `blur(${featherPx}px)`;
-    mCtx.fillStyle = '#000000';
-    mCtx.beginPath();
-    // Inset oval mask
-    mCtx.ellipse(size / 2, size / 2, size * 0.44, size * 0.44, 0, 0, Math.PI * 2);
-    mCtx.fill();
+    const maskLandmarks = currentPoints.map((p, i) => ({
+      x: p.x / size,
+      y: p.y / size,
+      meshIdx: landmarksA[i]?.meshIdx,
+      id: landmarksA[i]?.id
+    }));
+    const maskCanvas = createAnatomicalFaceMask(maskLandmarks, size, Math.max(3, Math.round(size * 0.04)));
 
     outCtx.globalCompositeOperation = 'destination-in';
     outCtx.drawImage(maskCanvas, 0, 0);
@@ -288,20 +346,35 @@ export function morphFaceMesh({
 /**
  * Draws interactive wireframe mesh and draggable landmark pins for visual tuning
  */
-export function drawLandmarkMeshOverlay(ctx, landmarks, size, { showTriangles = true, showPins = true, activePinId = null, color = '#06b6d4' }) {
+export function drawLandmarkMeshOverlay(ctx, landmarks, size, { showTriangles = true, showPins = true, activePinId = null, color = '#06b6d4', triangles = null } = {}) {
   if (!ctx || !landmarks) return;
 
   const pts = landmarks.map(p => ({ id: p.id, name: p.name, x: p.x * size, y: p.y * size, isAnchor: p.isAnchor, isKeyPin: p.isKeyPin }));
 
   // Draw wireframe triangles
   if (showTriangles) {
+    let triList = triangles;
+    if (!triList || triList.length === 0) {
+      if (landmarks.length === CANONICAL_LANDMARKS.length) {
+        triList = CANONICAL_TRIANGLES;
+      } else {
+        const rawPts = landmarks.map(p => [p.x, p.y]);
+        const d = Delaunay.from(rawPts);
+        triList = [];
+        for (let i = 0; i < d.triangles.length; i += 3) {
+          triList.push([d.triangles[i], d.triangles[i + 1], d.triangles[i + 2]]);
+        }
+      }
+    }
+
     ctx.save();
     ctx.strokeStyle = color;
     ctx.lineWidth = 1;
     ctx.globalAlpha = 0.4;
 
-    for (let i = 0; i < CANONICAL_TRIANGLES.length; i++) {
-      const [i1, i2, i3] = CANONICAL_TRIANGLES[i];
+    for (let i = 0; i < triList.length; i++) {
+      const [i1, i2, i3] = triList[i];
+      if (i1 >= pts.length || i2 >= pts.length || i3 >= pts.length) continue;
       const p1 = pts[i1], p2 = pts[i2], p3 = pts[i3];
       ctx.beginPath();
       ctx.moveTo(p1.x, p1.y);

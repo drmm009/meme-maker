@@ -12,13 +12,14 @@ import {
   Paintbrush, Eraser, Highlighter, Palette, Sun, Moon, ChevronDown, ChevronLeft, PencilLine, Move, ArrowDownRight, Wand2,
   Layers, ArrowUp, ArrowDown, ChevronsUp, ChevronsDown, Eye, EyeOff, Lock, Unlock, FlipHorizontal,
   PanelTop, PanelBottom, PanelsTopBottom, MessageSquare, Flame, Tv, MessageCircle, Shield, Circle, TrendingDown, Ban,
-  AlignLeft, AlignCenter, AlignRight, Crosshair
+  AlignLeft, AlignCenter, AlignRight
 } from 'lucide-react';
 import AiCaptionModal from './AiCaptionModal';
 import MemeStylesModal, { TwitterVerifiedBadge } from './MemeStylesModal';
 import FaceMorphModal from './FaceMorphModal';
 import FacePinpointOverlay from './FacePinpointOverlay';
 import { fuseFaceIntoTemplate } from '../utils/faceGraftEngine';
+import { detectFaceOnTemplate } from '../utils/faceLandmarkerService';
 import { downloadImageHelper, recordCanvasAsVideo } from '../utils/downloadHelper';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MEME_TEMPLATES, CATEGORIES } from '../data/templates';
@@ -446,6 +447,8 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
 
   useEffect(() => {
     setActiveTemplate(template);
+    setActiveLayerId(null);
+    setActiveTab('text');
   }, [template]);
 
 
@@ -547,7 +550,9 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
           title: 'PROCRASTINATION',
           subtitle: 'Hard work pays off in the future, laziness pays off now.'
         },
-        canvasFlipX: template?.canvasFlipX || false
+        canvasFlipX: template?.canvasFlipX || false,
+        templateImageUrl: template?.imageUrl || template?.rawImageUrl || null,
+        templateFaceMorph: null
       }
     ];
   });
@@ -581,11 +586,14 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
   });
   const [showStylesModal, setShowStylesModal] = useState(false);
   const [showFaceMorphModal, setShowFaceMorphModal] = useState(false);
+  const [morphTargetLayerId, setMorphTargetLayerId] = useState(null);
+  const [morphTargetUrl, setMorphTargetUrl] = useState(null);
   const [isPinpointingFace, setIsPinpointingFace] = useState(false);
   const [faceTarget, setFaceTarget] = useState({ x: 0.5, y: 0.38, radius: 0.14 });
   const [sampledFaceLighting, setSampledFaceLighting] = useState(null);
   const [extractedMemeFace, setExtractedMemeFace] = useState(null);
   const [templateFaceMorph, setTemplateFaceMorph] = useState(null);
+  const [isHoldingCanvasCompare, setIsHoldingCanvasCompare] = useState(false);
   const originalTemplateImgRef = useRef(null);
 
   const handleSetCanvasBgColor = (val) => {
@@ -618,6 +626,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
   const [showTextBlurMenu, setShowTextBlurMenu] = useState(false);
   const [showTextBgMenu, setShowTextBgMenu] = useState(false);
   const [showImageFilterMenu, setShowImageFilterMenu] = useState(false);
+  const [showFilterPresets, setShowFilterPresets] = useState(false);
   const [showLayerMenu, setShowLayerMenu] = useState(false);
   const [showDrawSettings, setShowDrawSettings] = useState(false);
   const [pasteToast, setPasteToast] = useState(false);
@@ -644,6 +653,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     setShowTextEffectsMenu(false);
     setShowTextBlurMenu(false);
     setShowTextBgMenu(false);
+    setShowFilterPresets(false);
     if (window.innerWidth <= 768) {
       setIsMobileTabsFolded(true);
     } else {
@@ -696,11 +706,15 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
   const [watermark, setWatermark] = useState(() => {
     try {
       const saved = localStorage.getItem('meme-maker-watermark');
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.text === '@username') parsed.text = '';
+        return parsed;
+      }
     } catch (e) {}
     return {
       enabled: false,
-      text: '@username',
+      text: '',
       imageUrl: null,
       position: 'bottom-right', // 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'
       opacity: 0.5,
@@ -759,11 +773,10 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [exportDropdownOpen]);
 
-  // Synchronize history snapshot on mount
+  // Ensure Text tab is active by default when user reaches editor and no layer is auto-selected
   useEffect(() => {
-    if (captions.length > 0 && activeLayerId === null) {
-      setActiveLayerId(captions[0].id);
-    }
+    setActiveLayerId(null);
+    setActiveTab('text');
   }, []);
 
   // Reset tweet toolbar submenus on active layer change
@@ -901,7 +914,18 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     return () => window.removeEventListener('paste', handlePaste);
   }, [captions, stickers, imageLayers]);
 
-  const pushHistory = (newCaptions, newStickers, newImgLayers = imageLayers, newDrawings = drawings, newCanvasHeader = canvasHeader, newCanvasFooter = canvasFooter, newDemotivational = demotivational, newCanvasFlipX = canvasFlipX) => {
+  const pushHistory = (
+    newCaptions,
+    newStickers,
+    newImgLayers = imageLayers,
+    newDrawings = drawings,
+    newCanvasHeader = canvasHeader,
+    newCanvasFooter = canvasFooter,
+    newDemotivational = demotivational,
+    newCanvasFlipX = canvasFlipX,
+    newTemplateImageUrl = (activeTemplate?.rawImageUrl || activeTemplate?.imageUrl || null),
+    newTemplateFaceMorph = templateFaceMorph
+  ) => {
     const newSnapshot = {
       captions: JSON.parse(JSON.stringify(newCaptions)),
       stickers: JSON.parse(JSON.stringify(newStickers)),
@@ -910,7 +934,9 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
       canvasHeader: JSON.parse(JSON.stringify(newCanvasHeader)),
       canvasFooter: JSON.parse(JSON.stringify(newCanvasFooter)),
       demotivational: JSON.parse(JSON.stringify(newDemotivational)),
-      canvasFlipX: Boolean(newCanvasFlipX)
+      canvasFlipX: Boolean(newCanvasFlipX),
+      templateImageUrl: newTemplateImageUrl,
+      templateFaceMorph: newTemplateFaceMorph ? JSON.parse(JSON.stringify(newTemplateFaceMorph)) : null
     };
     const updatedHistory = history.slice(0, historyStep + 1);
     updatedHistory.push(newSnapshot);
@@ -919,10 +945,21 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
   };
 
   // Debounced version — used for text typing so history isn't pushed on every keypress
-  const pushHistoryDebounced = (newCaptions, newStickers, newImgLayers = imageLayers, newDrawings = drawings, newCanvasHeader = canvasHeader, newCanvasFooter = canvasFooter, newDemotivational = demotivational, newCanvasFlipX = canvasFlipX) => {
+  const pushHistoryDebounced = (
+    newCaptions,
+    newStickers,
+    newImgLayers = imageLayers,
+    newDrawings = drawings,
+    newCanvasHeader = canvasHeader,
+    newCanvasFooter = canvasFooter,
+    newDemotivational = demotivational,
+    newCanvasFlipX = canvasFlipX,
+    newTemplateImageUrl = (activeTemplate?.rawImageUrl || activeTemplate?.imageUrl || null),
+    newTemplateFaceMorph = templateFaceMorph
+  ) => {
     if (historyTimerRef.current) clearTimeout(historyTimerRef.current);
     historyTimerRef.current = setTimeout(() => {
-      pushHistory(newCaptions, newStickers, newImgLayers, newDrawings, newCanvasHeader, newCanvasFooter, newDemotivational, newCanvasFlipX);
+      pushHistory(newCaptions, newStickers, newImgLayers, newDrawings, newCanvasHeader, newCanvasFooter, newDemotivational, newCanvasFlipX, newTemplateImageUrl, newTemplateFaceMorph);
     }, 800);
   };
 
@@ -952,6 +989,14 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
       if (snapshot.canvasFlipX !== undefined) {
         setCanvasFlipX(Boolean(snapshot.canvasFlipX));
       }
+      if (snapshot.templateImageUrl !== undefined && snapshot.templateImageUrl !== null) {
+        setActiveTemplate(prev => ({
+          ...prev,
+          rawImageUrl: snapshot.templateImageUrl,
+          imageUrl: snapshot.templateImageUrl
+        }));
+      }
+      setTemplateFaceMorph(snapshot.templateFaceMorph ? JSON.parse(JSON.stringify(snapshot.templateFaceMorph)) : null);
       setHistoryStep(prevStep);
     }
   };
@@ -976,6 +1021,14 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
       if (snapshot.canvasFlipX !== undefined) {
         setCanvasFlipX(Boolean(snapshot.canvasFlipX));
       }
+      if (snapshot.templateImageUrl !== undefined && snapshot.templateImageUrl !== null) {
+        setActiveTemplate(prev => ({
+          ...prev,
+          rawImageUrl: snapshot.templateImageUrl,
+          imageUrl: snapshot.templateImageUrl
+        }));
+      }
+      setTemplateFaceMorph(snapshot.templateFaceMorph ? JSON.parse(JSON.stringify(snapshot.templateFaceMorph)) : null);
       setHistoryStep(nextStep);
     }
   };
@@ -1954,15 +2007,61 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     e.target.value = '';
   };
 
-  const handleStartMorphFace = () => {
-    setIsPinpointingFace(true);
+  const handleStartMorphFace = (explicitTarget = null) => {
+    // 1. Identify if a target layer was explicitly passed, or if activeImageLayer / activeSticker is selected
+    // Note: React onClick passes a SyntheticEvent (which has nativeEvent/dispatchConfig), so ignore SyntheticEvents!
+    let targetLayer = null;
+    if (explicitTarget && typeof explicitTarget === 'object' && ('url' in explicitTarget || 'src' in explicitTarget) && !('nativeEvent' in explicitTarget)) {
+      targetLayer = explicitTarget;
+    } else if (activeImageLayer && (activeImageLayer.url || activeImageLayer.src)) {
+      targetLayer = activeImageLayer;
+    } else if (activeSticker && (activeSticker.url || activeSticker.src)) {
+      targetLayer = activeSticker;
+    }
+
+    if (targetLayer) {
+      const url = targetLayer.url || targetLayer.src;
+      if (url) {
+        setMorphTargetLayerId(targetLayer.id);
+        setMorphTargetUrl(url);
+        setSampledFaceLighting(null);
+        setExtractedMemeFace(null);
+        setShowFaceMorphModal(true);
+        return;
+      }
+    }
+
+    // 2. Fallback: Targeting background meme template
+    setMorphTargetLayerId(null);
+    setMorphTargetUrl(null);
+    setActiveLayerId(null);
+    let lighting = null;
+    let patch = null;
+    if (canvasRef.current?.sampleFaceLighting) {
+      lighting = canvasRef.current.sampleFaceLighting(faceTarget.x, faceTarget.y, faceTarget.radius);
+      setSampledFaceLighting(lighting);
+    }
+    if (canvasRef.current?.extractFacePatch) {
+      patch = canvasRef.current.extractFacePatch(faceTarget.x, faceTarget.y, faceTarget.radius, 400);
+      setExtractedMemeFace(patch);
+    }
+    setShowFaceMorphModal(true);
   };
 
   const handleRetargetFace = () => {
+    if (templateFaceMorph?.isLayerSwap) {
+      const target = imageLayers.find(l => l.id === templateFaceMorph.layerId) || stickers.find(s => s.id === templateFaceMorph.layerId);
+      if (target) {
+        handleStartMorphFace(target);
+        return;
+      }
+    }
+    setActiveLayerId(null);
     setIsPinpointingFace(true);
   };
 
   const handleConfirmPinpoint = () => {
+    setActiveLayerId(null);
     setIsPinpointingFace(false);
     let lighting = null;
     let patch = null;
@@ -1985,18 +2084,136 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     brightness,
     contrast,
     warmth,
-    morphProgress
+    morphProgress,
+    landmarksA,
+    landmarksB,
+    triangles,
+    isNeuralSwap,
+    neuralSwappedFullImage
   }) => {
     setShowFaceMorphModal(false);
-    const cleanOriginalUrl = activeTemplate?.originalUrl || activeTemplate?.rawImageUrl || activeTemplate?.imageUrl;
-    originalTemplateImgRef.current = cleanOriginalUrl;
 
-    const baseImg = canvasRef.current?.getBaseImageElement?.() || cleanOriginalUrl;
+    // CASE 1: Swapping an image layer or graphic sticker on top of canvas
+    if (morphTargetLayerId) {
+      const swappedResultUrl = neuralSwappedFullImage || url;
+      if (swappedResultUrl) {
+        let origUrl = null;
+        let nextImgLayers = imageLayers;
+        let nextStickers = stickers;
+        const isImg = imageLayers.some(l => l.id === morphTargetLayerId);
+        if (isImg) {
+          nextImgLayers = imageLayers.map((l) => {
+            if (l.id === morphTargetLayerId) {
+              origUrl = l.originalUrl || l.url;
+              return {
+                ...l,
+                url: swappedResultUrl,
+                originalUrl: origUrl
+              };
+            }
+            return l;
+          });
+          setImageLayers(nextImgLayers);
+        } else {
+          nextStickers = stickers.map((s) => {
+            if (s.id === morphTargetLayerId) {
+              origUrl = s.originalUrl || s.url;
+              return {
+                ...s,
+                url: swappedResultUrl,
+                originalUrl: origUrl
+              };
+            }
+            return s;
+          });
+          setStickers(nextStickers);
+        }
+
+        const morphState = {
+          isLayerSwap: true,
+          layerId: morphTargetLayerId,
+          cleanOriginalUrl: origUrl,
+          photoUrl: originalFaceUrl || url,
+          faceName: faceName || 'Face Swap'
+        };
+        setTemplateFaceMorph(morphState);
+        setActiveLayerId(null);
+        pushHistory(
+          captions,
+          nextStickers,
+          nextImgLayers,
+          drawings,
+          canvasHeader,
+          canvasFooter,
+          demotivational,
+          canvasFlipX,
+          activeTemplate?.rawImageUrl || activeTemplate?.imageUrl,
+          morphState
+        );
+      }
+      setMorphTargetLayerId(null);
+      setMorphTargetUrl(null);
+      return;
+    }
+
+    // CASE 2: Swapping background meme template
+    const cleanOriginalUrl = (originalTemplateImgRef.current && !originalTemplateImgRef.current.startsWith('data:'))
+      ? originalTemplateImgRef.current
+      : (activeTemplate?.originalUrl || (activeTemplate?.imageUrl && !activeTemplate.imageUrl.startsWith('data:') ? activeTemplate.imageUrl : null) || activeTemplate?.imageUrl);
+    
+    if (!originalTemplateImgRef.current || originalTemplateImgRef.current.startsWith('data:')) {
+      originalTemplateImgRef.current = cleanOriginalUrl;
+    }
+
+    if (isNeuralSwap && neuralSwappedFullImage) {
+      setActiveTemplate(prev => ({
+        ...prev,
+        rawImageUrl: neuralSwappedFullImage,
+        imageUrl: neuralSwappedFullImage,
+        originalUrl: prev?.originalUrl || cleanOriginalUrl
+      }));
+
+      const morphState = {
+        faceTarget: { ...faceTarget },
+        photoUrl: originalFaceUrl || url,
+        originalFaceUrl: originalFaceUrl || url,
+        faceName: faceName || 'AI Neural Swap',
+        morphProgress: 1.0,
+        warmth: 0,
+        brightness: 100,
+        contrast: 100,
+        flipX: false,
+        cleanOriginalUrl,
+        isNeuralSwap: true
+      };
+
+      setTemplateFaceMorph(morphState);
+      setActiveLayerId(null);
+      pushHistory(
+        captions,
+        stickers,
+        imageLayers,
+        drawings,
+        canvasHeader,
+        canvasFooter,
+        demotivational,
+        canvasFlipX,
+        neuralSwappedFullImage,
+        morphState
+      );
+      return;
+    }
+
+    const baseImg = cleanOriginalUrl;
 
     const fusedDataUrl = await fuseFaceIntoTemplate({
       baseImg,
       faceTarget,
-      photoImg: url || originalFaceUrl,
+      photoImg: originalFaceUrl || url,
+      morphedPatch: url,
+      landmarksA,
+      landmarksB,
+      triangles,
       morphProgress: morphProgress !== undefined ? morphProgress : 0.85,
       warmth: warmth || 0,
       brightness: brightness || 0,
@@ -2011,20 +2228,36 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
         originalUrl: prev?.originalUrl || cleanOriginalUrl
       }));
 
-      setTemplateFaceMorph({
+      const morphState = {
         faceTarget: { ...faceTarget },
         photoUrl: url || originalFaceUrl,
-        originalFaceUrl,
+        originalFaceUrl: originalFaceUrl || url,
         faceName: faceName || 'Face Morph',
         morphProgress: morphProgress !== undefined ? morphProgress : 0.85,
         warmth: warmth || 0,
         brightness: brightness || 0,
         contrast: contrast || 100,
         flipX: !!flipX,
-        cleanOriginalUrl
-      });
+        cleanOriginalUrl,
+        landmarksA,
+        landmarksB,
+        triangles
+      };
 
+      setTemplateFaceMorph(morphState);
       setActiveLayerId(null);
+      pushHistory(
+        captions,
+        stickers,
+        imageLayers,
+        drawings,
+        canvasHeader,
+        canvasFooter,
+        demotivational,
+        canvasFlipX,
+        fusedDataUrl,
+        morphState
+      );
     }
   };
 
@@ -2037,7 +2270,10 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     const fusedDataUrl = await fuseFaceIntoTemplate({
       baseImg: cleanUrl,
       faceTarget: templateFaceMorph.faceTarget,
-      photoImg: templateFaceMorph.photoUrl || templateFaceMorph.originalFaceUrl,
+      photoImg: templateFaceMorph.originalFaceUrl || templateFaceMorph.photoUrl,
+      landmarksA: templateFaceMorph.landmarksA,
+      landmarksB: templateFaceMorph.landmarksB,
+      triangles: templateFaceMorph.triangles,
       morphProgress: progress,
       warmth: templateFaceMorph.warmth || 0,
       brightness: templateFaceMorph.brightness || 0,
@@ -2055,11 +2291,32 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
   };
 
   const handleChangeFace = () => {
+    if (templateFaceMorph?.isLayerSwap) {
+      const target = imageLayers.find(l => l.id === templateFaceMorph.layerId) || stickers.find(s => s.id === templateFaceMorph.layerId);
+      if (target) {
+        handleStartMorphFace(target);
+        return;
+      }
+    }
     setShowFaceMorphModal(true);
   };
 
   const handleRevertTemplateFace = () => {
     if (!templateFaceMorph) return;
+    if (templateFaceMorph.isLayerSwap) {
+      const cleanUrl = templateFaceMorph.cleanOriginalUrl;
+      let nextImgs = imageLayers;
+      let nextStks = stickers;
+      if (cleanUrl) {
+        nextImgs = imageLayers.map(l => l.id === templateFaceMorph.layerId ? { ...l, url: cleanUrl } : l);
+        nextStks = stickers.map(s => s.id === templateFaceMorph.layerId ? { ...s, url: cleanUrl } : s);
+        setImageLayers(nextImgs);
+        setStickers(nextStks);
+      }
+      setTemplateFaceMorph(null);
+      pushHistory(captions, nextStks, nextImgs, drawings, canvasHeader, canvasFooter, demotivational, canvasFlipX, activeTemplate?.rawImageUrl || activeTemplate?.imageUrl, null);
+      return;
+    }
     const cleanUrl = templateFaceMorph.cleanOriginalUrl || activeTemplate?.originalUrl;
     if (cleanUrl) {
       setActiveTemplate(prev => ({
@@ -2070,14 +2327,21 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
       }));
     }
     setTemplateFaceMorph(null);
+    pushHistory(captions, stickers, imageLayers, drawings, canvasHeader, canvasFooter, demotivational, canvasFlipX, cleanUrl, null);
   };
 
   const handleFinalizeTemplateFace = () => {
+    if (templateFaceMorph?.isLayerSwap) {
+      setTemplateFaceMorph(null);
+      pushHistory(captions, stickers, imageLayers, drawings, canvasHeader, canvasFooter, demotivational, canvasFlipX, activeTemplate?.rawImageUrl || activeTemplate?.imageUrl, null);
+      return;
+    }
     setActiveTemplate(prev => ({
       ...prev,
       originalUrl: null
     }));
     setTemplateFaceMorph(null);
+    pushHistory(captions, stickers, imageLayers, drawings, canvasHeader, canvasFooter, demotivational, canvasFlipX, activeTemplate?.rawImageUrl || activeTemplate?.imageUrl, null);
   };
 
   const updateActiveImageLayer = (key, value) => {
@@ -2553,6 +2817,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     }
   }, [showFontMenu, activeCaption?.fontFamily]);
   const activeSticker = stickers.find((s) => s.id === activeLayerId);
+  const isElementSelected = Boolean(activeLayerId || activeCaption || activeSticker || activeImageLayer);
 
   useEffect(() => {
     const isFiltersOpen = (!activeCaption && !activeSticker && activeTab === 'filters') || (activeImageLayer && showImageFilterMenu);
@@ -4217,8 +4482,8 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                       {/* Normal Image: Morph Face button */}
                       <button
                         className="btn btn-xs vid-ctx-btn"
-                        title="Open Face Morph Studio"
-                        onClick={handleStartMorphFace}
+                        title="AI Face Swap"
+                        onClick={() => handleStartMorphFace(activeImageLayer)}
                         style={{
                           padding: '4px 10px',
                           fontSize: '0.75rem',
@@ -4231,8 +4496,8 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           flexShrink: 0
                         }}
                       >
-                        <Smile style={{ width: 13, height: 13, color: 'var(--cyber-cyan)' }} />
-                        <span>Morph Face</span>
+                        <Sparkles style={{ width: 13, height: 13, color: 'var(--cyber-cyan)' }} />
+                        <span>Face Swap</span>
                       </button>
 
                           {/* 1. BG Eraser */}
@@ -4378,62 +4643,13 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                   {/* ON-TEMPLATE FACE MORPH TOOLBAR (when template face morph is active & no layer selected) */}
                   {templateFaceMorph && !(activeCaption || activeSticker || activeImageLayer) && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-                      {/* 1. Face Badge / Name */}
-                      <div
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '6px',
-                          padding: '4px 10px',
-                          borderRadius: '8px',
-                          background: 'rgba(6, 182, 212, 0.2)',
-                          border: '1px solid var(--cyber-cyan)',
-                          color: '#ffffff',
-                          fontSize: '0.75rem',
-                          fontWeight: 700,
-                          flexShrink: 0
-                        }}
-                      >
-                        <Smile style={{ width: 14, height: 14, color: 'var(--cyber-cyan)' }} />
-                        <span>{templateFaceMorph.faceName || 'Face Morph'}</span>
-                      </div>
-
-                      {/* 2. Live Morph % Slider */}
-                      <div
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '6px',
-                          padding: '0 10px',
-                          background: 'rgba(255, 255, 255, 0.08)',
-                          borderRadius: '8px',
-                          height: '28px',
-                          flexShrink: 0
-                        }}
-                        title="Morph Blend % (adjusts face morph directly in template pixels)"
-                      >
-                        <span style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.7)', fontWeight: 600 }}>Morph</span>
-                        <input
-                          type="range"
-                          min="0"
-                          max="1"
-                          step="0.05"
-                          value={templateFaceMorph.morphProgress !== undefined ? templateFaceMorph.morphProgress : 0.85}
-                          onChange={(e) => handleUpdateTemplateMorphProgress(parseFloat(e.target.value))}
-                          style={{ width: '65px', accentColor: 'var(--cyber-cyan)', height: '4px', cursor: 'pointer' }}
-                        />
-                        <span style={{ fontSize: '0.75rem', color: 'var(--cyber-cyan)', fontWeight: 700, minWidth: '34px' }}>
-                          {Math.round((templateFaceMorph.morphProgress !== undefined ? templateFaceMorph.morphProgress : 0.85) * 100)}%
-                        </span>
-                      </div>
-
-                      {/* 3. Change Face Button */}
+                      {/* 1. Change Face */}
                       <button
                         className="btn btn-xs vid-ctx-btn"
                         title="Pick a different face or photo"
                         onClick={handleChangeFace}
                         style={{
-                          padding: '4px 10px',
+                          padding: '4px 11px',
                           fontSize: '0.75rem',
                           fontWeight: 600,
                           display: 'flex',
@@ -4450,36 +4666,13 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         <span>Change Face</span>
                       </button>
 
-                      {/* 4. Retarget Reticle Button */}
+                      {/* 2. Cancel */}
                       <button
                         className="btn btn-xs vid-ctx-btn"
-                        title="Reposition face target reticle on the canvas"
-                        onClick={handleRetargetFace}
-                        style={{
-                          padding: '4px 10px',
-                          fontSize: '0.75rem',
-                          fontWeight: 600,
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '5px',
-                          borderRadius: '8px',
-                          background: 'rgba(255, 255, 255, 0.08)',
-                          color: '#ffffff',
-                          border: '1px solid var(--glass-border)',
-                          flexShrink: 0
-                        }}
-                      >
-                        <Crosshair style={{ width: 12, height: 12, color: 'var(--cyber-cyan)' }} />
-                        <span>Retarget</span>
-                      </button>
-
-                      {/* 5. Revert to Original Button */}
-                      <button
-                        className="btn btn-xs vid-ctx-btn"
-                        title="Revert template face back to original"
+                        title="Cancel face swap and revert"
                         onClick={handleRevertTemplateFace}
                         style={{
-                          padding: '4px 10px',
+                          padding: '4px 11px',
                           fontSize: '0.75rem',
                           fontWeight: 600,
                           display: 'flex',
@@ -4488,36 +4681,36 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           borderRadius: '8px',
                           background: 'rgba(239, 68, 68, 0.15)',
                           color: '#f87171',
-                          border: '1px solid rgba(239, 68, 68, 0.4)',
+                          border: '1px solid rgba(239, 68, 68, 0.35)',
                           flexShrink: 0
                         }}
                       >
                         <X style={{ width: 12, height: 12 }} />
-                        <span>Revert</span>
+                        <span>Cancel</span>
                       </button>
 
-                      {/* 6. Fuse Permanently Button */}
+                      {/* 3. Okay (Active UI) */}
                       <button
-                        className="btn btn-xs vid-ctx-btn"
-                        title="Permanently fuse face into template image"
+                        className="btn btn-xs vid-ctx-btn active"
+                        title="Accept face swap"
                         onClick={handleFinalizeTemplateFace}
                         style={{
-                          padding: '4px 12px',
+                          padding: '4px 14px',
                           fontSize: '0.75rem',
                           fontWeight: 700,
                           display: 'flex',
                           alignItems: 'center',
                           gap: '5px',
                           borderRadius: '8px',
-                          background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.3), rgba(6, 182, 212, 0.35))',
-                          border: '1px solid rgba(52, 211, 153, 0.8)',
-                          color: '#34d399',
-                          boxShadow: '0 0 10px rgba(16, 185, 129, 0.25)',
+                          background: 'var(--primary-gradient)',
+                          border: '1px solid var(--cyber-cyan)',
+                          color: '#ffffff',
+                          boxShadow: '0 0 12px rgba(6, 182, 212, 0.45)',
                           flexShrink: 0
                         }}
                       >
-                        <Check style={{ width: 12, height: 12 }} />
-                        <span>Fuse Permanently</span>
+                        <Check style={{ width: 13, height: 13, strokeWidth: 2.5 }} />
+                        <span>Okay</span>
                       </button>
                     </div>
                   )}
@@ -4712,30 +4905,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         />
                       </label>
 
-                      {/* 2. MORPH FACE */}
-                      <button
-                        className="btn btn-xs vid-ctx-btn"
-                        onClick={handleStartMorphFace}
-                        style={{
-                          padding: '5px 14px',
-                          fontSize: '0.8rem',
-                          fontWeight: 600,
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '6px',
-                          borderRadius: '12px',
-                          background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(6, 182, 212, 0.25))',
-                          border: '1px solid var(--cyber-cyan)',
-                          color: '#ffffff',
-                          flexShrink: 0
-                        }}
-                        title="Morph Face onto Meme Template"
-                      >
-                        <Smile style={{ width: 14, height: 14, color: 'var(--cyber-cyan)' }} />
-                        <span>Morph Face</span>
-                      </button>
-
-                      {/* 3. TEMPLATE */}
+                      {/* 2. TEMPLATE */}
                       <button
                         className="btn btn-xs vid-ctx-btn"
                         onClick={() => setImagePickerTarget('layer')}
@@ -5114,27 +5284,35 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           </button>
 
                           {/* CLUSTER 2: WATERMARK BRANDING */}
-                          <button
-                            className={`btn btn-xs vid-ctx-btn ${watermark?.enabled ? 'active' : ''}`}
-                            onClick={() => {
-                                setShowWatermarkMenu(true);
-                                if (!watermark?.enabled) updateWatermark('enabled', true);
-                            }}
-                            style={{
-                              padding: '4px 10px',
-                              fontSize: '0.75rem',
-                              fontWeight: 600,
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '5px',
-                              borderRadius: '10px',
-                              background: watermark?.enabled ? 'var(--primary-gradient)' : undefined,
-                              color: '#ffffff',
-                              flexShrink: 0
-                            }}
-                          >
-                            <Droplet style={{ width: 13, height: 13 }} /> Watermark
-                          </button>
+                          {(() => {
+                            const isWatermarkActive = Boolean(
+                              watermark?.enabled &&
+                              (watermark?.text || '').replace(/^@+/, '').trim().length > 0
+                            );
+                            return (
+                              <button
+                                className={`btn btn-xs vid-ctx-btn ${isWatermarkActive ? 'active' : ''}`}
+                                onClick={() => {
+                                    setShowWatermarkMenu(true);
+                                    if (!watermark?.enabled) updateWatermark('enabled', true);
+                                }}
+                                style={{
+                                  padding: '4px 10px',
+                                  fontSize: '0.75rem',
+                                  fontWeight: 600,
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '5px',
+                                  borderRadius: '10px',
+                                  background: isWatermarkActive ? 'var(--primary-gradient)' : undefined,
+                                  color: '#ffffff',
+                                  flexShrink: 0
+                                }}
+                              >
+                                <Droplet style={{ width: 13, height: 13 }} /> Watermark
+                              </button>
+                            );
+                          })()}
                         </>
                       ) : (
                         <>
@@ -5228,103 +5406,168 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         </>
                       )}
 
-                      {!activeImageLayer && activeTab === 'filters' && (
+                      {!activeImageLayer && activeTab === 'filters' && !showFilterPresets && (
                         <>
+                          {/* 1. Face Swap */}
                           <button
                             className="btn btn-xs vid-ctx-btn"
-                            title={imageFilters.filterScope === 'background' ? "Filter Canvas Only" : "Filter Entire Meme (Canvas + Elements)"}
-                            onClick={() => {
-                              setImageFilters(prev => ({
-                                ...prev,
-                                filterScope: prev.filterScope === 'background' ? 'all' : 'background'
-                              }));
+                            title="AI Face Swap Studio"
+                            onClick={() => handleStartMorphFace()}
+                            style={{
+                              flexShrink: 0,
+                              padding: '5px 12px',
+                              borderRadius: '20px',
+                              fontSize: '0.75rem',
+                              fontWeight: 700,
+                              background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.25) 0%, rgba(99, 102, 241, 0.25) 100%)',
+                              border: '1px solid var(--cyber-cyan)',
+                              boxShadow: '0 0 10px rgba(6, 182, 212, 0.3)',
+                              color: '#ffffff',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '5px'
                             }}
+                          >
+                            <Sparkles style={{ width: 13, height: 13, color: 'var(--cyber-cyan)' }} />
+                            <span>Face Swap</span>
+                          </button>
+
+                          {/* 2. Filters */}
+                          <button
+                            className="btn btn-xs vid-ctx-btn"
+                            title="Open Photo Filters"
+                            onClick={() => setShowFilterPresets(true)}
                             style={{
                               flexShrink: 0,
                               padding: '5px 12px',
                               borderRadius: '20px',
                               fontSize: '0.75rem',
                               fontWeight: 600,
-                              background: imageFilters.filterScope === 'background' ? 'rgba(255, 255, 255, 0.08)' : 'var(--primary-gradient)',
+                              background: 'var(--primary-gradient)',
                               color: '#fff',
-                              border: imageFilters.filterScope === 'background' ? '1px solid rgba(255, 255, 255, 0.15)' : '1px solid rgba(249, 115, 22, 0.5)',
+                              border: '1px solid rgba(249, 115, 22, 0.5)',
                               display: 'flex',
                               alignItems: 'center',
                               gap: '6px'
                             }}
                           >
-                            <Layers style={{ width: 13, height: 13 }} />
-                            <span>{imageFilters.filterScope === 'background' ? 'Canvas Only' : 'All Elements'}</span>
+                            <Sliders style={{ width: 13, height: 13 }} />
+                            <span>Filters</span>
+                          </button>
+                        </>
+                      )}
+
+                      {!activeImageLayer && activeTab === 'filters' && showFilterPresets && (
+                        <>
+                          {/* Back Button replacing Face Swap & Filters */}
+                          <button
+                            onClick={() => setShowFilterPresets(false)}
+                            className="btn btn-icon btn-xs vid-ctx-btn"
+                            title="Back to AI/Filters"
+                          >
+                            <ArrowLeft style={{ width: 16, height: 16 }} />
                           </button>
                           <div className="vid-ctx-divider" />
                         </>
                       )}
 
-                      {(() => {
-                        let previewImage = 'https://images.unsplash.com/photo-1555685812-4b943f1cb0eb?w=100&q=80'; // fallback
-                        if (activeImageLayer) {
-                          previewImage = activeImageLayer.originalUrl || activeImageLayer.url || activeImageLayer.src || previewImage;
-                        } else if (imageLayers && imageLayers.length > 0) {
-                          previewImage = imageLayers[0].originalUrl || imageLayers[0].url || imageLayers[0].src || previewImage;
-                        }
-
-                        return PHOTO_FILTERS.map((filterItem) => {
-                          const isFilterActive = activeImageLayer 
-                            ? (activeImageLayer.filterId || 'original') === filterItem.id
-                            : (imageFilters.preset || 'original') === filterItem.id;
-                          return (
+                      {((!activeImageLayer && showFilterPresets) || (activeImageLayer && showImageFilterMenu)) && (
+                        <>
+                          {!activeImageLayer && (
                             <button
-                              key={filterItem.id}
-                              id={`filter-item-${filterItem.id}`}
-                              className={`btn btn-xs vid-ctx-btn ${isFilterActive ? 'active' : ''}`}
+                              className="btn btn-xs vid-ctx-btn"
+                              title={imageFilters.filterScope === 'background' ? "Filter Canvas Only" : "Filter Entire Meme (Canvas + Elements)"}
                               onClick={() => {
-                                if (activeImageLayer) {
-                                  updateActiveImageLayer({
-                                    filterId: filterItem.id,
-                                    filter: filterItem.filterString,
-                                    filters: filterItem.values
-                                  });
-                                  setShowImageFilterMenu(false);
-                                } else {
-                                  setImageFilters(prev => ({
-                                    ...prev,
-                                    preset: filterItem.id,
-                                    filterString: filterItem.filterString,
-                                    ...filterItem.values
-                                  }));
-                                }
+                                setImageFilters(prev => ({
+                                  ...prev,
+                                  filterScope: prev.filterScope === 'background' ? 'all' : 'background'
+                                }));
                               }}
-                              style={{ 
-                                flexShrink: 0, 
-                                padding: '4px 10px 4px 4px', 
+                              style={{
+                                flexShrink: 0,
+                                padding: '4px 10px',
                                 borderRadius: '20px',
-                                background: isFilterActive ? 'var(--primary-gradient)' : 'rgba(255, 255, 255, 0.05)', 
-                                border: isFilterActive ? '1px solid rgba(249, 115, 22, 0.5)' : '1px solid rgba(255,255,255,0.1)',
+                                fontSize: '0.72rem',
+                                background: 'rgba(255, 255, 255, 0.06)',
+                                border: '1px solid rgba(255, 255, 255, 0.15)',
+                                color: 'var(--text-muted)',
                                 display: 'flex',
-                                flexDirection: 'row',
                                 alignItems: 'center',
-                                gap: '8px',
-                                width: 'auto',
-                                overflow: 'hidden'
+                                gap: '4px'
                               }}
                             >
-                              <div style={{
-                                width: '28px',
-                                height: '28px',
-                                borderRadius: '50%',
-                                backgroundImage: `url(${previewImage})`,
-                                backgroundSize: 'cover',
-                                backgroundPosition: 'center',
-                                filter: filterItem.filterString,
-                                flexShrink: 0
-                              }} />
-                              <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#fff', whiteSpace: 'nowrap' }}>
-                                {filterItem.name}
-                              </span>
+                              <span>{imageFilters.filterScope === 'background' ? 'Canvas' : 'All'}</span>
                             </button>
-                          );
-                        });
-                      })()}
+                          )}
+                          {(() => {
+                            let previewImage = 'https://images.unsplash.com/photo-1555685812-4b943f1cb0eb?w=100&q=80'; // fallback
+                            if (activeImageLayer) {
+                              previewImage = activeImageLayer.originalUrl || activeImageLayer.url || activeImageLayer.src || previewImage;
+                            } else if (imageLayers && imageLayers.length > 0) {
+                              previewImage = imageLayers[0].originalUrl || imageLayers[0].url || imageLayers[0].src || previewImage;
+                            } else if (template?.imageUrl) {
+                              previewImage = template.imageUrl;
+                            }
+
+                            return PHOTO_FILTERS.map((filterItem) => {
+                              const isFilterActive = activeImageLayer 
+                                ? (activeImageLayer.filterId || 'original') === filterItem.id
+                                : (imageFilters.preset || 'original') === filterItem.id;
+                              return (
+                                <button
+                                  key={filterItem.id}
+                                  id={`filter-item-${filterItem.id}`}
+                                  className={`btn btn-xs vid-ctx-btn ${isFilterActive ? 'active' : ''}`}
+                                  onClick={() => {
+                                    if (activeImageLayer) {
+                                      updateActiveImageLayer({
+                                        filterId: filterItem.id,
+                                        filter: filterItem.filterString,
+                                        filters: filterItem.values
+                                      });
+                                      setShowImageFilterMenu(false);
+                                    } else {
+                                      setImageFilters(prev => ({
+                                        ...prev,
+                                        preset: filterItem.id,
+                                        filterString: filterItem.filterString,
+                                        ...filterItem.values
+                                      }));
+                                    }
+                                  }}
+                                  style={{ 
+                                    flexShrink: 0, 
+                                    padding: '4px 10px 4px 4px', 
+                                    borderRadius: '20px',
+                                    background: isFilterActive ? 'var(--primary-gradient)' : 'rgba(255, 255, 255, 0.05)', 
+                                    border: isFilterActive ? '1px solid rgba(249, 115, 22, 0.5)' : '1px solid rgba(255,255,255,0.1)',
+                                    display: 'flex',
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    width: 'auto',
+                                    overflow: 'hidden'
+                                  }}
+                                >
+                                  <div style={{
+                                    width: '28px',
+                                    height: '28px',
+                                    borderRadius: '50%',
+                                    backgroundImage: `url(${previewImage})`,
+                                    backgroundSize: 'cover',
+                                    backgroundPosition: 'center',
+                                    filter: filterItem.filterString,
+                                    flexShrink: 0
+                                  }} />
+                                  <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#fff', whiteSpace: 'nowrap' }}>
+                                    {filterItem.name}
+                                  </span>
+                                </button>
+                              );
+                            });
+                          })()}
+                        </>
+                      )}
                     </div>
                   )}
 
@@ -5370,7 +5613,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
             <CanvasEditor
               ref={canvasRef}
               template={activeTemplate}
-              imageUrl={activeTemplate?.rawImageUrl || activeTemplate?.imageUrl}
+              imageUrl={isHoldingCanvasCompare ? (templateFaceMorph?.cleanOriginalUrl || activeTemplate?.originalUrl) : (activeTemplate?.rawImageUrl || activeTemplate?.imageUrl)}
             captions={captions}
             stickers={stickers}
             imageLayers={imageLayers}
@@ -5396,27 +5639,13 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
               setShowHeaderFooterMenu(false);
               setShowTextAlignMenu(false);
               if (!id) {
-                const prevSticker = stickers.find((s) => s.id === activeLayerId);
-                const prevCaption = captions.find((c) => c.id === activeLayerId);
-                const prevImg = imageLayers.find((img) => img.id === activeLayerId);
-                if (prevSticker || (prevCaption && prevCaption.isTweetCard) || prevImg) {
-                  setActiveTab('images');
-                }
                 setActiveLayerId(null);
                 return;
               }
-              setActiveLayerId(id);
-              const stk = stickers.find((s) => s.id === id);
-              const cap = captions.find((c) => c.id === id);
-              if (stk) {
-                setActiveTab('images');
-              } else if (imageLayers.some((img) => img.id === id)) {
-                setActiveTab('images');
-              } else if (cap && cap.isTweetCard) {
-                setActiveTab('images');
-              } else if (id) {
-                setActiveTab('text');
+              if (window.innerWidth <= 768) {
+                setIsMobileTabsFolded(true);
               }
+              setActiveLayerId(id);
             }}
             onUpdateCaptionBounds={(id, newProps) => {
               const nextCaps = captions.map((c) => (c.id === id ? { ...c, ...newProps } : c));
@@ -5457,7 +5686,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
               canvasBgColor={canvasBgColor}
             drawings={drawings}
             onAddDrawing={handleAddDrawing}
-            isDrawingMode={activeTab === 'draw' && Boolean(drawTool)}
+            isDrawingMode={!isElementSelected && activeTab === 'draw' && Boolean(drawTool)}
             drawTool={drawTool}
             brushColor={brushColor}
             brushSize={brushSize}
@@ -5501,6 +5730,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
             onConfirm={handleConfirmPinpoint}
             onCancel={() => setIsPinpointingFace(false)}
             canvasRef={canvasRef}
+            templateImageUrl={originalTemplateImgRef.current || activeTemplate?.originalUrl || activeTemplate?.imageUrl}
           />
 
         </div>
@@ -5521,7 +5751,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
             }}
           >
             <button
-              className={`tab-btn ${activeTab === 'draw' ? 'active' : ''}`}
+              className={`tab-btn ${!isElementSelected && activeTab === 'draw' ? 'active' : ''}`}
               onClick={() => {
                 handleTabClick('draw');
                 setActiveLayerId(null);
@@ -5531,25 +5761,25 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
               <PencilLine className="icon-xs" /> <span>Draw</span>
             </button>
             <button
-              className={`tab-btn ${activeTab === 'images' ? 'active' : ''}`}
+              className={`tab-btn ${!isElementSelected && activeTab === 'images' ? 'active' : ''}`}
               onClick={() => handleTabClick('images')}
             >
               <Copy className="icon-xs" /> <span>Media</span>
             </button>
             <button
-              className={`tab-btn ${activeTab === 'text' ? 'active' : ''}`}
+              className={`tab-btn ${!isElementSelected && activeTab === 'text' ? 'active' : ''}`}
               onClick={() => handleTabClick('text')}
             >
               <Type className="icon-xs" /> <span>Text</span>
             </button>
             <button
-              className={`tab-btn ${activeTab === 'filters' ? 'active' : ''}`}
+              className={`tab-btn ${!isElementSelected && activeTab === 'filters' ? 'active' : ''}`}
               onClick={() => handleTabClick('filters')}
             >
-              <Sparkles className="icon-xs" /> <span>Filters</span>
+              <Sparkles className="icon-xs" /> <span>AI/Filters</span>
             </button>
             <button
-              className={`tab-btn ${activeTab === 'watermark' ? 'active' : ''}`}
+              className={`tab-btn ${!isElementSelected && activeTab === 'watermark' ? 'active' : ''}`}
               onClick={() => handleTabClick('watermark')}
             >
               <LayoutGrid className="icon-xs" /> <span>Canvas</span>
@@ -5560,7 +5790,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
 
 
             {/* TAB 5: CANVAS & WATERMARK */}
-            {activeTab === 'watermark' && (
+            {!isElementSelected && activeTab === 'watermark' && (
               <div className="tab-content">
                 {/* Canvas Orientation & Settings */}
                 <div className="form-group margin-bottom-md" style={{ background: 'var(--bg-surface-1)', padding: '14px', borderRadius: '14px', border: '1px solid var(--glass-border)', marginBottom: '16px' }}>
@@ -5709,7 +5939,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
               </div>
             )}
             {/* TAB 4: FREEHAND DRAWING */}
-            {activeTab === 'draw' && (
+            {!isElementSelected && activeTab === 'draw' && (
               <div className="tab-content animate-fade-in">
                 {/* Tool Selection: 4 Modes (Pen, Marker, Glow, Eraser) */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px', marginBottom: '14px' }}>
@@ -5879,7 +6109,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
             )}
 
           {/* TAB 1: TEXT CONTROLS */}
-          {activeTab === 'text' && (
+          {!isElementSelected && activeTab === 'text' && (
             <div className="tab-content animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {/* TOP ACTION & COLOR TOOLBAR */}
               <div
@@ -6993,7 +7223,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
 
 
           {/* TAB 3: MEDIA OVERLAY CONTROLS */}
-          {activeTab === 'images' && (() => {
+          {!isElementSelected && activeTab === 'images' && (() => {
             const isVideoLayer = activeImageLayer && isVideoUrl(activeImageLayer.url);
             return (
               <div className="tab-content animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -7070,31 +7300,6 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                     }}
                   >
                     <span style={{ fontSize: '0.9rem', fontWeight: 900, color: '#1d9bf0', lineHeight: 1 }}>𝕏</span> Tweet Card
-                  </button>
-
-                  <button
-                    type="button"
-                    className="btn btn-xs hover-lift"
-                    onClick={handleStartMorphFace}
-                    title="Morph / Swap Face onto Meme Template"
-                    style={{
-                      flex: 1,
-                      padding: '8px 10px',
-                      borderRadius: '999px',
-                      fontSize: '0.8rem',
-                      fontWeight: 600,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '5px',
-                      whiteSpace: 'nowrap',
-                      background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(6, 182, 212, 0.25))',
-                      border: '1px solid var(--cyber-cyan)',
-                      color: '#ffffff',
-                      boxShadow: '0 0 12px rgba(6, 182, 212, 0.25)'
-                    }}
-                  >
-                    <Smile className="icon-xs" style={{ color: 'var(--cyber-cyan)' }} /> Morph Face
                   </button>
 
                   {activeImageLayer && (
@@ -7240,7 +7445,282 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                 )}
               </div>
             );
-          })()}</div>
+          })()}
+
+          {/* TAB 4: AI / FILTERS */}
+          {!isElementSelected && activeTab === 'filters' && (
+            <div className="tab-content animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              {/* STATE 1: 2 Main Action Buttons / Cards (Shown when !showFilterPresets) */}
+              {!showFilterPresets && (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                  {/* 1. Face Swap Action Button */}
+                  <button
+                    type="button"
+                    className="btn hover-lift"
+                    onClick={() => handleStartMorphFace()}
+                    style={{
+                      padding: '14px 12px',
+                      borderRadius: '16px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px',
+                      background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.18) 0%, rgba(99, 102, 241, 0.18) 100%)',
+                      border: '1px solid rgba(6, 182, 212, 0.5)',
+                      boxShadow: '0 4px 15px rgba(6, 182, 212, 0.15)',
+                      cursor: 'pointer',
+                      textAlign: 'center',
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    <div style={{
+                      width: '38px',
+                      height: '38px',
+                      borderRadius: '50%',
+                      background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.3) 0%, rgba(99, 102, 241, 0.4) 100%)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      border: '1px solid var(--cyber-cyan)'
+                    }}>
+                      <Sparkles size={20} style={{ color: 'var(--cyber-cyan)' }} />
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#ffffff' }}>Face Swap</div>
+                      <div style={{ fontSize: '0.72rem', color: 'rgba(255, 255, 255, 0.65)' }}>AI Neural Morph</div>
+                    </div>
+                  </button>
+
+                  {/* 2. Filters Action Button */}
+                  <button
+                    type="button"
+                    className="btn hover-lift"
+                    onClick={() => setShowFilterPresets(true)}
+                    style={{
+                      padding: '14px 12px',
+                      borderRadius: '16px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px',
+                      background: 'linear-gradient(135deg, rgba(249, 115, 22, 0.18) 0%, rgba(236, 72, 153, 0.18) 100%)',
+                      border: '1px solid rgba(249, 115, 22, 0.6)',
+                      boxShadow: '0 4px 15px rgba(249, 115, 22, 0.15)',
+                      cursor: 'pointer',
+                      textAlign: 'center',
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    <div style={{
+                      width: '38px',
+                      height: '38px',
+                      borderRadius: '50%',
+                      background: 'linear-gradient(135deg, rgba(249, 115, 22, 0.35) 0%, rgba(236, 72, 153, 0.35) 100%)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      border: '1px solid rgba(249, 115, 22, 0.6)'
+                    }}>
+                      <Sliders size={20} style={{ color: 'var(--accent-orange)' }} />
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#ffffff' }}>Filters</div>
+                      <div style={{ fontSize: '0.72rem', color: 'rgba(255, 255, 255, 0.65)' }}>Presets & Adjust</div>
+                    </div>
+                  </button>
+                </div>
+              )}
+
+              {/* STATE 2: Filters Panel with Back Button (Replaces Face Swap & Filters when active) */}
+              {showFilterPresets && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {/* Back Navigation Bar */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <button
+                      type="button"
+                      className="btn btn-icon btn-xs btn-secondary hover-lift"
+                      onClick={() => setShowFilterPresets(false)}
+                      title="Back to AI/Filters"
+                      style={{
+                        width: '32px',
+                        height: '32px',
+                        borderRadius: '50%',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}
+                    >
+                      <ArrowLeft size={16} />
+                    </button>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <Sliders size={14} style={{ color: 'var(--accent-orange)' }} />
+                      <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-main)' }}>Photo Filters</span>
+                    </div>
+                    {imageFilters.preset !== 'original' ? (
+                      <button
+                        type="button"
+                        className="btn btn-xs btn-ghost text-red"
+                        onClick={() => {
+                          setImageFilters(prev => ({
+                            ...prev,
+                            preset: 'original',
+                            filterString: 'none',
+                            brightness: 100,
+                            contrast: 100,
+                            saturation: 100,
+                            grayscale: 0,
+                            sepia: 0,
+                            invert: 0,
+                            hueRotate: 0,
+                            blur: 0
+                          }));
+                        }}
+                        style={{ fontSize: '0.72rem', padding: '3px 6px' }}
+                      >
+                        Reset
+                      </button>
+                    ) : <div style={{ width: '40px' }} />}
+                  </div>
+                  {/* Scope Selector & Reset */}
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    background: 'var(--bg-surface-1)',
+                    padding: '8px 12px',
+                    borderRadius: '12px',
+                    border: '1px solid var(--glass-border)'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-muted)' }}>Apply To:</span>
+                      <div style={{ display: 'flex', gap: '4px' }}>
+                        <button
+                          type="button"
+                          className={`btn btn-xs ${imageFilters.filterScope === 'background' ? 'btn-primary' : 'btn-secondary'}`}
+                          onClick={() => setImageFilters(prev => ({ ...prev, filterScope: 'background' }))}
+                          style={{ padding: '3px 8px', fontSize: '0.72rem', borderRadius: '12px' }}
+                        >
+                          Canvas Only
+                        </button>
+                        <button
+                          type="button"
+                          className={`btn btn-xs ${imageFilters.filterScope === 'all' ? 'btn-primary' : 'btn-secondary'}`}
+                          onClick={() => setImageFilters(prev => ({ ...prev, filterScope: 'all' }))}
+                          style={{ padding: '3px 8px', fontSize: '0.72rem', borderRadius: '12px' }}
+                        >
+                          Entire Meme
+                        </button>
+                      </div>
+                    </div>
+                    {imageFilters.preset !== 'original' && (
+                      <button
+                        type="button"
+                        className="btn btn-xs btn-ghost text-red"
+                        onClick={() => {
+                          setImageFilters(prev => ({
+                            ...prev,
+                            preset: 'original',
+                            filterString: 'none',
+                            brightness: 100,
+                            contrast: 100,
+                            saturation: 100,
+                            grayscale: 0,
+                            sepia: 0,
+                            invert: 0,
+                            hueRotate: 0,
+                            blur: 0
+                          }));
+                        }}
+                        style={{ fontSize: '0.72rem', padding: '3px 6px' }}
+                      >
+                        Reset
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Filter Presets Grid */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(76px, 1fr))',
+                    gap: '8px',
+                    maxHeight: '260px',
+                    overflowY: 'auto',
+                    padding: '4px 2px'
+                  }}>
+                    {(() => {
+                      let previewImage = 'https://images.unsplash.com/photo-1555685812-4b943f1cb0eb?w=100&q=80';
+                      if (activeImageLayer) {
+                        previewImage = activeImageLayer.originalUrl || activeImageLayer.url || activeImageLayer.src || previewImage;
+                      } else if (imageLayers && imageLayers.length > 0) {
+                        previewImage = imageLayers[0].originalUrl || imageLayers[0].url || imageLayers[0].src || previewImage;
+                      } else if (template?.imageUrl) {
+                        previewImage = template.imageUrl;
+                      }
+
+                      return PHOTO_FILTERS.map((filterItem) => {
+                        const isFilterActive = (imageFilters.preset || 'original') === filterItem.id;
+                        return (
+                          <button
+                            key={filterItem.id}
+                            type="button"
+                            className={`btn btn-xs ${isFilterActive ? 'active' : ''}`}
+                            onClick={() => {
+                              setImageFilters(prev => ({
+                                ...prev,
+                                preset: filterItem.id,
+                                filterString: filterItem.filterString,
+                                ...filterItem.values
+                              }));
+                            }}
+                            style={{
+                              display: 'flex',
+                              flexDirection: 'column',
+                              alignItems: 'center',
+                              padding: '6px 4px',
+                              borderRadius: '12px',
+                              background: isFilterActive ? 'rgba(249, 115, 22, 0.2)' : 'var(--bg-surface-1)',
+                              border: isFilterActive ? '1.5px solid var(--accent-orange)' : '1px solid var(--glass-border)',
+                              cursor: 'pointer',
+                              gap: '5px',
+                              transition: 'all 0.15s ease'
+                            }}
+                          >
+                            <div style={{
+                              width: '36px',
+                              height: '36px',
+                              borderRadius: '50%',
+                              backgroundImage: `url(${previewImage})`,
+                              backgroundSize: 'cover',
+                              backgroundPosition: 'center',
+                              filter: filterItem.filterString,
+                              border: isFilterActive ? '2px solid #ffffff' : '1px solid rgba(255, 255, 255, 0.2)',
+                              boxShadow: isFilterActive ? '0 0 8px rgba(249, 115, 22, 0.5)' : 'none'
+                            }} />
+                            <span style={{
+                              fontSize: '0.68rem',
+                              fontWeight: isFilterActive ? 700 : 500,
+                              color: isFilterActive ? '#ffffff' : 'var(--text-muted)',
+                              textAlign: 'center',
+                              lineHeight: 1.1,
+                              whiteSpace: 'nowrap',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              maxWidth: '70px'
+                            }}>
+                              {filterItem.name.replace(' 🔥', '')}
+                            </span>
+                          </button>
+                        );
+                      });
+                    })()}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
 
@@ -7748,10 +8228,23 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
       {showFaceMorphModal && (
         <FaceMorphModal
           isOpen={showFaceMorphModal}
-          onClose={() => setShowFaceMorphModal(false)}
+          onClose={() => {
+            setShowFaceMorphModal(false);
+            setMorphTargetLayerId(null);
+            setMorphTargetUrl(null);
+          }}
           onApplyFaceMorph={handleApplyFaceMorph}
+          onOpenPinpoint={() => setIsPinpointingFace(true)}
           initialLighting={sampledFaceLighting}
           memeFacePatch={extractedMemeFace}
+          memeTemplateUrl={
+            morphTargetUrl ||
+            (morphTargetLayerId
+              ? (imageLayers.find((l) => l.id === morphTargetLayerId)?.url || stickers.find((s) => s.id === morphTargetLayerId)?.url)
+              : (originalTemplateImgRef.current || activeTemplate?.originalUrl || activeTemplate?.imageUrl))
+          }
+          faceTarget={morphTargetLayerId ? null : faceTarget}
+          targetLabel={morphTargetLayerId ? "Selected Image Layer" : null}
         />
       )}
 

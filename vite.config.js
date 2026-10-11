@@ -7,7 +7,13 @@ export default defineConfig({
   base: './',
   server: {
     host: true,
-    allowedHosts: true
+    allowedHosts: true,
+    proxy: {
+      '/api/face-swap': {
+        target: 'http://127.0.0.1:5174',
+        changeOrigin: true
+      }
+    }
   },
   plugins: [
     react(),
