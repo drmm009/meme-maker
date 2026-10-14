@@ -39,3 +39,4 @@ public/imgly/
 lint*.txt
 sw.js
 workbox-*.js
+design-preview/
