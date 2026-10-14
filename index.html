@@ -2,17 +2,23 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
-    <link rel="manifest" href="./manifest.json" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <link rel="icon" type="image/svg+xml" href="./assets/favicon-HV1kWBx1.svg" />
+    <link rel="manifest" href="./assets/manifest-DFyAIYJ0.webmanifest" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <meta name="description" content="Meme Creator - High-performance cross-platform meme generator, template editor, and multi-panel meme builder." />
     <meta name="theme-color" content="#0f172a" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="MemeCreator" />
+    <link rel="apple-touch-icon" href="./assets/favicon-HV1kWBx1.svg" />
     <title>Meme Creator Studio - Cross-Platform Meme App</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Montserrat:wght@700;900&family=Oswald:wght@700&family=Comic+Neue:wght@700&display=swap" rel="stylesheet">
-    <script type="module" crossorigin src="./assets/index-DtLl5QEN.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-CePnvHub.css">
+    <script type="module" crossorigin src="./assets/index-BQZqMz4Z.js"></script>
+    <link rel="modulepreload" crossorigin href="./assets/jsx-runtime-C7PDX_A2.js">
+    <link rel="stylesheet" crossorigin href="./assets/index-NFTc3rAy.css">
   <link rel="manifest" href="./manifest.webmanifest"><script id="vite-plugin-pwa:register-sw" src="./registerSW.js"></script></head>
   <body>
     <svg width="0" height="0" style="position: absolute; width: 0; height: 0; overflow: hidden;">
@@ -24,14 +30,5 @@
       </defs>
     </svg>
     <div id="root"></div>
-    <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js').catch(err => {
-            console.warn('PWA service worker registration failed:', err);
-          });
-        });
-      }
-    </script>
   </body>
 </html>
