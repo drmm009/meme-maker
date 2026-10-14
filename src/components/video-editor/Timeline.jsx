@@ -367,6 +367,9 @@ export default function Timeline() {
       video.src = url;
       video.crossOrigin = "anonymous";
       video.muted = true;
+      video.playsInline = true;
+      video.setAttribute('webkit-playsinline', 'true');
+      video.preload = 'auto';
       
       setTimeout(() => safeResolve(null), 2000);
 

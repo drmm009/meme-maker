@@ -4,22 +4,43 @@ import { Download, Trash2, Edit3, X, Sparkles } from 'lucide-react';
 import { downloadImageHelper } from '../utils/downloadHelper';
 import './MyGallery.css';
 
-export default function MyGallery({ savedMemes, onDeleteMeme, onSelectMeme }) {
+export default function MyGallery({ savedMemes, galleryReady, onDeleteMeme, onSelectMeme, onResolveFullImage }) {
   const [selectedMemeForView, setSelectedMemeForView] = useState(null);
+  const [fullViewUrl, setFullViewUrl] = useState('');
+
+  React.useEffect(() => {
+    let cancelled = false;
+    setFullViewUrl('');
+    if (selectedMemeForView && onResolveFullImage) {
+      onResolveFullImage(selectedMemeForView).then((url) => {
+        if (!cancelled) setFullViewUrl(url);
+      });
+    } else if (selectedMemeForView) {
+      setFullViewUrl(selectedMemeForView.thumbnailUrl || selectedMemeForView.imageUrl || '');
+    }
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedMemeForView, onResolveFullImage]);
+
+  const thumbOf = (meme) => meme.thumbnailUrl || meme.imageUrl || '';
 
   const handleDownload = async (meme, e) => {
     if (e) e.stopPropagation();
-    const filename = `${meme.name.replace(/\s+/g, '-').toLowerCase()}-${Date.now()}.png`;
-    await downloadImageHelper(meme.imageUrl, filename);
+    const safeBase = String(meme.name || 'meme').replace(/[^a-z0-9-_]+/gi, '-').toLowerCase().slice(0, 60) || 'meme';
+    const filename = `${safeBase}-${Date.now()}.png`;
+    const full = onResolveFullImage ? await onResolveFullImage(meme) : thumbOf(meme);
+    await downloadImageHelper(full, filename);
   };
 
-  const handleEdit = (meme, e) => {
+  const handleEdit = async (meme, e) => {
     if (e) e.stopPropagation();
+    const fullUrl = onResolveFullImage ? await onResolveFullImage(meme) : (meme.rawImageUrl || meme.imageUrl);
     const editTemplate = {
       id: meme.id || `custom-saved-${Date.now()}`,
       name: meme.name || 'Saved Meme',
-      imageUrl: meme.rawImageUrl || meme.imageUrl,
-      rawImageUrl: meme.rawImageUrl || meme.imageUrl,
+      imageUrl: fullUrl || meme.rawImageUrl || meme.imageUrl,
+      rawImageUrl: meme.rawImageUrl || fullUrl || meme.imageUrl,
       category: 'saved',
       isNativeLayout: meme.isNativeLayout || false,
       layoutDef: meme.layoutDef || null,
@@ -52,7 +73,11 @@ export default function MyGallery({ savedMemes, onDeleteMeme, onSelectMeme }) {
         </h2>
       </div>
 
-      {savedMemes.length > 0 ? (
+      {galleryReady === false ? (
+        <div className="empty-state glass-card" style={{ padding: '48px 24px', textAlign: 'center' }}>
+          <h3 style={{ fontSize: '1.25rem', marginBottom: '8px' }}>Loading gallery…</h3>
+        </div>
+      ) : savedMemes.length > 0 ? (
         <div className="gallery-grid">
           {savedMemes.map((meme) => (
             <div
@@ -61,7 +86,7 @@ export default function MyGallery({ savedMemes, onDeleteMeme, onSelectMeme }) {
               onClick={() => setSelectedMemeForView(meme)}
             >
               <div className="gallery-image-wrapper">
-                <img src={meme.imageUrl} alt={meme.name} decoding="async" loading="lazy" />
+                <img src={thumbOf(meme)} alt={meme.name} decoding="async" loading="lazy" />
               </div>
               <div className="gallery-info flex-between align-center" style={{ gap: '8px' }}>
                 <div style={{ flex: '1 1 auto', minWidth: '0', overflow: 'hidden' }}>
@@ -77,7 +102,7 @@ export default function MyGallery({ savedMemes, onDeleteMeme, onSelectMeme }) {
                     {meme.name}
                   </h4>
                   <span className="gallery-date">
-                    {new Date(meme.createdAt).toLocaleDateString()}
+                    {meme.createdAt ? new Date(meme.createdAt).toLocaleDateString() : 'Unknown date'}
                   </span>
                 </div>
                 <button
@@ -138,7 +163,7 @@ export default function MyGallery({ savedMemes, onDeleteMeme, onSelectMeme }) {
 
               <div className="modal-body text-center">
                 <img
-                  src={selectedMemeForView.imageUrl}
+                  src={fullViewUrl || thumbOf(selectedMemeForView)}
                   alt={selectedMemeForView.name}
                   decoding="async"
                   className="export-preview-img margin-bottom"

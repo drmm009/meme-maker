@@ -11,6 +11,10 @@ node_modules
 dist
 dist-ssr
 *.local
+.env
+.env.local
+.env.*.local
+!.env.example
 
 # Editor directories and files
 .vscode/*
@@ -33,3 +37,5 @@ archive/
 meme-maker/
 public/imgly/
 lint*.txt
+sw.js
+workbox-*.js

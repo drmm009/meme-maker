@@ -104,7 +104,7 @@ export const SOUND_EFFECTS = [
     id: 'jj_jameson_laugh',
     name: 'J.J. Jameson Wheeze',
     category: 'laugh',
-    url: '/sounds/jj_jameson_laugh.wav',
+    url: '/sounds/jj_jameson_laugh.mp3',
     durationMs: 4500,
     icon: '🗞️',
     tags: ['laugh', 'laughing', 'jj jameson', 'spider-man', 'wheeze', 'hysterical', 'jk simmons']
@@ -113,7 +113,7 @@ export const SOUND_EFFECTS = [
     id: 'spongebob_laugh',
     name: 'SpongeBob Laugh',
     category: 'laugh',
-    url: '/sounds/spongebob_laugh.wav',
+    url: '/sounds/spongebob_laugh.mp3',
     durationMs: 2000,
     icon: '🧽',
     tags: ['laugh', 'laughing', 'spongebob', 'cartoon', 'chuckle', 'giggle']
@@ -122,7 +122,7 @@ export const SOUND_EFFECTS = [
     id: 'seth_rogen_laugh',
     name: 'Seth Rogen Laugh',
     category: 'laugh',
-    url: '/sounds/seth_rogen_laugh.wav',
+    url: '/sounds/seth_rogen_laugh.mp3',
     durationMs: 1233,
     icon: '🧔',
     tags: ['laugh', 'laughing', 'seth rogen', 'huh huh', 'giggle']
@@ -131,7 +131,7 @@ export const SOUND_EFFECTS = [
     id: 'contagious_laugh',
     name: 'Contagious Wheeze Laugh',
     category: 'laugh',
-    url: '/sounds/contagious_laugh.wav',
+    url: '/sounds/contagious_laugh.mp3',
     durationMs: 1800,
     icon: '😂',
     tags: ['laugh', 'laughing', 'contagious', 'wheeze', 'choke', 'funny laugh']
@@ -140,7 +140,7 @@ export const SOUND_EFFECTS = [
     id: 'joker_laugh',
     name: 'Joker Laugh',
     category: 'laugh',
-    url: '/sounds/joker_laugh.wav',
+    url: '/sounds/joker_laugh.mp3',
     durationMs: 3733,
     icon: '🃏',
     tags: ['laugh', 'laughing', 'joker', 'batman', 'maniacal', 'insane', 'crazy']
@@ -149,7 +149,7 @@ export const SOUND_EFFECTS = [
     id: 'evil_laugh',
     name: 'Evil Cartoon Laugh',
     category: 'laugh',
-    url: '/sounds/evil_laugh.wav',
+    url: '/sounds/evil_laugh.mp3',
     durationMs: 1500,
     icon: '😈',
     tags: ['laugh', 'laughing', 'evil', 'villain', 'sinister', 'muahaha']
@@ -158,7 +158,7 @@ export const SOUND_EFFECTS = [
     id: 'ksi_laugh',
     name: 'KSI Screech Laugh',
     category: 'laugh',
-    url: '/sounds/ksi_laugh.wav',
+    url: '/sounds/ksi_laugh.mp3',
     durationMs: 1733,
     icon: '🤪',
     tags: ['laugh', 'laughing', 'ksi', 'screech', 'youtuber', 'wheeze']
@@ -223,7 +223,7 @@ export const SOUND_EFFECTS = [
     id: 'nice_click',
     name: 'Michael Rosen "Nice"',
     category: 'reaction',
-    url: '/sounds/nice_click.wav',
+    url: '/sounds/nice_click.mp3',
     durationMs: 1000,
     icon: '👌',
     tags: ['nice', 'click', 'michael rosen', 'tongue click', 'satisfying']
@@ -268,7 +268,7 @@ export const SOUND_EFFECTS = [
     id: 'crickets',
     name: 'Awkward Crickets',
     category: 'reaction',
-    url: '/sounds/crickets.wav',
+    url: '/sounds/crickets.mp3',
     durationMs: 2500,
     icon: '🦗',
     tags: ['crickets', 'silence', 'awkward', 'quiet', 'chirp']
@@ -313,7 +313,7 @@ export const SOUND_EFFECTS = [
     id: 'ishowspeed_scream',
     name: 'IShowSpeed Scream',
     category: 'reaction',
-    url: '/sounds/ishowspeed_scream.wav',
+    url: '/sounds/ishowspeed_scream.mp3',
     durationMs: 1000,
     icon: '😱',
     tags: ['ishowspeed', 'speed', 'scream', 'shout', 'rage']

@@ -101,8 +101,11 @@ Example output format:
 Category / Theme: ${category}
 User's Idea / Context: ${prompt || 'Make a hilarious, relatable, viral meme'}`;
 
+      const ctl = new AbortController();
+      const t = setTimeout(() => ctl.abort(), 12000);
       const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey.trim()}`, {
         method: 'POST',
+        signal: ctl.signal,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           contents: [
@@ -113,16 +116,19 @@ User's Idea / Context: ${prompt || 'Make a hilarious, relatable, viral meme'}`;
           ],
           generationConfig: {
             temperature: 0.9,
-            maxOutputTokens: 500
+            maxOutputTokens: 500,
+            responseMimeType: 'application/json'
           }
         })
       });
 
+      clearTimeout(t);
       if (res.ok) {
         const data = await res.json();
         const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
-        const cleaned = rawText.replace(/```json/gi, '').replace(/```/g, '').trim();
-        const parsed = JSON.parse(cleaned);
+        const arrayMatch = rawText.match(/\[[\s\S]*\]/);
+        const jsonToParse = arrayMatch ? arrayMatch[0] : rawText.replace(/```json/gi, '').replace(/```/g, '').trim();
+        const parsed = JSON.parse(jsonToParse);
         if (Array.isArray(parsed) && parsed.length > 0) {
           return parsed.map(item => String(typeof item === 'object' ? (item.text || item.caption || JSON.stringify(item)) : item).trim());
         }

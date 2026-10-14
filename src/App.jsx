@@ -1,15 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import TemplateDiscovery from './components/TemplateDiscovery';
-import CustomLayoutBuilder from './components/CustomLayoutBuilder';
-import VideoLayoutBuilder from './components/video-editor/VideoLayoutBuilder';
-import MemeEditor from './components/MemeEditor';
-import VideoEditor from './components/video-editor/VideoEditor';
-import MyGallery from './components/MyGallery';
-import AccountModal from './components/AccountModal';
-import SettingsModal from './components/SettingsModal';
 import ErrorBoundary from './components/ErrorBoundary';
+
+// Code-split heavy views and editors so the initial bundle stays lean.
+const CustomLayoutBuilder = lazy(() => import('./components/CustomLayoutBuilder'));
+const VideoLayoutBuilder = lazy(() => import('./components/video-editor/VideoLayoutBuilder'));
+const MyGallery = lazy(() => import('./components/MyGallery'));
+const AccountModal = lazy(() => import('./components/AccountModal'));
+const MemeEditor = lazy(() => import('./components/MemeEditor'));
+const VideoEditor = lazy(() => import('./components/video-editor/VideoEditor'));
 import { MEME_TEMPLATES } from './data/templates';
-import { Sparkles, Grid, LayoutGrid, FolderHeart, User, Sun, Moon, Settings } from 'lucide-react';
+import { idbPutMeme, idbGetAllMemes, idbGetMeme, idbDeleteMeme, dataURLToBlob, createThumbnail, toMetadata } from './utils/galleryStore';
+import { Sparkles, Grid, LayoutGrid, FolderHeart, User } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import './App.css';
 
@@ -39,25 +41,103 @@ function App() {
 
   // Modals state
   const [accountModalOpen, setAccountModalOpen] = useState(false);
-  const [settingsModalOpen, setSettingsModalOpen] = useState(false);
 
-  // Saved Memes (persisted in LocalStorage)
-  const [savedMemes, setSavedMemes] = useState(() => {
-    try {
-      const stored = localStorage.getItem('meme_creator_saved');
-      return stored ? JSON.parse(stored) : [];
-    } catch {
-      return [];
+  // Mobile & Android gesture / hardware back-button history navigation
+  useEffect(() => {
+    if (!window.history.state?.view) {
+      window.history.replaceState({ view: 'templates' }, '', window.location.pathname);
     }
-  });
+
+    const handlePopState = (event) => {
+      if (accountModalOpen) {
+        setAccountModalOpen(false);
+        return;
+      }
+      const targetView = event.state?.view || 'templates';
+      setCurrentView(targetView);
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [accountModalOpen]);
 
   useEffect(() => {
-    try {
-      localStorage.setItem('meme_creator_saved', JSON.stringify(savedMemes));
-    } catch (e) {
-      console.error('Failed to save memes to storage', e);
+    if (window.history.state?.view !== currentView) {
+      window.history.pushState({ view: currentView }, '', window.location.pathname);
     }
-  }, [savedMemes]);
+  }, [currentView]);
+
+  useEffect(() => {
+    if (accountModalOpen && window.history.state?.modal !== 'account') {
+      window.history.pushState({ modal: 'account', view: currentView }, '', window.location.pathname);
+    }
+  }, [accountModalOpen, currentView]);
+
+  // Saved Memes (IndexedDB for bytes + small metadata in state; avoids localStorage quota crashes)
+  const [savedMemes, setSavedMemes] = useState([]);
+  const [galleryReady, setGalleryReady] = useState(false);
+  const fullUrlCache = React.useRef(new Map());
+
+  // One-time load + migration from legacy localStorage key
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const records = await idbGetAllMemes();
+        if (!cancelled && records.length > 0) {
+          setSavedMemes(records.map(toMetadata));
+        } else {
+          // Migrate legacy localStorage gallery (full dataURLs) into IDB once, then free the key
+          try {
+            const stored = localStorage.getItem('meme_creator_saved');
+            const legacy = stored ? JSON.parse(stored) : [];
+            if (Array.isArray(legacy) && legacy.length > 0) {
+              const migrated = [];
+              for (const m of legacy.slice(0, 100)) {
+                try {
+                  const id = m.id || `meme-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+                  const imageUrl = m.imageUrl || m.thumbnailUrl || '';
+                  const thumbnailUrl = imageUrl.startsWith('data:image')
+                    ? await createThumbnail(imageUrl)
+                    : imageUrl;
+                  const record = {
+                    id,
+                    name: m.name || 'My Meme',
+                    createdAt: m.createdAt || new Date().toISOString(),
+                    thumbnailUrl,
+                    imageBlob: imageUrl.startsWith('data:image') ? dataURLToBlob(imageUrl) : null,
+                    rawImageUrl: m.rawImageUrl || null,
+                    captions: m.captions || [],
+                    stickers: m.stickers || m.defaultStickers || [],
+                    imageLayers: m.imageLayers || [],
+                    aspectRatio: m.aspectRatio,
+                    imageFit: m.imageFit,
+                    isNativeLayout: m.isNativeLayout,
+                    layoutDef: m.layoutDef,
+                    slotImages: m.slotImages,
+                    slotTransforms: m.slotTransforms,
+                  };
+                  await idbPutMeme(record);
+                  migrated.push(toMetadata(record));
+                } catch { /* skip corrupt entry */ }
+              }
+              if (!cancelled) setSavedMemes(migrated);
+            }
+          } catch { /* ignore */ }
+          try {
+            localStorage.removeItem('meme_creator_saved');
+          } catch { /* ignore */ }
+        }
+      } catch (e) {
+        console.error('Failed to load gallery from IndexedDB', e);
+      } finally {
+        if (!cancelled) setGalleryReady(true);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Auto-scroll window to top on view or template changes so editor is instantly visible
   useEffect(() => {
@@ -155,10 +235,10 @@ function App() {
   };
 
   const handleSaveToGallery = (newMeme) => {
+    const baseName = (newMeme.name || 'My Meme').trim();
     setSavedMemes((prev) => {
-      const baseName = (newMeme.name || 'My Meme').trim();
       const existingNames = prev.map((m) => (m.name || '').toLowerCase());
-      
+
       let finalName = baseName;
       if (existingNames.includes(baseName.toLowerCase())) {
         let counter = 1;
@@ -168,7 +248,61 @@ function App() {
         finalName = `${baseName} (${counter})`;
       }
 
-      return [{ ...newMeme, name: finalName }, ...prev];
+      const id = newMeme.id || `meme-${Date.now()}`;
+      const createdAt = newMeme.createdAt || new Date().toISOString();
+      const meta = {
+        ...newMeme,
+        id,
+        name: finalName,
+        createdAt,
+        thumbnailUrl: newMeme.thumbnailUrl || '',
+        imageUrl: newMeme.thumbnailUrl || '',
+      };
+      const next = [meta, ...prev].slice(0, 100);
+
+      // Persist bytes async (fire-and-forget); thumbnail first for instant UI
+      (async () => {
+        try {
+          const imageUrl = newMeme.imageUrl || '';
+          const thumbnailUrl = imageUrl.startsWith('data:image')
+            ? await createThumbnail(imageUrl)
+            : imageUrl;
+          const record = {
+            id,
+            name: finalName,
+            createdAt,
+            thumbnailUrl,
+            imageBlob: imageUrl.startsWith('data:image') ? dataURLToBlob(imageUrl) : null,
+            rawImageUrl: newMeme.rawImageUrl || null,
+            captions: newMeme.captions || [],
+            stickers: newMeme.stickers || newMeme.defaultStickers || [],
+            imageLayers: newMeme.imageLayers || [],
+            aspectRatio: newMeme.aspectRatio,
+            imageFit: newMeme.imageFit,
+            isNativeLayout: newMeme.isNativeLayout,
+            layoutDef: newMeme.layoutDef,
+            slotImages: newMeme.slotImages,
+            slotTransforms: newMeme.slotTransforms,
+          };
+          await idbPutMeme(record);
+          setSavedMemes((cur) =>
+            cur.map((m) =>
+              m.id === id ? { ...m, thumbnailUrl, imageUrl: thumbnailUrl } : m
+            )
+          );
+          // Prune oldest beyond 100
+          const pruned = next.slice(100);
+          for (const p of pruned) {
+            try {
+              await idbDeleteMeme(p.id);
+            } catch { /* ignore */ }
+          }
+        } catch (e) {
+          console.error('Failed to persist meme to IndexedDB', e);
+        }
+      })();
+
+      return next;
     });
     setLastBuilderView('custom-builder');
     setCurrentView('gallery');
@@ -176,10 +310,32 @@ function App() {
 
   const handleDeleteMeme = (id) => {
     setSavedMemes((prev) => prev.filter((m) => m.id !== id));
+    const cached = fullUrlCache.current.get(id);
+    if (cached) {
+      try {
+        URL.revokeObjectURL(cached);
+      } catch { /* ignore */ }
+      fullUrlCache.current.delete(id);
+    }
+    idbDeleteMeme(id).catch((e) => console.error('Failed to delete meme from IndexedDB', e));
   };
 
-  const toggleTheme = () => {
-    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
+  // Resolve full-resolution object URL for preview/download/edit (cached per id)
+  const resolveMemeFullImage = async (meme) => {
+    if (!meme) return '';
+    const cached = fullUrlCache.current.get(meme.id);
+    if (cached) return cached;
+    try {
+      const record = await idbGetMeme(meme.id);
+      if (record?.imageBlob) {
+        const url = URL.createObjectURL(record.imageBlob);
+        fullUrlCache.current.set(meme.id, url);
+        return url;
+      }
+    } catch (e) {
+      console.error('Failed to resolve full meme image', e);
+    }
+    return meme.thumbnailUrl || meme.imageUrl || '';
   };
 
   const handleEditorBack = () => {
@@ -281,11 +437,15 @@ function App() {
               exit={{ opacity: 0, y: -15 }}
               transition={{ duration: 0.25 }}
             >
-              <MyGallery
-                savedMemes={savedMemes}
-                onDeleteMeme={handleDeleteMeme}
-                onSelectMeme={handleSelectTemplate}
-              />
+              <Suspense fallback={<div className="glass-card" style={{ padding: '48px 24px', textAlign: 'center' }}>Loading gallery…</div>}>
+                <MyGallery
+                  savedMemes={savedMemes}
+                  galleryReady={galleryReady}
+                  onDeleteMeme={handleDeleteMeme}
+                  onSelectMeme={handleSelectTemplate}
+                  onResolveFullImage={resolveMemeFullImage}
+                />
+              </Suspense>
             </motion.div>
           )}
         </AnimatePresence>
@@ -295,21 +455,23 @@ function App() {
           className={`persistent-builder-view ${currentView === 'custom-builder' ? 'active-view' : 'hidden-view'}`}
         >
           {hasOpenedCustomBuilder && (
-            builderMode === 'video' ? (
-              <VideoLayoutBuilder
-                key={`video-builder-${customBuilderKey}`}
-                onLayoutComplete={handleCustomLayoutComplete}
-                onBack={() => setCurrentView('templates')}
-              />
-            ) : (
-              <CustomLayoutBuilder
-                key={`custom-builder-${customBuilderKey}`}
-                savedState={customBuilderState}
-                onSaveState={setCustomBuilderState}
-                onLayoutComplete={handleCustomLayoutComplete}
-                onBack={() => setCurrentView('templates')}
-              />
-            )
+            <Suspense fallback={<div className="glass-card" style={{ padding: '48px 24px', textAlign: 'center' }}>Loading builder…</div>}>
+              {builderMode === 'video' ? (
+                <VideoLayoutBuilder
+                  key={`video-builder-${customBuilderKey}`}
+                  onLayoutComplete={handleCustomLayoutComplete}
+                  onBack={() => setCurrentView('templates')}
+                />
+              ) : (
+                <CustomLayoutBuilder
+                  key={`custom-builder-${customBuilderKey}`}
+                  savedState={customBuilderState}
+                  onSaveState={setCustomBuilderState}
+                  onLayoutComplete={handleCustomLayoutComplete}
+                  onBack={() => setCurrentView('templates')}
+                />
+              )}
+            </Suspense>
           )}
         </div>
 
@@ -323,13 +485,15 @@ function App() {
               onBack={handleEditorBack}
               onReset={() => setEditorSessionKey((k) => k + 1)}
             >
-              <MemeEditor
-                key={`${selectedTemplate?.id || 'editor'}-${editorSessionKey}`}
-                template={selectedTemplate}
-                onBack={handleEditorBack}
-                onSaveToGallery={handleSaveToGallery}
-                theme="dark"
-              />
+              <Suspense fallback={<div className="glass-card" style={{ padding: '48px 24px', textAlign: 'center' }}>Loading editor…</div>}>
+                <MemeEditor
+                  key={`${selectedTemplate?.id || 'editor'}-${editorSessionKey}`}
+                  template={selectedTemplate}
+                  onBack={handleEditorBack}
+                  onSaveToGallery={handleSaveToGallery}
+                  theme="dark"
+                />
+              </Suspense>
             </ErrorBoundary>
           )}
         </div>
@@ -344,12 +508,14 @@ function App() {
               onBack={handleEditorBack}
               onReset={() => setVideoSessionKey((k) => k + 1)}
             >
-              <VideoEditor
-                key={`${selectedTemplate?.id || 'video-editor'}-${videoSessionKey}`}
-                template={selectedTemplate}
-                onBack={handleEditorBack}
-                theme="dark"
-              />
+              <Suspense fallback={<div className="glass-card" style={{ padding: '48px 24px', textAlign: 'center' }}>Loading video editor…</div>}>
+                <VideoEditor
+                  key={`${selectedTemplate?.id || 'video-editor'}-${videoSessionKey}`}
+                  template={selectedTemplate}
+                  onBack={handleEditorBack}
+                  theme="dark"
+                />
+              </Suspense>
             </ErrorBoundary>
           )}
         </div>
@@ -382,15 +548,11 @@ function App() {
         </button>
       </nav>
 
-      {/* Account & Settings Modals */}
+      {/* Account Modal */}
       {accountModalOpen && (
-        <AccountModal isOpen={true} onClose={() => setAccountModalOpen(false)} />
-      )}
-      {settingsModalOpen && (
-        <SettingsModal
-          isOpen={true}
-          onClose={() => setSettingsModalOpen(false)}
-        />
+        <Suspense fallback={null}>
+          <AccountModal isOpen={true} onClose={() => setAccountModalOpen(false)} />
+        </Suspense>
       )}
     </div>
   );

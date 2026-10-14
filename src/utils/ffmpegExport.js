@@ -22,10 +22,19 @@ export const loadFFmpeg = async () => {
       const coreHref = new URL(`${cleanBase}ffmpeg/ffmpeg-core.js`, window.location.href).href;
       const wasmHref = new URL(`${cleanBase}ffmpeg/ffmpeg-core.wasm`, window.location.href).href;
 
-      const coreURL = await toBlobURL(coreHref, 'text/javascript');
-      const wasmURL = await toBlobURL(wasmHref, 'application/wasm');
+      try {
+        const coreURL = await toBlobURL(coreHref, 'text/javascript');
+        const wasmURL = await toBlobURL(wasmHref, 'application/wasm');
+        await ff.load({ coreURL, wasmURL });
+      } catch (localErr) {
+        console.warn('[FFmpeg] Local load failed, falling back to CDN for mobile...', localErr);
+        const cdnCore = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm/ffmpeg-core.js';
+        const cdnWasm = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm/ffmpeg-core.wasm';
+        const coreURL = await toBlobURL(cdnCore, 'text/javascript');
+        const wasmURL = await toBlobURL(cdnWasm, 'application/wasm');
+        await ff.load({ coreURL, wasmURL });
+      }
 
-      await ff.load({ coreURL, wasmURL });
       ffmpeg = ff;
       return ff;
     } catch (error) {
@@ -40,6 +49,7 @@ export const loadFFmpeg = async () => {
 export const exportVideoFFmpeg = async (items = [], durationMs = 7000, canvasAspectRatio = 16/9, canvasDimensions = { width: 800, height: 600 }, layoutId = null, onProgress = () => {}) => {
   try {
     const ff = await loadFFmpeg();
+    if (typeof ff.off === 'function') ff.off('progress');
     ff.on('progress', ({ progress }) => {
       // Clamp progress between 0 and 100
       let p = Math.max(0, Math.min(progress * 100, 100));
@@ -406,7 +416,7 @@ export const exportVideoFFmpeg = async (items = [], durationMs = 7000, canvasAsp
       outputFileName
     );
 
-    console.error("[FFmpeg Command]", command.join(' '));
+    if (import.meta.env?.DEV) console.log("[FFmpeg Command]", command.join(' '));
     const retCode = await ff.exec(command);
     if (retCode !== 0) {
       throw new Error(`FFmpeg command failed with code ${retCode}. Check browser console for logs.`);
@@ -417,24 +427,20 @@ export const exportVideoFFmpeg = async (items = [], durationMs = 7000, canvasAsp
     const blob = new Blob([data.buffer], { type: 'video/mp4' });
     const url = URL.createObjectURL(blob);
 
-    for (const f of filesToDelete) {
-       try { await ff.deleteFile(f); } catch(e){}
+    try {
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `pro-edit-ffmpeg-${Date.now()}.mp4`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    } finally {
+      URL.revokeObjectURL(url);
+      for (const f of filesToDelete) {
+         try { await ff.deleteFile(f); } catch(e){}
+      }
+      try { await ff.deleteFile(outputFileName); } catch(e){}
     }
-    try { await ff.deleteFile(outputFileName); } catch(e){}
-
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `pro-edit-ffmpeg-${Date.now()}.mp4`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    
-    // Clean up VFS
-    for (const f of filesToDelete) {
-      try { await ff.deleteFile(f); } catch (e) {}
-    }
-    try { await ff.deleteFile(outputFileName); } catch (e) {}
 
     return true;
   } catch (error) {

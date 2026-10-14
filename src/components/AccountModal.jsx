@@ -23,7 +23,7 @@ export default function AccountModal({ isOpen = true, onClose }) {
           <div className="modal-header flex-between align-center margin-bottom-xs">
             <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
               <User className="icon-sm text-cyan" style={{ flexShrink: 0 }} />
-              <span>Account & Sync</span>
+              <span>Account (Local only)</span>
             </h3>
             <button className="btn-close" onClick={onClose} title="Close" aria-label="Close">✕</button>
           </div>
@@ -34,24 +34,24 @@ export default function AccountModal({ isOpen = true, onClose }) {
                 <div className="profile-avatar flex-center">
                   <User className="icon-lg text-cyan" />
                 </div>
-                <h3>Welcome Back!</h3>
+                <h3>Welcome Back! (Guest Mode)</h3>
                 <p className="user-email">{email || 'creator@meme.app'}</p>
                 <span className="badge badge-pro margin-top inline-block">
-                  <Crown className="icon-xs" /> Pro Creator Plan Active
+                  <Crown className="icon-xs" /> Local profile — no cloud sync
                 </span>
 
                 <div className="account-stats grid-3 margin-top">
                   <div className="stat-card glass-panel">
-                    <span className="stat-val">24</span>
+                    <span className="stat-val">Local</span>
                     <span className="stat-label">Memes Saved</span>
                   </div>
                   <div className="stat-card glass-panel">
-                    <span className="stat-val">☁️ Synced</span>
+                    <span className="stat-val">Off</span>
                     <span className="stat-label">Cloud Sync</span>
                   </div>
                   <div className="stat-card glass-panel">
-                    <span className="stat-val">Unlimited</span>
-                    <span className="stat-label">Pro Templates</span>
+                    <span className="stat-val">Free</span>
+                    <span className="stat-label">Local Templates</span>
                   </div>
                 </div>
 

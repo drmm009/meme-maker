@@ -1,0 +1,12 @@
+# Face-swap server dependencies (optional local service on :5174)
+# Install: pip install -r requirements-face-swap.txt
+# Needs Python 3.9+ and the InSwapper model file (see INSWAPPER_MODEL_PATH in face_swap_server.py).
+# NOTE: install sizes are large (insightface pulls onnxruntime + opencv).
+
+fastapi
+uvicorn
+pydantic
+numpy
+opencv-python-headless
+insightface
+onnxruntime

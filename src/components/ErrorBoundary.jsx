@@ -78,7 +78,7 @@ export default class ErrorBoundary extends React.Component {
           </p>
         </div>
 
-        {process.env.NODE_ENV === 'development' && this.state.error && (
+        {import.meta.env?.DEV && this.state.error && (
           <pre
             style={{
               fontSize: '0.72rem',

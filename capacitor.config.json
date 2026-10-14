@@ -1,5 +1,9 @@
 {
   "appId": "com.meme.creator",
-  "appName": "MemeCreator",
-  "webDir": "dist"
+  "appName": "Meme Creator Studio",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https",
+    "iosScheme": "https"
+  }
 }

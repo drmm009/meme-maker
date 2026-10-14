@@ -82,6 +82,29 @@ const METRICS_PRESETS = [
   { id: 'normal', label: '💬 Casual', text: '💬 142    🔁 890    ❤️ 4.6K    📊 72K', display: { replies: '142', retweets: '890', likes: '4.6K', views: '72K' } }
 ];
 
+/* ─── Elegant input style helper ─── */
+const inputStyle = {
+  width: '100%',
+  fontSize: '0.84rem',
+  background: 'rgba(255, 255, 255, 0.04)',
+  borderRadius: '12px',
+  border: '1px solid rgba(255, 255, 255, 0.10)',
+  padding: '10px 14px',
+  color: '#ffffff',
+  outline: 'none',
+  transition: 'border-color 0.2s, box-shadow 0.2s',
+  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+};
+
+const inputFocusHandler = (e) => {
+  e.target.style.borderColor = 'rgba(29, 155, 240, 0.5)';
+  e.target.style.boxShadow = '0 0 0 3px rgba(29, 155, 240, 0.12)';
+};
+const inputBlurHandler = (e) => {
+  e.target.style.borderColor = 'rgba(255, 255, 255, 0.10)';
+  e.target.style.boxShadow = 'none';
+};
+
 export default function MemeStylesModal({
   isOpen,
   onClose,
@@ -141,7 +164,7 @@ export default function MemeStylesModal({
         </div>
       }
       maxHeight="86vh"
-      contentStyle={{ padding: '6px 16px 16px 16px', gap: '12px' }}
+      contentStyle={{ padding: '0', gap: '0' }}
       footer={
         <button
           type="button"
@@ -161,14 +184,15 @@ export default function MemeStylesModal({
           style={{
             width: '100%',
             fontWeight: 800,
-            padding: '12px 18px',
+            padding: '13px 18px',
             borderRadius: '14px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             gap: '8px',
             fontSize: '0.92rem',
-            boxShadow: '0 8px 24px rgba(249, 115, 22, 0.35)'
+            boxShadow: '0 8px 24px rgba(249, 115, 22, 0.35)',
+            letterSpacing: '-0.01em'
           }}
         >
           <Plus size={18} strokeWidth={2.5} /> Add Tweet Card to Meme
@@ -176,7 +200,7 @@ export default function MemeStylesModal({
       }
     >
 
-        {/* Persona Quick-Presets Carousel */}
+        {/* ─── Persona Presets Carousel ─── */}
         <div
           className="horizontal-scroll-only"
           onWheel={(e) => {
@@ -185,8 +209,8 @@ export default function MemeStylesModal({
             }
           }}
           style={{
-            padding: '10px 20px',
-            background: 'rgba(0, 0, 0, 0.25)',
+            padding: '12px 20px',
+            background: 'linear-gradient(180deg, rgba(255,255,255,0.03) 0%, transparent 100%)',
             borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
             display: 'flex',
             alignItems: 'center',
@@ -200,8 +224,17 @@ export default function MemeStylesModal({
             msOverflowStyle: 'none'
           }}
         >
-          <span style={{ fontSize: '0.66rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap', marginRight: '2px', flexShrink: 0 }}>
-            Presets:
+          <span style={{
+            fontSize: '0.62rem',
+            fontWeight: 800,
+            color: 'rgba(255,255,255,0.35)',
+            textTransform: 'uppercase',
+            letterSpacing: '0.08em',
+            whiteSpace: 'nowrap',
+            marginRight: '4px',
+            flexShrink: 0
+          }}>
+            Personas
           </span>
           {PERSONA_PRESETS.map((p) => {
             const isSelected = activePersona === p.id;
@@ -211,17 +244,20 @@ export default function MemeStylesModal({
                 type="button"
                 onClick={() => handleApplyPersona(p)}
                 style={{
-                  padding: '5px 12px',
+                  padding: '6px 14px',
                   borderRadius: '999px',
-                  fontSize: '0.73rem',
+                  fontSize: '0.74rem',
                   fontWeight: 600,
                   whiteSpace: 'nowrap',
                   cursor: 'pointer',
-                  border: isSelected ? '1px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.08)',
-                  background: isSelected ? 'rgba(6, 182, 212, 0.18)' : 'rgba(255, 255, 255, 0.05)',
-                  color: isSelected ? '#ffffff' : 'rgba(255, 255, 255, 0.75)',
-                  transition: 'all 0.15s ease',
-                  flexShrink: 0
+                  border: isSelected ? '1px solid rgba(29, 155, 240, 0.5)' : '1px solid rgba(255, 255, 255, 0.08)',
+                  background: isSelected
+                    ? 'linear-gradient(135deg, rgba(29, 155, 240, 0.20), rgba(29, 155, 240, 0.08))'
+                    : 'rgba(255, 255, 255, 0.04)',
+                  color: isSelected ? '#ffffff' : 'rgba(255, 255, 255, 0.65)',
+                  transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                  flexShrink: 0,
+                  boxShadow: isSelected ? '0 2px 8px rgba(29, 155, 240, 0.15)' : 'none'
                 }}
               >
                 {p.label}
@@ -230,34 +266,75 @@ export default function MemeStylesModal({
           })}
         </div>
 
-        {/* Scrollable Content */}
+        {/* ─── Scrollable Content ─── */}
         <div
-          className="tweet-modal-scroll"
+          className="tweet-modal-scroll bs-content-scroll"
           style={{
-            padding: '16px 20px',
+            padding: '18px 20px 20px 20px',
             overflowY: 'auto',
             flex: 1,
             display: 'flex',
             flexDirection: 'column',
-            gap: '14px',
+            gap: '18px',
             scrollbarWidth: 'thin',
-            scrollbarColor: 'rgba(255, 255, 255, 0.2) transparent'
+            scrollbarColor: 'rgba(255, 255, 255, 0.15) transparent'
           }}
         >
           
-          {/* Spotlight Live Visual Preview Container */}
+          {/* ─── Live Preview Card ─── */}
           <div
             style={{
-              background: 'linear-gradient(180deg, rgba(10, 10, 16, 0.9) 0%, rgba(14, 14, 22, 0.9) 100%)',
+              background: 'linear-gradient(145deg, rgba(14, 14, 22, 0.95) 0%, rgba(8, 8, 14, 0.95) 100%)',
               borderRadius: '18px',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
               padding: '16px',
               display: 'flex',
               flexDirection: 'column',
-              boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.06)'
+              boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 4px 16px rgba(0,0,0,0.3)',
+              position: 'relative',
+              overflow: 'hidden'
             }}
           >
-            {/* The Actual Rendered Tweet Card */}
+            {/* Subtle gradient overlay for depth */}
+            <div style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              height: '60px',
+              background: 'linear-gradient(180deg, rgba(29, 155, 240, 0.04) 0%, transparent 100%)',
+              pointerEvents: 'none',
+              borderRadius: '18px 18px 0 0'
+            }} />
+
+            {/* "PREVIEW" label */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              marginBottom: '10px',
+              position: 'relative',
+              zIndex: 1
+            }}>
+              <div style={{
+                width: '6px',
+                height: '6px',
+                borderRadius: '50%',
+                background: '#1d9bf0',
+                boxShadow: '0 0 8px rgba(29, 155, 240, 0.5)'
+              }} />
+              <span style={{
+                fontSize: '0.62rem',
+                fontWeight: 800,
+                color: 'rgba(255,255,255,0.30)',
+                textTransform: 'uppercase',
+                letterSpacing: '0.12em'
+              }}>
+                Live Preview
+              </span>
+            </div>
+
+            {/* The Tweet Card */}
             <div
               style={{
                 background: cardBg,
@@ -265,9 +342,11 @@ export default function MemeStylesModal({
                 border: `1px solid ${cardBorder}`,
                 borderRadius: '16px',
                 padding: '16px 18px',
-                boxShadow: '0 12px 36px rgba(0, 0, 0, 0.45)',
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0,0,0,0.2)',
                 transition: 'all 0.2s ease',
-                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif'
+                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+                position: 'relative',
+                zIndex: 1
               }}
             >
               {/* Profile Header */}
@@ -398,14 +477,50 @@ export default function MemeStylesModal({
             </div>
           </div>
 
-          {/* Form Controls */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          {/* ─── Form Controls ─── */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             
+            {/* Section Label */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}>
+              <div style={{
+                height: '1px',
+                flex: 1,
+                background: 'linear-gradient(90deg, rgba(255,255,255,0.08), transparent)'
+              }} />
+              <span style={{
+                fontSize: '0.62rem',
+                fontWeight: 800,
+                color: 'rgba(255,255,255,0.25)',
+                textTransform: 'uppercase',
+                letterSpacing: '0.10em',
+                flexShrink: 0
+              }}>
+                Customize
+              </span>
+              <div style={{
+                height: '1px',
+                flex: 1,
+                background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.08))'
+              }} />
+            </div>
+
             {/* Account Info: Name & Handle */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '10px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '12px' }}>
               <div>
-                <label style={{ fontSize: '0.74rem', fontWeight: 700, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '5px' }}>
-                  <User size={13} style={{ color: 'var(--cyber-cyan)' }} /> Display Name
+                <label style={{
+                  fontSize: '0.72rem',
+                  fontWeight: 700,
+                  color: 'rgba(255,255,255,0.45)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                  marginBottom: '6px'
+                }}>
+                  <User size={12} style={{ color: '#1d9bf0' }} /> Display Name
                 </label>
                 <input
                   type="text"
@@ -416,21 +531,23 @@ export default function MemeStylesModal({
                     setActivePersona('custom');
                   }}
                   placeholder="e.g. Elon Musk"
-                  style={{
-                    width: '100%',
-                    fontSize: '0.84rem',
-                    background: 'rgba(255, 255, 255, 0.05)',
-                    borderRadius: '12px',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    padding: '8px 12px',
-                    color: '#ffffff'
-                  }}
+                  style={inputStyle}
+                  onFocus={inputFocusHandler}
+                  onBlur={inputBlurHandler}
                 />
               </div>
 
               <div>
-                <label style={{ fontSize: '0.74rem', fontWeight: 700, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '5px' }}>
-                  <AtSign size={13} style={{ color: 'var(--cyber-cyan)' }} /> Handle
+                <label style={{
+                  fontSize: '0.72rem',
+                  fontWeight: 700,
+                  color: 'rgba(255,255,255,0.45)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                  marginBottom: '6px'
+                }}>
+                  <AtSign size={12} style={{ color: '#1d9bf0' }} /> Handle
                 </label>
                 <input
                   type="text"
@@ -441,26 +558,35 @@ export default function MemeStylesModal({
                     setActivePersona('custom');
                   }}
                   placeholder="e.g. @elonmusk"
-                  style={{
-                    width: '100%',
-                    fontSize: '0.84rem',
-                    background: 'rgba(255, 255, 255, 0.05)',
-                    borderRadius: '12px',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    padding: '8px 12px',
-                    color: '#ffffff'
-                  }}
+                  style={inputStyle}
+                  onFocus={inputFocusHandler}
+                  onBlur={inputBlurHandler}
                 />
               </div>
             </div>
 
-
-
             {/* Tweet Textarea with Random Idea button */}
             <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                <label style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)' }}>
-                  Tweet Text ({tweetText.length}/280)
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '6px'
+              }}>
+                <label style={{
+                  fontSize: '0.72rem',
+                  fontWeight: 700,
+                  color: 'rgba(255,255,255,0.45)'
+                }}>
+                  Tweet Text
+                  <span style={{
+                    marginLeft: '6px',
+                    fontSize: '0.66rem',
+                    fontWeight: 500,
+                    color: tweetText.length > 240 ? '#ef4444' : 'rgba(255,255,255,0.25)'
+                  }}>
+                    {tweetText.length}/280
+                  </span>
                 </label>
                 <button
                   type="button"
@@ -468,16 +594,16 @@ export default function MemeStylesModal({
                   style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '4px',
-                    fontSize: '0.7rem',
+                    gap: '5px',
+                    fontSize: '0.70rem',
                     fontWeight: 700,
-                    color: 'var(--cyber-cyan)',
-                    background: 'rgba(6, 182, 212, 0.12)',
-                    border: '1px solid rgba(6, 182, 212, 0.25)',
-                    borderRadius: '7px',
-                    padding: '2px 7px',
+                    color: '#1d9bf0',
+                    background: 'rgba(29, 155, 240, 0.10)',
+                    border: '1px solid rgba(29, 155, 240, 0.20)',
+                    borderRadius: '8px',
+                    padding: '4px 10px',
                     cursor: 'pointer',
-                    transition: 'all 0.15s ease'
+                    transition: 'all 0.2s ease'
                   }}
                   title="Insert a funny viral meme tweet"
                 >
@@ -494,19 +620,14 @@ export default function MemeStylesModal({
                 }}
                 placeholder="What is happening?!"
                 style={{
-                  width: '100%',
-                  fontSize: '0.82rem',
-                  lineHeight: 1.35,
-                  minHeight: '48px',
-                  maxHeight: '90px',
-                  resize: 'vertical',
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  borderRadius: '10px',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  padding: '6px 10px',
-                  color: '#ffffff',
-                  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                  ...inputStyle,
+                  lineHeight: 1.4,
+                  minHeight: '52px',
+                  maxHeight: '100px',
+                  resize: 'vertical'
                 }}
+                onFocus={inputFocusHandler}
+                onBlur={inputBlurHandler}
               />
             </div>
           </div>

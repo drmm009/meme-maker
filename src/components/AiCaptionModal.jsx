@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Sparkles, RefreshCw, Check, Copy, Key, ArrowRight, X, Type, PanelTop } from 'lucide-react';
 import { AI_MEME_CATEGORIES, generateMemeCaptionsWithGemini } from '../data/aiMemeCaptions';
+import { safeGet, safeSet, safeRemove } from '../utils/storage';
 import BottomSheet from './BottomSheet';
 
 export default function AiCaptionModal({ isOpen, onClose, onApplyCaption, templateName }) {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [targetMode, setTargetMode] = useState('caption'); // 'caption' | 'header'
   const [customPrompt, setCustomPrompt] = useState('');
-  const [geminiApiKey, setGeminiApiKey] = useState(() => localStorage.getItem('gemini_api_key') || '');
+  const [geminiApiKey, setGeminiApiKey] = useState(() => safeGet('gemini_api_key', '') || '');
   const [showKeyInput, setShowKeyInput] = useState(false);
   const [captions, setCaptions] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -38,13 +39,25 @@ export default function AiCaptionModal({ isOpen, onClose, onApplyCaption, templa
   }, [isOpen, selectedCategory]);
 
   const handleSaveApiKey = (key) => {
-    setGeminiApiKey(key);
-    localStorage.setItem('gemini_api_key', key.trim());
+    const trimmed = String(key || '').trim();
+    setGeminiApiKey(trimmed);
+    if (trimmed) {
+      safeSet('gemini_api_key', trimmed);
+    } else {
+      safeRemove('gemini_api_key');
+    }
+  };
+
+  const handleClearApiKey = () => {
+    setGeminiApiKey('');
+    safeRemove('gemini_api_key');
   };
 
   const handleCopy = (e, text, idx) => {
     e.stopPropagation();
-    navigator.clipboard.writeText(text);
+    if (navigator?.clipboard?.writeText) {
+      navigator.clipboard.writeText(text).catch(() => {});
+    }
     setCopiedIdx(idx);
     setTimeout(() => setCopiedIdx(null), 1800);
   };
@@ -163,6 +176,11 @@ export default function AiCaptionModal({ isOpen, onClose, onApplyCaption, templa
                 onChange={(e) => handleSaveApiKey(e.target.value)}
                 style={{ fontSize: '0.75rem', padding: '6px 8px', borderRadius: '6px', flex: 1 }}
               />
+              {geminiApiKey && (
+                <button type="button" className="btn btn-xs btn-secondary" onClick={handleClearApiKey} title="Remove saved key from this browser">
+                  Clear
+                </button>
+              )}
             </div>
           )}
         </div>

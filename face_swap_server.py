@@ -1,62 +1,160 @@
 import os
 import sys
 import base64
+import time
+import socket
+import ipaddress
 import urllib.request
+import urllib.parse
 import numpy as np
 import cv2
 import uvicorn
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional, List
 import insightface
 from insightface.app import FaceAnalysis
 
 app = FastAPI(title="Offline InSwapper AI Face Swap Service")
 
+# Pinned dev origins via env; never "*" with credentials.
+# e.g. FACE_SWAP_CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
+_cors_env = os.environ.get("FACE_SWAP_CORS_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173")
+_allow_origins = [o.strip() for o in _cors_env.split(",") if o.strip()]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=_allow_origins,
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization"],
 )
+
+# Simple in-memory rate limit: 60 requests / 60s per client IP (POST endpoints only)
+_RATE_LIMIT = 60
+_RATE_WINDOW_S = 60.0
+_rate_hits = {}
+
+
+def check_rate_limit(request: Request):
+    try:
+        ip = request.client.host if request.client else "unknown"
+    except Exception:
+        ip = "unknown"
+    now = time.monotonic()
+    # Evict expired entries if table exceeds 1000 items to avoid memory exhaustion
+    if len(_rate_hits) > 1000:
+        expired = [k for k, v in _rate_hits.items() if now - v[1] > _RATE_WINDOW_S]
+        for k in expired:
+            _rate_hits.pop(k, None)
+    hits = _rate_hits.get(ip)
+    if hits is None or now - hits[1] > _RATE_WINDOW_S:
+        _rate_hits[ip] = [1, now]
+        return
+    hits[0] += 1
+    if hits[0] > _RATE_LIMIT:
+        raise HTTPException(status_code=429, detail="Rate limit exceeded. Try again shortly.")
 
 # Global models
 face_app = None
 swapper = None
 
+MAX_IMAGE_BYTES = 12 * 1024 * 1024  # 12MB cap per fetched/decoded image
+FETCH_TIMEOUT_S = 10
+
+
+def resolve_swapper_path():
+    env_path = os.environ.get("INSWAPPER_MODEL_PATH")
+    candidates = []
+    if env_path:
+        candidates.append(os.path.expanduser(env_path))
+    candidates.append(os.path.expanduser('~/Downloads/inswapper_128.onnx'))
+    candidates.append(os.path.expanduser('~/.insightface/models/inswapper_128.onnx'))
+    for p in candidates:
+        if p and os.path.exists(p):
+            return p
+    return candidates[0] if candidates else ''
+
+
 def get_models():
     global face_app, swapper
     if face_app is None:
-        print("[InSwapper Server] Initializing FaceAnalysis (buffalo_l)...")
+        print("[InSwapper Server] Initializing FaceAnalysis (buffalo_l)...", flush=True)
         face_app = FaceAnalysis(name='buffalo_l', providers=['CPUExecutionProvider'])
         face_app.prepare(ctx_id=0, det_size=(640, 640))
-        print("[InSwapper Server] FaceAnalysis ready.")
+        print("[InSwapper Server] FaceAnalysis ready.", flush=True)
 
     if swapper is None:
-        swapper_path = os.path.expanduser('~/Downloads/inswapper_128.onnx')
+        swapper_path = resolve_swapper_path()
         if not os.path.exists(swapper_path):
-            swapper_path = os.path.expanduser('~/.insightface/models/inswapper_128.onnx')
-        if not os.path.exists(swapper_path):
-            raise RuntimeError(f"InSwapper model not found at {swapper_path}")
-        print(f"[InSwapper Server] Loading InSwapper from {swapper_path}...")
+            raise RuntimeError(
+                "InSwapper model not found at %s. Set INSWAPPER_MODEL_PATH to the .onnx file." % swapper_path
+            )
+        print(f"[InSwapper Server] Loading InSwapper from {swapper_path}...", flush=True)
         swapper = insightface.model_zoo.get_model(swapper_path, download=False, download_zip=False, providers=['CPUExecutionProvider'])
-        print("[InSwapper Server] InSwapper ready.")
+        print("[InSwapper Server] InSwapper ready.", flush=True)
     return face_app, swapper
 
+
+@app.on_event("startup")
+def _preload_models():
+    # Best-effort warm-up so the first request doesn't hang; keeps /status alive if model is missing.
+    try:
+        get_models()
+    except Exception as e:
+        print(f"[InSwapper Server] Startup preload skipped: {e}", flush=True)
+
+
+def _read_limited(response):
+    total = 0
+    chunks = []
+    while True:
+        chunk = response.read(256 * 1024)
+        if not chunk:
+            break
+        total += len(chunk)
+        if total > MAX_IMAGE_BYTES:
+            raise ValueError("Remote image exceeds 12MB limit")
+        chunks.append(chunk)
+    return b"".join(chunks)
+
+
 def decode_image(data_str: str) -> np.ndarray:
+    if not isinstance(data_str, str) or not data_str:
+        raise ValueError("Empty image payload")
     if data_str.startswith('http://') or data_str.startswith('https://'):
+        parsed = urllib.parse.urlparse(data_str)
+        if not parsed.hostname:
+            raise ValueError("Invalid image URL")
+        # Block local/internal hosts to avoid SSRF (metadata endpoints, localhost, private RFC1918 subnets)
+        host = parsed.hostname.lower()
+        if host in ("localhost", "0.0.0.0") or host.endswith(".local"):
+            raise ValueError("Local image URLs are not allowed")
+        try:
+            ip_info = socket.getaddrinfo(host, None)
+            for addr in ip_info:
+                ip_str = addr[4][0]
+                ip_obj = ipaddress.ip_address(ip_str)
+                if ip_obj.is_private or ip_obj.is_loopback or ip_obj.is_link_local or ip_obj.is_reserved:
+                    raise ValueError("Access to private/internal network addresses is forbidden")
+        except (socket.gaierror, ValueError) as err:
+            raise ValueError(f"Invalid or forbidden remote host: {str(err)}")
         req = urllib.request.Request(data_str, headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'})
-        with urllib.request.urlopen(req) as response:
-            arr = np.asarray(bytearray(response.read()), dtype=np.uint8)
+        with urllib.request.urlopen(req, timeout=FETCH_TIMEOUT_S) as response:
+            raw = _read_limited(response)
+            arr = np.asarray(bytearray(raw), dtype=np.uint8)
         img = cv2.imdecode(arr, cv2.IMREAD_COLOR)
         return img
 
     if ',' in data_str:
         data_str = data_str.split(',', 1)[1]
-    
-    img_bytes = base64.b64decode(data_str)
+    if len(data_str) > (MAX_IMAGE_BYTES * 4 // 3) + 1024:
+        raise ValueError("Image payload exceeds 12MB limit")
+
+    img_bytes = base64.b64decode(data_str, validate=True)
+    if len(img_bytes) > MAX_IMAGE_BYTES:
+        raise ValueError("Image payload exceeds 12MB limit")
     arr = np.frombuffer(img_bytes, dtype=np.uint8)
     img = cv2.imdecode(arr, cv2.IMREAD_COLOR)
     return img
@@ -69,20 +167,22 @@ def encode_image(img: np.ndarray, format='jpeg') -> str:
     return f"data:image/{format};base64,{b64}"
 
 class DetectRequest(BaseModel):
-    image: str
+    image: str = Field(max_length=17_000_000)
+
 
 class SwapRequest(BaseModel):
-    source_image: str  # User photo (data URL or URL)
-    target_image: str  # Meme image or template (data URL or URL)
+    source_image: str = Field(max_length=17_000_000)  # User photo (data URL or URL)
+    target_image: str = Field(max_length=17_000_000)  # Meme image or template (data URL or URL)
     target_center: Optional[List[float]] = None  # [norm_x, norm_y] e.g. [0.5, 0.75]
-    target_face_index: Optional[int] = None  # Specific face index (0, 1, 2...)
+    target_face_index: Optional[int] = Field(default=None, ge=0)  # Specific face index (0, 1, 2...)
     swap_all: Optional[bool] = False  # Swap all detected faces in the meme
-    blend_ratio: Optional[float] = 1.0  # 0.0 = original, 1.0 = full swap
+    blend_ratio: Optional[float] = Field(default=1.0, ge=0.0, le=1.0)  # 0.0 = original, 1.0 = full swap
     crop_only: Optional[bool] = False  # If True, returns only the swapped face square
 
 @app.get("/api/face-swap/status")
+@app.get("/api/face-swap/health")
 def get_status():
-    swapper_path = os.path.expanduser('~/Downloads/inswapper_128.onnx')
+    swapper_path = resolve_swapper_path()
     model_exists = os.path.exists(swapper_path)
     return {
         "status": "online",
@@ -92,7 +192,8 @@ def get_status():
     }
 
 @app.post("/api/face-swap/detect-faces")
-def detect_faces(req: DetectRequest):
+def detect_faces(req: DetectRequest, request: Request):
+    check_rate_limit(request)
     try:
         app_model, _ = get_models()
     except Exception as e:
@@ -139,7 +240,8 @@ def detect_faces(req: DetectRequest):
     }
 
 @app.post("/api/face-swap")
-def face_swap(req: SwapRequest):
+def face_swap(req: SwapRequest, request: Request):
+    check_rate_limit(request)
     try:
         app_model, swap_model = get_models()
     except Exception as e:

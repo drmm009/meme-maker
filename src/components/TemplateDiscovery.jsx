@@ -1,12 +1,14 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { MEME_TEMPLATES } from '../data/templates';
 import { VIDEO_MEME_TEMPLATES } from '../data/videoTemplates';
+import { fetchOpenSourceMemes } from '../services/memeService';
 import { 
   Search, Sparkles, Image as ImageIcon, Video,
   Flame, Star, Drama, Clapperboard, Scale, LayoutGrid, Layers, ChevronDown, Check,
   Compass, Smile, ArrowDownAZ, Zap, ShieldCheck, ArrowRight
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { safeGet, safeSet } from '../utils/storage';
 import './TemplateDiscovery.css';
 
 const TAGS = [
@@ -30,6 +32,14 @@ const SORT_OPTIONS = [
   { id: 'name', label: 'A-Z Name', icon: ArrowDownAZ, color: '#a855f7' }
 ];
 
+// Stable numeric order for mixed string ids ("imgflip-123", "giphy-abc", "custom-...").
+// Trailing digits win; otherwise fall back to trendingScore so sort is deterministic (never NaN).
+export function templateNumericId(t) {
+  const m = String(t.id || '').match(/(\d+)$/);
+  if (m) return Number(m[1]);
+  return t.trendingScore || 0;
+}
+
 export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTag, setSelectedTag] = useState('all');
@@ -37,14 +47,10 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom }) 
   const [isSortOpen, setIsSortOpen] = useState(false);
   const sortRef = useRef(null);
 
-  // Favorites persistence
+  // Favorites persistence (quota-safe: falls back to session-only on write failure)
   const [favorites, setFavorites] = useState(() => {
-    try {
-      const saved = localStorage.getItem('meme_favorite_templates');
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
+    const saved = safeGet('meme_favorite_templates', []);
+    return Array.isArray(saved) ? saved : [];
   });
 
   // Responsive mobile check for search placeholder
@@ -74,11 +80,7 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom }) 
       const next = prev.includes(templateId)
         ? prev.filter(id => id !== templateId)
         : [...prev, templateId];
-      try {
-        localStorage.setItem('meme_favorite_templates', JSON.stringify(next));
-      } catch (err) {
-        console.error(err);
-      }
+      safeSet('meme_favorite_templates', next);
       return next;
     });
   };
@@ -98,12 +100,22 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom }) 
     };
   }, [isSortOpen]);
 
-  const allTemplates = useMemo(() => {
-    return [...MEME_TEMPLATES, ...VIDEO_MEME_TEMPLATES];
+  const [templatesList, setTemplatesList] = useState(() => [...MEME_TEMPLATES, ...VIDEO_MEME_TEMPLATES]);
+
+  useEffect(() => {
+    let isCancelled = false;
+    fetchOpenSourceMemes().then((online) => {
+      if (!isCancelled && Array.isArray(online) && online.length > 0) {
+        setTemplatesList([...online, ...VIDEO_MEME_TEMPLATES]);
+      }
+    });
+    return () => {
+      isCancelled = true;
+    };
   }, []);
 
   const filteredTemplates = useMemo(() => {
-    return allTemplates.filter((template) => {
+    return templatesList.filter((template) => {
       const q = searchQuery.toLowerCase().trim();
       const matchesSearch = !q ||
         (template.name && template.name.toLowerCase().includes(q)) ||
@@ -115,11 +127,7 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom }) 
       } else if (selectedTag === 'new') {
         matchesTag = true;
       } else if (selectedTag === 'favorites') {
-        if (favorites.length > 0) {
-          matchesTag = favorites.includes(template.id);
-        } else {
-          matchesTag = (template.trendingScore && template.trendingScore >= 95) || template.category === 'classic';
-        }
+        matchesTag = favorites.includes(template.id);
       } else if (selectedTag === 'classics') {
         matchesTag = template.category === 'classic' || template.category === 'popular';
       } else if (selectedTag === 'videos') {
@@ -141,96 +149,20 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom }) 
       return matchesSearch && matchesTag;
     }).sort((a, b) => {
       if (selectedTag === 'new') {
-        return (Number(b.id) || 0) - (Number(a.id) || 0);
+        return templateNumericId(b) - templateNumericId(a);
       }
       if (sortBy === 'trending' || sortBy === 'popular') {
         return (b.trendingScore || 0) - (a.trendingScore || 0);
       }
       if (sortBy === 'newest') {
-        return (Number(b.id) || 0) - (Number(a.id) || 0);
+        return templateNumericId(b) - templateNumericId(a);
       }
       if (sortBy === 'name') {
         return (a.name || '').localeCompare(b.name || '');
       }
       return 0;
     });
-  }, [searchQuery, selectedTag, sortBy, favorites, allTemplates]);
-
-  // Dynamic conflict-free spatial scattering of light cards so they never appear side-by-side
-  const [lightCardIds, setLightCardIds] = useState(() => new Set());
-
-  useEffect(() => {
-    const updateLightCards = () => {
-      const cards = Array.from(document.querySelectorAll('.template-grid > .template-card'));
-      if (!cards.length) return;
-      
-      const cardData = cards.map((el) => {
-        const rect = el.getBoundingClientRect();
-        const id = el.getAttribute('data-template-id');
-        return { id, left: Math.round(rect.left), top: Math.round(rect.top), height: Math.round(rect.height) };
-      });
-
-      // Group cards by distinct column (cluster left coordinates within 25px)
-      const colBuckets = [];
-      for (const card of cardData) {
-        let bucket = colBuckets.find(b => Math.abs(b.left - card.left) < 25);
-        if (!bucket) {
-          bucket = { left: card.left, items: [] };
-          colBuckets.push(bucket);
-        }
-        bucket.items.push(card);
-      }
-      colBuckets.sort((a, b) => a.left - b.left);
-
-      // Selected set of light card IDs
-      const selected = new Set();
-      const selectedList = [];
-
-      // Stagger starting indices per column to interleave vertically
-      const numCols = colBuckets.length;
-      const colOffsets = [1, 4, 2, 5, 0, 3];
-
-      for (let cIdx = 0; cIdx < numCols; cIdx++) {
-        const col = colBuckets[cIdx];
-        const offset = colOffsets[cIdx % colOffsets.length];
-        
-        for (let i = offset; i < col.items.length; i += 5) {
-          const cand = col.items[i];
-          if (!cand || !cand.id) continue;
-
-          // Check for horizontal or vertical conflicts with any already selected light card
-          const hasConflict = selectedList.some(sel => {
-            const sameCol = Math.abs(sel.left - cand.left) < 30;
-            const vDist = Math.abs(sel.top - cand.top);
-            if (sameCol) {
-              return vDist < 250;
-            } else {
-              // Never allow light cards in adjacent/other columns within 140px vertically
-              return vDist < 140;
-            }
-          });
-
-          if (!hasConflict) {
-            selected.add(cand.id);
-            selectedList.push(cand);
-          }
-        }
-      }
-
-      setLightCardIds(selected);
-    };
-
-    const frameId = requestAnimationFrame(() => {
-      updateLightCards();
-    });
-    const timer = setTimeout(updateLightCards, 100);
-    window.addEventListener('resize', updateLightCards);
-    return () => {
-      cancelAnimationFrame(frameId);
-      clearTimeout(timer);
-      window.removeEventListener('resize', updateLightCards);
-    };
-  }, [filteredTemplates]);
+  }, [searchQuery, selectedTag, sortBy, favorites, templatesList]);
 
   const currentSortOption = SORT_OPTIONS.find(opt => opt.id === sortBy) || SORT_OPTIONS[0];
 
@@ -384,12 +316,12 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom }) 
       <div className="templates-section">
         {filteredTemplates.length > 0 ? (
           <div className="template-grid">
-            {filteredTemplates.map((template) => {
-              const isLight = lightCardIds.has(String(template.id));
+            {filteredTemplates.map((template, index) => {
+              // CSS-only stagger: every 7th card starting at 3. No DOM measuring.
+              const isLight = index % 7 === 3;
               return (
                 <motion.div
                   key={template.id}
-                  data-template-id={String(template.id)}
                   className={`template-card glass-card ${isLight ? 'template-card-light' : ''}`}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => onSelectTemplate(template)}
@@ -416,7 +348,18 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom }) 
                 </button>
 
                 <div className="template-image-wrapper" style={{ position: 'relative' }}>
-                  <img src={template.type === 'video' ? template.thumbnailUrl : template.imageUrl} alt={template.name} loading="lazy" />
+                  <img
+                    src={template.type === 'video' ? template.thumbnailUrl : template.imageUrl}
+                    alt={template.name}
+                    loading="lazy"
+                    onError={(e) => {
+                      // One-shot fallback for dead hotlinks (Imgflip rotation/CORS takedowns)
+                      const el = e.currentTarget;
+                      if (el.dataset.fbk || !template.fallbackUrl) return;
+                      el.dataset.fbk = '1';
+                      el.src = template.fallbackUrl;
+                    }}
+                  />
                   
                   {template.type === 'video' && (
                     <div style={{
@@ -434,7 +377,9 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom }) 
                       alignItems: 'center',
                       gap: '4px'
                     }}>
-                      🎬 {Math.round(template.durationMs / 1000)}s
+                      {typeof template.durationMs === 'number' && Number.isFinite(template.durationMs)
+                        ? `🎬 ${Math.round(template.durationMs / 1000)}s`
+                        : '🎬 Video'}
                     </div>
                   )}
                 </div>

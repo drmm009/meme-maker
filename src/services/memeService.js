@@ -14,7 +14,11 @@ export async function fetchOpenSourceMemes() {
   }
 
   try {
-    const res = await fetch('https://api.imgflip.com/get_memes');
+    const ctl = new AbortController();
+    const t = setTimeout(() => ctl.abort(), 8000);
+    const res = await fetch('https://api.imgflip.com/get_memes', { signal: ctl.signal });
+    clearTimeout(t);
+    if (!res.ok) throw new Error(`Imgflip HTTP ${res.status}`);
     const data = await res.json();
 
     if (data.success && Array.isArray(data.data?.memes)) {
@@ -127,14 +131,25 @@ export async function fetchOpenSourceMemes() {
 /**
  * Fetches viral video meme templates from Giphy API & Open Source Repositories
  * with instant fallback to local curated video templates.
+ * Requires VITE_GIPHY_API_KEY — otherwise returns local templates only (no hardcoded key).
  */
 export async function fetchOpenSourceVideoMemes() {
   if (cachedVideoTemplates) {
     return cachedVideoTemplates;
   }
 
+  const giphyKey = import.meta.env.VITE_GIPHY_API_KEY;
+  if (!giphyKey) {
+    cachedVideoTemplates = LOCAL_VIDEO_TEMPLATES;
+    return LOCAL_VIDEO_TEMPLATES;
+  }
+
   try {
-    const res = await fetch('https://api.giphy.com/v1/gifs/search?api_key=cw93086RCh7MrhYWARo5JwICchujKuOf&q=meme&limit=30&rating=g');
+    const ctl = new AbortController();
+    const t = setTimeout(() => ctl.abort(), 8000);
+    const res = await fetch(`https://api.giphy.com/v1/gifs/search?api_key=${encodeURIComponent(giphyKey)}&q=meme&limit=30&rating=g`, { signal: ctl.signal });
+    clearTimeout(t);
+    if (!res.ok) throw new Error(`Giphy HTTP ${res.status}`);
     const data = await res.json();
 
     if (data.data && Array.isArray(data.data)) {

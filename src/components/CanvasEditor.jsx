@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState, useLayoutEffect } from 'react';
 import { Image as ImageIcon, Sparkles, Type } from 'lucide-react';
 import { getFilterCss, drawImageFiltered } from '../data/photoFilters';
+import { isColorDark } from '../utils/captionLayout';
 
 const wrapText = (ctx, text, maxWidth) => {
   if (!text) return [];
@@ -49,31 +50,6 @@ const wrapText = (ctx, text, maxWidth) => {
   
   if (lines.length === 0) return [''];
   return lines;
-};
-
-const isColorDark = (colorStr) => {
-  if (!colorStr) return false;
-  const str = String(colorStr).trim().toLowerCase();
-  if (str === 'black' || str === '#000' || str === '#000000') return true;
-  if (str === 'white' || str === '#fff' || str === '#ffffff' || str === 'transparent' || str === 'none') return false;
-  if (str.startsWith('#')) {
-    let hex = str.slice(1);
-    if (hex.length === 3) hex = hex.split('').map(c => c + c).join('');
-    if (hex.length >= 6) {
-      const r = parseInt(hex.slice(0, 2), 16) || 0;
-      const g = parseInt(hex.slice(2, 4), 16) || 0;
-      const b = parseInt(hex.slice(4, 6), 16) || 0;
-      return (r * 299 + g * 587 + b * 114) / 1000 < 128;
-    }
-  }
-  const rgbMatch = str.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/i);
-  if (rgbMatch) {
-    const r = parseInt(rgbMatch[1], 10) || 0;
-    const g = parseInt(rgbMatch[2], 10) || 0;
-    const b = parseInt(rgbMatch[3], 10) || 0;
-    return (r * 299 + g * 587 + b * 114) / 1000 < 128;
-  }
-  return false;
 };
 
 const drawRoundRect = (ctx, x, y, width, height, radius) => {
@@ -985,18 +961,10 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
   // Double-tap detection: track last tap time and layer id
   const [editingCaptionId, setEditingCaptionId] = useState(null);
   const [editingCaptionText, setEditingCaptionText] = useState('');
-  const [cursorVisible, setCursorVisible] = useState(true);
 
   useEffect(() => {
-    if (editingCaptionId && activeLayerId === editingCaptionId) {
-      setCursorVisible(true);
-      const interval = setInterval(() => setCursorVisible(v => !v), 530);
-      return () => clearInterval(interval);
-    } else {
-      setCursorVisible(false);
-      if (editingCaptionId && activeLayerId !== editingCaptionId) {
-        setEditingCaptionId(null);
-      }
+    if (editingCaptionId && activeLayerId !== editingCaptionId) {
+      setEditingCaptionId(null);
     }
   }, [editingCaptionId, activeLayerId]);
   const lastTapRef = useRef({ id: null, time: 0 });
@@ -1089,14 +1057,17 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
   // Layer Center Y position in canvas pixels (anchors meme image layers to the image area below header)
   const getCaptionCenterY = (cap) => {
     if (!cap) return 0;
-    if (cap.isHeaderCaption && !cap.hasCustomPos) {
+    if (cap.isHeaderCaption) {
+      if (cap.hasCustomPos) {
+        return (cap.y ?? 0) * (canvasRef.current?.height || totalCanvasH);
+      }
       return headerExtH / 2;
     }
-    if (cap.isFooterCaption && !cap.hasCustomPos) {
+    if (cap.isFooterCaption) {
+      if (cap.hasCustomPos) {
+        return (cap.y ?? 0) * (canvasRef.current?.height || totalCanvasH);
+      }
       return headerExtH + canvasH + (footerExtH / 2);
-    }
-    if (cap.isHeaderCaption || cap.isFooterCaption) {
-      return (cap.y || 0) * (canvasRef.current?.height || totalCanvasH);
     }
     return headerExtH + (cap.y || 0) * canvasH;
   };
@@ -1327,7 +1298,14 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
       return offCanvas.toDataURL('image/png');
     };
 
-    const renderCanvas = (img) => {
+    canvas.exportCleanImage = (format = 'image/png', quality = 0.92) => {
+      renderCanvas(baseImgRef.current, true);
+      const res = canvas.toDataURL(format, quality);
+      renderCanvas(baseImgRef.current, false);
+      return res;
+    };
+
+    const renderCanvas = (img, skipHandles = false) => {
       if (canvas.width !== canvasW) canvas.width = canvasW;
       if (canvas.height !== totalCanvasH) canvas.height = totalCanvasH;
 
@@ -1988,10 +1966,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
 
         const renderMaxWidth = (cap.width || 0.9) * canvas.width;
         
-        let displayString = cap.text || '';
-        if (cap.id === editingCaptionId && cap.id === activeLayerId && cursorVisible && !isDrawingMode) {
-          displayString += '|';
-        }
+        const displayString = cap.text || '';
         
         // Use the SAME global wrapText for rendering and hit-testing
         const lines = wrapText(targetCtx, displayString, renderMaxWidth);
@@ -2188,47 +2163,45 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
             }
 
             // Top Rotation Stem & Handle + Delete Handle
-            if (!cap.isHeaderCaption && !cap.isFooterCaption) {
-              // Rotation stem
-              uiCtx.save();
-              uiCtx.strokeStyle = '#f97316';
-              uiCtx.lineWidth = 2.5;
-              uiCtx.beginPath();
-              uiCtx.moveTo(0, boxY);
-              uiCtx.lineTo(0, boxY - 34);
-              uiCtx.stroke();
+            // Rotation stem
+            uiCtx.save();
+            uiCtx.strokeStyle = '#f97316';
+            uiCtx.lineWidth = 2.5;
+            uiCtx.beginPath();
+            uiCtx.moveTo(0, boxY);
+            uiCtx.lineTo(0, boxY - 34);
+            uiCtx.stroke();
 
-              // Rotation knob
-              uiCtx.shadowColor = 'rgba(0, 0, 0, 0.35)';
-              uiCtx.shadowBlur = 5;
-              uiCtx.shadowOffsetY = 1.5;
-              uiCtx.beginPath();
-              uiCtx.arc(0, boxY - 34, 15.5, 0, Math.PI * 2);
-              uiCtx.fillStyle = '#ffffff';
-              uiCtx.fill();
-              uiCtx.strokeStyle = '#f97316';
-              uiCtx.lineWidth = 3;
-              uiCtx.stroke();
+            // Rotation knob
+            uiCtx.shadowColor = 'rgba(0, 0, 0, 0.35)';
+            uiCtx.shadowBlur = 5;
+            uiCtx.shadowOffsetY = 1.5;
+            uiCtx.beginPath();
+            uiCtx.arc(0, boxY - 34, 15.5, 0, Math.PI * 2);
+            uiCtx.fillStyle = '#ffffff';
+            uiCtx.fill();
+            uiCtx.strokeStyle = '#f97316';
+            uiCtx.lineWidth = 3;
+            uiCtx.stroke();
 
-              // Circular rotate icon inside knob
-              uiCtx.strokeStyle = '#f97316';
-              uiCtx.lineWidth = 2;
-              uiCtx.lineCap = 'round';
-              uiCtx.beginPath();
-              uiCtx.arc(0, boxY - 34, 7.5, -Math.PI * 0.7, Math.PI * 0.8);
-              uiCtx.stroke();
-              // Arrowhead
-              uiCtx.fillStyle = '#f97316';
-              uiCtx.beginPath();
-              uiCtx.moveTo(5.5, boxY - 34 + 5);
-              uiCtx.lineTo(9.5, boxY - 34);
-              uiCtx.lineTo(5, boxY - 34 - 3);
-              uiCtx.fill();
-              uiCtx.restore();
+            // Circular rotate icon inside knob
+            uiCtx.strokeStyle = '#f97316';
+            uiCtx.lineWidth = 2;
+            uiCtx.lineCap = 'round';
+            uiCtx.beginPath();
+            uiCtx.arc(0, boxY - 34, 7.5, -Math.PI * 0.7, Math.PI * 0.8);
+            uiCtx.stroke();
+            // Arrowhead
+            uiCtx.fillStyle = '#f97316';
+            uiCtx.beginPath();
+            uiCtx.moveTo(5.5, boxY - 34 + 5);
+            uiCtx.lineTo(9.5, boxY - 34);
+            uiCtx.lineTo(5, boxY - 34 - 3);
+            uiCtx.fill();
+            uiCtx.restore();
 
-              // Delete handle at top-left
-              drawDeleteHandle(uiCtx, boxX - 32, boxY - 32);
-            }
+            // Delete handle at top-left
+            drawDeleteHandle(uiCtx, boxX - 32, boxY - 32);
 
             // Live Dimension / Size pill feedback during drag
             if (isDragging.current && dragTarget.current?.id === cap.id && dragTarget.current?.type?.startsWith('resize_caption_')) {
@@ -2392,12 +2365,12 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
       }
 
       // Draw active layer selection handles and rotation knob on the screen canvas (unfiltered and sharp)
-      if (activeHandleDrawer) {
+      if (activeHandleDrawer && !skipHandles) {
         activeHandleDrawer(ctx);
       }
 
       // Draw Snapping Guides
-      if (isDragging.current && snappingLines.current && (snappingLines.current.horizontal !== null || snappingLines.current.vertical !== null)) {
+      if (!skipHandles && isDragging.current && snappingLines.current && (snappingLines.current.horizontal !== null || snappingLines.current.vertical !== null)) {
         const { horizontal, vertical } = snappingLines.current;
         ctx.save();
         ctx.setLineDash([6, 6]);
@@ -2448,7 +2421,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     } else {
       renderCanvas(null);
     }
-  }, [captions, stickers, activeLayerId, imageLayers, slotImages, slotTransforms, activeIsNativeLayout, editingCaptionId, cursorVisible, aspectRatio, imageFit, watermark, drawings, isDrawingMode, imgSrc, filters, liveBgColor, canvasHeader, canvasFooter, demotivational, canvasFlipX]);
+  }, [captions, stickers, activeLayerId, imageLayers, slotImages, slotTransforms, activeIsNativeLayout, editingCaptionId, aspectRatio, imageFit, watermark, drawings, isDrawingMode, imgSrc, filters, liveBgColor, canvasHeader, canvasFooter, demotivational, canvasFlipX]);
 
   // Helper to rotate point for hit testing
   const rotatePoint = (px, py, cx, cy, angle) => {
@@ -2488,6 +2461,9 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
   };
 
   const handlePointerDown = (e) => {
+    if (e.cancelable && isDrawingMode) {
+      e.preventDefault();
+    }
     const coords = getCanvasCoords(e);
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -2618,8 +2594,8 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
           const deleteHitRadius = Math.max(52, Math.round(24 * screenScale));
 
           const handles = [
-            ...((!activeCap.isHeaderCaption && !activeCap.isFooterCaption) ? [{ type: 'delete_layer', x: leftX - 32, y: topY - 32, r: deleteHitRadius }] : []),
-            ...((!activeCap.isHeaderCaption && !activeCap.isFooterCaption) ? [{ type: 'rotate_caption', x: cx, y: topY - 34, r: touchHitRadius }] : []),
+            { type: 'delete_layer', x: leftX - 32, y: topY - 32, r: deleteHitRadius },
+            { type: 'rotate_caption', x: cx, y: topY - 34, r: touchHitRadius },
             { type: 'resize_caption_l', x: leftX, y: cy, r: touchHitRadius },
             { type: 'resize_caption_r', x: rightX, y: cy, r: touchHitRadius },
             { type: 'resize_caption_tl', x: leftX, y: topY, r: touchHitRadius },
@@ -2659,6 +2635,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
               y: activeCap.y,
               isHeaderCaption: !!activeCap.isHeaderCaption, 
               isFooterCaption: !!activeCap.isFooterCaption, 
+              hasCustomPos: !!activeCap.hasCustomPos,
               boxWidth,
               boxHeight,
               width: activeCap.width || (boxWidth / canvas.width), 
@@ -2826,6 +2803,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
               y: cap.y,
               isHeaderCaption: !!cap.isHeaderCaption,
               isFooterCaption: !!cap.isFooterCaption,
+              hasCustomPos: !!cap.hasCustomPos,
               boxWidth,
               boxHeight,
               width: cap.width || (boxWidth / canvas.width),
@@ -2878,13 +2856,14 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
 
     if (!hitLayer && isHeaderEnabled && coords.y <= headerExtH) {
       const hCap = captions.find(c => c.isHeaderCaption);
-      if (hCap) {
+      if (hCap && !hCap.hasCustomPos) {
         hitLayer = {
           id: hCap.id,
           type: 'caption',
           x: hCap.x,
           y: hCap.y,
           isHeaderCaption: true,
+          hasCustomPos: false,
           locked: !!hCap.locked
         };
       }
@@ -2892,13 +2871,14 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
 
     if (!hitLayer && isFooterEnabled && coords.y >= (headerExtH + canvasH)) {
       const fCap = captions.find(c => c.isFooterCaption);
-      if (fCap) {
+      if (fCap && !fCap.hasCustomPos) {
         hitLayer = {
           id: fCap.id,
           type: 'caption',
           x: fCap.x,
           y: fCap.y,
           isFooterCaption: true,
+          hasCustomPos: false,
           locked: !!fCap.locked
         };
       }
@@ -2941,9 +2921,14 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
           : (headerExtH + (hitLayer.y || 0) * canvasH);
         const initDist = hitLayer.initialDist || Math.hypot(coords.x - centerX, coords.y - centerY);
 
+        const isHeaderOrFooter = hitLayer.isHeaderCaption || hitLayer.isFooterCaption;
+        const initialNormalizedY = (isHeaderOrFooter && !hitLayer.hasCustomPos)
+          ? (centerY / Math.max(1, canvas.height || totalCanvasH))
+          : hitLayer.y;
+
         initialLayerPos.current = { 
           x: hitLayer.x, 
-          y: hitLayer.y, 
+          y: initialNormalizedY, 
           centerX,
           centerY,
           width: hitLayer.boxWidth || hitLayer.width,
@@ -2965,7 +2950,6 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     } else {
       if (onSelectLayer) onSelectLayer(null);
       setEditingCaptionId(null);
-      setCursorVisible(false);
       if (editableRef.current) editableRef.current.blur();
       
       // Native slot handling for pinch-to-zoom
@@ -3138,10 +3122,10 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         const hoverHitRadius = Math.max(38, Math.round(18 * screenScale));
         const deleteHoverRadius = Math.max(42, Math.round(20 * screenScale));
 
-        if (!activeCap.isHeaderCaption && !activeCap.isFooterCaption && Math.hypot(p.x - (leftX - 32), p.y - (topY - 32)) <= deleteHoverRadius) {
+        if (Math.hypot(p.x - (leftX - 32), p.y - (topY - 32)) <= deleteHoverRadius) {
           canvas.style.cursor = 'pointer'; return;
         }
-        if (!activeCap.isHeaderCaption && !activeCap.isFooterCaption && Math.hypot(p.x - cx, p.y - (topY - 34)) <= hoverHitRadius) {
+        if (Math.hypot(p.x - cx, p.y - (topY - 34)) <= hoverHitRadius) {
           canvas.style.cursor = 'grab'; return;
         }
         if (Math.hypot(p.x - leftX, p.y - cy) <= hoverHitRadius || Math.hypot(p.x - rightX, p.y - cy) <= hoverHitRadius) {
@@ -3280,6 +3264,9 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
   };
 
   const handlePointerMove = (e) => {
+    if (e.cancelable && (isDrawingActive.current || isDragging.current)) {
+      e.preventDefault();
+    }
     if (isDrawingMode && isDrawingActive.current && currentStroke.current) {
       const coords = getCanvasCoords(e);
       const stroke = currentStroke.current;
@@ -3634,7 +3621,15 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     snappingLines.current = { horizontal: snapH, vertical: snapV };
 
     if (dragTarget.current.type === 'caption' && onUpdateCaptionBounds) {
-      onUpdateCaptionBounds(dragTarget.current.id, { x: newX, y: newY });
+      const isHeaderOrFooter = dragTarget.current?.isHeaderCaption || dragTarget.current?.isFooterCaption;
+      if (isHeaderOrFooter) {
+        dragTarget.current.hasCustomPos = true;
+      }
+      onUpdateCaptionBounds(dragTarget.current.id, { 
+        x: newX, 
+        y: newY,
+        ...(isHeaderOrFooter ? { hasCustomPos: true } : {})
+      });
     
     } else if (dragTarget.current.type === 'sticker' && onUpdateStickerBounds) {
       onUpdateStickerBounds(dragTarget.current.id, { x: newX, y: newY });
@@ -3846,7 +3841,6 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
           }}
           onBlur={() => {
             setEditingCaptionId(null);
-            setCursorVisible(false);
           }}
           onTouchStart={(e) => {
             handleTextOverlayPointerDown(e);

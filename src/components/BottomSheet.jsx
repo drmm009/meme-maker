@@ -1,7 +1,40 @@
-import React, { useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useEffect, useState } from 'react';
+import { motion, AnimatePresence, useDragControls } from 'framer-motion';
 import { X } from 'lucide-react';
 import ModalPortal from './ModalPortal';
+
+/* ─── Inline stylesheet for scrollbar & hover effects ─── */
+const sheetStyleId = 'bottom-sheet-elegant-styles';
+const injectStyles = () => {
+  if (document.getElementById(sheetStyleId)) return;
+  const style = document.createElement('style');
+  style.id = sheetStyleId;
+  style.textContent = `
+    .bs-content-scroll::-webkit-scrollbar { width: 3px; }
+    .bs-content-scroll::-webkit-scrollbar-track { background: transparent; }
+    .bs-content-scroll::-webkit-scrollbar-thumb {
+      background: rgba(255,255,255,0.12);
+      border-radius: 99px;
+    }
+    .bs-content-scroll::-webkit-scrollbar-thumb:hover {
+      background: rgba(255,255,255,0.22);
+    }
+    .bs-close-btn:hover {
+      background: rgba(255,255,255,0.14) !important;
+      border-color: rgba(255,255,255,0.22) !important;
+      color: #fff !important;
+      transform: rotate(90deg);
+    }
+    .bs-close-btn:active {
+      transform: rotate(90deg) scale(0.92);
+    }
+    .bs-drag-handle:hover .bs-drag-pill {
+      width: 52px !important;
+      background: rgba(255,255,255,0.40) !important;
+    }
+  `;
+  document.head.appendChild(style);
+};
 
 export default function BottomSheet({
   isOpen,
@@ -15,6 +48,12 @@ export default function BottomSheet({
   className = '',
   contentStyle = {}
 }) {
+  const [isDragging, setIsDragging] = useState(false);
+  const dragControls = useDragControls();
+
+  // Inject custom styles
+  useEffect(() => { injectStyles(); }, []);
+
   // Lock body scroll when open
   useEffect(() => {
     if (isOpen) {
@@ -45,15 +84,15 @@ export default function BottomSheet({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.25 }}
             onClick={onClose}
             style={{
               position: 'fixed',
               inset: 0,
               zIndex: 99990,
-              background: 'rgba(0, 0, 0, 0.5)',
-              backdropFilter: 'blur(6px)',
-              WebkitBackdropFilter: 'blur(6px)',
+              background: 'rgba(0, 0, 0, 0.55)',
+              backdropFilter: 'blur(8px)',
+              WebkitBackdropFilter: 'blur(8px)',
               display: 'flex',
               flexDirection: 'column',
               justifyContent: 'flex-end',
@@ -66,12 +105,16 @@ export default function BottomSheet({
               initial={{ y: '100%' }}
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
-              transition={{ type: 'spring', damping: 28, stiffness: 280 }}
+              transition={{ type: 'spring', damping: 30, stiffness: 300, mass: 0.8 }}
               drag="y"
+              dragControls={dragControls}
+              dragListener={false}
               dragConstraints={{ top: 0 }}
-              dragElastic={{ top: 0, bottom: 0.3 }}
+              dragElastic={{ top: 0, bottom: 0.25 }}
+              onDragStart={() => setIsDragging(true)}
               onDragEnd={(e, { offset, velocity }) => {
-                if (offset.y > 90 || velocity.y > 350) {
+                setIsDragging(false);
+                if (offset.y > 80 || velocity.y > 300) {
                   onClose();
                 }
               }}
@@ -80,13 +123,24 @@ export default function BottomSheet({
                 width: '100%',
                 maxWidth: '640px',
                 maxHeight: maxHeight,
-                background: 'rgba(15, 18, 26, 0.96)',
-                backdropFilter: 'blur(20px)',
-                WebkitBackdropFilter: 'blur(20px)',
-                border: '1px solid rgba(255, 255, 255, 0.12)',
+                /* Layered glass background */
+                background: `
+                  linear-gradient(180deg, rgba(30, 34, 48, 0.98) 0%, rgba(15, 18, 26, 0.99) 100%)
+                `,
+                backdropFilter: 'blur(24px) saturate(1.4)',
+                WebkitBackdropFilter: 'blur(24px) saturate(1.4)',
+                /* Top glow border */
+                borderTop: '1px solid rgba(255, 255, 255, 0.15)',
+                borderLeft: '1px solid rgba(255, 255, 255, 0.08)',
+                borderRight: '1px solid rgba(255, 255, 255, 0.08)',
                 borderBottom: 'none',
-                borderRadius: '24px 24px 0 0',
-                boxShadow: '0 -12px 48px rgba(0, 0, 0, 0.75)',
+                borderRadius: '20px 20px 0 0',
+                /* Multi-layer shadow for depth */
+                boxShadow: `
+                  0 -4px 16px rgba(0, 0, 0, 0.3),
+                  0 -12px 48px rgba(0, 0, 0, 0.5),
+                  inset 0 1px 0 rgba(255, 255, 255, 0.06)
+                `,
                 display: 'flex',
                 flexDirection: 'column',
                 overflow: 'hidden',
@@ -94,24 +148,42 @@ export default function BottomSheet({
                 touchAction: 'pan-y'
               }}
             >
-              {/* Top Drag Handle Bar */}
+              {/* Top accent glow line */}
               <div
                 style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: '10%',
+                  right: '10%',
+                  height: '1px',
+                  background: 'linear-gradient(90deg, transparent, rgba(255, 94, 54, 0.4), rgba(236, 72, 153, 0.3), transparent)',
+                  pointerEvents: 'none',
+                  zIndex: 1
+                }}
+              />
+
+              {/* Drag Handle */}
+              <div
+                className="bs-drag-handle"
+                onPointerDown={(e) => dragControls.start(e)}
+                style={{
                   width: '100%',
-                  padding: '10px 0 4px 0',
+                  padding: '12px 0 6px 0',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  cursor: 'grab'
+                  cursor: isDragging ? 'grabbing' : 'grab',
+                  touchAction: 'none'
                 }}
               >
                 <div
+                  className="bs-drag-pill"
                   style={{
-                    width: '40px',
-                    height: '4.5px',
+                    width: '42px',
+                    height: '4px',
                     borderRadius: '999px',
-                    background: 'rgba(255, 255, 255, 0.28)',
-                    transition: 'background 0.2s'
+                    background: 'rgba(255, 255, 255, 0.25)',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
                   }}
                 />
               </div>
@@ -120,18 +192,41 @@ export default function BottomSheet({
               {(title || icon) && (
                 <div
                   style={{
-                    padding: '8px 18px 12px 18px',
+                    padding: '6px 20px 14px 20px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
-                    borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-                    flexShrink: 0
+                    flexShrink: 0,
+                    position: 'relative'
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    {icon}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    {icon && (
+                      <div
+                        style={{
+                          width: '32px',
+                          height: '32px',
+                          borderRadius: '10px',
+                          background: 'linear-gradient(135deg, rgba(255, 94, 54, 0.15), rgba(236, 72, 153, 0.10))',
+                          border: '1px solid rgba(255, 94, 54, 0.20)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0
+                        }}
+                      >
+                        {icon}
+                      </div>
+                    )}
                     {title && (
-                      <span style={{ fontSize: '0.96rem', fontWeight: 700, color: '#ffffff' }}>
+                      <span
+                        style={{
+                          fontSize: '1rem',
+                          fontWeight: 700,
+                          color: '#ffffff',
+                          letterSpacing: '-0.01em'
+                        }}
+                      >
                         {title}
                       </span>
                     )}
@@ -140,37 +235,52 @@ export default function BottomSheet({
 
                   <button
                     type="button"
-                    className="btn btn-icon btn-ghost btn-xs"
+                    className="bs-close-btn"
                     onClick={onClose}
                     title="Close"
                     aria-label="Close"
                     style={{
-                      width: '28px',
-                      height: '28px',
-                      borderRadius: '50%',
-                      background: 'rgba(255, 255, 255, 0.08)',
-                      border: '1px solid rgba(255, 255, 255, 0.1)',
-                      color: 'rgba(255, 255, 255, 0.7)',
+                      width: '30px',
+                      height: '30px',
+                      borderRadius: '10px',
+                      background: 'rgba(255, 255, 255, 0.07)',
+                      border: '1px solid rgba(255, 255, 255, 0.10)',
+                      color: 'rgba(255, 255, 255, 0.55)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       padding: 0,
-                      cursor: 'pointer'
+                      cursor: 'pointer',
+                      transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                      flexShrink: 0
                     }}
                   >
-                    <X size={15} />
+                    <X size={14} strokeWidth={2.5} />
                   </button>
+
+                  {/* Header bottom divider – subtle gradient */}
+                  <div
+                    style={{
+                      position: 'absolute',
+                      bottom: 0,
+                      left: '20px',
+                      right: '20px',
+                      height: '1px',
+                      background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0.06), transparent)'
+                    }}
+                  />
                 </div>
               )}
 
               {/* Scrollable Sheet Content */}
               <div
+                className="bs-content-scroll"
                 style={{
                   flex: 1,
                   overflowY: 'auto',
                   overscrollBehavior: 'contain',
                   WebkitOverflowScrolling: 'touch',
-                  padding: '14px 18px',
+                  padding: '14px 20px calc(14px + env(safe-area-inset-bottom, 0px)) 20px',
                   display: 'flex',
                   flexDirection: 'column',
                   gap: '12px',
@@ -184,13 +294,24 @@ export default function BottomSheet({
               {footer && (
                 <div
                   style={{
-                    padding: '10px 18px',
-                    borderTop: '1px solid rgba(255, 255, 255, 0.08)',
-                    background: 'rgba(10, 12, 18, 0.85)',
-                    backdropFilter: 'blur(10px)',
+                    padding: '12px 20px calc(12px + env(safe-area-inset-bottom, 0px)) 20px',
+                    position: 'relative',
+                    background: 'rgba(12, 14, 22, 0.90)',
+                    backdropFilter: 'blur(12px)',
                     flexShrink: 0
                   }}
                 >
+                  {/* Footer top divider – subtle gradient */}
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: '20px',
+                      right: '20px',
+                      height: '1px',
+                      background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0.06), transparent)'
+                    }}
+                  />
                   {footer}
                 </div>
               )}

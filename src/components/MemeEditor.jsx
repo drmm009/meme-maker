@@ -1,9 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import ModalPortal from './ModalPortal';
 import CanvasEditor from './CanvasEditor';
-import { FONTS, STICKERS } from '../data/stickers';
-import { GRAPHIC_STICKERS, GRAPHIC_STICKER_CATEGORIES } from '../data/memeStickers';
+import { FONTS } from '../data/stickers';
 import confetti from 'canvas-confetti';
 import {
   Type, Plus, Trash2, Undo, Redo, Download, Share2, Sparkles, Copy, Blend,
@@ -18,6 +16,9 @@ import AiCaptionModal from './AiCaptionModal';
 import MemeStylesModal, { TwitterVerifiedBadge } from './MemeStylesModal';
 import FaceMorphModal from './FaceMorphModal';
 import BottomSheet from './BottomSheet';
+import MemeStickersBottomSheet from './editor/MemeStickersBottomSheet';
+import EmojiBottomSheet from './editor/EmojiBottomSheet';
+import TemplatePickerBottomSheet from './editor/TemplatePickerBottomSheet';
 import FacePinpointOverlay from './FacePinpointOverlay';
 import { fuseFaceIntoTemplate } from '../utils/faceGraftEngine';
 import { detectFaceOnTemplate } from '../utils/faceLandmarkerService';
@@ -27,31 +28,19 @@ import { MEME_TEMPLATES, CATEGORIES } from '../data/templates';
 import { fetchOpenSourceMemes } from '../services/memeService';
 import VideoTrimmer from './VideoTrimmer';
 import AspectRatioDropdown from './AspectRatioDropdown';
-import GiphyTab from './GiphyTab';
 import { PHOTO_FILTERS } from '../data/photoFilters';
 import { removeBackground } from '@imgly/background-removal';
+import { safeGet, safeSet } from '../utils/storage';
+import { blobToDataURL, dataURLToBlob } from '../utils/galleryStore';
+import { useMemeHistory, cloneSnapshot } from '../hooks/useMemeHistory';
+import {
+  PRESET_PHRASES,
+  BUBBLE_LAYOUT_OPTIONS,
+  COLOR_SWATCHES,
+  getNonOverlappingPosition,
+  isColorDark,
+} from '../utils/captionLayout';
 import './MemeEditor.css';
-
-const PRESET_PHRASES = [
-  'WHEN YOU...',
-  'NOBODY:',
-  'MY BRAIN AT 3 AM:',
-  'EXPECTATION vs REALITY',
-  'HOW IT STARTED vs HOW IT GOES',
-  'ME TRYING TO EXPLAIN:',
-  'DEBUGGING CODE LIKE:'
-];
-
-const BUBBLE_LAYOUT_OPTIONS = [
-  { id: 'imessage-send', label: 'iPhone 📤' },
-  { id: 'imessage-receive', label: 'iPhone 📥' },
-  { id: 'whatsapp-send', label: 'WhatsApp 📤' },
-  { id: 'whatsapp-receive', label: 'WhatsApp 📥' },
-  { id: 'speech-left', label: 'Tail Left ◂' },
-  { id: 'speech-right', label: 'Tail Right ▸' },
-  { id: 'thought', label: 'Thought 💭' },
-  { id: 'shout', label: 'Shout 💥' },
-];
 
 export const TEXT_EFFECTS = [
   {
@@ -175,153 +164,6 @@ export const TEXT_EFFECTS = [
     )
   }
 ];
-
-const COLOR_SWATCHES = ['#ffffff', '#ffff00', '#a855f7', '#ff0055', '#00ff66', '#000000'];
-
-// Calculates a default canvas position (normalized 0..1) that avoids overlapping existing elements
-const getNonOverlappingPosition = (type, captions = [], stickers = [], imageLayers = []) => {
-  // Estimated normalized width and height per element type
-  let newW = 0.38;
-  let newH = 0.12;
-  if (type === 'phrase') {
-    newW = 0.55;
-    newH = 0.14;
-  } else if (type === 'sticker' || type === 'emoji') {
-    newW = 0.20;
-    newH = 0.20;
-  } else if (type === 'image') {
-    newW = 0.28;
-    newH = 0.28;
-  }
-
-  // Collect all existing elements on canvas with normalized bounds
-  const existing = [
-    ...captions.filter(c => !c.isHeaderCaption && !c.isFooterCaption).map((c) => ({
-      x: typeof c.x === 'number' ? c.x : 0.5,
-      y: typeof c.y === 'number' ? c.y : 0.5,
-      w: c.width ? Math.min(Math.max(c.width, 0.35), 0.8) : 0.38,
-      h: (c.fontSize || 50) > 60 ? 0.15 : 0.12
-    })),
-    ...stickers.map((s) => ({
-      x: typeof s.x === 'number' ? s.x : 0.5,
-      y: typeof s.y === 'number' ? s.y : 0.5,
-      w: 0.20,
-      h: 0.20
-    })),
-    ...imageLayers.map((img) => ({
-      x: typeof img.x === 'number' ? img.x : 0.5,
-      y: typeof img.y === 'number' ? img.y : 0.5,
-      w: 0.28,
-      h: 0.28
-    }))
-  ];
-
-  const checkOverlap = (cx, cy, w, h, items, margin = 0.03) => {
-    for (const it of items) {
-      const minDx = (w + it.w) / 2 + margin;
-      const minDy = (h + it.h) / 2 + margin;
-      if (Math.abs(cx - it.x) < minDx && Math.abs(cy - it.y) < minDy) {
-        return true;
-      }
-    }
-    return false;
-  };
-
-  // If canvas is completely empty, default to center
-  if (existing.length === 0) {
-    return { x: 0.5, y: 0.5 };
-  }
-
-  // 1. If center is completely free, use center
-  if (!checkOverlap(0.5, 0.5, newW, newH, existing, 0.03)) {
-    return { x: 0.5, y: 0.5 };
-  }
-
-  // 2. Safe boundaries inside canvas
-  const minX = Math.max(0.18, newW / 2 + 0.04);
-  const maxX = Math.min(0.82, 1 - (newW / 2 + 0.04));
-  const minY = Math.max(0.18, newH / 2 + 0.04);
-  const maxY = Math.min(0.82, 1 - (newH / 2 + 0.04));
-
-  // Build grid of candidate coordinates
-  const candidates = [];
-  const step = 0.05;
-  for (let y = minY; y <= maxY + 0.001; y += step) {
-    for (let x = minX; x <= maxX + 0.001; x += step) {
-      const px = Number(x.toFixed(3));
-      const py = Number(y.toFixed(3));
-      const dist = Math.hypot(px - 0.5, (py - 0.5) * 1.05);
-      candidates.push({ x: px, y: py, dist });
-    }
-  }
-
-  // Sort candidates by closeness to center
-  candidates.sort((a, b) => a.dist - b.dist);
-
-  // Pass 1: standard margin (comfortable spacing)
-  for (const cand of candidates) {
-    if (!checkOverlap(cand.x, cand.y, newW, newH, existing, 0.03)) {
-      return { x: cand.x, y: cand.y };
-    }
-  }
-
-  // Pass 2: tighter margin
-  for (const cand of candidates) {
-    if (!checkOverlap(cand.x, cand.y, newW, newH, existing, 0.01)) {
-      return { x: cand.x, y: cand.y };
-    }
-  }
-
-  // Pass 3: least crowded point (maximize minimum distance to any existing element)
-  let bestCand = null;
-  let maxMinDist = -1;
-  for (const cand of candidates) {
-    let minDist = Infinity;
-    for (const it of existing) {
-      const d = Math.hypot(cand.x - it.x, cand.y - it.y);
-      if (d < minDist) minDist = d;
-    }
-    if (minDist > maxMinDist) {
-      maxMinDist = minDist;
-      bestCand = cand;
-    }
-  }
-
-  if (bestCand) {
-    return { x: bestCand.x, y: bestCand.y };
-  }
-
-  const offset = (existing.length % 5) * 0.06;
-  return {
-    x: Number(Math.min(0.8, Math.max(0.2, 0.5 + offset)).toFixed(3)),
-    y: Number(Math.min(0.8, Math.max(0.2, 0.5 + offset)).toFixed(3))
-  };
-};
-
-const isColorDark = (colorStr) => {
-  if (!colorStr) return false;
-  const str = String(colorStr).trim().toLowerCase();
-  if (str === 'black' || str === '#000' || str === '#000000') return true;
-  if (str === 'white' || str === '#fff' || str === '#ffffff' || str === 'transparent' || str === 'none') return false;
-  if (str.startsWith('#')) {
-    let hex = str.slice(1);
-    if (hex.length === 3) hex = hex.split('').map(c => c + c).join('');
-    if (hex.length >= 6) {
-      const r = parseInt(hex.slice(0, 2), 16) || 0;
-      const g = parseInt(hex.slice(2, 4), 16) || 0;
-      const b = parseInt(hex.slice(4, 6), 16) || 0;
-      return (r * 299 + g * 587 + b * 114) / 1000 < 128;
-    }
-  }
-  const rgbMatch = str.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/i);
-  if (rgbMatch) {
-    const r = parseInt(rgbMatch[1], 10) || 0;
-    const g = parseInt(rgbMatch[2], 10) || 0;
-    const b = parseInt(rgbMatch[3], 10) || 0;
-    return (r * 299 + g * 587 + b * 114) / 1000 < 128;
-  }
-  return false;
-};
 
 function CanvasColorPicker({ canvasBgColor, setCanvasBgColor }) {
   const [localColor, setLocalColor] = React.useState(canvasBgColor);
@@ -459,7 +301,6 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
 
   // Open-source templates for Image Layer / Slot overlay picker
   const [imagePickerTarget, setImagePickerTarget] = useState(null); // 'layer' | 'replaceTemplate' | { slot: idx }
-  const [imagePickerSearch, setImagePickerSearch] = useState('');
   const [openSourceTemplates, setOpenSourceTemplates] = useState(MEME_TEMPLATES);
 
   useEffect(() => {
@@ -474,30 +315,10 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     };
   }, []);
 
-  const [imagePickerCategory, setImagePickerCategory] = useState('all');
-
-  const filteredImageTemplates = React.useMemo(() => {
-    return openSourceTemplates.filter((t) => {
-      const q = imagePickerSearch.toLowerCase().trim();
-      const matchesSearch = !q ||
-        t.name.toLowerCase().includes(q) ||
-        (t.category && t.category.toLowerCase().includes(q));
-
-      let matchesCategory = true;
-      if (imagePickerCategory === 'trending') {
-        matchesCategory = t.trendingScore >= 93;
-      } else if (imagePickerCategory !== 'all') {
-        matchesCategory = t.category === imagePickerCategory;
-      }
-
-      return matchesSearch && matchesCategory;
-    });
-  }, [openSourceTemplates, imagePickerSearch, imagePickerCategory]);
-
   const activeImageLayer = imageLayers.find((i) => i.id === activeLayerId);
 
-  // History stack for Undo / Redo
-  const [history, setHistory] = useState(() => {
+  // History stack for Undo / Redo (capped, structuredClone, timer cleanup in hook)
+  const buildInitialSnapshot = () => {
     const baseImgZ = 0;
     const initialImageLayers = (template?.imageLayers || []).map((img, idx) => ({
       ...img,
@@ -531,33 +352,32 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
       zIndex: baseCapZ + idx
     }));
 
-    return [
-      {
-        captions: JSON.parse(JSON.stringify(initialCaptions)),
-        stickers: JSON.parse(JSON.stringify(initialStickers)),
-        imageLayers: JSON.parse(JSON.stringify(initialImageLayers)),
-        canvasHeader: template?.canvasHeader || {
-          enabled: false,
-          bgColor: '#ffffff',
-          height: 140
-        },
-        canvasFooter: template?.canvasFooter || {
-          enabled: false,
-          bgColor: '#ffffff',
-          height: 140
-        },
-        demotivational: template?.demotivational || {
-          enabled: false,
-          title: 'PROCRASTINATION',
-          subtitle: 'Hard work pays off in the future, laziness pays off now.'
-        },
-        canvasFlipX: template?.canvasFlipX || false,
-        templateImageUrl: template?.imageUrl || template?.rawImageUrl || null,
-        templateFaceMorph: null
-      }
-    ];
-  });
-  const [historyStep, setHistoryStep] = useState(0);
+    return {
+      captions: cloneSnapshot(initialCaptions),
+      stickers: cloneSnapshot(initialStickers),
+      imageLayers: cloneSnapshot(initialImageLayers),
+      canvasHeader: template?.canvasHeader || {
+        enabled: false,
+        bgColor: '#ffffff',
+        height: 140
+      },
+      canvasFooter: template?.canvasFooter || {
+        enabled: false,
+        bgColor: '#ffffff',
+        height: 140
+      },
+      demotivational: template?.demotivational || {
+        enabled: false,
+        title: 'PROCRASTINATION',
+        subtitle: 'Hard work pays off in the future, laziness pays off now.'
+      },
+      canvasFlipX: template?.canvasFlipX || false,
+      templateImageUrl: template?.imageUrl || template?.rawImageUrl || null,
+      templateFaceMorph: null
+    };
+  };
+  const { history, historyStep, pushSnapshot, pushSnapshotDebounced, undoSnapshot, redoSnapshot } =
+    useMemeHistory(buildInitialSnapshot, { limit: 30, debounceMs: 800 });
 
   const [canvasBgColor, setCanvasBgColor] = useState(template?.canvasBgColor || '#ffffff');
   const [canvasFlipX, setCanvasFlipX] = useState(template?.canvasFlipX || false);
@@ -663,11 +483,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
   };
   const [showMemeStickersModal, setShowMemeStickersModal] = useState(false);
   const [showEmojiModal, setShowEmojiModal] = useState(false);
-  const [stickerSearchQuery, setStickerSearchQuery] = useState('');
-  const [emojiSearchQuery, setEmojiSearchQuery] = useState('');
-  const [activeStickerCategory, setActiveStickerCategory] = useState('faces');
   const [isRemovingBg, setIsRemovingBg] = useState(false);
-  const [activeGraphicStickerCategory, setActiveGraphicStickerCategory] = useState('memes');
 
   // Freehand Drawing state
   const [drawings, setDrawings] = useState([]);
@@ -703,16 +519,13 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
   const [recordProgress, setRecordProgress] = useState(0);
   const [isVideoPlaying, setIsVideoPlaying] = useState(true);
 
-  // Watermark state — persisted in localStorage
+  // Watermark state — persisted in localStorage (quota-safe: session state survives write failures)
   const [watermark, setWatermark] = useState(() => {
-    try {
-      const saved = localStorage.getItem('meme-maker-watermark');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed.text === '@username') parsed.text = '';
-        return parsed;
-      }
-    } catch (e) {}
+    const parsed = safeGet('meme-maker-watermark', null);
+    if (parsed && typeof parsed === 'object') {
+      if (parsed.text === '@username') parsed.text = '';
+      return parsed;
+    }
     return {
       enabled: false,
       text: '',
@@ -726,9 +539,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
 
   // Save watermark config to localStorage whenever it changes
   useEffect(() => {
-    try {
-      localStorage.setItem('meme-maker-watermark', JSON.stringify(watermark));
-    } catch (e) {}
+    safeSet('meme-maker-watermark', watermark);
   }, [watermark]);
 
   const updateWatermark = (key, value) => {
@@ -749,7 +560,6 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
   const canvasRef = useRef(null);
   const watermarkInputRef = useRef(null);
   const watermarkTextInputRef = useRef(null);
-  const historyTimerRef = useRef(null);
   const tabButtonsRef = useRef(null);
 
   // Auto-scroll active tab into view horizontally
@@ -808,8 +618,10 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
   }, [lastUsedSettingButton, showFontMenu, showTextCurveMenu, showTextBlurMenu, showTextBgMenu, showBubbleLayouts]);
 
   // Keyboard shortcuts: Ctrl+Z (undo), Ctrl+Y / Ctrl+Shift+Z (redo), Delete (delete layer), Escape (deselect)
-  useEffect(() => {
-    const handleKeyDown = (e) => {
+  // Subscribe-once via ref mirror: the ref always points at the latest closure, so typing
+  // and arrow-nudges don't re-attach document listeners on every render.
+  const keyHandlerRef = useRef(null);
+  keyHandlerRef.current = (e) => {
       // Skip if focus is inside a text input / textarea / contenteditable
       const tag = document.activeElement?.tagName?.toLowerCase();
       const isEditing =
@@ -881,13 +693,15 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
       }
     };
 
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [historyStep, history, activeLayerId, captions, stickers, imageLayers, drawings]);
-
-  // Global clipboard paste listener (Ctrl+V image/gif onto canvas)
   useEffect(() => {
-    const handlePaste = (e) => {
+    const h = (e) => keyHandlerRef.current?.(e);
+    document.addEventListener('keydown', h);
+    return () => document.removeEventListener('keydown', h);
+  }, []);
+
+  // Global clipboard paste listener (Ctrl+V image/gif onto canvas) — subscribe once, same pattern
+  const pasteHandlerRef = useRef(null);
+  pasteHandlerRef.current = (e) => {
       const tag = document.activeElement?.tagName?.toLowerCase();
       const isEditing = tag === 'input' || tag === 'textarea' || document.activeElement?.isContentEditable;
       if (isEditing) return;
@@ -901,19 +715,24 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
           e.preventDefault();
           const file = item.getAsFile();
           if (file) {
-            const url = URL.createObjectURL(file);
-            commitAddImageLayer(url);
-            setPasteToast(true);
-            setTimeout(() => setPasteToast(false), 2600);
+            blobToDataURL(file).then((url) => {
+              commitAddImageLayer(url);
+              setPasteToast(true);
+              setTimeout(() => setPasteToast(false), 2600);
+            }).catch((err) => {
+              console.error('Failed to convert pasted image to data URL:', err);
+            });
           }
           break;
         }
       }
     };
 
-    window.addEventListener('paste', handlePaste);
-    return () => window.removeEventListener('paste', handlePaste);
-  }, [captions, stickers, imageLayers]);
+  useEffect(() => {
+    const h = (e) => pasteHandlerRef.current?.(e);
+    window.addEventListener('paste', h);
+    return () => window.removeEventListener('paste', h);
+  }, []);
 
   const pushHistory = (
     newCaptions,
@@ -927,22 +746,18 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     newTemplateImageUrl = (activeTemplate?.rawImageUrl || activeTemplate?.imageUrl || null),
     newTemplateFaceMorph = templateFaceMorph
   ) => {
-    const newSnapshot = {
-      captions: JSON.parse(JSON.stringify(newCaptions)),
-      stickers: JSON.parse(JSON.stringify(newStickers)),
-      imageLayers: JSON.parse(JSON.stringify(newImgLayers)),
-      drawings: JSON.parse(JSON.stringify(newDrawings)),
-      canvasHeader: JSON.parse(JSON.stringify(newCanvasHeader)),
-      canvasFooter: JSON.parse(JSON.stringify(newCanvasFooter)),
-      demotivational: JSON.parse(JSON.stringify(newDemotivational)),
+    pushSnapshot({
+      captions: cloneSnapshot(newCaptions),
+      stickers: cloneSnapshot(newStickers),
+      imageLayers: cloneSnapshot(newImgLayers),
+      drawings: cloneSnapshot(newDrawings),
+      canvasHeader: cloneSnapshot(newCanvasHeader),
+      canvasFooter: cloneSnapshot(newCanvasFooter),
+      demotivational: cloneSnapshot(newDemotivational),
       canvasFlipX: Boolean(newCanvasFlipX),
       templateImageUrl: newTemplateImageUrl,
-      templateFaceMorph: newTemplateFaceMorph ? JSON.parse(JSON.stringify(newTemplateFaceMorph)) : null
-    };
-    const updatedHistory = history.slice(0, historyStep + 1);
-    updatedHistory.push(newSnapshot);
-    setHistory(updatedHistory);
-    setHistoryStep(updatedHistory.length - 1);
+      templateFaceMorph: newTemplateFaceMorph ? cloneSnapshot(newTemplateFaceMorph) : null
+    });
   };
 
   // Debounced version — used for text typing so history isn't pushed on every keypress
@@ -958,10 +773,18 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     newTemplateImageUrl = (activeTemplate?.rawImageUrl || activeTemplate?.imageUrl || null),
     newTemplateFaceMorph = templateFaceMorph
   ) => {
-    if (historyTimerRef.current) clearTimeout(historyTimerRef.current);
-    historyTimerRef.current = setTimeout(() => {
-      pushHistory(newCaptions, newStickers, newImgLayers, newDrawings, newCanvasHeader, newCanvasFooter, newDemotivational, newCanvasFlipX, newTemplateImageUrl, newTemplateFaceMorph);
-    }, 800);
+    pushSnapshotDebounced({
+      captions: cloneSnapshot(newCaptions),
+      stickers: cloneSnapshot(newStickers),
+      imageLayers: cloneSnapshot(newImgLayers),
+      drawings: cloneSnapshot(newDrawings),
+      canvasHeader: cloneSnapshot(newCanvasHeader),
+      canvasFooter: cloneSnapshot(newCanvasFooter),
+      demotivational: cloneSnapshot(newDemotivational),
+      canvasFlipX: Boolean(newCanvasFlipX),
+      templateImageUrl: newTemplateImageUrl,
+      templateFaceMorph: newTemplateFaceMorph ? cloneSnapshot(newTemplateFaceMorph) : null
+    });
   };
 
   const handleToggleCanvasFlip = () => {
@@ -970,68 +793,41 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     pushHistory(captions, stickers, imageLayers, drawings, canvasHeader, canvasFooter, demotivational, nextFlip);
   };
 
-  const handleUndo = () => {
-    if (historyStep > 0) {
-      const prevStep = historyStep - 1;
-      const snapshot = history[prevStep];
-      setCaptions(JSON.parse(JSON.stringify(snapshot.captions)));
-      setStickers(JSON.parse(JSON.stringify(snapshot.stickers)));
-      setImageLayers(JSON.parse(JSON.stringify(snapshot.imageLayers || [])));
-      setDrawings(JSON.parse(JSON.stringify(snapshot.drawings || [])));
-      if (snapshot.canvasHeader) {
-        setCanvasHeader(JSON.parse(JSON.stringify(snapshot.canvasHeader)));
-      }
-      if (snapshot.canvasFooter) {
-        setCanvasFooter(JSON.parse(JSON.stringify(snapshot.canvasFooter)));
-      }
-      if (snapshot.demotivational) {
-        setDemotivational(JSON.parse(JSON.stringify(snapshot.demotivational)));
-      }
-      if (snapshot.canvasFlipX !== undefined) {
-        setCanvasFlipX(Boolean(snapshot.canvasFlipX));
-      }
-      if (snapshot.templateImageUrl !== undefined && snapshot.templateImageUrl !== null) {
-        setActiveTemplate(prev => ({
-          ...prev,
-          rawImageUrl: snapshot.templateImageUrl,
-          imageUrl: snapshot.templateImageUrl
-        }));
-      }
-      setTemplateFaceMorph(snapshot.templateFaceMorph ? JSON.parse(JSON.stringify(snapshot.templateFaceMorph)) : null);
-      setHistoryStep(prevStep);
+  const applySnapshot = (snapshot) => {
+    setCaptions(cloneSnapshot(snapshot.captions));
+    setStickers(cloneSnapshot(snapshot.stickers));
+    setImageLayers(cloneSnapshot(snapshot.imageLayers || []));
+    setDrawings(cloneSnapshot(snapshot.drawings || []));
+    if (snapshot.canvasHeader) {
+      setCanvasHeader(cloneSnapshot(snapshot.canvasHeader));
     }
+    if (snapshot.canvasFooter) {
+      setCanvasFooter(cloneSnapshot(snapshot.canvasFooter));
+    }
+    if (snapshot.demotivational) {
+      setDemotivational(cloneSnapshot(snapshot.demotivational));
+    }
+    if (snapshot.canvasFlipX !== undefined) {
+      setCanvasFlipX(Boolean(snapshot.canvasFlipX));
+    }
+    if (snapshot.templateImageUrl !== undefined && snapshot.templateImageUrl !== null) {
+      setActiveTemplate(prev => ({
+        ...prev,
+        rawImageUrl: snapshot.templateImageUrl,
+        imageUrl: snapshot.templateImageUrl
+      }));
+    }
+    setTemplateFaceMorph(snapshot.templateFaceMorph ? cloneSnapshot(snapshot.templateFaceMorph) : null);
+  };
+
+  const handleUndo = () => {
+    const snapshot = undoSnapshot();
+    if (snapshot) applySnapshot(snapshot);
   };
 
   const handleRedo = () => {
-    if (historyStep < history.length - 1) {
-      const nextStep = historyStep + 1;
-      const snapshot = history[nextStep];
-      setCaptions(JSON.parse(JSON.stringify(snapshot.captions)));
-      setStickers(JSON.parse(JSON.stringify(snapshot.stickers)));
-      setImageLayers(JSON.parse(JSON.stringify(snapshot.imageLayers || [])));
-      setDrawings(JSON.parse(JSON.stringify(snapshot.drawings || [])));
-      if (snapshot.canvasHeader) {
-        setCanvasHeader(JSON.parse(JSON.stringify(snapshot.canvasHeader)));
-      }
-      if (snapshot.canvasFooter) {
-        setCanvasFooter(JSON.parse(JSON.stringify(snapshot.canvasFooter)));
-      }
-      if (snapshot.demotivational) {
-        setDemotivational(JSON.parse(JSON.stringify(snapshot.demotivational)));
-      }
-      if (snapshot.canvasFlipX !== undefined) {
-        setCanvasFlipX(Boolean(snapshot.canvasFlipX));
-      }
-      if (snapshot.templateImageUrl !== undefined && snapshot.templateImageUrl !== null) {
-        setActiveTemplate(prev => ({
-          ...prev,
-          rawImageUrl: snapshot.templateImageUrl,
-          imageUrl: snapshot.templateImageUrl
-        }));
-      }
-      setTemplateFaceMorph(snapshot.templateFaceMorph ? JSON.parse(JSON.stringify(snapshot.templateFaceMorph)) : null);
-      setHistoryStep(nextStep);
-    }
+    const snapshot = redoSnapshot();
+    if (snapshot) applySnapshot(snapshot);
   };
 
   const handleAddDrawing = (newDrawing) => {
@@ -1054,23 +850,25 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
 
   const handleOpenSaveModal = () => {
     setActiveLayerId(null);
-    setTimeout(() => {
-      if (canvasRef.current) {
-        const dataUrl = canvasRef.current.toDataURL('image/png');
-        setExportedImageUri(dataUrl);
-        const cleaned = cleanTemplateName(template?.name);
-        const defaultName = cleaned || (captions[0]?.text && captions[0].text !== 'TOP TEXT' ? captions[0].text : '') || 'My Meme';
-        setMemeCustomName(defaultName);
-        setIsSaveModalOpen(true);
-      }
-    }, 50);
+    if (canvasRef.current) {
+      const dataUrl = canvasRef.current.exportCleanImage
+        ? canvasRef.current.exportCleanImage('image/png')
+        : canvasRef.current.toDataURL('image/png');
+      setExportedImageUri(dataUrl);
+      const cleaned = cleanTemplateName(template?.name);
+      const defaultName = cleaned || (captions[0]?.text && captions[0].text !== 'TOP TEXT' ? captions[0].text : '') || 'My Meme';
+      setMemeCustomName(defaultName);
+      setIsSaveModalOpen(true);
+    }
   };
 
   const updateExportUriAndSize = (format = exportFormat, quality = exportQuality) => {
     if (!canvasRef.current) return;
     const mimeType = format === 'jpeg' ? 'image/jpeg' : (format === 'webp' ? 'image/webp' : 'image/png');
     const q = format === 'png' ? undefined : quality;
-    const dataUrl = canvasRef.current.toDataURL(mimeType, q);
+    const dataUrl = canvasRef.current.exportCleanImage
+      ? canvasRef.current.exportCleanImage(mimeType, q)
+      : canvasRef.current.toDataURL(mimeType, q);
     setExportedImageUri(dataUrl);
     // Base64 size estimation
     const bytes = Math.round((dataUrl.length * 3) / 4);
@@ -2000,12 +1798,17 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     }
   };
 
-  const handleFileUploadImageLayer = (e) => {
+  const handleFileUploadImageLayer = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const url = URL.createObjectURL(file);
-    handleAddImageLayer(url);
-    e.target.value = '';
+    try {
+      const url = await blobToDataURL(file);
+      handleAddImageLayer(url);
+    } catch (err) {
+      console.error('Failed to read image file:', err);
+    } finally {
+      e.target.value = '';
+    }
   };
 
   const handleStartMorphFace = (explicitTarget = null) => {
@@ -2541,9 +2344,14 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
   
   const handleRemoveBackground = async () => {
     const processImg = async (url) => {
-       const res = await fetch(url);
-       const blob = await res.blob();
-       return await removeBackground(blob);
+      let blob;
+      if (typeof url === 'string' && url.startsWith('data:')) {
+        blob = dataURLToBlob(url);
+      } else {
+        const res = await fetch(url);
+        blob = await res.blob();
+      }
+      return await removeBackground(blob);
     };
 
     if (activeImageLayer) {
@@ -2558,7 +2366,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
         try {
           setIsRemovingBg(true);
           const imgBlob = await processImg(activeImageLayer.url);
-          const newUrl = URL.createObjectURL(imgBlob);
+          const newUrl = await blobToDataURL(imgBlob);
           updateActiveImageLayer({
             url: newUrl,
             originalUrl: activeImageLayer.url
@@ -2581,7 +2389,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
           setIsRemovingBg(true);
           const oldUrl = activeSticker.url || activeSticker.src;
           const imgBlob = await processImg(oldUrl);
-          const newUrl = URL.createObjectURL(imgBlob);
+          const newUrl = await blobToDataURL(imgBlob);
           const nextStks = stickers.map((s) => (s.id === activeSticker.id ? { ...s, src: newUrl, url: newUrl, originalUrl: oldUrl } : s));
           setStickers(nextStks);
           pushHistoryDebounced(captions, nextStks, imageLayers);
@@ -2601,7 +2409,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
           setIsRemovingBg(true);
           const oldUrl = activeTemplate.rawImageUrl || activeTemplate.imageUrl;
           const imgBlob = await processImg(oldUrl);
-          const newUrl = URL.createObjectURL(imgBlob);
+          const newUrl = await blobToDataURL(imgBlob);
           setActiveTemplate({ ...activeTemplate, rawImageUrl: newUrl, imageUrl: newUrl, originalUrl: oldUrl });
         } catch (err) {
           console.error('Failed to remove background:', err);
@@ -2928,43 +2736,39 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
 
   const handlePreview = () => {
     setActiveLayerId(null);
-    
-    // Wait for the canvas to re-render without the active layer selection box
-    setTimeout(() => {
-      if (canvasRef.current) {
-        const dataUrl = canvasRef.current.toDataURL('image/png');
-        setExportedImageUri(dataUrl);
+    if (canvasRef.current) {
+      const dataUrl = canvasRef.current.exportCleanImage
+        ? canvasRef.current.exportCleanImage('image/png')
+        : canvasRef.current.toDataURL('image/png');
+      setExportedImageUri(dataUrl);
 
-        const cleaned = cleanTemplateName(template?.name);
-        const defaultName = cleaned || (captions[0]?.text && captions[0].text !== 'TOP TEXT' ? captions[0].text : '') || 'My Meme';
-        setMemeCustomName(defaultName);
-        
-        setExportedVideoUrl(null);
-        setIsPreviewModalOpen(true);
-        
-        if (hasVideoContent) {
-          handleGenerateVideo();
-        }
+      const cleaned = cleanTemplateName(template?.name);
+      const defaultName = cleaned || (captions[0]?.text && captions[0].text !== 'TOP TEXT' ? captions[0].text : '') || 'My Meme';
+      setMemeCustomName(defaultName);
+      
+      setExportedVideoUrl(null);
+      setIsPreviewModalOpen(true);
+      
+      if (hasVideoContent) {
+        handleGenerateVideo();
       }
-    }, 50);
+    }
   };
 
-  // Renders canvas to dataURL first, then runs the callback action
+  // Renders canvas to dataURL without handles, then runs the callback action
   const handleQuickExport = (action) => {
     setActiveLayerId(null);
     setExportDropdownOpen(false);
-    setTimeout(async () => {
-      if (canvasRef.current) {
-        const dataUrl = canvasRef.current.toDataURL('image/png');
-        setExportedImageUri(dataUrl);
-        const cleaned = cleanTemplateName(template?.name);
-        const defaultName = cleaned || (captions[0]?.text && captions[0].text !== 'TOP TEXT' ? captions[0].text : '') || 'My Meme';
-        setMemeCustomName(defaultName);
-        // Small delay so state update flushes
-        await new Promise(r => setTimeout(r, 30));
-        action(dataUrl);
-      }
-    }, 50);
+    if (canvasRef.current) {
+      const dataUrl = canvasRef.current.exportCleanImage
+        ? canvasRef.current.exportCleanImage('image/png')
+        : canvasRef.current.toDataURL('image/png');
+      setExportedImageUri(dataUrl);
+      const cleaned = cleanTemplateName(template?.name);
+      const defaultName = cleaned || (captions[0]?.text && captions[0].text !== 'TOP TEXT' ? captions[0].text : '') || 'My Meme';
+      setMemeCustomName(defaultName);
+      action(dataUrl);
+    }
   };
 
   const handleDirectCopyImage = () => {
@@ -2997,7 +2801,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
   };
 
   const handleConfirmSave = () => {
-    const dataUrl = exportedImageUri || (canvasRef.current && canvasRef.current.toDataURL('image/png'));
+    const dataUrl = (canvasRef.current?.exportCleanImage ? canvasRef.current.exportCleanImage('image/png') : canvasRef.current?.toDataURL('image/png')) || exportedImageUri;
     if (dataUrl) {
       const finalName = memeCustomName.trim() || 'My Meme';
       onSaveToGallery({
@@ -7727,418 +7531,40 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
 
 
       {/* Meme Stickers & Overlays Bottom Sheet */}
-      <BottomSheet
+      <MemeStickersBottomSheet
         isOpen={showMemeStickersModal}
         onClose={() => setShowMemeStickersModal(false)}
-        title="Choose a Sticker"
-        icon={<Sticker size={18} style={{ color: 'var(--cyber-cyan)' }} />}
-        maxHeight="78vh"
-        contentStyle={{ padding: '6px 16px 16px 16px', overflow: 'hidden' }}
-      >
-        <div className="search-bar-wrapper margin-bottom-md" style={{ position: 'relative', marginTop: '2px', marginBottom: '12px' }}>
-              <Search className="search-icon" size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-              <input 
-                type="text" 
-                placeholder="Search meme stickers (glasses, hat, bubble, crown)..." 
-                value={stickerSearchQuery}
-                onChange={(e) => setStickerSearchQuery(e.target.value)}
-                className="search-input"
-                style={{ width: '100%', padding: '12px 12px 12px 40px', borderRadius: '24px', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', outline: 'none', transition: 'border-color 0.2s', boxSizing: 'border-box' }}
-                onFocus={(e) => e.target.style.borderColor = 'var(--cyber-cyan)'}
-                onBlur={(e) => e.target.style.borderColor = 'var(--glass-border)'}
-              />
-              {stickerSearchQuery && (
-                <button 
-                  className="btn-clear-search hover-lift"
-                  style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'rgba(255,255,255,0.1)', border: 'none', color: 'var(--text-main)', cursor: 'pointer', borderRadius: '50%', width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                  onClick={() => setStickerSearchQuery('')}
-                >
-                  <X size={14} />
-                </button>
-              )}
-            </div>
-
-            <div style={{ display: 'flex', gap: '14px', flex: 1, minHeight: 0, overflow: 'hidden' }}>
-              {/* Category sidebar */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', minWidth: '64px', height: '100%', overflowY: 'auto', paddingRight: '4px', overscrollBehavior: 'contain' }}>
-                {GRAPHIC_STICKER_CATEGORIES.map(cat => {
-                  const isActive = activeGraphicStickerCategory === cat.id && !stickerSearchQuery;
-                  return (
-                    <button
-                      key={cat.id}
-                      onClick={() => {
-                        setActiveGraphicStickerCategory(cat.id);
-                        setStickerSearchQuery('');
-                      }}
-                      style={{
-                        padding: '10px 4px',
-                        background: isActive ? 'rgba(168, 85, 247, 0.16)' : 'transparent',
-                        border: isActive ? '1px solid var(--cyber-cyan)' : '1px solid transparent',
-                        borderRadius: 'var(--radius-md)',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        gap: '4px',
-                        transition: 'all 0.2s',
-                        color: isActive ? 'var(--cyber-cyan)' : 'var(--text-main)'
-                      }}
-                      title={cat.label}
-                    >
-                      <span style={{ fontSize: '1.5rem', lineHeight: 1 }}>{cat.icon}</span>
-                      <span style={{ fontSize: '0.65rem', fontWeight: 600 }}>{cat.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Graphic stickers grid */}
-              <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(74px, 1fr))', gap: '10px', overflowY: 'auto', padding: '4px', alignContent: 'start', overscrollBehavior: 'contain', height: '100%' }}>
-                {GRAPHIC_STICKERS.filter(s => {
-                  if (stickerSearchQuery.trim()) {
-                    const q = stickerSearchQuery.toLowerCase();
-                    return s.name.toLowerCase().includes(q) || s.category.toLowerCase().includes(q) || (s.id && s.id.toLowerCase().includes(q));
-                  }
-                  return s.category === activeGraphicStickerCategory;
-                }).map(stk => (
-                  <button
-                    key={stk.id}
-                    className="graphic-sticker-btn hover-lift"
-                    title={stk.name}
-                    onClick={() => handleAddGraphicSticker(stk)}
-                    style={{
-                      background: 'var(--bg-surface-1)',
-                      border: '1px solid var(--glass-border)',
-                      borderRadius: '12px',
-                      padding: '8px 4px',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      cursor: 'pointer',
-                      transition: 'all 0.15s ease',
-                      minHeight: '76px',
-                      position: 'relative'
-                    }}
-                  >
-                    <img
-                      src={stk.url}
-                      alt={stk.name}
-                      style={{ width: '48px', height: '44px', objectFit: 'contain', pointerEvents: 'none' }}
-                      loading="lazy"
-                    />
-                    <span style={{ fontSize: '0.62rem', color: 'var(--text-muted)', marginTop: '4px', textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '68px' }}>
-                      {stk.name}
-                    </span>
-                  </button>
-                ))}
-                {GRAPHIC_STICKERS.filter(s => {
-                  if (stickerSearchQuery.trim()) {
-                    const q = stickerSearchQuery.toLowerCase();
-                    return s.name.toLowerCase().includes(q) || s.category.toLowerCase().includes(q) || (s.id && s.id.toLowerCase().includes(q));
-                  }
-                  return s.category === activeGraphicStickerCategory;
-                }).length === 0 && (
-                  <div style={{ gridColumn: '1 / -1', textAlign: 'center', color: 'var(--text-muted)', padding: '30px 0' }}>
-                    No stickers found matching "{stickerSearchQuery}".
-                  </div>
-                )}
-              </div>
-            </div>
-      </BottomSheet>
+        onSelectSticker={(sticker) => handleAddGraphicSticker(sticker)}
+      />
 
       {/* Emoji Stickers Bottom Sheet */}
-      <BottomSheet
+      <EmojiBottomSheet
         isOpen={showEmojiModal}
         onClose={() => setShowEmojiModal(false)}
-        title="Choose an Emoji"
-        icon={<Smile size={18} style={{ color: 'var(--cyber-cyan)' }} />}
-        maxHeight="78vh"
-        contentStyle={{ padding: '6px 16px 16px 16px', overflow: 'hidden' }}
-      >
-        <div className="search-bar-wrapper margin-bottom-md" style={{ position: 'relative', marginTop: '2px', marginBottom: '12px' }}>
-              <Search className="search-icon" size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-              <input 
-                type="text" 
-                placeholder="Search emojis..." 
-                value={emojiSearchQuery}
-                onChange={(e) => setEmojiSearchQuery(e.target.value)}
-                className="search-input"
-                style={{ width: '100%', padding: '12px 12px 12px 40px', borderRadius: '24px', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', outline: 'none', transition: 'border-color 0.2s', boxSizing: 'border-box' }}
-                onFocus={(e) => e.target.style.borderColor = 'var(--cyber-cyan)'}
-                onBlur={(e) => e.target.style.borderColor = 'var(--glass-border)'}
-              />
-              {emojiSearchQuery && (
-                <button 
-                  className="btn-clear-search hover-lift"
-                  style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'rgba(255,255,255,0.1)', border: 'none', color: 'var(--text-main)', cursor: 'pointer', borderRadius: '50%', width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                  onClick={() => setEmojiSearchQuery('')}
-                >
-                  <X size={14} />
-                </button>
-              )}
-            </div>
-
-            <div style={{ display: 'flex', gap: '14px', flex: 1, minHeight: 0, overflow: 'hidden' }}>
-              {/* Category sidebar */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', minWidth: '60px', height: '100%', overflowY: 'auto', paddingRight: '4px', overscrollBehavior: 'contain' }}>
-                {[
-                  { id: 'faces', icon: '😀', label: 'Faces' },
-                  { id: 'gestures', icon: '👋', label: 'Hands' },
-                  { id: 'flags', icon: '🏳️‍🌈', label: 'Flags' },
-                  { id: 'symbols', icon: '❤️', label: 'Symbols' },
-                  { id: 'objects', icon: '💡', label: 'Objects' }
-                ].map(cat => {
-                  const isActive = activeStickerCategory === cat.id && !emojiSearchQuery;
-                  return (
-                    <button
-                      key={cat.id}
-                      onClick={() => {
-                        setActiveStickerCategory(cat.id);
-                        setEmojiSearchQuery('');
-                      }}
-                      style={{
-                        padding: '10px 4px',
-                        background: isActive ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
-                        color: isActive ? '#fff' : 'var(--text-main)',
-                        border: 'none',
-                        borderRadius: 'var(--radius-md)',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        gap: '4px',
-                        transition: 'all 0.2s'
-                      }}
-                      title={cat.label}
-                    >
-                      <span style={{ fontSize: '1.6rem', lineHeight: 1 }}>{cat.icon}</span>
-                      <span style={{ fontSize: '0.65rem', fontWeight: 600, color: 'inherit' }}>{cat.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Emoji grid */}
-              <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', overflowY: 'auto', padding: '4px', alignContent: 'start', overscrollBehavior: 'contain', height: '100%' }}>
-                {STICKERS.filter(s => {
-                  if (emojiSearchQuery.trim()) {
-                    const q = emojiSearchQuery.toLowerCase();
-                    return s.id.toLowerCase().includes(q) || (s.name && s.name.toLowerCase().includes(q)) || s.emoji.includes(q);
-                  }
-                  return s.category === activeStickerCategory;
-                }).map(s => (
-                  <button 
-                    key={s.id} 
-                    className="hover-lift"
-                    title={s.name}
-                    onClick={() => handleAddSticker(s)}
-                    style={{ background: 'none', border: 'none', fontSize: '2.2rem', cursor: 'pointer', padding: '4px', textAlign: 'center', transition: 'transform 0.15s' }}
-                  >
-                    {s.emoji}
-                  </button>
-                ))}
-                {STICKERS.filter(s => {
-                  if (emojiSearchQuery.trim()) {
-                    const q = emojiSearchQuery.toLowerCase();
-                    return s.id.toLowerCase().includes(q) || (s.name && s.name.toLowerCase().includes(q)) || s.emoji.includes(q);
-                  }
-                  return s.category === activeStickerCategory;
-                }).length === 0 && (
-                  <div style={{ gridColumn: '1 / -1', textAlign: 'center', color: 'var(--text-muted)', padding: '20px 0' }}>
-                    No emojis found matching "{emojiSearchQuery}".
-                  </div>
-                )}
-              </div>
-            </div>
-      </BottomSheet>
+        onSelectEmoji={(emoji) => handleAddSticker(emoji)}
+      />
 
       {/* Image Layer Template Picker Bottom Sheet */}
-      <BottomSheet
+      <TemplatePickerBottomSheet
         isOpen={imagePickerTarget !== null}
         onClose={() => setImagePickerTarget(null)}
-        title="Add Template"
-        icon={<ImageIcon size={18} style={{ color: 'var(--cyber-cyan)' }} />}
-        maxHeight="82vh"
-        contentStyle={{ padding: '8px 16px 16px 16px', overflow: 'hidden' }}
-      >
-        <div className="picker-search-bar" style={{ position: 'relative', marginBottom: '12px' }}>
-              <Search className="search-icon" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: 'var(--text-muted)' }} />
-              <input
-                type="text"
-                placeholder={`Search ${openSourceTemplates.length}+ meme templates...`}
-                value={imagePickerSearch}
-                onChange={(e) => setImagePickerSearch(e.target.value)}
-                className="search-input"
-                style={{ paddingLeft: '38px', paddingRight: imagePickerSearch ? '38px' : '14px', height: '42px', width: '100%', boxSizing: 'border-box', borderRadius: '24px' }}
-              />
-              {imagePickerSearch && (
-                <button
-                  onClick={() => setImagePickerSearch('')}
-                  style={{
-                    position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)',
-                    background: 'rgba(255,255,255,0.12)', border: 'none', borderRadius: '50%',
-                    width: '22px', height: '22px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    color: 'var(--text-muted)', cursor: 'pointer'
-                  }}
-                >
-                  <X className="icon-xs" style={{ width: '13px', height: '13px' }} />
-                </button>
-              )}
-            </div>
+        templates={openSourceTemplates}
+        onSelectTemplate={(tmpl) => {
+          if (imagePickerTarget?.slot !== undefined) {
+            const nextImages = [...slotImages];
+            nextImages[imagePickerTarget.slot] = tmpl.imageUrl;
+            setSlotImages(nextImages);
 
-            {/* Category Pills - Horizontal scroll only */}
-            <div 
-              onWheel={(e) => {
-                if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
-                  e.currentTarget.scrollLeft += e.deltaY;
-                }
-              }}
-              style={{
-                display: 'flex',
-                flexWrap: 'nowrap',
-                alignItems: 'center',
-                gap: '8px',
-                padding: '2px 4px 12px 4px',
-                overflowX: 'auto',
-                overflowY: 'hidden',
-                flexShrink: 0,
-                scrollbarWidth: 'none',
-                msOverflowStyle: 'none',
-                WebkitOverflowScrolling: 'touch',
-                borderBottom: '1px solid var(--glass-border)',
-                marginBottom: '10px'
-              }}
-            >
-              {CATEGORIES.map((cat) => {
-                const isActive = imagePickerCategory === cat.id && !imagePickerSearch;
-                return (
-                  <button
-                    key={cat.id}
-                    onClick={() => {
-                      setImagePickerCategory(cat.id);
-                      setImagePickerSearch('');
-                    }}
-                    style={{
-                      padding: '6px 14px',
-                      borderRadius: '20px',
-                      border: isActive ? '1px solid var(--primary-accent)' : '1px solid var(--glass-border)',
-                      background: isActive ? 'var(--primary-gradient)' : 'var(--glass-bg)',
-                      color: isActive ? '#ffffff' : 'var(--text-muted)',
-                      fontSize: '0.78rem',
-                      fontWeight: 600,
-                      boxShadow: isActive ? '0 2px 8px rgba(139, 92, 246, 0.3)' : 'none',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                      whiteSpace: 'nowrap',
-                      flexShrink: 0,
-                      transition: 'all 0.15s ease'
-                    }}
-                  >
-                    <span>{cat.label}</span>
-                  </button>
-                );
-              })}
-            </div>
+            const nextTransforms = [...slotTransforms];
+            nextTransforms[imagePickerTarget.slot] = { offsetX: 0, offsetY: 0, scale: 1.5 };
+            setSlotTransforms(nextTransforms);
+          } else {
+            handleAddImageLayer(tmpl.imageUrl);
+          }
+          setImagePickerTarget(null);
+        }}
+      />
 
-            <div 
-              className="template-picker-mini" 
-              style={{ 
-                flex: 1, 
-                minHeight: 0, 
-                overflowY: 'auto', 
-                overflowX: 'hidden', 
-                display: 'grid', 
-                gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', 
-                gridAutoRows: 'max-content',
-                alignContent: 'start',
-                gap: '12px', 
-                padding: '8px 4px 16px 4px',
-                boxSizing: 'border-box',
-                overscrollBehavior: 'contain'
-              }}
-            >
-              {filteredImageTemplates.length > 0 ? (
-                filteredImageTemplates.map((tmpl) => (
-                  <div
-                    key={tmpl.id}
-                    className="template-card glass-card hover-lift"
-                    style={{
-                      minWidth: 0,
-                      width: '100%',
-                      height: 'auto',
-                      minHeight: '165px',
-                      padding: 0,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      borderRadius: '12px',
-                      overflow: 'hidden',
-                      background: 'var(--bg-surface-1)',
-                      border: '1px solid var(--glass-border)',
-                      cursor: 'pointer',
-                      boxSizing: 'border-box'
-                    }}
-                    onClick={() => {
-                      if (pickingTemplateRef.current) return;
-                      pickingTemplateRef.current = true;
-                      setTimeout(() => { pickingTemplateRef.current = false; }, 400);
-
-                      if (imagePickerTarget?.slot !== undefined) {
-                        const nextImages = [...slotImages];
-                        nextImages[imagePickerTarget.slot] = tmpl.imageUrl;
-                        setSlotImages(nextImages);
-
-                        const nextTransforms = [...slotTransforms];
-                        nextTransforms[imagePickerTarget.slot] = { offsetX: 0, offsetY: 0, scale: 1.5 };
-                        setSlotTransforms(nextTransforms);
-                      } else {
-                        handleAddImageLayer(tmpl.imageUrl);
-                      }
-                      setImagePickerTarget(null);
-                      setImagePickerSearch('');
-                    }}
-                  >
-                    <div
-                      className="template-image-wrapper"
-                      style={{
-                        width: '100%',
-                        aspectRatio: '1 / 1',
-                        height: '130px',
-                        minHeight: '120px',
-                        position: 'relative',
-                        overflow: 'hidden',
-                        background: 'rgba(0, 0, 0, 0.4)',
-                        flexShrink: 0
-                      }}
-                    >
-                      <img
-                        src={tmpl.imageUrl}
-                        alt={tmpl.name}
-                        loading="lazy"
-                        style={{
-                          width: '100%',
-                          height: '100%',
-                          minHeight: '120px',
-                          objectFit: 'cover',
-                          display: 'block'
-                        }}
-                      />
-                    </div>
-                    <div className="template-info" style={{ padding: '6px 8px', minHeight: '38px', height: '38px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxSizing: 'border-box' }}>
-                      <span style={{ fontSize: '0.78rem', fontWeight: 600, textAlign: 'center', display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: 'var(--text-main)', width: '100%' }}>{tmpl.name}</span>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div style={{ textAlign: 'center', padding: '30px', color: 'var(--text-muted)' }}>
-                  <ImageIcon className="icon-lg" style={{ opacity: 0.4, marginBottom: '8px' }} />
-                  <p>No matching templates found for "{imagePickerSearch}"</p>
-                </div>
-              )}
-            </div>
-      </BottomSheet>
 
       {/* AI Meme Caption Generator Modal */}
       <AiCaptionModal

@@ -1,26 +1,33 @@
+import { dataURLToBlob } from './galleryStore';
+
 export const downloadImageHelper = async (dataUrl, filename = 'meme.png') => {
   try {
-    // 1. Convert base64 dataURI / canvas data to Blob
-    const response = await fetch(dataUrl);
-    const blob = await response.blob();
+    let blob;
+    if (typeof dataUrl === 'string' && dataUrl.startsWith('data:')) {
+      blob = dataURLToBlob(dataUrl);
+    } else {
+      const response = await fetch(dataUrl);
+      blob = await response.blob();
+    }
     const blobUrl = URL.createObjectURL(blob);
 
-    // 2. Mobile Native Web Share API (iOS Safari / Android Chrome)
-    const file = new File([blob], filename, { type: 'image/png' });
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    // 1. Mobile Native Web Share API (iOS Safari / Android Chrome)
+    const file = new File([blob], filename, { type: blob.type || 'image/png' });
+    if (typeof navigator !== 'undefined' && navigator.canShare && navigator.canShare({ files: [file] })) {
       try {
         await navigator.share({
           files: [file],
           title: 'Meme Creator',
           text: 'Created with Meme Creator Studio'
         });
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
         return;
       } catch (err) {
         if (err.name !== 'AbortError') console.log('Share sheet dismissed, falling back to download link');
       }
     }
 
-    // 3. Desktop / Mobile Blob Anchor Download
+    // 2. Desktop / Mobile Blob Anchor Download
     const link = document.createElement('a');
     link.href = blobUrl;
     link.download = filename;
@@ -31,20 +38,10 @@ export const downloadImageHelper = async (dataUrl, filename = 'meme.png') => {
 
     setTimeout(() => {
       URL.revokeObjectURL(blobUrl);
-    }, 3000);
+    }, 60000);
+    window.addEventListener('pagehide', () => URL.revokeObjectURL(blobUrl), { once: true });
   } catch (error) {
-    console.error('Download helper error, attempting direct open fallback', error);
-    // 4. Mobile Safari Fallback: Open image in new window/tab for tap & hold save
-    try {
-      const w = window.open('', '_blank');
-      if (w) {
-        w.document.write(`<img src="${dataUrl}" style="max-width:100%;height:auto;display:block;margin:auto;" />`);
-      } else {
-        window.location.href = dataUrl;
-      }
-    } catch {
-      window.location.href = dataUrl;
-    }
+    console.error('Download helper error:', error);
   }
 };
 
@@ -61,6 +58,7 @@ export const downloadImageHelper = async (dataUrl, filename = 'meme.png') => {
  * @returns {Promise<void>}
  */
 export const recordCanvasAsVideo = (canvas, baseFilename = 'meme-video', durationMs = 6000, onProgress, mediaElements = [], returnUrlOnly = false) => {
+  const DEV = import.meta.env?.DEV;
   return new Promise((resolve, reject) => {
     try {
       const mimeCandidates = [
@@ -75,9 +73,11 @@ export const recordCanvasAsVideo = (canvas, baseFilename = 'meme-video', duratio
       const ext = chosen ? chosen.ext : 'mp4';
       const filename = `${baseFilename}.${ext}`;
 
-      console.log(`[VideoExport] Using mimeType: ${mimeType || 'default'}, file: ${filename}`);
-
-      const canvasStream = canvas.captureStream(30);
+      const canvasStream = canvas.captureStream ? canvas.captureStream(30) : (canvas.mozCaptureStream ? canvas.mozCaptureStream(30) : null);
+      if (!canvasStream) {
+        reject(new Error('Canvas video recording is not supported on this browser or device.'));
+        return;
+      }
       const audioTracks = [];
       
       mediaElements.forEach(el => {
@@ -97,7 +97,7 @@ export const recordCanvasAsVideo = (canvas, baseFilename = 'meme-video', duratio
           ...canvasStream.getVideoTracks(),
           ...audioTracks
         ]);
-        console.log(`[VideoExport] Multiplexed ${audioTracks.length} audio track(s) into recording stream.`);
+        if (DEV) console.log(`[VideoExport] Multiplexed ${audioTracks.length} audio track(s) into recording stream.`);
       }
 
       const recorderOptions = {
@@ -113,19 +113,19 @@ export const recordCanvasAsVideo = (canvas, baseFilename = 'meme-video', duratio
       recorder.ondataavailable = (e) => {
         if (e.data && e.data.size > 0) {
           chunks.push(e.data);
-          console.log(`[VideoExport] Chunk received: ${e.data.size} bytes (total: ${chunks.length})`);
+          if (DEV) console.log(`[VideoExport] Chunk received: ${e.data.size} bytes (total: ${chunks.length})`);
         }
       };
 
       recorder.onstop = async () => {
-        console.log(`[VideoExport] Recording stopped. Total chunks: ${chunks.length}`);
+        if (DEV) console.log(`[VideoExport] Recording stopped. Total chunks: ${chunks.length}`);
         if (chunks.length === 0) {
           reject(new Error('No video data was captured. Make sure the canvas is visible and rendering.'));
           return;
         }
 
         const blob = new Blob(chunks, { type: mimeType });
-        console.log(`[VideoExport] Blob size: ${blob.size} bytes`);
+        if (DEV) console.log(`[VideoExport] Blob size: ${blob.size} bytes`);
 
         if (blob.size < 1000) {
           reject(new Error('Video file is too small — the canvas may not have rendered any frames.'));
@@ -139,31 +139,23 @@ export const recordCanvasAsVideo = (canvas, baseFilename = 'meme-video', duratio
           return;
         }
 
-        const win = window.open('', '_blank');
-        if (win) {
-          win.document.write(`
-            <!DOCTYPE html>
-            <html>
-            <head>
-              <title>Meme Video — Save to Device</title>
-              <style>
-                body { background: #000000; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; font-family: sans-serif; color: #fff; gap: 16px; }
-                video { max-width: 90vw; max-height: 70vh; border-radius: 12px; box-shadow: 0 16px 48px rgba(0,0,0,0.6); }
-                a { background: #ffffff; color: #000000; padding: 12px 28px; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 1rem; }
-                p { color: rgba(255,255,255,0.6); font-size: 0.85rem; }
-              </style>
-            </head>
-            <body>
-              <h2 style="margin:0">🎬 Your Meme Video</h2>
-              <video src="${blobUrl}" controls autoplay loop></video>
-              <a href="${blobUrl}" download="${filename}">⬇ Download Video</a>
-              <p>Tap and hold the video on mobile to save it to your device.</p>
-            </body>
-            </html>
-          `);
-          win.document.close();
+        const videoFile = new File([blob], filename, { type: mimeType || 'video/mp4' });
+        if (typeof navigator !== 'undefined' && navigator.canShare && navigator.canShare({ files: [videoFile] })) {
+          navigator.share({
+            files: [videoFile],
+            title: 'Meme Video',
+            text: 'Created with Meme Creator Studio'
+          }).catch((err) => {
+            if (err.name !== 'AbortError') console.log('Video share dismissed, triggering anchor download');
+            const link = document.createElement('a');
+            link.href = blobUrl;
+            link.download = filename;
+            link.style.display = 'none';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+          });
         } else {
-          // Fallback: direct anchor download
           const link = document.createElement('a');
           link.href = blobUrl;
           link.download = filename;
@@ -174,7 +166,8 @@ export const recordCanvasAsVideo = (canvas, baseFilename = 'meme-video', duratio
         }
 
         setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
-        resolve();
+        window.addEventListener('pagehide', () => URL.revokeObjectURL(blobUrl), { once: true });
+        resolve(blobUrl);
       };
 
       recorder.onerror = (e) => {
@@ -184,7 +177,7 @@ export const recordCanvasAsVideo = (canvas, baseFilename = 'meme-video', duratio
 
       // Start recording — collect data every 200ms for reliable chunks
       recorder.start(200);
-      console.log(`[VideoExport] Recording started for ${durationMs}ms`);
+      if (DEV) console.log(`[VideoExport] Recording started for ${durationMs}ms`);
 
       // Progress ticker + stop after duration
       const startTime = Date.now();

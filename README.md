@@ -1,16 +1,19 @@
-# React + Vite
+# Meme Creator Studio
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Browser-first meme studio: templates, custom multi-panel builder, Konva canvas editor, FFmpeg video export, local gallery. PWA + Capacitor wrapper.
 
-Currently, two official plugins are available:
+## Run
+- `npm install`
+- `npm run dev` (Vite, default `http://localhost:5173`)
+- `npm run build` / `npm run preview`
+- `npm run lint` (oxlint)
+- Deploy: `npm run deploy` (`gh-pages -d dist`)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Env (.env, see .env.example)
+- `VITE_GIPHY_API_KEY=` optional. Without it, GIF search shows a disabled state and video templates fall back to local only. No hardcoded keys are shipped.
 
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+## Notes
+- Gallery + favorites + watermark live in `localStorage` (5MB quota — keep exports small).
+- AI captions: user supplies their own Gemini key in-app; otherwise curated fallback is used.
+- Heavy models load at runtime: MediaPipe (CDN), FFmpeg WASM, `@imgly/background-removal`.
+- Optional local face-swap: `face_swap_server.py` on `:5174` (Vite proxies `/api/face-swap`). Requires `insightface` + `inswapper_128.onnx`.
