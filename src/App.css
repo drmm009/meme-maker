@@ -764,12 +764,11 @@ body.modal-open {
     border-top: none !important;
     border-left: none !important;
     border-right: none !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
-    background: rgba(18, 20, 29, 0.82) !important;
-    background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0) 100%) !important;
-    -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
-    backdrop-filter: blur(24px) saturate(180%) !important;
-    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5) !important;
+    border-bottom: 1px solid var(--glass-border) !important;
+    background: var(--bg-surface-1) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    backdrop-filter: blur(20px) !important;
+    box-shadow: var(--shadow-sm) !important;
     position: relative !important;
     z-index: 500 !important;
   }
@@ -806,20 +805,19 @@ body.modal-open {
     border-left: none !important;
     border-right: none !important;
     border-bottom: none !important;
-    border-top: 1px solid rgba(255, 255, 255, 0.12) !important;
-    border-radius: 20px 20px 0 0 !important;
+    border-top: 1px solid var(--glass-border) !important;
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0 !important;
     box-sizing: border-box !important;
-    padding: 12px 14px 18px 14px !important;
+    padding: 12px 14px calc(14px + env(safe-area-inset-bottom, 0px)) 14px !important;
     flex: 0 0 auto !important;
     min-height: 54px !important;
     max-height: 60% !important;
     height: var(--dock-height, 38vh) !important;
     overflow: hidden !important;
-    background: rgba(18, 20, 29, 0.88) !important;
-    background-image: linear-gradient(0deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0) 100%) !important;
-    -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
-    backdrop-filter: blur(24px) saturate(180%) !important;
-    box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.5) !important;
+    background: var(--bg-surface-1) !important;
+    -webkit-backdrop-filter: blur(24px) !important;
+    backdrop-filter: blur(24px) !important;
+    box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.4) !important;
     display: flex !important;
     flex-direction: column !important;
     transition: height 0.38s cubic-bezier(0.16, 1, 0.3, 1),
@@ -837,10 +835,9 @@ body.modal-open {
     border-left: none !important;
     border-right: none !important;
     border-bottom: none !important;
-    border-top: 1px solid rgba(0, 0, 0, 0.08) !important;
-    background: rgba(255, 255, 255, 0.92) !important;
-    background-image: linear-gradient(0deg, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0.3) 100%) !important;
-    border-radius: 20px 20px 0 0 !important;
+    border-top: 1px solid var(--glass-border) !important;
+    background: var(--bg-surface-1) !important;
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0 !important;
     box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06) !important;
   }
   .tab-buttons {
@@ -904,12 +901,11 @@ body.modal-open {
     height: 54px !important;
     min-height: 54px !important;
     padding: 0 8px !important;
-    background: rgba(18, 20, 29, 0.88) !important;
-    background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0) 100%) !important;
-    -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
-    backdrop-filter: blur(24px) saturate(180%) !important;
-    border: 1px solid rgba(255, 255, 255, 0.14) !important;
-    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 94, 54, 0.15) !important;
+    background: var(--bg-surface-2) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    backdrop-filter: blur(20px) !important;
+    border: 1px solid var(--glass-border) !important;
+    box-shadow: var(--shadow-floating) !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
@@ -962,10 +958,9 @@ body.modal-open {
   }
   
   [data-theme='light'] .editor-sidebar.folded {
-    border: 1px solid rgba(0, 0, 0, 0.1) !important;
-    background: rgba(255, 255, 255, 0.92) !important;
-    background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0.4) 100%) !important;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08) !important;
+    border: 1px solid var(--glass-border) !important;
+    background: var(--bg-surface-1) !important;
+    box-shadow: var(--shadow-floating) !important;
   }
   
   .meme-editor-container:has(.editor-sidebar.folded) .editor-main {

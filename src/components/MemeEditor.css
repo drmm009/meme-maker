@@ -7,13 +7,13 @@
 .editor-topbar {
   position: relative;
   z-index: 500;
-  padding: 6px 10px;
-  background: rgba(18, 20, 29, 0.82) !important;
-  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0) 100%) !important;
-  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
-  backdrop-filter: blur(24px) saturate(180%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.12) !important;
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5) !important;
+  padding: calc(8px + env(safe-area-inset-top, 0px)) 14px 8px 14px !important;
+  background: var(--bg-surface-1) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  backdrop-filter: blur(20px) !important;
+  border: 1px solid var(--glass-border) !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow: var(--shadow-sm) !important;
 }
 
 .editor-workspace {
@@ -47,18 +47,18 @@
   display: flex;
   flex-direction: column;
   position: relative;
-  border-radius: 20px;
+  border-radius: var(--radius-lg);
   overflow: hidden;
-  background-color: rgba(14, 17, 26, 0.78);
+  background-color: var(--bg-surface-1);
   background-image: 
-    linear-gradient(to right, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
   background-size: 22px 22px;
   background-position: center center;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.06);
-  backdrop-filter: blur(20px) saturate(160%);
-  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-card);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
   box-sizing: border-box;
 }
@@ -217,19 +217,20 @@
   z-index: 0;
 }
 .tab-buttons {
-  border-radius: 24px;
-  background: rgba(18, 18, 22, 0.9);
-  border: none;
-  gap: 8px;
-  margin-bottom: 18px;
-  padding: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--bg-surface-2);
+  border: 1px solid var(--glass-border);
+  gap: 6px;
+  margin-bottom: 14px;
+  padding: 4px;
   display: flex;
-  overflow: visible;
+  overflow-x: auto;
+  scrollbar-width: none;
   justify-content: flex-start !important;
   white-space: nowrap;
   position: relative;
   z-index: 1;
-  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.4);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 .tab-buttons::-webkit-scrollbar {
   display: none;
@@ -237,32 +238,31 @@
 .tab-btn {
   color: var(--text-muted);
   cursor: pointer;
-  background: rgba(255, 255, 255, 0.16);
+  background: transparent;
   border: none;
-  border-radius: 20px;
+  border-radius: var(--radius-pill);
   flex: 1 0 auto;
   justify-content: center;
   align-items: center;
-  gap: 8px;
-  padding: 10px 16px;
-  font-size: 0.78rem;
+  gap: 6px;
+  padding: 8px 14px;
+  min-height: 38px;
+  font-size: 0.8rem;
   font-weight: 700;
   display: flex;
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  letter-spacing: 0.02em;
 }
 .tab-btn:hover {
-  color: #fff;
-  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-main);
+  background: var(--bg-surface-3);
 }
 .tab-btn.active {
   background: var(--primary-gradient) !important;
-  border-color: transparent !important; box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.45);
-  
+  border-color: transparent !important;
   color: #ffffff !important;
   font-weight: 800;
-  
+  box-shadow: 0 4px 12px var(--primary-glow);
   transform: translateY(-1px);
 }
 .tab-content {

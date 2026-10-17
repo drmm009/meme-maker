@@ -3733,6 +3733,9 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
   useEffect(() => {
     const handleGlobalMove = (e) => {
       if (isDragging.current && handlePointerMoveRef.current) {
+        if (e.cancelable && e.type === 'touchmove') {
+          e.preventDefault();
+        }
         handlePointerMoveRef.current(e);
       }
     };
