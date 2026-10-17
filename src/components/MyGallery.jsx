@@ -68,9 +68,12 @@ export default function MyGallery({ savedMemes, galleryReady, onDeleteMeme, onSe
   return (
     <div className="my-gallery animate-fade-in">
       <div className="gallery-header" style={{ marginBottom: '24px', textAlign: 'center' }}>
-        <h2 style={{ margin: 0, fontSize: '1.6rem', fontWeight: 700, background: 'linear-gradient(135deg, #ffffff 30%, #a855f7 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', display: 'inline-block' }}>
+        <h2 className="gallery-title">
           My Saved Memes
         </h2>
+        <p className="gallery-subtitle">
+          Your creative vault — safely stored on device in IndexedDB
+        </p>
       </div>
 
       {galleryReady === false ? (
@@ -106,43 +109,31 @@ export default function MyGallery({ savedMemes, galleryReady, onDeleteMeme, onSe
                   </span>
                 </div>
                 <button
-                  style={{
-                    background: 'rgba(239, 68, 68, 0.85)',
-                    border: '1px solid rgba(239, 68, 68, 1)',
-                    color: '#ffffff',
-                    borderRadius: '8px',
-                    width: '32px',
-                    height: '32px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    flexShrink: 0
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'rgba(239, 68, 68, 1)';
-                    e.currentTarget.style.boxShadow = '0 0 10px rgba(239, 68, 68, 0.4)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'rgba(239, 68, 68, 0.85)';
-                    e.currentTarget.style.boxShadow = 'none';
-                  }}
+                  className="gallery-delete-btn"
                   onClick={(e) => handleDelete(meme.id, e)}
                   title="Delete Meme"
                 >
-                  <Trash2 className="icon-xs" />
+                  <Trash2 size={14} />
                 </button>
               </div>
             </div>
           ))}
         </div>
       ) : (
-        <div className="empty-state glass-card" style={{ padding: '48px 24px', textAlign: 'center' }}>
-          <h3 style={{ fontSize: '1.25rem', marginBottom: '8px' }}>No Saved Memes Yet</h3>
-          <p style={{ color: 'var(--text-muted)', maxWidth: '360px', margin: '0 auto' }}>
-            Create a new meme from templates or custom layouts and hit "Save"!
+        <div className="empty-state glass-card" style={{ padding: '52px 24px', textAlign: 'center' }}>
+          <div className="empty-icon-wrap" style={{ margin: '0 auto 16px', display: 'flex', justifyContent: 'center' }}>
+            <Sparkles className="empty-icon text-cyan" />
+          </div>
+          <h3 style={{ fontSize: '1.3rem', fontWeight: 800, marginBottom: '8px', color: 'var(--text-main)' }}>No Saved Memes Yet</h3>
+          <p style={{ color: 'var(--text-muted)', maxWidth: '380px', margin: '0 auto 20px', lineHeight: 1.5 }}>
+            Pick any trending template or design a multi-panel layout, customize it, and hit Save!
           </p>
+          <button
+            className="btn btn-primary"
+            onClick={() => onSelectMeme && onSelectMeme(null)}
+          >
+            <Sparkles size={16} /> Explore Templates
+          </button>
         </div>
       )}
 
@@ -167,47 +158,26 @@ export default function MyGallery({ savedMemes, galleryReady, onDeleteMeme, onSe
                   alt={selectedMemeForView.name}
                   decoding="async"
                   className="export-preview-img margin-bottom"
-                  style={{ maxHeight: '52vh', width: 'auto', margin: '0 auto 14px auto', display: 'block' }}
+                  style={{ maxHeight: '52vh', width: 'auto', margin: '0 auto 16px auto', display: 'block', borderRadius: '16px' }}
                 />
 
-                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '16px', flexWrap: 'wrap', marginTop: '12px' }}>
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '12px', flexWrap: 'wrap', marginTop: '16px' }}>
                   <button
-                    className="btn btn-xs btn-primary shadow-glow"
+                    className="btn btn-primary"
                     onClick={(e) => handleEdit(selectedMemeForView, e)}
                   >
-                    <Edit3 className="icon-xs" /> Edit
+                    <Edit3 className="icon-xs" /> Re-Edit
                   </button>
 
                   <button
-                    className="btn btn-xs btn-secondary"
+                    className="btn btn-secondary"
                     onClick={(e) => handleDownload(selectedMemeForView, e)}
                   >
                     <Download className="icon-xs" /> Download
                   </button>
 
                   <button
-                    style={{
-                      background: 'rgba(239, 68, 68, 0.85)',
-                      border: '1px solid rgba(239, 68, 68, 1)',
-                      color: '#ffffff',
-                      borderRadius: '8px',
-                      padding: '6px 14px',
-                      fontWeight: 600,
-                      fontSize: '0.85rem',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = 'rgba(239, 68, 68, 1)';
-                      e.currentTarget.style.boxShadow = '0 0 12px rgba(239, 68, 68, 0.5)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = 'rgba(239, 68, 68, 0.85)';
-                      e.currentTarget.style.boxShadow = 'none';
-                    }}
+                    className="btn btn-danger-pill"
                     onClick={(e) => handleDelete(selectedMemeForView.id, e)}
                   >
                     <Trash2 className="icon-xs" /> Delete

@@ -148,10 +148,10 @@ h1, h2, h3, h4, h5, h6, .display-font {
 }
 [data-theme='light'] .btn-primary {
   border-radius: 999px;
-  box-shadow: 0 4px 20px rgba(124, 92, 252, 0.3);
+  box-shadow: 0 4px 20px rgba(255, 94, 54, 0.3);
 }
 [data-theme='light'] .btn-primary:hover {
-  box-shadow: 0 8px 24px rgba(79, 134, 247, 0.35);
+  box-shadow: 0 8px 24px rgba(255, 59, 96, 0.35);
 }
 [data-theme='light'] .btn-secondary {
   border-radius: 999px;

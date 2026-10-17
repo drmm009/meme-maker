@@ -3,6 +3,7 @@ import {
   PRESET_PHRASES,
   BUBBLE_LAYOUT_OPTIONS,
   COLOR_SWATCHES,
+  DRAW_COLORS,
   getNonOverlappingPosition,
   isColorDark,
 } from './captionLayout';
@@ -12,6 +13,8 @@ describe('captionLayout constants', () => {
     expect(PRESET_PHRASES.length).toBeGreaterThan(0);
     expect(BUBBLE_LAYOUT_OPTIONS.length).toBeGreaterThan(0);
     expect(COLOR_SWATCHES).toContain('#ffffff');
+    expect(DRAW_COLORS).toEqual(['#ffffff', '#ff2a5f', '#ffe600', '#00f0ff', '#000000']);
+    expect(DRAW_COLORS.length).toBe(5);
   });
 });
 

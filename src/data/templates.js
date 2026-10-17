@@ -9,7 +9,7 @@ export const MEME_TEMPLATES = [
     "rawImageUrl": "./images/demotivational-inner.svg",
     "width": 1000,
     "height": 1000,
-    "trendingScore": 120,
+    "trendingScore": 95,
     "aspectRatio": "1:1",
     "canvasBgColor": "#000000",
     "demotivational": {
@@ -101,27 +101,17 @@ export const MEME_TEMPLATES = [
     "trendingScore": 100
   },
   {
-    "id": "181913649",
-    "name": "Drake Hotline Bling",
+    "id": "drake-approving",
+    "name": "Drake Approving",
     "category": "popular",
     "tag": "free",
-    "imageUrl": "https://i.imgflip.com/30b1gx.jpg",
+    "imageUrl": "./images/drake-pointing.jpg",
+    "fallbackUrl": "https://i.imgflip.com/30b1gx.jpg",
     "defaultCaptions": [
       {
-        "text": "TEXT 1",
+        "text": "CREATING WITH MEME STUDIO",
         "x": 0.5,
-        "y": 0.1,
-        "width": 0.8,
-        "height": 0.2,
-        "fontSize": 45,
-        "color": "#ffffff",
-        "stroke": "#000000",
-        "align": "center"
-      },
-      {
-        "text": "TEXT 2",
-        "x": 0.5,
-        "y": 0.8,
+        "y": 0.82,
         "width": 0.8,
         "height": 0.2,
         "fontSize": 45,
@@ -130,9 +120,33 @@ export const MEME_TEMPLATES = [
         "align": "center"
       }
     ],
-    "width": 1200,
-    "height": 1200,
-    "trendingScore": 100
+    "width": 800,
+    "height": 500,
+    "trendingScore": 138
+  },
+  {
+    "id": "181913649",
+    "name": "Drake Hotline Bling",
+    "category": "popular",
+    "tag": "free",
+    "imageUrl": "./images/drake-smile.jpg",
+    "fallbackUrl": "https://i.imgflip.com/30b1gx.jpg",
+    "defaultCaptions": [
+      {
+        "text": "WHEN THE DESIGN IS SPOT ON",
+        "x": 0.5,
+        "y": 0.82,
+        "width": 0.8,
+        "height": 0.2,
+        "fontSize": 45,
+        "color": "#ffffff",
+        "stroke": "#000000",
+        "align": "center"
+      }
+    ],
+    "width": 800,
+    "height": 530,
+    "trendingScore": 96
   },
   {
     "id": "87743020",
@@ -176,8 +190,8 @@ export const MEME_TEMPLATES = [
       }
     ],
     "width": 600,
-    "height": 908,
-    "trendingScore": 100
+    "height": 880,
+    "trendingScore": 134
   },
   {
     "id": "112126428",
@@ -187,10 +201,10 @@ export const MEME_TEMPLATES = [
     "imageUrl": "https://i.imgflip.com/1ur9b0.jpg",
     "defaultCaptions": [
       {
-        "text": "TEXT 1",
-        "x": 0.5,
-        "y": 0.1,
-        "width": 0.8,
+        "text": "NEW SHINY TECH STACK",
+        "x": 0.2,
+        "y": 0.7,
+        "width": 0.3,
         "height": 0.2,
         "fontSize": 45,
         "color": "#ffffff",
@@ -198,10 +212,10 @@ export const MEME_TEMPLATES = [
         "align": "center"
       },
       {
-        "text": "TEXT 2",
-        "x": 0.5,
-        "y": 0.35,
-        "width": 0.8,
+        "text": "DEVELOPER",
+        "x": 0.55,
+        "y": 0.65,
+        "width": 0.25,
         "height": 0.2,
         "fontSize": 45,
         "color": "#ffffff",
@@ -209,10 +223,10 @@ export const MEME_TEMPLATES = [
         "align": "center"
       },
       {
-        "text": "TEXT 3",
-        "x": 0.5,
-        "y": 0.5,
-        "width": 0.8,
+        "text": "CURRENT STABLE APP",
+        "x": 0.82,
+        "y": 0.7,
+        "width": 0.3,
         "height": 0.2,
         "fontSize": 45,
         "color": "#ffffff",
@@ -222,7 +236,7 @@ export const MEME_TEMPLATES = [
     ],
     "width": 1200,
     "height": 800,
-    "trendingScore": 100
+    "trendingScore": 140
   },
   {
     "id": "222403160",
@@ -3069,7 +3083,7 @@ export const MEME_TEMPLATES = [
     ],
     width: 650,
     height: 820,
-    trendingScore: 99
+    trendingScore: 132
   },
   {
     id: 'srk-darr-hakla',
@@ -3108,7 +3122,7 @@ export const MEME_TEMPLATES = [
     ],
     width: 1024,
     height: 664,
-    trendingScore: 98
+    trendingScore: 130
   },
   {
     id: 'akshay-lekin-ye-sala',

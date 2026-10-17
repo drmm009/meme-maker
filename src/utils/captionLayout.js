@@ -24,6 +24,9 @@ export const BUBBLE_LAYOUT_OPTIONS = [
 
 export const COLOR_SWATCHES = ['#ffffff', '#ffff00', '#a855f7', '#ff0055', '#00ff66', '#000000'];
 
+// Draw tool essential palette: 5 core high-impact colors (green & purple removed for clean mobile spacing)
+export const DRAW_COLORS = ['#ffffff', '#ff2a5f', '#ffe600', '#00f0ff', '#000000'];
+
 // Calculates a default canvas position (normalized 0..1) that avoids overlapping existing elements
 export const getNonOverlappingPosition = (type, captions = [], stickers = [], imageLayers = []) => {
   // Estimated normalized width and height per element type

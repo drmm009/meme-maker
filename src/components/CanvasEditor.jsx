@@ -516,7 +516,37 @@ const tweetHeartPath = new Path2D("M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 1
 const tweetBookmarkPath = new Path2D("M19 21l-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z");
 const tweetSharePath = new Path2D("M18 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM6 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM18 22a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98");
 
-const parseTweetMetrics = (metricsStr) => {
+export const TWEET_TREND_PRESETS = {
+  viral: {
+    label: '#1 Trending',
+    topic: 'Trending in World',
+    metrics: { replies: '14.2K', retweets: '62.8K', likes: '420.5K', views: '18.2M' },
+    text: '💬 14.2K    🔁 62.8K    ❤️ 420.5K    📊 18.2M'
+  },
+  tech: {
+    label: 'Technology',
+    topic: 'Technology · Trending',
+    metrics: { replies: '3.4K', retweets: '12.1K', likes: '88.5K', views: '4.2M' },
+    text: '💬 3.4K    🔁 12.1K    ❤️ 88.5K    📊 4.2M'
+  },
+  meme: {
+    label: 'Memes',
+    topic: 'Memes · Trending',
+    metrics: { replies: '8.9K', retweets: '44.2K', likes: '210.8K', views: '9.7M' },
+    text: '💬 8.9K    🔁 44.2K    ❤️ 210.8K    📊 9.7M'
+  },
+  casual: {
+    label: 'Casual',
+    topic: null,
+    metrics: { replies: '142', retweets: '890', likes: '4.6K', views: '72K' },
+    text: '💬 142    🔁 890    ❤️ 4.6K    📊 72K'
+  }
+};
+
+export const parseTweetMetrics = (metricsStr, trendRank) => {
+  if (trendRank && TWEET_TREND_PRESETS[trendRank]) {
+    return TWEET_TREND_PRESETS[trendRank].metrics;
+  }
   if (!metricsStr) {
     return { replies: '14.2K', retweets: '62.8K', likes: '420.5K', views: '18.2M' };
   }
@@ -533,6 +563,12 @@ const parseTweetMetrics = (metricsStr) => {
   }
   if (metricsStr.includes('142') || metricsStr.includes('Casual')) {
     return { replies: '142', retweets: '890', likes: '4.6K', views: '72K' };
+  }
+  if (metricsStr.includes('8.9K') || metricsStr.includes('Memes')) {
+    return { replies: '8.9K', retweets: '44.2K', likes: '210.8K', views: '9.7M' };
+  }
+  if (metricsStr.includes('3.4K') || metricsStr.includes('Technology')) {
+    return { replies: '3.4K', retweets: '12.1K', likes: '88.5K', views: '4.2M' };
   }
   const matches = metricsStr.match(/[0-9]+(\.[0-9]+)?[KkMmBb]?/g);
   if (matches && matches.length >= 4) {
@@ -596,7 +632,12 @@ const getTweetCardHeight = (ctx, cap, cardW) => {
   const dividerGap = Math.round(16 * scale);
   const metricsH = Math.max(iconSize, metricsFontSize);
 
-  const totalH = Math.round(pad + headerH + Math.round(10 * scale) + bodyH + Math.round(12 * scale) + timeH + dividerGap + metricsH + pad);
+  const trendTopic = cap.tweetTopic !== undefined
+    ? cap.tweetTopic
+    : (cap.tweetTrendRank ? TWEET_TREND_PRESETS[cap.tweetTrendRank]?.topic : (cap.tweetTrendRank === 'casual' ? null : TWEET_TREND_PRESETS.viral.topic));
+  const trendH = trendTopic ? Math.round(18 * scale) : 0;
+
+  const totalH = Math.round(pad + trendH + headerH + Math.round(10 * scale) + bodyH + Math.round(12 * scale) + timeH + dividerGap + metricsH + pad);
   return totalH;
 };
 
@@ -627,7 +668,12 @@ const drawTweetCard = (ctx, cardW, cap) => {
   const text = cap.text || "thinking about deleting the database and moving to the woods";
   const time = cap.tweetTime || '10:42 PM · Oct 8, 2026';
   const isVerified = cap.tweetVerified !== false;
-  const parsedMetrics = parseTweetMetrics(cap.tweetMetrics);
+  const parsedMetrics = parseTweetMetrics(cap.tweetMetrics, cap.tweetTrendRank);
+
+  const trendTopic = cap.tweetTopic !== undefined
+    ? cap.tweetTopic
+    : (cap.tweetTrendRank ? TWEET_TREND_PRESETS[cap.tweetTrendRank]?.topic : (cap.tweetTrendRank === 'casual' ? null : TWEET_TREND_PRESETS.viral.topic));
+  const trendH = trendTopic ? Math.round(18 * scale) : 0;
 
   ctx.font = `normal ${bodyFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
   const wrappedLines = wrapText(ctx, text, cardW - pad * 2);
@@ -643,9 +689,20 @@ const drawTweetCard = (ctx, cardW, cap) => {
   ctx.lineWidth = 1;
   ctx.stroke();
 
+  // Top Trending Topic Tag (if trending)
+  let headerStartY = startY + pad;
+  if (trendTopic) {
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+    ctx.fillStyle = mutedColor;
+    ctx.font = `bold ${Math.round(11 * scale)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+    ctx.fillText(`🔥 ${trendTopic}`, startX + pad, startY + pad);
+    headerStartY += trendH;
+  }
+
   // Avatar circle
   const avX = startX + pad + avatarR;
-  const avY = startY + pad + avatarR;
+  const avY = headerStartY + avatarR;
   ctx.beginPath();
   ctx.arc(avX, avY, avatarR, 0, Math.PI * 2);
   ctx.fillStyle = isDark ? '#0ea5e9' : '#38bdf8';
@@ -662,7 +719,7 @@ const drawTweetCard = (ctx, cardW, cap) => {
   ctx.fillStyle = textColor;
   ctx.font = `bold ${nameFontSize}px -apple-system, BlinkMacSystemFont, sans-serif`;
   const nameX = startX + pad + (avatarR * 2) + Math.round(10 * scale);
-  const nameY = startY + pad + Math.round(2 * scale);
+  const nameY = headerStartY + Math.round(2 * scale);
   ctx.fillText(name, nameX, nameY);
 
   const nameWidth = ctx.measureText(name).width;
@@ -681,11 +738,11 @@ const drawTweetCard = (ctx, cardW, cap) => {
 
   // 𝕏 Logo top-right
   const xLogoX = startX + cardW - pad - xLogoSize;
-  const xLogoY = startY + pad + Math.round(2 * scale);
+  const xLogoY = headerStartY + Math.round(2 * scale);
   drawTweetXLogo(ctx, xLogoX, xLogoY, xLogoSize, isDark ? '#ffffff' : '#0f1419');
 
   // Body text
-  let curY = startY + pad + Math.max(avatarR * 2, Math.round(44 * scale)) + Math.round(10 * scale);
+  let curY = headerStartY + Math.max(avatarR * 2, Math.round(44 * scale)) + Math.round(10 * scale);
   ctx.fillStyle = textColor;
   ctx.font = `normal ${bodyFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
   ctx.textAlign = 'left';
@@ -892,7 +949,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     onAddDrawing,
     isDrawingMode = false,
     drawTool = 'brush',
-    brushColor = '#a855f7',
+    brushColor = '#ff2a5f',
     brushSize = 10,
     canvasHeader,
     onUpdateCanvasHeader,
@@ -1113,8 +1170,9 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     };
   }, [canvasW, imgSrc]);
 
-  // Focus textarea ONLY when explicitly called (not on selection change)
+  // Focus textarea ONLY when explicitly called (not on selection change, never on Tweet Cards)
   const focusTextarea = () => {
+    if (activeCaption?.isTweetCard) return;
     if (editableRef.current) {
       try {
         editableRef.current.focus();
@@ -2892,7 +2950,8 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
       
       if (hitLayer.type === 'caption') {
         const now = Date.now();
-        if (lastTapRef.current.id === hitLayer.id && (now - lastTapRef.current.time) < 350) {
+        const cap = captions.find(c => c.id === hitLayer.id);
+        if (!cap?.isTweetCard && lastTapRef.current.id === hitLayer.id && (now - lastTapRef.current.time) < 350) {
           setEditingCaptionId(hitLayer.id);
           focusTextarea();
         }
@@ -3023,13 +3082,18 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
       // Slot actions are now handled by DOM overlays on the canvas
     }
 
-    // Clean tap on caption: select layer, activate editing mode and open keyboard immediately
+    // Clean tap on caption: select layer, activate editing mode and open keyboard immediately (only for regular text captions, not tweet cards)
     if (wasCleanTap && tappedType === 'caption' && tappedId) {
       if (onSelectLayer) onSelectLayer(tappedId);
-      setEditingCaptionId(tappedId);
       const activeCap = captions.find(c => c.id === tappedId);
-      setEditingCaptionText(activeCap ? activeCap.text : '');
-      focusTextarea();
+      if (!activeCap?.isTweetCard) {
+        setEditingCaptionId(tappedId);
+        setEditingCaptionText(activeCap ? activeCap.text : '');
+        focusTextarea();
+      } else {
+        setEditingCaptionId(null);
+        if (editableRef.current) editableRef.current.blur();
+      }
     }
   };
 
@@ -3706,9 +3770,9 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     }
   }, [liveBgColor, isNativeLayout]);
   
-// Keep focus on active caption whenever selected
+// Keep focus on active caption whenever selected (not for tweet cards)
   useEffect(() => {
-    if (activeCaption && editingCaptionId === activeCaption.id) {
+    if (activeCaption && !activeCaption.isTweetCard && editingCaptionId === activeCaption.id) {
       focusTextarea();
     }
   }, [activeCaption?.id, editingCaptionId]);
@@ -3761,7 +3825,20 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     <div
       ref={wrapperRef}
       className="canvas-interactive-wrapper"
-      style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center', touchAction: 'none', width: '100%', flex: 1, minHeight: 0 }}
+      style={{
+        position: 'relative',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        touchAction: 'none',
+        flex: 'none',
+        width: 'auto',
+        height: 'auto',
+        maxWidth: '100%',
+        maxHeight: '100%',
+        aspectRatio: `${canvasW} / ${totalCanvasH}`,
+        boxSizing: 'border-box'
+      }}
       onMouseDown={handlePointerDown}
       onMouseMove={handlePointerMove}
       onMouseUp={handlePointerEnd}
@@ -3779,17 +3856,17 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
           userSelect: 'none',
           WebkitUserSelect: 'none',
           cursor: isDrawingMode ? 'crosshair' : 'default',
+          width: '100%',
+          height: '100%',
           maxWidth: '100%',
           maxHeight: '100%',
-          width: 'auto',
-          height: 'auto',
           display: 'block',
           objectFit: 'contain'
         }}
       />
 
-      {/* SEAMLESS LIVE CANVAS TEXT EDITOR — EXACTLY AS SAVED VERSION WITH MOBILE TAP FOCUS */}
-      {!isDrawingMode && (
+      {/* SEAMLESS LIVE CANVAS TEXT EDITOR — ONLY FOR REGULAR CAPTIONS, NOT TWEET CARDS */}
+      {!isDrawingMode && activeCaption && !activeCaption.isTweetCard && (
         <textarea
           ref={editableRef}
           className="seamless-live-text-editor"

@@ -26,7 +26,7 @@
   transition: box-shadow 0.2s ease;
 }
 .timeline-item-layer:hover {
-  box-shadow: 0 0 0 2px var(--poster-orange, #f97316);
+  box-shadow: 0 0 0 2px var(--primary-accent);
 }
 
 /* ── Desktop Layout ─────────────────────────── */
@@ -246,7 +246,7 @@
 }
 .vid-export-progress-fill {
   height: 100%;
-  background: var(--poster-orange, #f97316);
+  background: var(--primary-gradient);
   border-radius: 99px;
   transition: width 0.1s linear;
 }

@@ -1,25 +1,43 @@
-@import "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Syne:wght@400;500;600;700;800&family=Montserrat:wght@800;900&family=Oswald:wght@700&family=Comic+Neue:wght@400;700&family=Anton&family=Archivo+Black&display=swap";
+@import "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Montserrat:wght@700;800;900&family=Syne:wght@700;800&family=Space+Mono:wght@700&display=swap";
 
 :root {
-  /* Vibrant Coral Flame Theme (#ff3b60 to #ff5e36) */
-  --primary-accent: #ff5e36; /* Warm Flame Orange for solid icons/text/accents */
-  --primary-accent-end: #ff5e36;
-  --secondary-accent: #ff5e36;
-  --tertiary-accent: #ff5e36;
+  /* ==========================================================================
+     ORIGINAL VIBRANT CORAL FLAME THEME (#ff5e36 / #ff3b60 / #ec4899)
+     ========================================================================== */
+  
+  /* Primary Flame Orange & Pink Accents */
+  --primary-accent: #ff5e36;
+  --primary-accent-end: #ff3b60;
+  --secondary-accent: #ff3b60;
+  --tertiary-accent: #ec4899;
 
+  --primary-gradient: linear-gradient(90deg, #ff5e36 0%, #ec4899 100%);
+  --primary-gradient-hover: linear-gradient(90deg, #ff4c21 0%, #db2777 100%);
+  --btn-blue-grad: linear-gradient(90deg, #ff3b60 0%, #ff5e36 100%);
+  
   --poster-orange: #ff5e36;
   --poster-yellow: #ff9100;
-  --primary-gradient: linear-gradient(90deg, #ff5e36 0%, #ec4899 100%);
-  --btn-blue-grad: linear-gradient(90deg, #ff3b60, #ff5e36);
   --cyber-cyan: #ff5e36;
-  --cyber-pink: #ff5e36;
-  --primary-glow: transparent;
+  --cyber-pink: #ec4899;
+  --emerald-accent: #ff5e36;
+  --amber-accent: #ff9100;
+  --primary-glow: rgba(255, 94, 54, 0.4);
 
+  /* Geometry - Smooth Squircles */
+  --radius-xs: 8px;
+  --radius-sm: 12px;
+  --radius-md: 20px;
+  --radius-lg: 28px;
+  --radius-xl: 36px;
+  --radius-pill: 9999px;
+
+  /* Dark Obsidian Spectrum (Original Default) */
   --bg-dark: #0f131d;
+  --bg-base: #0f131d;
   --bg-gradient:
-    radial-gradient(ellipse 90% 30% at 50% 0%, rgba(255, 255, 255, 0.04) 0%, transparent 60%),
-    radial-gradient(ellipse 110% 65% at 50% -5%, rgba(255, 94, 54, 0.36) 0%, rgba(249, 115, 22, 0.20) 40%, rgba(255, 59, 96, 0.08) 65%, transparent 85%),
-    linear-gradient(180deg, rgba(255, 94, 54, 0.05) 0%, transparent 45%, rgba(15, 19, 29, 0.4) 100%);
+    radial-gradient(ellipse 90% 30% at 50% 0%, rgba(255, 255, 255, 0.05) 0%, transparent 60%),
+    radial-gradient(ellipse 110% 70% at 50% -5%, rgba(255, 94, 54, 0.62) 0%, rgba(249, 115, 22, 0.44) 38%, rgba(255, 59, 96, 0.20) 65%, transparent 85%),
+    linear-gradient(180deg, rgba(255, 94, 54, 0.10) 0%, transparent 45%, rgba(15, 19, 29, 0.4) 100%);
   --bg-surface-1: #16181f;
   --bg-surface-2: #1c1e26;
   --bg-surface-3: #20232e;
@@ -28,39 +46,70 @@
   --text-muted: #8b8f9e;
   --text-tertiary: #565a69;
 
-  --glass-bg: rgba(255, 255, 255, 0.06);
-  --glass-border: rgba(255, 255, 255, 0.14);
-  --glass-border-glow: rgba(255, 59, 96, 0.45);
-  --glass-shadow: 0 20px 48px -12px rgba(0, 0, 0, 0.65);
+  --glass-bg: rgba(22, 24, 31, 0.85);
+  --glass-border: rgba(255, 255, 255, 0.12);
+  --glass-border-glow: rgba(255, 94, 54, 0.45);
+  --glass-shadow: 0 20px 48px -12px rgba(0, 0, 0, 0.7);
+  --shadow-card: 0 16px 36px -8px rgba(0, 0, 0, 0.65);
+  --shadow-float: 0 24px 50px -10px rgba(0, 0, 0, 0.8), 0 0 25px rgba(255, 94, 54, 0.25);
+  --shadow-inner-glow: inset 0 1px 1px 0 rgba(255, 255, 255, 0.12);
 
-  --emerald-accent: #ff5e36;
-  --amber-accent: #ff5e36;
-
-  /* Geometry */
-  --radius-sm: 8px;
-  --radius-md: 1.25rem;
-  --radius-lg: 1.75rem;
-  /* 28px for cards */
-  --radius-pill: 9999px;
+  --timeline-track-bg: #141620;
 }
 
 :root[data-theme='light'] {
   --bg-dark: #f8fafc;
-  --bg-surface-1: rgba(255, 255, 255, 0.65);
-  --bg-surface-2: rgba(255, 255, 255, 0.75);
-  --bg-surface-3: rgba(255, 255, 255, 0.85);
+  --bg-base: #f8fafc;
+  --bg-surface-1: rgba(255, 255, 255, 0.85);
+  --bg-surface-2: rgba(255, 255, 255, 0.92);
+  --bg-surface-3: #ffffff;
   --bg-gradient:
-    radial-gradient(ellipse 80% 50% at 15% -5%, rgba(139, 92, 246, 0.35) 0%, transparent 65%),
-    radial-gradient(ellipse 65% 45% at 85% 10%, rgba(56, 189, 248, 0.3) 0%, transparent 60%),
-    radial-gradient(ellipse 75% 55% at 90% 95%, rgba(236, 72, 153, 0.3) 0%, transparent 65%),
-    radial-gradient(ellipse 65% 50% at 5% 85%, rgba(99, 102, 241, 0.3) 0%, transparent 60%),
-    linear-gradient(135deg, #eef2ff 0%, #f1f5f9 50%, #f8fafc 100%);
-  --text-main: #0f172a;
-  --text-muted: #475569;
-  --glass-bg: rgba(226, 232, 240, 0.55);
-  --glass-border: rgba(255, 255, 255, 0.85);
-  --glass-border-glow: rgba(139, 92, 246, 0.3);
-  --glass-shadow: 0 16px 40px -8px rgba(139, 92, 246, 0.15), 0 4px 12px -2px rgba(15, 23, 42, 0.05), inset 0 1px 2px 0 rgba(255, 255, 255, 0.8);
+    radial-gradient(ellipse 85% 55% at 20% -5%, rgba(255, 94, 54, 0.38) 0%, transparent 65%),
+    radial-gradient(ellipse 70% 50% at 85% 10%, rgba(236, 72, 153, 0.26) 0%, transparent 60%),
+    linear-gradient(135deg, #fff5f2 0%, #fdf2f8 50%, #f8fafc 100%);
+  --text-main: #171310;
+  --text-muted: #6b6259;
+  --text-tertiary: #9ca3af;
+  --glass-bg: rgba(255, 255, 255, 0.85);
+  --glass-border: rgba(0, 0, 0, 0.08);
+  --glass-border-glow: rgba(255, 94, 54, 0.35);
+  --glass-shadow: 0 16px 40px -8px rgba(255, 94, 54, 0.15), 0 4px 12px -2px rgba(15, 23, 42, 0.05);
   --primary-accent: #ff5e36;
   --primary-gradient: linear-gradient(90deg, #ff5e36 0%, #ec4899 100%);
+  --shadow-card: 0 14px 34px -8px rgba(15, 23, 42, 0.06);
+  --shadow-float: 0 24px 50px -10px rgba(255, 94, 54, 0.2);
+  --shadow-inner-glow: inset 0 1px 1px 0 rgba(255, 255, 255, 0.9);
+  --timeline-track-bg: #f1f5f9;
+}
+
+:root[data-theme='dark'] {
+  --bg-dark: #0f131d;
+  --bg-base: #0f131d;
+  --bg-surface-1: #16181f;
+  --bg-surface-2: #1c1e26;
+  --bg-surface-3: #20232e;
+
+  --primary-accent: #ff5e36;
+  --primary-accent-end: #ff3b60;
+  --secondary-accent: #ff3b60;
+  --primary-gradient: linear-gradient(90deg, #ff5e36 0%, #ec4899 100%);
+  --primary-gradient-hover: linear-gradient(90deg, #ff4c21 0%, #db2777 100%);
+  --btn-blue-grad: linear-gradient(90deg, #ff3b60 0%, #ff5e36 100%);
+  --poster-orange: #ff5e36;
+  --cyber-cyan: #ff5e36;
+  --primary-glow: rgba(255, 94, 54, 0.45);
+
+  --text-main: #f5f5f7;
+  --text-muted: #8b8f9e;
+  --text-tertiary: #565a69;
+
+  --glass-bg: rgba(22, 24, 31, 0.85);
+  --glass-border: rgba(255, 255, 255, 0.12);
+  --glass-border-glow: rgba(255, 94, 54, 0.45);
+  --glass-shadow: 0 24px 60px -15px rgba(0, 0, 0, 0.85), 0 0 35px rgba(255, 94, 54, 0.2);
+  --shadow-card: 0 16px 36px -8px rgba(0, 0, 0, 0.7);
+  --shadow-float: 0 30px 60px -10px rgba(0, 0, 0, 0.9), 0 0 30px rgba(255, 94, 54, 0.25);
+  --shadow-inner-glow: inset 0 1px 1px 0 rgba(255, 255, 255, 0.12);
+
+  --timeline-track-bg: #141620;
 }

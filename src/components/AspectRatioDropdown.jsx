@@ -22,7 +22,7 @@ const AspectRatioDropdown = ({ value, onChange, options }) => {
       <button 
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`aspect-ratio-display glass-card ${isOpen ? 'active' : ''}`}
+        className={`aspect-ratio-display ${isOpen ? 'active' : ''}`}
         style={{ 
           cursor: 'pointer', 
           display: 'flex', 
@@ -72,7 +72,7 @@ const AspectRatioDropdown = ({ value, onChange, options }) => {
         <>
           <div style={{ position: 'fixed', inset: 0, zIndex: 99998 }} onClick={() => setIsOpen(false)} />
           <div 
-            className="glass-card aspect-ratio-menu" 
+            className="aspect-ratio-menu" 
             style={{ 
               position: 'absolute', 
               top: 'calc(100% + 8px)', 

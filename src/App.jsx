@@ -9,9 +9,13 @@ const MyGallery = lazy(() => import('./components/MyGallery'));
 const AccountModal = lazy(() => import('./components/AccountModal'));
 const MemeEditor = lazy(() => import('./components/MemeEditor'));
 const VideoEditor = lazy(() => import('./components/video-editor/VideoEditor'));
+const NotificationsModal = lazy(() => import('./components/NotificationsModal'));
+const SocialFeed = lazy(() => import('./components/SocialFeed'));
+const AiCaptionModal = lazy(() => import('./components/AiCaptionModal'));
 import { MEME_TEMPLATES } from './data/templates';
+import { INITIAL_NOTIFICATIONS } from './data/notifications';
 import { idbPutMeme, idbGetAllMemes, idbGetMeme, idbDeleteMeme, dataURLToBlob, createThumbnail, toMetadata } from './utils/galleryStore';
-import { Sparkles, Grid, LayoutGrid, FolderHeart, User } from 'lucide-react';
+import { Sparkles, Grid, LayoutGrid, FolderHeart, User, Sun, Moon, Bell, Plus, Users, Compass } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import './App.css';
 
@@ -20,18 +24,32 @@ function App() {
   const [builderMode, setBuilderMode] = useState('image'); // 'image' | 'video'
   const [selectedTemplate, setSelectedTemplate] = useState(MEME_TEMPLATES[0]);
 
-  // Hardcoded premium aesthetics, removing the color palette and theme toggle feature
+  // Dynamic world-class theme system (Dark default with sunset-orange palette)
+  const [theme, setTheme] = useState(() => {
+    try {
+      return localStorage.getItem('meme_studio_theme') || 'dark';
+    } catch {
+      return 'dark';
+    }
+  });
+
   useEffect(() => {
     try {
-      document.documentElement.setAttribute('data-theme', 'dark');
+      document.documentElement.setAttribute('data-theme', theme);
       document.documentElement.setAttribute('data-palette', 'sunset-orange');
       if (document.body) {
+        document.body.setAttribute('data-theme', theme);
         document.body.setAttribute('data-palette', 'sunset-orange');
       }
+      localStorage.setItem('meme_studio_theme', theme);
     } catch (e) {
-      console.error('Failed to set fixed theme', e);
+      console.error('Failed to set theme', e);
     }
-  }, []);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
+  };
 
   // Remembers the last builder page so the Builder nav button resumes it
   const [lastBuilderView, setLastBuilderView] = useState('custom-builder');
@@ -41,6 +59,29 @@ function App() {
 
   // Modals state
   const [accountModalOpen, setAccountModalOpen] = useState(false);
+  const [notificationsModalOpen, setNotificationsModalOpen] = useState(false);
+  const [aiGeneratorModalOpen, setAiGeneratorModalOpen] = useState(false);
+
+  // Notifications state with persistence
+  const [notifications, setNotifications] = useState(() => {
+    try {
+      const saved = localStorage.getItem('meme_studio_notifications');
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return INITIAL_NOTIFICATIONS;
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('meme_studio_notifications', JSON.stringify(notifications));
+    } catch {}
+  }, [notifications]);
+
+  const unreadNotifsCount = notifications.filter((n) => !n.read).length;
+
+  const handleMarkAllNotificationsRead = () => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+  };
 
   // Mobile & Android gesture / hardware back-button history navigation
   useEffect(() => {
@@ -49,6 +90,14 @@ function App() {
     }
 
     const handlePopState = (event) => {
+      if (notificationsModalOpen) {
+        setNotificationsModalOpen(false);
+        return;
+      }
+      if (aiGeneratorModalOpen) {
+        setAiGeneratorModalOpen(false);
+        return;
+      }
       if (accountModalOpen) {
         setAccountModalOpen(false);
         return;
@@ -59,7 +108,7 @@ function App() {
 
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, [accountModalOpen]);
+  }, [accountModalOpen, notificationsModalOpen, aiGeneratorModalOpen]);
 
   useEffect(() => {
     if (window.history.state?.view !== currentView) {
@@ -234,6 +283,87 @@ function App() {
     }
   };
 
+  const handleOpenAiGenerator = () => {
+    setAiGeneratorModalOpen(true);
+  };
+
+  const handleApplyAiGeneratedMeme = (captionText) => {
+    setAiGeneratorModalOpen(false);
+    const baseTemplate = selectedTemplate || MEME_TEMPLATES[0];
+    setSelectedTemplate({
+      ...baseTemplate,
+      defaultCaptions: [
+        {
+          text: captionText,
+          x: 0.5,
+          y: 0.15,
+          color: '#ffffff',
+          stroke: '#000000',
+          fontSize: 38,
+          align: 'center'
+        }
+      ]
+    });
+    setEditorSessionKey((k) => k + 1);
+    setHasOpenedEditor(true);
+    setCurrentView('editor');
+  };
+
+  const handleNotificationAction = (item) => {
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === item.id ? { ...n, read: true } : n))
+    );
+    setNotificationsModalOpen(false);
+
+    if (item.action?.type === 'template') {
+      const t = MEME_TEMPLATES.find((x) => String(x.id) === String(item.action.templateId)) || MEME_TEMPLATES[0];
+      handleSelectTemplate(t);
+    } else if (item.action?.type === 'custom-builder') {
+      handleCreateCustom('image');
+    } else if (item.action?.type === 'gallery') {
+      setCurrentView('gallery');
+    } else if (item.action?.type === 'ai-prompt') {
+      handleOpenAiGenerator();
+    }
+  };
+
+  const handleRemixCommunityMeme = (post) => {
+    const matchedTemplate = MEME_TEMPLATES.find((t) => String(t.id) === String(post.templateId));
+    if (matchedTemplate) {
+      setSelectedTemplate({
+        ...matchedTemplate,
+        defaultCaptions: post.captions?.map((c) => ({
+          text: c.text,
+          x: 0.5,
+          y: c.y,
+          color: '#ffffff',
+          stroke: '#000000',
+          fontSize: 36,
+          align: 'center'
+        })) || matchedTemplate.defaultCaptions
+      });
+    } else {
+      setSelectedTemplate({
+        id: `remix-${post.id}-${Date.now()}`,
+        name: `Remix: ${post.title}`,
+        imageUrl: post.imageUrl,
+        category: 'custom',
+        defaultCaptions: post.captions?.map((c) => ({
+          text: c.text,
+          x: 0.5,
+          y: c.y,
+          color: '#ffffff',
+          stroke: '#000000',
+          fontSize: 36,
+          align: 'center'
+        })) || []
+      });
+    }
+    setEditorSessionKey((k) => k + 1);
+    setHasOpenedEditor(true);
+    setCurrentView('editor');
+  };
+
   const handleSaveToGallery = (newMeme) => {
     const baseName = (newMeme.name || 'My Meme').trim();
     setSavedMemes((prev) => {
@@ -349,9 +479,8 @@ function App() {
 
   return (
     <div
-      className="app-root theme-dark palette-sunset-orange"
-      data-theme="dark"
-      data-palette="sunset-orange"
+      className={`app-root theme-${theme}`}
+      data-theme={theme}
     >
       {/* Hardware-accelerated static fixed background for seamless mobile & desktop rendering */}
       <div className="app-static-bg" aria-hidden="true" />
@@ -361,12 +490,37 @@ function App() {
         <header className="app-header glass-card">
           <div className="header-container flex-between">
             <div className="app-brand flex-gap" onClick={() => setCurrentView('templates')}>
-              <motion.div className="brand-logo flex-center" whileHover={{ scale: 1.1, rotate: 10 }}>
-                <Sparkles className="icon-md text-cyan" />
+              <motion.div className="brand-ribbon-logo" whileHover={{ scale: 1.08, rotate: 4 }}>
+                <svg width="34" height="34" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <defs>
+                    <linearGradient id="ribbonGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#ff5e36" />
+                      <stop offset="100%" stopColor="#ec4899" />
+                    </linearGradient>
+                    <linearGradient id="ribbonGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#ec4899" />
+                      <stop offset="100%" stopColor="#8b5cf6" />
+                    </linearGradient>
+                    <linearGradient id="ribbonGrad3" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#ff9100" />
+                      <stop offset="100%" stopColor="#ff5e36" />
+                    </linearGradient>
+                  </defs>
+                  <path d="M20 5L33 12.5V27.5L20 35L7 27.5V12.5L20 5Z" fill="url(#ribbonGrad1)" opacity="0.18" />
+                  <path d="M20 5L33 12.5L26.5 16.25L20 12.5L13.5 16.25L7 12.5L20 5Z" fill="url(#ribbonGrad3)" />
+                  <path d="M7 12.5L13.5 16.25V27.5L7 23.75V12.5Z" fill="url(#ribbonGrad1)" />
+                  <path d="M33 12.5L26.5 16.25V27.5L33 23.75V12.5Z" fill="url(#ribbonGrad2)" />
+                  <path d="M20 12.5L26.5 16.25L20 20L13.5 16.25L20 12.5Z" fill="#ff5e36" />
+                  <path d="M13.5 16.25L20 20V31.25L13.5 27.5V16.25Z" fill="url(#ribbonGrad1)" />
+                  <path d="M26.5 16.25L20 20V31.25L26.5 27.5V16.25Z" fill="url(#ribbonGrad2)" />
+                </svg>
               </motion.div>
-              <div>
-                <h1 className="brand-title">Meme Creator</h1>
-                <span className="brand-tagline">Mobile & Web Studio</span>
+              <div className="brand-text-block">
+                <div className="brand-title-row">
+                  <h1 className="brand-title">MEME</h1>
+                  <span className="brand-pro-badge">PRO</span>
+                </div>
+                <span className="brand-tagline">STUDIO</span>
               </div>
             </div>
 
@@ -376,7 +530,13 @@ function App() {
                 className={`nav-link ${currentView === 'templates' ? 'active' : ''}`}
                 onClick={() => setCurrentView('templates')}
               >
-                <Grid className="icon-xs" /> Templates
+                <Compass className="icon-xs" /> Explore
+              </button>
+              <button
+                className={`nav-link ${currentView === 'social' ? 'active' : ''}`}
+                onClick={() => setCurrentView('social')}
+              >
+                <Users className="icon-xs" /> Social
               </button>
               <button
                 className={`nav-link ${
@@ -390,14 +550,37 @@ function App() {
                 className={`nav-link ${currentView === 'gallery' ? 'active' : ''}`}
                 onClick={() => setCurrentView('gallery')}
               >
-                <FolderHeart className="icon-xs" style={{ color: currentView === 'gallery' ? 'var(--cyber-cyan)' : '#ffffff' }} /> My Memes ({savedMemes.length})
+                <FolderHeart className="icon-xs" style={{ color: currentView === 'gallery' ? 'var(--primary-accent)' : 'inherit' }} /> My Studio ({savedMemes.length})
               </button>
             </nav>
 
             {/* User Controls */}
             <div className="user-controls flex-gap" style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
               <motion.button
-                className="account-header-btn"
+                className="header-icon-circle notif-btn"
+                whileHover={{ scale: 1.08 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setNotificationsModalOpen(true)}
+                title="Notifications"
+                aria-label="Notifications"
+              >
+                <Bell className="icon-sm" />
+                {unreadNotifsCount > 0 && <span className="notif-dot" />}
+              </motion.button>
+
+              <motion.button
+                className="header-icon-circle theme-toggle-header-btn"
+                whileHover={{ scale: 1.08 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={toggleTheme}
+                title={theme === 'light' ? 'Switch to Dark Obsidian Mode' : 'Switch to Light Pearl Mode'}
+                aria-label="Toggle theme"
+              >
+                {theme === 'light' ? <Moon className="icon-sm" /> : <Sun className="icon-sm" />}
+              </motion.button>
+
+              <motion.button
+                className="header-icon-circle account-header-btn"
                 whileHover={{ scale: 1.08 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setAccountModalOpen(true)}
@@ -425,7 +608,25 @@ function App() {
               <TemplateDiscovery
                 onSelectTemplate={handleSelectTemplate}
                 onCreateCustom={handleCreateCustom}
+                onOpenAiGenerator={handleOpenAiGenerator}
               />
+            </motion.div>
+          )}
+
+          {currentView === 'social' && (
+            <motion.div
+              key="social"
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              transition={{ duration: 0.25 }}
+            >
+              <Suspense fallback={<div className="glass-card" style={{ padding: '48px 24px', textAlign: 'center' }}>Loading community memes…</div>}>
+                <SocialFeed
+                  onRemixMeme={handleRemixCommunityMeme}
+                  onCreateCustom={handleCreateCustom}
+                />
+              </Suspense>
             </motion.div>
           )}
 
@@ -491,7 +692,7 @@ function App() {
                   template={selectedTemplate}
                   onBack={handleEditorBack}
                   onSaveToGallery={handleSaveToGallery}
-                  theme="dark"
+                  theme={theme}
                 />
               </Suspense>
             </ErrorBoundary>
@@ -513,7 +714,7 @@ function App() {
                   key={`${selectedTemplate?.id || 'video-editor'}-${videoSessionKey}`}
                   template={selectedTemplate}
                   onBack={handleEditorBack}
-                  theme="dark"
+                  theme={theme}
                 />
               </Suspense>
             </ErrorBoundary>
@@ -521,37 +722,94 @@ function App() {
         </div>
       </main>
 
-      {/* Mobile Floating Bottom Navigation Bar */}
-      <nav className="mobile-bottom-bar glass-card">
-        <button
-          className={`mobile-nav-item ${currentView === 'templates' ? 'active' : ''}`}
-          onClick={() => setCurrentView('templates')}
-        >
-          <Grid className="icon-sm" />
-          <span>Templates</span>
-        </button>
-        <button
-          className={`mobile-nav-item ${
-            currentView === 'custom-builder' || currentView === 'editor' || currentView === 'video-editor' ? 'active' : ''
-          }`}
-          onClick={() => setCurrentView(lastBuilderView)}
-        >
-          <LayoutGrid className="icon-sm" />
-          <span>Builder</span>
-        </button>
-        <button
-          className={`mobile-nav-item ${currentView === 'gallery' ? 'active' : ''}`}
-          onClick={() => setCurrentView('gallery')}
-        >
-          <FolderHeart className="icon-sm" />
-          <span>My Memes</span>
-        </button>
-      </nav>
+      {/* Floating Island Capsule Dock - Hidden during editing for maximum canvas space */}
+      {currentView !== 'editor' && currentView !== 'video-editor' && currentView !== 'custom-builder' && (
+        <nav className="floating-island-dock">
+          <button
+            className={`dock-nav-item ${currentView === 'templates' ? 'active' : ''}`}
+            onClick={() => setCurrentView('templates')}
+          >
+            <Compass className="dock-icon" size={20} />
+            <span className="dock-label">Explore</span>
+            {currentView === 'templates' && <span className="dock-active-dot" />}
+          </button>
+
+          <button
+            className={`dock-nav-item ${currentView === 'gallery' ? 'active' : ''}`}
+            onClick={() => setCurrentView('gallery')}
+          >
+            <FolderHeart className="dock-icon" size={20} />
+            <span className="dock-label">My Studio</span>
+            {savedMemes.length > 0 && (
+              <span className="dock-count-badge">{savedMemes.length}</span>
+            )}
+            {currentView === 'gallery' && <span className="dock-active-dot" />}
+          </button>
+
+          <div className="dock-creator-wrapper">
+            <motion.button
+              className="dock-creator-squircle"
+              whileHover={{ scale: 1.08 }}
+              whileTap={{ scale: 0.92 }}
+              onClick={() => {
+                setBuilderMode('image');
+                setCurrentView('custom-builder');
+              }}
+              title="Create Custom Meme"
+            >
+              <Plus size={22} strokeWidth={2.8} />
+            </motion.button>
+            <span className="dock-creator-label">Creator</span>
+          </div>
+
+          <button
+            className={`dock-nav-item ${currentView === 'social' ? 'active' : ''}`}
+            onClick={() => setCurrentView('social')}
+          >
+            <Users className="dock-icon" size={20} />
+            <span className="dock-label">Social</span>
+            {currentView === 'social' && <span className="dock-active-dot" />}
+          </button>
+
+          <button
+            className="dock-nav-item"
+            onClick={() => setAccountModalOpen(true)}
+          >
+            <User className="dock-icon" size={20} />
+            <span className="dock-label">Profile</span>
+          </button>
+        </nav>
+      )}
 
       {/* Account Modal */}
       {accountModalOpen && (
         <Suspense fallback={null}>
           <AccountModal isOpen={true} onClose={() => setAccountModalOpen(false)} />
+        </Suspense>
+      )}
+
+      {/* Notifications Modal */}
+      {notificationsModalOpen && (
+        <Suspense fallback={null}>
+          <NotificationsModal
+            isOpen={true}
+            onClose={() => setNotificationsModalOpen(false)}
+            notifications={notifications}
+            onMarkAllRead={handleMarkAllNotificationsRead}
+            onNotificationAction={handleNotificationAction}
+          />
+        </Suspense>
+      )}
+
+      {/* Standalone AI Prompt Generator Modal */}
+      {aiGeneratorModalOpen && (
+        <Suspense fallback={null}>
+          <AiCaptionModal
+            isOpen={true}
+            onClose={() => setAiGeneratorModalOpen(false)}
+            onApplyCaption={handleApplyAiGeneratedMeme}
+            templateName={selectedTemplate?.name || 'Popular Meme'}
+          />
         </Suspense>
       )}
     </div>

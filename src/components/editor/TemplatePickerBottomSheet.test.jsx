@@ -24,7 +24,6 @@ describe('TemplatePickerBottomSheet', () => {
       />
     );
 
-    expect(screen.getByText('Add Template')).toBeDefined();
     expect(screen.getByText('Distracted Boyfriend')).toBeDefined();
 
     fireEvent.click(screen.getByText('Distracted Boyfriend'));

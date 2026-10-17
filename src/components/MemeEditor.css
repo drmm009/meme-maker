@@ -15,6 +15,7 @@
   border: 1px solid rgba(255, 255, 255, 0.12) !important;
   box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5) !important;
 }
+
 .editor-workspace {
   flex: 1;
   min-width: 0;
@@ -30,11 +31,116 @@
   align-items: center;
   width: 100%;
   flex: 1;
-  padding: 8px;
+  min-height: 0;
+  padding: 0; /* Edge-to-edge canvas immersion */
   display: flex;
   position: relative;
   overflow: hidden;
+  box-sizing: border-box;
 }
+
+/* ─── Canvas Studio Card (Dedicated Background Section) ─── */
+.canvas-studio-card {
+  width: 100%;
+  flex: 1 1 0%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  border-radius: 20px;
+  overflow: hidden;
+  background-color: rgba(14, 17, 26, 0.78);
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+  background-size: 22px 22px;
+  background-position: center center;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  box-sizing: border-box;
+}
+
+[data-theme='light'] .canvas-studio-card {
+  background-color: rgba(248, 250, 252, 0.88);
+  background-image: 
+    linear-gradient(to right, rgba(15, 23, 42, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(15, 23, 42, 0.04) 1px, transparent 1px);
+  border: 1px solid rgba(0, 0, 0, 0.09);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.canvas-viewport {
+  flex: 1 1 0%;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  padding: 0 0 50px 0; /* Zero horizontal padding for edge-to-edge canvas width; 50px bottom for static secondary toolbar clearance */
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* ─── Nested Secondary Toolbar Section (Bottom of Studio Card) ─── */
+.editor-secondary-toolbar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: 46px;
+  min-height: 46px;
+  max-height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: safe center;
+  gap: 8px;
+  padding: 6px 12px;
+  box-sizing: border-box;
+  background: transparent !important;
+  border: none !important;
+  border-top: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: none !important;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  z-index: 20;
+  pointer-events: auto;
+}
+
+.editor-secondary-toolbar > * {
+  margin-inline: auto;
+}
+
+.editor-secondary-toolbar::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+[data-theme='light'] .editor-secondary-toolbar {
+  background: transparent !important;
+  border: none !important;
+  border-top: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: none !important;
+  color: #0f172a;
+}
+
+[data-theme='light'] .editor-secondary-toolbar .vid-ctx-btn:not(.active) {
+  background: rgba(0, 0, 0, 0.05) !important;
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+  color: #0f172a !important;
+}
+
 .canvas-interactive-wrapper {
   touch-action: none;
   overscroll-behavior: none;
@@ -45,6 +151,7 @@
   align-items: center;
   max-width: 100%;
   max-height: 100%;
+  box-sizing: border-box;
 }
 .meme-canvas {
   object-fit: contain;
@@ -54,10 +161,9 @@
   -webkit-user-select: none;
   user-select: none;
   max-width: 100%;
-  max-height: 85vh;
-  max-height: 85dvh;
-  width: auto;
-  height: auto;
+  max-height: 100% !important;
+  width: 100%;
+  height: 100%;
   display: block;
   box-shadow: 0 10px 30px #00000080;
 }
@@ -334,58 +440,249 @@
   height: 0 !important;
 }
 
+.editor-floating-toolbar .draw-toolbar-group,
+.video-context-toolbar .draw-toolbar-group,
+.editor-floating-toolbar .filters-toolbar-group,
+.video-context-toolbar .filters-toolbar-group {
+  margin-inline: auto !important;
+  justify-content: center !important;
+}
+
 /* ─── Unified Toolbar Button System ──────────────────────────
-   All toolbar buttons: 34px height, 8px h-padding, 8px radius.
-   Icon-only buttons: 34×34px square, no h-padding.
+   All toolbar buttons: 34px height, rounded stadium pill edges (border-radius: 9999px),
+   same background color and glass border as the main dock.
+   Icon-only buttons: 34×34px circular pill.
    ─────────────────────────────────────────────────────────── */
-.vid-ctx-btn {
-  background: #23252b;
-  border: 1px solid transparent !important;
-  border-radius: 8px !important;
+.vid-ctx-btn,
+.editor-floating-toolbar button,
+.editor-floating-toolbar .btn,
+.editor-floating-toolbar label.btn,
+.editor-secondary-toolbar .vid-ctx-btn,
+.editor-secondary-toolbar button.btn,
+.bubble-layout-btn {
+  background: var(--glass-bg, rgba(22, 24, 31, 0.85)) !important;
+  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.12)) !important;
+  border-radius: 9999px !important;
   height: 34px !important;
   min-height: 34px !important;
   max-height: 34px !important;
-  padding: 0 12px !important;
+  padding: 0 14px !important;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
   gap: 6px !important;
   box-sizing: border-box !important;
-  color: rgba(255, 255, 255, 0.85);
+  color: rgba(255, 255, 255, 0.9) !important;
   cursor: pointer;
-  transition: background 0.15s ease, transform 0.1s ease;
+  transition: all 0.15s ease;
   font-size: 0.8rem !important;
   font-weight: 600 !important;
   white-space: nowrap;
   flex-shrink: 0;
-  box-shadow: none !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25) !important;
   line-height: 1 !important;
   vertical-align: middle;
 }
 
-.vid-ctx-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
+[data-theme='light'] .vid-ctx-btn,
+[data-theme='light'] .editor-floating-toolbar button,
+[data-theme='light'] .editor-floating-toolbar .btn,
+[data-theme='light'] .editor-floating-toolbar label.btn,
+[data-theme='light'] .editor-secondary-toolbar .vid-ctx-btn,
+[data-theme='light'] .editor-secondary-toolbar button.btn,
+[data-theme='light'] .bubble-layout-btn {
+  background: var(--glass-bg, rgba(255, 255, 255, 0.85)) !important;
+  border: 1px solid var(--glass-border, rgba(0, 0, 0, 0.1)) !important;
+  color: var(--text-main, #1e293b) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
+}
+
+.vid-ctx-btn:hover:not(.active),
+.editor-floating-toolbar button:hover:not(.active),
+.editor-floating-toolbar .btn:hover:not(.active),
+.editor-floating-toolbar label.btn:hover:not(.active),
+.editor-secondary-toolbar button:hover:not(.active),
+.bubble-layout-btn:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.15) !important;
+  border-color: rgba(255, 255, 255, 0.25) !important;
   color: #ffffff !important;
 }
 
-.vid-ctx-btn:active {
-  transform: scale(0.94);
+[data-theme='light'] .vid-ctx-btn:hover:not(.active),
+[data-theme='light'] .editor-floating-toolbar button:hover:not(.active),
+[data-theme='light'] .editor-floating-toolbar .btn:hover:not(.active),
+[data-theme='light'] .editor-floating-toolbar label.btn:hover:not(.active),
+[data-theme='light'] .editor-secondary-toolbar button:hover:not(.active),
+[data-theme='light'] .bubble-layout-btn:hover:not(.active) {
+  background: rgba(0, 0, 0, 0.07) !important;
+  border-color: rgba(0, 0, 0, 0.16) !important;
+  color: #0f172a !important;
+}
+
+.vid-ctx-btn:active,
+.editor-floating-toolbar button:active,
+.editor-secondary-toolbar button:active {
+  transform: scale(0.95);
 }
 
 .vid-ctx-btn.active,
-.vid-ctx-btn.vid-ctx-btn-last-used {
-  background: var(--primary-gradient, linear-gradient(135deg, #6366f1, #8b5cf6)) !important;
+.vid-ctx-btn.vid-ctx-btn-last-used,
+.editor-floating-toolbar button.active,
+.editor-floating-toolbar .btn.active,
+.editor-secondary-toolbar button.active {
+  background: var(--primary-gradient) !important;
   border: 1px solid var(--cyber-cyan) !important;
-  box-shadow: 0 2px 10px rgba(6, 182, 212, 0.4), 0 0 8px rgba(99, 102, 241, 0.4) !important;
+  box-shadow: 0 2px 12px rgba(255, 94, 54, 0.45) !important;
   color: #ffffff !important;
 }
 
 [data-theme='light'] .vid-ctx-btn.active,
-[data-theme='light'] .vid-ctx-btn.vid-ctx-btn-last-used {
-  background: var(--primary-gradient, linear-gradient(135deg, #6366f1, #8b5cf6)) !important;
+[data-theme='light'] .vid-ctx-btn.vid-ctx-btn-last-used,
+[data-theme='light'] .editor-floating-toolbar button.active,
+[data-theme='light'] .editor-floating-toolbar .btn.active,
+[data-theme='light'] .editor-secondary-toolbar button.active {
+  background: var(--primary-gradient) !important;
   border: 1px solid var(--cyber-cyan) !important;
-  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3) !important;
+  box-shadow: 0 2px 10px rgba(255, 94, 54, 0.35) !important;
   color: #ffffff !important;
+}
+
+.vid-ctx-btn.btn-icon,
+.editor-floating-toolbar button.btn-icon,
+.editor-secondary-toolbar button.btn-icon {
+  width: 34px !important;
+  min-width: 34px !important;
+  max-width: 34px !important;
+  padding: 0 !important;
+  border-radius: 50% !important;
+}
+
+/* ─── Button-type Round Container for Secondary Toolbar Settings ─── */
+.sec-bar-pill-container,
+.sec-bar-btn-container {
+  background: var(--glass-bg, rgba(22, 24, 31, 0.85)) !important;
+  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.12)) !important;
+  border-radius: 9999px !important;
+  height: 34px !important;
+  min-height: 34px !important;
+  max-height: 34px !important;
+  padding: 0 10px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  box-sizing: border-box !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25) !important;
+  flex-shrink: 0 !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+[data-theme='light'] .sec-bar-pill-container,
+[data-theme='light'] .sec-bar-btn-container {
+  background: var(--glass-bg, rgba(255, 255, 255, 0.85)) !important;
+  border: 1px solid var(--glass-border, rgba(0, 0, 0, 0.1)) !important;
+  color: var(--text-main, #1e293b) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* ─── Layer Actions Cluster for Canvas Elements ─── */
+.sec-bar-layer-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+/* ─── Size Slider for Draw Tools (Neutral Glass Pill) ─── */
+.sec-bar-accent-slider {
+  background: var(--glass-bg, rgba(22, 24, 31, 0.85)) !important;
+  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.12)) !important;
+  border-radius: 9999px !important;
+  height: 34px !important;
+  min-height: 34px !important;
+  max-height: 34px !important;
+  padding: 0 10px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  box-sizing: border-box !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25) !important;
+  flex-shrink: 0 !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.sec-bar-accent-slider input[type="range"] {
+  width: 50px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+  accent-color: var(--primary-accent, #ff5e36);
+  margin: 0;
+}
+
+.sec-bar-accent-slider input[type="range"]::-webkit-slider-runnable-track {
+  height: 4px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+}
+
+.sec-bar-accent-slider input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+  margin-top: -5px;
+}
+
+.sec-bar-accent-slider input[type="range"]::-moz-range-track {
+  height: 4px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+}
+
+.sec-bar-accent-slider input[type="range"]::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+  border: none;
+}
+
+[data-theme='light'] .sec-bar-accent-slider {
+  background: var(--glass-bg, rgba(255, 255, 255, 0.85)) !important;
+  border: 1px solid var(--glass-border, rgba(0, 0, 0, 0.1)) !important;
+  color: var(--text-main, #1e293b) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
+}
+
+[data-theme='light'] .sec-bar-accent-slider input[type="range"] {
+  background: rgba(0, 0, 0, 0.14);
+}
+
+[data-theme='light'] .sec-bar-accent-slider input[type="range"]::-webkit-slider-runnable-track {
+  background: rgba(0, 0, 0, 0.14);
+}
+
+[data-theme='light'] .sec-bar-accent-slider input[type="range"]::-webkit-slider-thumb {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+[data-theme='light'] .sec-bar-accent-slider input[type="range"]::-moz-range-track {
+  background: rgba(0, 0, 0, 0.14);
+}
+
+[data-theme='light'] .sec-bar-accent-slider input[type="range"]::-moz-range-thumb {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
 
 .editor-floating-toolbar.bubble-mode-left,
@@ -542,13 +839,22 @@
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12) !important;
 }
 
-[data-theme='light'] .vid-ctx-btn {
+[data-theme='light'] .vid-ctx-btn:not(.active) {
   background: rgba(0, 0, 0, 0.05) !important;
   border: 1px solid rgba(0, 0, 0, 0.1) !important;
   color: #0f172a !important;
 }
 
-[data-theme='light'] .vid-ctx-btn:hover {
+[data-theme='light'] .vid-ctx-btn:not(.active) span {
+  color: #0f172a !important;
+}
+
+[data-theme='light'] .vid-ctx-btn:not(.active) svg {
+  color: #0f172a !important;
+  stroke: #0f172a !important;
+}
+
+[data-theme='light'] .vid-ctx-btn:hover:not(.active) {
   background: rgba(0, 0, 0, 0.1) !important;
 }
 
@@ -630,7 +936,7 @@
 .photo-grading-badge {
   font-size: 0.78rem;
   font-weight: 800;
-  color: #ff5e36;
+  color: var(--primary-accent);
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
@@ -701,11 +1007,11 @@
 }
 
 .photo-grading-btn.active {
-  background: #ff5e36 !important;
+  background: var(--primary-gradient) !important;
   color: #ffffff !important;
   font-weight: 700 !important;
   border-color: rgba(255, 255, 255, 0.22) !important;
-  box-shadow: 0 4px 14px rgba(255, 94, 54, 0.4);
+  box-shadow: 0 4px 14px var(--primary-glow);
 }
 
 /* Light mode support */
@@ -746,7 +1052,7 @@
 }
 
 [data-theme='light'] .photo-grading-btn.active {
-  background: #ff5e36 !important;
+  background: var(--primary-gradient) !important;
   color: #ffffff !important;
 }
 
@@ -771,13 +1077,35 @@
     max-width: 100% !important;
     max-height: none !important;
     justify-content: safe center !important;
-    padding-left: 12px !important;
-    padding-right: 12px !important;
+    padding-left: 14px !important;
+    padding-right: 14px !important;
     flex-shrink: 0 !important;
     flex-direction: row !important;
+    flex-wrap: nowrap !important;
     overflow-x: auto !important;
     overflow-y: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+    scroll-behavior: smooth !important;
     /* Margins and Paddings handled by Framer Motion for smooth animation! */
+  }
+
+  .editor-floating-toolbar.bubble-mode-left,
+  .video-context-toolbar.bubble-mode-left {
+    justify-content: flex-start !important;
+  }
+
+  .editor-floating-toolbar > div,
+  .video-context-toolbar > div {
+    flex-shrink: 0 !important;
+  }
+
+  .editor-floating-toolbar .draw-toolbar-group,
+  .video-context-toolbar .draw-toolbar-group,
+  .editor-floating-toolbar .filters-toolbar-group,
+  .video-context-toolbar .filters-toolbar-group {
+    margin-inline: auto !important;
+    justify-content: center !important;
   }
   
   .editor-floating-toolbar.portrait .vid-ctx-divider {
@@ -789,12 +1117,16 @@
 
 
 /* Fix for delete button in light mode */
-[data-theme=\'light\'] .vid-ctx-btn-delete {
+[data-theme='light'] .vid-ctx-btn.vid-ctx-btn-delete {
   background: rgba(239, 68, 68, 0.9) !important;
   border-color: rgba(239, 68, 68, 1) !important;
   color: #ffffff !important;
 }
-[data-theme=\'light\'] .vid-ctx-btn-delete:hover {
+[data-theme='light'] .vid-ctx-btn.vid-ctx-btn-delete svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+[data-theme='light'] .vid-ctx-btn.vid-ctx-btn-delete:hover {
   background: rgba(220, 38, 38, 1) !important;
 }
 
@@ -806,14 +1138,7 @@
 }
 
 
-/* MOBILE OVERRIDE FOR FLOATING TOOLBAR */
-@media (max-width: 768px) {
-  .editor-floating-toolbar,
-  .video-context-toolbar {
-    top: auto !important;
-    bottom: 4px !important;
-  }
-}
+
 
 /* ==========================================================================
    LAYERS PANEL & CONTROLS STYLES

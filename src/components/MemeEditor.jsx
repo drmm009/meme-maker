@@ -1,13 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import CanvasEditor from './CanvasEditor';
+import CanvasEditor, { TWEET_TREND_PRESETS } from './CanvasEditor';
 import { FONTS } from '../data/stickers';
 import confetti from 'canvas-confetti';
 import {
   Type, Plus, Trash2, Undo, Redo, Download, Share2, Sparkles, Copy, Blend,
   Sliders, Smile, Sticker, ArrowLeft, Save, Check, RefreshCw,
   Image as ImageIcon, Search, X, Upload, RotateCw, ZoomIn, Crop, LayoutGrid, Scissors, Play, Pause, FolderHeart, Droplet, Monitor,
-  Paintbrush, Eraser, Highlighter, Palette, Sun, Moon, ChevronDown, ChevronLeft, PencilLine, Move, ArrowDownRight, Wand2,
+  Paintbrush, Highlighter, Palette, Sun, Moon, ChevronDown, ChevronLeft, PencilLine, Move, ArrowDownRight, Wand2,
   Layers, ArrowUp, ArrowDown, ChevronsUp, ChevronsDown, Eye, EyeOff, Lock, Unlock, FlipHorizontal,
   PanelTop, PanelBottom, PanelsTopBottom, MessageSquare, Flame, Tv, MessageCircle, Shield, Circle, TrendingDown, Ban,
   AlignLeft, AlignCenter, AlignRight
@@ -19,6 +19,8 @@ import BottomSheet from './BottomSheet';
 import MemeStickersBottomSheet from './editor/MemeStickersBottomSheet';
 import EmojiBottomSheet from './editor/EmojiBottomSheet';
 import TemplatePickerBottomSheet from './editor/TemplatePickerBottomSheet';
+import PhotoFiltersBottomSheet from './editor/PhotoFiltersBottomSheet';
+import BubbleChatBottomSheet from './editor/BubbleChatBottomSheet';
 import FacePinpointOverlay from './FacePinpointOverlay';
 import { fuseFaceIntoTemplate } from '../utils/faceGraftEngine';
 import { detectFaceOnTemplate } from '../utils/faceLandmarkerService';
@@ -37,6 +39,7 @@ import {
   PRESET_PHRASES,
   BUBBLE_LAYOUT_OPTIONS,
   COLOR_SWATCHES,
+  DRAW_COLORS,
   getNonOverlappingPosition,
   isColorDark,
 } from '../utils/captionLayout';
@@ -191,11 +194,25 @@ function CanvasColorPicker({ canvasBgColor, setCanvasBgColor }) {
       title="Canvas Color"
     >
       <div style={{ width: 14, height: 14, borderRadius: '50%', background: localColor || '#ffffff', border: '2px solid rgba(255,255,255,0.4)' }} />
-      <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#fff' }}>Canvas Color</span>
+      <span style={{ fontSize: '0.75rem', fontWeight: 600 }}>Canvas Color</span>
       <input type="color" value={localColor || '#ffffff'} onChange={handleChange} style={{ position: 'absolute', opacity: 0, inset: 0, cursor: 'pointer', width: '100%', height: '100%' }} />
     </div>
   );
 }
+
+const secondaryVariants = {
+  initial: { opacity: 0, x: 20 },
+  animate: {
+    opacity: 1,
+    x: 0,
+    transition: { duration: 0.18, ease: [0.22, 1, 0.36, 1] }
+  },
+  exit: {
+    opacity: 0,
+    x: -16,
+    transition: { duration: 0.12, ease: [0.22, 1, 0.36, 1] }
+  }
+};
 
 export default function MemeEditor({ template, onBack, onSaveToGallery, theme, onToggleTheme }) {
   const [imageLayers, setImageLayers] = useState(() => {
@@ -450,6 +467,11 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
   const [showFilterPresets, setShowFilterPresets] = useState(false);
   const [showLayerMenu, setShowLayerMenu] = useState(false);
   const [showDrawSettings, setShowDrawSettings] = useState(false);
+  const [activeSubmenu, setActiveSubmenu] = useState(null); // 'font' | 'color' | 'align' | 'effects' | 'bg' | 'blur' | 'bubble' | 'tweetTheme' | 'tweetTrend' | 'drawSettings' | 'watermark' | 'canvasBg' | 'banner' | 'filters'
+  const handleToggleSubmenu = (menuName) => {
+    setActiveSubmenu(prev => prev === menuName ? null : menuName);
+    setLastUsedSettingButton(menuName);
+  };
   const [pasteToast, setPasteToast] = useState(false);
   const [imageFilters, setImageFilters] = useState({
     preset: 'original',
@@ -475,6 +497,15 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     setShowTextBlurMenu(false);
     setShowTextBgMenu(false);
     setShowFilterPresets(false);
+    if (tabId === 'draw') {
+      setActiveSubmenu('drawSettings');
+    } else if (tabId === 'filters') {
+      setActiveSubmenu(null);
+    } else if (tabId === 'canvas' || tabId === 'watermark') {
+      setActiveSubmenu('canvasBg');
+    } else {
+      setActiveSubmenu(null);
+    }
     if (window.innerWidth <= 768) {
       setIsMobileTabsFolded(true);
     } else {
@@ -483,12 +514,14 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
   };
   const [showMemeStickersModal, setShowMemeStickersModal] = useState(false);
   const [showEmojiModal, setShowEmojiModal] = useState(false);
+  const [showFiltersModal, setShowFiltersModal] = useState(false);
+  const [showBubbleBottomSheet, setShowBubbleBottomSheet] = useState(false);
   const [isRemovingBg, setIsRemovingBg] = useState(false);
 
   // Freehand Drawing state
   const [drawings, setDrawings] = useState([]);
   const [drawTool, setDrawTool] = useState(null); // 'brush' | 'eraser' | null (deactivated by default)
-  const [brushColor, setBrushColor] = useState('#a855f7');
+  const [brushColor, setBrushColor] = useState('#ff2a5f');
   const [brushSize, setBrushSize] = useState(10);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const [exportedImageUri, setExportedImageUri] = useState(null);
@@ -1003,11 +1036,15 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     setActiveLayerId(newCap.id);
     setActiveTab('text');
     setShowBubbleLayouts(true);
+    setShowBubbleBottomSheet(true);
     pushHistory(nextCaps, stickers, imageLayers, drawings, canvasHeader, canvasFooter, demotivational);
   };
 
   const handleApplyBubbleStyle = (styleId) => {
-    if (!activeCaption) return;
+    if (!activeCaption) {
+      handleAddBubble(styleId);
+      return;
+    }
     let nextBg = activeCaption.bgColor;
     let nextColor = activeCaption.color;
     let nextFont = activeCaption.fontFamily;
@@ -1101,6 +1138,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
       width: nextWidth
     });
     setShowBubbleLayouts(true);
+    setShowBubbleBottomSheet(true);
   };
 
   const handleAddSpeechBubble = handleAddBubble;
@@ -1276,6 +1314,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
       if (existingHeaderCap) {
         setActiveLayerId(existingHeaderCap.id);
         setActiveTab('text');
+        setActiveSubmenu(null);
         pushHistory(captions, stickers, imageLayers, drawings, nextHeader, canvasFooter);
       } else {
         const newHeaderCap = {
@@ -1296,6 +1335,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
         setCaptions(nextCaps);
         setActiveLayerId(newHeaderCap.id);
         setActiveTab('text');
+        setActiveSubmenu(null);
         pushHistory(nextCaps, stickers, imageLayers, drawings, nextHeader, canvasFooter);
       }
     } else {
@@ -1327,6 +1367,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
       if (existingFooterCap) {
         setActiveLayerId(existingFooterCap.id);
         setActiveTab('text');
+        setActiveSubmenu(null);
         pushHistory(captions, stickers, imageLayers, drawings, canvasHeader, nextFooter);
       } else {
         const newFooterCap = {
@@ -1347,6 +1388,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
         setCaptions(nextCaps);
         setActiveLayerId(newFooterCap.id);
         setActiveTab('text');
+        setActiveSubmenu(null);
         pushHistory(nextCaps, stickers, imageLayers, drawings, canvasHeader, nextFooter);
       }
     } else {
@@ -1448,6 +1490,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
       setCaptions(nextCaps);
       setActiveLayerId(targetActiveId);
       setActiveTab('text');
+      setActiveSubmenu(null);
       pushHistory(nextCaps, stickers, imageLayers, drawings, nextHeader, nextFooter);
     }
   };
@@ -1566,8 +1609,10 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
       tweetVerified: verified,
       tweetTheme: theme,
       tweetTime: data.time || '10:42 PM · Oct 8, 2026',
-      tweetMetrics: data.metrics || '💬 14.2K    🔁 62.8K    ❤️ 420.5K    📊 18.2M',
+      tweetMetrics: data.metrics || (TWEET_TREND_PRESETS?.viral?.text || '💬 14.2K    🔁 62.8K    ❤️ 420.5K    📊 18.2M'),
       tweetMetricsId: 'viral',
+      tweetTrendRank: 'viral',
+      tweetTopic: TWEET_TREND_PRESETS?.viral?.topic || 'Trending in World',
       isTweetCard: true,
       x: 0.5,
       y: 0.5,
@@ -1582,6 +1627,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     const nextCaps = [...captions, newCap];
     setCaptions(nextCaps);
     setActiveLayerId(newCap.id);
+    setActiveSubmenu(null);
     setActiveTab('images');
     pushHistory(nextCaps, stickers, imageLayers, drawings, canvasHeader, canvasFooter, demotivational);
   };
@@ -2421,6 +2467,17 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
   };
 
 
+
+  const handleRotateLayer = () => {
+    if (activeCaption) {
+      const nextRot = ((activeCaption.rotation || 0) + 90) % 360;
+      updateActiveCaptionProps({ rotation: nextRot });
+    } else if (activeSticker) {
+      handleRotateSticker();
+    } else if (activeImageLayer) {
+      handleRotateImageLayer();
+    }
+  };
 
   const handleRotateImageLayer = () => {
     if (!activeImageLayer) return;
@@ -3305,239 +3362,472 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
               }
             }}
           >
-            {/* Floating Context Toolbar whenever dock container is folded */}
-            <AnimatePresence>
-              {((activeCaption || activeSticker || activeImageLayer || templateFaceMorph) || (isMobileTabsFolded && !activeCaption && !activeSticker && !activeImageLayer)) && (isMobileTabsFolded || templateFaceMorph) && (
-                <motion.div
-                  ref={contextToolbarRef}
-                  className={`editor-floating-toolbar video-context-toolbar ${showBubbleLayouts ? 'bubble-mode-left' : ''}`}
-                  initial={{ opacity: 0, height: 0, paddingTop: 0, paddingBottom: 0, marginTop: 0, marginBottom: 0, overflow: 'hidden' }}
-                  animate={{ opacity: 1, height: 46, paddingTop: 5, paddingBottom: 0, marginTop: 2, marginBottom: 0 }}
-                  exit={{ opacity: 0, height: 0, paddingTop: 0, paddingBottom: 0, marginTop: 0, marginBottom: 0, overflow: 'hidden' }}
-                  transition={{ duration: 0.25, ease: 'easeInOut' }}
-                >
-
-                  {/* Text controls */}
-                  {activeCaption && showFontMenu && (
-                    <>
-                      <button onClick={() => { setShowFontMenu(false); setLastUsedSettingButton('font'); }} className="btn btn-icon btn-xs vid-ctx-btn" title="Back to text toolbar">
-                        <ArrowLeft style={{ width: 14, height: 14 }} />
-                      </button>
-                      <div className="vid-ctx-divider"  />
-                      {FONTS.map(f => (
-                        <button
-                          key={f.id || f.family}
-                          id={`font-item-${f.family.replace(/\\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '')}`}
-                          className={`btn btn-xs vid-ctx-btn ${activeCaption.fontFamily === f.family ? 'active' : ''}`}
-                          style={{
-                            fontFamily: f.family,
-                            whiteSpace: 'nowrap'
-                          }}
-                          onClick={() => {
-                            updateActiveCaption('fontFamily', f.family);
-                            setShowFontMenu(false);
-                            setLastUsedSettingButton('font');
-                          }}
-                        >
-                          {f.id || f.name.split(' ')[0]}
-                        </button>
-                      ))}
-                    </>
+            {/* ─── 1. Canvas Studio Card (Dedicated Background Section) ─── */}
+            <div className="canvas-studio-card">
+              {/* Canvas Viewport Area */}
+              <div className="canvas-viewport">
+                {/* Clipboard Paste Toast */}
+                <AnimatePresence>
+                  {pasteToast && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -16, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -16, scale: 0.95 }}
+                      transition={{ duration: 0.2 }}
+                      style={{
+                        position: 'absolute',
+                        top: '14px',
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        zIndex: 9999,
+                        background: 'rgba(16, 185, 129, 0.95)',
+                        color: '#ffffff',
+                        padding: '8px 18px',
+                        borderRadius: '24px',
+                        boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        fontSize: '0.85rem',
+                        fontWeight: 700,
+                        pointerEvents: 'none'
+                      }}
+                    >
+                      <Check size={16} /> Image pasted from clipboard!
+                    </motion.div>
                   )}
-                  {/* Text Controls - 1. Effects Submenu */}
-                  {activeCaption && showTextEffectsMenu && (() => {
-                    const currentEffect = getActiveTextEffectId(activeCaption);
-                    return (
-                      <>
-                        <button
-                          onClick={() => { setShowTextEffectsMenu(false); setLastUsedSettingButton('effects'); }}
-                          className="btn btn-icon btn-xs vid-ctx-btn"
-                          title="Back to text toolbar"
-                          style={{ borderRadius: '8px', flexShrink: 0 }}
-                        >
-                          <ArrowLeft style={{ width: 14, height: 14 }} />
-                        </button>
-                        <div className="vid-ctx-divider" />
+                </AnimatePresence>
 
-                        {TEXT_EFFECTS.map((eff) => {
-                          const isActive = currentEffect === eff.id;
-                          return (
+                <CanvasEditor
+                  ref={canvasRef}
+                  template={activeTemplate}
+                  imageUrl={isHoldingCanvasCompare ? (templateFaceMorph?.cleanOriginalUrl || activeTemplate?.originalUrl) : (activeTemplate?.rawImageUrl || activeTemplate?.imageUrl)}
+                  captions={captions}
+                  stickers={stickers}
+                  imageLayers={imageLayers}
+                  aspectRatio={aspectRatio}
+                  imageFit={imageFit}
+                  filters={imageFilters}
+                  isNativeLayout={isNativeLayout}
+                  layoutDef={layoutDef}
+                  slotImages={slotImages}
+                  slotTransforms={slotTransforms}
+                  onUpdateSlotTransform={updateSlotTransform}
+                  activeLayerId={activeLayerId}
+                  onDeleteLayer={handleDeleteLayer}
+                  onSelectLayer={(id) => {
+                    setShowFontMenu(false);
+                    setShowTextCurveMenu(false);
+                    setShowTextBlurMenu(false);
+                    setShowTextBgMenu(false);
+                    setShowBubbleLayouts(false);
+                    setShowTweetThemeMenu(false);
+                    setShowTweetTrendMenu(false);
+                    setShowHeaderFooterMenu(false);
+                    setShowTextAlignMenu(false);
+                    if (!id) {
+                      setActiveLayerId(null);
+                      setActiveSubmenu(null);
+                      setShowBubbleBottomSheet(false);
+                      return;
+                    }
+                    if (window.innerWidth <= 768) {
+                      setIsMobileTabsFolded(true);
+                    }
+                    setActiveLayerId(id);
+                    setActiveSubmenu(null);
+                    setShowBubbleBottomSheet(false);
+                  }}
+                  onUpdateCaptionBounds={(id, newProps) => {
+                    const nextCaps = captions.map((c) => (c.id === id ? { ...c, ...newProps } : c));
+                    setCaptions(nextCaps);
+                    pushHistoryDebounced(nextCaps, stickers, imageLayers);
+                  }}
+                  onUpdateStickerBounds={(id, newProps) => {
+                    const nextStk = stickers.map((s) => (s.id === id ? { ...s, ...newProps } : s));
+                    setStickers(nextStk);
+                    pushHistoryDebounced(captions, nextStk, imageLayers);
+                  }}
+                  onUpdateImageLayerBounds={(id, newProps) => {
+                    const nextImgLayers = imageLayers.map((l) => (l.id === id ? { ...l, ...newProps } : l));
+                    setImageLayers(nextImgLayers);
+                    pushHistoryDebounced(captions, stickers, nextImgLayers);
+                  }}
+                  onUpdateCaptionText={(id, text) => {
+                    setCaptions((prevCaps) => {
+                      const nextCaps = prevCaps.map((c) => {
+                        if (c.id === id) {
+                          if (typeof text === 'object') {
+                            return { ...c, ...text };
+                          }
+                          const updated = { ...c, text };
+                          if (c.isBreakingNews) {
+                            updated.newsHeadline = text;
+                          }
+                          return updated;
+                        }
+                        return c;
+                      });
+                      pushHistoryDebounced(nextCaps, stickers, imageLayers);
+                      return nextCaps;
+                    });
+                  }}
+                  isVideoPlaying={isVideoPlaying}
+                  watermark={watermark}
+                  canvasBgColor={canvasBgColor}
+                  drawings={drawings}
+                  onAddDrawing={handleAddDrawing}
+                  isDrawingMode={!isElementSelected && activeTab === 'draw' && Boolean(drawTool)}
+                  drawTool={drawTool}
+                  brushColor={brushColor}
+                  brushSize={brushSize}
+                  canvasHeader={canvasHeader}
+                  onUpdateCanvasHeader={(props) => {
+                    setCanvasHeader((prev) => {
+                      const upd = { ...prev, ...props };
+                      pushHistoryDebounced(captions, stickers, imageLayers, drawings, upd, canvasFooter);
+                      return upd;
+                    });
+                  }}
+                  canvasFooter={canvasFooter}
+                  onUpdateCanvasFooter={(props) => {
+                    setCanvasFooter((prev) => {
+                      const upd = { ...prev, ...props };
+                      pushHistoryDebounced(captions, stickers, imageLayers, drawings, canvasHeader, upd);
+                      return upd;
+                    });
+                  }}
+                  demotivational={demotivational}
+                  canvasFlipX={canvasFlipX}
+                />
+
+                {isRemovingBg && (
+                  <div style={{
+                    position: 'absolute',
+                    top: 0, left: 0, right: 0, bottom: 0,
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                    background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)',
+                    color: '#fff', zIndex: 50, borderRadius: '12px'
+                  }}>
+                    <RefreshCw className="spin" style={{ width: 40, height: 40, color: 'var(--primary-accent)', marginBottom: '12px' }} />
+                    <span style={{ fontSize: '1rem', fontWeight: 600 }}>Removing Background...</span>
+                    <span style={{ fontSize: '0.8rem', opacity: 0.8, marginTop: '4px' }}>This may take a moment</span>
+                  </div>
+                )}
+
+                <FacePinpointOverlay
+                  isOpen={isPinpointingFace}
+                  faceTarget={faceTarget}
+                  onUpdateTarget={setFaceTarget}
+                  onConfirm={handleConfirmPinpoint}
+                  onCancel={() => setIsPinpointingFace(false)}
+                  canvasRef={canvasRef}
+                  templateImageUrl={originalTemplateImgRef.current || activeTemplate?.originalUrl || activeTemplate?.imageUrl}
+                />
+              </div>
+
+              {/* ─── Nested Secondary Toolbar Section (Inside Studio Card at bottom) ─── */}
+              <AnimatePresence>
+                {Boolean(
+                  Boolean(activeCaption || activeSticker || activeImageLayer) ||
+                  (!isElementSelected && activeTab === 'draw' && (activeSubmenu === 'drawSettings' || Boolean(drawTool))) ||
+                  (!isElementSelected && (activeTab === 'canvas' || activeTab === 'watermark') && (activeSubmenu === 'watermark' || activeSubmenu === 'canvasBg')) ||
+                  (!isElementSelected && activeTab === 'text' && activeSubmenu === 'banner')
+                ) && (
+                  <motion.div
+                    className="editor-secondary-toolbar"
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 8 }}
+                    transition={{ duration: 0.18, ease: 'easeOut' }}
+                  >
+                    <AnimatePresence mode="wait" initial={false}>
+                      {/* 1. Caption Font Submenu */}
+                      {activeCaption && !activeCaption.isTweetCard && activeSubmenu === 'font' && (
+                        <motion.div
+                          key={`cap-font-${activeCaption.id}`}
+                          variants={secondaryVariants}
+                          initial="initial"
+                          animate="animate"
+                          exit="exit"
+                          style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}
+                        >
+                          {FONTS.map(f => (
                             <button
-                              key={eff.id}
-                              type="button"
-                              onClick={() => handleApplyTextEffect(eff.id)}
-                              className={`btn btn-xs vid-ctx-btn ${isActive ? 'active' : ''}`}
-                              title={eff.title}
+                              key={f.id || f.family}
+                              id={`font-item-${f.family.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '')}`}
+                              className={`btn btn-xs vid-ctx-btn ${activeCaption.fontFamily === f.family ? 'active' : ''}`}
+                              style={{
+                                fontFamily: f.family,
+                                whiteSpace: 'nowrap'
+                              }}
+                              onClick={() => {
+                                updateActiveCaptionProps({ fontFamily: f.family });
+                              }}
                             >
-                              {eff.renderLabel()}
+                              {f.name}
                             </button>
-                          );
-                        })}
-                      </>
-                    );
-                  })()}
+                          ))}
+                        </motion.div>
+                      )}
 
-                  {/* Text Controls - 2. Blur (Opacity Bar) Submenu */}
-                  {activeCaption && showTextBlurMenu && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-                      <button
-                        onClick={() => { setShowTextBlurMenu(false); setLastUsedSettingButton('blur'); }}
-                        className="btn btn-icon btn-xs vid-ctx-btn"
-                        title="Back to text toolbar"
-                        style={{ borderRadius: '8px', flexShrink: 0 }}
-                      >
-                        <ArrowLeft style={{ width: 14, height: 14 }} />
-                      </button>
-                      <div className="vid-ctx-divider" />
-                      
-                      {/* Opacity Bar */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-                        <Droplet style={{ width: 13, height: 13, color: (activeCaption.opacity !== undefined && Number(activeCaption.opacity) < 1) ? 'var(--cyber-cyan)' : '#ffffff' }} />
-                        <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>Opacity:</span>
-                        <input
-                          type="range"
-                          min="0.1"
-                          max="1"
-                          step="0.05"
-                          value={activeCaption.opacity !== undefined ? activeCaption.opacity : 1}
-                          onChange={(e) => updateActiveCaptionProps({ opacity: parseFloat(e.target.value) })}
-                          style={{ width: '110px', accentColor: 'var(--cyber-cyan)', height: '4px' }}
-                          title="Text Opacity (10% - 100%)"
-                        />
-                        <span style={{ fontSize: '11px', fontWeight: 700, minWidth: '34px', color: (activeCaption.opacity !== undefined && Number(activeCaption.opacity) < 1) ? 'var(--cyber-cyan)' : '#ffffff' }}>
-                          {Math.round((activeCaption.opacity !== undefined ? Number(activeCaption.opacity) : 1) * 100)}%
-                        </span>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Text Controls - 3. Bg Submenu */}
-                  {activeCaption && showTextBgMenu && (() => {
-                    const isNone = !activeCaption.bgColor || activeCaption.bgColor === 'none' || activeCaption.bgColor === 'transparent';
-                    const isBlack = (activeCaption.bgColor === 'black' || activeCaption.bgColor === '#000000') && activeCaption.bgStyle !== 'banner';
-                    const isWhite = (activeCaption.bgColor === 'white' || activeCaption.bgColor === '#ffffff') && activeCaption.bgStyle !== 'banner';
-                    const isBanner = activeCaption.bgStyle === 'banner';
-                    const isCustom = !isNone && !isBlack && !isWhite && !isBanner;
-
-                    return (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-                        <button
-                          onClick={() => { setShowTextBgMenu(false); setLastUsedSettingButton('bg'); }}
-                          className="btn btn-icon btn-xs vid-ctx-btn"
-                          title="Back to text toolbar"
-                          style={{ borderRadius: '8px', flexShrink: 0 }}
+                      {/* 2. Caption Color Submenu */}
+                      {activeCaption && activeSubmenu === 'color' && (
+                        <motion.div
+                          key={`cap-color-${activeCaption.id}`}
+                          variants={secondaryVariants}
+                          initial="initial"
+                          animate="animate"
+                          exit="exit"
+                          className="sec-bar-btn-container"
                         >
-                          <ArrowLeft style={{ width: 14, height: 14 }} />
-                        </button>
-                        <div className="vid-ctx-divider" />
-
-                        {/* Minimalist Swatches & Banner */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-                          {/* 1. None (transparent) Swatch */}
-                          <button
-                            type="button"
-                            onClick={() => handleSetCaptionBg('none')}
-                            title="No background"
-                            style={{
-                              width: 22,
-                              height: 22,
-                              borderRadius: '50%',
-                              border: isNone ? '2px solid var(--cyber-cyan)' : '1.5px solid rgba(255, 255, 255, 0.25)',
-                              background: isNone ? 'rgba(6, 182, 212, 0.2)' : 'rgba(255, 255, 255, 0.06)',
-                              boxShadow: isNone ? '0 0 8px rgba(6, 182, 212, 0.5)' : 'none',
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              padding: 0,
-                              cursor: 'pointer',
-                              transform: isNone ? 'scale(1.1)' : 'scale(1)',
-                              transition: 'all 0.15s ease'
-                            }}
-                          >
-                            <Ban style={{ width: 12, height: 12, color: isNone ? 'var(--cyber-cyan)' : 'rgba(255, 255, 255, 0.6)' }} />
-                          </button>
-
-                          {/* 2. Black Swatch */}
-                          <button
-                            type="button"
-                            onClick={() => handleSetCaptionBg('black')}
-                            title="Black background"
-                            style={{
-                              width: 22,
-                              height: 22,
-                              borderRadius: '50%',
-                              backgroundColor: '#000000',
-                              border: isBlack ? '2px solid var(--cyber-cyan)' : '1.5px solid rgba(255, 255, 255, 0.35)',
-                              boxShadow: isBlack ? '0 0 8px rgba(6, 182, 212, 0.5)' : 'none',
-                              padding: 0,
-                              cursor: 'pointer',
-                              transform: isBlack ? 'scale(1.1)' : 'scale(1)',
-                              transition: 'all 0.15s ease'
-                            }}
-                          />
-
-                          {/* 3. White Swatch */}
-                          <button
-                            type="button"
-                            onClick={() => handleSetCaptionBg('white')}
-                            title="White background"
-                            style={{
-                              width: 22,
-                              height: 22,
-                              borderRadius: '50%',
-                              backgroundColor: '#ffffff',
-                              border: isWhite ? '2px solid var(--cyber-cyan)' : '1.5px solid rgba(255, 255, 255, 0.35)',
-                              boxShadow: isWhite ? '0 0 8px rgba(6, 182, 212, 0.5)' : 'none',
-                              padding: 0,
-                              cursor: 'pointer',
-                              transform: isWhite ? 'scale(1.1)' : 'scale(1)',
-                              transition: 'all 0.15s ease'
-                            }}
-                          />
-
-                          {/* 4. Custom Color Swatch with Color Picker */}
+                          {COLOR_SWATCHES.map(c => {
+                            const isSelected = (activeCaption.color || '#ffffff').toLowerCase() === c.toLowerCase();
+                            return (
+                              <button
+                                key={c}
+                                type="button"
+                                title={`Text color ${c}`}
+                                onClick={() => updateActiveCaptionProps({ color: c, stroke: getContrastStroke(c) })}
+                                style={{
+                                  width: 22,
+                                  height: 22,
+                                  borderRadius: '50%',
+                                  backgroundColor: c,
+                                  border: isSelected ? '2px solid var(--cyber-cyan)' : '1.5px solid rgba(255,255,255,0.3)',
+                                  boxShadow: isSelected ? '0 0 8px rgba(6, 182, 212, 0.6)' : 'none',
+                                  transform: isSelected ? 'scale(1.15)' : 'scale(1)',
+                                  cursor: 'pointer',
+                                  flexShrink: 0,
+                                  padding: 0,
+                                  transition: 'all 0.15s ease'
+                                }}
+                              />
+                            );
+                          })}
+                          <div className="vid-ctx-divider" style={{ width: 1, height: 20, margin: '0 4px', flexShrink: 0 }} />
                           <div
-                            title="Custom background color"
+                            title="Custom text color"
                             style={{
                               position: 'relative',
                               width: 22,
                               height: 22,
                               borderRadius: '50%',
-                              background: isCustom
-                                ? activeCaption.bgColor
-                                : 'conic-gradient(from 180deg at 50% 50%, #ff0055, #ffaa00, #00ff66, #00bbff, #aa00ff, #ff0055)',
-                              border: isCustom ? '2px solid var(--cyber-cyan)' : '1.5px solid rgba(255, 255, 255, 0.35)',
-                              boxShadow: isCustom ? '0 0 8px rgba(6, 182, 212, 0.5)' : 'none',
-                              transform: isCustom ? 'scale(1.1)' : 'scale(1)',
+                              background: 'conic-gradient(from 180deg at 50% 50%, #ff0055, #ffaa00, #00ff66, #00bbff, #aa00ff, #ff0055)',
+                              border: '1.5px solid rgba(255, 255, 255, 0.35)',
                               cursor: 'pointer',
                               overflow: 'hidden',
                               display: 'inline-flex',
                               alignItems: 'center',
                               justifyContent: 'center',
-                              transition: 'all 0.15s ease'
+                              flexShrink: 0
                             }}
                           >
                             <input
                               type="color"
-                              value={isCustom ? activeCaption.bgColor : '#ffffff'}
+                              value={activeCaption.color || '#ffffff'}
                               onChange={(e) => {
                                 const hex = e.target.value;
-                                updateActiveCaptionProps({ bgColor: hex, bgStyle: 'box' });
+                                updateActiveCaptionProps({ color: hex, stroke: getContrastStroke(hex) });
                               }}
-                              style={{
-                                position: 'absolute',
-                                opacity: 0,
-                                inset: 0,
-                                cursor: 'pointer',
-                                width: '100%',
-                                height: '100%'
-                              }}
+                              style={{ position: 'absolute', opacity: 0, inset: 0, cursor: 'pointer', width: '100%', height: '100%' }}
                             />
                           </div>
+                        </motion.div>
+                      )}
 
-                          <div className="vid-ctx-divider" style={{ margin: '0 2px' }} />
+                      {/* 3. Caption Alignment Submenu */}
+                      {activeCaption && activeSubmenu === 'align' && (
+                        <motion.div
+                          key={`cap-align-${activeCaption.id}`}
+                          variants={secondaryVariants}
+                          initial="initial"
+                          animate="animate"
+                          exit="exit"
+                          style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}
+                        >
+                          <button
+                            type="button"
+                            className={`btn btn-xs vid-ctx-btn ${activeCaption.align === 'left' ? 'active' : ''}`}
+                            onClick={() => updateActiveCaptionProps({ align: 'left' })}
+                          >
+                            <AlignLeft style={{ width: 14, height: 14 }} />
+                            <span>Left</span>
+                          </button>
+                          <button
+                            type="button"
+                            className={`btn btn-xs vid-ctx-btn ${(!activeCaption.align || activeCaption.align === 'center') ? 'active' : ''}`}
+                            onClick={() => updateActiveCaptionProps({ align: 'center' })}
+                          >
+                            <AlignCenter style={{ width: 14, height: 14 }} />
+                            <span>Center</span>
+                          </button>
+                          <button
+                            type="button"
+                            className={`btn btn-xs vid-ctx-btn ${activeCaption.align === 'right' ? 'active' : ''}`}
+                            onClick={() => updateActiveCaptionProps({ align: 'right' })}
+                          >
+                            <AlignRight style={{ width: 14, height: 14 }} />
+                            <span>Right</span>
+                          </button>
+                        </motion.div>
+                      )}
 
-                          {/* 5. Minimal Banner Toggle */}
+                      {/* 4. Caption Effects Submenu */}
+                      {activeCaption && activeSubmenu === 'effects' && (
+                        <motion.div
+                          key={`cap-effects-${activeCaption.id}`}
+                          variants={secondaryVariants}
+                          initial="initial"
+                          animate="animate"
+                          exit="exit"
+                          style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}
+                        >
+                          {TEXT_EFFECTS.map(effect => {
+                            const isSelected = activeCaption.effect ? activeCaption.effect === effect.id : (effect.id === 'flat' && !activeCaption.curve);
+                            return (
+                              <button
+                                key={effect.id}
+                                type="button"
+                                className={`btn btn-xs vid-ctx-btn ${isSelected ? 'active' : ''}`}
+                                onClick={() => {
+                                  updateActiveCaptionProps({
+                                    effect: effect.id,
+                                    curve: effect.curve || 0
+                                  });
+                                }}
+                                title={effect.title}
+                                style={{
+                                  padding: '4px 12px',
+                                  fontSize: '0.75rem',
+                                  fontWeight: 700,
+                                  flexShrink: 0
+                                }}
+                              >
+                                {effect.renderLabel()}
+                              </button>
+                            );
+                          })}
+                        </motion.div>
+                      )}
+
+                    {/* 5. Caption Background Submenu */}
+                    {activeCaption && activeSubmenu === 'bg' && (() => {
+                      const isNone = !activeCaption.bgColor || activeCaption.bgColor === 'none' || activeCaption.bgColor === 'transparent';
+                      const isBlack = activeCaption.bgColor === '#000000' || activeCaption.bgColor === 'rgba(0,0,0,0.75)';
+                      const isWhite = activeCaption.bgColor === '#ffffff' || activeCaption.bgColor === 'rgba(255,255,255,0.9)';
+                      const isBanner = activeCaption.bgStyle === 'banner';
+                      const isCustom = !isNone && !isBlack && !isWhite && !isBanner;
+
+                      return (
+                        <motion.div
+                          key={`cap-bg-${activeCaption.id}`}
+                          variants={secondaryVariants}
+                          initial="initial"
+                          animate="animate"
+                          exit="exit"
+                          style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}
+                        >
+                          <div className="sec-bar-btn-container">
+                            <button
+                              type="button"
+                              onClick={() => handleSetCaptionBg('none')}
+                              title="No background"
+                              style={{
+                                width: 22,
+                                height: 22,
+                                borderRadius: '50%',
+                                border: isNone ? '2px solid var(--cyber-cyan)' : '1.5px solid rgba(255, 255, 255, 0.25)',
+                                background: isNone ? 'rgba(6, 182, 212, 0.2)' : 'rgba(255, 255, 255, 0.06)',
+                                boxShadow: isNone ? '0 0 8px rgba(6, 182, 212, 0.5)' : 'none',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                padding: 0,
+                                cursor: 'pointer',
+                                transform: isNone ? 'scale(1.1)' : 'scale(1)',
+                                transition: 'all 0.15s ease'
+                              }}
+                            >
+                              <Ban style={{ width: 12, height: 12, color: isNone ? 'var(--cyber-cyan)' : 'rgba(255, 255, 255, 0.6)' }} />
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => handleSetCaptionBg('black')}
+                              title="Black background"
+                              style={{
+                                width: 22,
+                                height: 22,
+                                borderRadius: '50%',
+                                backgroundColor: '#000000',
+                                border: isBlack ? '2px solid var(--cyber-cyan)' : '1.5px solid rgba(255, 255, 255, 0.35)',
+                                boxShadow: isBlack ? '0 0 8px rgba(6, 182, 212, 0.5)' : 'none',
+                                padding: 0,
+                                cursor: 'pointer',
+                                transform: isBlack ? 'scale(1.1)' : 'scale(1)',
+                                transition: 'all 0.15s ease'
+                              }}
+                            />
+
+                            <button
+                              type="button"
+                              onClick={() => handleSetCaptionBg('white')}
+                              title="White background"
+                              style={{
+                                width: 22,
+                                height: 22,
+                                borderRadius: '50%',
+                                backgroundColor: '#ffffff',
+                                border: isWhite ? '2px solid var(--cyber-cyan)' : '1.5px solid rgba(255, 255, 255, 0.35)',
+                                boxShadow: isWhite ? '0 0 8px rgba(6, 182, 212, 0.5)' : 'none',
+                                padding: 0,
+                                cursor: 'pointer',
+                                transform: isWhite ? 'scale(1.1)' : 'scale(1)',
+                                transition: 'all 0.15s ease'
+                              }}
+                            />
+
+                            <div
+                              title="Custom background color"
+                              style={{
+                                position: 'relative',
+                                width: 22,
+                                height: 22,
+                                borderRadius: '50%',
+                                background: isCustom
+                                  ? activeCaption.bgColor
+                                  : 'conic-gradient(from 180deg at 50% 50%, #ff0055, #ffaa00, #00ff66, #00bbff, #aa00ff, #ff0055)',
+                                border: isCustom ? '2px solid var(--cyber-cyan)' : '1.5px solid rgba(255, 255, 255, 0.35)',
+                                boxShadow: isCustom ? '0 0 8px rgba(6, 182, 212, 0.5)' : 'none',
+                                transform: isCustom ? 'scale(1.1)' : 'scale(1)',
+                                cursor: 'pointer',
+                                overflow: 'hidden',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                transition: 'all 0.15s ease'
+                              }}
+                            >
+                              <input
+                                type="color"
+                                value={isCustom ? activeCaption.bgColor : '#ffffff'}
+                                onChange={(e) => {
+                                  const hex = e.target.value;
+                                  updateActiveCaptionProps({ bgColor: hex, bgStyle: 'box' });
+                                }}
+                                style={{
+                                  position: 'absolute',
+                                  opacity: 0,
+                                  inset: 0,
+                                  cursor: 'pointer',
+                                  width: '100%',
+                                  height: '100%'
+                                }}
+                              />
+                            </div>
+                          </div>
+
                           <button
                             type="button"
                             className={`btn btn-xs vid-ctx-btn ${isBanner ? 'active' : ''}`}
@@ -3551,388 +3841,613 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                               }
                             }}
                             title={isBanner ? "Full-width Banner active (Click to return to box)" : "Toggle full-width Banner"}
-                            style={{
-                              padding: '2px 8px',
-                              fontSize: '11px',
-                              height: '24px',
-                              borderRadius: '6px',
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '4px',
-                              background: isBanner ? 'var(--primary-gradient)' : 'rgba(255, 255, 255, 0.08)',
-                              border: isBanner ? '1px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.1)',
-                              color: '#ffffff',
-                              fontWeight: 600
-                            }}
                           >
-                            <PanelTop style={{ width: 12, height: 12, color: isBanner ? '#ffffff' : 'rgba(255, 255, 255, 0.85)' }} />
+                            <PanelTop style={{ width: 13, height: 13 }} />
                             <span>Banner</span>
                           </button>
-                        </div>
-                      </div>
-                    );
-                  })()}
+                        </motion.div>
+                      );
+                    })()}
 
-                  {/* Text Controls - Alignment Submenu */}
-                  {activeCaption && showTextAlignMenu && (() => {
-                    const currentAlign = activeCaption.align || 'center';
-
-                    return (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-                        <button
-                          onClick={() => { setShowTextAlignMenu(false); setLastUsedSettingButton('align'); }}
-                          className="btn btn-icon btn-xs vid-ctx-btn"
-                          title="Back to text toolbar"
-                          style={{ borderRadius: '8px', flexShrink: 0 }}
-                        >
-                          <ArrowLeft style={{ width: 14, height: 14 }} />
-                        </button>
-                        <div className="vid-ctx-divider" />
-
-                        {/* Alignment Buttons: Left, Center, Right */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
-                          <button
-                            type="button"
-                            className={`btn btn-xs vid-ctx-btn ${currentAlign === 'left' ? 'active' : ''}`}
-                            onClick={() => updateActiveCaption('align', 'left')}
-                            title="Align Left"
-                            style={{
-                              padding: '4px 10px',
-                              fontSize: '0.75rem',
-                              fontWeight: 600,
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '4px',
-                              borderRadius: '8px',
-                              background: currentAlign === 'left' ? 'var(--primary-gradient)' : 'rgba(255, 255, 255, 0.08)',
-                              border: currentAlign === 'left' ? '1px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.1)',
-                              color: '#ffffff',
-                              flexShrink: 0
-                            }}
-                          >
-                            <AlignLeft style={{ width: 13, height: 13, color: '#ffffff' }} />
-                            <span>Left</span>
-                          </button>
-
-                          <button
-                            type="button"
-                            className={`btn btn-xs vid-ctx-btn ${currentAlign === 'center' ? 'active' : ''}`}
-                            onClick={() => updateActiveCaption('align', 'center')}
-                            title="Align Center"
-                            style={{
-                              padding: '4px 10px',
-                              fontSize: '0.75rem',
-                              fontWeight: 600,
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '4px',
-                              borderRadius: '8px',
-                              background: currentAlign === 'center' ? 'var(--primary-gradient)' : 'rgba(255, 255, 255, 0.08)',
-                              border: currentAlign === 'center' ? '1px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.1)',
-                              color: '#ffffff',
-                              flexShrink: 0
-                            }}
-                          >
-                            <AlignCenter style={{ width: 13, height: 13, color: '#ffffff' }} />
-                            <span>Center</span>
-                          </button>
-
-                          <button
-                            type="button"
-                            className={`btn btn-xs vid-ctx-btn ${currentAlign === 'right' ? 'active' : ''}`}
-                            onClick={() => updateActiveCaption('align', 'right')}
-                            title="Align Right"
-                            style={{
-                              padding: '4px 10px',
-                              fontSize: '0.75rem',
-                              fontWeight: 600,
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '4px',
-                              borderRadius: '8px',
-                              background: currentAlign === 'right' ? 'var(--primary-gradient)' : 'rgba(255, 255, 255, 0.08)',
-                              border: currentAlign === 'right' ? '1px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.1)',
-                              color: '#ffffff',
-                              flexShrink: 0
-                            }}
-                          >
-                            <AlignRight style={{ width: 13, height: 13, color: '#ffffff' }} />
-                            <span>Right</span>
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })()}
-
-                  {/* Bubble Layout Selector Bar with Back button */}
-                  {activeCaption && activeCaption.bubbleStyle && showBubbleLayouts && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0, justifyContent: 'flex-start', width: '100%' }}>
-                      {/* Back Button */}
-                      <button
-                        onClick={() => { setShowBubbleLayouts(false); setLastUsedSettingButton('bubble'); }}
-                        className="btn btn-icon btn-xs vid-ctx-btn"
-                        title="Back to text toolbar"
-                        style={{ borderRadius: '8px', flexShrink: 0 }}
+                    {/* 6. Caption Opacity Submenu */}
+                    {activeCaption && activeSubmenu === 'blur' && (
+                      <motion.div
+                        key={`cap-blur-${activeCaption.id}`}
+                        variants={secondaryVariants}
+                        initial="initial"
+                        animate="animate"
+                        exit="exit"
+                        style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}
                       >
-                        <ArrowLeft style={{ width: 14, height: 14 }} />
-                      </button>
+                        <div className="sec-bar-btn-container">
+                          <Blend style={{ width: 14, height: 14, opacity: 0.8 }} />
+                          <span style={{ fontSize: '0.75rem', fontWeight: 600 }}>Opacity</span>
+                          <input
+                            type="range"
+                            min="0.1"
+                            max="1"
+                            step="0.05"
+                            value={activeCaption.opacity !== undefined ? activeCaption.opacity : 1}
+                            onChange={(e) => updateActiveCaptionProps({ opacity: parseFloat(e.target.value) })}
+                            style={{ width: '100px', accentColor: 'var(--cyber-cyan)' }}
+                          />
+                          <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--cyber-cyan)', minWidth: '28px' }}>
+                            {Math.round((activeCaption.opacity !== undefined ? activeCaption.opacity : 1) * 100)}%
+                          </span>
+                        </div>
+                      </motion.div>
+                    )}
 
-                      <div className="vid-ctx-divider" style={{ width: 1, height: 20, background: 'rgba(255,255,255,0.2)', margin: '0 2px', flexShrink: 0 }} />
-
-                      {/* Layout Options */}
-                      {BUBBLE_LAYOUT_OPTIONS.map(opt => {
-                        const isSelected = activeCaption.bubbleStyle === opt.id;
-                        return (
-                          <button
-                            key={opt.id}
-                            className={`btn btn-xs bubble-layout-btn bubble-layout-btn-${opt.id} ${isSelected ? 'bubble-active' : ''}`}
-                            onClick={() => handleApplyBubbleStyle(opt.id)}
-                            title={`Switch to ${opt.label} bubble`}
-                          >
-                            <span>{opt.label}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
-
-                  {/* Tweet Card Theme Selector Bar with Back button */}
-                  {activeCaption && activeCaption.isTweetCard && showTweetThemeMenu && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-                      {/* Back Button */}
-                      <button
-                        onClick={() => setShowTweetThemeMenu(false)}
-                        className="btn btn-icon btn-xs vid-ctx-btn"
-                        title="Back to tweet toolbar"
-                        style={{ borderRadius: '8px', flexShrink: 0 }}
+                    {/* 8. Tweet Card Theme & Trend Submenu */}
+                    {activeCaption?.isTweetCard && activeSubmenu === 'tweetTheme' && (
+                      <motion.div
+                        key={`cap-tweetTheme-${activeCaption.id}`}
+                        variants={secondaryVariants}
+                        initial="initial"
+                        animate="animate"
+                        exit="exit"
+                        style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}
                       >
-                        <ArrowLeft style={{ width: 14, height: 14, color: '#ffffff' }} />
-                      </button>
-
-                      <div className="vid-ctx-divider" style={{ width: 1, height: 20, background: 'rgba(255,255,255,0.2)', margin: '0 2px', flexShrink: 0 }} />
-
-                      {/* 3 buttons: Dim, Dark, White with white icons */}
-                      {[
-                        { id: 'dim', label: 'Dim', icon: <Moon style={{ width: 13, height: 13, color: '#ffffff' }} /> },
-                        { id: 'dark', label: 'Dark', icon: <Circle style={{ width: 12, height: 12, color: '#ffffff', fill: '#ffffff' }} /> },
-                        { id: 'white', label: 'White', icon: <Sun style={{ width: 13, height: 13, color: '#ffffff' }} /> }
-                      ].map((th) => {
-                        const currentTheme = activeCaption.tweetTheme || 'dark';
-                        const isActive = currentTheme === th.id || (th.id === 'white' && currentTheme === 'light');
-                        return (
+                        {['dark', 'dim', 'light'].map((th) => (
                           <button
-                            key={th.id}
+                            key={th}
                             type="button"
-                            className={`btn btn-xs vid-ctx-btn ${isActive ? 'active' : ''}`}
+                            className={`btn btn-xs vid-ctx-btn ${(activeCaption.tweetTheme || 'dark') === th ? 'active' : ''}`}
+                            onClick={() => updateActiveCaptionProps({ tweetTheme: th })}
+                            style={{ padding: '4px 12px', fontSize: '0.75rem', fontWeight: 600, textTransform: 'capitalize' }}
+                          >
+                            {th}
+                          </button>
+                        ))}
+                      </motion.div>
+                    )}
+                    {activeCaption?.isTweetCard && activeSubmenu === 'tweetTrend' && (
+                      <motion.div
+                        key={`cap-tweetTrend-${activeCaption.id}`}
+                        variants={secondaryVariants}
+                        initial="initial"
+                        animate="animate"
+                        exit="exit"
+                        style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}
+                      >
+                        {[
+                          { label: '#1 Trending', value: 'viral', icon: <Flame style={{ width: 12, height: 12 }} /> },
+                          { label: 'Technology', value: 'tech', icon: <Tv style={{ width: 12, height: 12 }} /> },
+                          { label: 'Memes', value: 'meme', icon: <Smile style={{ width: 12, height: 12 }} /> },
+                          { label: 'Casual', value: 'casual', icon: <MessageCircle style={{ width: 12, height: 12 }} /> }
+                        ].map((tr) => (
+                          <button
+                            key={tr.value}
+                            type="button"
+                            className={`btn btn-xs vid-ctx-btn ${(activeCaption.tweetTrendRank || 'viral') === tr.value ? 'active' : ''}`}
                             onClick={() => {
-                              const newColor = th.id === 'white' ? '#0f1419' : '#ffffff';
-                              updateActiveCaptionProps({ tweetTheme: th.id, color: newColor });
+                              const preset = TWEET_TREND_PRESETS?.[tr.value];
+                              if (preset) {
+                                updateActiveCaptionProps({
+                                  tweetTrendRank: tr.value,
+                                  tweetMetrics: preset.text,
+                                  tweetTopic: preset.topic
+                                });
+                              }
                             }}
-                            title={`${th.label} theme`}
-                            style={{
-                              padding: '4px 10px',
-                              fontSize: '0.75rem',
-                              fontWeight: 600,
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '5px',
-                              borderRadius: '8px',
-                              flexShrink: 0,
-                              background: isActive ? 'var(--primary-gradient)' : 'rgba(255, 255, 255, 0.08)',
-                              color: '#ffffff',
-                              border: isActive ? '1px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.1)'
-                            }}
-                          >
-                            {th.icon}
-                            <span>{th.label}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
-
-                  {/* Tweet Card Trend Selector Bar with Back button */}
-                  {activeCaption && activeCaption.isTweetCard && showTweetTrendMenu && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-                      {/* Back Button */}
-                      <button
-                        onClick={() => setShowTweetTrendMenu(false)}
-                        className="btn btn-icon btn-xs vid-ctx-btn"
-                        title="Back to tweet toolbar"
-                        style={{ borderRadius: '8px', flexShrink: 0 }}
-                      >
-                        <ArrowLeft style={{ width: 14, height: 14, color: '#ffffff' }} />
-                      </button>
-
-                      <div className="vid-ctx-divider" style={{ width: 1, height: 20, background: 'rgba(255,255,255,0.2)', margin: '0 2px', flexShrink: 0 }} />
-
-                      {/* 3 buttons: Viral, Casual, Ratioed with white icons */}
-                      {[
-                        { id: 'viral', label: 'Viral', icon: <Flame style={{ width: 13, height: 13, color: '#ffffff' }} />, text: '💬 14.2K    🔁 62.8K    ❤️ 420.5K    📊 18.2M' },
-                        { id: 'casual', label: 'Casual', icon: <MessageSquare style={{ width: 13, height: 13, color: '#ffffff' }} />, text: '💬 142    🔁 890    ❤️ 4.6K    📊 72K' },
-                        { id: 'ratio', label: 'Ratioed', icon: <TrendingDown style={{ width: 13, height: 13, color: '#ffffff' }} />, text: '💬 84.1K    🔁 412    ❤️ 1.2K    📊 6.4M' }
-                      ].map((tr) => {
-                        const currentMetricsText = activeCaption.tweetMetrics || '';
-                        const isSelected = activeCaption.tweetMetricsId === tr.id || (!activeCaption.tweetMetricsId && (
-                          tr.id === 'viral' ? (currentMetricsText.includes('14.2K') || currentMetricsText.includes('1.2K')) :
-                          tr.id === 'ratio' ? currentMetricsText.includes('84.1K') :
-                          tr.id === 'casual' ? currentMetricsText.includes('142') : false
-                        ));
-                        return (
-                          <button
-                            key={tr.id}
-                            type="button"
-                            className={`btn btn-xs vid-ctx-btn ${isSelected ? 'active' : ''}`}
-                            onClick={() => updateActiveCaptionProps({ tweetMetrics: tr.text, tweetMetricsId: tr.id })}
-                            title={`${tr.label} metrics`}
-                            style={{
-                              padding: '4px 10px',
-                              fontSize: '0.75rem',
-                              fontWeight: 600,
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '5px',
-                              borderRadius: '8px',
-                              flexShrink: 0,
-                              background: isSelected ? 'var(--primary-gradient)' : 'rgba(255, 255, 255, 0.08)',
-                              color: '#ffffff',
-                              border: isSelected ? '1px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.1)'
-                            }}
+                            style={{ padding: '4px 10px', fontSize: '0.75rem', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px' }}
                           >
                             {tr.icon}
                             <span>{tr.label}</span>
                           </button>
-                        );
-                      })}
-                    </div>
-                  )}
+                        ))}
+                      </motion.div>
+                    )}
 
-                  {activeCaption && !showFontMenu && !showTextAlignMenu && !showTextCurveMenu && !showTextBlurMenu && !showTextBgMenu && !showBubbleLayouts && !showTweetThemeMenu && !showTweetTrendMenu && (() => {
-                    if (activeCaption.isTweetCard) {
-                      const isVerified = activeCaption.tweetVerified !== false;
-
-                      return (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-                          {/* Verified button with white icon */}
-                          <button
-                            type="button"
-                            className={`btn btn-xs vid-ctx-btn ${isVerified ? 'active' : ''}`}
-                            onClick={() => updateActiveCaptionProps({ tweetVerified: !isVerified })}
-                            title="Toggle Verified Badge"
+                    {/* 9. Draw Tool Colors & Size Submenu */}
+                    {!isElementSelected && activeTab === 'draw' && (
+                      <motion.div
+                        key={`draw-${drawTool || 'brush'}`}
+                        variants={secondaryVariants}
+                        initial="initial"
+                        animate="animate"
+                        exit="exit"
+                        style={{ display: 'flex', alignItems: 'center', gap: '5px', flexShrink: 0 }}
+                      >
+                        <div className="sec-bar-btn-container" style={{ padding: '0 6px', gap: '4px' }}>
+                          {DRAW_COLORS.map((c) => {
+                            const isSelected = brushColor === c;
+                            return (
+                              <button
+                                key={c}
+                                type="button"
+                                title={`Set color ${c}`}
+                                onClick={() => setBrushColor(c)}
+                                style={{
+                                  width: 17.5,
+                                  height: 17.5,
+                                  borderRadius: '50%',
+                                  background: c,
+                                  border: isSelected ? '2px solid var(--cyber-cyan)' : '1px solid rgba(255,255,255,0.4)',
+                                  transform: isSelected ? 'scale(1.15)' : 'scale(1)',
+                                  boxShadow: isSelected ? (drawTool === 'glow' ? `0 0 10px ${c}` : '0 0 6px rgba(6,182,212,0.6)') : 'none',
+                                  cursor: 'pointer',
+                                  padding: 0,
+                                  transition: 'all 0.15s ease'
+                                }}
+                              />
+                            );
+                          })}
+                          <div
+                            title="Custom brush color"
                             style={{
-                              padding: '4px 10px',
-                              fontSize: '0.75rem',
-                              fontWeight: 600,
+                              position: 'relative',
+                              width: 17.5,
+                              height: 17.5,
+                              borderRadius: '50%',
+                              background: 'conic-gradient(from 180deg at 50% 50%, #ff0055, #ffaa00, #00ff66, #00bbff, #aa00ff, #ff0055)',
+                              border: '1px solid rgba(255,255,255,0.4)',
+                              cursor: 'pointer',
+                              overflow: 'hidden',
                               display: 'inline-flex',
                               alignItems: 'center',
-                              gap: '5px',
-                              borderRadius: '8px',
-                              flexShrink: 0,
-                              background: isVerified ? 'rgba(29, 155, 240, 0.28)' : 'rgba(255, 255, 255, 0.08)',
-                              border: isVerified ? '1px solid #1d9bf0' : '1px solid rgba(255, 255, 255, 0.1)',
-                              color: isVerified ? '#ffffff' : 'rgba(255, 255, 255, 0.85)'
+                              justifyContent: 'center',
+                              flexShrink: 0
                             }}
                           >
-                            <TwitterVerifiedBadge size={14} color="#ffffff" checkColor={isVerified ? "#1d9bf0" : "#0f172a"} />
-                            <span>Verified</span>
-                          </button>
-
-                          {/* Theme button with white icon */}
-                          <button
-                            type="button"
-                            className="btn btn-xs vid-ctx-btn"
-                            onClick={() => {
-                              setShowTweetTrendMenu(false);
-                              setShowTweetThemeMenu(true);
-                            }}
-                            title="Change Theme (Dim, Dark, White)"
-                            style={{
-                              padding: '4px 10px',
-                              fontSize: '0.75rem',
-                              fontWeight: 600,
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '5px',
-                              borderRadius: '8px',
-                              flexShrink: 0,
-                              background: 'rgba(255, 255, 255, 0.08)',
-                              border: '1px solid rgba(255, 255, 255, 0.1)',
-                              color: '#ffffff'
-                            }}
-                          >
-                            <Palette style={{ width: 13, height: 13, color: '#ffffff' }} />
-                            <span>Theme</span>
-                          </button>
-
-                          {/* Trend button with white icon */}
-                          <button
-                            type="button"
-                            className="btn btn-xs vid-ctx-btn"
-                            onClick={() => {
-                              setShowTweetThemeMenu(false);
-                              setShowTweetTrendMenu(true);
-                            }}
-                            title="Change Trend Metrics (Viral, Casual, Ratioed)"
-                            style={{
-                              padding: '4px 10px',
-                              fontSize: '0.75rem',
-                              fontWeight: 600,
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '5px',
-                              borderRadius: '8px',
-                              flexShrink: 0,
-                              background: 'rgba(255, 255, 255, 0.08)',
-                              border: '1px solid rgba(255, 255, 255, 0.1)',
-                              color: '#ffffff'
-                            }}
-                          >
-                            <Flame style={{ width: 13, height: 13, color: '#ffffff' }} />
-                            <span>Trend</span>
-                          </button>
+                            <input
+                              type="color"
+                              value={brushColor}
+                              onChange={(e) => setBrushColor(e.target.value)}
+                              style={{ position: 'absolute', opacity: 0, inset: 0, cursor: 'pointer', width: '100%', height: '100%' }}
+                            />
+                          </div>
                         </div>
-                      );
-                    }
 
-                    return (
-                      <>
-                        {/* 1. Case toggle Aa */}
+                        {/* Size Slider for Draw Tools (Neutral Glass Pill) */}
+                        <div className="sec-bar-accent-slider">
+                          <div
+                            style={{
+                              width: 8,
+                              height: 8,
+                              borderRadius: '50%',
+                              border: '1.5px solid currentColor',
+                              opacity: 0.6,
+                              boxSizing: 'border-box',
+                              flexShrink: 0
+                            }}
+                            title="Min stroke size"
+                          />
+                          <input
+                            type="range"
+                            min="2"
+                            max="50"
+                            value={brushSize}
+                            onChange={(e) => setBrushSize(parseInt(e.target.value, 10))}
+                            title={`Size: ${brushSize}px`}
+                          />
+                          <div
+                            style={{
+                              width: 14,
+                              height: 14,
+                              borderRadius: '50%',
+                              border: '1.5px solid currentColor',
+                              opacity: 0.6,
+                              boxSizing: 'border-box',
+                              flexShrink: 0
+                            }}
+                            title="Max stroke size"
+                          />
+                          <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'inherit', minWidth: '22px' }}>{brushSize}px</span>
+                        </div>
+
                         <button
                           type="button"
-                          className="btn btn-xs vid-ctx-btn"
-                          title="Toggle Text Case (ALL CAPS / Sentence case / lowercase)"
-                          onClick={handleToggleTextCase}
+                          className="btn btn-icon btn-xs vid-ctx-btn"
+                          onClick={handleClearDrawings}
+                          disabled={drawings.length === 0}
                           style={{
-                            padding: '4px 10px',
-                            fontSize: '0.75rem',
-                            fontWeight: 700,
+                            background: drawings.length > 0 ? 'rgba(239, 68, 68, 0.22)' : undefined,
+                            border: drawings.length > 0 ? '1px solid rgba(239, 68, 68, 0.45)' : undefined,
+                            boxShadow: drawings.length > 0 ? '0 0 8px rgba(239, 68, 68, 0.3)' : undefined,
+                            opacity: drawings.length === 0 ? 0.35 : 1,
+                            cursor: drawings.length === 0 ? 'not-allowed' : 'pointer'
+                          }}
+                          title={drawings.length > 0 ? `Clear all drawings (${drawings.length})` : 'Clear drawings'}
+                          aria-label="Clear all drawings"
+                        >
+                          <Trash2 style={{ width: 15, height: 15, color: '#ef4444' }} />
+                        </button>
+                      </motion.div>
+                    )}
+
+                    {/* 10. Watermark Controls Submenu */}
+                    {!isElementSelected && (activeTab === 'canvas' || activeTab === 'watermark') && activeSubmenu === 'watermark' && (
+                      <motion.div
+                        key="canvas-watermark"
+                        variants={secondaryVariants}
+                        initial="initial"
+                        animate="animate"
+                        exit="exit"
+                        style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}
+                      >
+                        <button
+                          className="btn btn-icon btn-xs vid-ctx-btn"
+                          style={{ position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                          title="Watermark Color"
+                        >
+                          <div style={{ width: 18, height: 18, borderRadius: '50%', background: watermark?.color || '#ffffff', border: '2px solid rgba(255,255,255,0.4)' }} />
+                          <input type="color" value={watermark?.color || '#ffffff'} onChange={(e) => updateWatermark('color', e.target.value)} style={{ position: 'absolute', opacity: 0, inset: 0, cursor: 'pointer', width: '100%', height: '100%' }} />
+                        </button>
+
+                        <input
+                          type="text"
+                          value={(watermark?.text || '').replace(/^@/, '')}
+                          onChange={(e) => {
+                            const raw = e.target.value.replace(/^@+/, '');
+                            updateWatermark('text', raw ? `@${raw}` : '');
+                            if (raw) updateWatermark('imageUrl', null);
+                          }}
+                          placeholder="username"
+                          className="sec-bar-btn-container"
+                          style={{ color: '#fff', padding: '0 12px', fontSize: '0.8rem', width: '105px', outline: 'none' }}
+                        />
+
+                        <button
+                          className="btn btn-icon btn-xs vid-ctx-btn"
+                          onClick={() => {
+                            const sizes = [12, 16, 24, 32, 48];
+                            const nextIdx = (sizes.indexOf(watermark?.size || 24) + 1) % sizes.length;
+                            updateWatermark('size', sizes[nextIdx]);
+                          }}
+                          title="Size"
+                        >
+                          <Type style={{ width: 15, height: 15, transform: `scale(${(watermark?.size || 24) / 24})`, transition: 'transform 0.2s' }} />
+                        </button>
+
+                        <button
+                          className="btn btn-icon btn-xs vid-ctx-btn"
+                          onClick={() => {
+                            const ops = [1, 0.75, 0.5, 0.25];
+                            const nextIdx = (ops.indexOf(watermark?.opacity || 0.5) + 1) % ops.length;
+                            updateWatermark('opacity', ops[nextIdx]);
+                          }}
+                          title="Opacity"
+                        >
+                          <Blend style={{ width: 15, height: 15, opacity: watermark?.opacity || 0.5, transition: 'opacity 0.2s' }} />
+                        </button>
+
+                        <button
+                          className="btn btn-icon btn-xs vid-ctx-btn"
+                          onClick={() => {
+                            const pos = ['bottom-right', 'bottom-left', 'top-left', 'top-right'];
+                            const nextIdx = (pos.indexOf(watermark?.position || 'bottom-right') + 1) % pos.length;
+                            updateWatermark('position', pos[nextIdx]);
+                          }}
+                          title="Position"
+                        >
+                          <ArrowDownRight 
+                            style={{ 
+                              width: 15, 
+                              height: 15, 
+                              transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                              transform: `rotate(${
+                                watermark?.position === 'bottom-left' ? 90 :
+                                watermark?.position === 'top-left' ? 180 :
+                                watermark?.position === 'top-right' ? 270 :
+                                0
+                              }deg)`
+                            }} 
+                          />
+                        </button>
+                      </motion.div>
+                    )}
+
+                    {/* 11. Canvas Color Submenu */}
+                    {!isElementSelected && (activeTab === 'canvas' || activeTab === 'watermark') && activeSubmenu === 'canvasBg' && (
+                      <motion.div
+                        key="canvas-bg-swatches"
+                        variants={secondaryVariants}
+                        initial="initial"
+                        animate="animate"
+                        exit="exit"
+                        className="sec-bar-btn-container"
+                      >
+                        {['#000000', '#ffffff', '#1e293b', '#0f172a', '#ff0055', '#00f0ff', 'transparent'].map((c) => (
+                          <button
+                            key={c}
+                            type="button"
+                            title={c === 'transparent' ? 'Transparent' : `Canvas background ${c}`}
+                            onClick={() => setCanvasBgColor(c)}
+                            style={{
+                              width: 22,
+                              height: 22,
+                              borderRadius: '50%',
+                              backgroundColor: c === 'transparent' ? 'rgba(255,255,255,0.1)' : c,
+                              border: canvasBgColor === c ? '2px solid var(--cyber-cyan)' : '1.5px solid rgba(255,255,255,0.3)',
+                              boxShadow: canvasBgColor === c ? '0 0 8px rgba(6, 182, 212, 0.5)' : 'none',
+                              cursor: 'pointer',
+                              flexShrink: 0,
+                              padding: 0
+                            }}
+                          />
+                        ))}
+                        <div
+                          title="Custom canvas color"
+                          style={{
+                            position: 'relative',
+                            width: 22,
+                            height: 22,
+                            borderRadius: '50%',
+                            background: 'conic-gradient(from 180deg at 50% 50%, #ff0055, #ffaa00, #00ff66, #00bbff, #aa00ff, #ff0055)',
+                            border: '1.5px solid rgba(255, 255, 255, 0.35)',
+                            cursor: 'pointer',
+                            overflow: 'hidden',
                             display: 'inline-flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            borderRadius: '8px',
-                            background: 'rgba(255, 255, 255, 0.08)',
-                            border: '1px solid rgba(255, 255, 255, 0.1)',
-                            color: '#ffffff',
                             flexShrink: 0
                           }}
                         >
-                          Aa
-                        </button>
+                          <input
+                            type="color"
+                            value={canvasBgColor || '#000000'}
+                            onChange={(e) => setCanvasBgColor(e.target.value)}
+                            style={{ position: 'absolute', opacity: 0, inset: 0, cursor: 'pointer', width: '100%', height: '100%' }}
+                          />
+                        </div>
+                      </motion.div>
+                    )}
 
-                        {/* 2. Font dropdown */}
+                    {/* 13. Header / Footer Extension Submenu */}
+                    {!isElementSelected && activeTab === 'text' && activeSubmenu === 'banner' && (
+                      <motion.div
+                        key="canvas-banner"
+                        variants={secondaryVariants}
+                        initial="initial"
+                        animate="animate"
+                        exit="exit"
+                        style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}
+                      >
                         <button
                           type="button"
-                          data-setting-btn="font"
-                          className={`btn btn-xs vid-ctx-btn vid-ctx-btn-font ${lastUsedSettingButton === 'font' ? 'active' : ''}`}
-                          title="Change Font"
-                          onClick={() => {
-                            setShowFontMenu(true);
-                            setShowTextAlignMenu(false);
-                            setShowTextCurveMenu(false);
-                            setShowTextBlurMenu(false);
-                            setShowTextBgMenu(false);
-                            setShowBubbleLayouts(false);
+                          className={`btn btn-xs vid-ctx-btn ${canvasHeader.enabled ? 'active' : ''}`}
+                          onClick={handleToggleCanvasHeader}
+                          title="Toggle Header Extension"
+                          style={{
+                            padding: '4px 12px',
+                            fontSize: '0.75rem',
+                            fontWeight: 600,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '5px',
+                            borderRadius: '8px',
+                            flexShrink: 0,
+                            background: canvasHeader.enabled ? 'var(--primary-gradient)' : undefined,
+                            border: canvasHeader.enabled ? '1px solid var(--cyber-cyan)' : undefined,
+                            color: canvasHeader.enabled ? '#ffffff' : undefined
                           }}
+                        >
+                          <PanelTop style={{ width: 13, height: 13 }} />
+                          <span>Header</span>
+                        </button>
+                        <button
+                          type="button"
+                          className={`btn btn-xs vid-ctx-btn ${canvasFooter.enabled ? 'active' : ''}`}
+                          onClick={handleToggleCanvasFooter}
+                          title="Toggle Footer Extension"
+                          style={{
+                            padding: '4px 12px',
+                            fontSize: '0.75rem',
+                            fontWeight: 600,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '5px',
+                            borderRadius: '8px',
+                            flexShrink: 0,
+                            background: canvasFooter.enabled ? 'var(--primary-gradient)' : undefined,
+                            border: canvasFooter.enabled ? '1px solid var(--cyber-cyan)' : undefined,
+                            color: canvasFooter.enabled ? '#ffffff' : undefined
+                          }}
+                        >
+                          <PanelBottom style={{ width: 13, height: 13 }} />
+                          <span>Footer</span>
+                        </button>
+                        <button
+                          type="button"
+                          className={`btn btn-xs vid-ctx-btn ${(canvasHeader.enabled && canvasFooter.enabled) ? 'active' : ''}`}
+                          onClick={handleToggleCanvasBoth}
+                          title="Toggle Both Header & Footer Extensions"
+                          style={{
+                            padding: '4px 12px',
+                            fontSize: '0.75rem',
+                            fontWeight: 600,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '5px',
+                            borderRadius: '8px',
+                            flexShrink: 0,
+                            background: (canvasHeader.enabled && canvasFooter.enabled) ? 'var(--primary-gradient)' : undefined,
+                            border: (canvasHeader.enabled && canvasFooter.enabled) ? '1px solid var(--cyber-cyan)' : undefined,
+                            color: (canvasHeader.enabled && canvasFooter.enabled) ? '#ffffff' : undefined
+                          }}
+                        >
+                          <PanelsTopBottom style={{ width: 13, height: 13 }} />
+                          <span>Both</span>
+                        </button>
+                      </motion.div>
+                    )}
+
+                    {/* 14. Unified Layer Actions Cluster (Rotate / Duplicate / Layers / Delete) - ONLY shown when no toolbar submenu is active */}
+                    {(activeCaption || activeSticker || activeImageLayer) && !activeSubmenu && (
+                      <motion.div
+                        key={`layer-actions-${activeLayerId || 'layer'}`}
+                        variants={secondaryVariants}
+                        initial="initial"
+                        animate="animate"
+                        exit="exit"
+                        className="sec-bar-layer-actions"
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          flexShrink: 0
+                        }}
+                      >
+                        {activeCaption && !activeCaption.isTweetCard && (
+                          <button
+                            type="button"
+                            className="btn btn-icon btn-xs vid-ctx-btn"
+                            title="Toggle Text Case (ALL CAPS / Sentence case / lowercase)"
+                            aria-label="Toggle Text Case"
+                            onClick={handleToggleTextCase}
+                            style={{
+                              fontSize: '0.75rem',
+                              fontWeight: 700,
+                              minWidth: 32,
+                              height: 32
+                            }}
+                          >
+                            Aa
+                          </button>
+                        )}
+
+                        {activeImageLayer && (
+                          <>
+                            <button
+                              type="button"
+                              className={`btn btn-icon btn-xs vid-ctx-btn ${activeImageLayer.fitMode === 'crop' ? 'active' : ''}`}
+                              title={activeImageLayer.fitMode === 'crop' ? 'Exit Crop' : 'Crop'}
+                              aria-label={activeImageLayer.fitMode === 'crop' ? 'Exit Crop' : 'Crop'}
+                              onClick={() => updateActiveImageLayer('fitMode', activeImageLayer.fitMode === 'crop' ? 'fit' : 'crop')}
+                              style={{
+                                background: activeImageLayer.fitMode === 'crop' ? 'var(--primary-gradient)' : undefined,
+                                color: activeImageLayer.fitMode === 'crop' ? '#ffffff' : undefined,
+                                border: activeImageLayer.fitMode === 'crop' ? '1px solid var(--cyber-cyan)' : undefined
+                              }}
+                            >
+                              <Crop style={{ width: 14, height: 14 }} />
+                            </button>
+
+                            <button
+                              type="button"
+                              className={`btn btn-icon btn-xs vid-ctx-btn ${activeImageLayer.flipX ? 'active' : ''}`}
+                              title="Flip Horizontal (Mirror)"
+                              aria-label="Flip Horizontal"
+                              onClick={handleFlipActiveLayer}
+                              style={{
+                                background: activeImageLayer.flipX ? 'var(--primary-gradient)' : undefined,
+                                color: activeImageLayer.flipX ? '#ffffff' : undefined,
+                                border: activeImageLayer.flipX ? '1px solid var(--cyber-cyan)' : undefined
+                              }}
+                            >
+                              <FlipHorizontal style={{ width: 14, height: 14 }} />
+                            </button>
+                          </>
+                        )}
+
+                        <button
+                          type="button"
+                          className="btn btn-icon btn-xs vid-ctx-btn"
+                          title="Rotate 90°"
+                          aria-label="Rotate 90°"
+                          onClick={handleRotateLayer}
+                        >
+                          <RotateCw style={{ width: 14, height: 14 }} />
+                        </button>
+
+                        <button
+                          type="button"
+                          className="btn btn-icon btn-xs vid-ctx-btn"
+                          title="Duplicate Layer"
+                          aria-label="Duplicate Layer"
+                          onClick={() => handleDuplicateLayer()}
+                        >
+                          <Copy style={{ width: 14, height: 14 }} />
+                        </button>
+
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                          <button
+                            type="button"
+                            className={`btn btn-icon btn-xs vid-ctx-btn ${showLayerMenu ? 'active' : ''}`}
+                            title="Layer Order"
+                            aria-label="Layer Order"
+                            onClick={() => setShowLayerMenu(!showLayerMenu)}
+                          >
+                            <Layers style={{ width: 14, height: 14 }} />
+                          </button>
+
+                          {showLayerMenu && (
+                            <div
+                              className="sec-bar-btn-container"
+                              style={{
+                                padding: '0 4px',
+                                gap: '2px',
+                                height: '34px'
+                              }}
+                            >
+                              <button
+                                type="button"
+                                className="btn btn-icon btn-xs vid-ctx-btn"
+                                title="Bring Forward"
+                                aria-label="Bring Forward"
+                                onClick={() => moveLayer(activeLayerId, 'forward')}
+                                style={{ border: 'none', background: 'transparent', width: 28, height: 28, minWidth: 28 }}
+                              >
+                                <ArrowUp style={{ width: 13, height: 13 }} />
+                              </button>
+                              <button
+                                type="button"
+                                className="btn btn-icon btn-xs vid-ctx-btn"
+                                title="Send Backward"
+                                aria-label="Send Backward"
+                                onClick={() => moveLayer(activeLayerId, 'backward')}
+                                style={{ border: 'none', background: 'transparent', width: 28, height: 28, minWidth: 28 }}
+                              >
+                                <ArrowDown style={{ width: 13, height: 13 }} />
+                              </button>
+                            </div>
+                          )}
+                        </div>
+
+                        <button
+                          type="button"
+                          className="btn btn-icon btn-xs vid-ctx-btn vid-ctx-btn-delete"
+                          style={{
+                            background: 'rgba(239, 68, 68, 0.22)',
+                            border: '1px solid rgba(239, 68, 68, 0.45)',
+                            boxShadow: '0 0 8px rgba(239, 68, 68, 0.3)',
+                            color: '#ef4444'
+                          }}
+                          title="Delete Layer"
+                          aria-label="Delete Layer"
+                          onClick={() => handleDeleteLayer()}
+                        >
+                          <Trash2 style={{ width: 14, height: 14, color: '#ef4444' }} />
+                        </button>
+                      </motion.div>
+                    )}
+                    </AnimatePresence>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* ─── 2. Main Context Toolbar (Directly below Studio Card) ─── */}
+            <AnimatePresence>
+              {((activeCaption || activeSticker || activeImageLayer || templateFaceMorph) || (isMobileTabsFolded && !activeCaption && !activeSticker && !activeImageLayer)) && (isMobileTabsFolded || templateFaceMorph) && (
+                <motion.div
+                  ref={contextToolbarRef}
+                  className={`editor-floating-toolbar video-context-toolbar ${showBubbleLayouts ? 'bubble-mode-left' : ''}`}
+                  initial={{ opacity: 0, height: 0, paddingTop: 0, paddingBottom: 0, marginTop: 0, marginBottom: 0, overflow: 'hidden' }}
+                  animate={{ opacity: 1, height: 46, paddingTop: 5, paddingBottom: 0, marginTop: 2, marginBottom: 0 }}
+                  exit={{ opacity: 0, height: 0, paddingTop: 0, paddingBottom: 0, marginTop: 0, marginBottom: 0, overflow: 'hidden' }}
+                  transition={{ duration: 0.25, ease: 'easeInOut' }}
+                >
+                  {/* Text Controls when caption is active */}
+                  {activeCaption && (
+                    activeCaption.isTweetCard ? (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+                        <button
+                          type="button"
+                          className={`btn btn-xs vid-ctx-btn ${activeCaption.tweetVerified !== false ? 'active' : ''}`}
+                          onClick={() => updateActiveCaptionProps({ tweetVerified: activeCaption.tweetVerified === false })}
+                          title="Toggle Verified Badge"
                           style={{
                             padding: '4px 10px',
                             fontSize: '0.75rem',
@@ -3941,9 +4456,82 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                             alignItems: 'center',
                             gap: '5px',
                             borderRadius: '8px',
-                            background: lastUsedSettingButton === 'font' ? 'var(--primary-gradient)' : 'rgba(255, 255, 255, 0.08)',
-                            border: lastUsedSettingButton === 'font' ? '1px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.1)',
-                            boxShadow: lastUsedSettingButton === 'font' ? '0 2px 10px rgba(6, 182, 212, 0.4), 0 0 8px rgba(99, 102, 241, 0.4)' : 'none',
+                            flexShrink: 0,
+                            background: activeCaption.tweetVerified !== false ? 'rgba(29, 155, 240, 0.28)' : 'rgba(255, 255, 255, 0.08)',
+                            border: activeCaption.tweetVerified !== false ? '1px solid #1d9bf0' : '1px solid rgba(255, 255, 255, 0.1)',
+                            color: activeCaption.tweetVerified !== false ? '#ffffff' : 'rgba(255, 255, 255, 0.85)'
+                          }}
+                        >
+                          <TwitterVerifiedBadge size={14} color="#ffffff" checkColor={activeCaption.tweetVerified !== false ? "#1d9bf0" : "#0f172a"} />
+                          <span>Verified</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          className={`btn btn-xs vid-ctx-btn ${activeSubmenu === 'tweetTheme' ? 'active' : ''}`}
+                          onClick={() => handleToggleSubmenu('tweetTheme')}
+                          title="Change Theme (Dim, Dark, White)"
+                          style={{
+                            padding: '4px 10px',
+                            fontSize: '0.75rem',
+                            fontWeight: 600,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '5px',
+                            borderRadius: '8px',
+                            flexShrink: 0,
+                            background: activeSubmenu === 'tweetTheme' ? 'var(--primary-gradient)' : 'rgba(255, 255, 255, 0.08)',
+                            border: activeSubmenu === 'tweetTheme' ? '1px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.1)',
+                            color: '#ffffff'
+                          }}
+                        >
+                          <Palette style={{ width: 13, height: 13, color: '#ffffff' }} />
+                          <span>Theme</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          className={`btn btn-xs vid-ctx-btn ${activeSubmenu === 'tweetTrend' ? 'active' : ''}`}
+                          onClick={() => handleToggleSubmenu('tweetTrend')}
+                          title="Change Trend Metrics (Viral, Casual, Ratioed)"
+                          style={{
+                            padding: '4px 10px',
+                            fontSize: '0.75rem',
+                            fontWeight: 600,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '5px',
+                            borderRadius: '8px',
+                            flexShrink: 0,
+                            background: activeSubmenu === 'tweetTrend' ? 'var(--primary-gradient)' : 'rgba(255, 255, 255, 0.08)',
+                            border: activeSubmenu === 'tweetTrend' ? '1px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.1)',
+                            color: '#ffffff'
+                          }}
+                        >
+                          <Flame style={{ width: 13, height: 13, color: '#ffffff' }} />
+                          <span>Trend</span>
+                        </button>
+                      </div>
+                    ) : (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+                        {/* 1. Font Button */}
+                        <button
+                          type="button"
+                          data-setting-btn="font"
+                          className={`btn btn-xs vid-ctx-btn vid-ctx-btn-font ${activeSubmenu === 'font' ? 'active' : ''}`}
+                          title="Change Font"
+                          onClick={() => handleToggleSubmenu('font')}
+                          style={{
+                            padding: '4px 10px',
+                            fontSize: '0.75rem',
+                            fontWeight: 600,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '5px',
+                            borderRadius: '8px',
+                            background: activeSubmenu === 'font' ? 'var(--primary-gradient)' : 'rgba(255, 255, 255, 0.08)',
+                            border: activeSubmenu === 'font' ? '1px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.1)',
+                            boxShadow: activeSubmenu === 'font' ? '0 2px 10px rgba(6, 182, 212, 0.4), 0 0 8px rgba(99, 102, 241, 0.4)' : 'none',
                             transition: 'all 0.2s ease',
                             color: '#ffffff',
                             flexShrink: 0
@@ -3953,12 +4541,13 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           <span>{activeFontObj ? activeFontObj.id : (activeCaption.fontFamily || 'Impact').split(/[\s,]+/)[0].replace(/^[-'"]+|['"]+$/g, '')}</span>
                         </button>
 
-                        {/* 3. Color button (beside Font button) */}
-                        <div
-                          className="btn btn-xs vid-ctx-btn"
+                        {/* 3. Color Button */}
+                        <button
+                          type="button"
+                          data-setting-btn="color"
+                          className={`btn btn-xs vid-ctx-btn ${activeSubmenu === 'color' ? 'active' : ''}`}
+                          onClick={() => handleToggleSubmenu('color')}
                           style={{
-                            position: 'relative',
-                            overflow: 'hidden',
                             display: 'inline-flex',
                             alignItems: 'center',
                             gap: '5px',
@@ -3966,8 +4555,9 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                             fontSize: '0.75rem',
                             fontWeight: 600,
                             borderRadius: '8px',
-                            background: 'rgba(255, 255, 255, 0.08)',
-                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                            background: activeSubmenu === 'color' ? 'var(--primary-gradient)' : 'rgba(255, 255, 255, 0.08)',
+                            border: activeSubmenu === 'color' ? '1px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.1)',
+                            boxShadow: activeSubmenu === 'color' ? '0 2px 10px rgba(6, 182, 212, 0.4), 0 0 8px rgba(99, 102, 241, 0.4)' : 'none',
                             color: '#ffffff',
                             flexShrink: 0,
                             cursor: 'pointer'
@@ -3984,31 +4574,15 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                             }}
                           />
                           <span>Color</span>
-                          <input
-                            type="color"
-                            value={activeCaption.color || '#ffffff'}
-                            onChange={(e) => {
-                              const hex = e.target.value;
-                              updateActiveCaptionProps({ color: hex, stroke: getContrastStroke(hex) });
-                            }}
-                            style={{ position: 'absolute', opacity: 0, inset: 0, cursor: 'pointer', width: '100%', height: '100%' }}
-                          />
-                        </div>
+                        </button>
 
                         {/* 4. Align Button */}
                         <button
                           type="button"
                           data-setting-btn="align"
-                          className={`btn btn-xs vid-ctx-btn ${lastUsedSettingButton === 'align' ? 'active' : ''}`}
+                          className={`btn btn-xs vid-ctx-btn ${activeSubmenu === 'align' ? 'active' : ''}`}
                           title={`Text Alignment: ${activeCaption.align || 'center'}`}
-                          onClick={() => {
-                            setShowTextAlignMenu(true);
-                            setShowTextCurveMenu(false);
-                            setShowTextBlurMenu(false);
-                            setShowTextBgMenu(false);
-                            setShowFontMenu(false);
-                            setShowBubbleLayouts(false);
-                          }}
+                          onClick={() => handleToggleSubmenu('align')}
                           style={{
                             padding: '4px 10px',
                             fontSize: '0.75rem',
@@ -4017,9 +4591,9 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                             alignItems: 'center',
                             gap: '5px',
                             borderRadius: '8px',
-                            background: lastUsedSettingButton === 'align' ? 'var(--primary-gradient)' : 'rgba(255, 255, 255, 0.08)',
-                            border: lastUsedSettingButton === 'align' ? '1px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.1)',
-                            boxShadow: lastUsedSettingButton === 'align' ? '0 2px 10px rgba(6, 182, 212, 0.4), 0 0 8px rgba(99, 102, 241, 0.4)' : 'none',
+                            background: activeSubmenu === 'align' ? 'var(--primary-gradient)' : 'rgba(255, 255, 255, 0.08)',
+                            border: activeSubmenu === 'align' ? '1px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.1)',
+                            boxShadow: activeSubmenu === 'align' ? '0 2px 10px rgba(6, 182, 212, 0.4), 0 0 8px rgba(99, 102, 241, 0.4)' : 'none',
                             transition: 'all 0.2s ease',
                             color: '#ffffff',
                             flexShrink: 0
@@ -4035,20 +4609,13 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           <span>Align</span>
                         </button>
 
-                        {/* 5. Bg Button (Interchanged with Curv) */}
+                        {/* 5. Bg Button */}
                         <button
                           type="button"
                           data-setting-btn="bg"
-                          className={`btn btn-xs vid-ctx-btn ${lastUsedSettingButton === 'bg' ? 'active' : ''}`}
+                          className={`btn btn-xs vid-ctx-btn ${activeSubmenu === 'bg' ? 'active' : ''}`}
                           title="Text Background Box / Banner settings"
-                          onClick={() => {
-                            setShowTextBgMenu(true);
-                            setShowTextAlignMenu(false);
-                            setShowTextCurveMenu(false);
-                            setShowTextBlurMenu(false);
-                            setShowFontMenu(false);
-                            setShowBubbleLayouts(false);
-                          }}
+                          onClick={() => handleToggleSubmenu('bg')}
                           style={{
                             padding: '4px 10px',
                             fontSize: '0.75rem',
@@ -4057,9 +4624,9 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                             alignItems: 'center',
                             gap: '5px',
                             borderRadius: '8px',
-                            background: lastUsedSettingButton === 'bg' ? 'var(--primary-gradient)' : 'rgba(255, 255, 255, 0.08)',
-                            border: lastUsedSettingButton === 'bg' ? '1px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.1)',
-                            boxShadow: lastUsedSettingButton === 'bg' ? '0 2px 10px rgba(6, 182, 212, 0.4), 0 0 8px rgba(99, 102, 241, 0.4)' : 'none',
+                            background: activeSubmenu === 'bg' ? 'var(--primary-gradient)' : 'rgba(255, 255, 255, 0.08)',
+                            border: activeSubmenu === 'bg' ? '1px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.1)',
+                            boxShadow: activeSubmenu === 'bg' ? '0 2px 10px rgba(6, 182, 212, 0.4), 0 0 8px rgba(99, 102, 241, 0.4)' : 'none',
                             transition: 'all 0.2s ease',
                             color: '#ffffff',
                             flexShrink: 0
@@ -4073,16 +4640,9 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         <button
                           type="button"
                           data-setting-btn="blur"
-                          className={`btn btn-xs vid-ctx-btn ${lastUsedSettingButton === 'blur' ? 'active' : ''}`}
+                          className={`btn btn-xs vid-ctx-btn ${activeSubmenu === 'blur' ? 'active' : ''}`}
                           title="Text Blur & Opacity settings"
-                          onClick={() => {
-                            setShowTextBlurMenu(true);
-                            setShowTextAlignMenu(false);
-                            setShowTextCurveMenu(false);
-                            setShowTextBgMenu(false);
-                            setShowFontMenu(false);
-                            setShowBubbleLayouts(false);
-                          }}
+                          onClick={() => handleToggleSubmenu('blur')}
                           style={{
                             padding: '4px 10px',
                             fontSize: '0.75rem',
@@ -4091,9 +4651,9 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                             alignItems: 'center',
                             gap: '5px',
                             borderRadius: '8px',
-                            background: lastUsedSettingButton === 'blur' ? 'var(--primary-gradient)' : 'rgba(255, 255, 255, 0.08)',
-                            border: lastUsedSettingButton === 'blur' ? '1px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.1)',
-                            boxShadow: lastUsedSettingButton === 'blur' ? '0 2px 10px rgba(6, 182, 212, 0.4), 0 0 8px rgba(99, 102, 241, 0.4)' : 'none',
+                            background: activeSubmenu === 'blur' ? 'var(--primary-gradient)' : 'rgba(255, 255, 255, 0.08)',
+                            border: activeSubmenu === 'blur' ? '1px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.1)',
+                            boxShadow: activeSubmenu === 'blur' ? '0 2px 10px rgba(6, 182, 212, 0.4), 0 0 8px rgba(99, 102, 241, 0.4)' : 'none',
                             transition: 'all 0.2s ease',
                             color: '#ffffff',
                             flexShrink: 0
@@ -4103,20 +4663,13 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           <span>Blur</span>
                         </button>
 
-                        {/* 7. Effects Button (Replaced Curv) */}
+                        {/* 7. Effects Button */}
                         <button
                           type="button"
                           data-setting-btn="effects"
-                          className={`btn btn-xs vid-ctx-btn ${lastUsedSettingButton === 'effects' ? 'active' : ''}`}
+                          className={`btn btn-xs vid-ctx-btn ${activeSubmenu === 'effects' ? 'active' : ''}`}
                           title="Text Effects (Arch, Smile, Shadow, Glow, Glitch, 3D, Hollow)"
-                          onClick={() => {
-                            setShowTextEffectsMenu(true);
-                            setShowTextAlignMenu(false);
-                            setShowTextBlurMenu(false);
-                            setShowTextBgMenu(false);
-                            setShowFontMenu(false);
-                            setShowBubbleLayouts(false);
-                          }}
+                          onClick={() => handleToggleSubmenu('effects')}
                           style={{
                             padding: '4px 10px',
                             fontSize: '0.75rem',
@@ -4125,9 +4678,9 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                             alignItems: 'center',
                             gap: '5px',
                             borderRadius: '8px',
-                            background: (lastUsedSettingButton === 'effects' || (activeCaption.effect && activeCaption.effect !== 'flat') || activeCaption.curve) ? 'var(--primary-gradient)' : 'rgba(255, 255, 255, 0.08)',
-                            border: (lastUsedSettingButton === 'effects' || (activeCaption.effect && activeCaption.effect !== 'flat') || activeCaption.curve) ? '1px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.1)',
-                            boxShadow: (lastUsedSettingButton === 'effects' || (activeCaption.effect && activeCaption.effect !== 'flat') || activeCaption.curve) ? '0 2px 10px rgba(6, 182, 212, 0.4), 0 0 8px rgba(99, 102, 241, 0.4)' : 'none',
+                            background: (activeSubmenu === 'effects' || (activeCaption.effect && activeCaption.effect !== 'flat') || activeCaption.curve) ? 'var(--primary-gradient)' : 'rgba(255, 255, 255, 0.08)',
+                            border: (activeSubmenu === 'effects' || (activeCaption.effect && activeCaption.effect !== 'flat') || activeCaption.curve) ? '1px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.1)',
+                            boxShadow: (activeSubmenu === 'effects' || (activeCaption.effect && activeCaption.effect !== 'flat') || activeCaption.curve) ? '0 2px 10px rgba(6, 182, 212, 0.4), 0 0 8px rgba(99, 102, 241, 0.4)' : 'none',
                             transition: 'all 0.2s ease',
                             color: '#ffffff',
                             flexShrink: 0
@@ -4137,13 +4690,16 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           <span>Effects</span>
                         </button>
 
-                        {/* 7. Bubble Button */}
+                        {/* 8. Bubble Button - Opens BubbleChatBottomSheet */}
                         <button
                           type="button"
                           data-setting-btn="bubble"
-                          className={`btn btn-xs vid-ctx-btn ${lastUsedSettingButton === 'bubble' ? 'active' : ''}`}
-                          title={activeCaption.bubbleStyle ? "Change Bubble Layout (iPhone, WhatsApp, Comic)" : "Convert to Chat / Speech Bubble (iPhone, WhatsApp, Comic)"}
-                          onClick={handleConvertToBubble}
+                          className={`btn btn-xs vid-ctx-btn ${showBubbleBottomSheet ? 'active' : ''}`}
+                          title="Chat & Speech Bubbles (iPhone, WhatsApp, Comic)"
+                          onClick={() => {
+                            setShowBubbleBottomSheet(!showBubbleBottomSheet);
+                            setActiveSubmenu(null);
+                          }}
                           style={{
                             padding: '4px 10px',
                             fontSize: '0.75rem',
@@ -4153,9 +4709,9 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                             gap: '5px',
                             borderRadius: '8px',
                             flexShrink: 0,
-                            background: lastUsedSettingButton === 'bubble' ? 'var(--primary-gradient)' : 'rgba(255, 255, 255, 0.08)',
-                            border: lastUsedSettingButton === 'bubble' ? '1px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.1)',
-                            boxShadow: lastUsedSettingButton === 'bubble' ? '0 2px 10px rgba(6, 182, 212, 0.4), 0 0 8px rgba(99, 102, 241, 0.4)' : 'none',
+                            background: (showBubbleBottomSheet || activeCaption.bubbleStyle) ? 'var(--primary-gradient)' : 'rgba(255, 255, 255, 0.08)',
+                            border: (showBubbleBottomSheet || activeCaption.bubbleStyle) ? '1px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.1)',
+                            boxShadow: (showBubbleBottomSheet || activeCaption.bubbleStyle) ? '0 2px 10px rgba(6, 182, 212, 0.4), 0 0 8px rgba(99, 102, 241, 0.4)' : 'none',
                             transition: 'all 0.2s ease',
                             color: '#ffffff'
                           }}
@@ -4163,49 +4719,37 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           <MessageSquare style={{ width: 13, height: 13, color: '#ffffff' }} />
                           <span>Bubble</span>
                         </button>
-                      </>
-                    );
-                  })()}
+                      </div>
+                    )
+                  )}
 
-                  {/* Sticker / Emoji controls */}
+                  {/* Sticker controls */}
                   {activeSticker && (
-                    <>
-                      {/* 1. Rotate */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
                       <button
-                        className="btn btn-icon btn-xs vid-ctx-btn"
-                        title="Rotate 90°"
-                        onClick={handleRotateSticker}
-                        style={{
-                          borderRadius: '8px',
-                          flexShrink: 0,
-                          background: 'rgba(255,255,255,0.08)'
-                        }}
-                      >
-                        <RotateCw style={{ width: 14, height: 14 }} />
-                      </button>
-
-                      {/* 2. Flip */}
-                      <button
-                        className={activeSticker.flipX ? 'btn btn-xs vid-ctx-btn active' : 'btn btn-icon btn-xs vid-ctx-btn'}
+                        type="button"
+                        className={`btn btn-xs vid-ctx-btn ${activeSticker.flipX ? 'active' : ''}`}
                         title="Flip Horizontal (Mirror)"
+                        aria-label="Flip Horizontal"
                         onClick={handleFlipActiveLayer}
                         style={{
-                          padding: activeSticker.flipX ? '4px 10px' : undefined,
+                          padding: '4px 10px',
                           fontSize: '0.75rem',
                           fontWeight: 600,
                           display: 'flex',
                           alignItems: 'center',
-                          gap: '4px',
-                          background: activeSticker.flipX ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.08)',
+                          gap: '5px',
+                          background: activeSticker.flipX ? 'var(--primary-gradient)' : 'rgba(255,255,255,0.08)',
+                          border: activeSticker.flipX ? '1px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.1)',
+                          color: '#ffffff',
                           borderRadius: '8px',
                           flexShrink: 0
                         }}
                       >
                         <FlipHorizontal style={{ width: 14, height: 14 }} />
-                        {activeSticker.flipX && <span>Flip</span>}
+                        <span>Flip</span>
                       </button>
 
-                      {/* 3. Die-Cut */}
                       <div
                         role="button"
                         tabIndex={0}
@@ -4278,13 +4822,12 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           </span>
                         )}
                       </div>
-                    </>
+                    </div>
                   )}
 
-                  {/* Image controls */}
-                  {activeImageLayer && !showImageFilterMenu && (
-                    <>
-                      {/* Normal Image: Morph Face button */}
+                  {/* Image Layer controls */}
+                  {activeImageLayer && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
                       <button
                         className="btn btn-xs vid-ctx-btn"
                         title="AI Face Swap"
@@ -4305,150 +4848,55 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         <span>Face Swap</span>
                       </button>
 
-                          {/* 1. BG Eraser */}
-                          <button
-                            className="btn btn-xs vid-ctx-btn"
-                            title="Magic Eraser (Remove Background)"
-                            onClick={handleRemoveBackground}
-                            disabled={isRemovingBg}
-                            style={{
-                              padding: '4px 10px',
-                              fontSize: '0.75rem',
-                              fontWeight: 600,
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '4px',
-                              background: isRemovingBg ? 'rgba(255,255,255,0.1)' : 'var(--primary-gradient)',
-                              color: '#fff',
-                              borderRadius: '8px',
-                              flexShrink: 0
-                            }}
-                          >
-                            <Wand2 style={{ width: 13, height: 13 }} className={isRemovingBg ? "spin" : ""} />
-                            <span>{activeImageLayer?.originalUrl ? 'Undo BG' : 'BG Eraser'}</span>
-                          </button>
-
-                          {/* 2. Filters */}
-                          <button
-                            className="btn btn-xs vid-ctx-btn"
-                            title="Filters"
-                            onClick={() => setShowImageFilterMenu(true)}
-                            style={{
-                              padding: '4px 10px',
-                              fontSize: '0.75rem',
-                              fontWeight: 600,
-                              flexShrink: 0,
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '4px',
-                              borderRadius: '8px',
-                              background: 'rgba(255,255,255,0.08)'
-                            }}
-                          >
-                            <Sparkles style={{ width: 13, height: 13 }} />
-                            <span>Filters</span>
-                          </button>
-
-                          {/* 3. Crop */}
-                          <button
-                            className={activeImageLayer.fitMode === 'crop' ? 'btn btn-xs vid-ctx-btn active' : 'btn btn-icon btn-xs vid-ctx-btn'}
-                            title={activeImageLayer.fitMode === 'crop' ? 'Exit Crop' : 'Crop'}
-                            onClick={() => updateActiveImageLayer('fitMode', activeImageLayer.fitMode === 'crop' ? 'fit' : 'crop')}
-                            style={{
-                              padding: activeImageLayer.fitMode === 'crop' ? '4px 10px' : undefined,
-                              fontSize: '0.75rem',
-                              fontWeight: 600,
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '4px',
-                              background: activeImageLayer.fitMode === 'crop' ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.08)',
-                              borderRadius: '8px',
-                              flexShrink: 0
-                            }}
-                          >
-                            <Crop style={{ width: 14, height: 14 }} />
-                            {activeImageLayer.fitMode === 'crop' && <span>Crop</span>}
-                          </button>
-
-                          {/* 4. Flip */}
-                          <button
-                            className={activeImageLayer.flipX ? 'btn btn-xs vid-ctx-btn active' : 'btn btn-icon btn-xs vid-ctx-btn'}
-                            title="Flip Horizontal (Mirror)"
-                            onClick={handleFlipActiveLayer}
-                            style={{
-                              padding: activeImageLayer.flipX ? '4px 10px' : undefined,
-                              fontSize: '0.75rem',
-                              fontWeight: 600,
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '4px',
-                              background: activeImageLayer.flipX ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.08)',
-                              borderRadius: '8px',
-                              flexShrink: 0
-                            }}
-                          >
-                            <FlipHorizontal style={{ width: 14, height: 14 }} />
-                            {activeImageLayer.flipX && <span>Flip</span>}
-                          </button>
-                    </>
-                  )}
-
-                  {/* UNIFIED ACTIONS CLUSTER (Duplicate / Layers / Delete for All Elements) */}
-                  {((activeCaption && !showFontMenu && !showTextAlignMenu && !showTextCurveMenu && !showTextBlurMenu && !showTextBgMenu && !showBubbleLayouts && !showTweetThemeMenu && !showTweetTrendMenu) || activeSticker || (activeImageLayer && !showImageFilterMenu)) && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '3px', flexShrink: 0 }}>
-                      <div className="vid-ctx-divider" style={{ width: 1, height: 18, background: 'rgba(255,255,255,0.15)', margin: '0 2px', flexShrink: 0 }} />
                       <button
-                        className="btn btn-icon btn-xs vid-ctx-btn"
-                        title="Duplicate"
-                        onClick={() => handleDuplicateLayer()}
-                        style={{ borderRadius: '8px' }}
+                        className="btn btn-xs vid-ctx-btn"
+                        title="Magic Eraser (Remove Background)"
+                        onClick={handleRemoveBackground}
+                        disabled={isRemovingBg}
+                        style={{
+                          padding: '4px 10px',
+                          fontSize: '0.75rem',
+                          fontWeight: 600,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          background: isRemovingBg ? 'rgba(255,255,255,0.1)' : 'var(--primary-gradient)',
+                          color: '#fff',
+                          borderRadius: '8px',
+                          flexShrink: 0
+                        }}
                       >
-                        <Copy style={{ width: 14, height: 14 }} />
+                        <Wand2 style={{ width: 13, height: 13 }} className={isRemovingBg ? "spin" : ""} />
+                        <span>{activeImageLayer?.originalUrl ? 'Undo BG' : 'BG Eraser'}</span>
                       </button>
+
                       <button
-                        className={`btn btn-icon btn-xs vid-ctx-btn ${showLayerMenu ? 'active' : ''}`}
-                        title="Layer Management"
-                        onClick={() => setShowLayerMenu(!showLayerMenu)}
-                        style={{ borderRadius: '8px' }}
+                        className={`btn btn-xs vid-ctx-btn ${showFiltersModal ? 'active' : ''}`}
+                        title="Filters"
+                        onClick={() => setShowFiltersModal(true)}
+                        style={{
+                          padding: '4px 10px',
+                          fontSize: '0.75rem',
+                          fontWeight: 600,
+                          flexShrink: 0,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          borderRadius: '8px',
+                          background: showFiltersModal ? 'var(--primary-gradient)' : 'rgba(255,255,255,0.08)'
+                        }}
                       >
-                        <Layers style={{ width: 14, height: 14 }} />
-                      </button>
-                      
-                      {showLayerMenu && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '2px', background: 'rgba(0,0,0,0.3)', borderRadius: '8px', padding: '1px' }}>
-                          <button
-                            className="btn btn-icon btn-xs vid-ctx-btn"
-                            title="Bring Forward"
-                            onClick={() => moveLayer(activeLayerId, 'forward')}
-                            style={{ border: 'none', background: 'transparent' }}
-                          >
-                            <ArrowUp style={{ width: 13, height: 13 }} />
-                          </button>
-                          <button
-                            className="btn btn-icon btn-xs vid-ctx-btn"
-                            title="Send Backward"
-                            onClick={() => moveLayer(activeLayerId, 'backward')}
-                            style={{ border: 'none', background: 'transparent' }}
-                          >
-                            <ArrowDown style={{ width: 13, height: 13 }} />
-                          </button>
-                        </div>
-                      )}
-                      <button
-                        className="btn btn-icon btn-xs vid-ctx-btn vid-ctx-btn-delete"
-                        style={{ background: 'rgba(239, 68, 68, 0.85)', color: '#ffffff', border: '1px solid rgba(239, 68, 68, 1)', borderRadius: '8px' }}
-                        title="Delete"
-                        onClick={() => handleDeleteLayer()}
-                      >
-                        <Trash2 style={{ width: 14, height: 14 }} />
+                        <Sparkles style={{ width: 13, height: 13 }} />
+                        <span>Filters</span>
                       </button>
                     </div>
                   )}
 
-                  {/* ON-TEMPLATE FACE MORPH TOOLBAR (when template face morph is active & no layer selected) */}
+
+
+                  {/* ON-TEMPLATE FACE MORPH TOOLBAR */}
                   {templateFaceMorph && !(activeCaption || activeSticker || activeImageLayer) && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-                      {/* 1. Change Face */}
                       <button
                         className="btn btn-xs vid-ctx-btn"
                         title="Pick a different face or photo"
@@ -4471,7 +4919,6 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         <span>Change Face</span>
                       </button>
 
-                      {/* 2. Cancel */}
                       <button
                         className="btn btn-xs vid-ctx-btn"
                         title="Cancel face swap and revert"
@@ -4494,7 +4941,6 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         <span>Cancel</span>
                       </button>
 
-                      {/* 3. Okay (Active UI) */}
                       <button
                         className="btn btn-xs vid-ctx-btn active"
                         title="Accept face swap"
@@ -4508,179 +4954,129 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           gap: '5px',
                           borderRadius: '8px',
                           background: 'var(--primary-gradient)',
-                          border: '1px solid var(--cyber-cyan)',
                           color: '#ffffff',
-                          boxShadow: '0 0 12px rgba(6, 182, 212, 0.45)',
+                          border: '1px solid var(--cyber-cyan)',
                           flexShrink: 0
                         }}
                       >
-                        <Check style={{ width: 13, height: 13, strokeWidth: 2.5 }} />
-                        <span>Okay</span>
+                        <Check style={{ width: 12, height: 12 }} />
+                        <span>Done</span>
+                      </button>
+
+                      <button
+                        className="btn btn-icon btn-xs vid-ctx-btn"
+                        title="Hold to see original without face swap"
+                        onPointerDown={() => setIsHoldingCanvasCompare(true)}
+                        onPointerUp={() => setIsHoldingCanvasCompare(false)}
+                        onPointerLeave={() => setIsHoldingCanvasCompare(false)}
+                        style={{
+                          padding: '4px 8px',
+                          borderRadius: '8px',
+                          background: isHoldingCanvasCompare ? 'var(--primary-gradient)' : 'rgba(255, 255, 255, 0.08)',
+                          border: isHoldingCanvasCompare ? '1px solid var(--cyber-cyan)' : '1px solid var(--glass-border)',
+                          flexShrink: 0
+                        }}
+                      >
+                        <Eye style={{ width: 14, height: 14, color: isHoldingCanvasCompare ? '#ffffff' : 'var(--cyber-cyan)' }} />
                       </button>
                     </div>
                   )}
 
                   {/* TAB SPECIFIC TOOLS (when nothing selected and not in template face morph) */}
+                  {/* TEXT TAB */}
                   {!(activeCaption || activeSticker || activeImageLayer) && !templateFaceMorph && activeTab === "text" && (
-                    showHeaderFooterMenu ? (
-                      <div style={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0, justifyContent: "flex-start", width: "100%" }}>
-                        {/* Back Button */}
-                        <button
-                          onClick={() => { setShowHeaderFooterMenu(false); setLastUsedSettingButton('banner'); }}
-                          className="btn btn-icon btn-xs vid-ctx-btn"
-                          title="Back to text toolbar"
-                          style={{ borderRadius: "8px", flexShrink: 0 }}
-                        >
-                          <ArrowLeft style={{ width: 14, height: 14, color: "#ffffff" }} />
-                        </button>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}>
+                      <button
+                        className="btn btn-xs vid-ctx-btn"
+                        onClick={handleAddCaption}
+                        style={{ padding: "4px 10px", fontSize: "0.75rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "5px", borderRadius: "8px", background: 'var(--primary-gradient)', color: '#fff', border: 'none', flexShrink: 0 }}
+                      >
+                        <Plus style={{ width: 14, height: 14 }} /> <span>Add Text</span>
+                      </button>
 
-                        <div className="vid-ctx-divider" style={{ width: 1, height: 20, background: "rgba(255,255,255,0.2)", margin: "0 2px", flexShrink: 0 }} />
+                      <button
+                        type="button"
+                        data-setting-btn="banner"
+                        className={`btn btn-xs vid-ctx-btn ${(canvasHeader.enabled || canvasFooter.enabled || activeSubmenu === 'banner') ? 'active' : ''}`}
+                        onClick={() => handleToggleSubmenu('banner')}
+                        title="Header & Footer Canvas Extensions (Top / Bottom)"
+                        style={{
+                          padding: "4px 10px",
+                          fontSize: "0.75rem",
+                          fontWeight: 600,
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "5px",
+                          borderRadius: "8px",
+                          background: (canvasHeader.enabled || canvasFooter.enabled || activeSubmenu === 'banner') ? 'var(--primary-gradient)' : undefined,
+                          border: (canvasHeader.enabled || canvasFooter.enabled || activeSubmenu === 'banner') ? '1px solid var(--cyber-cyan)' : undefined,
+                          boxShadow: (canvasHeader.enabled || canvasFooter.enabled || activeSubmenu === 'banner') ? '0 2px 10px rgba(6, 182, 212, 0.4), 0 0 8px rgba(99, 102, 241, 0.4)' : 'none',
+                          color: (canvasHeader.enabled || canvasFooter.enabled || activeSubmenu === 'banner') ? "#ffffff" : undefined,
+                          flexShrink: 0
+                        }}
+                      >
+                        <PanelsTopBottom style={{ width: 13, height: 13 }} />
+                        <span>Header / Footer</span>
+                      </button>
 
-                        {/* Header Toggle */}
-                        <button
-                          type="button"
-                          className={`btn btn-xs vid-ctx-btn ${canvasHeader.enabled ? 'active' : ''}`}
-                          onClick={handleToggleCanvasHeader}
-                          title="Toggle Header Extension"
-                          style={{
-                            padding: "4px 12px",
-                            fontSize: "0.75rem",
-                            fontWeight: 600,
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: "5px",
-                            borderRadius: "8px",
-                            flexShrink: 0,
-                            background: canvasHeader.enabled ? 'var(--primary-gradient)' : 'rgba(255, 255, 255, 0.08)',
-                            border: canvasHeader.enabled ? '1px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.1)',
-                            color: "#ffffff"
-                          }}
-                        >
-                          <PanelTop style={{ width: 13, height: 13, color: "#ffffff" }} />
-                          <span>Header</span>
-                        </button>
+                      <button
+                        type="button"
+                        data-setting-btn="bubble"
+                        className={`btn btn-xs vid-ctx-btn ${showBubbleBottomSheet ? 'active' : ''}`}
+                        onClick={() => {
+                          if (activeCaption) {
+                            setShowBubbleBottomSheet(true);
+                          } else {
+                            handleAddBubble();
+                            setShowBubbleBottomSheet(true);
+                          }
+                          setActiveSubmenu(null);
+                        }}
+                        title="Add Chat & Speech Bubble (iPhone, WhatsApp, Comic)"
+                        style={{
+                          padding: "4px 10px",
+                          fontSize: "0.75rem",
+                          fontWeight: 600,
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "5px",
+                          borderRadius: "8px",
+                          flexShrink: 0,
+                          background: showBubbleBottomSheet ? 'var(--primary-gradient)' : undefined,
+                          border: showBubbleBottomSheet ? '1px solid var(--cyber-cyan)' : undefined,
+                          boxShadow: showBubbleBottomSheet ? '0 2px 10px rgba(6, 182, 212, 0.4), 0 0 8px rgba(99, 102, 241, 0.4)' : 'none',
+                          color: showBubbleBottomSheet ? '#ffffff' : undefined
+                        }}
+                      >
+                        <MessageSquare style={{ width: 13, height: 13, color: showBubbleBottomSheet ? '#ffffff' : "var(--cyber-cyan)" }} /> <span>Bubble</span>
+                      </button>
 
-                        {/* Footer Toggle */}
-                        <button
-                          type="button"
-                          className={`btn btn-xs vid-ctx-btn ${canvasFooter.enabled ? 'active' : ''}`}
-                          onClick={handleToggleCanvasFooter}
-                          title="Toggle Footer Extension"
-                          style={{
-                            padding: "4px 12px",
-                            fontSize: "0.75rem",
-                            fontWeight: 600,
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: "5px",
-                            borderRadius: "8px",
-                            flexShrink: 0,
-                            background: canvasFooter.enabled ? 'var(--primary-gradient)' : 'rgba(255, 255, 255, 0.08)',
-                            border: canvasFooter.enabled ? '1px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.1)',
-                            color: "#ffffff"
-                          }}
-                        >
-                          <PanelBottom style={{ width: 13, height: 13, color: "#ffffff" }} />
-                          <span>Footer</span>
-                        </button>
-
-                        {/* Both Header & Footer Toggle */}
-                        <button
-                          type="button"
-                          className={`btn btn-xs vid-ctx-btn ${(canvasHeader.enabled && canvasFooter.enabled) ? 'active' : ''}`}
-                          onClick={handleToggleCanvasBoth}
-                          title="Toggle Both Header & Footer Extensions"
-                          style={{
-                            padding: "4px 12px",
-                            fontSize: "0.75rem",
-                            fontWeight: 600,
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: "5px",
-                            borderRadius: "8px",
-                            flexShrink: 0,
-                            background: (canvasHeader.enabled && canvasFooter.enabled) ? 'var(--primary-gradient)' : 'rgba(255, 255, 255, 0.08)',
-                            border: (canvasHeader.enabled && canvasFooter.enabled) ? '1px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.1)',
-                            color: "#ffffff"
-                          }}
-                        >
-                          <PanelsTopBottom style={{ width: 13, height: 13, color: "#ffffff" }} />
-                          <span>Both</span>
-                        </button>
-                      </div>
-                    ) : (
-                      <div style={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}>
-                        {/* 1. Add Text */}
-                        <button
-                          className="btn btn-xs vid-ctx-btn"
-                          onClick={handleAddCaption}
-                          style={{ padding: "4px 10px", fontSize: "0.75rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "5px", borderRadius: "8px", background: 'var(--primary-gradient)', color: '#fff', border: 'none', flexShrink: 0 }}
-                        >
-                          <Plus style={{ width: 14, height: 14 }} /> <span>Add Text</span>
-                        </button>
-
-                        {/* 2. Unified Header / Footer Button */}
-                        <button
-                          type="button"
-                          data-setting-btn="banner"
-                          className={`btn btn-xs vid-ctx-btn ${(canvasHeader.enabled || canvasFooter.enabled || lastUsedSettingButton === 'banner') ? 'active' : ''}`}
-                          onClick={() => setShowHeaderFooterMenu(true)}
-                          title="Header & Footer Canvas Extensions (Top / Bottom)"
-                          style={{
-                            padding: "4px 10px",
-                            fontSize: "0.75rem",
-                            fontWeight: 600,
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: "5px",
-                            borderRadius: "8px",
-                            background: (canvasHeader.enabled || canvasFooter.enabled || lastUsedSettingButton === 'banner') ? 'var(--primary-gradient)' : 'rgba(255, 255, 255, 0.08)',
-                            border: (canvasHeader.enabled || canvasFooter.enabled || lastUsedSettingButton === 'banner') ? '1px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.1)',
-                            boxShadow: (canvasHeader.enabled || canvasFooter.enabled || lastUsedSettingButton === 'banner') ? '0 2px 10px rgba(6, 182, 212, 0.4), 0 0 8px rgba(99, 102, 241, 0.4)' : 'none',
-                            color: "#ffffff",
-                            flexShrink: 0
-                          }}
-                        >
-                          <PanelsTopBottom style={{ width: 13, height: 13, color: "#ffffff" }} />
-                          <span>Header / Footer</span>
-                        </button>
-
-                        {/* 3. Creative Tools: Bubble & AI Captions */}
-                        <button
-                          className="btn btn-xs vid-ctx-btn"
-                          onClick={() => handleAddBubble()}
-                          title="Add Chat & Speech Bubble (iPhone, WhatsApp, Comic)"
-                          style={{ padding: "4px 10px", fontSize: "0.75rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "5px", borderRadius: "8px", flexShrink: 0 }}
-                        >
-                          <MessageSquare style={{ width: 13, height: 13, color: "var(--cyber-cyan)" }} /> <span>Bubble</span>
-                        </button>
-
-                        <button
-                          className="btn btn-xs vid-ctx-btn"
-                          onClick={() => setShowAiModal(true)}
-                          title="AI Meme Captions"
-                          style={{
-                            padding: "4px 10px",
-                            fontSize: "0.75rem",
-                            fontWeight: 600,
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "5px",
-                            borderRadius: "8px",
-                            background: "linear-gradient(135deg, rgba(168, 85, 247, 0.3) 0%, rgba(236, 72, 153, 0.3) 100%)",
-                            border: "1px solid rgba(236, 72, 153, 0.5)",
-                            color: "#ffffff",
-                            flexShrink: 0
-                          }}
-                        >
-                          <Sparkles style={{ width: 13, height: 13, color: "#ec4899" }} /> <span>AI Captions</span>
-                        </button>
-                      </div>
-                    )
+                      <button
+                        className="btn btn-xs vid-ctx-btn"
+                        onClick={() => setShowAiModal(true)}
+                        title="AI Meme Captions"
+                        style={{
+                          padding: "4px 10px",
+                          fontSize: "0.75rem",
+                          fontWeight: 600,
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "5px",
+                          borderRadius: "8px",
+                          background: "linear-gradient(135deg, rgba(168, 85, 247, 0.3) 0%, rgba(236, 72, 153, 0.3) 100%)",
+                          border: "1px solid rgba(236, 72, 153, 0.5)",
+                          color: "#ffffff",
+                          flexShrink: 0
+                        }}
+                      >
+                        <Sparkles style={{ width: 13, height: 13, color: "#ec4899" }} /> <span>AI Captions</span>
+                      </button>
+                    </div>
                   )}
+
+                  {/* IMAGES TAB */}
                   {!(activeCaption || activeSticker || activeImageLayer) && !templateFaceMorph && activeTab === 'images' && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-                      {/* 1. UPLOAD */}
                       <label
                         className="btn btn-xs vid-ctx-btn"
                         style={{
@@ -4691,9 +5087,6 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           alignItems: 'center',
                           gap: '6px',
                           borderRadius: '12px',
-                          background: 'rgba(255,255,255,0.08)',
-                          color: '#ffffff',
-                          border: '1px solid var(--glass-border)',
                           flexShrink: 0,
                           cursor: 'pointer',
                           margin: 0
@@ -4710,7 +5103,6 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         />
                       </label>
 
-                      {/* 2. TEMPLATE */}
                       <button
                         className="btn btn-xs vid-ctx-btn"
                         onClick={() => setImagePickerTarget('layer')}
@@ -4722,9 +5114,6 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           alignItems: 'center',
                           gap: '6px',
                           borderRadius: '12px',
-                          background: 'rgba(255,255,255,0.08)',
-                          color: '#ffffff',
-                          border: '1px solid var(--glass-border)',
                           flexShrink: 0
                         }}
                         title="Add Image from Templates"
@@ -4733,7 +5122,6 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         <span>Template</span>
                       </button>
 
-                      {/* 3. STICKER */}
                       <button
                         className="btn btn-xs vid-ctx-btn"
                         onClick={() => setShowMemeStickersModal(true)}
@@ -4745,18 +5133,14 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           alignItems: 'center',
                           gap: '6px',
                           borderRadius: '12px',
-                          background: 'rgba(255,255,255,0.08)',
-                          color: '#ffffff',
-                          border: '1px solid var(--glass-border)',
                           flexShrink: 0
                         }}
-                        title="Add Sticker"
+                        title="Add Meme Stickers"
                       >
                         <Sticker style={{ width: 14, height: 14, color: 'var(--cyber-cyan)' }} />
-                        <span>Sticker</span>
+                        <span>Stickers</span>
                       </button>
 
-                      {/* 4. EMOJI */}
                       <button
                         className="btn btn-xs vid-ctx-btn"
                         onClick={() => setShowEmojiModal(true)}
@@ -4768,18 +5152,14 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           alignItems: 'center',
                           gap: '6px',
                           borderRadius: '12px',
-                          background: 'rgba(255,255,255,0.08)',
-                          color: '#ffffff',
-                          border: '1px solid var(--glass-border)',
                           flexShrink: 0
                         }}
-                        title="Add Emoji"
+                        title="Add Emojis"
                       >
-                        <Smile style={{ width: 14, height: 14, color: '#facc15' }} />
-                        <span>Emoji</span>
+                        <Smile style={{ width: 14, height: 14, color: 'var(--cyber-cyan)' }} />
+                        <span>Emojis</span>
                       </button>
 
-                      {/* 5. TWEET CARD */}
                       <button
                         className="btn btn-xs vid-ctx-btn"
                         onClick={() => setShowStylesModal(true)}
@@ -4791,752 +5171,210 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           alignItems: 'center',
                           gap: '6px',
                           borderRadius: '12px',
-                          background: 'rgba(255,255,255,0.08)',
-                          color: '#ffffff',
-                          border: '1px solid var(--glass-border)',
                           flexShrink: 0
                         }}
-                        title="Add Tweet Card (Fake Twitter / X Post)"
+                        title="Meme Styles (Breaking News, Tweets, Chat Bubbles)"
                       >
-                        <span style={{ fontSize: '0.9rem', fontWeight: 900, color: '#1d9bf0', lineHeight: 1 }}>𝕏</span>
-                        <span>Tweet Card</span>
+                        <Sliders style={{ width: 14, height: 14, color: 'var(--cyber-cyan)' }} />
+                        <span>Styles</span>
                       </button>
                     </div>
                   )}
 
+                  {/* DRAW TAB */}
                   {!(activeCaption || activeSticker || activeImageLayer) && activeTab === 'draw' && (
-                    !showDrawSettings ? (
-                      /* ROOT 4-BUTTON BAR */
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-                        <button
-                          className={`btn btn-xs vid-ctx-btn ${drawTool === 'brush' ? 'active' : ''}`}
-                          onClick={() => {
-                            setDrawTool('brush');
-                            setShowDrawSettings(true);
-                          }}
-                          style={{
-                            padding: '5px 14px',
-                            fontSize: '0.8rem',
-                            fontWeight: 600,
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '6px',
-                            borderRadius: '12px',
-                            background: drawTool === 'brush' ? 'var(--primary-gradient)' : 'rgba(255,255,255,0.08)',
-                            color: '#ffffff',
-                            border: drawTool === 'brush' ? '1px solid var(--cyber-cyan)' : '1px solid var(--glass-border)',
-                            flexShrink: 0
-                          }}
-                          title="Brush: Solid clean brush stroke (Tap for colors & size)"
-                        >
-                          <Paintbrush style={{ width: 14, height: 14 }} />
-                          <span>Brush</span>
-                        </button>
+                    <div
+                      className="draw-toolbar-group"
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '8px',
+                        flexShrink: 0,
+                        marginInline: 'auto'
+                      }}
+                    >
+                      <button
+                        className={`btn btn-xs vid-ctx-btn ${drawTool === 'brush' ? 'active' : ''}`}
+                        onClick={() => {
+                          setDrawTool('brush');
+                          setActiveSubmenu('drawSettings');
+                        }}
+                        style={{
+                          padding: '5px 14px',
+                          fontSize: '0.8rem',
+                          fontWeight: 600,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          borderRadius: '12px',
+                          background: drawTool === 'brush' ? 'var(--primary-gradient)' : undefined,
+                          color: drawTool === 'brush' ? '#ffffff' : undefined,
+                          border: drawTool === 'brush' ? '1px solid var(--cyber-cyan)' : undefined,
+                          flexShrink: 0
+                        }}
+                        title="Brush: Solid clean brush stroke"
+                      >
+                        <Paintbrush style={{ width: 14, height: 14 }} />
+                        <span>Brush</span>
+                      </button>
 
-                        <button
-                          className={`btn btn-xs vid-ctx-btn ${drawTool === 'highlighter' ? 'active' : ''}`}
-                          onClick={() => {
-                            setDrawTool('highlighter');
-                            setShowDrawSettings(true);
-                          }}
-                          style={{
-                            padding: '5px 14px',
-                            fontSize: '0.8rem',
-                            fontWeight: 600,
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '6px',
-                            borderRadius: '12px',
-                            background: drawTool === 'highlighter' ? 'var(--primary-gradient)' : 'rgba(255,255,255,0.08)',
-                            color: '#ffffff',
-                            border: drawTool === 'highlighter' ? '1px solid var(--cyber-cyan)' : '1px solid var(--glass-border)',
-                            flexShrink: 0
-                          }}
-                          title="Marker: Translucent highlighter (Tap for colors & size)"
-                        >
-                          <Highlighter style={{ width: 14, height: 14 }} />
-                          <span>Marker</span>
-                        </button>
+                      <button
+                        className={`btn btn-xs vid-ctx-btn ${drawTool === 'highlighter' ? 'active' : ''}`}
+                        onClick={() => {
+                          setDrawTool('highlighter');
+                          setActiveSubmenu('drawSettings');
+                        }}
+                        style={{
+                          padding: '5px 14px',
+                          fontSize: '0.8rem',
+                          fontWeight: 600,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          borderRadius: '12px',
+                          background: drawTool === 'highlighter' ? 'var(--primary-gradient)' : undefined,
+                          color: drawTool === 'highlighter' ? '#ffffff' : undefined,
+                          border: drawTool === 'highlighter' ? '1px solid var(--cyber-cyan)' : undefined,
+                          flexShrink: 0
+                        }}
+                        title="Marker: Translucent highlighter"
+                      >
+                        <Highlighter style={{ width: 14, height: 14 }} />
+                        <span>Marker</span>
+                      </button>
 
-                        <button
-                          className={`btn btn-xs vid-ctx-btn ${drawTool === 'glow' ? 'active' : ''}`}
-                          onClick={() => {
-                            setDrawTool('glow');
-                            setShowDrawSettings(true);
-                          }}
-                          style={{
-                            padding: '5px 14px',
-                            fontSize: '0.8rem',
-                            fontWeight: 600,
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '6px',
-                            borderRadius: '12px',
-                            background: drawTool === 'glow' ? 'linear-gradient(135deg, rgba(6,182,212,0.7), rgba(168,85,247,0.7))' : 'rgba(255,255,255,0.08)',
-                            color: '#ffffff',
-                            border: drawTool === 'glow' ? '1px solid var(--cyber-cyan)' : '1px solid var(--glass-border)',
-                            flexShrink: 0
-                          }}
-                          title="Glow: Neon laser glow (Tap for colors & size)"
-                        >
-                          <Sparkles style={{ width: 14, height: 14 }} />
-                          <span>Glow</span>
-                        </button>
-
-                        <button
-                          className={`btn btn-xs vid-ctx-btn ${drawTool === 'eraser' ? 'active' : ''}`}
-                          onClick={() => {
-                            setDrawTool('eraser');
-                            setShowDrawSettings(true);
-                          }}
-                          style={{
-                            padding: '5px 14px',
-                            fontSize: '0.8rem',
-                            fontWeight: 600,
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '6px',
-                            borderRadius: '12px',
-                            background: drawTool === 'eraser' ? 'var(--primary-gradient)' : 'rgba(255,255,255,0.08)',
-                            color: '#ffffff',
-                            border: drawTool === 'eraser' ? '1px solid var(--cyber-cyan)' : '1px solid var(--glass-border)',
-                            flexShrink: 0
-                          }}
-                          title="Eraser: Erase freehand strokes (Tap for eraser size)"
-                        >
-                          <Eraser style={{ width: 14, height: 14 }} />
-                          <span>Eraser</span>
-                        </button>
-                      </div>
-                    ) : (
-                      /* INSTRUMENT COLOR & SETTINGS SUB-BAR WITH BACK BUTTON */
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-                        {/* 1. BACK BUTTON */}
-                        <button
-                          onClick={() => setShowDrawSettings(false)}
-                          className="btn btn-icon btn-xs vid-ctx-btn"
-                          title="Back to Draw Tools"
-                          style={{ borderRadius: '8px', flexShrink: 0 }}
-                        >
-                          <ArrowLeft style={{ width: 15, height: 15 }} />
-                        </button>
-
-                        <div className="vid-ctx-divider" style={{ width: 1, height: 20, background: 'rgba(255,255,255,0.2)', margin: '0 2px', flexShrink: 0 }} />
-
-                        {/* 2. ACTIVE TOOL ICON (No text label) */}
-                        <div
-                          title={drawTool === 'eraser' ? 'Eraser' : (drawTool === 'highlighter' ? 'Marker' : (drawTool === 'glow' ? 'Glow' : 'Brush'))}
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            width: 26,
-                            height: 26,
-                            borderRadius: '8px',
-                            background: 'rgba(255,255,255,0.12)',
-                            color: '#ffffff',
-                            flexShrink: 0
-                          }}
-                        >
-                          {drawTool === 'eraser' ? (
-                            <Eraser style={{ width: 14, height: 14 }} />
-                          ) : drawTool === 'highlighter' ? (
-                            <Highlighter style={{ width: 14, height: 14 }} />
-                          ) : drawTool === 'glow' ? (
-                            <Sparkles style={{ width: 14, height: 14 }} />
-                          ) : (
-                            <Paintbrush style={{ width: 14, height: 14 }} />
-                          )}
-                        </div>
-
-                        {/* 3. COLOR BAR (When not erasing) */}
-                        {drawTool !== 'eraser' && (
-                          <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.08)', borderRadius: '10px', padding: '2px 5px', gap: '5px', flexShrink: 0 }}>
-                            {['#ffffff', '#ff2a5f', '#ffe600', '#00f0ff', '#22c55e', '#a855f7', '#000000'].map((c) => (
-                              <button
-                                key={c}
-                                type="button"
-                                title={`Set color ${c}`}
-                                onClick={() => setBrushColor(c)}
-                                style={{
-                                  width: 16,
-                                  height: 16,
-                                  borderRadius: '50%',
-                                  background: c,
-                                  border: brushColor === c ? '2px solid #ffffff' : '1px solid rgba(255,255,255,0.3)',
-                                  boxShadow: brushColor === c ? (drawTool === 'glow' ? `0 0 8px ${c}` : '0 0 6px rgba(255,255,255,0.6)') : 'none',
-                                  cursor: 'pointer',
-                                  padding: 0,
-                                  transform: brushColor === c ? 'scale(1.2)' : 'scale(1)',
-                                  transition: 'all 0.15s ease',
-                                  flexShrink: 0
-                                }}
-                              />
-                            ))}
-                            <div
-                              style={{
-                                position: 'relative',
-                                overflow: 'hidden',
-                                width: 18,
-                                height: 18,
-                                borderRadius: '50%',
-                                background: 'linear-gradient(135deg, #ff007f, #00f0ff, #ffe600, #00ff66)',
-                                border: '1.5px solid rgba(255,255,255,0.6)',
-                                cursor: 'pointer',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                flexShrink: 0
-                              }}
-                              title="Custom Color Palette"
-                            >
-                              <input
-                                type="color"
-                                value={brushColor}
-                                onChange={(e) => setBrushColor(e.target.value)}
-                                style={{ position: 'absolute', opacity: 0, inset: 0, cursor: 'pointer', width: '100%', height: '100%' }}
-                              />
-                            </div>
-                          </div>
-                        )}
-
-                        {/* 4. SIZE BAR */}
-                        <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.08)', borderRadius: '10px', padding: '2px 8px', gap: '6px', flexShrink: 0 }}>
-                          <div
-                            style={{
-                              width: 14,
-                              height: 14,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              flexShrink: 0
-                            }}
-                            title={`Stroke Size: ${brushSize}px`}
-                          >
-                            <div
-                              style={{
-                                width: Math.min(14, Math.max(3, (brushSize / 48) * 14)),
-                                height: Math.min(14, Math.max(3, (brushSize / 48) * 14)),
-                                borderRadius: '50%',
-                                background: drawTool === 'eraser' ? '#ffffff' : brushColor,
-                                boxShadow: drawTool === 'glow' ? `0 0 6px ${brushColor}` : 'none',
-                                transition: 'all 0.1s ease'
-                              }}
-                            />
-                          </div>
-                          <input
-                            type="range"
-                            min="2"
-                            max="48"
-                            value={brushSize}
-                            onChange={(e) => setBrushSize(parseInt(e.target.value, 10))}
-                            style={{ width: '56px', accentColor: 'var(--cyber-cyan)', height: '4px', cursor: 'pointer' }}
-                            title={`Brush Size: ${brushSize}px`}
-                          />
-                          <span style={{ fontSize: '10px', fontWeight: 700, color: '#fff', minWidth: '24px' }}>
-                            {brushSize}px
-                          </span>
-                        </div>
-
-                        {/* 5. ACTIONS: CLEAR */}
-                        <div style={{ display: 'flex', alignItems: 'center', marginLeft: 'auto', flexShrink: 0 }}>
-                          <button
-                            className="btn btn-icon btn-xs vid-ctx-btn vid-ctx-btn-delete"
-                            title={drawings.length > 0 ? "Clear All Drawings" : "Clear Drawings (Empty)"}
-                            onClick={handleClearDrawings}
-                            disabled={drawings.length === 0}
-                            style={{
-                              borderRadius: '8px',
-                              background: drawings.length > 0 ? 'rgba(239, 68, 68, 0.85)' : 'rgba(255,255,255,0.08)',
-                              color: '#ffffff',
-                              border: drawings.length > 0 ? '1px solid rgba(239, 68, 68, 1)' : '1px solid transparent',
-                              opacity: drawings.length === 0 ? 0.35 : 1,
-                              cursor: drawings.length === 0 ? 'default' : 'pointer'
-                            }}
-                          >
-                            <Trash2 style={{ width: 14, height: 14 }} />
-                          </button>
-                        </div>
-                      </div>
-                    )
-                  )}
-
-                  {!(activeCaption || activeSticker || activeImageLayer) && activeTab === 'watermark' && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-                      {!showWatermarkMenu ? (
-                        <>
-                          {/* Canvas Color & Flip Canvas */}
-                          <CanvasColorPicker canvasBgColor={canvasBgColor} setCanvasBgColor={handleSetCanvasBgColor} />
-                          <button
-                            className={`btn btn-xs vid-ctx-btn ${canvasFlipX ? 'active' : ''}`}
-                            title="Flip Canvas Horizontal (Mirror Background Template)"
-                            onClick={handleToggleCanvasFlip}
-                            style={{
-                              padding: '4px 10px',
-                              fontSize: '0.75rem',
-                              fontWeight: 600,
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '5px',
-                              borderRadius: '10px',
-                              background: canvasFlipX ? 'var(--primary-gradient)' : undefined,
-                              color: '#ffffff',
-                              flexShrink: 0
-                            }}
-                          >
-                            <FlipHorizontal style={{ width: 13, height: 13 }} />
-                            <span>Flip Canvas</span>
-                          </button>
-
-                          {/* CLUSTER 2: WATERMARK BRANDING */}
-                          {(() => {
-                            const isWatermarkActive = Boolean(
-                              watermark?.enabled &&
-                              (watermark?.text || '').replace(/^@+/, '').trim().length > 0
-                            );
-                            return (
-                              <button
-                                className={`btn btn-xs vid-ctx-btn ${isWatermarkActive ? 'active' : ''}`}
-                                onClick={() => {
-                                    setShowWatermarkMenu(true);
-                                    if (!watermark?.enabled) updateWatermark('enabled', true);
-                                }}
-                                style={{
-                                  padding: '4px 10px',
-                                  fontSize: '0.75rem',
-                                  fontWeight: 600,
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  gap: '5px',
-                                  borderRadius: '10px',
-                                  background: isWatermarkActive ? 'var(--primary-gradient)' : undefined,
-                                  color: '#ffffff',
-                                  flexShrink: 0
-                                }}
-                              >
-                                <Droplet style={{ width: 13, height: 13 }} /> Watermark
-                              </button>
-                            );
-                          })()}
-                        </>
-                      ) : (
-                        <>
-                          <button onClick={() => setShowWatermarkMenu(false)} className="btn btn-icon btn-xs vid-ctx-btn" >
-                            <ArrowLeft style={{ width: 16, height: 16 }} />
-                          </button>
-                          <div className="vid-ctx-divider"  />
-                          
-                          <button
-                            className="btn btn-icon btn-xs vid-ctx-btn"
-                            style={{ position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                            title="Watermark Color"
-                          >
-                            <div style={{ width: 18, height: 18, borderRadius: '50%', background: watermark?.color || '#ffffff', border: '2px solid rgba(255,255,255,0.4)' }} />
-                            <input type="color" value={watermark?.color || '#ffffff'} onChange={(e) => updateWatermark('color', e.target.value)} style={{ position: 'absolute', opacity: 0, inset: 0, cursor: 'pointer', width: '100%', height: '100%' }} />
-                          </button>
-
-                          <input
-                            type="text"
-                            value={(watermark?.text || '').replace(/^@/, '')}
-                            onChange={(e) => {
-                               const raw = e.target.value.replace(/^@+/, '');
-                               updateWatermark('text', raw ? `@${raw}` : '');
-                               if (raw) updateWatermark('imageUrl', null);
-                            }}
-                            placeholder="username"
-                            style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', padding: '0 16px', borderRadius: '999px', fontSize: '0.85rem', width: '105px', outline: 'none', height: '40px', boxSizing: 'border-box' }}
-                          />
-
-                          <button
-                            className="btn btn-icon btn-xs vid-ctx-btn"
-                            onClick={() => {
-                               const sizes = [12, 16, 24, 32, 48];
-                               const nextIdx = (sizes.indexOf(watermark?.size || 24) + 1) % sizes.length;
-                               updateWatermark('size', sizes[nextIdx]);
-                            }}
-                            title="Size"
-                          >
-                            <Type style={{ width: 16, height: 16, transform: `scale(${(watermark?.size || 24) / 24})`, transition: 'transform 0.2s' }} />
-                          </button>
-
-                          <button
-                            className="btn btn-icon btn-xs vid-ctx-btn"
-                            onClick={() => {
-                               const ops = [1, 0.75, 0.5, 0.25];
-                               const nextIdx = (ops.indexOf(watermark?.opacity || 0.5) + 1) % ops.length;
-                               updateWatermark('opacity', ops[nextIdx]);
-                            }}
-                            title="Opacity"
-                          >
-                            <Blend style={{ width: 16, height: 16, opacity: watermark?.opacity || 0.5, transition: 'opacity 0.2s' }} />
-                          </button>
-
-                          <button
-                            className="btn btn-icon btn-xs vid-ctx-btn"
-                            onClick={() => {
-                               const pos = ['bottom-right', 'bottom-left', 'top-left', 'top-right'];
-                               const nextIdx = (pos.indexOf(watermark?.position || 'bottom-right') + 1) % pos.length;
-                               updateWatermark('position', pos[nextIdx]);
-                            }}
-                            title="Position"
-                          >
-                            <ArrowDownRight 
-                              style={{ 
-                                width: 16, 
-                                height: 16, 
-                                transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                                transform: `rotate(${
-                                  watermark?.position === 'bottom-left' ? 90 :
-                                  watermark?.position === 'top-left' ? 180 :
-                                  watermark?.position === 'top-right' ? 270 :
-                                  0
-                                }deg)`
-                              }} 
-                            />
-                          </button>
-                        </>
-                      )}
+                      <button
+                        className={`btn btn-xs vid-ctx-btn ${drawTool === 'glow' ? 'active' : ''}`}
+                        onClick={() => {
+                          setDrawTool('glow');
+                          setActiveSubmenu('drawSettings');
+                        }}
+                        style={{
+                          padding: '5px 14px',
+                          fontSize: '0.8rem',
+                          fontWeight: 600,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          borderRadius: '12px',
+                          background: drawTool === 'glow' ? 'var(--primary-gradient)' : undefined,
+                          color: drawTool === 'glow' ? '#ffffff' : undefined,
+                          border: drawTool === 'glow' ? '1px solid var(--cyber-cyan)' : undefined,
+                          flexShrink: 0
+                        }}
+                        title="Glow: Neon laser glow"
+                      >
+                        <Sparkles style={{ width: 14, height: 14 }} />
+                        <span>Glow</span>
+                      </button>
                     </div>
                   )}
 
-                  {((!activeCaption && !activeSticker && activeTab === 'filters') || (activeImageLayer && showImageFilterMenu)) && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+                  {/* CANVAS TAB */}
+                  {!(activeCaption || activeSticker || activeImageLayer) && !templateFaceMorph && (activeTab === 'canvas' || activeTab === 'watermark') && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+                      <button
+                        className={`btn btn-xs vid-ctx-btn ${activeSubmenu === 'canvasBg' ? 'active' : ''}`}
+                        onClick={() => handleToggleSubmenu('canvasBg')}
+                        title="Canvas Color"
+                      >
+                        <div style={{ width: 14, height: 14, borderRadius: '50%', background: canvasBgColor || '#000000', border: '1.5px solid rgba(255,255,255,0.6)' }} />
+                        <span>Canvas Color</span>
+                      </button>
 
-                      {activeImageLayer && showImageFilterMenu && (
-                        <>
-                          <button onClick={() => setShowImageFilterMenu(false)} className="btn btn-icon btn-xs vid-ctx-btn" >
-                            <ArrowLeft style={{ width: 16, height: 16 }} />
-                          </button>
-                          <div className="vid-ctx-divider"  />
-                        </>
-                      )}
+                      <button
+                        className="btn btn-xs vid-ctx-btn"
+                        onClick={() => setCanvasFlipX(prev => !prev)}
+                        title="Flip Canvas Horizontal"
+                      >
+                        <FlipHorizontal style={{ width: 13, height: 13 }} />
+                        <span>Flip Canvas</span>
+                      </button>
 
-                      {!activeImageLayer && activeTab === 'filters' && !showFilterPresets && (
-                        <>
-                          {/* 1. Face Swap */}
+                      {(() => {
+                        const isWatermarkActive = Boolean(
+                          watermark?.enabled &&
+                          (watermark?.text || '').replace(/^@+/, '').trim().length > 0
+                        );
+                        return (
                           <button
-                            className="btn btn-xs vid-ctx-btn"
-                            title="AI Face Swap Studio"
-                            onClick={() => handleStartMorphFace()}
-                            style={{
-                              flexShrink: 0,
-                              padding: '5px 12px',
-                              borderRadius: '20px',
-                              fontSize: '0.75rem',
-                              fontWeight: 700,
-                              background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.25) 0%, rgba(99, 102, 241, 0.25) 100%)',
-                              border: '1px solid var(--cyber-cyan)',
-                              boxShadow: '0 0 10px rgba(6, 182, 212, 0.3)',
-                              color: '#ffffff',
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '5px'
+                            className={`btn btn-xs vid-ctx-btn ${(activeSubmenu === 'watermark' || isWatermarkActive) ? 'active' : ''}`}
+                            onClick={() => {
+                              if (!watermark?.enabled) updateWatermark('enabled', true);
+                              handleToggleSubmenu('watermark');
                             }}
+                            title="Watermark Settings"
                           >
-                            <Sparkles style={{ width: 13, height: 13, color: 'var(--cyber-cyan)' }} />
-                            <span>Face Swap</span>
+                            <Droplet style={{ width: 13, height: 13 }} />
+                            <span>Watermark</span>
                           </button>
+                        );
+                      })()}
+                    </div>
+                  )}
 
-                          {/* 2. Filters */}
-                          <button
-                            className="btn btn-xs vid-ctx-btn"
-                            title="Open Photo Filters"
-                            onClick={() => setShowFilterPresets(true)}
-                            style={{
-                              flexShrink: 0,
-                              padding: '5px 12px',
-                              borderRadius: '20px',
-                              fontSize: '0.75rem',
-                              fontWeight: 600,
-                              background: 'var(--primary-gradient)',
-                              color: '#fff',
-                              border: '1px solid rgba(249, 115, 22, 0.5)',
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '6px'
-                            }}
-                          >
-                            <Sliders style={{ width: 13, height: 13 }} />
-                            <span>Filters</span>
-                          </button>
-                        </>
-                      )}
+                  {/* FILTERS TAB */}
+                  {!(activeCaption || activeSticker || activeImageLayer) && !templateFaceMorph && activeTab === 'filters' && (
+                    <div
+                      className="filters-toolbar-group"
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '8px',
+                        flexShrink: 0,
+                        marginInline: 'auto'
+                      }}
+                    >
+                      <button
+                        className="btn btn-xs vid-ctx-btn"
+                        title="Swap faces with another photo using AI"
+                        onClick={() => setShowFaceMorphModal(true)}
+                        style={{
+                          padding: '4px 12px',
+                          fontSize: '0.75rem',
+                          fontWeight: 600,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          borderRadius: '12px',
+                          background: 'rgba(255, 255, 255, 0.08)',
+                          border: '1px solid var(--glass-border)',
+                          flexShrink: 0
+                        }}
+                      >
+                        <Sparkles style={{ width: 13, height: 13, color: 'var(--cyber-cyan)' }} />
+                        <span>Face Swap</span>
+                      </button>
 
-                      {!activeImageLayer && activeTab === 'filters' && showFilterPresets && (
-                        <>
-                          {/* Back Button replacing Face Swap & Filters */}
-                          <button
-                            onClick={() => setShowFilterPresets(false)}
-                            className="btn btn-icon btn-xs vid-ctx-btn"
-                            title="Back to AI/Filters"
-                          >
-                            <ArrowLeft style={{ width: 16, height: 16 }} />
-                          </button>
-                          <div className="vid-ctx-divider" />
-                        </>
-                      )}
-
-                      {((!activeImageLayer && showFilterPresets) || (activeImageLayer && showImageFilterMenu)) && (
-                        <>
-                          {!activeImageLayer && (
-                            <button
-                              className="btn btn-xs vid-ctx-btn"
-                              title={imageFilters.filterScope === 'background' ? "Filter Canvas Only" : "Filter Entire Meme (Canvas + Elements)"}
-                              onClick={() => {
-                                setImageFilters(prev => ({
-                                  ...prev,
-                                  filterScope: prev.filterScope === 'background' ? 'all' : 'background'
-                                }));
-                              }}
-                              style={{
-                                flexShrink: 0,
-                                padding: '4px 10px',
-                                borderRadius: '20px',
-                                fontSize: '0.72rem',
-                                background: 'rgba(255, 255, 255, 0.06)',
-                                border: '1px solid rgba(255, 255, 255, 0.15)',
-                                color: 'var(--text-muted)',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '4px'
-                              }}
-                            >
-                              <span>{imageFilters.filterScope === 'background' ? 'Canvas' : 'All'}</span>
-                            </button>
-                          )}
-                          {(() => {
-                            let previewImage = 'https://images.unsplash.com/photo-1555685812-4b943f1cb0eb?w=100&q=80'; // fallback
-                            if (activeImageLayer) {
-                              previewImage = activeImageLayer.originalUrl || activeImageLayer.url || activeImageLayer.src || previewImage;
-                            } else if (imageLayers && imageLayers.length > 0) {
-                              previewImage = imageLayers[0].originalUrl || imageLayers[0].url || imageLayers[0].src || previewImage;
-                            } else if (template?.imageUrl) {
-                              previewImage = template.imageUrl;
-                            }
-
-                            return PHOTO_FILTERS.map((filterItem) => {
-                              const isFilterActive = activeImageLayer 
-                                ? (activeImageLayer.filterId || 'original') === filterItem.id
-                                : (imageFilters.preset || 'original') === filterItem.id;
-                              return (
-                                <button
-                                  key={filterItem.id}
-                                  id={`filter-item-${filterItem.id}`}
-                                  className={`btn btn-xs vid-ctx-btn ${isFilterActive ? 'active' : ''}`}
-                                  onClick={() => {
-                                    if (activeImageLayer) {
-                                      updateActiveImageLayer({
-                                        filterId: filterItem.id,
-                                        filter: filterItem.filterString,
-                                        filters: filterItem.values
-                                      });
-                                      setShowImageFilterMenu(false);
-                                    } else {
-                                      setImageFilters(prev => ({
-                                        ...prev,
-                                        preset: filterItem.id,
-                                        filterString: filterItem.filterString,
-                                        ...filterItem.values
-                                      }));
-                                    }
-                                  }}
-                                  style={{ 
-                                    flexShrink: 0, 
-                                    padding: '4px 10px 4px 4px', 
-                                    borderRadius: '20px',
-                                    background: isFilterActive ? 'var(--primary-gradient)' : 'rgba(255, 255, 255, 0.05)', 
-                                    border: isFilterActive ? '1px solid rgba(249, 115, 22, 0.5)' : '1px solid rgba(255,255,255,0.1)',
-                                    display: 'flex',
-                                    flexDirection: 'row',
-                                    alignItems: 'center',
-                                    gap: '8px',
-                                    width: 'auto',
-                                    overflow: 'hidden'
-                                  }}
-                                >
-                                  <div style={{
-                                    width: '28px',
-                                    height: '28px',
-                                    borderRadius: '50%',
-                                    backgroundImage: `url(${previewImage})`,
-                                    backgroundSize: 'cover',
-                                    backgroundPosition: 'center',
-                                    filter: filterItem.filterString,
-                                    flexShrink: 0
-                                  }} />
-                                  <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#fff', whiteSpace: 'nowrap' }}>
-                                    {filterItem.name}
-                                  </span>
-                                </button>
-                              );
-                            });
-                          })()}
-                        </>
-                      )}
+                      <button
+                        className={`btn btn-xs vid-ctx-btn ${showFiltersModal ? 'active' : ''}`}
+                        title="Photo Filters"
+                        onClick={() => setShowFiltersModal(true)}
+                        style={{
+                          padding: '4px 12px',
+                          fontSize: '0.75rem',
+                          fontWeight: 600,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          borderRadius: '12px',
+                          background: showFiltersModal ? 'var(--primary-gradient)' : 'rgba(255, 255, 255, 0.08)',
+                          border: showFiltersModal ? '1px solid var(--cyber-cyan)' : '1px solid var(--glass-border)',
+                          color: '#ffffff',
+                          flexShrink: 0
+                        }}
+                      >
+                        <Sun style={{ width: 13, height: 13, color: '#f59e0b' }} />
+                        <span>Filters</span>
+                      </button>
                     </div>
                   )}
 
                 </motion.div>
               )}
             </AnimatePresence>
-
-
-            
-
-            {/* Clipboard Paste Toast */}
-            <AnimatePresence>
-              {pasteToast && (
-                <motion.div
-                  initial={{ opacity: 0, y: -16, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -16, scale: 0.95 }}
-                  transition={{ duration: 0.2 }}
-                  style={{
-                    position: 'absolute',
-                    top: '14px',
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    zIndex: 9999,
-                    background: 'rgba(16, 185, 129, 0.95)',
-                    color: '#ffffff',
-                    padding: '8px 18px',
-                    borderRadius: '24px',
-                    boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    fontSize: '0.85rem',
-                    fontWeight: 700,
-                    pointerEvents: 'none'
-                  }}
-                >
-                  <Check size={16} /> Image pasted from clipboard!
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            <CanvasEditor
-              ref={canvasRef}
-              template={activeTemplate}
-              imageUrl={isHoldingCanvasCompare ? (templateFaceMorph?.cleanOriginalUrl || activeTemplate?.originalUrl) : (activeTemplate?.rawImageUrl || activeTemplate?.imageUrl)}
-            captions={captions}
-            stickers={stickers}
-            imageLayers={imageLayers}
-            aspectRatio={aspectRatio}
-            
-            imageFit={imageFit}
-            filters={imageFilters}
-            isNativeLayout={isNativeLayout}
-            layoutDef={layoutDef}
-            slotImages={slotImages}
-            slotTransforms={slotTransforms}
-            onUpdateSlotTransform={updateSlotTransform}
-            activeLayerId={activeLayerId}
-            onDeleteLayer={handleDeleteLayer}
-            onSelectLayer={(id) => {
-              setShowFontMenu(false);
-              setShowTextCurveMenu(false);
-              setShowTextBlurMenu(false);
-              setShowTextBgMenu(false);
-              setShowBubbleLayouts(false);
-              setShowTweetThemeMenu(false);
-              setShowTweetTrendMenu(false);
-              setShowHeaderFooterMenu(false);
-              setShowTextAlignMenu(false);
-              if (!id) {
-                setActiveLayerId(null);
-                return;
-              }
-              if (window.innerWidth <= 768) {
-                setIsMobileTabsFolded(true);
-              }
-              setActiveLayerId(id);
-            }}
-            onUpdateCaptionBounds={(id, newProps) => {
-              const nextCaps = captions.map((c) => (c.id === id ? { ...c, ...newProps } : c));
-              setCaptions(nextCaps);
-              pushHistoryDebounced(nextCaps, stickers, imageLayers);
-            }}
-            onUpdateStickerBounds={(id, newProps) => {
-              const nextStk = stickers.map((s) => (s.id === id ? { ...s, ...newProps } : s));
-              setStickers(nextStk);
-              pushHistoryDebounced(captions, nextStk, imageLayers);
-            }}
-            onUpdateImageLayerBounds={(id, newProps) => {
-              const nextImgLayers = imageLayers.map((l) => (l.id === id ? { ...l, ...newProps } : l));
-              setImageLayers(nextImgLayers);
-              pushHistoryDebounced(captions, stickers, nextImgLayers);
-            }}
-            onUpdateCaptionText={(id, text) => {
-              setCaptions((prevCaps) => {
-                const nextCaps = prevCaps.map((c) => {
-                  if (c.id === id) {
-                    if (typeof text === 'object') {
-                      return { ...c, ...text };
-                    }
-                    const updated = { ...c, text };
-                    if (c.isBreakingNews) {
-                      updated.newsHeadline = text;
-                    }
-                    return updated;
-                  }
-                  return c;
-                });
-                pushHistoryDebounced(nextCaps, stickers, imageLayers);
-                return nextCaps;
-              });
-            }}
-            isVideoPlaying={isVideoPlaying}
-            watermark={watermark}
-              canvasBgColor={canvasBgColor}
-            drawings={drawings}
-            onAddDrawing={handleAddDrawing}
-            isDrawingMode={!isElementSelected && activeTab === 'draw' && Boolean(drawTool)}
-            drawTool={drawTool}
-            brushColor={brushColor}
-            brushSize={brushSize}
-            canvasHeader={canvasHeader}
-            onUpdateCanvasHeader={(props) => {
-              setCanvasHeader((prev) => {
-                const upd = { ...prev, ...props };
-                pushHistoryDebounced(captions, stickers, imageLayers, drawings, upd, canvasFooter);
-                return upd;
-              });
-            }}
-            canvasFooter={canvasFooter}
-            onUpdateCanvasFooter={(props) => {
-              setCanvasFooter((prev) => {
-                const upd = { ...prev, ...props };
-                pushHistoryDebounced(captions, stickers, imageLayers, drawings, canvasHeader, upd);
-                return upd;
-              });
-            }}
-            demotivational={demotivational}
-            canvasFlipX={canvasFlipX}
-          />
-          {isRemovingBg && (
-            <div style={{
-              position: 'absolute',
-              top: 0, left: 0, right: 0, bottom: 0,
-              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-              background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)',
-              color: '#fff', zIndex: 50, borderRadius: '12px'
-            }}>
-              <RefreshCw className="spin" style={{ width: 40, height: 40, color: 'var(--primary-accent)', marginBottom: '12px' }} />
-              <span style={{ fontSize: '1rem', fontWeight: 600 }}>Removing Background...</span>
-              <span style={{ fontSize: '0.8rem', opacity: 0.8, marginTop: '4px' }}>This may take a moment</span>
-            </div>
-          )}
-
-          <FacePinpointOverlay
-            isOpen={isPinpointingFace}
-            faceTarget={faceTarget}
-            onUpdateTarget={setFaceTarget}
-            onConfirm={handleConfirmPinpoint}
-            onCancel={() => setIsPinpointingFace(false)}
-            canvasRef={canvasRef}
-            templateImageUrl={originalTemplateImgRef.current || activeTemplate?.originalUrl || activeTemplate?.imageUrl}
-          />
 
         </div>
       </div>
@@ -5584,8 +5422,8 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
               <Sparkles className="icon-xs" /> <span>AI/Filters</span>
             </button>
             <button
-              className={`tab-btn ${!isElementSelected && activeTab === 'watermark' ? 'active' : ''}`}
-              onClick={() => handleTabClick('watermark')}
+              className={`tab-btn ${!isElementSelected && (activeTab === 'canvas' || activeTab === 'watermark') ? 'active' : ''}`}
+              onClick={() => handleTabClick('canvas')}
             >
               <LayoutGrid className="icon-xs" /> <span>Canvas</span>
             </button>
@@ -5595,7 +5433,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
 
 
             {/* TAB 5: CANVAS & WATERMARK */}
-            {!isElementSelected && activeTab === 'watermark' && (
+            {!isElementSelected && (activeTab === 'canvas' || activeTab === 'watermark') && (
               <div className="tab-content">
                 {/* Canvas Orientation & Settings */}
                 <div className="form-group margin-bottom-md" style={{ background: 'var(--bg-surface-1)', padding: '14px', borderRadius: '14px', border: '1px solid var(--glass-border)', marginBottom: '16px' }}>
@@ -5746,8 +5584,8 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
             {/* TAB 4: FREEHAND DRAWING */}
             {!isElementSelected && activeTab === 'draw' && (
               <div className="tab-content animate-fade-in">
-                {/* Tool Selection: 4 Modes (Pen, Marker, Glow, Eraser) */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px', marginBottom: '14px' }}>
+                {/* Tool Selection: 3 Modes (Brush, Marker, Glow) */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px', marginBottom: '14px' }}>
                   <button
                     className={`btn ${drawTool === 'brush' ? 'btn-primary' : 'btn-secondary'}`}
                     onClick={() => setDrawTool('brush')}
@@ -5774,15 +5612,6 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                   >
                     <Sparkles className="icon-xs" style={{ width: '14px', height: '14px' }} />
                     <span>Glow</span>
-                  </button>
-                  <button
-                    className={`btn ${drawTool === 'eraser' ? 'btn-primary' : 'btn-secondary'}`}
-                    onClick={() => setDrawTool('eraser')}
-                    style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '7px 4px', gap: '4px', borderRadius: '10px', fontSize: '0.72rem', fontWeight: 600 }}
-                    title="Eraser"
-                  >
-                    <Eraser className="icon-xs" style={{ width: '14px', height: '14px' }} />
-                    <span>Eraser</span>
                   </button>
                 </div>
 
@@ -5812,18 +5641,18 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                   </button>
                 </div>
 
-                {/* 1. Stroke / Eraser Thickness */}
+                {/* 1. Stroke Thickness */}
                 <div style={{ marginBottom: '16px', display: drawTool ? 'block' : 'none' }}>
                   <div className="flex-between align-center" style={{ marginBottom: '6px', paddingRight: '4px' }}>
                     <label style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)' }}>
-                      {drawTool === 'eraser' ? 'Eraser Thickness' : 'Stroke Thickness'} ({brushSize}px)
+                      Stroke Thickness ({brushSize}px)
                     </label>
                     <div
                       style={{
                         width: Math.min(26, Math.max(6, brushSize)),
                         height: Math.min(26, Math.max(6, brushSize)),
                         borderRadius: '50%',
-                        background: drawTool === 'eraser' ? '#ffffff' : brushColor,
+                        background: brushColor,
                         boxShadow: drawTool === 'glow' ? `0 0 8px ${brushColor}` : 'none',
                         border: '1px solid #ffffff',
                         transition: 'all 0.1s ease',
@@ -5839,13 +5668,13 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                 </div>
 
                 {/* 2. Brush Color: Buttons placed directly next to the label */}
-                <div style={{ display: (drawTool && drawTool !== 'eraser') ? 'block' : 'none' }}>
+                <div style={{ display: drawTool ? 'block' : 'none' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px', paddingLeft: '4px', paddingRight: '4px', flexWrap: 'wrap' }}>
                     <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0, whiteSpace: 'nowrap' }}>
                       Stroke Color:
                     </label>
                     <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                      {['#ffffff', '#ff2a5f', '#ffe600', '#00f0ff', '#22c55e', '#a855f7', '#000000'].map((color) => (
+                      {DRAW_COLORS.map((color) => (
                         <button
                           key={color}
                           type="button"
@@ -6064,9 +5893,10 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                       className={`btn btn-xs hover-lift ${activeCaption?.bubbleStyle ? 'btn-primary' : 'btn-secondary'}`}
                       onClick={() => {
                         if (activeCaption) {
-                          handleConvertToBubble();
+                          setShowBubbleBottomSheet(true);
                         } else {
                           handleAddBubble();
+                          setShowBubbleBottomSheet(true);
                         }
                       }}
                       title={activeCaption?.bubbleStyle ? "Change Chat or Speech Bubble Layout (iPhone, WhatsApp, Comic)" : "Add Chat or Speech Bubble (iPhone, WhatsApp, Comic)"}
@@ -6894,8 +6724,12 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           className="btn btn-xs btn-primary"
                           onClick={() => {
                             const hCap = captions.find(c => c.isHeaderCaption);
-                            if (hCap) setActiveLayerId(hCap.id);
-                            else handleToggleCanvasHeader();
+                            if (hCap) {
+                              setActiveLayerId(hCap.id);
+                              setActiveSubmenu(null);
+                            } else {
+                              handleToggleCanvasHeader();
+                            }
                           }}
                           style={{ fontSize: '0.75rem', padding: '4px 10px', borderRadius: '12px' }}
                         >
@@ -6959,8 +6793,12 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           className="btn btn-xs btn-primary"
                           onClick={() => {
                             const fCap = captions.find(c => c.isFooterCaption);
-                            if (fCap) setActiveLayerId(fCap.id);
-                            else handleToggleCanvasFooter();
+                            if (fCap) {
+                              setActiveLayerId(fCap.id);
+                              setActiveSubmenu(null);
+                            } else {
+                              handleToggleCanvasFooter();
+                            }
                           }}
                           style={{ fontSize: '0.75rem', padding: '4px 10px', borderRadius: '12px' }}
                         >
@@ -7257,7 +7095,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
             <div className="tab-content animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               {/* STATE 1: 2 Main Action Buttons / Cards (Shown when !showFilterPresets) */}
               {!showFilterPresets && (
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', maxWidth: '420px', margin: '0 auto', width: '100%', gap: '10px', justifyContent: 'center' }}>
                   {/* 1. Face Swap Action Button */}
                   <button
                     type="button"
@@ -7301,7 +7139,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                   <button
                     type="button"
                     className="btn hover-lift"
-                    onClick={() => setShowFilterPresets(true)}
+                    onClick={() => setShowFiltersModal(true)}
                     style={{
                       padding: '14px 12px',
                       borderRadius: '16px',
@@ -7563,6 +7401,34 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
           }
           setImagePickerTarget(null);
         }}
+      />
+
+      {/* Photo Filters Bottom Sheet */}
+      <PhotoFiltersBottomSheet
+        isOpen={showFiltersModal}
+        onClose={() => setShowFiltersModal(false)}
+        activeImageLayer={activeImageLayer}
+        imageFilters={imageFilters}
+        setImageFilters={setImageFilters}
+        updateActiveImageLayer={updateActiveImageLayer}
+        previewImage={(() => {
+          if (activeImageLayer) {
+            return activeImageLayer.originalUrl || activeImageLayer.url || activeImageLayer.src;
+          }
+          if (imageLayers && imageLayers.length > 0) {
+            return imageLayers[0].originalUrl || imageLayers[0].url || imageLayers[0].src;
+          }
+          return activeTemplate?.imageUrl || template?.imageUrl;
+        })()}
+      />
+
+      {/* Bubble Chat & Speech Layouts Bottom Sheet */}
+      <BubbleChatBottomSheet
+        isOpen={showBubbleBottomSheet}
+        onClose={() => setShowBubbleBottomSheet(false)}
+        activeCaption={activeCaption}
+        onApplyBubbleStyle={handleApplyBubbleStyle}
+        onRemoveBubbleStyle={() => updateActiveCaptionProps({ bubbleStyle: null })}
       />
 
 

@@ -1,49 +1,191 @@
+/* ==========================================================================
+   FLAGSHIP CURVX LIQUID MY GALLERY
+   Continuous Squircles (24px), Frosted Glass Cards, Micro-Interactions
+   ========================================================================== */
+
+.my-gallery {
+  position: relative;
+  z-index: 1;
+  padding-bottom: 24px;
+}
+
+.gallery-header {
+  margin-bottom: 28px;
+  text-align: center;
+}
+
+.gallery-title {
+  margin: 0 0 6px;
+  font-size: 2rem;
+  font-weight: 800;
+  font-family: 'Syne', sans-serif;
+  background: var(--primary-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: var(--text-main);
+  letter-spacing: -0.025em;
+}
+
+[data-theme='light'] .gallery-title {
+  background: linear-gradient(135deg, #171310 30%, #ff5e36 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.gallery-subtitle {
+  color: var(--text-muted);
+  font-size: 0.92rem;
+  font-weight: 500;
+  margin: 0 auto;
+  max-width: 480px;
+}
+
 .gallery-grid {
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 16px;
   display: grid;
 }
-.gallery-card {
-  overflow: hidden;
+
+@media (min-width: 640px) {
+  .gallery-grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 20px;
+  }
 }
+
+.gallery-card {
+  border-radius: 24px !important;
+  background: var(--bg-surface-1) !important;
+  border: 1px solid var(--glass-border) !important;
+  box-shadow: var(--shadow-card) !important;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease, border-color 0.25s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.gallery-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(255, 94, 54, 0.35) !important;
+  box-shadow: 0 16px 36px -8px var(--primary-glow), var(--shadow-card) !important;
+}
+
 .gallery-image-wrapper {
   aspect-ratio: 1;
   position: relative;
+  background: var(--bg-surface-2);
+  overflow: hidden;
 }
+
 .gallery-image-wrapper img {
   object-fit: cover;
   width: 100%;
   height: 100%;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
+
+.gallery-card:hover .gallery-image-wrapper img {
+  transform: scale(1.05);
+}
+
 .gallery-info {
   justify-content: space-between;
   align-items: center;
-  gap: 8px;
-  padding: 8px 10px;
+  gap: 10px;
+  padding: 10px 14px;
   display: flex;
+  background: var(--bg-surface-1);
+  border-top: 1px solid var(--glass-border);
 }
+
 .gallery-info h4 {
   white-space: nowrap;
   text-overflow: ellipsis;
-  margin: 0;
-  font-size: 0.88rem;
+  margin: 0 0 2px;
+  font-size: 0.92rem;
   font-weight: 700;
+  color: var(--text-main);
   overflow: hidden;
 }
+
 .gallery-date {
   color: var(--text-muted);
-  font-size: 0.7rem;
+  font-size: 0.72rem;
+  font-weight: 500;
   display: block;
 }
+
+.gallery-delete-btn {
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  color: #ef4444;
+  border-radius: 10px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  flex-shrink: 0;
+}
+
+.gallery-delete-btn:hover {
+  background: #ef4444;
+  border-color: #ef4444;
+  color: #ffffff;
+  transform: scale(1.08);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+}
+
+/* Danger Pill in Modal */
+.btn-danger-pill {
+  background: rgba(239, 68, 68, 0.14) !important;
+  border: 1px solid rgba(239, 68, 68, 0.35) !important;
+  color: #ef4444 !important;
+  border-radius: var(--radius-pill) !important;
+  padding: 10px 20px !important;
+  font-weight: 700 !important;
+  font-size: 0.88rem !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  cursor: pointer !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.btn-danger-pill:hover {
+  background: #ef4444 !important;
+  border-color: #ef4444 !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.4) !important;
+  transform: translateY(-2px);
+}
+
+/* Empty State */
 .empty-state {
   text-align: center;
-  max-width: 380px;
-  margin: 20px auto;
-  padding: 40px 14px;
+  max-width: 440px;
+  margin: 30px auto;
+  padding: 48px 24px;
+  border-radius: var(--radius-xl, 32px);
 }
+
+.empty-icon-wrap {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: rgba(255, 94, 54, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .empty-icon {
-  width: 44px;
-  height: 44px;
-  color: var(--text-muted);
-  margin-bottom: 10px;
+  width: 32px;
+  height: 32px;
+  color: var(--primary-accent);
 }

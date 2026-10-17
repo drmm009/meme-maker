@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence, useDragControls } from 'framer-motion';
-import { X } from 'lucide-react';
 import ModalPortal from './ModalPortal';
 
 /* ─── Inline stylesheet for scrollbar & hover effects ─── */
@@ -18,15 +17,6 @@ const injectStyles = () => {
     }
     .bs-content-scroll::-webkit-scrollbar-thumb:hover {
       background: rgba(255,255,255,0.22);
-    }
-    .bs-close-btn:hover {
-      background: rgba(255,255,255,0.14) !important;
-      border-color: rgba(255,255,255,0.22) !important;
-      color: #fff !important;
-      transform: rotate(90deg);
-    }
-    .bs-close-btn:active {
-      transform: rotate(90deg) scale(0.92);
     }
     .bs-drag-handle:hover .bs-drag-pill {
       width: 52px !important;
@@ -168,7 +158,7 @@ export default function BottomSheet({
                 onPointerDown={(e) => dragControls.start(e)}
                 style={{
                   width: '100%',
-                  padding: '12px 0 6px 0',
+                  padding: '10px 0 6px 0',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -188,90 +178,6 @@ export default function BottomSheet({
                 />
               </div>
 
-              {/* Header */}
-              {(title || icon) && (
-                <div
-                  style={{
-                    padding: '6px 20px 14px 20px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    flexShrink: 0,
-                    position: 'relative'
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    {icon && (
-                      <div
-                        style={{
-                          width: '32px',
-                          height: '32px',
-                          borderRadius: '10px',
-                          background: 'linear-gradient(135deg, rgba(255, 94, 54, 0.15), rgba(236, 72, 153, 0.10))',
-                          border: '1px solid rgba(255, 94, 54, 0.20)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          flexShrink: 0
-                        }}
-                      >
-                        {icon}
-                      </div>
-                    )}
-                    {title && (
-                      <span
-                        style={{
-                          fontSize: '1rem',
-                          fontWeight: 700,
-                          color: '#ffffff',
-                          letterSpacing: '-0.01em'
-                        }}
-                      >
-                        {title}
-                      </span>
-                    )}
-                    {badge}
-                  </div>
-
-                  <button
-                    type="button"
-                    className="bs-close-btn"
-                    onClick={onClose}
-                    title="Close"
-                    aria-label="Close"
-                    style={{
-                      width: '30px',
-                      height: '30px',
-                      borderRadius: '10px',
-                      background: 'rgba(255, 255, 255, 0.07)',
-                      border: '1px solid rgba(255, 255, 255, 0.10)',
-                      color: 'rgba(255, 255, 255, 0.55)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      padding: 0,
-                      cursor: 'pointer',
-                      transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-                      flexShrink: 0
-                    }}
-                  >
-                    <X size={14} strokeWidth={2.5} />
-                  </button>
-
-                  {/* Header bottom divider – subtle gradient */}
-                  <div
-                    style={{
-                      position: 'absolute',
-                      bottom: 0,
-                      left: '20px',
-                      right: '20px',
-                      height: '1px',
-                      background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0.06), transparent)'
-                    }}
-                  />
-                </div>
-              )}
-
               {/* Scrollable Sheet Content */}
               <div
                 className="bs-content-scroll"
@@ -280,7 +186,7 @@ export default function BottomSheet({
                   overflowY: 'auto',
                   overscrollBehavior: 'contain',
                   WebkitOverflowScrolling: 'touch',
-                  padding: '14px 20px calc(14px + env(safe-area-inset-bottom, 0px)) 20px',
+                  padding: '6px 20px calc(14px + env(safe-area-inset-bottom, 0px)) 20px',
                   display: 'flex',
                   flexDirection: 'column',
                   gap: '12px',

@@ -73,60 +73,6 @@ export default function AiCaptionModal({ isOpen, onClose, onApplyCaption, templa
     <BottomSheet
       isOpen={isOpen}
       onClose={onClose}
-      title="AI Captions"
-      icon={<Sparkles size={16} style={{ color: 'var(--cyber-cyan)' }} />}
-      badge={
-        <div
-          style={{
-            display: 'inline-flex',
-            background: 'rgba(255, 255, 255, 0.06)',
-            borderRadius: '8px',
-            padding: '2px',
-            border: '1px solid rgba(255, 255, 255, 0.08)'
-          }}
-        >
-          <button
-            type="button"
-            onClick={() => setTargetMode('caption')}
-            style={{
-              padding: '3px 8px',
-              borderRadius: '6px',
-              fontSize: '0.7rem',
-              fontWeight: targetMode === 'caption' ? 600 : 500,
-              border: 'none',
-              cursor: 'pointer',
-              background: targetMode === 'caption' ? 'var(--primary-gradient)' : 'transparent',
-              color: targetMode === 'caption' ? '#ffffff' : 'rgba(255, 255, 255, 0.6)',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '4px'
-            }}
-          >
-            <Type size={11} />
-            <span>Caption</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setTargetMode('header')}
-            style={{
-              padding: '3px 8px',
-              borderRadius: '6px',
-              fontSize: '0.7rem',
-              fontWeight: targetMode === 'header' ? 600 : 500,
-              border: 'none',
-              cursor: 'pointer',
-              background: targetMode === 'header' ? 'var(--primary-gradient)' : 'transparent',
-              color: targetMode === 'header' ? '#ffffff' : 'rgba(255, 255, 255, 0.6)',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '4px'
-            }}
-          >
-            <PanelTop size={11} />
-            <span>Header</span>
-          </button>
-        </div>
-      }
       maxHeight="82vh"
       footer={
         <div>
@@ -186,8 +132,63 @@ export default function AiCaptionModal({ isOpen, onClose, onApplyCaption, templa
         </div>
       }
     >
-          {/* Minimal Prompt Input with integrated Generate Button */}
-          <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+      {/* Target Mode Switcher: Caption vs Header */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+        <span style={{ fontSize: '0.78rem', color: 'rgba(255, 255, 255, 0.65)', fontWeight: 600 }}>Target Layer:</span>
+        <div
+          style={{
+            display: 'inline-flex',
+            background: 'rgba(255, 255, 255, 0.06)',
+            borderRadius: '8px',
+            padding: '2px',
+            border: '1px solid rgba(255, 255, 255, 0.08)'
+          }}
+        >
+          <button
+            type="button"
+            onClick={() => setTargetMode('caption')}
+            style={{
+              padding: '3px 10px',
+              borderRadius: '6px',
+              fontSize: '0.72rem',
+              fontWeight: targetMode === 'caption' ? 600 : 500,
+              border: 'none',
+              cursor: 'pointer',
+              background: targetMode === 'caption' ? 'var(--primary-gradient)' : 'transparent',
+              color: targetMode === 'caption' ? '#ffffff' : 'rgba(255, 255, 255, 0.6)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px'
+            }}
+          >
+            <Type size={11} />
+            <span>Caption</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setTargetMode('header')}
+            style={{
+              padding: '3px 10px',
+              borderRadius: '6px',
+              fontSize: '0.72rem',
+              fontWeight: targetMode === 'header' ? 600 : 500,
+              border: 'none',
+              cursor: 'pointer',
+              background: targetMode === 'header' ? 'var(--primary-gradient)' : 'transparent',
+              color: targetMode === 'header' ? '#ffffff' : 'rgba(255, 255, 255, 0.6)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px'
+            }}
+          >
+            <PanelTop size={11} />
+            <span>Header</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Minimal Prompt Input with integrated Generate Button */}
+      <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
             <input
               type="text"
               className="form-input"
