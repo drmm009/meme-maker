@@ -2,16 +2,40 @@ import React, { useState, useEffect, Suspense, lazy } from 'react';
 import TemplateDiscovery from './components/TemplateDiscovery';
 import ErrorBoundary from './components/ErrorBoundary';
 
-// Code-split heavy views and editors so the initial bundle stays lean.
-const CustomLayoutBuilder = lazy(() => import('./components/CustomLayoutBuilder'));
-const VideoLayoutBuilder = lazy(() => import('./components/video-editor/VideoLayoutBuilder'));
-const MyGallery = lazy(() => import('./components/MyGallery'));
-const AccountModal = lazy(() => import('./components/AccountModal'));
-const MemeEditor = lazy(() => import('./components/MemeEditor'));
-const VideoEditor = lazy(() => import('./components/video-editor/VideoEditor'));
-const NotificationsModal = lazy(() => import('./components/NotificationsModal'));
-const SocialFeed = lazy(() => import('./components/SocialFeed'));
-const AiCaptionModal = lazy(() => import('./components/AiCaptionModal'));
+// Resilient code-split helper that retries on mobile network hiccups
+const safeLazy = (importFn) =>
+  lazy(async () => {
+    try {
+      return await importFn();
+    } catch (err) {
+      console.warn('Retrying dynamic import:', err);
+      await new Promise((r) => setTimeout(r, 400));
+      try {
+        return await importFn();
+      } catch (finalErr) {
+        if (typeof window !== 'undefined' && window.sessionStorage) {
+          const key = 'last_chunk_reload';
+          const now = Date.now();
+          const last = Number(sessionStorage.getItem(key) || 0);
+          if (now - last > 10000) {
+            sessionStorage.setItem(key, String(now));
+            window.location.reload();
+          }
+        }
+        throw finalErr;
+      }
+    }
+  });
+
+const CustomLayoutBuilder = safeLazy(() => import('./components/CustomLayoutBuilder'));
+const VideoLayoutBuilder = safeLazy(() => import('./components/video-editor/VideoLayoutBuilder'));
+const MyGallery = safeLazy(() => import('./components/MyGallery'));
+const AccountModal = safeLazy(() => import('./components/AccountModal'));
+const MemeEditor = safeLazy(() => import('./components/MemeEditor'));
+const VideoEditor = safeLazy(() => import('./components/video-editor/VideoEditor'));
+const NotificationsModal = safeLazy(() => import('./components/NotificationsModal'));
+const SocialFeed = safeLazy(() => import('./components/SocialFeed'));
+const AiCaptionModal = safeLazy(() => import('./components/AiCaptionModal'));
 import { MEME_TEMPLATES } from './data/templates';
 import { INITIAL_NOTIFICATIONS } from './data/notifications';
 import { idbPutMeme, idbGetAllMemes, idbGetMeme, idbDeleteMeme, dataURLToBlob, createThumbnail, toMetadata } from './utils/galleryStore';
