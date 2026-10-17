@@ -10,6 +10,9 @@ export default defineConfig({
     testTimeout: 30000,
     isolate: false
   },
+  resolve: {
+    dedupe: ['react', 'react-dom']
+  },
   server: {
     host: true,
     allowedHosts: true,
