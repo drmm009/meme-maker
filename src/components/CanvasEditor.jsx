@@ -1829,35 +1829,54 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
           const scale = imgLayer.scale || 1.0;
           const maxDim = 320;
           const fitScale = Math.min(maxDim / baseW, maxDim / baseH);
-          const w = imgLayer.boxWidth || imgLayer.width || (baseW * fitScale * scale);
-          const h = imgLayer.boxHeight || imgLayer.height || (baseH * fitScale * scale);
+          const crop = imgLayer.crop || { x: 0, y: 0, width: 1, height: 1 };
+          const naturalFullW = baseW * fitScale * scale;
+          const naturalFullH = baseH * fitScale * scale;
+          const w = imgLayer.boxWidth || imgLayer.width || Math.round(naturalFullW * (crop.width || 1));
+          const h = imgLayer.boxHeight || imgLayer.height || Math.round(naturalFullH * (crop.height || 1));
 
           const mode = imgLayer.fitMode || 'fit';
           
-          if (mode === 'stretch') {
-            targetCtx.drawImage(drawSource, -w / 2, -h / 2, w, h);
-          } else {
-            const imgAspect = baseW / baseH;
+          if (mode === 'crop') {
+            const sx = Math.max(0, Math.min(baseW - 1, (crop.x || 0) * baseW));
+            const sy = Math.max(0, Math.min(baseH - 1, (crop.y || 0) * baseH));
+            const sw = Math.max(1, Math.min(baseW - sx, (crop.width || 1) * baseW));
+            const sh = Math.max(1, Math.min(baseH - sy, (crop.height || 1) * baseH));
+
+            targetCtx.save();
+            targetCtx.beginPath();
+            if (imgLayer.isFaceMorph) {
+              targetCtx.ellipse(0, 0, w / 2, h / 2, 0, 0, Math.PI * 2);
+            } else {
+              targetCtx.rect(-w / 2, -h / 2, w, h);
+            }
+            targetCtx.clip();
+            targetCtx.drawImage(drawSource, sx, sy, sw, sh, -w / 2, -h / 2, w, h);
+            targetCtx.restore();
+          } else if (mode === 'stretch') {
+            const sx = Math.max(0, Math.min(baseW - 1, (crop.x || 0) * baseW));
+            const sy = Math.max(0, Math.min(baseH - 1, (crop.y || 0) * baseH));
+            const sw = Math.max(1, Math.min(baseW - sx, (crop.width || 1) * baseW));
+            const sh = Math.max(1, Math.min(baseH - sy, (crop.height || 1) * baseH));
+            targetCtx.drawImage(drawSource, sx, sy, sw, sh, -w / 2, -h / 2, w, h);
+          } else { // fit
+            const hasCrop = (crop.width && crop.width < 1) || (crop.height && crop.height < 1) || (crop.x || 0) > 0 || (crop.y || 0) > 0;
+            const sx = hasCrop ? Math.max(0, Math.min(baseW - 1, (crop.x || 0) * baseW)) : 0;
+            const sy = hasCrop ? Math.max(0, Math.min(baseH - 1, (crop.y || 0) * baseH)) : 0;
+            const sw = hasCrop ? Math.max(1, Math.min(baseW - sx, (crop.width || 1) * baseW)) : baseW;
+            const sh = hasCrop ? Math.max(1, Math.min(baseH - sy, (crop.height || 1) * baseH)) : baseH;
+
+            const imgAspect = sw / sh;
             const boxAspect = w / h;
             let drawW = w;
             let drawH = h;
             
-            if (mode === 'crop') {
-              if (boxAspect > imgAspect) {
-                drawW = w;
-                drawH = w / imgAspect;
-              } else {
-                drawH = h;
-                drawW = h * imgAspect;
-              }
-            } else { // fit
-              if (boxAspect > imgAspect) {
-                drawH = h;
-                drawW = h * imgAspect;
-              } else {
-                drawH = w;
-                drawH = w / imgAspect;
-              }
+            if (boxAspect > imgAspect) {
+              drawH = h;
+              drawW = h * imgAspect;
+            } else {
+              drawW = w;
+              drawH = w / imgAspect;
             }
             
             targetCtx.save();
@@ -1868,7 +1887,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
               targetCtx.rect(-w / 2, -h / 2, w, h);
             }
             targetCtx.clip();
-            targetCtx.drawImage(drawSource, -drawW / 2, -drawH / 2, drawW, drawH);
+            targetCtx.drawImage(drawSource, sx, sy, sw, sh, -drawW / 2, -drawH / 2, drawW, drawH);
             targetCtx.restore();
           }
 
@@ -1938,19 +1957,40 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
                 return;
               }
 
-              // Reference Image Style: Coral Glow Rounded Box with Top-Left Delete, Bottom-Right Resize & Side Handles
+              const isCropping = imgLayer.fitMode === 'crop';
+
+              // Reference Image Style: Coral Glow Rounded Box with Side Handles
               drawSelectionBox(uiCtx, -hw, -hh, w + 12, h + 12, 10);
 
-              // Rotation handle
-              drawRotateHandle(uiCtx, 0, -hh, 0, -hh - 28);
+              if (isCropping) {
+                // Subtle rule-of-thirds grid in crop mode
+                uiCtx.save();
+                uiCtx.strokeStyle = 'rgba(240, 104, 83, 0.35)';
+                uiCtx.lineWidth = 1;
+                uiCtx.setLineDash([3, 3]);
+                uiCtx.beginPath();
+                uiCtx.moveTo(-hw + (w + 12) / 3, -hh);
+                uiCtx.lineTo(-hw + (w + 12) / 3, hh);
+                uiCtx.moveTo(-hw + (w + 12) * 2 / 3, -hh);
+                uiCtx.lineTo(-hw + (w + 12) * 2 / 3, hh);
+                uiCtx.moveTo(-hw, -hh + (h + 12) / 3);
+                uiCtx.lineTo(hw, -hh + (h + 12) / 3);
+                uiCtx.moveTo(-hw, -hh + (h + 12) * 2 / 3);
+                uiCtx.lineTo(hw, -hh + (h + 12) * 2 / 3);
+                uiCtx.stroke();
+                uiCtx.restore();
+              } else {
+                // Rotation handle
+                drawRotateHandle(uiCtx, 0, -hh, 0, -hh - 28);
 
-              // Corner handles:
-              // Top-Left IS the Delete Handle!
-              drawDeleteHandle(uiCtx, -hw, -hh);
-              // Bottom-Right IS the Resize Handle!
-              drawResizeHandle(uiCtx, hw, hh);
+                // Corner handles:
+                // Top-Left IS the Delete Handle!
+                drawDeleteHandle(uiCtx, -hw, -hh);
+                // Bottom-Right IS the Resize Handle!
+                drawResizeHandle(uiCtx, hw, hh);
+              }
 
-              // 4 Middle-of-side handles
+              // 4 Middle-of-side handles (used for freeform cropping in crop mode, or stretching)
               drawSideHandle(uiCtx, 0, -hh, false);  // Top middle
               drawSideHandle(uiCtx, 0, hh, false);   // Bottom middle
               drawSideHandle(uiCtx, -hw, 0, true);   // Left middle
@@ -2722,10 +2762,18 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
             const hw = w / 2 + 6;
             const hh = h / 2 + 6;
 
+            const isCropping = activeImg.fitMode === 'crop';
+
             const handles = activeImg.isFaceMorph ? [
               { type: 'delete_layer', x: cx - hw * 0.72, y: cy - hh * 0.72, r: 26 },
               { type: 'rotate_imageLayer', x: cx, y: cy - hh - 28, r: 24 },
               { type: 'resize_imageLayer_br', x: cx + hw * 0.72, y: cy + hh * 0.72, r: 24 }
+            ] : isCropping ? [
+              // In crop mode: only middle handles are active; delete and resize are removed per user request
+              { type: 'resize_imageLayer_t',  x: cx,      y: cy - hh, r: 24 },
+              { type: 'resize_imageLayer_b',  x: cx,      y: cy + hh, r: 24 },
+              { type: 'resize_imageLayer_l',  x: cx - hw, y: cy,      r: 24 },
+              { type: 'resize_imageLayer_r',  x: cx + hw, y: cy,      r: 24 }
             ] : [
               { type: 'delete_layer', x: cx - hw, y: cy - hh, r: 26 },
               { type: 'rotate_imageLayer', x: cx, y: cy - hh - 28, r: 22 },
@@ -2759,7 +2807,9 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
                 boxWidth: w, 
                 boxHeight: h, 
                 width: w, 
-                height: h 
+                height: h,
+                crop: activeImg.crop ? { ...activeImg.crop } : { x: 0, y: 0, width: 1, height: 1 },
+                fitMode: activeImg.fitMode
               };
             }
           }
@@ -2891,7 +2941,9 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
                 boxHeight: h,
                 width: w,
                 height: h,
-                locked: !!imgLayer.locked
+                locked: !!imgLayer.locked,
+                crop: imgLayer.crop ? { ...imgLayer.crop } : undefined,
+                fitMode: imgLayer.fitMode
               };
             }
           }
@@ -2990,7 +3042,9 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
           initialBoxHeight: hitLayer.initialBoxHeight || hitLayer.boxHeight,
           handleRelX: hitLayer.handleRelX,
           handleRelY: hitLayer.handleRelY,
-          hasCustomWidth: hitLayer.hasCustomWidth
+          hasCustomWidth: hitLayer.hasCustomWidth,
+          crop: hitLayer.crop ? { ...hitLayer.crop } : undefined,
+          fitMode: hitLayer.fitMode
         };
       }
     } else {
@@ -3203,14 +3257,18 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
           const hw = w / 2 + 6;
           const hh = h / 2 + 6;
 
-          if (Math.hypot(p.x - (cx - hw), p.y - (cy - hh)) <= 26) {
-            canvas.style.cursor = 'pointer'; return;
-          }
-          if (Math.hypot(p.x - cx, p.y - (cy - hh - 28)) <= 22) {
-            canvas.style.cursor = 'grab'; return;
-          }
-          if (Math.hypot(p.x - (cx + hw), p.y - (cy + hh)) <= 22) {
-            canvas.style.cursor = 'nwse-resize'; return;
+          const isCropping = activeImg.fitMode === 'crop';
+
+          if (!isCropping) {
+            if (Math.hypot(p.x - (cx - hw), p.y - (cy - hh)) <= 26) {
+              canvas.style.cursor = 'pointer'; return;
+            }
+            if (Math.hypot(p.x - cx, p.y - (cy - hh - 28)) <= 22) {
+              canvas.style.cursor = 'grab'; return;
+            }
+            if (Math.hypot(p.x - (cx + hw), p.y - (cy + hh)) <= 22) {
+              canvas.style.cursor = 'nwse-resize'; return;
+            }
           }
           if (Math.hypot(p.x - cx, p.y - (cy - hh)) <= 22 || Math.hypot(p.x - cx, p.y - (cy + hh)) <= 22) {
             canvas.style.cursor = 'ns-resize'; return;
@@ -3449,6 +3507,123 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
       const initW = initialLayerPos.current.boxWidth || initialLayerPos.current.width || 160;
       const initH = initialLayerPos.current.boxHeight || initialLayerPos.current.height || 160;
       const initScale = initialLayerPos.current.scale || 1.0;
+      const isCropping = (imgLayer.fitMode === 'crop') || (initialLayerPos.current.fitMode === 'crop');
+
+      if (isCropping) {
+        const initCrop = initialLayerPos.current.crop || { x: 0, y: 0, width: 1, height: 1 };
+        const rot = (imgLayer.rotation || 0);
+        let naturalFullW = initW / Math.max(0.01, initCrop.width || 1);
+        let naturalFullH = initH / Math.max(0.01, initCrop.height || 1);
+        const cached = imageCacheRef.current[imgLayer.url];
+        if (cached && cached.width && cached.height) {
+          const baseW = cached.width;
+          const baseH = cached.height;
+          const fitScale = Math.min(320 / baseW, 320 / baseH);
+          const scale = initialLayerPos.current.scale || imgLayer.scale || 1.0;
+          if (!initialLayerPos.current.crop || (initialLayerPos.current.crop.width === 1 && initialLayerPos.current.crop.height === 1)) {
+            naturalFullW = baseW * fitScale * scale;
+            naturalFullH = baseH * fitScale * scale;
+          }
+        }
+
+        const localCoords = rotatePoint(coords.x, coords.y, centerX, centerY, -rot);
+
+        if (handleType === 'resize_imageLayer_r') {
+          const localLeft = centerX - initW / 2;
+          const rawW = localCoords.x - localLeft;
+          const maxCropW = Math.max(0.02, 1.0 - (initCrop.x || 0));
+          const minCropW = Math.min(maxCropW, Math.max(0.02, 20 / naturalFullW));
+          const targetCropW = rawW / naturalFullW;
+          const newCropWidth = Math.max(minCropW, Math.min(maxCropW, targetCropW));
+          const newW = Math.max(20, Math.round(newCropWidth * naturalFullW));
+          const newLocalCenterX = localLeft + newW / 2;
+          const newCenter = rotatePoint(newLocalCenterX, centerY, centerX, centerY, rot);
+
+          onUpdateImageLayerBounds(id, {
+            x: newCenter.x / canvas.width,
+            y: (newCenter.y - headerExtH) / canvasH,
+            width: newW,
+            boxWidth: newW,
+            crop: { ...initCrop, width: newCropWidth },
+            fitMode: 'crop'
+          });
+          return;
+        }
+
+        if (handleType === 'resize_imageLayer_l') {
+          const localRight = centerX + initW / 2;
+          const rawW = localRight - localCoords.x;
+          const rightCropEdge = Math.min(1.0, (initCrop.x || 0) + (initCrop.width || 1));
+          const maxCropW = Math.max(0.02, rightCropEdge);
+          const minCropW = Math.min(maxCropW, Math.max(0.02, 20 / naturalFullW));
+          const targetCropW = rawW / naturalFullW;
+          const newCropWidth = Math.max(minCropW, Math.min(maxCropW, targetCropW));
+          const newCropX = Math.max(0, rightCropEdge - newCropWidth);
+          const newW = Math.max(20, Math.round(newCropWidth * naturalFullW));
+          const newLocalCenterX = localRight - newW / 2;
+          const newCenter = rotatePoint(newLocalCenterX, centerY, centerX, centerY, rot);
+
+          onUpdateImageLayerBounds(id, {
+            x: newCenter.x / canvas.width,
+            y: (newCenter.y - headerExtH) / canvasH,
+            width: newW,
+            boxWidth: newW,
+            crop: { ...initCrop, x: newCropX, width: newCropWidth },
+            fitMode: 'crop'
+          });
+          return;
+        }
+
+        if (handleType === 'resize_imageLayer_b') {
+          const localTop = centerY - initH / 2;
+          const rawH = localCoords.y - localTop;
+          const maxCropH = Math.max(0.02, 1.0 - (initCrop.y || 0));
+          const minCropH = Math.min(maxCropH, Math.max(0.02, 20 / naturalFullH));
+          const targetCropH = rawH / naturalFullH;
+          const newCropHeight = Math.max(minCropH, Math.min(maxCropH, targetCropH));
+          const newH = Math.max(20, Math.round(newCropHeight * naturalFullH));
+          const newLocalCenterY = localTop + newH / 2;
+          const newCenter = rotatePoint(centerX, newLocalCenterY, centerX, centerY, rot);
+
+          onUpdateImageLayerBounds(id, {
+            x: newCenter.x / canvas.width,
+            y: (newCenter.y - headerExtH) / canvasH,
+            height: newH,
+            boxHeight: newH,
+            crop: { ...initCrop, height: newCropHeight },
+            fitMode: 'crop'
+          });
+          return;
+        }
+
+        if (handleType === 'resize_imageLayer_t') {
+          const localBottom = centerY + initH / 2;
+          const rawH = localBottom - localCoords.y;
+          const bottomCropEdge = Math.min(1.0, (initCrop.y || 0) + (initCrop.height || 1));
+          const maxCropH = Math.max(0.02, bottomCropEdge);
+          const minCropH = Math.min(maxCropH, Math.max(0.02, 20 / naturalFullH));
+          const targetCropH = rawH / naturalFullH;
+          const newCropHeight = Math.max(minCropH, Math.min(maxCropH, targetCropH));
+          const newCropY = Math.max(0, bottomCropEdge - newCropHeight);
+          const newH = Math.max(20, Math.round(newCropHeight * naturalFullH));
+          const newLocalCenterY = localBottom - newH / 2;
+          const newCenter = rotatePoint(centerX, newLocalCenterY, centerX, centerY, rot);
+
+          onUpdateImageLayerBounds(id, {
+            x: newCenter.x / canvas.width,
+            y: (newCenter.y - headerExtH) / canvasH,
+            height: newH,
+            boxHeight: newH,
+            crop: { ...initCrop, y: newCropY, height: newCropHeight },
+            fitMode: 'crop'
+          });
+          return;
+        }
+
+        // In crop mode, corner resize is disabled
+        return;
+      }
+
       const nextFitMode = (!imgLayer.fitMode || imgLayer.fitMode === 'fit') ? 'stretch' : imgLayer.fitMode;
 
       if (handleType === 'resize_imageLayer_l' || handleType === 'resize_imageLayer_r') {
