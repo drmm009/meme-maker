@@ -1711,6 +1711,14 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     updateActiveCaption('text', nextText);
   };
 
+  // Cycle Text Alignment: center -> left -> right -> center
+  const handleCycleTextAlignment = () => {
+    if (!activeCaption) return;
+    const current = activeCaption.align || 'center';
+    const nextAlign = current === 'center' ? 'left' : current === 'left' ? 'right' : 'center';
+    updateActiveCaptionProps({ align: nextAlign });
+  };
+
   // Horizontal Flip / Mirror for Stickers & Media Overlays
   const handleFlipActiveLayer = () => {
     if (!activeLayerId) return;
@@ -4426,6 +4434,23 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                                 <span style={{ color: '#ffffff', fontWeight: 700, fontSize: '0.86rem' }}>Aa</span>
                               </button>
                               <div className="layer-action-divider" />
+
+                              <button
+                                type="button"
+                                className="layer-action-btn layer-action-btn-align"
+                                title={`Text Alignment: ${(activeCaption.align || 'center').toUpperCase()} (Click to cycle Left, Center, Right)`}
+                                aria-label={`Text Alignment: ${activeCaption.align || 'center'}`}
+                                onClick={handleCycleTextAlignment}
+                              >
+                                {(activeCaption.align === 'left') ? (
+                                  <AlignLeft style={{ width: 16, height: 16 }} />
+                                ) : (activeCaption.align === 'right') ? (
+                                  <AlignRight style={{ width: 16, height: 16 }} />
+                                ) : (
+                                  <AlignCenter style={{ width: 16, height: 16 }} />
+                                )}
+                              </button>
+                              <div className="layer-action-divider" />
                             </>
                           )}
 
@@ -4692,65 +4717,93 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           <span>Color</span>
                         </button>
 
-                        {/* 4. Align Button */}
-                        <button
-                          type="button"
-                          data-setting-btn="align"
-                          className={`btn btn-xs vid-ctx-btn vid-ctx-btn-align ${activeSubmenu === 'align' ? 'active' : ''}`}
-                          title={`Text Alignment: ${activeCaption.align || 'center'}`}
-                          onClick={() => handleToggleSubmenu('align')}
-                          style={{
-                            padding: '4px 10px',
-                            fontSize: '0.75rem',
-                            fontWeight: 600,
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '5px',
-                            borderRadius: '8px',
-                            background: activeSubmenu === 'align' ? 'var(--primary-gradient)' : 'rgba(255, 255, 255, 0.08)',
-                            border: activeSubmenu === 'align' ? '1px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.1)',
-                            boxShadow: activeSubmenu === 'align' ? '0 2px 10px rgba(6, 182, 212, 0.4), 0 0 8px rgba(99, 102, 241, 0.4)' : 'none',
-                            transition: 'all 0.2s ease',
-                            color: '#ffffff',
-                            flexShrink: 0
-                          }}
-                        >
-                          {(activeCaption.align === 'left') ? (
-                            <AlignLeft style={{ width: 13, height: 13, color: '#ffffff' }} />
-                          ) : (activeCaption.align === 'right') ? (
-                            <AlignRight style={{ width: 13, height: 13, color: '#ffffff' }} />
-                          ) : (
-                            <AlignCenter style={{ width: 13, height: 13, color: '#ffffff' }} />
-                          )}
-                          <span>Align</span>
-                        </button>
+                        {/* 4. Bg Button */}
+                        {(() => {
+                          const hasBg = Boolean(activeCaption.bgColor && activeCaption.bgColor !== 'none' && activeCaption.bgColor !== 'transparent');
+                          const isCustomColor = hasBg && activeCaption.bgColor !== 'white' && activeCaption.bgColor !== '#ffffff';
 
-                        {/* 5. Bg Button */}
-                        <button
-                          type="button"
-                          data-setting-btn="bg"
-                          className={`btn btn-xs vid-ctx-btn vid-ctx-btn-bg ${activeSubmenu === 'bg' ? 'active' : ''}`}
-                          title="Text Background Box / Banner settings"
-                          onClick={() => handleToggleSubmenu('bg')}
-                          style={{
-                            padding: '4px 10px',
-                            fontSize: '0.75rem',
-                            fontWeight: 600,
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '5px',
-                            borderRadius: '8px',
-                            background: activeSubmenu === 'bg' ? 'var(--primary-gradient)' : 'rgba(255, 255, 255, 0.08)',
-                            border: activeSubmenu === 'bg' ? '1px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.1)',
-                            boxShadow: activeSubmenu === 'bg' ? '0 2px 10px rgba(6, 182, 212, 0.4), 0 0 8px rgba(99, 102, 241, 0.4)' : 'none',
-                            transition: 'all 0.2s ease',
-                            color: '#ffffff',
-                            flexShrink: 0
-                          }}
-                        >
-                          <Highlighter style={{ width: 13, height: 13, color: '#ffffff' }} />
-                          <span>Bg</span>
-                        </button>
+                          return (
+                            <button
+                              type="button"
+                              data-setting-btn="bg"
+                              className={`btn btn-xs vid-ctx-btn vid-ctx-btn-bg ${activeSubmenu === 'bg' ? 'active' : ''}`}
+                              title={hasBg ? `Text Background Active (${activeCaption.bgColor}) - Click to toggle options` : "Text Background - Click to apply and change color"}
+                              onClick={() => {
+                                if (activeSubmenu === 'bg') {
+                                  handleToggleSubmenu('bg');
+                                } else {
+                                  handleToggleSubmenu('bg');
+                                  if (!hasBg) {
+                                    handleSetCaptionBg('white');
+                                  }
+                                }
+                              }}
+                              style={{
+                                padding: '4px 10px',
+                                fontSize: '0.75rem',
+                                fontWeight: 600,
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '5px',
+                                borderRadius: '8px',
+                                background: activeSubmenu === 'bg' ? 'var(--primary-gradient)' : 'rgba(255, 255, 255, 0.08)',
+                                border: activeSubmenu === 'bg' ? '1px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.1)',
+                                boxShadow: activeSubmenu === 'bg' ? '0 2px 10px rgba(6, 182, 212, 0.4), 0 0 8px rgba(99, 102, 241, 0.4)' : 'none',
+                                transition: 'all 0.2s ease',
+                                color: '#ffffff',
+                                flexShrink: 0
+                              }}
+                            >
+                              <span
+                                className={`vid-ctx-bg-badge ${hasBg ? 'active' : ''}`}
+                                style={{
+                                  width: 16,
+                                  height: 16,
+                                  borderRadius: '3.5px',
+                                  border: '1.5px solid #ffffff',
+                                  background: hasBg ? '#ffffff' : 'transparent',
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  boxSizing: 'border-box',
+                                  flexShrink: 0,
+                                  boxShadow: hasBg ? '0 1px 4px rgba(0,0,0,0.35)' : 'none',
+                                  transition: 'all 0.18s ease'
+                                }}
+                              >
+                                <span
+                                  style={{
+                                    color: hasBg ? '#000000' : '#ffffff',
+                                    fontWeight: 800,
+                                    fontSize: '11px',
+                                    lineHeight: 1,
+                                    fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
+                                    userSelect: 'none'
+                                  }}
+                                >
+                                  A
+                                </span>
+                              </span>
+                              <span>Bg</span>
+                              {isCustomColor && (
+                                <span
+                                  title={`Active Background Color: ${activeCaption.bgColor}`}
+                                  style={{
+                                    display: 'inline-flex',
+                                    width: 8,
+                                    height: 8,
+                                    borderRadius: '50%',
+                                    border: '1px solid rgba(255,255,255,0.9)',
+                                    background: activeCaption.bgColor === 'black' ? '#000000' : activeCaption.bgColor,
+                                    boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
+                                    marginLeft: '1px',
+                                    flexShrink: 0
+                                  }}
+                                />
+                              )}
+                            </button>
+                          );
+                        })()}
 
                         {/* 6. Blur Button */}
                         <button
