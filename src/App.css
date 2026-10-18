@@ -759,7 +759,7 @@ body.modal-open {
   }
   .editor-workspace {
     width: 100% !important;
-    padding: 0 10px !important;
+    padding: 0 2px !important;
     box-sizing: border-box !important;
     flex: 1 1 0% !important;
     max-height: none !important;

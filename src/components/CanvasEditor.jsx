@@ -1391,44 +1391,124 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
 
       let activeHandleDrawer = null;
 
+      // Modern UI Handle Drawer Helpers
+      // 1. Delete Handle (Top-Left corner handle with modern coral circular badge and clean ✕)
       const drawDeleteHandle = (uiCtx, hx, hy) => {
-        uiCtx.beginPath();
-        uiCtx.fillStyle = '#ef4444';
-        uiCtx.strokeStyle = '#ffffff';
-        uiCtx.lineWidth = 3;
-        uiCtx.arc(hx, hy, 22, 0, Math.PI * 2);
-        uiCtx.fill();
-        uiCtx.stroke();
-        
         uiCtx.save();
-        uiCtx.translate(hx, hy);
-        // Draw Trash Icon
+        uiCtx.shadowColor = 'rgba(0, 0, 0, 0.45)';
+        uiCtx.shadowBlur = 6;
+        uiCtx.shadowOffsetY = 1.5;
+
+        // Button background circle
+        uiCtx.beginPath();
+        uiCtx.arc(hx, hy, 15, 0, Math.PI * 2);
+        uiCtx.fillStyle = '#ef4444';
+        uiCtx.fill();
+
+        // Crisp white border
+        uiCtx.strokeStyle = '#ffffff';
+        uiCtx.lineWidth = 2.5;
+        uiCtx.stroke();
+
+        // Modern minimalist ✕ inside
+        uiCtx.shadowColor = 'transparent';
         uiCtx.beginPath();
         uiCtx.strokeStyle = '#ffffff';
         uiCtx.lineWidth = 2.5;
         uiCtx.lineCap = 'round';
-        uiCtx.lineJoin = 'round';
-        
-        // Lid
-        uiCtx.moveTo(-7, -5);
-        uiCtx.lineTo(7, -5);
-        // Handle
-        uiCtx.moveTo(-3, -5);
-        uiCtx.lineTo(-3, -8);
-        uiCtx.lineTo(3, -8);
-        uiCtx.lineTo(3, -5);
-        // Bin
-        uiCtx.moveTo(-6, -5);
-        uiCtx.lineTo(-5, 7);
-        uiCtx.lineTo(5, 7);
-        uiCtx.lineTo(6, -5);
-        // Lines
-        uiCtx.moveTo(-2, -1);
-        uiCtx.lineTo(-2, 4);
-        uiCtx.moveTo(2, -1);
-        uiCtx.lineTo(2, 4);
-        
+        const cr = 4.5;
+        uiCtx.moveTo(hx - cr, hy - cr);
+        uiCtx.lineTo(hx + cr, hy + cr);
+        uiCtx.moveTo(hx + cr, hy - cr);
+        uiCtx.lineTo(hx - cr, hy + cr);
         uiCtx.stroke();
+        uiCtx.restore();
+      };
+
+      // 2. Corner Resize Handle (Modern crisp white knob with cyber-cyan border and shadow)
+      const drawRoundHandle = (uiCtx, hx, hy) => {
+        uiCtx.save();
+        uiCtx.shadowColor = 'rgba(0, 0, 0, 0.35)';
+        uiCtx.shadowBlur = 5;
+        uiCtx.shadowOffsetY = 1.5;
+
+        uiCtx.beginPath();
+        uiCtx.arc(hx, hy, 13.5, 0, Math.PI * 2);
+        uiCtx.fillStyle = '#ffffff';
+        uiCtx.fill();
+        uiCtx.strokeStyle = '#06b6d4';
+        uiCtx.lineWidth = 2.5;
+        uiCtx.stroke();
+        uiCtx.restore();
+      };
+
+      // 3. Side Stretch Handle (Modern rounded capsule for width stretching)
+      const drawSideHandle = (uiCtx, hx, hy, isVertical = true) => {
+        uiCtx.save();
+        uiCtx.shadowColor = 'rgba(0, 0, 0, 0.35)';
+        uiCtx.shadowBlur = 4;
+        uiCtx.shadowOffsetY = 1;
+
+        uiCtx.beginPath();
+        if (isVertical) {
+          if (uiCtx.roundRect) {
+            uiCtx.roundRect(hx - 4, hy - 11, 8, 22, 4);
+          } else {
+            uiCtx.rect(hx - 4, hy - 11, 8, 22);
+          }
+        } else {
+          if (uiCtx.roundRect) {
+            uiCtx.roundRect(hx - 11, hy - 4, 22, 8, 4);
+          } else {
+            uiCtx.rect(hx - 11, hy - 4, 22, 8);
+          }
+        }
+        uiCtx.fillStyle = '#ffffff';
+        uiCtx.fill();
+        uiCtx.strokeStyle = '#06b6d4';
+        uiCtx.lineWidth = 2;
+        uiCtx.stroke();
+        uiCtx.restore();
+      };
+
+      // 4. Rotation Handle (Clean vertical stem + rotation knob with circular arrow)
+      const drawRotateHandle = (uiCtx, startX, startY, knobX, knobY) => {
+        uiCtx.save();
+        // Rotation stem
+        uiCtx.strokeStyle = '#06b6d4';
+        uiCtx.lineWidth = 2;
+        uiCtx.beginPath();
+        uiCtx.moveTo(startX, startY);
+        uiCtx.lineTo(knobX, knobY);
+        uiCtx.stroke();
+
+        // Rotation knob
+        uiCtx.shadowColor = 'rgba(0, 0, 0, 0.35)';
+        uiCtx.shadowBlur = 5;
+        uiCtx.shadowOffsetY = 1.5;
+        uiCtx.beginPath();
+        uiCtx.arc(knobX, knobY, 14, 0, Math.PI * 2);
+        uiCtx.fillStyle = '#ffffff';
+        uiCtx.fill();
+        uiCtx.strokeStyle = '#06b6d4';
+        uiCtx.lineWidth = 2.5;
+        uiCtx.stroke();
+
+        // Circular rotate icon inside knob
+        uiCtx.shadowColor = 'transparent';
+        uiCtx.strokeStyle = '#06b6d4';
+        uiCtx.lineWidth = 2;
+        uiCtx.lineCap = 'round';
+        uiCtx.beginPath();
+        uiCtx.arc(knobX, knobY, 6.5, -Math.PI * 0.7, Math.PI * 0.8);
+        uiCtx.stroke();
+        // Arrowhead
+        uiCtx.fillStyle = '#06b6d4';
+        uiCtx.beginPath();
+        uiCtx.moveTo(knobX + 4.5, knobY + 4.5);
+        uiCtx.lineTo(knobX + 8, knobY);
+        uiCtx.lineTo(knobX + 4, knobY - 3);
+        uiCtx.fill();
         uiCtx.restore();
       };
 
@@ -1798,8 +1878,8 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
                 drawRoundFaceHandle(hw * 0.72, hh * 0.72);
                 drawRoundFaceHandle(-hw * 0.72, hh * 0.72);
 
-                // Delete handle (Top Right)
-                drawDeleteHandle(uiCtx, hw * 0.8, -hh * 0.8);
+                // Delete handle (Top Left)
+                drawDeleteHandle(uiCtx, -hw * 0.72, -hh * 0.72);
 
                 // Floating badge
                 uiCtx.save();
@@ -1823,52 +1903,39 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
                 return;
               }
 
-              uiCtx.strokeStyle = '#f97316';
-              uiCtx.lineWidth = 3;
-              uiCtx.setLineDash([6, 6]);
-              uiCtx.strokeRect(-w / 2 - 6, -h / 2 - 6, w + 12, h + 12);
-              
-              uiCtx.setLineDash([]);
-
-              // Rotation handle stem
-              uiCtx.beginPath();
-              uiCtx.strokeStyle = '#000000';
+              // Upgraded Modern Image Layer Box Outline
+              uiCtx.save();
+              uiCtx.shadowColor = 'rgba(0, 0, 0, 0.45)';
+              uiCtx.shadowBlur = 4;
+              uiCtx.shadowOffsetY = 1;
+              uiCtx.strokeStyle = '#06b6d4';
               uiCtx.lineWidth = 2;
-              uiCtx.moveTo(0, -hh);
-              uiCtx.lineTo(0, -hh - 60);
-              uiCtx.stroke();
-              
-              // Rotation handle circle
-              uiCtx.beginPath();
-              uiCtx.fillStyle = '#f97316';
-              uiCtx.arc(0, -hh - 60, 16, 0, Math.PI * 2);
-              uiCtx.fill();
-              uiCtx.stroke();
+              uiCtx.strokeRect(-hw, -hh, w + 12, h + 12);
+              uiCtx.restore();
 
-              // Round handles for resizing, stretching, and cropping (4 corners + 4 middle of sides)
-              uiCtx.fillStyle = '#f97316';
-              uiCtx.strokeStyle = '#000000';
-              uiCtx.lineWidth = 2;
-              const drawRoundHandle = (hx, hy) => {
-                uiCtx.beginPath();
-                uiCtx.arc(hx, hy, 14, 0, Math.PI * 2);
-                uiCtx.fill();
-                uiCtx.stroke();
-              };
+              // Inner crisp hairline for contrast
+              uiCtx.save();
+              uiCtx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+              uiCtx.lineWidth = 1;
+              uiCtx.strokeRect(-hw + 1, -hh + 1, Math.max(1, w + 10), Math.max(1, h + 10));
+              uiCtx.restore();
 
-              // 4 Corner handles
-              drawRoundHandle(-hw, -hh); // TL
-              drawRoundHandle(hw, -hh);  // TR
-              drawRoundHandle(-hw, hh);  // BL
-              drawRoundHandle(hw, hh);   // BR
+              // Rotation handle
+              drawRotateHandle(uiCtx, 0, -hh, 0, -hh - 36);
+
+              // 4 Corner handles:
+              // Top-Left IS the Delete Handle!
+              drawDeleteHandle(uiCtx, -hw, -hh);
+              // TR, BL, BR are resize handles
+              drawRoundHandle(uiCtx, hw, -hh);  // TR
+              drawRoundHandle(uiCtx, -hw, hh);  // BL
+              drawRoundHandle(uiCtx, hw, hh);   // BR
 
               // 4 Middle-of-side handles
-              drawRoundHandle(0, -hh);  // Top middle
-              drawRoundHandle(0, hh);   // Bottom middle
-              drawRoundHandle(-hw, 0);  // Left middle
-              drawRoundHandle(hw, 0);   // Right middle
-              
-              drawDeleteHandle(uiCtx, -hw - 36, -hh - 36);
+              drawSideHandle(uiCtx, 0, -hh, false);  // Top middle
+              drawSideHandle(uiCtx, 0, hh, false);   // Bottom middle
+              drawSideHandle(uiCtx, -hw, 0, true);   // Left middle
+              drawSideHandle(uiCtx, hw, 0, true);    // Right middle
               uiCtx.restore();
             };
           }
@@ -1917,41 +1984,36 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
               uiCtx.restore();
               return;
             }
-            uiCtx.strokeStyle = '#f97316';
-            uiCtx.lineWidth = 3;
-            uiCtx.setLineDash([6, 6]);
-            uiCtx.strokeRect(-stkSize / 2 - 6, -stkSize / 2 - 6, stkSize + 12, stkSize + 12);
-            
-            uiCtx.setLineDash([]);
-            uiCtx.fillStyle = '#f97316';
-            uiCtx.strokeStyle = '#000000';
-            uiCtx.lineWidth = 2;
-            
-            const drawHandle = (x, y) => {
-              uiCtx.beginPath();
-              uiCtx.arc(x, y, 14, 0, Math.PI * 2);
-              uiCtx.fill();
-              uiCtx.stroke();
-            };
-            
             const hs = stkSize / 2 + 6;
-            drawHandle(-hs, -hs); // TL
-            drawHandle(hs, -hs); // TR
-            drawHandle(-hs, hs); // BL
-            drawHandle(hs, hs); // BR
-            
-            uiCtx.beginPath();
-            uiCtx.moveTo(0, -stkSize / 2 - 6);
-            uiCtx.lineTo(0, -stkSize / 2 - 40);
-            uiCtx.stroke();
-            
-            uiCtx.beginPath();
-            uiCtx.fillStyle = '#f97316';
-            uiCtx.arc(0, -stkSize / 2 - 40, 16, 0, Math.PI * 2);
-            uiCtx.fill();
-            uiCtx.stroke();
-            
-            drawDeleteHandle(uiCtx, -hs - 36, -hs - 36);
+
+            // Upgraded Modern Sticker Box Outline
+            uiCtx.save();
+            uiCtx.shadowColor = 'rgba(0, 0, 0, 0.45)';
+            uiCtx.shadowBlur = 4;
+            uiCtx.shadowOffsetY = 1;
+            uiCtx.strokeStyle = '#06b6d4';
+            uiCtx.lineWidth = 2;
+            uiCtx.strokeRect(-hs, -hs, stkSize + 12, stkSize + 12);
+            uiCtx.restore();
+
+            // Inner hairline
+            uiCtx.save();
+            uiCtx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+            uiCtx.lineWidth = 1;
+            uiCtx.strokeRect(-hs + 1, -hs + 1, Math.max(1, stkSize + 10), Math.max(1, stkSize + 10));
+            uiCtx.restore();
+
+            // Rotation handle
+            drawRotateHandle(uiCtx, 0, -hs, 0, -hs - 30);
+
+            // Corner handles:
+            // Top-Left IS the Delete Handle!
+            drawDeleteHandle(uiCtx, -hs, -hs);
+            // TR, BL, BR
+            drawRoundHandle(uiCtx, hs, -hs); // TR
+            drawRoundHandle(uiCtx, -hs, hs); // BL
+            drawRoundHandle(uiCtx, hs, hs);  // BR
+
             uiCtx.restore();
           };
         }
@@ -2175,91 +2237,39 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
             // Upgraded Modern Text Box Bounding Layer
             // 1. Dual-tone crisp outline with subtle shadow for high contrast on light/dark images
             uiCtx.save();
-            uiCtx.shadowColor = 'rgba(0, 0, 0, 0.4)';
+            uiCtx.shadowColor = 'rgba(0, 0, 0, 0.45)';
             uiCtx.shadowBlur = 4;
             uiCtx.shadowOffsetY = 1;
-            uiCtx.strokeStyle = '#f97316'; // App theme orange accent
-            uiCtx.lineWidth = 2.5;
+            uiCtx.strokeStyle = '#06b6d4'; // Cyber cyan
+            uiCtx.lineWidth = 2;
             uiCtx.strokeRect(boxX, boxY, boxWidth, boxHeight);
             uiCtx.restore();
 
             // Inner crisp hairline for contrast against dark backgrounds
             uiCtx.save();
-            uiCtx.strokeStyle = 'rgba(255, 255, 255, 0.75)';
+            uiCtx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
             uiCtx.lineWidth = 1;
             uiCtx.strokeRect(boxX + 1, boxY + 1, Math.max(1, boxWidth - 2), Math.max(1, boxHeight - 2));
             uiCtx.restore();
 
-            // Helper: Draw Circular Handle (Enlarged comfortable rounded control knob for corners and side stretch handles)
-            const drawRoundHandle = (hx, hy) => {
-              uiCtx.save();
-              uiCtx.shadowColor = 'rgba(0, 0, 0, 0.35)';
-              uiCtx.shadowBlur = 5;
-              uiCtx.shadowOffsetY = 1.5;
-              uiCtx.beginPath();
-              uiCtx.arc(hx, hy, 16.5, 0, Math.PI * 2);
-              uiCtx.fillStyle = '#ffffff';
-              uiCtx.fill();
-              uiCtx.strokeStyle = '#f97316';
-              uiCtx.lineWidth = 3;
-              uiCtx.stroke();
-              uiCtx.restore();
-            };
+            // Side Handles: Left & Right (Modern capsules)
+            drawSideHandle(uiCtx, boxX, 0, true); // Middle Left
+            drawSideHandle(uiCtx, boxX + boxWidth, 0, true); // Middle Right
 
-            // Side Handles: Left & Right (Now rounded circular knobs matching corner handles)
-            drawRoundHandle(boxX, 0); // Middle Left
-            drawRoundHandle(boxX + boxWidth, 0); // Middle Right
-
-            // Corner Handles: TL, TR, BL, BR (Enlarged rounded control knobs)
-            drawRoundHandle(boxX, boxY); // Top Left
-            drawRoundHandle(boxX + boxWidth, boxY); // Top Right
+            // Corner Handles:
+            // Top-Left IS the Delete Handle!
+            drawDeleteHandle(uiCtx, boxX, boxY);
+            // TR, BL, BR
+            drawRoundHandle(uiCtx, boxX + boxWidth, boxY); // Top Right
             if (cap.bubbleStyle !== 'imessage-receive') {
-              drawRoundHandle(boxX, boxY + boxHeight); // Bottom Left
+              drawRoundHandle(uiCtx, boxX, boxY + boxHeight); // Bottom Left
             }
             if (cap.bubbleStyle !== 'imessage-send') {
-              drawRoundHandle(boxX + boxWidth, boxY + boxHeight); // Bottom Right
+              drawRoundHandle(uiCtx, boxX + boxWidth, boxY + boxHeight); // Bottom Right
             }
 
-            // Top Rotation Stem & Handle + Delete Handle
-            // Rotation stem
-            uiCtx.save();
-            uiCtx.strokeStyle = '#f97316';
-            uiCtx.lineWidth = 2.5;
-            uiCtx.beginPath();
-            uiCtx.moveTo(0, boxY);
-            uiCtx.lineTo(0, boxY - 34);
-            uiCtx.stroke();
-
-            // Rotation knob
-            uiCtx.shadowColor = 'rgba(0, 0, 0, 0.35)';
-            uiCtx.shadowBlur = 5;
-            uiCtx.shadowOffsetY = 1.5;
-            uiCtx.beginPath();
-            uiCtx.arc(0, boxY - 34, 15.5, 0, Math.PI * 2);
-            uiCtx.fillStyle = '#ffffff';
-            uiCtx.fill();
-            uiCtx.strokeStyle = '#f97316';
-            uiCtx.lineWidth = 3;
-            uiCtx.stroke();
-
-            // Circular rotate icon inside knob
-            uiCtx.strokeStyle = '#f97316';
-            uiCtx.lineWidth = 2;
-            uiCtx.lineCap = 'round';
-            uiCtx.beginPath();
-            uiCtx.arc(0, boxY - 34, 7.5, -Math.PI * 0.7, Math.PI * 0.8);
-            uiCtx.stroke();
-            // Arrowhead
-            uiCtx.fillStyle = '#f97316';
-            uiCtx.beginPath();
-            uiCtx.moveTo(5.5, boxY - 34 + 5);
-            uiCtx.lineTo(9.5, boxY - 34);
-            uiCtx.lineTo(5, boxY - 34 - 3);
-            uiCtx.fill();
-            uiCtx.restore();
-
-            // Delete handle at top-left
-            drawDeleteHandle(uiCtx, boxX - 32, boxY - 32);
+            // Top Rotation Stem & Handle
+            drawRotateHandle(uiCtx, 0, boxY, 0, boxY - 30);
 
             // Live Dimension / Size pill feedback during drag
             if (isDragging.current && dragTarget.current?.id === cap.id && dragTarget.current?.type?.startsWith('resize_caption_')) {
@@ -2286,7 +2296,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
               }
               uiCtx.fill();
 
-              uiCtx.strokeStyle = '#f97316';
+              uiCtx.strokeStyle = '#06b6d4';
               uiCtx.lineWidth = 1.5;
               uiCtx.stroke();
 
@@ -2302,7 +2312,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
               const tw = uiCtx.measureText(label).width;
               const pw = tw + 18;
               const ph = 24;
-              const py = boxY - 58;
+              const py = boxY - 54;
               
               uiCtx.shadowColor = 'rgba(0, 0, 0, 0.4)';
               uiCtx.shadowBlur = 6;
@@ -2316,11 +2326,11 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
               }
               uiCtx.fill();
 
-              uiCtx.strokeStyle = '#f97316';
+              uiCtx.strokeStyle = '#06b6d4';
               uiCtx.lineWidth = 1.5;
               uiCtx.stroke();
 
-              uiCtx.fillStyle = '#fb923c';
+              uiCtx.fillStyle = '#38bdf8';
               uiCtx.textAlign = 'center';
               uiCtx.textBaseline = 'middle';
               uiCtx.fillText(label, 0, py + ph / 2);
@@ -2576,9 +2586,8 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         const hs = stkSize / 2 + 6;
 
         const handles = [
-          { type: 'delete_layer', x: cx - hs - 36, y: cy - hs - 36, r: 26 },
-          { type: 'rotate_sticker', x: cx, y: cy - stkSize / 2 - 40, r: 24 },
-          { type: 'resize_sticker_tl', x: cx - hs, y: cy - hs, r: 22 },
+          { type: 'delete_layer', x: cx - hs, y: cy - hs, r: 26 },
+          { type: 'rotate_sticker', x: cx, y: cy - stkSize / 2 - 30, r: 24 },
           { type: 'resize_sticker_tr', x: cx + hs, y: cy - hs, r: 22 },
           { type: 'resize_sticker_bl', x: cx - hs, y: cy + hs, r: 22 },
           { type: 'resize_sticker_br', x: cx + hs, y: cy + hs, r: 22 },
@@ -2652,11 +2661,10 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
           const deleteHitRadius = Math.max(52, Math.round(24 * screenScale));
 
           const handles = [
-            { type: 'delete_layer', x: leftX - 32, y: topY - 32, r: deleteHitRadius },
-            { type: 'rotate_caption', x: cx, y: topY - 34, r: touchHitRadius },
+            { type: 'delete_layer', x: leftX, y: topY, r: deleteHitRadius },
+            { type: 'rotate_caption', x: cx, y: topY - 30, r: touchHitRadius },
             { type: 'resize_caption_l', x: leftX, y: cy, r: touchHitRadius },
             { type: 'resize_caption_r', x: rightX, y: cy, r: touchHitRadius },
-            { type: 'resize_caption_tl', x: leftX, y: topY, r: touchHitRadius },
             { type: 'resize_caption_tr', x: rightX, y: topY, r: touchHitRadius },
             { type: 'resize_caption_bl', x: leftX, y: bottomY, r: touchHitRadius },
             { type: 'resize_caption_br', x: rightX, y: bottomY, r: touchHitRadius }
@@ -2732,14 +2740,13 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
             const hh = h / 2 + 6;
 
             const handles = activeImg.isFaceMorph ? [
-              { type: 'delete_layer', x: cx + hw * 0.8, y: cy - hh * 0.8, r: 26 },
+              { type: 'delete_layer', x: cx - hw * 0.72, y: cy - hh * 0.72, r: 26 },
               { type: 'rotate_imageLayer', x: cx, y: cy - hh - 40, r: 24 },
               { type: 'resize_imageLayer_br', x: cx + hw * 0.72, y: cy + hh * 0.72, r: 24 },
               { type: 'resize_imageLayer_bl', x: cx - hw * 0.72, y: cy + hh * 0.72, r: 24 }
             ] : [
-              { type: 'delete_layer', x: cx - hw - 36, y: cy - hh - 36, r: 26 },
-              { type: 'rotate_imageLayer', x: cx, y: cy - hh - 60, r: 22 },
-              { type: 'resize_imageLayer_tl', x: cx - hw, y: cy - hh, r: 22 },
+              { type: 'delete_layer', x: cx - hw, y: cy - hh, r: 26 },
+              { type: 'rotate_imageLayer', x: cx, y: cy - hh - 36, r: 22 },
               { type: 'resize_imageLayer_tr', x: cx + hw, y: cy - hh, r: 22 },
               { type: 'resize_imageLayer_bl', x: cx - hw, y: cy + hh, r: 22 },
               { type: 'resize_imageLayer_br', x: cx + hw, y: cy + hh, r: 22 },
@@ -3118,13 +3125,13 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         const p = rotatePoint(coords.x, coords.y, cx, cy, -(activeStk.rotation || 0));
         const hs = stkSize / 2 + 6;
 
-        if (Math.hypot(p.x - (cx - hs - 36), p.y - (cy - hs - 36)) <= 26) {
+        if (Math.hypot(p.x - (cx - hs), p.y - (cy - hs)) <= 26) {
           canvas.style.cursor = 'pointer'; return;
         }
-        if (Math.hypot(p.x - cx, p.y - (cy - stkSize / 2 - 40)) <= 24) {
+        if (Math.hypot(p.x - cx, p.y - (cy - stkSize / 2 - 30)) <= 24) {
           canvas.style.cursor = 'grab'; return;
         }
-        if (Math.hypot(p.x - (cx - hs), p.y - (cy - hs)) <= 22 || Math.hypot(p.x - (cx + hs), p.y - (cy + hs)) <= 22) {
+        if (Math.hypot(p.x - (cx + hs), p.y - (cy + hs)) <= 22) {
           canvas.style.cursor = 'nwse-resize'; return;
         }
         if (Math.hypot(p.x - (cx + hs), p.y - (cy - hs)) <= 22 || Math.hypot(p.x - (cx - hs), p.y - (cy + hs)) <= 22) {
@@ -3186,16 +3193,16 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         const hoverHitRadius = Math.max(38, Math.round(18 * screenScale));
         const deleteHoverRadius = Math.max(42, Math.round(20 * screenScale));
 
-        if (Math.hypot(p.x - (leftX - 32), p.y - (topY - 32)) <= deleteHoverRadius) {
+        if (Math.hypot(p.x - leftX, p.y - topY) <= deleteHoverRadius) {
           canvas.style.cursor = 'pointer'; return;
         }
-        if (Math.hypot(p.x - cx, p.y - (topY - 34)) <= hoverHitRadius) {
+        if (Math.hypot(p.x - cx, p.y - (topY - 30)) <= hoverHitRadius) {
           canvas.style.cursor = 'grab'; return;
         }
         if (Math.hypot(p.x - leftX, p.y - cy) <= hoverHitRadius || Math.hypot(p.x - rightX, p.y - cy) <= hoverHitRadius) {
           canvas.style.cursor = 'ew-resize'; return;
         }
-        if (Math.hypot(p.x - leftX, p.y - topY) <= hoverHitRadius || Math.hypot(p.x - rightX, p.y - bottomY) <= hoverHitRadius) {
+        if (Math.hypot(p.x - rightX, p.y - bottomY) <= hoverHitRadius) {
           canvas.style.cursor = 'nwse-resize'; return;
         }
         if (Math.hypot(p.x - rightX, p.y - topY) <= hoverHitRadius || Math.hypot(p.x - leftX, p.y - bottomY) <= hoverHitRadius) {
@@ -3222,13 +3229,13 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
           const hw = w / 2 + 6;
           const hh = h / 2 + 6;
 
-          if (Math.hypot(p.x - (cx - hw - 36), p.y - (cy - hh - 36)) <= 26) {
+          if (Math.hypot(p.x - (cx - hw), p.y - (cy - hh)) <= 26) {
             canvas.style.cursor = 'pointer'; return;
           }
-          if (Math.hypot(p.x - cx, p.y - (cy - hh - 60)) <= 22) {
+          if (Math.hypot(p.x - cx, p.y - (cy - hh - 36)) <= 22) {
             canvas.style.cursor = 'grab'; return;
           }
-          if (Math.hypot(p.x - (cx - hw), p.y - (cy - hh)) <= 22 || Math.hypot(p.x - (cx + hw), p.y - (cy + hh)) <= 22) {
+          if (Math.hypot(p.x - (cx + hw), p.y - (cy + hh)) <= 22) {
             canvas.style.cursor = 'nwse-resize'; return;
           }
           if (Math.hypot(p.x - (cx + hw), p.y - (cy - hh)) <= 22 || Math.hypot(p.x - (cx - hw), p.y - (cy + hh)) <= 22) {
