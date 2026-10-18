@@ -7,10 +7,11 @@ import {
   Type, Plus, Trash2, Undo, Redo, Download, Share2, Sparkles, Copy, Blend,
   Sliders, Smile, Sticker, ArrowLeft, Save, Check, RefreshCw,
   Image as ImageIcon, Search, X, Upload, RotateCw, ZoomIn, Crop, LayoutGrid, Scissors, Play, Pause, FolderHeart, Droplet, Monitor,
-  Paintbrush, Highlighter, Palette, Sun, Moon, ChevronDown, ChevronLeft, PencilLine, Move, ArrowDownRight, Wand2,
+  Highlighter, Palette, Sun, Moon, ChevronDown, ChevronLeft, PencilLine, Move, ArrowDownRight, Wand2,
   Layers, ArrowUp, ArrowDown, ChevronsUp, ChevronsDown, Eye, EyeOff, Lock, Unlock, FlipHorizontal,
-  PanelTop, PanelBottom, PanelsTopBottom, MessageSquare, MessageSquareQuote, Flame, Tv, MessageCircle, Shield, Circle, TrendingDown, Ban,
-  AlignLeft, AlignCenter, AlignRight
+  PanelTop, PanelBottom, MessageSquare, MessageSquareQuote, Flame, Tv, MessageCircle, Shield, Circle, TrendingDown, Ban,
+  AlignLeft, AlignCenter, AlignRight,
+  Brush, SunMedium, ImagePlus, LayoutTemplate, Rows3, WandSparkles, ScanFace
 } from 'lucide-react';
 import AiCaptionModal from './AiCaptionModal';
 import MemeStylesModal, { TwitterVerifiedBadge } from './MemeStylesModal';
@@ -44,6 +45,20 @@ import {
   isColorDark,
 } from '../utils/captionLayout';
 import './MemeEditor.css';
+
+export const XSocialLogo = ({ size = 16, style = {}, className = "" }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    className={className}
+    style={{ display: 'inline-block', verticalAlign: 'middle', flexShrink: 0, ...style }}
+    aria-hidden="true"
+  >
+    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+  </svg>
+);
 
 export const TEXT_EFFECTS = [
   {
@@ -4274,7 +4289,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                             color: (canvasHeader.enabled && canvasFooter.enabled) ? '#ffffff' : undefined
                           }}
                         >
-                          <PanelsTopBottom style={{ width: 13, height: 13 }} />
+                          <Rows3 style={{ width: 13, height: 13 }} />
                           <span>Both</span>
                         </button>
                       </motion.div>
@@ -4850,7 +4865,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           flexShrink: 0
                         }}
                       >
-                        <Sparkles style={{ width: 13, height: 13, color: 'var(--cyber-cyan)' }} />
+                        <ScanFace style={{ width: 13, height: 13, color: 'var(--cyber-cyan)' }} />
                         <span>Face Swap</span>
                       </button>
 
@@ -5008,7 +5023,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         onClick={() => handleToggleSubmenu('banner')}
                         title="Header & Footer Canvas Extensions (Top / Bottom)"
                       >
-                        <PanelsTopBottom style={{ width: 13, height: 13, color: '#ffffff' }} />
+                        <Rows3 style={{ width: 13, height: 13, color: '#ffffff' }} />
                         <span>Header / Footer</span>
                       </button>
 
@@ -5036,7 +5051,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         onClick={() => setShowAiModal(true)}
                         title="AI Meme Captions"
                       >
-                        <Sparkles style={{ width: 13, height: 13, color: '#ffffff' }} className="vid-ai-sparkle-icon" /> <span>AI Captions</span>
+                        <WandSparkles style={{ width: 13, height: 13, color: '#ffffff' }} className="vid-ai-sparkle-icon" /> <span>AI Captions</span>
                       </button>
                     </div>
                   )}
@@ -5060,7 +5075,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         }}
                         title="Upload Image or Video"
                       >
-                        <Upload style={{ width: 14, height: 14, color: 'var(--cyber-cyan)' }} />
+                        <ImagePlus style={{ width: 14, height: 14, color: 'var(--cyber-cyan)' }} />
                         <span>Upload</span>
                         <input
                           type="file"
@@ -5085,7 +5100,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         }}
                         title="Add Image from Templates"
                       >
-                        <LayoutGrid style={{ width: 14, height: 14, color: 'var(--cyber-cyan)' }} />
+                        <LayoutTemplate style={{ width: 14, height: 14, color: 'var(--cyber-cyan)' }} />
                         <span>Template</span>
                       </button>
 
@@ -5140,10 +5155,10 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           borderRadius: '12px',
                           flexShrink: 0
                         }}
-                        title="Meme Styles (Breaking News, Tweets, Chat Bubbles)"
+                        title="Social & Viral Styles (Tweets, Threads, News, Chat)"
                       >
-                        <Sliders style={{ width: 14, height: 14, color: 'var(--cyber-cyan)' }} />
-                        <span>Styles</span>
+                        <XSocialLogo size={14} style={{ color: 'var(--cyber-cyan)' }} />
+                        <span>Social</span>
                       </button>
                     </div>
                   )}
@@ -5182,7 +5197,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         }}
                         title="Brush: Solid clean brush stroke"
                       >
-                        <Paintbrush style={{ width: 14, height: 14 }} />
+                        <Brush style={{ width: 14, height: 14 }} />
                         <span>Brush</span>
                       </button>
 
@@ -5232,7 +5247,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         }}
                         title="Glow: Neon laser glow"
                       >
-                        <Sparkles style={{ width: 14, height: 14 }} />
+                        <SunMedium style={{ width: 14, height: 14 }} />
                         <span>Glow</span>
                       </button>
                     </div>
@@ -5311,7 +5326,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           flexShrink: 0
                         }}
                       >
-                        <Sparkles style={{ width: 13, height: 13, color: 'var(--cyber-cyan)' }} />
+                        <ScanFace style={{ width: 13, height: 13, color: 'var(--cyber-cyan)' }} />
                         <span>Face Swap</span>
                       </button>
 
@@ -5560,7 +5575,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                     style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '7px 4px', gap: '4px', borderRadius: '10px', fontSize: '0.72rem', fontWeight: 600 }}
                     title="Solid Brush"
                   >
-                    <Paintbrush className="icon-xs" style={{ width: '14px', height: '14px' }} />
+                    <Brush className="icon-xs" style={{ width: '14px', height: '14px' }} />
                     <span>Brush</span>
                   </button>
                   <button
@@ -5578,7 +5593,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                     style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '7px 4px', gap: '4px', borderRadius: '10px', fontSize: '0.72rem', fontWeight: 600 }}
                     title="Neon Glow / Laser Line"
                   >
-                    <Sparkles className="icon-xs" style={{ width: '14px', height: '14px' }} />
+                    <SunMedium className="icon-xs" style={{ width: '14px', height: '14px' }} />
                     <span>Glow</span>
                   </button>
                 </div>
@@ -5850,7 +5865,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           color: "#ffffff"
                         }}
                       >
-                        <PanelsTopBottom size={14} style={{ color: (canvasHeader.enabled && canvasFooter.enabled) ? "#ffffff" : "var(--cyber-cyan)" }} />
+                        <Rows3 size={14} style={{ color: (canvasHeader.enabled && canvasFooter.enabled) ? "#ffffff" : "var(--cyber-cyan)" }} />
                         <span>Both</span>
                       </button>
                     </div>
@@ -5892,7 +5907,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         color: "#ffffff"
                       }}
                     >
-                      <Sparkles size={15} style={{ color: "#ec4899" }} /> AI Captions
+                      <WandSparkles size={15} style={{ color: "#ec4899" }} /> AI Captions
                     </button>
                   </div>
 
@@ -6859,7 +6874,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                       whiteSpace: 'nowrap'
                     }}
                   >
-                    <Upload className="icon-xs" /> Upload Media
+                    <ImagePlus className="icon-xs" /> Upload Media
                     <input
                       type="file"
                       accept="image/*,video/*"
@@ -7102,7 +7117,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                       justifyContent: 'center',
                       border: '1px solid var(--cyber-cyan)'
                     }}>
-                      <Sparkles size={20} style={{ color: 'var(--cyber-cyan)' }} />
+                      <ScanFace size={20} style={{ color: 'var(--cyber-cyan)' }} />
                     </div>
                     <div>
                       <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#ffffff' }}>Face Swap</div>
