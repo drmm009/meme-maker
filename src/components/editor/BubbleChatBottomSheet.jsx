@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import BottomSheet from '../BottomSheet';
-import { MessageSquare, Check, Ban } from 'lucide-react';
+import { MessageSquare, Check, Ban, Sparkles } from 'lucide-react';
 
 export const BUBBLE_PRESETS = [
   {
@@ -101,6 +101,8 @@ export const BUBBLE_PRESETS = [
   }
 ];
 
+const BUBBLE_CATEGORIES = ['All', 'iMessage', 'WhatsApp', 'Comic', 'Action'];
+
 export default function BubbleChatBottomSheet({
   isOpen,
   onClose,
@@ -108,7 +110,13 @@ export default function BubbleChatBottomSheet({
   onApplyBubbleStyle,
   onRemoveBubbleStyle
 }) {
+  const [activeCategory, setActiveCategory] = useState('All');
   const currentBubbleStyle = activeCaption?.bubbleStyle;
+
+  const filteredPresets = BUBBLE_PRESETS.filter((p) => {
+    if (activeCategory === 'All') return true;
+    return p.category === activeCategory;
+  });
 
   return (
     <BottomSheet
@@ -116,20 +124,20 @@ export default function BubbleChatBottomSheet({
       onClose={onClose}
       title="Chat & Speech Bubbles"
       icon={<MessageSquare size={18} style={{ color: 'var(--cyber-cyan)' }} />}
-      maxHeight="75vh"
-      contentStyle={{ padding: '8px 16px 24px 16px', overflowY: 'auto' }}
+      maxHeight="78vh"
+      contentStyle={{ padding: '6px 16px 20px 16px', overflowY: 'auto' }}
     >
-      {/* Top Controls: Status + Revert to Normal Text Button */}
+      {/* Top Status & Revert Control Bar */}
       <div
         style={{
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          background: 'rgba(255, 255, 255, 0.05)',
+          background: 'rgba(255, 255, 255, 0.04)',
           padding: '8px 12px',
           borderRadius: '12px',
           border: '1px solid var(--glass-border)',
-          marginBottom: '14px',
+          marginBottom: '10px',
           flexShrink: 0
         }}
       >
@@ -138,19 +146,23 @@ export default function BubbleChatBottomSheet({
           {currentBubbleStyle ? (
             <span
               style={{
-                fontSize: '0.74rem',
+                fontSize: '0.72rem',
                 fontWeight: 700,
                 padding: '3px 10px',
                 borderRadius: '12px',
                 background: 'rgba(6, 182, 212, 0.16)',
                 border: '1px solid var(--cyber-cyan)',
-                color: 'var(--cyber-cyan)'
+                color: 'var(--cyber-cyan)',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px'
               }}
             >
-              {BUBBLE_PRESETS.find(p => p.id === currentBubbleStyle)?.name || 'Bubble Active'}
+              <Sparkles size={11} />
+              <span>{BUBBLE_PRESETS.find(p => p.id === currentBubbleStyle)?.name || 'Bubble Active'}</span>
             </span>
           ) : (
-            <span style={{ fontSize: '0.74rem', color: 'rgba(255, 255, 255, 0.6)' }}>
+            <span style={{ fontSize: '0.74rem', color: 'rgba(255, 255, 255, 0.65)' }}>
               Standard Text
             </span>
           )}
@@ -159,10 +171,8 @@ export default function BubbleChatBottomSheet({
         {currentBubbleStyle && onRemoveBubbleStyle && (
           <button
             type="button"
-            className="btn btn-xs btn-ghost"
-            onClick={() => {
-              onRemoveBubbleStyle();
-            }}
+            className="btn btn-xs hover-lift"
+            onClick={onRemoveBubbleStyle}
             style={{
               fontSize: '0.72rem',
               display: 'inline-flex',
@@ -171,7 +181,11 @@ export default function BubbleChatBottomSheet({
               color: '#ef4444',
               padding: '4px 10px',
               borderRadius: '8px',
-              border: '1px solid rgba(239, 68, 68, 0.3)'
+              background: 'rgba(239, 68, 68, 0.10)',
+              border: '1px solid rgba(239, 68, 68, 0.30)',
+              cursor: 'pointer',
+              fontWeight: 600,
+              transition: 'all 0.18s ease'
             }}
           >
             <Ban size={12} />
@@ -180,15 +194,61 @@ export default function BubbleChatBottomSheet({
         )}
       </div>
 
+      {/* Category Filter Pills */}
+      <div
+        className="horizontal-scroll-only"
+        style={{
+          display: 'flex',
+          gap: '8px',
+          overflowX: 'auto',
+          scrollbarWidth: 'none',
+          msOverflowStyle: 'none',
+          padding: '2px 2px 8px 2px',
+          marginBottom: '8px',
+          flexShrink: 0
+        }}
+      >
+        {BUBBLE_CATEGORIES.map((cat) => {
+          const isActive = activeCategory === cat;
+          return (
+            <button
+              key={cat}
+              type="button"
+              onClick={() => setActiveCategory(cat)}
+              style={{
+                padding: '6px 14px',
+                borderRadius: '20px',
+                border: isActive ? '1px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.10)',
+                background: isActive ? 'linear-gradient(135deg, rgba(6, 182, 212, 0.22), rgba(99, 102, 241, 0.15))' : 'rgba(255, 255, 255, 0.05)',
+                color: isActive ? '#ffffff' : 'rgba(255, 255, 255, 0.70)',
+                fontSize: '0.78rem',
+                fontWeight: isActive ? 600 : 500,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '5px',
+                whiteSpace: 'nowrap',
+                cursor: 'pointer',
+                flexShrink: 0,
+                transition: 'all 0.18s ease',
+                boxShadow: isActive ? '0 2px 8px rgba(6, 182, 212, 0.3)' : 'none'
+              }}
+            >
+              <span>{cat}</span>
+            </button>
+          );
+        })}
+      </div>
+
       {/* Grid of Bubble Style Presets */}
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
-          gap: '10px'
+          gridTemplateColumns: 'repeat(auto-fill, minmax(154px, 1fr))',
+          gap: '10px',
+          flex: 1
         }}
       >
-        {BUBBLE_PRESETS.map((preset) => {
+        {filteredPresets.map((preset) => {
           const isSelected = currentBubbleStyle === preset.id;
           const displayMsg = (activeCaption?.text && activeCaption.text.length <= 26)
             ? activeCaption.text
@@ -203,22 +263,36 @@ export default function BubbleChatBottomSheet({
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'stretch',
-                padding: '10px',
+                padding: '12px 10px',
                 borderRadius: '14px',
                 background: isSelected
-                  ? 'rgba(6, 182, 212, 0.12)'
+                  ? 'linear-gradient(180deg, rgba(6, 182, 212, 0.16) 0%, rgba(15, 18, 26, 0.85) 100%)'
                   : 'rgba(255, 255, 255, 0.04)',
                 border: isSelected
                   ? '1.5px solid var(--cyber-cyan)'
-                  : '1px solid var(--glass-border)',
+                  : '1px solid rgba(255, 255, 255, 0.08)',
                 boxShadow: isSelected
-                  ? '0 0 14px rgba(6, 182, 212, 0.35)'
+                  ? '0 0 16px rgba(6, 182, 212, 0.35)'
                   : 'none',
                 cursor: 'pointer',
                 textAlign: 'left',
                 position: 'relative',
                 transition: 'all 0.18s ease',
                 outline: 'none'
+              }}
+              onMouseEnter={(e) => {
+                if (!isSelected) {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.18)';
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isSelected) {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.04)';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                }
               }}
             >
               {/* Active Selection Badge */}
@@ -230,8 +304,8 @@ export default function BubbleChatBottomSheet({
                     right: 8,
                     background: 'var(--cyber-cyan)',
                     borderRadius: '50%',
-                    width: 18,
-                    height: 18,
+                    width: 20,
+                    height: 20,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -239,11 +313,11 @@ export default function BubbleChatBottomSheet({
                     zIndex: 2
                   }}
                 >
-                  <Check size={11} color="#000000" strokeWidth={3} />
+                  <Check size={12} color="#000000" strokeWidth={3} />
                 </div>
               )}
 
-              {/* Category Tag */}
+              {/* Category Pill Tag */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
                 <span
                   style={{
@@ -251,7 +325,10 @@ export default function BubbleChatBottomSheet({
                     fontWeight: 700,
                     textTransform: 'uppercase',
                     letterSpacing: '0.5px',
-                    color: isSelected ? 'var(--cyber-cyan)' : 'rgba(255, 255, 255, 0.5)'
+                    color: isSelected ? 'var(--cyber-cyan)' : 'rgba(255, 255, 255, 0.55)',
+                    background: isSelected ? 'rgba(6, 182, 212, 0.12)' : 'rgba(255, 255, 255, 0.06)',
+                    padding: '2px 6px',
+                    borderRadius: '6px'
                   }}
                 >
                   {preset.category}
@@ -261,14 +338,15 @@ export default function BubbleChatBottomSheet({
               {/* Visual Bubble Preview Container */}
               <div
                 style={{
-                  background: 'rgba(0, 0, 0, 0.35)',
+                  background: 'rgba(0, 0, 0, 0.40)',
                   borderRadius: '10px',
                   padding: '12px 8px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  minHeight: '62px',
-                  marginBottom: '8px'
+                  minHeight: '64px',
+                  marginBottom: '10px',
+                  border: '1px solid rgba(255, 255, 255, 0.05)'
                 }}
               >
                 <div
@@ -277,14 +355,14 @@ export default function BubbleChatBottomSheet({
                     color: preset.textColor,
                     border: preset.borderWidth ? `${preset.borderWidth}px solid ${preset.borderColor}` : 'none',
                     borderRadius: preset.borderRadius,
-                    padding: '5px 10px',
+                    padding: '6px 12px',
                     fontSize: '0.74rem',
                     fontWeight: 700,
                     maxWidth: '100%',
                     textAlign: 'center',
                     wordBreak: 'break-word',
                     lineHeight: 1.25,
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.25)'
+                    boxShadow: '0 2px 10px rgba(0,0,0,0.35)'
                   }}
                 >
                   {displayMsg}
@@ -293,10 +371,10 @@ export default function BubbleChatBottomSheet({
 
               {/* Preset Title & Description */}
               <div style={{ marginTop: 'auto' }}>
-                <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#ffffff' }}>
+                <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#ffffff' }}>
                   {preset.name}
                 </div>
-                <div style={{ fontSize: '0.68rem', color: 'rgba(255, 255, 255, 0.55)', marginTop: '2px' }}>
+                <div style={{ fontSize: '0.68rem', color: 'rgba(255, 255, 255, 0.60)', marginTop: '2px', lineHeight: 1.3 }}>
                   {preset.description}
                 </div>
               </div>

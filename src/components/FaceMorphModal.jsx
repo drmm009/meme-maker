@@ -279,9 +279,9 @@ export default function FaceMorphModal({
       badge={targetLabel ? (
         <span
           style={{
-            fontSize: '0.64rem',
-            fontWeight: 600,
-            padding: '2px 8px',
+            fontSize: '0.68rem',
+            fontWeight: 700,
+            padding: '3px 10px',
             borderRadius: '999px',
             background: 'rgba(6, 182, 212, 0.15)',
             color: 'var(--cyber-cyan)',
@@ -291,7 +291,7 @@ export default function FaceMorphModal({
           {targetLabel}
         </span>
       ) : null}
-      maxHeight="82vh"
+      maxHeight="84vh"
       footer={
         <div
           style={{
@@ -305,56 +305,65 @@ export default function FaceMorphModal({
             type="button"
             className="btn btn-ghost btn-sm"
             onClick={onClose}
-            style={{ fontSize: '0.8rem', padding: '7px 14px', borderRadius: '10px' }}
+            style={{
+              fontSize: '0.82rem',
+              fontWeight: 600,
+              padding: '8px 16px',
+              borderRadius: '12px',
+              color: 'rgba(255, 255, 255, 0.65)'
+            }}
           >
             Cancel
           </button>
 
           <button
             type="button"
-            className="btn btn-primary btn-sm"
+            className="btn btn-primary"
             onClick={handleApply}
             disabled={isNeuralProcessing || (!neuralFullImage && !neuralCropPreview)}
             style={{
               flex: 1,
-              fontSize: '0.82rem',
+              height: '42px',
+              fontSize: '0.84rem',
               fontWeight: 700,
-              padding: '8px 16px',
-              borderRadius: '10px',
+              padding: '0 18px',
+              borderRadius: '12px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '6px'
+              gap: '6px',
+              cursor: isNeuralProcessing || (!neuralFullImage && !neuralCropPreview) ? 'not-allowed' : 'pointer',
+              boxShadow: '0 4px 14px rgba(249, 115, 22, 0.28)'
             }}
           >
-            <Check size={14} />
+            <Check size={15} />
             <span>Apply to Meme</span>
           </button>
         </div>
       }
     >
       {/* Visual Preview Box */}
-            <div
-              style={{
-                position: 'relative',
-                width: '100%',
-                height: '210px',
-                borderRadius: '12px',
-                background: '#090a0f',
-                border: '1px solid rgba(255, 255, 255, 0.08)',
-                overflow: 'hidden',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
-            >
-              {isNeuralProcessing ? (
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-                  <RefreshCw className="spin" size={24} style={{ color: 'var(--cyber-cyan)' }} />
-                  <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'rgba(255, 255, 255, 0.9)' }}>
-                    Swapping face...
-                  </span>
-                </div>
+      <div
+        style={{
+          position: 'relative',
+          width: '100%',
+          height: '215px',
+          borderRadius: '14px',
+          background: '#07080d',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          overflow: 'hidden',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}
+      >
+        {isNeuralProcessing ? (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+            <RefreshCw className="spin" size={24} style={{ color: 'var(--cyber-cyan)' }} />
+            <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'rgba(255, 255, 255, 0.9)' }}>
+              Swapping face...
+            </span>
+          </div>
               ) : neuralError ? (
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', padding: '12px', textAlign: 'center', color: '#f87171' }}>
                   <AlertCircle size={22} />
@@ -383,7 +392,7 @@ export default function FaceMorphModal({
                     }}
                   />
 
-                  {/* Minimal "Hold to Compare" Button */}
+                  {/* Sleek "Hold to Compare" Button */}
                   <button
                     type="button"
                     onPointerDown={handleStartComparing}
@@ -396,54 +405,58 @@ export default function FaceMorphModal({
                     onContextMenu={(e) => e.preventDefault()}
                     style={{
                       position: 'absolute',
-                      top: '8px',
-                      left: '8px',
-                      padding: '3px 9px',
+                      top: '10px',
+                      left: '10px',
+                      padding: '5px 12px',
                       borderRadius: '999px',
-                      fontSize: '0.66rem',
-                      fontWeight: 600,
+                      fontSize: '0.72rem',
+                      fontWeight: 700,
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '4px',
+                      gap: '5px',
                       cursor: 'pointer',
-                      border: isComparing ? '1px solid #ef4444' : '1px solid rgba(255, 255, 255, 0.15)',
-                      background: isComparing ? '#ef4444' : 'rgba(15, 18, 25, 0.85)',
-                      backdropFilter: 'blur(6px)',
+                      border: isComparing ? '1px solid #ef4444' : '1px solid rgba(255, 255, 255, 0.18)',
+                      background: isComparing ? '#ef4444' : 'rgba(12, 14, 20, 0.88)',
+                      backdropFilter: 'blur(8px)',
                       color: '#ffffff',
                       userSelect: 'none',
-                      touchAction: 'manipulation'
+                      touchAction: 'manipulation',
+                      boxShadow: isComparing ? '0 0 12px rgba(239, 68, 68, 0.5)' : '0 2px 8px rgba(0,0,0,0.3)',
+                      transition: 'all 0.15s ease'
                     }}
                   >
-                    <Eye size={10} />
-                    <span>{isComparing ? 'Original' : 'Hold to Compare'}</span>
+                    <Eye size={12} />
+                    <span>{isComparing ? 'Original Face' : 'Hold to Compare'}</span>
                   </button>
 
                   {/* Subtle Face / Full Zoom Toggle */}
                   <div
                     style={{
                       position: 'absolute',
-                      bottom: '8px',
-                      right: '8px',
+                      bottom: '10px',
+                      right: '10px',
                       display: 'inline-flex',
-                      background: 'rgba(15, 18, 25, 0.85)',
-                      backdropFilter: 'blur(6px)',
-                      borderRadius: '6px',
-                      padding: '2px',
-                      border: '1px solid rgba(255, 255, 255, 0.12)'
+                      background: 'rgba(12, 14, 20, 0.88)',
+                      backdropFilter: 'blur(8px)',
+                      borderRadius: '999px',
+                      padding: '3px',
+                      border: '1px solid rgba(255, 255, 255, 0.15)',
+                      gap: '2px'
                     }}
                   >
                     <button
                       type="button"
                       onClick={() => setPreviewType('crop')}
                       style={{
-                        padding: '2px 7px',
-                        borderRadius: '4px',
-                        fontSize: '0.64rem',
+                        padding: '3px 9px',
+                        borderRadius: '999px',
+                        fontSize: '0.68rem',
                         fontWeight: previewType === 'crop' ? 700 : 500,
                         border: 'none',
                         background: previewType === 'crop' ? 'var(--cyber-cyan)' : 'transparent',
-                        color: previewType === 'crop' ? '#000000' : 'rgba(255, 255, 255, 0.7)',
-                        cursor: 'pointer'
+                        color: previewType === 'crop' ? '#000000' : 'rgba(255, 255, 255, 0.75)',
+                        cursor: 'pointer',
+                        transition: 'all 0.15s ease'
                       }}
                     >
                       Face
@@ -452,14 +465,15 @@ export default function FaceMorphModal({
                       type="button"
                       onClick={() => setPreviewType('full')}
                       style={{
-                        padding: '2px 7px',
-                        borderRadius: '4px',
-                        fontSize: '0.64rem',
+                        padding: '3px 9px',
+                        borderRadius: '999px',
+                        fontSize: '0.68rem',
                         fontWeight: previewType === 'full' ? 700 : 500,
                         border: 'none',
                         background: previewType === 'full' ? 'var(--cyber-cyan)' : 'transparent',
-                        color: previewType === 'full' ? '#000000' : 'rgba(255, 255, 255, 0.7)',
-                        cursor: 'pointer'
+                        color: previewType === 'full' ? '#000000' : 'rgba(255, 255, 255, 0.75)',
+                        cursor: 'pointer',
+                        transition: 'all 0.15s ease'
                       }}
                     >
                       Full
@@ -494,51 +508,62 @@ export default function FaceMorphModal({
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="btn btn-secondary btn-sm"
+                className="btn btn-secondary"
                 style={{
                   flex: 1,
+                  height: '40px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: '6px',
-                  fontSize: '0.78rem',
+                  gap: '7px',
+                  fontSize: '0.82rem',
                   fontWeight: 600,
-                  padding: '8px 12px',
-                  borderRadius: '10px'
+                  borderRadius: '12px',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease'
                 }}
               >
-                <Upload size={14} style={{ color: 'var(--cyber-cyan)' }} />
+                <Upload size={15} style={{ color: 'var(--cyber-cyan)' }} />
                 <span>Upload Photo</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => cameraInputRef.current?.click()}
-                className="btn btn-secondary btn-sm"
+                className="btn btn-secondary"
                 style={{
+                  height: '40px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: '6px',
-                  fontSize: '0.78rem',
+                  gap: '7px',
+                  fontSize: '0.82rem',
                   fontWeight: 600,
-                  padding: '8px 14px',
-                  borderRadius: '10px'
+                  padding: '0 18px',
+                  borderRadius: '12px',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease'
                 }}
               >
-                <Camera size={14} />
+                <Camera size={15} />
                 <span>Selfie</span>
               </button>
             </div>
 
             {/* Quick Face Presets Strip */}
             <div
+              className="horizontal-scroll-only"
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '8px',
+                gap: '10px',
                 overflowX: 'auto',
-                paddingBottom: '2px',
+                overflowY: 'hidden',
+                padding: '4px 2px',
                 scrollbarWidth: 'none',
                 WebkitOverflowScrolling: 'touch'
               }}
@@ -553,15 +578,17 @@ export default function FaceMorphModal({
                   }}
                   style={{
                     flexShrink: 0,
-                    width: '42px',
-                    height: '42px',
+                    width: '48px',
+                    height: '48px',
                     borderRadius: '50%',
                     padding: 0,
                     overflow: 'hidden',
                     background: '#0d1017',
                     border: selectedPresetId === customFace.id ? '2px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.15)',
-                    boxShadow: selectedPresetId === customFace.id ? '0 0 10px rgba(6, 182, 212, 0.5)' : 'none',
-                    cursor: 'pointer'
+                    boxShadow: selectedPresetId === customFace.id ? '0 0 12px rgba(6, 182, 212, 0.55)' : 'none',
+                    transform: selectedPresetId === customFace.id ? 'scale(1.06)' : 'scale(1)',
+                    cursor: 'pointer',
+                    transition: 'all 0.18s cubic-bezier(0.4, 0, 0.2, 1)'
                   }}
                   title="Your Uploaded Photo"
                 >
@@ -578,15 +605,17 @@ export default function FaceMorphModal({
                     onClick={() => handleSelectPreset(preset)}
                     style={{
                       flexShrink: 0,
-                      width: '42px',
-                      height: '42px',
+                      width: '48px',
+                      height: '48px',
                       borderRadius: '50%',
                       padding: 0,
                       overflow: 'hidden',
                       background: '#0d1017',
                       border: isSelected ? '2px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.15)',
-                      boxShadow: isSelected ? '0 0 10px rgba(6, 182, 212, 0.5)' : 'none',
-                      cursor: 'pointer'
+                      boxShadow: isSelected ? '0 0 12px rgba(6, 182, 212, 0.55)' : 'none',
+                      transform: isSelected ? 'scale(1.06)' : 'scale(1)',
+                      cursor: 'pointer',
+                      transition: 'all 0.18s cubic-bezier(0.4, 0, 0.2, 1)'
                     }}
                     title={preset.name}
                   >

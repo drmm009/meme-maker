@@ -6,9 +6,9 @@ import { STICKERS } from '../../data/stickers';
 const EMOJI_CATEGORIES = [
   { id: 'faces', icon: '😀', label: 'Faces' },
   { id: 'gestures', icon: '👋', label: 'Hands' },
-  { id: 'flags', icon: '🏳️‍🌈', label: 'Flags' },
   { id: 'symbols', icon: '❤️', label: 'Symbols' },
   { id: 'objects', icon: '💡', label: 'Objects' },
+  { id: 'flags', icon: '🏳️‍🌈', label: 'Flags' },
 ];
 
 export default function EmojiBottomSheet({ isOpen, onClose, onSelectEmoji }) {
@@ -36,82 +36,182 @@ export default function EmojiBottomSheet({ isOpen, onClose, onSelectEmoji }) {
       maxHeight="78vh"
       contentStyle={{ padding: '6px 16px 16px 16px', overflow: 'hidden' }}
     >
-      <div className="search-bar-wrapper margin-bottom-md" style={{ position: 'relative', marginTop: '2px', marginBottom: '12px' }}>
-        <Search className="search-icon" size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+      {/* Search Bar */}
+      <div className="search-bar-wrapper" style={{ position: 'relative', marginTop: '2px', marginBottom: '10px' }}>
+        <Search
+          className="search-icon"
+          size={16}
+          style={{
+            position: 'absolute',
+            left: '12px',
+            top: '50%',
+            transform: 'translateY(-50%)',
+            color: 'var(--text-muted)',
+            pointerEvents: 'none'
+          }}
+        />
         <input
           type="text"
           placeholder="Search emojis..."
           value={emojiSearchQuery}
           onChange={(e) => setEmojiSearchQuery(e.target.value)}
           className="search-input"
-          style={{ width: '100%', padding: '12px 12px 12px 40px', borderRadius: '24px', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', outline: 'none', transition: 'border-color 0.2s', boxSizing: 'border-box' }}
+          style={{
+            width: '100%',
+            height: '40px',
+            padding: '8px 36px 8px 36px',
+            borderRadius: '20px',
+            background: 'rgba(255, 255, 255, 0.06)',
+            border: '1px solid var(--glass-border)',
+            color: 'var(--text-main)',
+            fontSize: '0.84rem',
+            outline: 'none',
+            transition: 'all 0.2s ease',
+            boxSizing: 'border-box'
+          }}
           onFocus={(e) => (e.target.style.borderColor = 'var(--cyber-cyan)')}
           onBlur={(e) => (e.target.style.borderColor = 'var(--glass-border)')}
         />
         {emojiSearchQuery && (
           <button
+            type="button"
             className="btn-clear-search hover-lift"
-            style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'rgba(255,255,255,0.1)', border: 'none', color: 'var(--text-main)', cursor: 'pointer', borderRadius: '50%', width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            style={{
+              position: 'absolute',
+              right: '10px',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              background: 'rgba(255, 255, 255, 0.12)',
+              border: 'none',
+              color: 'var(--text-main)',
+              cursor: 'pointer',
+              borderRadius: '50%',
+              width: '22px',
+              height: '22px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: 0
+            }}
             onClick={() => setEmojiSearchQuery('')}
+            aria-label="Clear search"
           >
-            <X size={14} />
+            <X size={13} />
           </button>
         )}
       </div>
 
-      <div style={{ display: 'flex', gap: '14px', flex: 1, minHeight: 0, overflow: 'hidden' }}>
-        {/* Category sidebar */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', minWidth: '60px', height: '100%', overflowY: 'auto', paddingRight: '4px', overscrollBehavior: 'contain' }}>
-          {EMOJI_CATEGORIES.map((cat) => {
-            const isActive = activeStickerCategory === cat.id && !emojiSearchQuery;
-            return (
-              <button
-                key={cat.id}
-                onClick={() => {
-                  setActiveStickerCategory(cat.id);
-                  setEmojiSearchQuery('');
-                }}
-                style={{
-                  padding: '10px 4px',
-                  background: isActive ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
-                  color: isActive ? '#fff' : 'var(--text-main)',
-                  border: 'none',
-                  borderRadius: 'var(--radius-md)',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: '4px',
-                  transition: 'all 0.2s',
-                }}
-                title={cat.label}
-              >
-                <span style={{ fontSize: '1.6rem', lineHeight: 1 }}>{cat.icon}</span>
-                <span style={{ fontSize: '0.65rem', fontWeight: 600, color: 'inherit' }}>{cat.label}</span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Emoji grid */}
-        <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', overflowY: 'auto', padding: '4px', alignContent: 'start', overscrollBehavior: 'contain', height: '100%' }}>
-          {filteredEmojis.map((s) => (
+      {/* Horizontal Category Pill Bar */}
+      <div
+        className="horizontal-scroll-only"
+        style={{
+          display: 'flex',
+          gap: '8px',
+          overflowX: 'auto',
+          scrollbarWidth: 'none',
+          msOverflowStyle: 'none',
+          padding: '2px 2px 8px 2px',
+          marginBottom: '6px',
+          flexShrink: 0
+        }}
+      >
+        {EMOJI_CATEGORIES.map((cat) => {
+          const isActive = activeStickerCategory === cat.id && !emojiSearchQuery;
+          return (
             <button
-              key={s.id}
-              className="hover-lift"
-              title={s.name}
-              onClick={() => onSelectEmoji(s)}
-              style={{ background: 'none', border: 'none', fontSize: '2.2rem', cursor: 'pointer', padding: '4px', textAlign: 'center', transition: 'transform 0.15s' }}
+              key={cat.id}
+              type="button"
+              onClick={() => {
+                setActiveStickerCategory(cat.id);
+                setEmojiSearchQuery('');
+              }}
+              style={{
+                padding: '6px 12px',
+                borderRadius: '20px',
+                border: isActive ? '1px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.10)',
+                background: isActive ? 'linear-gradient(135deg, rgba(6, 182, 212, 0.22), rgba(99, 102, 241, 0.15))' : 'rgba(255, 255, 255, 0.05)',
+                color: isActive ? '#ffffff' : 'rgba(255, 255, 255, 0.70)',
+                fontSize: '0.78rem',
+                fontWeight: isActive ? 600 : 500,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                whiteSpace: 'nowrap',
+                cursor: 'pointer',
+                flexShrink: 0,
+                transition: 'all 0.18s ease',
+                boxShadow: isActive ? '0 2px 8px rgba(6, 182, 212, 0.3)' : 'none'
+              }}
+              title={cat.label}
             >
-              {s.emoji}
+              <span style={{ fontSize: '1.05rem', lineHeight: 1 }}>{cat.icon}</span>
+              <span>{cat.label}</span>
             </button>
-          ))}
-          {filteredEmojis.length === 0 && (
-            <div style={{ gridColumn: '1 / -1', textAlign: 'center', color: 'var(--text-muted)', padding: '20px 0' }}>
-              No emojis found matching "{emojiSearchQuery}".
-            </div>
-          )}
-        </div>
+          );
+        })}
+      </div>
+
+      {/* Full-Width Grid of Emojis */}
+      <div
+        style={{
+          flex: 1,
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(48px, 1fr))',
+          gap: '8px',
+          overflowY: 'auto',
+          padding: '4px 2px 14px 2px',
+          alignContent: 'start',
+          overscrollBehavior: 'contain',
+          minHeight: 0
+        }}
+      >
+        {filteredEmojis.map((s) => (
+          <button
+            key={s.id}
+            type="button"
+            className="hover-lift"
+            title={s.name}
+            onClick={() => onSelectEmoji(s)}
+            style={{
+              background: 'rgba(255, 255, 255, 0.03)',
+              border: '1px solid rgba(255, 255, 255, 0.06)',
+              borderRadius: '12px',
+              fontSize: '1.85rem',
+              cursor: 'pointer',
+              padding: '6px 2px',
+              textAlign: 'center',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              aspectRatio: '1 / 1',
+              minHeight: '48px',
+              transition: 'all 0.15s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.12)';
+              e.currentTarget.style.transform = 'scale(1.14)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)';
+              e.currentTarget.style.transform = 'scale(1)';
+            }}
+          >
+            {s.emoji}
+          </button>
+        ))}
+        {filteredEmojis.length === 0 && (
+          <div
+            style={{
+              gridColumn: '1 / -1',
+              textAlign: 'center',
+              color: 'var(--text-muted)',
+              padding: '30px 10px',
+              fontSize: '0.85rem'
+            }}
+          >
+            No emojis found matching "{emojiSearchQuery}".
+          </div>
+        )}
       </div>
     </BottomSheet>
   );

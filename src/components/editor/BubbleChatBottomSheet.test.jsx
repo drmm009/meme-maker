@@ -38,6 +38,7 @@ describe('BubbleChatBottomSheet', () => {
       />
     );
 
+    expect(screen.getByText('Chat & Speech Bubbles')).toBeDefined();
     expect(screen.getByText('iPhone Sent')).toBeDefined();
     expect(screen.getByText('WhatsApp Sent')).toBeDefined();
     expect(screen.getByText('Comic Speech (Left)')).toBeDefined();

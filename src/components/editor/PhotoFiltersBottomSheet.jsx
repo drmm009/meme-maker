@@ -1,6 +1,6 @@
 import React from 'react';
 import BottomSheet from '../BottomSheet';
-import { Sparkles, Check, RotateCcw } from 'lucide-react';
+import { Sparkles, Check, RotateCcw, Image as ImageIcon } from 'lucide-react';
 import { PHOTO_FILTERS } from '../../data/photoFilters';
 
 export default function PhotoFiltersBottomSheet({
@@ -60,8 +60,8 @@ export default function PhotoFiltersBottomSheet({
       onClose={onClose}
       title="Photo Filters"
       icon={<Sparkles size={18} style={{ color: 'var(--cyber-cyan)' }} />}
-      maxHeight="75vh"
-      contentStyle={{ padding: '8px 16px 20px 16px', overflow: 'hidden' }}
+      maxHeight="78vh"
+      contentStyle={{ padding: '6px 16px 20px 16px', overflow: 'hidden' }}
     >
       {/* Target & Scope Control Bar */}
       <div
@@ -69,11 +69,11 @@ export default function PhotoFiltersBottomSheet({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          background: 'rgba(255, 255, 255, 0.05)',
+          background: 'rgba(255, 255, 255, 0.04)',
           padding: '8px 12px',
           borderRadius: '12px',
           border: '1px solid var(--glass-border)',
-          marginBottom: '12px',
+          marginBottom: '10px',
           flexShrink: 0
         }}
       >
@@ -88,10 +88,14 @@ export default function PhotoFiltersBottomSheet({
                 borderRadius: '12px',
                 background: 'rgba(6, 182, 212, 0.16)',
                 border: '1px solid var(--cyber-cyan)',
-                color: 'var(--cyber-cyan)'
+                color: 'var(--cyber-cyan)',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '5px'
               }}
             >
-              Image Layer
+              <ImageIcon size={12} />
+              <span>Image Layer</span>
             </span>
           ) : (
             <div style={{ display: 'flex', gap: '6px' }}>
@@ -132,15 +136,21 @@ export default function PhotoFiltersBottomSheet({
         {currentPreset !== 'original' && (
           <button
             type="button"
-            className="btn btn-xs btn-ghost hover-lift"
+            className="btn btn-xs hover-lift"
             onClick={handleReset}
             style={{
               fontSize: '0.74rem',
-              padding: '3px 8px',
+              padding: '4px 10px',
               color: '#ff4d6d',
+              background: 'rgba(255, 77, 109, 0.12)',
+              border: '1px solid rgba(255, 77, 109, 0.30)',
+              borderRadius: '8px',
               display: 'flex',
               alignItems: 'center',
-              gap: '4px'
+              gap: '4px',
+              cursor: 'pointer',
+              fontWeight: 600,
+              transition: 'all 0.18s ease'
             }}
           >
             <RotateCcw size={12} />
@@ -155,11 +165,12 @@ export default function PhotoFiltersBottomSheet({
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fill, minmax(96px, 1fr))',
-          gap: '12px',
+          gap: '10px',
           overflowY: 'auto',
           padding: '2px 2px 14px 2px',
           alignContent: 'start',
-          overscrollBehavior: 'contain'
+          overscrollBehavior: 'contain',
+          flex: 1
         }}
       >
         {PHOTO_FILTERS.map((filterItem) => {
@@ -183,12 +194,26 @@ export default function PhotoFiltersBottomSheet({
                   : 'rgba(255, 255, 255, 0.04)',
                 border: isActive
                   ? '2px solid var(--cyber-cyan)'
-                  : '1px solid rgba(255, 255, 255, 0.09)',
-                boxShadow: isActive ? '0 0 14px rgba(6, 182, 212, 0.35)' : 'none',
+                  : '1px solid rgba(255, 255, 255, 0.08)',
+                boxShadow: isActive ? '0 0 16px rgba(6, 182, 212, 0.35)' : 'none',
                 cursor: 'pointer',
                 transition: 'all 0.18s ease',
                 position: 'relative',
                 textAlign: 'center'
+              }}
+              onMouseEnter={(e) => {
+                if (!isActive) {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.18)';
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isActive) {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.04)';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                }
               }}
             >
               {/* Filter Thumbnail */}
@@ -196,8 +221,8 @@ export default function PhotoFiltersBottomSheet({
                 style={{
                   width: '100%',
                   aspectRatio: '1 / 1',
-                  maxWidth: '82px',
-                  borderRadius: '10px',
+                  maxWidth: '84px',
+                  borderRadius: '12px',
                   overflow: 'hidden',
                   position: 'relative',
                   background: 'rgba(0, 0, 0, 0.5)',
@@ -227,8 +252,8 @@ export default function PhotoFiltersBottomSheet({
                       position: 'absolute',
                       top: '4px',
                       right: '4px',
-                      width: '18px',
-                      height: '18px',
+                      width: '20px',
+                      height: '20px',
                       borderRadius: '50%',
                       background: 'var(--primary-gradient)',
                       display: 'flex',
@@ -237,7 +262,7 @@ export default function PhotoFiltersBottomSheet({
                       boxShadow: '0 2px 6px rgba(0,0,0,0.5)'
                     }}
                   >
-                    <Check size={11} strokeWidth={3} color="#ffffff" />
+                    <Check size={12} strokeWidth={3} color="#ffffff" />
                   </div>
                 )}
 
@@ -246,16 +271,16 @@ export default function PhotoFiltersBottomSheet({
                   <span
                     style={{
                       position: 'absolute',
-                      bottom: '3px',
+                      bottom: '4px',
                       left: '50%',
                       transform: 'translateX(-50%)',
-                      fontSize: '0.50rem',
+                      fontSize: '0.52rem',
                       fontWeight: 700,
                       letterSpacing: '0.04em',
                       color: 'rgba(255, 255, 255, 0.95)',
-                      background: 'rgba(0, 0, 0, 0.65)',
+                      background: 'rgba(0, 0, 0, 0.70)',
                       backdropFilter: 'blur(4px)',
-                      padding: '1px 5px',
+                      padding: '2px 6px',
                       borderRadius: '4px',
                       whiteSpace: 'nowrap',
                       pointerEvents: 'none'
@@ -269,14 +294,14 @@ export default function PhotoFiltersBottomSheet({
               {/* Filter Name */}
               <span
                 style={{
-                  fontSize: '0.72rem',
+                  fontSize: '0.74rem',
                   fontWeight: isActive ? 700 : 500,
-                  color: isActive ? '#ffffff' : 'rgba(255, 255, 255, 0.78)',
-                  lineHeight: 1.2,
+                  color: isActive ? '#ffffff' : 'rgba(255, 255, 255, 0.85)',
+                  lineHeight: 1.25,
                   whiteSpace: 'nowrap',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
-                  maxWidth: '84px'
+                  maxWidth: '86px'
                 }}
               >
                 {filterItem.name}

@@ -9,7 +9,7 @@ import {
   Image as ImageIcon, Search, X, Upload, RotateCw, ZoomIn, Crop, LayoutGrid, Scissors, Play, Pause, FolderHeart, Droplet, Monitor,
   Paintbrush, Highlighter, Palette, Sun, Moon, ChevronDown, ChevronLeft, PencilLine, Move, ArrowDownRight, Wand2,
   Layers, ArrowUp, ArrowDown, ChevronsUp, ChevronsDown, Eye, EyeOff, Lock, Unlock, FlipHorizontal,
-  PanelTop, PanelBottom, PanelsTopBottom, MessageSquare, Flame, Tv, MessageCircle, Shield, Circle, TrendingDown, Ban,
+  PanelTop, PanelBottom, PanelsTopBottom, MessageSquare, MessageSquareQuote, Flame, Tv, MessageCircle, Shield, Circle, TrendingDown, Ban,
   AlignLeft, AlignCenter, AlignRight
 } from 'lucide-react';
 import AiCaptionModal from './AiCaptionModal';
@@ -3362,10 +3362,8 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
               }
             }}
           >
-            {/* ─── 1. Canvas Studio Card (Dedicated Background Section) ─── */}
-            <div className="canvas-studio-card">
-              {/* Canvas Viewport Area */}
-              <div className="canvas-viewport">
+            {/* Canvas Viewport Area */}
+            <div className="canvas-viewport">
                 {/* Clipboard Paste Toast */}
                 <AnimatePresence>
                   {pasteToast && (
@@ -3526,8 +3524,10 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                 />
               </div>
 
-              {/* ─── Nested Secondary Toolbar Section (Inside Studio Card at bottom) ─── */}
-              <AnimatePresence>
+              {/* ─── Bottom Toolbars Dock Anchor (Main Toolbar on top of main dock, Layer Toolbar floats above it) ─── */}
+              <div className="editor-toolbars-dock-anchor">
+                {/* ─── Layer Toolbar (Secondary Toolbar) ─── */}
+                <AnimatePresence>
                 {Boolean(
                   Boolean(activeCaption || activeSticker || activeImageLayer) ||
                   (!isElementSelected && activeTab === 'draw' && (activeSubmenu === 'drawSettings' || Boolean(drawTool))) ||
@@ -3587,6 +3587,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                               <button
                                 key={c}
                                 type="button"
+                                className={`color-swatch-btn ${isSelected ? 'active' : ''}`}
                                 title={`Text color ${c}`}
                                 onClick={() => updateActiveCaptionProps({ color: c, stroke: getContrastStroke(c) })}
                                 style={{
@@ -3731,6 +3732,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           <div className="sec-bar-btn-container">
                             <button
                               type="button"
+                              className={`color-swatch-btn ${isNone ? 'active' : ''}`}
                               onClick={() => handleSetCaptionBg('none')}
                               title="No background"
                               style={{
@@ -3754,6 +3756,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
 
                             <button
                               type="button"
+                              className={`color-swatch-btn ${isBlack ? 'active' : ''}`}
                               onClick={() => handleSetCaptionBg('black')}
                               title="Black background"
                               style={{
@@ -3772,6 +3775,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
 
                             <button
                               type="button"
+                              className={`color-swatch-btn ${isWhite ? 'active' : ''}`}
                               onClick={() => handleSetCaptionBg('white')}
                               title="White background"
                               style={{
@@ -3956,6 +3960,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                               <button
                                 key={c}
                                 type="button"
+                                className={`color-swatch-btn ${isSelected ? 'active' : ''}`}
                                 title={`Set color ${c}`}
                                 onClick={() => setBrushColor(c)}
                                 style={{
@@ -4038,20 +4043,21 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
 
                         <button
                           type="button"
-                          className="btn btn-icon btn-xs vid-ctx-btn"
+                          className="btn btn-icon btn-xs vid-ctx-btn vid-ctx-btn-delete"
                           onClick={handleClearDrawings}
                           disabled={drawings.length === 0}
                           style={{
-                            background: drawings.length > 0 ? 'rgba(239, 68, 68, 0.22)' : undefined,
-                            border: drawings.length > 0 ? '1px solid rgba(239, 68, 68, 0.45)' : undefined,
-                            boxShadow: drawings.length > 0 ? '0 0 8px rgba(239, 68, 68, 0.3)' : undefined,
+                            background: drawings.length > 0 ? 'linear-gradient(135deg, #ef4444, #dc2626)' : undefined,
+                            border: drawings.length > 0 ? '1px solid rgba(255, 255, 255, 0.28)' : undefined,
+                            boxShadow: drawings.length > 0 ? '0 2px 10px rgba(239, 68, 68, 0.45)' : undefined,
                             opacity: drawings.length === 0 ? 0.35 : 1,
-                            cursor: drawings.length === 0 ? 'not-allowed' : 'pointer'
+                            cursor: drawings.length === 0 ? 'not-allowed' : 'pointer',
+                            color: '#ffffff'
                           }}
                           title={drawings.length > 0 ? `Clear all drawings (${drawings.length})` : 'Clear drawings'}
                           aria-label="Clear all drawings"
                         >
-                          <Trash2 style={{ width: 15, height: 15, color: '#ef4444' }} />
+                          <Trash2 style={{ width: 15, height: 15, color: '#ffffff' }} />
                         </button>
                       </motion.div>
                     )}
@@ -4152,6 +4158,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           <button
                             key={c}
                             type="button"
+                            className={`color-swatch-btn ${canvasBgColor === c ? 'active' : ''}`}
                             title={c === 'transparent' ? 'Transparent' : `Canvas background ${c}`}
                             onClick={() => setCanvasBgColor(c)}
                             style={{
@@ -4282,143 +4289,141 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         animate="animate"
                         exit="exit"
                         className="sec-bar-layer-actions"
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '6px',
-                          flexShrink: 0
-                        }}
                       >
                         {activeCaption && !activeCaption.isTweetCard && (
-                          <button
-                            type="button"
-                            className="btn btn-icon btn-xs vid-ctx-btn"
-                            title="Toggle Text Case (ALL CAPS / Sentence case / lowercase)"
-                            aria-label="Toggle Text Case"
-                            onClick={handleToggleTextCase}
-                            style={{
-                              fontSize: '0.75rem',
-                              fontWeight: 700,
-                              minWidth: 32,
-                              height: 32
-                            }}
-                          >
-                            Aa
-                          </button>
+                          <>
+                            <button
+                              type="button"
+                              className="layer-action-btn layer-action-btn-case"
+                              title="Toggle Text Case (ALL CAPS / Sentence case / lowercase)"
+                              aria-label="Toggle Text Case"
+                              onClick={handleToggleTextCase}
+                            >
+                              <span style={{ color: '#ffffff', fontWeight: 700, fontSize: '0.86rem' }}>Aa</span>
+                            </button>
+                            <div className="layer-action-divider" />
+                          </>
                         )}
 
                         {activeImageLayer && (
                           <>
                             <button
                               type="button"
-                              className={`btn btn-icon btn-xs vid-ctx-btn ${activeImageLayer.fitMode === 'crop' ? 'active' : ''}`}
+                              className={`layer-action-btn layer-action-btn-crop ${activeImageLayer.fitMode === 'crop' ? 'active' : ''}`}
                               title={activeImageLayer.fitMode === 'crop' ? 'Exit Crop' : 'Crop'}
                               aria-label={activeImageLayer.fitMode === 'crop' ? 'Exit Crop' : 'Crop'}
                               onClick={() => updateActiveImageLayer('fitMode', activeImageLayer.fitMode === 'crop' ? 'fit' : 'crop')}
-                              style={{
-                                background: activeImageLayer.fitMode === 'crop' ? 'var(--primary-gradient)' : undefined,
-                                color: activeImageLayer.fitMode === 'crop' ? '#ffffff' : undefined,
-                                border: activeImageLayer.fitMode === 'crop' ? '1px solid var(--cyber-cyan)' : undefined
-                              }}
                             >
-                              <Crop style={{ width: 14, height: 14 }} />
+                              <Crop style={{ width: 16, height: 16 }} />
                             </button>
+                            <div className="layer-action-divider" />
 
                             <button
                               type="button"
-                              className={`btn btn-icon btn-xs vid-ctx-btn ${activeImageLayer.flipX ? 'active' : ''}`}
+                              className={`layer-action-btn layer-action-btn-flip ${activeImageLayer.flipX ? 'active' : ''}`}
                               title="Flip Horizontal (Mirror)"
                               aria-label="Flip Horizontal"
                               onClick={handleFlipActiveLayer}
-                              style={{
-                                background: activeImageLayer.flipX ? 'var(--primary-gradient)' : undefined,
-                                color: activeImageLayer.flipX ? '#ffffff' : undefined,
-                                border: activeImageLayer.flipX ? '1px solid var(--cyber-cyan)' : undefined
-                              }}
                             >
-                              <FlipHorizontal style={{ width: 14, height: 14 }} />
+                              <FlipHorizontal style={{ width: 16, height: 16 }} />
                             </button>
+                            <div className="layer-action-divider" />
+                          </>
+                        )}
+
+                        {activeSticker && (
+                          <>
+                            <button
+                              type="button"
+                              className={`layer-action-btn layer-action-btn-flip ${activeSticker.flipX ? 'active' : ''}`}
+                              title="Flip Horizontal (Mirror)"
+                              aria-label="Flip Horizontal"
+                              onClick={handleFlipActiveLayer}
+                            >
+                              <FlipHorizontal style={{ width: 16, height: 16 }} />
+                            </button>
+                            <div className="layer-action-divider" />
                           </>
                         )}
 
                         <button
                           type="button"
-                          className="btn btn-icon btn-xs vid-ctx-btn"
+                          className="layer-action-btn layer-action-btn-rotate"
                           title="Rotate 90°"
                           aria-label="Rotate 90°"
                           onClick={handleRotateLayer}
                         >
-                          <RotateCw style={{ width: 14, height: 14 }} />
+                          <RotateCw style={{ width: 16, height: 16 }} />
                         </button>
+
+                        <div className="layer-action-divider" />
 
                         <button
                           type="button"
-                          className="btn btn-icon btn-xs vid-ctx-btn"
+                          className="layer-action-btn layer-action-btn-duplicate"
                           title="Duplicate Layer"
                           aria-label="Duplicate Layer"
                           onClick={() => handleDuplicateLayer()}
                         >
-                          <Copy style={{ width: 14, height: 14 }} />
+                          <Copy style={{ width: 16, height: 16 }} />
                         </button>
 
-                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                        <div className="layer-action-divider" />
+
+                        <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
                           <button
                             type="button"
-                            className={`btn btn-icon btn-xs vid-ctx-btn ${showLayerMenu ? 'active' : ''}`}
+                            className={`layer-action-btn layer-action-btn-layers ${showLayerMenu ? 'active' : ''}`}
                             title="Layer Order"
                             aria-label="Layer Order"
                             onClick={() => setShowLayerMenu(!showLayerMenu)}
                           >
-                            <Layers style={{ width: 14, height: 14 }} />
+                            <Layers style={{ width: 16, height: 16 }} />
                           </button>
 
                           {showLayerMenu && (
                             <div
-                              className="sec-bar-btn-container"
+                              className="sec-bar-layer-order-popover"
                               style={{
-                                padding: '0 4px',
-                                gap: '2px',
-                                height: '34px'
+                                position: 'absolute',
+                                bottom: 'calc(100% + 8px)',
+                                left: '50%',
+                                transform: 'translateX(-50%)'
                               }}
                             >
                               <button
                                 type="button"
-                                className="btn btn-icon btn-xs vid-ctx-btn"
+                                className="layer-action-popover-btn"
                                 title="Bring Forward"
                                 aria-label="Bring Forward"
                                 onClick={() => moveLayer(activeLayerId, 'forward')}
-                                style={{ border: 'none', background: 'transparent', width: 28, height: 28, minWidth: 28 }}
                               >
-                                <ArrowUp style={{ width: 13, height: 13 }} />
+                                <ArrowUp style={{ width: 14, height: 14 }} />
                               </button>
+                              <div className="layer-action-divider" />
                               <button
                                 type="button"
-                                className="btn btn-icon btn-xs vid-ctx-btn"
+                                className="layer-action-popover-btn"
                                 title="Send Backward"
                                 aria-label="Send Backward"
                                 onClick={() => moveLayer(activeLayerId, 'backward')}
-                                style={{ border: 'none', background: 'transparent', width: 28, height: 28, minWidth: 28 }}
                               >
-                                <ArrowDown style={{ width: 13, height: 13 }} />
+                                <ArrowDown style={{ width: 14, height: 14 }} />
                               </button>
                             </div>
                           )}
                         </div>
 
+                        <div className="layer-action-divider" />
+
                         <button
                           type="button"
-                          className="btn btn-icon btn-xs vid-ctx-btn vid-ctx-btn-delete"
-                          style={{
-                            background: 'rgba(239, 68, 68, 0.22)',
-                            border: '1px solid rgba(239, 68, 68, 0.45)',
-                            boxShadow: '0 0 8px rgba(239, 68, 68, 0.3)',
-                            color: '#ef4444'
-                          }}
+                          className="layer-action-btn layer-action-btn-delete"
                           title="Delete Layer"
                           aria-label="Delete Layer"
                           onClick={() => handleDeleteLayer()}
                         >
-                          <Trash2 style={{ width: 14, height: 14, color: '#ef4444' }} />
+                          <Trash2 style={{ width: 16, height: 16 }} />
                         </button>
                       </motion.div>
                     )}
@@ -4426,16 +4431,15 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                   </motion.div>
                 )}
               </AnimatePresence>
-            </div>
 
-            {/* ─── 2. Main Context Toolbar (Directly below Studio Card) ─── */}
+            {/* ─── 2. Main Context Toolbar ─── */}
             <AnimatePresence>
               {((activeCaption || activeSticker || activeImageLayer || templateFaceMorph) || (isMobileTabsFolded && !activeCaption && !activeSticker && !activeImageLayer)) && (isMobileTabsFolded || templateFaceMorph) && (
                 <motion.div
                   ref={contextToolbarRef}
                   className={`editor-floating-toolbar video-context-toolbar ${showBubbleLayouts ? 'bubble-mode-left' : ''}`}
                   initial={{ opacity: 0, height: 0, paddingTop: 0, paddingBottom: 0, marginTop: 0, marginBottom: 0, overflow: 'hidden' }}
-                  animate={{ opacity: 1, height: 46, paddingTop: 5, paddingBottom: 0, marginTop: 2, marginBottom: 0 }}
+                  animate={{ opacity: 1, height: 64, paddingTop: 5, paddingBottom: 5, marginTop: 2, marginBottom: 0 }}
                   exit={{ opacity: 0, height: 0, paddingTop: 0, paddingBottom: 0, marginTop: 0, marginBottom: 0, overflow: 'hidden' }}
                   transition={{ duration: 0.25, ease: 'easeInOut' }}
                 >
@@ -4545,7 +4549,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         <button
                           type="button"
                           data-setting-btn="color"
-                          className={`btn btn-xs vid-ctx-btn ${activeSubmenu === 'color' ? 'active' : ''}`}
+                          className={`btn btn-xs vid-ctx-btn vid-ctx-btn-color ${activeSubmenu === 'color' ? 'active' : ''}`}
                           onClick={() => handleToggleSubmenu('color')}
                           style={{
                             display: 'inline-flex',
@@ -4565,12 +4569,14 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           title="Text Fill Color"
                         >
                           <div
+                            className="vid-color-swatch-disc"
                             style={{
-                              width: 14,
-                              height: 14,
+                              width: 16,
+                              height: 16,
                               borderRadius: '50%',
                               background: activeCaption.color || '#fff',
-                              border: '2px solid rgba(255,255,255,0.4)',
+                              border: '2px solid rgba(255,255,255,0.85)',
+                              boxShadow: `0 0 6px ${activeCaption.color || 'rgba(255,255,255,0.4)'}`
                             }}
                           />
                           <span>Color</span>
@@ -4580,7 +4586,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         <button
                           type="button"
                           data-setting-btn="align"
-                          className={`btn btn-xs vid-ctx-btn ${activeSubmenu === 'align' ? 'active' : ''}`}
+                          className={`btn btn-xs vid-ctx-btn vid-ctx-btn-align ${activeSubmenu === 'align' ? 'active' : ''}`}
                           title={`Text Alignment: ${activeCaption.align || 'center'}`}
                           onClick={() => handleToggleSubmenu('align')}
                           style={{
@@ -4613,7 +4619,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         <button
                           type="button"
                           data-setting-btn="bg"
-                          className={`btn btn-xs vid-ctx-btn ${activeSubmenu === 'bg' ? 'active' : ''}`}
+                          className={`btn btn-xs vid-ctx-btn vid-ctx-btn-bg ${activeSubmenu === 'bg' ? 'active' : ''}`}
                           title="Text Background Box / Banner settings"
                           onClick={() => handleToggleSubmenu('bg')}
                           style={{
@@ -4632,7 +4638,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                             flexShrink: 0
                           }}
                         >
-                          <PanelTop style={{ width: 13, height: 13, color: '#ffffff' }} />
+                          <Highlighter style={{ width: 13, height: 13, color: '#ffffff' }} />
                           <span>Bg</span>
                         </button>
 
@@ -4640,7 +4646,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         <button
                           type="button"
                           data-setting-btn="blur"
-                          className={`btn btn-xs vid-ctx-btn ${activeSubmenu === 'blur' ? 'active' : ''}`}
+                          className={`btn btn-xs vid-ctx-btn vid-ctx-btn-blur ${activeSubmenu === 'blur' ? 'active' : ''}`}
                           title="Text Blur & Opacity settings"
                           onClick={() => handleToggleSubmenu('blur')}
                           style={{
@@ -4667,7 +4673,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         <button
                           type="button"
                           data-setting-btn="effects"
-                          className={`btn btn-xs vid-ctx-btn ${activeSubmenu === 'effects' ? 'active' : ''}`}
+                          className={`btn btn-xs vid-ctx-btn vid-ctx-btn-effects ${activeSubmenu === 'effects' ? 'active' : ''}`}
                           title="Text Effects (Arch, Smile, Shadow, Glow, Glitch, 3D, Hollow)"
                           onClick={() => handleToggleSubmenu('effects')}
                           style={{
@@ -4686,7 +4692,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                             flexShrink: 0
                           }}
                         >
-                          <Sparkles style={{ width: 13, height: 13, color: '#ffffff' }} />
+                          <Wand2 style={{ width: 13, height: 13, color: '#ffffff' }} />
                           <span>Effects</span>
                         </button>
 
@@ -4694,7 +4700,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         <button
                           type="button"
                           data-setting-btn="bubble"
-                          className={`btn btn-xs vid-ctx-btn ${showBubbleBottomSheet ? 'active' : ''}`}
+                          className={`btn btn-xs vid-ctx-btn vid-ctx-btn-bubble ${showBubbleBottomSheet ? 'active' : ''}`}
                           title="Chat & Speech Bubbles (iPhone, WhatsApp, Comic)"
                           onClick={() => {
                             setShowBubbleBottomSheet(!showBubbleBottomSheet);
@@ -4716,7 +4722,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                             color: '#ffffff'
                           }}
                         >
-                          <MessageSquare style={{ width: 13, height: 13, color: '#ffffff' }} />
+                          <MessageSquareQuote style={{ width: 13, height: 13, color: '#ffffff' }} />
                           <span>Bubble</span>
                         </button>
                       </div>
@@ -4987,42 +4993,29 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                   {!(activeCaption || activeSticker || activeImageLayer) && !templateFaceMorph && activeTab === "text" && (
                     <div style={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}>
                       <button
-                        className="btn btn-xs vid-ctx-btn"
+                        className="btn btn-xs vid-ctx-btn vid-ctx-btn-primary vid-ctx-btn-add-text"
+                        data-action="add-text"
                         onClick={handleAddCaption}
-                        style={{ padding: "4px 10px", fontSize: "0.75rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "5px", borderRadius: "8px", background: 'var(--primary-gradient)', color: '#fff', border: 'none', flexShrink: 0 }}
+                        title="Add Text Caption"
                       >
-                        <Plus style={{ width: 14, height: 14 }} /> <span>Add Text</span>
+                        <Plus style={{ width: 14, height: 14, color: '#ffffff' }} /> <span>Add Text</span>
                       </button>
 
                       <button
                         type="button"
                         data-setting-btn="banner"
-                        className={`btn btn-xs vid-ctx-btn ${(canvasHeader.enabled || canvasFooter.enabled || activeSubmenu === 'banner') ? 'active' : ''}`}
+                        className={`btn btn-xs vid-ctx-btn vid-ctx-btn-banner ${(canvasHeader.enabled || canvasFooter.enabled || activeSubmenu === 'banner') ? 'active' : ''}`}
                         onClick={() => handleToggleSubmenu('banner')}
                         title="Header & Footer Canvas Extensions (Top / Bottom)"
-                        style={{
-                          padding: "4px 10px",
-                          fontSize: "0.75rem",
-                          fontWeight: 600,
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: "5px",
-                          borderRadius: "8px",
-                          background: (canvasHeader.enabled || canvasFooter.enabled || activeSubmenu === 'banner') ? 'var(--primary-gradient)' : undefined,
-                          border: (canvasHeader.enabled || canvasFooter.enabled || activeSubmenu === 'banner') ? '1px solid var(--cyber-cyan)' : undefined,
-                          boxShadow: (canvasHeader.enabled || canvasFooter.enabled || activeSubmenu === 'banner') ? '0 2px 10px rgba(6, 182, 212, 0.4), 0 0 8px rgba(99, 102, 241, 0.4)' : 'none',
-                          color: (canvasHeader.enabled || canvasFooter.enabled || activeSubmenu === 'banner') ? "#ffffff" : undefined,
-                          flexShrink: 0
-                        }}
                       >
-                        <PanelsTopBottom style={{ width: 13, height: 13 }} />
+                        <PanelsTopBottom style={{ width: 13, height: 13, color: '#ffffff' }} />
                         <span>Header / Footer</span>
                       </button>
 
                       <button
                         type="button"
                         data-setting-btn="bubble"
-                        className={`btn btn-xs vid-ctx-btn ${showBubbleBottomSheet ? 'active' : ''}`}
+                        className={`btn btn-xs vid-ctx-btn vid-ctx-btn-bubble ${showBubbleBottomSheet ? 'active' : ''}`}
                         onClick={() => {
                           if (activeCaption) {
                             setShowBubbleBottomSheet(true);
@@ -5033,43 +5026,17 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           setActiveSubmenu(null);
                         }}
                         title="Add Chat & Speech Bubble (iPhone, WhatsApp, Comic)"
-                        style={{
-                          padding: "4px 10px",
-                          fontSize: "0.75rem",
-                          fontWeight: 600,
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "5px",
-                          borderRadius: "8px",
-                          flexShrink: 0,
-                          background: showBubbleBottomSheet ? 'var(--primary-gradient)' : undefined,
-                          border: showBubbleBottomSheet ? '1px solid var(--cyber-cyan)' : undefined,
-                          boxShadow: showBubbleBottomSheet ? '0 2px 10px rgba(6, 182, 212, 0.4), 0 0 8px rgba(99, 102, 241, 0.4)' : 'none',
-                          color: showBubbleBottomSheet ? '#ffffff' : undefined
-                        }}
                       >
-                        <MessageSquare style={{ width: 13, height: 13, color: showBubbleBottomSheet ? '#ffffff' : "var(--cyber-cyan)" }} /> <span>Bubble</span>
+                        <MessageSquareQuote style={{ width: 13, height: 13, color: '#ffffff' }} /> <span>Bubble</span>
                       </button>
 
                       <button
-                        className="btn btn-xs vid-ctx-btn"
+                        className="btn btn-xs vid-ctx-btn vid-ctx-btn-ai"
+                        data-action="ai-captions"
                         onClick={() => setShowAiModal(true)}
                         title="AI Meme Captions"
-                        style={{
-                          padding: "4px 10px",
-                          fontSize: "0.75rem",
-                          fontWeight: 600,
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "5px",
-                          borderRadius: "8px",
-                          background: "linear-gradient(135deg, rgba(168, 85, 247, 0.3) 0%, rgba(236, 72, 153, 0.3) 100%)",
-                          border: "1px solid rgba(236, 72, 153, 0.5)",
-                          color: "#ffffff",
-                          flexShrink: 0
-                        }}
                       >
-                        <Sparkles style={{ width: 13, height: 13, color: "#ec4899" }} /> <span>AI Captions</span>
+                        <Sparkles style={{ width: 13, height: 13, color: '#ffffff' }} className="vid-ai-sparkle-icon" /> <span>AI Captions</span>
                       </button>
                     </div>
                   )}
@@ -5375,6 +5342,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                 </motion.div>
               )}
             </AnimatePresence>
+          </div>
 
         </div>
       </div>
@@ -6027,15 +5995,16 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                     {/* Delete Text Layer Button */}
                     <button
                       type="button"
-                      className="btn btn-icon btn-xs hover-lift"
+                      className="btn btn-icon btn-xs hover-lift vid-ctx-btn-delete"
                       onClick={() => handleDeleteLayer()}
                       title="Delete Text"
                       style={{
                         width: '32px',
                         height: '32px',
                         borderRadius: '50%',
-                        background: 'rgba(239, 68, 68, 0.85)',
-                        border: '1px solid rgba(239, 68, 68, 1)',
+                        background: 'linear-gradient(135deg, #ef4444, #dc2626)',
+                        border: '1px solid rgba(255, 255, 255, 0.28)',
+                        boxShadow: '0 2px 8px rgba(239, 68, 68, 0.4)',
                         color: '#ffffff',
                         display: 'flex',
                         alignItems: 'center',
@@ -6044,7 +6013,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         marginRight: '8px'
                       }}
                     >
-                      <Trash2 size={14} />
+                      <Trash2 size={14} style={{ color: '#ffffff' }} />
                     </button>
                   </div>
                 )}
@@ -6948,12 +6917,18 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                   {activeImageLayer && (
                     <button
                       type="button"
-                      className="btn btn-icon btn-xs text-danger hover-lift"
+                      className="btn btn-icon btn-xs hover-lift vid-ctx-btn-delete"
                       onClick={() => handleDeleteLayer()}
                       title="Delete Media Layer"
-                      style={{ flexShrink: 0, background: 'rgba(239, 68, 68, 0.85)', color: '#ffffff', border: '1px solid rgba(239, 68, 68, 1)' }}
+                      style={{
+                        flexShrink: 0,
+                        background: 'linear-gradient(135deg, #ef4444, #dc2626)',
+                        color: '#ffffff',
+                        border: '1px solid rgba(255, 255, 255, 0.28)',
+                        boxShadow: '0 2px 8px rgba(239, 68, 68, 0.4)'
+                      }}
                     >
-                      <Trash2 className="icon-xs" />
+                      <Trash2 className="icon-xs" style={{ color: '#ffffff' }} />
                     </button>
                   )}
                 </div>

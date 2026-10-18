@@ -1352,6 +1352,16 @@
   margin-bottom: 18px;
 }
 
+/* Mobile-only equal vertical spacing (matching top panel to hero banner space) */
+@media (max-width: 640px) {
+  .hero-banner-wrapper {
+    margin-bottom: 12px !important;
+  }
+  .search-filter-row {
+    margin-bottom: 8px !important;
+  }
+}
+
 .search-pill-container {
   position: relative;
   display: flex;
@@ -1612,25 +1622,33 @@ input.search-pill-input[type="text"]::placeholder {
   color: #0f172a !important;
 }
 
-/* Active Category Pill: Signature Warm Orange Glow */
+/* Active Category Pill: Active Orange Gradient (No glowing border) */
 .discovery-tag-pill.active {
-  background: rgba(255, 94, 54, 0.22) !important;
-  border: 1.5px solid #ff5e36 !important;
-  box-shadow: 0 0 16px rgba(255, 94, 54, 0.6) !important;
+  background: var(--primary-gradient, linear-gradient(135deg, #ff5e36 0%, #ec4899 100%)) !important;
+  border: 1px solid transparent !important;
+  box-shadow: none !important;
   color: #ffffff !important;
-  font-weight: 750 !important;
+  font-weight: 700 !important;
 }
 
 .discovery-tag-pill.active:hover {
-  background: rgba(255, 94, 54, 0.3) !important;
-  box-shadow: 0 0 20px rgba(255, 94, 54, 0.75) !important;
+  background: var(--primary-gradient-hover, linear-gradient(135deg, #ff4c21 0%, #db2777 100%)) !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  transform: translateY(-2px);
 }
 
 [data-theme='light'] .discovery-tag-pill.active {
-  background: rgba(255, 94, 54, 0.14) !important;
-  border-color: #ff5e36 !important;
-  box-shadow: 0 2px 10px rgba(255, 94, 54, 0.28) !important;
-  color: #e0471e !important;
+  background: var(--primary-gradient, linear-gradient(135deg, #ff5e36 0%, #ec4899 100%)) !important;
+  border: 1px solid transparent !important;
+  box-shadow: none !important;
+  color: #ffffff !important;
+}
+
+[data-theme='light'] .discovery-tag-pill.active:hover {
+  background: var(--primary-gradient-hover, linear-gradient(135deg, #ff4c21 0%, #db2777 100%)) !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
 }
 
 .tag-count-badge {

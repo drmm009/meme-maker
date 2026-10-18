@@ -38,27 +38,54 @@ export default function TemplatePickerBottomSheet({ isOpen, onClose, templates =
       title="Add Template"
       icon={<ImageIcon size={18} style={{ color: 'var(--cyber-cyan)' }} />}
       maxHeight="82vh"
-      contentStyle={{ padding: '8px 16px 16px 16px', overflow: 'hidden' }}
+      contentStyle={{ padding: '6px 16px 16px 16px', overflow: 'hidden' }}
     >
-      <div className="picker-search-bar" style={{ position: 'relative', marginBottom: '12px' }}>
-        <Search className="search-icon" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: 'var(--text-muted)' }} />
+      <div className="picker-search-bar" style={{ position: 'relative', marginTop: '2px', marginBottom: '10px' }}>
+        <Search
+          className="search-icon"
+          size={16}
+          style={{
+            position: 'absolute',
+            left: '12px',
+            top: '50%',
+            transform: 'translateY(-50%)',
+            pointerEvents: 'none',
+            color: 'var(--text-muted)'
+          }}
+        />
         <input
           type="text"
           placeholder={`Search ${templates.length}+ meme templates...`}
           value={imagePickerSearch}
           onChange={(e) => setImagePickerSearch(e.target.value)}
           className="search-input"
-          style={{ paddingLeft: '38px', paddingRight: imagePickerSearch ? '38px' : '14px', height: '42px', width: '100%', boxSizing: 'border-box', borderRadius: '24px' }}
+          style={{
+            paddingLeft: '36px',
+            paddingRight: imagePickerSearch ? '36px' : '14px',
+            height: '40px',
+            width: '100%',
+            boxSizing: 'border-box',
+            borderRadius: '20px',
+            background: 'rgba(255, 255, 255, 0.06)',
+            border: '1px solid var(--glass-border)',
+            color: 'var(--text-main)',
+            fontSize: '0.84rem',
+            outline: 'none',
+            transition: 'all 0.2s ease'
+          }}
+          onFocus={(e) => (e.target.style.borderColor = 'var(--cyber-cyan)')}
+          onBlur={(e) => (e.target.style.borderColor = 'var(--glass-border)')}
         />
         {imagePickerSearch && (
           <button
+            type="button"
             onClick={() => setImagePickerSearch('')}
             style={{
               position: 'absolute',
               right: '10px',
               top: '50%',
               transform: 'translateY(-50%)',
-              background: 'rgba(255,255,255,0.12)',
+              background: 'rgba(255, 255, 255, 0.12)',
               border: 'none',
               borderRadius: '50%',
               width: '22px',
@@ -68,7 +95,9 @@ export default function TemplatePickerBottomSheet({ isOpen, onClose, templates =
               justifyContent: 'center',
               color: 'var(--text-muted)',
               cursor: 'pointer',
+              padding: 0
             }}
+            aria-label="Clear search"
           >
             <X className="icon-xs" style={{ width: '13px', height: '13px' }} />
           </button>
@@ -77,6 +106,7 @@ export default function TemplatePickerBottomSheet({ isOpen, onClose, templates =
 
       {/* Category Pills - Horizontal scroll only */}
       <div
+        className="horizontal-scroll-only"
         onWheel={(e) => {
           if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
             e.currentTarget.scrollLeft += e.deltaY;
@@ -87,15 +117,14 @@ export default function TemplatePickerBottomSheet({ isOpen, onClose, templates =
           flexWrap: 'nowrap',
           alignItems: 'center',
           gap: '8px',
-          padding: '2px 4px 12px 4px',
+          padding: '2px 2px 8px 2px',
           overflowX: 'auto',
           overflowY: 'hidden',
           flexShrink: 0,
           scrollbarWidth: 'none',
           msOverflowStyle: 'none',
           WebkitOverflowScrolling: 'touch',
-          borderBottom: '1px solid var(--glass-border)',
-          marginBottom: '10px',
+          marginBottom: '8px',
         }}
       >
         {CATEGORIES.map((cat) => {
@@ -103,6 +132,7 @@ export default function TemplatePickerBottomSheet({ isOpen, onClose, templates =
           return (
             <button
               key={cat.id}
+              type="button"
               onClick={() => {
                 setImagePickerCategory(cat.id);
                 setImagePickerSearch('');
@@ -110,19 +140,19 @@ export default function TemplatePickerBottomSheet({ isOpen, onClose, templates =
               style={{
                 padding: '6px 14px',
                 borderRadius: '20px',
-                border: isActive ? '1px solid var(--primary-accent)' : '1px solid var(--glass-border)',
-                background: isActive ? 'var(--primary-gradient)' : 'var(--glass-bg)',
-                color: isActive ? '#ffffff' : 'var(--text-muted)',
+                border: isActive ? '1px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.10)',
+                background: isActive ? 'linear-gradient(135deg, rgba(6, 182, 212, 0.22), rgba(99, 102, 241, 0.15))' : 'rgba(255, 255, 255, 0.05)',
+                color: isActive ? '#ffffff' : 'rgba(255, 255, 255, 0.70)',
                 fontSize: '0.78rem',
-                fontWeight: 600,
-                boxShadow: isActive ? '0 2px 8px rgba(139, 92, 246, 0.3)' : 'none',
+                fontWeight: isActive ? 600 : 500,
+                boxShadow: isActive ? '0 2px 8px rgba(6, 182, 212, 0.3)' : 'none',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '6px',
                 whiteSpace: 'nowrap',
                 flexShrink: 0,
-                transition: 'all 0.15s ease',
+                transition: 'all 0.18s ease',
               }}
             >
               <span>{cat.label}</span>
@@ -143,7 +173,7 @@ export default function TemplatePickerBottomSheet({ isOpen, onClose, templates =
           gridAutoRows: 'max-content',
           alignContent: 'start',
           gap: '12px',
-          padding: '8px 4px 16px 4px',
+          padding: '4px 2px 16px 2px',
           boxSizing: 'border-box',
           overscrollBehavior: 'contain',
         }}
@@ -161,14 +191,23 @@ export default function TemplatePickerBottomSheet({ isOpen, onClose, templates =
                 padding: 0,
                 display: 'flex',
                 flexDirection: 'column',
-                borderRadius: '12px',
+                borderRadius: '14px',
                 overflow: 'hidden',
-                background: 'var(--bg-surface-1)',
-                border: '1px solid var(--glass-border)',
+                background: 'rgba(255, 255, 255, 0.04)',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
                 cursor: 'pointer',
                 boxSizing: 'border-box',
+                transition: 'all 0.18s ease'
               }}
               onClick={() => handleCardClick(tmpl)}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = 'rgba(6, 182, 212, 0.4)';
+                e.currentTarget.style.transform = 'translateY(-2px)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)';
+                e.currentTarget.style.transform = 'translateY(0)';
+              }}
             >
               <div
                 className="template-image-wrapper"
@@ -193,10 +232,11 @@ export default function TemplatePickerBottomSheet({ isOpen, onClose, templates =
                     minHeight: '120px',
                     objectFit: 'cover',
                     display: 'block',
+                    transition: 'transform 0.25s ease'
                   }}
                 />
               </div>
-              <div className="template-info" style={{ padding: '6px 8px', minHeight: '38px', height: '38px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxSizing: 'border-box' }}>
+              <div className="template-info" style={{ padding: '8px', minHeight: '38px', height: '38px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxSizing: 'border-box' }}>
                 <span style={{ fontSize: '0.78rem', fontWeight: 600, textAlign: 'center', display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: 'var(--text-main)', width: '100%' }}>{tmpl.name}</span>
               </div>
             </div>

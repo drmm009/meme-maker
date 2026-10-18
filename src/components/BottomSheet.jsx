@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence, useDragControls } from 'framer-motion';
+import { X } from 'lucide-react';
 import ModalPortal from './ModalPortal';
 
 /* ─── Inline stylesheet for scrollbar & hover effects ─── */
@@ -9,18 +10,30 @@ const injectStyles = () => {
   const style = document.createElement('style');
   style.id = sheetStyleId;
   style.textContent = `
-    .bs-content-scroll::-webkit-scrollbar { width: 3px; }
+    .bs-content-scroll::-webkit-scrollbar { width: 4px; }
     .bs-content-scroll::-webkit-scrollbar-track { background: transparent; }
     .bs-content-scroll::-webkit-scrollbar-thumb {
-      background: rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.16);
       border-radius: 99px;
     }
     .bs-content-scroll::-webkit-scrollbar-thumb:hover {
-      background: rgba(255,255,255,0.22);
+      background: rgba(255,255,255,0.28);
+    }
+    .bs-close-btn:hover {
+      background: rgba(255,255,255,0.16) !important;
+      border-color: rgba(255,255,255,0.28) !important;
+      color: #fff !important;
+      transform: scale(1.06);
+    }
+    .bs-close-btn:active {
+      transform: scale(0.92);
     }
     .bs-drag-handle:hover .bs-drag-pill {
       width: 52px !important;
-      background: rgba(255,255,255,0.40) !important;
+      background: rgba(255,255,255,0.50) !important;
+    }
+    .bottom-sheet-panel:focus-visible {
+      outline: none;
     }
   `;
   document.head.appendChild(style);
@@ -169,14 +182,102 @@ export default function BottomSheet({
                 <div
                   className="bs-drag-pill"
                   style={{
-                    width: '42px',
+                    width: '44px',
                     height: '4px',
                     borderRadius: '999px',
-                    background: 'rgba(255, 255, 255, 0.25)',
-                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+                    background: 'rgba(255, 255, 255, 0.28)',
+                    transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)'
                   }}
                 />
               </div>
+
+              {/* Header */}
+              {(title || icon) && (
+                <div
+                  style={{
+                    padding: '4px 18px 12px 18px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    flexShrink: 0,
+                    position: 'relative'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+                    {icon && (
+                      <div
+                        style={{
+                          width: '32px',
+                          height: '32px',
+                          borderRadius: '10px',
+                          background: 'linear-gradient(135deg, rgba(255, 94, 54, 0.18), rgba(236, 72, 153, 0.12))',
+                          border: '1px solid rgba(255, 94, 54, 0.25)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0
+                        }}
+                      >
+                        {icon}
+                      </div>
+                    )}
+                    {title && (
+                      <span
+                        style={{
+                          fontSize: '1.02rem',
+                          fontWeight: 700,
+                          color: '#ffffff',
+                          letterSpacing: '-0.015em',
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis'
+                        }}
+                      >
+                        {title}
+                      </span>
+                    )}
+                    {badge}
+                  </div>
+
+                  <button
+                    type="button"
+                    className="bs-close-btn"
+                    onClick={onClose}
+                    title="Close"
+                    aria-label="Close"
+                    style={{
+                      width: '34px',
+                      height: '34px',
+                      borderRadius: '10px',
+                      background: 'rgba(255, 255, 255, 0.08)',
+                      border: '1px solid rgba(255, 255, 255, 0.12)',
+                      color: 'rgba(255, 255, 255, 0.65)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      padding: 0,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                      flexShrink: 0,
+                      touchAction: 'manipulation'
+                    }}
+                  >
+                    <X size={15} strokeWidth={2.5} />
+                  </button>
+
+                  {/* Header bottom divider – subtle gradient */}
+                  <div
+                    style={{
+                      position: 'absolute',
+                      bottom: 0,
+                      left: '18px',
+                      right: '18px',
+                      height: '1px',
+                      background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0.06), transparent)'
+                    }}
+                  />
+                </div>
+              )}
 
               {/* Scrollable Sheet Content */}
               <div
@@ -186,10 +287,11 @@ export default function BottomSheet({
                   overflowY: 'auto',
                   overscrollBehavior: 'contain',
                   WebkitOverflowScrolling: 'touch',
-                  padding: '6px 20px calc(14px + env(safe-area-inset-bottom, 0px)) 20px',
+                  padding: '10px 18px calc(16px + env(safe-area-inset-bottom, 0px)) 18px',
                   display: 'flex',
                   flexDirection: 'column',
                   gap: '12px',
+                  minHeight: 0,
                   ...contentStyle
                 }}
               >

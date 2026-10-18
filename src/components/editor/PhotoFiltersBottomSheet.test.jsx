@@ -37,6 +37,7 @@ describe('PhotoFiltersBottomSheet', () => {
       />
     );
 
+    expect(screen.getByText('Photo Filters')).toBeDefined();
     expect(screen.getByText('Original')).toBeDefined();
     expect(screen.getByText('Deep Fried 🔥')).toBeDefined();
 

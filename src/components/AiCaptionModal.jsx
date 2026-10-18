@@ -73,14 +73,72 @@ export default function AiCaptionModal({ isOpen, onClose, onApplyCaption, templa
     <BottomSheet
       isOpen={isOpen}
       onClose={onClose}
-      maxHeight="82vh"
+      title="AI Captions"
+      icon={<Sparkles size={16} style={{ color: 'var(--cyber-cyan)' }} />}
+      badge={
+        <div
+          style={{
+            display: 'inline-flex',
+            background: 'rgba(255, 255, 255, 0.06)',
+            borderRadius: '999px',
+            padding: '3px',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            gap: '2px'
+          }}
+        >
+          <button
+            type="button"
+            onClick={() => setTargetMode('caption')}
+            style={{
+              padding: '4px 10px',
+              borderRadius: '999px',
+              fontSize: '0.72rem',
+              fontWeight: targetMode === 'caption' ? 700 : 500,
+              border: 'none',
+              cursor: 'pointer',
+              background: targetMode === 'caption' ? 'var(--primary-gradient)' : 'transparent',
+              color: targetMode === 'caption' ? '#ffffff' : 'rgba(255, 255, 255, 0.65)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px',
+              transition: 'all 0.15s ease'
+            }}
+          >
+            <Type size={12} />
+            <span>Caption</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setTargetMode('header')}
+            style={{
+              padding: '4px 10px',
+              borderRadius: '999px',
+              fontSize: '0.72rem',
+              fontWeight: targetMode === 'header' ? 700 : 500,
+              border: 'none',
+              cursor: 'pointer',
+              background: targetMode === 'header' ? 'var(--primary-gradient)' : 'transparent',
+              color: targetMode === 'header' ? '#ffffff' : 'rgba(255, 255, 255, 0.65)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px',
+              transition: 'all 0.15s ease'
+            }}
+          >
+            <PanelTop size={12} />
+            <span>Header</span>
+          </button>
+        </div>
+      }
+      maxHeight="84vh"
       footer={
-        <div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <div
             style={{
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'space-between'
+              justifyContent: 'space-between',
+              padding: '2px 0'
             }}
           >
             <button
@@ -89,29 +147,41 @@ export default function AiCaptionModal({ isOpen, onClose, onApplyCaption, templa
               style={{
                 background: 'none',
                 border: 'none',
-                color: geminiApiKey ? 'var(--cyber-cyan)' : 'rgba(255, 255, 255, 0.4)',
-                fontSize: '0.68rem',
+                color: geminiApiKey ? 'var(--cyber-cyan)' : 'rgba(255, 255, 255, 0.5)',
+                fontSize: '0.72rem',
+                fontWeight: 600,
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: '4px',
+                gap: '5px',
                 cursor: 'pointer',
-                padding: 0
+                padding: '4px 0',
+                transition: 'color 0.15s ease'
               }}
             >
-              <Key size={11} />
+              <Key size={13} style={{ color: geminiApiKey ? 'var(--cyber-cyan)' : 'rgba(255, 255, 255, 0.4)' }} />
               <span>{geminiApiKey ? 'Gemini Key Configured' : 'Custom Gemini Key (Optional)'}</span>
             </button>
-            <span style={{ fontSize: '0.66rem', color: 'rgba(255, 255, 255, 0.35)' }}>
-              1-tap to apply
+            <span
+              style={{
+                fontSize: '0.7rem',
+                color: 'rgba(255, 255, 255, 0.4)',
+                fontWeight: 500,
+                letterSpacing: '0.02em'
+              }}
+            >
+              Tap card to apply
             </span>
           </div>
 
           {showKeyInput && (
             <div
               style={{
-                marginTop: '8px',
                 display: 'flex',
-                gap: '6px'
+                gap: '8px',
+                padding: '8px 10px',
+                background: 'rgba(255, 255, 255, 0.04)',
+                borderRadius: '10px',
+                border: '1px solid rgba(255, 255, 255, 0.08)'
               }}
             >
               <input
@@ -120,10 +190,33 @@ export default function AiCaptionModal({ isOpen, onClose, onApplyCaption, templa
                 placeholder="Paste Google Gemini API Key..."
                 value={geminiApiKey}
                 onChange={(e) => handleSaveApiKey(e.target.value)}
-                style={{ fontSize: '0.75rem', padding: '6px 8px', borderRadius: '6px', flex: 1 }}
+                style={{
+                  fontSize: '0.78rem',
+                  padding: '7px 10px',
+                  borderRadius: '8px',
+                  flex: 1,
+                  background: 'rgba(0, 0, 0, 0.3)',
+                  border: '1px solid rgba(255, 255, 255, 0.12)',
+                  color: '#ffffff'
+                }}
               />
               {geminiApiKey && (
-                <button type="button" className="btn btn-xs btn-secondary" onClick={handleClearApiKey} title="Remove saved key from this browser">
+                <button
+                  type="button"
+                  className="btn btn-xs"
+                  onClick={handleClearApiKey}
+                  title="Remove saved key from this browser"
+                  style={{
+                    padding: '0 12px',
+                    borderRadius: '8px',
+                    background: 'rgba(239, 68, 68, 0.15)',
+                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                    color: '#f87171',
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    cursor: 'pointer'
+                  }}
+                >
                   Clear
                 </button>
               )}
@@ -132,242 +225,224 @@ export default function AiCaptionModal({ isOpen, onClose, onApplyCaption, templa
         </div>
       }
     >
-      {/* Target Mode Switcher: Caption vs Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-        <span style={{ fontSize: '0.78rem', color: 'rgba(255, 255, 255, 0.65)', fontWeight: 600 }}>Target Layer:</span>
-        <div
+      {/* Search / Topic Input with Integrated Generate Button */}
+      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+        <input
+          type="text"
+          className="form-input"
+          placeholder="Topic or vibe (e.g. coffee, coding, 3AM)..."
+          value={customPrompt}
+          onChange={(e) => setCustomPrompt(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') fetchIdeas();
+          }}
           style={{
+            fontSize: '0.84rem',
+            padding: '9px 13px',
+            borderRadius: '12px',
+            background: 'rgba(255, 255, 255, 0.05)',
+            border: '1px solid rgba(255, 255, 255, 0.11)',
+            color: '#ffffff',
+            flex: 1,
+            outline: 'none',
+            transition: 'border-color 0.2s, box-shadow 0.2s'
+          }}
+        />
+        <button
+          type="button"
+          className="btn btn-primary"
+          onClick={fetchIdeas}
+          disabled={loading}
+          title="Generate fresh captions"
+          style={{
+            height: '40px',
+            padding: '0 15px',
+            borderRadius: '12px',
+            fontSize: '0.82rem',
+            fontWeight: 700,
             display: 'inline-flex',
-            background: 'rgba(255, 255, 255, 0.06)',
-            borderRadius: '8px',
-            padding: '2px',
-            border: '1px solid rgba(255, 255, 255, 0.08)'
+            alignItems: 'center',
+            gap: '6px',
+            flexShrink: 0,
+            cursor: loading ? 'not-allowed' : 'pointer',
+            boxShadow: '0 4px 14px rgba(249, 115, 22, 0.28)'
           }}
         >
-          <button
-            type="button"
-            onClick={() => setTargetMode('caption')}
-            style={{
-              padding: '3px 10px',
-              borderRadius: '6px',
-              fontSize: '0.72rem',
-              fontWeight: targetMode === 'caption' ? 600 : 500,
-              border: 'none',
-              cursor: 'pointer',
-              background: targetMode === 'caption' ? 'var(--primary-gradient)' : 'transparent',
-              color: targetMode === 'caption' ? '#ffffff' : 'rgba(255, 255, 255, 0.6)',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '4px'
-            }}
-          >
-            <Type size={11} />
-            <span>Caption</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setTargetMode('header')}
-            style={{
-              padding: '3px 10px',
-              borderRadius: '6px',
-              fontSize: '0.72rem',
-              fontWeight: targetMode === 'header' ? 600 : 500,
-              border: 'none',
-              cursor: 'pointer',
-              background: targetMode === 'header' ? 'var(--primary-gradient)' : 'transparent',
-              color: targetMode === 'header' ? '#ffffff' : 'rgba(255, 255, 255, 0.6)',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '4px'
-            }}
-          >
-            <PanelTop size={11} />
-            <span>Header</span>
-          </button>
-        </div>
+          <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
+          <span>{loading ? '...' : 'Generate'}</span>
+        </button>
       </div>
 
-      {/* Minimal Prompt Input with integrated Generate Button */}
-      <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-            <input
-              type="text"
-              className="form-input"
-              placeholder="Topic or vibe (e.g. coffee, coding, 3AM)..."
-              value={customPrompt}
-              onChange={(e) => setCustomPrompt(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') fetchIdeas();
-              }}
-              style={{
-                fontSize: '0.82rem',
-                padding: '8px 12px',
-                borderRadius: '10px',
-                background: 'rgba(255, 255, 255, 0.05)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                color: '#ffffff',
-                flex: 1
-              }}
-            />
+      {/* Horizontal Category Chips */}
+      <div
+        className="horizontal-scroll-only"
+        style={{
+          display: 'flex',
+          gap: '6px',
+          overflowX: 'auto',
+          overflowY: 'hidden',
+          scrollbarWidth: 'none',
+          padding: '2px 0 4px',
+          WebkitOverflowScrolling: 'touch'
+        }}
+      >
+        {AI_MEME_CATEGORIES.map((cat) => {
+          const isSelected = selectedCategory === cat.id;
+          return (
             <button
+              key={cat.id}
               type="button"
-              className="btn btn-primary btn-xs"
-              onClick={fetchIdeas}
-              disabled={loading}
-              title="Generate fresh captions"
+              onClick={() => setSelectedCategory(cat.id)}
               style={{
-                height: '35px',
-                padding: '0 12px',
-                borderRadius: '10px',
-                fontSize: '0.78rem',
-                fontWeight: 600,
+                padding: '6px 13px',
+                borderRadius: '999px',
+                fontSize: '0.74rem',
+                fontWeight: isSelected ? 700 : 500,
+                whiteSpace: 'nowrap',
+                flexShrink: 0,
+                cursor: 'pointer',
+                background: isSelected
+                  ? 'linear-gradient(135deg, rgba(6, 182, 212, 0.26), rgba(6, 182, 212, 0.12))'
+                  : 'rgba(255, 255, 255, 0.04)',
+                color: isSelected ? '#ffffff' : 'rgba(255, 255, 255, 0.68)',
+                border: isSelected
+                  ? '1px solid var(--cyber-cyan)'
+                  : '1px solid rgba(255, 255, 255, 0.08)',
+                boxShadow: isSelected ? '0 2px 10px rgba(6, 182, 212, 0.22)' : 'none',
+                transition: 'all 0.18s cubic-bezier(0.4, 0, 0.2, 1)',
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: '5px',
-                flexShrink: 0
+                gap: '5px'
               }}
             >
-              <RefreshCw size={13} className={loading ? 'animate-spin' : ''} />
-              <span>{loading ? '...' : 'Generate'}</span>
+              <span>{cat.icon}</span>
+              <span>{cat.label}</span>
             </button>
-          </div>
+          );
+        })}
+      </div>
 
-          {/* Minimal Category Chips */}
+      {/* Caption Suggestions List */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        {loading ? (
           <div
             style={{
-              display: 'flex',
-              gap: '5px',
-              overflowX: 'auto',
-              scrollbarWidth: 'none',
-              paddingBottom: '2px'
+              textAlign: 'center',
+              padding: '38px 0',
+              color: 'rgba(255, 255, 255, 0.55)',
+              background: 'rgba(255, 255, 255, 0.02)',
+              borderRadius: '14px',
+              border: '1px dashed rgba(255, 255, 255, 0.08)'
             }}
           >
-            {AI_MEME_CATEGORIES.map((cat) => {
-              const isSelected = selectedCategory === cat.id;
-              return (
-                <button
-                  key={cat.id}
-                  type="button"
-                  onClick={() => setSelectedCategory(cat.id)}
-                  style={{
-                    padding: '3px 9px',
-                    borderRadius: '12px',
-                    fontSize: '0.71rem',
-                    fontWeight: isSelected ? 600 : 400,
-                    whiteSpace: 'nowrap',
-                    flexShrink: 0,
-                    cursor: 'pointer',
-                    background: isSelected ? 'rgba(255, 255, 255, 0.16)' : 'rgba(255, 255, 255, 0.04)',
-                    color: isSelected ? '#ffffff' : 'rgba(255, 255, 255, 0.6)',
-                    border: isSelected ? '1px solid var(--cyber-cyan)' : '1px solid transparent',
-                    transition: 'all 0.15s ease'
-                  }}
-                >
-                  <span style={{ marginRight: '3px' }}>{cat.icon}</span>
-                  {cat.label}
-                </button>
-              );
-            })}
+            <RefreshCw
+              size={22}
+              className="animate-spin"
+              style={{ margin: '0 auto 10px', color: 'var(--cyber-cyan)' }}
+            />
+            <p style={{ fontSize: '0.82rem', margin: 0, fontWeight: 500 }}>
+              Crafting hilarious captions...
+            </p>
           </div>
-
-          {/* Minimal 1-Click Captions List */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>
-            {loading ? (
-              <div style={{ textAlign: 'center', padding: '36px 0', color: 'rgba(255, 255, 255, 0.5)' }}>
-                <RefreshCw
-                  size={18}
-                  className="animate-spin"
-                  style={{ margin: '0 auto 8px', color: 'var(--cyber-cyan)' }}
-                />
-                <p style={{ fontSize: '0.78rem', margin: 0 }}>Generating fresh captions...</p>
-              </div>
-            ) : captions.length > 0 ? (
-              captions.map((capText, idx) => (
-                <div
-                  key={idx}
-                  onClick={() => handleSelectCaption(capText)}
-                  style={{
-                    padding: '10px 12px',
-                    background: 'rgba(255, 255, 255, 0.03)',
-                    borderRadius: '10px',
-                    border: '1px solid rgba(255, 255, 255, 0.07)',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: '10px',
-                    transition: 'all 0.15s ease'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'rgba(6, 182, 212, 0.1)';
-                    e.currentTarget.style.borderColor = 'rgba(6, 182, 212, 0.35)';
-                    e.currentTarget.style.transform = 'translateY(-1px)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)';
-                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.07)';
-                    e.currentTarget.style.transform = 'none';
-                  }}
-                  title={`Click to apply as ${targetMode}`}
-                >
-                  <span
-                    style={{
-                      fontSize: '0.82rem',
-                      fontWeight: 500,
-                      color: 'rgba(255, 255, 255, 0.92)',
-                      lineHeight: 1.4,
-                      flex: 1
-                    }}
-                  >
-                    {capText}
-                  </span>
-
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
-                    <button
-                      type="button"
-                      className="btn btn-icon btn-ghost btn-xs"
-                      onClick={(e) => handleCopy(e, capText, idx)}
-                      title="Copy to clipboard"
-                      style={{
-                        width: '24px',
-                        height: '24px',
-                        borderRadius: '6px',
-                        color: copiedIdx === idx ? '#22c55e' : 'rgba(255, 255, 255, 0.45)'
-                      }}
-                    >
-                      {copiedIdx === idx ? <Check size={12} color="#22c55e" /> : <Copy size={12} />}
-                    </button>
-                    <div
-                      style={{
-                        fontSize: '0.68rem',
-                        fontWeight: 600,
-                        color: 'var(--cyber-cyan)',
-                        padding: '2px 6px',
-                        borderRadius: '4px',
-                        background: 'rgba(6, 182, 212, 0.15)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '2px'
-                      }}
-                    >
-                      <span>Use</span>
-                      <ArrowRight size={10} />
-                    </div>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div
+        ) : captions.length > 0 ? (
+          captions.map((capText, idx) => (
+            <div
+              key={idx}
+              onClick={() => handleSelectCaption(capText)}
+              style={{
+                padding: '12px 14px',
+                background: 'rgba(255, 255, 255, 0.035)',
+                borderRadius: '13px',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: '12px',
+                transition: 'all 0.18s cubic-bezier(0.4, 0, 0.2, 1)'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(6, 182, 212, 0.1)';
+                e.currentTarget.style.borderColor = 'rgba(6, 182, 212, 0.38)';
+                e.currentTarget.style.transform = 'translateY(-1px)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.035)';
+                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)';
+                e.currentTarget.style.transform = 'none';
+              }}
+              title={`Click to apply as ${targetMode}`}
+            >
+              <span
                 style={{
-                  textAlign: 'center',
-                  padding: '24px 0',
-                  color: 'rgba(255, 255, 255, 0.45)',
-                  fontSize: '0.78rem'
+                  fontSize: '0.85rem',
+                  fontWeight: 500,
+                  color: 'rgba(255, 255, 255, 0.94)',
+                  lineHeight: 1.42,
+                  flex: 1
                 }}
               >
-                No captions found. Try clicking Generate.
+                {capText}
+              </span>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+                <button
+                  type="button"
+                  className="btn btn-icon btn-ghost"
+                  onClick={(e) => handleCopy(e, capText, idx)}
+                  title="Copy to clipboard"
+                  style={{
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '8px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: copiedIdx === idx ? 'rgba(34, 197, 94, 0.18)' : 'rgba(255, 255, 255, 0.05)',
+                    border: copiedIdx === idx ? '1px solid rgba(34, 197, 94, 0.4)' : '1px solid rgba(255, 255, 255, 0.08)',
+                    color: copiedIdx === idx ? '#22c55e' : 'rgba(255, 255, 255, 0.55)',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  {copiedIdx === idx ? <Check size={14} color="#22c55e" /> : <Copy size={13} />}
+                </button>
+                <div
+                  style={{
+                    fontSize: '0.72rem',
+                    fontWeight: 700,
+                    color: 'var(--cyber-cyan)',
+                    padding: '5px 10px',
+                    borderRadius: '8px',
+                    background: 'rgba(6, 182, 212, 0.14)',
+                    border: '1px solid rgba(6, 182, 212, 0.3)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}
+                >
+                  <span>Use</span>
+                  <ArrowRight size={11} />
+                </div>
               </div>
-            )}
+            </div>
+          ))
+        ) : (
+          <div
+            style={{
+              textAlign: 'center',
+              padding: '30px 16px',
+              color: 'rgba(255, 255, 255, 0.45)',
+              fontSize: '0.8rem',
+              background: 'rgba(255, 255, 255, 0.02)',
+              borderRadius: '14px',
+              border: '1px dashed rgba(255, 255, 255, 0.08)'
+            }}
+          >
+            No captions found for this prompt. Tap <strong style={{ color: 'var(--cyber-cyan)' }}>Generate</strong> to create some!
           </div>
+        )}
+      </div>
     </BottomSheet>
   );
 }

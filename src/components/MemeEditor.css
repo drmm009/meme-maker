@@ -7,7 +7,7 @@
 .editor-topbar {
   position: relative;
   z-index: 500;
-  padding: 6px 10px;
+  padding: calc(6px + env(safe-area-inset-top, 0px)) 10px 6px 10px;
   background: rgba(18, 20, 29, 0.82) !important;
   background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0) 100%) !important;
   -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
@@ -27,79 +27,103 @@
 .canvas-wrapper {
   background: 0 0;
   flex-direction: column;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
-  width: 100%;
-  flex: 1;
-  min-height: 0;
-  padding: 0; /* Edge-to-edge canvas immersion */
-  display: flex;
-  position: relative;
-  overflow: hidden;
-  box-sizing: border-box;
-}
-
-/* ─── Canvas Studio Card (Dedicated Background Section) ─── */
-.canvas-studio-card {
   width: 100%;
   flex: 1 1 0%;
   min-height: 0;
+  padding: 8px 12px 2px 12px;
   display: flex;
-  flex-direction: column;
   position: relative;
-  border-radius: 20px;
   overflow: hidden;
-  background-color: rgba(14, 17, 26, 0.78);
-  background-image: 
-    linear-gradient(to right, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
-  background-size: 22px 22px;
-  background-position: center center;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.06);
-  backdrop-filter: blur(20px) saturate(160%);
-  -webkit-backdrop-filter: blur(20px) saturate(160%);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
   box-sizing: border-box;
-}
-
-[data-theme='light'] .canvas-studio-card {
-  background-color: rgba(248, 250, 252, 0.88);
-  background-image: 
-    linear-gradient(to right, rgba(15, 23, 42, 0.04) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(15, 23, 42, 0.04) 1px, transparent 1px);
-  border: 1px solid rgba(0, 0, 0, 0.09);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
 .canvas-viewport {
   flex: 1 1 0%;
   min-height: 0;
   width: 100%;
+  max-width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
-  padding: 0 0 50px 0; /* Zero horizontal padding for edge-to-edge canvas width; 50px bottom for static secondary toolbar clearance */
+  padding: 0;
   box-sizing: border-box;
-  overflow: hidden;
+  overflow: visible;
 }
 
-/* ─── Nested Secondary Toolbar Section (Bottom of Studio Card) ─── */
-.editor-secondary-toolbar {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
+/* ─── Bottom Toolbars Dock Anchor (Main Toolbar stays on top of Main Dock) ─── */
+.editor-toolbars-dock-anchor {
   width: 100%;
-  height: 46px;
-  min-height: 46px;
-  max-height: 46px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 50;
+  margin-top: auto;
+  margin-bottom: 2px;
+  pointer-events: none;
+}
+
+.editor-toolbars-dock-anchor > * {
+  pointer-events: auto;
+}
+
+.editor-toolbars-dock-anchor .editor-floating-toolbar,
+.editor-toolbars-dock-anchor .video-context-toolbar {
+  position: relative !important;
+  top: auto !important;
+  bottom: auto !important;
+  left: auto !important;
+  right: auto !important;
+  transform: none !important;
+  margin: 0 auto !important;
+  width: auto !important;
+  max-width: min(100%, 720px) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: safe center !important;
+  flex-shrink: 0 !important;
+  z-index: 20 !important;
+}
+
+.editor-toolbars-dock-anchor .editor-secondary-toolbar {
+  position: relative !important;
+  bottom: auto !important;
+  left: auto !important;
+  right: auto !important;
+  transform: none !important;
+  margin: 0 auto !important;
+  width: auto !important;
+  max-width: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: safe center !important;
+  flex-shrink: 0 !important;
+  z-index: 25 !important;
+}
+
+/* ─── Layer Toolbar (Floats with respect to Main Toolbar) ─── */
+.editor-secondary-toolbar {
+  position: relative;
+  bottom: auto;
+  left: auto;
+  right: auto;
+  margin: 0 auto;
+  width: auto;
+  max-width: 100%;
+  height: 42px;
+  min-height: 42px;
+  max-height: 42px;
   display: flex;
   align-items: center;
   justify-content: safe center;
-  gap: 8px;
-  padding: 6px 12px;
+  gap: 6px;
+  padding: 0 8px;
   box-sizing: border-box;
   background: transparent !important;
   border: none !important;
@@ -108,11 +132,12 @@
   -webkit-backdrop-filter: none !important;
   box-shadow: none !important;
   overflow-x: auto;
-  overflow-y: hidden;
+  overflow-y: visible;
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
   z-index: 20;
   pointer-events: auto;
+  flex-shrink: 0;
 }
 
 .editor-secondary-toolbar > * {
@@ -136,8 +161,8 @@
 }
 
 [data-theme='light'] .editor-secondary-toolbar .vid-ctx-btn:not(.active) {
-  background: rgba(0, 0, 0, 0.05) !important;
-  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+  background: #e2e8f0 !important;
+  border: none !important;
   color: #0f172a !important;
 }
 
@@ -152,10 +177,12 @@
   max-width: 100%;
   max-height: 100%;
   box-sizing: border-box;
+  border-radius: 14px !important;
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.45);
 }
 .meme-canvas {
   object-fit: contain;
-  border-radius: var(--radius-sm);
+  border-radius: 14px !important;
   touch-action: none;
   -webkit-touch-callout: none;
   -webkit-user-select: none;
@@ -166,6 +193,10 @@
   height: 100%;
   display: block;
   box-shadow: 0 10px 30px #00000080;
+}
+
+[data-theme='light'] .canvas-interactive-wrapper {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
 }
 
 .editor-main {
@@ -448,166 +479,703 @@
   justify-content: center !important;
 }
 
-/* ─── Unified Toolbar Button System ──────────────────────────
-   All toolbar buttons: 34px height, rounded stadium pill edges (border-radius: 9999px),
-   same background color and glass border as the main dock.
-   Icon-only buttons: 34×34px circular pill.
+/* ─── 1. Main Floating Context Toolbar (Dock Style: Icon with Label Below) ───
+   52px height, rounded squircle tile (border-radius: 22px),
+   icon on top with label below, matching main dock buttons.
+   Solid color (#16181f) with crisp dock-matched border (1px solid rgba(255, 255, 255, 0.14)).
    ─────────────────────────────────────────────────────────── */
-.vid-ctx-btn,
-.editor-floating-toolbar button,
-.editor-floating-toolbar .btn,
-.editor-floating-toolbar label.btn,
-.editor-secondary-toolbar .vid-ctx-btn,
-.editor-secondary-toolbar button.btn,
-.bubble-layout-btn {
-  background: var(--glass-bg, rgba(22, 24, 31, 0.85)) !important;
-  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.12)) !important;
-  border-radius: 9999px !important;
-  height: 34px !important;
-  min-height: 34px !important;
-  max-height: 34px !important;
-  padding: 0 14px !important;
+.vid-ctx-btn:not(.bubble-layout-btn),
+.editor-floating-toolbar button:not(.bubble-layout-btn),
+.editor-floating-toolbar .btn:not(.bubble-layout-btn),
+.editor-floating-toolbar label.btn:not(.bubble-layout-btn) {
+  background: #16181f !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  border-radius: 22px !important;
+  height: 52px !important;
+  min-height: 52px !important;
+  max-height: 52px !important;
+  min-width: 58px !important;
+  padding: 5px 8px !important;
   display: inline-flex !important;
+  flex-direction: column !important;
   align-items: center !important;
   justify-content: center !important;
-  gap: 6px !important;
+  gap: 3px !important;
   box-sizing: border-box !important;
-  color: rgba(255, 255, 255, 0.9) !important;
+  color: #ffffff !important;
   cursor: pointer;
-  transition: all 0.15s ease;
-  font-size: 0.8rem !important;
-  font-weight: 600 !important;
+  transition: all 0.18s ease;
   white-space: nowrap;
   flex-shrink: 0;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25) !important;
-  line-height: 1 !important;
-  vertical-align: middle;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35) !important;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
-[data-theme='light'] .vid-ctx-btn,
-[data-theme='light'] .editor-floating-toolbar button,
-[data-theme='light'] .editor-floating-toolbar .btn,
-[data-theme='light'] .editor-floating-toolbar label.btn,
-[data-theme='light'] .editor-secondary-toolbar .vid-ctx-btn,
-[data-theme='light'] .editor-secondary-toolbar button.btn,
-[data-theme='light'] .bubble-layout-btn {
-  background: var(--glass-bg, rgba(255, 255, 255, 0.85)) !important;
-  border: 1px solid var(--glass-border, rgba(0, 0, 0, 0.1)) !important;
-  color: var(--text-main, #1e293b) !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
+.vid-ctx-btn:not(.bubble-layout-btn) svg,
+.editor-floating-toolbar button:not(.bubble-layout-btn) svg,
+.editor-floating-toolbar .btn:not(.bubble-layout-btn) svg,
+.editor-floating-toolbar label.btn:not(.bubble-layout-btn) svg {
+  width: 20px !important;
+  height: 20px !important;
+  color: #ffffff !important;
+  stroke: currentColor;
+  opacity: 0.95;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  flex-shrink: 0;
+  margin: 0 !important;
+}
+
+.vid-ctx-btn:not(.bubble-layout-btn) span,
+.editor-floating-toolbar button:not(.bubble-layout-btn) span,
+.editor-floating-toolbar .btn:not(.bubble-layout-btn) span,
+.editor-floating-toolbar label.btn:not(.bubble-layout-btn) span {
+  display: block !important;
+  font-size: 0.65rem !important;
+  font-weight: 600 !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
+  letter-spacing: -0.01em;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+[data-theme='light'] .vid-ctx-btn:not(.bubble-layout-btn),
+[data-theme='light'] .editor-floating-toolbar button:not(.bubble-layout-btn),
+[data-theme='light'] .editor-floating-toolbar .btn:not(.bubble-layout-btn),
+[data-theme='light'] .editor-floating-toolbar label.btn:not(.bubble-layout-btn) {
+  background: #e2e8f0 !important;
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+  color: var(--text-main, #0f172a) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+}
+
+[data-theme='light'] .vid-ctx-btn:not(.bubble-layout-btn) svg,
+[data-theme='light'] .editor-floating-toolbar button:not(.bubble-layout-btn) svg,
+[data-theme='light'] .editor-floating-toolbar .btn:not(.bubble-layout-btn) svg {
+  color: #0f172a !important;
+  stroke: #0f172a !important;
+}
+
+[data-theme='light'] .vid-ctx-btn:not(.bubble-layout-btn) span,
+[data-theme='light'] .editor-floating-toolbar button:not(.bubble-layout-btn) span,
+[data-theme='light'] .editor-floating-toolbar .btn:not(.bubble-layout-btn) span {
+  color: #0f172a !important;
 }
 
 .vid-ctx-btn:hover:not(.active),
 .editor-floating-toolbar button:hover:not(.active),
 .editor-floating-toolbar .btn:hover:not(.active),
-.editor-floating-toolbar label.btn:hover:not(.active),
-.editor-secondary-toolbar button:hover:not(.active),
-.bubble-layout-btn:hover:not(.active) {
-  background: rgba(255, 255, 255, 0.15) !important;
-  border-color: rgba(255, 255, 255, 0.25) !important;
+.editor-floating-toolbar label.btn:hover:not(.active) {
+  background: #1c1e26 !important;
+  border-color: rgba(255, 255, 255, 0.24) !important;
   color: #ffffff !important;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45) !important;
 }
 
 [data-theme='light'] .vid-ctx-btn:hover:not(.active),
 [data-theme='light'] .editor-floating-toolbar button:hover:not(.active),
 [data-theme='light'] .editor-floating-toolbar .btn:hover:not(.active),
-[data-theme='light'] .editor-floating-toolbar label.btn:hover:not(.active),
-[data-theme='light'] .editor-secondary-toolbar button:hover:not(.active),
-[data-theme='light'] .bubble-layout-btn:hover:not(.active) {
-  background: rgba(0, 0, 0, 0.07) !important;
-  border-color: rgba(0, 0, 0, 0.16) !important;
+[data-theme='light'] .editor-floating-toolbar label.btn:hover:not(.active) {
+  background: #cbd5e1 !important;
+  border-color: rgba(0, 0, 0, 0.18) !important;
   color: #0f172a !important;
 }
 
 .vid-ctx-btn:active,
-.editor-floating-toolbar button:active,
-.editor-secondary-toolbar button:active {
+.editor-floating-toolbar button:active {
   transform: scale(0.95);
+  background: #101217 !important;
 }
 
+/* Active indicator in Toolbar (Orange Accent Gradient with dock-matched border) */
 .vid-ctx-btn.active,
 .vid-ctx-btn.vid-ctx-btn-last-used,
 .editor-floating-toolbar button.active,
-.editor-floating-toolbar .btn.active,
-.editor-secondary-toolbar button.active {
+.editor-floating-toolbar .btn.active {
   background: var(--primary-gradient) !important;
-  border: 1px solid var(--cyber-cyan) !important;
-  box-shadow: 0 2px 12px rgba(255, 94, 54, 0.45) !important;
+  border: 1px solid rgba(255, 255, 255, 0.28) !important;
+  box-shadow: 0 4px 14px rgba(255, 94, 54, 0.45) !important;
   color: #ffffff !important;
 }
 
 [data-theme='light'] .vid-ctx-btn.active,
 [data-theme='light'] .vid-ctx-btn.vid-ctx-btn-last-used,
 [data-theme='light'] .editor-floating-toolbar button.active,
-[data-theme='light'] .editor-floating-toolbar .btn.active,
-[data-theme='light'] .editor-secondary-toolbar button.active {
+[data-theme='light'] .editor-floating-toolbar .btn.active {
   background: var(--primary-gradient) !important;
-  border: 1px solid var(--cyber-cyan) !important;
+  border: 1px solid rgba(255, 255, 255, 0.28) !important;
   box-shadow: 0 2px 10px rgba(255, 94, 54, 0.35) !important;
   color: #ffffff !important;
 }
 
 .vid-ctx-btn.btn-icon,
-.editor-floating-toolbar button.btn-icon,
-.editor-secondary-toolbar button.btn-icon {
-  width: 34px !important;
-  min-width: 34px !important;
-  max-width: 34px !important;
+.editor-floating-toolbar button.btn-icon {
+  width: 52px !important;
+  min-width: 52px !important;
+  max-width: 52px !important;
+  height: 52px !important;
+  padding: 0 !important;
+  border-radius: 22px !important;
+  flex-direction: row !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+}
+
+/* ─── Unified White Icons & Labels for Dark Dock Styling ─── */
+.editor-floating-toolbar .vid-ctx-btn svg {
+  color: #ffffff !important;
+}
+
+.editor-floating-toolbar .vid-ctx-btn span {
+  color: rgba(255, 255, 255, 0.92) !important;
+}
+
+.vid-ctx-btn-delete:hover:not(.active) {
+  border-color: rgba(239, 68, 68, 0.6) !important;
+  box-shadow: 0 4px 16px rgba(239, 68, 68, 0.35) !important;
+}
+
+/* ─── Kinetic Micro-Animations ─── */
+@keyframes wandWave {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-14deg); }
+  75% { transform: rotate(14deg); }
+}
+
+@keyframes aiSparklePulse {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  50% { transform: scale(1.18) rotate(12deg); }
+}
+
+@keyframes bubblePop {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.18) translateY(-1px); }
+}
+
+@keyframes trashShake {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-12deg); }
+  75% { transform: rotate(12deg); }
+}
+
+.editor-floating-toolbar .vid-ctx-btn {
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease !important;
+}
+
+.editor-floating-toolbar .vid-ctx-btn:hover:not(.active) {
+  transform: translateY(-2px) scale(1.03) !important;
+}
+
+.editor-floating-toolbar .vid-ctx-btn:active {
+  transform: scale(0.94) !important;
+}
+
+/* Icon-specific micro-motions */
+.vid-ctx-btn-effects:hover svg {
+  animation: wandWave 0.5s ease-in-out infinite !important;
+}
+
+.vid-ctx-btn-ai svg {
+  animation: aiSparklePulse 2.8s ease-in-out infinite !important;
+}
+
+.vid-ctx-btn-ai:hover svg {
+  animation: aiSparklePulse 0.75s ease-in-out infinite !important;
+}
+
+.vid-ctx-btn-bubble:hover svg {
+  animation: bubblePop 0.4s ease-in-out !important;
+}
+
+.vid-ctx-btn-rotate:hover svg,
+.layer-action-btn-rotate:hover svg {
+  transform: rotate(90deg) !important;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+.vid-ctx-btn-duplicate:hover svg,
+.layer-action-btn-duplicate:hover svg {
+  transform: scale(1.15) !important;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+.vid-ctx-btn-layers:hover svg,
+.layer-action-btn-layers:hover svg {
+  transform: translateY(-2px) !important;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+.layer-action-btn-flip:hover svg {
+  transform: scaleX(-1) !important;
+  transition: transform 0.2s ease !important;
+}
+
+.layer-action-btn-crop:hover svg {
+  transform: scale(1.12) !important;
+  transition: transform 0.2s ease !important;
+}
+
+.vid-ctx-btn-delete:hover svg,
+.layer-action-btn-delete:hover svg {
+  animation: trashShake 0.4s ease-in-out infinite !important;
+}
+
+.vid-ctx-btn-font:hover svg {
+  transform: scale(1.15) !important;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+.vid-ctx-btn-align:hover svg {
+  transform: scaleX(1.15) !important;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+.vid-ctx-btn-bg:hover svg {
+  transform: rotate(-10deg) scale(1.12) !important;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+.vid-ctx-btn-blur:hover svg {
+  transform: scale(1.15) !important;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+.vid-ctx-btn-add-text:hover svg {
+  transform: rotate(90deg) scale(1.15) !important;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+.vid-ctx-btn-banner:hover svg {
+  transform: scaleY(1.15) !important;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+.vid-ctx-btn-color:hover .vid-color-swatch-disc {
+  transform: scale(1.18) !important;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+/* ─── Unified Layer Actions Capsule Toolbar (Single Floating Stadium Pill) ─── */
+.editor-secondary-toolbar:has(.sec-bar-layer-actions) {
+  overflow: visible !important;
+}
+
+.editor-secondary-toolbar .sec-bar-layer-actions,
+.sec-bar-layer-actions {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0 !important;
+  height: 42px !important;
+  min-height: 42px !important;
+  max-height: 42px !important;
+  background: #151821 !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  border-radius: 9999px !important;
+  padding: 0 6px !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5) !important;
+  box-sizing: border-box !important;
+  flex-shrink: 0 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  position: relative !important;
+}
+
+[data-theme='light'] .editor-secondary-toolbar .sec-bar-layer-actions,
+[data-theme='light'] .sec-bar-layer-actions {
+  background: #f1f5f9 !important;
+  border: 1px solid rgba(0, 0, 0, 0.12) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Individual Action Items inside Unified Capsule */
+.sec-bar-layer-actions .layer-action-btn {
+  width: 38px !important;
+  min-width: 38px !important;
+  max-width: 38px !important;
+  height: 32px !important;
+  min-height: 32px !important;
+  max-height: 32px !important;
+  border-radius: 9999px !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: #ffffff !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  transition: all 0.16s ease !important;
+  flex-shrink: 0 !important;
+  outline: none !important;
+}
+
+.sec-bar-layer-actions .layer-action-btn svg {
+  width: 17px !important;
+  height: 17px !important;
+  color: #ffffff !important;
+  stroke: currentColor !important;
+  opacity: 0.95 !important;
+  margin: 0 !important;
+}
+
+.sec-bar-layer-actions .layer-action-btn:not(.layer-action-btn-delete):hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #ffffff !important;
+}
+
+.sec-bar-layer-actions .layer-action-btn:active {
+  transform: scale(0.92) !important;
+}
+
+.sec-bar-layer-actions .layer-action-btn.active {
+  background: rgba(255, 255, 255, 0.16) !important;
+  color: var(--cyber-cyan) !important;
+}
+
+.sec-bar-layer-actions .layer-action-btn.active svg {
+  color: var(--cyber-cyan) !important;
+  stroke: var(--cyber-cyan) !important;
+}
+
+/* Text case button (Aa) inside Unified Capsule */
+.sec-bar-layer-actions .layer-action-btn-case {
+  font-size: 0.86rem !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.5px !important;
+}
+
+.sec-bar-layer-actions .layer-action-btn-case span {
+  color: #ffffff !important;
+  font-size: 0.86rem !important;
+  font-weight: 800 !important;
+  line-height: normal !important;
+}
+
+/* Vertical Dividers inside Unified Capsule */
+.sec-bar-layer-actions .layer-action-divider {
+  width: 1px !important;
+  height: 18px !important;
+  background: rgba(255, 255, 255, 0.14) !important;
+  flex-shrink: 0 !important;
+  margin: 0 3px !important;
+}
+
+[data-theme='light'] .sec-bar-layer-actions .layer-action-divider {
+  background: rgba(0, 0, 0, 0.12) !important;
+}
+
+/* Red Delete Action inside Unified Capsule */
+.sec-bar-layer-actions .layer-action-btn-delete {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: #ef4444 !important;
+}
+
+.sec-bar-layer-actions .layer-action-btn-delete svg {
+  color: #ef4444 !important;
+  stroke: #ef4444 !important;
+  opacity: 1 !important;
+}
+
+.sec-bar-layer-actions .layer-action-btn-delete:hover {
+  background: rgba(239, 68, 68, 0.16) !important;
+  color: #f87171 !important;
+}
+
+.sec-bar-layer-actions .layer-action-btn-delete:hover svg {
+  color: #f87171 !important;
+  stroke: #f87171 !important;
+  animation: trashShake 0.4s ease-in-out infinite !important;
+}
+
+.sec-bar-layer-actions .layer-action-btn-delete:active {
+  background: rgba(239, 68, 68, 0.28) !important;
+  transform: scale(0.92) !important;
+}
+
+/* Layer Order Popover */
+.sec-bar-layer-order-popover {
+  background: #151821 !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  border-radius: 9999px !important;
+  padding: 2px 5px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0 !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55) !important;
+  height: 34px !important;
+  z-index: 50 !important;
+}
+
+.sec-bar-layer-order-popover .layer-action-popover-btn {
+  width: 28px !important;
+  min-width: 28px !important;
+  max-width: 28px !important;
+  height: 28px !important;
+  border-radius: 6px !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  color: #ffffff !important;
+  outline: none !important;
+  transition: all 0.16s ease !important;
+}
+
+.sec-bar-layer-order-popover .layer-action-popover-btn svg {
+  width: 14px !important;
+  height: 14px !important;
+  color: #ffffff !important;
+  stroke: currentColor !important;
+}
+
+.sec-bar-layer-order-popover .layer-action-popover-btn:hover {
+  background: rgba(255, 255, 255, 0.12) !important;
+}
+
+.sec-bar-layer-order-popover .layer-action-divider {
+  width: 1px !important;
+  height: 14px !important;
+  background: rgba(255, 255, 255, 0.14) !important;
+  flex-shrink: 0 !important;
+  margin: 0 2px !important;
+}
+
+[data-theme='light'] .sec-bar-layer-order-popover {
+  background: #f1f5f9 !important;
+  border: 1px solid rgba(0, 0, 0, 0.12) !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12) !important;
+}
+
+[data-theme='light'] .sec-bar-layer-order-popover .layer-action-popover-btn {
+  color: #0f172a !important;
+}
+
+[data-theme='light'] .sec-bar-layer-order-popover .layer-action-popover-btn svg {
+  color: #0f172a !important;
+  stroke: #0f172a !important;
+}
+
+[data-theme='light'] .sec-bar-layer-order-popover .layer-action-divider {
+  background: rgba(0, 0, 0, 0.12) !important;
+}
+
+/* Light Theme overrides for Capsule items */
+[data-theme='light'] .sec-bar-layer-actions .layer-action-btn {
+  color: #0f172a !important;
+}
+
+[data-theme='light'] .sec-bar-layer-actions .layer-action-btn svg {
+  color: #0f172a !important;
+  stroke: #0f172a !important;
+}
+
+[data-theme='light'] .sec-bar-layer-actions .layer-action-btn-case span {
+  color: #0f172a !important;
+}
+
+[data-theme='light'] .sec-bar-layer-actions .layer-action-btn:not(.layer-action-btn-delete):hover {
+  background: rgba(0, 0, 0, 0.07) !important;
+}
+
+[data-theme='light'] .sec-bar-layer-actions .layer-action-btn-delete {
+  color: #dc2626 !important;
+}
+
+[data-theme='light'] .sec-bar-layer-actions .layer-action-btn-delete svg {
+  color: #dc2626 !important;
+  stroke: #dc2626 !important;
+}
+
+[data-theme='light'] .sec-bar-layer-actions .layer-action-btn-delete:hover {
+  background: rgba(220, 38, 38, 0.12) !important;
+}
+
+/* ─── 2. Canvas Container Secondary Toolbar (Inside Canvas Studio Card) ───
+   Comfortable, sleek horizontal pills (height: 36px) so they are easy to tap and read,
+   without blocking the meme canvas image.
+   Solid dock color (#16181f) with crisp dock border (1px solid rgba(255, 255, 255, 0.14)).
+   ─────────────────────────────────────────────────────────── */
+.editor-secondary-toolbar .vid-ctx-btn:not(.bubble-layout-btn):not(.color-swatch-btn):not(.vid-ctx-btn-delete) {
+  background: #16181f !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  border-radius: 9999px !important;
+  height: 36px !important;
+  min-height: 36px !important;
+  max-height: 36px !important;
+  min-width: unset !important;
+  padding: 0 14px !important;
+  display: inline-flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  box-sizing: border-box !important;
+  color: #ffffff !important;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35) !important;
+  font-size: 0.78rem !important;
+  font-weight: 600 !important;
+}
+
+.editor-secondary-toolbar .vid-ctx-btn:not(.bubble-layout-btn):not(.color-swatch-btn):not(.vid-ctx-btn-delete) svg {
+  width: 15px !important;
+  height: 15px !important;
+  color: #ffffff;
+  stroke: currentColor;
+  opacity: 0.95;
+  flex-shrink: 0;
+  margin: 0 !important;
+}
+
+.editor-secondary-toolbar .vid-ctx-btn:not(.bubble-layout-btn):not(.color-swatch-btn):not(.vid-ctx-btn-delete) span {
+  display: inline-block !important;
+  font-size: 0.78rem !important;
+  font-weight: 600 !important;
+  line-height: normal !important;
+  white-space: nowrap !important;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+[data-theme='light'] .editor-secondary-toolbar .vid-ctx-btn:not(.bubble-layout-btn):not(.color-swatch-btn):not(.vid-ctx-btn-delete) {
+  background: #e2e8f0 !important;
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+  color: var(--text-main, #0f172a) !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05) !important;
+}
+
+[data-theme='light'] .editor-secondary-toolbar .vid-ctx-btn:not(.bubble-layout-btn):not(.color-swatch-btn):not(.vid-ctx-btn-delete) span {
+  color: #0f172a !important;
+}
+
+.editor-secondary-toolbar .vid-ctx-btn:hover:not(.active):not(.color-swatch-btn):not(.vid-ctx-btn-delete) {
+  background: #1c1e26 !important;
+  border-color: rgba(255, 255, 255, 0.24) !important;
+  color: #ffffff !important;
+}
+
+.editor-secondary-toolbar .vid-ctx-btn:active:not(.color-swatch-btn):not(.vid-ctx-btn-delete) {
+  transform: scale(0.96);
+  background: #101217 !important;
+}
+
+.editor-secondary-toolbar .vid-ctx-btn.active:not(.color-swatch-btn):not(.vid-ctx-btn-delete) {
+  background: var(--primary-gradient) !important;
+  border: 1px solid rgba(255, 255, 255, 0.28) !important;
+  box-shadow: 0 2px 10px rgba(255, 94, 54, 0.4) !important;
+  color: #ffffff !important;
+}
+
+.editor-secondary-toolbar .vid-ctx-btn.btn-icon:not(.color-swatch-btn):not(.vid-ctx-btn-delete) {
+  width: 36px !important;
+  min-width: 36px !important;
+  max-width: 36px !important;
+  height: 36px !important;
   padding: 0 !important;
   border-radius: 50% !important;
 }
 
-/* ─── Button-type Round Container for Secondary Toolbar Settings ─── */
+/* ─── Color Swatches inside Secondary Toolbar ─── */
+.editor-secondary-toolbar .color-swatch-btn,
+.sec-bar-btn-container button.color-swatch-btn {
+  border-radius: 50% !important;
+  box-sizing: border-box !important;
+  padding: 0 !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+  outline: none !important;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease !important;
+}
+
+.editor-secondary-toolbar .color-swatch-btn:hover,
+.sec-bar-btn-container button.color-swatch-btn:hover {
+  filter: brightness(1.2) !important;
+}
+
+.editor-secondary-toolbar .sec-bar-btn-container .vid-ctx-btn {
+  height: 28px !important;
+  min-height: 28px !important;
+  max-height: 28px !important;
+  width: 28px !important;
+  min-width: 28px !important;
+  padding: 0 !important;
+  border-radius: 6px !important;
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.editor-secondary-toolbar .sec-bar-btn-container .vid-ctx-btn:hover {
+  background: rgba(255, 255, 255, 0.12) !important;
+}
+
+/* Secondary toolbar containers inside canvas card (color swatches, sliders) */
+.editor-secondary-toolbar .sec-bar-pill-container,
+.editor-secondary-toolbar .sec-bar-btn-container,
 .sec-bar-pill-container,
 .sec-bar-btn-container {
-  background: var(--glass-bg, rgba(22, 24, 31, 0.85)) !important;
-  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.12)) !important;
+  background: #16181f !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
   border-radius: 9999px !important;
-  height: 34px !important;
-  min-height: 34px !important;
-  max-height: 34px !important;
-  padding: 0 10px !important;
+  height: 36px !important;
+  min-height: 36px !important;
+  max-height: 36px !important;
+  padding: 0 12px !important;
   display: inline-flex !important;
   align-items: center !important;
   gap: 6px !important;
   box-sizing: border-box !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25) !important;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.35) !important;
   flex-shrink: 0 !important;
-  color: rgba(255, 255, 255, 0.9) !important;
+  color: #ffffff !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 [data-theme='light'] .sec-bar-pill-container,
 [data-theme='light'] .sec-bar-btn-container {
-  background: var(--glass-bg, rgba(255, 255, 255, 0.85)) !important;
-  border: 1px solid var(--glass-border, rgba(0, 0, 0, 0.1)) !important;
+  background: #e2e8f0 !important;
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
   color: var(--text-main, #1e293b) !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
 }
 
-/* ─── Layer Actions Cluster for Canvas Elements ─── */
-.sec-bar-layer-actions {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  flex-shrink: 0;
-}
 
-/* ─── Size Slider for Draw Tools (Neutral Glass Pill) ─── */
+/* ─── Size Slider for Draw Tools (Solid Dark Pill) ─── */
+.editor-secondary-toolbar .sec-bar-accent-slider,
 .sec-bar-accent-slider {
-  background: var(--glass-bg, rgba(22, 24, 31, 0.85)) !important;
-  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.12)) !important;
+  background: #16181f !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
   border-radius: 9999px !important;
-  height: 34px !important;
-  min-height: 34px !important;
-  max-height: 34px !important;
-  padding: 0 10px !important;
+  height: 36px !important;
+  min-height: 36px !important;
+  max-height: 36px !important;
+  padding: 0 12px !important;
   display: inline-flex !important;
   align-items: center !important;
   gap: 6px !important;
   box-sizing: border-box !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25) !important;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.35) !important;
   flex-shrink: 0 !important;
-  color: rgba(255, 255, 255, 0.9) !important;
+  color: #ffffff !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 .sec-bar-accent-slider input[type="range"] {
@@ -814,13 +1382,17 @@
 }
 
 .vid-ctx-btn-delete {
-  background: rgba(239, 68, 68, 0.85) !important;
+  background: #ef4444 !important;
+  background: linear-gradient(135deg, #ef4444, #dc2626) !important;
   color: #ffffff !important;
-  border: 1px solid rgba(239, 68, 68, 1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.28) !important;
+  box-shadow: 0 3px 12px rgba(239, 68, 68, 0.45) !important;
 }
 
 .vid-ctx-btn-delete:hover {
-  background: rgba(220, 38, 38, 1) !important;
+  background: #dc2626 !important;
+  background: linear-gradient(135deg, #f87171, #dc2626) !important;
+  border-color: rgba(255, 255, 255, 0.45) !important;
 }
 
 .vid-ctx-divider {
@@ -840,8 +1412,8 @@
 }
 
 [data-theme='light'] .vid-ctx-btn:not(.active) {
-  background: rgba(0, 0, 0, 0.05) !important;
-  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+  background: #e2e8f0 !important;
+  border: none !important;
   color: #0f172a !important;
 }
 
