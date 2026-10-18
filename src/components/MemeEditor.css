@@ -143,7 +143,8 @@
   -webkit-backdrop-filter: none !important;
   box-shadow: none !important;
   overflow-x: auto;
-  overflow-y: visible;
+  overflow-y: hidden !important;
+  touch-action: pan-x !important;
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
   z-index: 20;
@@ -1090,13 +1091,31 @@
   color: #ffffff !important;
 }
 
-.editor-secondary-toolbar .vid-ctx-btn.btn-icon:not(.color-swatch-btn):not(.vid-ctx-btn-delete) {
+.editor-secondary-toolbar .vid-ctx-btn.btn-icon:not(.color-swatch-btn),
+.editor-secondary-toolbar .vid-ctx-btn.vid-ctx-btn-delete,
+.editor-secondary-toolbar .vid-ctx-btn-delete {
   width: 36px !important;
   min-width: 36px !important;
   max-width: 36px !important;
   height: 36px !important;
+  min-height: 36px !important;
+  max-height: 36px !important;
   padding: 0 !important;
   border-radius: 50% !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+  box-sizing: border-box !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35) !important;
+}
+
+.editor-secondary-toolbar .vid-ctx-btn.btn-icon:not(.color-swatch-btn) svg,
+.editor-secondary-toolbar .vid-ctx-btn.vid-ctx-btn-delete svg,
+.editor-secondary-toolbar .vid-ctx-btn-delete svg {
+  width: 14px !important;
+  height: 14px !important;
+  margin: 0 !important;
 }
 
 /* ─── Color Swatches inside Secondary Toolbar ─── */
@@ -1187,6 +1206,8 @@
   color: #ffffff !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
+  touch-action: none !important;
+  overflow: hidden !important;
 }
 
 .sec-bar-accent-slider input[type="range"] {
@@ -1198,6 +1219,9 @@
   cursor: pointer;
   accent-color: var(--primary-accent, #ff5e36);
   margin: 0;
+  touch-action: none !important;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .sec-bar-accent-slider input[type="range"]::-webkit-slider-runnable-track {

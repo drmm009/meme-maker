@@ -3888,7 +3888,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                             step="0.05"
                             value={activeCaption.opacity !== undefined ? activeCaption.opacity : 1}
                             onChange={(e) => updateActiveCaptionProps({ opacity: parseFloat(e.target.value) })}
-                            style={{ width: '100px', accentColor: 'var(--cyber-cyan)' }}
+                            style={{ width: '100px', accentColor: 'var(--cyber-cyan)', touchAction: 'none' }}
                           />
                           <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--cyber-cyan)', minWidth: '28px' }}>
                             {Math.round((activeCaption.opacity !== undefined ? activeCaption.opacity : 1) * 100)}%
@@ -4040,6 +4040,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                             value={brushSize}
                             onChange={(e) => setBrushSize(parseInt(e.target.value, 10))}
                             title={`Size: ${brushSize}px`}
+                            style={{ touchAction: 'none' }}
                           />
                           <div
                             style={{
@@ -4062,6 +4063,16 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           onClick={handleClearDrawings}
                           disabled={drawings.length === 0}
                           style={{
+                            width: 36,
+                            height: 36,
+                            minWidth: 36,
+                            minHeight: 36,
+                            borderRadius: '50%',
+                            padding: 0,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            flexShrink: 0,
                             background: drawings.length > 0 ? 'linear-gradient(135deg, #ef4444, #dc2626)' : undefined,
                             border: drawings.length > 0 ? '1px solid rgba(255, 255, 255, 0.28)' : undefined,
                             boxShadow: drawings.length > 0 ? '0 2px 10px rgba(239, 68, 68, 0.45)' : undefined,
@@ -4072,7 +4083,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           title={drawings.length > 0 ? `Clear all drawings (${drawings.length})` : 'Clear drawings'}
                           aria-label="Clear all drawings"
                         >
-                          <Trash2 style={{ width: 15, height: 15, color: '#ffffff' }} />
+                          <Trash2 style={{ width: 14, height: 14, color: '#ffffff' }} />
                         </button>
                       </motion.div>
                     )}
@@ -5645,7 +5656,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                   </div>
                   <div className="size-control-group flex-between gap-xs" style={{ height: '36px', padding: '0 6px', borderRadius: '10px', background: 'var(--bg-surface-1)', border: '1px solid var(--glass-border)', alignItems: 'center' }}>
                     <button type="button" className="btn btn-xs btn-ghost" style={{ width: '24px', height: '24px', borderRadius: '50%', padding: 0, fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', flexShrink: 0, color: 'var(--text-main)' }} onClick={() => setBrushSize(Math.max(2, brushSize - 2))} title="Decrease size">-</button>
-                    <input type="range" min="2" max="48" value={brushSize} onChange={(e) => setBrushSize(parseInt(e.target.value))} style={{ flex: 1, margin: '0 4px', minWidth: 0, accentColor: 'var(--cyber-cyan)' }} />
+                    <input type="range" min="2" max="48" value={brushSize} onChange={(e) => setBrushSize(parseInt(e.target.value))} style={{ flex: 1, margin: '0 4px', minWidth: 0, accentColor: 'var(--cyber-cyan)', touchAction: 'none' }} />
                     <button type="button" className="btn btn-xs btn-ghost" style={{ width: '24px', height: '24px', borderRadius: '50%', padding: 0, fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', flexShrink: 0, color: 'var(--text-main)' }} onClick={() => setBrushSize(Math.min(48, brushSize + 2))} title="Increase size">+</button>
                   </div>
                 </div>
