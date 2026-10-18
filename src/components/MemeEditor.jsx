@@ -43,6 +43,8 @@ import {
   DRAW_COLORS,
   getNonOverlappingPosition,
   isColorDark,
+  hslToHex,
+  hexToHue,
 } from '../utils/captionLayout';
 import './MemeEditor.css';
 
@@ -2542,7 +2544,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
         dieCutColor: color
       } : s);
       setStickers(nextStickers);
-      pushHistory(captions, nextStickers, imageLayers);
+      pushHistoryDebounced(captions, nextStickers, imageLayers);
     } else if (activeImageLayer) {
       const nextImg = imageLayers.map(l => l.id === activeImageLayer.id ? {
         ...l,
@@ -2550,7 +2552,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
         dieCutColor: color
       } : l);
       setImageLayers(nextImg);
-      pushHistory(captions, stickers, nextImg);
+      pushHistoryDebounced(captions, stickers, nextImg);
     }
   };
 
@@ -4306,7 +4308,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                       </motion.div>
                     )}
 
-                    {/* 14. Unified Layer Actions Cluster (Rotate / Duplicate / Layers / Delete) - ONLY shown when no toolbar submenu is active */}
+                    {/* 14. Unified Layer Actions Cluster (Rotate / Duplicate / Layers / Delete) + Die-Cut Colors Slider */}
                     {(activeCaption || activeSticker || activeImageLayer) && !activeSubmenu && (
                       <motion.div
                         key={`layer-actions-${activeLayerId || 'layer'}`}
@@ -4314,143 +4316,225 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         initial="initial"
                         animate="animate"
                         exit="exit"
-                        className="sec-bar-layer-actions"
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}
                       >
-                        {activeCaption && !activeCaption.isTweetCard && (
-                          <>
-                            <button
-                              type="button"
-                              className="layer-action-btn layer-action-btn-case"
-                              title="Toggle Text Case (ALL CAPS / Sentence case / lowercase)"
-                              aria-label="Toggle Text Case"
-                              onClick={handleToggleTextCase}
-                            >
-                              <span style={{ color: '#ffffff', fontWeight: 700, fontSize: '0.86rem' }}>Aa</span>
-                            </button>
-                            <div className="layer-action-divider" />
-                          </>
-                        )}
-
-                        {activeImageLayer && (
-                          <>
-                            <button
-                              type="button"
-                              className={`layer-action-btn layer-action-btn-crop ${activeImageLayer.fitMode === 'crop' ? 'active' : ''}`}
-                              title={activeImageLayer.fitMode === 'crop' ? 'Exit Crop' : 'Crop'}
-                              aria-label={activeImageLayer.fitMode === 'crop' ? 'Exit Crop' : 'Crop'}
-                              onClick={() => updateActiveImageLayer('fitMode', activeImageLayer.fitMode === 'crop' ? 'fit' : 'crop')}
-                            >
-                              <Crop style={{ width: 16, height: 16 }} />
-                            </button>
-                            <div className="layer-action-divider" />
-
-                            <button
-                              type="button"
-                              className={`layer-action-btn layer-action-btn-flip ${activeImageLayer.flipX ? 'active' : ''}`}
-                              title="Flip Horizontal (Mirror)"
-                              aria-label="Flip Horizontal"
-                              onClick={handleFlipActiveLayer}
-                            >
-                              <FlipHorizontal style={{ width: 16, height: 16 }} />
-                            </button>
-                            <div className="layer-action-divider" />
-                          </>
-                        )}
-
-                        {activeSticker && (
-                          <>
-                            <button
-                              type="button"
-                              className={`layer-action-btn layer-action-btn-flip ${activeSticker.flipX ? 'active' : ''}`}
-                              title="Flip Horizontal (Mirror)"
-                              aria-label="Flip Horizontal"
-                              onClick={handleFlipActiveLayer}
-                            >
-                              <FlipHorizontal style={{ width: 16, height: 16 }} />
-                            </button>
-                            <div className="layer-action-divider" />
-                          </>
-                        )}
-
-                        <button
-                          type="button"
-                          className="layer-action-btn layer-action-btn-rotate"
-                          title="Rotate 90°"
-                          aria-label="Rotate 90°"
-                          onClick={handleRotateLayer}
-                        >
-                          <RotateCw style={{ width: 16, height: 16 }} />
-                        </button>
-
-                        <div className="layer-action-divider" />
-
-                        <button
-                          type="button"
-                          className="layer-action-btn layer-action-btn-duplicate"
-                          title="Duplicate Layer"
-                          aria-label="Duplicate Layer"
-                          onClick={() => handleDuplicateLayer()}
-                        >
-                          <Copy style={{ width: 16, height: 16 }} />
-                        </button>
-
-                        <div className="layer-action-divider" />
-
-                        <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
-                          <button
-                            type="button"
-                            className={`layer-action-btn layer-action-btn-layers ${showLayerMenu ? 'active' : ''}`}
-                            title="Layer Order"
-                            aria-label="Layer Order"
-                            onClick={() => setShowLayerMenu(!showLayerMenu)}
+                        {/* Die-Cut Colors Slider Pill — Appears on Secondary Toolbar when Die-Cut is active on sticker / emoji */}
+                        {activeSticker && activeSticker.dieCut && (
+                          <div
+                            className="sec-bar-btn-container"
+                            style={{
+                              padding: '0 8px',
+                              gap: '5px'
+                            }}
                           >
-                            <Layers style={{ width: 16, height: 16 }} />
-                          </button>
+                            <Shield style={{ width: 13, height: 13, color: 'var(--primary-accent, #f06853)', flexShrink: 0 }} />
+                            <div className="layer-action-divider" style={{ margin: '0 2px' }} />
+                            {['#ffffff', '#000000', '#ff2a5f', '#ffe600', '#00f0ff', '#a855f7', '#00ff66'].map((c) => {
+                              const isSelected = (activeSticker.dieCutColor || '#ffffff').toLowerCase() === c.toLowerCase();
+                              return (
+                                <button
+                                  key={c}
+                                  type="button"
+                                  className={`color-swatch-btn ${isSelected ? 'active' : ''}`}
+                                  title={`Die-cut border color ${c}`}
+                                  onClick={() => handleSetDieCutColor(c)}
+                                  style={{
+                                    width: 18,
+                                    height: 18,
+                                    borderRadius: '50%',
+                                    backgroundColor: c,
+                                    border: isSelected ? '2px solid var(--cyber-cyan, #06b6d4)' : '1px solid rgba(255, 255, 255, 0.35)',
+                                    transform: isSelected ? 'scale(1.15)' : 'scale(1)',
+                                    boxShadow: isSelected ? '0 0 8px rgba(6, 182, 212, 0.7)' : 'none',
+                                    padding: 0,
+                                    cursor: 'pointer',
+                                    flexShrink: 0,
+                                    transition: 'all 0.15s ease'
+                                  }}
+                                />
+                              );
+                            })}
 
-                          {showLayerMenu && (
                             <div
-                              className="sec-bar-layer-order-popover"
+                              title="Slide to change border color"
                               style={{
-                                position: 'absolute',
-                                bottom: 'calc(100% + 8px)',
-                                left: '50%',
-                                transform: 'translateX(-50%)'
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                position: 'relative',
+                                width: 56,
+                                height: 18,
+                                flexShrink: 0,
+                                margin: '0 2px'
                               }}
                             >
+                              <input
+                                type="range"
+                                min="0"
+                                max="360"
+                                value={hexToHue(activeSticker.dieCutColor || '#ffffff')}
+                                onChange={(e) => handleSetDieCutColor(hslToHex(Number(e.target.value), 100, 50))}
+                                className="die-cut-hue-slider"
+                              />
+                            </div>
+
+                            <div
+                              title="Custom Color Picker"
+                              style={{
+                                position: 'relative',
+                                width: 18,
+                                height: 18,
+                                borderRadius: '50%',
+                                background: 'conic-gradient(from 180deg at 50% 50%, #ff0055, #ffaa00, #00ff66, #00bbff, #aa00ff, #ff0055)',
+                                border: '1px solid rgba(255, 255, 255, 0.4)',
+                                cursor: 'pointer',
+                                overflow: 'hidden',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                flexShrink: 0
+                              }}
+                            >
+                              <input
+                                type="color"
+                                value={activeSticker.dieCutColor || '#ffffff'}
+                                onChange={(e) => handleSetDieCutColor(e.target.value)}
+                                style={{
+                                  position: 'absolute',
+                                  opacity: 0,
+                                  inset: 0,
+                                  cursor: 'pointer',
+                                  width: '100%',
+                                  height: '100%',
+                                  padding: 0,
+                                  border: 'none'
+                                }}
+                              />
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="sec-bar-layer-actions">
+                          {activeCaption && !activeCaption.isTweetCard && (
+                            <>
                               <button
                                 type="button"
-                                className="layer-action-popover-btn"
-                                title="Bring Forward"
-                                aria-label="Bring Forward"
-                                onClick={() => moveLayer(activeLayerId, 'forward')}
+                                className="layer-action-btn layer-action-btn-case"
+                                title="Toggle Text Case (ALL CAPS / Sentence case / lowercase)"
+                                aria-label="Toggle Text Case"
+                                onClick={handleToggleTextCase}
                               >
-                                <ArrowUp style={{ width: 14, height: 14 }} />
+                                <span style={{ color: '#ffffff', fontWeight: 700, fontSize: '0.86rem' }}>Aa</span>
                               </button>
                               <div className="layer-action-divider" />
+                            </>
+                          )}
+
+                          {activeImageLayer && (
+                            <>
                               <button
                                 type="button"
-                                className="layer-action-popover-btn"
-                                title="Send Backward"
-                                aria-label="Send Backward"
-                                onClick={() => moveLayer(activeLayerId, 'backward')}
+                                className={`layer-action-btn layer-action-btn-crop ${activeImageLayer.fitMode === 'crop' ? 'active' : ''}`}
+                                title={activeImageLayer.fitMode === 'crop' ? 'Exit Crop' : 'Crop'}
+                                aria-label={activeImageLayer.fitMode === 'crop' ? 'Exit Crop' : 'Crop'}
+                                onClick={() => updateActiveImageLayer('fitMode', activeImageLayer.fitMode === 'crop' ? 'fit' : 'crop')}
                               >
-                                <ArrowDown style={{ width: 14, height: 14 }} />
+                                <Crop style={{ width: 16, height: 16 }} />
                               </button>
-                            </div>
+                              <div className="layer-action-divider" />
+
+                              <button
+                                type="button"
+                                className={`layer-action-btn layer-action-btn-flip ${activeImageLayer.flipX ? 'active' : ''}`}
+                                title="Flip Horizontal (Mirror)"
+                                aria-label="Flip Horizontal"
+                                onClick={handleFlipActiveLayer}
+                              >
+                                <FlipHorizontal style={{ width: 16, height: 16 }} />
+                              </button>
+                              <div className="layer-action-divider" />
+                            </>
                           )}
+
+                          <button
+                            type="button"
+                            className="layer-action-btn layer-action-btn-rotate"
+                            title="Rotate 90°"
+                            aria-label="Rotate 90°"
+                            onClick={handleRotateLayer}
+                          >
+                            <RotateCw style={{ width: 16, height: 16 }} />
+                          </button>
+
+                          <div className="layer-action-divider" />
+
+                          <button
+                            type="button"
+                            className="layer-action-btn layer-action-btn-duplicate"
+                            title="Duplicate Layer"
+                            aria-label="Duplicate Layer"
+                            onClick={() => handleDuplicateLayer()}
+                          >
+                            <Copy style={{ width: 16, height: 16 }} />
+                          </button>
+
+                          <div className="layer-action-divider" />
+
+                          <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
+                            <button
+                              type="button"
+                              className={`layer-action-btn layer-action-btn-layers ${showLayerMenu ? 'active' : ''}`}
+                              title="Layer Order"
+                              aria-label="Layer Order"
+                              onClick={() => setShowLayerMenu(!showLayerMenu)}
+                            >
+                              <Layers style={{ width: 16, height: 16 }} />
+                            </button>
+
+                            {showLayerMenu && (
+                              <div
+                                className="sec-bar-layer-order-popover"
+                                style={{
+                                  position: 'absolute',
+                                  bottom: 'calc(100% + 8px)',
+                                  left: '50%',
+                                  transform: 'translateX(-50%)'
+                                }}
+                              >
+                                <button
+                                  type="button"
+                                  className="layer-action-popover-btn"
+                                  title="Bring Forward"
+                                  aria-label="Bring Forward"
+                                  onClick={() => moveLayer(activeLayerId, 'forward')}
+                                >
+                                  <ArrowUp style={{ width: 14, height: 14 }} />
+                                </button>
+                                <div className="layer-action-divider" />
+                                <button
+                                  type="button"
+                                  className="layer-action-popover-btn"
+                                  title="Send Backward"
+                                  aria-label="Send Backward"
+                                  onClick={() => moveLayer(activeLayerId, 'backward')}
+                                >
+                                  <ArrowDown style={{ width: 14, height: 14 }} />
+                                </button>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="layer-action-divider" />
+
+                          <button
+                            type="button"
+                            className="layer-action-btn layer-action-btn-delete"
+                            title="Delete Layer"
+                            aria-label="Delete Layer"
+                            onClick={() => handleDeleteLayer()}
+                          >
+                            <Trash2 style={{ width: 16, height: 16 }} />
+                          </button>
                         </div>
-
-                        <div className="layer-action-divider" />
-
-                        <button
-                          type="button"
-                          className="layer-action-btn layer-action-btn-delete"
-                          title="Delete Layer"
-                          aria-label="Delete Layer"
-                          onClick={() => handleDeleteLayer()}
-                        >
-                          <Trash2 style={{ width: 16, height: 16 }} />
-                        </button>
                       </motion.div>
                     )}
                     </AnimatePresence>
@@ -4786,7 +4870,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         role="button"
                         tabIndex={0}
                         className={`btn btn-xs vid-ctx-btn ${activeSticker.dieCut ? 'active' : ''}`}
-                        title={activeSticker.dieCut ? "Die-Cut Border (Active - click to disable, or click color circle to change color)" : "Die-Cut Sticker Border (White Vinyl Outline)"}
+                        title={activeSticker.dieCut ? "Die-Cut Border (Active - click to disable)" : "Die-Cut Sticker Border (White Vinyl Outline)"}
                         onClick={() => handleToggleDieCutSticker()}
                         onKeyDown={(e) => {
                           if (e.key === 'Enter' || e.key === ' ') {
@@ -4813,45 +4897,19 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         <span>Die-Cut</span>
                         {activeSticker.dieCut && (
                           <span
-                            onClick={(e) => e.stopPropagation()}
-                            title="Change Die-Cut Border Color"
+                            title="Active Die-Cut Border Color"
                             style={{
-                              position: 'relative',
                               display: 'inline-flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              width: 15,
-                              height: 15,
+                              width: 10,
+                              height: 10,
                               borderRadius: '50%',
-                              border: '2px solid rgba(255,255,255,0.9)',
+                              border: '1.5px solid rgba(255,255,255,0.9)',
                               background: activeSticker.dieCutColor || '#ffffff',
                               boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
-                              cursor: 'pointer',
-                              overflow: 'hidden',
                               marginLeft: '2px',
                               flexShrink: 0
                             }}
-                          >
-                            <input
-                              type="color"
-                              value={activeSticker.dieCutColor || '#ffffff'}
-                              onChange={(e) => {
-                                e.stopPropagation();
-                                handleSetDieCutColor(e.target.value);
-                              }}
-                              onClick={(e) => e.stopPropagation()}
-                              style={{
-                                position: 'absolute',
-                                opacity: 0,
-                                inset: 0,
-                                cursor: 'pointer',
-                                width: '100%',
-                                height: '100%',
-                                padding: 0,
-                                border: 'none'
-                              }}
-                            />
-                          </span>
+                          />
                         )}
                       </div>
                     </div>

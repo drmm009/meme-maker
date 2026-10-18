@@ -6,6 +6,8 @@ import {
   DRAW_COLORS,
   getNonOverlappingPosition,
   isColorDark,
+  hslToHex,
+  hexToHue,
 } from './captionLayout';
 
 describe('captionLayout constants', () => {
@@ -63,3 +65,17 @@ describe('isColorDark', () => {
     expect(isColorDark('rgb(255, 255, 255)')).toBe(false);
   });
 });
+
+describe('hslToHex and hexToHue', () => {
+  it('converts hsl to hex and back', () => {
+    expect(hslToHex(0, 100, 50)).toBe('#ff0000');
+    expect(hslToHex(120, 100, 50)).toBe('#00ff00');
+    expect(hslToHex(240, 100, 50)).toBe('#0000ff');
+    expect(hexToHue('#ff0000')).toBe(0);
+    expect(hexToHue('#00ff00')).toBe(120);
+    expect(hexToHue('#0000ff')).toBe(240);
+    expect(hexToHue('#ffffff')).toBe(0);
+    expect(hexToHue('#000000')).toBe(0);
+  });
+});
+
