@@ -1391,10 +1391,10 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
 
       let activeHandleDrawer = null;
 
-      // Modern UI Handle Drawer Helpers (Matches User Reference Image: Coral Outline, Dark Badges, Top-Left ✕, Bottom-Right ⤢, Side Capsules)
+      // Modern UI Handle Drawer Helpers (Matches User Reference Image: Coral Outline, White Badges, Top-Left ✕, Bottom-Right ⤢, Side Capsules)
       const THEME_CORAL = '#f06853';
       const THEME_GLOW = 'rgba(240, 104, 83, 0.45)';
-      const THEME_BADGE_BG = '#2d2727';
+      const THEME_BADGE_BG = '#ffffff';
 
       // 1. Selection Box Outline (Smooth rounded rectangle with soft coral glow)
       const drawSelectionBox = (uiCtx, bx, by, bw, bh, radius = 10) => {
@@ -1414,31 +1414,31 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         uiCtx.restore();
       };
 
-      // 2. Delete Handle (Top-Left corner handle with dark charcoal circular badge, coral border & ✕ icon)
+      // 2. Delete Handle (Top-Left corner handle: crisp white circular badge, coral border & coral ✕ icon, increased size)
       const drawDeleteHandle = (uiCtx, hx, hy) => {
         uiCtx.save();
-        uiCtx.shadowColor = 'rgba(0, 0, 0, 0.45)';
+        uiCtx.shadowColor = 'rgba(0, 0, 0, 0.28)';
         uiCtx.shadowBlur = 6;
         uiCtx.shadowOffsetY = 1.5;
 
-        // Button background circle
+        // Button background circle (increased to radius 18)
         uiCtx.beginPath();
-        uiCtx.arc(hx, hy, 15, 0, Math.PI * 2);
+        uiCtx.arc(hx, hy, 18, 0, Math.PI * 2);
         uiCtx.fillStyle = THEME_BADGE_BG;
         uiCtx.fill();
 
         // Coral border
         uiCtx.strokeStyle = THEME_CORAL;
-        uiCtx.lineWidth = 2.2;
+        uiCtx.lineWidth = 2.4;
         uiCtx.stroke();
 
-        // Coral ✕ inside
+        // Coral ✕ inside (scaled up to match radius 18)
         uiCtx.shadowColor = 'transparent';
         uiCtx.beginPath();
         uiCtx.strokeStyle = THEME_CORAL;
-        uiCtx.lineWidth = 2.2;
+        uiCtx.lineWidth = 2.4;
         uiCtx.lineCap = 'round';
-        const cr = 4.5;
+        const cr = 5.5;
         uiCtx.moveTo(hx - cr, hy - cr);
         uiCtx.lineTo(hx + cr, hy + cr);
         uiCtx.moveTo(hx + cr, hy - cr);
@@ -1447,47 +1447,48 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         uiCtx.restore();
       };
 
-      // 3. Resize Handle (Bottom-Right corner handle with dark circular badge, coral border & diagonal double-arrows ⤢)
+      // 3. Resize Handle (Bottom-Right corner handle: crisp white circular badge, coral border & diagonal double-arrows ⤢, increased size)
       const drawResizeHandle = (uiCtx, hx, hy) => {
         uiCtx.save();
-        uiCtx.shadowColor = 'rgba(0, 0, 0, 0.45)';
+        uiCtx.shadowColor = 'rgba(0, 0, 0, 0.28)';
         uiCtx.shadowBlur = 6;
         uiCtx.shadowOffsetY = 1.5;
 
+        // Button background circle (increased to radius 18)
         uiCtx.beginPath();
-        uiCtx.arc(hx, hy, 15, 0, Math.PI * 2);
+        uiCtx.arc(hx, hy, 18, 0, Math.PI * 2);
         uiCtx.fillStyle = THEME_BADGE_BG;
         uiCtx.fill();
 
         uiCtx.strokeStyle = THEME_CORAL;
-        uiCtx.lineWidth = 2.2;
+        uiCtx.lineWidth = 2.4;
         uiCtx.stroke();
 
-        // Diagonal double-arrow icon (up-right ↗ and down-left ↙)
+        // Diagonal double-arrow icon inside (scaled up for radius 18)
         uiCtx.shadowColor = 'transparent';
         uiCtx.strokeStyle = THEME_CORAL;
-        uiCtx.lineWidth = 2;
+        uiCtx.lineWidth = 2.4;
         uiCtx.lineCap = 'round';
         uiCtx.lineJoin = 'round';
 
         // Diagonal connecting stem
         uiCtx.beginPath();
-        uiCtx.moveTo(hx - 4.5, hy + 4.5);
-        uiCtx.lineTo(hx + 4.5, hy - 4.5);
+        uiCtx.moveTo(hx - 5.5, hy + 5.5);
+        uiCtx.lineTo(hx + 5.5, hy - 5.5);
         uiCtx.stroke();
 
         // Top-right arrowhead ↗
         uiCtx.beginPath();
-        uiCtx.moveTo(hx + 1.5, hy - 4.5);
-        uiCtx.lineTo(hx + 4.5, hy - 4.5);
-        uiCtx.lineTo(hx + 4.5, hy - 1.5);
+        uiCtx.moveTo(hx + 2.0, hy - 5.5);
+        uiCtx.lineTo(hx + 5.5, hy - 5.5);
+        uiCtx.lineTo(hx + 5.5, hy - 2.0);
         uiCtx.stroke();
 
         // Bottom-left arrowhead ↙
         uiCtx.beginPath();
-        uiCtx.moveTo(hx - 1.5, hy + 4.5);
-        uiCtx.lineTo(hx - 4.5, hy + 4.5);
-        uiCtx.lineTo(hx - 4.5, hy + 1.5);
+        uiCtx.moveTo(hx - 2.0, hy + 5.5);
+        uiCtx.lineTo(hx - 5.5, hy + 5.5);
+        uiCtx.lineTo(hx - 5.5, hy + 2.0);
         uiCtx.stroke();
 
         uiCtx.restore();
@@ -1498,36 +1499,36 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         drawResizeHandle(uiCtx, hx, hy);
       };
 
-      // 5. Side Stretch Handle (Modern rounded capsule for width stretching)
+      // 5. Side Stretch Handle (Crisp white rounded capsule for width stretching)
       const drawSideHandle = (uiCtx, hx, hy, isVertical = true) => {
         uiCtx.save();
-        uiCtx.shadowColor = 'rgba(0, 0, 0, 0.4)';
-        uiCtx.shadowBlur = 4;
+        uiCtx.shadowColor = 'rgba(0, 0, 0, 0.25)';
+        uiCtx.shadowBlur = 5;
         uiCtx.shadowOffsetY = 1;
 
         uiCtx.beginPath();
         if (isVertical) {
           if (uiCtx.roundRect) {
-            uiCtx.roundRect(hx - 3.5, hy - 12, 7, 24, 3.5);
+            uiCtx.roundRect(hx - 4, hy - 13, 8, 26, 4);
           } else {
-            uiCtx.rect(hx - 3.5, hy - 12, 7, 24);
+            uiCtx.rect(hx - 4, hy - 13, 8, 26);
           }
         } else {
           if (uiCtx.roundRect) {
-            uiCtx.roundRect(hx - 12, hy - 3.5, 24, 7, 3.5);
+            uiCtx.roundRect(hx - 13, hy - 4, 26, 8, 4);
           } else {
-            uiCtx.rect(hx - 12, hy - 3.5, 24, 7);
+            uiCtx.rect(hx - 13, hy - 4, 26, 8);
           }
         }
         uiCtx.fillStyle = THEME_BADGE_BG;
         uiCtx.fill();
         uiCtx.strokeStyle = THEME_CORAL;
-        uiCtx.lineWidth = 1.8;
+        uiCtx.lineWidth = 2;
         uiCtx.stroke();
         uiCtx.restore();
       };
 
-      // 6. Rotation Handle (Clean vertical stem + rotation knob with circular arrow)
+      // 6. Rotation Handle (Clean vertical stem + crisp white rotation knob with circular arrow)
       const drawRotateHandle = (uiCtx, startX, startY, knobX, knobY) => {
         uiCtx.save();
         // Rotation stem
@@ -1539,32 +1540,32 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         uiCtx.stroke();
 
         // Rotation knob
-        uiCtx.shadowColor = 'rgba(0, 0, 0, 0.45)';
+        uiCtx.shadowColor = 'rgba(0, 0, 0, 0.28)';
         uiCtx.shadowBlur = 6;
         uiCtx.shadowOffsetY = 1.5;
         uiCtx.beginPath();
-        uiCtx.arc(knobX, knobY, 13.5, 0, Math.PI * 2);
+        uiCtx.arc(knobX, knobY, 15, 0, Math.PI * 2);
         uiCtx.fillStyle = THEME_BADGE_BG;
         uiCtx.fill();
         uiCtx.strokeStyle = THEME_CORAL;
-        uiCtx.lineWidth = 2;
+        uiCtx.lineWidth = 2.2;
         uiCtx.stroke();
 
         // Circular rotate icon inside knob
         uiCtx.shadowColor = 'transparent';
         uiCtx.strokeStyle = THEME_CORAL;
-        uiCtx.lineWidth = 1.8;
+        uiCtx.lineWidth = 2;
         uiCtx.lineCap = 'round';
         uiCtx.beginPath();
-        uiCtx.arc(knobX, knobY, 6, -Math.PI * 0.7, Math.PI * 0.8);
+        uiCtx.arc(knobX, knobY, 6.5, -Math.PI * 0.7, Math.PI * 0.8);
         uiCtx.stroke();
 
         // Arrowhead
         uiCtx.fillStyle = THEME_CORAL;
         uiCtx.beginPath();
-        uiCtx.moveTo(knobX + 4.2, knobY + 4.2);
-        uiCtx.lineTo(knobX + 7.5, knobY);
-        uiCtx.lineTo(knobX + 3.8, knobY - 2.8);
+        uiCtx.moveTo(knobX + 4.5, knobY + 4.5);
+        uiCtx.lineTo(knobX + 8, knobY);
+        uiCtx.lineTo(knobX + 4, knobY - 3);
         uiCtx.fill();
         uiCtx.restore();
       };
