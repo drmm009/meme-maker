@@ -48,14 +48,14 @@
   align-items: center;
   justify-content: center;
   position: relative;
-  padding: 0;
+  padding: 8px 16px 128px 16px;
   box-sizing: border-box;
   overflow: visible;
 }
 
 @media (max-width: 768px) {
   .canvas-viewport {
-    padding: 0 0 72px 0;
+    padding: 6px 10px 128px 10px;
   }
 }
 
