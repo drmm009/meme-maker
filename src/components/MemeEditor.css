@@ -53,6 +53,12 @@
   overflow: visible;
 }
 
+@media (max-width: 768px) {
+  .canvas-viewport {
+    padding: 0 0 72px 0;
+  }
+}
+
 /* ─── Bottom Toolbars Dock Anchor (Main Toolbar stays on top of Main Dock) ─── */
 .editor-toolbars-dock-anchor {
   width: 100%;
@@ -61,11 +67,12 @@
   align-items: center;
   justify-content: flex-end;
   gap: 8px;
-  flex-shrink: 0;
-  position: relative;
+  position: absolute;
+  bottom: 2px;
+  left: 0;
+  right: 0;
   z-index: 50;
-  margin-top: auto;
-  margin-bottom: 2px;
+  margin: 0;
   pointer-events: none;
 }
 
@@ -92,19 +99,20 @@
 }
 
 .editor-toolbars-dock-anchor .editor-secondary-toolbar {
-  position: relative !important;
-  bottom: auto !important;
-  left: auto !important;
-  right: auto !important;
+  position: absolute !important;
+  bottom: calc(100% + 8px) !important;
+  left: 0 !important;
+  right: 0 !important;
   transform: none !important;
   margin: 0 auto !important;
-  width: auto !important;
-  max-width: 100% !important;
+  width: max-content !important;
+  max-width: calc(100% - 20px) !important;
   display: flex !important;
   align-items: center !important;
   justify-content: safe center !important;
   flex-shrink: 0 !important;
-  z-index: 25 !important;
+  z-index: 35 !important;
+  pointer-events: auto !important;
 }
 
 /* ─── Layer Toolbar (Floats with respect to Main Toolbar) ─── */
