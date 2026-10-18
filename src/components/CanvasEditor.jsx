@@ -1391,8 +1391,30 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
 
       let activeHandleDrawer = null;
 
-      // Modern UI Handle Drawer Helpers
-      // 1. Delete Handle (Top-Left corner handle with modern coral circular badge and clean ✕)
+      // Modern UI Handle Drawer Helpers (Matches User Reference Image: Coral Outline, Dark Badges, Top-Left ✕, Bottom-Right ⤢, Side Capsules)
+      const THEME_CORAL = '#f06853';
+      const THEME_GLOW = 'rgba(240, 104, 83, 0.45)';
+      const THEME_BADGE_BG = '#2d2727';
+
+      // 1. Selection Box Outline (Smooth rounded rectangle with soft coral glow)
+      const drawSelectionBox = (uiCtx, bx, by, bw, bh, radius = 10) => {
+        uiCtx.save();
+        uiCtx.shadowColor = THEME_GLOW;
+        uiCtx.shadowBlur = 8;
+        uiCtx.shadowOffsetY = 0;
+        uiCtx.strokeStyle = THEME_CORAL;
+        uiCtx.lineWidth = 2.4;
+        uiCtx.beginPath();
+        if (uiCtx.roundRect) {
+          uiCtx.roundRect(bx, by, bw, bh, radius);
+        } else {
+          uiCtx.rect(bx, by, bw, bh);
+        }
+        uiCtx.stroke();
+        uiCtx.restore();
+      };
+
+      // 2. Delete Handle (Top-Left corner handle with dark charcoal circular badge, coral border & ✕ icon)
       const drawDeleteHandle = (uiCtx, hx, hy) => {
         uiCtx.save();
         uiCtx.shadowColor = 'rgba(0, 0, 0, 0.45)';
@@ -1402,19 +1424,19 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         // Button background circle
         uiCtx.beginPath();
         uiCtx.arc(hx, hy, 15, 0, Math.PI * 2);
-        uiCtx.fillStyle = '#ef4444';
+        uiCtx.fillStyle = THEME_BADGE_BG;
         uiCtx.fill();
 
-        // Crisp white border
-        uiCtx.strokeStyle = '#ffffff';
-        uiCtx.lineWidth = 2.5;
+        // Coral border
+        uiCtx.strokeStyle = THEME_CORAL;
+        uiCtx.lineWidth = 2.2;
         uiCtx.stroke();
 
-        // Modern minimalist ✕ inside
+        // Coral ✕ inside
         uiCtx.shadowColor = 'transparent';
         uiCtx.beginPath();
-        uiCtx.strokeStyle = '#ffffff';
-        uiCtx.lineWidth = 2.5;
+        uiCtx.strokeStyle = THEME_CORAL;
+        uiCtx.lineWidth = 2.2;
         uiCtx.lineCap = 'round';
         const cr = 4.5;
         uiCtx.moveTo(hx - cr, hy - cr);
@@ -1425,89 +1447,124 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         uiCtx.restore();
       };
 
-      // 2. Corner Resize Handle (Modern crisp white knob with cyber-cyan border and shadow)
-      const drawRoundHandle = (uiCtx, hx, hy) => {
+      // 3. Resize Handle (Bottom-Right corner handle with dark circular badge, coral border & diagonal double-arrows ⤢)
+      const drawResizeHandle = (uiCtx, hx, hy) => {
         uiCtx.save();
-        uiCtx.shadowColor = 'rgba(0, 0, 0, 0.35)';
-        uiCtx.shadowBlur = 5;
+        uiCtx.shadowColor = 'rgba(0, 0, 0, 0.45)';
+        uiCtx.shadowBlur = 6;
         uiCtx.shadowOffsetY = 1.5;
 
         uiCtx.beginPath();
-        uiCtx.arc(hx, hy, 13.5, 0, Math.PI * 2);
-        uiCtx.fillStyle = '#ffffff';
+        uiCtx.arc(hx, hy, 15, 0, Math.PI * 2);
+        uiCtx.fillStyle = THEME_BADGE_BG;
         uiCtx.fill();
-        uiCtx.strokeStyle = '#06b6d4';
-        uiCtx.lineWidth = 2.5;
+
+        uiCtx.strokeStyle = THEME_CORAL;
+        uiCtx.lineWidth = 2.2;
         uiCtx.stroke();
+
+        // Diagonal double-arrow icon (up-right ↗ and down-left ↙)
+        uiCtx.shadowColor = 'transparent';
+        uiCtx.strokeStyle = THEME_CORAL;
+        uiCtx.lineWidth = 2;
+        uiCtx.lineCap = 'round';
+        uiCtx.lineJoin = 'round';
+
+        // Diagonal connecting stem
+        uiCtx.beginPath();
+        uiCtx.moveTo(hx - 4.5, hy + 4.5);
+        uiCtx.lineTo(hx + 4.5, hy - 4.5);
+        uiCtx.stroke();
+
+        // Top-right arrowhead ↗
+        uiCtx.beginPath();
+        uiCtx.moveTo(hx + 1.5, hy - 4.5);
+        uiCtx.lineTo(hx + 4.5, hy - 4.5);
+        uiCtx.lineTo(hx + 4.5, hy - 1.5);
+        uiCtx.stroke();
+
+        // Bottom-left arrowhead ↙
+        uiCtx.beginPath();
+        uiCtx.moveTo(hx - 1.5, hy + 4.5);
+        uiCtx.lineTo(hx - 4.5, hy + 4.5);
+        uiCtx.lineTo(hx - 4.5, hy + 1.5);
+        uiCtx.stroke();
+
         uiCtx.restore();
       };
 
-      // 3. Side Stretch Handle (Modern rounded capsule for width stretching)
+      // 4. Corner Knob (fallback if ever needed)
+      const drawRoundHandle = (uiCtx, hx, hy) => {
+        drawResizeHandle(uiCtx, hx, hy);
+      };
+
+      // 5. Side Stretch Handle (Modern rounded capsule for width stretching)
       const drawSideHandle = (uiCtx, hx, hy, isVertical = true) => {
         uiCtx.save();
-        uiCtx.shadowColor = 'rgba(0, 0, 0, 0.35)';
+        uiCtx.shadowColor = 'rgba(0, 0, 0, 0.4)';
         uiCtx.shadowBlur = 4;
         uiCtx.shadowOffsetY = 1;
 
         uiCtx.beginPath();
         if (isVertical) {
           if (uiCtx.roundRect) {
-            uiCtx.roundRect(hx - 4, hy - 11, 8, 22, 4);
+            uiCtx.roundRect(hx - 3.5, hy - 12, 7, 24, 3.5);
           } else {
-            uiCtx.rect(hx - 4, hy - 11, 8, 22);
+            uiCtx.rect(hx - 3.5, hy - 12, 7, 24);
           }
         } else {
           if (uiCtx.roundRect) {
-            uiCtx.roundRect(hx - 11, hy - 4, 22, 8, 4);
+            uiCtx.roundRect(hx - 12, hy - 3.5, 24, 7, 3.5);
           } else {
-            uiCtx.rect(hx - 11, hy - 4, 22, 8);
+            uiCtx.rect(hx - 12, hy - 3.5, 24, 7);
           }
         }
-        uiCtx.fillStyle = '#ffffff';
+        uiCtx.fillStyle = THEME_BADGE_BG;
         uiCtx.fill();
-        uiCtx.strokeStyle = '#06b6d4';
-        uiCtx.lineWidth = 2;
+        uiCtx.strokeStyle = THEME_CORAL;
+        uiCtx.lineWidth = 1.8;
         uiCtx.stroke();
         uiCtx.restore();
       };
 
-      // 4. Rotation Handle (Clean vertical stem + rotation knob with circular arrow)
+      // 6. Rotation Handle (Clean vertical stem + rotation knob with circular arrow)
       const drawRotateHandle = (uiCtx, startX, startY, knobX, knobY) => {
         uiCtx.save();
         // Rotation stem
-        uiCtx.strokeStyle = '#06b6d4';
-        uiCtx.lineWidth = 2;
+        uiCtx.strokeStyle = THEME_CORAL;
+        uiCtx.lineWidth = 1.8;
         uiCtx.beginPath();
         uiCtx.moveTo(startX, startY);
         uiCtx.lineTo(knobX, knobY);
         uiCtx.stroke();
 
         // Rotation knob
-        uiCtx.shadowColor = 'rgba(0, 0, 0, 0.35)';
-        uiCtx.shadowBlur = 5;
+        uiCtx.shadowColor = 'rgba(0, 0, 0, 0.45)';
+        uiCtx.shadowBlur = 6;
         uiCtx.shadowOffsetY = 1.5;
         uiCtx.beginPath();
-        uiCtx.arc(knobX, knobY, 14, 0, Math.PI * 2);
-        uiCtx.fillStyle = '#ffffff';
+        uiCtx.arc(knobX, knobY, 13.5, 0, Math.PI * 2);
+        uiCtx.fillStyle = THEME_BADGE_BG;
         uiCtx.fill();
-        uiCtx.strokeStyle = '#06b6d4';
-        uiCtx.lineWidth = 2.5;
+        uiCtx.strokeStyle = THEME_CORAL;
+        uiCtx.lineWidth = 2;
         uiCtx.stroke();
 
         // Circular rotate icon inside knob
         uiCtx.shadowColor = 'transparent';
-        uiCtx.strokeStyle = '#06b6d4';
-        uiCtx.lineWidth = 2;
+        uiCtx.strokeStyle = THEME_CORAL;
+        uiCtx.lineWidth = 1.8;
         uiCtx.lineCap = 'round';
         uiCtx.beginPath();
-        uiCtx.arc(knobX, knobY, 6.5, -Math.PI * 0.7, Math.PI * 0.8);
+        uiCtx.arc(knobX, knobY, 6, -Math.PI * 0.7, Math.PI * 0.8);
         uiCtx.stroke();
+
         // Arrowhead
-        uiCtx.fillStyle = '#06b6d4';
+        uiCtx.fillStyle = THEME_CORAL;
         uiCtx.beginPath();
-        uiCtx.moveTo(knobX + 4.5, knobY + 4.5);
-        uiCtx.lineTo(knobX + 8, knobY);
-        uiCtx.lineTo(knobX + 4, knobY - 3);
+        uiCtx.moveTo(knobX + 4.2, knobY + 4.2);
+        uiCtx.lineTo(knobX + 7.5, knobY);
+        uiCtx.lineTo(knobX + 3.8, knobY - 2.8);
         uiCtx.fill();
         uiCtx.restore();
       };
@@ -1840,9 +1897,9 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
               }
 
               if (imgLayer.isFaceMorph) {
-                // Sleek, glowing face reticle (not a rectangular sticker box!)
-                uiCtx.strokeStyle = '#06b6d4';
-                uiCtx.lineWidth = 2.5;
+                // Sleek, glowing face reticle (matching coral theme)
+                uiCtx.strokeStyle = THEME_CORAL;
+                uiCtx.lineWidth = 2.4;
                 uiCtx.setLineDash([5, 5]);
                 uiCtx.beginPath();
                 uiCtx.ellipse(0, 0, hw, hh, 0, 0, Math.PI * 2);
@@ -1850,42 +1907,19 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
                 uiCtx.setLineDash([]);
 
                 // Rotation handle stem & circle
-                uiCtx.beginPath();
-                uiCtx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
-                uiCtx.lineWidth = 1.5;
-                uiCtx.moveTo(0, -hh);
-                uiCtx.lineTo(0, -hh - 40);
-                uiCtx.stroke();
+                drawRotateHandle(uiCtx, 0, -hh, 0, -hh - 28);
 
-                uiCtx.beginPath();
-                uiCtx.fillStyle = '#06b6d4';
-                uiCtx.strokeStyle = '#ffffff';
-                uiCtx.lineWidth = 2;
-                uiCtx.arc(0, -hh - 40, 14, 0, Math.PI * 2);
-                uiCtx.fill();
-                uiCtx.stroke();
-
-                // Round size handles (Bottom corners)
-                const drawRoundFaceHandle = (hx, hy) => {
-                  uiCtx.beginPath();
-                  uiCtx.fillStyle = '#06b6d4';
-                  uiCtx.strokeStyle = '#ffffff';
-                  uiCtx.lineWidth = 2;
-                  uiCtx.arc(hx, hy, 14, 0, Math.PI * 2);
-                  uiCtx.fill();
-                  uiCtx.stroke();
-                };
-                drawRoundFaceHandle(hw * 0.72, hh * 0.72);
-                drawRoundFaceHandle(-hw * 0.72, hh * 0.72);
+                // Round size handles (Bottom Right corner)
+                drawResizeHandle(uiCtx, hw * 0.72, hh * 0.72);
 
                 // Delete handle (Top Left)
                 drawDeleteHandle(uiCtx, -hw * 0.72, -hh * 0.72);
 
                 // Floating badge
                 uiCtx.save();
-                uiCtx.fillStyle = 'rgba(0, 0, 0, 0.88)';
-                uiCtx.strokeStyle = 'rgba(6, 182, 212, 0.5)';
-                uiCtx.lineWidth = 1;
+                uiCtx.fillStyle = THEME_BADGE_BG;
+                uiCtx.strokeStyle = THEME_CORAL;
+                uiCtx.lineWidth = 1.5;
                 const badgeText = `🎭 ${imgLayer.faceName || 'Face Morph'} (${Math.round((imgLayer.opacity !== undefined ? imgLayer.opacity : 1) * 100)}%)`;
                 uiCtx.font = 'bold 12px sans-serif';
                 const textW = uiCtx.measureText(badgeText).width;
@@ -1893,7 +1927,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
                 uiCtx.roundRect(-textW / 2 - 8, hh + 12, textW + 16, 24, 12);
                 uiCtx.fill();
                 uiCtx.stroke();
-                uiCtx.fillStyle = '#06b6d4';
+                uiCtx.fillStyle = THEME_CORAL;
                 uiCtx.textAlign = 'center';
                 uiCtx.textBaseline = 'middle';
                 uiCtx.fillText(badgeText, 0, hh + 24);
@@ -1903,33 +1937,17 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
                 return;
               }
 
-              // Upgraded Modern Image Layer Box Outline
-              uiCtx.save();
-              uiCtx.shadowColor = 'rgba(0, 0, 0, 0.45)';
-              uiCtx.shadowBlur = 4;
-              uiCtx.shadowOffsetY = 1;
-              uiCtx.strokeStyle = '#06b6d4';
-              uiCtx.lineWidth = 2;
-              uiCtx.strokeRect(-hw, -hh, w + 12, h + 12);
-              uiCtx.restore();
-
-              // Inner crisp hairline for contrast
-              uiCtx.save();
-              uiCtx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
-              uiCtx.lineWidth = 1;
-              uiCtx.strokeRect(-hw + 1, -hh + 1, Math.max(1, w + 10), Math.max(1, h + 10));
-              uiCtx.restore();
+              // Reference Image Style: Coral Glow Rounded Box with Top-Left Delete, Bottom-Right Resize & Side Handles
+              drawSelectionBox(uiCtx, -hw, -hh, w + 12, h + 12, 10);
 
               // Rotation handle
-              drawRotateHandle(uiCtx, 0, -hh, 0, -hh - 36);
+              drawRotateHandle(uiCtx, 0, -hh, 0, -hh - 28);
 
-              // 4 Corner handles:
+              // Corner handles:
               // Top-Left IS the Delete Handle!
               drawDeleteHandle(uiCtx, -hw, -hh);
-              // TR, BL, BR are resize handles
-              drawRoundHandle(uiCtx, hw, -hh);  // TR
-              drawRoundHandle(uiCtx, -hw, hh);  // BL
-              drawRoundHandle(uiCtx, hw, hh);   // BR
+              // Bottom-Right IS the Resize Handle!
+              drawResizeHandle(uiCtx, hw, hh);
 
               // 4 Middle-of-side handles
               drawSideHandle(uiCtx, 0, -hh, false);  // Top middle
@@ -1986,33 +2004,21 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
             }
             const hs = stkSize / 2 + 6;
 
-            // Upgraded Modern Sticker Box Outline
-            uiCtx.save();
-            uiCtx.shadowColor = 'rgba(0, 0, 0, 0.45)';
-            uiCtx.shadowBlur = 4;
-            uiCtx.shadowOffsetY = 1;
-            uiCtx.strokeStyle = '#06b6d4';
-            uiCtx.lineWidth = 2;
-            uiCtx.strokeRect(-hs, -hs, stkSize + 12, stkSize + 12);
-            uiCtx.restore();
+            // Reference Image Style: Coral Glow Rounded Box with Top-Left Delete, Bottom-Right Resize & Side Handles
+            drawSelectionBox(uiCtx, -hs, -hs, stkSize + 12, stkSize + 12, 10);
 
-            // Inner hairline
-            uiCtx.save();
-            uiCtx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
-            uiCtx.lineWidth = 1;
-            uiCtx.strokeRect(-hs + 1, -hs + 1, Math.max(1, stkSize + 10), Math.max(1, stkSize + 10));
-            uiCtx.restore();
+            // Side Handles: Left & Right Capsules
+            drawSideHandle(uiCtx, -hs, 0, true);
+            drawSideHandle(uiCtx, hs, 0, true);
 
-            // Rotation handle
-            drawRotateHandle(uiCtx, 0, -hs, 0, -hs - 30);
+            // Top Rotation Stem & Handle
+            drawRotateHandle(uiCtx, 0, -hs, 0, -hs - 28);
 
-            // Corner handles:
+            // Corner Handles:
             // Top-Left IS the Delete Handle!
             drawDeleteHandle(uiCtx, -hs, -hs);
-            // TR, BL, BR
-            drawRoundHandle(uiCtx, hs, -hs); // TR
-            drawRoundHandle(uiCtx, -hs, hs); // BL
-            drawRoundHandle(uiCtx, hs, hs);  // BR
+            // Bottom-Right IS the Resize Handle!
+            drawResizeHandle(uiCtx, hs, hs);
 
             uiCtx.restore();
           };
@@ -2100,8 +2106,8 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         const hasBg = (cap.bgColor && cap.bgColor !== 'transparent' && cap.bgColor !== 'none') || isBubble;
 
         // The visual bounding box is sized to match the actual text
-        const padX = isBubble ? Math.max(24, fontSize * 0.5) : (hasBg && cap.bgStyle !== 'banner' ? Math.max(16, fontSize * 0.35) : Math.max(8, fontSize * 0.15));
-        const padY = isBubble ? Math.max(18, fontSize * 0.4) : (hasBg && cap.bgStyle !== 'banner' ? Math.max(10, fontSize * 0.2) : Math.max(4, fontSize * 0.1));
+        const padX = isBubble ? Math.max(24, fontSize * 0.5) : (hasBg && cap.bgStyle !== 'banner' ? Math.max(16, fontSize * 0.35) : Math.max(16, fontSize * 0.25));
+        const padY = isBubble ? Math.max(18, fontSize * 0.4) : (hasBg && cap.bgStyle !== 'banner' ? Math.max(10, fontSize * 0.2) : Math.max(10, fontSize * 0.16));
         let boxWidth = (cap.hasCustomWidth && cap.width)
           ? Math.max(maxLineWidth + padX * 2, cap.width * canvas.width)
           : (maxLineWidth + padX * 2);
@@ -2234,42 +2240,22 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
               return;
             }
 
-            // Upgraded Modern Text Box Bounding Layer
-            // 1. Dual-tone crisp outline with subtle shadow for high contrast on light/dark images
-            uiCtx.save();
-            uiCtx.shadowColor = 'rgba(0, 0, 0, 0.45)';
-            uiCtx.shadowBlur = 4;
-            uiCtx.shadowOffsetY = 1;
-            uiCtx.strokeStyle = '#06b6d4'; // Cyber cyan
-            uiCtx.lineWidth = 2;
-            uiCtx.strokeRect(boxX, boxY, boxWidth, boxHeight);
-            uiCtx.restore();
+            // Reference Image Style: Coral Glow Rounded Box with Top-Left Delete, Bottom-Right Resize & Side Handles
+            drawSelectionBox(uiCtx, boxX, boxY, boxWidth, boxHeight, 10);
 
-            // Inner crisp hairline for contrast against dark backgrounds
-            uiCtx.save();
-            uiCtx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
-            uiCtx.lineWidth = 1;
-            uiCtx.strokeRect(boxX + 1, boxY + 1, Math.max(1, boxWidth - 2), Math.max(1, boxHeight - 2));
-            uiCtx.restore();
-
-            // Side Handles: Left & Right (Modern capsules)
+            // Side Handles: Left & Right Capsules
             drawSideHandle(uiCtx, boxX, 0, true); // Middle Left
             drawSideHandle(uiCtx, boxX + boxWidth, 0, true); // Middle Right
 
             // Corner Handles:
             // Top-Left IS the Delete Handle!
             drawDeleteHandle(uiCtx, boxX, boxY);
-            // TR, BL, BR
-            drawRoundHandle(uiCtx, boxX + boxWidth, boxY); // Top Right
-            if (cap.bubbleStyle !== 'imessage-receive') {
-              drawRoundHandle(uiCtx, boxX, boxY + boxHeight); // Bottom Left
-            }
-            if (cap.bubbleStyle !== 'imessage-send') {
-              drawRoundHandle(uiCtx, boxX + boxWidth, boxY + boxHeight); // Bottom Right
-            }
+            // Bottom-Right IS the Resize / Scale Handle (with diagonal arrows ⤢)
+            drawResizeHandle(uiCtx, boxX + boxWidth, boxY + boxHeight);
+            // (Note: Top-Right duplicate button omitted per user request; Top-Right & Bottom-Left remain clean rounded corners)
 
             // Top Rotation Stem & Handle
-            drawRotateHandle(uiCtx, 0, boxY, 0, boxY - 30);
+            drawRotateHandle(uiCtx, 0, boxY, 0, boxY - 28);
 
             // Live Dimension / Size pill feedback during drag
             if (isDragging.current && dragTarget.current?.id === cap.id && dragTarget.current?.type?.startsWith('resize_caption_')) {
@@ -2287,7 +2273,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
               uiCtx.shadowColor = 'rgba(0, 0, 0, 0.4)';
               uiCtx.shadowBlur = 6;
               uiCtx.shadowOffsetY = 2;
-              uiCtx.fillStyle = '#0f172a';
+              uiCtx.fillStyle = THEME_BADGE_BG;
               uiCtx.beginPath();
               if (uiCtx.roundRect) {
                 uiCtx.roundRect(-pw / 2, py, pw, ph, 12);
@@ -2296,11 +2282,11 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
               }
               uiCtx.fill();
 
-              uiCtx.strokeStyle = '#06b6d4';
+              uiCtx.strokeStyle = THEME_CORAL;
               uiCtx.lineWidth = 1.5;
               uiCtx.stroke();
 
-              uiCtx.fillStyle = '#f8fafc';
+              uiCtx.fillStyle = THEME_CORAL;
               uiCtx.textAlign = 'center';
               uiCtx.textBaseline = 'middle';
               uiCtx.fillText(label, 0, py + ph / 2);
@@ -2317,7 +2303,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
               uiCtx.shadowColor = 'rgba(0, 0, 0, 0.4)';
               uiCtx.shadowBlur = 6;
               uiCtx.shadowOffsetY = 2;
-              uiCtx.fillStyle = '#0f172a';
+              uiCtx.fillStyle = THEME_BADGE_BG;
               uiCtx.beginPath();
               if (uiCtx.roundRect) {
                 uiCtx.roundRect(-pw / 2, py, pw, ph, 12);
@@ -2326,11 +2312,11 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
               }
               uiCtx.fill();
 
-              uiCtx.strokeStyle = '#06b6d4';
+              uiCtx.strokeStyle = THEME_CORAL;
               uiCtx.lineWidth = 1.5;
               uiCtx.stroke();
 
-              uiCtx.fillStyle = '#38bdf8';
+              uiCtx.fillStyle = THEME_CORAL;
               uiCtx.textAlign = 'center';
               uiCtx.textBaseline = 'middle';
               uiCtx.fillText(label, 0, py + ph / 2);
@@ -2587,10 +2573,8 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
 
         const handles = [
           { type: 'delete_layer', x: cx - hs, y: cy - hs, r: 26 },
-          { type: 'rotate_sticker', x: cx, y: cy - stkSize / 2 - 30, r: 24 },
-          { type: 'resize_sticker_tr', x: cx + hs, y: cy - hs, r: 22 },
-          { type: 'resize_sticker_bl', x: cx - hs, y: cy + hs, r: 22 },
-          { type: 'resize_sticker_br', x: cx + hs, y: cy + hs, r: 22 },
+          { type: 'rotate_sticker', x: cx, y: cy - stkSize / 2 - 28, r: 24 },
+          { type: 'resize_sticker_br', x: cx + hs, y: cy + hs, r: 24 },
         ];
 
         for (const h of handles) {
@@ -2626,8 +2610,8 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
           }
           const isBubble = !!activeCap.bubbleStyle;
           const hasBg = (activeCap.bgColor && activeCap.bgColor !== 'transparent' && activeCap.bgColor !== 'none') || isBubble;
-          const padX = isBubble ? Math.max(24, fontSize * 0.5) : (hasBg && activeCap.bgStyle !== 'banner' ? Math.max(16, fontSize * 0.35) : Math.max(8, fontSize * 0.15));
-          const padY = isBubble ? Math.max(18, fontSize * 0.4) : (hasBg && activeCap.bgStyle !== 'banner' ? Math.max(10, fontSize * 0.2) : Math.max(4, fontSize * 0.1));
+          const padX = isBubble ? Math.max(24, fontSize * 0.5) : (hasBg && activeCap.bgStyle !== 'banner' ? Math.max(16, fontSize * 0.35) : Math.max(16, fontSize * 0.25));
+          const padY = isBubble ? Math.max(18, fontSize * 0.4) : (hasBg && activeCap.bgStyle !== 'banner' ? Math.max(10, fontSize * 0.2) : Math.max(10, fontSize * 0.16));
           let boxWidth = (activeCap.hasCustomWidth && activeCap.width)
             ? Math.max(maxLineWidth + padX * 2, activeCap.width * canvas.width)
             : (maxLineWidth + padX * 2);
@@ -2662,11 +2646,9 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
 
           const handles = [
             { type: 'delete_layer', x: leftX, y: topY, r: deleteHitRadius },
-            { type: 'rotate_caption', x: cx, y: topY - 30, r: touchHitRadius },
+            { type: 'rotate_caption', x: cx, y: topY - 28, r: touchHitRadius },
             { type: 'resize_caption_l', x: leftX, y: cy, r: touchHitRadius },
             { type: 'resize_caption_r', x: rightX, y: cy, r: touchHitRadius },
-            { type: 'resize_caption_tr', x: rightX, y: topY, r: touchHitRadius },
-            { type: 'resize_caption_bl', x: leftX, y: bottomY, r: touchHitRadius },
             { type: 'resize_caption_br', x: rightX, y: bottomY, r: touchHitRadius }
           ];
 
@@ -2741,14 +2723,11 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
 
             const handles = activeImg.isFaceMorph ? [
               { type: 'delete_layer', x: cx - hw * 0.72, y: cy - hh * 0.72, r: 26 },
-              { type: 'rotate_imageLayer', x: cx, y: cy - hh - 40, r: 24 },
-              { type: 'resize_imageLayer_br', x: cx + hw * 0.72, y: cy + hh * 0.72, r: 24 },
-              { type: 'resize_imageLayer_bl', x: cx - hw * 0.72, y: cy + hh * 0.72, r: 24 }
+              { type: 'rotate_imageLayer', x: cx, y: cy - hh - 28, r: 24 },
+              { type: 'resize_imageLayer_br', x: cx + hw * 0.72, y: cy + hh * 0.72, r: 24 }
             ] : [
               { type: 'delete_layer', x: cx - hw, y: cy - hh, r: 26 },
-              { type: 'rotate_imageLayer', x: cx, y: cy - hh - 36, r: 22 },
-              { type: 'resize_imageLayer_tr', x: cx + hw, y: cy - hh, r: 22 },
-              { type: 'resize_imageLayer_bl', x: cx - hw, y: cy + hh, r: 22 },
+              { type: 'rotate_imageLayer', x: cx, y: cy - hh - 28, r: 22 },
               { type: 'resize_imageLayer_br', x: cx + hw, y: cy + hh, r: 22 },
               { type: 'resize_imageLayer_t',  x: cx,      y: cy - hh, r: 22 },
               { type: 'resize_imageLayer_b',  x: cx,      y: cy + hh, r: 22 },
@@ -3128,14 +3107,11 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         if (Math.hypot(p.x - (cx - hs), p.y - (cy - hs)) <= 26) {
           canvas.style.cursor = 'pointer'; return;
         }
-        if (Math.hypot(p.x - cx, p.y - (cy - stkSize / 2 - 30)) <= 24) {
+        if (Math.hypot(p.x - cx, p.y - (cy - stkSize / 2 - 28)) <= 24) {
           canvas.style.cursor = 'grab'; return;
         }
-        if (Math.hypot(p.x - (cx + hs), p.y - (cy + hs)) <= 22) {
+        if (Math.hypot(p.x - (cx + hs), p.y - (cy + hs)) <= 24) {
           canvas.style.cursor = 'nwse-resize'; return;
-        }
-        if (Math.hypot(p.x - (cx + hs), p.y - (cy - hs)) <= 22 || Math.hypot(p.x - (cx - hs), p.y - (cy + hs)) <= 22) {
-          canvas.style.cursor = 'nesw-resize'; return;
         }
         if (p.x >= cx - stkSize / 2 - 6 && p.x <= cx + stkSize / 2 + 6 && p.y >= cy - stkSize / 2 - 6 && p.y <= cy + stkSize / 2 + 6) {
           canvas.style.cursor = 'move'; return;
@@ -3159,8 +3135,8 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         }
         const isBubble = !!activeCap.bubbleStyle;
         const hasBg = (activeCap.bgColor && activeCap.bgColor !== 'transparent' && activeCap.bgColor !== 'none') || isBubble;
-        const padX = isBubble ? Math.max(24, fontSize * 0.5) : (hasBg && activeCap.bgStyle !== 'banner' ? Math.max(16, fontSize * 0.35) : Math.max(8, fontSize * 0.15));
-        const padY = isBubble ? Math.max(18, fontSize * 0.4) : (hasBg && activeCap.bgStyle !== 'banner' ? Math.max(10, fontSize * 0.2) : Math.max(4, fontSize * 0.1));
+        const padX = isBubble ? Math.max(24, fontSize * 0.5) : (hasBg && activeCap.bgStyle !== 'banner' ? Math.max(16, fontSize * 0.35) : Math.max(16, fontSize * 0.25));
+        const padY = isBubble ? Math.max(18, fontSize * 0.4) : (hasBg && activeCap.bgStyle !== 'banner' ? Math.max(10, fontSize * 0.2) : Math.max(10, fontSize * 0.16));
         let boxWidth = (activeCap.hasCustomWidth && activeCap.width)
           ? Math.max(maxLineWidth + padX * 2, activeCap.width * canvas.width)
           : (maxLineWidth + padX * 2);
@@ -3196,7 +3172,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         if (Math.hypot(p.x - leftX, p.y - topY) <= deleteHoverRadius) {
           canvas.style.cursor = 'pointer'; return;
         }
-        if (Math.hypot(p.x - cx, p.y - (topY - 30)) <= hoverHitRadius) {
+        if (Math.hypot(p.x - cx, p.y - (topY - 28)) <= hoverHitRadius) {
           canvas.style.cursor = 'grab'; return;
         }
         if (Math.hypot(p.x - leftX, p.y - cy) <= hoverHitRadius || Math.hypot(p.x - rightX, p.y - cy) <= hoverHitRadius) {
@@ -3204,9 +3180,6 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         }
         if (Math.hypot(p.x - rightX, p.y - bottomY) <= hoverHitRadius) {
           canvas.style.cursor = 'nwse-resize'; return;
-        }
-        if (Math.hypot(p.x - rightX, p.y - topY) <= hoverHitRadius || Math.hypot(p.x - leftX, p.y - bottomY) <= hoverHitRadius) {
-          canvas.style.cursor = 'nesw-resize'; return;
         }
         if (p.x >= cx - halfW && p.x <= cx + halfW && p.y >= cy - halfH && p.y <= cy + halfH) {
           canvas.style.cursor = 'move'; return;
@@ -3232,14 +3205,11 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
           if (Math.hypot(p.x - (cx - hw), p.y - (cy - hh)) <= 26) {
             canvas.style.cursor = 'pointer'; return;
           }
-          if (Math.hypot(p.x - cx, p.y - (cy - hh - 36)) <= 22) {
+          if (Math.hypot(p.x - cx, p.y - (cy - hh - 28)) <= 22) {
             canvas.style.cursor = 'grab'; return;
           }
           if (Math.hypot(p.x - (cx + hw), p.y - (cy + hh)) <= 22) {
             canvas.style.cursor = 'nwse-resize'; return;
-          }
-          if (Math.hypot(p.x - (cx + hw), p.y - (cy - hh)) <= 22 || Math.hypot(p.x - (cx - hw), p.y - (cy + hh)) <= 22) {
-            canvas.style.cursor = 'nesw-resize'; return;
           }
           if (Math.hypot(p.x - cx, p.y - (cy - hh)) <= 22 || Math.hypot(p.x - cx, p.y - (cy + hh)) <= 22) {
             canvas.style.cursor = 'ns-resize'; return;
