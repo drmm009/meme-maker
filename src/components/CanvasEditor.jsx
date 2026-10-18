@@ -1471,24 +1471,24 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         uiCtx.lineCap = 'round';
         uiCtx.lineJoin = 'round';
 
-        // Diagonal connecting stem
+        // Inside-out diagonal connecting stem (from inside/top-left to outside/bottom-right)
         uiCtx.beginPath();
-        uiCtx.moveTo(hx - 5.5, hy + 5.5);
-        uiCtx.lineTo(hx + 5.5, hy - 5.5);
+        uiCtx.moveTo(hx - 5.5, hy - 5.5);
+        uiCtx.lineTo(hx + 5.5, hy + 5.5);
         uiCtx.stroke();
 
-        // Top-right arrowhead ↗
+        // Inward arrowhead ↖ (pointing inside toward box center)
         uiCtx.beginPath();
-        uiCtx.moveTo(hx + 2.0, hy - 5.5);
-        uiCtx.lineTo(hx + 5.5, hy - 5.5);
-        uiCtx.lineTo(hx + 5.5, hy - 2.0);
+        uiCtx.moveTo(hx - 1.5, hy - 5.5);
+        uiCtx.lineTo(hx - 5.5, hy - 5.5);
+        uiCtx.lineTo(hx - 5.5, hy - 1.5);
         uiCtx.stroke();
 
-        // Bottom-left arrowhead ↙
+        // Outward arrowhead ↘ (pointing outside away from box)
         uiCtx.beginPath();
-        uiCtx.moveTo(hx - 2.0, hy + 5.5);
-        uiCtx.lineTo(hx - 5.5, hy + 5.5);
-        uiCtx.lineTo(hx - 5.5, hy + 2.0);
+        uiCtx.moveTo(hx + 1.5, hy + 5.5);
+        uiCtx.lineTo(hx + 5.5, hy + 5.5);
+        uiCtx.lineTo(hx + 5.5, hy + 1.5);
         uiCtx.stroke();
 
         uiCtx.restore();
