@@ -2767,7 +2767,7 @@ h1, h2, h3,
   -webkit-backdrop-filter: none !important;
   backdrop-filter: none !important;
 }
-input[type='text']:not(.bs-search-input),
+input[type='text']:not(.search-pill-input):not(.bs-search-input):not(.watermark-inner-input),
 input[type='number'],
 input[type='email'],
 textarea,
@@ -3031,13 +3031,26 @@ select {
   box-shadow: var(--shadow-card) !important;
 }
 
+.search-pill-container input.search-pill-input,
+.search-pill-container input[type='text'],
+input[type='text'].search-pill-input,
 [data-theme='light'] .search-pill-container input.search-pill-input,
 [data-theme='light'] input[type='text'].search-pill-input {
   border: none !important;
   background: transparent !important;
   box-shadow: none !important;
   outline: none !important;
+  border-radius: 0 !important;
   color: var(--text-main) !important;
+}
+
+.search-pill-container input.search-pill-input:focus,
+.search-pill-container input[type='text']:focus,
+input[type='text'].search-pill-input:focus {
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  outline: none !important;
 }
 
 [data-theme='light'] .category-pill,

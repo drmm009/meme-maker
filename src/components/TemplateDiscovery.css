@@ -1406,6 +1406,8 @@
   color: #ff5e36;
 }
 
+.search-pill-container input,
+.search-pill-container input[type="text"],
 .search-pill-input,
 input.search-pill-input[type="text"] {
   flex: 1 1 0% !important;
@@ -1421,6 +1423,16 @@ input.search-pill-input[type="text"] {
   color: var(--text-main) !important;
   font-family: inherit !important;
   font-weight: 550 !important;
+}
+
+.search-pill-container input:focus,
+.search-pill-container input[type="text"]:focus,
+.search-pill-input:focus,
+input.search-pill-input[type="text"]:focus {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
 }
 
 .search-pill-input::placeholder,
