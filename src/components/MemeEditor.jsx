@@ -4314,8 +4314,71 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                       </motion.div>
                     )}
 
-                    {/* 14. Unified Layer Actions Cluster (Rotate / Duplicate / Layers / Delete) + Die-Cut Colors Slider */}
-                    {(activeCaption || activeSticker || activeImageLayer) && !activeSubmenu && (
+                    {/* 14. Die-Cut Color Picker — Appears on Secondary Toolbar when Die-Cut is active on sticker / emoji */}
+                    {activeSticker && activeSticker.dieCut && !activeSubmenu && (
+                      <motion.div
+                        key={`stk-diecut-${activeSticker.id}`}
+                        variants={secondaryVariants}
+                        initial="initial"
+                        animate="animate"
+                        exit="exit"
+                        className="sec-bar-btn-container"
+                      >
+                        {COLOR_SWATCHES.map((c) => {
+                          const isSelected = (activeSticker.dieCutColor || '#ffffff').toLowerCase() === c.toLowerCase();
+                          return (
+                            <button
+                              key={c}
+                              type="button"
+                              className={`color-swatch-btn ${isSelected ? 'active' : ''}`}
+                              title={`Die-cut border color ${c}`}
+                              onClick={() => handleSetDieCutColor(c)}
+                              style={{
+                                width: 22,
+                                height: 22,
+                                borderRadius: '50%',
+                                backgroundColor: c,
+                                border: isSelected ? '2px solid var(--cyber-cyan)' : '1.5px solid rgba(255,255,255,0.3)',
+                                boxShadow: isSelected ? '0 0 8px rgba(6, 182, 212, 0.6)' : 'none',
+                                transform: isSelected ? 'scale(1.15)' : 'scale(1)',
+                                cursor: 'pointer',
+                                flexShrink: 0,
+                                padding: 0,
+                                transition: 'all 0.15s ease'
+                              }}
+                            />
+                          );
+                        })}
+                        <div className="vid-ctx-divider" style={{ width: 1, height: 20, margin: '0 4px', flexShrink: 0 }} />
+                        <div
+                          title="Custom die-cut border color"
+                          style={{
+                            position: 'relative',
+                            width: 22,
+                            height: 22,
+                            borderRadius: '50%',
+                            background: 'conic-gradient(from 180deg at 50% 50%, #ff0055, #ffaa00, #00ff66, #00bbff, #aa00ff, #ff0055)',
+                            border: '1.5px solid rgba(255, 255, 255, 0.35)',
+                            cursor: 'pointer',
+                            overflow: 'hidden',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            flexShrink: 0
+                          }}
+                        >
+                          <input
+                            type="color"
+                            value={activeSticker.dieCutColor || '#ffffff'}
+                            onChange={(e) => handleSetDieCutColor(e.target.value)}
+                            style={{ position: 'absolute', opacity: 0, inset: 0, cursor: 'pointer', width: '100%', height: '100%' }}
+                          />
+                        </div>
+                      </motion.div>
+                    )}
+
+                    {/* 15. Unified Layer Actions Cluster (Rotate / Duplicate / Layers / Delete) */}
+                    {(activeCaption || (activeSticker && !activeSticker.dieCut) || activeImageLayer) && !activeSubmenu && (
                       <motion.div
                         key={`layer-actions-${activeLayerId || 'layer'}`}
                         variants={secondaryVariants}
@@ -4324,202 +4387,145 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         exit="exit"
                         style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}
                       >
-                        {/* Die-Cut Colors Slider Pill — Appears on Secondary Toolbar when Die-Cut is active on sticker / emoji */}
-                        {/* Die-Cut Colors Pill — Styled identically to Draw/Brush Color Picker */}
-                        {activeSticker && activeSticker.dieCut && (
-                          <div className="sec-bar-btn-container" style={{ padding: '0 6px', gap: '4px' }}>
-                            {DRAW_COLORS.map((c) => {
-                              const isSelected = (activeSticker.dieCutColor || '#ffffff').toLowerCase() === c.toLowerCase();
-                              return (
-                                <button
-                                  key={c}
-                                  type="button"
-                                  className={`color-swatch-btn ${isSelected ? 'active' : ''}`}
-                                  title={`Die-cut border color ${c}`}
-                                  onClick={() => handleSetDieCutColor(c)}
-                                  style={{
-                                    width: 17.5,
-                                    height: 17.5,
-                                    borderRadius: '50%',
-                                    background: c,
-                                    border: isSelected ? '2px solid var(--cyber-cyan)' : '1px solid rgba(255,255,255,0.4)',
-                                    transform: isSelected ? 'scale(1.15)' : 'scale(1)',
-                                    boxShadow: isSelected ? '0 0 6px rgba(6,182,212,0.6)' : 'none',
-                                    cursor: 'pointer',
-                                    padding: 0,
-                                    transition: 'all 0.15s ease'
-                                  }}
-                                />
-                              );
-                            })}
-                            <div
-                              title="Custom die-cut border color"
-                              style={{
-                                position: 'relative',
-                                width: 17.5,
-                                height: 17.5,
-                                borderRadius: '50%',
-                                background: 'conic-gradient(from 180deg at 50% 50%, #ff0055, #ffaa00, #00ff66, #00bbff, #aa00ff, #ff0055)',
-                                border: '1px solid rgba(255,255,255,0.4)',
-                                cursor: 'pointer',
-                                overflow: 'hidden',
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                flexShrink: 0
-                              }}
-                            >
-                              <input
-                                type="color"
-                                value={activeSticker.dieCutColor || '#ffffff'}
-                                onChange={(e) => handleSetDieCutColor(e.target.value)}
-                                style={{ position: 'absolute', opacity: 0, inset: 0, cursor: 'pointer', width: '100%', height: '100%' }}
-                              />
-                            </div>
-                          </div>
-                        )}
-
-                        {(!activeSticker || !activeSticker.dieCut) && (
-                          <div className="sec-bar-layer-actions">
-                            {activeCaption && !activeCaption.isTweetCard && (
-                              <>
-                                <button
-                                  type="button"
-                                  className="layer-action-btn layer-action-btn-case"
-                                  title="Toggle Text Case (ALL CAPS / Sentence case / lowercase)"
-                                  aria-label="Toggle Text Case"
-                                  onClick={handleToggleTextCase}
-                                >
-                                  <span style={{ color: '#ffffff', fontWeight: 700, fontSize: '0.86rem' }}>Aa</span>
-                                </button>
-                                <div className="layer-action-divider" />
-
-                                <button
-                                  type="button"
-                                  className="layer-action-btn layer-action-btn-align"
-                                  title={`Text Alignment: ${(activeCaption.align || 'center').toUpperCase()} (Click to cycle Left, Center, Right)`}
-                                  aria-label={`Text Alignment: ${activeCaption.align || 'center'}`}
-                                  onClick={handleCycleTextAlignment}
-                                >
-                                  {(activeCaption.align === 'left') ? (
-                                    <AlignLeft style={{ width: 16, height: 16 }} />
-                                  ) : (activeCaption.align === 'right') ? (
-                                    <AlignRight style={{ width: 16, height: 16 }} />
-                                  ) : (
-                                    <AlignCenter style={{ width: 16, height: 16 }} />
-                                  )}
-                                </button>
-                                <div className="layer-action-divider" />
-                              </>
-                            )}
-
-                            {activeImageLayer && (
-                              <>
-                                <button
-                                  type="button"
-                                  className={`layer-action-btn layer-action-btn-crop ${activeImageLayer.fitMode === 'crop' ? 'active' : ''}`}
-                                  title={activeImageLayer.fitMode === 'crop' ? 'Exit Crop' : 'Crop'}
-                                  aria-label={activeImageLayer.fitMode === 'crop' ? 'Exit Crop' : 'Crop'}
-                                  onClick={() => updateActiveImageLayer('fitMode', activeImageLayer.fitMode === 'crop' ? 'fit' : 'crop')}
-                                >
-                                  <Crop style={{ width: 16, height: 16 }} />
-                                </button>
-                                <div className="layer-action-divider" />
-
-                                <button
-                                  type="button"
-                                  className={`layer-action-btn layer-action-btn-flip ${activeImageLayer.flipX ? 'active' : ''}`}
-                                  title="Flip Horizontal (Mirror)"
-                                  aria-label="Flip Horizontal"
-                                  onClick={handleFlipActiveLayer}
-                                >
-                                  <FlipHorizontal style={{ width: 16, height: 16 }} />
-                                </button>
-                                <div className="layer-action-divider" />
-                              </>
-                            )}
-
-                            <button
-                              type="button"
-                              className="layer-action-btn layer-action-btn-rotate"
-                              title="Rotate 90°"
-                              aria-label="Rotate 90°"
-                              onClick={handleRotateLayer}
-                            >
-                              <RotateCw style={{ width: 16, height: 16 }} />
-                            </button>
-
-                            <div className="layer-action-divider" />
-
-                            <button
-                              type="button"
-                              className="layer-action-btn layer-action-btn-duplicate"
-                              title="Duplicate Layer"
-                              aria-label="Duplicate Layer"
-                              onClick={() => handleDuplicateLayer()}
-                            >
-                              <Copy style={{ width: 16, height: 16 }} />
-                            </button>
-
-                            <div className="layer-action-divider" />
-
-                            <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
+                        <div className="sec-bar-layer-actions">
+                          {activeCaption && !activeCaption.isTweetCard && (
+                            <>
                               <button
                                 type="button"
-                                className={`layer-action-btn layer-action-btn-layers ${showLayerMenu ? 'active' : ''}`}
-                                title="Layer Order"
-                                aria-label="Layer Order"
-                                onClick={() => setShowLayerMenu(!showLayerMenu)}
+                                className="layer-action-btn layer-action-btn-case"
+                                title="Toggle Text Case (ALL CAPS / Sentence case / lowercase)"
+                                aria-label="Toggle Text Case"
+                                onClick={handleToggleTextCase}
                               >
-                                <Layers style={{ width: 16, height: 16 }} />
+                                <span style={{ color: '#ffffff', fontWeight: 700, fontSize: '0.86rem' }}>Aa</span>
                               </button>
+                              <div className="layer-action-divider" />
 
-                              {showLayerMenu && (
-                                <div
-                                  className="sec-bar-layer-order-popover"
-                                  style={{
-                                    position: 'absolute',
-                                    bottom: 'calc(100% + 8px)',
-                                    left: '50%',
-                                    transform: 'translateX(-50%)'
-                                  }}
-                                >
-                                  <button
-                                    type="button"
-                                    className="layer-action-popover-btn"
-                                    title="Bring Forward"
-                                    aria-label="Bring Forward"
-                                    onClick={() => moveLayer(activeLayerId, 'forward')}
-                                  >
-                                    <ArrowUp style={{ width: 14, height: 14 }} />
-                                  </button>
-                                  <div className="layer-action-divider" />
-                                  <button
-                                    type="button"
-                                    className="layer-action-popover-btn"
-                                    title="Send Backward"
-                                    aria-label="Send Backward"
-                                    onClick={() => moveLayer(activeLayerId, 'backward')}
-                                  >
-                                    <ArrowDown style={{ width: 14, height: 14 }} />
-                                  </button>
-                                </div>
-                              )}
-                            </div>
+                              <button
+                                type="button"
+                                className="layer-action-btn layer-action-btn-align"
+                                title={`Text Alignment: ${(activeCaption.align || 'center').toUpperCase()} (Click to cycle Left, Center, Right)`}
+                                aria-label={`Text Alignment: ${activeCaption.align || 'center'}`}
+                                onClick={handleCycleTextAlignment}
+                              >
+                                {(activeCaption.align === 'left') ? (
+                                  <AlignLeft style={{ width: 16, height: 16 }} />
+                                ) : (activeCaption.align === 'right') ? (
+                                  <AlignRight style={{ width: 16, height: 16 }} />
+                                ) : (
+                                  <AlignCenter style={{ width: 16, height: 16 }} />
+                                )}
+                              </button>
+                              <div className="layer-action-divider" />
+                            </>
+                          )}
 
-                            <div className="layer-action-divider" />
+                          {activeImageLayer && (
+                            <>
+                              <button
+                                type="button"
+                                className={`layer-action-btn layer-action-btn-crop ${activeImageLayer.fitMode === 'crop' ? 'active' : ''}`}
+                                title={activeImageLayer.fitMode === 'crop' ? 'Exit Crop' : 'Crop'}
+                                aria-label={activeImageLayer.fitMode === 'crop' ? 'Exit Crop' : 'Crop'}
+                                onClick={() => updateActiveImageLayer('fitMode', activeImageLayer.fitMode === 'crop' ? 'fit' : 'crop')}
+                              >
+                                <Crop style={{ width: 16, height: 16 }} />
+                              </button>
+                              <div className="layer-action-divider" />
 
+                              <button
+                                type="button"
+                                className={`layer-action-btn layer-action-btn-flip ${activeImageLayer.flipX ? 'active' : ''}`}
+                                title="Flip Horizontal (Mirror)"
+                                aria-label="Flip Horizontal"
+                                onClick={handleFlipActiveLayer}
+                              >
+                                <FlipHorizontal style={{ width: 16, height: 16 }} />
+                              </button>
+                              <div className="layer-action-divider" />
+                            </>
+                          )}
+
+                          <button
+                            type="button"
+                            className="layer-action-btn layer-action-btn-rotate"
+                            title="Rotate 90°"
+                            aria-label="Rotate 90°"
+                            onClick={handleRotateLayer}
+                          >
+                            <RotateCw style={{ width: 16, height: 16 }} />
+                          </button>
+
+                          <div className="layer-action-divider" />
+
+                          <button
+                            type="button"
+                            className="layer-action-btn layer-action-btn-duplicate"
+                            title="Duplicate Layer"
+                            aria-label="Duplicate Layer"
+                            onClick={() => handleDuplicateLayer()}
+                          >
+                            <Copy style={{ width: 16, height: 16 }} />
+                          </button>
+
+                          <div className="layer-action-divider" />
+
+                          <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
                             <button
                               type="button"
-                              className="layer-action-btn layer-action-btn-delete"
-                              title="Delete Layer"
-                              aria-label="Delete Layer"
-                              onClick={() => handleDeleteLayer()}
+                              className={`layer-action-btn layer-action-btn-layers ${showLayerMenu ? 'active' : ''}`}
+                              title="Layer Order"
+                              aria-label="Layer Order"
+                              onClick={() => setShowLayerMenu(!showLayerMenu)}
                             >
-                              <Trash2 style={{ width: 16, height: 16 }} />
+                              <Layers style={{ width: 16, height: 16 }} />
                             </button>
+
+                            {showLayerMenu && (
+                              <div
+                                className="sec-bar-layer-order-popover"
+                                style={{
+                                  position: 'absolute',
+                                  bottom: 'calc(100% + 8px)',
+                                  left: '50%',
+                                  transform: 'translateX(-50%)'
+                                }}
+                              >
+                                <button
+                                  type="button"
+                                  className="layer-action-popover-btn"
+                                  title="Bring Forward"
+                                  aria-label="Bring Forward"
+                                  onClick={() => moveLayer(activeLayerId, 'forward')}
+                                >
+                                  <ArrowUp style={{ width: 14, height: 14 }} />
+                                </button>
+                                <div className="layer-action-divider" />
+                                <button
+                                  type="button"
+                                  className="layer-action-popover-btn"
+                                  title="Send Backward"
+                                  aria-label="Send Backward"
+                                  onClick={() => moveLayer(activeLayerId, 'backward')}
+                                >
+                                  <ArrowDown style={{ width: 14, height: 14 }} />
+                                </button>
+                              </div>
+                            )}
                           </div>
-                        )}
+
+                          <div className="layer-action-divider" />
+
+                          <button
+                            type="button"
+                            className="layer-action-btn layer-action-btn-delete"
+                            title="Delete Layer"
+                            aria-label="Delete Layer"
+                            onClick={() => handleDeleteLayer()}
+                          >
+                            <Trash2 style={{ width: 16, height: 16 }} />
+                          </button>
+                        </div>
                       </motion.div>
                     )}
                     </AnimatePresence>
