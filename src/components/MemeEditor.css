@@ -1467,11 +1467,11 @@
   stroke: #0f172a !important;
 }
 
-[data-theme='light'] .vid-ctx-btn:not(.active) .vid-ctx-bg-badge:not(.active) {
+[data-theme='light'] .vid-ctx-btn:not(.active) .vid-ctx-bg-badge {
   border-color: #0f172a !important;
 }
 
-[data-theme='light'] .vid-ctx-btn:not(.active) .vid-ctx-bg-badge:not(.active) span {
+[data-theme='light'] .vid-ctx-btn:not(.active) .vid-ctx-bg-badge span {
   color: #0f172a !important;
 }
 

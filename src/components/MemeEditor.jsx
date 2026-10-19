@@ -4677,17 +4677,16 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           <span>Color</span>
                         </button>
 
-                        {/* 4. Bg Button */}
+                        {/* 4. Box Button */}
                         {(() => {
                           const hasBg = Boolean(activeCaption.bgColor && activeCaption.bgColor !== 'none' && activeCaption.bgColor !== 'transparent');
-                          const isCustomColor = hasBg && activeCaption.bgColor !== 'white' && activeCaption.bgColor !== '#ffffff';
 
                           return (
                             <button
                               type="button"
                               data-setting-btn="bg"
                               className={`btn btn-xs vid-ctx-btn vid-ctx-btn-bg ${activeSubmenu === 'bg' ? 'active' : ''}`}
-                              title={hasBg ? `Text Background Active (${activeCaption.bgColor}) - Click to toggle options` : "Text Background - Click to apply and change color"}
+                              title={hasBg ? `Text Box Active (${activeCaption.bgColor}) - Click to toggle options` : "Text Box - Click to apply and change color"}
                               onClick={() => {
                                 if (activeSubmenu === 'bg') {
                                   handleToggleSubmenu('bg');
@@ -4715,25 +4714,24 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                               }}
                             >
                               <span
-                                className={`vid-ctx-bg-badge ${hasBg ? 'active' : ''}`}
+                                className="vid-ctx-bg-badge"
                                 style={{
                                   width: 16,
                                   height: 16,
                                   borderRadius: '3.5px',
                                   border: '1.5px solid #ffffff',
-                                  background: hasBg ? '#ffffff' : 'transparent',
+                                  background: 'transparent',
                                   display: 'inline-flex',
                                   alignItems: 'center',
                                   justifyContent: 'center',
                                   boxSizing: 'border-box',
                                   flexShrink: 0,
-                                  boxShadow: hasBg ? '0 1px 4px rgba(0,0,0,0.35)' : 'none',
-                                  transition: 'all 0.18s ease'
+                                  userSelect: 'none'
                                 }}
                               >
                                 <span
                                   style={{
-                                    color: hasBg ? '#000000' : '#ffffff',
+                                    color: '#ffffff',
                                     fontWeight: 800,
                                     fontSize: '11px',
                                     lineHeight: 1,
@@ -4744,23 +4742,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                                   A
                                 </span>
                               </span>
-                              <span>Bg</span>
-                              {isCustomColor && (
-                                <span
-                                  title={`Active Background Color: ${activeCaption.bgColor}`}
-                                  style={{
-                                    display: 'inline-flex',
-                                    width: 8,
-                                    height: 8,
-                                    borderRadius: '50%',
-                                    border: '1px solid rgba(255,255,255,0.9)',
-                                    background: activeCaption.bgColor === 'black' ? '#000000' : activeCaption.bgColor,
-                                    boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
-                                    marginLeft: '1px',
-                                    flexShrink: 0
-                                  }}
-                                />
-                              )}
+                              <span>Box</span>
                             </button>
                           );
                         })()}
