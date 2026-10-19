@@ -805,6 +805,388 @@ const drawTweetCard = (ctx, cardW, cap) => {
   ctx.restore();
 };
 
+export const getInstagramCardHeight = (ctx, cap, cardW) => {
+  const scale = Math.max(0.4, Math.min(3.5, cardW / 480));
+  const pad = Math.round(16 * scale);
+  const avatarSize = Math.round(42 * scale);
+  const bodyFontSize = Math.round(Math.max(12, (cap.fontSize || 16) * scale));
+  const likesFontSize = Math.round(13 * scale);
+  const timeFontSize = Math.round(11 * scale);
+  const iconSize = Math.round(20 * scale);
+
+  ctx.save();
+  ctx.font = `normal ${bodyFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+  const wrappedLines = wrapText(ctx, `${cap.igUsername || 'username'} ${cap.text || ''}`, cardW - pad * 2);
+  ctx.restore();
+
+  const headerH = Math.max(avatarSize, Math.round(44 * scale));
+  const captionH = wrappedLines.length * (bodyFontSize * 1.38);
+  const actionsH = iconSize + Math.round(10 * scale);
+  const likesH = likesFontSize + Math.round(6 * scale);
+  const timeH = timeFontSize + Math.round(4 * scale);
+
+  const totalH = Math.round(pad + headerH + Math.round(10 * scale) + captionH + Math.round(12 * scale) + actionsH + likesH + timeH + pad);
+  return totalH;
+};
+
+export const drawInstagramCard = (ctx, cardW, cap) => {
+  ctx.save();
+  const scale = Math.max(0.4, Math.min(3.5, cardW / 480));
+  const pad = Math.round(16 * scale);
+  const avatarR = Math.round(20 * scale);
+  const nameFontSize = Math.round(15 * scale);
+  const subtitleFontSize = Math.round(12 * scale);
+  const bodyFontSize = Math.round(Math.max(12, (cap.fontSize || 16) * scale));
+  const likesFontSize = Math.round(13 * scale);
+  const timeFontSize = Math.round(11 * scale);
+  const iconSize = Math.round(20 * scale);
+  const cornerRadius = Math.round(16 * scale);
+
+  const theme = cap.igTheme || 'dark';
+  const isDark = theme !== 'light' && theme !== 'white';
+  const cardBg = isDark ? '#000000' : '#ffffff';
+  const textColor = isDark ? '#ffffff' : '#262626';
+  const mutedColor = isDark ? '#a8a8a8' : '#737373';
+  const borderColor = isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.1)';
+
+  const username = cap.igUsername || 'zuck';
+  const subtitle = cap.igSubtitle || 'Original audio';
+  const text = cap.text || 'Meta announces AGI is just a guy named Dave in a basement writing if-else statements. Link in bio.';
+  const isVerified = cap.igVerified !== false;
+  const hasStoryRing = cap.igHasStoryRing !== false;
+  const likesText = cap.igLikesText || 'Liked by cristiano and 1,842,509 others';
+  const time = cap.igTime || '2 HOURS AGO';
+
+  ctx.font = `normal ${bodyFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+  const wrappedLines = wrapText(ctx, `${username} ${text}`, cardW - pad * 2);
+
+  const cardH = getInstagramCardHeight(ctx, cap, cardW);
+  const startX = - cardW / 2;
+  const startY = - cardH / 2;
+
+  // Background card with rounded corners
+  ctx.fillStyle = cardBg;
+  drawRoundRect(ctx, startX, startY, cardW, cardH, cornerRadius);
+  ctx.strokeStyle = borderColor;
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // Avatar with Story Ring
+  const avCenterX = startX + pad + avatarR;
+  const avCenterY = startY + pad + avatarR;
+  if (hasStoryRing) {
+    const ringGrad = ctx.createLinearGradient(
+      avCenterX - avatarR - 3 * scale,
+      avCenterY - avatarR - 3 * scale,
+      avCenterX + avatarR + 3 * scale,
+      avCenterY + avatarR + 3 * scale
+    );
+    ringGrad.addColorStop(0, '#f09433');
+    ringGrad.addColorStop(0.3, '#e6683c');
+    ringGrad.addColorStop(0.6, '#dc2743');
+    ringGrad.addColorStop(0.85, '#cc2366');
+    ringGrad.addColorStop(1, '#bc1888');
+
+    ctx.beginPath();
+    ctx.arc(avCenterX, avCenterY, avatarR + Math.round(3 * scale), 0, Math.PI * 2);
+    ctx.fillStyle = ringGrad;
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.arc(avCenterX, avCenterY, avatarR + Math.round(1.5 * scale), 0, Math.PI * 2);
+    ctx.fillStyle = cardBg;
+    ctx.fill();
+  }
+
+  // Avatar inner circle
+  ctx.beginPath();
+  ctx.arc(avCenterX, avCenterY, avatarR, 0, Math.PI * 2);
+  ctx.fillStyle = isDark ? '#0ea5e9' : '#38bdf8';
+  ctx.fill();
+  ctx.fillStyle = '#ffffff';
+  ctx.font = `bold ${Math.round(16 * scale)}px -apple-system, BlinkMacSystemFont, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(username.charAt(0).toUpperCase() || 'U', avCenterX, avCenterY);
+
+  // Username & Subtitle
+  const nameX = startX + pad + (avatarR * 2) + Math.round(12 * scale);
+  const nameY = startY + pad + (subtitle ? Math.round(2 * scale) : Math.round(10 * scale));
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'top';
+  ctx.fillStyle = textColor;
+  ctx.font = `bold ${nameFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+  ctx.fillText(username, nameX, nameY);
+
+  const nameW = ctx.measureText(username).width;
+  if (isVerified) {
+    const badgeSize = Math.round(14 * scale);
+    const badgeX = nameX + nameW + Math.round(4 * scale);
+    const badgeY = nameY + Math.round((nameFontSize - badgeSize) / 2);
+    drawTweetVerifiedBadge(ctx, badgeX, badgeY, badgeSize);
+  }
+
+  // Subtitle
+  if (subtitle) {
+    ctx.font = `normal ${subtitleFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+    ctx.fillStyle = mutedColor;
+    ctx.fillText(subtitle, nameX, nameY + nameFontSize + Math.round(3 * scale));
+  }
+
+  // Instagram 3-dots on top right
+  const dotsX = startX + cardW - pad - Math.round(16 * scale);
+  const dotsY = startY + pad + Math.round(16 * scale);
+  ctx.fillStyle = textColor;
+  for (let i = 0; i < 3; i++) {
+    ctx.beginPath();
+    ctx.arc(dotsX + (i * 5 * scale), dotsY, Math.round(1.5 * scale), 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Caption text
+  let curY = startY + pad + Math.max(avatarR * 2, Math.round(44 * scale)) + Math.round(12 * scale);
+  ctx.font = `normal ${bodyFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+  ctx.fillStyle = textColor;
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'top';
+
+  for (let idx = 0; idx < wrappedLines.length; idx++) {
+    const line = wrappedLines[idx];
+    if (idx === 0) {
+      ctx.font = `bold ${bodyFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+      ctx.fillText(username, startX + pad, curY);
+      const userW = ctx.measureText(username).width;
+      ctx.font = `normal ${bodyFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+      const restOfFirstLine = line.slice(username.length);
+      ctx.fillText(restOfFirstLine, startX + pad + userW, curY);
+    } else {
+      ctx.fillText(line, startX + pad, curY);
+    }
+    curY += Math.round(bodyFontSize * 1.38);
+  }
+
+  // Action icons row: Heart, Comment, Share, Bookmark
+  curY += Math.round(10 * scale);
+  ctx.save();
+  ctx.translate(startX + pad, curY);
+  const iconS = iconSize / 24;
+  ctx.scale(iconS, iconS);
+  ctx.fillStyle = '#ff3040';
+  ctx.fill(tweetHeartPath);
+  ctx.restore();
+
+  drawTweetVectorStrokeIcon(ctx, tweetCommentPath, startX + pad + Math.round(32 * scale), curY, iconSize, textColor);
+  drawTweetVectorStrokeIcon(ctx, tweetSharePath, startX + pad + Math.round(64 * scale), curY, iconSize, textColor);
+  drawTweetVectorStrokeIcon(ctx, tweetBookmarkPath, startX + cardW - pad - iconSize, curY, iconSize, textColor);
+
+  // Likes line
+  curY += iconSize + Math.round(10 * scale);
+  ctx.font = `bold ${likesFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+  ctx.fillStyle = textColor;
+  ctx.fillText(likesText, startX + pad, curY);
+
+  // Timestamp
+  curY += likesFontSize + Math.round(5 * scale);
+  ctx.font = `normal ${timeFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+  ctx.fillStyle = mutedColor;
+  ctx.fillText(time, startX + pad, curY);
+
+  ctx.restore();
+};
+
+export const getWhatsAppCardHeight = (ctx, cap, cardW) => {
+  const scale = Math.max(0.4, Math.min(3.5, cardW / 480));
+  const pad = Math.round(14 * scale);
+  const headerH = cap.waShowHeader !== false ? Math.round(52 * scale) : 0;
+  const bodyFontSize = Math.round(Math.max(12, (cap.fontSize || 16) * scale));
+  const timeFontSize = Math.round(11 * scale);
+
+  const bubbleMaxW = (cardW - pad * 2) * 0.85;
+  ctx.save();
+  ctx.font = `normal ${bodyFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+  const wrappedLines = wrapText(ctx, cap.text || '', bubbleMaxW - Math.round(20 * scale));
+  ctx.restore();
+
+  const textH = wrappedLines.length * (bodyFontSize * 1.35);
+  const bubbleH = textH + Math.round(22 * scale) + timeFontSize;
+
+  const totalH = Math.round(headerH + pad * 2 + bubbleH);
+  return totalH;
+};
+
+export const drawWhatsAppCard = (ctx, cardW, cap) => {
+  ctx.save();
+  const scale = Math.max(0.4, Math.min(3.5, cardW / 480));
+  const pad = Math.round(14 * scale);
+  const nameFontSize = Math.round(15 * scale);
+  const statusFontSize = Math.round(11 * scale);
+  const bodyFontSize = Math.round(Math.max(12, (cap.fontSize || 16) * scale));
+  const timeFontSize = Math.round(11 * scale);
+  const cornerRadius = Math.round(16 * scale);
+  const showHeader = cap.waShowHeader !== false;
+
+  const theme = cap.waTheme || 'dark';
+  const isDark = theme !== 'light' && theme !== 'white';
+  const direction = cap.waDirection || 'received';
+  const isSent = direction === 'sent';
+
+  const cardBg = isDark ? '#0b141a' : '#efeae2';
+  const headerBg = isDark ? '#202c33' : '#f0f2f5';
+  const headerText = isDark ? '#e9edef' : '#111b21';
+  const headerMuted = isDark ? '#8696a0' : '#667781';
+  const bubbleBg = isSent
+    ? (isDark ? '#005c4b' : '#d9fdd3')
+    : (isDark ? '#202c33' : '#ffffff');
+  const bubbleText = isDark ? '#e9edef' : '#111b21';
+  const timeColor = isDark ? '#8696a0' : '#667781';
+  const borderColor = isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.1)';
+
+  const contactName = cap.waContactName || 'Mom ❤️';
+  const status = cap.waStatus || 'online';
+  const text = cap.text || 'Please remember to eat vegetables and don’t stay up until 4 AM arguing with strangers on the internet.';
+  const time = cap.waTime || '11:42 PM';
+  const ticks = cap.waTicks || 'blue';
+
+  const cardH = getWhatsAppCardHeight(ctx, cap, cardW);
+  const startX = - cardW / 2;
+  const startY = - cardH / 2;
+
+  // Background card
+  ctx.fillStyle = cardBg;
+  drawRoundRect(ctx, startX, startY, cardW, cardH, cornerRadius);
+  ctx.strokeStyle = borderColor;
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  let contentStartY = startY;
+
+  // Header Bar
+  if (showHeader) {
+    const headerH = Math.round(52 * scale);
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(startX, startY + cornerRadius);
+    ctx.arcTo(startX, startY, startX + cornerRadius, startY, cornerRadius);
+    ctx.lineTo(startX + cardW - cornerRadius, startY);
+    ctx.arcTo(startX + cardW, startY, startX + cardW, startY + cornerRadius, cornerRadius);
+    ctx.lineTo(startX + cardW, startY + headerH);
+    ctx.lineTo(startX, startY + headerH);
+    ctx.closePath();
+    ctx.fillStyle = headerBg;
+    ctx.fill();
+    ctx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 0, 0, 0.06)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.restore();
+
+    // Back arrow
+    ctx.fillStyle = headerMuted;
+    ctx.font = `bold ${Math.round(18 * scale)}px sans-serif`;
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('←', startX + Math.round(10 * scale), startY + headerH / 2);
+
+    // Avatar
+    const avR = Math.round(17 * scale);
+    const avX = startX + Math.round(32 * scale) + avR;
+    const avY = startY + headerH / 2;
+    ctx.beginPath();
+    ctx.arc(avX, avY, avR, 0, Math.PI * 2);
+    ctx.fillStyle = '#f43f5e';
+    ctx.fill();
+    ctx.fillStyle = '#ffffff';
+    ctx.font = `bold ${Math.round(14 * scale)}px -apple-system, BlinkMacSystemFont, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText(contactName.charAt(0).toUpperCase() || 'W', avX, avY);
+
+    // Contact Name & Status
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+    ctx.fillStyle = headerText;
+    ctx.font = `bold ${nameFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+    const nameX = avX + avR + Math.round(8 * scale);
+    ctx.fillText(contactName, nameX, startY + Math.round(10 * scale));
+
+    ctx.font = `normal ${statusFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+    ctx.fillStyle = status === 'online' ? '#25d366' : headerMuted;
+    ctx.fillText(status, nameX, startY + Math.round(29 * scale));
+
+    // Header Right action icons
+    const iconsX = startX + cardW - Math.round(48 * scale);
+    ctx.fillStyle = headerMuted;
+    ctx.font = `normal ${Math.round(16 * scale)}px sans-serif`;
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('📞   ⋮', iconsX, startY + headerH / 2);
+
+    contentStartY += headerH;
+  }
+
+  // Message Bubble
+  const bubbleMaxW = (cardW - pad * 2) * 0.85;
+  ctx.font = `normal ${bodyFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+  const wrappedLines = wrapText(ctx, text, bubbleMaxW - Math.round(20 * scale));
+
+  let maxLineW = 0;
+  for (const line of wrappedLines) {
+    const lw = ctx.measureText(line).width;
+    if (lw > maxLineW) maxLineW = lw;
+  }
+  const timeMetricsW = ctx.measureText(`${time}  ✓✓`).width;
+  const bubbleW = Math.max(Math.round(120 * scale), Math.min(bubbleMaxW, Math.max(maxLineW, timeMetricsW) + Math.round(24 * scale)));
+  const textH = wrappedLines.length * (bodyFontSize * 1.35);
+  const bubbleH = textH + Math.round(22 * scale) + timeFontSize;
+
+  const bubbleX = isSent
+    ? (startX + cardW - pad - bubbleW)
+    : (startX + pad);
+  const bubbleY = contentStartY + pad;
+  const bubbleR = Math.round(12 * scale);
+
+  // Draw speech bubble
+  ctx.save();
+  ctx.fillStyle = bubbleBg;
+  drawRoundRect(ctx, bubbleX, bubbleY, bubbleW, bubbleH, bubbleR);
+  ctx.restore();
+
+  // Draw Text inside bubble
+  let curY = bubbleY + Math.round(10 * scale);
+  ctx.fillStyle = bubbleText;
+  ctx.font = `normal ${bodyFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'top';
+
+  for (const line of wrappedLines) {
+    ctx.fillText(line, bubbleX + Math.round(12 * scale), curY);
+    curY += Math.round(bodyFontSize * 1.35);
+  }
+
+  // Timestamp & Read Receipts
+  curY = bubbleY + bubbleH - timeFontSize - Math.round(6 * scale);
+  ctx.font = `normal ${timeFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+  ctx.fillStyle = timeColor;
+  ctx.textAlign = 'right';
+  ctx.textBaseline = 'top';
+
+  const timeEndX = bubbleX + bubbleW - Math.round(10 * scale);
+  if (isSent) {
+    const tickColor = ticks === 'blue' ? '#53bdeb' : '#8696a0';
+    ctx.fillStyle = tickColor;
+    ctx.font = `bold ${Math.round(12 * scale)}px sans-serif`;
+    const tickStr = ticks === 'single' ? '✓' : '✓✓';
+    ctx.fillText(tickStr, timeEndX, curY - Math.round(1 * scale));
+    const tickW = ctx.measureText(tickStr).width;
+
+    ctx.fillStyle = timeColor;
+    ctx.font = `normal ${timeFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+    ctx.fillText(time, timeEndX - tickW - Math.round(4 * scale), curY);
+  } else {
+    ctx.fillText(time, timeEndX, curY);
+  }
+
+  ctx.restore();
+};
+
 const dieCutSilhouetteCache = new Map();
 
 function getOrCreateDieCutSilhouette(imgSource, color, width, height) {
@@ -1170,9 +1552,9 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     };
   }, [canvasW, imgSrc]);
 
-  // Focus textarea ONLY when explicitly called (not on selection change, never on Tweet Cards)
+  // Focus textarea ONLY when explicitly called (not on selection change, never on Social Cards)
   const focusTextarea = () => {
-    if (activeCaption?.isTweetCard) return;
+    if (activeCaption?.isTweetCard || activeCaption?.isInstagramCard || activeCaption?.isWhatsAppCard) return;
     if (editableRef.current) {
       try {
         editableRef.current.focus();
@@ -2169,6 +2551,14 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
           boxWidth = Math.max(180, (cap.width || 0.88) * canvas.width);
           boxHeight = getTweetCardHeight(targetCtx, cap, boxWidth);
           drawTweetCard(targetCtx, boxWidth, cap);
+        } else if (cap.isInstagramCard) {
+          boxWidth = Math.max(180, (cap.width || 0.88) * canvas.width);
+          boxHeight = getInstagramCardHeight(targetCtx, cap, boxWidth);
+          drawInstagramCard(targetCtx, boxWidth, cap);
+        } else if (cap.isWhatsAppCard) {
+          boxWidth = Math.max(180, (cap.width || 0.84) * canvas.width);
+          boxHeight = getWhatsAppCardHeight(targetCtx, cap, boxWidth);
+          drawWhatsAppCard(targetCtx, boxWidth, cap);
         } else {
           let bgFillColor = '#ffffff';
           if (isBubble) {
@@ -2669,6 +3059,12 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
           } else if (activeCap.isTweetCard) {
             boxWidth = Math.max(180, (activeCap.width || 0.88) * canvas.width);
             boxHeight = getTweetCardHeight(ctx, activeCap, boxWidth);
+          } else if (activeCap.isInstagramCard) {
+            boxWidth = Math.max(180, (activeCap.width || 0.88) * canvas.width);
+            boxHeight = getInstagramCardHeight(ctx, activeCap, boxWidth);
+          } else if (activeCap.isWhatsAppCard) {
+            boxWidth = Math.max(180, (activeCap.width || 0.84) * canvas.width);
+            boxHeight = getWhatsAppCardHeight(ctx, activeCap, boxWidth);
           }
           const halfW = boxWidth / 2;
           const halfH = boxHeight / 2;
@@ -2880,6 +3276,12 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
           } else if (cap.isTweetCard) {
             boxWidth = Math.max(180, (cap.width || 0.88) * canvas.width);
             boxHeight = getTweetCardHeight(ctx, cap, boxWidth);
+          } else if (cap.isInstagramCard) {
+            boxWidth = Math.max(180, (cap.width || 0.88) * canvas.width);
+            boxHeight = getInstagramCardHeight(ctx, cap, boxWidth);
+          } else if (cap.isWhatsAppCard) {
+            boxWidth = Math.max(180, (cap.width || 0.84) * canvas.width);
+            boxHeight = getWhatsAppCardHeight(ctx, cap, boxWidth);
           }
 
           let hitBox = false;
@@ -2989,8 +3391,8 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
       
       if (hitLayer.type === 'caption') {
         const now = Date.now();
-        const cap = captions.find(c => c.id === hitLayer.id);
-        if (!cap?.isTweetCard && lastTapRef.current.id === hitLayer.id && (now - lastTapRef.current.time) < 350) {
+        const isSocial = cap?.isTweetCard || cap?.isInstagramCard || cap?.isWhatsAppCard;
+        if (!isSocial && lastTapRef.current.id === hitLayer.id && (now - lastTapRef.current.time) < 350) {
           setEditingCaptionId(hitLayer.id);
           focusTextarea();
         }
@@ -3126,8 +3528,8 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     // Clean tap on caption: select layer, activate editing mode and open keyboard immediately (only for regular text captions, not tweet cards)
     if (wasCleanTap && tappedType === 'caption' && tappedId) {
       if (onSelectLayer) onSelectLayer(tappedId);
-      const activeCap = captions.find(c => c.id === tappedId);
-      if (!activeCap?.isTweetCard) {
+      const isSocial = activeCap?.isTweetCard || activeCap?.isInstagramCard || activeCap?.isWhatsAppCard;
+      if (!isSocial) {
         setEditingCaptionId(tappedId);
         setEditingCaptionText(activeCap ? activeCap.text : '');
         focusTextarea();
@@ -3208,6 +3610,12 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         } else if (activeCap.isTweetCard) {
           boxWidth = Math.max(180, (activeCap.width || 0.88) * canvas.width);
           boxHeight = getTweetCardHeight(ctx, activeCap, boxWidth);
+        } else if (activeCap.isInstagramCard) {
+          boxWidth = Math.max(180, (activeCap.width || 0.88) * canvas.width);
+          boxHeight = getInstagramCardHeight(ctx, activeCap, boxWidth);
+        } else if (activeCap.isWhatsAppCard) {
+          boxWidth = Math.max(180, (activeCap.width || 0.84) * canvas.width);
+          boxHeight = getWhatsAppCardHeight(ctx, activeCap, boxWidth);
         }
 
         const halfW = boxWidth / 2;
@@ -3352,6 +3760,12 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         } else if (cap.isTweetCard) {
           boxWidth = Math.max(180, (cap.width || 0.88) * canvas.width);
           boxHeight = getTweetCardHeight(ctx, cap, boxWidth);
+        } else if (cap.isInstagramCard) {
+          boxWidth = Math.max(180, (cap.width || 0.88) * canvas.width);
+          boxHeight = getInstagramCardHeight(ctx, cap, boxWidth);
+        } else if (cap.isWhatsAppCard) {
+          boxWidth = Math.max(180, (cap.width || 0.84) * canvas.width);
+          boxHeight = getWhatsAppCardHeight(ctx, cap, boxWidth);
         }
         if (p.x >= cx - boxWidth / 2 && p.x <= cx + boxWidth / 2 && p.y >= cy - boxHeight / 2 && p.y <= cy + boxHeight / 2) {
           canvas.style.cursor = 'pointer';
@@ -3770,10 +4184,12 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
 
       const scaleFactor = Math.max(0.1, Math.min(maxAllowedScale, proj));
 
-      const initFontSize = initialLayerPos.current.initialFontSize || cap.fontSize || (cap.isTweetCard ? 18 : 50);
+      const isSocial = cap.isTweetCard || cap.isInstagramCard || cap.isWhatsAppCard;
+      const defaultCardWidth = cap.isWhatsAppCard ? 0.84 : 0.88;
+      const initFontSize = initialLayerPos.current.initialFontSize || cap.fontSize || (isSocial ? 16 : 50);
       const newFontSize = Math.max(10, Math.min(220, Math.round(initFontSize * scaleFactor)));
 
-      const initWidth = initialLayerPos.current.initialWidth || cap.width || (cap.isTweetCard ? 0.88 : 0.9);
+      const initWidth = initialLayerPos.current.initialWidth || cap.width || (isSocial ? defaultCardWidth : 0.9);
       const newWidth = Math.max(0.15, Math.min(0.98, Number((initWidth * scaleFactor).toFixed(3))));
 
       onUpdateCaptionBounds(id, { 
@@ -3923,9 +4339,10 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     }
   }, [liveBgColor, isNativeLayout]);
   
-// Keep focus on active caption whenever selected (not for tweet cards)
+// Keep focus on active caption whenever selected (not for social cards)
   useEffect(() => {
-    if (activeCaption && !activeCaption.isTweetCard && editingCaptionId === activeCaption.id) {
+    const isSocial = activeCaption?.isTweetCard || activeCaption?.isInstagramCard || activeCaption?.isWhatsAppCard;
+    if (activeCaption && !isSocial && editingCaptionId === activeCaption.id) {
       focusTextarea();
     }
   }, [activeCaption?.id, editingCaptionId]);
@@ -4018,8 +4435,8 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         }}
       />
 
-      {/* SEAMLESS LIVE CANVAS TEXT EDITOR — ONLY FOR REGULAR CAPTIONS, NOT TWEET CARDS */}
-      {!isDrawingMode && activeCaption && !activeCaption.isTweetCard && (
+      {/* SEAMLESS LIVE CANVAS TEXT EDITOR — ONLY FOR REGULAR CAPTIONS, NOT SOCIAL CARDS */}
+      {!isDrawingMode && activeCaption && !activeCaption.isTweetCard && !activeCaption.isInstagramCard && !activeCaption.isWhatsAppCard && (
         <textarea
           ref={editableRef}
           className="seamless-live-text-editor"

@@ -11,10 +11,11 @@ import {
   Layers, ArrowUp, ArrowDown, ChevronsUp, ChevronsDown, Eye, EyeOff, Lock, Unlock, FlipHorizontal,
   PanelTop, PanelBottom, MessageSquare, MessageSquareQuote, Flame, Tv, MessageCircle, Shield, Circle, TrendingDown, Ban,
   AlignLeft, AlignCenter, AlignRight,
-  Brush, SunMedium, ImagePlus, LayoutTemplate, Rows3, WandSparkles, ScanFace
+  Brush, SunMedium, ImagePlus, LayoutTemplate, Rows3, WandSparkles, ScanFace,
+  CheckCheck, ArrowLeftRight, User
 } from 'lucide-react';
 import AiCaptionModal from './AiCaptionModal';
-import MemeStylesModal, { TwitterVerifiedBadge } from './MemeStylesModal';
+import MemeStylesModal, { TwitterVerifiedBadge, InstagramVerifiedBadge, InstagramLogo, WhatsAppLogo } from './MemeStylesModal';
 import FaceMorphModal from './FaceMorphModal';
 import BottomSheet from './BottomSheet';
 import MemeStickersBottomSheet from './editor/MemeStickersBottomSheet';
@@ -59,6 +60,8 @@ export const XSocialLogo = ({ size = 16, style = {}, className = "" }) => (
     <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
   </svg>
 );
+
+export const isSocialCardCaption = (c) => Boolean(c && (c.isTweetCard || c.isInstagramCard || c.isWhatsAppCard));
 
 export const TEXT_EFFECTS = [
   {
@@ -438,6 +441,11 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     };
   });
   const [showStylesModal, setShowStylesModal] = useState(false);
+  const [socialModalPlatform, setSocialModalPlatform] = useState('tweet');
+  const handleOpenSocialModal = (platform = 'tweet') => {
+    setSocialModalPlatform(platform);
+    setShowStylesModal(true);
+  };
   const [showFaceMorphModal, setShowFaceMorphModal] = useState(false);
   const [morphTargetLayerId, setMorphTargetLayerId] = useState(null);
   const [morphTargetUrl, setMorphTargetUrl] = useState(null);
@@ -1647,6 +1655,86 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     pushHistory(nextCaps, stickers, imageLayers, drawings, canvasHeader, canvasFooter, demotivational);
   };
 
+  const handleAddInstagramCard = (data = {}) => {
+    const username = data.username || 'zuck';
+    const subtitle = data.subtitle || 'Original audio';
+    const text = data.text || 'just dropped the new open-source weights. feeling good about the timeline.';
+    const verified = data.verified !== false;
+    const hasStoryRing = data.hasStoryRing !== false;
+    const likesText = data.likesText || 'Liked by elonmusk and 1,420,890 others';
+    const time = data.time || '2 HOURS AGO';
+    const theme = data.theme || 'dark';
+    const maxZ = Math.max(-1, ...captions.map(c => c.zIndex ?? -1), ...stickers.map(s => s.zIndex ?? -1), ...(imageLayers || []).map(i => i.zIndex ?? -1));
+
+    const newCap = {
+      id: `cap-ig-${Date.now()}`,
+      text: text,
+      igUsername: username,
+      igSubtitle: subtitle,
+      igVerified: verified,
+      igHasStoryRing: hasStoryRing,
+      igLikesText: likesText,
+      igTime: time,
+      igTheme: theme,
+      isInstagramCard: true,
+      x: 0.5,
+      y: 0.5,
+      width: 0.88,
+      fontSize: 16,
+      color: theme === 'light' ? '#262626' : '#f5f5f5',
+      stroke: 'transparent',
+      strokeWidth: 0,
+      zIndex: maxZ + 1
+    };
+
+    const nextCaps = [...captions, newCap];
+    setCaptions(nextCaps);
+    setActiveLayerId(newCap.id);
+    setActiveSubmenu(null);
+    setActiveTab('images');
+    pushHistory(nextCaps, stickers, imageLayers, drawings, canvasHeader, canvasFooter, demotivational);
+  };
+
+  const handleAddWhatsAppCard = (data = {}) => {
+    const contactName = data.contactName || 'Mom ❤️';
+    const status = data.status || 'online';
+    const text = data.text || 'Please remember to eat vegetables and don’t stay up until 4 AM arguing with strangers on the internet.';
+    const direction = data.direction || 'received';
+    const ticks = data.ticks || 'blue';
+    const time = data.time || '11:42 PM';
+    const theme = data.theme || 'dark';
+    const showHeader = data.showHeader !== false;
+    const maxZ = Math.max(-1, ...captions.map(c => c.zIndex ?? -1), ...stickers.map(s => s.zIndex ?? -1), ...(imageLayers || []).map(i => i.zIndex ?? -1));
+
+    const newCap = {
+      id: `cap-wa-${Date.now()}`,
+      text: text,
+      waContactName: contactName,
+      waStatus: status,
+      waDirection: direction,
+      waTicks: ticks,
+      waTime: time,
+      waTheme: theme,
+      waShowHeader: showHeader,
+      isWhatsAppCard: true,
+      x: 0.5,
+      y: 0.5,
+      width: 0.84,
+      fontSize: 16,
+      color: '#ffffff',
+      stroke: 'transparent',
+      strokeWidth: 0,
+      zIndex: maxZ + 1
+    };
+
+    const nextCaps = [...captions, newCap];
+    setCaptions(nextCaps);
+    setActiveLayerId(newCap.id);
+    setActiveSubmenu(null);
+    setActiveTab('images');
+    pushHistory(nextCaps, stickers, imageLayers, drawings, canvasHeader, canvasFooter, demotivational);
+  };
+
   const handleAddChatBubble = (data = {}) => {
     const style = data.style || 'imessage-send';
     const text = data.text || 'are you free to hop on a quick 5-min call?';
@@ -2320,7 +2408,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
         const prevSticker = stickers.find((s) => s.id === id);
         const prevCaption = captions.find((c) => c.id === id);
         const prevImg = imageLayers.find((img) => img.id === id);
-        if (prevSticker || (prevCaption && prevCaption.isTweetCard) || prevImg) {
+        if (prevSticker || (prevCaption && isSocialCardCaption(prevCaption)) || prevImg) {
           setActiveTab('images');
         }
         setActiveLayerId(null);
@@ -2375,7 +2463,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
       const prevSticker = stickers.find((s) => s.id === idToDelete);
       const prevCaption = captions.find((c) => c.id === idToDelete);
       const prevImg = imageLayers.find((img) => img.id === idToDelete);
-      if (prevSticker || (prevCaption && prevCaption.isTweetCard) || prevImg) {
+      if (prevSticker || (prevCaption && isSocialCardCaption(prevCaption)) || prevImg) {
         setActiveTab('images');
       }
       setActiveLayerId(null);
@@ -3378,7 +3466,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                 const prevSticker = stickers.find((s) => s.id === activeLayerId);
                 const prevCaption = captions.find((c) => c.id === activeLayerId);
                 const prevImg = imageLayers.find((img) => img.id === activeLayerId);
-                if (prevSticker || (prevCaption && prevCaption.isTweetCard) || prevImg) {
+                if (prevSticker || (prevCaption && isSocialCardCaption(prevCaption)) || prevImg) {
                   setActiveTab('images');
                 }
                 setActiveLayerId(null);
@@ -3566,7 +3654,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                   >
                     <AnimatePresence mode="wait" initial={false}>
                       {/* 1. Caption Font Submenu */}
-                      {activeCaption && !activeCaption.isTweetCard && activeSubmenu === 'font' && (
+                      {activeCaption && !isSocialCardCaption(activeCaption) && activeSubmenu === 'font' && (
                         <motion.div
                           key={`cap-font-${activeCaption.id}`}
                           variants={secondaryVariants}
@@ -3961,6 +4049,83 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           >
                             {tr.icon}
                             <span>{tr.label}</span>
+                          </button>
+                        ))}
+                      </motion.div>
+                    )}
+
+                    {/* 8b. Instagram Card Theme Submenu */}
+                    {activeCaption?.isInstagramCard && activeSubmenu === 'igTheme' && (
+                      <motion.div
+                        key={`cap-igTheme-${activeCaption.id}`}
+                        variants={secondaryVariants}
+                        initial="initial"
+                        animate="animate"
+                        exit="exit"
+                        style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}
+                      >
+                        {['dark', 'light'].map((th) => (
+                          <button
+                            key={th}
+                            type="button"
+                            className={`btn btn-xs vid-ctx-btn ${(activeCaption.igTheme || 'dark') === th ? 'active' : ''}`}
+                            onClick={() => {
+                              const newColor = th === 'light' ? '#262626' : '#f5f5f5';
+                              updateActiveCaptionProps({ igTheme: th, color: newColor });
+                            }}
+                            style={{ padding: '4px 12px', fontSize: '0.75rem', fontWeight: 600, textTransform: 'capitalize' }}
+                          >
+                            {th}
+                          </button>
+                        ))}
+                      </motion.div>
+                    )}
+
+                    {/* 8c. WhatsApp Card Submenus */}
+                    {activeCaption?.isWhatsAppCard && activeSubmenu === 'waTheme' && (
+                      <motion.div
+                        key={`cap-waTheme-${activeCaption.id}`}
+                        variants={secondaryVariants}
+                        initial="initial"
+                        animate="animate"
+                        exit="exit"
+                        style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}
+                      >
+                        {['dark', 'light'].map((th) => (
+                          <button
+                            key={th}
+                            type="button"
+                            className={`btn btn-xs vid-ctx-btn ${(activeCaption.waTheme || 'dark') === th ? 'active' : ''}`}
+                            onClick={() => updateActiveCaptionProps({ waTheme: th })}
+                            style={{ padding: '4px 12px', fontSize: '0.75rem', fontWeight: 600, textTransform: 'capitalize' }}
+                          >
+                            {th}
+                          </button>
+                        ))}
+                      </motion.div>
+                    )}
+                    {activeCaption?.isWhatsAppCard && activeSubmenu === 'waTicks' && (
+                      <motion.div
+                        key={`cap-waTicks-${activeCaption.id}`}
+                        variants={secondaryVariants}
+                        initial="initial"
+                        animate="animate"
+                        exit="exit"
+                        style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}
+                      >
+                        {[
+                          { label: 'Blue Double (Read)', value: 'blue' },
+                          { label: 'Grey Double (Delivered)', value: 'grey' },
+                          { label: 'Single (Sent)', value: 'single' }
+                        ].map((item) => (
+                          <button
+                            key={item.value}
+                            type="button"
+                            className={`btn btn-xs vid-ctx-btn ${(activeCaption.waTicks || 'blue') === item.value ? 'active' : ''}`}
+                            onClick={() => updateActiveCaptionProps({ waTicks: item.value })}
+                            style={{ padding: '4px 12px', fontSize: '0.75rem', fontWeight: 600 }}
+                          >
+                            {item.label}
                           </button>
                         ))}
                       </motion.div>
@@ -4388,7 +4553,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}
                       >
                         <div className="sec-bar-layer-actions">
-                          {activeCaption && !activeCaption.isTweetCard && (
+                          {activeCaption && !isSocialCardCaption(activeCaption) && (
                             <>
                               <button
                                 type="button"
@@ -4615,6 +4780,179 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         >
                           <Flame style={{ width: 13, height: 13, color: '#ffffff' }} />
                           <span>Trend</span>
+                        </button>
+                      </div>
+                    ) : activeCaption.isInstagramCard ? (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+                        <button
+                          type="button"
+                          className={`btn btn-xs vid-ctx-btn ${activeCaption.igVerified !== false ? 'active' : ''}`}
+                          onClick={() => updateActiveCaptionProps({ igVerified: activeCaption.igVerified === false })}
+                          title="Toggle Verified Badge"
+                          style={{
+                            padding: '4px 10px',
+                            fontSize: '0.75rem',
+                            fontWeight: 600,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '5px',
+                            borderRadius: '8px',
+                            flexShrink: 0,
+                            background: activeCaption.igVerified !== false ? 'rgba(0, 149, 246, 0.28)' : 'rgba(255, 255, 255, 0.08)',
+                            border: activeCaption.igVerified !== false ? '1px solid #0095f6' : '1px solid rgba(255, 255, 255, 0.1)',
+                            color: activeCaption.igVerified !== false ? '#ffffff' : 'rgba(255, 255, 255, 0.85)'
+                          }}
+                        >
+                          <InstagramVerifiedBadge size={14} />
+                          <span>Verified</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          className={`btn btn-xs vid-ctx-btn ${activeCaption.igHasStoryRing !== false ? 'active' : ''}`}
+                          onClick={() => updateActiveCaptionProps({ igHasStoryRing: activeCaption.igHasStoryRing === false })}
+                          title="Toggle Gradient Story Ring"
+                          style={{
+                            padding: '4px 10px',
+                            fontSize: '0.75rem',
+                            fontWeight: 600,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '5px',
+                            borderRadius: '8px',
+                            flexShrink: 0,
+                            background: activeCaption.igHasStoryRing !== false ? 'rgba(244, 63, 94, 0.28)' : 'rgba(255, 255, 255, 0.08)',
+                            border: activeCaption.igHasStoryRing !== false ? '1px solid #f43f5e' : '1px solid rgba(255, 255, 255, 0.1)',
+                            color: '#ffffff'
+                          }}
+                        >
+                          <div style={{
+                            width: 12,
+                            height: 12,
+                            borderRadius: '50%',
+                            background: 'linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888)',
+                            border: '1.5px solid #fff'
+                          }} />
+                          <span>Story Ring</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          className={`btn btn-xs vid-ctx-btn ${activeSubmenu === 'igTheme' ? 'active' : ''}`}
+                          onClick={() => handleToggleSubmenu('igTheme')}
+                          title="Change Instagram Theme (Dark / Light)"
+                          style={{
+                            padding: '4px 10px',
+                            fontSize: '0.75rem',
+                            fontWeight: 600,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '5px',
+                            borderRadius: '8px',
+                            flexShrink: 0,
+                            background: activeSubmenu === 'igTheme' ? 'var(--primary-gradient)' : 'rgba(255, 255, 255, 0.08)',
+                            border: activeSubmenu === 'igTheme' ? '1px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.1)',
+                            color: '#ffffff'
+                          }}
+                        >
+                          <Palette style={{ width: 13, height: 13, color: '#ffffff' }} />
+                          <span>Theme</span>
+                        </button>
+                      </div>
+                    ) : activeCaption.isWhatsAppCard ? (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+                        <button
+                          type="button"
+                          className={`btn btn-xs vid-ctx-btn ${activeCaption.waDirection === 'sent' ? 'active' : ''}`}
+                          onClick={() => updateActiveCaptionProps({ waDirection: activeCaption.waDirection === 'sent' ? 'received' : 'sent' })}
+                          title="Toggle Message Direction (Sent / Received)"
+                          style={{
+                            padding: '4px 10px',
+                            fontSize: '0.75rem',
+                            fontWeight: 600,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '5px',
+                            borderRadius: '8px',
+                            flexShrink: 0,
+                            background: activeCaption.waDirection === 'sent' ? 'rgba(37, 211, 102, 0.28)' : 'rgba(255, 255, 255, 0.08)',
+                            border: activeCaption.waDirection === 'sent' ? '1px solid #25d366' : '1px solid rgba(255, 255, 255, 0.1)',
+                            color: '#ffffff'
+                          }}
+                        >
+                          <ArrowLeftRight style={{ width: 13, height: 13 }} />
+                          <span>{activeCaption.waDirection === 'sent' ? 'Sent' : 'Received'}</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          className={`btn btn-xs vid-ctx-btn ${activeCaption.waShowHeader !== false ? 'active' : ''}`}
+                          onClick={() => updateActiveCaptionProps({ waShowHeader: activeCaption.waShowHeader === false })}
+                          title="Toggle WhatsApp Contact Header"
+                          style={{
+                            padding: '4px 10px',
+                            fontSize: '0.75rem',
+                            fontWeight: 600,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '5px',
+                            borderRadius: '8px',
+                            flexShrink: 0,
+                            background: activeCaption.waShowHeader !== false ? 'rgba(37, 211, 102, 0.28)' : 'rgba(255, 255, 255, 0.08)',
+                            border: activeCaption.waShowHeader !== false ? '1px solid #25d366' : '1px solid rgba(255, 255, 255, 0.1)',
+                            color: '#ffffff'
+                          }}
+                        >
+                          <User style={{ width: 13, height: 13 }} />
+                          <span>Header</span>
+                        </button>
+
+                        {activeCaption.waDirection === 'sent' && (
+                          <button
+                            type="button"
+                            className={`btn btn-xs vid-ctx-btn ${activeSubmenu === 'waTicks' ? 'active' : ''}`}
+                            onClick={() => handleToggleSubmenu('waTicks')}
+                            title="Change Read Receipt Ticks (Blue / Grey / Single)"
+                            style={{
+                              padding: '4px 10px',
+                              fontSize: '0.75rem',
+                              fontWeight: 600,
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '5px',
+                              borderRadius: '8px',
+                              flexShrink: 0,
+                              background: activeSubmenu === 'waTicks' ? 'var(--primary-gradient)' : 'rgba(255, 255, 255, 0.08)',
+                              border: activeSubmenu === 'waTicks' ? '1px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.1)',
+                              color: '#ffffff'
+                            }}
+                          >
+                            <CheckCheck style={{ width: 13, height: 13, color: '#53bdeb' }} />
+                            <span>Ticks</span>
+                          </button>
+                        )}
+
+                        <button
+                          type="button"
+                          className={`btn btn-xs vid-ctx-btn ${activeSubmenu === 'waTheme' ? 'active' : ''}`}
+                          onClick={() => handleToggleSubmenu('waTheme')}
+                          title="Change WhatsApp Theme (Dark / Light)"
+                          style={{
+                            padding: '4px 10px',
+                            fontSize: '0.75rem',
+                            fontWeight: 600,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '5px',
+                            borderRadius: '8px',
+                            flexShrink: 0,
+                            background: activeSubmenu === 'waTheme' ? 'var(--primary-gradient)' : 'rgba(255, 255, 255, 0.08)',
+                            border: activeSubmenu === 'waTheme' ? '1px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.1)',
+                            color: '#ffffff'
+                          }}
+                        >
+                          <Palette style={{ width: 13, height: 13, color: '#ffffff' }} />
+                          <span>Theme</span>
                         </button>
                       </div>
                     ) : (
@@ -5198,21 +5536,59 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
 
                       <button
                         className="btn btn-xs vid-ctx-btn"
-                        onClick={() => setShowStylesModal(true)}
+                        onClick={() => handleOpenSocialModal('tweet')}
                         style={{
-                          padding: '5px 14px',
+                          padding: '5px 12px',
                           fontSize: '0.8rem',
                           fontWeight: 600,
                           display: 'flex',
                           alignItems: 'center',
-                          gap: '6px',
+                          gap: '5px',
                           borderRadius: '12px',
                           flexShrink: 0
                         }}
-                        title="Social & Viral Styles (Tweets, Threads, News, Chat)"
+                        title="Fake Twitter / X Card"
                       >
-                        <XSocialLogo size={14} style={{ color: 'var(--cyber-cyan)' }} />
-                        <span>Social</span>
+                        <span style={{ fontSize: '0.85rem', fontWeight: 900, color: 'var(--cyber-cyan)', lineHeight: 1 }}>𝕏</span>
+                        <span>Tweet</span>
+                      </button>
+
+                      <button
+                        className="btn btn-xs vid-ctx-btn"
+                        onClick={() => handleOpenSocialModal('instagram')}
+                        style={{
+                          padding: '5px 12px',
+                          fontSize: '0.8rem',
+                          fontWeight: 600,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '5px',
+                          borderRadius: '12px',
+                          flexShrink: 0
+                        }}
+                        title="Fake Instagram Post Card"
+                      >
+                        <InstagramLogo size={14} style={{ color: '#f43f5e' }} />
+                        <span>Insta</span>
+                      </button>
+
+                      <button
+                        className="btn btn-xs vid-ctx-btn"
+                        onClick={() => handleOpenSocialModal('whatsapp')}
+                        style={{
+                          padding: '5px 12px',
+                          fontSize: '0.8rem',
+                          fontWeight: 600,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '5px',
+                          borderRadius: '12px',
+                          flexShrink: 0
+                        }}
+                        title="Fake WhatsApp Chat Message Card"
+                      >
+                        <WhatsAppLogo size={14} style={{ color: '#22c55e' }} />
+                        <span>WhatsApp</span>
                       </button>
                     </div>
                   )}
@@ -6461,7 +6837,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                   </div>
 
                   {/* ROW 3: TEXT EFFECTS CONTROL */}
-                  {(!activeCaption.isBreakingNews && !activeCaption.isTweetCard) && (() => {
+                  {(!activeCaption.isBreakingNews && !isSocialCardCaption(activeCaption)) && (() => {
                     const currentEffect = getActiveTextEffectId(activeCaption);
                     return (
                       <div
@@ -6687,8 +7063,241 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                     </div>
                   )}
 
+                  {/* Fake Instagram Post Customizer */}
+                  {activeCaption.isInstagramCard && (
+                    <div
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '8px',
+                        background: 'var(--bg-surface-1)',
+                        padding: '10px',
+                        borderRadius: '10px',
+                        border: '1px solid var(--glass-border)',
+                        marginTop: '4px'
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <InstagramLogo size={16} />
+                          <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#fff' }}>Instagram Card</span>
+                        </div>
+                        <div style={{ display: 'flex', gap: '3px' }}>
+                          {['dark', 'light'].map((th) => (
+                            <button
+                              key={th}
+                              type="button"
+                              className={`btn btn-xs ${(activeCaption.igTheme || 'dark') === th ? 'btn-primary' : 'btn-ghost'}`}
+                              onClick={() => {
+                                const newColor = th === 'light' ? '#262626' : '#f5f5f5';
+                                updateActiveCaptionProps({ igTheme: th, color: newColor });
+                              }}
+                              style={{ fontSize: '0.65rem', padding: '2px 6px', textTransform: 'capitalize' }}
+                            >
+                              {th}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '8px' }}>
+                        <div>
+                          <label style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>Username</label>
+                          <input
+                            type="text"
+                            className="form-input"
+                            value={activeCaption.igUsername || 'zuck'}
+                            onChange={(e) => updateActiveCaption('igUsername', e.target.value)}
+                            style={{ width: '100%', fontSize: '0.8rem', padding: '4px 8px' }}
+                          />
+                        </div>
+                        <div>
+                          <label style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>Subtitle / Audio</label>
+                          <input
+                            type="text"
+                            className="form-input"
+                            value={activeCaption.igSubtitle || 'Original audio'}
+                            onChange={(e) => updateActiveCaption('igSubtitle', e.target.value)}
+                            style={{ width: '100%', fontSize: '0.8rem', padding: '4px 8px' }}
+                          />
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                        <label style={{ fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', color: '#38bdf8' }}>
+                          <input
+                            type="checkbox"
+                            checked={activeCaption.igVerified !== false}
+                            onChange={(e) => updateActiveCaption('igVerified', e.target.checked)}
+                          />
+                          Verified Rosette
+                        </label>
+                        <label style={{ fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', color: '#f43f5e' }}>
+                          <input
+                            type="checkbox"
+                            checked={activeCaption.igHasStoryRing !== false}
+                            onChange={(e) => updateActiveCaption('igHasStoryRing', e.target.checked)}
+                          />
+                          Story Ring
+                        </label>
+                      </div>
+                      <div>
+                        <label style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>Caption</label>
+                        <textarea
+                          className="form-input"
+                          rows={2}
+                          value={activeCaption.text || ''}
+                          onChange={(e) => updateActiveCaption('text', e.target.value)}
+                          style={{ width: '100%', fontSize: '0.82rem', padding: '4px 8px', resize: 'vertical' }}
+                        />
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '8px' }}>
+                        <div>
+                          <label style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>Likes Line</label>
+                          <input
+                            type="text"
+                            className="form-input"
+                            value={activeCaption.igLikesText || 'Liked by elonmusk and 1,420,890 others'}
+                            onChange={(e) => updateActiveCaption('igLikesText', e.target.value)}
+                            style={{ width: '100%', fontSize: '0.8rem', padding: '4px 8px' }}
+                          />
+                        </div>
+                        <div>
+                          <label style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>Timestamp</label>
+                          <input
+                            type="text"
+                            className="form-input"
+                            value={activeCaption.igTime || '2 HOURS AGO'}
+                            onChange={(e) => updateActiveCaption('igTime', e.target.value)}
+                            style={{ width: '100%', fontSize: '0.8rem', padding: '4px 8px' }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Fake WhatsApp Message Customizer */}
+                  {activeCaption.isWhatsAppCard && (
+                    <div
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '8px',
+                        background: 'var(--bg-surface-1)',
+                        padding: '10px',
+                        borderRadius: '10px',
+                        border: '1px solid var(--glass-border)',
+                        marginTop: '4px'
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <WhatsAppLogo size={16} />
+                          <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#fff' }}>WhatsApp Card</span>
+                        </div>
+                        <div style={{ display: 'flex', gap: '3px' }}>
+                          {['dark', 'light'].map((th) => (
+                            <button
+                              key={th}
+                              type="button"
+                              className={`btn btn-xs ${(activeCaption.waTheme || 'dark') === th ? 'btn-primary' : 'btn-ghost'}`}
+                              onClick={() => updateActiveCaptionProps({ waTheme: th })}
+                              style={{ fontSize: '0.65rem', padding: '2px 6px', textTransform: 'capitalize' }}
+                            >
+                              {th}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '8px' }}>
+                        <div>
+                          <label style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>Contact Name</label>
+                          <input
+                            type="text"
+                            className="form-input"
+                            value={activeCaption.waContactName || 'Mom ❤️'}
+                            onChange={(e) => updateActiveCaption('waContactName', e.target.value)}
+                            style={{ width: '100%', fontSize: '0.8rem', padding: '4px 8px' }}
+                          />
+                        </div>
+                        <div>
+                          <label style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>Status</label>
+                          <input
+                            type="text"
+                            className="form-input"
+                            value={activeCaption.waStatus || 'online'}
+                            onChange={(e) => updateActiveCaption('waStatus', e.target.value)}
+                            style={{ width: '100%', fontSize: '0.8rem', padding: '4px 8px' }}
+                          />
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+                        <label style={{ fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', color: '#22c55e' }}>
+                          <input
+                            type="checkbox"
+                            checked={activeCaption.waShowHeader !== false}
+                            onChange={(e) => updateActiveCaption('waShowHeader', e.target.checked)}
+                          />
+                          Show Header Bar
+                        </label>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Bubble:</span>
+                          <button
+                            type="button"
+                            className={`btn btn-xs ${activeCaption.waDirection === 'received' ? 'btn-primary' : 'btn-ghost'}`}
+                            onClick={() => updateActiveCaption('waDirection', 'received')}
+                            style={{ fontSize: '0.65rem', padding: '2px 6px' }}
+                          >
+                            Received
+                          </button>
+                          <button
+                            type="button"
+                            className={`btn btn-xs ${activeCaption.waDirection === 'sent' ? 'btn-primary' : 'btn-ghost'}`}
+                            onClick={() => updateActiveCaption('waDirection', 'sent')}
+                            style={{ fontSize: '0.65rem', padding: '2px 6px' }}
+                          >
+                            Sent
+                          </button>
+                        </div>
+                      </div>
+                      <div>
+                        <label style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>Message Text</label>
+                        <textarea
+                          className="form-input"
+                          rows={2}
+                          value={activeCaption.text || ''}
+                          onChange={(e) => updateActiveCaption('text', e.target.value)}
+                          style={{ width: '100%', fontSize: '0.82rem', padding: '4px 8px', resize: 'vertical' }}
+                        />
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: '8px' }}>
+                        <div>
+                          <label style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>Timestamp</label>
+                          <input
+                            type="text"
+                            className="form-input"
+                            value={activeCaption.waTime || '11:42 PM'}
+                            onChange={(e) => updateActiveCaption('waTime', e.target.value)}
+                            style={{ width: '100%', fontSize: '0.8rem', padding: '4px 8px' }}
+                          />
+                        </div>
+                        <div>
+                          <label style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>Receipt Ticks</label>
+                          <select
+                            className="form-input"
+                            value={activeCaption.waTicks || 'blue'}
+                            onChange={(e) => updateActiveCaption('waTicks', e.target.value)}
+                            style={{ width: '100%', fontSize: '0.8rem', padding: '4px 8px' }}
+                          >
+                            <option value="blue">Blue Double Ticks (Read)</option>
+                            <option value="grey">Grey Double Ticks (Delivered)</option>
+                            <option value="single">Single Tick (Sent)</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Standard / Demotivational Caption Textarea */}
-                  {(!activeCaption.isBreakingNews && !activeCaption.isTweetCard) && (
+                  {(!activeCaption.isBreakingNews && !isSocialCardCaption(activeCaption)) && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '4px' }}>
                       <div className="flex-between align-center">
                         <label style={{ margin: 0, fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)' }}>
@@ -6962,25 +7571,73 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                   <button
                     type="button"
                     className="btn btn-xs hover-lift"
-                    onClick={() => setShowStylesModal(true)}
+                    onClick={() => handleOpenSocialModal('tweet')}
                     title="Add Tweet Card (Fake Twitter / X Post)"
                     style={{
                       flex: 1,
-                      padding: '8px 10px',
+                      padding: '7px 8px',
                       borderRadius: '999px',
-                      fontSize: '0.8rem',
+                      fontSize: '0.78rem',
                       fontWeight: 600,
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      gap: '5px',
+                      gap: '4px',
                       whiteSpace: 'nowrap',
                       background: 'rgba(29, 155, 240, 0.15)',
                       border: '1px solid rgba(29, 155, 240, 0.4)',
                       color: '#ffffff'
                     }}
                   >
-                    <span style={{ fontSize: '0.9rem', fontWeight: 900, color: '#1d9bf0', lineHeight: 1 }}>𝕏</span> Tweet Card
+                    <span style={{ fontSize: '0.85rem', fontWeight: 900, color: '#1d9bf0', lineHeight: 1 }}>𝕏</span> Tweet
+                  </button>
+
+                  <button
+                    type="button"
+                    className="btn btn-xs hover-lift"
+                    onClick={() => handleOpenSocialModal('instagram')}
+                    title="Add Instagram Card (Fake Instagram Post)"
+                    style={{
+                      flex: 1,
+                      padding: '7px 8px',
+                      borderRadius: '999px',
+                      fontSize: '0.78rem',
+                      fontWeight: 600,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '4px',
+                      whiteSpace: 'nowrap',
+                      background: 'rgba(244, 63, 94, 0.15)',
+                      border: '1px solid rgba(244, 63, 94, 0.4)',
+                      color: '#ffffff'
+                    }}
+                  >
+                    <InstagramLogo size={14} style={{ color: '#f43f5e' }} /> Insta
+                  </button>
+
+                  <button
+                    type="button"
+                    className="btn btn-xs hover-lift"
+                    onClick={() => handleOpenSocialModal('whatsapp')}
+                    title="Add WhatsApp Card (Fake WhatsApp Message)"
+                    style={{
+                      flex: 1,
+                      padding: '7px 8px',
+                      borderRadius: '999px',
+                      fontSize: '0.78rem',
+                      fontWeight: 600,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '4px',
+                      whiteSpace: 'nowrap',
+                      background: 'rgba(34, 197, 94, 0.15)',
+                      border: '1px solid rgba(34, 197, 94, 0.4)',
+                      color: '#ffffff'
+                    }}
+                  >
+                    <WhatsAppLogo size={14} style={{ color: '#22c55e' }} /> WhatsApp
                   </button>
 
                   {activeImageLayer && (
@@ -7484,11 +8141,14 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
         templateName={template?.name}
       />
 
-      {/* Meme Style Modal (Tweet Card) */}
+      {/* Meme Style Modal (Unified Social Cards Studio) */}
       <MemeStylesModal
         isOpen={showStylesModal}
         onClose={() => setShowStylesModal(false)}
+        initialPlatform={socialModalPlatform}
         onAddTweetCard={handleAddTweetCard}
+        onAddInstagramCard={handleAddInstagramCard}
+        onAddWhatsAppCard={handleAddWhatsAppCard}
       />
 
       {/* Face Morph & Swap Studio Modal */}
