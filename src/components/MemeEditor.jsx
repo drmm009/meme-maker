@@ -15,7 +15,7 @@ import {
   CheckCheck, ArrowLeftRight, User
 } from 'lucide-react';
 import AiCaptionModal from './AiCaptionModal';
-import MemeStylesModal, { TwitterVerifiedBadge, InstagramVerifiedBadge, InstagramLogo, WhatsAppLogo } from './MemeStylesModal';
+import MemeStylesModal, { TwitterVerifiedBadge, InstagramVerifiedBadge, InstagramLogo, WhatsAppLogo, IG_PRESET_IMAGES } from './MemeStylesModal';
 import FaceMorphModal from './FaceMorphModal';
 import BottomSheet from './BottomSheet';
 import MemeStickersBottomSheet from './editor/MemeStickersBottomSheet';
@@ -1661,7 +1661,8 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     const text = data.text || 'just dropped the new open-source weights. feeling good about the timeline.';
     const verified = data.verified !== false;
     const hasStoryRing = data.hasStoryRing !== false;
-    const likesText = data.likesText || 'Liked by elonmusk and 1,420,890 others';
+    const likesText = data.likesText || 'Liked by cristiano and 1,842,509 others';
+    const postImage = data.postImage || IG_PRESET_IMAGES?.zuck || null;
     const time = data.time || '2 HOURS AGO';
     const theme = data.theme || 'dark';
     const maxZ = Math.max(-1, ...captions.map(c => c.zIndex ?? -1), ...stickers.map(s => s.zIndex ?? -1), ...(imageLayers || []).map(i => i.zIndex ?? -1));
@@ -1674,13 +1675,14 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
       igVerified: verified,
       igHasStoryRing: hasStoryRing,
       igLikesText: likesText,
+      igPostImage: postImage,
       igTime: time,
       igTheme: theme,
       isInstagramCard: true,
       x: 0.5,
       y: 0.5,
       width: 0.88,
-      fontSize: 16,
+      fontSize: 15,
       color: theme === 'light' ? '#262626' : '#f5f5f5',
       stroke: 'transparent',
       strokeWidth: 0,
@@ -1702,25 +1704,33 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     const direction = data.direction || 'received';
     const ticks = data.ticks || 'blue';
     const time = data.time || '11:42 PM';
+    const messages = (data.messages && Array.isArray(data.messages) && data.messages.length > 0)
+      ? data.messages
+      : [
+          { id: 'm1', text: text, direction: direction, time: time, ticks: ticks },
+          { id: 'm2', text: 'I am eating healthy right now mom! 👍', direction: 'sent', time: '11:43 PM', ticks: 'blue' },
+          { id: 'm3', text: 'Pizza is not a vegetable. I can see your location at Domino’s.', direction: 'received', time: '11:44 PM', ticks: 'blue' }
+        ];
     const theme = data.theme || 'dark';
     const showHeader = data.showHeader !== false;
     const maxZ = Math.max(-1, ...captions.map(c => c.zIndex ?? -1), ...stickers.map(s => s.zIndex ?? -1), ...(imageLayers || []).map(i => i.zIndex ?? -1));
 
     const newCap = {
       id: `cap-wa-${Date.now()}`,
-      text: text,
+      text: messages[0]?.text || text,
       waContactName: contactName,
       waStatus: status,
-      waDirection: direction,
+      waDirection: messages[0]?.direction || direction,
       waTicks: ticks,
       waTime: time,
       waTheme: theme,
       waShowHeader: showHeader,
+      waMessages: messages,
       isWhatsAppCard: true,
       x: 0.5,
       y: 0.5,
       width: 0.84,
-      fontSize: 16,
+      fontSize: 15,
       color: '#ffffff',
       stroke: 'transparent',
       strokeWidth: 0,
@@ -4784,6 +4794,44 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                       </div>
                     ) : activeCaption.isInstagramCard ? (
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+                        {/* Custom Post Photo Uploader */}
+                        <label
+                          className="btn btn-xs vid-ctx-btn"
+                          title="Upload Custom Post Photo"
+                          style={{
+                            padding: '4px 10px',
+                            fontSize: '0.75rem',
+                            fontWeight: 600,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '5px',
+                            borderRadius: '8px',
+                            flexShrink: 0,
+                            background: 'rgba(255, 94, 54, 0.22)',
+                            border: '1px solid #ff5e36',
+                            color: '#ffffff',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          <Upload style={{ width: 13, height: 13 }} />
+                          <span>Photo</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            style={{ display: 'none' }}
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                const reader = new FileReader();
+                                reader.onload = (ev) => {
+                                  updateActiveCaptionProps({ igPostImage: ev.target.result });
+                                };
+                                reader.readAsDataURL(file);
+                              }
+                            }}
+                          />
+                        </label>
+
                         <button
                           type="button"
                           className={`btn btn-xs vid-ctx-btn ${activeCaption.igVerified !== false ? 'active' : ''}`}
@@ -4861,11 +4909,26 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                       </div>
                     ) : activeCaption.isWhatsAppCard ? (
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+                        {/* Add Message Button */}
                         <button
                           type="button"
-                          className={`btn btn-xs vid-ctx-btn ${activeCaption.waDirection === 'sent' ? 'active' : ''}`}
-                          onClick={() => updateActiveCaptionProps({ waDirection: activeCaption.waDirection === 'sent' ? 'received' : 'sent' })}
-                          title="Toggle Message Direction (Sent / Received)"
+                          className="btn btn-xs vid-ctx-btn"
+                          onClick={() => {
+                            const curMsgs = activeCaption.waMessages && activeCaption.waMessages.length > 0
+                              ? activeCaption.waMessages
+                              : [{ id: 'm1', text: activeCaption.text || '', direction: activeCaption.waDirection || 'received', time: activeCaption.waTime || '11:42 PM', ticks: activeCaption.waTicks || 'blue' }];
+                            const lastMsg = curMsgs[curMsgs.length - 1];
+                            const nextDir = lastMsg?.direction === 'sent' ? 'received' : 'sent';
+                            const newMsg = {
+                              id: `m_${Date.now()}`,
+                              text: nextDir === 'sent' ? 'Sounds great!' : 'Check this out!',
+                              direction: nextDir,
+                              time: '11:45 PM',
+                              ticks: 'blue'
+                            };
+                            updateActiveCaptionProps({ waMessages: [...curMsgs, newMsg] });
+                          }}
+                          title="Add New Message to WhatsApp Thread"
                           style={{
                             padding: '4px 10px',
                             fontSize: '0.75rem',
@@ -4875,13 +4938,13 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                             gap: '5px',
                             borderRadius: '8px',
                             flexShrink: 0,
-                            background: activeCaption.waDirection === 'sent' ? 'rgba(37, 211, 102, 0.28)' : 'rgba(255, 255, 255, 0.08)',
-                            border: activeCaption.waDirection === 'sent' ? '1px solid #25d366' : '1px solid rgba(255, 255, 255, 0.1)',
+                            background: 'rgba(37, 211, 102, 0.28)',
+                            border: '1px solid #25d366',
                             color: '#ffffff'
                           }}
                         >
-                          <ArrowLeftRight style={{ width: 13, height: 13 }} />
-                          <span>{activeCaption.waDirection === 'sent' ? 'Sent' : 'Received'}</span>
+                          <Plus style={{ width: 13, height: 13 }} />
+                          <span>+ Msg</span>
                         </button>
 
                         <button
@@ -7099,6 +7162,71 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           ))}
                         </div>
                       </div>
+
+                      {/* Post Photo Uploader & Presets */}
+                      <div style={{ padding: '8px', borderRadius: '8px', background: 'rgba(0,0,0,0.25)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                          <span style={{ fontSize: '0.70rem', fontWeight: 700, color: '#ff5e36' }}>Post Photo</span>
+                          <label
+                            style={{
+                              fontSize: '0.68rem',
+                              fontWeight: 600,
+                              color: '#ffffff',
+                              background: 'rgba(255, 94, 54, 0.25)',
+                              border: '1px solid #ff5e36',
+                              borderRadius: '6px',
+                              padding: '2px 8px',
+                              cursor: 'pointer',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px'
+                            }}
+                          >
+                            <Upload size={11} />
+                            <span>Upload Image</span>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              style={{ display: 'none' }}
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) {
+                                  const reader = new FileReader();
+                                  reader.onload = (ev) => {
+                                    updateActiveCaptionProps({ igPostImage: ev.target.result });
+                                  };
+                                  reader.readAsDataURL(file);
+                                }
+                              }}
+                            />
+                          </label>
+                        </div>
+
+                        {/* Preset Photo Chips */}
+                        <div style={{ display: 'flex', gap: '4px', overflowX: 'auto', paddingBottom: '2px' }}>
+                          {IG_PRESET_IMAGES && Object.entries(IG_PRESET_IMAGES).map(([key, src]) => (
+                            <button
+                              key={key}
+                              type="button"
+                              onClick={() => updateActiveCaptionProps({ igPostImage: src })}
+                              style={{
+                                padding: '2px 7px',
+                                borderRadius: '6px',
+                                fontSize: '0.65rem',
+                                fontWeight: 600,
+                                textTransform: 'capitalize',
+                                background: activeCaption.igPostImage === src ? 'rgba(255,94,54,0.3)' : 'rgba(255,255,255,0.06)',
+                                border: activeCaption.igPostImage === src ? '1px solid #ff5e36' : '1px solid transparent',
+                                color: activeCaption.igPostImage === src ? '#ff5e36' : 'rgba(255,255,255,0.7)',
+                                cursor: 'pointer'
+                              }}
+                            >
+                              {key}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
                       <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '8px' }}>
                         <div>
                           <label style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>Username</label>
@@ -7121,6 +7249,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           />
                         </div>
                       </div>
+
                       <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                         <label style={{ fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', color: '#38bdf8' }}>
                           <input
@@ -7139,23 +7268,15 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           Story Ring
                         </label>
                       </div>
-                      <div>
-                        <label style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>Caption</label>
-                        <textarea
-                          className="form-input"
-                          rows={2}
-                          value={activeCaption.text || ''}
-                          onChange={(e) => updateActiveCaption('text', e.target.value)}
-                          style={{ width: '100%', fontSize: '0.82rem', padding: '4px 8px', resize: 'vertical' }}
-                        />
-                      </div>
+
+                      {/* Likes Line (Above Caption in Feed) */}
                       <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '8px' }}>
                         <div>
                           <label style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>Likes Line</label>
                           <input
                             type="text"
                             className="form-input"
-                            value={activeCaption.igLikesText || 'Liked by elonmusk and 1,420,890 others'}
+                            value={activeCaption.igLikesText || 'Liked by cristiano and 1,842,509 others'}
                             onChange={(e) => updateActiveCaption('igLikesText', e.target.value)}
                             style={{ width: '100%', fontSize: '0.8rem', padding: '4px 8px' }}
                           />
@@ -7171,10 +7292,22 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           />
                         </div>
                       </div>
+
+                      {/* Caption (Below Likes) */}
+                      <div>
+                        <label style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>Caption (Below Likes)</label>
+                        <textarea
+                          className="form-input"
+                          rows={2}
+                          value={activeCaption.text || ''}
+                          onChange={(e) => updateActiveCaption('text', e.target.value)}
+                          style={{ width: '100%', fontSize: '0.82rem', padding: '4px 8px', resize: 'vertical' }}
+                        />
+                      </div>
                     </div>
                   )}
 
-                  {/* Fake WhatsApp Message Customizer */}
+                  {/* Fake WhatsApp Message Customizer (Modern iOS Multi-Message) */}
                   {activeCaption.isWhatsAppCard && (
                     <div
                       style={{
@@ -7191,7 +7324,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                           <WhatsAppLogo size={16} />
-                          <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#fff' }}>WhatsApp Card</span>
+                          <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#fff' }}>iOS WhatsApp Card</span>
                         </div>
                         <div style={{ display: 'flex', gap: '3px' }}>
                           {['dark', 'light'].map((th) => (
@@ -7207,6 +7340,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           ))}
                         </div>
                       </div>
+
                       <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '8px' }}>
                         <div>
                           <label style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>Contact Name</label>
@@ -7229,69 +7363,167 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           />
                         </div>
                       </div>
-                      <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <label style={{ fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', color: '#22c55e' }}>
                           <input
                             type="checkbox"
                             checked={activeCaption.waShowHeader !== false}
                             onChange={(e) => updateActiveCaption('waShowHeader', e.target.checked)}
                           />
-                          Show Header Bar
+                          Show iOS Header
                         </label>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Bubble:</span>
-                          <button
-                            type="button"
-                            className={`btn btn-xs ${activeCaption.waDirection === 'received' ? 'btn-primary' : 'btn-ghost'}`}
-                            onClick={() => updateActiveCaption('waDirection', 'received')}
-                            style={{ fontSize: '0.65rem', padding: '2px 6px' }}
-                          >
-                            Received
-                          </button>
-                          <button
-                            type="button"
-                            className={`btn btn-xs ${activeCaption.waDirection === 'sent' ? 'btn-primary' : 'btn-ghost'}`}
-                            onClick={() => updateActiveCaption('waDirection', 'sent')}
-                            style={{ fontSize: '0.65rem', padding: '2px 6px' }}
-                          >
-                            Sent
-                          </button>
-                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const curMsgs = activeCaption.waMessages && activeCaption.waMessages.length > 0
+                              ? activeCaption.waMessages
+                              : [{ id: 'm1', text: activeCaption.text || '', direction: activeCaption.waDirection || 'received', time: activeCaption.waTime || '11:42 PM', ticks: activeCaption.waTicks || 'blue' }];
+                            const lastMsg = curMsgs[curMsgs.length - 1];
+                            const nextDir = lastMsg?.direction === 'sent' ? 'received' : 'sent';
+                            const newMsg = {
+                              id: `m_${Date.now()}`,
+                              text: nextDir === 'sent' ? 'Sure thing! 👍' : 'Sounds good!',
+                              direction: nextDir,
+                              time: '11:45 PM',
+                              ticks: 'blue'
+                            };
+                            updateActiveCaptionProps({ waMessages: [...curMsgs, newMsg] });
+                          }}
+                          style={{
+                            padding: '3px 8px',
+                            borderRadius: '6px',
+                            background: 'rgba(37, 211, 102, 0.2)',
+                            border: '1px solid #25d366',
+                            color: '#25d366',
+                            fontSize: '0.68rem',
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '4px'
+                          }}
+                        >
+                          <Plus size={11} />
+                          <span>Add Message</span>
+                        </button>
                       </div>
-                      <div>
-                        <label style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>Message Text</label>
-                        <textarea
-                          className="form-input"
-                          rows={2}
-                          value={activeCaption.text || ''}
-                          onChange={(e) => updateActiveCaption('text', e.target.value)}
-                          style={{ width: '100%', fontSize: '0.82rem', padding: '4px 8px', resize: 'vertical' }}
-                        />
-                      </div>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: '8px' }}>
-                        <div>
-                          <label style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>Timestamp</label>
-                          <input
-                            type="text"
-                            className="form-input"
-                            value={activeCaption.waTime || '11:42 PM'}
-                            onChange={(e) => updateActiveCaption('waTime', e.target.value)}
-                            style={{ width: '100%', fontSize: '0.8rem', padding: '4px 8px' }}
-                          />
-                        </div>
-                        <div>
-                          <label style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>Receipt Ticks</label>
-                          <select
-                            className="form-input"
-                            value={activeCaption.waTicks || 'blue'}
-                            onChange={(e) => updateActiveCaption('waTicks', e.target.value)}
-                            style={{ width: '100%', fontSize: '0.8rem', padding: '4px 8px' }}
-                          >
-                            <option value="blue">Blue Double Ticks (Read)</option>
-                            <option value="grey">Grey Double Ticks (Delivered)</option>
-                            <option value="single">Single Tick (Sent)</option>
-                          </select>
-                        </div>
+
+                      {/* Multi-Message Conversation Editor */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '240px', overflowY: 'auto' }}>
+                        {((activeCaption.waMessages && activeCaption.waMessages.length > 0)
+                          ? activeCaption.waMessages
+                          : [{ id: 'm1', text: activeCaption.text || '', direction: activeCaption.waDirection || 'received', time: activeCaption.waTime || '11:42 PM', ticks: activeCaption.waTicks || 'blue' }]
+                        ).map((msg, index, arr) => {
+                          const isSent = msg.direction === 'sent';
+                          return (
+                            <div
+                              key={msg.id || index}
+                              style={{
+                                padding: '6px 8px',
+                                borderRadius: '8px',
+                                background: 'rgba(0, 0, 0, 0.3)',
+                                border: isSent ? '1px solid rgba(37, 211, 102, 0.3)' : '1px solid rgba(255, 255, 255, 0.1)',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: '5px'
+                              }}
+                            >
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                  <span style={{ fontSize: '0.66rem', fontWeight: 800, color: 'rgba(255,255,255,0.4)' }}>#{index + 1}</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const updated = arr.map((m, i) => i === index ? { ...m, direction: isSent ? 'received' : 'sent' } : m);
+                                      updateActiveCaptionProps({ waMessages: updated, text: updated[0].text, waDirection: updated[0].direction });
+                                    }}
+                                    style={{
+                                      padding: '1px 6px',
+                                      borderRadius: '999px',
+                                      fontSize: '0.64rem',
+                                      fontWeight: 700,
+                                      background: isSent ? 'rgba(37, 211, 102, 0.25)' : 'rgba(255, 255, 255, 0.1)',
+                                      border: isSent ? '1px solid #25d366' : '1px solid rgba(255, 255, 255, 0.2)',
+                                      color: isSent ? '#25d366' : '#ffffff',
+                                      cursor: 'pointer'
+                                    }}
+                                  >
+                                    {isSent ? 'Sent (Green)' : 'Received (Slate)'}
+                                  </button>
+                                </div>
+
+                                {arr.length > 1 && (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const updated = arr.filter((_, i) => i !== index);
+                                      updateActiveCaptionProps({ waMessages: updated, text: updated[0].text, waDirection: updated[0].direction });
+                                    }}
+                                    style={{ background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '1px 4px' }}
+                                    title="Delete Message"
+                                  >
+                                    <Trash2 size={12} />
+                                  </button>
+                                )}
+                              </div>
+
+                              <textarea
+                                className="form-input"
+                                rows={2}
+                                value={msg.text || ''}
+                                onChange={(e) => {
+                                  const updated = arr.map((m, i) => i === index ? { ...m, text: e.target.value } : m);
+                                  updateActiveCaptionProps({ waMessages: updated, text: updated[0].text });
+                                }}
+                                style={{ width: '100%', fontSize: '0.78rem', padding: '3px 6px', resize: 'vertical' }}
+                              />
+
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '6px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                  <span style={{ fontSize: '0.64rem', color: 'rgba(255,255,255,0.4)' }}>Time:</span>
+                                  <input
+                                    type="text"
+                                    value={msg.time || '11:42 PM'}
+                                    onChange={(e) => {
+                                      const updated = arr.map((m, i) => i === index ? { ...m, time: e.target.value } : m);
+                                      updateActiveCaptionProps({ waMessages: updated });
+                                    }}
+                                    style={{ width: '75px', fontSize: '0.72rem', padding: '2px 4px' }}
+                                    className="form-input"
+                                  />
+                                </div>
+
+                                {isSent && (
+                                  <div style={{ display: 'flex', gap: '3px' }}>
+                                    {['blue', 'grey', 'single'].map((t) => (
+                                      <button
+                                        key={t}
+                                        type="button"
+                                        onClick={() => {
+                                          const updated = arr.map((m, i) => i === index ? { ...m, ticks: t } : m);
+                                          updateActiveCaptionProps({ waMessages: updated });
+                                        }}
+                                        style={{
+                                          padding: '1px 5px',
+                                          borderRadius: '4px',
+                                          fontSize: '0.62rem',
+                                          background: (msg.ticks || 'blue') === t ? 'rgba(83, 189, 235, 0.25)' : 'rgba(255,255,255,0.06)',
+                                          border: (msg.ticks || 'blue') === t ? '1px solid #53bdeb' : '1px solid transparent',
+                                          color: (msg.ticks || 'blue') === t ? '#53bdeb' : 'rgba(255,255,255,0.5)',
+                                          cursor: 'pointer'
+                                        }}
+                                      >
+                                        {t === 'blue' ? '✓✓' : t === 'grey' ? '✓✓' : '✓'}
+                                      </button>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   )}

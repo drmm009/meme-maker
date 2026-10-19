@@ -73,6 +73,25 @@ const drawRoundRect = (ctx, x, y, width, height, radius) => {
   ctx.fill();
 };
 
+const drawCustomRoundRect = (ctx, x, y, width, height, radii) => {
+  if (width <= 0 || height <= 0) return;
+  const { tl = 0, tr = 0, br = 0, bl = 0 } = typeof radii === 'number'
+    ? { tl: radii, tr: radii, br: radii, bl: radii }
+    : radii;
+  ctx.beginPath();
+  ctx.moveTo(x + tl, y);
+  ctx.lineTo(x + width - tr, y);
+  ctx.quadraticCurveTo(x + width, y, x + width, y + tr);
+  ctx.lineTo(x + width, y + height - br);
+  ctx.quadraticCurveTo(x + width, y + height, x + width - br, y + height);
+  ctx.lineTo(x + bl, y + height);
+  ctx.quadraticCurveTo(x, y + height, x, y + height - bl);
+  ctx.lineTo(x, y + tl);
+  ctx.quadraticCurveTo(x, y, x + tl, y);
+  ctx.closePath();
+  ctx.fill();
+};
+
 export const sampleFaceLighting = (ctx, cx, cy, radius) => {
   try {
     const r = Math.max(12, Math.round(radius * 0.75));
@@ -516,6 +535,14 @@ const tweetHeartPath = new Path2D("M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 1
 const tweetBookmarkPath = new Path2D("M19 21l-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z");
 const tweetSharePath = new Path2D("M18 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM6 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM18 22a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98");
 
+// Instagram & iOS WhatsApp vector paths
+const instagramSendPath = new Path2D("M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z");
+const iosChevronPath = new Path2D("M15 18l-6-6 6-6");
+const iosVideoPath = new Path2D("M4 6.5A2.5 2.5 0 0 0 1.5 9v6A2.5 2.5 0 0 0 4 17.5h9a2.5 2.5 0 0 0 2.5-2.5V9A2.5 2.5 0 0 0 13 6.5H4zm13.78 3.03a1 1 0 0 0-1.28.96v3.02a1 1 0 0 0 1.28.96l3.5-1.5a1 1 0 0 0 .72-.96v-1a1 1 0 0 0-.72-.96l-3.5-1.5z");
+const iosPhonePath = new Path2D("M6.62 10.79a15.05 15.05 0 0 0 6.59 6.59l2.2-2.2a1 1 0 0 1 1.01-.24c1.12.37 2.33.57 3.58.57a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1.02l-2.2 2.2z");
+
+export const socialCardImageCache = new Map();
+
 export const TWEET_TREND_PRESETS = {
   viral: {
     label: '#1 Trending',
@@ -807,36 +834,39 @@ const drawTweetCard = (ctx, cardW, cap) => {
 
 export const getInstagramCardHeight = (ctx, cap, cardW) => {
   const scale = Math.max(0.4, Math.min(3.5, cardW / 480));
-  const pad = Math.round(16 * scale);
-  const avatarSize = Math.round(42 * scale);
-  const bodyFontSize = Math.round(Math.max(12, (cap.fontSize || 16) * scale));
+  const pad = Math.round(14 * scale);
+  const avatarSize = Math.round(40 * scale);
+  const bodyFontSize = Math.round(Math.max(12, (cap.fontSize || 15) * scale));
   const likesFontSize = Math.round(13 * scale);
   const timeFontSize = Math.round(11 * scale);
   const iconSize = Math.round(20 * scale);
+
+  const headerH = Math.max(avatarSize, Math.round(44 * scale));
+  const postImageH = Math.round(cardW * 0.82);
 
   ctx.save();
   ctx.font = `normal ${bodyFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
   const wrappedLines = wrapText(ctx, `${cap.igUsername || 'username'} ${cap.text || ''}`, cardW - pad * 2);
   ctx.restore();
 
-  const headerH = Math.max(avatarSize, Math.round(44 * scale));
-  const captionH = wrappedLines.length * (bodyFontSize * 1.38);
-  const actionsH = iconSize + Math.round(10 * scale);
+  const actionsH = iconSize + Math.round(8 * scale);
   const likesH = likesFontSize + Math.round(6 * scale);
-  const timeH = timeFontSize + Math.round(4 * scale);
+  const captionH = wrappedLines.length * (bodyFontSize * 1.38);
+  const timeH = timeFontSize + Math.round(6 * scale);
 
-  const totalH = Math.round(pad + headerH + Math.round(10 * scale) + captionH + Math.round(12 * scale) + actionsH + likesH + timeH + pad);
+  // Feed ordering: Pad + Header + Post Image + Actions Row + Likes Line + Caption + Timestamp + Pad
+  const totalH = Math.round(pad + headerH + Math.round(10 * scale) + postImageH + Math.round(10 * scale) + actionsH + likesH + captionH + timeH + pad);
   return totalH;
 };
 
 export const drawInstagramCard = (ctx, cardW, cap) => {
   ctx.save();
   const scale = Math.max(0.4, Math.min(3.5, cardW / 480));
-  const pad = Math.round(16 * scale);
-  const avatarR = Math.round(20 * scale);
-  const nameFontSize = Math.round(15 * scale);
-  const subtitleFontSize = Math.round(12 * scale);
-  const bodyFontSize = Math.round(Math.max(12, (cap.fontSize || 16) * scale));
+  const pad = Math.round(14 * scale);
+  const avatarR = Math.round(19 * scale);
+  const nameFontSize = Math.round(14.5 * scale);
+  const subtitleFontSize = Math.round(11.5 * scale);
+  const bodyFontSize = Math.round(Math.max(12, (cap.fontSize || 15) * scale));
   const likesFontSize = Math.round(13 * scale);
   const timeFontSize = Math.round(11 * scale);
   const iconSize = Math.round(20 * scale);
@@ -851,11 +881,12 @@ export const drawInstagramCard = (ctx, cardW, cap) => {
 
   const username = cap.igUsername || 'zuck';
   const subtitle = cap.igSubtitle || 'Original audio';
-  const text = cap.text || 'Meta announces AGI is just a guy named Dave in a basement writing if-else statements. Link in bio.';
+  const text = cap.text || 'just dropped the new open-source weights. feeling good about the timeline.';
   const isVerified = cap.igVerified !== false;
   const hasStoryRing = cap.igHasStoryRing !== false;
   const likesText = cap.igLikesText || 'Liked by cristiano and 1,842,509 others';
   const time = cap.igTime || '2 HOURS AGO';
+  const postImageSrc = cap.igPostImage || cap.postImage || null;
 
   ctx.font = `normal ${bodyFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
   const wrappedLines = wrapText(ctx, `${username} ${text}`, cardW - pad * 2);
@@ -888,7 +919,7 @@ export const drawInstagramCard = (ctx, cardW, cap) => {
     ringGrad.addColorStop(1, '#bc1888');
 
     ctx.beginPath();
-    ctx.arc(avCenterX, avCenterY, avatarR + Math.round(3 * scale), 0, Math.PI * 2);
+    ctx.arc(avCenterX, avCenterY, avatarR + Math.round(2.8 * scale), 0, Math.PI * 2);
     ctx.fillStyle = ringGrad;
     ctx.fill();
 
@@ -898,20 +929,20 @@ export const drawInstagramCard = (ctx, cardW, cap) => {
     ctx.fill();
   }
 
-  // Avatar inner circle
+  // Inner avatar circle
   ctx.beginPath();
   ctx.arc(avCenterX, avCenterY, avatarR, 0, Math.PI * 2);
   ctx.fillStyle = isDark ? '#0ea5e9' : '#38bdf8';
   ctx.fill();
   ctx.fillStyle = '#ffffff';
-  ctx.font = `bold ${Math.round(16 * scale)}px -apple-system, BlinkMacSystemFont, sans-serif`;
+  ctx.font = `bold ${Math.round(15 * scale)}px -apple-system, BlinkMacSystemFont, sans-serif`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(username.charAt(0).toUpperCase() || 'U', avCenterX, avCenterY);
 
   // Username & Subtitle
-  const nameX = startX + pad + (avatarR * 2) + Math.round(12 * scale);
-  const nameY = startY + pad + (subtitle ? Math.round(2 * scale) : Math.round(10 * scale));
+  const nameX = startX + pad + (avatarR * 2) + Math.round(10 * scale);
+  const nameY = startY + pad + (subtitle ? Math.round(2 * scale) : Math.round(8 * scale));
   ctx.textAlign = 'left';
   ctx.textBaseline = 'top';
   ctx.fillStyle = textColor;
@@ -934,17 +965,113 @@ export const drawInstagramCard = (ctx, cardW, cap) => {
   }
 
   // Instagram 3-dots on top right
-  const dotsX = startX + cardW - pad - Math.round(16 * scale);
-  const dotsY = startY + pad + Math.round(16 * scale);
+  const dotsX = startX + cardW - pad - Math.round(14 * scale);
+  const dotsY = startY + pad + Math.round(14 * scale);
   ctx.fillStyle = textColor;
   for (let i = 0; i < 3; i++) {
     ctx.beginPath();
-    ctx.arc(dotsX + (i * 5 * scale), dotsY, Math.round(1.5 * scale), 0, Math.PI * 2);
+    ctx.arc(dotsX + (i * 4.5 * scale), dotsY, Math.round(1.5 * scale), 0, Math.PI * 2);
     ctx.fill();
   }
 
-  // Caption text
-  let curY = startY + pad + Math.max(avatarR * 2, Math.round(44 * scale)) + Math.round(12 * scale);
+  // ─── Post Image Section (Square Feed Photo) ───
+  const headerH = Math.max(avatarR * 2, Math.round(44 * scale));
+  const postImageY = startY + pad + headerH + Math.round(10 * scale);
+  const postImageH = Math.round(cardW * 0.82);
+
+  if (postImageSrc) {
+    let cached = socialCardImageCache.get(postImageSrc);
+    if (!cached) {
+      cached = new Image();
+      if (!postImageSrc.startsWith('data:') && !postImageSrc.startsWith('blob:')) {
+        cached.crossOrigin = 'anonymous';
+      }
+      cached.onload = () => {
+        if (typeof window !== 'undefined' && window.__memeCanvasForceRender) {
+          window.__memeCanvasForceRender();
+        }
+      };
+      cached.src = postImageSrc;
+      socialCardImageCache.set(postImageSrc, cached);
+    }
+
+    if (cached.complete) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(startX, postImageY, cardW, postImageH);
+      ctx.clip();
+
+      const natW = cached.naturalWidth || cached.width || 600;
+      const natH = cached.naturalHeight || cached.height || 600;
+      const imgAspect = natW / natH;
+      const targetAspect = cardW / postImageH;
+      let sx = 0, sy = 0, sw = natW, sh = natH;
+      if (imgAspect > targetAspect) {
+        sw = natH * targetAspect;
+        sx = (natW - sw) / 2;
+      } else {
+        sh = natW / targetAspect;
+        sy = (natH - sh) / 2;
+      }
+      try {
+        ctx.drawImage(cached, sx, sy, sw, sh, startX, postImageY, cardW, postImageH);
+      } catch (err) {
+        // Fallback
+      }
+      ctx.restore();
+    } else {
+      ctx.save();
+      const grad = ctx.createLinearGradient(startX, postImageY, startX + cardW, postImageY + postImageH);
+      grad.addColorStop(0, isDark ? '#18181b' : '#f4f4f5');
+      grad.addColorStop(1, isDark ? '#27272a' : '#e4e4e7');
+      ctx.fillStyle = grad;
+      ctx.fillRect(startX, postImageY, cardW, postImageH);
+      ctx.fillStyle = mutedColor;
+      ctx.font = `bold ${Math.round(13 * scale)}px -apple-system, BlinkMacSystemFont, sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('📷 Photo Post', startX + cardW / 2, postImageY + postImageH / 2);
+      ctx.restore();
+    }
+  } else {
+    ctx.save();
+    const grad = ctx.createLinearGradient(startX, postImageY, startX + cardW, postImageY + postImageH);
+    grad.addColorStop(0, '#0f172a');
+    grad.addColorStop(1, '#311042');
+    ctx.fillStyle = grad;
+    ctx.fillRect(startX, postImageY, cardW, postImageH);
+    ctx.fillStyle = '#38bdf8';
+    ctx.font = `bold ${Math.round(13 * scale)}px -apple-system, BlinkMacSystemFont, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('📷 Photo Post', startX + cardW / 2, postImageY + postImageH / 2);
+    ctx.restore();
+  }
+
+  // ─── Action Icons Row: Heart, Comment, Share (Paper Plane), Bookmark ───
+  let curY = postImageY + postImageH + Math.round(10 * scale);
+  ctx.save();
+  ctx.translate(startX + pad, curY);
+  const iconS = iconSize / 24;
+  ctx.scale(iconS, iconS);
+  ctx.fillStyle = '#ff3040';
+  ctx.fill(tweetHeartPath);
+  ctx.restore();
+
+  drawTweetVectorStrokeIcon(ctx, tweetCommentPath, startX + pad + Math.round(32 * scale), curY, iconSize, textColor);
+  drawTweetVectorStrokeIcon(ctx, instagramSendPath, startX + pad + Math.round(64 * scale), curY, iconSize, textColor);
+  drawTweetVectorStrokeIcon(ctx, tweetBookmarkPath, startX + cardW - pad - iconSize, curY, iconSize, textColor);
+
+  // ─── Likes Line (BELOW ACTIONS) ───
+  curY += iconSize + Math.round(10 * scale);
+  ctx.font = `bold ${likesFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+  ctx.fillStyle = textColor;
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'top';
+  ctx.fillText(likesText, startX + pad, curY);
+
+  // ─── Caption (STRICTLY BELOW LIKES) ───
+  curY += likesFontSize + Math.round(6 * scale);
   ctx.font = `normal ${bodyFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
   ctx.fillStyle = textColor;
   ctx.textAlign = 'left';
@@ -965,28 +1092,8 @@ export const drawInstagramCard = (ctx, cardW, cap) => {
     curY += Math.round(bodyFontSize * 1.38);
   }
 
-  // Action icons row: Heart, Comment, Share, Bookmark
-  curY += Math.round(10 * scale);
-  ctx.save();
-  ctx.translate(startX + pad, curY);
-  const iconS = iconSize / 24;
-  ctx.scale(iconS, iconS);
-  ctx.fillStyle = '#ff3040';
-  ctx.fill(tweetHeartPath);
-  ctx.restore();
-
-  drawTweetVectorStrokeIcon(ctx, tweetCommentPath, startX + pad + Math.round(32 * scale), curY, iconSize, textColor);
-  drawTweetVectorStrokeIcon(ctx, tweetSharePath, startX + pad + Math.round(64 * scale), curY, iconSize, textColor);
-  drawTweetVectorStrokeIcon(ctx, tweetBookmarkPath, startX + cardW - pad - iconSize, curY, iconSize, textColor);
-
-  // Likes line
-  curY += iconSize + Math.round(10 * scale);
-  ctx.font = `bold ${likesFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
-  ctx.fillStyle = textColor;
-  ctx.fillText(likesText, startX + pad, curY);
-
-  // Timestamp
-  curY += likesFontSize + Math.round(5 * scale);
+  // ─── Timestamp ───
+  curY += Math.round(5 * scale);
   ctx.font = `normal ${timeFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
   ctx.fillStyle = mutedColor;
   ctx.fillText(time, startX + pad, curY);
@@ -997,20 +1104,37 @@ export const drawInstagramCard = (ctx, cardW, cap) => {
 export const getWhatsAppCardHeight = (ctx, cap, cardW) => {
   const scale = Math.max(0.4, Math.min(3.5, cardW / 480));
   const pad = Math.round(14 * scale);
-  const headerH = cap.waShowHeader !== false ? Math.round(52 * scale) : 0;
-  const bodyFontSize = Math.round(Math.max(12, (cap.fontSize || 16) * scale));
-  const timeFontSize = Math.round(11 * scale);
+  const headerH = cap.waShowHeader !== false ? Math.round(54 * scale) : 0;
+  const datePillH = Math.round(36 * scale);
+  const bodyFontSize = Math.round(Math.max(12, (cap.fontSize || 15) * scale));
+  const timeFontSize = Math.round(10.5 * scale);
 
-  const bubbleMaxW = (cardW - pad * 2) * 0.85;
+  const messages = (cap.waMessages && Array.isArray(cap.waMessages) && cap.waMessages.length > 0)
+    ? cap.waMessages
+    : [{
+        id: 'm1',
+        text: cap.text || '',
+        direction: cap.waDirection || 'received',
+        time: cap.waTime || '11:42 PM',
+        ticks: cap.waTicks || 'blue'
+      }];
+
+  const bubbleMaxW = (cardW - pad * 2) * 0.82;
   ctx.save();
   ctx.font = `normal ${bodyFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
-  const wrappedLines = wrapText(ctx, cap.text || '', bubbleMaxW - Math.round(20 * scale));
+
+  let totalBubblesH = 0;
+  for (let i = 0; i < messages.length; i++) {
+    const msg = messages[i];
+    const wrappedLines = wrapText(ctx, msg.text || '', bubbleMaxW - Math.round(22 * scale));
+    const textH = Math.max(1, wrappedLines.length) * (bodyFontSize * 1.34);
+    const bubbleH = textH + Math.round(13 * scale) + timeFontSize;
+    const gap = (i > 0 && messages[i - 1].direction === msg.direction) ? Math.round(4 * scale) : Math.round(10 * scale);
+    totalBubblesH += bubbleH + gap;
+  }
   ctx.restore();
 
-  const textH = wrappedLines.length * (bodyFontSize * 1.35);
-  const bubbleH = textH + Math.round(22 * scale) + timeFontSize;
-
-  const totalH = Math.round(headerH + pad * 2 + bubbleH);
+  const totalH = Math.round(headerH + datePillH + totalBubblesH + pad);
   return totalH;
 };
 
@@ -1020,32 +1144,32 @@ export const drawWhatsAppCard = (ctx, cardW, cap) => {
   const pad = Math.round(14 * scale);
   const nameFontSize = Math.round(15 * scale);
   const statusFontSize = Math.round(11 * scale);
-  const bodyFontSize = Math.round(Math.max(12, (cap.fontSize || 16) * scale));
-  const timeFontSize = Math.round(11 * scale);
+  const bodyFontSize = Math.round(Math.max(12, (cap.fontSize || 15) * scale));
+  const timeFontSize = Math.round(10.5 * scale);
   const cornerRadius = Math.round(16 * scale);
   const showHeader = cap.waShowHeader !== false;
 
   const theme = cap.waTheme || 'dark';
   const isDark = theme !== 'light' && theme !== 'white';
-  const direction = cap.waDirection || 'received';
-  const isSent = direction === 'sent';
 
   const cardBg = isDark ? '#0b141a' : '#efeae2';
-  const headerBg = isDark ? '#202c33' : '#f0f2f5';
-  const headerText = isDark ? '#e9edef' : '#111b21';
+  const headerBg = isDark ? '#161f26' : '#f6f6f6';
+  const headerText = isDark ? '#ffffff' : '#000000';
   const headerMuted = isDark ? '#8696a0' : '#667781';
-  const bubbleBg = isSent
-    ? (isDark ? '#005c4b' : '#d9fdd3')
-    : (isDark ? '#202c33' : '#ffffff');
-  const bubbleText = isDark ? '#e9edef' : '#111b21';
-  const timeColor = isDark ? '#8696a0' : '#667781';
   const borderColor = isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.1)';
 
   const contactName = cap.waContactName || 'Mom ❤️';
   const status = cap.waStatus || 'online';
-  const text = cap.text || 'Please remember to eat vegetables and don’t stay up until 4 AM arguing with strangers on the internet.';
-  const time = cap.waTime || '11:42 PM';
-  const ticks = cap.waTicks || 'blue';
+
+  const messages = (cap.waMessages && Array.isArray(cap.waMessages) && cap.waMessages.length > 0)
+    ? cap.waMessages
+    : [{
+        id: 'm1',
+        text: cap.text || '',
+        direction: cap.waDirection || 'received',
+        time: cap.waTime || '11:42 PM',
+        ticks: cap.waTicks || 'blue'
+      }];
 
   const cardH = getWhatsAppCardHeight(ctx, cap, cardW);
   const startX = - cardW / 2;
@@ -1060,9 +1184,9 @@ export const drawWhatsAppCard = (ctx, cardW, cap) => {
 
   let contentStartY = startY;
 
-  // Header Bar
+  // Modern iOS WhatsApp Header Bar
   if (showHeader) {
-    const headerH = Math.round(52 * scale);
+    const headerH = Math.round(54 * scale);
     ctx.save();
     ctx.beginPath();
     ctx.moveTo(startX, startY + cornerRadius);
@@ -1074,19 +1198,24 @@ export const drawWhatsAppCard = (ctx, cardW, cap) => {
     ctx.closePath();
     ctx.fillStyle = headerBg;
     ctx.fill();
-    ctx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 0, 0, 0.06)';
+
+    // Hairline bottom divider
+    ctx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)';
     ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(startX, startY + headerH);
+    ctx.lineTo(startX + cardW, startY + headerH);
     ctx.stroke();
     ctx.restore();
 
-    // Back arrow
-    ctx.fillStyle = headerMuted;
-    ctx.font = `bold ${Math.round(18 * scale)}px sans-serif`;
+    // iOS Blue Back Chevron ‹
+    ctx.fillStyle = '#007aff';
+    ctx.font = `bold ${Math.round(22 * scale)}px -apple-system, BlinkMacSystemFont, sans-serif`;
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
-    ctx.fillText('←', startX + Math.round(10 * scale), startY + headerH / 2);
+    ctx.fillText('‹', startX + Math.round(11 * scale), startY + headerH / 2);
 
-    // Avatar
+    // Contact Avatar
     const avR = Math.round(17 * scale);
     const avX = startX + Math.round(32 * scale) + avR;
     const avY = startY + headerH / 2;
@@ -1097,91 +1226,132 @@ export const drawWhatsAppCard = (ctx, cardW, cap) => {
     ctx.fillStyle = '#ffffff';
     ctx.font = `bold ${Math.round(14 * scale)}px -apple-system, BlinkMacSystemFont, sans-serif`;
     ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
     ctx.fillText(contactName.charAt(0).toUpperCase() || 'W', avX, avY);
 
-    // Contact Name & Status
+    // Contact Name & Status (SF Pro style)
     ctx.textAlign = 'left';
     ctx.textBaseline = 'top';
     ctx.fillStyle = headerText;
     ctx.font = `bold ${nameFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
     const nameX = avX + avR + Math.round(8 * scale);
-    ctx.fillText(contactName, nameX, startY + Math.round(10 * scale));
+    ctx.fillText(contactName, nameX, startY + Math.round(11 * scale));
 
     ctx.font = `normal ${statusFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
     ctx.fillStyle = status === 'online' ? '#25d366' : headerMuted;
-    ctx.fillText(status, nameX, startY + Math.round(29 * scale));
+    ctx.fillText(status, nameX, startY + Math.round(30 * scale));
 
-    // Header Right action icons
-    const iconsX = startX + cardW - Math.round(48 * scale);
-    ctx.fillStyle = headerMuted;
-    ctx.font = `normal ${Math.round(16 * scale)}px sans-serif`;
-    ctx.textAlign = 'right';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('📞   ⋮', iconsX, startY + headerH / 2);
+    // iOS Call Glyphs (Video camera & Phone handset) in #007aff
+    const callIconSize = Math.round(18 * scale);
+    drawTweetVectorStrokeIcon(ctx, iosVideoPath, startX + cardW - Math.round(56 * scale), startY + (headerH - callIconSize) / 2, callIconSize, '#007aff');
+    drawTweetVectorStrokeIcon(ctx, iosPhonePath, startX + cardW - Math.round(26 * scale), startY + (headerH - callIconSize) / 2, callIconSize, '#007aff');
 
     contentStartY += headerH;
   }
 
-  // Message Bubble
-  const bubbleMaxW = (cardW - pad * 2) * 0.85;
-  ctx.font = `normal ${bodyFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
-  const wrappedLines = wrapText(ctx, text, bubbleMaxW - Math.round(20 * scale));
-
-  let maxLineW = 0;
-  for (const line of wrappedLines) {
-    const lw = ctx.measureText(line).width;
-    if (lw > maxLineW) maxLineW = lw;
-  }
-  const timeMetricsW = ctx.measureText(`${time}  ✓✓`).width;
-  const bubbleW = Math.max(Math.round(120 * scale), Math.min(bubbleMaxW, Math.max(maxLineW, timeMetricsW) + Math.round(24 * scale)));
-  const textH = wrappedLines.length * (bodyFontSize * 1.35);
-  const bubbleH = textH + Math.round(22 * scale) + timeFontSize;
-
-  const bubbleX = isSent
-    ? (startX + cardW - pad - bubbleW)
-    : (startX + pad);
-  const bubbleY = contentStartY + pad;
-  const bubbleR = Math.round(12 * scale);
-
-  // Draw speech bubble
+  // Centered Date Pill ("TODAY")
+  const datePillW = Math.round(72 * scale);
+  const datePillH = Math.round(22 * scale);
+  const datePillX = startX + (cardW - datePillW) / 2;
+  const datePillY = contentStartY + Math.round(8 * scale);
   ctx.save();
-  ctx.fillStyle = bubbleBg;
-  drawRoundRect(ctx, bubbleX, bubbleY, bubbleW, bubbleH, bubbleR);
+  ctx.fillStyle = isDark ? 'rgba(24, 34, 41, 0.92)' : 'rgba(255, 255, 255, 0.92)';
+  drawRoundRect(ctx, datePillX, datePillY, datePillW, datePillH, Math.round(11 * scale));
+  ctx.fillStyle = isDark ? '#8696a0' : '#54656f';
+  ctx.font = `bold ${Math.round(10 * scale)}px -apple-system, BlinkMacSystemFont, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('TODAY', datePillX + datePillW / 2, datePillY + datePillH / 2);
   ctx.restore();
 
-  // Draw Text inside bubble
-  let curY = bubbleY + Math.round(10 * scale);
-  ctx.fillStyle = bubbleText;
+  // Multi-Message Conversation Bubbles
+  let curY = datePillY + datePillH + Math.round(6 * scale);
+  const bubbleMaxW = (cardW - pad * 2) * 0.82;
+
   ctx.font = `normal ${bodyFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
-  ctx.textAlign = 'left';
-  ctx.textBaseline = 'top';
 
-  for (const line of wrappedLines) {
-    ctx.fillText(line, bubbleX + Math.round(12 * scale), curY);
-    curY += Math.round(bodyFontSize * 1.35);
-  }
+  for (let idx = 0; idx < messages.length; idx++) {
+    const msg = messages[idx];
+    const isSent = msg.direction === 'sent';
 
-  // Timestamp & Read Receipts
-  curY = bubbleY + bubbleH - timeFontSize - Math.round(6 * scale);
-  ctx.font = `normal ${timeFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
-  ctx.fillStyle = timeColor;
-  ctx.textAlign = 'right';
-  ctx.textBaseline = 'top';
+    const bubbleBg = isSent
+      ? (isDark ? '#005c4b' : '#d9fdd3')
+      : (isDark ? '#202c33' : '#ffffff');
+    const bubbleTextColor = isDark ? '#e9edef' : '#111b21';
+    const timeColor = isDark ? '#8696a0' : '#667781';
 
-  const timeEndX = bubbleX + bubbleW - Math.round(10 * scale);
-  if (isSent) {
-    const tickColor = ticks === 'blue' ? '#53bdeb' : '#8696a0';
-    ctx.fillStyle = tickColor;
-    ctx.font = `bold ${Math.round(12 * scale)}px sans-serif`;
-    const tickStr = ticks === 'single' ? '✓' : '✓✓';
-    ctx.fillText(tickStr, timeEndX, curY - Math.round(1 * scale));
-    const tickW = ctx.measureText(tickStr).width;
+    ctx.font = `normal ${bodyFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+    const wrappedLines = wrapText(ctx, msg.text || '', bubbleMaxW - Math.round(22 * scale));
 
-    ctx.fillStyle = timeColor;
+    let maxLineW = 0;
+    for (const line of wrappedLines) {
+      const lw = ctx.measureText(line).width;
+      if (lw > maxLineW) maxLineW = lw;
+    }
+    const timeStr = msg.time || '11:42 PM';
+    const timeMetricsW = ctx.measureText(`${timeStr}  ✓✓`).width;
+    const bubbleW = Math.max(Math.round(85 * scale), Math.min(bubbleMaxW, Math.max(maxLineW, timeMetricsW) + Math.round(22 * scale)));
+    const textH = Math.max(1, wrappedLines.length) * (bodyFontSize * 1.34);
+    const bubbleH = textH + Math.round(13 * scale) + timeFontSize;
+
+    const gap = (idx > 0 && messages[idx - 1].direction === msg.direction)
+      ? Math.round(4 * scale)
+      : Math.round(10 * scale);
+    curY += gap;
+
+    const bubbleX = isSent
+      ? (startX + cardW - pad - bubbleW)
+      : (startX + pad);
+    const bubbleY = curY;
+
+    // Authentic iOS Bubble with clustered tail corners
+    const r = Math.round(14 * scale);
+    const cornerRadii = isSent
+      ? { tl: r, tr: r, br: Math.round(3 * scale), bl: r }
+      : { tl: r, tr: r, br: r, bl: Math.round(3 * scale) };
+
+    ctx.save();
+    ctx.fillStyle = bubbleBg;
+    drawCustomRoundRect(ctx, bubbleX, bubbleY, bubbleW, bubbleH, cornerRadii);
+    ctx.restore();
+
+    // Message text inside bubble
+    let textY = bubbleY + Math.round(7 * scale);
+    ctx.fillStyle = bubbleTextColor;
+    ctx.font = `normal ${bodyFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+
+    for (const line of wrappedLines) {
+      ctx.fillText(line, bubbleX + Math.round(11 * scale), textY);
+      textY += Math.round(bodyFontSize * 1.34);
+    }
+
+    // Timestamp & read receipts
+    const timeY = bubbleY + bubbleH - timeFontSize - Math.round(4 * scale);
+    const timeEndX = bubbleX + bubbleW - Math.round(8 * scale);
     ctx.font = `normal ${timeFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
-    ctx.fillText(time, timeEndX - tickW - Math.round(4 * scale), curY);
-  } else {
-    ctx.fillText(time, timeEndX, curY);
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'top';
+
+    if (isSent) {
+      const ticks = msg.ticks || 'blue';
+      const tickColor = ticks === 'blue' ? '#53bdeb' : '#8696a0';
+      ctx.fillStyle = tickColor;
+      ctx.font = `bold ${Math.round(11 * scale)}px sans-serif`;
+      const tickStr = ticks === 'single' ? '✓' : '✓✓';
+      ctx.fillText(tickStr, timeEndX, timeY - Math.round(1 * scale));
+      const tickW = ctx.measureText(tickStr).width;
+
+      ctx.fillStyle = timeColor;
+      ctx.font = `normal ${timeFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+      ctx.fillText(timeStr, timeEndX - tickW - Math.round(3 * scale), timeY);
+    } else {
+      ctx.fillStyle = timeColor;
+      ctx.fillText(timeStr, timeEndX, timeY);
+    }
+
+    curY += bubbleH;
   }
 
   ctx.restore();
@@ -1746,6 +1916,11 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     };
 
     const renderCanvas = (img, skipHandles = false) => {
+      if (typeof window !== 'undefined') {
+        window.__memeCanvasForceRender = () => {
+          renderCanvas(baseImgRef.current, false);
+        };
+      }
       if (canvas.width !== canvasW) canvas.width = canvasW;
       if (canvas.height !== totalCanvasH) canvas.height = totalCanvasH;
 

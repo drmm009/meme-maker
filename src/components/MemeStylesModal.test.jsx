@@ -80,12 +80,12 @@ describe('MemeStylesModal (Unified Social Cards Studio)', () => {
     const igTab = screen.getByText('Instagram');
     fireEvent.click(igTab);
 
-    expect(screen.getByText(/Mark Zuckerberg/i)).toBeDefined();
-    expect(screen.getByText(/Aesthetic Creator/i)).toBeDefined();
+    expect(screen.getAllByText(/Mark Zuckerberg/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Aesthetic Creator/i).length).toBeGreaterThan(0);
     expect(screen.getByText('Add Instagram Card to Meme')).toBeDefined();
 
     // Select Aesthetic Creator persona
-    const aestheticBtn = screen.getByText(/Aesthetic Creator/i);
+    const aestheticBtn = screen.getAllByText(/Aesthetic Creator/i)[0];
     fireEvent.click(aestheticBtn);
 
     // Submit Instagram card
@@ -97,6 +97,7 @@ describe('MemeStylesModal (Unified Social Cards Studio)', () => {
     expect(callArgs.username).toBe('daily_aesthetic');
     expect(callArgs.hasStoryRing).toBe(false);
     expect(callArgs.verified).toBe(true);
+    expect(callArgs.postImage).toBeDefined();
     expect(onClose).toHaveBeenCalled();
   });
 
@@ -115,11 +116,11 @@ describe('MemeStylesModal (Unified Social Cards Studio)', () => {
 
     expect(screen.getByText('WhatsApp Card')).toBeDefined();
     expect(screen.getAllByText(/Mom/i).length).toBeGreaterThan(0);
-    expect(screen.getByText(/The Boss/i)).toBeDefined();
+    expect(screen.getAllByText(/The Boss/i).length).toBeGreaterThan(0);
     expect(screen.getByText('Add WhatsApp Card to Meme')).toBeDefined();
 
     // Select The Boss persona
-    const bossBtn = screen.getByText(/The Boss/i);
+    const bossBtn = screen.getAllByText(/The Boss/i)[0];
     fireEvent.click(bossBtn);
 
     // Submit WhatsApp card
@@ -129,7 +130,8 @@ describe('MemeStylesModal (Unified Social Cards Studio)', () => {
     expect(onAddWhatsApp).toHaveBeenCalledTimes(1);
     const callArgs = onAddWhatsApp.mock.calls[0][0];
     expect(callArgs.contactName).toBe('Boss 💼');
-    expect(callArgs.direction).toBe('received');
+    expect(Array.isArray(callArgs.messages)).toBe(true);
+    expect(callArgs.messages.length).toBeGreaterThan(0);
     expect(onClose).toHaveBeenCalled();
   });
 
