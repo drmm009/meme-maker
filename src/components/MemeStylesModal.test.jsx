@@ -18,10 +18,11 @@ describe('MemeStylesModal (Unified Social Cards Studio)', () => {
     expect(container.firstChild).toBeNull();
   });
 
-  it('renders all three platform selector buttons when open', () => {
+  it('renders platform modal without top switcher tabs', () => {
     render(
       <MemeStylesModal
         isOpen={true}
+        initialPlatform="tweet"
         onClose={() => {}}
         onAddTweetCard={() => {}}
         onAddInstagramCard={() => {}}
@@ -29,11 +30,9 @@ describe('MemeStylesModal (Unified Social Cards Studio)', () => {
       />
     );
 
-    expect(screen.getByText('Tweet Card')).toBeDefined();
-    expect(screen.getByText('Twitter / X')).toBeDefined();
-    expect(screen.getByText('Instagram')).toBeDefined();
-    expect(screen.getByText('WhatsApp')).toBeDefined();
     expect(screen.getByText('Add Tweet Card to Meme')).toBeDefined();
+    // Switcher tabs should not exist in the bottom sheet
+    expect(screen.queryByText('Twitter / X')).toBeNull();
   });
 
   it('adds Tweet card with selected persona when submitted', () => {
@@ -62,23 +61,19 @@ describe('MemeStylesModal (Unified Social Cards Studio)', () => {
     expect(onClose).toHaveBeenCalled();
   });
 
-  it('switches to Instagram tab, displays Instagram controls, and adds Instagram card', () => {
+  it('opens directly with Instagram modal, displays Instagram controls without orange tags container, and adds Instagram card', () => {
     const onAddInstagram = vi.fn();
     const onClose = vi.fn();
 
     render(
       <MemeStylesModal
         isOpen={true}
-        initialPlatform="tweet"
+        initialPlatform="instagram"
         onClose={onClose}
         onAddTweetCard={() => {}}
         onAddInstagramCard={onAddInstagram}
       />
     );
-
-    // Switch to Instagram
-    const igTab = screen.getByText('Instagram');
-    fireEvent.click(igTab);
 
     expect(screen.getAllByText(/Mark Zuckerberg/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/Aesthetic Creator/i).length).toBeGreaterThan(0);

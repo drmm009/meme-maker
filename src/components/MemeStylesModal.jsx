@@ -326,7 +326,6 @@ export default function MemeStylesModal({
   onAddWhatsAppCard
 }) {
   const [activePlatform, setActivePlatform] = useState(initialPlatform);
-  const fileInputRef = useRef(null);
 
   // Sync initial platform when modal opens
   useEffect(() => {
@@ -551,44 +550,6 @@ export default function MemeStylesModal({
         </button>
       }
     >
-      {/* ─── Platform Tabs Switcher (Top Capsule Navigation) ─── */}
-      <div
-        className="bs-category-bar"
-        style={{
-          padding: '2px 2px 10px 2px',
-          marginBottom: '10px',
-          display: 'flex',
-          gap: '8px'
-        }}
-      >
-        <button
-          type="button"
-          className={`bs-category-btn ${activePlatform === 'tweet' ? 'active' : ''}`}
-          onClick={() => setActivePlatform('tweet')}
-        >
-          <XLogo size={14} />
-          <span>Twitter / X</span>
-        </button>
-
-        <button
-          type="button"
-          className={`bs-category-btn ${activePlatform === 'instagram' ? 'active' : ''}`}
-          onClick={() => setActivePlatform('instagram')}
-        >
-          <InstagramLogo size={15} color={activePlatform === 'instagram' ? '#ffffff' : '#e1306c'} />
-          <span>Instagram</span>
-        </button>
-
-        <button
-          type="button"
-          className={`bs-category-btn ${activePlatform === 'whatsapp' ? 'active' : ''}`}
-          onClick={() => setActivePlatform('whatsapp')}
-        >
-          <WhatsAppLogo size={15} color={activePlatform === 'whatsapp' ? '#ffffff' : '#25d366'} />
-          <span>WhatsApp</span>
-        </button>
-      </div>
-
       {/* ─── Platform Personas Carousel ─── */}
       <div
         className="bs-category-bar"
@@ -1184,70 +1145,6 @@ export default function MemeStylesModal({
         {/* 2. INSTAGRAM CONTROLS */}
         {activePlatform === 'instagram' && (
           <>
-            {/* Custom Post Image Picker & Uploader */}
-            <div
-              style={{
-                background: '#16181f',
-                border: '1px solid rgba(255, 255, 255, 0.14)',
-                borderRadius: '16px',
-                padding: '12px 14px'
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <span style={{ fontSize: '0.74rem', fontWeight: 700, color: 'rgba(255,255,255,0.85)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <ImageIcon size={14} style={{ color: '#ff5e36' }} /> Post Image
-                </span>
-                <label
-                  style={{
-                    background: 'var(--primary-gradient)',
-                    color: '#ffffff',
-                    padding: '5px 12px',
-                    borderRadius: '999px',
-                    fontSize: '0.74rem',
-                    fontWeight: 700,
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '5px',
-                    cursor: 'pointer'
-                  }}
-                >
-                  <Upload size={12} strokeWidth={2.5} />
-                  <span>Upload Custom Photo</span>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handleUploadPostImage}
-                    style={{ display: 'none' }}
-                  />
-                </label>
-              </div>
-
-              {/* Preset Image Options */}
-              <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px' }}>
-                {INSTAGRAM_PERSONAS.map(p => (
-                  <button
-                    key={p.id}
-                    type="button"
-                    onClick={() => setIgPostImage(p.postImage)}
-                    style={{
-                      padding: '4px 10px',
-                      borderRadius: '8px',
-                      background: igPostImage === p.postImage ? 'rgba(255, 94, 54, 0.25)' : 'rgba(255, 255, 255, 0.06)',
-                      border: igPostImage === p.postImage ? '1px solid #ff5e36' : '1px solid rgba(255, 255, 255, 0.1)',
-                      color: '#ffffff',
-                      fontSize: '0.72rem',
-                      fontWeight: 600,
-                      cursor: 'pointer',
-                      whiteSpace: 'nowrap'
-                    }}
-                  >
-                    {p.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
             {/* Username & Subtitle */}
             <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '12px' }}>
               <div>
