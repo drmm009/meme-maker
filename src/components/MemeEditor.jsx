@@ -4379,145 +4379,147 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           </div>
                         )}
 
-                        <div className="sec-bar-layer-actions">
-                          {activeCaption && !activeCaption.isTweetCard && (
-                            <>
-                              <button
-                                type="button"
-                                className="layer-action-btn layer-action-btn-case"
-                                title="Toggle Text Case (ALL CAPS / Sentence case / lowercase)"
-                                aria-label="Toggle Text Case"
-                                onClick={handleToggleTextCase}
-                              >
-                                <span style={{ color: '#ffffff', fontWeight: 700, fontSize: '0.86rem' }}>Aa</span>
-                              </button>
-                              <div className="layer-action-divider" />
-
-                              <button
-                                type="button"
-                                className="layer-action-btn layer-action-btn-align"
-                                title={`Text Alignment: ${(activeCaption.align || 'center').toUpperCase()} (Click to cycle Left, Center, Right)`}
-                                aria-label={`Text Alignment: ${activeCaption.align || 'center'}`}
-                                onClick={handleCycleTextAlignment}
-                              >
-                                {(activeCaption.align === 'left') ? (
-                                  <AlignLeft style={{ width: 16, height: 16 }} />
-                                ) : (activeCaption.align === 'right') ? (
-                                  <AlignRight style={{ width: 16, height: 16 }} />
-                                ) : (
-                                  <AlignCenter style={{ width: 16, height: 16 }} />
-                                )}
-                              </button>
-                              <div className="layer-action-divider" />
-                            </>
-                          )}
-
-                          {activeImageLayer && (
-                            <>
-                              <button
-                                type="button"
-                                className={`layer-action-btn layer-action-btn-crop ${activeImageLayer.fitMode === 'crop' ? 'active' : ''}`}
-                                title={activeImageLayer.fitMode === 'crop' ? 'Exit Crop' : 'Crop'}
-                                aria-label={activeImageLayer.fitMode === 'crop' ? 'Exit Crop' : 'Crop'}
-                                onClick={() => updateActiveImageLayer('fitMode', activeImageLayer.fitMode === 'crop' ? 'fit' : 'crop')}
-                              >
-                                <Crop style={{ width: 16, height: 16 }} />
-                              </button>
-                              <div className="layer-action-divider" />
-
-                              <button
-                                type="button"
-                                className={`layer-action-btn layer-action-btn-flip ${activeImageLayer.flipX ? 'active' : ''}`}
-                                title="Flip Horizontal (Mirror)"
-                                aria-label="Flip Horizontal"
-                                onClick={handleFlipActiveLayer}
-                              >
-                                <FlipHorizontal style={{ width: 16, height: 16 }} />
-                              </button>
-                              <div className="layer-action-divider" />
-                            </>
-                          )}
-
-                          <button
-                            type="button"
-                            className="layer-action-btn layer-action-btn-rotate"
-                            title="Rotate 90°"
-                            aria-label="Rotate 90°"
-                            onClick={handleRotateLayer}
-                          >
-                            <RotateCw style={{ width: 16, height: 16 }} />
-                          </button>
-
-                          <div className="layer-action-divider" />
-
-                          <button
-                            type="button"
-                            className="layer-action-btn layer-action-btn-duplicate"
-                            title="Duplicate Layer"
-                            aria-label="Duplicate Layer"
-                            onClick={() => handleDuplicateLayer()}
-                          >
-                            <Copy style={{ width: 16, height: 16 }} />
-                          </button>
-
-                          <div className="layer-action-divider" />
-
-                          <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
-                            <button
-                              type="button"
-                              className={`layer-action-btn layer-action-btn-layers ${showLayerMenu ? 'active' : ''}`}
-                              title="Layer Order"
-                              aria-label="Layer Order"
-                              onClick={() => setShowLayerMenu(!showLayerMenu)}
-                            >
-                              <Layers style={{ width: 16, height: 16 }} />
-                            </button>
-
-                            {showLayerMenu && (
-                              <div
-                                className="sec-bar-layer-order-popover"
-                                style={{
-                                  position: 'absolute',
-                                  bottom: 'calc(100% + 8px)',
-                                  left: '50%',
-                                  transform: 'translateX(-50%)'
-                                }}
-                              >
+                        {(!activeSticker || !activeSticker.dieCut) && (
+                          <div className="sec-bar-layer-actions">
+                            {activeCaption && !activeCaption.isTweetCard && (
+                              <>
                                 <button
                                   type="button"
-                                  className="layer-action-popover-btn"
-                                  title="Bring Forward"
-                                  aria-label="Bring Forward"
-                                  onClick={() => moveLayer(activeLayerId, 'forward')}
+                                  className="layer-action-btn layer-action-btn-case"
+                                  title="Toggle Text Case (ALL CAPS / Sentence case / lowercase)"
+                                  aria-label="Toggle Text Case"
+                                  onClick={handleToggleTextCase}
                                 >
-                                  <ArrowUp style={{ width: 14, height: 14 }} />
+                                  <span style={{ color: '#ffffff', fontWeight: 700, fontSize: '0.86rem' }}>Aa</span>
                                 </button>
                                 <div className="layer-action-divider" />
+
                                 <button
                                   type="button"
-                                  className="layer-action-popover-btn"
-                                  title="Send Backward"
-                                  aria-label="Send Backward"
-                                  onClick={() => moveLayer(activeLayerId, 'backward')}
+                                  className="layer-action-btn layer-action-btn-align"
+                                  title={`Text Alignment: ${(activeCaption.align || 'center').toUpperCase()} (Click to cycle Left, Center, Right)`}
+                                  aria-label={`Text Alignment: ${activeCaption.align || 'center'}`}
+                                  onClick={handleCycleTextAlignment}
                                 >
-                                  <ArrowDown style={{ width: 14, height: 14 }} />
+                                  {(activeCaption.align === 'left') ? (
+                                    <AlignLeft style={{ width: 16, height: 16 }} />
+                                  ) : (activeCaption.align === 'right') ? (
+                                    <AlignRight style={{ width: 16, height: 16 }} />
+                                  ) : (
+                                    <AlignCenter style={{ width: 16, height: 16 }} />
+                                  )}
                                 </button>
-                              </div>
+                                <div className="layer-action-divider" />
+                              </>
                             )}
+
+                            {activeImageLayer && (
+                              <>
+                                <button
+                                  type="button"
+                                  className={`layer-action-btn layer-action-btn-crop ${activeImageLayer.fitMode === 'crop' ? 'active' : ''}`}
+                                  title={activeImageLayer.fitMode === 'crop' ? 'Exit Crop' : 'Crop'}
+                                  aria-label={activeImageLayer.fitMode === 'crop' ? 'Exit Crop' : 'Crop'}
+                                  onClick={() => updateActiveImageLayer('fitMode', activeImageLayer.fitMode === 'crop' ? 'fit' : 'crop')}
+                                >
+                                  <Crop style={{ width: 16, height: 16 }} />
+                                </button>
+                                <div className="layer-action-divider" />
+
+                                <button
+                                  type="button"
+                                  className={`layer-action-btn layer-action-btn-flip ${activeImageLayer.flipX ? 'active' : ''}`}
+                                  title="Flip Horizontal (Mirror)"
+                                  aria-label="Flip Horizontal"
+                                  onClick={handleFlipActiveLayer}
+                                >
+                                  <FlipHorizontal style={{ width: 16, height: 16 }} />
+                                </button>
+                                <div className="layer-action-divider" />
+                              </>
+                            )}
+
+                            <button
+                              type="button"
+                              className="layer-action-btn layer-action-btn-rotate"
+                              title="Rotate 90°"
+                              aria-label="Rotate 90°"
+                              onClick={handleRotateLayer}
+                            >
+                              <RotateCw style={{ width: 16, height: 16 }} />
+                            </button>
+
+                            <div className="layer-action-divider" />
+
+                            <button
+                              type="button"
+                              className="layer-action-btn layer-action-btn-duplicate"
+                              title="Duplicate Layer"
+                              aria-label="Duplicate Layer"
+                              onClick={() => handleDuplicateLayer()}
+                            >
+                              <Copy style={{ width: 16, height: 16 }} />
+                            </button>
+
+                            <div className="layer-action-divider" />
+
+                            <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
+                              <button
+                                type="button"
+                                className={`layer-action-btn layer-action-btn-layers ${showLayerMenu ? 'active' : ''}`}
+                                title="Layer Order"
+                                aria-label="Layer Order"
+                                onClick={() => setShowLayerMenu(!showLayerMenu)}
+                              >
+                                <Layers style={{ width: 16, height: 16 }} />
+                              </button>
+
+                              {showLayerMenu && (
+                                <div
+                                  className="sec-bar-layer-order-popover"
+                                  style={{
+                                    position: 'absolute',
+                                    bottom: 'calc(100% + 8px)',
+                                    left: '50%',
+                                    transform: 'translateX(-50%)'
+                                  }}
+                                >
+                                  <button
+                                    type="button"
+                                    className="layer-action-popover-btn"
+                                    title="Bring Forward"
+                                    aria-label="Bring Forward"
+                                    onClick={() => moveLayer(activeLayerId, 'forward')}
+                                  >
+                                    <ArrowUp style={{ width: 14, height: 14 }} />
+                                  </button>
+                                  <div className="layer-action-divider" />
+                                  <button
+                                    type="button"
+                                    className="layer-action-popover-btn"
+                                    title="Send Backward"
+                                    aria-label="Send Backward"
+                                    onClick={() => moveLayer(activeLayerId, 'backward')}
+                                  >
+                                    <ArrowDown style={{ width: 14, height: 14 }} />
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+
+                            <div className="layer-action-divider" />
+
+                            <button
+                              type="button"
+                              className="layer-action-btn layer-action-btn-delete"
+                              title="Delete Layer"
+                              aria-label="Delete Layer"
+                              onClick={() => handleDeleteLayer()}
+                            >
+                              <Trash2 style={{ width: 16, height: 16 }} />
+                            </button>
                           </div>
-
-                          <div className="layer-action-divider" />
-
-                          <button
-                            type="button"
-                            className="layer-action-btn layer-action-btn-delete"
-                            title="Delete Layer"
-                            aria-label="Delete Layer"
-                            onClick={() => handleDeleteLayer()}
-                          >
-                            <Trash2 style={{ width: 16, height: 16 }} />
-                          </button>
-                        </div>
+                        )}
                       </motion.div>
                     )}
                     </AnimatePresence>
@@ -4906,22 +4908,6 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                       >
                         <Shield style={{ width: 13, height: 13 }} />
                         <span>Die-Cut</span>
-                        {activeSticker.dieCut && (
-                          <span
-                            title="Active Die-Cut Border Color"
-                            style={{
-                              display: 'inline-flex',
-                              width: 10,
-                              height: 10,
-                              borderRadius: '50%',
-                              border: '1.5px solid rgba(255,255,255,0.9)',
-                              background: activeSticker.dieCutColor || '#ffffff',
-                              boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
-                              marginLeft: '2px',
-                              flexShrink: 0
-                            }}
-                          />
-                        )}
                       </div>
                     </div>
                   )}
