@@ -363,6 +363,26 @@ input.bs-search-input[type="text"]:focus,
   box-shadow: 0 4px 14px rgba(255, 94, 54, 0.45) !important;
 }
 
+.bs-category-count-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 9999px;
+  background: rgba(255, 94, 54, 0.25);
+  border: 1px solid rgba(255, 94, 54, 0.4);
+  color: #ff5e36;
+  margin-left: 2px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bs-category-btn.active .bs-category-count-badge {
+  background: rgba(255, 255, 255, 0.28);
+  border-color: rgba(255, 255, 255, 0.4);
+  color: #ffffff;
+}
+
 /* ─── Scrollable Content ─── */
 .bs-content-scroll {
   flex: 1;

@@ -33,7 +33,8 @@ export default function EmojiBottomSheet({ isOpen, onClose, onSelectEmoji }) {
       onClose={onClose}
       title="Choose an Emoji"
       icon={<Smile size={17} strokeWidth={2.4} />}
-      maxHeight="78vh"
+      height="min(78vh, 640px)"
+      maxHeight="min(78vh, 640px)"
       contentStyle={{ padding: '6px 16px 18px 16px', overflow: 'hidden' }}
     >
       {/* Search Bar */}

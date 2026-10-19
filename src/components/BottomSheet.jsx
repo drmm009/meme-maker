@@ -12,6 +12,7 @@ export default function BottomSheet({
   badge,
   children,
   footer,
+  height,
   maxHeight = '82vh',
   className = '',
   contentStyle = {}
@@ -71,7 +72,10 @@ export default function BottomSheet({
                 }
               }}
               onClick={(e) => e.stopPropagation()}
-              style={{ maxHeight }}
+              style={{
+                ...(height ? { height } : {}),
+                maxHeight: maxHeight || (height ? height : '82vh')
+              }}
             >
               {/* Specular Top Glow Beam */}
               <div className="bs-specular-beam" />

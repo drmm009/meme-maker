@@ -1,24 +1,73 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import BottomSheet from '../BottomSheet';
 import { Image as ImageIcon, Search, X } from 'lucide-react';
-import { CATEGORIES } from '../../data/templates';
+import { MEME_TEMPLATES } from '../../data/templates';
+import { safeGet } from '../../utils/storage';
 
-export default function TemplatePickerBottomSheet({ isOpen, onClose, templates = [], onSelectTemplate }) {
+export const TEMPLATE_TAGS = [
+  { id: 'all', label: 'All' },
+  { id: 'images', label: 'Images' },
+  { id: 'reaction', label: 'Reactions' },
+  { id: 'favorites', label: 'Favorites' },
+  { id: 'classics', label: 'Classics' },
+  { id: 'multi-panel', label: 'Multi-Panel' },
+];
+
+export const CATEGORIES = TEMPLATE_TAGS;
+
+export default function TemplatePickerBottomSheet({
+  isOpen,
+  onClose,
+  templates = MEME_TEMPLATES,
+  onSelectTemplate
+}) {
   const [imagePickerSearch, setImagePickerSearch] = useState('');
   const [imagePickerCategory, setImagePickerCategory] = useState('all');
   const pickingTemplateRef = useRef(false);
 
-  const filteredImageTemplates = templates.filter((t) => {
-    if (imagePickerSearch.trim()) {
-      const q = imagePickerSearch.toLowerCase();
-      return (
-        t.name?.toLowerCase().includes(q) ||
-        (t.tags && t.tags.some((tag) => tag.toLowerCase().includes(q)))
-      );
-    }
-    if (imagePickerCategory === 'all') return true;
-    return t.category === imagePickerCategory;
+  const [favorites] = useState(() => {
+    const saved = safeGet('meme_favorite_templates', []);
+    return Array.isArray(saved) ? saved : [];
   });
+
+  const templateList = templates && templates.length > 0 ? templates : MEME_TEMPLATES;
+
+  const filteredImageTemplates = useMemo(() => {
+    return templateList
+      .filter((template) => {
+        // Exclude video templates - this picker is strictly for images
+        if (template.type === 'video' || template.mediaType === 'video') {
+          return false;
+        }
+
+        // Search query filter
+        const q = imagePickerSearch.toLowerCase().trim();
+        const matchesSearch =
+          !q ||
+          (template.name && template.name.toLowerCase().includes(q)) ||
+          (template.category && template.category.toLowerCase().includes(q)) ||
+          (template.tags && template.tags.some((tag) => tag.toLowerCase().includes(q)));
+
+        // Category tag filter (matching TemplateDiscovery logic)
+        let matchesTag = true;
+        if (imagePickerCategory === 'all' || imagePickerCategory === 'images') {
+          matchesTag = true;
+        } else if (imagePickerCategory === 'reaction') {
+          matchesTag = template.category === 'reaction';
+        } else if (imagePickerCategory === 'favorites') {
+          matchesTag = favorites.includes(template.id);
+        } else if (imagePickerCategory === 'classics' || imagePickerCategory === 'classic') {
+          matchesTag = template.category === 'classic' || template.category === 'popular';
+        } else if (imagePickerCategory === 'multi-panel') {
+          matchesTag = template.category === 'multi-panel';
+        } else if (imagePickerCategory === 'desi') {
+          matchesTag = template.category === 'desi';
+        }
+
+        return matchesSearch && matchesTag;
+      })
+      .sort((a, b) => (b.trendingScore || 0) - (a.trendingScore || 0));
+  }, [templateList, imagePickerSearch, imagePickerCategory, favorites]);
 
   const handleCardClick = (tmpl) => {
     if (pickingTemplateRef.current) return;
@@ -37,7 +86,8 @@ export default function TemplatePickerBottomSheet({ isOpen, onClose, templates =
       onClose={onClose}
       title="Add Template"
       icon={<ImageIcon size={17} strokeWidth={2.4} />}
-      maxHeight="82vh"
+      height="min(82vh, 700px)"
+      maxHeight="min(82vh, 700px)"
       contentStyle={{ padding: '6px 16px 18px 16px', overflow: 'hidden' }}
     >
       {/* Search Bar */}
@@ -45,7 +95,7 @@ export default function TemplatePickerBottomSheet({ isOpen, onClose, templates =
         <Search className="bs-search-icon" size={16} />
         <input
           type="text"
-          placeholder={`Search ${templates.length}+ meme templates...`}
+          placeholder={`Search ${templateList.length}+ meme templates...`}
           value={imagePickerSearch}
           onChange={(e) => setImagePickerSearch(e.target.value)}
           className="bs-search-input"
@@ -72,7 +122,7 @@ export default function TemplatePickerBottomSheet({ isOpen, onClose, templates =
           }
         }}
       >
-        {CATEGORIES.map((cat) => {
+        {TEMPLATE_TAGS.map((cat) => {
           const isActive = imagePickerCategory === cat.id && !imagePickerSearch;
           return (
             <button
@@ -85,6 +135,9 @@ export default function TemplatePickerBottomSheet({ isOpen, onClose, templates =
               }}
             >
               <span>{cat.label}</span>
+              {cat.id === 'favorites' && favorites.length > 0 && (
+                <span className="bs-category-count-badge">{favorites.length}</span>
+              )}
             </button>
           );
         })}
@@ -114,7 +167,11 @@ export default function TemplatePickerBottomSheet({ isOpen, onClose, templates =
         ) : (
           <div className="bs-empty-state">
             <ImageIcon size={32} strokeWidth={1.5} style={{ opacity: 0.4 }} />
-            <span>No matching templates found for "{imagePickerSearch}"</span>
+            <span>
+              {imagePickerCategory === 'favorites' && !imagePickerSearch
+                ? "You haven't starred any templates yet. Star templates on the home screen to access them quickly here!"
+                : `No matching templates found for "${imagePickerSearch || imagePickerCategory}"`}
+            </span>
           </div>
         )}
       </div>
