@@ -43,8 +43,6 @@ import {
   DRAW_COLORS,
   getNonOverlappingPosition,
   isColorDark,
-  hslToHex,
-  hexToHue,
 } from '../utils/captionLayout';
 import './MemeEditor.css';
 
@@ -4327,17 +4325,10 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}
                       >
                         {/* Die-Cut Colors Slider Pill — Appears on Secondary Toolbar when Die-Cut is active on sticker / emoji */}
+                        {/* Die-Cut Colors Pill — Styled identically to Draw/Brush Color Picker */}
                         {activeSticker && activeSticker.dieCut && (
-                          <div
-                            className="sec-bar-btn-container"
-                            style={{
-                              padding: '0 8px',
-                              gap: '5px'
-                            }}
-                          >
-                            <Shield style={{ width: 13, height: 13, color: 'var(--primary-accent, #f06853)', flexShrink: 0 }} />
-                            <div className="layer-action-divider" style={{ margin: '0 2px' }} />
-                            {['#ffffff', '#000000', '#ff2a5f', '#ffe600', '#00f0ff', '#a855f7', '#00ff66'].map((c) => {
+                          <div className="sec-bar-btn-container" style={{ padding: '0 6px', gap: '4px' }}>
+                            {DRAW_COLORS.map((c) => {
                               const isSelected = (activeSticker.dieCutColor || '#ffffff').toLowerCase() === c.toLowerCase();
                               return (
                                 <button
@@ -4347,53 +4338,29 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                                   title={`Die-cut border color ${c}`}
                                   onClick={() => handleSetDieCutColor(c)}
                                   style={{
-                                    width: 18,
-                                    height: 18,
+                                    width: 17.5,
+                                    height: 17.5,
                                     borderRadius: '50%',
-                                    backgroundColor: c,
-                                    border: isSelected ? '2px solid var(--cyber-cyan, #06b6d4)' : '1px solid rgba(255, 255, 255, 0.35)',
+                                    background: c,
+                                    border: isSelected ? '2px solid var(--cyber-cyan)' : '1px solid rgba(255,255,255,0.4)',
                                     transform: isSelected ? 'scale(1.15)' : 'scale(1)',
-                                    boxShadow: isSelected ? '0 0 8px rgba(6, 182, 212, 0.7)' : 'none',
-                                    padding: 0,
+                                    boxShadow: isSelected ? '0 0 6px rgba(6,182,212,0.6)' : 'none',
                                     cursor: 'pointer',
-                                    flexShrink: 0,
+                                    padding: 0,
                                     transition: 'all 0.15s ease'
                                   }}
                                 />
                               );
                             })}
-
                             <div
-                              title="Slide to change border color"
-                              style={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                position: 'relative',
-                                width: 56,
-                                height: 18,
-                                flexShrink: 0,
-                                margin: '0 2px'
-                              }}
-                            >
-                              <input
-                                type="range"
-                                min="0"
-                                max="360"
-                                value={hexToHue(activeSticker.dieCutColor || '#ffffff')}
-                                onChange={(e) => handleSetDieCutColor(hslToHex(Number(e.target.value), 100, 50))}
-                                className="die-cut-hue-slider"
-                              />
-                            </div>
-
-                            <div
-                              title="Custom Color Picker"
+                              title="Custom die-cut border color"
                               style={{
                                 position: 'relative',
-                                width: 18,
-                                height: 18,
+                                width: 17.5,
+                                height: 17.5,
                                 borderRadius: '50%',
                                 background: 'conic-gradient(from 180deg at 50% 50%, #ff0055, #ffaa00, #00ff66, #00bbff, #aa00ff, #ff0055)',
-                                border: '1px solid rgba(255, 255, 255, 0.4)',
+                                border: '1px solid rgba(255,255,255,0.4)',
                                 cursor: 'pointer',
                                 overflow: 'hidden',
                                 display: 'inline-flex',
@@ -4406,16 +4373,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                                 type="color"
                                 value={activeSticker.dieCutColor || '#ffffff'}
                                 onChange={(e) => handleSetDieCutColor(e.target.value)}
-                                style={{
-                                  position: 'absolute',
-                                  opacity: 0,
-                                  inset: 0,
-                                  cursor: 'pointer',
-                                  width: '100%',
-                                  height: '100%',
-                                  padding: 0,
-                                  border: 'none'
-                                }}
+                                style={{ position: 'absolute', opacity: 0, inset: 0, cursor: 'pointer', width: '100%', height: '100%' }}
                               />
                             </div>
                           </div>
