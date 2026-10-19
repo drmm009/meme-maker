@@ -1651,7 +1651,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     setCaptions(nextCaps);
     setActiveLayerId(newCap.id);
     setActiveSubmenu(null);
-    setActiveTab('images');
+    setActiveTab('text');
     pushHistory(nextCaps, stickers, imageLayers, drawings, canvasHeader, canvasFooter, demotivational);
   };
 
@@ -1681,7 +1681,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
       isInstagramCard: true,
       x: 0.5,
       y: 0.5,
-      width: 0.88,
+      width: 0.70,
       fontSize: 15,
       color: theme === 'light' ? '#262626' : '#f5f5f5',
       stroke: 'transparent',
@@ -1693,7 +1693,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     setCaptions(nextCaps);
     setActiveLayerId(newCap.id);
     setActiveSubmenu(null);
-    setActiveTab('images');
+    setActiveTab('text');
     pushHistory(nextCaps, stickers, imageLayers, drawings, canvasHeader, canvasFooter, demotivational);
   };
 
@@ -1741,7 +1741,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     setCaptions(nextCaps);
     setActiveLayerId(newCap.id);
     setActiveSubmenu(null);
-    setActiveTab('images');
+    setActiveTab('text');
     pushHistory(nextCaps, stickers, imageLayers, drawings, canvasHeader, canvasFooter, demotivational);
   };
 
@@ -3552,6 +3552,9 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                     }
                     if (window.innerWidth <= 768) {
                       setIsMobileTabsFolded(true);
+                    }
+                    if (captions.some(c => c.id === id)) {
+                      setActiveTab('text');
                     }
                     setActiveLayerId(id);
                     setActiveSubmenu(null);
@@ -5870,7 +5873,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
             }}
           >
             <button
-              className={`tab-btn ${!isElementSelected && activeTab === 'draw' ? 'active' : ''}`}
+              className={`tab-btn ${activeTab === 'draw' ? 'active' : ''}`}
               onClick={() => {
                 handleTabClick('draw');
                 setActiveLayerId(null);
@@ -5880,25 +5883,25 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
               <PencilLine className="icon-xs" /> <span>Draw</span>
             </button>
             <button
-              className={`tab-btn ${!isElementSelected && activeTab === 'images' ? 'active' : ''}`}
+              className={`tab-btn ${activeTab === 'images' ? 'active' : ''}`}
               onClick={() => handleTabClick('images')}
             >
               <Copy className="icon-xs" /> <span>Media</span>
             </button>
             <button
-              className={`tab-btn ${!isElementSelected && activeTab === 'text' ? 'active' : ''}`}
+              className={`tab-btn ${activeTab === 'text' ? 'active' : ''}`}
               onClick={() => handleTabClick('text')}
             >
               <Type className="icon-xs" /> <span>Text</span>
             </button>
             <button
-              className={`tab-btn ${!isElementSelected && activeTab === 'filters' ? 'active' : ''}`}
+              className={`tab-btn ${activeTab === 'filters' ? 'active' : ''}`}
               onClick={() => handleTabClick('filters')}
             >
               <Sparkles className="icon-xs" /> <span>AI/Filters</span>
             </button>
             <button
-              className={`tab-btn ${!isElementSelected && (activeTab === 'canvas' || activeTab === 'watermark') ? 'active' : ''}`}
+              className={`tab-btn ${(activeTab === 'canvas' || activeTab === 'watermark') ? 'active' : ''}`}
               onClick={() => handleTabClick('canvas')}
             >
               <LayoutGrid className="icon-xs" /> <span>Canvas</span>
@@ -5909,7 +5912,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
 
 
             {/* TAB 5: CANVAS & WATERMARK */}
-            {!isElementSelected && (activeTab === 'canvas' || activeTab === 'watermark') && (
+            {(activeTab === 'canvas' || activeTab === 'watermark') && (
               <div className="tab-content">
                 {/* Canvas Orientation & Settings */}
                 <div className="form-group margin-bottom-md" style={{ background: 'var(--bg-surface-1)', padding: '14px', borderRadius: '14px', border: '1px solid var(--glass-border)', marginBottom: '16px' }}>
@@ -6058,7 +6061,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
               </div>
             )}
             {/* TAB 4: FREEHAND DRAWING */}
-            {!isElementSelected && activeTab === 'draw' && (
+            {activeTab === 'draw' && (
               <div className="tab-content animate-fade-in">
                 {/* Tool Selection: 3 Modes (Brush, Marker, Glow) */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px', marginBottom: '14px' }}>
@@ -6219,7 +6222,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
             )}
 
           {/* TAB 1: TEXT CONTROLS */}
-          {!isElementSelected && activeTab === 'text' && (
+          {activeTab === 'text' && (
             <div className="tab-content animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {/* TOP ACTION & COLOR TOOLBAR */}
               <div
@@ -7745,7 +7748,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
 
 
           {/* TAB 3: MEDIA OVERLAY CONTROLS */}
-          {!isElementSelected && activeTab === 'images' && (() => {
+          {activeTab === 'images' && (() => {
             const isVideoLayer = activeImageLayer && isVideoUrl(activeImageLayer.url);
             return (
               <div className="tab-content animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -8024,7 +8027,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
           })()}
 
           {/* TAB 4: AI / FILTERS */}
-          {!isElementSelected && activeTab === 'filters' && (
+          {activeTab === 'filters' && (
             <div className="tab-content animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               {/* STATE 1: 2 Main Action Buttons / Cards (Shown when !showFilterPresets) */}
               {!showFilterPresets && (

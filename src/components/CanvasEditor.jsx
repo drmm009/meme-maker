@@ -842,7 +842,7 @@ export const getInstagramCardHeight = (ctx, cap, cardW) => {
   const iconSize = Math.round(20 * scale);
 
   const headerH = Math.max(avatarSize, Math.round(44 * scale));
-  const postImageH = Math.round(cardW * 0.82);
+  const postImageH = Math.round(cardW * 0.72);
 
   ctx.save();
   ctx.font = `normal ${bodyFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
@@ -977,7 +977,7 @@ export const drawInstagramCard = (ctx, cardW, cap) => {
   // ─── Post Image Section (Square Feed Photo) ───
   const headerH = Math.max(avatarR * 2, Math.round(44 * scale));
   const postImageY = startY + pad + headerH + Math.round(10 * scale);
-  const postImageH = Math.round(cardW * 0.82);
+  const postImageH = Math.round(cardW * 0.72);
 
   if (postImageSrc) {
     let cached = socialCardImageCache.get(postImageSrc);
