@@ -3077,6 +3077,9 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
           baseImgRef.current = baseImg;
           renderCanvas(baseImg);
         };
+        baseImg.onerror = () => {
+          renderCanvas(null);
+        };
         baseImg.src = imgSrc;
     } else {
       renderCanvas(null);
@@ -3566,7 +3569,8 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
       
       if (hitLayer.type === 'caption') {
         const now = Date.now();
-        const isSocial = cap?.isTweetCard || cap?.isInstagramCard || cap?.isWhatsAppCard;
+        const clickedCap = captions.find(c => c.id === hitLayer.id);
+        const isSocial = clickedCap?.isTweetCard || clickedCap?.isInstagramCard || clickedCap?.isWhatsAppCard;
         if (!isSocial && lastTapRef.current.id === hitLayer.id && (now - lastTapRef.current.time) < 350) {
           setEditingCaptionId(hitLayer.id);
           focusTextarea();
