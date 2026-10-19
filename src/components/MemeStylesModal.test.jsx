@@ -92,6 +92,8 @@ describe('MemeStylesModal (Unified Social Cards Studio)', () => {
     expect(callArgs.username).toBe('daily_aesthetic');
     expect(callArgs.hasStoryRing).toBe(false);
     expect(callArgs.verified).toBe(true);
+    expect(callArgs.likesText).toBe('Liked by zendaya and 984,210 others');
+    expect(callArgs.commentsCount).toBe('1,420');
     expect(callArgs.postImage).toBeDefined();
     expect(onClose).toHaveBeenCalled();
   });

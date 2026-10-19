@@ -839,6 +839,7 @@ export const getInstagramCardHeight = (ctx, cap, cardW) => {
   const bodyFontSize = Math.round(Math.max(12, (cap.fontSize || 15) * scale));
   const likesFontSize = Math.round(13 * scale);
   const timeFontSize = Math.round(11 * scale);
+  const commentsFontSize = Math.round(11.5 * scale);
   const iconSize = Math.round(20 * scale);
 
   const headerH = Math.max(avatarSize, Math.round(44 * scale));
@@ -849,13 +850,21 @@ export const getInstagramCardHeight = (ctx, cap, cardW) => {
   const wrappedLines = wrapText(ctx, `${cap.igUsername || 'username'} ${cap.text || ''}`, cardW - pad * 2);
   ctx.restore();
 
-  const actionsH = iconSize + Math.round(8 * scale);
-  const likesH = likesFontSize + Math.round(6 * scale);
+  const actionsH = iconSize + Math.round(10 * scale);
+  const likesH = cap.igLikesText !== '' ? (likesFontSize + Math.round(6 * scale)) : 0;
   const captionH = wrappedLines.length * (bodyFontSize * 1.38);
+
+  const commentsCountText = cap.igCommentsCount ? (cap.igCommentsCount.startsWith('View') ? cap.igCommentsCount : `View all ${cap.igCommentsCount} comments`) : (cap.igCommentsText || 'View all 420 comments');
+  const showComments = cap.igShowComments !== false && Boolean(commentsCountText);
+  const commentsH = showComments ? (commentsFontSize + Math.round(5 * scale)) : 0;
+
+  const hasTopComment = Boolean(cap.igTopCommentUser && cap.igTopCommentText);
+  const topCommentH = hasTopComment ? (Math.round(12 * scale) + Math.round(5 * scale)) : 0;
+
   const timeH = timeFontSize + Math.round(6 * scale);
 
-  // Feed ordering: Pad + Header + Post Image + Actions Row + Likes Line + Caption + Timestamp + Pad
-  const totalH = Math.round(pad + headerH + Math.round(10 * scale) + postImageH + Math.round(10 * scale) + actionsH + likesH + captionH + timeH + pad);
+  // Feed ordering: Pad + Header + Post Image + Actions Row + Likes Line + Caption + Comments + Top Comment + Timestamp + Pad
+  const totalH = Math.round(pad + headerH + Math.round(10 * scale) + postImageH + Math.round(10 * scale) + actionsH + likesH + captionH + commentsH + topCommentH + timeH + pad);
   return totalH;
 };
 
@@ -1063,15 +1072,19 @@ export const drawInstagramCard = (ctx, cardW, cap) => {
   drawTweetVectorStrokeIcon(ctx, tweetBookmarkPath, startX + cardW - pad - iconSize, curY, iconSize, textColor);
 
   // ─── Likes Line (BELOW ACTIONS) ───
-  curY += iconSize + Math.round(10 * scale);
-  ctx.font = `bold ${likesFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
-  ctx.fillStyle = textColor;
-  ctx.textAlign = 'left';
-  ctx.textBaseline = 'top';
-  ctx.fillText(likesText, startX + pad, curY);
+  if (likesText) {
+    curY += iconSize + Math.round(10 * scale);
+    ctx.font = `bold ${likesFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+    ctx.fillStyle = textColor;
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+    ctx.fillText(likesText, startX + pad, curY);
+    curY += likesFontSize + Math.round(6 * scale);
+  } else {
+    curY += iconSize + Math.round(8 * scale);
+  }
 
   // ─── Caption (STRICTLY BELOW LIKES) ───
-  curY += likesFontSize + Math.round(6 * scale);
   ctx.font = `normal ${bodyFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
   ctx.fillStyle = textColor;
   ctx.textAlign = 'left';
@@ -1092,11 +1105,37 @@ export const drawInstagramCard = (ctx, cardW, cap) => {
     curY += Math.round(bodyFontSize * 1.38);
   }
 
-  // ─── Timestamp ───
-  curY += Math.round(5 * scale);
+  // ─── Comments Count Line ───
+  const commentsCountText = cap.igCommentsCount ? (cap.igCommentsCount.startsWith('View') ? cap.igCommentsCount : `View all ${cap.igCommentsCount} comments`) : (cap.igCommentsText || 'View all 420 comments');
+  const showComments = cap.igShowComments !== false && Boolean(commentsCountText);
+  if (showComments) {
+    curY += Math.round(3 * scale);
+    ctx.font = `normal ${Math.round(11.5 * scale)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+    ctx.fillStyle = mutedColor;
+    ctx.fillText(commentsCountText, startX + pad, curY);
+    curY += Math.round(11.5 * scale) + Math.round(2 * scale);
+  }
+
+  // ─── Top / Pinned Comment (Optional) ───
+  if (cap.igTopCommentUser && cap.igTopCommentText) {
+    curY += Math.round(2 * scale);
+    ctx.font = `bold ${Math.round(12 * scale)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+    ctx.fillStyle = textColor;
+    ctx.fillText(cap.igTopCommentUser, startX + pad, curY);
+    const topUserW = ctx.measureText(cap.igTopCommentUser).width;
+    ctx.font = `normal ${Math.round(12 * scale)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+    ctx.fillText(` ${cap.igTopCommentText}`, startX + pad + topUserW, curY);
+    curY += Math.round(12 * scale) + Math.round(2 * scale);
+  }
+
+  // ─── Timestamp & Translation ───
+  curY += Math.round(3 * scale);
+  const displayTime = cap.igTime || '2 hours ago';
+  const showTranslation = cap.igShowTranslation !== false;
+  const timeText = showTranslation ? `${displayTime} · See translation` : displayTime;
   ctx.font = `normal ${timeFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
   ctx.fillStyle = mutedColor;
-  ctx.fillText(time, startX + pad, curY);
+  ctx.fillText(timeText, startX + pad, curY);
 
   ctx.restore();
 };

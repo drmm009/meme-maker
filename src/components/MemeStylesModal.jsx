@@ -148,6 +148,10 @@ const INSTAGRAM_PERSONAS = [
     avatarBg: 'linear-gradient(135deg, #0ea5e9, #38bdf8)',
     likesText: 'Liked by cristiano and 1,842,509 others',
     text: 'Meta announces AGI is just a guy named Dave in a basement writing if-else statements. Link in bio.',
+    commentsCount: '14,209',
+    topCommentUser: 'cristiano',
+    topCommentText: 'AGI when? 😂👏',
+    time: '2 hours ago',
     postImage: IG_PRESET_IMAGES.zuck
   },
   {
@@ -160,6 +164,10 @@ const INSTAGRAM_PERSONAS = [
     avatarBg: 'linear-gradient(135deg, #f59e0b, #ef4444)',
     likesText: 'Liked by kyliejenner and 58,912,400 others',
     text: 'Let’s set a world record together and get the most liked post on Instagram. We got this 💪',
+    commentsCount: '3,842,109',
+    topCommentUser: 'kyliejenner',
+    topCommentText: 'Take the crown 👑',
+    time: '1 day ago',
     postImage: IG_PRESET_IMAGES.egg
   },
   {
@@ -172,6 +180,10 @@ const INSTAGRAM_PERSONAS = [
     avatarBg: 'linear-gradient(135deg, #f59e0b, #eab308)',
     likesText: 'Liked by 412,890 others',
     text: 'I did not knock the glass off the table. Gravity did. I am completely innocent of all charges.',
+    commentsCount: '892',
+    topCommentUser: 'doge',
+    topCommentText: 'much innocent such gravity',
+    time: '4 hours ago',
     postImage: IG_PRESET_IMAGES.cat
   },
   {
@@ -184,6 +196,10 @@ const INSTAGRAM_PERSONAS = [
     avatarBg: 'linear-gradient(135deg, #ec4899, #8b5cf6)',
     likesText: 'Liked by zendaya and 984,210 others',
     text: 'Romanticize your life even when your code refuses to compile. ✨ Matcha latte in hand, zero bugs in sight.',
+    commentsCount: '1,420',
+    topCommentUser: 'zendaya',
+    topCommentText: 'Obsessed with this vibe ✨',
+    time: '5 hours ago',
     postImage: IG_PRESET_IMAGES.aesthetic
   },
   {
@@ -196,6 +212,10 @@ const INSTAGRAM_PERSONAS = [
     avatarBg: 'linear-gradient(135deg, #10b981, #06b6d4)',
     likesText: 'Liked by elonmusk and 74,102 others',
     text: 'We just raised $50M seed round to replace meetings with silence. Hiring 10 senior devs to maintain the silence.',
+    commentsCount: '648',
+    topCommentUser: 'elonmusk',
+    topCommentText: 'Sounds like a hard problem',
+    time: '7 hours ago',
     postImage: IG_PRESET_IMAGES.startup
   }
 ];
@@ -351,6 +371,12 @@ export default function MemeStylesModal({
   const [igVerified, setIgVerified] = useState(true);
   const [igHasStoryRing, setIgHasStoryRing] = useState(true);
   const [igLikesText, setIgLikesText] = useState('Liked by cristiano and 1,842,509 others');
+  const [igCommentsCount, setIgCommentsCount] = useState('14,209');
+  const [igShowComments, setIgShowComments] = useState(true);
+  const [igTopCommentUser, setIgTopCommentUser] = useState('cristiano');
+  const [igTopCommentText, setIgTopCommentText] = useState('AGI when? 😂👏');
+  const [igTime, setIgTime] = useState('2 hours ago');
+  const [igShowTranslation, setIgShowTranslation] = useState(true);
   const [igTheme, setIgTheme] = useState('dark');
   const [igAvatarBg, setIgAvatarBg] = useState('linear-gradient(135deg, #0ea5e9, #38bdf8)');
   const [igPostImage, setIgPostImage] = useState(IG_PRESET_IMAGES.zuck);
@@ -391,6 +417,10 @@ export default function MemeStylesModal({
     setIgHasStoryRing(p.hasStoryRing);
     setIgLikesText(p.likesText);
     setIgText(p.text);
+    if (p.commentsCount) setIgCommentsCount(p.commentsCount);
+    if (p.topCommentUser !== undefined) setIgTopCommentUser(p.topCommentUser);
+    if (p.topCommentText !== undefined) setIgTopCommentText(p.topCommentText);
+    if (p.time) setIgTime(p.time);
     if (p.avatarBg) setIgAvatarBg(p.avatarBg);
     if (p.postImage) setIgPostImage(p.postImage);
   };
@@ -487,7 +517,12 @@ export default function MemeStylesModal({
           likesText: igLikesText,
           postImage: igPostImage,
           theme: igTheme,
-          time: '2 HOURS AGO'
+          time: igTime || '2 hours ago',
+          commentsCount: igCommentsCount,
+          showComments: igShowComments,
+          topCommentUser: igTopCommentUser,
+          topCommentText: igTopCommentText,
+          showTranslation: igShowTranslation
         });
       }
     } else if (activePlatform === 'whatsapp') {
@@ -847,11 +882,13 @@ export default function MemeStylesModal({
               </div>
 
               {/* Likes Text (Above Caption) */}
-              <div style={{ marginBottom: '6px' }}>
-                <span style={{ fontWeight: 700, fontSize: '0.84rem', color: igTheme === 'light' ? '#262626' : '#ffffff' }}>
-                  {igLikesText}
-                </span>
-              </div>
+              {igLikesText && (
+                <div style={{ marginBottom: '6px' }}>
+                  <span style={{ fontWeight: 600, fontSize: '0.84rem', color: igTheme === 'light' ? '#262626' : '#ffffff' }}>
+                    {igLikesText}
+                  </span>
+                </div>
+              )}
 
               {/* Caption Content (BELOW LIKES ICON & LIKES COUNT) */}
               <div
@@ -861,21 +898,43 @@ export default function MemeStylesModal({
                   wordBreak: 'break-word',
                   whiteSpace: 'pre-wrap',
                   color: igTheme === 'light' ? '#262626' : '#ffffff',
-                  marginBottom: '8px'
+                  marginBottom: '6px'
                 }}
               >
                 <strong style={{ marginRight: '6px', fontWeight: 700 }}>{igUsername || 'username'}</strong>
                 <span>{igText || 'Caption here...'}</span>
               </div>
 
-              {/* Comments & Timestamp */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-                <span style={{ fontSize: '0.74rem', color: igTheme === 'light' ? '#737373' : '#8e8e8e', cursor: 'pointer' }}>
-                  View all 420 comments
+              {/* Comments Count */}
+              {igShowComments !== false && Boolean(igCommentsCount) && (
+                <div style={{ marginBottom: '4px' }}>
+                  <span style={{ fontSize: '0.78rem', color: igTheme === 'light' ? '#737373' : '#a8a8a8', cursor: 'pointer' }}>
+                    {igCommentsCount.startsWith('View') ? igCommentsCount : `View all ${igCommentsCount} comments`}
+                  </span>
+                </div>
+              )}
+
+              {/* Optional Top / Pinned Comment */}
+              {igTopCommentUser && igTopCommentText && (
+                <div style={{ fontSize: '0.80rem', lineHeight: 1.35, marginBottom: '4px', color: igTheme === 'light' ? '#262626' : '#ffffff' }}>
+                  <strong style={{ marginRight: '6px', fontWeight: 700 }}>{igTopCommentUser}</strong>
+                  <span>{igTopCommentText}</span>
+                </div>
+              )}
+
+              {/* Timestamp & Translation */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
+                <span style={{ fontSize: '0.68rem', color: igTheme === 'light' ? '#8e8e8e' : '#737373', textTransform: 'none' }}>
+                  {igTime || '2 hours ago'}
                 </span>
-                <span style={{ fontSize: '0.66rem', color: igTheme === 'light' ? '#8e8e8e' : '#737373', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
-                  2 HOURS AGO
-                </span>
+                {igShowTranslation !== false && (
+                  <>
+                    <span style={{ fontSize: '0.68rem', color: igTheme === 'light' ? '#8e8e8e' : '#737373' }}>·</span>
+                    <span style={{ fontSize: '0.68rem', fontWeight: 600, color: igTheme === 'light' ? '#262626' : '#ffffff', cursor: 'pointer' }}>
+                      See translation
+                    </span>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -1186,11 +1245,39 @@ export default function MemeStylesModal({
               </div>
             </div>
 
-            {/* Likes Line Input */}
+            {/* Likes Line Input & Quick Presets */}
             <div>
-              <label style={{ fontSize: '0.74rem', fontWeight: 700, color: 'rgba(255,255,255,0.65)', marginBottom: '6px', display: 'block' }}>
-                Likes Line (Above Caption)
-              </label>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                <label style={{ fontSize: '0.74rem', fontWeight: 700, color: 'rgba(255,255,255,0.65)' }}>
+                  Likes Count & Text
+                </label>
+                <div style={{ display: 'flex', gap: '4px' }}>
+                  {[
+                    { label: 'Friend + Count', val: 'Liked by cristiano and 1,842,509 others' },
+                    { label: '1.8M likes', val: '1,842,509 likes' },
+                    { label: '420K likes', val: '420.5K likes' },
+                    { label: '12K likes', val: '12,410 likes' }
+                  ].map(p => (
+                    <button
+                      key={p.label}
+                      type="button"
+                      onClick={() => setIgLikesText(p.val)}
+                      style={{
+                        padding: '2px 7px',
+                        borderRadius: '6px',
+                        background: igLikesText === p.val ? 'rgba(255, 94, 54, 0.25)' : 'rgba(255, 255, 255, 0.06)',
+                        border: igLikesText === p.val ? '1px solid #ff5e36' : '1px solid rgba(255, 255, 255, 0.1)',
+                        color: igLikesText === p.val ? '#ff5e36' : 'rgba(255, 255, 255, 0.7)',
+                        fontSize: '0.65rem',
+                        fontWeight: 600,
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
               <input
                 type="text"
                 className="form-input"
@@ -1244,27 +1331,165 @@ export default function MemeStylesModal({
               />
             </div>
 
-            {/* Options Row: Verified Badge, Story Ring, Theme */}
+            {/* Comments Count & Timestamp */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '12px' }}>
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                  <label style={{ fontSize: '0.74rem', fontWeight: 700, color: 'rgba(255,255,255,0.65)' }}>
+                    Comments Count
+                  </label>
+                  <div style={{ display: 'flex', gap: '4px' }}>
+                    {['42', '420', '1,420', '14.2K'].map(c => (
+                      <button
+                        key={c}
+                        type="button"
+                        onClick={() => setIgCommentsCount(c)}
+                        style={{
+                          padding: '1px 6px',
+                          borderRadius: '5px',
+                          background: igCommentsCount === c ? 'rgba(255, 94, 54, 0.25)' : 'rgba(255, 255, 255, 0.06)',
+                          border: igCommentsCount === c ? '1px solid #ff5e36' : '1px solid rgba(255, 255, 255, 0.1)',
+                          color: igCommentsCount === c ? '#ff5e36' : 'rgba(255, 255, 255, 0.7)',
+                          fontSize: '0.65rem',
+                          fontWeight: 600,
+                          cursor: 'pointer'
+                        }}
+                      >
+                        {c}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={igCommentsCount}
+                  onChange={(e) => setIgCommentsCount(e.target.value)}
+                  placeholder="e.g. 420 or 1,420"
+                  style={inputStyle}
+                  onFocus={inputFocusHandler}
+                  onBlur={inputBlurHandler}
+                />
+              </div>
+
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                  <label style={{ fontSize: '0.74rem', fontWeight: 700, color: 'rgba(255,255,255,0.65)' }}>
+                    Timestamp
+                  </label>
+                  <div style={{ display: 'flex', gap: '4px' }}>
+                    {['2h', '5h', '1d'].map(t => {
+                      const full = t === '2h' ? '2 hours ago' : t === '5h' ? '5 hours ago' : '1 day ago';
+                      return (
+                        <button
+                          key={t}
+                          type="button"
+                          onClick={() => setIgTime(full)}
+                          style={{
+                            padding: '1px 6px',
+                            borderRadius: '5px',
+                            background: igTime === full ? 'rgba(255, 94, 54, 0.25)' : 'rgba(255, 255, 255, 0.06)',
+                            border: igTime === full ? '1px solid #ff5e36' : '1px solid rgba(255, 255, 255, 0.1)',
+                            color: igTime === full ? '#ff5e36' : 'rgba(255, 255, 255, 0.7)',
+                            fontSize: '0.65rem',
+                            fontWeight: 600,
+                            cursor: 'pointer'
+                          }}
+                        >
+                          {t}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={igTime}
+                  onChange={(e) => setIgTime(e.target.value)}
+                  placeholder="e.g. 2 hours ago"
+                  style={inputStyle}
+                  onFocus={inputFocusHandler}
+                  onBlur={inputBlurHandler}
+                />
+              </div>
+            </div>
+
+            {/* Top / Pinned Comment (Optional) */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.6fr', gap: '12px' }}>
+              <div>
+                <label style={{ fontSize: '0.74rem', fontWeight: 700, color: 'rgba(255,255,255,0.65)', display: 'block', marginBottom: '6px' }}>
+                  Top Commenter (Optional)
+                </label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={igTopCommentUser}
+                  onChange={(e) => setIgTopCommentUser(e.target.value)}
+                  placeholder="e.g. cristiano"
+                  style={inputStyle}
+                  onFocus={inputFocusHandler}
+                  onBlur={inputBlurHandler}
+                />
+              </div>
+              <div>
+                <label style={{ fontSize: '0.74rem', fontWeight: 700, color: 'rgba(255,255,255,0.65)', display: 'block', marginBottom: '6px' }}>
+                  Top Comment Text
+                </label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={igTopCommentText}
+                  onChange={(e) => setIgTopCommentText(e.target.value)}
+                  placeholder="e.g. AGI when? 😂👏"
+                  style={inputStyle}
+                  onFocus={inputFocusHandler}
+                  onBlur={inputBlurHandler}
+                />
+              </div>
+            </div>
+
+            {/* Options Row: Verified Badge, Story Ring, Show Comments, Translation, Theme */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
-              <div style={{ display: 'flex', gap: '14px' }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '0.78rem', color: '#ffffff' }}>
+              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer', fontSize: '0.76rem', color: '#ffffff' }}>
                   <input
                     type="checkbox"
                     checked={igVerified}
                     onChange={(e) => setIgVerified(e.target.checked)}
-                    style={{ accentColor: '#ff5e36', width: 16, height: 16 }}
+                    style={{ accentColor: '#ff5e36', width: 15, height: 15 }}
                   />
-                  <span>Verified Badge</span>
+                  <span>Verified</span>
                 </label>
 
-                <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '0.78rem', color: '#ffffff' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer', fontSize: '0.76rem', color: '#ffffff' }}>
                   <input
                     type="checkbox"
                     checked={igHasStoryRing}
                     onChange={(e) => setIgHasStoryRing(e.target.checked)}
-                    style={{ accentColor: '#ff5e36', width: 16, height: 16 }}
+                    style={{ accentColor: '#ff5e36', width: 15, height: 15 }}
                   />
                   <span>Story Ring</span>
+                </label>
+
+                <label style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer', fontSize: '0.76rem', color: '#ffffff' }}>
+                  <input
+                    type="checkbox"
+                    checked={igShowComments}
+                    onChange={(e) => setIgShowComments(e.target.checked)}
+                    style={{ accentColor: '#ff5e36', width: 15, height: 15 }}
+                  />
+                  <span>Comments</span>
+                </label>
+
+                <label style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer', fontSize: '0.76rem', color: '#ffffff' }}>
+                  <input
+                    type="checkbox"
+                    checked={igShowTranslation}
+                    onChange={(e) => setIgShowTranslation(e.target.checked)}
+                    style={{ accentColor: '#ff5e36', width: 15, height: 15 }}
+                  />
+                  <span>Translation</span>
                 </label>
               </div>
 
