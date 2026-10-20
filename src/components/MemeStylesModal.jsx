@@ -3,7 +3,8 @@ import {
   X, Plus, User, AtSign, Sparkles, Dices, Check,
   MessageCircle, Repeat, Heart, Bookmark, Share2,
   Phone, Video, MoreVertical, Send, CheckCheck,
-  Upload, Image as ImageIcon, Trash2, ArrowLeftRight, ChevronLeft, ChevronDown
+  Upload, Image as ImageIcon, Trash2, ArrowLeftRight, ChevronLeft, ChevronDown,
+  Newspaper, Rocket, Trophy, Smile, Briefcase
 } from 'lucide-react';
 import BottomSheet from './BottomSheet';
 
@@ -141,7 +142,8 @@ const RANDOM_TWEETS = [
 const INSTAGRAM_PERSONAS = [
   {
     id: 'inc42',
-    label: '📰 Tech Media (inc42)',
+    label: 'Tech Media (inc42)',
+    icon: Newspaper,
     username: 'inc42.media',
     subtitle: 'Suggested for you',
     verified: true,
@@ -159,7 +161,8 @@ const INSTAGRAM_PERSONAS = [
   },
   {
     id: 'zuck',
-    label: '🚀 Mark Zuckerberg',
+    label: 'Mark Zuckerberg',
+    icon: Rocket,
     username: 'zuck',
     subtitle: 'Suggested for you',
     verified: true,
@@ -177,7 +180,8 @@ const INSTAGRAM_PERSONAS = [
   },
   {
     id: 'egg',
-    label: '🥚 World Record Egg',
+    label: 'World Record Egg',
+    icon: Trophy,
     username: 'world_record_egg',
     subtitle: 'Egg Gang',
     verified: true,
@@ -195,7 +199,8 @@ const INSTAGRAM_PERSONAS = [
   },
   {
     id: 'cat',
-    label: '🐱 Chonky Cat',
+    label: 'Chonky Cat',
+    icon: Smile,
     username: 'chonk_vibes',
     subtitle: 'Living Room, Couch',
     verified: false,
@@ -213,7 +218,8 @@ const INSTAGRAM_PERSONAS = [
   },
   {
     id: 'aesthetic',
-    label: '✨ Aesthetic Creator',
+    label: 'Aesthetic Creator',
+    icon: Sparkles,
     username: 'daily_aesthetic',
     subtitle: 'Coffee & Sunsets',
     verified: true,
@@ -231,7 +237,8 @@ const INSTAGRAM_PERSONAS = [
   },
   {
     id: 'startup',
-    label: '💼 Silicon Valley',
+    label: 'Silicon Valley',
+    icon: Briefcase,
     username: 'startup_grind',
     subtitle: 'San Francisco, CA',
     verified: false,
@@ -650,16 +657,35 @@ export default function MemeStylesModal({
           </button>
         ))}
 
-        {activePlatform === 'instagram' && INSTAGRAM_PERSONAS.map((p) => (
-          <button
-            key={p.id}
-            type="button"
-            className={`bs-category-btn ${activeIgPersona === p.id ? 'active' : ''}`}
-            onClick={() => handleApplyIgPersona(p)}
-          >
-            <span>{p.label}</span>
-          </button>
-        ))}
+        {activePlatform === 'instagram' && INSTAGRAM_PERSONAS.map((p) => {
+          const IconComp = p.icon;
+          return (
+            <button
+              key={p.id}
+              type="button"
+              className={`bs-category-btn ${activeIgPersona === p.id ? 'active' : ''}`}
+              onClick={() => handleApplyIgPersona(p)}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}
+            >
+              {IconComp && (
+                <IconComp
+                  size={13}
+                  strokeWidth={2.2}
+                  style={{
+                    color: 'currentColor',
+                    opacity: 0.9,
+                    flexShrink: 0
+                  }}
+                />
+              )}
+              <span>{p.label}</span>
+            </button>
+          );
+        })}
 
         {activePlatform === 'whatsapp' && WHATSAPP_PERSONAS.map((p) => (
           <button
@@ -1461,60 +1487,8 @@ export default function MemeStylesModal({
               </div>
             </div>
 
-            {/* Row 4: Clean Quick Toggles (Story Ring, Verified, More Options disclosure) */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '2px' }}>
-              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                <button
-                  type="button"
-                  onClick={() => setIgHasStoryRing(!igHasStoryRing)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '5px',
-                    padding: '4px 10px',
-                    borderRadius: '8px',
-                    fontSize: '0.70rem',
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    background: igHasStoryRing ? 'rgba(225, 48, 108, 0.18)' : 'rgba(255, 255, 255, 0.05)',
-                    border: igHasStoryRing ? '1px solid #e1306c' : '1px solid rgba(255, 255, 255, 0.1)',
-                    color: igHasStoryRing ? '#f43f5e' : 'rgba(255, 255, 255, 0.5)'
-                  }}
-                >
-                  <span style={{
-                    width: 7,
-                    height: 7,
-                    borderRadius: '50%',
-                    background: igHasStoryRing
-                      ? 'linear-gradient(45deg, #f09433, #dc2743, #bc1888)'
-                      : 'rgba(255,255,255,0.3)'
-                  }} />
-                  Story Ring
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setIgVerified(!igVerified)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '5px',
-                    padding: '4px 10px',
-                    borderRadius: '8px',
-                    fontSize: '0.70rem',
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    background: igVerified ? 'rgba(0, 149, 246, 0.18)' : 'rgba(255, 255, 255, 0.05)',
-                    border: igVerified ? '1px solid #0095f6' : '1px solid rgba(255, 255, 255, 0.1)',
-                    color: igVerified ? '#38bdf8' : 'rgba(255, 255, 255, 0.5)'
-                  }}
-                >
-                  <Check size={11} strokeWidth={3} />
-                  Verified
-                </button>
-              </div>
-
-              {/* Collapsible toggle for advanced details */}
+            {/* Row 4: More Options disclosure */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingTop: '2px' }}>
               <button
                 type="button"
                 onClick={() => setShowIgMoreOptions(!showIgMoreOptions)}
@@ -1542,7 +1516,7 @@ export default function MemeStylesModal({
               </button>
             </div>
 
-            {/* Collapsible Advanced Section (Follow Text, Timestamp, Pinned Comment, Translation) */}
+            {/* Collapsible Advanced Section (Timestamp, Pinned Comment, Translation, Story Ring) */}
             {showIgMoreOptions && (
               <div
                 style={{
@@ -1555,65 +1529,47 @@ export default function MemeStylesModal({
                   gap: '10px'
                 }}
               >
-                {/* Follow Button & Timestamp */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: '10px' }}>
-                  <div>
-                    <label style={{ fontSize: '0.68rem', fontWeight: 600, color: 'rgba(255,255,255,0.5)', display: 'block', marginBottom: '4px' }}>
-                      Follow Button Text
+                {/* Timestamp */}
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                    <label style={{ fontSize: '0.68rem', fontWeight: 600, color: 'rgba(255,255,255,0.5)' }}>
+                      Timestamp
                     </label>
-                    <input
-                      type="text"
-                      className="form-input"
-                      value={igFollowText}
-                      onChange={(e) => setIgFollowText(e.target.value)}
-                      placeholder="Follow"
-                      style={{ ...inputStyle, padding: '5px 10px', fontSize: '0.78rem' }}
-                      onFocus={inputFocusHandler}
-                      onBlur={inputBlurHandler}
-                    />
-                  </div>
-
-                  <div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                      <label style={{ fontSize: '0.68rem', fontWeight: 600, color: 'rgba(255,255,255,0.5)' }}>
-                        Timestamp
-                      </label>
-                      <div style={{ display: 'flex', gap: '3px' }}>
-                        {[
-                          { short: '28 Sep', full: '28 September' },
-                          { short: '5h', full: '5 hours ago' },
-                          { short: '1d', full: '1 day ago' }
-                        ].map((t) => (
-                          <button
-                            key={t.short}
-                            type="button"
-                            onClick={() => setIgTime(t.full)}
-                            style={{
-                              padding: '1px 5px',
-                              borderRadius: '4px',
-                              background: igTime === t.full ? 'rgba(255, 94, 54, 0.25)' : 'rgba(255, 255, 255, 0.05)',
-                              border: igTime === t.full ? '1px solid #ff5e36' : '1px solid transparent',
-                              color: igTime === t.full ? '#ff5e36' : 'rgba(255, 255, 255, 0.6)',
-                              fontSize: '0.62rem',
-                              cursor: 'pointer'
-                            }}
-                          >
-                            {t.short}
-                          </button>
-                        ))}
-                      </div>
+                    <div style={{ display: 'flex', gap: '3px' }}>
+                      {[
+                        { short: '28 Sep', full: '28 September' },
+                        { short: '5h', full: '5 hours ago' },
+                        { short: '1d', full: '1 day ago' }
+                      ].map((t) => (
+                        <button
+                          key={t.short}
+                          type="button"
+                          onClick={() => setIgTime(t.full)}
+                          style={{
+                            padding: '1px 5px',
+                            borderRadius: '4px',
+                            background: igTime === t.full ? 'rgba(255, 94, 54, 0.25)' : 'rgba(255, 255, 255, 0.05)',
+                            border: igTime === t.full ? '1px solid #ff5e36' : '1px solid transparent',
+                            color: igTime === t.full ? '#ff5e36' : 'rgba(255, 255, 255, 0.6)',
+                            fontSize: '0.62rem',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          {t.short}
+                        </button>
+                      ))}
                     </div>
-                    <input
-                      type="text"
-                      className="form-input"
-                      value={igTime}
-                      onChange={(e) => setIgTime(e.target.value)}
-                      placeholder="e.g. 28 September"
-                      style={{ ...inputStyle, padding: '5px 10px', fontSize: '0.78rem' }}
-                      onFocus={inputFocusHandler}
-                      onBlur={inputBlurHandler}
-                    />
                   </div>
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={igTime}
+                    onChange={(e) => setIgTime(e.target.value)}
+                    placeholder="e.g. 28 September"
+                    style={{ ...inputStyle, padding: '5px 10px', fontSize: '0.78rem' }}
+                    onFocus={inputFocusHandler}
+                    onBlur={inputBlurHandler}
+                  />
                 </div>
 
                 {/* Optional Pinned Comment */}
@@ -1650,16 +1606,28 @@ export default function MemeStylesModal({
                   </div>
                 </div>
 
-                {/* Translation toggle */}
-                <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '0.72rem', color: 'rgba(255,255,255,0.7)' }}>
-                  <input
-                    type="checkbox"
-                    checked={igShowTranslation}
-                    onChange={(e) => setIgShowTranslation(e.target.checked)}
-                    style={{ accentColor: '#ff5e36', width: 14, height: 14 }}
-                  />
-                  <span>Show "See translation" link</span>
-                </label>
+                {/* Secondary Toggles (Story Ring & Translation) */}
+                <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '0.72rem', color: 'rgba(255,255,255,0.7)' }}>
+                    <input
+                      type="checkbox"
+                      checked={igHasStoryRing}
+                      onChange={(e) => setIgHasStoryRing(e.target.checked)}
+                      style={{ accentColor: '#ff5e36', width: 14, height: 14 }}
+                    />
+                    <span>Story Ring</span>
+                  </label>
+
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '0.72rem', color: 'rgba(255,255,255,0.7)' }}>
+                    <input
+                      type="checkbox"
+                      checked={igShowTranslation}
+                      onChange={(e) => setIgShowTranslation(e.target.checked)}
+                      style={{ accentColor: '#ff5e36', width: 14, height: 14 }}
+                    />
+                    <span>Show "See translation" link</span>
+                  </label>
+                </div>
               </div>
             )}
           </div>
