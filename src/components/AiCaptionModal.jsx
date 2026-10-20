@@ -272,9 +272,6 @@ export default function AiCaptionModal({ isOpen, onClose, onApplyCaption, templa
             display: 'inline-flex',
             alignItems: 'center',
             gap: '6px',
-            flexShrink: 0
-          }}
-        >
             flexShrink: 0,
             cursor: loading ? 'not-allowed' : 'pointer',
             boxShadow: '0 4px 14px rgba(249, 115, 22, 0.28)'
