@@ -3,7 +3,7 @@ import {
   X, Plus, User, AtSign, Sparkles, Dices, Check,
   MessageCircle, Repeat, Heart, Bookmark, Share2,
   Phone, Video, MoreVertical, Send, CheckCheck,
-  Upload, Image as ImageIcon, Trash2, ArrowLeftRight, ChevronLeft
+  Upload, Image as ImageIcon, Trash2, ArrowLeftRight, ChevronLeft, ChevronDown
 } from 'lucide-react';
 import BottomSheet from './BottomSheet';
 
@@ -412,6 +412,7 @@ export default function MemeStylesModal({
   const [igTheme, setIgTheme] = useState('light');
   const [igAvatarBg, setIgAvatarBg] = useState('linear-gradient(135deg, #b91c1c, #ef4444)');
   const [igPostImage, setIgPostImage] = useState(IG_PRESET_IMAGES.inc42);
+  const [showIgMoreOptions, setShowIgMoreOptions] = useState(false);
 
 
   // 3. WhatsApp State
@@ -864,8 +865,8 @@ export default function MemeStylesModal({
             <div
               style={{
                 width: '100%',
-                aspectRatio: '1 / 1',
-                maxHeight: '280px',
+                maxHeight: '220px',
+                aspectRatio: '16 / 11',
                 background: igTheme === 'light' ? '#f3f4f6' : '#111827',
                 position: 'relative',
                 overflow: 'hidden',
@@ -882,8 +883,8 @@ export default function MemeStylesModal({
                 />
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', color: '#9ca3af' }}>
-                  <ImageIcon size={36} strokeWidth={1.5} />
-                  <span style={{ fontSize: '0.78rem' }}>No photo uploaded</span>
+                  <ImageIcon size={32} strokeWidth={1.5} />
+                  <span style={{ fontSize: '0.76rem' }}>No photo uploaded</span>
                 </div>
               )}
 
@@ -891,25 +892,25 @@ export default function MemeStylesModal({
               <label
                 style={{
                   position: 'absolute',
-                  bottom: '10px',
-                  right: '10px',
+                  bottom: '8px',
+                  right: '8px',
                   background: 'rgba(0, 0, 0, 0.75)',
                   backdropFilter: 'blur(8px)',
                   color: '#ffffff',
-                  padding: '5px 12px',
+                  padding: '4px 10px',
                   borderRadius: '999px',
-                  fontSize: '0.72rem',
+                  fontSize: '0.70rem',
                   fontWeight: 600,
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '5px',
+                  gap: '4px',
                   cursor: 'pointer',
                   border: '1px solid rgba(255, 255, 255, 0.25)',
-                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.4)'
+                  boxShadow: '0 2px 6px rgba(0, 0, 0, 0.4)'
                 }}
               >
-                <Upload size={12} />
-                <span>Upload Custom Photo</span>
+                <Upload size={11} />
+                <span>Change Photo</span>
                 <input
                   type="file"
                   accept="image/*"
@@ -1255,33 +1256,54 @@ export default function MemeStylesModal({
           </>
         )}
 
-        {/* 2. INSTAGRAM CONTROLS */}
+        {/* 2. MINIMALIST INSTAGRAM CONTROLS */}
         {activePlatform === 'instagram' && (
-          <>
-            {/* Username & Subtitle */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '12px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {/* Row 1: Username & Subtitle */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '10px' }}>
               <div>
-                <label style={{ fontSize: '0.74rem', fontWeight: 700, color: 'rgba(255,255,255,0.65)', display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '6px' }}>
-                  <User size={13} style={{ color: '#ff5e36' }} /> Username
+                <label style={{ fontSize: '0.72rem', fontWeight: 600, color: 'rgba(255,255,255,0.6)', display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '5px' }}>
+                  <User size={12} style={{ color: '#ff5e36' }} /> Username
                 </label>
-                <input
-                  type="text"
-                  className="form-input"
-                  value={igUsername}
-                  onChange={(e) => {
-                    setIgUsername(e.target.value);
-                    setActiveIgPersona('custom');
-                  }}
-                  placeholder="e.g. zuck"
-                  style={inputStyle}
-                  onFocus={inputFocusHandler}
-                  onBlur={inputBlurHandler}
-                />
+                <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={igUsername}
+                    onChange={(e) => {
+                      setIgUsername(e.target.value);
+                      setActiveIgPersona('custom');
+                    }}
+                    placeholder="e.g. inc42.media"
+                    style={{ ...inputStyle, paddingRight: '34px' }}
+                    onFocus={inputFocusHandler}
+                    onBlur={inputBlurHandler}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setIgVerified(!igVerified)}
+                    title={igVerified ? 'Verified (tap to toggle)' : 'Unverified (tap to toggle)'}
+                    style={{
+                      position: 'absolute',
+                      right: '8px',
+                      background: 'none',
+                      border: 'none',
+                      padding: 0,
+                      cursor: 'pointer',
+                      opacity: igVerified ? 1 : 0.25,
+                      transition: 'opacity 0.2s',
+                      display: 'flex',
+                      alignItems: 'center'
+                    }}
+                  >
+                    <InstagramVerifiedBadge size={16} />
+                  </button>
+                </div>
               </div>
 
               <div>
-                <label style={{ fontSize: '0.74rem', fontWeight: 700, color: 'rgba(255,255,255,0.65)', display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '6px' }}>
-                  <Sparkles size={13} style={{ color: '#ff5e36' }} /> Subtitle / Audio
+                <label style={{ fontSize: '0.72rem', fontWeight: 600, color: 'rgba(255,255,255,0.6)', display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '5px' }}>
+                  <Sparkles size={12} style={{ color: '#ff5e36' }} /> Subtitle
                 </label>
                 <input
                   type="text"
@@ -1291,7 +1313,7 @@ export default function MemeStylesModal({
                     setIgSubtitle(e.target.value);
                     setActiveIgPersona('custom');
                   }}
-                  placeholder="e.g. Original audio"
+                  placeholder="e.g. Suggested for you"
                   style={inputStyle}
                   onFocus={inputFocusHandler}
                   onBlur={inputBlurHandler}
@@ -1299,74 +1321,11 @@ export default function MemeStylesModal({
               </div>
             </div>
 
-
-            {/* Engagement Counts — 2x2 Grid */}
+            {/* Row 2: Caption (Hero text) */}
             <div>
-              <label style={{ fontSize: '0.74rem', fontWeight: 700, color: 'rgba(255,255,255,0.65)', display: 'block', marginBottom: '8px' }}>
-                Engagement Counts
-              </label>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                <div>
-                  <label style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.5)', display: 'block', marginBottom: '4px' }}>❤️ Likes</label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    value={igLikesCount}
-                    onChange={(e) => setIgLikesCount(e.target.value)}
-                    placeholder="e.g. 1,583"
-                    style={inputStyle}
-                    onFocus={inputFocusHandler}
-                    onBlur={inputBlurHandler}
-                  />
-                </div>
-                <div>
-                  <label style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.5)', display: 'block', marginBottom: '4px' }}>💬 Comments</label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    value={igCommentsCount}
-                    onChange={(e) => setIgCommentsCount(e.target.value)}
-                    placeholder="e.g. 15"
-                    style={inputStyle}
-                    onFocus={inputFocusHandler}
-                    onBlur={inputBlurHandler}
-                  />
-                </div>
-                <div>
-                  <label style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.5)', display: 'block', marginBottom: '4px' }}>🔁 Reposts</label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    value={igRepostsCount}
-                    onChange={(e) => setIgRepostsCount(e.target.value)}
-                    placeholder="e.g. 15"
-                    style={inputStyle}
-                    onFocus={inputFocusHandler}
-                    onBlur={inputBlurHandler}
-                  />
-                </div>
-                <div>
-                  <label style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.5)', display: 'block', marginBottom: '4px' }}>✈️ Shares</label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    value={igSharesCount}
-                    onChange={(e) => setIgSharesCount(e.target.value)}
-                    placeholder="e.g. 295"
-                    style={inputStyle}
-                    onFocus={inputFocusHandler}
-                    onBlur={inputBlurHandler}
-                  />
-                </div>
-              </div>
-            </div>
-
-
-            {/* Caption Textarea (Below Likes Icon & Likes Line) */}
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                <label style={{ fontSize: '0.74rem', fontWeight: 700, color: 'rgba(255,255,255,0.65)' }}>
-                  Caption (Appears below likes icon)
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '5px' }}>
+                <label style={{ fontSize: '0.72rem', fontWeight: 600, color: 'rgba(255,255,255,0.6)' }}>
+                  Caption
                 </label>
                 <button
                   type="button"
@@ -1374,187 +1333,336 @@ export default function MemeStylesModal({
                   style={{
                     display: 'inline-flex',
                     alignItems: 'center',
-                    gap: '5px',
-                    fontSize: '0.74rem',
+                    gap: '4px',
+                    fontSize: '0.70rem',
                     fontWeight: 700,
                     color: '#ff5e36',
                     background: '#16181f',
-                    border: '1px solid rgba(255, 255, 255, 0.14)',
+                    border: '1px solid rgba(255, 255, 255, 0.12)',
                     borderRadius: '9999px',
-                    padding: '4px 12px',
+                    padding: '3px 10px',
                     cursor: 'pointer'
                   }}
                 >
-                  <Dices size={13} strokeWidth={2.4} /> Surprise Me
+                  <Dices size={12} strokeWidth={2.4} /> Surprise Me
                 </button>
               </div>
               <textarea
                 className="form-input"
-                rows={3}
+                rows={2}
                 value={igText}
                 onChange={(e) => {
                   setIgText(e.target.value);
                   setActiveIgPersona('custom');
                 }}
                 placeholder="Write an Instagram caption..."
-                style={{ ...inputStyle, lineHeight: 1.4, minHeight: '68px', resize: 'vertical' }}
+                style={{ ...inputStyle, lineHeight: 1.4, minHeight: '56px', resize: 'vertical' }}
                 onFocus={inputFocusHandler}
                 onBlur={inputBlurHandler}
               />
             </div>
 
-
-            {/* Follow Button Text + Timestamp */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: '12px' }}>
-              <div>
-                <label style={{ fontSize: '0.74rem', fontWeight: 700, color: 'rgba(255,255,255,0.65)', display: 'block', marginBottom: '6px' }}>
-                  Follow Button Text
+            {/* Row 3: Minimalist Inline Engagement Bar (4 icons + compact counts in 1 row) */}
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '5px' }}>
+                <label style={{ fontSize: '0.72rem', fontWeight: 600, color: 'rgba(255,255,255,0.6)' }}>
+                  Metrics
                 </label>
-                <input
-                  type="text"
-                  className="form-input"
-                  value={igFollowText}
-                  onChange={(e) => setIgFollowText(e.target.value)}
-                  placeholder="e.g. Follow or Following"
-                  style={inputStyle}
-                  onFocus={inputFocusHandler}
-                  onBlur={inputBlurHandler}
-                />
+                <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                  <button
+                    type="button"
+                    onClick={() => setIgTheme('light')}
+                    style={{
+                      padding: '2px 8px',
+                      borderRadius: '6px',
+                      fontSize: '0.68rem',
+                      fontWeight: 600,
+                      background: igTheme === 'light' ? 'rgba(255,255,255,0.2)' : 'transparent',
+                      border: igTheme === 'light' ? '1px solid rgba(255,255,255,0.3)' : '1px solid transparent',
+                      color: igTheme === 'light' ? '#ffffff' : 'rgba(255,255,255,0.4)',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Light
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIgTheme('dark')}
+                    style={{
+                      padding: '2px 8px',
+                      borderRadius: '6px',
+                      fontSize: '0.68rem',
+                      fontWeight: 600,
+                      background: igTheme === 'dark' ? 'rgba(255, 94, 54, 0.25)' : 'transparent',
+                      border: igTheme === 'dark' ? '1px solid #ff5e36' : '1px solid transparent',
+                      color: igTheme === 'dark' ? '#ff5e36' : 'rgba(255,255,255,0.4)',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Dark
+                  </button>
+                </div>
               </div>
 
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                  <label style={{ fontSize: '0.74rem', fontWeight: 700, color: 'rgba(255,255,255,0.65)' }}>
-                    Timestamp
-                  </label>
-                  <div style={{ display: 'flex', gap: '4px' }}>
-                    {[
-                      { short: '28 Sep', full: '28 September' },
-                      { short: '5h', full: '5 hours ago' },
-                      { short: '1d', full: '1 day ago' }
-                    ].map(t => (
-                      <button
-                        key={t.short}
-                        type="button"
-                        onClick={() => setIgTime(t.full)}
-                        style={{
-                          padding: '1px 6px',
-                          borderRadius: '5px',
-                          background: igTime === t.full ? 'rgba(255, 94, 54, 0.25)' : 'rgba(255, 255, 255, 0.06)',
-                          border: igTime === t.full ? '1px solid #ff5e36' : '1px solid rgba(255, 255, 255, 0.1)',
-                          color: igTime === t.full ? '#ff5e36' : 'rgba(255, 255, 255, 0.7)',
-                          fontSize: '0.65rem',
-                          fontWeight: 600,
-                          cursor: 'pointer'
-                        }}
-                      >
-                        {t.short}
-                      </button>
-                    ))}
+              {/* 4 compact metric inputs side-by-side in one sleek row */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px' }}>
+                <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                  <Heart size={13} style={{ position: 'absolute', left: '8px', color: '#ff3040', fill: '#ff3040', pointerEvents: 'none' }} />
+                  <input
+                    type="text"
+                    value={igLikesCount}
+                    onChange={(e) => setIgLikesCount(e.target.value)}
+                    placeholder="1,583"
+                    title="Likes Count"
+                    style={{ ...inputStyle, padding: '6px 6px 6px 26px', fontSize: '0.78rem', textAlign: 'left' }}
+                    onFocus={inputFocusHandler}
+                    onBlur={inputBlurHandler}
+                  />
+                </div>
+                <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                  <MessageCircle size={13} style={{ position: 'absolute', left: '8px', color: 'rgba(255,255,255,0.6)', pointerEvents: 'none' }} />
+                  <input
+                    type="text"
+                    value={igCommentsCount}
+                    onChange={(e) => setIgCommentsCount(e.target.value)}
+                    placeholder="15"
+                    title="Comments Count"
+                    style={{ ...inputStyle, padding: '6px 6px 6px 26px', fontSize: '0.78rem', textAlign: 'left' }}
+                    onFocus={inputFocusHandler}
+                    onBlur={inputBlurHandler}
+                  />
+                </div>
+                <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                  <Repeat size={13} style={{ position: 'absolute', left: '8px', color: 'rgba(255,255,255,0.6)', pointerEvents: 'none' }} />
+                  <input
+                    type="text"
+                    value={igRepostsCount}
+                    onChange={(e) => setIgRepostsCount(e.target.value)}
+                    placeholder="15"
+                    title="Reposts Count"
+                    style={{ ...inputStyle, padding: '6px 6px 6px 26px', fontSize: '0.78rem', textAlign: 'left' }}
+                    onFocus={inputFocusHandler}
+                    onBlur={inputBlurHandler}
+                  />
+                </div>
+                <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                  <Send size={12} style={{ position: 'absolute', left: '8px', color: 'rgba(255,255,255,0.6)', pointerEvents: 'none' }} />
+                  <input
+                    type="text"
+                    value={igSharesCount}
+                    onChange={(e) => setIgSharesCount(e.target.value)}
+                    placeholder="295"
+                    title="Shares Count"
+                    style={{ ...inputStyle, padding: '6px 6px 6px 26px', fontSize: '0.78rem', textAlign: 'left' }}
+                    onFocus={inputFocusHandler}
+                    onBlur={inputBlurHandler}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Row 4: Clean Quick Toggles (Story Ring, Verified, More Options disclosure) */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '2px' }}>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <button
+                  type="button"
+                  onClick={() => setIgHasStoryRing(!igHasStoryRing)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '5px',
+                    padding: '4px 10px',
+                    borderRadius: '8px',
+                    fontSize: '0.70rem',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    background: igHasStoryRing ? 'rgba(225, 48, 108, 0.18)' : 'rgba(255, 255, 255, 0.05)',
+                    border: igHasStoryRing ? '1px solid #e1306c' : '1px solid rgba(255, 255, 255, 0.1)',
+                    color: igHasStoryRing ? '#f43f5e' : 'rgba(255, 255, 255, 0.5)'
+                  }}
+                >
+                  <span style={{
+                    width: 7,
+                    height: 7,
+                    borderRadius: '50%',
+                    background: igHasStoryRing
+                      ? 'linear-gradient(45deg, #f09433, #dc2743, #bc1888)'
+                      : 'rgba(255,255,255,0.3)'
+                  }} />
+                  Story Ring
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setIgVerified(!igVerified)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '5px',
+                    padding: '4px 10px',
+                    borderRadius: '8px',
+                    fontSize: '0.70rem',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    background: igVerified ? 'rgba(0, 149, 246, 0.18)' : 'rgba(255, 255, 255, 0.05)',
+                    border: igVerified ? '1px solid #0095f6' : '1px solid rgba(255, 255, 255, 0.1)',
+                    color: igVerified ? '#38bdf8' : 'rgba(255, 255, 255, 0.5)'
+                  }}
+                >
+                  <Check size={11} strokeWidth={3} />
+                  Verified
+                </button>
+              </div>
+
+              {/* Collapsible toggle for advanced details */}
+              <button
+                type="button"
+                onClick={() => setShowIgMoreOptions(!showIgMoreOptions)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  background: 'transparent',
+                  border: 'none',
+                  color: showIgMoreOptions ? '#ff5e36' : 'rgba(255, 255, 255, 0.5)',
+                  fontSize: '0.70rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  padding: '2px 4px'
+                }}
+              >
+                <span>{showIgMoreOptions ? 'Fewer options' : 'More options'}</span>
+                <ChevronDown
+                  size={12}
+                  style={{
+                    transform: showIgMoreOptions ? 'rotate(180deg)' : 'rotate(0deg)',
+                    transition: 'transform 0.2s ease'
+                  }}
+                />
+              </button>
+            </div>
+
+            {/* Collapsible Advanced Section (Follow Text, Timestamp, Pinned Comment, Translation) */}
+            {showIgMoreOptions && (
+              <div
+                style={{
+                  padding: '10px 12px',
+                  borderRadius: '12px',
+                  background: 'rgba(255, 255, 255, 0.03)',
+                  border: '1px solid rgba(255, 255, 255, 0.07)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '10px'
+                }}
+              >
+                {/* Follow Button & Timestamp */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: '10px' }}>
+                  <div>
+                    <label style={{ fontSize: '0.68rem', fontWeight: 600, color: 'rgba(255,255,255,0.5)', display: 'block', marginBottom: '4px' }}>
+                      Follow Button Text
+                    </label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      value={igFollowText}
+                      onChange={(e) => setIgFollowText(e.target.value)}
+                      placeholder="Follow"
+                      style={{ ...inputStyle, padding: '5px 10px', fontSize: '0.78rem' }}
+                      onFocus={inputFocusHandler}
+                      onBlur={inputBlurHandler}
+                    />
+                  </div>
+
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                      <label style={{ fontSize: '0.68rem', fontWeight: 600, color: 'rgba(255,255,255,0.5)' }}>
+                        Timestamp
+                      </label>
+                      <div style={{ display: 'flex', gap: '3px' }}>
+                        {[
+                          { short: '28 Sep', full: '28 September' },
+                          { short: '5h', full: '5 hours ago' },
+                          { short: '1d', full: '1 day ago' }
+                        ].map((t) => (
+                          <button
+                            key={t.short}
+                            type="button"
+                            onClick={() => setIgTime(t.full)}
+                            style={{
+                              padding: '1px 5px',
+                              borderRadius: '4px',
+                              background: igTime === t.full ? 'rgba(255, 94, 54, 0.25)' : 'rgba(255, 255, 255, 0.05)',
+                              border: igTime === t.full ? '1px solid #ff5e36' : '1px solid transparent',
+                              color: igTime === t.full ? '#ff5e36' : 'rgba(255, 255, 255, 0.6)',
+                              fontSize: '0.62rem',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            {t.short}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <input
+                      type="text"
+                      className="form-input"
+                      value={igTime}
+                      onChange={(e) => setIgTime(e.target.value)}
+                      placeholder="e.g. 28 September"
+                      style={{ ...inputStyle, padding: '5px 10px', fontSize: '0.78rem' }}
+                      onFocus={inputFocusHandler}
+                      onBlur={inputBlurHandler}
+                    />
                   </div>
                 </div>
-                <input
-                  type="text"
-                  className="form-input"
-                  value={igTime}
-                  onChange={(e) => setIgTime(e.target.value)}
-                  placeholder="e.g. 28 September"
-                  style={inputStyle}
-                  onFocus={inputFocusHandler}
-                  onBlur={inputBlurHandler}
-                />
-              </div>
-            </div>
 
+                {/* Optional Pinned Comment */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.6fr', gap: '10px' }}>
+                  <div>
+                    <label style={{ fontSize: '0.68rem', fontWeight: 600, color: 'rgba(255,255,255,0.5)', display: 'block', marginBottom: '4px' }}>
+                      Top Commenter (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      value={igTopCommentUser}
+                      onChange={(e) => setIgTopCommentUser(e.target.value)}
+                      placeholder="e.g. cristiano"
+                      style={{ ...inputStyle, padding: '5px 10px', fontSize: '0.78rem' }}
+                      onFocus={inputFocusHandler}
+                      onBlur={inputBlurHandler}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.68rem', fontWeight: 600, color: 'rgba(255,255,255,0.5)', display: 'block', marginBottom: '4px' }}>
+                      Comment Text
+                    </label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      value={igTopCommentText}
+                      onChange={(e) => setIgTopCommentText(e.target.value)}
+                      placeholder="e.g. AGI when? 😂👏"
+                      style={{ ...inputStyle, padding: '5px 10px', fontSize: '0.78rem' }}
+                      onFocus={inputFocusHandler}
+                      onBlur={inputBlurHandler}
+                    />
+                  </div>
+                </div>
 
-            {/* Top / Pinned Comment (Optional) */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.6fr', gap: '12px' }}>
-              <div>
-                <label style={{ fontSize: '0.74rem', fontWeight: 700, color: 'rgba(255,255,255,0.65)', display: 'block', marginBottom: '6px' }}>
-                  Top Commenter (Optional)
-                </label>
-                <input
-                  type="text"
-                  className="form-input"
-                  value={igTopCommentUser}
-                  onChange={(e) => setIgTopCommentUser(e.target.value)}
-                  placeholder="e.g. cristiano"
-                  style={inputStyle}
-                  onFocus={inputFocusHandler}
-                  onBlur={inputBlurHandler}
-                />
-              </div>
-              <div>
-                <label style={{ fontSize: '0.74rem', fontWeight: 700, color: 'rgba(255,255,255,0.65)', display: 'block', marginBottom: '6px' }}>
-                  Top Comment Text
-                </label>
-                <input
-                  type="text"
-                  className="form-input"
-                  value={igTopCommentText}
-                  onChange={(e) => setIgTopCommentText(e.target.value)}
-                  placeholder="e.g. AGI when? 😂👏"
-                  style={inputStyle}
-                  onFocus={inputFocusHandler}
-                  onBlur={inputBlurHandler}
-                />
-              </div>
-            </div>
-
-            {/* Options Row: Verified Badge, Story Ring, Translation, Theme */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
-              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer', fontSize: '0.76rem', color: '#ffffff' }}>
-                  <input
-                    type="checkbox"
-                    checked={igVerified}
-                    onChange={(e) => setIgVerified(e.target.checked)}
-                    style={{ accentColor: '#ff5e36', width: 15, height: 15 }}
-                  />
-                  <span>Verified</span>
-                </label>
-
-                <label style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer', fontSize: '0.76rem', color: '#ffffff' }}>
-                  <input
-                    type="checkbox"
-                    checked={igHasStoryRing}
-                    onChange={(e) => setIgHasStoryRing(e.target.checked)}
-                    style={{ accentColor: '#ff5e36', width: 15, height: 15 }}
-                  />
-                  <span>Story Ring</span>
-                </label>
-
-                <label style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer', fontSize: '0.76rem', color: '#ffffff' }}>
+                {/* Translation toggle */}
+                <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '0.72rem', color: 'rgba(255,255,255,0.7)' }}>
                   <input
                     type="checkbox"
                     checked={igShowTranslation}
                     onChange={(e) => setIgShowTranslation(e.target.checked)}
-                    style={{ accentColor: '#ff5e36', width: 15, height: 15 }}
+                    style={{ accentColor: '#ff5e36', width: 14, height: 14 }}
                   />
-                  <span>See translation</span>
+                  <span>Show "See translation" link</span>
                 </label>
               </div>
-
-              <div style={{ display: 'flex', gap: '6px' }}>
-                <button
-                  type="button"
-                  className={`bs-category-btn ${igTheme === 'dark' ? 'active' : ''}`}
-                  onClick={() => setIgTheme('dark')}
-                  style={{ height: 28, padding: '0 10px', fontSize: '0.72rem' }}
-                >
-                  Dark
-                </button>
-                <button
-                  type="button"
-                  className={`bs-category-btn ${igTheme === 'light' ? 'active' : ''}`}
-                  onClick={() => setIgTheme('light')}
-                  style={{ height: 28, padding: '0 10px', fontSize: '0.72rem' }}
-                >
-                  Light
-                </button>
-              </div>
-            </div>
-          </>
+            )}
+          </div>
         )}
 
         {/* 3. MODERN iOS WHATSAPP CONTROLS (MULTI-MESSAGE CONVERSATION MANAGER) */}
