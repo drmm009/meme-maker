@@ -1656,20 +1656,23 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
   };
 
   const handleAddInstagramCard = (data = {}) => {
-    const username = data.username || 'zuck';
-    const subtitle = data.subtitle || 'Original audio';
-    const text = data.text || 'just dropped the new open-source weights. feeling good about the timeline.';
+    const username = data.username || 'inc42.media';
+    const subtitle = data.subtitle || 'Suggested for you';
+    const text = data.text || 'Remember Tanmay Bhat from the AIB... more';
     const verified = data.verified !== false;
     const hasStoryRing = data.hasStoryRing !== false;
-    const likesText = data.likesText || 'Liked by cristiano and 1,842,509 others';
-    const postImage = data.postImage || IG_PRESET_IMAGES?.zuck || null;
-    const time = data.time || '2 hours ago';
-    const theme = data.theme || 'dark';
-    const commentsCount = data.commentsCount || '14,209';
-    const showComments = data.showComments !== false;
+    const likesText = data.likesText || '';
+    const likesCount = data.likesCount || '1,583';
+    const commentsCount = data.commentsCount || '15';
+    const repostsCount = data.repostsCount || '15';
+    const sharesCount = data.sharesCount || '295';
+    const followText = data.followText || 'Follow';
+    const postImage = data.postImage || IG_PRESET_IMAGES?.inc42 || null;
+    const time = data.time || '28 September';
+    const theme = data.theme || 'light';
     const topCommentUser = data.topCommentUser || '';
     const topCommentText = data.topCommentText || '';
-    const showTranslation = data.showTranslation !== false;
+    const showTranslation = data.showTranslation === true;
     const maxZ = Math.max(-1, ...captions.map(c => c.zIndex ?? -1), ...stickers.map(s => s.zIndex ?? -1), ...(imageLayers || []).map(i => i.zIndex ?? -1));
 
     const newCap = {
@@ -1680,8 +1683,11 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
       igVerified: verified,
       igHasStoryRing: hasStoryRing,
       igLikesText: likesText,
+      igLikesCount: likesCount,
       igCommentsCount: commentsCount,
-      igShowComments: showComments,
+      igRepostsCount: repostsCount,
+      igSharesCount: sharesCount,
+      igFollowText: followText,
       igTopCommentUser: topCommentUser,
       igTopCommentText: topCommentText,
       igShowTranslation: showTranslation,
@@ -1693,7 +1699,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
       y: 0.5,
       width: 0.70,
       fontSize: 15,
-      color: theme === 'light' ? '#262626' : '#f5f5f5',
+      color: theme === 'light' ? '#000000' : '#f5f5f5',
       stroke: 'transparent',
       strokeWidth: 0,
       zIndex: maxZ + 1
@@ -7282,15 +7288,15 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         </label>
                       </div>
 
-                      {/* Likes Line (Above Caption in Feed) */}
+                      {/* Likes Count + Timestamp (2-col grid) */}
                       <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '8px' }}>
                         <div>
-                          <label style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>Likes Line</label>
+                          <label style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>Likes Count</label>
                           <input
                             type="text"
                             className="form-input"
-                            value={activeCaption.igLikesText || 'Liked by cristiano and 1,842,509 others'}
-                            onChange={(e) => updateActiveCaption('igLikesText', e.target.value)}
+                            value={activeCaption.igLikesCount || '1,583'}
+                            onChange={(e) => updateActiveCaption('igLikesCount', e.target.value)}
                             style={{ width: '100%', fontSize: '0.8rem', padding: '4px 8px' }}
                           />
                         </div>
@@ -7299,43 +7305,62 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           <input
                             type="text"
                             className="form-input"
-                            value={activeCaption.igTime || '2 hours ago'}
+                            value={activeCaption.igTime || '28 September'}
                             onChange={(e) => updateActiveCaption('igTime', e.target.value)}
                             style={{ width: '100%', fontSize: '0.8rem', padding: '4px 8px' }}
                           />
                         </div>
                       </div>
 
-                      {/* Comments Count Line */}
-                      <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '8px' }}>
+                      {/* Comments Count + Reposts Count */}
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                         <div>
                           <label style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>Comments Count</label>
                           <input
                             type="text"
                             className="form-input"
-                            value={activeCaption.igCommentsCount ?? '14,209'}
+                            value={activeCaption.igCommentsCount ?? '15'}
                             onChange={(e) => updateActiveCaption('igCommentsCount', e.target.value)}
-                            placeholder="e.g. 420 or 1,420"
+                            placeholder="e.g. 15"
                             style={{ width: '100%', fontSize: '0.8rem', padding: '4px 8px' }}
                           />
                         </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', paddingTop: '16px' }}>
-                          <label style={{ fontSize: '0.68rem', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', color: 'var(--text-muted)' }}>
-                            <input
-                              type="checkbox"
-                              checked={activeCaption.igShowComments !== false}
-                              onChange={(e) => updateActiveCaption('igShowComments', e.target.checked)}
-                            />
-                            Comments Link
-                          </label>
-                          <label style={{ fontSize: '0.68rem', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', color: 'var(--text-muted)' }}>
-                            <input
-                              type="checkbox"
-                              checked={activeCaption.igShowTranslation !== false}
-                              onChange={(e) => updateActiveCaption('igShowTranslation', e.target.checked)}
-                            />
-                            See translation
-                          </label>
+                        <div>
+                          <label style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>Reposts Count</label>
+                          <input
+                            type="text"
+                            className="form-input"
+                            value={activeCaption.igRepostsCount ?? '15'}
+                            onChange={(e) => updateActiveCaption('igRepostsCount', e.target.value)}
+                            placeholder="e.g. 15"
+                            style={{ width: '100%', fontSize: '0.8rem', padding: '4px 8px' }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Shares Count + Follow Text */}
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                        <div>
+                          <label style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>Shares Count</label>
+                          <input
+                            type="text"
+                            className="form-input"
+                            value={activeCaption.igSharesCount ?? '295'}
+                            onChange={(e) => updateActiveCaption('igSharesCount', e.target.value)}
+                            placeholder="e.g. 295"
+                            style={{ width: '100%', fontSize: '0.8rem', padding: '4px 8px' }}
+                          />
+                        </div>
+                        <div>
+                          <label style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>Follow Text</label>
+                          <input
+                            type="text"
+                            className="form-input"
+                            value={activeCaption.igFollowText || 'Follow'}
+                            onChange={(e) => updateActiveCaption('igFollowText', e.target.value)}
+                            placeholder="e.g. Follow"
+                            style={{ width: '100%', fontSize: '0.8rem', padding: '4px 8px' }}
+                          />
                         </div>
                       </div>
 

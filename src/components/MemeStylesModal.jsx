@@ -70,6 +70,7 @@ const IOSPhoneGlyph = ({ size = 17, color = '#007aff' }) => (
 
 /* ─── Standalone Crisp Preset Post Images for Instagram ─── */
 export const IG_PRESET_IMAGES = {
+  inc42: `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600"><rect width="600" height="600" fill="%23f7f5f0"/><defs><pattern id="dots" width="18" height="18" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1.5" fill="%23d6d0c4"/></pattern></defs><rect width="600" height="600" fill="url(%23dots)"/><rect x="25" y="25" width="550" height="550" rx="16" fill="%23ffffff" stroke="%23e5e0d8" stroke-width="2"/><text x="45" y="70" fill="%23b91c1c" font-size="26" font-family="sans-serif" font-weight="900" letter-spacing="1">INSIDE TANMAY BHAT'S</text><text x="45" y="112" fill="%23111827" font-size="34" font-family="sans-serif" font-weight="900">STARTUP PORTFOLIO</text><text x="45" y="142" fill="%234b5563" font-size="14" font-family="sans-serif" font-weight="700">19 Startup Bets From The Creator-Turned-Investor</text><rect x="45" y="165" width="180" height="180" rx="10" fill="%23f9fafb" stroke="%23e5e7eb"/><rect x="45" y="165" width="180" height="28" rx="6" fill="%23b91c1c"/><text x="135" y="184" fill="%23ffffff" font-size="12" font-family="sans-serif" font-weight="800" text-anchor="middle">FINTECH</text><text x="60" y="222" fill="%231f2937" font-size="14" font-family="sans-serif" font-weight="700">◆ TRACKK</text><text x="60" y="252" fill="%231f2937" font-size="14" font-family="sans-serif" font-weight="700">◆ smallcase</text><text x="60" y="282" fill="%231f2937" font-size="14" font-family="sans-serif" font-weight="700">◆ EquityList</text><text x="60" y="312" fill="%231f2937" font-size="14" font-family="sans-serif" font-weight="700">◆ Flint.money</text><circle cx="310" cy="255" r="70" fill="%23fee2e2"/><circle cx="310" cy="255" r="62" fill="%23b91c1c"/><text x="310" y="266" fill="%23ffffff" font-size="32" font-family="sans-serif" font-weight="900" text-anchor="middle">TB</text><text x="310" y="340" fill="%23b91c1c" font-size="38" font-family="sans-serif" font-weight="900" text-anchor="middle">$</text><rect x="375" y="165" width="180" height="180" rx="10" fill="%23f9fafb" stroke="%23e5e7eb"/><rect x="375" y="165" width="180" height="28" rx="6" fill="%23b91c1c"/><text x="465" y="184" fill="%23ffffff" font-size="12" font-family="sans-serif" font-weight="800" text-anchor="middle">MEDIA &amp; ENT</text><text x="390" y="222" fill="%231f2937" font-size="14" font-family="sans-serif" font-weight="700">★ RIGI TV</text><text x="390" y="252" fill="%231f2937" font-size="14" font-family="sans-serif" font-weight="700">★ HYPD.</text><text x="390" y="282" fill="%231f2937" font-size="14" font-family="sans-serif" font-weight="700">★ atom.com</text><text x="390" y="312" fill="%231f2937" font-size="14" font-family="sans-serif" font-weight="700">★ Unikon.ai</text><rect x="45" y="365" width="160" height="120" rx="10" fill="%23f9fafb" stroke="%23e5e7eb"/><rect x="45" y="365" width="160" height="26" rx="6" fill="%23b91c1c"/><text x="125" y="382" fill="%23ffffff" font-size="11" font-family="sans-serif" font-weight="800" text-anchor="middle">CLEAN TECH</text><text x="58" y="420" fill="%231f2937" font-size="13" font-family="sans-serif" font-weight="700">alt carbon</text><rect x="220" y="365" width="160" height="120" rx="10" fill="%23f9fafb" stroke="%23e5e7eb"/><rect x="220" y="365" width="160" height="26" rx="6" fill="%23b91c1c"/><text x="300" y="382" fill="%23ffffff" font-size="11" font-family="sans-serif" font-weight="800" text-anchor="middle">ECOMMERCE</text><text x="235" y="420" fill="%231f2937" font-size="13" font-family="sans-serif" font-weight="700">ROTORIS</text><rect x="395" y="365" width="160" height="120" rx="10" fill="%23f9fafb" stroke="%23e5e7eb"/><rect x="395" y="365" width="160" height="26" rx="6" fill="%23b91c1c"/><text x="475" y="382" fill="%23ffffff" font-size="11" font-family="sans-serif" font-weight="800" text-anchor="middle">HEALTH TECH</text><text x="410" y="420" fill="%231f2937" font-size="13" font-family="sans-serif" font-weight="700">ULTRAHUMAN</text><text x="45" y="525" fill="%239ca3af" font-size="11" font-family="sans-serif">Note: This is not an exhaustive list. · Inc42 Datalabs</text></svg>`,
   zuck: `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600"><defs><linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="%230f172a"/><stop offset="50%" stop-color="%231e1b4b"/><stop offset="100%" stop-color="%23311042"/></linearGradient><linearGradient id="glow" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="%2306b6d4"/><stop offset="100%" stop-color="%238b5cf6"/></linearGradient></defs><rect width="600" height="600" fill="url(%23g1)"/><circle cx="300" cy="240" r="140" fill="none" stroke="url(%23glow)" stroke-width="4" opacity="0.6"/><polygon points="260,180 380,240 260,300" fill="%2338bdf8"/><rect x="120" y="420" width="360" height="40" rx="12" fill="%231e293b" stroke="%2338bdf8" stroke-width="1.5"/><text x="300" y="446" fill="%23f8fafc" font-size="18" font-family="sans-serif" font-weight="700" text-anchor="middle">META CONNECT 2026 // OPEN WEIGHTS</text><text x="300" y="520" fill="%2394a3b8" font-size="15" font-family="sans-serif" text-anchor="middle">⚡ Keynote Livestream &amp; Demo</text></svg>`,
   egg: `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600"><rect width="600" height="600" fill="%23fdfaf5"/><defs><radialGradient id="eggShade" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="%23ffedd5"/><stop offset="50%" stop-color="%23ea580c"/><stop offset="100%" stop-color="%239a3412"/></radialGradient><filter id="eggShadow"><feDropShadow dx="0" dy="25" stdDeviation="20" flood-opacity="0.18"/></filter></defs><ellipse cx="300" cy="310" rx="135" ry="175" fill="url(%23eggShade)" filter="url(%23eggShadow)"/><ellipse cx="270" cy="240" rx="30" ry="45" fill="%23fff" opacity="0.3" transform="rotate(-15 270 240)"/><text x="300" y="540" fill="%23431407" font-size="16" font-family="sans-serif" font-weight="800" letter-spacing="2" text-anchor="middle">%23EGGGANG · 58.9M LIKES</text></svg>`,
   cat: `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600"><rect width="600" height="600" fill="%23fef3c7"/><circle cx="300" cy="330" r="160" fill="%23f97316"/><polygon points="190,210 240,110 270,200" fill="%23ea580c"/><polygon points="205,195 240,130 260,195" fill="%23fda4af"/><polygon points="410,210 360,110 330,200" fill="%23ea580c"/><polygon points="395,195 360,130 340,195" fill="%23fda4af"/><circle cx="240" cy="310" r="28" fill="%23fff"/><circle cx="244" cy="310" r="16" fill="%231e293b"/><circle cx="250" cy="304" r="6" fill="%23fff"/><circle cx="360" cy="310" r="28" fill="%23fff"/><circle cx="356" cy="310" r="16" fill="%231e293b"/><circle cx="362" cy="304" r="6" fill="%23fff"/><polygon points="300,345 288,335 312,335" fill="%23f43f5e"/><path d="M288 348 Q300 365 312 348" stroke="%23431407" stroke-width="4" fill="none"/><line x1="170" y1="330" x2="250" y2="340" stroke="%23ea580c" stroke-width="4"/><line x1="160" y1="355" x2="250" y2="355" stroke="%23ea580c" stroke-width="4"/><line x1="430" y1="330" x2="350" y2="340" stroke="%23ea580c" stroke-width="4"/><line x1="440" y1="355" x2="350" y2="355" stroke="%23ea580c" stroke-width="4"/><text x="300" y="540" fill="%237c2d12" font-size="18" font-family="sans-serif" font-weight="700" text-anchor="middle">ZERO THOUGHTS BEHIND THESE EYES</text></svg>`,
@@ -136,21 +137,41 @@ const RANDOM_TWEETS = [
   'i have 99 problems and 87 of them are completely made up scenarios in my head'
 ];
 
-/* ─── Instagram Presets & Data ─── */
+/* ─── Instagram Presets & Data (Latest UI Reference Anatomy) ─── */
 const INSTAGRAM_PERSONAS = [
+  {
+    id: 'inc42',
+    label: '📰 Tech Media (inc42)',
+    username: 'inc42.media',
+    subtitle: 'Suggested for you',
+    verified: true,
+    hasStoryRing: true,
+    avatarBg: 'linear-gradient(135deg, #b91c1c, #ef4444)',
+    likesCount: '1,583',
+    commentsCount: '15',
+    repostsCount: '15',
+    sharesCount: '295',
+    followText: 'Follow',
+    likesText: '1,583',
+    text: 'Remember Tanmay Bhat from the AIB... more',
+    time: '28 September',
+    postImage: IG_PRESET_IMAGES.inc42
+  },
   {
     id: 'zuck',
     label: '🚀 Mark Zuckerberg',
     username: 'zuck',
-    subtitle: 'Original audio',
+    subtitle: 'Suggested for you',
     verified: true,
     hasStoryRing: true,
     avatarBg: 'linear-gradient(135deg, #0ea5e9, #38bdf8)',
+    likesCount: '142.5K',
+    commentsCount: '14.2K',
+    repostsCount: '8.4K',
+    sharesCount: '29.1K',
+    followText: 'Follow',
     likesText: 'Liked by cristiano and 1,842,509 others',
     text: 'Meta announces AGI is just a guy named Dave in a basement writing if-else statements. Link in bio.',
-    commentsCount: '14,209',
-    topCommentUser: 'cristiano',
-    topCommentText: 'AGI when? 😂👏',
     time: '2 hours ago',
     postImage: IG_PRESET_IMAGES.zuck
   },
@@ -162,11 +183,13 @@ const INSTAGRAM_PERSONAS = [
     verified: true,
     hasStoryRing: true,
     avatarBg: 'linear-gradient(135deg, #f59e0b, #ef4444)',
+    likesCount: '58.9M',
+    commentsCount: '3.8M',
+    repostsCount: '1.2M',
+    sharesCount: '4.5M',
+    followText: 'Follow',
     likesText: 'Liked by kyliejenner and 58,912,400 others',
     text: 'Let’s set a world record together and get the most liked post on Instagram. We got this 💪',
-    commentsCount: '3,842,109',
-    topCommentUser: 'kyliejenner',
-    topCommentText: 'Take the crown 👑',
     time: '1 day ago',
     postImage: IG_PRESET_IMAGES.egg
   },
@@ -178,11 +201,13 @@ const INSTAGRAM_PERSONAS = [
     verified: false,
     hasStoryRing: true,
     avatarBg: 'linear-gradient(135deg, #f59e0b, #eab308)',
+    likesCount: '412K',
+    commentsCount: '892',
+    repostsCount: '450',
+    sharesCount: '12.8K',
+    followText: 'Follow',
     likesText: 'Liked by 412,890 others',
     text: 'I did not knock the glass off the table. Gravity did. I am completely innocent of all charges.',
-    commentsCount: '892',
-    topCommentUser: 'doge',
-    topCommentText: 'much innocent such gravity',
     time: '4 hours ago',
     postImage: IG_PRESET_IMAGES.cat
   },
@@ -194,11 +219,13 @@ const INSTAGRAM_PERSONAS = [
     verified: true,
     hasStoryRing: false,
     avatarBg: 'linear-gradient(135deg, #ec4899, #8b5cf6)',
+    likesCount: '98.4K',
+    commentsCount: '1,420',
+    repostsCount: '610',
+    sharesCount: '3.2K',
+    followText: 'Follow',
     likesText: 'Liked by zendaya and 984,210 others',
     text: 'Romanticize your life even when your code refuses to compile. ✨ Matcha latte in hand, zero bugs in sight.',
-    commentsCount: '1,420',
-    topCommentUser: 'zendaya',
-    topCommentText: 'Obsessed with this vibe ✨',
     time: '5 hours ago',
     postImage: IG_PRESET_IMAGES.aesthetic
   },
@@ -210,11 +237,13 @@ const INSTAGRAM_PERSONAS = [
     verified: false,
     hasStoryRing: true,
     avatarBg: 'linear-gradient(135deg, #10b981, #06b6d4)',
+    likesCount: '74.1K',
+    commentsCount: '648',
+    repostsCount: '1,120',
+    sharesCount: '8.9K',
+    followText: 'Follow',
     likesText: 'Liked by elonmusk and 74,102 others',
     text: 'We just raised $50M seed round to replace meetings with silence. Hiring 10 senior devs to maintain the silence.',
-    commentsCount: '648',
-    topCommentUser: 'elonmusk',
-    topCommentText: 'Sounds like a hard problem',
     time: '7 hours ago',
     postImage: IG_PRESET_IMAGES.startup
   }
@@ -364,22 +393,26 @@ export default function MemeStylesModal({
   const [tweetAvatarBg, setTweetAvatarBg] = useState('linear-gradient(135deg, #0ea5e9, #38bdf8)');
 
   // 2. Instagram State
-  const [activeIgPersona, setActiveIgPersona] = useState('zuck');
-  const [igUsername, setIgUsername] = useState('zuck');
-  const [igSubtitle, setIgSubtitle] = useState('Original audio');
-  const [igText, setIgText] = useState('Meta announces AGI is just a guy named Dave in a basement writing if-else statements. Link in bio.');
+  const [activeIgPersona, setActiveIgPersona] = useState('inc42');
+  const [igUsername, setIgUsername] = useState('inc42.media');
+  const [igSubtitle, setIgSubtitle] = useState('Suggested for you');
+  const [igText, setIgText] = useState('Remember Tanmay Bhat from the AIB... more');
   const [igVerified, setIgVerified] = useState(true);
   const [igHasStoryRing, setIgHasStoryRing] = useState(true);
-  const [igLikesText, setIgLikesText] = useState('Liked by cristiano and 1,842,509 others');
-  const [igCommentsCount, setIgCommentsCount] = useState('14,209');
-  const [igShowComments, setIgShowComments] = useState(true);
-  const [igTopCommentUser, setIgTopCommentUser] = useState('cristiano');
-  const [igTopCommentText, setIgTopCommentText] = useState('AGI when? 😂👏');
-  const [igTime, setIgTime] = useState('2 hours ago');
-  const [igShowTranslation, setIgShowTranslation] = useState(true);
-  const [igTheme, setIgTheme] = useState('dark');
-  const [igAvatarBg, setIgAvatarBg] = useState('linear-gradient(135deg, #0ea5e9, #38bdf8)');
-  const [igPostImage, setIgPostImage] = useState(IG_PRESET_IMAGES.zuck);
+  const [igLikesText, setIgLikesText] = useState('1,583');
+  const [igLikesCount, setIgLikesCount] = useState('1,583');
+  const [igCommentsCount, setIgCommentsCount] = useState('15');
+  const [igRepostsCount, setIgRepostsCount] = useState('15');
+  const [igSharesCount, setIgSharesCount] = useState('295');
+  const [igFollowText, setIgFollowText] = useState('Follow');
+  const [igTopCommentUser, setIgTopCommentUser] = useState('');
+  const [igTopCommentText, setIgTopCommentText] = useState('');
+  const [igTime, setIgTime] = useState('28 September');
+  const [igShowTranslation, setIgShowTranslation] = useState(false);
+  const [igTheme, setIgTheme] = useState('light');
+  const [igAvatarBg, setIgAvatarBg] = useState('linear-gradient(135deg, #b91c1c, #ef4444)');
+  const [igPostImage, setIgPostImage] = useState(IG_PRESET_IMAGES.inc42);
+
 
   // 3. WhatsApp State
   const [activeWaPersona, setActiveWaPersona] = useState('mom');
@@ -412,18 +445,23 @@ export default function MemeStylesModal({
   const handleApplyIgPersona = (p) => {
     setActiveIgPersona(p.id);
     setIgUsername(p.username);
-    setIgSubtitle(p.subtitle);
+    setIgSubtitle(p.subtitle !== undefined ? p.subtitle : 'Suggested for you');
     setIgVerified(p.verified);
     setIgHasStoryRing(p.hasStoryRing);
-    setIgLikesText(p.likesText);
+    setIgLikesText(p.likesText || '');
     setIgText(p.text);
-    if (p.commentsCount) setIgCommentsCount(p.commentsCount);
+    if (p.likesCount !== undefined) setIgLikesCount(p.likesCount);
+    if (p.commentsCount !== undefined) setIgCommentsCount(p.commentsCount);
+    if (p.repostsCount !== undefined) setIgRepostsCount(p.repostsCount);
+    if (p.sharesCount !== undefined) setIgSharesCount(p.sharesCount);
+    if (p.followText !== undefined) setIgFollowText(p.followText);
     if (p.topCommentUser !== undefined) setIgTopCommentUser(p.topCommentUser);
     if (p.topCommentText !== undefined) setIgTopCommentText(p.topCommentText);
     if (p.time) setIgTime(p.time);
     if (p.avatarBg) setIgAvatarBg(p.avatarBg);
     if (p.postImage) setIgPostImage(p.postImage);
   };
+
 
   const handleRandomIgCaption = () => {
     const remaining = RANDOM_IG_CAPTIONS.filter(t => t !== igText);
@@ -515,13 +553,16 @@ export default function MemeStylesModal({
           verified: igVerified,
           hasStoryRing: igHasStoryRing,
           likesText: igLikesText,
-          postImage: igPostImage,
-          theme: igTheme,
-          time: igTime || '2 hours ago',
+          likesCount: igLikesCount,
           commentsCount: igCommentsCount,
-          showComments: igShowComments,
+          repostsCount: igRepostsCount,
+          sharesCount: igSharesCount,
+          followText: igFollowText,
           topCommentUser: igTopCommentUser,
           topCommentText: igTopCommentText,
+          postImage: igPostImage,
+          theme: igTheme,
+          time: igTime || '28 September',
           showTranslation: igShowTranslation
         });
       }
@@ -796,9 +837,26 @@ export default function MemeStylesModal({
                 </div>
               </div>
 
-              {/* 3-dots menu */}
-              <div style={{ display: 'flex', gap: '3px', paddingLeft: '8px', color: igTheme === 'light' ? '#262626' : '#ffffff' }}>
-                <span style={{ fontSize: '1.2rem', lineHeight: 0.5, letterSpacing: '1px' }}>•••</span>
+              {/* Follow button + 3-dots menu */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <button
+                  style={{
+                    background: igTheme === 'dark' ? '#262626' : '#efefef',
+                    border: 'none',
+                    borderRadius: 8,
+                    padding: '5px 14px',
+                    fontWeight: 700,
+                    fontSize: '0.84rem',
+                    color: igTheme === 'light' ? '#000000' : '#ffffff',
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  {igFollowText || 'Follow'}
+                </button>
+                <div style={{ display: 'flex', gap: '3px', color: igTheme === 'light' ? '#262626' : '#ffffff' }}>
+                  <span style={{ fontSize: '1.2rem', lineHeight: 0.5, letterSpacing: '1px' }}>•••</span>
+                </div>
               </div>
             </div>
 
@@ -861,34 +919,37 @@ export default function MemeStylesModal({
               </label>
             </div>
 
-            {/* Content Area Below Image: Actions -> Likes -> Caption -> Comments/Time */}
+            {/* Content Area Below Image: Actions -> Caption -> Time */}
             <div style={{ padding: '10px 14px 14px 14px' }}>
-              {/* Action Icons Row */}
+              {/* Modern Action Icons Row — inline icon + count */}
               <div
                 style={{
                   display: 'flex',
-                  justifyContent: 'space-between',
                   alignItems: 'center',
                   marginBottom: '8px',
                   color: igTheme === 'light' ? '#262626' : '#ffffff'
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                  <Heart size={21} strokeWidth={2} style={{ color: '#ff3040', fill: '#ff3040' }} />
-                  <MessageCircle size={21} strokeWidth={2} />
-                  <Send size={20} strokeWidth={2} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                    <Heart size={21} strokeWidth={2} style={{ color: '#ff3040', fill: '#ff3040' }} />
+                    <span style={{ fontWeight: 600, fontSize: '0.84rem' }}>{igLikesCount || '1,583'}</span>
+                  </span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                    <MessageCircle size={21} strokeWidth={2} />
+                    <span style={{ fontWeight: 600, fontSize: '0.84rem' }}>{igCommentsCount || '15'}</span>
+                  </span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                    <Repeat size={21} strokeWidth={2} />
+                    <span style={{ fontWeight: 600, fontSize: '0.84rem' }}>{igRepostsCount || '15'}</span>
+                  </span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                    <Send size={20} strokeWidth={2} />
+                    <span style={{ fontWeight: 600, fontSize: '0.84rem' }}>{igSharesCount || '295'}</span>
+                  </span>
                 </div>
                 <Bookmark size={21} strokeWidth={2} />
               </div>
-
-              {/* Likes Text (Above Caption) */}
-              {igLikesText && (
-                <div style={{ marginBottom: '6px' }}>
-                  <span style={{ fontWeight: 600, fontSize: '0.84rem', color: igTheme === 'light' ? '#262626' : '#ffffff' }}>
-                    {igLikesText}
-                  </span>
-                </div>
-              )}
 
               {/* Caption Content (BELOW LIKES ICON & LIKES COUNT) */}
               <div
@@ -905,14 +966,6 @@ export default function MemeStylesModal({
                 <span>{igText || 'Caption here...'}</span>
               </div>
 
-              {/* Comments Count */}
-              {igShowComments !== false && Boolean(igCommentsCount) && (
-                <div style={{ marginBottom: '4px' }}>
-                  <span style={{ fontSize: '0.78rem', color: igTheme === 'light' ? '#737373' : '#a8a8a8', cursor: 'pointer' }}>
-                    {igCommentsCount.startsWith('View') ? igCommentsCount : `View all ${igCommentsCount} comments`}
-                  </span>
-                </div>
-              )}
 
               {/* Optional Top / Pinned Comment */}
               {igTopCommentUser && igTopCommentText && (
@@ -925,9 +978,9 @@ export default function MemeStylesModal({
               {/* Timestamp & Translation */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
                 <span style={{ fontSize: '0.68rem', color: igTheme === 'light' ? '#8e8e8e' : '#737373', textTransform: 'none' }}>
-                  {igTime || '2 hours ago'}
+                  {igTime || '28 September'}
                 </span>
-                {igShowTranslation !== false && (
+                {igShowTranslation === true && (
                   <>
                     <span style={{ fontSize: '0.68rem', color: igTheme === 'light' ? '#8e8e8e' : '#737373' }}>·</span>
                     <span style={{ fontSize: '0.68rem', fontWeight: 600, color: igTheme === 'light' ? '#262626' : '#ffffff', cursor: 'pointer' }}>
@@ -937,6 +990,7 @@ export default function MemeStylesModal({
                 )}
               </div>
             </div>
+
           </div>
         )}
 
@@ -1245,50 +1299,68 @@ export default function MemeStylesModal({
               </div>
             </div>
 
-            {/* Likes Line Input & Quick Presets */}
+
+            {/* Engagement Counts — 2x2 Grid */}
             <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                <label style={{ fontSize: '0.74rem', fontWeight: 700, color: 'rgba(255,255,255,0.65)' }}>
-                  Likes Count & Text
-                </label>
-                <div style={{ display: 'flex', gap: '4px' }}>
-                  {[
-                    { label: 'Friend + Count', val: 'Liked by cristiano and 1,842,509 others' },
-                    { label: '1.8M likes', val: '1,842,509 likes' },
-                    { label: '420K likes', val: '420.5K likes' },
-                    { label: '12K likes', val: '12,410 likes' }
-                  ].map(p => (
-                    <button
-                      key={p.label}
-                      type="button"
-                      onClick={() => setIgLikesText(p.val)}
-                      style={{
-                        padding: '2px 7px',
-                        borderRadius: '6px',
-                        background: igLikesText === p.val ? 'rgba(255, 94, 54, 0.25)' : 'rgba(255, 255, 255, 0.06)',
-                        border: igLikesText === p.val ? '1px solid #ff5e36' : '1px solid rgba(255, 255, 255, 0.1)',
-                        color: igLikesText === p.val ? '#ff5e36' : 'rgba(255, 255, 255, 0.7)',
-                        fontSize: '0.65rem',
-                        fontWeight: 600,
-                        cursor: 'pointer'
-                      }}
-                    >
-                      {p.label}
-                    </button>
-                  ))}
+              <label style={{ fontSize: '0.74rem', fontWeight: 700, color: 'rgba(255,255,255,0.65)', display: 'block', marginBottom: '8px' }}>
+                Engagement Counts
+              </label>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                <div>
+                  <label style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.5)', display: 'block', marginBottom: '4px' }}>❤️ Likes</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={igLikesCount}
+                    onChange={(e) => setIgLikesCount(e.target.value)}
+                    placeholder="e.g. 1,583"
+                    style={inputStyle}
+                    onFocus={inputFocusHandler}
+                    onBlur={inputBlurHandler}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.5)', display: 'block', marginBottom: '4px' }}>💬 Comments</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={igCommentsCount}
+                    onChange={(e) => setIgCommentsCount(e.target.value)}
+                    placeholder="e.g. 15"
+                    style={inputStyle}
+                    onFocus={inputFocusHandler}
+                    onBlur={inputBlurHandler}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.5)', display: 'block', marginBottom: '4px' }}>🔁 Reposts</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={igRepostsCount}
+                    onChange={(e) => setIgRepostsCount(e.target.value)}
+                    placeholder="e.g. 15"
+                    style={inputStyle}
+                    onFocus={inputFocusHandler}
+                    onBlur={inputBlurHandler}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.5)', display: 'block', marginBottom: '4px' }}>✈️ Shares</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={igSharesCount}
+                    onChange={(e) => setIgSharesCount(e.target.value)}
+                    placeholder="e.g. 295"
+                    style={inputStyle}
+                    onFocus={inputFocusHandler}
+                    onBlur={inputBlurHandler}
+                  />
                 </div>
               </div>
-              <input
-                type="text"
-                className="form-input"
-                value={igLikesText}
-                onChange={(e) => setIgLikesText(e.target.value)}
-                placeholder="e.g. Liked by cristiano and 1,842,509 others"
-                style={inputStyle}
-                onFocus={inputFocusHandler}
-                onBlur={inputBlurHandler}
-              />
             </div>
+
 
             {/* Caption Textarea (Below Likes Icon & Likes Line) */}
             <div>
@@ -1331,41 +1403,19 @@ export default function MemeStylesModal({
               />
             </div>
 
-            {/* Comments Count & Timestamp */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '12px' }}>
+
+            {/* Follow Button Text + Timestamp */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: '12px' }}>
               <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                  <label style={{ fontSize: '0.74rem', fontWeight: 700, color: 'rgba(255,255,255,0.65)' }}>
-                    Comments Count
-                  </label>
-                  <div style={{ display: 'flex', gap: '4px' }}>
-                    {['42', '420', '1,420', '14.2K'].map(c => (
-                      <button
-                        key={c}
-                        type="button"
-                        onClick={() => setIgCommentsCount(c)}
-                        style={{
-                          padding: '1px 6px',
-                          borderRadius: '5px',
-                          background: igCommentsCount === c ? 'rgba(255, 94, 54, 0.25)' : 'rgba(255, 255, 255, 0.06)',
-                          border: igCommentsCount === c ? '1px solid #ff5e36' : '1px solid rgba(255, 255, 255, 0.1)',
-                          color: igCommentsCount === c ? '#ff5e36' : 'rgba(255, 255, 255, 0.7)',
-                          fontSize: '0.65rem',
-                          fontWeight: 600,
-                          cursor: 'pointer'
-                        }}
-                      >
-                        {c}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                <label style={{ fontSize: '0.74rem', fontWeight: 700, color: 'rgba(255,255,255,0.65)', display: 'block', marginBottom: '6px' }}>
+                  Follow Button Text
+                </label>
                 <input
                   type="text"
                   className="form-input"
-                  value={igCommentsCount}
-                  onChange={(e) => setIgCommentsCount(e.target.value)}
-                  placeholder="e.g. 420 or 1,420"
+                  value={igFollowText}
+                  onChange={(e) => setIgFollowText(e.target.value)}
+                  placeholder="e.g. Follow or Following"
                   style={inputStyle}
                   onFocus={inputFocusHandler}
                   onBlur={inputBlurHandler}
@@ -1378,28 +1428,29 @@ export default function MemeStylesModal({
                     Timestamp
                   </label>
                   <div style={{ display: 'flex', gap: '4px' }}>
-                    {['2h', '5h', '1d'].map(t => {
-                      const full = t === '2h' ? '2 hours ago' : t === '5h' ? '5 hours ago' : '1 day ago';
-                      return (
-                        <button
-                          key={t}
-                          type="button"
-                          onClick={() => setIgTime(full)}
-                          style={{
-                            padding: '1px 6px',
-                            borderRadius: '5px',
-                            background: igTime === full ? 'rgba(255, 94, 54, 0.25)' : 'rgba(255, 255, 255, 0.06)',
-                            border: igTime === full ? '1px solid #ff5e36' : '1px solid rgba(255, 255, 255, 0.1)',
-                            color: igTime === full ? '#ff5e36' : 'rgba(255, 255, 255, 0.7)',
-                            fontSize: '0.65rem',
-                            fontWeight: 600,
-                            cursor: 'pointer'
-                          }}
-                        >
-                          {t}
-                        </button>
-                      );
-                    })}
+                    {[
+                      { short: '28 Sep', full: '28 September' },
+                      { short: '5h', full: '5 hours ago' },
+                      { short: '1d', full: '1 day ago' }
+                    ].map(t => (
+                      <button
+                        key={t.short}
+                        type="button"
+                        onClick={() => setIgTime(t.full)}
+                        style={{
+                          padding: '1px 6px',
+                          borderRadius: '5px',
+                          background: igTime === t.full ? 'rgba(255, 94, 54, 0.25)' : 'rgba(255, 255, 255, 0.06)',
+                          border: igTime === t.full ? '1px solid #ff5e36' : '1px solid rgba(255, 255, 255, 0.1)',
+                          color: igTime === t.full ? '#ff5e36' : 'rgba(255, 255, 255, 0.7)',
+                          fontSize: '0.65rem',
+                          fontWeight: 600,
+                          cursor: 'pointer'
+                        }}
+                      >
+                        {t.short}
+                      </button>
+                    ))}
                   </div>
                 </div>
                 <input
@@ -1407,13 +1458,14 @@ export default function MemeStylesModal({
                   className="form-input"
                   value={igTime}
                   onChange={(e) => setIgTime(e.target.value)}
-                  placeholder="e.g. 2 hours ago"
+                  placeholder="e.g. 28 September"
                   style={inputStyle}
                   onFocus={inputFocusHandler}
                   onBlur={inputBlurHandler}
                 />
               </div>
             </div>
+
 
             {/* Top / Pinned Comment (Optional) */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.6fr', gap: '12px' }}>
@@ -1449,7 +1501,7 @@ export default function MemeStylesModal({
               </div>
             </div>
 
-            {/* Options Row: Verified Badge, Story Ring, Show Comments, Translation, Theme */}
+            {/* Options Row: Verified Badge, Story Ring, Translation, Theme */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
               <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
                 <label style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer', fontSize: '0.76rem', color: '#ffffff' }}>
@@ -1475,21 +1527,11 @@ export default function MemeStylesModal({
                 <label style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer', fontSize: '0.76rem', color: '#ffffff' }}>
                   <input
                     type="checkbox"
-                    checked={igShowComments}
-                    onChange={(e) => setIgShowComments(e.target.checked)}
-                    style={{ accentColor: '#ff5e36', width: 15, height: 15 }}
-                  />
-                  <span>Comments</span>
-                </label>
-
-                <label style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer', fontSize: '0.76rem', color: '#ffffff' }}>
-                  <input
-                    type="checkbox"
                     checked={igShowTranslation}
                     onChange={(e) => setIgShowTranslation(e.target.checked)}
                     style={{ accentColor: '#ff5e36', width: 15, height: 15 }}
                   />
-                  <span>Translation</span>
+                  <span>See translation</span>
                 </label>
               </div>
 

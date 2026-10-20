@@ -543,6 +543,21 @@ const iosPhonePath = new Path2D("M6.62 10.79a15.05 15.05 0 0 0 6.59 6.59l2.2-2.2
 
 export const socialCardImageCache = new Map();
 
+export const parseLikesCount = (likesText) => {
+  if (!likesText || typeof likesText !== 'string') return '';
+  const trimmed = likesText.trim();
+  if (/^[\d,.]+[kKmMbB]?$/.test(trimmed)) {
+    return trimmed;
+  }
+  const matchAnd = trimmed.match(/and\s+([\d,.]+[kKmMbB]?)\s+others/i);
+  if (matchAnd) return matchAnd[1];
+  const matchOthers = trimmed.match(/by\s+([\d,.]+[kKmMbB]?)\s+others/i);
+  if (matchOthers) return matchOthers[1];
+  const matchLikes = trimmed.match(/([\d,.]+[kKmMbB]?)\s+likes/i);
+  if (matchLikes) return matchLikes[1];
+  return trimmed;
+};
+
 export const TWEET_TREND_PRESETS = {
   viral: {
     label: '#1 Trending',
@@ -837,9 +852,7 @@ export const getInstagramCardHeight = (ctx, cap, cardW) => {
   const pad = Math.round(14 * scale);
   const avatarSize = Math.round(40 * scale);
   const bodyFontSize = Math.round(Math.max(12, (cap.fontSize || 15) * scale));
-  const likesFontSize = Math.round(13 * scale);
-  const timeFontSize = Math.round(11 * scale);
-  const commentsFontSize = Math.round(11.5 * scale);
+  const timeFontSize = Math.round(11.5 * scale);
   const iconSize = Math.round(20 * scale);
 
   const headerH = Math.max(avatarSize, Math.round(44 * scale));
@@ -847,24 +860,20 @@ export const getInstagramCardHeight = (ctx, cap, cardW) => {
 
   ctx.save();
   ctx.font = `normal ${bodyFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
-  const wrappedLines = wrapText(ctx, `${cap.igUsername || 'username'} ${cap.text || ''}`, cardW - pad * 2);
+  const wrappedLines = wrapText(ctx, `${cap.igUsername || 'inc42.media'} ${cap.text || ''}`, cardW - pad * 2);
   ctx.restore();
 
-  const actionsH = iconSize + Math.round(10 * scale);
-  const likesH = cap.igLikesText !== '' ? (likesFontSize + Math.round(6 * scale)) : 0;
-  const captionH = wrappedLines.length * (bodyFontSize * 1.38);
+  const actionsH = iconSize + Math.round(12 * scale);
+  const captionH = Math.max(1, wrappedLines.length) * Math.round(bodyFontSize * 1.36);
 
-  const commentsCountText = cap.igCommentsCount ? (cap.igCommentsCount.startsWith('View') ? cap.igCommentsCount : `View all ${cap.igCommentsCount} comments`) : (cap.igCommentsText || 'View all 420 comments');
-  const showComments = cap.igShowComments !== false && Boolean(commentsCountText);
-  const commentsH = showComments ? (commentsFontSize + Math.round(5 * scale)) : 0;
-
+  // Optional top comment
   const hasTopComment = Boolean(cap.igTopCommentUser && cap.igTopCommentText);
-  const topCommentH = hasTopComment ? (Math.round(12 * scale) + Math.round(5 * scale)) : 0;
+  const topCommentH = hasTopComment ? (Math.round(12 * scale) + Math.round(4 * scale)) : 0;
 
-  const timeH = timeFontSize + Math.round(6 * scale);
+  const timeH = timeFontSize + Math.round(5 * scale);
 
-  // Feed ordering: Pad + Header + Post Image + Actions Row + Likes Line + Caption + Comments + Top Comment + Timestamp + Pad
-  const totalH = Math.round(pad + headerH + Math.round(10 * scale) + postImageH + Math.round(10 * scale) + actionsH + likesH + captionH + commentsH + topCommentH + timeH + pad);
+  // Pad + Header + Gap + Post Image + Actions Row + Caption + (Optional Top Comment) + Timestamp + Pad
+  const totalH = Math.round(pad + headerH + Math.round(10 * scale) + postImageH + actionsH + captionH + topCommentH + timeH + pad);
   return totalH;
 };
 
@@ -873,28 +882,36 @@ export const drawInstagramCard = (ctx, cardW, cap) => {
   const scale = Math.max(0.4, Math.min(3.5, cardW / 480));
   const pad = Math.round(14 * scale);
   const avatarR = Math.round(19 * scale);
-  const nameFontSize = Math.round(14.5 * scale);
-  const subtitleFontSize = Math.round(11.5 * scale);
+  const nameFontSize = Math.round(14 * scale);
+  const subtitleFontSize = Math.round(11 * scale);
   const bodyFontSize = Math.round(Math.max(12, (cap.fontSize || 15) * scale));
-  const likesFontSize = Math.round(13 * scale);
-  const timeFontSize = Math.round(11 * scale);
+  const metricsFontSize = Math.round(13 * scale);
+  const timeFontSize = Math.round(11.5 * scale);
   const iconSize = Math.round(20 * scale);
   const cornerRadius = Math.round(16 * scale);
 
   const theme = cap.igTheme || 'dark';
   const isDark = theme !== 'light' && theme !== 'white';
   const cardBg = isDark ? '#000000' : '#ffffff';
-  const textColor = isDark ? '#ffffff' : '#262626';
+  const textColor = isDark ? '#ffffff' : '#000000';
   const mutedColor = isDark ? '#a8a8a8' : '#737373';
   const borderColor = isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.1)';
 
-  const username = cap.igUsername || 'zuck';
-  const subtitle = cap.igSubtitle || 'Original audio';
-  const text = cap.text || 'just dropped the new open-source weights. feeling good about the timeline.';
+  const username = cap.igUsername || 'inc42.media';
+  const subtitle = cap.igSubtitle !== undefined ? cap.igSubtitle : 'Suggested for you';
+  const text = cap.text || 'Remember Tanmay Bhat from the AIB...';
   const isVerified = cap.igVerified !== false;
   const hasStoryRing = cap.igHasStoryRing !== false;
-  const likesText = cap.igLikesText || 'Liked by cristiano and 1,842,509 others';
-  const time = cap.igTime || '2 HOURS AGO';
+  const showFollow = cap.igShowFollow !== false;
+  const followText = cap.igFollowText || 'Follow';
+  const isLiked = Boolean(cap.igLiked);
+
+  // Modern action bar counts (matches latest Instagram UI from user reference)
+  const likesCount = cap.igLikesCount || parseLikesCount(cap.igLikesText) || '1,583';
+  const commentsCount = cap.igCommentsCount || '15';
+  const repostsCount = cap.igRepostsCount || '15';
+  const sharesCount = cap.igSharesCount || '295';
+  const time = cap.igTime || '28 September';
   const postImageSrc = cap.igPostImage || cap.postImage || null;
 
   ctx.font = `normal ${bodyFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
@@ -941,13 +958,13 @@ export const drawInstagramCard = (ctx, cardW, cap) => {
   // Inner avatar circle
   ctx.beginPath();
   ctx.arc(avCenterX, avCenterY, avatarR, 0, Math.PI * 2);
-  ctx.fillStyle = isDark ? '#0ea5e9' : '#38bdf8';
+  ctx.fillStyle = isDark ? '#b91c1c' : '#ef4444';
   ctx.fill();
   ctx.fillStyle = '#ffffff';
-  ctx.font = `bold ${Math.round(15 * scale)}px -apple-system, BlinkMacSystemFont, sans-serif`;
+  ctx.font = `bold ${Math.round(14 * scale)}px -apple-system, BlinkMacSystemFont, sans-serif`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText(username.charAt(0).toUpperCase() || 'U', avCenterX, avCenterY);
+  ctx.fillText(username.charAt(0).toUpperCase() || 'I', avCenterX, avCenterY);
 
   // Username & Subtitle
   const nameX = startX + pad + (avatarR * 2) + Math.round(10 * scale);
@@ -960,27 +977,54 @@ export const drawInstagramCard = (ctx, cardW, cap) => {
 
   const nameW = ctx.measureText(username).width;
   if (isVerified) {
-    const badgeSize = Math.round(14 * scale);
+    const badgeSize = Math.round(13.5 * scale);
     const badgeX = nameX + nameW + Math.round(4 * scale);
     const badgeY = nameY + Math.round((nameFontSize - badgeSize) / 2);
     drawTweetVerifiedBadge(ctx, badgeX, badgeY, badgeSize);
   }
 
-  // Subtitle
+  // Subtitle (e.g. Suggested for you)
   if (subtitle) {
     ctx.font = `normal ${subtitleFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
     ctx.fillStyle = mutedColor;
     ctx.fillText(subtitle, nameX, nameY + nameFontSize + Math.round(3 * scale));
   }
 
-  // Instagram 3-dots on top right
-  const dotsX = startX + cardW - pad - Math.round(14 * scale);
-  const dotsY = startY + pad + Math.round(14 * scale);
+  // Top Right: Follow button & Menu (···)
+  const menuIconW = Math.round(16 * scale);
+  const menuX = startX + cardW - pad - menuIconW;
+  const headerCenterY = startY + pad + avatarR;
+
+  // Draw 3 dots
   ctx.fillStyle = textColor;
+  const dotR = Math.max(1.2, 1.6 * scale);
+  const dotSpacing = 4.5 * scale;
+  const dotsStartX = menuX + (menuIconW - dotSpacing * 2) / 2;
   for (let i = 0; i < 3; i++) {
     ctx.beginPath();
-    ctx.arc(dotsX + (i * 4.5 * scale), dotsY, Math.round(1.5 * scale), 0, Math.PI * 2);
+    ctx.arc(dotsStartX + i * dotSpacing, headerCenterY, dotR, 0, Math.PI * 2);
     ctx.fill();
+  }
+
+  // Draw Follow pill button
+  if (showFollow) {
+    ctx.font = `bold ${Math.round(12 * scale)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+    const followTextW = ctx.measureText(followText).width;
+    const btnPadX = Math.round(13 * scale);
+    const btnW = followTextW + btnPadX * 2;
+    const btnH = Math.round(28 * scale);
+    const btnX = menuX - btnW - Math.round(8 * scale);
+    const btnY = headerCenterY - btnH / 2;
+    const btnRadius = Math.round(8 * scale);
+
+    ctx.save();
+    ctx.fillStyle = isDark ? '#262626' : '#efefef';
+    drawRoundRect(ctx, btnX, btnY, btnW, btnH, btnRadius);
+    ctx.fillStyle = isDark ? '#ffffff' : '#000000';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(followText, btnX + btnW / 2, btnY + btnH / 2);
+    ctx.restore();
   }
 
   // ─── Post Image Section (Square Feed Photo) ───
@@ -1057,34 +1101,61 @@ export const drawInstagramCard = (ctx, cardW, cap) => {
     ctx.restore();
   }
 
-  // ─── Action Icons Row: Heart, Comment, Share (Paper Plane), Bookmark ───
-  let curY = postImageY + postImageH + Math.round(10 * scale);
-  ctx.save();
-  ctx.translate(startX + pad, curY);
-  const iconS = iconSize / 24;
-  ctx.scale(iconS, iconS);
-  ctx.fillStyle = '#ff3040';
-  ctx.fill(tweetHeartPath);
-  ctx.restore();
+  // ─── Modern Action Icons Row with Inline Counts ───
+  let curY = postImageY + postImageH + Math.round(11 * scale);
+  const iconCenterY = curY + iconSize / 2;
 
-  drawTweetVectorStrokeIcon(ctx, tweetCommentPath, startX + pad + Math.round(32 * scale), curY, iconSize, textColor);
-  drawTweetVectorStrokeIcon(ctx, instagramSendPath, startX + pad + Math.round(64 * scale), curY, iconSize, textColor);
+  ctx.font = `600 ${metricsFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+  ctx.textBaseline = 'middle';
+  ctx.textAlign = 'left';
+
+  let curX = startX + pad;
+  const inlineGap = Math.round(5.5 * scale);
+  const groupGap = Math.round(12 * scale);
+
+  // 1. Like icon + count
+  if (isLiked) {
+    ctx.save();
+    ctx.translate(curX, curY);
+    const iconS = iconSize / 24;
+    ctx.scale(iconS, iconS);
+    ctx.fillStyle = '#ff3040';
+    ctx.fill(tweetHeartPath);
+    ctx.restore();
+  } else {
+    drawTweetVectorStrokeIcon(ctx, tweetHeartPath, curX, curY, iconSize, textColor);
+  }
+  curX += iconSize + inlineGap;
+  ctx.fillStyle = textColor;
+  ctx.fillText(likesCount, curX, iconCenterY);
+  curX += ctx.measureText(likesCount).width + groupGap;
+
+  // 2. Comment icon + count
+  drawTweetVectorStrokeIcon(ctx, tweetCommentPath, curX, curY, iconSize, textColor);
+  curX += iconSize + inlineGap;
+  ctx.fillStyle = textColor;
+  ctx.fillText(commentsCount, curX, iconCenterY);
+  curX += ctx.measureText(commentsCount).width + groupGap;
+
+  // 3. Repost icon + count
+  drawTweetVectorStrokeIcon(ctx, tweetRepeatPath, curX, curY, iconSize, textColor);
+  curX += iconSize + inlineGap;
+  ctx.fillStyle = textColor;
+  ctx.fillText(repostsCount, curX, iconCenterY);
+  curX += ctx.measureText(repostsCount).width + groupGap;
+
+  // 4. Share icon + count
+  drawTweetVectorStrokeIcon(ctx, instagramSendPath, curX, curY, iconSize, textColor);
+  curX += iconSize + inlineGap;
+  ctx.fillStyle = textColor;
+  ctx.fillText(sharesCount, curX, iconCenterY);
+
+  // 5. Bookmark icon on far right
   drawTweetVectorStrokeIcon(ctx, tweetBookmarkPath, startX + cardW - pad - iconSize, curY, iconSize, textColor);
 
-  // ─── Likes Line (BELOW ACTIONS) ───
-  if (likesText) {
-    curY += iconSize + Math.round(10 * scale);
-    ctx.font = `bold ${likesFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
-    ctx.fillStyle = textColor;
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'top';
-    ctx.fillText(likesText, startX + pad, curY);
-    curY += likesFontSize + Math.round(6 * scale);
-  } else {
-    curY += iconSize + Math.round(8 * scale);
-  }
+  curY += iconSize + Math.round(10 * scale);
 
-  // ─── Caption (STRICTLY BELOW LIKES) ───
+  // ─── Caption (Directly Below Actions with bold username) ───
   ctx.font = `normal ${bodyFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
   ctx.fillStyle = textColor;
   ctx.textAlign = 'left';
@@ -1102,18 +1173,7 @@ export const drawInstagramCard = (ctx, cardW, cap) => {
     } else {
       ctx.fillText(line, startX + pad, curY);
     }
-    curY += Math.round(bodyFontSize * 1.38);
-  }
-
-  // ─── Comments Count Line ───
-  const commentsCountText = cap.igCommentsCount ? (cap.igCommentsCount.startsWith('View') ? cap.igCommentsCount : `View all ${cap.igCommentsCount} comments`) : (cap.igCommentsText || 'View all 420 comments');
-  const showComments = cap.igShowComments !== false && Boolean(commentsCountText);
-  if (showComments) {
-    curY += Math.round(3 * scale);
-    ctx.font = `normal ${Math.round(11.5 * scale)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
-    ctx.fillStyle = mutedColor;
-    ctx.fillText(commentsCountText, startX + pad, curY);
-    curY += Math.round(11.5 * scale) + Math.round(2 * scale);
+    curY += Math.round(bodyFontSize * 1.36);
   }
 
   // ─── Top / Pinned Comment (Optional) ───
@@ -1128,10 +1188,10 @@ export const drawInstagramCard = (ctx, cardW, cap) => {
     curY += Math.round(12 * scale) + Math.round(2 * scale);
   }
 
-  // ─── Timestamp & Translation ───
-  curY += Math.round(3 * scale);
-  const displayTime = cap.igTime || '2 hours ago';
-  const showTranslation = cap.igShowTranslation !== false;
+  // ─── Date / Timestamp Row ───
+  curY += Math.round(2 * scale);
+  const displayTime = time || '28 September';
+  const showTranslation = cap.igShowTranslation === true;
   const timeText = showTranslation ? `${displayTime} · See translation` : displayTime;
   ctx.font = `normal ${timeFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
   ctx.fillStyle = mutedColor;
