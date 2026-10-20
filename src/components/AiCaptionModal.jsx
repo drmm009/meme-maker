@@ -191,13 +191,18 @@ export default function AiCaptionModal({ isOpen, onClose, onApplyCaption, templa
                 value={geminiApiKey}
                 onChange={(e) => handleSaveApiKey(e.target.value)}
                 style={{
-                  fontSize: '0.78rem',
-                  padding: '7px 10px',
-                  borderRadius: '8px',
+                  height: '38px',
+                  fontSize: '0.84rem',
+                  fontWeight: 500,
+                  padding: '0 16px',
+                  borderRadius: '9999px',
                   flex: 1,
-                  background: 'rgba(0, 0, 0, 0.3)',
-                  border: '1px solid rgba(255, 255, 255, 0.12)',
-                  color: '#ffffff'
+                  background: '#16181f',
+                  border: '1px solid rgba(255, 255, 255, 0.14)',
+                  boxShadow: '0 3px 10px rgba(0, 0, 0, 0.35)',
+                  color: '#ffffff',
+                  outline: 'none',
+                  transition: 'all 0.22s cubic-bezier(0.16, 1, 0.3, 1)'
                 }}
               />
               {geminiApiKey && (
@@ -207,8 +212,9 @@ export default function AiCaptionModal({ isOpen, onClose, onApplyCaption, templa
                   onClick={handleClearApiKey}
                   title="Remove saved key from this browser"
                   style={{
-                    padding: '0 12px',
-                    borderRadius: '8px',
+                    padding: '0 14px',
+                    height: '38px',
+                    borderRadius: '9999px',
                     background: 'rgba(239, 68, 68, 0.15)',
                     border: '1px solid rgba(239, 68, 68, 0.3)',
                     color: '#f87171',
@@ -237,15 +243,18 @@ export default function AiCaptionModal({ isOpen, onClose, onApplyCaption, templa
             if (e.key === 'Enter') fetchIdeas();
           }}
           style={{
-            fontSize: '0.84rem',
-            padding: '9px 13px',
-            borderRadius: '12px',
-            background: 'rgba(255, 255, 255, 0.05)',
-            border: '1px solid rgba(255, 255, 255, 0.11)',
-            color: '#ffffff',
             flex: 1,
+            height: '42px',
+            fontSize: '0.88rem',
+            fontWeight: 500,
+            padding: '0 16px',
+            borderRadius: '9999px',
+            background: '#16181f',
+            border: '1px solid rgba(255, 255, 255, 0.14)',
+            boxShadow: '0 3px 10px rgba(0, 0, 0, 0.35)',
+            color: '#ffffff',
             outline: 'none',
-            transition: 'border-color 0.2s, box-shadow 0.2s'
+            transition: 'all 0.22s cubic-bezier(0.16, 1, 0.3, 1)'
           }}
         />
         <button
@@ -255,14 +264,17 @@ export default function AiCaptionModal({ isOpen, onClose, onApplyCaption, templa
           disabled={loading}
           title="Generate fresh captions"
           style={{
-            height: '40px',
-            padding: '0 15px',
-            borderRadius: '12px',
-            fontSize: '0.82rem',
+            height: '42px',
+            padding: '0 18px',
+            borderRadius: '9999px',
+            fontSize: '0.84rem',
             fontWeight: 700,
             display: 'inline-flex',
             alignItems: 'center',
             gap: '6px',
+            flexShrink: 0
+          }}
+        >
             flexShrink: 0,
             cursor: loading ? 'not-allowed' : 'pointer',
             boxShadow: '0 4px 14px rgba(249, 115, 22, 0.28)'

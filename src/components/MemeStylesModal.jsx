@@ -346,31 +346,43 @@ const RANDOM_DIALOGUES = [
   ]
 ];
 
-/* ─── Editor Dock Input Style Helper ─── */
+/* ─── Harmonized BottomSheet Input Style (Matching Add Template Search Bar) ─── */
 const inputStyle = {
   width: '100%',
-  fontSize: '0.86rem',
+  height: '42px',
+  fontSize: '0.88rem',
+  fontWeight: 500,
   background: '#16181f',
-  borderRadius: '16px',
+  borderRadius: '9999px',
   border: '1px solid rgba(255, 255, 255, 0.14)',
-  padding: '10px 14px',
+  padding: '0 16px',
   color: '#ffffff',
   outline: 'none',
-  boxShadow: 'inset 0 1px 3px rgba(0, 0, 0, 0.35), 0 2px 8px rgba(0, 0, 0, 0.25)',
-  transition: 'all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1)',
-  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+  boxShadow: '0 3px 10px rgba(0, 0, 0, 0.35)',
+  transition: 'all 0.22s cubic-bezier(0.16, 1, 0.3, 1)',
+  fontFamily: 'inherit',
   boxSizing: 'border-box'
+};
+
+const textareaStyle = {
+  ...inputStyle,
+  height: 'auto',
+  minHeight: '72px',
+  borderRadius: '18px',
+  padding: '12px 16px',
+  lineHeight: 1.45,
+  resize: 'vertical'
 };
 
 const inputFocusHandler = (e) => {
   e.target.style.borderColor = '#ff5e36';
-  e.target.style.background = '#1c1e26';
-  e.target.style.boxShadow = '0 0 0 3px rgba(255, 94, 54, 0.18), inset 0 1px 2px rgba(0, 0, 0, 0.3)';
+  e.target.style.background = '#1a1c24';
+  e.target.style.boxShadow = '0 0 0 3px rgba(255, 94, 54, 0.22), 0 4px 14px rgba(0, 0, 0, 0.35)';
 };
 const inputBlurHandler = (e) => {
   e.target.style.borderColor = 'rgba(255, 255, 255, 0.14)';
   e.target.style.background = '#16181f';
-  e.target.style.boxShadow = 'inset 0 1px 3px rgba(0, 0, 0, 0.35), 0 2px 8px rgba(0, 0, 0, 0.25)';
+  e.target.style.boxShadow = '0 3px 10px rgba(0, 0, 0, 0.35)';
 };
 
 export default function MemeStylesModal({
@@ -1248,7 +1260,7 @@ export default function MemeStylesModal({
                   setActivePersona('custom');
                 }}
                 placeholder="What's happening?"
-                style={{ ...inputStyle, lineHeight: 1.4, minHeight: '68px', resize: 'vertical' }}
+                style={textareaStyle}
                 onFocus={inputFocusHandler}
                 onBlur={inputBlurHandler}
               />
@@ -1301,7 +1313,7 @@ export default function MemeStylesModal({
                       setActiveIgPersona('custom');
                     }}
                     placeholder="e.g. inc42.media"
-                    style={{ ...inputStyle, paddingRight: '34px' }}
+                    style={{ ...inputStyle, paddingRight: '40px' }}
                     onFocus={inputFocusHandler}
                     onBlur={inputBlurHandler}
                   />
@@ -1311,7 +1323,7 @@ export default function MemeStylesModal({
                     title={igVerified ? 'Verified (tap to toggle)' : 'Unverified (tap to toggle)'}
                     style={{
                       position: 'absolute',
-                      right: '8px',
+                      right: '12px',
                       background: 'none',
                       border: 'none',
                       padding: 0,
@@ -1382,7 +1394,7 @@ export default function MemeStylesModal({
                   setActiveIgPersona('custom');
                 }}
                 placeholder="Write an Instagram caption..."
-                style={{ ...inputStyle, lineHeight: 1.4, minHeight: '56px', resize: 'vertical' }}
+                style={{ ...textareaStyle, minHeight: '62px' }}
                 onFocus={inputFocusHandler}
                 onBlur={inputBlurHandler}
               />
@@ -1433,53 +1445,53 @@ export default function MemeStylesModal({
               {/* 4 compact metric inputs side-by-side in one sleek row */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px' }}>
                 <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                  <Heart size={13} style={{ position: 'absolute', left: '8px', color: '#ff3040', fill: '#ff3040', pointerEvents: 'none' }} />
+                  <Heart size={13} style={{ position: 'absolute', left: '10px', color: '#ff3040', fill: '#ff3040', pointerEvents: 'none', zIndex: 1 }} />
                   <input
                     type="text"
                     value={igLikesCount}
                     onChange={(e) => setIgLikesCount(e.target.value)}
                     placeholder="1,583"
                     title="Likes Count"
-                    style={{ ...inputStyle, padding: '6px 6px 6px 26px', fontSize: '0.78rem', textAlign: 'left' }}
+                    style={{ ...inputStyle, height: '38px', padding: '0 8px 0 28px', fontSize: '0.80rem', fontWeight: 600, textAlign: 'left' }}
                     onFocus={inputFocusHandler}
                     onBlur={inputBlurHandler}
                   />
                 </div>
                 <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                  <MessageCircle size={13} style={{ position: 'absolute', left: '8px', color: 'rgba(255,255,255,0.6)', pointerEvents: 'none' }} />
+                  <MessageCircle size={13} style={{ position: 'absolute', left: '10px', color: 'rgba(255,255,255,0.6)', pointerEvents: 'none', zIndex: 1 }} />
                   <input
                     type="text"
                     value={igCommentsCount}
                     onChange={(e) => setIgCommentsCount(e.target.value)}
                     placeholder="15"
                     title="Comments Count"
-                    style={{ ...inputStyle, padding: '6px 6px 6px 26px', fontSize: '0.78rem', textAlign: 'left' }}
+                    style={{ ...inputStyle, height: '38px', padding: '0 8px 0 28px', fontSize: '0.80rem', fontWeight: 600, textAlign: 'left' }}
                     onFocus={inputFocusHandler}
                     onBlur={inputBlurHandler}
                   />
                 </div>
                 <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                  <Repeat size={13} style={{ position: 'absolute', left: '8px', color: 'rgba(255,255,255,0.6)', pointerEvents: 'none' }} />
+                  <Repeat size={13} style={{ position: 'absolute', left: '10px', color: 'rgba(255,255,255,0.6)', pointerEvents: 'none', zIndex: 1 }} />
                   <input
                     type="text"
                     value={igRepostsCount}
                     onChange={(e) => setIgRepostsCount(e.target.value)}
                     placeholder="15"
                     title="Reposts Count"
-                    style={{ ...inputStyle, padding: '6px 6px 6px 26px', fontSize: '0.78rem', textAlign: 'left' }}
+                    style={{ ...inputStyle, height: '38px', padding: '0 8px 0 28px', fontSize: '0.80rem', fontWeight: 600, textAlign: 'left' }}
                     onFocus={inputFocusHandler}
                     onBlur={inputBlurHandler}
                   />
                 </div>
                 <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                  <Send size={12} style={{ position: 'absolute', left: '8px', color: 'rgba(255,255,255,0.6)', pointerEvents: 'none' }} />
+                  <Send size={12} style={{ position: 'absolute', left: '10px', color: 'rgba(255,255,255,0.6)', pointerEvents: 'none', zIndex: 1 }} />
                   <input
                     type="text"
                     value={igSharesCount}
                     onChange={(e) => setIgSharesCount(e.target.value)}
                     placeholder="295"
                     title="Shares Count"
-                    style={{ ...inputStyle, padding: '6px 6px 6px 26px', fontSize: '0.78rem', textAlign: 'left' }}
+                    style={{ ...inputStyle, height: '38px', padding: '0 8px 0 28px', fontSize: '0.80rem', fontWeight: 600, textAlign: 'left' }}
                     onFocus={inputFocusHandler}
                     onBlur={inputBlurHandler}
                   />
@@ -1566,7 +1578,7 @@ export default function MemeStylesModal({
                     value={igTime}
                     onChange={(e) => setIgTime(e.target.value)}
                     placeholder="e.g. 28 September"
-                    style={{ ...inputStyle, padding: '5px 10px', fontSize: '0.78rem' }}
+                    style={{ ...inputStyle, height: '38px', fontSize: '0.82rem' }}
                     onFocus={inputFocusHandler}
                     onBlur={inputBlurHandler}
                   />
@@ -1584,7 +1596,7 @@ export default function MemeStylesModal({
                       value={igTopCommentUser}
                       onChange={(e) => setIgTopCommentUser(e.target.value)}
                       placeholder="e.g. cristiano"
-                      style={{ ...inputStyle, padding: '5px 10px', fontSize: '0.78rem' }}
+                      style={{ ...inputStyle, height: '38px', fontSize: '0.82rem' }}
                       onFocus={inputFocusHandler}
                       onBlur={inputBlurHandler}
                     />
@@ -1599,7 +1611,7 @@ export default function MemeStylesModal({
                       value={igTopCommentText}
                       onChange={(e) => setIgTopCommentText(e.target.value)}
                       placeholder="e.g. AGI when? 😂👏"
-                      style={{ ...inputStyle, padding: '5px 10px', fontSize: '0.78rem' }}
+                      style={{ ...inputStyle, height: '38px', fontSize: '0.82rem' }}
                       onFocus={inputFocusHandler}
                       onBlur={inputBlurHandler}
                     />
@@ -1799,7 +1811,7 @@ export default function MemeStylesModal({
                         value={msg.text}
                         onChange={(e) => handleUpdateWaMessage(msg.id, { text: e.target.value })}
                         placeholder="Type message text..."
-                        style={{ ...inputStyle, minHeight: '44px', padding: '6px 10px', fontSize: '0.82rem', resize: 'vertical' }}
+                        style={{ ...textareaStyle, minHeight: '52px', padding: '10px 14px', fontSize: '0.84rem' }}
                         onFocus={inputFocusHandler}
                         onBlur={inputBlurHandler}
                       />
@@ -1810,9 +1822,12 @@ export default function MemeStylesModal({
                           <span style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.5)' }}>Time:</span>
                           <input
                             type="text"
+                            className="form-input"
                             value={msg.time || '11:42 PM'}
                             onChange={(e) => handleUpdateWaMessage(msg.id, { time: e.target.value })}
-                            style={{ ...inputStyle, padding: '3px 8px', fontSize: '0.74rem', width: '90px' }}
+                            style={{ ...inputStyle, height: '32px', padding: '0 10px', fontSize: '0.74rem', width: '92px' }}
+                            onFocus={inputFocusHandler}
+                            onBlur={inputBlurHandler}
                           />
                         </div>
 
