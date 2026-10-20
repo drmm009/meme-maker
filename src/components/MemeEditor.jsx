@@ -522,10 +522,6 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     setShowFilterPresets(false);
     if (tabId === 'draw') {
       setActiveSubmenu('drawSettings');
-    } else if (tabId === 'filters') {
-      setActiveSubmenu(null);
-    } else if (tabId === 'canvas' || tabId === 'watermark') {
-      setActiveSubmenu('canvasBg');
     } else {
       setActiveSubmenu(null);
     }
@@ -575,7 +571,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
   const [recordProgress, setRecordProgress] = useState(0);
   const [isVideoPlaying, setIsVideoPlaying] = useState(true);
 
-  // Watermark state — persisted in localStorage (quota-safe: session state survives write failures)
+  // Watermark state â€” persisted in localStorage (quota-safe: session state survives write failures)
   const [watermark, setWatermark] = useState(() => {
     const parsed = safeGet('meme-maker-watermark', null);
     if (parsed && typeof parsed === 'object') {
@@ -755,7 +751,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     return () => document.removeEventListener('keydown', h);
   }, []);
 
-  // Global clipboard paste listener (Ctrl+V image/gif onto canvas) — subscribe once, same pattern
+  // Global clipboard paste listener (Ctrl+V image/gif onto canvas) â€” subscribe once, same pattern
   const pasteHandlerRef = useRef(null);
   pasteHandlerRef.current = (e) => {
       const tag = document.activeElement?.tagName?.toLowerCase();
@@ -816,7 +812,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     });
   };
 
-  // Debounced version — used for text typing so history isn't pushed on every keypress
+  // Debounced version â€” used for text typing so history isn't pushed on every keypress
   const pushHistoryDebounced = (
     newCaptions,
     newStickers,
@@ -1631,8 +1627,8 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
       tweetHandle: handle,
       tweetVerified: verified,
       tweetTheme: theme,
-      tweetTime: data.time || '10:42 PM · Oct 8, 2026',
-      tweetMetrics: data.metrics || (TWEET_TREND_PRESETS?.viral?.text || '💬 14.2K    🔁 62.8K    ❤️ 420.5K    📊 18.2M'),
+      tweetTime: data.time || '10:42 PM Â· Oct 8, 2026',
+      tweetMetrics: data.metrics || (TWEET_TREND_PRESETS?.viral?.text || 'ðŸ’¬ 14.2K    ðŸ” 62.8K    â¤ï¸ 420.5K    ðŸ“Š 18.2M'),
       tweetMetricsId: 'viral',
       tweetTrendRank: 'viral',
       tweetTopic: TWEET_TREND_PRESETS?.viral?.topic || 'Trending in World',
@@ -1714,9 +1710,9 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
   };
 
   const handleAddWhatsAppCard = (data = {}) => {
-    const contactName = data.contactName || 'Mom ❤️';
+    const contactName = data.contactName || 'Mom â¤ï¸';
     const status = data.status || 'online';
-    const text = data.text || 'Please remember to eat vegetables and don’t stay up until 4 AM arguing with strangers on the internet.';
+    const text = data.text || 'Please remember to eat vegetables and donâ€™t stay up until 4 AM arguing with strangers on the internet.';
     const direction = data.direction || 'received';
     const ticks = data.ticks || 'blue';
     const time = data.time || '11:42 PM';
@@ -1724,8 +1720,8 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
       ? data.messages
       : [
           { id: 'm1', text: text, direction: direction, time: time, ticks: ticks },
-          { id: 'm2', text: 'I am eating healthy right now mom! 👍', direction: 'sent', time: '11:43 PM', ticks: 'blue' },
-          { id: 'm3', text: 'Pizza is not a vegetable. I can see your location at Domino’s.', direction: 'received', time: '11:44 PM', ticks: 'blue' }
+          { id: 'm2', text: 'I am eating healthy right now mom! ðŸ‘', direction: 'sent', time: '11:43 PM', ticks: 'blue' },
+          { id: 'm3', text: 'Pizza is not a vegetable. I can see your location at Dominoâ€™s.', direction: 'received', time: '11:44 PM', ticks: 'blue' }
         ];
     const theme = data.theme || 'dark';
     const showHeader = data.showHeader !== false;
@@ -3075,7 +3071,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
       const res = await fetch(exportedImageUri);
       const blob = await res.blob();
       if (typeof ClipboardItem !== 'undefined' && navigator.clipboard?.write) {
-        // Modern clipboard API — copies actual image, pasteable into Discord/Twitter/etc.
+        // Modern clipboard API â€” copies actual image, pasteable into Discord/Twitter/etc.
         await navigator.clipboard.write([
           new ClipboardItem({ 'image/png': blob })
         ]);
@@ -3107,7 +3103,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
         // Native share sheet (mobile / Chrome Android / Safari iOS)
         await navigator.share({
           title: memeCustomName || 'My Meme',
-          text: 'Check out this meme I made! 😂',
+          text: 'Check out this meme I made! ðŸ˜‚',
           files: [file],
         });
         triggerConfetti();
@@ -3118,7 +3114,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
         setTimeout(() => setShareCopied(false), 2500);
       }
     } catch (err) {
-      // User cancelled share or clipboard not available — silently ignore
+      // User cancelled share or clipboard not available â€” silently ignore
       if (err.name !== 'AbortError') {
         console.warn('Share failed:', err);
       }
@@ -3267,7 +3263,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                 <button
                   className="btn btn-secondary hover-lift"
                   onClick={handleCopyToClipboard}
-                  title={clipboardCopied ? 'Image copied!' : 'Copy image to clipboard — paste into Discord, Twitter, etc.'}
+                  title={clipboardCopied ? 'Image copied!' : 'Copy image to clipboard â€” paste into Discord, Twitter, etc.'}
                   style={{
                     background: clipboardCopied ? 'rgba(34, 197, 94, 0.15)' : undefined,
                     borderColor: clipboardCopied ? 'rgba(34, 197, 94, 0.4)' : undefined,
@@ -3424,7 +3420,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         const blob = await res.blob();
                         const file = new File([blob], `meme-${Date.now()}.png`, { type: 'image/png' });
                         if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                          await navigator.share({ title: memeCustomName || 'My Meme', text: 'Check out this meme! 😂', files: [file] });
+                          await navigator.share({ title: memeCustomName || 'My Meme', text: 'Check out this meme! ðŸ˜‚', files: [file] });
                           triggerConfetti();
                         } else {
                           await navigator.clipboard.writeText(uri);
@@ -3664,9 +3660,9 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                 />
               </div>
 
-              {/* ─── Bottom Toolbars Dock Anchor (Main Toolbar on top of main dock, Layer Toolbar floats above it) ─── */}
+              {/* â”€â”€â”€ Bottom Toolbars Dock Anchor (Main Toolbar on top of main dock, Layer Toolbar floats above it) â”€â”€â”€ */}
               <div className="editor-toolbars-dock-anchor">
-                {/* ─── Layer Toolbar (Secondary Toolbar) ─── */}
+                {/* â”€â”€â”€ Layer Toolbar (Secondary Toolbar) â”€â”€â”€ */}
                 <AnimatePresence>
                 {Boolean(
                   Boolean(activeCaption || activeSticker || activeImageLayer) ||
@@ -4508,7 +4504,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                       </motion.div>
                     )}
 
-                    {/* 14. Die-Cut Color Picker — Appears on Secondary Toolbar when Die-Cut is active on sticker / emoji */}
+                    {/* 14. Die-Cut Color Picker â€” Appears on Secondary Toolbar when Die-Cut is active on sticker / emoji */}
                     {activeSticker && activeSticker.dieCut && !activeSubmenu && (
                       <motion.div
                         key={`stk-diecut-${activeSticker.id}`}
@@ -4643,8 +4639,8 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           <button
                             type="button"
                             className="layer-action-btn layer-action-btn-rotate"
-                            title="Rotate 90°"
-                            aria-label="Rotate 90°"
+                            title="Rotate 90Â°"
+                            aria-label="Rotate 90Â°"
                             onClick={handleRotateLayer}
                           >
                             <RotateCw style={{ width: 16, height: 16 }} />
@@ -4727,7 +4723,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                 )}
               </AnimatePresence>
 
-            {/* ─── 2. Main Context Toolbar ─── */}
+            {/* â”€â”€â”€ 2. Main Context Toolbar â”€â”€â”€ */}
             <AnimatePresence>
               {((activeCaption || activeSticker || activeImageLayer || templateFaceMorph) || (isMobileTabsFolded && !activeCaption && !activeSticker && !activeImageLayer)) && (isMobileTabsFolded || templateFaceMorph) && (
                 <motion.div
@@ -5631,7 +5627,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         }}
                         title="Fake Twitter / X Card"
                       >
-                        <span style={{ fontSize: '0.85rem', fontWeight: 900, color: 'var(--cyber-cyan)', lineHeight: 1 }}>𝕏</span>
+                        <span style={{ fontSize: '0.85rem', fontWeight: 900, color: 'var(--cyber-cyan)', lineHeight: 1 }}>ð•</span>
                         <span>Tweet</span>
                       </button>
 
@@ -6290,7 +6286,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                         <path d="M4 18C4 11.3726 9.37258 6 16 6H20" />
                         <path d="M16 2L20 6L16 10" />
                       </svg>
-                      <span>{activeCaption ? (activeCaption.curve ? `Arc (${activeCaption.curve > 0 ? '+' : ''}${activeCaption.curve}°)` : 'Curve') : 'Curved Text'}</span>
+                      <span>{activeCaption ? (activeCaption.curve ? `Arc (${activeCaption.curve > 0 ? '+' : ''}${activeCaption.curve}Â°)` : 'Curve') : 'Curved Text'}</span>
                     </button>
 
                     {/* Unified Header & Footer Segmented Control */}
@@ -7080,7 +7076,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                     >
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <span style={{ fontSize: '0.9rem', fontWeight: 900 }}>𝕏</span>
+                          <span style={{ fontSize: '0.9rem', fontWeight: 900 }}>ð•</span>
                           <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#fff' }}>X / Tweet Card</span>
                         </div>
                         <div style={{ display: 'flex', gap: '3px' }}>
@@ -7384,7 +7380,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                             className="form-input"
                             value={activeCaption.igTopCommentText || ''}
                             onChange={(e) => updateActiveCaption('igTopCommentText', e.target.value)}
-                            placeholder="e.g. AGI when? 😂👏"
+                            placeholder="e.g. AGI when? ðŸ˜‚ðŸ‘"
                             style={{ width: '100%', fontSize: '0.8rem', padding: '4px 8px' }}
                           />
                         </div>
@@ -7444,7 +7440,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                           <input
                             type="text"
                             className="form-input"
-                            value={activeCaption.waContactName || 'Mom ❤️'}
+                            value={activeCaption.waContactName || 'Mom â¤ï¸'}
                             onChange={(e) => updateActiveCaption('waContactName', e.target.value)}
                             style={{ width: '100%', fontSize: '0.8rem', padding: '4px 8px' }}
                           />
@@ -7481,7 +7477,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                             const nextDir = lastMsg?.direction === 'sent' ? 'received' : 'sent';
                             const newMsg = {
                               id: `m_${Date.now()}`,
-                              text: nextDir === 'sent' ? 'Sure thing! 👍' : 'Sounds good!',
+                              text: nextDir === 'sent' ? 'Sure thing! ðŸ‘' : 'Sounds good!',
                               direction: nextDir,
                               time: '11:45 PM',
                               ticks: 'blue'
@@ -7612,7 +7608,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                                           cursor: 'pointer'
                                         }}
                                       >
-                                        {t === 'blue' ? '✓✓' : t === 'grey' ? '✓✓' : '✓'}
+                                        {t === 'blue' ? 'âœ“âœ“' : t === 'grey' ? 'âœ“âœ“' : 'âœ“'}
                                       </button>
                                     ))}
                                   </div>
@@ -7918,7 +7914,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                       color: '#ffffff'
                     }}
                   >
-                    <span style={{ fontSize: '0.85rem', fontWeight: 900, color: '#1d9bf0', lineHeight: 1 }}>𝕏</span> Tweet
+                    <span style={{ fontSize: '0.85rem', fontWeight: 900, color: '#1d9bf0', lineHeight: 1 }}>ð•</span> Tweet
                   </button>
 
                   <button
@@ -8102,7 +8098,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                   </div>
                 )}
 
-                {/* VideoTrimmer Modal — rendered as portal to escape canvas z-index stacking context */}
+                {/* VideoTrimmer Modal â€” rendered as portal to escape canvas z-index stacking context */}
                 {pendingVideoLayer && createPortal(
                   <VideoTrimmer
                     videoUrl={pendingVideoLayer}
@@ -8382,7 +8378,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
                               textOverflow: 'ellipsis',
                               maxWidth: '70px'
                             }}>
-                              {filterItem.name.replace(' 🔥', '')}
+                              {filterItem.name.replace(' ðŸ”¥', '')}
                             </span>
                           </button>
                         );
