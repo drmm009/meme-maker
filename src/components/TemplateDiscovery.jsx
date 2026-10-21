@@ -1069,10 +1069,10 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom, on
         </section>
       )}
 
-      {/* 2. Top Search & Filter Bar (Below Carousel Banner Section) */}
-      <div className="discovery-top-bar">
+      {/* 2. Top Search & Filter Bar (Side-by-side matching Primary Glass UI) */}
+      <div className="search-filter-row discovery-top-bar">
         <div className="search-pill-container">
-          <Search className="search-pill-icon" size={18} />
+          <Search className="search-pill-icon" size={19} />
           <input
             ref={searchInputRef}
             type="text"
@@ -1088,7 +1088,7 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom, on
               onClick={() => setSearchQuery('')}
               aria-label="Clear search"
             >
-              <X size={15} />
+              ✕
             </button>
           )}
         </div>
@@ -1103,9 +1103,10 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom, on
             title={`Sorted by: ${currentSortOption.label}`}
             aria-label="Filter and sort templates"
           >
-            <SlidersHorizontal size={17} />
+            <SlidersHorizontal size={18} />
           </button>
 
+          {/* Floating Sort Dropdown */}
           <AnimatePresence>
             {isSortOpen && (
               <motion.div
@@ -1128,8 +1129,8 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom, on
                         setIsSortOpen(false);
                       }}
                     >
-                      <span className="sort-item-icon">
-                        <OptIcon size={15} color={opt.color || '#ff5e36'} />
+                      <span className="sort-item-icon" style={{ display: 'flex', alignItems: 'center' }}>
+                        <OptIcon size={16} color={opt.color || '#ff5e36'} />
                       </span>
                       <span className="sort-item-label">{opt.label}</span>
                       {sortBy === opt.id && <Check size={14} className="sort-check" />}
@@ -1142,16 +1143,15 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom, on
         </div>
       </div>
 
-      {/* 3. Quick Action Navigation Strip / Category Tags (Below Search Bar) */}
-      <div className="quick-actions-strip" role="tablist">
+      {/* 3. Category Tags Row matching Primary Acrylic Glass UI */}
+      <div className="discovery-tags-scroll quick-actions-strip" role="tablist">
         {TAGS.map((tag) => {
           const isActive = selectedTag === tag.id;
-          const TagIcon = tag.icon;
           return (
             <button
               key={tag.id}
               type="button"
-              className={`quick-pill-btn ${isActive ? 'active' : ''}`}
+              className={`discovery-tag-pill quick-pill-btn ${isActive ? 'active' : ''}`}
               onClick={() => {
                 setSelectedTag(tag.id);
                 if (tag.id === 'featured') {
@@ -1161,10 +1161,9 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom, on
               role="tab"
               aria-selected={isActive}
             >
-              <TagIcon size={14} className="quick-pill-icon" />
-              <span>{tag.label}</span>
+              <span className="tag-label">{tag.label}</span>
               {tag.id === 'favorites' && favorites.length > 0 && (
-                <span className="quick-pill-count">{favorites.length}</span>
+                <span className="tag-count-badge quick-pill-count">{favorites.length}</span>
               )}
             </button>
           );
