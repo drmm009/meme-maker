@@ -96,7 +96,7 @@
   font-weight: 900;
   line-height: 1.1;
   letter-spacing: 0.02em;
-  font-family: 'Syne', 'Plus Jakarta Sans', sans-serif;
+  font-family: 'Plus Jakarta Sans', Inter, system-ui, -apple-system, sans-serif;
   margin: 0;
 }
 
@@ -2501,7 +2501,7 @@ body {
 h1, h2, h3,
 .brand-title,
 .hero-banner h2 {
-  font-family: 'Archivo Black', 'Anton', 'Plus Jakarta Sans', sans-serif !important;
+  font-family: 'Plus Jakarta Sans', Inter, system-ui, -apple-system, sans-serif !important;
   letter-spacing: 0.015em !important;
   word-spacing: 0.24em !important;
   text-transform: uppercase !important;
@@ -2695,7 +2695,7 @@ h1, h2, h3,
 }
 .template-info h4 {
   color: var(--text-main) !important;
-  font-family: 'Archivo Black', 'Plus Jakarta Sans', sans-serif !important;
+  font-family: 'Plus Jakarta Sans', Inter, system-ui, -apple-system, sans-serif !important;
   font-size: 0.82rem !important;
   letter-spacing: -0.01em !important;
   text-transform: uppercase !important;
@@ -3298,7 +3298,7 @@ input[type='text'].search-pill-input:focus {
   -webkit-background-clip: border-box !important;
   -webkit-text-fill-color: var(--text-main) !important;
   color: var(--text-main) !important;
-  font-family: 'Archivo Black', 'Plus Jakarta Sans', sans-serif !important;
+  font-family: 'Plus Jakarta Sans', Inter, system-ui, -apple-system, sans-serif !important;
   text-transform: uppercase !important;
 }
 
