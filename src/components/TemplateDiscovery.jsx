@@ -423,10 +423,10 @@ export const STUDIO_HERO_SLIDES = [
     glowColor: 'rgba(255, 94, 54, 0.45)',
     icon: Plus,
     renderGraphic: () => <GraphicRocket3D />,
-    primaryVariant: 'studio-pill-canvas',
+    primaryVariant: 'pill-sunset',
     secondaryLabel: 'AI Generator',
     secondaryIcon: Sparkles,
-    secondaryVariant: 'studio-pill-ai',
+    secondaryVariant: 'studio-pill-dark',
     secondaryAction: 'ai'
   },
   {
@@ -447,7 +447,7 @@ export const STUDIO_HERO_SLIDES = [
     primaryVariant: 'pill-cyan',
     secondaryLabel: 'Upload',
     secondaryIcon: Upload,
-    secondaryVariant: 'pill-indigo',
+    secondaryVariant: 'studio-pill-dark',
     secondaryAction: 'upload'
   },
   {
@@ -468,7 +468,7 @@ export const STUDIO_HERO_SLIDES = [
     primaryVariant: 'pill-mint',
     secondaryLabel: 'Upload',
     secondaryIcon: Upload,
-    secondaryVariant: 'studio-pill-canvas',
+    secondaryVariant: 'studio-pill-dark',
     secondaryAction: 'upload'
   },
   {
@@ -489,7 +489,7 @@ export const STUDIO_HERO_SLIDES = [
     primaryVariant: 'pill-amber',
     secondaryLabel: 'Upload',
     secondaryIcon: Upload,
-    secondaryVariant: 'pill-fuchsia',
+    secondaryVariant: 'studio-pill-dark',
     secondaryAction: 'upload'
   },
   {
@@ -510,7 +510,7 @@ export const STUDIO_HERO_SLIDES = [
     primaryVariant: 'pill-fuchsia',
     secondaryLabel: 'Upload',
     secondaryIcon: Upload,
-    secondaryVariant: 'studio-pill-canvas',
+    secondaryVariant: 'studio-pill-dark',
     secondaryAction: 'upload'
   },
   {
@@ -531,7 +531,7 @@ export const STUDIO_HERO_SLIDES = [
     primaryVariant: 'studio-pill-ai',
     secondaryLabel: 'Upload',
     secondaryIcon: Upload,
-    secondaryVariant: 'pill-indigo',
+    secondaryVariant: 'studio-pill-dark',
     secondaryAction: 'upload'
   }
 ];

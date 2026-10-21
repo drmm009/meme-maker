@@ -1484,6 +1484,35 @@
   color: #ff5e36 !important;
 }
 
+.pill-sunset {
+  background: linear-gradient(135deg, #ff5e36 0%, #f43f5e 50%, #ec4899 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 18px rgba(255, 94, 54, 0.45) !important;
+}
+.pill-sunset .studio-pill-icon {
+  color: #ffffff !important;
+}
+
+.studio-pill-dark {
+  background: #131622 !important;
+  color: #e2e8f0 !important;
+  border: 1px solid rgba(255, 255, 255, 0.13) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
+}
+.studio-pill-dark:hover {
+  background: #1c2132 !important;
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.24) !important;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.55) !important;
+  transform: translateY(-2px) scale(1.03);
+}
+.studio-pill-dark .studio-pill-icon {
+  color: #94a3b8 !important;
+}
+.studio-pill-dark:hover .studio-pill-icon {
+  color: #ffffff !important;
+}
+
 .studio-pill-ai {
   background: linear-gradient(135deg, #ec4899 0%, #ff5e36 100%) !important;
   color: #ffffff !important;
@@ -2556,4 +2585,43 @@
 [data-theme='light'] .hero-indicator-dot.active {
   background: linear-gradient(90deg, #ff5e36, #ec4899) !important;
   box-shadow: 0 0 10px rgba(255, 94, 54, 0.4) !important;
+}
+[data-theme='light'] .pill-sunset,
+[data-theme='light'] .studio-pill-ai,
+[data-theme='light'] .pill-cyan,
+[data-theme='light'] .pill-mint,
+[data-theme='light'] .pill-amber,
+[data-theme='light'] .pill-fuchsia {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+[data-theme='light'] .pill-sunset .studio-pill-icon,
+[data-theme='light'] .studio-pill-ai .studio-pill-icon,
+[data-theme='light'] .pill-cyan .studio-pill-icon,
+[data-theme='light'] .pill-mint .studio-pill-icon,
+[data-theme='light'] .pill-amber .studio-pill-icon,
+[data-theme='light'] .pill-fuchsia .studio-pill-icon {
+  color: #ffffff !important;
+}
+
+[data-theme='light'] .studio-pill-dark {
+  background: #0f172a !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(15, 23, 42, 0.2) !important;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.18) !important;
+}
+
+[data-theme='light'] .studio-pill-dark:hover {
+  background: #1e293b !important;
+  color: #ffffff !important;
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.25) !important;
+}
+
+[data-theme='light'] .studio-pill-dark .studio-pill-icon {
+  color: #94a3b8 !important;
+}
+
+[data-theme='light'] .studio-pill-dark:hover .studio-pill-icon {
+  color: #ffffff !important;
 }
