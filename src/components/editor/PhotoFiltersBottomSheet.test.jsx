@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import React from 'react';
 import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import PhotoFiltersBottomSheet from './PhotoFiltersBottomSheet';
+import { PHOTO_FILTERS } from '../../data/photoFilters';
 
 beforeEach(() => {
   if (!window.matchMedia) {

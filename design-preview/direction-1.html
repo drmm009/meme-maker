@@ -1,0 +1,1311 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Direction 1: Noir Luxe (Studio Noir Evolved)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Syne:wght@700;800&family=Space+Mono:wght@700&display=swap" rel="stylesheet">
+  <style>
+    :root[data-theme="dark"] {
+      --bg: #0a0b10;
+      --bg-gradient: radial-gradient(circle at 50% 0%, rgba(201, 162, 39, 0.08) 0%, transparent 60%), #0a0b10;
+      --surface-1: #13151f;
+      --surface-2: #1b1e2b;
+      --surface-glass: rgba(19, 21, 31, 0.78);
+      --border: rgba(255, 255, 255, 0.08);
+      --border-accent: rgba(201, 162, 39, 0.35);
+      --accent-gold: #c9a227;
+      --accent-gold-glow: rgba(201, 162, 39, 0.3);
+      --accent-teal: #4a6670;
+      --accent-teal-bright: #688e9c;
+      --text-main: #f3f4f6;
+      --text-muted: #8c93a4;
+      --text-dim: #555b6a;
+      --card-shadow: 0 16px 36px -10px rgba(0, 0, 0, 0.65);
+      --badge-bg: rgba(201, 162, 39, 0.15);
+      --timeline-bg: #0e1017;
+      --phone-shell: #1a1c23;
+    }
+    :root[data-theme="light"] {
+      --bg: #f5f6f8;
+      --bg-gradient: radial-gradient(circle at 50% 0%, rgba(201, 162, 39, 0.06) 0%, transparent 60%), #f5f6f8;
+      --surface-1: #ffffff;
+      --surface-2: #f0f2f5;
+      --surface-glass: rgba(255, 255, 255, 0.85);
+      --border: rgba(0, 0, 0, 0.08);
+      --border-accent: rgba(184, 142, 19, 0.4);
+      --accent-gold: #b88e13;
+      --accent-gold-glow: rgba(184, 142, 19, 0.2);
+      --accent-teal: #3b535c;
+      --accent-teal-bright: #4a6670;
+      --text-main: #11141c;
+      --text-muted: #5e6575;
+      --text-dim: #9aa0af;
+      --card-shadow: 0 12px 30px -8px rgba(0, 0, 0, 0.08);
+      --badge-bg: rgba(184, 142, 19, 0.12);
+      --timeline-bg: #e8ecf1;
+      --phone-shell: #e4e7eb;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
+    body {
+      background: var(--bg);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 30px 16px 60px;
+      transition: background 0.3s ease, color 0.3s ease;
+    }
+
+    /* Page Navigation & Controls */
+    .showcase-header {
+      width: 100%;
+      max-width: 1200px;
+      margin-bottom: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .brand-badge {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .badge-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #c9a227, #4a6670);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 800;
+      font-size: 1.1rem;
+      box-shadow: 0 6px 16px var(--accent-gold-glow);
+    }
+    .title-group h1 { font-family: 'Syne', sans-serif; font-size: 1.4rem; font-weight: 800; letter-spacing: -0.02em; }
+    .title-group p { font-size: 0.85rem; color: var(--text-muted); }
+
+    .control-pills {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      background: var(--surface-1);
+      padding: 6px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+    }
+    .tab-btn {
+      padding: 8px 14px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      border-radius: 999px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .tab-btn.active {
+      background: var(--accent-gold);
+      color: #0a0b10;
+      box-shadow: 0 2px 10px var(--accent-gold-glow);
+    }
+    .theme-toggle {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      color: var(--text-main);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Screen Selector */
+    .screen-selector {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+      justify-content: center;
+      max-width: 900px;
+    }
+    .screen-pill {
+      background: var(--surface-1);
+      border: 1px solid var(--border);
+      padding: 7px 16px;
+      border-radius: 20px;
+      color: var(--text-muted);
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .screen-pill.active {
+      background: var(--surface-2);
+      border-color: var(--accent-gold);
+      color: var(--accent-gold);
+      box-shadow: 0 0 12px var(--accent-gold-glow);
+    }
+
+    /* Phone Mockup Frame (390 x 844) */
+    .phone-container {
+      width: 390px;
+      height: 844px;
+      background: var(--surface-1);
+      border-radius: 48px;
+      box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.7), 0 0 0 8px var(--phone-shell);
+      border: 1px solid var(--border);
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+    /* Dynamic Island */
+    .notch {
+      position: absolute;
+      top: 11px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 120px;
+      height: 30px;
+      background: #000;
+      border-radius: 20px;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 12px;
+    }
+    .notch::after {
+      content: '';
+      width: 11px;
+      height: 11px;
+      background: #111;
+      border-radius: 50%;
+      border: 2px solid #222;
+    }
+    .status-bar {
+      height: 48px;
+      padding: 12px 24px 0;
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text-main);
+      z-index: 999;
+    }
+    .home-indicator {
+      position: absolute;
+      bottom: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 134px;
+      height: 5px;
+      background: var(--text-muted);
+      opacity: 0.4;
+      border-radius: 3px;
+      z-index: 1000;
+      pointer-events: none;
+    }
+
+    /* Screen Views */
+    .screen-content {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding-bottom: 74px;
+      display: none;
+    }
+    .screen-content.active {
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Top App Bar */
+    .top-bar {
+      padding: 8px 18px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface-glass);
+      backdrop-filter: blur(16px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .top-brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .top-brand-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 7px;
+      background: linear-gradient(135deg, var(--accent-gold), var(--accent-teal));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #000;
+      font-size: 0.8rem;
+      font-weight: 900;
+    }
+    .top-brand-text {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 1.05rem;
+      letter-spacing: -0.02em;
+    }
+    .top-actions {
+      display: flex;
+      gap: 8px;
+    }
+    .icon-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-main);
+      cursor: pointer;
+    }
+
+    /* Bottom Navigation Bar */
+    .mobile-nav {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 72px;
+      background: var(--surface-glass);
+      backdrop-filter: blur(20px);
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      padding: 0 10px 14px;
+      z-index: 200;
+    }
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      color: var(--text-muted);
+      font-size: 0.68rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .nav-item.active {
+      color: var(--accent-gold);
+    }
+    .nav-item svg { width: 22px; height: 22px; stroke-width: 2.2; }
+
+    /* SCREEN 1: DISCOVERY */
+    .search-box {
+      margin: 12px 16px 8px;
+      position: relative;
+    }
+    .search-input {
+      width: 100%;
+      height: 44px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 0 14px 0 40px;
+      font-size: 0.88rem;
+      color: var(--text-main);
+      outline: none;
+    }
+    .search-icon-pos {
+      position: absolute;
+      left: 12px;
+      top: 12px;
+      color: var(--text-muted);
+    }
+
+    .category-scroll {
+      display: flex;
+      gap: 8px;
+      padding: 4px 16px 12px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .cat-chip {
+      padding: 7px 14px;
+      border-radius: 10px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      font-weight: 600;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .cat-chip.active {
+      background: var(--badge-bg);
+      border-color: var(--accent-gold);
+      color: var(--accent-gold);
+      font-weight: 700;
+    }
+
+    .hero-banner {
+      margin: 4px 16px 14px;
+      padding: 16px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, rgba(201, 162, 39, 0.16) 0%, rgba(74, 102, 112, 0.14) 100%), var(--surface-2);
+      border: 1px solid var(--border-accent);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .hero-text h3 { font-size: 0.95rem; font-weight: 800; font-family: 'Syne', sans-serif; }
+    .hero-text p { font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; }
+    .btn-create-custom {
+      background: var(--accent-gold);
+      color: #000;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 10px;
+      font-size: 0.76rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 12px var(--accent-gold-glow);
+    }
+
+    .template-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      padding: 0 16px;
+    }
+    .template-card {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      cursor: pointer;
+      position: relative;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .template-card:hover {
+      border-color: var(--accent-gold);
+      transform: translateY(-2px);
+    }
+    .template-thumb {
+      width: 100%;
+      height: 140px;
+      background: #1f2330;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .template-badge {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 0.65rem;
+      font-weight: 700;
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(8px);
+      color: #fff;
+    }
+    .template-fav {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.65);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+    }
+    .template-fav.active { color: var(--accent-gold); }
+    .template-info {
+      padding: 10px 12px;
+    }
+    .template-name { font-size: 0.8rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .template-meta { font-size: 0.68rem; color: var(--text-muted); display: flex; justify-content: space-between; margin-top: 4px; }
+
+    /* SCREEN 2: MEME CANVAS EDITOR */
+    .editor-top {
+      padding: 8px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface-1);
+    }
+    .editor-canvas-stage {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px;
+      background: radial-gradient(#1c1f2b 1px, transparent 1px);
+      background-size: 16px 16px;
+      background-color: var(--bg);
+      position: relative;
+    }
+    .meme-preview-art {
+      width: 320px;
+      height: 320px;
+      background: #2a2e3d;
+      border-radius: 12px;
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 14px;
+    }
+    .preview-img-bg {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.4) 100%), url('https://images.unsplash.com/photo-1543610892-0b1f7e6d8ac1?auto=format&fit=crop&w=600&q=80') center/cover;
+    }
+    .meme-caption-active {
+      position: relative;
+      z-index: 10;
+      text-align: center;
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 1.35rem;
+      color: #fff;
+      text-shadow: 2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 0 4px 12px rgba(0,0,0,0.8);
+      letter-spacing: -0.01em;
+      text-transform: uppercase;
+      padding: 4px;
+      border: 1.5px dashed var(--accent-gold);
+      border-radius: 8px;
+    }
+    .selection-handle {
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      background: var(--accent-gold);
+      border: 2px solid #000;
+      border-radius: 50%;
+    }
+    .handle-tr { top: -7px; right: -7px; }
+    .handle-bl { bottom: -7px; left: -7px; }
+    .handle-rot { top: -24px; left: 50%; transform: translateX(-50%); width: 12px; height: 12px; background: #fff; border-radius: 50%; border: 2px solid var(--accent-gold); }
+
+    /* Tool Sheet / Effects Panel */
+    .editor-dock {
+      background: var(--surface-1);
+      border-top: 1px solid var(--border);
+      padding: 10px 14px 8px;
+    }
+    .tool-strip {
+      display: flex;
+      justify-content: space-between;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+    .tool-btn {
+      flex: 1;
+      height: 48px;
+      border-radius: 12px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      color: var(--text-muted);
+      font-size: 0.65rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .tool-btn.active {
+      background: var(--badge-bg);
+      border-color: var(--accent-gold);
+      color: var(--accent-gold);
+    }
+    .tool-btn svg { width: 18px; height: 18px; }
+
+    /* Text Effects Panel */
+    .effects-drawer {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .effect-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+    .slider-bar {
+      flex: 1;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 3px;
+      margin: 0 12px;
+      position: relative;
+    }
+    .slider-fill {
+      width: 65%;
+      height: 100%;
+      background: var(--accent-gold);
+      border-radius: 3px;
+    }
+    .style-pill-group {
+      display: flex;
+      gap: 6px;
+    }
+    .style-pill {
+      padding: 4px 10px;
+      border-radius: 8px;
+      background: var(--surface-1);
+      border: 1px solid var(--border);
+      font-size: 0.72rem;
+      color: var(--text-main);
+      cursor: pointer;
+    }
+    .style-pill.active {
+      border-color: var(--accent-gold);
+      background: var(--badge-bg);
+      color: var(--accent-gold);
+      font-weight: 700;
+    }
+
+    /* SCREEN 3: VIDEO STUDIO */
+    .video-viewport {
+      height: 220px;
+      background: #000;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .video-overlay-text {
+      position: absolute;
+      top: 20px;
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      color: #fff;
+      font-size: 1.1rem;
+      text-transform: uppercase;
+      text-shadow: 0 2px 8px #000;
+    }
+    .play-head-pill {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.72rem;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: rgba(0, 0, 0, 0.7);
+      border: 1px solid var(--border);
+      color: var(--accent-gold);
+      position: absolute;
+      bottom: 10px;
+      right: 12px;
+    }
+
+    .timeline-dock {
+      flex: 1;
+      background: var(--timeline-bg);
+      border-top: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 10px 14px;
+    }
+    .transport-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .transport-center {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .btn-circle-play {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--accent-gold);
+      color: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 4px 14px var(--accent-gold-glow);
+    }
+    .track-container {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      position: relative;
+    }
+    .timeline-scrubber-line {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 45%;
+      width: 2px;
+      background: var(--accent-gold);
+      z-index: 20;
+    }
+    .timeline-scrubber-head {
+      position: absolute;
+      top: -6px;
+      left: 45%;
+      transform: translateX(-50%);
+      width: 12px;
+      height: 12px;
+      background: var(--accent-gold);
+      border-radius: 3px;
+      z-index: 21;
+    }
+    .track-row {
+      height: 38px;
+      background: var(--surface-1);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      padding: 0 8px;
+      position: relative;
+      overflow: hidden;
+    }
+    .track-badge {
+      font-size: 0.62rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      width: 50px;
+      flex-shrink: 0;
+    }
+    .track-clip {
+      position: absolute;
+      left: 70px;
+      right: 40px;
+      height: 28px;
+      border-radius: 6px;
+      background: linear-gradient(90deg, #2b3244, #363e54);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+      padding: 0 8px;
+      font-size: 0.68rem;
+      color: #fff;
+    }
+    .track-clip.audio {
+      left: 100px;
+      right: 120px;
+      background: linear-gradient(90deg, #4a6670, #2c424a);
+      border-color: var(--accent-teal-bright);
+    }
+
+    /* SCREEN 4: MY GALLERY */
+    .gallery-filter-bar {
+      padding: 12px 16px 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .gallery-stats { font-size: 0.75rem; color: var(--text-muted); font-weight: 600; }
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      padding: 8px 16px;
+    }
+    .gallery-card {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+    .gallery-thumb {
+      height: 125px;
+      background: #1a1e2b;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .gallery-actions {
+      padding: 8px 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .badge-fmt {
+      font-size: 0.62rem;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: var(--badge-bg);
+      color: var(--accent-gold);
+    }
+
+    /* SPECIAL STATES */
+    /* Bottom Sheet Modal Overlay */
+    .bottom-sheet-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(4px);
+      z-index: 500;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+    }
+    .sheet-card {
+      background: var(--surface-1);
+      border-top: 1px solid var(--border-accent);
+      border-radius: 26px 26px 0 0;
+      padding: 16px;
+      box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.7);
+    }
+    .sheet-handle {
+      width: 40px;
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      margin: 0 auto 14px;
+    }
+    .sticker-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      max-height: 220px;
+      overflow-y: auto;
+      padding: 8px 0;
+    }
+    .sticker-item {
+      height: 56px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.6rem;
+      cursor: pointer;
+    }
+
+    /* AI Loading HUD */
+    .ai-loading-hud {
+      position: absolute;
+      inset: 0;
+      background: rgba(10, 11, 16, 0.82);
+      backdrop-filter: blur(8px);
+      z-index: 600;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      text-align: center;
+    }
+    .spinner-ring {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      border: 3px solid rgba(201, 162, 39, 0.2);
+      border-top-color: var(--accent-gold);
+      animation: spin 1s linear infinite;
+      margin-bottom: 16px;
+    }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+    .ai-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--badge-bg);
+      border: 1px solid var(--border-accent);
+      color: var(--accent-gold);
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+    .progress-bar-hud {
+      width: 220px;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 3px;
+      margin-top: 14px;
+      overflow: hidden;
+    }
+    .progress-bar-inner {
+      width: 78%;
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent-gold), var(--accent-teal-bright));
+      border-radius: 3px;
+    }
+
+    /* Empty State */
+    .empty-state-view {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 30px;
+      text-align: center;
+    }
+    .empty-art {
+      width: 80px;
+      height: 80px;
+      border-radius: 24px;
+      background: var(--surface-2);
+      border: 1px solid var(--border-accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.2rem;
+      margin-bottom: 16px;
+      box-shadow: 0 10px 24px var(--accent-gold-glow);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="showcase-header">
+    <div class="brand-badge">
+      <div class="badge-icon">1</div>
+      <div class="title-group">
+        <h1>Direction 1: Noir Luxe (Studio Noir Evolved)</h1>
+        <p>Obsidian base · Muted Gold (#c9a227) · Deep Teal (#4a6670) · Cinema-grade precision</p>
+      </div>
+    </div>
+    <div class="control-pills">
+      <button class="theme-toggle" id="themeBtn" title="Toggle Light/Dark Theme">🌙</button>
+      <a href="index.html" class="tab-btn" style="text-decoration:none;">All Directions</a>
+      <a href="direction-2.html" class="tab-btn" style="text-decoration:none;">Direction 2 →</a>
+    </div>
+  </div>
+
+  <!-- Screen Selector Tabs -->
+  <div class="screen-selector">
+    <button class="screen-pill active" onclick="switchScreen('discovery')">1. Discovery</button>
+    <button class="screen-pill" onclick="switchScreen('editor')">2. Meme Canvas Editor</button>
+    <button class="screen-pill" onclick="switchScreen('video')">3. Video Studio</button>
+    <button class="screen-pill" onclick="switchScreen('gallery')">4. My Gallery</button>
+    <button class="screen-pill" onclick="switchScreen('sheet')">5. Bottom Sheet</button>
+    <button class="screen-pill" onclick="switchScreen('ai')">6. AI Processing</button>
+    <button class="screen-pill" onclick="switchScreen('empty')">7. Empty Gallery</button>
+  </div>
+
+  <!-- Physical Mobile Phone Mockup -->
+  <div class="phone-container">
+    <div class="notch"></div>
+    <div class="status-bar">
+      <span>9:41</span>
+      <span>5G 􀛨 100%</span>
+    </div>
+
+    <!-- 1. DISCOVERY SCREEN -->
+    <div id="screen-discovery" class="screen-content active">
+      <div class="top-bar">
+        <div class="top-brand">
+          <div class="top-brand-icon">M</div>
+          <span class="top-brand-text">MemeStudio</span>
+        </div>
+        <div class="top-actions">
+          <button class="icon-btn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="search-box">
+        <svg class="search-icon-pos" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <input type="text" class="search-input" placeholder="Search 250+ trending meme templates...">
+      </div>
+
+      <div class="category-scroll">
+        <div class="cat-chip active">🔥 Hot Trending</div>
+        <div class="cat-chip">⚡ Classics</div>
+        <div class="cat-chip">🎬 Video Memes</div>
+        <div class="cat-chip">🐱 Reactions</div>
+        <div class="cat-chip">🇮🇳 Desi Humor</div>
+      </div>
+
+      <div class="hero-banner">
+        <div class="hero-text">
+          <h3>Custom Multi-Panel</h3>
+          <p>Combine 2 to 6 slots into a meme</p>
+        </div>
+        <button class="btn-create-custom">+ Build Grid</button>
+      </div>
+
+      <div class="template-grid">
+        <div class="template-card">
+          <div class="template-thumb" style="background-image: url('https://images.unsplash.com/photo-1543610892-0b1f7e6d8ac1?auto=format&fit=crop&w=400&q=80'); background-size: cover; background-position: center;">
+            <span class="template-badge">1:1 Square</span>
+            <div class="template-fav active">★</div>
+          </div>
+          <div class="template-info">
+            <div class="template-name">Doge vs Buff Doge</div>
+            <div class="template-meta"><span>Trending #1</span><span>2.4k edits</span></div>
+          </div>
+        </div>
+
+        <div class="template-card">
+          <div class="template-thumb" style="background: linear-gradient(135deg, #1f2330, #2c3245);">
+            <span style="font-size:2rem;">💁‍♂️ 🦋</span>
+            <span class="template-badge">4:5 Portrait</span>
+            <div class="template-fav">☆</div>
+          </div>
+          <div class="template-info">
+            <div class="template-name">Is This A Pigeon?</div>
+            <div class="template-meta"><span>Anime Classic</span><span>1.8k edits</span></div>
+          </div>
+        </div>
+
+        <div class="template-card">
+          <div class="template-thumb" style="background: linear-gradient(135deg, #231f30, #382c45);">
+            <span style="font-size:2rem;">🐱 👩‍🦰</span>
+            <span class="template-badge">16:9 Video</span>
+            <div class="template-fav active">★</div>
+          </div>
+          <div class="template-info">
+            <div class="template-name">Woman Yelling at Cat</div>
+            <div class="template-meta"><span>Multi-Panel</span><span>3.1k edits</span></div>
+          </div>
+        </div>
+
+        <div class="template-card">
+          <div class="template-thumb" style="background: linear-gradient(135deg, #1f2930, #2c3c45);">
+            <span style="font-size:2rem;">🧠 ⚡</span>
+            <span class="template-badge">4-Slot</span>
+            <div class="template-fav">☆</div>
+          </div>
+          <div class="template-info">
+            <div class="template-name">Galaxy Brain</div>
+            <div class="template-meta"><span>Desi / Tech</span><span>940 edits</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. MEME CANVAS EDITOR -->
+    <div id="screen-editor" class="screen-content">
+      <div class="editor-top">
+        <button class="icon-btn" style="width:32px; height:32px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>
+        </button>
+        <div style="font-size: 0.85rem; font-weight:700;">Doge vs Buff Doge</div>
+        <div style="display:flex; gap:6px;">
+          <button class="icon-btn" style="width:32px; height:32px;">↶</button>
+          <button class="icon-btn" style="width:32px; height:32px;">↷</button>
+          <button class="btn-create-custom" style="padding:4px 10px; font-size:0.72rem;">Export</button>
+        </div>
+      </div>
+
+      <div class="editor-canvas-stage">
+        <div class="meme-preview-art">
+          <div class="preview-img-bg"></div>
+          <div class="meme-caption-active">
+            ME CODING IN 2016
+            <div class="selection-handle handle-tr"></div>
+            <div class="selection-handle handle-bl"></div>
+            <div class="selection-handle handle-rot"></div>
+          </div>
+          <div style="position:relative; z-index:10; text-align:center; font-family:'Syne'; font-weight:800; font-size:1.35rem; color:#fff; text-shadow:2px 2px 0 #000, -2px -2px 0 #000; text-transform:uppercase;">
+            ME ASKING AI TO WRITE 2 LINES
+          </div>
+        </div>
+      </div>
+
+      <div class="editor-dock">
+        <div class="tool-strip">
+          <div class="tool-btn active">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7V4h16v3"/><path d="M9 20h6"/><path d="M12 4v16"/></svg>
+            <span>Text</span>
+          </div>
+          <div class="tool-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+            <span>Stickers</span>
+          </div>
+          <div class="tool-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="M2 12h20"/></svg>
+            <span>AI Magic</span>
+          </div>
+          <div class="tool-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 14.14 14.14"/></svg>
+            <span>Filters</span>
+          </div>
+          <div class="tool-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+            <span>Layers</span>
+          </div>
+        </div>
+
+        <!-- Open Text Effects Drawer -->
+        <div class="effects-drawer">
+          <div class="effect-row">
+            <span>Curve Sagitta</span>
+            <div class="slider-bar"><div class="slider-fill"></div></div>
+            <span style="color:var(--accent-gold);">+24°</span>
+          </div>
+          <div class="effect-row">
+            <span>Text Presets</span>
+            <div class="style-pill-group">
+              <span class="style-pill active">Classic Impact</span>
+              <span class="style-pill">𝕏 Tweet Card</span>
+              <span class="style-pill">Breaking News</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. VIDEO STUDIO -->
+    <div id="screen-video" class="screen-content">
+      <div class="editor-top">
+        <button class="icon-btn" style="width:32px; height:32px;">‹</button>
+        <div style="font-size: 0.85rem; font-weight:700;">Video Studio</div>
+        <button class="btn-create-custom" style="padding:4px 10px; font-size:0.72rem;">Export MP4</button>
+      </div>
+
+      <div class="video-viewport">
+        <div class="video-overlay-text">WHEN THE DROP FINALLY HITS</div>
+        <div style="font-size:3rem;">🕺🎶</div>
+        <div class="play-head-pill">00:03.45 / 00:08.00</div>
+      </div>
+
+      <div class="timeline-dock">
+        <div class="transport-bar">
+          <button class="icon-btn" style="width:36px; height:36px;">⏮</button>
+          <div class="transport-center">
+            <button class="btn-circle-play">▶</button>
+          </div>
+          <button class="icon-btn" style="width:36px; height:36px;">✂ Split</button>
+        </div>
+
+        <div class="track-container">
+          <div class="timeline-scrubber-line"></div>
+          <div class="timeline-scrubber-head"></div>
+
+          <div class="track-row">
+            <span class="track-badge">VIDEO</span>
+            <div class="track-clip">
+              <span>dancing_cat_loop.mp4</span>
+            </div>
+          </div>
+
+          <div class="track-row">
+            <span class="track-badge">TEXT</span>
+            <div class="track-clip" style="left:70px; right:110px; background:#4f3d20; border-color:var(--accent-gold);">
+              <span>Top Chyron Overlay</span>
+            </div>
+          </div>
+
+          <div class="track-row">
+            <span class="track-badge">AUDIO</span>
+            <div class="track-clip audio">
+              <span>🔊 Vine_Boom_SFX.mp3</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. MY GALLERY -->
+    <div id="screen-gallery" class="screen-content">
+      <div class="top-bar">
+        <div class="top-brand">
+          <div class="top-brand-icon">M</div>
+          <span class="top-brand-text">My Saved Memes</span>
+        </div>
+        <span class="badge-fmt">4 Created</span>
+      </div>
+
+      <div class="gallery-filter-bar">
+        <div class="gallery-stats">IndexedDB Secured · Zero Quota Limits</div>
+        <div style="display:flex; gap:6px;">
+          <span class="cat-chip active" style="padding:4px 10px; font-size:0.7rem;">All</span>
+          <span class="cat-chip" style="padding:4px 10px; font-size:0.7rem;">Images</span>
+          <span class="cat-chip" style="padding:4px 10px; font-size:0.7rem;">Videos</span>
+        </div>
+      </div>
+
+      <div class="gallery-grid">
+        <div class="gallery-card">
+          <div class="gallery-thumb" style="background-image:url('https://images.unsplash.com/photo-1543610892-0b1f7e6d8ac1?auto=format&fit=crop&w=400&q=80'); background-size:cover;">
+            <span class="template-badge" style="bottom:6px; top:auto;">1080p</span>
+          </div>
+          <div class="gallery-actions">
+            <div>
+              <div style="font-size:0.75rem; font-weight:700;">Coding vs AI</div>
+              <div style="font-size:0.62rem; color:var(--text-muted);">Today 10:45 AM</div>
+            </div>
+            <button class="icon-btn" style="width:28px; height:28px;">↗</button>
+          </div>
+        </div>
+
+        <div class="gallery-card">
+          <div class="gallery-thumb" style="background:#1f2833;">
+            <span style="font-size:2rem;">☕💻</span>
+            <span class="template-badge" style="bottom:6px; top:auto;">MP4 · 6s</span>
+          </div>
+          <div class="gallery-actions">
+            <div>
+              <div style="font-size:0.75rem; font-weight:700;">Bug in Prod</div>
+              <div style="font-size:0.62rem; color:var(--text-muted);">Yesterday</div>
+            </div>
+            <button class="icon-btn" style="width:28px; height:28px;">↗</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. BOTTOM SHEET STATE -->
+    <div id="screen-sheet" class="screen-content">
+      <div class="editor-canvas-stage" style="opacity:0.35;">
+        <div class="meme-preview-art">
+          <div class="preview-img-bg"></div>
+        </div>
+      </div>
+
+      <div class="bottom-sheet-overlay">
+        <div class="sheet-card">
+          <div class="sheet-handle"></div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+            <h4 style="font-size:0.92rem; font-weight:800; font-family:'Syne';">Sticker Library</h4>
+            <div style="display:flex; gap:6px;">
+              <span class="cat-chip active" style="padding:4px 8px; font-size:0.68rem;">Trending</span>
+              <span class="cat-chip" style="padding:4px 8px; font-size:0.68rem;">Faces</span>
+            </div>
+          </div>
+          <div class="sticker-grid">
+            <div class="sticker-item">🔥</div>
+            <div class="sticker-item">💀</div>
+            <div class="sticker-item">😎</div>
+            <div class="sticker-item">🤡</div>
+            <div class="sticker-item">🚀</div>
+            <div class="sticker-item">🧢</div>
+            <div class="sticker-item">🕶️</div>
+            <div class="sticker-item">💯</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. AI PROCESSING HUD -->
+    <div id="screen-ai" class="screen-content">
+      <div class="editor-canvas-stage">
+        <div class="meme-preview-art">
+          <div class="preview-img-bg"></div>
+        </div>
+      </div>
+
+      <div class="ai-loading-hud">
+        <div class="ai-badge">✦ AI Neural Engine</div>
+        <div class="spinner-ring"></div>
+        <h4 style="font-size:1.05rem; font-weight:800; font-family:'Syne';">Removing Background</h4>
+        <p style="font-size:0.75rem; color:var(--text-muted); margin-top:4px;">WASM In-Browser Edge Refinement · 84%</p>
+        <div class="progress-bar-hud">
+          <div class="progress-bar-inner"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7. EMPTY STATE (MY GALLERY) -->
+    <div id="screen-empty" class="screen-content">
+      <div class="top-bar">
+        <div class="top-brand"><span class="top-brand-text">My Saved Memes</span></div>
+      </div>
+      <div class="empty-state-view">
+        <div class="empty-art">🎨</div>
+        <h3 style="font-size:1.1rem; font-weight:800; font-family:'Syne';">No Memes Created Yet</h3>
+        <p style="font-size:0.8rem; color:var(--text-muted); margin:6px 0 18px; max-width:240px;">
+          Pick a trending template or craft a custom video meme from scratch!
+        </p>
+        <button class="btn-create-custom" style="padding:10px 20px; font-size:0.85rem;">Browse Trending Templates</button>
+      </div>
+    </div>
+
+    <!-- Mobile Bottom Navigation Bar -->
+    <div class="mobile-nav">
+      <div class="nav-item active" onclick="switchScreen('discovery')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>
+        <span>Discover</span>
+      </div>
+      <div class="nav-item" onclick="switchScreen('editor')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+        <span>Editor</span>
+      </div>
+      <div class="nav-item" onclick="switchScreen('video')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="m22 8-6 4 6 4V8Z"/><rect width="14" height="12" x="2" y="6" rx="2"/></svg>
+        <span>Video</span>
+      </div>
+      <div class="nav-item" onclick="switchScreen('gallery')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2z"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        <span>Gallery</span>
+      </div>
+    </div>
+
+    <div class="home-indicator"></div>
+  </div>
+
+  <script>
+    function switchScreen(id) {
+      document.querySelectorAll('.screen-content').forEach(s => s.classList.remove('active'));
+      const target = document.getElementById('screen-' + id);
+      if (target) target.classList.add('active');
+
+      document.querySelectorAll('.screen-pill').forEach(p => p.classList.remove('active'));
+      const activePill = Array.from(document.querySelectorAll('.screen-pill')).find(p => p.getAttribute('onclick')?.includes(id));
+      if (activePill) activePill.classList.add('active');
+
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      const navTarget = Array.from(document.querySelectorAll('.nav-item')).find(n => n.getAttribute('onclick')?.includes(id));
+      if (navTarget) navTarget.classList.add('active');
+    }
+
+    const themeBtn = document.getElementById('themeBtn');
+    themeBtn.addEventListener('click', () => {
+      const current = document.documentElement.getAttribute('data-theme');
+      const next = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      themeBtn.textContent = next === 'dark' ? '🌙' : '☀️';
+    });
+  </script>
+</body>
+</html>

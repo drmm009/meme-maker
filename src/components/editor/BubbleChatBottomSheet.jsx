@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import BottomSheet from '../BottomSheet';
 import { MessageSquare, Check, Ban, Sparkles } from 'lucide-react';
 
-const BUBBLE_PRESETS = [
+export const BUBBLE_PRESETS = [
   {
     id: 'imessage-send',
     name: 'iPhone Sent',

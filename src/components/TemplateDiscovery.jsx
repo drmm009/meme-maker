@@ -4,17 +4,17 @@ import { VIDEO_MEME_TEMPLATES } from '../data/videoTemplates';
 import { fetchOpenSourceMemes } from '../services/memeService';
 import { 
   Search, Sparkles, Image as ImageIcon, Video,
-  Flame, Star, Drama, Clapperboard, LayoutGrid, Layers, Check,
-  Smile, ArrowDownAZ, Zap,
-  Edit3, SlidersHorizontal, Eye, ChevronLeft, ChevronRight, Scissors
+  Flame, Star, Drama, Clapperboard, Scale, LayoutGrid, Layers, ChevronDown, Check,
+  Compass, Smile, ArrowDownAZ, Zap, ShieldCheck, ArrowRight,
+  Edit3, SlidersHorizontal, Eye, ChevronLeft, ChevronRight, Wand2, Scissors, Share2
 } from 'lucide-react';
-import { templateNumericId } from '../utils/templateUtils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { safeGet, safeSet } from '../utils/storage';
 import './TemplateDiscovery.css';
 
 const TAGS = [
   { id: 'all', label: 'All', icon: Layers },
+  { id: 'social', label: 'Social Media', icon: Share2 },
   { id: 'images', label: 'Images', icon: ImageIcon },
   { id: 'videos', label: 'Videos', icon: Clapperboard },
   { id: 'reaction', label: 'Reactions', icon: Smile },
@@ -30,16 +30,26 @@ const SORT_OPTIONS = [
   { id: 'name', label: 'A-Z Name', icon: ArrowDownAZ, color: '#a855f7' }
 ];
 
+// Stable numeric order for mixed string ids ("imgflip-123", "giphy-abc", "custom-...").
+// Trailing digits win; otherwise fall back to trendingScore so sort is deterministic (never NaN).
+export function templateNumericId(t) {
+  const m = String(t.id || '').match(/(\d+)$/);
+  if (m) return Number(m[1]);
+  return t.trendingScore || 0;
+}
 
 // Compute dynamic, contextual badges so templates show a variety of labels (Trending, Classic, New, Reaction, Video, Popular)
-function getTemplateBadge(template, index = 0) {
+export function getTemplateBadge(template, index = 0) {
   if (template.type === 'video') {
     return { label: '', iconOnly: true, icon: Video, color: '#38bdf8' };
   }
   if (template.tag === 'pro') {
     return { label: 'Pro', icon: Zap, color: '#facc15' };
   }
-  if (template.category === 'reaction') {
+    if (template.category === 'social' || template.category === 'social media' || (template.tags && template.tags.includes('social'))) {
+    return { label: 'Social', icon: Share2, color: '#38bdf8' };
+  }
+if (template.category === 'reaction') {
     return { label: 'Reaction', icon: Smile, color: '#a855f7' };
   }
   if (template.category === 'classic' || (template.trendingScore && template.trendingScore >= 135 && template.trendingScore < 140)) {
@@ -490,11 +500,23 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom, on
 
   // Hero Carousel State & Handlers
   const [activeSlideIndex, setActiveSlideIndex] = useState(0);
-  const [_slideDirection, setSlideDirection] = useState(1);
+  const [slideDirection, setSlideDirection] = useState(1);
   const [isCarouselHovered, setIsCarouselHovered] = useState(false);
+  const [isHeroBannerVisible, setIsHeroBannerVisible] = useState(true);
+  const heroBannerRef = useRef(null);
   const touchStartRef = useRef({ x: null, y: null });
 
-  // Autoplay carousel every 5.5s (pauses on hover, touch, or global test flag)
+  useEffect(() => {
+    const el = heroBannerRef.current;
+    if (!el || typeof IntersectionObserver === 'undefined') return;
+    const observer = new IntersectionObserver(([entry]) => {
+      setIsHeroBannerVisible(entry.isIntersecting);
+    }, { threshold: 0.05 });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  // Autoplay carousel every 5.5s (pauses on hover, touch, offscreen, or global test flag)
   useEffect(() => {
     if (typeof window !== 'undefined') {
       window.__SET_HERO_SLIDE__ = (idx) => {
@@ -502,14 +524,14 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom, on
         setActiveSlideIndex(idx);
       };
     }
-    if (isCarouselHovered) return;
+    if (isCarouselHovered || !isHeroBannerVisible) return;
     const timer = setInterval(() => {
       if (typeof window !== 'undefined' && window.__PAUSE_CAROUSEL__) return;
       setSlideDirection(1);
       setActiveSlideIndex((prev) => (prev + 1) % HERO_SLIDES.length);
     }, 5500);
     return () => clearInterval(timer);
-  }, [isCarouselHovered, activeSlideIndex]);
+  }, [isCarouselHovered, isHeroBannerVisible, activeSlideIndex]);
 
   const handleNextSlide = (e) => {
     e?.stopPropagation();
@@ -634,7 +656,9 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom, on
         (template.category && template.category.toLowerCase().includes(q));
 
       let matchesTag = true;
-      if (selectedTag === 'hot') {
+      if (selectedTag === 'social') {
+        matchesTag = template.category === 'social' || template.category === 'social media' || (template.tags && template.tags.includes('social'));
+      } else if (selectedTag === 'hot') {
         matchesTag = (template.trendingScore && template.trendingScore >= 90) || template.category === 'popular';
       } else if (selectedTag === 'new') {
         matchesTag = true;
@@ -676,14 +700,48 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom, on
     });
   }, [searchQuery, selectedTag, sortBy, favorites, templatesList]);
 
+  // Pagination / Progressive loading for maximum scroll performance
+  const PAGE_SIZE = 24;
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const sentinelRef = useRef(null);
+
+  // Reset pagination whenever search, category tag, or sort order changes
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [searchQuery, selectedTag, sortBy]);
+
+  const displayedTemplates = useMemo(() => {
+    return filteredTemplates.slice(0, visibleCount);
+  }, [filteredTemplates, visibleCount]);
+
+  // Infinite scroll observer to seamlessly load subsequent batches on scroll
+  useEffect(() => {
+    if (visibleCount >= filteredTemplates.length) return;
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+
+    if (typeof IntersectionObserver !== 'undefined') {
+      const observer = new IntersectionObserver(
+        (entries) => {
+          if (entries[0] && entries[0].isIntersecting) {
+            setVisibleCount((prev) => Math.min(prev + PAGE_SIZE, filteredTemplates.length));
+          }
+        },
+        { rootMargin: '400px 0px' }
+      );
+      observer.observe(sentinel);
+      return () => observer.disconnect();
+    }
+  }, [visibleCount, filteredTemplates.length]);
+
   // Distribute filtered templates across columns for true Pinterest-style masonry
   const masonryColumns = useMemo(() => {
     const cols = Array.from({ length: columnsCount }, () => []);
-    filteredTemplates.forEach((template, index) => {
+    displayedTemplates.forEach((template, index) => {
       cols[index % columnsCount].push({ template, originalIndex: index });
     });
     return cols;
-  }, [filteredTemplates, columnsCount]);
+  }, [displayedTemplates, columnsCount]);
 
   const currentSortOption = SORT_OPTIONS.find(opt => opt.id === sortBy) || SORT_OPTIONS[0];
   const currentSlide = HERO_SLIDES[activeSlideIndex] || HERO_SLIDES[0];
@@ -693,6 +751,7 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom, on
       <div className="discovery-header">
         {/* Flagship Carousel Hero Banner with Dynamic Aurora Backlights */}
         <div 
+          ref={heroBannerRef}
           className={`hero-banner-wrapper ${currentSlide.glowTheme}`}
           onMouseEnter={() => setIsCarouselHovered(true)}
           onMouseLeave={() => setIsCarouselHovered(false)}
@@ -920,6 +979,7 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom, on
       {/* Main Template Grid */}
       <div className="templates-section">
         {filteredTemplates.length > 0 ? (
+          <>
           <div className="template-grid template-masonry-wrapper">
             {masonryColumns.map((colItems, colIdx) => (
               <div key={colIdx} className="template-masonry-col">
@@ -929,10 +989,9 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom, on
                   const badge = getTemplateBadge(template, originalIndex);
                   const BadgeIcon = badge.icon;
                   return (
-                    <motion.div
+                    <div
                       key={template.id}
-                      className={`template-card glass-card ${isContrast ? 'template-card-contrast template-card-light' : ''}`}
-                      whileTap={{ scale: 0.98 }}
+                      className={`template-card ${isContrast ? 'template-card-contrast template-card-light' : ''}`}
                       onClick={() => onSelectTemplate(template)}
                     >
                       {/* Top-Left Dynamic Category Badge */}
@@ -974,6 +1033,7 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom, on
                           src={template.type === 'video' ? template.thumbnailUrl : template.imageUrl}
                           alt={template.name}
                           loading="lazy"
+                          decoding="async"
                           onLoad={(e) => {
                             const img = e.currentTarget;
                             if (img.naturalWidth && img.naturalHeight && img.parentElement) {
@@ -1010,12 +1070,24 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom, on
                       <div className="template-card-footer">
                         <span className="card-footer-title" title={template.name}>{template.name}</span>
                       </div>
-                    </motion.div>
+                    </div>
                   );
                 })}
               </div>
             ))}
           </div>
+          {visibleCount < filteredTemplates.length && (
+            <div ref={sentinelRef} className="masonry-sentinel">
+              <button
+                type="button"
+                className="studio-pill-btn secondary masonry-load-more-btn"
+                onClick={() => setVisibleCount((prev) => Math.min(prev + PAGE_SIZE, filteredTemplates.length))}
+              >
+                Load more templates ({filteredTemplates.length - visibleCount} remaining)
+              </button>
+            </div>
+          )}
+        </>
         ) : (
           <div className="empty-state glass-card">
             <ImageIcon className="empty-icon" />

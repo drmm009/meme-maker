@@ -12,7 +12,7 @@ export default class ErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, info) {
-    console.error('[ErrorBoundary] Caught error:', error, info);
+    console.error('[ErrorBoundary] STACK TRACE:\n' + (error?.stack || error) + '\nCOMPONENT STACK:\n' + (info?.componentStack || ''));
   }
 
   handleReset = () => {

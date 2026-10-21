@@ -1,16 +1,5 @@
-import { TWEET_TREND_PRESETS } from '../data/tweetPresets';
-import React, { useEffect, useRef, useState, useLayoutEffect, useCallback } from 'react';
-
-let sharedMeasureCanvas = null;
-let sharedMeasureCtx = null;
-const getMeasureCtx = () => {
-  if (typeof document === 'undefined') return null;
-  if (!sharedMeasureCtx) {
-    sharedMeasureCanvas = document.createElement('canvas');
-    sharedMeasureCtx = sharedMeasureCanvas.getContext('2d');
-  }
-  return sharedMeasureCtx;
-};
+import React, { useEffect, useRef, useState, useLayoutEffect } from 'react';
+import { Image as ImageIcon, Sparkles, Type } from 'lucide-react';
 import { getFilterCss, drawImageFiltered } from '../data/photoFilters';
 import { isColorDark } from '../utils/captionLayout';
 
@@ -103,7 +92,7 @@ const drawCustomRoundRect = (ctx, x, y, width, height, radii) => {
   ctx.fill();
 };
 
-const sampleFaceLighting = (ctx, cx, cy, radius) => {
+export const sampleFaceLighting = (ctx, cx, cy, radius) => {
   try {
     const r = Math.max(12, Math.round(radius * 0.75));
     const x = Math.max(0, Math.round(cx - r));
@@ -135,7 +124,7 @@ const sampleFaceLighting = (ctx, cx, cy, radius) => {
     const warmth = Math.min(35, Math.round((redExcess / 90) * 25));
 
     return { brightness, warmth, avgR, avgG, avgB };
-  } catch {
+  } catch (e) {
     return { brightness: 100, warmth: 0 };
   }
 };
@@ -537,23 +526,26 @@ const drawBreakingNewsChyron = (ctx, barW, cap) => {
 };
 
 // Path2D vector paths for tweet card icons matching the live preview modal
-const twitterStarBadgePath = new Path2D("M22.25 12c0-1.43-.88-2.67-2.19-3.34.46-1.39.2-2.9-.81-3.91s-2.52-1.27-3.91-.81c-.67-1.31-1.91-2.19-3.34-2.19s-2.67.88-3.34 2.19c-1.39-.46-2.9-.2-3.91.81s-1.27 2.52-.81 3.91c-1.31.67-2.19 1.91-2.19 3.34s.88 2.67 2.19 3.34c-.46 1.39-.2 2.9.81 3.91s2.52 1.27 3.91.81c.67 1.31 1.91 2.19 3.34 2.19s2.67-.88 3.34-2.19c1.39.46 2.9.2 3.91-.81s1.27-2.52.81-3.91c1.31-.67 2.19-1.91 2.19-3.34z");
-const twitterCheckPath = new Path2D("M10.53 16.28l-3.53-3.53 1.41-1.41 2.12 2.12 5.66-5.66 1.41 1.41-7.07 7.07z");
-const tweetXLogoPath = new Path2D("M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z");
-const tweetCommentPath = new Path2D("M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z");
-const tweetRepeatPath = new Path2D("M17 2l4 4-4 4M3 11v-1a4 4 0 0 1 4-4h14M7 22l-4-4 4-4M21 13v1a4 4 0 0 1-4 4H3");
-const tweetHeartPath = new Path2D("M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z");
-const tweetBookmarkPath = new Path2D("M19 21l-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z");
-const tweetSharePath = new Path2D("M18 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM6 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM18 22a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98");
+const createPath2D = (d) => (typeof window !== 'undefined' && window.Path2D) ? new window.Path2D(d) : (typeof Path2D !== 'undefined' ? new Path2D(d) : null);
+
+const twitterStarBadgePath = createPath2D("M22.25 12c0-1.43-.88-2.67-2.19-3.34.46-1.39.2-2.9-.81-3.91s-2.52-1.27-3.91-.81c-.67-1.31-1.91-2.19-3.34-2.19s-2.67.88-3.34 2.19c-1.39-.46-2.9-.2-3.91.81s-1.27 2.52-.81 3.91c-1.31.67-2.19 1.91-2.19 3.34s.88 2.67 2.19 3.34c-.46 1.39-.2 2.9.81 3.91s2.52 1.27 3.91.81c.67 1.31 1.91 2.19 3.34 2.19s2.67-.88 3.34-2.19c1.39.46 2.9.2 3.91-.81s1.27-2.52.81-3.91c1.31-.67 2.19-1.91 2.19-3.34z");
+const twitterCheckPath = createPath2D("M10.53 16.28l-3.53-3.53 1.41-1.41 2.12 2.12 5.66-5.66 1.41 1.41-7.07 7.07z");
+const tweetXLogoPath = createPath2D("M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z");
+const tweetCommentPath = createPath2D("M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z");
+const tweetRepeatPath = createPath2D("M17 2l4 4-4 4M3 11v-1a4 4 0 0 1 4-4h14M7 22l-4-4 4-4M21 13v1a4 4 0 0 1-4 4H3");
+const tweetHeartPath = createPath2D("M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z");
+const tweetBookmarkPath = createPath2D("M19 21l-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z");
+const tweetSharePath = createPath2D("M18 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM6 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM18 22a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98");
 
 // Instagram & iOS WhatsApp vector paths
-const instagramSendPath = new Path2D("M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z");
-const iosVideoPath = new Path2D("M4 6.5A2.5 2.5 0 0 0 1.5 9v6A2.5 2.5 0 0 0 4 17.5h9a2.5 2.5 0 0 0 2.5-2.5V9A2.5 2.5 0 0 0 13 6.5H4zm13.78 3.03a1 1 0 0 0-1.28.96v3.02a1 1 0 0 0 1.28.96l3.5-1.5a1 1 0 0 0 .72-.96v-1a1 1 0 0 0-.72-.96l-3.5-1.5z");
-const iosPhonePath = new Path2D("M6.62 10.79a15.05 15.05 0 0 0 6.59 6.59l2.2-2.2a1 1 0 0 1 1.01-.24c1.12.37 2.33.57 3.58.57a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1.02l-2.2 2.2z");
+const instagramSendPath = createPath2D("M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z");
+const iosChevronPath = createPath2D("M15 18l-6-6 6-6");
+const iosVideoPath = createPath2D("M4 6.5A2.5 2.5 0 0 0 1.5 9v6A2.5 2.5 0 0 0 4 17.5h9a2.5 2.5 0 0 0 2.5-2.5V9A2.5 2.5 0 0 0 13 6.5H4zm13.78 3.03a1 1 0 0 0-1.28.96v3.02a1 1 0 0 0 1.28.96l3.5-1.5a1 1 0 0 0 .72-.96v-1a1 1 0 0 0-.72-.96l-3.5-1.5z");
+const iosPhonePath = createPath2D("M6.62 10.79a15.05 15.05 0 0 0 6.59 6.59l2.2-2.2a1 1 0 0 1 1.01-.24c1.12.37 2.33.57 3.58.57a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1.02l-2.2 2.2z");
 
-const socialCardImageCache = new Map();
+export const socialCardImageCache = new Map();
 
-const parseLikesCount = (likesText) => {
+export const parseLikesCount = (likesText) => {
   if (!likesText || typeof likesText !== 'string') return '';
   const trimmed = likesText.trim();
   if (/^[\d,.]+[kKmMbB]?$/.test(trimmed)) {
@@ -568,9 +560,34 @@ const parseLikesCount = (likesText) => {
   return trimmed;
 };
 
-// TWEET_TREND_PRESETS is imported from ../data/tweetPresets
+export const TWEET_TREND_PRESETS = {
+  viral: {
+    label: '#1 Trending',
+    topic: 'Trending in World',
+    metrics: { replies: '14.2K', retweets: '62.8K', likes: '420.5K', views: '18.2M' },
+    text: '💬 14.2K    🔁 62.8K    ❤️ 420.5K    📊 18.2M'
+  },
+  tech: {
+    label: 'Technology',
+    topic: 'Technology · Trending',
+    metrics: { replies: '3.4K', retweets: '12.1K', likes: '88.5K', views: '4.2M' },
+    text: '💬 3.4K    🔁 12.1K    ❤️ 88.5K    📊 4.2M'
+  },
+  meme: {
+    label: 'Memes',
+    topic: 'Memes · Trending',
+    metrics: { replies: '8.9K', retweets: '44.2K', likes: '210.8K', views: '9.7M' },
+    text: '💬 8.9K    🔁 44.2K    ❤️ 210.8K    📊 9.7M'
+  },
+  casual: {
+    label: 'Casual',
+    topic: null,
+    metrics: { replies: '142', retweets: '890', likes: '4.6K', views: '72K' },
+    text: '💬 142    🔁 890    ❤️ 4.6K    📊 72K'
+  }
+};
 
-const parseTweetMetrics = (metricsStr, trendRank) => {
+export const parseTweetMetrics = (metricsStr, trendRank) => {
   if (trendRank && TWEET_TREND_PRESETS[trendRank]) {
     return TWEET_TREND_PRESETS[trendRank].metrics;
   }
@@ -644,6 +661,7 @@ const getTweetCardHeight = (ctx, cap, cardW) => {
   const pad = Math.round(18 * scale);
   const avatarSize = Math.round(40 * scale);
   const bodyFontSize = Math.round(Math.max(12, (cap.fontSize || 18) * scale));
+  const timeFontSize = Math.round(13 * scale);
   const metricsFontSize = Math.round(13 * scale);
   const iconSize = Math.round(15 * scale);
 
@@ -831,7 +849,7 @@ const drawTweetCard = (ctx, cardW, cap) => {
   ctx.restore();
 };
 
-const getInstagramCardHeight = (ctx, cap, cardW) => {
+export const getInstagramCardHeight = (ctx, cap, cardW) => {
   const scale = Math.max(0.4, Math.min(3.5, cardW / 480));
   const pad = Math.round(14 * scale);
   const avatarSize = Math.round(40 * scale);
@@ -861,7 +879,7 @@ const getInstagramCardHeight = (ctx, cap, cardW) => {
   return totalH;
 };
 
-const drawInstagramCard = (ctx, cardW, cap) => {
+export const drawInstagramCard = (ctx, cardW, cap) => {
   ctx.save();
   const scale = Math.max(0.4, Math.min(3.5, cardW / 480));
   const pad = Math.round(14 * scale);
@@ -1052,7 +1070,7 @@ const drawInstagramCard = (ctx, cardW, cap) => {
       }
       try {
         ctx.drawImage(cached, sx, sy, sw, sh, startX, postImageY, cardW, postImageH);
-      } catch {
+      } catch (err) {
         // Fallback
       }
       ctx.restore();
@@ -1184,103 +1202,434 @@ const drawInstagramCard = (ctx, cardW, cap) => {
   ctx.restore();
 };
 
-const getWhatsAppCardHeight = (ctx, cap, cardW) => {
-  const scale = Math.max(0.4, Math.min(3.5, cardW / 480));
-  const pad = Math.round(14 * scale);
-  const headerH = cap.waShowHeader !== false ? Math.round(54 * scale) : 0;
-  const datePillH = Math.round(36 * scale);
-  const bodyFontSize = Math.round(Math.max(12, (cap.fontSize || 15) * scale));
-  const timeFontSize = Math.round(10.5 * scale);
+// WhatsApp Doodle Wallpaper Offscreen Canvas Pattern Cache
+let waDoodlePatternCache = null;
+let waDoodlePatternTheme = null;
 
-  const messages = (cap.waMessages && Array.isArray(cap.waMessages) && cap.waMessages.length > 0)
+function getWhatsAppDoodlePattern(ctx, isDark = true) {
+  const themeKey = isDark ? 'dark' : 'light';
+  if (waDoodlePatternCache && waDoodlePatternTheme === themeKey) {
+    return waDoodlePatternCache;
+  }
+  const tileW = 200;
+  const tileH = 200;
+  const offscreen = document.createElement('canvas');
+  offscreen.width = tileW;
+  offscreen.height = tileH;
+  const oCtx = offscreen.getContext('2d');
+  if (!oCtx) return null;
+
+  oCtx.clearRect(0, 0, tileW, tileH);
+  const strokeColor = isDark ? 'rgba(255, 255, 255, 0.042)' : 'rgba(0, 0, 0, 0.042)';
+  const fillColor = strokeColor;
+  oCtx.strokeStyle = strokeColor;
+  oCtx.fillStyle = fillColor;
+  oCtx.lineWidth = 1.3;
+  oCtx.lineCap = 'round';
+  oCtx.lineJoin = 'round';
+
+  // 1. Speech bubble
+  oCtx.beginPath();
+  oCtx.strokeRect(18, 16, 22, 16);
+  oCtx.moveTo(22, 32);
+  oCtx.lineTo(18, 38);
+  oCtx.lineTo(28, 32);
+  oCtx.stroke();
+
+  // 2. Coffee Cup
+  oCtx.beginPath();
+  oCtx.strokeRect(110, 22, 18, 13);
+  oCtx.moveTo(128, 25);
+  oCtx.arc(128, 29, 4, -Math.PI / 2, Math.PI / 2);
+  oCtx.stroke();
+
+  // 3. Heart
+  oCtx.beginPath();
+  oCtx.arc(165, 35, 4, Math.PI, 0, false);
+  oCtx.arc(173, 35, 4, Math.PI, 0, false);
+  oCtx.lineTo(169, 44);
+  oCtx.closePath();
+  oCtx.stroke();
+
+  // 4. Clock
+  oCtx.beginPath();
+  oCtx.arc(50, 75, 9, 0, Math.PI * 2);
+  oCtx.stroke();
+  oCtx.beginPath();
+  oCtx.moveTo(50, 75);
+  oCtx.lineTo(50, 70);
+  oCtx.moveTo(50, 75);
+  oCtx.lineTo(54, 75);
+  oCtx.stroke();
+
+  // 5. Music Note
+  oCtx.beginPath();
+  oCtx.arc(140, 78, 3.5, 0, Math.PI * 2);
+  oCtx.fill();
+  oCtx.moveTo(143.5, 78);
+  oCtx.lineTo(143.5, 65);
+  oCtx.lineTo(154, 63);
+  oCtx.lineTo(154, 75);
+  oCtx.stroke();
+  oCtx.beginPath();
+  oCtx.arc(150.5, 75, 3.5, 0, Math.PI * 2);
+  oCtx.fill();
+
+  // 6. Smiley Face
+  oCtx.beginPath();
+  oCtx.arc(26, 125, 9, 0, Math.PI * 2);
+  oCtx.stroke();
+  oCtx.beginPath();
+  oCtx.arc(23, 123, 1, 0, Math.PI * 2);
+  oCtx.arc(29, 123, 1, 0, Math.PI * 2);
+  oCtx.fill();
+  oCtx.beginPath();
+  oCtx.arc(26, 126, 4, 0.2 * Math.PI, 0.8 * Math.PI);
+  oCtx.stroke();
+
+  // 7. Camera
+  oCtx.beginPath();
+  oCtx.strokeRect(95, 120, 20, 13);
+  oCtx.arc(105, 127, 3.5, 0, Math.PI * 2);
+  oCtx.fillRect(99, 117, 4, 3);
+  oCtx.stroke();
+
+  // 8. Handset curve
+  oCtx.beginPath();
+  oCtx.arc(168, 125, 7, 0.4 * Math.PI, 1.4 * Math.PI);
+  oCtx.stroke();
+
+  // 9. Star
+  oCtx.beginPath();
+  oCtx.moveTo(60, 160);
+  oCtx.lineTo(62, 165);
+  oCtx.lineTo(67, 165);
+  oCtx.lineTo(63, 169);
+  oCtx.lineTo(65, 174);
+  oCtx.lineTo(60, 171);
+  oCtx.lineTo(55, 174);
+  oCtx.lineTo(57, 169);
+  oCtx.lineTo(53, 165);
+  oCtx.lineTo(58, 165);
+  oCtx.closePath();
+  oCtx.stroke();
+
+  // 10. Checkmark
+  oCtx.beginPath();
+  oCtx.moveTo(125, 168);
+  oCtx.lineTo(128, 172);
+  oCtx.lineTo(135, 164);
+  oCtx.moveTo(130, 168);
+  oCtx.lineTo(133, 172);
+  oCtx.lineTo(140, 164);
+  oCtx.stroke();
+
+  const pattern = ctx.createPattern(offscreen, 'repeat');
+  waDoodlePatternCache = pattern;
+  waDoodlePatternTheme = themeKey;
+  return pattern;
+}
+
+function drawCanvasCameraIcon(ctx, cx, cy, size, color) {
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.fillStyle = color;
+  ctx.lineWidth = Math.max(1.3, size * 0.08);
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  const w = Math.round(size);
+  const h = Math.round(size * 0.72);
+  const left = cx - w / 2;
+  const top = cy - h / 2 + Math.round(size * 0.07);
+  const r = Math.round(size * 0.16);
+
+  const bumpW = Math.round(w * 0.36);
+  const bumpH = Math.round(size * 0.14);
+  const bumpLeft = cx - bumpW / 2;
+
+  ctx.beginPath();
+  ctx.moveTo(left + r, top);
+  ctx.lineTo(bumpLeft, top);
+  ctx.lineTo(bumpLeft + Math.round(size * 0.04), top - bumpH);
+  ctx.lineTo(bumpLeft + bumpW - Math.round(size * 0.04), top - bumpH);
+  ctx.lineTo(bumpLeft + bumpW, top);
+  ctx.lineTo(left + w - r, top);
+  ctx.arcTo(left + w, top, left + w, top + r, r);
+  ctx.lineTo(left + w, top + h - r);
+  ctx.arcTo(left + w, top + h, left + w - r, top + h, r);
+  ctx.lineTo(left + r, top + h);
+  ctx.arcTo(left, top + h, left, top + h - r, r);
+  ctx.lineTo(left, top + r);
+  ctx.arcTo(left, top, left + r, top, r);
+  ctx.closePath();
+  ctx.stroke();
+
+  // Central circular lens
+  const lensR = Math.round(size * 0.22);
+  ctx.beginPath();
+  ctx.arc(cx, top + h / 2 + Math.round(size * 0.02), lensR, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Small reflection dot
+  ctx.beginPath();
+  ctx.arc(cx + Math.round(lensR * 0.45), top + h / 2 - Math.round(lensR * 0.35), Math.max(1, Math.round(size * 0.045)), 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.restore();
+}
+
+function drawCanvasMicIcon(ctx, cx, cy, size, color) {
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.fillStyle = color;
+  ctx.lineWidth = Math.max(1.4, size * 0.09);
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  const headW = Math.round(size * 0.36);
+  const headH = Math.round(size * 0.52);
+  const headR = headW / 2;
+  const headTop = cy - Math.round(size * 0.34);
+
+  // Mic capsule head (filled)
+  ctx.beginPath();
+  ctx.arc(cx, headTop + headR, headR, Math.PI, 0, false);
+  ctx.lineTo(cx + headR, headTop + headH - headR);
+  ctx.arc(cx, headTop + headH - headR, headR, 0, Math.PI, false);
+  ctx.closePath();
+  ctx.fill();
+
+  // U-shaped cradle below capsule
+  const cradleR = Math.round(size * 0.30);
+  const cradleCenterY = headTop + Math.round(headH * 0.52);
+  ctx.beginPath();
+  ctx.arc(cx, cradleCenterY, cradleR, 0, Math.PI, false);
+  ctx.stroke();
+
+  // Stem
+  const stemTop = cradleCenterY + cradleR;
+  const stemBottom = stemTop + Math.round(size * 0.16);
+  ctx.beginPath();
+  ctx.moveTo(cx, stemTop);
+  ctx.lineTo(cx, stemBottom);
+  ctx.stroke();
+
+  // Base line
+  const baseW = Math.round(size * 0.34);
+  ctx.beginPath();
+  ctx.moveTo(cx - baseW / 2, stemBottom);
+  ctx.lineTo(cx + baseW / 2, stemBottom);
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+function drawCanvasPaperclipIcon(ctx, cx, cy, size, color) {
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = Math.max(1.2, size * 0.09);
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  ctx.translate(cx, cy);
+  ctx.rotate(-Math.PI / 4);
+
+  const w = size * 0.32;
+  const h = size * 0.62;
+  const r = w / 2;
+
+  ctx.beginPath();
+  ctx.moveTo(-w * 0.3, h * 0.2);
+  ctx.lineTo(-w * 0.3, -h * 0.2);
+  ctx.arcTo(-w * 0.3, -h * 0.4, 0, -h * 0.4, r * 0.7);
+  ctx.arcTo(w * 0.4, -h * 0.4, w * 0.4, -h * 0.2, r * 0.7);
+  ctx.lineTo(w * 0.4, h * 0.25);
+  ctx.arcTo(w * 0.4, h * 0.48, 0, h * 0.48, r);
+  ctx.arcTo(-w * 0.55, h * 0.48, -w * 0.55, h * 0.25, r);
+  ctx.lineTo(-w * 0.55, -h * 0.3);
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+export const getWhatsAppCardMetrics = (ctx, cap, cardW) => {
+  const mCtx = ctx || (typeof document !== 'undefined' ? document.createElement('canvas').getContext('2d') : null);
+  const canvasH = mCtx?.canvas?.height || 1080;
+  const maxAllowedH = Math.round(canvasH * 0.88);
+
+  const messages = (cap?.waMessages && Array.isArray(cap.waMessages) && cap.waMessages.length > 0)
     ? cap.waMessages
     : [{
         id: 'm1',
-        text: cap.text || '',
-        direction: cap.waDirection || 'received',
-        time: cap.waTime || '11:42 PM',
-        ticks: cap.waTicks || 'blue'
+        text: cap?.text || '',
+        direction: cap?.waDirection || 'received',
+        time: cap?.waTime || '11:42 PM',
+        ticks: cap?.waTicks || 'blue'
       }];
 
-  const bubbleMaxW = (cardW - pad * 2) * 0.82;
-  ctx.save();
-  ctx.font = `normal ${bodyFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+  const showHeader = cap?.waShowHeader !== false;
+  const showDate = cap?.waShowDate !== false;
+  const showFooter = cap?.waShowFooter !== false;
 
-  let totalBubblesH = 0;
-  for (let i = 0; i < messages.length; i++) {
-    const msg = messages[i];
-    const wrappedLines = wrapText(ctx, msg.text || '', bubbleMaxW - Math.round(22 * scale));
-    const textH = Math.max(1, wrappedLines.length) * (bodyFontSize * 1.34);
-    const bubbleH = textH + Math.round(13 * scale) + timeFontSize;
-    const gap = (i > 0 && messages[i - 1].direction === msg.direction) ? Math.round(4 * scale) : Math.round(10 * scale);
-    totalBubblesH += bubbleH + gap;
+  const measure = (s) => {
+    const pad = Math.round(14 * s);
+    const headerH = showHeader ? Math.round(56 * s) : 0;
+    const datePillH = showDate ? Math.round(36 * s) : 0;
+    const footerH = showFooter ? Math.round(50 * s) : 0;
+    // Guaranteed breathing room so the last message bubble is 100% visible before the footer input bar
+    const bottomSpacing = Math.round(18 * s);
+    const bodyFontSize = Math.round(Math.max(11, (cap?.fontSize || 14) * s));
+    const timeFontSize = Math.round(9.5 * s);
+    const bubbleMaxW = (cardW - pad * 2) * 0.82;
+
+    if (mCtx) {
+      mCtx.save();
+      mCtx.font = `normal ${bodyFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+    }
+
+    let totalBubblesH = 0;
+    const bubbleLayouts = [];
+
+    for (let i = 0; i < messages.length; i++) {
+      const msg = messages[i];
+      const wrappedLines = mCtx ? wrapText(mCtx, msg.text || '', bubbleMaxW - Math.round(24 * s)) : [msg.text || ''];
+      let maxLineW = 0;
+      if (mCtx) {
+        for (const line of wrappedLines) {
+          const lw = mCtx.measureText(line).width;
+          if (lw > maxLineW) maxLineW = lw;
+        }
+      }
+      const timeStr = msg.time || '11:42 PM';
+      const timeMetricsW = mCtx ? mCtx.measureText(`${timeStr}  ✓✓`).width : (timeFontSize * 6);
+      const bubbleW = Math.max(Math.round(82 * s), Math.min(bubbleMaxW, Math.max(maxLineW, timeMetricsW) + Math.round(24 * s)));
+      const textH = Math.max(1, wrappedLines.length) * Math.round(bodyFontSize * 1.36);
+      const bubbleH = textH + Math.round(14 * s) + timeFontSize;
+      const isConsecutive = (i > 0 && messages[i - 1].direction === msg.direction);
+      const gap = isConsecutive ? Math.round(3 * s) : Math.round(8 * s);
+
+      totalBubblesH += gap + bubbleH;
+      bubbleLayouts.push({
+        msg,
+        wrappedLines,
+        bubbleW,
+        bubbleH,
+        gap,
+        isConsecutive,
+        isSent: msg.direction === 'sent',
+        timeStr,
+        textH
+      });
+    }
+
+    if (mCtx) {
+      mCtx.restore();
+    }
+
+    const totalH = Math.round(headerH + datePillH + totalBubblesH + bottomSpacing + footerH);
+    return {
+      scale: s,
+      pad,
+      headerH,
+      datePillH,
+      footerH,
+      bottomSpacing,
+      bodyFontSize,
+      timeFontSize,
+      bubbleMaxW,
+      totalBubblesH,
+      bubbleLayouts,
+      totalH,
+      messages
+    };
+  };
+
+  let baseScale = Math.max(0.4, Math.min(1.40, cardW / 560));
+  let layout = measure(baseScale);
+
+  if (layout.totalH > maxAllowedH) {
+    const fitFactor = (maxAllowedH - 12) / layout.totalH;
+    const fittedScale = Math.max(0.36, baseScale * fitFactor);
+    layout = measure(fittedScale);
   }
-  ctx.restore();
 
-  const totalH = Math.round(headerH + datePillH + totalBubblesH + pad);
-  return totalH;
+  return layout;
 };
 
-const drawWhatsAppCard = (ctx, cardW, cap) => {
+export const getWhatsAppCardScale = (ctx, cap, cardW) => {
+  return getWhatsAppCardMetrics(ctx, cap, cardW).scale;
+};
+
+export const getWhatsAppCardHeight = (ctx, cap, cardW) => {
+  return getWhatsAppCardMetrics(ctx, cap, cardW).totalH;
+};
+
+export const drawWhatsAppCard = (ctx, cardW, cap) => {
   ctx.save();
-  const scale = Math.max(0.4, Math.min(3.5, cardW / 480));
-  const pad = Math.round(14 * scale);
+  const metrics = getWhatsAppCardMetrics(ctx, cap, cardW);
+  const {
+    scale,
+    pad,
+    headerH,
+    datePillH,
+    footerH,
+    bottomSpacing,
+    bodyFontSize,
+    timeFontSize,
+    bubbleLayouts,
+    totalH,
+    messages
+  } = metrics;
+
   const nameFontSize = Math.round(15 * scale);
   const statusFontSize = Math.round(11 * scale);
-  const bodyFontSize = Math.round(Math.max(12, (cap.fontSize || 15) * scale));
-  const timeFontSize = Math.round(10.5 * scale);
   const cornerRadius = Math.round(16 * scale);
   const showHeader = cap.waShowHeader !== false;
+  const showFooter = cap.waShowFooter !== false;
+  const showDate = cap.waShowDate !== false;
+  const showDoodles = cap.waShowDoodles !== false;
 
   const theme = cap.waTheme || 'dark';
   const isDark = theme !== 'light' && theme !== 'white';
 
   const cardBg = isDark ? '#0b141a' : '#efeae2';
-  const headerBg = isDark ? '#161f26' : '#f6f6f6';
-  const headerText = isDark ? '#ffffff' : '#000000';
+  const headerBg = isDark ? '#121b22' : '#f0f2f5';
+  const headerText = isDark ? '#ffffff' : '#111b21';
   const headerMuted = isDark ? '#8696a0' : '#667781';
-  const borderColor = isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.1)';
 
-  const contactName = cap.waContactName || 'Mom ❤️';
-  const status = cap.waStatus || 'online';
+  const contactName = cap.waContactName || '+91 81210 03003';
+  const status = cap.waStatus || 'last seen yesterday at 6:43 PM';
+  const datePillText = cap.waDatePill || 'Yesterday';
 
-  const messages = (cap.waMessages && Array.isArray(cap.waMessages) && cap.waMessages.length > 0)
-    ? cap.waMessages
-    : [{
-        id: 'm1',
-        text: cap.text || '',
-        direction: cap.waDirection || 'received',
-        time: cap.waTime || '11:42 PM',
-        ticks: cap.waTicks || 'blue'
-      }];
-
-  const cardH = getWhatsAppCardHeight(ctx, cap, cardW);
+  const cardH = totalH;
   const startX = - cardW / 2;
   const startY = - cardH / 2;
 
-  // Background card
-  ctx.fillStyle = cardBg;
+  // 1. Clip entire card region with rounded corners
+  ctx.save();
   drawRoundRect(ctx, startX, startY, cardW, cardH, cornerRadius);
-  ctx.strokeStyle = borderColor;
-  ctx.lineWidth = 1;
-  ctx.stroke();
+  ctx.clip();
+
+  // 2. Base background color
+  ctx.fillStyle = cardBg;
+  ctx.fillRect(startX, startY, cardW, cardH);
+
+  // 3. Authentic WhatsApp Doodle Wallpaper Pattern
+  if (showDoodles) {
+    const doodlePattern = getWhatsAppDoodlePattern(ctx, isDark);
+    if (doodlePattern) {
+      ctx.fillStyle = doodlePattern;
+      ctx.fillRect(startX, startY, cardW, cardH);
+    }
+  }
 
   let contentStartY = startY;
 
-  // Modern iOS WhatsApp Header Bar
+  // 4. Modern Authentic Header Bar (matching reference image)
   if (showHeader) {
-    const headerH = Math.round(54 * scale);
-    ctx.save();
-    ctx.beginPath();
-    ctx.moveTo(startX, startY + cornerRadius);
-    ctx.arcTo(startX, startY, startX + cornerRadius, startY, cornerRadius);
-    ctx.lineTo(startX + cardW - cornerRadius, startY);
-    ctx.arcTo(startX + cardW, startY, startX + cardW, startY + cornerRadius, cornerRadius);
-    ctx.lineTo(startX + cardW, startY + headerH);
-    ctx.lineTo(startX, startY + headerH);
-    ctx.closePath();
     ctx.fillStyle = headerBg;
-    ctx.fill();
+    ctx.fillRect(startX, startY, cardW, headerH);
 
     // Hairline bottom divider
     ctx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)';
@@ -1289,73 +1638,87 @@ const drawWhatsAppCard = (ctx, cardW, cap) => {
     ctx.moveTo(startX, startY + headerH);
     ctx.lineTo(startX + cardW, startY + headerH);
     ctx.stroke();
-    ctx.restore();
 
-    // iOS Blue Back Chevron ‹
-    ctx.fillStyle = '#007aff';
-    ctx.font = `bold ${Math.round(22 * scale)}px -apple-system, BlinkMacSystemFont, sans-serif`;
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('‹', startX + Math.round(11 * scale), startY + headerH / 2);
+    // Clean back chevron < (thin white, matching reference image)
+    const chevronSize = Math.round(18 * scale);
+    const chevronX = startX + Math.round(12 * scale);
+    const chevronY = startY + (headerH - chevronSize) / 2;
+    drawTweetVectorStrokeIcon(ctx, iosChevronPath, chevronX, chevronY, chevronSize, isDark ? '#ffffff' : '#111b21');
 
     // Contact Avatar
-    const avR = Math.round(17 * scale);
-    const avX = startX + Math.round(32 * scale) + avR;
+    const avR = Math.round(19 * scale);
+    const avX = chevronX + chevronSize + Math.round(8 * scale) + avR;
     const avY = startY + headerH / 2;
+    ctx.save();
     ctx.beginPath();
     ctx.arc(avX, avY, avR, 0, Math.PI * 2);
-    ctx.fillStyle = '#f43f5e';
+    ctx.fillStyle = cap.waAvatarBg || (isDark ? '#202c33' : '#e9edef');
     ctx.fill();
-    ctx.fillStyle = '#ffffff';
+    ctx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.1)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // Initial or Avatar text
+    ctx.fillStyle = isDark ? '#ffffff' : '#111b21';
     ctx.font = `bold ${Math.round(14 * scale)}px -apple-system, BlinkMacSystemFont, sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(contactName.charAt(0).toUpperCase() || 'W', avX, avY);
+    const initChar = (contactName.replace(/^\+91\s*/, '') || 'W').charAt(0).toUpperCase();
+    ctx.fillText(initChar, avX, avY);
+    ctx.restore();
 
-    // Contact Name & Status (SF Pro style)
+    // Contact Name & Status
+    const nameX = avX + avR + Math.round(10 * scale);
     ctx.textAlign = 'left';
     ctx.textBaseline = 'top';
     ctx.fillStyle = headerText;
-    ctx.font = `bold ${nameFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
-    const nameX = avX + avR + Math.round(8 * scale);
-    ctx.fillText(contactName, nameX, startY + Math.round(11 * scale));
+    ctx.font = `600 ${nameFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+    ctx.fillText(contactName, nameX, startY + Math.round(12 * scale));
 
     ctx.font = `normal ${statusFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
     ctx.fillStyle = status === 'online' ? '#25d366' : headerMuted;
-    ctx.fillText(status, nameX, startY + Math.round(30 * scale));
+    ctx.fillText(status, nameX, startY + Math.round(31 * scale));
 
-    // iOS Call Glyphs (Video camera & Phone handset) in #007aff
-    const callIconSize = Math.round(18 * scale);
-    drawTweetVectorStrokeIcon(ctx, iosVideoPath, startX + cardW - Math.round(56 * scale), startY + (headerH - callIconSize) / 2, callIconSize, '#007aff');
-    drawTweetVectorStrokeIcon(ctx, iosPhonePath, startX + cardW - Math.round(26 * scale), startY + (headerH - callIconSize) / 2, callIconSize, '#007aff');
+    // Clean Phone Call outline icon on the right (matching reference image)
+    const callIconSize = Math.round(20 * scale);
+    const callX = startX + cardW - pad - callIconSize;
+    const callY = startY + (headerH - callIconSize) / 2;
+    drawTweetVectorStrokeIcon(ctx, iosPhonePath, callX, callY, callIconSize, isDark ? '#ffffff' : '#111b21');
 
     contentStartY += headerH;
   }
 
-  // Centered Date Pill ("TODAY")
-  const datePillW = Math.round(72 * scale);
-  const datePillH = Math.round(22 * scale);
-  const datePillX = startX + (cardW - datePillW) / 2;
-  const datePillY = contentStartY + Math.round(8 * scale);
-  ctx.save();
-  ctx.fillStyle = isDark ? 'rgba(24, 34, 41, 0.92)' : 'rgba(255, 255, 255, 0.92)';
-  drawRoundRect(ctx, datePillX, datePillY, datePillW, datePillH, Math.round(11 * scale));
-  ctx.fillStyle = isDark ? '#8696a0' : '#54656f';
-  ctx.font = `bold ${Math.round(10 * scale)}px -apple-system, BlinkMacSystemFont, sans-serif`;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText('TODAY', datePillX + datePillW / 2, datePillY + datePillH / 2);
-  ctx.restore();
+  // 5. Centered Date Pill ("Yesterday" / "Today")
+  if (showDate) {
+    ctx.save();
+    ctx.font = `500 ${Math.round(11 * scale)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+    const dateTextW = ctx.measureText(datePillText).width;
+    const datePillW = Math.round(dateTextW + 24 * scale);
+    const pillH = Math.round(22 * scale);
+    const datePillX = startX + (cardW - datePillW) / 2;
+    const datePillY = contentStartY + (datePillH - pillH) / 2;
 
-  // Multi-Message Conversation Bubbles
-  let curY = datePillY + datePillH + Math.round(6 * scale);
-  const bubbleMaxW = (cardW - pad * 2) * 0.82;
+    ctx.fillStyle = isDark ? '#182229' : 'rgba(255, 255, 255, 0.92)';
+    drawRoundRect(ctx, datePillX, datePillY, datePillW, pillH, Math.round(7 * scale));
+    ctx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
 
-  ctx.font = `normal ${bodyFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+    ctx.fillStyle = isDark ? '#8696a0' : '#54656f';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(datePillText, datePillX + datePillW / 2, datePillY + pillH / 2);
+    ctx.restore();
+    contentStartY += datePillH;
+  }
 
-  for (let idx = 0; idx < messages.length; idx++) {
-    const msg = messages[idx];
-    const isSent = msg.direction === 'sent';
+  // 6. Multi-Message Conversation Stream with Authentic WhatsApp Speech Tails
+  let curY = contentStartY;
+
+  for (let idx = 0; idx < bubbleLayouts.length; idx++) {
+    const layout = bubbleLayouts[idx];
+    const { msg, wrappedLines, bubbleW, bubbleH, gap, isConsecutive, isSent, timeStr } = layout;
+    const hasTail = !isConsecutive;
 
     const bubbleBg = isSent
       ? (isDark ? '#005c4b' : '#d9fdd3')
@@ -1363,39 +1726,64 @@ const drawWhatsAppCard = (ctx, cardW, cap) => {
     const bubbleTextColor = isDark ? '#e9edef' : '#111b21';
     const timeColor = isDark ? '#8696a0' : '#667781';
 
-    ctx.font = `normal ${bodyFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
-    const wrappedLines = wrapText(ctx, msg.text || '', bubbleMaxW - Math.round(22 * scale));
-
-    let maxLineW = 0;
-    for (const line of wrappedLines) {
-      const lw = ctx.measureText(line).width;
-      if (lw > maxLineW) maxLineW = lw;
-    }
-    const timeStr = msg.time || '11:42 PM';
-    const timeMetricsW = ctx.measureText(`${timeStr}  ✓✓`).width;
-    const bubbleW = Math.max(Math.round(85 * scale), Math.min(bubbleMaxW, Math.max(maxLineW, timeMetricsW) + Math.round(22 * scale)));
-    const textH = Math.max(1, wrappedLines.length) * (bodyFontSize * 1.34);
-    const bubbleH = textH + Math.round(13 * scale) + timeFontSize;
-
-    const gap = (idx > 0 && messages[idx - 1].direction === msg.direction)
-      ? Math.round(4 * scale)
-      : Math.round(10 * scale);
     curY += gap;
 
+    const tailOffset = hasTail ? Math.round(6 * scale) : 0;
     const bubbleX = isSent
-      ? (startX + cardW - pad - bubbleW)
-      : (startX + pad);
+      ? (startX + cardW - pad - bubbleW - tailOffset)
+      : (startX + pad + tailOffset);
     const bubbleY = curY;
 
-    // Authentic iOS Bubble with clustered tail corners
-    const r = Math.round(14 * scale);
-    const cornerRadii = isSent
-      ? { tl: r, tr: r, br: Math.round(3 * scale), bl: r }
-      : { tl: r, tr: r, br: r, bl: Math.round(3 * scale) };
+    // Draw Authentic Speech Bubble with sharp top tail
+    const r = Math.round(8 * scale);
+    const tailW = Math.round(7 * scale);
+    const tailH = Math.round(11 * scale);
 
     ctx.save();
     ctx.fillStyle = bubbleBg;
-    drawCustomRoundRect(ctx, bubbleX, bubbleY, bubbleW, bubbleH, cornerRadii);
+    ctx.beginPath();
+
+    if (isSent) {
+      // Sent Bubble: rounded tl, bl, br. Top-right tail if hasTail
+      ctx.moveTo(bubbleX + r, bubbleY);
+      if (hasTail) {
+        ctx.lineTo(bubbleX + bubbleW, bubbleY);
+        ctx.lineTo(bubbleX + bubbleW + tailW, bubbleY);
+        ctx.quadraticCurveTo(bubbleX + bubbleW + Math.round(1 * scale), bubbleY + Math.round(4 * scale), bubbleX + bubbleW, bubbleY + tailH);
+      } else {
+        ctx.lineTo(bubbleX + bubbleW - r, bubbleY);
+        ctx.arcTo(bubbleX + bubbleW, bubbleY, bubbleX + bubbleW, bubbleY + r, r);
+      }
+      ctx.lineTo(bubbleX + bubbleW, bubbleY + bubbleH - r);
+      ctx.arcTo(bubbleX + bubbleW, bubbleY + bubbleH, bubbleX + bubbleW - r, bubbleY + bubbleH, r);
+      ctx.lineTo(bubbleX + r, bubbleY + bubbleH);
+      ctx.arcTo(bubbleX, bubbleY + bubbleH, bubbleX, bubbleY + bubbleH - r, r);
+      ctx.lineTo(bubbleX, bubbleY + r);
+      ctx.arcTo(bubbleX, bubbleY, bubbleX + r, bubbleY, r);
+    } else {
+      // Received Bubble: rounded tr, br, bl. Top-left tail if hasTail
+      if (hasTail) {
+        ctx.moveTo(bubbleX - tailW, bubbleY);
+        ctx.lineTo(bubbleX + bubbleW - r, bubbleY);
+      } else {
+        ctx.moveTo(bubbleX + r, bubbleY);
+        ctx.lineTo(bubbleX + bubbleW - r, bubbleY);
+      }
+      ctx.arcTo(bubbleX + bubbleW, bubbleY, bubbleX + bubbleW, bubbleY + r, r);
+      ctx.lineTo(bubbleX + bubbleW, bubbleY + bubbleH - r);
+      ctx.arcTo(bubbleX + bubbleW, bubbleY + bubbleH, bubbleX + bubbleW - r, bubbleY + bubbleH, r);
+      ctx.lineTo(bubbleX + r, bubbleY + bubbleH);
+      ctx.arcTo(bubbleX, bubbleY + bubbleH, bubbleX, bubbleY + bubbleH - r, r);
+      if (hasTail) {
+        ctx.lineTo(bubbleX, bubbleY + tailH);
+        ctx.quadraticCurveTo(bubbleX - Math.round(1 * scale), bubbleY + Math.round(4 * scale), bubbleX - tailW, bubbleY);
+      } else {
+        ctx.lineTo(bubbleX, bubbleY + r);
+        ctx.arcTo(bubbleX, bubbleY, bubbleX + r, bubbleY, r);
+      }
+    }
+    ctx.closePath();
+    ctx.fill();
     ctx.restore();
 
     // Message text inside bubble
@@ -1406,8 +1794,8 @@ const drawWhatsAppCard = (ctx, cardW, cap) => {
     ctx.textBaseline = 'top';
 
     for (const line of wrappedLines) {
-      ctx.fillText(line, bubbleX + Math.round(11 * scale), textY);
-      textY += Math.round(bodyFontSize * 1.34);
+      ctx.fillText(line, bubbleX + Math.round(10 * scale), textY);
+      textY += Math.round(bodyFontSize * 1.36);
     }
 
     // Timestamp & read receipts
@@ -1437,37 +1825,81 @@ const drawWhatsAppCard = (ctx, cardW, cap) => {
     curY += bubbleH;
   }
 
-  ctx.restore();
+  // 7. Modern Bottom Chat Input Bar (never overlaps messages - guaranteed bottomSpacing)
+  if (showFooter) {
+    const footerY = curY + bottomSpacing;
+
+    // Footer bar background
+    ctx.fillStyle = isDark ? '#0b141a' : '#f0f2f5';
+    ctx.fillRect(startX, footerY, cardW, footerH);
+
+    // Hairline top border
+    ctx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(startX, footerY);
+    ctx.lineTo(startX + cardW, footerY);
+    ctx.stroke();
+
+    const iconColor = isDark ? '#8696a0' : '#54656f';
+
+    // Plus icon on left
+    ctx.fillStyle = iconColor;
+    ctx.font = `300 ${Math.round(22 * scale)}px -apple-system, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const plusCenterX = startX + pad + Math.round(6 * scale);
+    ctx.fillText('+', plusCenterX, footerY + footerH / 2);
+
+    // Microphone button on far right
+    const micR = Math.round(16 * scale);
+    const micCenterX = startX + cardW - pad - micR;
+    const micCenterY = footerY + footerH / 2;
+    ctx.beginPath();
+    ctx.arc(micCenterX, micCenterY, micR, 0, Math.PI * 2);
+    ctx.fillStyle = isDark ? '#202c33' : '#00a884';
+    ctx.fill();
+    drawCanvasMicIcon(ctx, micCenterX, micCenterY, Math.round(15 * scale), '#ffffff');
+
+    // Camera icon to the left of the mic button
+    const camSize = Math.round(18 * scale);
+    const camCenterX = micCenterX - micR - Math.round(14 * scale) - camSize / 2;
+    const camCenterY = footerY + footerH / 2;
+    drawCanvasCameraIcon(ctx, camCenterX, camCenterY, camSize, iconColor);
+
+    // Rounded input capsule (between Plus and Camera)
+    const capX = plusCenterX + Math.round(16 * scale);
+    const capEndX = camCenterX - camSize / 2 - Math.round(12 * scale);
+    const capW = Math.max(Math.round(60 * scale), capEndX - capX);
+    const capH = Math.round(34 * scale);
+    const capY = footerY + (footerH - capH) / 2;
+    const capR = Math.round(17 * scale);
+    ctx.fillStyle = isDark ? '#202c33' : '#ffffff';
+    drawRoundRect(ctx, capX, capY, capW, capH, capR);
+
+    // "Message" placeholder text inside capsule
+    ctx.fillStyle = isDark ? '#8696a0' : '#8696a0';
+    ctx.font = `normal ${Math.round(13 * scale)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('Message', capX + Math.round(14 * scale), capY + capH / 2);
+
+    // Paperclip icon on right of capsule
+    const clipCenterX = capX + capW - Math.round(16 * scale);
+    const clipCenterY = capY + capH / 2;
+    drawCanvasPaperclipIcon(ctx, clipCenterX, clipCenterY, Math.round(14 * scale), '#8696a0');
+  }
+
+  ctx.restore(); // Restore clip
+  ctx.restore(); // Restore save
 };
 
 const dieCutSilhouetteCache = new Map();
 
-const dieCutEmojiCanvasCache = new Map();
-function getOrCreateEmojiCanvas(emoji, fontSize, fullW, fullH) {
-  const key = `${emoji}_${fontSize}_${fullW}_${fullH}`;
-  if (dieCutEmojiCanvasCache.has(key)) {
-    return dieCutEmojiCanvasCache.get(key);
-  }
-  const offCanvas = document.createElement('canvas');
-  offCanvas.width = fullW;
-  offCanvas.height = fullH;
-  const oCtx = offCanvas.getContext('2d');
-  oCtx.font = `${fontSize}px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif`;
-  oCtx.textAlign = 'center';
-  oCtx.textBaseline = 'middle';
-  oCtx.fillText(emoji, fullW / 2, fullH / 2);
-  if (dieCutEmojiCanvasCache.size > 80) {
-    const first = dieCutEmojiCanvasCache.keys().next().value;
-    dieCutEmojiCanvasCache.delete(first);
-  }
-  dieCutEmojiCanvasCache.set(key, offCanvas);
-  return offCanvas;
-}
-
-function getOrCreateDieCutSilhouette(imgSource, color, width, height, customKey = null) {
+function getOrCreateDieCutSilhouette(imgSource, color, width, height) {
   const w = Math.max(1, Math.round(width));
   const h = Math.max(1, Math.round(height));
-  const srcKey = customKey || imgSource.src || imgSource.currentSrc || (imgSource.toDataURL ? 'canvas' : 'img');
+  const srcKey = imgSource.src || imgSource.currentSrc || (imgSource.toDataURL ? 'canvas' : 'img');
   const key = `${srcKey}_${color}_${w}_${h}`;
   if (dieCutSilhouetteCache.has(key)) {
     return dieCutSilhouetteCache.get(key);
@@ -1531,8 +1963,16 @@ function renderDieCutEmoji(ctx, emoji, fontSize, borderColor = '#ffffff', border
   const fullW = Math.ceil(fontSize * 1.5 + pad * 2);
   const fullH = Math.ceil(fontSize * 1.5 + pad * 2);
 
-  const offCanvas = getOrCreateEmojiCanvas(emoji, fontSize, fullW, fullH);
-  const sil = getOrCreateDieCutSilhouette(offCanvas, borderColor, fullW, fullH, `emoji_${emoji}_${fontSize}`);
+  const offCanvas = document.createElement('canvas');
+  offCanvas.width = fullW;
+  offCanvas.height = fullH;
+  const oCtx = offCanvas.getContext('2d');
+  oCtx.font = `${fontSize}px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif`;
+  oCtx.textAlign = 'center';
+  oCtx.textBaseline = 'middle';
+  oCtx.fillText(emoji, fullW / 2, fullH / 2);
+
+  const sil = getOrCreateDieCutSilhouette(offCanvas, borderColor, fullW, fullH);
   const R = Math.max(2, borderWidth);
   const steps = Math.min(24, Math.max(12, Math.round(R * 3)));
   const cx = -fullW / 2;
@@ -1591,7 +2031,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     slotImages,
     slotTransforms,
     onUpdateSlotTransform,
-    _isVideoPlaying = true,
+    isVideoPlaying = true,
     watermark,
     canvasBgColor = '#ffffff',
     drawings = [],
@@ -1601,9 +2041,9 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     brushColor = '#ff2a5f',
     brushSize = 10,
     canvasHeader,
-    _onUpdateCanvasHeader,
+    onUpdateCanvasHeader,
     canvasFooter,
-    _onUpdateCanvasFooter,
+    onUpdateCanvasFooter,
     demotivational,
     canvasFlipX = false
   },
@@ -1653,8 +2093,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
   const editableRef = useRef(null);
   const imageCacheRef = useRef({});
   const loadingMediaRef = useRef({});
-  const layerFilterCacheRef = useRef(new Map());
-  const [_canvasScale, setCanvasScale] = useState(1);
+  const [canvasScale, setCanvasScale] = useState(1);
   const [naturalSize, setNaturalSize] = useState({ w: 800, h: 800 });
 
   const isDragging = useRef(false);
@@ -1667,6 +2106,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
   const initialSlotScale = useRef(null);
   // Double-tap detection: track last tap time and layer id
   const [editingCaptionId, setEditingCaptionId] = useState(null);
+  const [editingCaptionText, setEditingCaptionText] = useState('');
 
   useEffect(() => {
     if (editingCaptionId && activeLayerId !== editingCaptionId) {
@@ -1676,7 +2116,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
   const lastTapRef = useRef({ id: null, time: 0 });
 
 
-  const imgSrc = template?.imageUrl || imageUrl;
+  const imgSrc = template?.canvasOnly ? null : (template?.rawImageUrl || imageUrl || template?.imageUrl);
   let canvasW = 1080;
   let canvasH = 1080;
   let rawW = 1080;
@@ -1716,7 +2156,8 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
       const hFontFamily = headerCap.fontFamily || 'Montserrat, sans-serif';
       let linesCount = 1;
       if (typeof document !== 'undefined') {
-        const tempCtx = getMeasureCtx();
+        const tempCanvas = document.createElement('canvas');
+        const tempCtx = tempCanvas.getContext('2d');
         if (tempCtx) {
           tempCtx.font = `bold ${hFontSize}px ${hFontFamily}`;
           const wrapped = wrapText(tempCtx, headerCap.text || '', (headerCap.width || 0.92) * canvasW);
@@ -1741,7 +2182,8 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
       const fFontFamily = footerCap.fontFamily || 'Montserrat, sans-serif';
       let linesCount = 1;
       if (typeof document !== 'undefined') {
-        const tempCtx = getMeasureCtx();
+        const tempCanvas = document.createElement('canvas');
+        const tempCtx = tempCanvas.getContext('2d');
         if (tempCtx) {
           tempCtx.font = `bold ${fFontSize}px ${fFontFamily}`;
           const wrapped = wrapText(tempCtx, footerCap.text || '', (footerCap.width || 0.92) * canvasW);
@@ -1759,21 +2201,35 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
   const totalCanvasH = canvasH + headerExtH + footerExtH;
 
   // Layer Center Y position in canvas pixels (anchors meme image layers to the image area below header)
-  const getCaptionCenterY = (cap) => {
+  const getCaptionCenterY = (cap, customCanvas = null) => {
     if (!cap) return 0;
+    const activeCanvas = customCanvas || canvasRef.current;
     if (cap.isHeaderCaption) {
       if (cap.hasCustomPos) {
-        return (cap.y ?? 0) * (canvasRef.current?.height || totalCanvasH);
+        return (cap.y ?? 0) * (activeCanvas?.height || totalCanvasH);
       }
       return headerExtH / 2;
     }
     if (cap.isFooterCaption) {
       if (cap.hasCustomPos) {
-        return (cap.y ?? 0) * (canvasRef.current?.height || totalCanvasH);
+        return (cap.y ?? 0) * (activeCanvas?.height || totalCanvasH);
       }
       return headerExtH + canvasH + (footerExtH / 2);
     }
-    return headerExtH + (cap.y || 0) * canvasH;
+    const currentH = activeCanvas?.height || canvasH;
+    const rawY = headerExtH + (cap.y ?? 0.5) * canvasH;
+    if (cap.isWhatsAppCard && activeCanvas) {
+      const cardW = Math.max(180, (cap.width || 0.82) * (activeCanvas.width || canvasW));
+      const ctx = activeCanvas.getContext ? activeCanvas.getContext('2d') : null;
+      const cardH = getWhatsAppCardHeight(ctx, cap, cardW);
+      const minMargin = 16;
+      if (cardH <= currentH - minMargin * 2) {
+        const minY = cardH / 2 + minMargin;
+        const maxY = currentH - cardH / 2 - minMargin;
+        return Math.max(minY, Math.min(maxY, rawY));
+      }
+    }
+    return rawY;
   };
 
   const getStickerCenterY = (stk) => {
@@ -1789,18 +2245,18 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
   const activeCaption = captions.find((c) => c.id === activeLayerId);
 
   // Compute exact scale ratio synchronously so font scale is accurate
-  const updateScaleSync = useCallback(() => {
+  const updateScaleSync = () => {
     if (canvasRef.current) {
       const rect = canvasRef.current.getBoundingClientRect();
       if (rect.width > 0 && canvasW > 0) {
         setCanvasScale(rect.width / canvasW);
       }
     }
-  }, [canvasW, canvasRef]);
+  };
 
   useLayoutEffect(() => {
     updateScaleSync();
-  }, [canvasW, imgSrc, totalCanvasH, updateScaleSync]);
+  }, [canvasW, imgSrc, totalCanvasH]);
 
   useEffect(() => {
     updateScaleSync();
@@ -1815,10 +2271,10 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
       window.removeEventListener('resize', updateScaleSync);
       if (ro) ro.disconnect();
     };
-  }, [canvasW, imgSrc, updateScaleSync, canvasRef]);
+  }, [canvasW, imgSrc]);
 
   // Focus textarea ONLY when explicitly called (not on selection change, never on Social Cards)
-  const focusTextarea = useCallback(() => {
+  const focusTextarea = () => {
     if (activeCaption?.isTweetCard || activeCaption?.isInstagramCard || activeCaption?.isWhatsAppCard) return;
     if (editableRef.current) {
       try {
@@ -1829,11 +2285,41 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         // Focus fallback
       }
     }
-  }, [activeCaption?.isTweetCard, activeCaption?.isInstagramCard, activeCaption?.isWhatsAppCard]);
+  };
 
   const handlePointerDownRef = useRef(null);
   const handlePointerMoveRef = useRef(null);
   const handlePointerEndRef = useRef(null);
+
+  // rAF batching for high-DPI drag, resize, and rotate operations (prevents event flooding)
+  const dragRafRef = useRef(null);
+  const pendingDragRef = useRef(null);
+
+  const flushDragBatch = () => {
+    if (dragRafRef.current) {
+      cancelAnimationFrame(dragRafRef.current);
+      dragRafRef.current = null;
+    }
+    if (pendingDragRef.current) {
+      const fn = pendingDragRef.current;
+      pendingDragRef.current = null;
+      fn();
+    }
+  };
+
+  const scheduleDragBatch = (fn) => {
+    pendingDragRef.current = fn;
+    if (!dragRafRef.current) {
+      dragRafRef.current = requestAnimationFrame(() => {
+        dragRafRef.current = null;
+        if (pendingDragRef.current) {
+          const u = pendingDragRef.current;
+          pendingDragRef.current = null;
+          u();
+        }
+      });
+    }
+  };
   
   useLayoutEffect(() => {
     handlePointerDownRef.current = handlePointerDown;
@@ -1874,9 +2360,29 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
       wrapper.removeEventListener('touchmove', onTouchMove);
       wrapper.removeEventListener('touchend', onTouchEnd);
     };
-  }, [isDrawingMode]);
+  }, []);
 
+  // Global window listeners for mouse drag & drawing so it doesn't stop when cursor moves outside canvas
+  useEffect(() => {
+    const onGlobalMouseMove = (e) => {
+      if ((isDragging.current || isDrawingActive.current) && handlePointerMoveRef.current) {
+        handlePointerMoveRef.current(e);
+      }
+    };
+    const onGlobalMouseUp = (e) => {
+      if ((isDragging.current || isDrawingActive.current) && handlePointerEndRef.current) {
+        handlePointerEndRef.current(e);
+      }
+    };
 
+    window.addEventListener('mousemove', onGlobalMouseMove);
+    window.addEventListener('mouseup', onGlobalMouseUp);
+
+    return () => {
+      window.removeEventListener('mousemove', onGlobalMouseMove);
+      window.removeEventListener('mouseup', onGlobalMouseUp);
+    };
+  }, []);
 
   const baseImgRef = useRef(null);
   const compCanvasRef = useRef(null);
@@ -2126,7 +2632,10 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         uiCtx.restore();
       };
 
-
+      // 4. Corner Knob (fallback if ever needed)
+      const drawRoundHandle = (uiCtx, hx, hy) => {
+        drawResizeHandle(uiCtx, hx, hy);
+      };
 
       // 5. Side Stretch Handle (Crisp white rounded capsule for width stretching)
       const drawSideHandle = (uiCtx, hx, hy, isVertical = true) => {
@@ -2406,7 +2915,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
       }
 
       // Reset filter for text/stickers/image-layers overlay (safe on all browsers)
-      try { targetCtx.filter = 'none'; } catch {}
+      try { targetCtx.filter = 'none'; } catch(e) {}
 
       // Render Custom Image Overlay Layers
             const allLayers = [
@@ -2433,21 +2942,13 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
             const filterObj = imgLayer.filters || imgLayer.filter;
             const filterCss = getFilterCss(filterObj);
             if (filterCss !== 'none') {
-              const cacheKey = `${imgLayer.id || 'layer'}_${imgLayer.url}_${filterCss}_${baseW}_${baseH}`;
-              let filteredCanvas = layerFilterCacheRef.current.get(cacheKey);
-              if (!filteredCanvas) {
-                filteredCanvas = document.createElement('canvas');
-                filteredCanvas.width = baseW;
-                filteredCanvas.height = baseH;
-                const tempCtx = filteredCanvas.getContext('2d');
-                drawImageFiltered(tempCtx, cached, filterCss, 0, 0, baseW, baseH);
-                if (layerFilterCacheRef.current.size > 24) {
-                  const firstK = layerFilterCacheRef.current.keys().next().value;
-                  layerFilterCacheRef.current.delete(firstK);
-                }
-                layerFilterCacheRef.current.set(cacheKey, filteredCanvas);
-              }
-              drawSource = filteredCanvas;
+              const tempCanvas = document.createElement('canvas');
+              tempCanvas.width = baseW;
+              tempCanvas.height = baseH;
+              const tempCtx = tempCanvas.getContext('2d');
+              // iOS-safe: uses pixel-level fallback on iOS Safari
+              drawImageFiltered(tempCtx, cached, filterCss, 0, 0, baseW, baseH);
+              drawSource = tempCanvas;
             }
           }
 
@@ -2736,8 +3237,16 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         targetCtx.restore();
               } else if (layer._type === 'caption') {
           const cap = layer;
-        const cx = cap.x * canvas.width;
-        const cy = getCaptionCenterY(cap);
+        let cx = (cap.x ?? 0.5) * canvas.width;
+        let cy = getCaptionCenterY(cap, canvas);
+        if (cap.isWhatsAppCard) {
+          const cardW = Math.max(180, (cap.width || 0.82) * canvas.width);
+          const halfW = cardW / 2;
+          const minPadX = 14;
+          if (cardW <= canvas.width - minPadX * 2) {
+            cx = Math.max(halfW + minPadX, Math.min(canvas.width - halfW - minPadX, cx));
+          }
+        }
         
         targetCtx.save();
         targetCtx.translate(cx, cy);
@@ -3058,7 +3567,9 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         targetCtx.globalAlpha = watermark.opacity || 0.5;
         
         const pad = 20;
-
+        let wx = 0;
+        let wy = 0;
+        
         const getPositions = (w, h) => {
           const pos = watermark.position || 'bottom-right';
           if (pos === 'bottom-right') return { x: canvas.width - pad - w, y: canvas.height - pad - h };
@@ -3143,11 +3654,10 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
       }
     };
 
-    if (baseImgRef.current && (baseImgRef.current._origSrc === imgSrc || baseImgRef.current.src === imgSrc)) {
+    if (baseImgRef.current && baseImgRef.current.src === imgSrc) {
       renderCanvas(baseImgRef.current);
     } else if (imgSrc) {
         const baseImg = new Image();
-        baseImg._origSrc = imgSrc;
         if (imgSrc && !imgSrc.startsWith('blob:') && !imgSrc.startsWith('data:')) baseImg.crossOrigin = 'anonymous';
         baseImg.onload = () => {
           if (baseImg.width && baseImg.height && (naturalSize.w !== baseImg.width || naturalSize.h !== baseImg.height)) {
@@ -3157,14 +3667,12 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
           renderCanvas(baseImg);
         };
         baseImg.onerror = () => {
-          baseImgRef.current = null;
           renderCanvas(null);
         };
         baseImg.src = imgSrc;
     } else {
       renderCanvas(null);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [captions, stickers, activeLayerId, imageLayers, slotImages, slotTransforms, activeIsNativeLayout, editingCaptionId, aspectRatio, imageFit, watermark, drawings, isDrawingMode, imgSrc, filters, liveBgColor, canvasHeader, canvasFooter, demotivational, canvasFlipX]);
 
   // Helper to rotate point for hit testing
@@ -3286,8 +3794,16 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
       if (!hitLayer) {
         const activeCap = captions.find(c => c.id === activeLayerId);
         if (activeCap && !activeCap.locked) {
-          const cx = activeCap.x * canvas.width;
-          const cy = getCaptionCenterY(activeCap);
+          let cx = (activeCap.x ?? 0.5) * canvas.width;
+          let cy = getCaptionCenterY(activeCap, canvas);
+          if (activeCap.isWhatsAppCard) {
+            const cardW = Math.max(180, (activeCap.width || 0.82) * canvas.width);
+            const halfW = cardW / 2;
+            const minPadX = 14;
+            if (cardW <= canvas.width - minPadX * 2) {
+              cx = Math.max(halfW + minPadX, Math.min(canvas.width - halfW - minPadX, cx));
+            }
+          }
           const p = rotatePoint(coords.x, coords.y, cx, cy, -(activeCap.rotation || 0));
 
           const renderMaxWidth = (activeCap.width || 0.9) * canvas.width;
@@ -3504,8 +4020,16 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
           }
         } else if (layer._type === 'caption') {
           const cap = layer;
-          const cx = cap.x * canvas.width;
-          const cy = getCaptionCenterY(cap);
+          let cx = (cap.x ?? 0.5) * canvas.width;
+          let cy = getCaptionCenterY(cap, canvas);
+          if (cap.isWhatsAppCard) {
+            const cardW = Math.max(180, (cap.width || 0.82) * canvas.width);
+            const halfW = cardW / 2;
+            const minPadX = 14;
+            if (cardW <= canvas.width - minPadX * 2) {
+              cx = Math.max(halfW + minPadX, Math.min(canvas.width - halfW - minPadX, cx));
+            }
+          }
           const p = rotatePoint(coords.x, coords.y, cx, cy, -(cap.rotation || 0));
           const fontSize = cap.fontSize || 50;
           ctx.font = `bold ${fontSize}px ${cap.fontFamily || 'Impact, sans-serif'}`;
@@ -3756,7 +4280,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     }
   };
 
-  const handlePointerEnd = (_e) => {
+  const handlePointerEnd = (e) => {
     if (canvasRef.current && !isDrawingMode) {
       canvasRef.current.style.cursor = 'default';
     }
@@ -3792,6 +4316,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
       const isSocial = tappedCap?.isTweetCard || tappedCap?.isInstagramCard || tappedCap?.isWhatsAppCard;
       if (!isSocial) {
         setEditingCaptionId(tappedId);
+        setEditingCaptionText(tappedCap ? tappedCap.text : '');
         focusTextarea();
       } else {
         setEditingCaptionId(null);
@@ -3837,8 +4362,16 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
 
       const activeCap = captions.find(c => c.id === activeLayerId);
       if (activeCap && !activeCap.locked) {
-        const cx = activeCap.x * canvas.width;
-        const cy = getCaptionCenterY(activeCap);
+        let cx = (activeCap.x ?? 0.5) * canvas.width;
+        let cy = getCaptionCenterY(activeCap, canvas);
+        if (activeCap.isWhatsAppCard) {
+          const cardW = Math.max(180, (activeCap.width || 0.82) * canvas.width);
+          const halfW = cardW / 2;
+          const minPadX = 14;
+          if (cardW <= canvas.width - minPadX * 2) {
+            cx = Math.max(halfW + minPadX, Math.min(canvas.width - halfW - minPadX, cx));
+          }
+        }
         const p = rotatePoint(coords.x, coords.y, cx, cy, -(activeCap.rotation || 0));
         const renderMaxWidth = (activeCap.width || 0.9) * canvas.width;
         const fontSize = activeCap.fontSize || 50;
@@ -4159,13 +4692,16 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
       const newRotation = angleDeg;
       const id = dragTarget.current.id;
 
-      if (dragTarget.current.type === 'rotate_caption' && onUpdateCaptionBounds) {
-        onUpdateCaptionBounds(id, { rotation: newRotation });
-      } else if (dragTarget.current.type === 'rotate_sticker' && onUpdateStickerBounds) {
-        onUpdateStickerBounds(id, { rotation: newRotation });
-      } else if (dragTarget.current.type === 'rotate_imageLayer' && onUpdateImageLayerBounds) {
-        onUpdateImageLayerBounds(id, { rotation: newRotation });
-      }
+      scheduleDragBatch(() => {
+        if (!dragTarget.current) return;
+        if (dragTarget.current.type === 'rotate_caption' && onUpdateCaptionBounds) {
+          onUpdateCaptionBounds(id, { rotation: newRotation });
+        } else if (dragTarget.current.type === 'rotate_sticker' && onUpdateStickerBounds) {
+          onUpdateStickerBounds(id, { rotation: newRotation });
+        } else if (dragTarget.current.type === 'rotate_imageLayer' && onUpdateImageLayerBounds) {
+          onUpdateImageLayerBounds(id, { rotation: newRotation });
+        }
+      });
       return;
     }
 
@@ -4513,24 +5049,53 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     
     snappingLines.current = { horizontal: snapH, vertical: snapV };
 
-    if (dragTarget.current.type === 'caption' && onUpdateCaptionBounds) {
-      const isHeaderOrFooter = dragTarget.current?.isHeaderCaption || dragTarget.current?.isFooterCaption;
-      if (isHeaderOrFooter) {
-        dragTarget.current.hasCustomPos = true;
+    scheduleDragBatch(() => {
+      if (!dragTarget.current) return;
+      if (dragTarget.current.type === 'caption' && onUpdateCaptionBounds) {
+        const isHeaderOrFooter = dragTarget.current?.isHeaderCaption || dragTarget.current?.isFooterCaption;
+        if (isHeaderOrFooter) {
+          dragTarget.current.hasCustomPos = true;
+        }
+        onUpdateCaptionBounds(dragTarget.current.id, { 
+          x: newX, 
+          y: newY,
+          ...(isHeaderOrFooter ? { hasCustomPos: true } : {})
+        });
+      } else if (dragTarget.current.type === 'sticker' && onUpdateStickerBounds) {
+        onUpdateStickerBounds(dragTarget.current.id, { x: newX, y: newY });
+      } else if (dragTarget.current.type === 'imageLayer' && onUpdateImageLayerBounds) {
+        onUpdateImageLayerBounds(dragTarget.current.id, { x: newX, y: newY });
+      } else if (dragTarget.current.type === 'imageLayer' && onUpdateImageLayerPosition) {
+        onUpdateImageLayerPosition(dragTarget.current.id, newX, newY);
       }
-      onUpdateCaptionBounds(dragTarget.current.id, { 
-        x: newX, 
-        y: newY,
-        ...(isHeaderOrFooter ? { hasCustomPos: true } : {})
-      });
-    
-    } else if (dragTarget.current.type === 'sticker' && onUpdateStickerBounds) {
-      onUpdateStickerBounds(dragTarget.current.id, { x: newX, y: newY });
-    } else if (dragTarget.current.type === 'imageLayer' && onUpdateImageLayerBounds) {
-      onUpdateImageLayerBounds(dragTarget.current.id, { x: newX, y: newY });
-    }
+    });
   };
 
+  const handlePointerUp = () => {
+    flushDragBatch();
+    if (canvasRef.current && !isDrawingMode) {
+      canvasRef.current.style.cursor = 'default';
+    }
+    if (isDrawingMode && isDrawingActive.current) {
+      isDrawingActive.current = false;
+      lastDrawPoint.current = null;
+      if (currentStroke.current) {
+        const strokeToSave = currentStroke.current;
+        currentStroke.current = null;
+        if (strokeToSave.points.length > 0 && onAddDrawing) {
+          onAddDrawing(strokeToSave);
+        }
+      }
+      return;
+    }
+    isDragging.current = false;
+    hasDragged.current = false;
+    dragTarget.current = null;
+    if (snappingLines.current.horizontal !== null || snappingLines.current.vertical !== null) {
+      snappingLines.current = { horizontal: null, vertical: null };
+    }
+    if (baseImgRef.current) renderCanvas(baseImgRef.current);
+  };
 
   // Global window listeners so fast mouse or touch drags don't freeze when leaving the canvas element
   useEffect(() => {
@@ -4540,8 +5105,9 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
       }
     };
     const handleGlobalUp = (e) => {
-      if ((isDragging.current || isDrawingActive.current) && handlePointerEndRef.current) {
-        handlePointerEndRef.current(e);
+      if (isDragging.current || isDrawingActive.current) {
+        if (handlePointerEndRef.current) handlePointerEndRef.current(e);
+        else handlePointerUp();
       }
     };
     window.addEventListener('mousemove', handleGlobalMove);
@@ -4559,7 +5125,18 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
   }, []);
 
   
-
+  useEffect(() => {
+    if (baseImgRef.current || isNativeLayout) {
+      // Just force a re-render. To force a re-render in CanvasEditor we just call renderCanvas.
+      // But renderCanvas is inside the component body, so it is accessible.
+      // Let's check if renderCanvas is defined in the body... yes.
+      // We will inject a dummy state update to force the component to re-execute and thus call renderCanvas via the existing mechanisms, OR just call renderCanvas directly.
+      // Wait, renderCanvas takes the image. 
+      if (typeof renderCanvas === 'function') {
+         renderCanvas(baseImgRef.current);
+      }
+    }
+  }, [liveBgColor, isNativeLayout]);
   
 // Keep focus on active caption whenever selected (not for social cards)
   useEffect(() => {
@@ -4567,7 +5144,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     if (activeCaption && !isSocial && editingCaptionId === activeCaption.id) {
       focusTextarea();
     }
-  }, [activeCaption, editingCaptionId, focusTextarea]);
+  }, [activeCaption?.id, editingCaptionId]);
 
   const handleWheel = (e) => {
     if (!activeIsNativeLayout || !activeLayoutDef || !onUpdateSlotTransform) return;
@@ -4611,6 +5188,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     }
   };
 
+  const computedFontSize = activeCaption ? (activeCaption.fontSize || 50) * (canvasScale || 1) : 18;
 
   return (
     <div

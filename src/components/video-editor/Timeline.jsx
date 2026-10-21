@@ -10,7 +10,7 @@ import AudioModal from './AudioModal';
 import VideoTemplateModal from './VideoTemplateModal';
 import ModalPortal from '../ModalPortal';
 
-const _TIMELINE_WIDTH_PX = 1000; // Fixed visual width for the timeline track
+const TIMELINE_WIDTH_PX = 1000; // Fixed visual width for the timeline track
 
 // Distinct warm shades of yellow, amber, gold, and orange for sound layers
 // Excludes green (text), red, purple (image), and blue (video)
@@ -94,7 +94,7 @@ export default function Timeline() {
   const fileInputRef = useRef(null);
   const audioInputRef = useRef(null);
   const imageInputRef = useRef(null);
-  const _stickerInputRef = useRef(null);
+  const stickerInputRef = useRef(null);
     
   const [showEmojiPicker, setShowEmojiPicker] = React.useState(false);
   const [emojiCategory, setEmojiCategory] = React.useState('faces');
@@ -381,7 +381,7 @@ export default function Timeline() {
           const ctx = canvas.getContext('2d');
           ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
           safeResolve(canvas.toDataURL('image/jpeg', 0.5));
-        } catch {
+        } catch (e) {
           safeResolve(null);
         }
       };

@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Crosshair, Check, X, Plus, Minus, User } from 'lucide-react';
+import { Crosshair, Check, X, Move, Plus, Minus, Sparkles, User } from 'lucide-react';
 
 export default function FacePinpointOverlay({
   isOpen,
@@ -31,7 +31,7 @@ export default function FacePinpointOverlay({
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ image: imgUrl })
           });
-        } catch {
+        } catch (e) {
           res = await fetch('http://127.0.0.1:5174/api/face-swap/detect-faces', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },

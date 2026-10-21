@@ -57,7 +57,7 @@ export const AudioModal = ({ isOpen, onClose }) => {
 
   const handleAddSound = (sound) => {
     const store = useEditorStore.getState();
-    const _playhead = store.playhead || 0;
+    const playhead = store.playhead || 0;
     const durationMs = sound.durationMs || 3000;
 
     store.addItem({

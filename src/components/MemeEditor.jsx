@@ -1,23 +1,23 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import CanvasEditor from './CanvasEditor';
-import { TWEET_TREND_PRESETS } from '../data/tweetPresets';
+import CanvasEditor, { TWEET_TREND_PRESETS } from './CanvasEditor';
 import { FONTS } from '../data/stickers';
 import confetti from 'canvas-confetti';
 import {
   Type, Plus, Trash2, Undo, Redo, Download, Share2, Sparkles, Copy, Blend,
-  Sliders, Smile, Sticker, ArrowLeft, Save, Check, RefreshCw,
-  X, Upload, RotateCw, Crop, LayoutGrid, Droplet,
-  Highlighter, Palette, Sun, ChevronDown, PencilLine, ArrowDownRight, Wand2,
-  Layers, ArrowUp, ArrowDown, Eye, FlipHorizontal,
-  PanelTop, PanelBottom, MessageSquare, MessageSquareQuote, Flame, Tv, MessageCircle, Shield, Ban,
+  Sliders, SlidersHorizontal, Settings, Smile, Sticker, ArrowLeft, Save, Check, RefreshCw,
+  Image as ImageIcon, Search, X, Upload, RotateCw, ZoomIn, Crop, LayoutGrid, Scissors, Play, Pause, FolderHeart, Droplet, Monitor,
+  Highlighter, Palette, Sun, Moon, ChevronDown, ChevronLeft, PencilLine, Move, ArrowDownRight, Wand2,
+  Layers, ArrowUp, ArrowDown, ChevronsUp, ChevronsDown, Eye, EyeOff, Lock, Unlock, FlipHorizontal,
+  PanelTop, PanelBottom, MessageSquare, MessageSquareQuote, Flame, Tv, MessageCircle, Shield, Circle, TrendingDown, Ban,
   AlignLeft, AlignCenter, AlignRight,
   Brush, SunMedium, ImagePlus, LayoutTemplate, Rows3, WandSparkles, ScanFace,
-  CheckCheck, User
+  CheckCheck, ArrowLeftRight, User
 } from 'lucide-react';
 import AiCaptionModal from './AiCaptionModal';
 import MemeStylesModal, { TwitterVerifiedBadge, InstagramVerifiedBadge, InstagramLogo, WhatsAppLogo, IG_PRESET_IMAGES } from './MemeStylesModal';
 import FaceMorphModal from './FaceMorphModal';
+import BottomSheet from './BottomSheet';
 import MemeStickersBottomSheet from './editor/MemeStickersBottomSheet';
 import EmojiBottomSheet from './editor/EmojiBottomSheet';
 import TemplatePickerBottomSheet from './editor/TemplatePickerBottomSheet';
@@ -25,9 +25,10 @@ import PhotoFiltersBottomSheet from './editor/PhotoFiltersBottomSheet';
 import BubbleChatBottomSheet from './editor/BubbleChatBottomSheet';
 import FacePinpointOverlay from './FacePinpointOverlay';
 import { fuseFaceIntoTemplate } from '../utils/faceGraftEngine';
-import { downloadImageHelper } from '../utils/downloadHelper';
+import { detectFaceOnTemplate } from '../utils/faceLandmarkerService';
+import { downloadImageHelper, recordCanvasAsVideo } from '../utils/downloadHelper';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MEME_TEMPLATES } from '../data/templates';
+import { MEME_TEMPLATES, CATEGORIES } from '../data/templates';
 import { fetchOpenSourceMemes } from '../services/memeService';
 import VideoTrimmer from './VideoTrimmer';
 import AspectRatioDropdown from './AspectRatioDropdown';
@@ -46,7 +47,7 @@ import {
 } from '../utils/captionLayout';
 import './MemeEditor.css';
 
-const XSocialLogo = ({ size = 16, style = {}, className = "" }) => (
+export const XSocialLogo = ({ size = 16, style = {}, className = "" }) => (
   <svg
     width={size}
     height={size}
@@ -60,9 +61,9 @@ const XSocialLogo = ({ size = 16, style = {}, className = "" }) => (
   </svg>
 );
 
-const isSocialCardCaption = (c) => Boolean(c && (c.isTweetCard || c.isInstagramCard || c.isWhatsAppCard));
+export const isSocialCardCaption = (c) => Boolean(c && (c.isTweetCard || c.isInstagramCard || c.isWhatsAppCard));
 
-const TEXT_EFFECTS = [
+export const TEXT_EFFECTS = [
   {
     id: 'flat',
     name: 'Flat',
@@ -231,7 +232,7 @@ const secondaryVariants = {
   }
 };
 
-export default function MemeEditor({ template, onBack, onSaveToGallery, _theme, _onToggleTheme }) {
+export default function MemeEditor({ template, onBack, onSaveToGallery, theme, onToggleTheme }) {
   const [imageLayers, setImageLayers] = useState(() => {
     return (template?.imageLayers || []).map((img, idx) => ({
       ...img,
@@ -305,7 +306,16 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, _theme, 
     return initialCaps;
   });
 
-  const [activeLayerId, setActiveLayerId] = useState(null);
+  const [activeLayerId, setActiveLayerId] = useState(() => {
+    const socialCap = template?.defaultCaptions?.find((c) => isSocialCardCaption(c));
+    if (socialCap) {
+      return socialCap.id;
+    }
+    if (template?.defaultCaptions?.length === 1 && isSocialCardCaption(template.defaultCaptions[0])) {
+      return template.defaultCaptions[0].id || 'social-card-1';
+    }
+    return null;
+  });
 
   // Native Multi-Panel Layout Support
   const isNativeLayout = template?.isNativeLayout || false;
@@ -320,17 +330,27 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, _theme, 
   const [slotTransforms, setSlotTransforms] = useState(template?.slotTransforms || []);
 
   const [activeTemplate, setActiveTemplate] = useState(template);
+  const pickingTemplateRef = useRef(false);
 
   useEffect(() => {
     setActiveTemplate(template);
-    setActiveLayerId(null);
+    const socialCap = template?.defaultCaptions?.find((c) => isSocialCardCaption(c));
+    if (socialCap) {
+      setActiveLayerId(socialCap.id);
+      if (socialCap.isInstagramCard) setSocialModalPlatform('instagram');
+      else if (socialCap.isWhatsAppCard) setSocialModalPlatform('whatsapp');
+      else setSocialModalPlatform('tweet');
+      setShowStylesModal(true);
+    } else {
+      setActiveLayerId(null);
+    }
     setActiveTab('text');
   }, [template]);
 
 
   const [aspectRatio, setAspectRatio] = useState(template?.aspectRatio || 'original');
   
-  const imageFit = template?.imageFit || 'contain';
+  const [imageFit, setImageFit] = useState(template?.imageFit || 'contain');
 
   // Open-source templates for Image Layer / Slot overlay picker
   const [imagePickerTarget, setImagePickerTarget] = useState(null); // 'layer' | 'replaceTemplate' | { slot: idx }
@@ -379,7 +399,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, _theme, 
       fontFamily: 'Impact, sans-serif',
       rotation: 0,
       ...c,
-      width: undefined, // Clear template width to force tight hugging initially
+      width: (c.isTweetCard || c.isInstagramCard || c.isWhatsAppCard || c.isBreakingNews) ? (c.width ?? 0.88) : undefined, // Preserve card width
       fontSize: c.fontSize || 45, // Respect template font size or fallback to 45px
       id: c.id || `cap-${idx}-${Date.now()}`,
       zIndex: baseCapZ + idx
@@ -405,7 +425,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, _theme, 
         subtitle: 'Hard work pays off in the future, laziness pays off now.'
       },
       canvasFlipX: template?.canvasFlipX || false,
-      templateImageUrl: template?.imageUrl || template?.rawImageUrl || null,
+      templateImageUrl: template?.canvasOnly ? null : (template?.rawImageUrl || template?.imageUrl || null),
       templateFaceMorph: null
     };
   };
@@ -438,11 +458,127 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, _theme, 
       subtitle: 'Hard work pays off in the future, laziness pays off now.'
     };
   });
-  const [showStylesModal, setShowStylesModal] = useState(false);
-  const [socialModalPlatform, setSocialModalPlatform] = useState('tweet');
+  const [showStylesModal, setShowStylesModal] = useState(() => {
+    return Boolean(
+      template && (
+        template.category === 'social' ||
+        template.isSocialTemplate ||
+        (template.defaultCaptions && template.defaultCaptions.some((c) => isSocialCardCaption(c)))
+      )
+    );
+  });
+  const [socialModalPlatform, setSocialModalPlatform] = useState(() => {
+    const socialCap = template?.defaultCaptions?.find((c) => isSocialCardCaption(c));
+    if (socialCap?.isInstagramCard) return 'instagram';
+    if (socialCap?.isWhatsAppCard) return 'whatsapp';
+    if (socialCap?.isTweetCard) return 'tweet';
+    if (template?.id?.includes('instagram')) return 'instagram';
+    if (template?.id?.includes('whatsapp')) return 'whatsapp';
+    return 'tweet';
+  });
   const handleOpenSocialModal = (platform = 'tweet') => {
     setSocialModalPlatform(platform);
     setShowStylesModal(true);
+  };
+
+  const handleOpenSocialModalForActiveCard = (targetPlatform) => {
+    let platform = targetPlatform;
+    const currentActiveCap = captions.find((c) => c.id === activeLayerId);
+    const targetCap = (currentActiveCap && isSocialCardCaption(currentActiveCap))
+      ? currentActiveCap
+      : captions.find(c => {
+          if (targetPlatform === 'whatsapp') return c.isWhatsAppCard;
+          if (targetPlatform === 'instagram') return c.isInstagramCard;
+          return c.isTweetCard;
+        }) || captions.find(c => isSocialCardCaption(c));
+
+    if (targetCap) {
+      setActiveLayerId(targetCap.id);
+      if (!platform) {
+        if (targetCap.isInstagramCard) platform = 'instagram';
+        else if (targetCap.isWhatsAppCard) platform = 'whatsapp';
+        else platform = 'tweet';
+      }
+    }
+    const finalPlatform = platform || 'tweet';
+    if (showStylesModal && socialModalPlatform === finalPlatform) {
+      setShowStylesModal(false);
+    } else {
+      setSocialModalPlatform(finalPlatform);
+      setShowStylesModal(true);
+    }
+  };
+
+  const handleUpdateSocialCard = (data = {}) => {
+    const currentActiveCap = captions.find((c) => c.id === activeLayerId);
+    const targetCap = (currentActiveCap && isSocialCardCaption(currentActiveCap))
+      ? currentActiveCap
+      : captions.find(c => {
+          if (socialModalPlatform === 'whatsapp') return c.isWhatsAppCard;
+          if (socialModalPlatform === 'instagram') return c.isInstagramCard;
+          return c.isTweetCard;
+        }) || captions.find(c => isSocialCardCaption(c));
+
+    if (!targetCap) return;
+    const targetId = targetCap.id;
+
+    let updates = {};
+    if (targetCap.isTweetCard) {
+      updates = {
+        text: data.text !== undefined ? data.text : targetCap.text,
+        tweetName: data.name !== undefined ? data.name : targetCap.tweetName,
+        tweetHandle: data.handle !== undefined ? data.handle : targetCap.tweetHandle,
+        tweetVerified: data.verified !== undefined ? data.verified : targetCap.tweetVerified,
+        tweetTheme: data.theme || targetCap.tweetTheme,
+        tweetAvatarBg: data.avatarBg || targetCap.tweetAvatarBg,
+        tweetTime: data.time || targetCap.tweetTime,
+        tweetMetrics: data.metrics || targetCap.tweetMetrics
+      };
+    } else if (targetCap.isInstagramCard) {
+      updates = {
+        text: data.text !== undefined ? data.text : targetCap.text,
+        igUsername: data.username !== undefined ? data.username : targetCap.igUsername,
+        igSubtitle: data.subtitle !== undefined ? data.subtitle : targetCap.igSubtitle,
+        igVerified: data.verified !== undefined ? data.verified : targetCap.igVerified,
+        igHasStoryRing: data.hasStoryRing !== undefined ? data.hasStoryRing : targetCap.igHasStoryRing,
+        igLikesCount: data.likesCount !== undefined ? data.likesCount : targetCap.igLikesCount,
+        igLikesText: data.likesText !== undefined ? data.likesText : targetCap.igLikesText,
+        igCommentsCount: data.commentsCount !== undefined ? data.commentsCount : targetCap.igCommentsCount,
+        igRepostsCount: data.repostsCount !== undefined ? data.repostsCount : targetCap.igRepostsCount,
+        igSharesCount: data.sharesCount !== undefined ? data.sharesCount : targetCap.igSharesCount,
+        igFollowText: data.followText !== undefined ? data.followText : targetCap.igFollowText,
+        topCommentUser: data.topCommentUser !== undefined ? data.topCommentUser : targetCap.topCommentUser,
+        topCommentText: data.topCommentText !== undefined ? data.topCommentText : targetCap.topCommentText,
+        igPostImage: data.postImage !== undefined ? data.postImage : targetCap.igPostImage,
+        igTheme: data.theme || targetCap.igTheme,
+        igTime: data.time || targetCap.igTime,
+        color: (data.theme || targetCap.igTheme) === 'light' ? '#262626' : '#f5f5f5'
+      };
+    } else if (targetCap.isWhatsAppCard) {
+      updates = {
+        text: data.messages?.[0]?.text || data.text || targetCap.text,
+        waContactName: data.contactName || data.name || targetCap.waContactName,
+        waStatus: data.status !== undefined ? data.status : targetCap.waStatus,
+        waMessages: data.messages && Array.isArray(data.messages) ? data.messages : targetCap.waMessages,
+        waTheme: data.theme || targetCap.waTheme,
+        waShowHeader: data.showHeader !== undefined ? data.showHeader : targetCap.waShowHeader,
+        waShowFooter: data.showFooter !== undefined ? data.showFooter : targetCap.waShowFooter,
+        waShowDoodles: data.showDoodles !== undefined ? data.showDoodles : targetCap.waShowDoodles,
+        waDatePill: data.datePill !== undefined ? data.datePill : targetCap.waDatePill,
+        waAvatarBg: data.avatarBg || targetCap.waAvatarBg
+      };
+    }
+
+    const nextCaps = captions.map((cap) => {
+      if (cap.id === targetId) {
+        return { ...cap, ...updates };
+      }
+      return cap;
+    });
+    setCaptions(nextCaps);
+    pushHistory(nextCaps, stickers);
+    setActiveLayerId(targetId);
+    setShowStylesModal(false);
   };
   const [showFaceMorphModal, setShowFaceMorphModal] = useState(false);
   const [morphTargetLayerId, setMorphTargetLayerId] = useState(null);
@@ -477,14 +613,17 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, _theme, 
 
   const [activeTab, setActiveTab] = useState('text'); // 'text' | 'stickers' | 'images' | 'draw' | 'watermark'
   const [isMobileTabsFolded, setIsMobileTabsFolded] = useState(true);
+  const [showWatermarkMenu, setShowWatermarkMenu] = useState(false);
   const [showFontMenu, setShowFontMenu] = useState(false);
   const [showTextEffectsMenu, setShowTextEffectsMenu] = useState(false);
   const showTextCurveMenu = showTextEffectsMenu;
   const setShowTextCurveMenu = setShowTextEffectsMenu;
   const [showTextBlurMenu, setShowTextBlurMenu] = useState(false);
   const [showTextBgMenu, setShowTextBgMenu] = useState(false);
+  const [showImageFilterMenu, setShowImageFilterMenu] = useState(false);
   const [showFilterPresets, setShowFilterPresets] = useState(false);
   const [showLayerMenu, setShowLayerMenu] = useState(false);
+  const [showDrawSettings, setShowDrawSettings] = useState(false);
   const [activeSubmenu, setActiveSubmenu] = useState(null); // 'font' | 'color' | 'align' | 'effects' | 'bg' | 'blur' | 'bubble' | 'tweetTheme' | 'tweetTrend' | 'drawSettings' | 'watermark' | 'canvasBg' | 'banner' | 'filters'
   const handleToggleSubmenu = (menuName) => {
     setActiveSubmenu(prev => prev === menuName ? null : menuName);
@@ -504,10 +643,12 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, _theme, 
     filterString: 'none',
     filterScope: 'all'
   });
+  const [filterTarget, setFilterTarget] = useState('canvas'); // 'canvas' | 'layer'
 
   const handleTabClick = (tabId) => {
     setActiveTab(tabId);
     setActiveLayerId(null);
+    setShowDrawSettings(false);
     setShowFontMenu(false);
     setShowTextEffectsMenu(false);
     setShowTextBlurMenu(false);
@@ -535,21 +676,34 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, _theme, 
   const [drawTool, setDrawTool] = useState(null); // 'brush' | 'eraser' | null (deactivated by default)
   const [brushColor, setBrushColor] = useState('#ff2a5f');
   const [brushSize, setBrushSize] = useState(10);
+  const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const [exportedImageUri, setExportedImageUri] = useState(null);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [showAiModal, setShowAiModal] = useState(false);
   const [showBubbleLayouts, setShowBubbleLayouts] = useState(false);
+  const [showHeaderFooterMenu, setShowHeaderFooterMenu] = useState(false);
+  const [showTextAlignMenu, setShowTextAlignMenu] = useState(false);
   const [lastUsedSettingButton, setLastUsedSettingButton] = useState(null);
   const contextToolbarRef = useRef(null);
+  const [showTweetThemeMenu, setShowTweetThemeMenu] = useState(false);
+  const [showTweetTrendMenu, setShowTweetTrendMenu] = useState(false);
   const [exportFormat, setExportFormat] = useState('png'); // 'png' | 'jpeg' | 'webp'
   const [exportQuality, setExportQuality] = useState(0.92);
   const [exportPreset, setExportPreset] = useState('hd'); // 'hd' | 'discord' | 'compact'
   const [exportFileSize, setExportFileSize] = useState(null);
   const [exportDropdownOpen, setExportDropdownOpen] = useState(false);
   const exportDropdownRef = useRef(null);
+  const [directCopyStatus, setDirectCopyStatus] = useState(false);
+  const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
+  const [exportedVideoUrl, setExportedVideoUrl] = useState(null);
   const [isSaved, setIsSaved] = useState(false);
   const [memeCustomName, setMemeCustomName] = useState('');
+  const [isFontPickerOpen, setIsFontPickerOpen] = useState(false);
+  const [showVideoTrimmer, setShowVideoTrimmer] = useState(false);
   const [pendingVideoLayer, setPendingVideoLayer] = useState(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordProgress, setRecordProgress] = useState(0);
+  const [isVideoPlaying, setIsVideoPlaying] = useState(true);
 
   // Watermark state â€” persisted in localStorage (quota-safe: session state survives write failures)
   const [watermark, setWatermark] = useState(() => {
@@ -622,9 +776,10 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, _theme, 
     setActiveTab('text');
   }, []);
 
-  // Reset toolbar submenus on active layer change
+  // Reset tweet toolbar submenus on active layer change
   useEffect(() => {
-    setActiveSubmenu(null);
+    setShowTweetThemeMenu(false);
+    setShowTweetTrendMenu(false);
     setLastUsedSettingButton(null);
   }, [activeLayerId]);
 
@@ -879,7 +1034,19 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, _theme, 
     pushHistory(captions, stickers, imageLayers, nextDrawings);
   };
 
-
+  const handleOpenSaveModal = () => {
+    setActiveLayerId(null);
+    if (canvasRef.current) {
+      const dataUrl = canvasRef.current.exportCleanImage
+        ? canvasRef.current.exportCleanImage('image/png')
+        : canvasRef.current.toDataURL('image/png');
+      setExportedImageUri(dataUrl);
+      const cleaned = cleanTemplateName(template?.name);
+      const defaultName = cleaned || (captions[0]?.text && captions[0].text !== 'TOP TEXT' ? captions[0].text : '') || 'My Meme';
+      setMemeCustomName(defaultName);
+      setIsSaveModalOpen(true);
+    }
+  };
 
   const updateExportUriAndSize = (format = exportFormat, quality = exportQuality) => {
     if (!canvasRef.current) return;
@@ -920,7 +1087,15 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, _theme, 
     }
   };
 
-
+  const handleExport = () => {
+    setActiveLayerId(null);
+    setTimeout(() => {
+      if (canvasRef.current) {
+        updateExportUriAndSize(exportFormat, exportQuality);
+        setIsExportModalOpen(true);
+      }
+    }, 50);
+  };
 
   // Chat & Speech Bubble Generator (iPhone, WhatsApp, Comic)
   const handleAddBubble = (data = {}) => {
@@ -1092,9 +1267,34 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, _theme, 
     });
   };
 
+  const handleConvertToBubble = () => {
+    if (!activeCaption) return;
+    if (activeCaption.bubbleStyle) {
+      setShowBubbleLayouts(true);
+      return;
+    }
 
+    const nextBg = '#007aff';
+    const nextColor = '#ffffff';
+    const nextFont = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    const nextStroke = 'transparent';
+    const nextStrokeWidth = 0;
+    const nextWidth = activeCaption.width || 0.65;
 
+    updateActiveCaptionProps({
+      bubbleStyle: 'imessage-send',
+      bgColor: nextBg,
+      color: nextColor,
+      fontFamily: nextFont,
+      stroke: nextStroke,
+      strokeWidth: nextStrokeWidth,
+      width: nextWidth
+    });
+    setShowBubbleLayouts(true);
+    setShowBubbleBottomSheet(true);
+  };
 
+  const handleAddSpeechBubble = handleAddBubble;
 
   // AI Meme Caption Application
   const handleApplyAiCaption = (captionText, target = 'caption') => {
@@ -1301,7 +1501,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, _theme, 
       pushHistory(nextCaps, stickers, imageLayers, drawings, nextHeader, canvasFooter);
     }
   };
-
+  const handleAddModernHeader = handleToggleCanvasHeader;
 
   // 1-Tap Modern Meme Footer Extension (Canvas extension below meme image with normal caption layer)
   const handleToggleCanvasFooter = () => {
@@ -1354,7 +1554,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, _theme, 
       pushHistory(nextCaps, stickers, imageLayers, drawings, canvasHeader, nextFooter);
     }
   };
-
+  const handleAddModernFooter = handleToggleCanvasFooter;
 
   // 1-Tap Toggle Both Modern Header & Footer Extensions
   const handleToggleCanvasBoth = () => {
@@ -1449,7 +1649,102 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, _theme, 
   };
 
   // Meme Culture Staples & Social Formats Handlers
+  const handleToggleDemotivational = (data = {}) => {
+    const willEnable = !demotivational.enabled;
+    const titleText = (data.title || demotivational.title || 'PROCRASTINATION').toUpperCase();
+    const subtitleText = data.subtitle || demotivational.subtitle || 'Hard work pays off in the future, laziness pays off now.';
 
+    const nextDemo = {
+      enabled: willEnable,
+      title: titleText,
+      subtitle: subtitleText
+    };
+    setDemotivational(nextDemo);
+
+    if (willEnable) {
+      setCanvasBgColor('#000000');
+      window.dispatchEvent(new CustomEvent('liveCanvasBgColor', { detail: '#000000' }));
+
+      // Clean existing demotivational captions
+      const cleanCaps = captions.filter(c => !c.isDemotivationalTitle && !c.isDemotivationalSubtitle);
+      const maxZ = Math.max(-1, ...cleanCaps.map(c => c.zIndex ?? -1), ...stickers.map(s => s.zIndex ?? -1), ...(imageLayers || []).map(i => i.zIndex ?? -1));
+
+      const titleCap = {
+        id: `cap-demo-title-${Date.now()}`,
+        text: titleText,
+        x: 0.5,
+        y: 0.82,
+        fontSize: 48,
+        fontFamily: '"Times New Roman", Times, serif',
+        color: '#ffffff',
+        stroke: 'transparent',
+        strokeWidth: 0,
+        align: 'center',
+        width: 0.88,
+        isDemotivationalTitle: true,
+        zIndex: maxZ + 1
+      };
+
+      const subtitleCap = {
+        id: `cap-demo-sub-${Date.now() + 1}`,
+        text: subtitleText,
+        x: 0.5,
+        y: 0.90,
+        fontSize: 22,
+        fontFamily: 'Georgia, serif',
+        color: '#ffffff',
+        stroke: 'transparent',
+        strokeWidth: 0,
+        align: 'center',
+        width: 0.84,
+        isDemotivationalSubtitle: true,
+        zIndex: maxZ + 2
+      };
+
+      const nextCaps = [...cleanCaps, titleCap, subtitleCap];
+      setCaptions(nextCaps);
+      setActiveLayerId(titleCap.id);
+      setActiveTab('text');
+      pushHistory(nextCaps, stickers, imageLayers, drawings, canvasHeader, canvasFooter, nextDemo);
+    } else {
+      const nextCaps = captions.filter(c => !c.isDemotivationalTitle && !c.isDemotivationalSubtitle);
+      setCaptions(nextCaps);
+      if (activeCaption?.isDemotivationalTitle || activeCaption?.isDemotivationalSubtitle) {
+        setActiveLayerId(null);
+      }
+      pushHistory(nextCaps, stickers, imageLayers, drawings, canvasHeader, canvasFooter, nextDemo);
+    }
+  };
+
+  const handleAddBreakingNews = (data = {}) => {
+    const headline = data.headline || "LOCAL MAN ADMITS HE HAS NO IDEA WHAT HE'S DOING";
+    const channel = data.channel || "MEME NEWS 24";
+    const ticker = data.ticker || "DEVELOPING STORY - DETAILS TO FOLLOW";
+    const maxZ = Math.max(-1, ...captions.map(c => c.zIndex ?? -1), ...stickers.map(s => s.zIndex ?? -1), ...(imageLayers || []).map(i => i.zIndex ?? -1));
+
+    const newCap = {
+      id: `cap-news-${Date.now()}`,
+      text: headline,
+      newsHeadline: headline,
+      newsChannel: channel,
+      newsTicker: ticker,
+      isBreakingNews: true,
+      x: 0.5,
+      y: 0.88,
+      width: 0.96,
+      fontSize: 28,
+      color: '#facc15',
+      stroke: 'transparent',
+      strokeWidth: 0,
+      zIndex: maxZ + 1
+    };
+
+    const nextCaps = [...captions, newCap];
+    setCaptions(nextCaps);
+    setActiveLayerId(newCap.id);
+    setActiveTab('text');
+    pushHistory(nextCaps, stickers, imageLayers, drawings, canvasHeader, canvasFooter, demotivational);
+  };
 
   const handleAddTweetCard = (data = {}) => {
     const name = data.name || 'Elon Musk';
@@ -1466,7 +1761,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, _theme, 
       tweetHandle: handle,
       tweetVerified: verified,
       tweetTheme: theme,
-      tweetTime: data.time || '10:42 PM · Oct 8, 2026',
+      tweetTime: data.time || '10:42 PM Â· Oct 8, 2026',
       tweetMetrics: data.metrics || (TWEET_TREND_PRESETS?.viral?.text || 'ðŸ’¬ 14.2K    ðŸ” 62.8K    â¤ï¸ 420.5K    ðŸ“Š 18.2M'),
       tweetMetricsId: 'viral',
       tweetTrendRank: 'viral',
@@ -1564,6 +1859,10 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, _theme, 
         ];
     const theme = data.theme || 'dark';
     const showHeader = data.showHeader !== false;
+    const showFooter = data.showFooter !== false;
+    const showDoodles = data.showDoodles !== false;
+    const datePill = data.datePill || 'Yesterday';
+    const avatarBg = data.avatarBg || '#202c33';
     const maxZ = Math.max(-1, ...captions.map(c => c.zIndex ?? -1), ...stickers.map(s => s.zIndex ?? -1), ...(imageLayers || []).map(i => i.zIndex ?? -1));
 
     const newCap = {
@@ -1576,12 +1875,16 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, _theme, 
       waTime: time,
       waTheme: theme,
       waShowHeader: showHeader,
+      waShowFooter: showFooter,
+      waShowDoodles: showDoodles,
+      waDatePill: datePill,
+      waAvatarBg: avatarBg,
       waMessages: messages,
       isWhatsAppCard: true,
       x: 0.5,
       y: 0.5,
-      width: 0.84,
-      fontSize: 15,
+      width: 0.88,
+      fontSize: 14.5,
       color: '#ffffff',
       stroke: 'transparent',
       strokeWidth: 0,
@@ -1596,6 +1899,48 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, _theme, 
     pushHistory(nextCaps, stickers, imageLayers, drawings, canvasHeader, canvasFooter, demotivational);
   };
 
+  const handleAddChatBubble = (data = {}) => {
+    const style = data.style || 'imessage-send';
+    const text = data.text || 'are you free to hop on a quick 5-min call?';
+    const maxZ = Math.max(-1, ...captions.map(c => c.zIndex ?? -1), ...stickers.map(s => s.zIndex ?? -1), ...(imageLayers || []).map(i => i.zIndex ?? -1));
+
+    let bgColor = '#007aff';
+    let textColor = '#ffffff';
+    if (style === 'imessage-receive') {
+      bgColor = '#e9e9eb';
+      textColor = '#000000';
+    } else if (style === 'whatsapp-send') {
+      bgColor = '#005c4b';
+      textColor = '#ffffff';
+    } else if (style === 'whatsapp-receive') {
+      bgColor = '#202c33';
+      textColor = '#ffffff';
+    }
+
+    const pos = getNonOverlappingPosition('phrase', captions, stickers, imageLayers);
+
+    const newCap = {
+      id: `cap-chat-${Date.now()}`,
+      text: text,
+      bubbleStyle: style,
+      bgColor: bgColor,
+      color: textColor,
+      stroke: 'transparent',
+      strokeWidth: 0,
+      x: pos.x,
+      y: pos.y,
+      fontSize: 26,
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      width: 0.72,
+      zIndex: maxZ + 1
+    };
+
+    const nextCaps = [...captions, newCap];
+    setCaptions(nextCaps);
+    setActiveLayerId(newCap.id);
+    setActiveTab('text');
+    pushHistory(nextCaps, stickers, imageLayers, drawings, canvasHeader, canvasFooter, demotivational);
+  };
 
   // Toggle Text Case: ALL CAPS <-> Sentence Case <-> lowercase
   const handleToggleTextCase = () => {
@@ -1732,7 +2077,17 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, _theme, 
     }
   };
 
-
+  const updateActiveStickerScale = (scaleValue) => {
+    if (!activeLayerId) return;
+    const nextStickers = stickers.map((stk) => {
+      if (stk.id === activeLayerId) {
+        return { ...stk, scale: scaleValue };
+      }
+      return stk;
+    });
+    setStickers(nextStickers);
+    pushHistory(captions, nextStickers);
+  };
 
   const commitAddImageLayer = (src, trimStart, trimEnd) => {
     const pos = getNonOverlappingPosition('image', captions, stickers, imageLayers);
@@ -1818,7 +2173,17 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, _theme, 
     setShowFaceMorphModal(true);
   };
 
-
+  const handleRetargetFace = () => {
+    if (templateFaceMorph?.isLayerSwap) {
+      const target = imageLayers.find(l => l.id === templateFaceMorph.layerId) || stickers.find(s => s.id === templateFaceMorph.layerId);
+      if (target) {
+        handleStartMorphFace(target);
+        return;
+      }
+    }
+    setActiveLayerId(null);
+    setIsPinpointingFace(true);
+  };
 
   const handleConfirmPinpoint = () => {
     setActiveLayerId(null);
@@ -2175,11 +2540,71 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, _theme, 
     commitLayerStack(list);
   };
 
+  const handleZIndex = (dir) => {
+    if (!activeLayerId) return;
+    moveLayer(activeLayerId, dir === 1 ? 'forward' : 'backward');
+  };
 
+  const toggleLayerVisibility = (id) => {
+    if (!id) return;
+    const isCap = captions.some(c => c.id === id);
+    const isStk = stickers.some(s => s.id === id);
+    const isImg = imageLayers.some(i => i.id === id);
 
+    let nextCaps = captions;
+    let nextStks = stickers;
+    let nextImgs = imageLayers;
 
+    if (isCap) {
+      nextCaps = captions.map(c => c.id === id ? { ...c, hidden: !c.hidden } : c);
+      setCaptions(nextCaps);
+    } else if (isStk) {
+      nextStks = stickers.map(s => s.id === id ? { ...s, hidden: !s.hidden } : s);
+      setStickers(nextStks);
+    } else if (isImg) {
+      nextImgs = imageLayers.map(i => i.id === id ? { ...i, hidden: !i.hidden } : i);
+      setImageLayers(nextImgs);
+    }
 
+    if (activeLayerId === id) {
+      const target = [...nextCaps, ...nextStks, ...nextImgs].find(i => i.id === id);
+      if (target?.hidden) {
+        const prevSticker = stickers.find((s) => s.id === id);
+        const prevCaption = captions.find((c) => c.id === id);
+        const prevImg = imageLayers.find((img) => img.id === id);
+        if (prevSticker || (prevCaption && isSocialCardCaption(prevCaption)) || prevImg) {
+          setActiveTab('images');
+        }
+        setActiveLayerId(null);
+      }
+    }
 
+    pushHistory(nextCaps, nextStks, nextImgs, drawings);
+  };
+
+  const toggleLayerLock = (id) => {
+    if (!id) return;
+    const isCap = captions.some(c => c.id === id);
+    const isStk = stickers.some(s => s.id === id);
+    const isImg = imageLayers.some(i => i.id === id);
+
+    let nextCaps = captions;
+    let nextStks = stickers;
+    let nextImgs = imageLayers;
+
+    if (isCap) {
+      nextCaps = captions.map(c => c.id === id ? { ...c, locked: !c.locked } : c);
+      setCaptions(nextCaps);
+    } else if (isStk) {
+      nextStks = stickers.map(s => s.id === id ? { ...s, locked: !s.locked } : s);
+      setStickers(nextStks);
+    } else if (isImg) {
+      nextImgs = imageLayers.map(i => i.id === id ? { ...i, locked: !i.locked } : i);
+      setImageLayers(nextImgs);
+    }
+
+    pushHistory(nextCaps, nextStks, nextImgs, drawings);
+  };
 
   const handleDeleteLayer = (targetId) => {
     const idToDelete = (typeof targetId === 'string' && targetId) ? targetId : activeLayerId;
@@ -2394,7 +2819,24 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, _theme, 
     return hex.toLowerCase() === '#ffffff' ? '#000000' : 'transparent';
   };
 
+  const handleFileUploadSlot = (slotIndex, e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      if (evt.target?.result) {
+        const nextImages = [...slotImages];
+        nextImages[slotIndex] = evt.target.result;
+        setSlotImages(nextImages);
 
+        const nextTransforms = [...slotTransforms];
+        nextTransforms[slotIndex] = { offsetX: 0, offsetY: 0, scale: 1.5 };
+        setSlotTransforms(nextTransforms);
+      }
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
 
   const updateSlotTransform = (slotIndex, updateFn) => {
     const nextTransforms = [...slotTransforms];
@@ -2403,7 +2845,62 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, _theme, 
     setSlotTransforms(nextTransforms);
   };
 
+  const handleTextPanel = (slotIndex) => {
+    // 1. Fill the slot with a 1x1 white transparent image to prevent it from acting as an "empty" slot for hit testing
+    const whitePixelUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=';
+    
+    const nextImages = [...slotImages];
+    nextImages[slotIndex] = whitePixelUrl;
+    setSlotImages(nextImages);
 
+    // 2. Add a centered text caption for that slot
+    const totalSlots = layoutDef.slots;
+    const isVert = layoutDef.id === '2-vert' || layoutDef.id === '3-stacked';
+    const isHoriz = layoutDef.id === '2-horiz' || layoutDef.id === '3-horiz';
+    const isGrid = layoutDef.id === '4-grid';
+    const isHybrid = layoutDef.id === '3-hybrid';
+
+    let cx = 0.5;
+    let cy = 0.5;
+
+    if (isVert) {
+      cy = (slotIndex + 0.5) / totalSlots;
+    } else if (isHoriz) {
+      cx = (slotIndex + 0.5) / totalSlots;
+    } else if (isGrid) {
+      cx = (slotIndex % 2 === 0 ? 0.25 : 0.75);
+      cy = (Math.floor(slotIndex / 2) === 0 ? 0.25 : 0.75);
+    } else if (isHybrid) {
+      if (slotIndex === 0) {
+        cx = 0.5;
+        cy = 0.25;
+      } else {
+        cx = (slotIndex === 1 ? 0.25 : 0.75);
+        cy = 0.75;
+      }
+    }
+
+    const newCap = {
+      id: `cap-${Date.now()}`,
+      text: 'ADD TEXT HERE',
+      x: cx,
+      y: cy,
+      fontSize: 45,
+      color: '#000000', // Black text for white panel
+      stroke: 'transparent',
+      align: 'center',
+      fontFamily: 'Impact, sans-serif',
+      rotation: 0,
+      width: undefined
+    };
+    
+    const nextCaps = [...captions, newCap];
+    setCaptions(nextCaps);
+    setActiveLayerId(newCap.id);
+    setActiveTab('text');
+    setActiveSlotAction(null);
+    pushHistory(nextCaps, stickers);
+  };
 
   // Emoji & Sticker Handlers
   const handleAddSticker = (stickerObj) => {
@@ -2448,6 +2945,13 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, _theme, 
   };
 
   const activeCaption = captions.find((c) => c.id === activeLayerId);
+  const currentEditingSocialCard = (activeCaption && isSocialCardCaption(activeCaption))
+    ? activeCaption
+    : captions.find(c => {
+        if (socialModalPlatform === 'whatsapp') return c.isWhatsAppCard;
+        if (socialModalPlatform === 'instagram') return c.isInstagramCard;
+        return c.isTweetCard;
+      }) || captions.find(c => isSocialCardCaption(c));
 
   useEffect(() => {
     if (showFontMenu && activeCaption?.fontFamily) {
@@ -2464,26 +2968,23 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, _theme, 
   const isElementSelected = Boolean(activeLayerId || activeCaption || activeSticker || activeImageLayer);
 
   useEffect(() => {
-    const isFiltersOpen = (!activeCaption && !activeSticker && activeTab === 'filters') || (activeImageLayer && activeTab === 'filters');
+    const isFiltersOpen = (!activeCaption && !activeSticker && activeTab === 'filters') || (activeImageLayer && showImageFilterMenu);
     if (isFiltersOpen) {
-      const timer = setTimeout(() => {
+      setTimeout(() => {
         const activeFilterId = activeImageLayer ? (activeImageLayer.filterId || 'original') : (imageFilters.preset || 'original');
         const el = document.getElementById('filter-item-' + activeFilterId);
         if (el) {
           el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
         }
       }, 50);
-      return () => clearTimeout(timer);
     }
-  }, [activeTab, activeImageLayer?.id, activeImageLayer?.filterId, imageFilters.preset, activeCaption, activeSticker, activeImageLayer]);
+  }, [activeTab, activeImageLayer?.id, activeImageLayer?.filterId, imageFilters.preset]);
 
-  const activeFontObj = useMemo(() => {
-    return FONTS.find((f) => f.family === (activeCaption?.fontFamily || 'Impact, sans-serif'))
-      || FONTS.find((f) => activeCaption?.fontFamily?.toLowerCase().includes('comic') && f.id.toLowerCase().includes('comic'))
-      || FONTS.find((f) => (activeCaption?.fontFamily?.toLowerCase().includes('apple') || activeCaption?.fontFamily?.toLowerCase().includes('system')) && f.id.toLowerCase().includes('apple'))
-      || FONTS.find((f) => activeCaption?.fontFamily?.toLowerCase().includes(f.id.toLowerCase()))
-      || FONTS[0];
-  }, [activeCaption?.fontFamily]);
+  const activeFontObj = FONTS.find((f) => f.family === (activeCaption?.fontFamily || 'Impact, sans-serif'))
+    || FONTS.find((f) => activeCaption?.fontFamily?.toLowerCase().includes('comic') && f.id.toLowerCase().includes('comic'))
+    || FONTS.find((f) => (activeCaption?.fontFamily?.toLowerCase().includes('apple') || activeCaption?.fontFamily?.toLowerCase().includes('system')) && f.id.toLowerCase().includes('apple'))
+    || FONTS.find((f) => activeCaption?.fontFamily?.toLowerCase().includes(f.id.toLowerCase()))
+    || FONTS[0];
 
   const handleCycleFont = () => {
     if (!activeCaption) return;
@@ -2496,7 +2997,16 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, _theme, 
     updateActiveCaption('fontFamily', FONTS[nextIndex].family);
   };
 
-
+  const handleCycleOpacity = () => {
+    if (!activeCaption) return;
+    const currentOpacity = activeCaption.opacity !== undefined ? Number(activeCaption.opacity) : 1;
+    let nextOpacity = 1;
+    if (currentOpacity >= 0.9) nextOpacity = 0.75;
+    else if (currentOpacity >= 0.7) nextOpacity = 0.5;
+    else if (currentOpacity >= 0.4) nextOpacity = 0.25;
+    else nextOpacity = 1;
+    updateActiveCaption('opacity', nextOpacity);
+  };
 
   const ASPECT_RATIOS = [
     { value: 'original', label: 'Original Image' },
@@ -2506,7 +3016,11 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, _theme, 
     { value: '16:9', label: '16:9 (Video)' }
   ];
 
-
+  const handleCycleAspectRatio = () => {
+    const currentIndex = ASPECT_RATIOS.findIndex((a) => a.value === aspectRatio);
+    const nextIndex = (currentIndex + 1) % ASPECT_RATIOS.length;
+    setAspectRatio(ASPECT_RATIOS[nextIndex].value);
+  };
 
   const handleCycleWatermarkPosition = () => {
     const positions = [
@@ -2541,6 +3055,13 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, _theme, 
     if (url.startsWith('data:image/')) return false;
     return /\.(mp4|webm|ogg|mov|m4v)(\?.*)?$/i.test(url);
   };
+  const hasVideoContent = (
+    isVideoUrl(template?.imageUrl) ||
+    isVideoUrl(template?.rawImageUrl) ||
+    (imageLayers || []).some((l) => isVideoUrl(l.url)) ||
+    (slotImages || []).some((s) => isVideoUrl(s)) ||
+    (template?.slotImages || []).some((s) => isVideoUrl(s))
+  );
 
   const cleanTemplateName = (rawName) => {
     if (!rawName) return '';
@@ -2552,7 +3073,26 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, _theme, 
       .trim();
   };
 
+  const handlePreview = () => {
+    setActiveLayerId(null);
+    if (canvasRef.current) {
+      const dataUrl = canvasRef.current.exportCleanImage
+        ? canvasRef.current.exportCleanImage('image/png')
+        : canvasRef.current.toDataURL('image/png');
+      setExportedImageUri(dataUrl);
 
+      const cleaned = cleanTemplateName(template?.name);
+      const defaultName = cleaned || (captions[0]?.text && captions[0].text !== 'TOP TEXT' ? captions[0].text : '') || 'My Meme';
+      setMemeCustomName(defaultName);
+      
+      setExportedVideoUrl(null);
+      setIsPreviewModalOpen(true);
+      
+      if (hasVideoContent) {
+        handleGenerateVideo();
+      }
+    }
+  };
 
   // Renders canvas to dataURL without handles, then runs the callback action
   const handleQuickExport = (action) => {
@@ -2570,7 +3110,34 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, _theme, 
     }
   };
 
-
+  const handleDirectCopyImage = () => {
+    handleQuickExport(async (dataUrl) => {
+      try {
+        const res = await fetch(dataUrl);
+        const blob = await res.blob();
+        if (typeof ClipboardItem !== 'undefined' && navigator.clipboard?.write) {
+          await navigator.clipboard.write([
+            new ClipboardItem({ 'image/png': blob })
+          ]);
+        } else {
+          await navigator.clipboard.writeText(dataUrl);
+        }
+        setDirectCopyStatus(true);
+        triggerConfetti();
+        setTimeout(() => setDirectCopyStatus(false), 2200);
+      } catch (e) {
+        console.warn('Direct image copy failed, trying writeText fallback:', e);
+        try {
+          await navigator.clipboard.writeText(dataUrl);
+          setDirectCopyStatus(true);
+          triggerConfetti();
+          setTimeout(() => setDirectCopyStatus(false), 2200);
+        } catch (err2) {
+          console.error('Direct copy failed completely:', err2);
+        }
+      }
+    });
+  };
 
   const handleConfirmSave = () => {
     const dataUrl = (canvasRef.current?.exportCleanImage ? canvasRef.current.exportCleanImage('image/png') : canvasRef.current?.toDataURL('image/png')) || exportedImageUri;
@@ -2598,7 +3165,43 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, _theme, 
     }
   };
 
+  const handleGenerateVideo = async () => {
+    if (hasVideoContent) {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
 
+      if (typeof canvas.resetVideoTimestamps === 'function') {
+        canvas.resetVideoTimestamps();
+      }
+      setIsVideoPlaying(true);
+      
+      await new Promise(resolve => setTimeout(resolve, 200));
+
+      const filename = `meme-video-${template?.id || 'custom'}-${Date.now()}`;
+      const videoLayer = (imageLayers || []).find((l) => isVideoUrl(l.url) && (l.trimEnd !== undefined || l.trimStart !== undefined));
+      const durationMs = (videoLayer && videoLayer.trimEnd !== undefined)
+        ? Math.max((videoLayer.trimEnd - (videoLayer.trimStart || 0)) * 1000, 1000)
+        : 6000;
+      setIsRecording(true);
+      setRecordProgress(0);
+      try {
+        let mediaElements = [];
+        if (typeof canvas.getVideoElements === 'function') {
+          mediaElements = canvas.getVideoElements();
+        }
+        // Pass true for returnUrlOnly
+        const videoUrl = await recordCanvasAsVideo(canvas, filename, durationMs, (p) => setRecordProgress(p), mediaElements, true);
+        setExportedVideoUrl(videoUrl);
+        triggerConfetti();
+      } catch (err) {
+        console.error('Video export failed:', err);
+        alert('Video export failed. Try saving as image instead.');
+      } finally {
+        setIsRecording(false);
+        setRecordProgress(0);
+      }
+    }
+  };
 
   const handleDownloadImage = async () => {
     if (exportedImageUri) {
@@ -2955,9 +3558,9 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, _theme, 
                         } else {
                           await navigator.clipboard.writeText(uri);
                         }
-                        setClipboardCopied(true);
+                        setDirectCopyStatus(true);
                         triggerConfetti();
-                        setTimeout(() => setClipboardCopied(false), 2200);
+                        setTimeout(() => setDirectCopyStatus(false), 2200);
                       } catch(e) { console.warn(e); }
                     }},
                     { icon: <Share2 style={{width:16,height:16}} />, label: 'Share', action: async (uri) => {
@@ -3098,6 +3701,10 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, _theme, 
                     setShowTextBlurMenu(false);
                     setShowTextBgMenu(false);
                     setShowBubbleLayouts(false);
+                    setShowTweetThemeMenu(false);
+                    setShowTweetTrendMenu(false);
+                    setShowHeaderFooterMenu(false);
+                    setShowTextAlignMenu(false);
                     if (!id) {
                       setActiveLayerId(null);
                       setActiveSubmenu(null);
@@ -3148,7 +3755,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, _theme, 
                       return nextCaps;
                     });
                   }}
-                  isVideoPlaying={true}
+                  isVideoPlaying={isVideoPlaying}
                   watermark={watermark}
                   canvasBgColor={canvasBgColor}
                   drawings={drawings}
@@ -4181,8 +4788,8 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, _theme, 
                           <button
                             type="button"
                             className="layer-action-btn layer-action-btn-rotate"
-                            title="Rotate 90°"
-                            aria-label="Rotate 90°"
+                            title="Rotate 90Â°"
+                            aria-label="Rotate 90Â°"
                             onClick={handleRotateLayer}
                           >
                             <RotateCw style={{ width: 16, height: 16 }} />
@@ -4282,6 +4889,28 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, _theme, 
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
                         <button
                           type="button"
+                          className={`btn btn-xs vid-ctx-btn ${showStylesModal ? 'active' : ''}`}
+                          onClick={() => handleOpenSocialModalForActiveCard('tweet')}
+                          title="Tweet Card Settings"
+                          aria-label="Tweet Card Settings"
+                          style={{
+                            padding: '4px 8px',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            borderRadius: '8px',
+                            flexShrink: 0,
+                            background: showStylesModal ? 'rgba(29, 155, 240, 0.45)' : 'rgba(29, 155, 240, 0.22)',
+                            border: showStylesModal ? '1.5px solid #1d9bf0' : '1px solid #1d9bf0',
+                            boxShadow: showStylesModal ? '0 0 10px rgba(29, 155, 240, 0.5)' : 'none',
+                            color: '#ffffff'
+                          }}
+                        >
+                          <Settings style={{ width: 14, height: 14, color: '#1d9bf0' }} />
+                        </button>
+
+                        <button
+                          type="button"
                           className={`btn btn-xs vid-ctx-btn ${activeCaption.tweetVerified !== false ? 'active' : ''}`}
                           onClick={() => updateActiveCaptionProps({ tweetVerified: activeCaption.tweetVerified === false })}
                           title="Toggle Verified Badge"
@@ -4351,6 +4980,28 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, _theme, 
                       </div>
                     ) : activeCaption.isInstagramCard ? (
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+                        <button
+                          type="button"
+                          className={`btn btn-xs vid-ctx-btn ${showStylesModal ? 'active' : ''}`}
+                          onClick={() => handleOpenSocialModalForActiveCard('instagram')}
+                          title="Instagram Post Settings"
+                          aria-label="Instagram Post Settings"
+                          style={{
+                            padding: '4px 8px',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            borderRadius: '8px',
+                            flexShrink: 0,
+                            background: showStylesModal ? 'rgba(244, 63, 94, 0.45)' : 'rgba(244, 63, 94, 0.22)',
+                            border: showStylesModal ? '1.5px solid #f43f5e' : '1px solid #f43f5e',
+                            boxShadow: showStylesModal ? '0 0 10px rgba(244, 63, 94, 0.5)' : 'none',
+                            color: '#ffffff'
+                          }}
+                        >
+                          <Settings style={{ width: 14, height: 14, color: '#f43f5e' }} />
+                        </button>
+
                         {/* Custom Post Photo Uploader */}
                         <label
                           className="btn btn-xs vid-ctx-btn"
@@ -4466,6 +5117,28 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, _theme, 
                       </div>
                     ) : activeCaption.isWhatsAppCard ? (
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+                        <button
+                          type="button"
+                          className={`btn btn-xs vid-ctx-btn ${showStylesModal ? 'active' : ''}`}
+                          onClick={() => handleOpenSocialModalForActiveCard('whatsapp')}
+                          title="WhatsApp Chat Settings"
+                          aria-label="WhatsApp Chat Settings"
+                          style={{
+                            padding: '4px 8px',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            borderRadius: '8px',
+                            flexShrink: 0,
+                            background: showStylesModal ? 'rgba(34, 197, 94, 0.45)' : 'rgba(34, 197, 94, 0.22)',
+                            border: showStylesModal ? '1.5px solid #22c55e' : '1px solid #22c55e',
+                            boxShadow: showStylesModal ? '0 0 10px rgba(34, 197, 94, 0.5)' : 'none',
+                            color: '#ffffff'
+                          }}
+                        >
+                          <Settings style={{ width: 14, height: 14, color: '#22c55e' }} />
+                        </button>
+
                         {/* Add Message Button */}
                         <button
                           type="button"
@@ -5153,63 +5826,6 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, _theme, 
                         <Smile style={{ width: 14, height: 14, color: 'var(--cyber-cyan)' }} />
                         <span>Emojis</span>
                       </button>
-
-                      <button
-                        className="btn btn-xs vid-ctx-btn"
-                        onClick={() => handleOpenSocialModal('tweet')}
-                        style={{
-                          padding: '5px 12px',
-                          fontSize: '0.8rem',
-                          fontWeight: 600,
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '5px',
-                          borderRadius: '12px',
-                          flexShrink: 0
-                        }}
-                        title="Fake Twitter / X Card"
-                      >
-                        <span style={{ fontSize: '0.85rem', fontWeight: 900, color: 'var(--cyber-cyan)', lineHeight: 1 }}>ð•</span>
-                        <span>Tweet</span>
-                      </button>
-
-                      <button
-                        className="btn btn-xs vid-ctx-btn"
-                        onClick={() => handleOpenSocialModal('instagram')}
-                        style={{
-                          padding: '5px 12px',
-                          fontSize: '0.8rem',
-                          fontWeight: 600,
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '5px',
-                          borderRadius: '12px',
-                          flexShrink: 0
-                        }}
-                        title="Fake Instagram Post Card"
-                      >
-                        <InstagramLogo size={14} style={{ color: '#f43f5e' }} />
-                        <span>Insta</span>
-                      </button>
-
-                      <button
-                        className="btn btn-xs vid-ctx-btn"
-                        onClick={() => handleOpenSocialModal('whatsapp')}
-                        style={{
-                          padding: '5px 12px',
-                          fontSize: '0.8rem',
-                          fontWeight: 600,
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '5px',
-                          borderRadius: '12px',
-                          flexShrink: 0
-                        }}
-                        title="Fake WhatsApp Chat Message Card"
-                      >
-                        <WhatsAppLogo size={14} style={{ color: '#22c55e' }} />
-                        <span>WhatsApp</span>
-                      </button>
                     </div>
                   )}
 
@@ -5828,7 +6444,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, _theme, 
                         <path d="M4 18C4 11.3726 9.37258 6 16 6H20" />
                         <path d="M16 2L20 6L16 10" />
                       </svg>
-                      <span>{activeCaption ? (activeCaption.curve ? `Arc (${activeCaption.curve > 0 ? '+' : ''}${activeCaption.curve}°)` : 'Curve') : 'Curved Text'}</span>
+                      <span>{activeCaption ? (activeCaption.curve ? `Arc (${activeCaption.curve > 0 ? '+' : ''}${activeCaption.curve}Â°)` : 'Curve') : 'Curved Text'}</span>
                     </button>
 
                     {/* Unified Header & Footer Segmented Control */}
@@ -6618,7 +7234,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, _theme, 
                     >
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <XSocialLogo size={15} style={{ color: "#fff" }} />
+                          <span style={{ fontSize: '0.9rem', fontWeight: 900 }}>ð•</span>
                           <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#fff' }}>X / Tweet Card</span>
                         </div>
                         <div style={{ display: 'flex', gap: '3px' }}>
@@ -7381,6 +7997,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, _theme, 
 
           {/* TAB 3: MEDIA OVERLAY CONTROLS */}
           {activeTab === 'images' && (() => {
+            const isVideoLayer = activeImageLayer && isVideoUrl(activeImageLayer.url);
             return (
               <div className="tab-content animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {/* Header Action Buttons: Upload Media | Pick Template (+ Delete if media layer selected) */}
@@ -7433,79 +8050,6 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, _theme, 
                   >
                     <Plus className="icon-xs" /> Add Overlay
                   </button>
-
-                  <button
-                    type="button"
-                    className="btn btn-xs hover-lift"
-                    onClick={() => handleOpenSocialModal('tweet')}
-                    title="Add Tweet Card (Fake Twitter / X Post)"
-                    style={{
-                      flex: 1,
-                      padding: '7px 8px',
-                      borderRadius: '999px',
-                      fontSize: '0.78rem',
-                      fontWeight: 600,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '4px',
-                      whiteSpace: 'nowrap',
-                      background: 'rgba(29, 155, 240, 0.15)',
-                      border: '1px solid rgba(29, 155, 240, 0.4)',
-                      color: '#ffffff'
-                    }}
-                  >
-                    <span style={{ fontSize: '0.85rem', fontWeight: 900, color: '#1d9bf0', lineHeight: 1 }}>ð•</span> Tweet
-                  </button>
-
-                  <button
-                    type="button"
-                    className="btn btn-xs hover-lift"
-                    onClick={() => handleOpenSocialModal('instagram')}
-                    title="Add Instagram Card (Fake Instagram Post)"
-                    style={{
-                      flex: 1,
-                      padding: '7px 8px',
-                      borderRadius: '999px',
-                      fontSize: '0.78rem',
-                      fontWeight: 600,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '4px',
-                      whiteSpace: 'nowrap',
-                      background: 'rgba(244, 63, 94, 0.15)',
-                      border: '1px solid rgba(244, 63, 94, 0.4)',
-                      color: '#ffffff'
-                    }}
-                  >
-                    <InstagramLogo size={14} style={{ color: '#f43f5e' }} /> Insta
-                  </button>
-
-                  <button
-                    type="button"
-                    className="btn btn-xs hover-lift"
-                    onClick={() => handleOpenSocialModal('whatsapp')}
-                    title="Add WhatsApp Card (Fake WhatsApp Message)"
-                    style={{
-                      flex: 1,
-                      padding: '7px 8px',
-                      borderRadius: '999px',
-                      fontSize: '0.78rem',
-                      fontWeight: 600,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '4px',
-                      whiteSpace: 'nowrap',
-                      background: 'rgba(34, 197, 94, 0.15)',
-                      border: '1px solid rgba(34, 197, 94, 0.4)',
-                      color: '#ffffff'
-                    }}
-                  >
-                    <WhatsAppLogo size={14} style={{ color: '#22c55e' }} /> WhatsApp
-                  </button>
-
                   {activeImageLayer && (
                     <button
                       type="button"
@@ -8012,6 +8556,8 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, _theme, 
         isOpen={showStylesModal}
         onClose={() => setShowStylesModal(false)}
         initialPlatform={socialModalPlatform}
+        cardData={currentEditingSocialCard || null}
+        onUpdateCard={handleUpdateSocialCard}
         onAddTweetCard={handleAddTweetCard}
         onAddInstagramCard={handleAddInstagramCard}
         onAddWhatsAppCard={handleAddWhatsAppCard}

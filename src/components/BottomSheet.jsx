@@ -17,7 +17,7 @@ export default function BottomSheet({
   className = '',
   contentStyle = {}
 }) {
-  const [_isDragging, setIsDragging] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   const dragControls = useDragControls();
 
   // Lock body scroll when open

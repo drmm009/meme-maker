@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { X, Scissors, Play, Pause, Check } from 'lucide-react';
 
 /**

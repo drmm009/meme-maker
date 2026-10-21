@@ -29,13 +29,13 @@ export const useAudioPlaybackSync = (items) => {
               try {
                 entry.audio.pause();
                 entry.audio.src = '';
-              } catch {}
+              } catch (e) {}
             }).catch(() => {});
           } else {
             entry.audio.pause();
             entry.audio.src = '';
           }
-        } catch {}
+        } catch (e) {}
         pool.delete(id);
       }
     }
@@ -76,12 +76,12 @@ export const useAudioPlaybackSync = (items) => {
         try {
           if (entry.playPromise) {
             entry.playPromise.then(() => {
-              try { entry.audio.pause(); } catch {}
+              try { entry.audio.pause(); } catch (e) {}
             }).catch(() => {});
           } else {
             entry.audio.pause();
           }
-        } catch {}
+        } catch (e) {}
       }
     };
   }, [items]);
@@ -117,7 +117,7 @@ export const useAudioPlaybackSync = (items) => {
               if (Math.abs(audio.currentTime - mediaTimeSec) > 0.08) {
                 try {
                   audio.currentTime = Math.max(0, mediaTimeSec);
-                } catch {}
+                } catch (e) {}
               }
               const p = audio.play();
               if (p && typeof p.then === 'function') {
@@ -138,20 +138,20 @@ export const useAudioPlaybackSync = (items) => {
             if (Math.abs(audio.currentTime - mediaTimeSec) > 1.0) {
               try {
                 audio.currentTime = Math.max(0, mediaTimeSec);
-              } catch {}
+              } catch (e) {}
             }
           }
         } else {
           if (!audio.paused) {
             if (entry.playPromise) {
               entry.playPromise.then(() => {
-                try { audio.pause(); } catch {}
+                try { audio.pause(); } catch (e) {}
               }).catch(() => {});
               entry.playPromise = null;
             } else {
               try {
                 audio.pause();
-              } catch {}
+              } catch (e) {}
             }
           }
 
@@ -159,14 +159,14 @@ export const useAudioPlaybackSync = (items) => {
             if (Math.abs(audio.currentTime - mediaTimeSec) > 0.08) {
               try {
                 audio.currentTime = Math.max(0, mediaTimeSec);
-              } catch {}
+              } catch (e) {}
             }
           } else if (!isInside && playhead < item.startMs) {
             entry.hasEnded = false;
             if (Math.abs(audio.currentTime - trimStartSec) > 0.08) {
               try {
                 audio.currentTime = trimStartSec;
-              } catch {}
+              } catch (e) {}
             }
           }
         }

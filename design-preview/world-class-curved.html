@@ -1,0 +1,1452 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>World-Class Curved UI — Meme Creator Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Montserrat:wght@800;900&family=Space+Mono:wght@700&display=swap" rel="stylesheet">
+  <style>
+    /* ==========================================================================
+       DESIGN TOKENS — LIQUID CURVES & OPTICAL GLASS
+       ========================================================================== */
+    :root[data-theme="light"] {
+      --bg-base: #f8faff;
+      --bg-ambient: 
+        radial-gradient(circle at 15% 10%, rgba(124, 92, 252, 0.12) 0%, transparent 45%),
+        radial-gradient(circle at 85% 85%, rgba(79, 134, 247, 0.10) 0%, transparent 50%),
+        radial-gradient(circle at 50% 50%, rgba(6, 182, 212, 0.05) 0%, transparent 65%),
+        #f8faff;
+      --surface-1: #ffffff;
+      --surface-2: #f0f4fc;
+      --surface-3: #e8eef9;
+      --surface-glass: rgba(255, 255, 255, 0.85);
+      --surface-glass-card: rgba(255, 255, 255, 0.72);
+      
+      --border-subtle: rgba(15, 23, 42, 0.06);
+      --border-medium: rgba(15, 23, 42, 0.10);
+      --border-glow: rgba(124, 92, 252, 0.35);
+
+      --primary-gradient: linear-gradient(135deg, #7c5cfc 0%, #4f86f7 100%);
+      --primary-gradient-hover: linear-gradient(135deg, #6c4af5 0%, #3e77f0 100%);
+      --primary-accent: #7c5cfc;
+      --secondary-accent: #4f86f7;
+      --cyan-accent: #06b6d4;
+      --emerald-accent: #10b981;
+      --amber-accent: #f59e0b;
+
+      --text-main: #0b132b; /* Premium deep navy */
+      --text-muted: #53607e;
+      --text-dim: #9aa5be;
+
+      --shadow-ambient: 0 20px 48px -12px rgba(124, 92, 252, 0.14), 0 4px 16px -2px rgba(11, 19, 43, 0.04);
+      --shadow-card: 0 14px 34px -8px rgba(11, 19, 43, 0.06), 0 2px 8px -2px rgba(11, 19, 43, 0.03);
+      --shadow-float: 0 24px 50px -10px rgba(124, 92, 252, 0.28), 0 8px 20px -4px rgba(11, 19, 43, 0.08);
+      --shadow-inner-glow: inset 0 1px 1px 0 rgba(255, 255, 255, 0.9);
+
+      --phone-shell: #e5eaf3;
+      --timeline-track-bg: #e9eff9;
+    }
+
+    :root[data-theme="dark"] {
+      --bg-base: #07080f;
+      --bg-ambient: 
+        radial-gradient(circle at 15% 10%, rgba(124, 92, 252, 0.18) 0%, transparent 45%),
+        radial-gradient(circle at 85% 85%, rgba(79, 134, 247, 0.14) 0%, transparent 50%),
+        radial-gradient(circle at 50% 50%, rgba(6, 182, 212, 0.06) 0%, transparent 65%),
+        #07080f;
+      --surface-1: #0f111e;
+      --surface-2: #16192a;
+      --surface-3: #1f233a;
+      --surface-glass: rgba(15, 17, 30, 0.85);
+      --surface-glass-card: rgba(22, 25, 42, 0.68);
+
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-medium: rgba(255, 255, 255, 0.14);
+      --border-glow: rgba(124, 92, 252, 0.45);
+
+      --primary-gradient: linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%);
+      --primary-gradient-hover: linear-gradient(135deg, #9d71f7 0%, #4f91f8 100%);
+      --primary-accent: #8b5cf6;
+      --secondary-accent: #3b82f6;
+      --cyan-accent: #22d3ee;
+      --emerald-accent: #34d399;
+      --amber-accent: #fbbf24;
+
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+
+      --shadow-ambient: 0 24px 60px -15px rgba(0, 0, 0, 0.85), 0 0 40px rgba(124, 92, 252, 0.12);
+      --shadow-card: 0 16px 36px -8px rgba(0, 0, 0, 0.7);
+      --shadow-float: 0 30px 60px -10px rgba(0, 0, 0, 0.9), 0 0 30px rgba(124, 92, 252, 0.25);
+      --shadow-inner-glow: inset 0 1px 1px 0 rgba(255, 255, 255, 0.15);
+
+      --phone-shell: #171822;
+      --timeline-track-bg: #0b0c16;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
+    body {
+      background: var(--bg-base);
+      background-image: var(--bg-ambient);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 30px 16px 80px;
+      transition: background 0.3s cubic-bezier(0.16, 1, 0.3, 1), color 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* ==========================================================================
+       SHOWCASE NAVIGATION HEADER
+       ========================================================================== */
+    .showcase-header {
+      width: 100%;
+      max-width: 1200px;
+      margin-bottom: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .brand-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 9999px;
+      background: var(--primary-gradient);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 1.25rem;
+      font-weight: 900;
+      box-shadow: 0 8px 24px rgba(124, 92, 252, 0.4), var(--shadow-inner-glow);
+    }
+    .brand-title h1 {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 1.45rem;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      background: var(--primary-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .brand-title p {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .pill-btn-nav {
+      height: 40px;
+      padding: 0 18px;
+      border-radius: 9999px;
+      background: var(--surface-1);
+      border: 1px solid var(--border-medium);
+      color: var(--text-main);
+      font-size: 0.82rem;
+      font-weight: 700;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: var(--shadow-card);
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .pill-btn-nav:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-ambient);
+      border-color: var(--primary-accent);
+    }
+    .theme-toggle {
+      width: 40px;
+      height: 40px;
+      border-radius: 9999px;
+      border: 1px solid var(--border-medium);
+      background: var(--surface-1);
+      color: var(--text-main);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      box-shadow: var(--shadow-card);
+      transition: transform 0.25s ease;
+    }
+    .theme-toggle:hover { transform: scale(1.08); }
+
+    /* Screen Selector Pills */
+    .screen-pills-bar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+      max-width: 960px;
+      margin-bottom: 28px;
+    }
+    .screen-tab-pill {
+      height: 38px;
+      padding: 0 18px;
+      border-radius: 9999px;
+      background: var(--surface-1);
+      border: 1px solid var(--border-medium);
+      color: var(--text-muted);
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: var(--shadow-card);
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .screen-tab-pill:hover {
+      color: var(--primary-accent);
+    }
+    .screen-tab-pill.active {
+      background: var(--primary-gradient);
+      color: #ffffff;
+      border-color: transparent;
+      box-shadow: 0 6px 20px rgba(124, 92, 252, 0.35);
+      transform: scale(1.03);
+    }
+
+    /* ==========================================================================
+       PHONE CONTAINER (390 x 844 px)
+       ========================================================================== */
+    .phone-mockup {
+      width: 390px;
+      height: 844px;
+      background: var(--surface-1);
+      border-radius: 54px;
+      box-shadow: var(--shadow-float), 0 0 0 10px var(--phone-shell);
+      border: 1.5px solid var(--border-medium);
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      transform: translateZ(0);
+    }
+
+    /* iPhone Dynamic Island */
+    .dynamic-island {
+      position: absolute;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 122px;
+      height: 32px;
+      background: #000000;
+      border-radius: 9999px;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    }
+    .sensor-dot {
+      width: 10px;
+      height: 10px;
+      background: #0d0f17;
+      border-radius: 50%;
+      border: 1.5px solid #1c2130;
+    }
+
+    .status-bar {
+      height: 48px;
+      padding: 13px 26px 0;
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      font-weight: 800;
+      color: var(--text-main);
+      z-index: 999;
+    }
+
+    .home-indicator {
+      position: absolute;
+      bottom: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 134px;
+      height: 5px;
+      background: var(--text-main);
+      opacity: 0.28;
+      border-radius: 9999px;
+      z-index: 1000;
+      pointer-events: none;
+    }
+
+    /* Screen Views */
+    .screen-view {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding-bottom: 96px; /* Room for floating island dock */
+      display: none;
+    }
+    .screen-view.active {
+      display: flex;
+      flex-direction: column;
+      animation: fadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ==========================================================================
+       WORLD-CLASS FLOATING ISLAND DOCK (BOTTOM NAV)
+       ========================================================================== */
+    .floating-island-dock {
+      position: absolute;
+      bottom: 16px;
+      left: 18px;
+      right: 18px;
+      height: 64px;
+      background: var(--surface-glass);
+      backdrop-filter: blur(28px) saturate(190%);
+      -webkit-backdrop-filter: blur(28px) saturate(190%);
+      border: 1px solid var(--border-medium);
+      border-radius: 9999px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 8px;
+      z-index: 300;
+      box-shadow: var(--shadow-float), var(--shadow-inner-glow);
+    }
+    .dock-item {
+      flex: 1;
+      height: 48px;
+      border-radius: 9999px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      color: var(--text-muted);
+      font-size: 0.65rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .dock-item svg { width: 20px; height: 20px; stroke-width: 2.3; }
+    .dock-item.active {
+      background: var(--primary-gradient);
+      color: #ffffff;
+      box-shadow: 0 6px 16px rgba(124, 92, 252, 0.4), var(--shadow-inner-glow);
+      transform: scale(1.04);
+    }
+
+    /* ==========================================================================
+       SCREEN 1: DISCOVERY SCREEN
+       ========================================================================== */
+    .discovery-header {
+      padding: 8px 18px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .brand-mark {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .brand-logo-pill {
+      width: 32px;
+      height: 32px;
+      border-radius: 9999px;
+      background: var(--primary-gradient);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 0.9rem;
+      font-weight: 900;
+      box-shadow: 0 4px 12px rgba(124, 92, 252, 0.35);
+    }
+    .brand-logo-text {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 1.15rem;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      background: var(--primary-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .header-user-btn {
+      height: 34px;
+      padding: 0 14px;
+      border-radius: 9999px;
+      background: var(--surface-2);
+      border: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.75rem;
+      font-weight: 800;
+      color: var(--text-main);
+      cursor: pointer;
+    }
+
+    /* Floating Search Capsule */
+    .search-capsule-wrapper {
+      margin: 6px 18px 10px;
+      position: relative;
+    }
+    .search-capsule-input {
+      width: 100%;
+      height: 48px;
+      background: var(--surface-2);
+      border: 1.5px solid transparent;
+      border-radius: 9999px;
+      padding: 0 18px 0 46px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--text-main);
+      outline: none;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.03);
+      transition: all 0.25s ease;
+    }
+    .search-capsule-input:focus {
+      border-color: var(--primary-accent);
+      background: var(--surface-1);
+      box-shadow: 0 0 0 4px rgba(124, 92, 252, 0.15);
+    }
+    .search-icon {
+      position: absolute;
+      left: 16px;
+      top: 15px;
+      color: var(--primary-accent);
+    }
+
+    /* Category Chips Carousel */
+    .chip-scroll {
+      display: flex;
+      gap: 8px;
+      padding: 4px 18px 14px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .liquid-pill-chip {
+      height: 36px;
+      padding: 0 16px;
+      border-radius: 9999px;
+      background: var(--surface-2);
+      border: 1px solid var(--border-medium);
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      font-weight: 800;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      box-shadow: var(--shadow-card);
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .liquid-pill-chip.active {
+      background: var(--primary-gradient);
+      color: #ffffff;
+      border-color: transparent;
+      box-shadow: 0 6px 16px rgba(124, 92, 252, 0.35);
+    }
+
+    /* Hero Creator Card */
+    .creator-banner {
+      margin: 2px 18px 16px;
+      padding: 16px 20px;
+      border-radius: 28px;
+      background: linear-gradient(135deg, rgba(124, 92, 252, 0.14) 0%, rgba(79, 134, 247, 0.12) 100%), var(--surface-1);
+      border: 1.5px solid var(--border-glow);
+      box-shadow: var(--shadow-card), var(--shadow-inner-glow);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .banner-text h3 {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.98rem;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+    }
+    .banner-text p {
+      font-size: 0.74rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      margin-top: 3px;
+    }
+    .btn-create-pill {
+      height: 38px;
+      padding: 0 18px;
+      border-radius: 9999px;
+      background: var(--primary-gradient);
+      color: #ffffff;
+      border: none;
+      font-size: 0.78rem;
+      font-weight: 800;
+      box-shadow: 0 6px 18px rgba(124, 92, 252, 0.4), var(--shadow-inner-glow);
+      cursor: pointer;
+    }
+
+    /* Template Cards Grid */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      padding: 0 18px;
+    }
+    .squircle-card {
+      background: var(--surface-1);
+      border: 1px solid var(--border-medium);
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: var(--shadow-card);
+      cursor: pointer;
+      position: relative;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .squircle-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-ambient);
+      border-color: var(--primary-accent);
+    }
+    .squircle-thumb {
+      width: 100%;
+      height: 145px;
+      position: relative;
+      background: #eef2fa;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .badge-pill-tag {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      font-size: 0.65rem;
+      font-weight: 800;
+      background: rgba(11, 19, 43, 0.75);
+      backdrop-filter: blur(10px);
+      color: #ffffff;
+    }
+    .fav-circle-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 30px;
+      height: 30px;
+      border-radius: 9999px;
+      background: var(--surface-glass);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--border-medium);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #cbd5e1;
+      font-size: 0.85rem;
+    }
+    .fav-circle-btn.active { color: var(--amber-accent); }
+    .card-meta {
+      padding: 12px 14px 14px;
+    }
+    .card-title {
+      font-size: 0.82rem;
+      font-weight: 800;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .card-stats {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      display: flex;
+      justify-content: space-between;
+      margin-top: 4px;
+    }
+
+    /* ==========================================================================
+       SCREEN 2: MEME CANVAS EDITOR
+       ========================================================================== */
+    .editor-navbar {
+      padding: 8px 18px 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .btn-pill-back {
+      height: 36px;
+      padding: 0 14px;
+      border-radius: 9999px;
+      background: var(--surface-2);
+      border: 1px solid var(--border-medium);
+      color: var(--text-main);
+      font-size: 0.78rem;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .canvas-title-pill {
+      padding: 4px 12px;
+      border-radius: 9999px;
+      background: var(--surface-2);
+      font-size: 0.8rem;
+      font-weight: 800;
+    }
+    .btn-pill-export {
+      height: 36px;
+      padding: 0 18px;
+      border-radius: 9999px;
+      background: var(--primary-gradient);
+      color: #ffffff;
+      border: none;
+      font-size: 0.78rem;
+      font-weight: 800;
+      box-shadow: 0 4px 14px rgba(124, 92, 252, 0.4);
+      cursor: pointer;
+    }
+
+    /* Canvas Stage Pedestal */
+    .canvas-pedestal {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px;
+      background: radial-gradient(var(--border-medium) 1.5px, transparent 1.5px);
+      background-size: 20px 20px;
+      background-color: var(--surface-2);
+      position: relative;
+    }
+    .canvas-frame-squircle {
+      width: 320px;
+      height: 320px;
+      background: #ffffff;
+      border-radius: 24px;
+      box-shadow: var(--shadow-float);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 16px;
+    }
+    .meme-bg-layer {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.3) 100%), url('https://images.unsplash.com/photo-1543610892-0b1f7e6d8ac1?auto=format&fit=crop&w=600&q=80') center/cover;
+    }
+    .caption-active-squircle {
+      position: relative;
+      z-index: 10;
+      text-align: center;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 900;
+      font-size: 1.35rem;
+      color: #ffffff;
+      text-shadow: 2px 2px 0 #000, -2px -2px 0 #000, 0 6px 14px rgba(0,0,0,0.7);
+      text-transform: uppercase;
+      padding: 6px 8px;
+      border: 2px solid var(--primary-accent);
+      border-radius: 16px;
+      box-shadow: 0 0 20px rgba(124, 92, 252, 0.45);
+    }
+    .handle-glow-dot {
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      background: var(--primary-accent);
+      border: 2.5px solid #ffffff;
+      border-radius: 9999px;
+      box-shadow: 0 0 8px rgba(124, 92, 252, 0.6);
+    }
+    .handle-tr { top: -7px; right: -7px; }
+    .handle-bl { bottom: -7px; left: -7px; }
+    .handle-rot-head {
+      top: -26px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 14px;
+      height: 14px;
+      background: #ffffff;
+      border: 3px solid var(--primary-accent);
+    }
+
+    /* Ergonomic Bottom Drawer for Tools */
+    .editor-tool-drawer {
+      background: var(--surface-1);
+      border-top: 1px solid var(--border-medium);
+      padding: 12px 18px 8px;
+      box-shadow: 0 -12px 32px rgba(0,0,0,0.04);
+    }
+    .tool-capsule-strip {
+      display: flex;
+      justify-content: space-between;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+    .pill-tool-item {
+      flex: 1;
+      height: 50px;
+      border-radius: 9999px;
+      background: var(--surface-2);
+      border: 1px solid var(--border-medium);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      color: var(--text-muted);
+      font-size: 0.68rem;
+      font-weight: 800;
+      cursor: pointer;
+      transition: all 0.22s ease;
+    }
+    .pill-tool-item svg { width: 18px; height: 18px; stroke-width: 2.3; }
+    .pill-tool-item.active {
+      background: var(--primary-gradient);
+      color: #ffffff;
+      border-color: transparent;
+      box-shadow: 0 6px 18px rgba(124, 92, 252, 0.35);
+      transform: scale(1.03);
+    }
+
+    /* Open Text Effects Control Card */
+    .effects-squircle-card {
+      background: var(--surface-2);
+      border: 1.5px solid var(--border-glow);
+      border-radius: 22px;
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      box-shadow: var(--shadow-card);
+    }
+    .ctrl-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.78rem;
+      font-weight: 800;
+      color: var(--text-muted);
+    }
+    .pill-slider-track {
+      flex: 1;
+      height: 10px;
+      background: var(--surface-3);
+      border-radius: 9999px;
+      margin: 0 14px;
+      position: relative;
+    }
+    .pill-slider-fill {
+      width: 62%;
+      height: 100%;
+      background: var(--primary-gradient);
+      border-radius: 9999px;
+    }
+    .pill-preset-row {
+      display: flex;
+      gap: 6px;
+    }
+    .preset-pill-btn {
+      padding: 6px 14px;
+      border-radius: 9999px;
+      background: var(--surface-1);
+      border: 1px solid var(--border-medium);
+      font-size: 0.72rem;
+      font-weight: 800;
+      color: var(--text-main);
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+    }
+    .preset-pill-btn.active {
+      background: var(--primary-gradient);
+      color: #ffffff;
+      border-color: transparent;
+      box-shadow: 0 4px 12px rgba(124, 92, 252, 0.3);
+    }
+
+    /* ==========================================================================
+       SCREEN 3: VIDEO STUDIO
+       ========================================================================== */
+    .video-hero-screen {
+      height: 220px;
+      background: #000000;
+      border-radius: 0 0 28px 28px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .video-timecode-capsule {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.74rem;
+      font-weight: 700;
+      padding: 5px 12px;
+      border-radius: 9999px;
+      background: rgba(11, 19, 43, 0.85);
+      backdrop-filter: blur(12px);
+      color: var(--cyan-accent);
+      position: absolute;
+      bottom: 12px;
+      right: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
+    .video-dock-workspace {
+      flex: 1;
+      background: var(--timeline-track-bg);
+      display: flex;
+      flex-direction: column;
+      padding: 12px 18px;
+    }
+    .transport-capsule-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .btn-play-hero-circle {
+      width: 52px;
+      height: 52px;
+      border-radius: 9999px;
+      background: var(--primary-gradient);
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      box-shadow: 0 8px 24px rgba(124, 92, 252, 0.4), var(--shadow-inner-glow);
+      cursor: pointer;
+    }
+
+    .timeline-curved-tracks {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      position: relative;
+    }
+    .playhead-laser-line {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 45%;
+      width: 3px;
+      background: var(--primary-accent);
+      z-index: 20;
+      box-shadow: 0 0 8px var(--primary-accent);
+    }
+    .laser-pill-head {
+      position: absolute;
+      top: -6px;
+      left: 45%;
+      transform: translateX(-50%);
+      width: 14px;
+      height: 14px;
+      background: var(--primary-accent);
+      border-radius: 9999px;
+      border: 2px solid #ffffff;
+      z-index: 21;
+    }
+    .track-capsule-row {
+      height: 42px;
+      background: var(--surface-1);
+      border: 1px solid var(--border-medium);
+      border-radius: 9999px;
+      display: flex;
+      align-items: center;
+      padding: 0 14px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+    }
+    .track-type-badge {
+      font-size: 0.68rem;
+      font-weight: 900;
+      color: var(--primary-accent);
+      width: 50px;
+      flex-shrink: 0;
+    }
+    .clip-capsule {
+      position: absolute;
+      left: 70px;
+      right: 30px;
+      height: 30px;
+      border-radius: 9999px;
+      background: linear-gradient(90deg, #6366f1, #3b82f6);
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      font-size: 0.72rem;
+      color: #ffffff;
+      font-weight: 800;
+      box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+    }
+    .clip-capsule.audio {
+      left: 95px;
+      right: 120px;
+      background: linear-gradient(90deg, #06b6d4, #0284c7);
+      box-shadow: 0 2px 8px rgba(6, 182, 212, 0.3);
+    }
+
+    /* ==========================================================================
+       SCREEN 4: MY GALLERY
+       ========================================================================== */
+    .gallery-top-stats {
+      padding: 12px 18px 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.76rem;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+
+    /* ==========================================================================
+       SPECIAL STATES: BOTTOM SHEET, AI HUD & EMPTY STATE
+       ========================================================================== */
+    .bottom-sheet-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(11, 19, 43, 0.5);
+      backdrop-filter: blur(8px);
+      z-index: 500;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+    }
+    .sheet-capsule-card {
+      background: var(--surface-1);
+      border-top: 1.5px solid var(--border-glow);
+      border-radius: 36px 36px 0 0;
+      padding: 20px;
+      box-shadow: 0 -20px 50px rgba(124, 92, 252, 0.25);
+    }
+    .sheet-handle-pill {
+      width: 48px;
+      height: 5px;
+      background: var(--border-medium);
+      border-radius: 9999px;
+      margin: 0 auto 16px;
+    }
+    .sticker-grid-curved {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      max-height: 220px;
+      overflow-y: auto;
+      padding: 8px 0;
+    }
+    .sticker-curved-item {
+      height: 58px;
+      background: var(--surface-2);
+      border: 1px solid var(--border-medium);
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.8rem;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+      transition: all 0.2s;
+    }
+    .sticker-curved-item:hover {
+      transform: scale(1.1);
+      background: var(--surface-3);
+    }
+
+    /* AI Loading Glass HUD */
+    .ai-hud-backdrop {
+      position: absolute;
+      inset: 0;
+      background: var(--surface-glass);
+      backdrop-filter: blur(14px) saturate(180%);
+      z-index: 600;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 28px;
+      text-align: center;
+    }
+    .ai-pulsing-orb {
+      width: 76px;
+      height: 76px;
+      border-radius: 9999px;
+      border: 4.5px solid rgba(124, 92, 252, 0.16);
+      border-top-color: var(--primary-accent);
+      animation: spin 1s linear infinite;
+      margin-bottom: 20px;
+      box-shadow: 0 0 30px rgba(124, 92, 252, 0.4);
+    }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+    .ai-glow-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--primary-gradient);
+      color: #ffffff;
+      padding: 6px 16px;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 800;
+      margin-bottom: 14px;
+      box-shadow: 0 6px 20px rgba(124, 92, 252, 0.4);
+    }
+    .ai-progress-track {
+      width: 230px;
+      height: 8px;
+      background: var(--surface-3);
+      border-radius: 9999px;
+      margin-top: 16px;
+      overflow: hidden;
+    }
+    .ai-progress-fill {
+      width: 86%;
+      height: 100%;
+      background: var(--primary-gradient);
+      border-radius: 9999px;
+    }
+
+    /* Empty State View */
+    .empty-state-workspace {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 32px;
+      text-align: center;
+    }
+    .empty-orb-art {
+      width: 90px;
+      height: 90px;
+      border-radius: 32px;
+      background: var(--surface-2);
+      border: 1.5px solid var(--border-glow);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.5rem;
+      margin-bottom: 20px;
+      box-shadow: 0 16px 36px rgba(124, 92, 252, 0.25);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Showcase Header -->
+  <header class="showcase-header">
+    <div class="brand-group">
+      <div class="brand-avatar">✨</div>
+      <div class="brand-title">
+        <h1>World-Class Liquid Curved Studio</h1>
+        <p>Continuous Squircles (24–36px) · Floating Island Navigation · Violet-to-Blue Spectrum · Optical Acrylic</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="theme-toggle" id="themeToggleBtn" title="Toggle Light/Dark Theme">☀️</button>
+      <a href="index.html" class="pill-btn-nav">← Back to Showcase</a>
+    </div>
+  </header>
+
+  <!-- Screen Selector Tabs -->
+  <div class="screen-pills-bar">
+    <button class="screen-tab-pill active" onclick="showScreen('discovery')">1. Discovery</button>
+    <button class="screen-tab-pill" onclick="showScreen('editor')">2. Canvas Editor</button>
+    <button class="screen-tab-pill" onclick="showScreen('video')">3. Video Studio</button>
+    <button class="screen-tab-pill" onclick="showScreen('gallery')">4. My Gallery</button>
+    <button class="screen-tab-pill" onclick="showScreen('sheet')">5. Bottom Sheet</button>
+    <button class="screen-tab-pill" onclick="showScreen('ai')">6. AI Processing HUD</button>
+    <button class="screen-tab-pill" onclick="showScreen('empty')">7. Empty State</button>
+  </div>
+
+  <!-- Mobile Phone Frame -->
+  <div class="phone-mockup">
+    <!-- Dynamic Island -->
+    <div class="dynamic-island">
+      <div class="sensor-dot"></div>
+    </div>
+    <!-- Status Bar -->
+    <div class="status-bar">
+      <span>9:41</span>
+      <span>5G 􀛨 100%</span>
+    </div>
+
+    <!-- 1. DISCOVERY SCREEN -->
+    <div id="screen-discovery" class="screen-view active">
+      <div class="discovery-header">
+        <div class="brand-mark">
+          <div class="brand-logo-pill">⚡</div>
+          <span class="brand-logo-text">MemeStudio</span>
+        </div>
+        <button class="header-user-btn">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <span>Account</span>
+        </button>
+      </div>
+
+      <div class="search-capsule-wrapper">
+        <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <input type="text" class="search-capsule-input" placeholder="Search templates, formats & memes...">
+      </div>
+
+      <div class="chip-scroll">
+        <div class="liquid-pill-chip active">🔥 Hot Trending</div>
+        <div class="liquid-pill-chip">🎬 Video Loops</div>
+        <div class="liquid-pill-chip">⚡ Tech & Dev</div>
+        <div class="liquid-pill-chip">🐱 Wholesome</div>
+        <div class="liquid-pill-chip">🎭 Desi Classics</div>
+      </div>
+
+      <div class="creator-banner">
+        <div class="banner-text">
+          <h3>Multi-Panel Creator</h3>
+          <p>Assemble side-by-side meme grids</p>
+        </div>
+        <button class="btn-create-pill">+ Start Grid</button>
+      </div>
+
+      <div class="cards-grid">
+        <div class="squircle-card">
+          <div class="squircle-thumb" style="background-image: url('https://images.unsplash.com/photo-1543610892-0b1f7e6d8ac1?auto=format&fit=crop&w=400&q=80'); background-size: cover;">
+            <span class="badge-pill-tag">Square 1:1</span>
+            <div class="fav-circle-btn active">★</div>
+          </div>
+          <div class="card-meta">
+            <div class="card-title">Doge vs Buff Doge</div>
+            <div class="card-stats"><span>🔥 Top 1</span><span>2.4k edits</span></div>
+          </div>
+        </div>
+
+        <div class="squircle-card">
+          <div class="squircle-thumb" style="background: linear-gradient(135deg, #eef2ff, #e0e7ff);">
+            <span style="font-size:2.4rem;">💁‍♂️🦋</span>
+            <span class="badge-pill-tag">Story 9:16</span>
+            <div class="fav-circle-btn">☆</div>
+          </div>
+          <div class="card-meta">
+            <div class="card-title">Is This A Butterfly?</div>
+            <div class="card-stats"><span>Anime Pop</span><span>1.8k edits</span></div>
+          </div>
+        </div>
+
+        <div class="squircle-card">
+          <div class="squircle-thumb" style="background: linear-gradient(135deg, #f5f3ff, #ede9fe);">
+            <span style="font-size:2.4rem;">🐱👩‍🦰</span>
+            <span class="badge-pill-tag">Reel / Video</span>
+            <div class="fav-circle-btn active">★</div>
+          </div>
+          <div class="card-meta">
+            <div class="card-title">Woman Yelling at Cat</div>
+            <div class="card-stats"><span>Two-Panel</span><span>3.1k edits</span></div>
+          </div>
+        </div>
+
+        <div class="squircle-card">
+          <div class="squircle-thumb" style="background: linear-gradient(135deg, #ecfeff, #cffafe);">
+            <span style="font-size:2.4rem;">🧠⚡</span>
+            <span class="badge-pill-tag">4-Level</span>
+            <div class="fav-circle-btn">☆</div>
+          </div>
+          <div class="card-meta">
+            <div class="card-title">Expanding Galaxy Brain</div>
+            <div class="card-stats"><span>Progression</span><span>940 edits</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. MEME CANVAS EDITOR -->
+    <div id="screen-editor" class="screen-view">
+      <div class="editor-navbar">
+        <button class="btn-pill-back">‹ Back</button>
+        <div class="canvas-title-pill">Doge vs Buff Doge</div>
+        <button class="btn-pill-export">Export ↗</button>
+      </div>
+
+      <div class="canvas-pedestal">
+        <div class="canvas-frame-squircle">
+          <div class="meme-bg-layer"></div>
+          <div class="caption-active-squircle">
+            LOCAL DEV ENVIRONMENT
+            <div class="handle-glow-dot handle-tr"></div>
+            <div class="handle-glow-dot handle-bl"></div>
+            <div class="handle-glow-dot handle-rot-head"></div>
+          </div>
+          <div style="position:relative; z-index:10; text-align:center; font-family:'Montserrat'; font-weight:900; font-size:1.35rem; color:#fff; text-shadow:2px 2px 0 #000, -2px -2px 0 #000; text-transform:uppercase;">
+            PRODUCTION CLOUD DEPLOY
+          </div>
+        </div>
+      </div>
+
+      <div class="editor-tool-drawer">
+        <div class="tool-capsule-strip">
+          <div class="pill-tool-item active">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 7V4h16v3"/><path d="M9 20h6"/><path d="M12 4v16"/></svg>
+            <span>Text</span>
+          </div>
+          <div class="pill-tool-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+            <span>Sticker</span>
+          </div>
+          <div class="pill-tool-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></svg>
+            <span>AI Magic</span>
+          </div>
+          <div class="pill-tool-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 14.14 14.14"/></svg>
+            <span>Filters</span>
+          </div>
+          <div class="pill-tool-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M2 12h20"/><path d="M12 2v20"/></svg>
+            <span>Overlay</span>
+          </div>
+        </div>
+
+        <div class="effects-squircle-card">
+          <div class="ctrl-row">
+            <span>Curvature Arc</span>
+            <div class="pill-slider-track"><div class="pill-slider-fill"></div></div>
+            <span style="color:var(--primary-accent);">+32°</span>
+          </div>
+          <div class="ctrl-row">
+            <span>Effect Preset</span>
+            <div class="pill-preset-row">
+              <span class="preset-pill-btn active">Impact</span>
+              <span class="preset-pill-btn">𝕏 Tweet</span>
+              <span class="preset-pill-btn">Chyron</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. VIDEO STUDIO -->
+    <div id="screen-video" class="screen-view">
+      <div class="editor-navbar">
+        <button class="btn-pill-back">‹ Back</button>
+        <div class="canvas-title-pill">Video Studio</div>
+        <button class="btn-pill-export">Export MP4</button>
+      </div>
+
+      <div class="video-hero-screen">
+        <div style="position:absolute; top:20px; font-family:'Montserrat'; font-weight:900; color:#fff; font-size:1.15rem; text-shadow:0 3px 10px #000; text-transform:uppercase;">
+          WHEN CI/CD TURNS GREEN ON FIRST PUSH
+        </div>
+        <div style="font-size:3.6rem;">🎉🚀</div>
+        <div class="video-timecode-capsule">00:03.45 / 00:08.00</div>
+      </div>
+
+      <div class="video-dock-workspace">
+        <div class="transport-capsule-row">
+          <button class="btn-pill-back">⏮ Start</button>
+          <button class="btn-play-hero-circle">▶</button>
+          <button class="btn-pill-back">✂ Split</button>
+        </div>
+
+        <div class="timeline-curved-tracks">
+          <div class="playhead-laser-line"></div>
+          <div class="laser-pill-head"></div>
+
+          <div class="track-capsule-row">
+            <span class="track-type-badge">VIDEO</span>
+            <div class="clip-capsule">
+              <span>dance_routine_1080p.mp4</span>
+            </div>
+          </div>
+
+          <div class="track-capsule-row">
+            <span class="track-type-badge">TEXT</span>
+            <div class="clip-capsule" style="left:70px; right:120px; background:linear-gradient(90deg, #7c5cfc, #a855f7);">
+              <span>Animated Chyron Title</span>
+            </div>
+          </div>
+
+          <div class="track-capsule-row">
+            <span class="track-type-badge">AUDIO</span>
+            <div class="clip-capsule audio">
+              <span>🎵 Celebration_Song.mp3</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. MY GALLERY -->
+    <div id="screen-gallery" class="screen-view">
+      <div class="discovery-header">
+        <div class="brand-mark">
+          <span class="brand-logo-text">My Gallery</span>
+        </div>
+        <span class="badge-pill-tag" style="position:static; background:rgba(124, 92, 252, 0.15); color:var(--primary-accent);">5 Memes Saved</span>
+      </div>
+
+      <div class="gallery-top-stats">
+        <span>IndexedDB Secured · Zero Quota Limit</span>
+        <div style="display:flex; gap:6px;">
+          <span class="liquid-pill-chip active" style="height:30px; padding:0 12px; font-size:0.72rem;">All</span>
+          <span class="liquid-pill-chip" style="height:30px; padding:0 12px; font-size:0.72rem;">Images</span>
+        </div>
+      </div>
+
+      <div class="cards-grid">
+        <div class="squircle-card">
+          <div class="squircle-thumb" style="background-image:url('https://images.unsplash.com/photo-1543610892-0b1f7e6d8ac1?auto=format&fit=crop&w=400&q=80'); background-size:cover;">
+            <span class="badge-pill-tag" style="top:auto; bottom:8px;">1080p PNG</span>
+          </div>
+          <div class="card-meta" style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <div class="card-title">CSS Grid Mastery</div>
+              <div class="card-stats"><span>Today 11:20 AM</span></div>
+            </div>
+            <button class="btn-create-pill" style="height:30px; padding:0 12px; font-size:0.7rem;">Share ↗</button>
+          </div>
+        </div>
+
+        <div class="squircle-card">
+          <div class="squircle-thumb" style="background:linear-gradient(135deg, #e0e7ff, #ede9fe);">
+            <span style="font-size:2.4rem;">🕺🔥</span>
+            <span class="badge-pill-tag" style="top:auto; bottom:8px;">MP4 · 8s</span>
+          </div>
+          <div class="card-meta" style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <div class="card-title">Weekend Vibe</div>
+              <div class="card-stats"><span>Yesterday</span></div>
+            </div>
+            <button class="btn-create-pill" style="height:30px; padding:0 12px; font-size:0.7rem;">Share ↗</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. BOTTOM SHEET STATE -->
+    <div id="screen-sheet" class="screen-view">
+      <div class="canvas-pedestal" style="opacity:0.35;">
+        <div class="canvas-frame-squircle"><div class="meme-bg-layer"></div></div>
+      </div>
+
+      <div class="bottom-sheet-backdrop">
+        <div class="sheet-capsule-card">
+          <div class="sheet-handle-pill"></div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+            <h4 style="font-size:1.05rem; font-weight:900; font-family:'Montserrat';">Sticker Studio</h4>
+            <div style="display:flex; gap:6px;">
+              <span class="liquid-pill-chip active" style="height:28px; padding:0 10px; font-size:0.7rem;">Viral</span>
+              <span class="liquid-pill-chip" style="height:28px; padding:0 10px; font-size:0.7rem;">Dank</span>
+            </div>
+          </div>
+          <div class="sticker-grid-curved">
+            <div class="sticker-curved-item">🔥</div>
+            <div class="sticker-curved-item">💀</div>
+            <div class="sticker-curved-item">😎</div>
+            <div class="sticker-curved-item">🤡</div>
+            <div class="sticker-curved-item">🚀</div>
+            <div class="sticker-curved-item">🧢</div>
+            <div class="sticker-curved-item">🕶️</div>
+            <div class="sticker-curved-item">💯</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. AI PROCESSING HUD -->
+    <div id="screen-ai" class="screen-view">
+      <div class="canvas-pedestal">
+        <div class="canvas-frame-squircle"><div class="meme-bg-layer"></div></div>
+      </div>
+
+      <div class="ai-hud-backdrop">
+        <div class="ai-glow-badge">⚡ Neural AI Engine</div>
+        <div class="ai-pulsing-orb"></div>
+        <h4 style="font-size:1.2rem; font-weight:900; font-family:'Montserrat';">Removing Background</h4>
+        <p style="font-size:0.8rem; color:var(--text-muted); font-weight:600; margin-top:4px;">WASM Neural Edge Extraction · 86%</p>
+        <div class="ai-progress-track">
+          <div class="ai-progress-fill"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7. EMPTY GALLERY -->
+    <div id="screen-empty" class="screen-view">
+      <div class="discovery-header">
+        <div class="brand-mark"><span class="brand-logo-text">My Gallery</span></div>
+      </div>
+      <div class="empty-state-workspace">
+        <div class="empty-orb-art">🎨</div>
+        <h3 style="font-size:1.2rem; font-weight:900; font-family:'Montserrat';">Zero Memes Created Yet</h3>
+        <p style="font-size:0.82rem; color:var(--text-muted); font-weight:600; margin:8px 0 22px; max-width:250px;">
+          Pick a viral template or combine photos into a multi-panel meme!
+        </p>
+        <button class="btn-create-pill" style="height:44px; padding:0 24px; font-size:0.88rem;">Explore Trending Templates</button>
+      </div>
+    </div>
+
+    <!-- WORLD-CLASS FLOATING ISLAND DOCK -->
+    <div class="floating-island-dock">
+      <div class="dock-item active" onclick="showScreen('discovery')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect width="7" height="7" x="3" y="3" rx="2"/><rect width="7" height="7" x="14" y="3" rx="2"/><rect width="7" height="7" x="14" y="14" rx="2"/><rect width="7" height="7" x="3" y="14" rx="2"/></svg>
+        <span>Discover</span>
+      </div>
+      <div class="dock-item" onclick="showScreen('editor')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+        <span>Editor</span>
+      </div>
+      <div class="dock-item" onclick="showScreen('video')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="m22 8-6 4 6 4V8Z"/><rect width="14" height="12" x="2" y="6" rx="3"/></svg>
+        <span>Video</span>
+      </div>
+      <div class="dock-item" onclick="showScreen('gallery')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2z"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        <span>Gallery</span>
+      </div>
+    </div>
+
+    <div class="home-indicator"></div>
+  </div>
+
+  <script>
+    function showScreen(id) {
+      document.querySelectorAll('.screen-view').forEach(s => s.classList.remove('active'));
+      const target = document.getElementById('screen-' + id);
+      if (target) target.classList.add('active');
+
+      document.querySelectorAll('.screen-tab-pill').forEach(p => p.classList.remove('active'));
+      const activePill = Array.from(document.querySelectorAll('.screen-tab-pill')).find(p => p.getAttribute('onclick')?.includes(id));
+      if (activePill) activePill.classList.add('active');
+
+      document.querySelectorAll('.dock-item').forEach(d => d.classList.remove('active'));
+      const activeDock = Array.from(document.querySelectorAll('.dock-item')).find(d => d.getAttribute('onclick')?.includes(id));
+      if (activeDock) activeDock.classList.add('active');
+    }
+
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
+    themeToggleBtn.addEventListener('click', () => {
+      const current = document.documentElement.getAttribute('data-theme');
+      const next = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      themeToggleBtn.textContent = next === 'dark' ? '🌙' : '☀️';
+    });
+  </script>
+</body>
+</html>

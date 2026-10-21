@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, Flame, Sparkles, Bot, ShieldCheck, CheckCheck, X, ArrowRight } from 'lucide-react';
 import ModalPortal from './ModalPortal';
 import './NotificationsModal.css';
@@ -9,7 +9,7 @@ export default function NotificationsModal({
   onClose,
   notifications = [],
   onMarkAllRead,
-  _onDismissNotification,
+  onDismissNotification,
   onNotificationAction
 }) {
   if (!isOpen) return null;

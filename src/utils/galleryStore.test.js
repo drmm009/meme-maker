@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { toMetadata, dataURLToBlob, blobToDataURL } from './galleryStore';
-import { templateNumericId } from './templateUtils';
+import { templateNumericId } from '../components/TemplateDiscovery';
 
 // 1x1 transparent PNG
 const TINY_PNG =

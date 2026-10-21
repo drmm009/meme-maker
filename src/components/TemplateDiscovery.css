@@ -1728,6 +1728,14 @@ input.search-pill-input[type="text"]::placeholder {
   position: relative;
   transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease, border-color 0.25s ease;
   box-sizing: border-box !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  content-visibility: auto;
+  contain-intrinsic-size: 260px;
+}
+
+.template-card:active {
+  transform: scale(0.98);
 }
 
 [data-theme='light'] .template-card {
@@ -1847,9 +1855,7 @@ input.search-pill-input[type="text"]::placeholder {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  background: rgba(0, 0, 0, 0.65);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background: rgba(10, 14, 23, 0.88);
   border: 1px solid rgba(255, 255, 255, 0.16);
   color: #ffffff;
   font-size: 0.68rem;
@@ -1889,9 +1895,7 @@ input.search-pill-input[type="text"]::placeholder {
   justify-content: center;
   width: 26px;
   height: 26px;
-  background: rgba(0, 0, 0, 0.65);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background: rgba(10, 14, 23, 0.88);
   border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 50%;
   padding: 0;
@@ -1925,9 +1929,7 @@ input.search-pill-input[type="text"]::placeholder {
   display: flex;
   align-items: center;
   padding: 10px 12px;
-  background: rgba(14, 17, 26, 0.88);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(14, 17, 26, 0.94);
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   min-height: 42px;
   box-sizing: border-box;
@@ -1967,9 +1969,7 @@ input.search-pill-input[type="text"]::placeholder {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  background: rgba(10, 14, 23, 0.76);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background: rgba(10, 14, 23, 0.88);
   border: 1px solid rgba(255, 255, 255, 0.16);
   color: #ffffff;
   font-size: 0.68rem;
@@ -1993,8 +1993,7 @@ input.search-pill-input[type="text"]::placeholder {
   bottom: 8px;
   left: 8px;
   z-index: 5;
-  background: rgba(14, 165, 233, 0.85);
-  backdrop-filter: blur(8px);
+  background: rgba(14, 165, 233, 0.92);
   color: #ffffff;
   font-size: 0.66rem;
   font-weight: 800;
@@ -2031,4 +2030,26 @@ input.search-pill-input[type="text"]::placeholder {
   color: var(--primary-accent);
   margin-bottom: 16px;
   opacity: 0.75;
+}
+
+
+/* Infinite Scroll Sentinel / Load More Container */
+.masonry-sentinel {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  padding: 28px 0 36px;
+}
+
+.masonry-load-more-btn {
+  font-size: 0.84rem !important;
+  padding: 9px 22px !important;
+  border-radius: 9999px !important;
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.masonry-load-more-btn:hover {
+  transform: translateY(-2px);
 }

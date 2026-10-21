@@ -267,7 +267,7 @@ export function frameFaceSquare(img, size = 400) {
       const cW = maxX - minX;
       cropSize = cW * 1.08;
     }
-  } catch {
+  } catch (e) {
     // Cross-origin fallback: upper-center crop
   }
 

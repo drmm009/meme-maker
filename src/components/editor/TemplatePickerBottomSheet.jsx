@@ -4,8 +4,9 @@ import { Image as ImageIcon, Search, X } from 'lucide-react';
 import { MEME_TEMPLATES } from '../../data/templates';
 import { safeGet } from '../../utils/storage';
 
-const TEMPLATE_TAGS = [
+export const TEMPLATE_TAGS = [
   { id: 'all', label: 'All' },
+  { id: 'social', label: 'Social Media' },
   { id: 'images', label: 'Images' },
   { id: 'reaction', label: 'Reactions' },
   { id: 'favorites', label: 'Favorites' },
@@ -13,6 +14,7 @@ const TEMPLATE_TAGS = [
   { id: 'multi-panel', label: 'Multi-Panel' },
 ];
 
+export const CATEGORIES = TEMPLATE_TAGS;
 
 export default function TemplatePickerBottomSheet({
   isOpen,
@@ -49,7 +51,9 @@ export default function TemplatePickerBottomSheet({
 
         // Category tag filter (matching TemplateDiscovery logic)
         let matchesTag = true;
-        if (imagePickerCategory === 'all' || imagePickerCategory === 'images') {
+        if (imagePickerCategory === 'social') {
+          matchesTag = template.category === 'social' || template.category === 'social media' || (template.tags && template.tags.includes('social'));
+        } else if (imagePickerCategory === 'all' || imagePickerCategory === 'images') {
           matchesTag = true;
         } else if (imagePickerCategory === 'reaction') {
           matchesTag = template.category === 'reaction';

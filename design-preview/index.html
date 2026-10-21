@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Meme Creator Studio — UI Revamp Design Exploration</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Syne:wght@700;800&family=Montserrat:wght@700;800;900&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    :root[data-theme="dark"] {
+      --bg: #090a0f;
+      --surface-1: #11131a;
+      --surface-2: #191c26;
+      --border: rgba(255, 255, 255, 0.08);
+      --text-main: #f3f4f8;
+      --text-muted: #8d95a5;
+      --brand-accent: #7c5cfc;
+    }
+    :root[data-theme="light"] {
+      --bg: #f8fafc;
+      --surface-1: #ffffff;
+      --surface-2: #f1f5f9;
+      --border: rgba(15, 23, 42, 0.08);
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --brand-accent: #6366f1;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
+    body {
+      background: var(--bg);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px 80px;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    .master-header {
+      width: 100%;
+      max-width: 1360px;
+      padding: 20px 24px;
+      background: var(--surface-1);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      margin-bottom: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+    }
+    .header-left h1 { font-size: 1.4rem; font-weight: 800; letter-spacing: -0.02em; display: flex; align-items: center; gap: 10px; }
+    .header-left p { font-size: 0.85rem; color: var(--text-muted); margin-top: 4px; }
+    .global-controls {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    .theme-toggle-btn {
+      padding: 8px 16px;
+      border-radius: 999px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Screen Selector Sync Bar */
+    .sync-bar {
+      width: 100%;
+      max-width: 1360px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 24px;
+      padding: 12px 18px;
+      background: var(--surface-1);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+    }
+    .sync-label {
+      font-size: 0.82rem;
+      font-weight: 800;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .screen-pills {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .pill {
+      padding: 7px 14px;
+      border-radius: 999px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .pill.active {
+      background: var(--brand-accent);
+      color: #fff;
+      border-color: transparent;
+      box-shadow: 0 4px 12px rgba(124, 92, 252, 0.3);
+    }
+
+    /* 3-Column Comparison Grid */
+    .comparison-grid {
+      width: 100%;
+      max-width: 1360px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+    @media (max-width: 1240px) {
+      .comparison-grid {
+        grid-template-columns: 1fr;
+        justify-items: center;
+      }
+    }
+
+    .column-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      width: 100%;
+      max-width: 420px;
+    }
+    .column-header {
+      width: 100%;
+      background: var(--surface-1);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 14px 18px;
+      text-align: center;
+    }
+    .col-title { font-size: 1.05rem; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .col-subtitle { font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; line-height: 1.4; }
+    .col-palette {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .swatch {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(255, 255, 255, 0.2);
+    }
+    .view-link-btn {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .view-link-btn:hover {
+      border-color: var(--brand-accent);
+      color: var(--brand-accent);
+    }
+
+    /* Embedded iframe mockups */
+    .frame-wrapper {
+      width: 390px;
+      height: 844px;
+      border-radius: 48px;
+      overflow: hidden;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+      border: 2px solid var(--border);
+      background: #000;
+    }
+    .frame-wrapper iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    /* Review Checklist Table */
+    .review-table-card {
+      width: 100%;
+      max-width: 1360px;
+      background: var(--surface-1);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 24px;
+      margin-top: 36px;
+    }
+    .review-table-card h2 { font-size: 1.2rem; font-weight: 800; margin-bottom: 12px; }
+    .summary-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+    .summary-table th, .summary-table td {
+      padding: 12px 14px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    .summary-table th {
+      color: var(--text-muted);
+      font-weight: 700;
+      background: var(--surface-2);
+    }
+    .badge-tag {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 0.7rem;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+
+  <header class="master-header">
+    <div class="header-left">
+      <h1><span>🎨</span> Meme Creator Studio — UI Revamp Proposals</h1>
+      <p>Phase 2 & 3 Visual Mockup Suite · 3 Baseline Concepts + 1 World-Class Liquid Curved Evolution (390×844px)</p>
+    </div>
+    <div class="global-controls">
+      <a href="world-class-curved.html" class="theme-toggle-btn" style="text-decoration:none; background:linear-gradient(135deg, #7c5cfc, #4f86f7); color:#fff; border:none; box-shadow: 0 4px 14px rgba(124, 92, 252, 0.4);">✨ Open World-Class Curved ➔</a>
+      <button class="theme-toggle-btn" id="globalThemeBtn">🌙 Toggle All Themes</button>
+    </div>
+  </header>
+
+  <!-- World-Class Curved Featured Banner -->
+  <div style="width: 100%; max-width: 1360px; margin-bottom: 24px; padding: 18px 24px; border-radius: 24px; background: linear-gradient(135deg, rgba(124, 92, 252, 0.16) 0%, rgba(79, 134, 247, 0.14) 100%), var(--surface-1); border: 2px solid rgba(124, 92, 252, 0.4); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; box-shadow: 0 16px 40px rgba(124, 92, 252, 0.18);">
+    <div>
+      <span style="display:inline-block; padding: 4px 12px; border-radius: 9999px; background: linear-gradient(135deg, #7c5cfc, #4f86f7); color: #fff; font-size: 0.72rem; font-weight: 800; margin-bottom: 6px;">✨ PREMIER EVOLUTION</span>
+      <h2 style="font-size: 1.25rem; font-weight: 900; letter-spacing: -0.02em;">World-Class Liquid Curved Studio (CurvX)</h2>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 3px;">Continuous 24–36px Squircles · Floating Island Navigation · Optical Acrylic Glass · Pure White & Dark Navy Baseline</p>
+    </div>
+    <a href="world-class-curved.html" style="padding: 12px 24px; border-radius: 9999px; background: linear-gradient(135deg, #7c5cfc, #4f86f7); color: #ffffff; text-decoration: none; font-size: 0.88rem; font-weight: 800; box-shadow: 0 6px 20px rgba(124, 92, 252, 0.4);">Launch Prototype ➔</a>
+  </div>
+
+  <!-- Interactive Synchronization Controls -->
+  <div class="sync-bar">
+    <span class="sync-label">Switch Screen In All 3 Directions Simultaneously:</span>
+    <div class="screen-pills">
+      <button class="pill active" onclick="syncScreens('discovery')">1. Discovery</button>
+      <button class="pill" onclick="syncScreens('editor')">2. Canvas Editor</button>
+      <button class="pill" onclick="syncScreens('video')">3. Video Studio</button>
+      <button class="pill" onclick="syncScreens('gallery')">4. My Gallery</button>
+      <button class="pill" onclick="syncScreens('sheet')">5. Bottom Sheet</button>
+      <button class="pill" onclick="syncScreens('ai')">6. AI Processing</button>
+      <button class="pill" onclick="syncScreens('empty')">7. Empty State</button>
+    </div>
+  </div>
+
+  <!-- 3-Direction Comparison Grid -->
+  <main class="comparison-grid">
+
+    <!-- Column 1: Noir Luxe -->
+    <div class="column-card">
+      <div class="column-header">
+        <div class="col-title" style="color:#c9a227;">
+          <span>1. Noir Luxe</span>
+        </div>
+        <p class="col-subtitle">
+          Studio Noir evolved · Deep obsidian (#0a0b10) · Brushed gold (#c9a227) & smoky teal (#4a6670) · A24/DaVinci Resolve tactile console
+        </p>
+        <div class="col-palette">
+          <div class="swatch" style="background:#0a0b10;" title="Obsidian Base #0a0b10"></div>
+          <div class="swatch" style="background:#13151f;" title="Card Surface #13151f"></div>
+          <div class="swatch" style="background:#c9a227;" title="Muted Gold #c9a227"></div>
+          <div class="swatch" style="background:#4a6670;" title="Smoky Teal #4a6670"></div>
+        </div>
+        <a href="direction-1.html" class="view-link-btn" target="_blank">Open Direction 1 Standalone ↗</a>
+      </div>
+      <div class="frame-wrapper">
+        <iframe id="frame1" src="direction-1.html"></iframe>
+      </div>
+    </div>
+
+    <!-- Column 2: Neo-Pulse -->
+    <div class="column-card">
+      <div class="column-header">
+        <div class="col-title" style="color:#7c5cfc;">
+          <span>2. Neo-Pulse</span>
+        </div>
+        <p class="col-subtitle">
+          Violet-to-Blue Studio · Pure white base · Dark navy text (#0b132b) · Electric gradient (#7c5cfc → #4f86f7) · Tactile pill buttons & pastel glass
+        </p>
+        <div class="col-palette">
+          <div class="swatch" style="background:#ffffff; border-color:#ccc;" title="Crisp White #ffffff"></div>
+          <div class="swatch" style="background:#0b132b;" title="Navy Text #0b132b"></div>
+          <div class="swatch" style="background:linear-gradient(135deg, #7c5cfc, #4f86f7);" title="Violet-Blue Gradient"></div>
+          <div class="swatch" style="background:#06b6d4;" title="Cyan Accent #06b6d4"></div>
+        </div>
+        <a href="direction-2.html" class="view-link-btn" target="_blank">Open Direction 2 Standalone ↗</a>
+      </div>
+      <div class="frame-wrapper">
+        <iframe id="frame2" src="direction-2.html"></iframe>
+      </div>
+    </div>
+
+    <!-- Column 3: Cyber-Minimal -->
+    <div class="column-card">
+      <div class="column-header">
+        <div class="col-title" style="color:#00f5a0;">
+          <span>3. Cyber-Minimal</span>
+        </div>
+        <p class="col-subtitle">
+          Hyper-Tactile Precision · Pure carbon (#08090b) · Neon green (#00f5a0) · Swiss Space Grotesk · 8px segmented toolbars & hairline borders
+        </p>
+        <div class="col-palette">
+          <div class="swatch" style="background:#08090b;" title="Pure Carbon #08090b"></div>
+          <div class="swatch" style="background:#181a20;" title="Matte Slate #181a20"></div>
+          <div class="swatch" style="background:#00f5a0;" title="Neon Green #00f5a0"></div>
+          <div class="swatch" style="background:#00d9f5;" title="Electric Cyan #00d9f5"></div>
+        </div>
+        <a href="direction-3.html" class="view-link-btn" target="_blank">Open Direction 3 Standalone ↗</a>
+      </div>
+      <div class="frame-wrapper">
+        <iframe id="frame3" src="direction-3.html"></iframe>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Design Spec & Audit Summary Table -->
+  <section class="review-table-card">
+    <h2>UX Audit & Revamp Decision Matrix</h2>
+    <table class="summary-table">
+      <thead>
+        <tr>
+          <th>Area / Screen</th>
+          <th>Identified Problem</th>
+          <th>Direction 1 (Noir Luxe) Solution</th>
+          <th>Direction 2 (Neo-Pulse) Solution</th>
+          <th>Direction 3 (Cyber-Minimal) Solution</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Discovery</strong></td>
+          <td>11 flat chips, excessive horizontal scrolling, cluttered hero banner</td>
+          <td>Grouped chips with gold active indicators, compact hero card, high-contrast badges</td>
+          <td>Pill chips with violet gradient, squircle cards with subtle ambient glow</td>
+          <td>Segmented technical filter bar with count metrics and hairline borders</td>
+        </tr>
+        <tr>
+          <td><strong>Canvas Editor</strong></td>
+          <td>Crowded toolbar, full-screen modals hide canvas, top buttons hard to reach</td>
+          <td>Thumb-dock tool strip, progressive bottom sheets, live canvas feedback</td>
+          <td>Pill tool strip, floating drawer for curve/shadow, one-tap share button</td>
+          <td>Segmented dock with tactile step sliders and instant property readouts</td>
+        </tr>
+        <tr>
+          <td><strong>Video Studio</strong></td>
+          <td>Unfolded timeline takes 38vh, tiny buttons &lt; 36px, thumb scrub conflicts</td>
+          <td>38px track rows, thumb-friendly transport strip, clear gold playhead</td>
+          <td>Pill-shaped video/audio tracks with rounded clips, 46px circular play button</td>
+          <td>High-contrast V1/T1/A1 technical tracks, neon scrubber, precision timecode</td>
+        </tr>
+        <tr>
+          <td><strong>My Gallery</strong></td>
+          <td>Generic empty state, small corner download/delete buttons</td>
+          <td>Gold-trimmed cards, prominent action pills, zero-quota IDB status</td>
+          <td>Floating cards with one-tap "Share ↗" pill, playful rocket empty state</td>
+          <td>Technical asset card with resolution badge and quick export glyph</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <script>
+    function syncScreens(screenId) {
+      document.querySelectorAll('.sync-bar .pill').forEach(p => p.classList.remove('active'));
+      const activePill = Array.from(document.querySelectorAll('.sync-bar .pill')).find(p => p.getAttribute('onclick')?.includes(screenId));
+      if (activePill) activePill.classList.add('active');
+
+      ['frame1', 'frame2', 'frame3'].forEach(frameId => {
+        const frame = document.getElementById(frameId);
+        if (frame && frame.contentWindow && frame.contentWindow.switchScreen) {
+          frame.contentWindow.switchScreen(screenId);
+        }
+      });
+    }
+
+    const globalThemeBtn = document.getElementById('globalThemeBtn');
+    globalThemeBtn.addEventListener('click', () => {
+      const current = document.documentElement.getAttribute('data-theme');
+      const next = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      globalThemeBtn.textContent = next === 'dark' ? '🌙 Dark Mode' : '☀️ Light Mode';
+
+      ['frame1', 'frame2', 'frame3'].forEach(frameId => {
+        const frame = document.getElementById(frameId);
+        if (frame && frame.contentDocument) {
+          frame.contentDocument.documentElement.setAttribute('data-theme', next);
+        }
+      });
+    });
+  </script>
+</body>
+</html>

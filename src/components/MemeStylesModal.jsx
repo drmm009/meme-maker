@@ -1,12 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
-  Plus, User, AtSign, Sparkles, Dices,
+  X, Plus, User, AtSign, Sparkles, Dices, Check,
   MessageCircle, Repeat, Heart, Bookmark, Share2,
-  Send,
-  Upload, Image as ImageIcon, Trash2, ArrowLeftRight, ChevronDown,
-  Newspaper, Rocket, Trophy, Smile, Briefcase
+  Phone, Video, MoreVertical, Send, CheckCheck,
+  Upload, Image as ImageIcon, Trash2, ArrowLeftRight, ChevronLeft, ChevronRight, ChevronDown,
+  Newspaper, Rocket, Trophy, Smile, Briefcase, Calendar, Paperclip, Camera, Mic
 } from 'lucide-react';
 import BottomSheet from './BottomSheet';
+
+const WHATSAPP_DOODLE_CSS_BG = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Cg fill='none' stroke='%23ffffff' stroke-width='1.2' stroke-linecap='round' stroke-linejoin='round' opacity='0.045'%3E%3Cpath d='M15 15h20v14H24l-6 5v-5h-3z'/%3E%3Ccircle cx='110' cy='30' r='8'/%3E%3Cpath d='M110 26v4l3 2'/%3E%3Cpath d='M150 40c0-4 4-8 8-8s8 4 8 8c0 8-16 16-16 16s-16-8-16-16c0-4 4-8 8-8s8 4 8 8z'/%3E%3Ccircle cx='55' cy='75' r='3' fill='%23fff'/%3E%3Cpath d='M58 75V62h10v10'/%3E%3Ccircle cx='68' cy='72' r='3' fill='%23fff'/%3E%3Crect x='130' y='100' width='16' height='12' rx='2'/%3E%3Ccircle cx='138' cy='106' r='3'/%3E%3Ccircle cx='40' cy='130' r='9'/%3E%3Ccircle cx='37' cy='128' r='1' fill='%23fff'/%3E%3Ccircle cx='43' cy='128' r='1' fill='%23fff'/%3E%3Cpath d='M37 133a4 4 0 0 0 6 0'/%3E%3Cpath d='M95 145l2 4 5 1-4 3 1 5-4-3-4 3 1-5-4-3 5-1z'/%3E%3Cpath d='M150 155l3 3 6-7m-4 4l3 3 6-7'/%3E%3C/g%3E%3C/svg%3E")`;
 
 /* ─── Platform Verified & Brand Badges ─── */
 export const TwitterVerifiedBadge = ({ size = 16, color = '#1d9bf0', checkColor = '#ffffff' }) => (
@@ -272,10 +274,27 @@ const RANDOM_IG_CAPTIONS = [
 /* ─── WhatsApp Presets & Multi-Message Conversations ─── */
 const WHATSAPP_PERSONAS = [
   {
+    id: 'newspaper',
+    label: '📰 Newspaper Ad',
+    name: '+91 81210 03003',
+    status: 'last seen yesterday at 6:43 PM',
+    datePill: 'Yesterday',
+    avatarBg: '#202c33',
+    messages: [
+      { id: 'm1', text: 'Hi, I need some help.', direction: 'sent', time: '12:28 PM', ticks: 'blue' },
+      { id: 'm2', text: 'Hello. Are you looking for advertising in newspaper. Please let us know what kind of ad you are looking to advertise. We will reply you shortly', direction: 'received', time: '12:31 PM', ticks: 'none' },
+      { id: 'm3', text: 'Yes', direction: 'sent', time: '12:31 PM', ticks: 'blue' },
+      { id: 'm4', text: 'In English and Gujarati', direction: 'sent', time: '12:31 PM', ticks: 'blue' },
+      { id: 'm5', text: '??', direction: 'sent', time: '11:34 AM', ticks: 'blue' },
+      { id: 'm6', text: 'We request you to please share the matter along with the newspaper name, date, and city.', direction: 'received', time: '12:16 PM', ticks: 'none' }
+    ]
+  },
+  {
     id: 'mom',
     label: '❤️ Mom',
     name: 'Mom ❤️',
     status: 'online',
+    datePill: 'TODAY',
     avatarBg: 'linear-gradient(135deg, #f43f5e, #fda4af)',
     messages: [
       { id: 'm1', text: 'Please remember to eat vegetables and don’t stay up until 4 AM arguing with strangers on the internet.', direction: 'received', time: '11:42 PM', ticks: 'blue' },
@@ -288,6 +307,7 @@ const WHATSAPP_PERSONAS = [
     label: '💼 The Boss',
     name: 'Boss 💼',
     status: 'online',
+    datePill: 'TODAY',
     avatarBg: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
     messages: [
       { id: 'b1', text: 'Hey, I know you’re on PTO in the mountains right now...', direction: 'received', time: '8:01 AM', ticks: 'blue' },
@@ -389,18 +409,64 @@ export default function MemeStylesModal({
   isOpen,
   onClose,
   initialPlatform = 'tweet',
+  cardData = null,
+  onUpdateCard,
   onAddTweetCard,
   onAddInstagramCard,
   onAddWhatsAppCard
 }) {
   const [activePlatform, setActivePlatform] = useState(initialPlatform);
 
-  // Sync initial platform when modal opens
+  // Sync initial platform and cardData when modal opens
   useEffect(() => {
-    if (isOpen && initialPlatform) {
+    if (!isOpen) return;
+    if (cardData) {
+      if (cardData.isTweetCard) {
+        setActivePlatform('tweet');
+        if (cardData.tweetName) setTweetName(cardData.tweetName);
+        if (cardData.tweetHandle) setTweetHandle(cardData.tweetHandle);
+        if (cardData.text !== undefined) setTweetText(cardData.text);
+        if (cardData.tweetVerified !== undefined) setTweetVerified(cardData.tweetVerified);
+        if (cardData.tweetTheme) setTweetTheme(cardData.tweetTheme);
+        if (cardData.tweetAvatarBg) setTweetAvatarBg(cardData.tweetAvatarBg);
+      } else if (cardData.isInstagramCard) {
+        setActivePlatform('instagram');
+        if (cardData.igUsername) setIgUsername(cardData.igUsername);
+        if (cardData.igSubtitle !== undefined) setIgSubtitle(cardData.igSubtitle);
+        if (cardData.text !== undefined) setIgText(cardData.text);
+        if (cardData.igVerified !== undefined) setIgVerified(cardData.igVerified);
+        if (cardData.igHasStoryRing !== undefined) setIgHasStoryRing(cardData.igHasStoryRing);
+        if (cardData.igLikesText !== undefined) setIgLikesText(cardData.igLikesText);
+        if (cardData.igLikesCount !== undefined) setIgLikesCount(cardData.igLikesCount);
+        if (cardData.igCommentsCount !== undefined) setIgCommentsCount(cardData.igCommentsCount);
+        if (cardData.igRepostsCount !== undefined) setIgRepostsCount(cardData.igRepostsCount);
+        if (cardData.igSharesCount !== undefined) setIgSharesCount(cardData.igSharesCount);
+        if (cardData.igFollowText !== undefined) setIgFollowText(cardData.igFollowText);
+        if (cardData.topCommentUser !== undefined) setIgTopCommentUser(cardData.topCommentUser);
+        if (cardData.topCommentText !== undefined) setIgTopCommentText(cardData.topCommentText);
+        if (cardData.igTheme) setIgTheme(cardData.igTheme);
+        if (cardData.igTime) setIgTime(cardData.igTime);
+        if (cardData.igPostImage) setIgPostImage(cardData.igPostImage);
+        if (cardData.igAvatarBg) setIgAvatarBg(cardData.igAvatarBg);
+      } else if (cardData.isWhatsAppCard) {
+        setActivePlatform('whatsapp');
+        if (cardData.waContactName) setWaName(cardData.waContactName);
+        if (cardData.waStatus) setWaStatus(cardData.waStatus);
+        if (cardData.waDatePill) setWaDatePill(cardData.waDatePill);
+        if (cardData.waTheme) setWaTheme(cardData.waTheme);
+        if (cardData.waShowHeader !== undefined) setWaShowHeader(cardData.waShowHeader);
+        if (cardData.waShowFooter !== undefined) setWaShowFooter(cardData.waShowFooter);
+        if (cardData.waShowDoodles !== undefined) setWaShowDoodles(cardData.waShowDoodles);
+        if (cardData.waMessages && Array.isArray(cardData.waMessages)) {
+          setWaMessages(cardData.waMessages);
+          setActiveWaMsgIndex(0);
+        }
+        if (cardData.waAvatarBg) setWaAvatarBg(cardData.waAvatarBg);
+      }
+    } else if (initialPlatform) {
       setActivePlatform(initialPlatform);
     }
-  }, [isOpen, initialPlatform]);
+  }, [isOpen, initialPlatform, cardData]);
 
   // 1. Twitter / X State
   const [activePersona, setActivePersona] = useState('elon');
@@ -435,13 +501,17 @@ export default function MemeStylesModal({
 
 
   // 3. WhatsApp State
-  const [activeWaPersona, setActiveWaPersona] = useState('mom');
-  const [waName, setWaName] = useState('Mom ❤️');
-  const [waStatus, setWaStatus] = useState('online');
+  const [activeWaPersona, setActiveWaPersona] = useState('newspaper');
+  const [waName, setWaName] = useState('+91 81210 03003');
+  const [waStatus, setWaStatus] = useState('last seen yesterday at 6:43 PM');
+  const [waDatePill, setWaDatePill] = useState('Yesterday');
   const [waTheme, setWaTheme] = useState('dark');
   const [waShowHeader, setWaShowHeader] = useState(true);
-  const [waAvatarBg, setWaAvatarBg] = useState('linear-gradient(135deg, #f43f5e, #fda4af)');
+  const [waShowFooter, setWaShowFooter] = useState(true);
+  const [waShowDoodles, setWaShowDoodles] = useState(true);
+  const [waAvatarBg, setWaAvatarBg] = useState('#202c33');
   const [waMessages, setWaMessages] = useState(WHATSAPP_PERSONAS[0].messages);
+  const [activeWaMsgIndex, setActiveWaMsgIndex] = useState(0);
 
   if (!isOpen) return null;
 
@@ -506,7 +576,11 @@ export default function MemeStylesModal({
     setActiveWaPersona(p.id);
     setWaName(p.name);
     setWaStatus(p.status);
-    if (p.messages) setWaMessages(p.messages);
+    if (p.datePill) setWaDatePill(p.datePill);
+    if (p.messages) {
+      setWaMessages(p.messages);
+      setActiveWaMsgIndex(0);
+    }
     if (p.avatarBg) setWaAvatarBg(p.avatarBg);
   };
 
@@ -520,7 +594,9 @@ export default function MemeStylesModal({
       time: '11:45 PM',
       ticks: 'blue'
     };
-    setWaMessages([...waMessages, newMsg]);
+    const next = [...waMessages, newMsg];
+    setWaMessages(next);
+    setActiveWaMsgIndex(next.length - 1);
   };
 
   const handleUpdateWaMessage = (id, updates) => {
@@ -529,82 +605,111 @@ export default function MemeStylesModal({
 
   const handleRemoveWaMessage = (id) => {
     if (waMessages.length <= 1) return;
-    setWaMessages(waMessages.filter(m => m.id !== id));
+    const removedIdx = waMessages.findIndex(m => m.id === id);
+    const next = waMessages.filter(m => m.id !== id);
+    setWaMessages(next);
+    setActiveWaMsgIndex(prev => {
+      if (prev >= next.length) return next.length - 1;
+      if (removedIdx <= prev) return Math.max(0, prev - 1);
+      return prev;
+    });
   };
 
   const handleRandomWaDialogue = () => {
     const pick = RANDOM_DIALOGUES[Math.floor(Math.random() * RANDOM_DIALOGUES.length)];
     setWaMessages(pick);
+    setActiveWaMsgIndex(0);
   };
 
   // Header Title and Icon per platform
   let modalTitle = 'Social Cards Studio';
   let modalIcon = <Sparkles size={17} />;
   if (activePlatform === 'tweet') {
-    modalTitle = 'Tweet Card';
+    modalTitle = cardData ? 'Edit Tweet Card' : 'Tweet Card';
     modalIcon = <XLogo size={17} />;
   } else if (activePlatform === 'instagram') {
-    modalTitle = 'Instagram Card';
+    modalTitle = cardData ? 'Edit Instagram Card' : 'Instagram Card';
     modalIcon = <InstagramLogo size={17} color="#e1306c" />;
   } else if (activePlatform === 'whatsapp') {
-    modalTitle = 'WhatsApp Card';
+    modalTitle = cardData ? 'Edit WhatsApp Card' : 'WhatsApp Card';
     modalIcon = <WhatsAppLogo size={17} color="#25d366" />;
   }
 
   const handleAddCurrentCard = () => {
     if (activePlatform === 'tweet') {
-      if (onAddTweetCard) {
-        onAddTweetCard({
-          name: tweetName,
-          handle: tweetHandle,
-          text: tweetText,
-          verified: tweetVerified,
-          theme: tweetTheme,
-          time: '10:42 PM · Oct 8, 2026',
-          metrics: '💬 14.2K    🔁 62.8K    ❤️ 420.5K    📊 18.2M'
-        });
+      const tweetData = {
+        name: tweetName,
+        handle: tweetHandle,
+        text: tweetText,
+        verified: tweetVerified,
+        theme: tweetTheme,
+        avatarBg: tweetAvatarBg,
+        time: '10:42 PM · Oct 8, 2026',
+        metrics: '💬 14.2K    🔁 62.8K    ❤️ 420.5K    📊 18.2M'
+      };
+      if (cardData && onUpdateCard) {
+        onUpdateCard(tweetData);
+      } else if (onAddTweetCard) {
+        onAddTweetCard(tweetData);
       }
     } else if (activePlatform === 'instagram') {
-      if (onAddInstagramCard) {
-        onAddInstagramCard({
-          username: igUsername,
-          subtitle: igSubtitle,
-          text: igText,
-          verified: igVerified,
-          hasStoryRing: igHasStoryRing,
-          likesText: igLikesText,
-          likesCount: igLikesCount,
-          commentsCount: igCommentsCount,
-          repostsCount: igRepostsCount,
-          sharesCount: igSharesCount,
-          followText: igFollowText,
-          topCommentUser: igTopCommentUser,
-          topCommentText: igTopCommentText,
-          postImage: igPostImage,
-          theme: igTheme,
-          time: igTime || '28 September',
-          showTranslation: igShowTranslation
-        });
+      const igData = {
+        username: igUsername,
+        subtitle: igSubtitle,
+        text: igText,
+        verified: igVerified,
+        hasStoryRing: igHasStoryRing,
+        likesText: igLikesText,
+        likesCount: igLikesCount,
+        commentsCount: igCommentsCount,
+        repostsCount: igRepostsCount,
+        sharesCount: igSharesCount,
+        followText: igFollowText,
+        topCommentUser: igTopCommentUser,
+        topCommentText: igTopCommentText,
+        postImage: igPostImage,
+        theme: igTheme,
+        time: igTime || '28 September',
+        showTranslation: igShowTranslation
+      };
+      if (cardData && onUpdateCard) {
+        onUpdateCard(igData);
+      } else if (onAddInstagramCard) {
+        onAddInstagramCard(igData);
       }
     } else if (activePlatform === 'whatsapp') {
-      if (onAddWhatsAppCard) {
-        onAddWhatsAppCard({
-          contactName: waName,
-          status: waStatus,
-          text: waMessages[0]?.text || '',
-          messages: waMessages,
-          direction: waMessages[0]?.direction || 'received',
-          ticks: 'blue',
-          theme: waTheme,
-          showHeader: waShowHeader,
-          time: waMessages[waMessages.length - 1]?.time || '11:42 PM'
-        });
+      const waData = {
+        contactName: waName,
+        status: waStatus,
+        datePill: waDatePill,
+        text: waMessages[0]?.text || '',
+        messages: waMessages,
+        direction: waMessages[0]?.direction || 'received',
+        ticks: 'blue',
+        theme: waTheme,
+        showHeader: waShowHeader,
+        showFooter: waShowFooter,
+        showDoodles: waShowDoodles,
+        avatarBg: waAvatarBg,
+        time: waMessages[waMessages.length - 1]?.time || '11:42 PM'
+      };
+      if (cardData && onUpdateCard) {
+        onUpdateCard(waData);
+      } else if (onAddWhatsAppCard) {
+        onAddWhatsAppCard(waData);
       }
     }
-    onClose();
+    if (onClose) onClose();
   };
 
+  const isEditing = Boolean(cardData);
+
   const getAddBtnLabel = () => {
+    if (isEditing) {
+      if (activePlatform === 'tweet') return 'Save Tweet Card';
+      if (activePlatform === 'instagram') return 'Save Instagram Post';
+      return 'Save WhatsApp Card';
+    }
     if (activePlatform === 'tweet') return 'Add Tweet Card to Meme';
     if (activePlatform === 'instagram') return 'Add Instagram Card to Meme';
     return 'Add WhatsApp Card to Meme';
@@ -634,15 +739,28 @@ export default function MemeStylesModal({
             justifyContent: 'center',
             gap: '8px',
             fontSize: '0.92rem',
-            background: 'linear-gradient(135deg, #ff5e36 0%, #ff3b30 100%)',
+            background: activePlatform === 'whatsapp'
+              ? 'linear-gradient(135deg, #25d366 0%, #128c7e 100%)'
+              : (isEditing
+                ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
+                : 'linear-gradient(135deg, #ff5e36 0%, #ff3b30 100%)'),
             border: 'none',
             color: '#ffffff',
-            boxShadow: '0 6px 20px rgba(255, 94, 54, 0.45)',
+            boxShadow: activePlatform === 'whatsapp'
+              ? '0 6px 20px rgba(37, 211, 102, 0.35)'
+              : (isEditing
+                ? '0 6px 20px rgba(16, 185, 129, 0.45)'
+                : '0 6px 20px rgba(255, 94, 54, 0.45)'),
             letterSpacing: '-0.01em',
             cursor: 'pointer'
           }}
         >
-          <Plus size={18} strokeWidth={2.5} /> {getAddBtnLabel()}
+          {isEditing ? (
+            <Check size={18} strokeWidth={2.6} />
+          ) : (
+            <Plus size={18} strokeWidth={2.5} />
+          )}
+          <span>{getAddBtnLabel()}</span>
         </button>
       }
     >
@@ -724,8 +842,24 @@ export default function MemeStylesModal({
       >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#ff5e36', display: 'inline-block' }} />
-            <span style={{ fontSize: '0.68rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#ff5e36' }}>
+            <span
+              style={{
+                width: 6,
+                height: 6,
+                borderRadius: '50%',
+                background: activePlatform === 'whatsapp' ? '#25d366' : (activePlatform === 'tweet' ? '#1d9bf0' : '#e1306c'),
+                display: 'inline-block'
+              }}
+            />
+            <span
+              style={{
+                fontSize: '0.68rem',
+                fontWeight: 800,
+                textTransform: 'uppercase',
+                letterSpacing: '0.08em',
+                color: activePlatform === 'whatsapp' ? '#25d366' : (activePlatform === 'tweet' ? '#1d9bf0' : '#e1306c')
+              }}
+            >
               Live Preview
             </span>
           </div>
@@ -1033,25 +1167,27 @@ export default function MemeStylesModal({
           </div>
         )}
 
-        {/* 3. MODERN iOS WHATSAPP CHAT CARD PREVIEW (MULTI-MESSAGE CONVERSATION) */}
+        {/* 3. AUTHENTIC WHATSAPP CHAT CARD PREVIEW */}
         {activePlatform === 'whatsapp' && (
           <div
             style={{
               background: waTheme === 'light' ? '#efeae2' : '#0b141a',
+              backgroundImage: waShowDoodles ? WHATSAPP_DOODLE_CSS_BG : 'none',
+              backgroundRepeat: 'repeat',
               color: waTheme === 'light' ? '#111b21' : '#e9edef',
-              border: waTheme === 'light' ? '1px solid rgba(0, 0, 0, 0.12)' : '1px solid rgba(255, 255, 255, 0.12)',
-              borderRadius: '18px',
+              border: waTheme === 'light' ? '1px solid rgba(0, 0, 0, 0.12)' : '1px solid rgba(255, 255, 255, 0.10)',
+              borderRadius: '14px',
               overflow: 'hidden',
-              boxShadow: '0 6px 20px rgba(0, 0, 0, 0.45)',
+              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.35)',
               fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif'
             }}
           >
-            {/* Modern iOS WhatsApp Header Bar */}
+            {/* Authentic WhatsApp Header Bar */}
             {waShowHeader && (
               <div
                 style={{
-                  background: waTheme === 'light' ? '#f6f6f6' : '#1f2c34',
-                  padding: '10px 14px',
+                  background: waTheme === 'light' ? '#f0f2f5' : '#121b22',
+                  padding: '8px 12px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
@@ -1059,16 +1195,14 @@ export default function MemeStylesModal({
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  {/* iOS Blue Back Chevron */}
-                  <span style={{ color: '#007aff', fontWeight: 600, fontSize: '1.25rem', lineHeight: 1, display: 'inline-flex', alignItems: 'center' }}>
-                    ‹
-                  </span>
-                  
+                  {/* Clean White Back Chevron */}
+                  <ChevronLeft size={18} color={waTheme === 'light' ? '#111b21' : '#ffffff'} style={{ cursor: 'pointer', flexShrink: 0 }} />
+
                   {/* Contact Avatar */}
                   <div
                     style={{
-                      width: 36,
-                      height: 36,
+                      width: 32,
+                      height: 32,
                       borderRadius: '50%',
                       background: waAvatarBg,
                       display: 'flex',
@@ -1076,60 +1210,61 @@ export default function MemeStylesModal({
                       justifyContent: 'center',
                       fontWeight: 700,
                       color: '#ffffff',
-                      fontSize: '0.90rem',
-                      boxShadow: '0 1px 3px rgba(0,0,0,0.2)'
+                      fontSize: '0.84rem',
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+                      border: waTheme === 'light' ? '1px solid rgba(0,0,0,0.1)' : '1px solid rgba(255,255,255,0.15)',
+                      flexShrink: 0
                     }}
                   >
-                    {(waName || 'W').charAt(0).toUpperCase()}
+                    {(waName || 'W').replace(/^\+91\s*/, '').charAt(0).toUpperCase() || 'W'}
                   </div>
 
                   {/* Name and Status */}
-                  <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.15 }}>
-                    <span style={{ fontWeight: 700, fontSize: '0.90rem', color: waTheme === 'light' ? '#111b21' : '#e9edef' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.15, minWidth: 0 }}>
+                    <span style={{ fontWeight: 600, fontSize: '0.84rem', color: waTheme === 'light' ? '#111b21' : '#ffffff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {waName || 'Contact Name'}
                     </span>
-                    <span style={{ fontSize: '0.70rem', color: waStatus === 'online' ? '#25d366' : (waTheme === 'light' ? '#667781' : '#8696a0'), fontWeight: waStatus === 'online' ? 600 : 400 }}>
+                    <span style={{ fontSize: '0.67rem', color: waStatus === 'online' ? '#25d366' : (waTheme === 'light' ? '#667781' : '#8696a0'), fontWeight: waStatus === 'online' ? 600 : 400 }}>
                       {waStatus}
                     </span>
                   </div>
                 </div>
 
-                {/* iOS Call Glyphs */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                  <IOSVideoGlyph size={19} color="#007aff" />
-                  <IOSPhoneGlyph size={17} color="#007aff" />
-                </div>
+                {/* White Outline Phone Call Icon */}
+                <Phone size={16} color={waTheme === 'light' ? '#111b21' : '#ffffff'} style={{ flexShrink: 0 }} />
               </div>
             )}
 
             {/* Conversation Stream */}
-            <div style={{ padding: '14px 14px 16px 14px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {/* Centered iOS Date Pill */}
+            <div style={{ padding: '8px 10px', display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '170px', overflowY: 'auto' }}>
+              {/* Centered WhatsApp Date Badge */}
               <div
                 style={{
                   alignSelf: 'center',
-                  background: waTheme === 'light' ? 'rgba(255, 255, 255, 0.88)' : 'rgba(18, 27, 34, 0.78)',
-                  backdropFilter: 'blur(8px)',
-                  padding: '3px 12px',
-                  borderRadius: '10px',
-                  boxShadow: '0 1px 2px rgba(0,0,0,0.15)',
-                  marginBottom: '4px'
+                  background: waTheme === 'light' ? 'rgba(255, 255, 255, 0.92)' : '#182229',
+                  padding: '2px 10px',
+                  borderRadius: '6px',
+                  border: waTheme === 'light' ? '1px solid rgba(0,0,0,0.06)' : '1px solid rgba(255,255,255,0.05)',
+                  marginBottom: '2px'
                 }}
               >
-                <span style={{ fontSize: '0.66rem', fontWeight: 700, color: waTheme === 'light' ? '#54656f' : '#8696a0', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                  TODAY
+                <span style={{ fontSize: '0.65rem', fontWeight: 500, color: waTheme === 'light' ? '#54656f' : '#8696a0' }}>
+                  {waDatePill || 'Yesterday'}
                 </span>
               </div>
 
-              {/* Multi-Message Sequence */}
+              {/* Multi-Message Sequence with authentic speech bubble tails */}
               {waMessages.map((msg, index) => {
                 const isSent = msg.direction === 'sent';
                 const prevMsg = waMessages[index - 1];
-                const isClustered = prevMsg && prevMsg.direction === msg.direction;
+                const isConsecutive = prevMsg && prevMsg.direction === msg.direction;
+                const hasTail = !isConsecutive;
+                const isSelected = activeWaMsgIndex === index;
 
                 return (
                   <div
                     key={msg.id || index}
+                    onClick={() => setActiveWaMsgIndex(index)}
                     style={{
                       alignSelf: isSent ? 'flex-end' : 'flex-start',
                       maxWidth: '82%',
@@ -1137,16 +1272,21 @@ export default function MemeStylesModal({
                         ? (waTheme === 'light' ? '#d9fdd3' : '#005c4b')
                         : (waTheme === 'light' ? '#ffffff' : '#202c33'),
                       color: waTheme === 'light' ? '#111b21' : '#e9edef',
-                      padding: '7px 11px 5px 12px',
+                      padding: '6px 10px 4px 10px',
                       borderRadius: isSent
-                        ? (isClustered ? '14px 14px 4px 14px' : '14px 14px 4px 14px')
-                        : (isClustered ? '14px 14px 14px 4px' : '14px 14px 14px 4px'),
-                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.14)',
+                        ? (hasTail ? '8px 2px 8px 8px' : '8px')
+                        : (hasTail ? '2px 8px 8px 8px' : '8px'),
+                      boxShadow: isSelected
+                        ? '0 0 0 1.5px #25d366, 0 2px 6px rgba(0, 0, 0, 0.25)'
+                        : '0 1px 2px rgba(0, 0, 0, 0.16)',
                       position: 'relative',
-                      marginTop: isClustered ? '-4px' : '0'
+                      marginTop: isConsecutive ? '-2px' : '3px',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease'
                     }}
+                    title={`Click to edit Message ${index + 1}`}
                   >
-                    <div style={{ fontSize: '0.86rem', lineHeight: 1.35, wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>
+                    <div style={{ fontSize: '0.82rem', lineHeight: 1.35, wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>
                       {msg.text || '...'}
                     </div>
 
@@ -1156,18 +1296,71 @@ export default function MemeStylesModal({
                         alignItems: 'center',
                         justifyContent: 'flex-end',
                         gap: '4px',
-                        fontSize: '0.64rem',
+                        fontSize: '0.60rem',
                         color: waTheme === 'light' ? '#667781' : '#8696a0',
-                        marginTop: '3px'
+                        marginTop: '2px'
                       }}
                     >
                       <span>{msg.time || '11:42 PM'}</span>
-                      {isSent && <WhatsAppCheckmarks ticks={msg.ticks || 'blue'} size={13} />}
+                      {isSent && (
+                        <span style={{ color: msg.ticks === 'grey' ? '#8696a0' : '#53bdeb', fontWeight: 700, fontSize: '0.70rem', lineHeight: 1 }}>
+                          {msg.ticks === 'single' ? '✓' : '✓✓'}
+                        </span>
+                      )}
                     </div>
                   </div>
                 );
               })}
             </div>
+
+            {/* Authentic Modern Bottom Input Bar */}
+            {waShowFooter && (
+              <div
+                style={{
+                  background: waTheme === 'light' ? '#f0f2f5' : '#0b141a',
+                  padding: '6px 10px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  borderTop: waTheme === 'light' ? '1px solid rgba(0,0,0,0.08)' : '1px solid rgba(255,255,255,0.08)'
+                }}
+              >
+                <Plus size={18} color={waTheme === 'light' ? '#54656f' : '#8696a0'} />
+                <div
+                  style={{
+                    flex: 1,
+                    background: waTheme === 'light' ? '#ffffff' : '#202c33',
+                    borderRadius: '20px',
+                    height: '28px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '0 10px',
+                    color: '#8696a0',
+                    fontSize: '0.75rem'
+                  }}
+                >
+                  <span>Message</span>
+                  <Paperclip size={13} color="#8696a0" />
+                </div>
+                <Camera size={16} color={waTheme === 'light' ? '#54656f' : '#8696a0'} />
+                <div
+                  style={{
+                    width: 28,
+                    height: 28,
+                    borderRadius: '50%',
+                    background: waTheme === 'light' ? '#00a884' : '#202c33',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#ffffff',
+                    fontSize: '0.80rem'
+                  }}
+                >
+                  <Mic size={13} color="#ffffff" />
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -1645,13 +1838,24 @@ export default function MemeStylesModal({
           </div>
         )}
 
-        {/* 3. MODERN iOS WHATSAPP CONTROLS (MULTI-MESSAGE CONVERSATION MANAGER) */}
+        {/* 3. AUTHENTIC MINIMALIST WHATSAPP CONTROLS */}
         {activePlatform === 'whatsapp' && (
-          <>
-            <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '12px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {/* Minimalist Contact & Status Card */}
+            <div
+              style={{
+                background: 'rgba(255, 255, 255, 0.03)',
+                border: '1px solid rgba(255, 255, 255, 0.07)',
+                borderRadius: '12px',
+                padding: '10px 12px',
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))',
+                gap: '8px'
+              }}
+            >
               <div>
-                <label style={{ fontSize: '0.74rem', fontWeight: 700, color: 'rgba(255,255,255,0.65)', display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '6px' }}>
-                  <User size={13} style={{ color: '#ff5e36' }} /> Contact Name
+                <label style={{ fontSize: '0.66rem', fontWeight: 600, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: '0.04em', display: 'block', marginBottom: '4px' }}>
+                  Name / Number
                 </label>
                 <input
                   type="text"
@@ -1661,16 +1865,24 @@ export default function MemeStylesModal({
                     setWaName(e.target.value);
                     setActiveWaPersona('custom');
                   }}
-                  placeholder="e.g. Mom ❤️"
-                  style={inputStyle}
+                  placeholder="+91 81210 03003"
+                  style={{
+                    ...inputStyle,
+                    height: '34px',
+                    fontSize: '0.80rem',
+                    background: '#0d1015',
+                    border: '1px solid rgba(255, 255, 255, 0.09)',
+                    borderRadius: '8px',
+                    padding: '0 10px'
+                  }}
                   onFocus={inputFocusHandler}
                   onBlur={inputBlurHandler}
                 />
               </div>
 
               <div>
-                <label style={{ fontSize: '0.74rem', fontWeight: 700, color: 'rgba(255,255,255,0.65)', display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '6px' }}>
-                  <Sparkles size={13} style={{ color: '#ff5e36' }} /> Status
+                <label style={{ fontSize: '0.66rem', fontWeight: 600, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: '0.04em', display: 'block', marginBottom: '4px' }}>
+                  Status
                 </label>
                 <input
                   type="text"
@@ -1680,218 +1892,531 @@ export default function MemeStylesModal({
                     setWaStatus(e.target.value);
                     setActiveWaPersona('custom');
                   }}
-                  placeholder="e.g. online, typing..."
-                  style={inputStyle}
+                  placeholder="online"
+                  style={{
+                    ...inputStyle,
+                    height: '34px',
+                    fontSize: '0.80rem',
+                    background: '#0d1015',
+                    border: '1px solid rgba(255, 255, 255, 0.09)',
+                    borderRadius: '8px',
+                    padding: '0 10px'
+                  }}
+                  onFocus={inputFocusHandler}
+                  onBlur={inputBlurHandler}
+                />
+              </div>
+
+              <div>
+                <label style={{ fontSize: '0.66rem', fontWeight: 600, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: '0.04em', display: 'block', marginBottom: '4px' }}>
+                  Date Badge
+                </label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={waDatePill}
+                  onChange={(e) => setWaDatePill(e.target.value)}
+                  placeholder="Yesterday"
+                  style={{
+                    ...inputStyle,
+                    height: '34px',
+                    fontSize: '0.80rem',
+                    background: '#0d1015',
+                    border: '1px solid rgba(255, 255, 255, 0.09)',
+                    borderRadius: '8px',
+                    padding: '0 10px'
+                  }}
                   onFocus={inputFocusHandler}
                   onBlur={inputBlurHandler}
                 />
               </div>
             </div>
 
-            {/* Conversation Messages List */}
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <span style={{ fontSize: '0.74rem', fontWeight: 700, color: 'rgba(255,255,255,0.75)' }}>
-                  Conversation Messages ({waMessages.length})
+            {/* Conversation Messages Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '2px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Messages
                 </span>
-                <div style={{ display: 'flex', gap: '6px' }}>
-                  <button
-                    type="button"
-                    onClick={handleRandomWaDialogue}
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '4px',
-                      fontSize: '0.72rem',
-                      fontWeight: 700,
-                      color: '#ff5e36',
-                      background: '#16181f',
-                      border: '1px solid rgba(255, 255, 255, 0.14)',
-                      borderRadius: '9999px',
-                      padding: '3px 10px',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    <Dices size={12} /> Surprise Dialogue
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleAddWaMessage}
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '4px',
-                      fontSize: '0.72rem',
-                      fontWeight: 700,
-                      color: '#ffffff',
-                      background: 'var(--primary-gradient)',
-                      border: 'none',
-                      borderRadius: '9999px',
-                      padding: '3px 12px',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    <Plus size={13} strokeWidth={2.4} /> Add Message
-                  </button>
-                </div>
+                <span
+                  style={{
+                    fontSize: '0.64rem',
+                    fontWeight: 700,
+                    background: 'rgba(255, 255, 255, 0.08)',
+                    color: 'rgba(255, 255, 255, 0.6)',
+                    padding: '1px 6px',
+                    borderRadius: '999px'
+                  }}
+                >
+                  {waMessages.length}
+                </span>
               </div>
+              <button
+                type="button"
+                onClick={handleAddWaMessage}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  fontSize: '0.70rem',
+                  fontWeight: 600,
+                  color: '#25d366',
+                  background: 'rgba(37, 211, 102, 0.1)',
+                  border: '1px solid rgba(37, 211, 102, 0.28)',
+                  borderRadius: '9999px',
+                  padding: '3px 10px',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                <Plus size={12} strokeWidth={2.5} />
+                <span>Add Message</span>
+              </button>
+            </div>
 
-              {/* Message Cards */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {waMessages.map((msg, index) => {
-                  const isSent = msg.direction === 'sent';
+            {/* Message Selector Buttons: Message 1, Message 2, etc. */}
+            <div
+              style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: '6px',
+                alignItems: 'center'
+              }}
+            >
+              {waMessages.map((msg, index) => {
+                const isSelected = activeWaMsgIndex === index;
+                const isSent = msg.direction === 'sent';
 
-                  return (
-                    <div
-                      key={msg.id || index}
+                return (
+                  <button
+                    key={msg.id || index}
+                    type="button"
+                    onClick={() => setActiveWaMsgIndex(isSelected ? null : index)}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '5px',
+                      padding: '5px 12px',
+                      borderRadius: '9999px',
+                      fontSize: '0.72rem',
+                      fontWeight: isSelected ? 700 : 500,
+                      background: isSelected
+                        ? 'rgba(37, 211, 102, 0.12)'
+                        : 'rgba(255, 255, 255, 0.04)',
+                      border: isSelected
+                        ? '1px solid #25d366'
+                        : '1px solid rgba(255, 255, 255, 0.09)',
+                      color: isSelected ? '#25d366' : 'rgba(255, 255, 255, 0.72)',
+                      cursor: 'pointer',
+                      boxShadow: isSelected ? '0 2px 8px rgba(37, 211, 102, 0.15)' : 'none',
+                      transition: 'all 0.15s ease'
+                    }}
+                    title={`Click to ${isSelected ? 'close' : 'open'} Message ${index + 1}`}
+                  >
+                    <span
                       style={{
-                        background: '#16181f',
-                        border: '1px solid rgba(255, 255, 255, 0.12)',
-                        borderRadius: '14px',
-                        padding: '10px 12px',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '8px'
+                        width: '6px',
+                        height: '6px',
+                        borderRadius: '50%',
+                        background: isSent ? '#25d366' : '#8696a0',
+                        flexShrink: 0
+                      }}
+                    />
+                    <span>Message {index + 1}</span>
+                    <ChevronDown
+                      size={11}
+                      style={{
+                        transform: isSelected ? 'rotate(180deg)' : 'rotate(0deg)',
+                        transition: 'transform 0.18s ease',
+                        opacity: isSelected ? 1 : 0.5
+                      }}
+                    />
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Active Message Container (opens when user clicks a message button) */}
+            {activeWaMsgIndex !== null && waMessages[activeWaMsgIndex] && (() => {
+              const msg = waMessages[activeWaMsgIndex];
+              const isSent = msg.direction === 'sent';
+
+              return (
+                <div
+                  style={{
+                    background: '#11141b',
+                    border: '1px solid rgba(255, 255, 255, 0.09)',
+                    borderLeft: `3px solid ${isSent ? '#25d366' : '#8696a0'}`,
+                    borderRadius: '12px',
+                    padding: '12px 14px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '10px',
+                    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.25)'
+                  }}
+                >
+                  {/* Streamlined Top Control Row */}
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: '8px',
+                      flexWrap: 'wrap'
+                    }}
+                  >
+                    {/* iOS-style Segmented Sender Control */}
+                    <div
+                      style={{
+                        display: 'inline-flex',
+                        background: 'rgba(0, 0, 0, 0.45)',
+                        borderRadius: '8px',
+                        padding: '2px',
+                        border: '1px solid rgba(255, 255, 255, 0.08)'
                       }}
                     >
-                      {/* Message Card Header */}
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <span style={{ fontSize: '0.70rem', fontWeight: 800, color: 'rgba(255,255,255,0.4)' }}>
-                            #{index + 1}
-                          </span>
+                      <button
+                        type="button"
+                        onClick={() => handleUpdateWaMessage(msg.id, { direction: 'sent' })}
+                        style={{
+                          padding: '3px 10px',
+                          borderRadius: '6px',
+                          fontSize: '0.68rem',
+                          fontWeight: isSent ? 700 : 500,
+                          background: isSent ? 'rgba(37, 211, 102, 0.22)' : 'transparent',
+                          color: isSent ? '#25d366' : 'rgba(255, 255, 255, 0.45)',
+                          border: isSent ? '1px solid rgba(37, 211, 102, 0.35)' : '1px solid transparent',
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          transition: 'all 0.15s ease'
+                        }}
+                        title="Switch to Sent message (Green, on Right)"
+                      >
+                        <span>Sent</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleUpdateWaMessage(msg.id, { direction: 'received' })}
+                        style={{
+                          padding: '3px 10px',
+                          borderRadius: '6px',
+                          fontSize: '0.68rem',
+                          fontWeight: !isSent ? 700 : 500,
+                          background: !isSent ? 'rgba(255, 255, 255, 0.14)' : 'transparent',
+                          color: !isSent ? '#ffffff' : 'rgba(255, 255, 255, 0.45)',
+                          border: !isSent ? '1px solid rgba(255, 255, 255, 0.18)' : '1px solid transparent',
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          transition: 'all 0.15s ease'
+                        }}
+                        title="Switch to Received message (Slate, on Left)"
+                      >
+                        <span>Received</span>
+                      </button>
+                    </div>
 
-                          {/* Direction Toggle Pill */}
-                          <button
-                            type="button"
-                            onClick={() => handleUpdateWaMessage(msg.id, { direction: isSent ? 'received' : 'sent' })}
-                            style={{
-                              padding: '2px 8px',
-                              borderRadius: '999px',
-                              fontSize: '0.68rem',
-                              fontWeight: 700,
-                              background: isSent ? 'rgba(37, 211, 102, 0.2)' : 'rgba(255, 255, 255, 0.1)',
-                              border: isSent ? '1px solid #25d366' : '1px solid rgba(255, 255, 255, 0.2)',
-                              color: isSent ? '#25d366' : '#ffffff',
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '4px',
-                              cursor: 'pointer'
-                            }}
-                          >
-                            <ArrowLeftRight size={10} />
-                            <span>{isSent ? 'Sent (Green)' : 'Received (Slate)'}</span>
-                          </button>
-                        </div>
-
-                        {/* Delete message if > 1 */}
-                        {waMessages.length > 1 && (
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveWaMessage(msg.id)}
-                            style={{
-                              background: 'transparent',
-                              border: 'none',
-                              color: '#ef4444',
-                              cursor: 'pointer',
-                              padding: '2px 6px',
-                              borderRadius: '4px'
-                            }}
-                            title="Delete this message"
-                          >
-                            <Trash2 size={13} />
-                          </button>
-                        )}
-                      </div>
-
-                      {/* Message Content Input */}
-                      <textarea
+                    {/* Timestamp & Ticks Controls */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <input
+                        type="text"
                         className="form-input"
-                        rows={2}
-                        value={msg.text}
-                        onChange={(e) => handleUpdateWaMessage(msg.id, { text: e.target.value })}
-                        placeholder="Type message text..."
-                        style={{ ...textareaStyle, minHeight: '52px', padding: '10px 14px', fontSize: '0.84rem' }}
+                        value={msg.time || '11:42 PM'}
+                        onChange={(e) => handleUpdateWaMessage(msg.id, { time: e.target.value })}
+                        style={{
+                          height: '27px',
+                          width: '74px',
+                          fontSize: '0.70rem',
+                          textAlign: 'center',
+                          background: 'rgba(0, 0, 0, 0.4)',
+                          border: '1px solid rgba(255, 255, 255, 0.08)',
+                          borderRadius: '6px',
+                          color: 'rgba(255, 255, 255, 0.9)',
+                          padding: '0 4px',
+                          fontWeight: 500
+                        }}
                         onFocus={inputFocusHandler}
                         onBlur={inputBlurHandler}
+                        title="Message timestamp"
                       />
 
-                      {/* Message Time and Ticks */}
-                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', flex: 1 }}>
-                          <span style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.5)' }}>Time:</span>
-                          <input
-                            type="text"
-                            className="form-input"
-                            value={msg.time || '11:42 PM'}
-                            onChange={(e) => handleUpdateWaMessage(msg.id, { time: e.target.value })}
-                            style={{ ...inputStyle, height: '32px', padding: '0 10px', fontSize: '0.74rem', width: '92px' }}
-                            onFocus={inputFocusHandler}
-                            onBlur={inputBlurHandler}
-                          />
-                        </div>
-
-                        {isSent && (
-                          <div style={{ display: 'flex', gap: '4px' }}>
-                            {['blue', 'grey', 'single'].map(t => (
-                              <button
-                                key={t}
-                                type="button"
-                                onClick={() => handleUpdateWaMessage(msg.id, { ticks: t })}
-                                style={{
-                                  padding: '2px 6px',
-                                  borderRadius: '6px',
-                                  fontSize: '0.66rem',
-                                  background: (msg.ticks || 'blue') === t ? 'rgba(83, 189, 235, 0.25)' : 'rgba(255,255,255,0.06)',
-                                  border: (msg.ticks || 'blue') === t ? '1px solid #53bdeb' : '1px solid transparent',
-                                  color: (msg.ticks || 'blue') === t ? '#53bdeb' : 'rgba(255,255,255,0.6)',
-                                  cursor: 'pointer'
-                                }}
-                              >
-                                {t === 'blue' ? '✓✓ Blue' : t === 'grey' ? '✓✓ Grey' : '✓ Single'}
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                      </div>
+                      {isSent && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const nextTicks = msg.ticks === 'blue' ? 'grey' : msg.ticks === 'grey' ? 'single' : 'blue';
+                            handleUpdateWaMessage(msg.id, { ticks: nextTicks });
+                          }}
+                          style={{
+                            height: '27px',
+                            padding: '0 8px',
+                            borderRadius: '6px',
+                            fontSize: '0.70rem',
+                            fontWeight: 700,
+                            background: 'rgba(0, 0, 0, 0.4)',
+                            border: '1px solid rgba(255, 255, 255, 0.08)',
+                            color: msg.ticks === 'blue' ? '#53bdeb' : '#8696a0',
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '3px',
+                            transition: 'all 0.15s ease'
+                          }}
+                          title="Click to cycle read receipts (Blue / Grey / Single)"
+                        >
+                          <span>{msg.ticks === 'single' ? '✓ Single' : msg.ticks === 'grey' ? '✓✓ Grey' : '✓✓ Blue'}</span>
+                        </button>
+                      )}
                     </div>
-                  );
-                })}
-              </div>
-            </div>
 
-            {/* Header toggle and Theme */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '0.78rem', color: '#ffffff' }}>
-                <input
-                  type="checkbox"
-                  checked={waShowHeader}
-                  onChange={(e) => setWaShowHeader(e.target.checked)}
-                  style={{ accentColor: '#25d366', width: 16, height: 16 }}
-                />
-                <span>Show iOS Header Bar</span>
-              </label>
+                    {/* Step Prev/Next, Delete, and Close Actions */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginLeft: 'auto' }}>
+                      <button
+                        type="button"
+                        disabled={activeWaMsgIndex === 0}
+                        onClick={() => setActiveWaMsgIndex(prev => Math.max(0, prev - 1))}
+                        style={{
+                          width: '27px',
+                          height: '27px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          background: 'rgba(255, 255, 255, 0.04)',
+                          border: '1px solid rgba(255, 255, 255, 0.08)',
+                          borderRadius: '6px',
+                          color: activeWaMsgIndex === 0 ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.8)',
+                          cursor: activeWaMsgIndex === 0 ? 'not-allowed' : 'pointer',
+                          padding: 0
+                        }}
+                        title="Previous message"
+                      >
+                        <ChevronLeft size={13} />
+                      </button>
 
-              <div style={{ display: 'flex', gap: '6px' }}>
+                      <button
+                        type="button"
+                        disabled={activeWaMsgIndex === waMessages.length - 1}
+                        onClick={() => setActiveWaMsgIndex(prev => Math.min(waMessages.length - 1, prev + 1))}
+                        style={{
+                          width: '27px',
+                          height: '27px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          background: 'rgba(255, 255, 255, 0.04)',
+                          border: '1px solid rgba(255, 255, 255, 0.08)',
+                          borderRadius: '6px',
+                          color: activeWaMsgIndex === waMessages.length - 1 ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.8)',
+                          cursor: activeWaMsgIndex === waMessages.length - 1 ? 'not-allowed' : 'pointer',
+                          padding: 0
+                        }}
+                        title="Next message"
+                      >
+                        <ChevronRight size={13} />
+                      </button>
+
+                      {waMessages.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveWaMessage(msg.id)}
+                          style={{
+                            width: '27px',
+                            height: '27px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            background: 'rgba(239, 68, 68, 0.08)',
+                            border: '1px solid rgba(239, 68, 68, 0.22)',
+                            borderRadius: '6px',
+                            color: '#ef4444',
+                            cursor: 'pointer',
+                            padding: 0
+                          }}
+                          title="Delete message"
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={() => setActiveWaMsgIndex(null)}
+                        style={{
+                          width: '27px',
+                          height: '27px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          background: 'transparent',
+                          border: 'none',
+                          color: 'rgba(255, 255, 255, 0.35)',
+                          cursor: 'pointer',
+                          fontSize: '0.85rem',
+                          padding: 0
+                        }}
+                        title="Close editor"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Message Textarea */}
+                  <div>
+                    <textarea
+                      className="form-input"
+                      rows={2}
+                      value={msg.text}
+                      onChange={(e) => handleUpdateWaMessage(msg.id, { text: e.target.value })}
+                      placeholder="Type message text..."
+                      style={{
+                        ...textareaStyle,
+                        minHeight: '46px',
+                        background: 'rgba(0, 0, 0, 0.45)',
+                        border: '1px solid rgba(255, 255, 255, 0.08)',
+                        borderRadius: '8px',
+                        padding: '8px 10px',
+                        fontSize: '0.82rem',
+                        lineHeight: 1.4,
+                        color: '#ffffff'
+                      }}
+                      onFocus={inputFocusHandler}
+                      onBlur={inputBlurHandler}
+                    />
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Minimalist Appearance Options Bar */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: '8px',
+                paddingTop: '6px',
+                borderTop: '1px solid rgba(255, 255, 255, 0.07)'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
                 <button
                   type="button"
-                  className={`bs-category-btn ${waTheme === 'dark' ? 'active' : ''}`}
+                  onClick={() => setWaShowHeader(!waShowHeader)}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '5px',
+                    padding: '4px 10px',
+                    borderRadius: '7px',
+                    fontSize: '0.70rem',
+                    fontWeight: waShowHeader ? 600 : 500,
+                    background: waShowHeader ? 'rgba(37, 211, 102, 0.12)' : 'rgba(255, 255, 255, 0.04)',
+                    border: waShowHeader ? '1px solid rgba(37, 211, 102, 0.35)' : '1px solid rgba(255, 255, 255, 0.08)',
+                    color: waShowHeader ? '#25d366' : 'rgba(255, 255, 255, 0.6)',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  <span style={{ fontSize: '0.72rem' }}>{waShowHeader ? '✓' : '○'}</span>
+                  <span>Header</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setWaShowFooter(!waShowFooter)}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '5px',
+                    padding: '4px 10px',
+                    borderRadius: '7px',
+                    fontSize: '0.70rem',
+                    fontWeight: waShowFooter ? 600 : 500,
+                    background: waShowFooter ? 'rgba(37, 211, 102, 0.12)' : 'rgba(255, 255, 255, 0.04)',
+                    border: waShowFooter ? '1px solid rgba(37, 211, 102, 0.35)' : '1px solid rgba(255, 255, 255, 0.08)',
+                    color: waShowFooter ? '#25d366' : 'rgba(255, 255, 255, 0.6)',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  <span style={{ fontSize: '0.72rem' }}>{waShowFooter ? '✓' : '○'}</span>
+                  <span>Input Bar</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setWaShowDoodles(!waShowDoodles)}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '5px',
+                    padding: '4px 10px',
+                    borderRadius: '7px',
+                    fontSize: '0.70rem',
+                    fontWeight: waShowDoodles ? 600 : 500,
+                    background: waShowDoodles ? 'rgba(37, 211, 102, 0.12)' : 'rgba(255, 255, 255, 0.04)',
+                    border: waShowDoodles ? '1px solid rgba(37, 211, 102, 0.35)' : '1px solid rgba(255, 255, 255, 0.08)',
+                    color: waShowDoodles ? '#25d366' : 'rgba(255, 255, 255, 0.6)',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  <span style={{ fontSize: '0.72rem' }}>{waShowDoodles ? '✓' : '○'}</span>
+                  <span>Doodles</span>
+                </button>
+              </div>
+
+              <div
+                style={{
+                  display: 'inline-flex',
+                  background: 'rgba(0, 0, 0, 0.45)',
+                  borderRadius: '7px',
+                  padding: '2px',
+                  border: '1px solid rgba(255, 255, 255, 0.08)'
+                }}
+              >
+                <button
+                  type="button"
                   onClick={() => setWaTheme('dark')}
-                  style={{ height: 28, padding: '0 10px', fontSize: '0.72rem' }}
+                  style={{
+                    padding: '3px 9px',
+                    borderRadius: '5px',
+                    fontSize: '0.68rem',
+                    fontWeight: waTheme === 'dark' ? 700 : 500,
+                    background: waTheme === 'dark' ? 'rgba(255, 255, 255, 0.16)' : 'transparent',
+                    color: waTheme === 'dark' ? '#ffffff' : 'rgba(255, 255, 255, 0.5)',
+                    border: waTheme === 'dark' ? '1px solid rgba(255, 255, 255, 0.22)' : '1px solid transparent',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease'
+                  }}
                 >
-                  Dark OLED
+                  Dark
                 </button>
                 <button
                   type="button"
-                  className={`bs-category-btn ${waTheme === 'light' ? 'active' : ''}`}
                   onClick={() => setWaTheme('light')}
-                  style={{ height: 28, padding: '0 10px', fontSize: '0.72rem' }}
+                  style={{
+                    padding: '3px 9px',
+                    borderRadius: '5px',
+                    fontSize: '0.68rem',
+                    fontWeight: waTheme === 'light' ? 700 : 500,
+                    background: waTheme === 'light' ? 'rgba(255, 255, 255, 0.16)' : 'transparent',
+                    color: waTheme === 'light' ? '#ffffff' : 'rgba(255, 255, 255, 0.5)',
+                    border: waTheme === 'light' ? '1px solid rgba(255, 255, 255, 0.22)' : '1px solid transparent',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease'
+                  }}
                 >
-                  Light iOS
+                  Light
                 </button>
               </div>
             </div>
-          </>
+          </div>
         )}
       </div>
     </BottomSheet>

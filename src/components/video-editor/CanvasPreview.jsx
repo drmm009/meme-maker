@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle, useMemo } from 'react';
-import { Stage, Layer, Rect, Image as KonvaImage, Text as KonvaText, Transformer, Line } from 'react-konva';
+import Konva from 'konva';
+import { Stage, Layer, Rect, Image as KonvaImage, Text as KonvaText, Transformer, Line, Group } from 'react-konva';
 import { useEditorStore } from '../../store/useVideoEditorStore';
 import { useShallow } from 'zustand/react/shallow';
 
@@ -14,7 +15,6 @@ const CanvasMedia = ({ item, isSelected, onSelect, onChange, canvasDimensions })
     itemRef.current = item;
   }, [item]);
 
-  const positionMediaRef = useRef(null);
   const positionMedia = (naturalWidth, naturalHeight) => {
     if (!item.isPositioned && canvasDimensions) {
       const store = useEditorStore.getState();
@@ -63,7 +63,6 @@ const CanvasMedia = ({ item, isSelected, onSelect, onChange, canvasDimensions })
       onChange({ ...item, isPositioned: true, x, y, width: w, height: h });
     }
   };
-  positionMediaRef.current = positionMedia;
 
   useEffect(() => {
     if ((item.type === 'image' || item.type === 'sticker') && item.url) {
@@ -71,7 +70,7 @@ const CanvasMedia = ({ item, isSelected, onSelect, onChange, canvasDimensions })
       img.src = item.url;
       img.onload = () => {
         setImage(img);
-        positionMediaRef.current?.(img.width, img.height);
+        positionMedia(img.width, img.height);
       };
     } else if (item.type === 'video' && item.url) {
       const vid = document.createElement('video');
@@ -87,7 +86,7 @@ const CanvasMedia = ({ item, isSelected, onSelect, onChange, canvasDimensions })
       vid.preservesPitch = false; // Prevents severe audio-resampling lag when playbackRate != 1
       
       vid.addEventListener('loadedmetadata', () => {
-        positionMediaRef.current?.(vid.videoWidth, vid.videoHeight);
+        positionMedia(vid.videoWidth, vid.videoHeight);
       });
       
       // Trick browser anti-throttling by making it slightly visible and fixed off-screen
@@ -174,6 +173,7 @@ const CanvasMedia = ({ item, isSelected, onSelect, onChange, canvasDimensions })
           node.getLayer()?.batchDraw();
         }
 
+        let needsRedraw = false;
 
         // If within the item's duration and meant to be visible
         if (isVisible) {
@@ -215,7 +215,7 @@ const CanvasMedia = ({ item, isSelected, onSelect, onChange, canvasDimensions })
       
       // Ensure first frame draws when video is ready
       vid.onloadedmetadata = () => {
-        positionMediaRef.current?.(vid.videoWidth, vid.videoHeight);
+        positionMedia(vid.videoWidth, vid.videoHeight);
       };
       vid.onloadeddata = () => {
         const layer = imageRef.current?.getLayer();
@@ -239,7 +239,7 @@ const CanvasMedia = ({ item, isSelected, onSelect, onChange, canvasDimensions })
         }
       };
     }
-  }, [item.id, item.url, item.type, canvasDimensions]);
+  }, [item.url, item.type, canvasDimensions]);
 
   // Generic visibility loop for non-video items (video handles its own visibility above)
   useEffect(() => {
@@ -311,7 +311,7 @@ const CanvasMedia = ({ item, isSelected, onSelect, onChange, canvasDimensions })
             y: newY,
           });
         }}
-        onTransformEnd={(_e) => {
+        onTransformEnd={(e) => {
           const node = imageRef.current;
           onChange({
             ...item,
@@ -339,7 +339,7 @@ const CanvasMedia = ({ item, isSelected, onSelect, onChange, canvasDimensions })
 };
 
 // Custom Text Component to handle visibility outside React render cycle
-const CanvasText = ({ item, isSelected, onSelect, onChange, onEditStart, _isEditing }) => {
+const CanvasText = ({ item, isSelected, onSelect, onChange, onEditStart, isEditing }) => {
   const textRef = useRef(null);
   const bgRectRef = useRef(null);
   const trRef = useRef(null);
@@ -425,7 +425,7 @@ const CanvasText = ({ item, isSelected, onSelect, onChange, onEditStart, _isEdit
             e.target.getLayer()?.batchDraw();
           }
         }}
-        onTransform={(_e) => {
+        onTransform={(e) => {
           if (bgRectRef.current && textRef.current) {
             const node = textRef.current;
             bgRectRef.current.setAttrs({
@@ -449,7 +449,7 @@ const CanvasText = ({ item, isSelected, onSelect, onChange, onEditStart, _isEdit
         onDragEnd={(e) => {
           onChange({ ...item, x: e.target.x(), y: e.target.y() });
         }}
-        onTransformEnd={(_e) => {
+        onTransformEnd={(e) => {
           const node = textRef.current;
           const scaleX = node.scaleX();
           
@@ -530,7 +530,7 @@ const GridOverlay = ({ layoutId, width, height }) => {
 };
 
 const CanvasPreview = forwardRef((props, ref) => {
-  const { items, activeItemId, setActiveItem, updateItem, canvasAspectRatio, _setCanvasDimensions, layoutId } = useEditorStore(
+  const { items, activeItemId, setActiveItem, updateItem, canvasAspectRatio, setCanvasDimensions, layoutId } = useEditorStore(
     useShallow(state => ({
       items: state.items,
       activeItemId: state.activeItemId,
@@ -544,7 +544,7 @@ const CanvasPreview = forwardRef((props, ref) => {
   const containerRef = useRef(null);
   const stageRef = useRef(null);
   const hiddenInputRef = useRef(null);
-  const [dimensions, _setDimensions] = useState({ width: 800, height: 450 });
+  const [dimensions, setDimensions] = useState({ width: 800, height: 450 });
   const [editingTextData, setEditingTextData] = useState(null);
 
   const logicalDimensions = useMemo(() => ({ width: 800, height: 800 / canvasAspectRatio }), [canvasAspectRatio]);

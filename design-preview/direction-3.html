@@ -1,0 +1,1179 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Direction 3: Cyber-Minimal / Hyper-Tactile Precision</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@700&display=swap" rel="stylesheet">
+  <style>
+    :root[data-theme="dark"] {
+      --bg: #08090b;
+      --surface-1: #111216;
+      --surface-2: #181a20;
+      --surface-glass: rgba(17, 18, 22, 0.88);
+      --border: #22252e;
+      --border-accent: rgba(0, 245, 160, 0.4);
+      --accent-neon: #00f5a0;
+      --accent-cyan: #00d9f5;
+      --accent-glow: rgba(0, 245, 160, 0.25);
+      --text-main: #ffffff;
+      --text-muted: #798094;
+      --text-dim: #4d5363;
+      --card-shadow: 0 10px 28px -6px rgba(0, 0, 0, 0.8);
+      --badge-bg: rgba(0, 245, 160, 0.12);
+      --timeline-bg: #0c0d11;
+      --phone-shell: #1b1d24;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+    }
+    :root[data-theme="light"] {
+      --bg: #f2f4f7;
+      --surface-1: #ffffff;
+      --surface-2: #eaedf2;
+      --surface-glass: rgba(255, 255, 255, 0.9);
+      --border: #d4d9e2;
+      --border-accent: rgba(5, 150, 105, 0.5);
+      --accent-neon: #059669;
+      --accent-cyan: #0284c7;
+      --accent-glow: rgba(5, 150, 105, 0.2);
+      --text-main: #090a0f;
+      --text-muted: #5a6477;
+      --text-dim: #8b95a8;
+      --card-shadow: 0 8px 24px -6px rgba(0, 0, 0, 0.08);
+      --badge-bg: rgba(5, 150, 105, 0.12);
+      --timeline-bg: #e2e6ed;
+      --phone-shell: #dbe0e8;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
+    h1, h2, h3, h4, .brand-title { font-family: 'Space Grotesk', sans-serif; }
+    body {
+      background: var(--bg);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 30px 16px 60px;
+      transition: background 0.3s ease, color 0.3s ease;
+    }
+
+    .showcase-header {
+      width: 100%;
+      max-width: 1200px;
+      margin-bottom: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .brand-badge {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .badge-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 8px;
+      background: #000;
+      border: 1.5px solid var(--accent-neon);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent-neon);
+      font-weight: 800;
+      font-size: 1.1rem;
+      box-shadow: 0 0 14px var(--accent-glow);
+    }
+    .title-group h1 { font-size: 1.4rem; font-weight: 700; letter-spacing: -0.03em; }
+    .title-group p { font-size: 0.85rem; color: var(--text-muted); }
+
+    .control-pills {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      background: var(--surface-1);
+      padding: 6px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+    }
+    .tab-btn {
+      padding: 8px 14px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .tab-btn.active {
+      background: var(--surface-2);
+      color: var(--accent-neon);
+      border: 1px solid var(--border-accent);
+    }
+    .theme-toggle {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      color: var(--text-main);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .screen-selector {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+      justify-content: center;
+      max-width: 900px;
+    }
+    .screen-pill {
+      background: var(--surface-1);
+      border: 1px solid var(--border);
+      padding: 7px 16px;
+      border-radius: 8px;
+      color: var(--text-muted);
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .screen-pill.active {
+      background: var(--surface-2);
+      border-color: var(--accent-neon);
+      color: var(--accent-neon);
+      box-shadow: 0 0 10px var(--accent-glow);
+    }
+
+    /* Phone Mockup Frame */
+    .phone-container {
+      width: 390px;
+      height: 844px;
+      background: var(--surface-1);
+      border-radius: 48px;
+      box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.8), 0 0 0 8px var(--phone-shell);
+      border: 1px solid var(--border);
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+    .notch {
+      position: absolute;
+      top: 11px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 120px;
+      height: 30px;
+      background: #000;
+      border-radius: 20px;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 12px;
+    }
+    .notch::after {
+      content: '';
+      width: 11px;
+      height: 11px;
+      background: #111;
+      border-radius: 50%;
+      border: 2px solid #222;
+    }
+    .status-bar {
+      height: 48px;
+      padding: 12px 24px 0;
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      font-weight: 700;
+      font-family: 'Space Mono', monospace;
+      color: var(--text-main);
+      z-index: 999;
+    }
+    .home-indicator {
+      position: absolute;
+      bottom: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 134px;
+      height: 5px;
+      background: var(--text-muted);
+      opacity: 0.4;
+      border-radius: 3px;
+      z-index: 1000;
+      pointer-events: none;
+    }
+
+    .screen-content {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding-bottom: 74px;
+      display: none;
+    }
+    .screen-content.active {
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Top App Bar */
+    .top-bar {
+      padding: 8px 18px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface-glass);
+      backdrop-filter: blur(14px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .top-brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .top-brand-icon {
+      width: 26px;
+      height: 26px;
+      border-radius: 6px;
+      background: #000;
+      border: 1.5px solid var(--accent-neon);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent-neon);
+      font-size: 0.75rem;
+      font-weight: 800;
+    }
+    .top-brand-text {
+      font-weight: 700;
+      font-size: 1.05rem;
+      letter-spacing: -0.03em;
+    }
+    .icon-box-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-main);
+      cursor: pointer;
+    }
+
+    /* Mobile Bottom Navigation Bar */
+    .mobile-nav {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 72px;
+      background: var(--surface-glass);
+      backdrop-filter: blur(20px);
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      padding: 0 10px 14px;
+      z-index: 200;
+    }
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      color: var(--text-muted);
+      font-size: 0.68rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .nav-item.active {
+      color: var(--accent-neon);
+    }
+    .nav-item svg { width: 20px; height: 20px; stroke-width: 2.2; }
+
+    /* SCREEN 1: DISCOVERY */
+    .search-box {
+      margin: 12px 16px 8px;
+      position: relative;
+    }
+    .search-input {
+      width: 100%;
+      height: 44px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0 14px 0 40px;
+      font-size: 0.85rem;
+      color: var(--text-main);
+      outline: none;
+    }
+    .search-icon-pos {
+      position: absolute;
+      left: 12px;
+      top: 12px;
+      color: var(--text-muted);
+    }
+
+    .category-scroll {
+      display: flex;
+      gap: 6px;
+      padding: 4px 16px 12px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .cat-btn {
+      padding: 6px 14px;
+      border-radius: 6px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .cat-btn.active {
+      background: var(--badge-bg);
+      border-color: var(--accent-neon);
+      color: var(--accent-neon);
+    }
+
+    .hero-tech-card {
+      margin: 4px 16px 14px;
+      padding: 14px 16px;
+      border-radius: 10px;
+      background: var(--surface-2);
+      border: 1px solid var(--border-accent);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .hero-tech-card h3 { font-size: 0.92rem; font-weight: 700; letter-spacing: -0.02em; }
+    .hero-tech-card p { font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; }
+    .btn-neon-action {
+      background: var(--accent-neon);
+      color: #000;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-size: 0.76rem;
+      font-weight: 700;
+      font-family: 'Space Grotesk', sans-serif;
+      cursor: pointer;
+    }
+
+    .template-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      padding: 0 16px;
+    }
+    .template-card {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      cursor: pointer;
+      position: relative;
+    }
+    .template-card:hover {
+      border-color: var(--accent-neon);
+    }
+    .template-thumb {
+      width: 100%;
+      height: 140px;
+      background: #14161f;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .tech-badge {
+      position: absolute;
+      top: 6px;
+      left: 6px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.62rem;
+      font-weight: 700;
+      font-family: 'Space Mono', monospace;
+      background: rgba(0, 0, 0, 0.85);
+      border: 1px solid var(--border);
+      color: var(--accent-neon);
+    }
+    .template-info { padding: 8px 10px; }
+    .template-name { font-size: 0.78rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .template-meta { font-size: 0.65rem; color: var(--text-muted); font-family: 'Space Mono', monospace; margin-top: 4px; }
+
+    /* SCREEN 2: MEME CANVAS EDITOR */
+    .editor-top {
+      padding: 8px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface-1);
+    }
+    .editor-canvas-stage {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px;
+      background: #090a0d;
+      position: relative;
+    }
+    .meme-preview-art {
+      width: 320px;
+      height: 320px;
+      background: #181a20;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      box-shadow: 0 10px 24px rgba(0,0,0,0.6);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 14px;
+    }
+    .preview-img-bg {
+      position: absolute;
+      inset: 0;
+      background: url('https://images.unsplash.com/photo-1543610892-0b1f7e6d8ac1?auto=format&fit=crop&w=600&q=80') center/cover;
+    }
+    .meme-caption-box {
+      position: relative;
+      z-index: 10;
+      text-align: center;
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 800;
+      font-size: 1.3rem;
+      color: #fff;
+      text-shadow: 2px 2px 0 #000, -2px -2px 0 #000;
+      text-transform: uppercase;
+      padding: 4px;
+      border: 1.5px solid var(--accent-neon);
+      border-radius: 6px;
+    }
+    .tech-handle {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background: var(--accent-neon);
+      border: 1.5px solid #000;
+      border-radius: 2px;
+    }
+    .tech-tr { top: -5px; right: -5px; }
+    .tech-bl { bottom: -5px; left: -5px; }
+    .tech-rot { top: -20px; left: 50%; transform: translateX(-50%); width: 10px; height: 10px; background: #fff; border-radius: 50%; border: 1.5px solid var(--accent-neon); }
+
+    /* Segmented Dock */
+    .editor-dock {
+      background: var(--surface-1);
+      border-top: 1px solid var(--border);
+      padding: 10px 14px 8px;
+    }
+    .segmented-toolbar {
+      display: flex;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 2px;
+      margin-bottom: 10px;
+    }
+    .seg-btn {
+      flex: 1;
+      height: 38px;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.72rem;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+    .seg-btn.active {
+      background: var(--surface-1);
+      color: var(--accent-neon);
+      border: 1px solid var(--border-accent);
+    }
+
+    .tech-drawer {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .tech-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+    .step-slider {
+      flex: 1;
+      height: 4px;
+      background: #272a34;
+      margin: 0 12px;
+      position: relative;
+      border-radius: 2px;
+    }
+    .step-fill { width: 70%; height: 100%; background: var(--accent-neon); border-radius: 2px; }
+
+    /* SCREEN 3: VIDEO STUDIO */
+    .video-viewport {
+      height: 220px;
+      background: #000;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .video-overlay-text {
+      position: absolute;
+      top: 18px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 800;
+      color: #fff;
+      font-size: 1.15rem;
+      text-transform: uppercase;
+      text-shadow: 0 2px 6px #000;
+    }
+    .tech-timecode {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.7rem;
+      padding: 2px 8px;
+      border-radius: 4px;
+      background: rgba(0, 0, 0, 0.85);
+      border: 1px solid var(--border);
+      color: var(--accent-neon);
+      position: absolute;
+      bottom: 8px;
+      right: 10px;
+    }
+
+    .timeline-dock {
+      flex: 1;
+      background: var(--timeline-bg);
+      border-top: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 10px 14px;
+    }
+    .transport-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .btn-tech-play {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      background: var(--accent-neon);
+      color: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      cursor: pointer;
+      font-weight: 800;
+    }
+    .track-container {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      position: relative;
+    }
+    .scrubber-line {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 45%;
+      width: 2px;
+      background: var(--accent-neon);
+      z-index: 20;
+    }
+    .track-row {
+      height: 36px;
+      background: var(--surface-1);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      padding: 0 8px;
+      position: relative;
+    }
+    .track-badge {
+      font-size: 0.6rem;
+      font-family: 'Space Mono', monospace;
+      font-weight: 700;
+      color: var(--accent-neon);
+      width: 50px;
+      flex-shrink: 0;
+    }
+    .track-clip {
+      position: absolute;
+      left: 65px;
+      right: 40px;
+      height: 24px;
+      border-radius: 4px;
+      background: #1e222d;
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 8px;
+      font-size: 0.65rem;
+      color: #fff;
+    }
+    .track-clip.audio {
+      left: 90px;
+      right: 120px;
+      background: #112d27;
+      border-color: var(--accent-neon);
+    }
+
+    /* SCREEN 4: MY GALLERY */
+    .gallery-filter-bar {
+      padding: 10px 16px 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      padding: 8px 16px;
+    }
+    .gallery-card {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .gallery-thumb {
+      height: 125px;
+      background: #14161f;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .gallery-actions {
+      padding: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* SPECIAL STATES */
+    /* Bottom Sheet */
+    .bottom-sheet-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(4px);
+      z-index: 500;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+    }
+    .sheet-card {
+      background: var(--surface-1);
+      border-top: 1px solid var(--border-accent);
+      border-radius: 16px 16px 0 0;
+      padding: 16px;
+    }
+    .sheet-handle {
+      width: 36px;
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      margin: 0 auto 12px;
+    }
+    .sticker-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      max-height: 220px;
+      overflow-y: auto;
+      padding: 6px 0;
+    }
+    .sticker-item {
+      height: 52px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+
+    /* AI Loading HUD */
+    .ai-loading-hud {
+      position: absolute;
+      inset: 0;
+      background: rgba(8, 9, 11, 0.88);
+      backdrop-filter: blur(6px);
+      z-index: 600;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      text-align: center;
+    }
+    .spinner-ring {
+      width: 56px;
+      height: 56px;
+      border: 2px solid #22252e;
+      border-top-color: var(--accent-neon);
+      animation: spin 1s linear infinite;
+      margin-bottom: 14px;
+    }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+    .ai-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #000;
+      border: 1px solid var(--border-accent);
+      color: var(--accent-neon);
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 0.68rem;
+      font-family: 'Space Mono', monospace;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+    .progress-bar-hud {
+      width: 200px;
+      height: 4px;
+      background: #22252e;
+      border-radius: 2px;
+      margin-top: 14px;
+      overflow: hidden;
+    }
+    .progress-bar-inner {
+      width: 84%;
+      height: 100%;
+      background: var(--accent-neon);
+    }
+
+    /* Empty State */
+    .empty-state-view {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 30px;
+      text-align: center;
+    }
+    .empty-art {
+      width: 72px;
+      height: 72px;
+      border-radius: 12px;
+      background: var(--surface-2);
+      border: 1px solid var(--border-accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      margin-bottom: 16px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="showcase-header">
+    <div class="brand-badge">
+      <div class="badge-icon">3</div>
+      <div class="title-group">
+        <h1>Direction 3: Cyber-Minimal / Hyper-Tactile Precision</h1>
+        <p>Pure Carbon · Hyper-Neon Green (#00f5a0) · Swiss Space Grotesk · 8px Segmented Toolbars</p>
+      </div>
+    </div>
+    <div class="control-pills">
+      <button class="theme-toggle" id="themeBtn" title="Toggle Light/Dark Theme">🌙</button>
+      <a href="direction-2.html" class="tab-btn" style="text-decoration:none;">← Direction 2</a>
+      <a href="index.html" class="tab-btn" style="text-decoration:none;">All Directions</a>
+    </div>
+  </div>
+
+  <div class="screen-selector">
+    <button class="screen-pill active" onclick="switchScreen('discovery')">1. Discovery</button>
+    <button class="screen-pill" onclick="switchScreen('editor')">2. Meme Canvas Editor</button>
+    <button class="screen-pill" onclick="switchScreen('video')">3. Video Studio</button>
+    <button class="screen-pill" onclick="switchScreen('gallery')">4. My Gallery</button>
+    <button class="screen-pill" onclick="switchScreen('sheet')">5. Bottom Sheet</button>
+    <button class="screen-pill" onclick="switchScreen('ai')">6. AI Processing</button>
+    <button class="screen-pill" onclick="switchScreen('empty')">7. Empty Gallery</button>
+  </div>
+
+  <div class="phone-container">
+    <div class="notch"></div>
+    <div class="status-bar">
+      <span>09:41</span>
+      <span>5G [100%]</span>
+    </div>
+
+    <!-- 1. DISCOVERY SCREEN -->
+    <div id="screen-discovery" class="screen-content active">
+      <div class="top-bar">
+        <div class="top-brand">
+          <div class="top-brand-icon">⌘</div>
+          <span class="top-brand-text">MEME_SYS</span>
+        </div>
+        <button class="icon-box-btn">⚙</button>
+      </div>
+
+      <div class="search-box">
+        <svg class="search-icon-pos" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <input type="text" class="search-input" placeholder="QUERY_TEMPLATES...">
+      </div>
+
+      <div class="category-scroll">
+        <div class="cat-btn active">HOT_TRENDING</div>
+        <div class="cat-btn">VIDEO_LOOPS</div>
+        <div class="cat-btn">TECH_DEV</div>
+        <div class="cat-btn">CLASSICS</div>
+      </div>
+
+      <div class="hero-tech-card">
+        <div>
+          <h3>MULTI-SLOT COMPOSER</h3>
+          <p>Matrix layout: 2 to 6 panels</p>
+        </div>
+        <button class="btn-neon-action">+ BUILD</button>
+      </div>
+
+      <div class="template-grid">
+        <div class="template-card">
+          <div class="template-thumb" style="background-image: url('https://images.unsplash.com/photo-1543610892-0b1f7e6d8ac1?auto=format&fit=crop&w=400&q=80'); background-size: cover;">
+            <span class="tech-badge">1:1</span>
+          </div>
+          <div class="template-info">
+            <div class="template-name">Doge vs Buff Doge</div>
+            <div class="template-meta">RANK #1 · 2.4K RUNS</div>
+          </div>
+        </div>
+
+        <div class="template-card">
+          <div class="template-thumb" style="background:#13151c;">
+            <span style="font-size:1.8rem;">💁‍♂️🦋</span>
+            <span class="tech-badge">9:16</span>
+          </div>
+          <div class="template-info">
+            <div class="template-name">Is This A Pigeon?</div>
+            <div class="template-meta">ANIME · 1.8K RUNS</div>
+          </div>
+        </div>
+
+        <div class="template-card">
+          <div class="template-thumb" style="background:#13151c;">
+            <span style="font-size:1.8rem;">🐱👩‍🦰</span>
+            <span class="tech-badge">VIDEO</span>
+          </div>
+          <div class="template-info">
+            <div class="template-name">Woman Yelling at Cat</div>
+            <div class="template-meta">2-PANEL · 3.1K RUNS</div>
+          </div>
+        </div>
+
+        <div class="template-card">
+          <div class="template-thumb" style="background:#13151c;">
+            <span style="font-size:1.8rem;">🧠⚡</span>
+            <span class="tech-badge">4-SLOT</span>
+          </div>
+          <div class="template-info">
+            <div class="template-name">Galaxy Brain</div>
+            <div class="template-meta">PROGRESSION · 940</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. MEME CANVAS EDITOR -->
+    <div id="screen-editor" class="screen-content">
+      <div class="editor-top">
+        <button class="icon-box-btn" style="width:30px; height:30px;">‹</button>
+        <div style="font-size: 0.82rem; font-weight:700; font-family:'Space Mono';">DOGE_V2.PNG</div>
+        <button class="btn-neon-action" style="padding:4px 10px; font-size:0.72rem;">EXPORT</button>
+      </div>
+
+      <div class="editor-canvas-stage">
+        <div class="meme-preview-art">
+          <div class="preview-img-bg"></div>
+          <div class="meme-caption-box">
+            LOCAL DEV ENVIRONMENT
+            <div class="tech-handle tech-tr"></div>
+            <div class="tech-handle tech-bl"></div>
+            <div class="tech-handle tech-rot"></div>
+          </div>
+          <div style="position:relative; z-index:10; text-align:center; font-family:'Space Grotesk'; font-weight:800; font-size:1.2rem; color:#fff; text-shadow:2px 2px 0 #000, -2px -2px 0 #000; text-transform:uppercase;">
+            PRODUCTION CLOUD DEPLOY
+          </div>
+        </div>
+      </div>
+
+      <div class="editor-dock">
+        <div class="segmented-toolbar">
+          <button class="seg-btn active">TEXT</button>
+          <button class="seg-btn">STICKER</button>
+          <button class="seg-btn">AI_TOOL</button>
+          <button class="seg-btn">FILTER</button>
+          <button class="seg-btn">LAYERS</button>
+        </div>
+
+        <div class="tech-drawer">
+          <div class="tech-row">
+            <span>CURVE_SAGITTA</span>
+            <div class="step-slider"><div class="step-fill"></div></div>
+            <span style="font-family:'Space Mono'; color:var(--accent-neon);">+28 DEG</span>
+          </div>
+          <div class="tech-row">
+            <span>PRESET_TYPE</span>
+            <div style="display:flex; gap:4px;">
+              <span class="cat-btn active" style="padding:3px 8px; font-size:0.65rem;">IMPACT</span>
+              <span class="cat-btn" style="padding:3px 8px; font-size:0.65rem;">𝕏 POST</span>
+              <span class="cat-btn" style="padding:3px 8px; font-size:0.65rem;">CHYRON</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. VIDEO STUDIO -->
+    <div id="screen-video" class="screen-content">
+      <div class="editor-top">
+        <button class="icon-box-btn" style="width:30px; height:30px;">‹</button>
+        <div style="font-size:0.82rem; font-weight:700; font-family:'Space Mono';">VIDEO_STUDIO</div>
+        <button class="btn-neon-action" style="padding:4px 10px; font-size:0.72rem;">RENDER_MP4</button>
+      </div>
+
+      <div class="video-viewport">
+        <div class="video-overlay-text">WHEN CI/CD TURNS GREEN</div>
+        <div style="font-size:3rem;">⚡🚀</div>
+        <div class="tech-timecode">00:03.20 / 00:08.00</div>
+      </div>
+
+      <div class="timeline-dock">
+        <div class="transport-bar">
+          <button class="icon-box-btn" style="width:36px; height:36px;">⏮</button>
+          <button class="btn-tech-play">▶</button>
+          <button class="icon-box-btn" style="width:36px; height:36px;">✂</button>
+        </div>
+
+        <div class="track-container">
+          <div class="scrubber-line"></div>
+
+          <div class="track-row">
+            <span class="track-badge">V1</span>
+            <div class="track-clip"><span>base_meme_loop.mp4</span></div>
+          </div>
+
+          <div class="track-row">
+            <span class="track-badge">T1</span>
+            <div class="track-clip" style="left:65px; right:110px; border-color:var(--accent-neon);">
+              <span>HEADLINE_OVERLAY</span>
+            </div>
+          </div>
+
+          <div class="track-row">
+            <span class="track-badge">A1</span>
+            <div class="track-clip audio"><span>sfx_laugh_track.mp3</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. MY GALLERY -->
+    <div id="screen-gallery" class="screen-content">
+      <div class="top-bar">
+        <div class="top-brand"><span class="top-brand-text">INDEXED_STORAGE</span></div>
+        <span class="tech-badge" style="position:static;">4 ASSETS</span>
+      </div>
+
+      <div class="gallery-filter-bar">
+        <span>STORAGE: 100% QUOTA_SAFE</span>
+        <div style="display:flex; gap:4px;">
+          <span class="cat-btn active" style="padding:2px 8px; font-size:0.65rem;">ALL</span>
+          <span class="cat-btn" style="padding:2px 8px; font-size:0.65rem;">PNG</span>
+        </div>
+      </div>
+
+      <div class="gallery-grid">
+        <div class="gallery-card">
+          <div class="gallery-thumb" style="background-image:url('https://images.unsplash.com/photo-1543610892-0b1f7e6d8ac1?auto=format&fit=crop&w=400&q=80'); background-size:cover;">
+            <span class="tech-badge" style="bottom:4px; top:auto;">1080P</span>
+          </div>
+          <div class="gallery-actions">
+            <div>
+              <div style="font-size:0.75rem; font-weight:700;">DEV_VS_PROD</div>
+              <div style="font-size:0.62rem; color:var(--text-muted); font-family:'Space Mono';">10:45 AM</div>
+            </div>
+            <button class="icon-box-btn" style="width:26px; height:26px;">↗</button>
+          </div>
+        </div>
+
+        <div class="gallery-card">
+          <div class="gallery-thumb" style="background:#13151c;">
+            <span style="font-size:1.8rem;">🚀⚡</span>
+            <span class="tech-badge" style="bottom:4px; top:auto;">MP4 · 6S</span>
+          </div>
+          <div class="gallery-actions">
+            <div>
+              <div style="font-size:0.75rem; font-weight:700;">CI_CD_SUCCESS</div>
+              <div style="font-size:0.62rem; color:var(--text-muted); font-family:'Space Mono';">YESTERDAY</div>
+            </div>
+            <button class="icon-box-btn" style="width:26px; height:26px;">↗</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. BOTTOM SHEET -->
+    <div id="screen-sheet" class="screen-content">
+      <div class="editor-canvas-stage" style="opacity:0.3;">
+        <div class="meme-preview-art"><div class="preview-img-bg"></div></div>
+      </div>
+
+      <div class="bottom-sheet-overlay">
+        <div class="sheet-card">
+          <div class="sheet-handle"></div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+            <h4 style="font-size:0.9rem; font-family:'Space Grotesk';">STICKER_LIBRARY</h4>
+            <span class="tech-badge" style="position:static;">PAGE 1/4</span>
+          </div>
+          <div class="sticker-grid">
+            <div class="sticker-item">🔥</div>
+            <div class="sticker-item">💀</div>
+            <div class="sticker-item">😎</div>
+            <div class="sticker-item">🤡</div>
+            <div class="sticker-item">🚀</div>
+            <div class="sticker-item">🧢</div>
+            <div class="sticker-item">🕶️</div>
+            <div class="sticker-item">💯</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. AI PROCESSING HUD -->
+    <div id="screen-ai" class="screen-content">
+      <div class="editor-canvas-stage">
+        <div class="meme-preview-art"><div class="preview-img-bg"></div></div>
+      </div>
+
+      <div class="ai-loading-hud">
+        <div class="ai-badge">SYS_WASM // NEURAL_BG</div>
+        <div class="spinner-ring"></div>
+        <h4 style="font-size:1rem; font-family:'Space Grotesk';">REMOVING BACKGROUND</h4>
+        <p style="font-size:0.72rem; color:var(--text-muted); font-family:'Space Mono'; margin-top:4px;">SEGMENTATION_PIPELINE · 84%</p>
+        <div class="progress-bar-hud">
+          <div class="progress-bar-inner"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7. EMPTY GALLERY -->
+    <div id="screen-empty" class="screen-content">
+      <div class="top-bar">
+        <div class="top-brand"><span class="top-brand-text">INDEXED_STORAGE</span></div>
+      </div>
+      <div class="empty-state-view">
+        <div class="empty-art">⚡</div>
+        <h3 style="font-size:1.05rem; font-family:'Space Grotesk';">STORAGE_EMPTY</h3>
+        <p style="font-size:0.78rem; color:var(--text-muted); margin:6px 0 16px; max-width:240px;">
+          Zero assets found in local database. Initialize creation sequence.
+        </p>
+        <button class="btn-neon-action" style="padding:10px 18px;">SELECT TEMPLATE</button>
+      </div>
+    </div>
+
+    <div class="mobile-nav">
+      <div class="nav-item active" onclick="switchScreen('discovery')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>
+        <span>DISCOVER</span>
+      </div>
+      <div class="nav-item" onclick="switchScreen('editor')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+        <span>EDITOR</span>
+      </div>
+      <div class="nav-item" onclick="switchScreen('video')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="m22 8-6 4 6 4V8Z"/><rect width="14" height="12" x="2" y="6" rx="2"/></svg>
+        <span>VIDEO</span>
+      </div>
+      <div class="nav-item" onclick="switchScreen('gallery')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2z"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        <span>GALLERY</span>
+      </div>
+    </div>
+
+    <div class="home-indicator"></div>
+  </div>
+
+  <script>
+    function switchScreen(id) {
+      document.querySelectorAll('.screen-content').forEach(s => s.classList.remove('active'));
+      const target = document.getElementById('screen-' + id);
+      if (target) target.classList.add('active');
+
+      document.querySelectorAll('.screen-pill').forEach(p => p.classList.remove('active'));
+      const activePill = Array.from(document.querySelectorAll('.screen-pill')).find(p => p.getAttribute('onclick')?.includes(id));
+      if (activePill) activePill.classList.add('active');
+
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      const navTarget = Array.from(document.querySelectorAll('.nav-item')).find(n => n.getAttribute('onclick')?.includes(id));
+      if (navTarget) navTarget.classList.add('active');
+    }
+
+    const themeBtn = document.getElementById('themeBtn');
+    themeBtn.addEventListener('click', () => {
+      const current = document.documentElement.getAttribute('data-theme');
+      const next = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      themeBtn.textContent = next === 'dark' ? '🌙' : '☀️';
+    });
+  </script>
+</body>
+</html>

@@ -9,6 +9,7 @@ import {
   Flame, 
   Trophy, 
   Check, 
+  SlidersHorizontal,
   Download,
   Users
 } from 'lucide-react';
@@ -16,7 +17,7 @@ import { COMMUNITY_MEMES } from '../data/communityMemes';
 import { safeGet, safeSet } from '../utils/storage';
 import './SocialFeed.css';
 
-export default function SocialFeed({ onRemixMeme, _onCreateCustom }) {
+export default function SocialFeed({ onRemixMeme, onCreateCustom }) {
   const [activeTab, setActiveTab] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [likedPosts, setLikedPosts] = useState(() => {
@@ -53,7 +54,7 @@ export default function SocialFeed({ onRemixMeme, _onCreateCustom }) {
       try {
         await navigator.share(shareData);
         return;
-      } catch {
+      } catch (err) {
         // Fallback to clipboard if user canceled or unsupported
       }
     }

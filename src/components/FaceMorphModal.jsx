@@ -5,6 +5,7 @@ import {
   Camera,
   RefreshCw,
   Check,
+  X,
   Eye,
   AlertCircle
 } from 'lucide-react';
@@ -27,7 +28,7 @@ async function ensureDataUrl(src) {
         const ctx = c.getContext('2d');
         ctx.drawImage(img, 0, 0);
         resolve(c.toDataURL('image/jpeg', 0.92));
-      } catch {
+      } catch (err) {
         resolve(src);
       }
     };
@@ -87,12 +88,12 @@ export default function FaceMorphModal({
         if (data.status === 'online' && data.model_available) {
           isOnline = true;
         }
-      } catch {
+      } catch (e) {
         try {
           const res2 = await fetch('http://127.0.0.1:5174/api/face-swap/status');
           const data2 = await res2.json();
           if (data2.status === 'online') isOnline = true;
-        } catch {}
+        } catch (e2) {}
       }
 
       if (isMounted) {
@@ -113,7 +114,7 @@ export default function FaceMorphModal({
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ image: targetUrl })
             });
-          } catch {
+          } catch (e) {
             detectRes = await fetch('http://127.0.0.1:5174/api/face-swap/detect-faces', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -173,7 +174,7 @@ export default function FaceMorphModal({
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
-      } catch {
+      } catch (err) {
         resp = await fetch('http://127.0.0.1:5174/api/face-swap', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -210,7 +211,7 @@ export default function FaceMorphModal({
     if (isNeuralAvailable && selectedImageSrc && isOpen) {
       runNeuralFaceSwap(selectedImageSrc, selectedTargetIndex, swapAllFaces);
     }
-  }, [isNeuralAvailable, selectedImageSrc, selectedTargetIndex, swapAllFaces, isOpen, runNeuralFaceSwap]);
+  }, [isNeuralAvailable, selectedImageSrc, selectedTargetIndex, swapAllFaces, isOpen]);
 
   // Handle Preset Selection
   const handleSelectPreset = (preset) => {

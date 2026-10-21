@@ -3,7 +3,7 @@ import { useStore } from 'zustand';
 import {
   Play, Pause, SkipBack, Download, Trash2, VolumeX, Volume2,
   ArrowLeft, Maximize, Crop, Minimize, Undo, Redo,
-  ChevronDown, ChevronUp, Type, Share2, Copy, Check,
+  ChevronDown, ChevronUp, Type, Share2, Copy, Save, Check,
   Video as VideoIcon, RotateCw
 } from 'lucide-react';
 import Timeline from './Timeline';
@@ -150,9 +150,9 @@ const VIDEO_ASPECT_RATIOS = [
   { value: 4/3,  label: '4:3'  },
 ];
 
-export default function VideoEditor({ template, onBack, _theme, _onToggleTheme }) {
+export default function VideoEditor({ template, onBack, theme, onToggleTheme }) {
   const {
-    isPlaying, setIsPlaying, addItem, canvasAspectRatio, _setCanvasAspectRatio,
+    isPlaying, setIsPlaying, addItem, canvasAspectRatio, setCanvasAspectRatio,
     isExporting, exportProgress, setIsExporting, setExportProgress,
     activeItemId, removeItem, items, updateItem, clearItems,
     canvasDimensions, setLayoutSlots, playhead
@@ -235,7 +235,7 @@ export default function VideoEditor({ template, onBack, _theme, _onToggleTheme }
         }
       }
     }
-  }, [template, clearItems, setLayoutSlots, addItem]);
+  }, [template?.id]);
 
   const handleExport = async () => {
     setExportDropdownOpen(false);
@@ -281,7 +281,7 @@ export default function VideoEditor({ template, onBack, _theme, _onToggleTheme }
     justifyContent: 'center',
   });
 
-
+  const mobileCanvasHeightVh = Math.min(52, Math.max(28, Math.round(45 / Math.max(0.3, canvasAspectRatio))));
 
   return (
     <div className="meme-editor-container animate-fade-in video-editor-container">
@@ -384,6 +384,7 @@ export default function VideoEditor({ template, onBack, _theme, _onToggleTheme }
                     { icon: <Download style={{ width: 15, height: 15 }} />, label: 'Export Video', action: handleExport },
                     { icon: <Copy    style={{ width: 15, height: 15 }} />, label: 'Copy Frame',  action: async () => {
                       setExportDropdownOpen(false);
+                      const canvas = canvasPreviewRef.current?.getStream ? null : null;
                       // fallback: grab current canvas snapshot
                       const el = document.querySelector('.video-canvas-area canvas');
                       if (el) {
