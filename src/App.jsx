@@ -15,7 +15,7 @@ const AiCaptionModal = lazy(() => import('./components/AiCaptionModal'));
 import { MEME_TEMPLATES } from './data/templates';
 import { INITIAL_NOTIFICATIONS } from './data/notifications';
 import { idbPutMeme, idbGetAllMemes, idbGetMeme, idbDeleteMeme, dataURLToBlob, createThumbnail, toMetadata } from './utils/galleryStore';
-import { Sparkles, Grid, LayoutGrid, FolderHeart, User, Sun, Moon, Bell, Plus, Users, Compass } from 'lucide-react';
+import { LayoutGrid, FolderHeart, User, Sun, Moon, Bell, Plus, Users, Compass } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import './App.css';
 

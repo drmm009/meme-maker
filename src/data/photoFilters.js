@@ -110,7 +110,7 @@ export const isCtxFilterSupported = () => {
     ctx.filter = 'none';
     const pixel = ctx.getImageData(0, 0, 1, 1).data;
     _ctxFilterSupported = pixel[0] < 128; // pixel should be dark if filter worked
-  } catch (e) {
+  } catch {
     _ctxFilterSupported = false;
   }
   return _ctxFilterSupported;
@@ -280,7 +280,7 @@ export const drawImageFiltered = (ctx, img, filterCss, dx, dy, dw, dh) => {
     const imageData = offCtx.getImageData(0, 0, w, h);
     applyPixelFilters(imageData, filterCss);
     offCtx.putImageData(imageData, 0, 0);
-  } catch (e) {
+  } catch {
     // Cross-origin image: can't read pixels. Try native ctx.filter as last resort.
     ctx.filter = filterCss;
     ctx.drawImage(img, dx, dy, dw, dh);

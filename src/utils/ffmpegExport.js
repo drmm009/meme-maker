@@ -290,7 +290,7 @@ export const exportVideoFFmpeg = async (items = [], durationMs = 7000, canvasAsp
               });
               return;
             }
-          } catch (e2) {}
+          } catch {}
           resolve(new Uint8Array(0));
         }
       });
@@ -437,9 +437,9 @@ export const exportVideoFFmpeg = async (items = [], durationMs = 7000, canvasAsp
     } finally {
       URL.revokeObjectURL(url);
       for (const f of filesToDelete) {
-         try { await ff.deleteFile(f); } catch(e){}
+         try { await ff.deleteFile(f); } catch {}
       }
-      try { await ff.deleteFile(outputFileName); } catch(e){}
+      try { await ff.deleteFile(outputFileName); } catch {}
     }
 
     return true;

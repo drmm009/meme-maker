@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  X, Plus, User, AtSign, Sparkles, Dices, Check,
+  Plus, User, AtSign, Sparkles, Dices,
   MessageCircle, Repeat, Heart, Bookmark, Share2,
-  Phone, Video, MoreVertical, Send, CheckCheck,
-  Upload, Image as ImageIcon, Trash2, ArrowLeftRight, ChevronLeft, ChevronDown,
+  Send,
+  Upload, Image as ImageIcon, Trash2, ArrowLeftRight, ChevronDown,
   Newspaper, Rocket, Trophy, Smile, Briefcase
 } from 'lucide-react';
 import BottomSheet from './BottomSheet';

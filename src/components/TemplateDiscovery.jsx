@@ -4,10 +4,11 @@ import { VIDEO_MEME_TEMPLATES } from '../data/videoTemplates';
 import { fetchOpenSourceMemes } from '../services/memeService';
 import { 
   Search, Sparkles, Image as ImageIcon, Video,
-  Flame, Star, Drama, Clapperboard, Scale, LayoutGrid, Layers, ChevronDown, Check,
-  Compass, Smile, ArrowDownAZ, Zap, ShieldCheck, ArrowRight,
-  Edit3, SlidersHorizontal, Eye, ChevronLeft, ChevronRight, Wand2, Scissors
+  Flame, Star, Drama, Clapperboard, LayoutGrid, Layers, Check,
+  Smile, ArrowDownAZ, Zap,
+  Edit3, SlidersHorizontal, Eye, ChevronLeft, ChevronRight, Scissors
 } from 'lucide-react';
+import { templateNumericId } from '../utils/templateUtils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { safeGet, safeSet } from '../utils/storage';
 import './TemplateDiscovery.css';
@@ -29,16 +30,9 @@ const SORT_OPTIONS = [
   { id: 'name', label: 'A-Z Name', icon: ArrowDownAZ, color: '#a855f7' }
 ];
 
-// Stable numeric order for mixed string ids ("imgflip-123", "giphy-abc", "custom-...").
-// Trailing digits win; otherwise fall back to trendingScore so sort is deterministic (never NaN).
-export function templateNumericId(t) {
-  const m = String(t.id || '').match(/(\d+)$/);
-  if (m) return Number(m[1]);
-  return t.trendingScore || 0;
-}
 
 // Compute dynamic, contextual badges so templates show a variety of labels (Trending, Classic, New, Reaction, Video, Popular)
-export function getTemplateBadge(template, index = 0) {
+function getTemplateBadge(template, index = 0) {
   if (template.type === 'video') {
     return { label: '', iconOnly: true, icon: Video, color: '#38bdf8' };
   }
@@ -496,7 +490,7 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom, on
 
   // Hero Carousel State & Handlers
   const [activeSlideIndex, setActiveSlideIndex] = useState(0);
-  const [slideDirection, setSlideDirection] = useState(1);
+  const [_slideDirection, setSlideDirection] = useState(1);
   const [isCarouselHovered, setIsCarouselHovered] = useState(false);
   const touchStartRef = useRef({ x: null, y: null });
 

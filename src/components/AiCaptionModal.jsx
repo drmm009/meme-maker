@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Sparkles, RefreshCw, Check, Copy, Key, ArrowRight, X, Type, PanelTop } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Sparkles, RefreshCw, Check, Copy, Key, ArrowRight, Type, PanelTop } from 'lucide-react';
 import { AI_MEME_CATEGORIES, generateMemeCaptionsWithGemini } from '../data/aiMemeCaptions';
 import { safeGet, safeSet, safeRemove } from '../utils/storage';
 import BottomSheet from './BottomSheet';
@@ -32,9 +32,12 @@ export default function AiCaptionModal({ isOpen, onClose, onApplyCaption, templa
     }
   };
 
+  const fetchIdeasRef = useRef(fetchIdeas);
+  fetchIdeasRef.current = fetchIdeas;
+
   useEffect(() => {
     if (isOpen) {
-      fetchIdeas();
+      fetchIdeasRef.current();
     }
   }, [isOpen, selectedCategory]);
 

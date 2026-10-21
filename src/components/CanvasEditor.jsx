@@ -1,5 +1,16 @@
-import React, { useEffect, useRef, useState, useLayoutEffect } from 'react';
-import { Image as ImageIcon, Sparkles, Type } from 'lucide-react';
+import { TWEET_TREND_PRESETS } from '../data/tweetPresets';
+import React, { useEffect, useRef, useState, useLayoutEffect, useCallback } from 'react';
+
+let sharedMeasureCanvas = null;
+let sharedMeasureCtx = null;
+const getMeasureCtx = () => {
+  if (typeof document === 'undefined') return null;
+  if (!sharedMeasureCtx) {
+    sharedMeasureCanvas = document.createElement('canvas');
+    sharedMeasureCtx = sharedMeasureCanvas.getContext('2d');
+  }
+  return sharedMeasureCtx;
+};
 import { getFilterCss, drawImageFiltered } from '../data/photoFilters';
 import { isColorDark } from '../utils/captionLayout';
 
@@ -92,7 +103,7 @@ const drawCustomRoundRect = (ctx, x, y, width, height, radii) => {
   ctx.fill();
 };
 
-export const sampleFaceLighting = (ctx, cx, cy, radius) => {
+const sampleFaceLighting = (ctx, cx, cy, radius) => {
   try {
     const r = Math.max(12, Math.round(radius * 0.75));
     const x = Math.max(0, Math.round(cx - r));
@@ -124,7 +135,7 @@ export const sampleFaceLighting = (ctx, cx, cy, radius) => {
     const warmth = Math.min(35, Math.round((redExcess / 90) * 25));
 
     return { brightness, warmth, avgR, avgG, avgB };
-  } catch (e) {
+  } catch {
     return { brightness: 100, warmth: 0 };
   }
 };
@@ -537,13 +548,12 @@ const tweetSharePath = new Path2D("M18 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM6 15a3 3 0
 
 // Instagram & iOS WhatsApp vector paths
 const instagramSendPath = new Path2D("M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z");
-const iosChevronPath = new Path2D("M15 18l-6-6 6-6");
 const iosVideoPath = new Path2D("M4 6.5A2.5 2.5 0 0 0 1.5 9v6A2.5 2.5 0 0 0 4 17.5h9a2.5 2.5 0 0 0 2.5-2.5V9A2.5 2.5 0 0 0 13 6.5H4zm13.78 3.03a1 1 0 0 0-1.28.96v3.02a1 1 0 0 0 1.28.96l3.5-1.5a1 1 0 0 0 .72-.96v-1a1 1 0 0 0-.72-.96l-3.5-1.5z");
 const iosPhonePath = new Path2D("M6.62 10.79a15.05 15.05 0 0 0 6.59 6.59l2.2-2.2a1 1 0 0 1 1.01-.24c1.12.37 2.33.57 3.58.57a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1.02l-2.2 2.2z");
 
-export const socialCardImageCache = new Map();
+const socialCardImageCache = new Map();
 
-export const parseLikesCount = (likesText) => {
+const parseLikesCount = (likesText) => {
   if (!likesText || typeof likesText !== 'string') return '';
   const trimmed = likesText.trim();
   if (/^[\d,.]+[kKmMbB]?$/.test(trimmed)) {
@@ -558,34 +568,9 @@ export const parseLikesCount = (likesText) => {
   return trimmed;
 };
 
-export const TWEET_TREND_PRESETS = {
-  viral: {
-    label: '#1 Trending',
-    topic: 'Trending in World',
-    metrics: { replies: '14.2K', retweets: '62.8K', likes: '420.5K', views: '18.2M' },
-    text: '💬 14.2K    🔁 62.8K    ❤️ 420.5K    📊 18.2M'
-  },
-  tech: {
-    label: 'Technology',
-    topic: 'Technology · Trending',
-    metrics: { replies: '3.4K', retweets: '12.1K', likes: '88.5K', views: '4.2M' },
-    text: '💬 3.4K    🔁 12.1K    ❤️ 88.5K    📊 4.2M'
-  },
-  meme: {
-    label: 'Memes',
-    topic: 'Memes · Trending',
-    metrics: { replies: '8.9K', retweets: '44.2K', likes: '210.8K', views: '9.7M' },
-    text: '💬 8.9K    🔁 44.2K    ❤️ 210.8K    📊 9.7M'
-  },
-  casual: {
-    label: 'Casual',
-    topic: null,
-    metrics: { replies: '142', retweets: '890', likes: '4.6K', views: '72K' },
-    text: '💬 142    🔁 890    ❤️ 4.6K    📊 72K'
-  }
-};
+// TWEET_TREND_PRESETS is imported from ../data/tweetPresets
 
-export const parseTweetMetrics = (metricsStr, trendRank) => {
+const parseTweetMetrics = (metricsStr, trendRank) => {
   if (trendRank && TWEET_TREND_PRESETS[trendRank]) {
     return TWEET_TREND_PRESETS[trendRank].metrics;
   }
@@ -659,7 +644,6 @@ const getTweetCardHeight = (ctx, cap, cardW) => {
   const pad = Math.round(18 * scale);
   const avatarSize = Math.round(40 * scale);
   const bodyFontSize = Math.round(Math.max(12, (cap.fontSize || 18) * scale));
-  const timeFontSize = Math.round(13 * scale);
   const metricsFontSize = Math.round(13 * scale);
   const iconSize = Math.round(15 * scale);
 
@@ -847,7 +831,7 @@ const drawTweetCard = (ctx, cardW, cap) => {
   ctx.restore();
 };
 
-export const getInstagramCardHeight = (ctx, cap, cardW) => {
+const getInstagramCardHeight = (ctx, cap, cardW) => {
   const scale = Math.max(0.4, Math.min(3.5, cardW / 480));
   const pad = Math.round(14 * scale);
   const avatarSize = Math.round(40 * scale);
@@ -877,7 +861,7 @@ export const getInstagramCardHeight = (ctx, cap, cardW) => {
   return totalH;
 };
 
-export const drawInstagramCard = (ctx, cardW, cap) => {
+const drawInstagramCard = (ctx, cardW, cap) => {
   ctx.save();
   const scale = Math.max(0.4, Math.min(3.5, cardW / 480));
   const pad = Math.round(14 * scale);
@@ -1068,7 +1052,7 @@ export const drawInstagramCard = (ctx, cardW, cap) => {
       }
       try {
         ctx.drawImage(cached, sx, sy, sw, sh, startX, postImageY, cardW, postImageH);
-      } catch (err) {
+      } catch {
         // Fallback
       }
       ctx.restore();
@@ -1200,7 +1184,7 @@ export const drawInstagramCard = (ctx, cardW, cap) => {
   ctx.restore();
 };
 
-export const getWhatsAppCardHeight = (ctx, cap, cardW) => {
+const getWhatsAppCardHeight = (ctx, cap, cardW) => {
   const scale = Math.max(0.4, Math.min(3.5, cardW / 480));
   const pad = Math.round(14 * scale);
   const headerH = cap.waShowHeader !== false ? Math.round(54 * scale) : 0;
@@ -1237,7 +1221,7 @@ export const getWhatsAppCardHeight = (ctx, cap, cardW) => {
   return totalH;
 };
 
-export const drawWhatsAppCard = (ctx, cardW, cap) => {
+const drawWhatsAppCard = (ctx, cardW, cap) => {
   ctx.save();
   const scale = Math.max(0.4, Math.min(3.5, cardW / 480));
   const pad = Math.round(14 * scale);
@@ -1458,10 +1442,32 @@ export const drawWhatsAppCard = (ctx, cardW, cap) => {
 
 const dieCutSilhouetteCache = new Map();
 
-function getOrCreateDieCutSilhouette(imgSource, color, width, height) {
+const dieCutEmojiCanvasCache = new Map();
+function getOrCreateEmojiCanvas(emoji, fontSize, fullW, fullH) {
+  const key = `${emoji}_${fontSize}_${fullW}_${fullH}`;
+  if (dieCutEmojiCanvasCache.has(key)) {
+    return dieCutEmojiCanvasCache.get(key);
+  }
+  const offCanvas = document.createElement('canvas');
+  offCanvas.width = fullW;
+  offCanvas.height = fullH;
+  const oCtx = offCanvas.getContext('2d');
+  oCtx.font = `${fontSize}px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif`;
+  oCtx.textAlign = 'center';
+  oCtx.textBaseline = 'middle';
+  oCtx.fillText(emoji, fullW / 2, fullH / 2);
+  if (dieCutEmojiCanvasCache.size > 80) {
+    const first = dieCutEmojiCanvasCache.keys().next().value;
+    dieCutEmojiCanvasCache.delete(first);
+  }
+  dieCutEmojiCanvasCache.set(key, offCanvas);
+  return offCanvas;
+}
+
+function getOrCreateDieCutSilhouette(imgSource, color, width, height, customKey = null) {
   const w = Math.max(1, Math.round(width));
   const h = Math.max(1, Math.round(height));
-  const srcKey = imgSource.src || imgSource.currentSrc || (imgSource.toDataURL ? 'canvas' : 'img');
+  const srcKey = customKey || imgSource.src || imgSource.currentSrc || (imgSource.toDataURL ? 'canvas' : 'img');
   const key = `${srcKey}_${color}_${w}_${h}`;
   if (dieCutSilhouetteCache.has(key)) {
     return dieCutSilhouetteCache.get(key);
@@ -1525,16 +1531,8 @@ function renderDieCutEmoji(ctx, emoji, fontSize, borderColor = '#ffffff', border
   const fullW = Math.ceil(fontSize * 1.5 + pad * 2);
   const fullH = Math.ceil(fontSize * 1.5 + pad * 2);
 
-  const offCanvas = document.createElement('canvas');
-  offCanvas.width = fullW;
-  offCanvas.height = fullH;
-  const oCtx = offCanvas.getContext('2d');
-  oCtx.font = `${fontSize}px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif`;
-  oCtx.textAlign = 'center';
-  oCtx.textBaseline = 'middle';
-  oCtx.fillText(emoji, fullW / 2, fullH / 2);
-
-  const sil = getOrCreateDieCutSilhouette(offCanvas, borderColor, fullW, fullH);
+  const offCanvas = getOrCreateEmojiCanvas(emoji, fontSize, fullW, fullH);
+  const sil = getOrCreateDieCutSilhouette(offCanvas, borderColor, fullW, fullH, `emoji_${emoji}_${fontSize}`);
   const R = Math.max(2, borderWidth);
   const steps = Math.min(24, Math.max(12, Math.round(R * 3)));
   const cx = -fullW / 2;
@@ -1593,7 +1591,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     slotImages,
     slotTransforms,
     onUpdateSlotTransform,
-    isVideoPlaying = true,
+    _isVideoPlaying = true,
     watermark,
     canvasBgColor = '#ffffff',
     drawings = [],
@@ -1603,9 +1601,9 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     brushColor = '#ff2a5f',
     brushSize = 10,
     canvasHeader,
-    onUpdateCanvasHeader,
+    _onUpdateCanvasHeader,
     canvasFooter,
-    onUpdateCanvasFooter,
+    _onUpdateCanvasFooter,
     demotivational,
     canvasFlipX = false
   },
@@ -1655,7 +1653,8 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
   const editableRef = useRef(null);
   const imageCacheRef = useRef({});
   const loadingMediaRef = useRef({});
-  const [canvasScale, setCanvasScale] = useState(1);
+  const layerFilterCacheRef = useRef(new Map());
+  const [_canvasScale, setCanvasScale] = useState(1);
   const [naturalSize, setNaturalSize] = useState({ w: 800, h: 800 });
 
   const isDragging = useRef(false);
@@ -1668,7 +1667,6 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
   const initialSlotScale = useRef(null);
   // Double-tap detection: track last tap time and layer id
   const [editingCaptionId, setEditingCaptionId] = useState(null);
-  const [editingCaptionText, setEditingCaptionText] = useState('');
 
   useEffect(() => {
     if (editingCaptionId && activeLayerId !== editingCaptionId) {
@@ -1718,8 +1716,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
       const hFontFamily = headerCap.fontFamily || 'Montserrat, sans-serif';
       let linesCount = 1;
       if (typeof document !== 'undefined') {
-        const tempCanvas = document.createElement('canvas');
-        const tempCtx = tempCanvas.getContext('2d');
+        const tempCtx = getMeasureCtx();
         if (tempCtx) {
           tempCtx.font = `bold ${hFontSize}px ${hFontFamily}`;
           const wrapped = wrapText(tempCtx, headerCap.text || '', (headerCap.width || 0.92) * canvasW);
@@ -1744,8 +1741,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
       const fFontFamily = footerCap.fontFamily || 'Montserrat, sans-serif';
       let linesCount = 1;
       if (typeof document !== 'undefined') {
-        const tempCanvas = document.createElement('canvas');
-        const tempCtx = tempCanvas.getContext('2d');
+        const tempCtx = getMeasureCtx();
         if (tempCtx) {
           tempCtx.font = `bold ${fFontSize}px ${fFontFamily}`;
           const wrapped = wrapText(tempCtx, footerCap.text || '', (footerCap.width || 0.92) * canvasW);
@@ -1793,18 +1789,18 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
   const activeCaption = captions.find((c) => c.id === activeLayerId);
 
   // Compute exact scale ratio synchronously so font scale is accurate
-  const updateScaleSync = () => {
+  const updateScaleSync = useCallback(() => {
     if (canvasRef.current) {
       const rect = canvasRef.current.getBoundingClientRect();
       if (rect.width > 0 && canvasW > 0) {
         setCanvasScale(rect.width / canvasW);
       }
     }
-  };
+  }, [canvasW, canvasRef]);
 
   useLayoutEffect(() => {
     updateScaleSync();
-  }, [canvasW, imgSrc, totalCanvasH]);
+  }, [canvasW, imgSrc, totalCanvasH, updateScaleSync]);
 
   useEffect(() => {
     updateScaleSync();
@@ -1819,10 +1815,10 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
       window.removeEventListener('resize', updateScaleSync);
       if (ro) ro.disconnect();
     };
-  }, [canvasW, imgSrc]);
+  }, [canvasW, imgSrc, updateScaleSync, canvasRef]);
 
   // Focus textarea ONLY when explicitly called (not on selection change, never on Social Cards)
-  const focusTextarea = () => {
+  const focusTextarea = useCallback(() => {
     if (activeCaption?.isTweetCard || activeCaption?.isInstagramCard || activeCaption?.isWhatsAppCard) return;
     if (editableRef.current) {
       try {
@@ -1833,7 +1829,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         // Focus fallback
       }
     }
-  };
+  }, [activeCaption?.isTweetCard, activeCaption?.isInstagramCard, activeCaption?.isWhatsAppCard]);
 
   const handlePointerDownRef = useRef(null);
   const handlePointerMoveRef = useRef(null);
@@ -1878,29 +1874,9 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
       wrapper.removeEventListener('touchmove', onTouchMove);
       wrapper.removeEventListener('touchend', onTouchEnd);
     };
-  }, []);
+  }, [isDrawingMode]);
 
-  // Global window listeners for mouse drag & drawing so it doesn't stop when cursor moves outside canvas
-  useEffect(() => {
-    const onGlobalMouseMove = (e) => {
-      if ((isDragging.current || isDrawingActive.current) && handlePointerMoveRef.current) {
-        handlePointerMoveRef.current(e);
-      }
-    };
-    const onGlobalMouseUp = (e) => {
-      if ((isDragging.current || isDrawingActive.current) && handlePointerEndRef.current) {
-        handlePointerEndRef.current(e);
-      }
-    };
 
-    window.addEventListener('mousemove', onGlobalMouseMove);
-    window.addEventListener('mouseup', onGlobalMouseUp);
-
-    return () => {
-      window.removeEventListener('mousemove', onGlobalMouseMove);
-      window.removeEventListener('mouseup', onGlobalMouseUp);
-    };
-  }, []);
 
   const baseImgRef = useRef(null);
   const compCanvasRef = useRef(null);
@@ -2150,10 +2126,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         uiCtx.restore();
       };
 
-      // 4. Corner Knob (fallback if ever needed)
-      const drawRoundHandle = (uiCtx, hx, hy) => {
-        drawResizeHandle(uiCtx, hx, hy);
-      };
+
 
       // 5. Side Stretch Handle (Crisp white rounded capsule for width stretching)
       const drawSideHandle = (uiCtx, hx, hy, isVertical = true) => {
@@ -2433,7 +2406,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
       }
 
       // Reset filter for text/stickers/image-layers overlay (safe on all browsers)
-      try { targetCtx.filter = 'none'; } catch(e) {}
+      try { targetCtx.filter = 'none'; } catch {}
 
       // Render Custom Image Overlay Layers
             const allLayers = [
@@ -2460,13 +2433,21 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
             const filterObj = imgLayer.filters || imgLayer.filter;
             const filterCss = getFilterCss(filterObj);
             if (filterCss !== 'none') {
-              const tempCanvas = document.createElement('canvas');
-              tempCanvas.width = baseW;
-              tempCanvas.height = baseH;
-              const tempCtx = tempCanvas.getContext('2d');
-              // iOS-safe: uses pixel-level fallback on iOS Safari
-              drawImageFiltered(tempCtx, cached, filterCss, 0, 0, baseW, baseH);
-              drawSource = tempCanvas;
+              const cacheKey = `${imgLayer.id || 'layer'}_${imgLayer.url}_${filterCss}_${baseW}_${baseH}`;
+              let filteredCanvas = layerFilterCacheRef.current.get(cacheKey);
+              if (!filteredCanvas) {
+                filteredCanvas = document.createElement('canvas');
+                filteredCanvas.width = baseW;
+                filteredCanvas.height = baseH;
+                const tempCtx = filteredCanvas.getContext('2d');
+                drawImageFiltered(tempCtx, cached, filterCss, 0, 0, baseW, baseH);
+                if (layerFilterCacheRef.current.size > 24) {
+                  const firstK = layerFilterCacheRef.current.keys().next().value;
+                  layerFilterCacheRef.current.delete(firstK);
+                }
+                layerFilterCacheRef.current.set(cacheKey, filteredCanvas);
+              }
+              drawSource = filteredCanvas;
             }
           }
 
@@ -3077,9 +3058,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         targetCtx.globalAlpha = watermark.opacity || 0.5;
         
         const pad = 20;
-        let wx = 0;
-        let wy = 0;
-        
+
         const getPositions = (w, h) => {
           const pos = watermark.position || 'bottom-right';
           if (pos === 'bottom-right') return { x: canvas.width - pad - w, y: canvas.height - pad - h };
@@ -3164,10 +3143,11 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
       }
     };
 
-    if (baseImgRef.current && baseImgRef.current.src === imgSrc) {
+    if (baseImgRef.current && (baseImgRef.current._origSrc === imgSrc || baseImgRef.current.src === imgSrc)) {
       renderCanvas(baseImgRef.current);
     } else if (imgSrc) {
         const baseImg = new Image();
+        baseImg._origSrc = imgSrc;
         if (imgSrc && !imgSrc.startsWith('blob:') && !imgSrc.startsWith('data:')) baseImg.crossOrigin = 'anonymous';
         baseImg.onload = () => {
           if (baseImg.width && baseImg.height && (naturalSize.w !== baseImg.width || naturalSize.h !== baseImg.height)) {
@@ -3177,12 +3157,14 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
           renderCanvas(baseImg);
         };
         baseImg.onerror = () => {
+          baseImgRef.current = null;
           renderCanvas(null);
         };
         baseImg.src = imgSrc;
     } else {
       renderCanvas(null);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [captions, stickers, activeLayerId, imageLayers, slotImages, slotTransforms, activeIsNativeLayout, editingCaptionId, aspectRatio, imageFit, watermark, drawings, isDrawingMode, imgSrc, filters, liveBgColor, canvasHeader, canvasFooter, demotivational, canvasFlipX]);
 
   // Helper to rotate point for hit testing
@@ -3774,7 +3756,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     }
   };
 
-  const handlePointerEnd = (e) => {
+  const handlePointerEnd = (_e) => {
     if (canvasRef.current && !isDrawingMode) {
       canvasRef.current.style.cursor = 'default';
     }
@@ -3806,10 +3788,10 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     // Clean tap on caption: select layer, activate editing mode and open keyboard immediately (only for regular text captions, not tweet cards)
     if (wasCleanTap && tappedType === 'caption' && tappedId) {
       if (onSelectLayer) onSelectLayer(tappedId);
-      const isSocial = activeCap?.isTweetCard || activeCap?.isInstagramCard || activeCap?.isWhatsAppCard;
+      const tappedCap = captions.find(c => c.id === tappedId);
+      const isSocial = tappedCap?.isTweetCard || tappedCap?.isInstagramCard || tappedCap?.isWhatsAppCard;
       if (!isSocial) {
         setEditingCaptionId(tappedId);
-        setEditingCaptionText(activeCap ? activeCap.text : '');
         focusTextarea();
       } else {
         setEditingCaptionId(null);
@@ -4546,35 +4528,9 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
       onUpdateStickerBounds(dragTarget.current.id, { x: newX, y: newY });
     } else if (dragTarget.current.type === 'imageLayer' && onUpdateImageLayerBounds) {
       onUpdateImageLayerBounds(dragTarget.current.id, { x: newX, y: newY });
-    } else if (dragTarget.current.type === 'imageLayer' && onUpdateImageLayerPosition) {
-      onUpdateImageLayerPosition(dragTarget.current.id, newX, newY);
     }
   };
 
-  const handlePointerUp = () => {
-    if (canvasRef.current && !isDrawingMode) {
-      canvasRef.current.style.cursor = 'default';
-    }
-    if (isDrawingMode && isDrawingActive.current) {
-      isDrawingActive.current = false;
-      lastDrawPoint.current = null;
-      if (currentStroke.current) {
-        const strokeToSave = currentStroke.current;
-        currentStroke.current = null;
-        if (strokeToSave.points.length > 0 && onAddDrawing) {
-          onAddDrawing(strokeToSave);
-        }
-      }
-      return;
-    }
-    isDragging.current = false;
-    hasDragged.current = false;
-    dragTarget.current = null;
-    if (snappingLines.current.horizontal !== null || snappingLines.current.vertical !== null) {
-      snappingLines.current = { horizontal: null, vertical: null };
-    }
-    if (baseImgRef.current) renderCanvas(baseImgRef.current);
-  };
 
   // Global window listeners so fast mouse or touch drags don't freeze when leaving the canvas element
   useEffect(() => {
@@ -4584,9 +4540,8 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
       }
     };
     const handleGlobalUp = (e) => {
-      if (isDragging.current || isDrawingActive.current) {
-        if (handlePointerEndRef.current) handlePointerEndRef.current(e);
-        else handlePointerUp();
+      if ((isDragging.current || isDrawingActive.current) && handlePointerEndRef.current) {
+        handlePointerEndRef.current(e);
       }
     };
     window.addEventListener('mousemove', handleGlobalMove);
@@ -4604,18 +4559,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
   }, []);
 
   
-  useEffect(() => {
-    if (baseImgRef.current || isNativeLayout) {
-      // Just force a re-render. To force a re-render in CanvasEditor we just call renderCanvas.
-      // But renderCanvas is inside the component body, so it is accessible.
-      // Let's check if renderCanvas is defined in the body... yes.
-      // We will inject a dummy state update to force the component to re-execute and thus call renderCanvas via the existing mechanisms, OR just call renderCanvas directly.
-      // Wait, renderCanvas takes the image. 
-      if (typeof renderCanvas === 'function') {
-         renderCanvas(baseImgRef.current);
-      }
-    }
-  }, [liveBgColor, isNativeLayout]);
+
   
 // Keep focus on active caption whenever selected (not for social cards)
   useEffect(() => {
@@ -4623,7 +4567,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     if (activeCaption && !isSocial && editingCaptionId === activeCaption.id) {
       focusTextarea();
     }
-  }, [activeCaption?.id, editingCaptionId]);
+  }, [activeCaption, editingCaptionId, focusTextarea]);
 
   const handleWheel = (e) => {
     if (!activeIsNativeLayout || !activeLayoutDef || !onUpdateSlotTransform) return;
@@ -4667,7 +4611,6 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     }
   };
 
-  const computedFontSize = activeCaption ? (activeCaption.fontSize || 50) * (canvasScale || 1) : 18;
 
   return (
     <div

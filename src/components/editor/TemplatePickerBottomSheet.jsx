@@ -4,7 +4,7 @@ import { Image as ImageIcon, Search, X } from 'lucide-react';
 import { MEME_TEMPLATES } from '../../data/templates';
 import { safeGet } from '../../utils/storage';
 
-export const TEMPLATE_TAGS = [
+const TEMPLATE_TAGS = [
   { id: 'all', label: 'All' },
   { id: 'images', label: 'Images' },
   { id: 'reaction', label: 'Reactions' },
@@ -13,7 +13,6 @@ export const TEMPLATE_TAGS = [
   { id: 'multi-panel', label: 'Multi-Panel' },
 ];
 
-export const CATEGORIES = TEMPLATE_TAGS;
 
 export default function TemplatePickerBottomSheet({
   isOpen,

@@ -6,7 +6,7 @@ import { VitePWA } from 'vite-plugin-pwa'
 export default defineConfig({
   base: './',
   test: {
-    exclude: ['node_modules/**', 'dist/**', 'archive/**', 'android/**', 'meme-maker/**'],
+    exclude: ['node_modules/**', 'dist/**', 'archive/**', 'android/**', 'meme-maker/**', 'src-best-version/**'],
     testTimeout: 30000,
     isolate: false
   },
