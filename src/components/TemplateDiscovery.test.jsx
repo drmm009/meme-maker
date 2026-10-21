@@ -54,4 +54,51 @@ describe('TemplateDiscovery', () => {
       expect(Number.isNaN(templateNumericId(t))).toBe(false);
     }
   });
+
+  it('renders studio feature containers and handles feature clicks', () => {
+    const onSelectTemplate = vi.fn();
+    const onCreateCustom = vi.fn();
+    const onOpenAiGenerator = vi.fn();
+
+    render(
+      <TemplateDiscovery
+        onSelectTemplate={onSelectTemplate}
+        onCreateCustom={onCreateCustom}
+        onOpenAiGenerator={onOpenAiGenerator}
+      />
+    );
+
+    // Verify all 6 feature containers render
+    expect(screen.getByRole('button', { name: 'Generate Stickers' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Face Swap' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Create Viral Video' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Create Now' })).toBeTruthy();
+    expect(screen.getAllByRole('button', { name: 'Upload' }).length).toBeGreaterThan(0);
+    expect(screen.getByRole('button', { name: 'Social Cards' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'AI Punchlines' })).toBeTruthy();
+
+    // Click Face Swap
+    fireEvent.click(screen.getByRole('button', { name: 'Face Swap' }));
+    expect(onSelectTemplate).toHaveBeenCalledWith(
+      expect.objectContaining({ initialFaceSwap: true })
+    );
+
+    // Click Generate Stickers
+    fireEvent.click(screen.getByRole('button', { name: 'Generate Stickers' }));
+    expect(onSelectTemplate).toHaveBeenCalledWith(
+      expect.objectContaining({ initialStickersModal: true })
+    );
+
+    // Click Video Trimming
+    fireEvent.click(screen.getByRole('button', { name: 'Create Viral Video' }));
+    expect(onCreateCustom).toHaveBeenCalledWith('video');
+
+    // Click Create Now
+    fireEvent.click(screen.getByRole('button', { name: 'Create Now' }));
+    expect(onCreateCustom).toHaveBeenCalledWith('image');
+
+    // Click AI Punchlines
+    fireEvent.click(screen.getByRole('button', { name: 'AI Punchlines' }));
+    expect(onOpenAiGenerator).toHaveBeenCalled();
+  });
 });

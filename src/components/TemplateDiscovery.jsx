@@ -2,25 +2,42 @@ import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { MEME_TEMPLATES } from '../data/templates';
 import { VIDEO_MEME_TEMPLATES } from '../data/videoTemplates';
 import { fetchOpenSourceMemes } from '../services/memeService';
-import { 
+import {
+  Plus, Upload,
   Search, Sparkles, Image as ImageIcon, Video,
-  Flame, Star, Drama, Clapperboard, Scale, LayoutGrid, Layers, ChevronDown, Check,
-  Compass, Smile, ArrowDownAZ, Zap, ShieldCheck, ArrowRight,
-  Edit3, SlidersHorizontal, Eye, ChevronLeft, ChevronRight, Wand2, Scissors, Share2
+  Flame, Star, Drama, Clapperboard, LayoutGrid, Layers, Check,
+  Smile, ArrowDownAZ, Zap, ChevronRight, ChevronLeft, ArrowRight, Eye, Wand2, Share2,
+  Briefcase, Heart, ArrowUp, X, SlidersHorizontal, Scissors
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { safeGet, safeSet } from '../utils/storage';
 import './TemplateDiscovery.css';
 
 const TAGS = [
-  { id: 'all', label: 'All', icon: Layers },
-  { id: 'social', label: 'Social Media', icon: Share2 },
+  { id: 'featured', label: 'Featured', icon: Flame },
+  { id: 'all', label: 'All Memes', icon: Layers },
+  { id: 'social', label: 'Social Cards', icon: Share2 },
   { id: 'images', label: 'Images', icon: ImageIcon },
   { id: 'videos', label: 'Videos', icon: Clapperboard },
   { id: 'reaction', label: 'Reactions', icon: Smile },
   { id: 'favorites', label: 'Favorites', icon: Star },
   { id: 'classics', label: 'Classics', icon: Drama },
   { id: 'multi-panel', label: 'Multi-Panel', icon: LayoutGrid },
+];
+
+const QUICK_PROMPTS = [
+  '☕ Monday morning meeting',
+  '💻 Code works on first try',
+  '🐱 Cat judging my choices',
+  '🍕 2 AM weekend hunger',
+  '🚀 Pushing directly to prod'
+];
+
+export const AI_VIBE_MODES = [
+  { id: 'roast', emoji: '🔥', label: 'Roast Mode', prompt: 'Roast my daily morning routine and procrastination' },
+  { id: 'sarcastic', emoji: '😂', label: 'Sarcastic', prompt: 'When the code works on the first try and you suspect a trap' },
+  { id: 'wholesome', emoji: '🐱', label: 'Wholesome', prompt: 'My cat looking at me with unconditional love and judgment' },
+  { id: 'tech', emoji: '🧠', label: 'Tech Humor', prompt: 'Pushing directly to production on a Friday afternoon' },
 ];
 
 const SORT_OPTIONS = [
@@ -30,41 +47,7 @@ const SORT_OPTIONS = [
   { id: 'name', label: 'A-Z Name', icon: ArrowDownAZ, color: '#a855f7' }
 ];
 
-// Stable numeric order for mixed string ids ("imgflip-123", "giphy-abc", "custom-...").
-// Trailing digits win; otherwise fall back to trendingScore so sort is deterministic (never NaN).
-export function templateNumericId(t) {
-  const m = String(t.id || '').match(/(\d+)$/);
-  if (m) return Number(m[1]);
-  return t.trendingScore || 0;
-}
-
-// Compute dynamic, contextual badges so templates show a variety of labels (Trending, Classic, New, Reaction, Video, Popular)
-export function getTemplateBadge(template, index = 0) {
-  if (template.type === 'video') {
-    return { label: '', iconOnly: true, icon: Video, color: '#38bdf8' };
-  }
-  if (template.tag === 'pro') {
-    return { label: 'Pro', icon: Zap, color: '#facc15' };
-  }
-    if (template.category === 'social' || template.category === 'social media' || (template.tags && template.tags.includes('social'))) {
-    return { label: 'Social', icon: Share2, color: '#38bdf8' };
-  }
-if (template.category === 'reaction') {
-    return { label: 'Reaction', icon: Smile, color: '#a855f7' };
-  }
-  if (template.category === 'classic' || (template.trendingScore && template.trendingScore >= 135 && template.trendingScore < 140)) {
-    return { label: 'Classic', icon: Drama, color: '#f59e0b' };
-  }
-  if (template.tag === 'trending' || (template.trendingScore && template.trendingScore >= 140)) {
-    return { label: 'Trending', icon: Flame, color: '#ff3b60' };
-  }
-  if (index % 6 === 4 || (template.trendingScore && template.trendingScore < 30)) {
-    return { label: 'New', icon: Sparkles, color: '#10b981' };
-  }
-  return { label: 'Popular', icon: Flame, color: '#ff5e36' };
-}
-
-/* --- Bespoke 3D Volumetric SVG Graphics for Hero Carousel --- */
+/* --- Bespoke 3D Volumetric SVG Graphics for Hero Carousel (From Primary Version) --- */
 
 function GraphicRocket3D() {
   return (
@@ -185,48 +168,30 @@ function GraphicAiRobot3D() {
         </filter>
       </defs>
       <g transform="translate(6, 4)">
-        {/* Dynamic Shadow that scales with floating height */}
         <ellipse cx="58" cy="102" rx="24" ry="6" fill="#0f172a" opacity="0.35" filter="blur(4px)" className="ai-motion-shadow" />
-
-        {/* Orbit Energy Ring (Back Half) */}
         <g className="ai-motion-ring-back">
           <ellipse cx="58" cy="62" rx="42" ry="16" fill="none" stroke="url(#aiRingGrad)" strokeWidth="3" opacity="0.55" strokeDasharray="6 3" transform="rotate(-22 58 62)" />
         </g>
-
-        {/* Robot Main Body with Bobbing Levitation */}
         <g className="ai-motion-character">
-          {/* Robot Head / Sphere Body */}
           <circle cx="58" cy="58" r="30" fill="url(#aiOrbGrad)" />
-          
-          {/* Specular curved highlight */}
           <ellipse cx="50" cy="40" rx="14" ry="6" fill="#ffffff" opacity="0.75" transform="rotate(-30 50 40)" />
-
-          {/* Visor Screen Glass */}
           <rect x="36" y="47" width="44" height="22" rx="11" fill="url(#aiVisorGrad)" stroke="#1e1b4b" strokeWidth="1.5" />
-          
-          {/* Smiling LED Eyes with Organic Blink */}
           <g className="ai-motion-eyes">
             <ellipse cx="48" cy="57" rx="3.5" ry="4.5" fill="#38bdf8" filter="url(#aiGlow)" />
             <ellipse cx="48" cy="57" rx="2" ry="3" fill="#ffffff" />
             <ellipse cx="68" cy="57" rx="3.5" ry="4.5" fill="#38bdf8" filter="url(#aiGlow)" />
             <ellipse cx="68" cy="57" rx="2" ry="3" fill="#ffffff" />
           </g>
-
-          {/* Head Antenna with Wireless Signal Beacon */}
           <path d="M58 28 L58 16" stroke="#94a3b8" strokeWidth="2.5" strokeLinecap="round" />
           <g className="ai-motion-beacon">
             <circle cx="58" cy="13" r="5" fill="#38bdf8" filter="url(#aiGlow)" />
             <circle cx="58" cy="13" r="2.5" fill="#ffffff" />
           </g>
         </g>
-
-        {/* Orbit Energy Ring (Front Half) */}
         <g className="ai-motion-ring-front">
           <path d="M20 70 A 42 16 0 0 0 96 54" fill="none" stroke="url(#aiRingGrad)" strokeWidth="3.5" transform="rotate(-22 58 62)" />
         </g>
       </g>
-
-      {/* Floating 3D AI Stars & Neural Sparkles */}
       <g className="ai-motion-sparkles">
         <path d="M102 12 C102 18 97 22 91 22 C97 22 102 26 102 32 C102 26 107 22 113 22 C107 22 102 18 102 12 Z" fill="#38bdf8" />
         <circle cx="102" cy="22" r="1.8" fill="#ffffff" />
@@ -259,10 +224,7 @@ function GraphicFaceSwap3D() {
         </filter>
       </defs>
       <g transform="translate(6, 4)">
-        {/* Dynamic Shadow / Morph Silhouette Behind */}
         <ellipse cx="64" cy="62" rx="27" ry="33" fill="url(#maskBacking)" opacity="0.45" transform="rotate(18 64 62)" filter="url(#maskGlow)" className="face-motion-backing" />
-        
-        {/* Volumetric Face Mask Floating & Tilting */}
         <g className="face-motion-mask" transform="rotate(-10 56 60)">
           <path d="M30 42 C30 24 42 16 58 16 C74 16 86 24 86 42 C86 64 74 86 58 92 C42 86 30 64 30 42 Z" fill="url(#maskGold3D)" />
           <ellipse cx="58" cy="26" rx="16" ry="6" fill="#ffffff" opacity="0.65" />
@@ -276,8 +238,6 @@ function GraphicFaceSwap3D() {
           <path d="M48 66 C51 70 65 70 68 66 Z" fill="#ffffff" />
           <path d="M58 32 L58 56" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" opacity="0.55" />
         </g>
-
-        {/* Orbiting Swap Arrows Swirl */}
         <g className="face-motion-arrows">
           <path d="M88 42 C96 50 96 66 86 76" fill="none" stroke="#ec4899" strokeWidth="2.5" strokeLinecap="round" strokeDasharray="4 2" />
           <polygon points="84,72 87,79 92,75" fill="#ec4899" />
@@ -285,8 +245,6 @@ function GraphicFaceSwap3D() {
           <polygon points="32,42 29,35 24,39" fill="#facc15" />
         </g>
       </g>
-
-      {/* Floating 3D Sparkles */}
       <g className="face-motion-sparkles">
         <path d="M104 12 C104 17 100 21 95 21 C100 21 104 25 104 30 C104 25 108 21 113 21 C108 21 104 17 104 12 Z" fill="#facc15" />
         <circle cx="104" cy="21" r="1.5" fill="#ffffff" />
@@ -323,41 +281,29 @@ function GraphicCutout3D() {
         </filter>
       </defs>
       <g transform="translate(4, 4)">
-        {/* Floating Transparent Checkerboard Sticker Card */}
         <g className="cutout-motion-card" transform="rotate(-8 52 62)">
           <rect x="22" y="28" width="56" height="56" rx="14" fill="#1e293b" stroke="#38bdf8" strokeWidth="1.5" strokeDasharray="4 3" />
           <rect x="23" y="29" width="54" height="54" rx="13" fill="url(#cutoutChecker)" />
           <path d="M64 28 L78 42 L64 42 Z" fill="#38bdf8" opacity="0.85" />
           <path d="M64 28 L78 42 L64 42 Z" stroke="#ffffff" strokeWidth="1" />
         </g>
-
-        {/* Laser Cutout Path with Traveling Energy Beam */}
         <path d="M26 36 Q 52 14 78 36" fill="none" stroke="#34d399" strokeWidth="2.5" filter="url(#laserGlow)" strokeDasharray="3 3" className="cutout-motion-laser" />
-
-        {/* 3D Magic Scissors with Snip & Glide Motion */}
         <g className="cutout-motion-scissors" transform="translate(56, 32) rotate(42)">
-          {/* Top Blade & Handle */}
           <g className="scissor-blade-top-group">
             <path d="M0 0 L34 -5 C36 -5 36 -2 34 0 L0 3 Z" fill="url(#scissorChrome)" />
             <path d="M0 0 L32 -3" stroke="#ffffff" strokeWidth="1" opacity="0.8" />
             <path d="M-2 -2 C-8 -8 -18 -8 -20 -2 C-22 4 -14 10 -6 4 Z" fill="url(#scissorMint)" />
             <circle cx="-11" cy="-1" r="3.5" fill="#0f172a" />
           </g>
-
-          {/* Bottom Blade & Handle */}
           <g className="scissor-blade-bottom-group">
             <path d="M0 0 L34 5 C36 5 36 2 34 0 L0 -3 Z" fill="url(#scissorChrome)" />
             <path d="M-2 2 C-8 8 -18 8 -20 2 C-22 -4 -14 -10 -6 -4 Z" fill="url(#scissorMint)" />
             <circle cx="-11" cy="1" r="3.5" fill="#0f172a" />
           </g>
-
-          {/* Center Golden Pivot Pin */}
           <circle cx="2" cy="0" r="3.5" fill="#facc15" />
           <circle cx="2" cy="0" r="1.5" fill="#1e293b" />
         </g>
       </g>
-
-      {/* Floating 3D Sparkle Cutout Embers */}
       <g className="cutout-motion-sparkles">
         <path d="M104 10 C104 15 100 19 95 19 C100 19 104 23 104 28 C104 23 108 19 113 19 C108 19 104 15 104 10 Z" fill="#34d399" />
         <circle cx="104" cy="19" r="1.5" fill="#ffffff" />
@@ -369,216 +315,282 @@ function GraphicCutout3D() {
   );
 }
 
-/* --- Carousel Slides Configuration --- */
-const HERO_SLIDES = [
+function GraphicVideoTimeline3D() {
+  return (
+    <svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" className="hero-3d-svg video-3d-svg">
+      <defs>
+        <linearGradient id="clapperBodyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#1e293b" />
+          <stop offset="50%" stopColor="#0f172a" />
+          <stop offset="100%" stopColor="#0284c7" />
+        </linearGradient>
+        <linearGradient id="clapperCyan" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#38bdf8" />
+          <stop offset="100%" stopColor="#0284c7" />
+        </linearGradient>
+        <filter id="videoGlow" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="3" result="blur" />
+          <feComposite in="SourceGraphic" in2="blur" operator="over" />
+        </filter>
+      </defs>
+      <g transform="translate(6, 4)">
+        <ellipse cx="58" cy="100" rx="26" ry="6" fill="#0f172a" opacity="0.4" filter="blur(4px)" className="video-motion-shadow" />
+        <g className="video-motion-clapper" transform="rotate(-8 56 58)">
+          <rect x="20" y="38" width="72" height="52" rx="10" fill="url(#clapperBodyGrad)" stroke="#38bdf8" strokeWidth="1.5" />
+          <rect x="26" y="58" width="60" height="20" rx="6" fill="#0369a1" opacity="0.35" />
+          <line x1="36" y1="58" x2="36" y2="78" stroke="#38bdf8" strokeWidth="1.5" strokeDasharray="2 2" />
+          <line x1="48" y1="58" x2="48" y2="78" stroke="#38bdf8" strokeWidth="1.5" strokeDasharray="2 2" />
+          <line x1="60" y1="58" x2="60" y2="78" stroke="#38bdf8" strokeWidth="1.5" strokeDasharray="2 2" />
+          <line x1="72" y1="58" x2="72" y2="78" stroke="#38bdf8" strokeWidth="1.5" strokeDasharray="2 2" />
+          <polygon points="52,62 64,68 52,74" fill="#38bdf8" filter="url(#videoGlow)" />
+          <polygon points="53,63 62,68 53,73" fill="#ffffff" />
+          <g className="video-motion-stick" transform="translate(20, 22)">
+            <rect x="0" y="0" width="72" height="14" rx="4" fill="#0f172a" stroke="#38bdf8" strokeWidth="1.5" />
+            <polygon points="10,0 20,0 12,14 2,14" fill="#38bdf8" />
+            <polygon points="30,0 40,0 32,14 22,14" fill="#38bdf8" />
+            <polygon points="50,0 60,0 52,14 42,14" fill="#38bdf8" />
+          </g>
+        </g>
+      </g>
+      <g className="video-motion-sparkles">
+        <path d="M102 12 C102 17 98 21 93 21 C98 21 102 25 102 30 C102 25 106 21 111 21 C106 21 102 17 102 12 Z" fill="#38bdf8" />
+        <circle cx="102" cy="21" r="1.5" fill="#ffffff" />
+        <path d="M78 6 C78 9 75 11 72 11 C75 11 78 13 78 16 C78 13 81 11 84 11 C81 11 78 9 78 6 Z" fill="#818cf8" opacity="0.9" />
+        <circle cx="112" cy="46" r="1.6" fill="#38bdf8" />
+      </g>
+    </svg>
+  );
+}
+
+function GraphicSocialChat3D() {
+  return (
+    <svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" className="hero-3d-svg social-3d-svg">
+      <defs>
+        <linearGradient id="socialCardGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#1e1b4b" />
+          <stop offset="50%" stopColor="#311042" />
+          <stop offset="100%" stopColor="#ec4899" />
+        </linearGradient>
+        <linearGradient id="waGreenGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#25d366" />
+          <stop offset="100%" stopColor="#128c7e" />
+        </linearGradient>
+        <filter id="socialGlow" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="3" result="blur" />
+          <feComposite in="SourceGraphic" in2="blur" operator="over" />
+        </filter>
+      </defs>
+      <g transform="translate(6, 4)">
+        <ellipse cx="58" cy="100" rx="26" ry="6" fill="#0f172a" opacity="0.4" filter="blur(4px)" className="social-motion-shadow" />
+        <g className="social-motion-phone" transform="rotate(-6 56 58)">
+          <rect x="22" y="24" width="68" height="72" rx="14" fill="url(#socialCardGrad)" stroke="#ec4899" strokeWidth="1.5" />
+          <circle cx="34" cy="38" r="6" fill="#f43f5e" />
+          <rect x="44" y="35" width="28" height="4" rx="2" fill="#ffffff" opacity="0.8" />
+          <rect x="44" y="41" width="18" height="3" rx="1.5" fill="#f472b6" opacity="0.6" />
+          <rect x="28" y="50" width="56" height="18" rx="8" fill="url(#waGreenGrad)" filter="url(#socialGlow)" opacity="0.9" />
+          <rect x="34" y="56" width="36" height="4" rx="2" fill="#ffffff" />
+          <rect x="34" y="62" width="22" height="3" rx="1.5" fill="#dcfce7" opacity="0.9" />
+          <g transform="translate(60, 68)" className="social-motion-heart">
+            <circle cx="12" cy="12" r="10" fill="#f43f5e" />
+            <path d="M12 8 C10 6 7 7 7 10 C7 13 12 16 12 16 C12 16 17 13 17 10 C17 7 14 6 12 8 Z" fill="#ffffff" />
+          </g>
+        </g>
+      </g>
+      <g className="social-motion-sparkles">
+        <path d="M102 12 C102 17 98 21 93 21 C98 21 102 25 102 30 C102 25 106 21 111 21 C106 21 102 17 102 12 Z" fill="#ec4899" />
+        <circle cx="102" cy="21" r="1.5" fill="#ffffff" />
+        <path d="M78 6 C78 9 75 11 72 11 C75 11 78 13 78 16 C78 13 81 11 84 11 C81 11 78 9 78 6 Z" fill="#facc15" opacity="0.9" />
+        <circle cx="112" cy="46" r="1.6" fill="#f43f5e" />
+      </g>
+    </svg>
+  );
+}
+
+/* --- Carousel Slides Configuration (Studio Features in Primary Hero Banner UI) --- */
+export const STUDIO_HERO_SLIDES = [
   {
-    id: 'studio',
-    badgeText: '100% FREE APP',
+    id: 'customlayout',
+    action: 'custom',
+    title: 'Create Now',
+    badgeText: '🚀 100% FREE APP',
     badgeClass: 'badge-emerald',
     badgeDotClass: 'dot-emerald',
     titleMain: 'UNLEASH YOUR',
-    titleGradient: 'CREATIVE IDEAS',
+    titleGradient: 'VIRAL MEME IDEAS',
     titleGradClass: 'grad-sunset',
-    tagline: 'Instant HD memes • Zero watermarks • Full creative studio',
+    tagline: 'Unleash your viral meme ideas with custom multi-panel layouts',
     glowTheme: 'glow-theme-studio',
+    glowColor: 'rgba(255, 94, 54, 0.45)',
+    icon: Plus,
     renderGraphic: () => <GraphicRocket3D />,
-    actions: [
-      { id: 'canvas', label: 'Custom Canvas', icon: Edit3, variant: 'studio-pill-canvas', onClick: ({ onCreateCustom }) => onCreateCustom('image') },
-      { id: 'ai', label: 'AI Generator', icon: Sparkles, variant: 'studio-pill-ai', onClick: ({ goToSlide }) => goToSlide(1) }
-    ]
+    primaryVariant: 'studio-pill-canvas',
+    secondaryLabel: 'AI Generator',
+    secondaryIcon: Sparkles,
+    secondaryVariant: 'studio-pill-ai',
+    secondaryAction: 'ai'
   },
   {
-    id: 'ai-generator',
-    badgeText: '✨ 100% FREE AI MEMES',
+    id: 'videotrim',
+    action: 'video',
+    title: 'Create Viral Video',
+    badgeText: '🎬 TIMELINE & AUDIO SYNC',
     badgeClass: 'badge-cyan',
     badgeDotClass: 'dot-cyan',
-    titleMain: 'PROMPT-TO-MEME',
-    titleGradient: 'AI GENERATOR',
+    titleMain: 'CREATE VIRAL',
+    titleGradient: 'MEME VIDEOS',
     titleGradClass: 'grad-electric',
-    tagline: 'Turn any prompt into viral comedy with smart AI captions',
+    tagline: 'Trim video clips, sync audio & curved captions',
     glowTheme: 'glow-theme-ai',
-    renderGraphic: () => <GraphicAiRobot3D />,
-    actions: [
-      {
-        id: 'ai-gen',
-        label: 'Generate with AI',
-        icon: Sparkles,
-        variant: 'pill-cyan',
-        onClick: ({ onOpenAiGenerator, onSelectTemplate, templatesList }) => {
-          if (onOpenAiGenerator) {
-            onOpenAiGenerator();
-          } else {
-            onSelectTemplate(templatesList[0]);
-          }
-        }
-      },
-      { id: 'ai-canvas', label: 'Custom Canvas', icon: Edit3, variant: 'pill-indigo', onClick: ({ onCreateCustom }) => onCreateCustom('image') }
-    ]
+    glowColor: 'rgba(6, 182, 212, 0.45)',
+    icon: Video,
+    renderGraphic: () => <GraphicVideoTimeline3D />,
+    primaryVariant: 'pill-cyan',
+    secondaryLabel: 'Upload',
+    secondaryIcon: Upload,
+    secondaryVariant: 'pill-indigo',
+    secondaryAction: 'upload'
   },
   {
-    id: 'face-swap',
+    id: 'stickers',
+    action: 'stickers',
+    title: 'Generate Stickers',
+    badgeText: '🔥 100% FREE AI CUTOUT',
+    badgeClass: 'badge-mint',
+    badgeDotClass: 'dot-mint',
+    titleMain: 'REMOVE BACKGROUND',
+    titleGradient: 'MAKE STICKERS',
+    titleGradClass: 'grad-mint-cyan',
+    tagline: 'Extract clean cutout stickers in 1 tap',
+    glowTheme: 'glow-theme-cutout',
+    glowColor: 'rgba(16, 185, 129, 0.45)',
+    icon: Scissors,
+    renderGraphic: () => <GraphicCutout3D />,
+    primaryVariant: 'pill-mint',
+    secondaryLabel: 'Upload',
+    secondaryIcon: Upload,
+    secondaryVariant: 'studio-pill-canvas',
+    secondaryAction: 'upload'
+  },
+  {
+    id: 'faceswap',
+    action: 'faceswap',
+    title: 'Face Swap',
     badgeText: '🎭 100% FREE FACE SWAP',
     badgeClass: 'badge-amber',
     badgeDotClass: 'dot-amber',
     titleMain: 'SWAP YOUR FACE',
     titleGradient: 'INTO ANY MEME',
     titleGradClass: 'grad-amber-fuchsia',
-    tagline: 'Put your face into iconic memes with realistic AI blending',
+    tagline: 'Swap your face into viral memes instantly',
     glowTheme: 'glow-theme-face',
+    glowColor: 'rgba(245, 158, 11, 0.45)',
+    icon: Smile,
     renderGraphic: () => <GraphicFaceSwap3D />,
-    actions: [
-      { id: 'face-action', label: 'Swap Face Now', icon: Drama, variant: 'pill-amber', onClick: ({ onSelectTemplate, templatesList }) => onSelectTemplate(templatesList[1] || templatesList[0]) },
-      { id: 'face-custom', label: 'Upload Photo', icon: ImageIcon, variant: 'pill-fuchsia', onClick: ({ triggerCutoutUpload, onCreateCustom }) => {
-        if (triggerCutoutUpload) triggerCutoutUpload();
-        else onCreateCustom('image');
-      }}
-    ]
+    primaryVariant: 'pill-amber',
+    secondaryLabel: 'Upload',
+    secondaryIcon: Upload,
+    secondaryVariant: 'pill-fuchsia',
+    secondaryAction: 'upload'
   },
   {
-    id: 'bg-removal',
-    badgeText: '✂️ 1-CLICK AI CUTOUT',
-    badgeClass: 'badge-mint',
-    badgeDotClass: 'dot-mint',
-    titleMain: 'REMOVE BACKGROUND',
-    titleGradient: 'MAKE STICKERS',
-    titleGradClass: 'grad-mint-cyan',
-    tagline: 'Isolate subjects instantly to create custom meme stickers',
-    glowTheme: 'glow-theme-cutout',
-    renderGraphic: () => <GraphicCutout3D />,
-    actions: [
-      {
-        id: 'cutout-action',
-        label: 'Cutout Sticker',
-        icon: Scissors,
-        variant: 'pill-mint',
-        onClick: ({ triggerCutoutUpload, onCreateCustom }) => {
-          if (triggerCutoutUpload) {
-            triggerCutoutUpload();
-          } else {
-            onCreateCustom('image');
-          }
-        }
-      },
-      { id: 'cutout-browse', label: 'Browse Memes', icon: LayoutGrid, variant: 'pill-blue', onClick: () => {
-        const grid = document.querySelector('.discovery-masonry-feed');
-        if (grid) grid.scrollIntoView({ behavior: 'smooth' });
-      }}
-    ]
+    id: 'socialcards',
+    action: 'social',
+    title: 'Social Cards',
+    badgeText: '💬 INTERACTIVE SOCIAL CARDS',
+    badgeClass: 'badge-fuchsia',
+    badgeDotClass: 'dot-fuchsia',
+    titleMain: 'CREATE REALISTIC',
+    titleGradient: 'SOCIAL CARDS',
+    titleGradClass: 'grad-amber-fuchsia',
+    tagline: 'Craft Twitter, WhatsApp & Instagram cards',
+    glowTheme: 'glow-theme-face',
+    glowColor: 'rgba(217, 70, 239, 0.45)',
+    icon: Share2,
+    renderGraphic: () => <GraphicSocialChat3D />,
+    primaryVariant: 'pill-fuchsia',
+    secondaryLabel: 'Upload',
+    secondaryIcon: Upload,
+    secondaryVariant: 'studio-pill-canvas',
+    secondaryAction: 'upload'
+  },
+  {
+    id: 'aipunchlines',
+    action: 'ai',
+    title: 'AI Punchlines',
+    badgeText: '⚡ 100% FREE AI MEMES',
+    badgeClass: 'badge-cyan',
+    badgeDotClass: 'dot-cyan',
+    titleMain: 'PROMPT-TO-MEME',
+    titleGradient: 'AI PUNCHLINES',
+    titleGradClass: 'grad-electric',
+    tagline: 'Turn prompts into viral captions & punchlines',
+    glowTheme: 'glow-theme-ai',
+    glowColor: 'rgba(129, 140, 248, 0.45)',
+    icon: Wand2,
+    renderGraphic: () => <GraphicAiRobot3D />,
+    primaryVariant: 'studio-pill-ai',
+    secondaryLabel: 'Upload',
+    secondaryIcon: Upload,
+    secondaryVariant: 'pill-indigo',
+    secondaryAction: 'upload'
   }
 ];
 
+export const STUDIO_FEATURES = STUDIO_HERO_SLIDES;
+
+// Stable numeric order for mixed string ids ("imgflip-123", "giphy-abc", "custom-...").
+// Trailing digits win; otherwise fall back to trendingScore so sort is deterministic (never NaN).
+export function templateNumericId(t) {
+  if (!t) return 0;
+  const m = String(t.id || '').match(/(\d+)$/);
+  if (m) return Number(m[1]);
+  return t.trendingScore || 0;
+}
+
+// Compute dynamic, contextual badges so templates show a variety of labels
+export function getTemplateBadge(template, index = 0) {
+  if (!template) return { label: 'Popular', icon: Flame, color: '#ff5e36' };
+  if (template.type === 'video') {
+    return { label: '', iconOnly: true, icon: Video, color: '#38bdf8' };
+  }
+  if (template.tag === 'pro') {
+    return { label: 'Pro', icon: Zap, color: '#facc15' };
+  }
+  if (template.category === 'social' || (template.tags && template.tags.includes('social'))) {
+    return { label: 'Social', icon: Share2, color: '#38bdf8' };
+  }
+  if (template.category === 'reaction') {
+    return { label: 'Reaction', icon: Smile, color: '#a855f7' };
+  }
+  if (template.category === 'classic' || (template.trendingScore && template.trendingScore >= 135 && template.trendingScore < 140)) {
+    return { label: 'Classic', icon: Drama, color: '#f59e0b' };
+  }
+  if (template.tag === 'trending' || (template.trendingScore && template.trendingScore >= 140)) {
+    return { label: 'Trending', icon: Flame, color: '#ff3b60' };
+  }
+  if (index % 6 === 4 || (template.trendingScore && template.trendingScore < 30)) {
+    return { label: 'New', icon: Sparkles, color: '#10b981' };
+  }
+  return { label: 'Popular', icon: Flame, color: '#ff5e36' };
+}
+
 export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom, onOpenAiGenerator }) {
-  const cutoutFileInputRef = useRef(null);
-
-  const handleCutoutImageSelected = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const dataUrl = event.target?.result;
-      if (dataUrl) {
-        onSelectTemplate({
-          id: `cutout-${Date.now()}`,
-          name: 'AI Cutout Sticker',
-          imageUrl: dataUrl,
-          rawImageUrl: dataUrl,
-          category: 'custom',
-          width: 800,
-          height: 800
-        });
-      }
-    };
-    reader.readAsDataURL(file);
-    e.target.value = '';
-  };
-
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedTag, setSelectedTag] = useState('all');
+  const [selectedTag, setSelectedTag] = useState('featured');
   const [sortBy, setSortBy] = useState('trending');
   const [isSortOpen, setIsSortOpen] = useState(false);
+  const [aiPromptText, setAiPromptText] = useState('');
+  const [selectedVibe, setSelectedVibe] = useState(null);
+  const searchInputRef = useRef(null);
   const sortRef = useRef(null);
 
-  // Hero Carousel State & Handlers
-  const [activeSlideIndex, setActiveSlideIndex] = useState(0);
-  const [slideDirection, setSlideDirection] = useState(1);
-  const [isCarouselHovered, setIsCarouselHovered] = useState(false);
-  const [isHeroBannerVisible, setIsHeroBannerVisible] = useState(true);
-  const heroBannerRef = useRef(null);
-  const touchStartRef = useRef({ x: null, y: null });
-
-  useEffect(() => {
-    const el = heroBannerRef.current;
-    if (!el || typeof IntersectionObserver === 'undefined') return;
-    const observer = new IntersectionObserver(([entry]) => {
-      setIsHeroBannerVisible(entry.isIntersecting);
-    }, { threshold: 0.05 });
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
-
-  // Autoplay carousel every 5.5s (pauses on hover, touch, offscreen, or global test flag)
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      window.__SET_HERO_SLIDE__ = (idx) => {
-        setSlideDirection(idx > activeSlideIndex ? 1 : -1);
-        setActiveSlideIndex(idx);
-      };
-    }
-    if (isCarouselHovered || !isHeroBannerVisible) return;
-    const timer = setInterval(() => {
-      if (typeof window !== 'undefined' && window.__PAUSE_CAROUSEL__) return;
-      setSlideDirection(1);
-      setActiveSlideIndex((prev) => (prev + 1) % HERO_SLIDES.length);
-    }, 5500);
-    return () => clearInterval(timer);
-  }, [isCarouselHovered, isHeroBannerVisible, activeSlideIndex]);
-
-  const handleNextSlide = (e) => {
-    e?.stopPropagation();
-    setSlideDirection(1);
-    setActiveSlideIndex((prev) => (prev + 1) % HERO_SLIDES.length);
-  };
-
-  const handlePrevSlide = (e) => {
-    e?.stopPropagation();
-    setSlideDirection(-1);
-    setActiveSlideIndex((prev) => (prev - 1 + HERO_SLIDES.length) % HERO_SLIDES.length);
-  };
-
-  const handleDotClick = (index) => {
-    setSlideDirection(index > activeSlideIndex ? 1 : -1);
-    setActiveSlideIndex(index);
-  };
-
-  const handleTouchStart = (e) => {
-    if (!e.touches || e.touches.length === 0) return;
-    touchStartRef.current = {
-      x: e.touches[0].clientX,
-      y: e.touches[0].clientY
-    };
-  };
-
-  const handleTouchEnd = (e) => {
-    const start = touchStartRef.current;
-    if (start.x === null || !e.changedTouches || e.changedTouches.length === 0) return;
-    const diffX = start.x - e.changedTouches[0].clientX;
-    const diffY = start.y !== null ? start.y - e.changedTouches[0].clientY : 0;
-    
-    // Only trigger slide transition if horizontal swipe is dominant and exceeds 35px threshold
-    if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 35) {
-      if (diffX > 0) handleNextSlide();
-      else handlePrevSlide();
-    }
-    touchStartRef.current = { x: null, y: null };
-  };
-
-  // Favorites persistence (quota-safe: falls back to session-only on write failure)
+  // Favorites persistence
   const [favorites, setFavorites] = useState(() => {
     const saved = safeGet('meme_favorite_templates', []);
     return Array.isArray(saved) ? saved : [];
   });
 
-  // Responsive mobile check and dynamic masonry column count
+  // Responsive mobile check and columns count
   const [isMobile, setIsMobile] = useState(() => {
     if (typeof window !== 'undefined') {
       return window.innerWidth <= 640;
@@ -634,6 +646,7 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom, on
     };
   }, [isSortOpen]);
 
+  // Template List with dynamic fetch
   const [templatesList, setTemplatesList] = useState(() => [...MEME_TEMPLATES, ...VIDEO_MEME_TEMPLATES]);
 
   useEffect(() => {
@@ -648,64 +661,98 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom, on
     };
   }, []);
 
+  // Filtered Templates for Search & Masonry Grid View
   const filteredTemplates = useMemo(() => {
     return templatesList.filter((template) => {
       const q = searchQuery.toLowerCase().trim();
-      const matchesSearch = !q ||
-        (template.name && template.name.toLowerCase().includes(q)) ||
+      const matchSearch =
+        !q ||
+        template.name.toLowerCase().includes(q) ||
+        (template.tags && template.tags.some((tag) => tag.toLowerCase().includes(q))) ||
         (template.category && template.category.toLowerCase().includes(q));
 
-      let matchesTag = true;
+      if (!matchSearch) return false;
+
+      if (selectedTag === 'featured' || selectedTag === 'all') return true;
+      if (selectedTag === 'favorites') return favorites.includes(template.id);
       if (selectedTag === 'social') {
-        matchesTag = template.category === 'social' || template.category === 'social media' || (template.tags && template.tags.includes('social'));
-      } else if (selectedTag === 'hot') {
-        matchesTag = (template.trendingScore && template.trendingScore >= 90) || template.category === 'popular';
-      } else if (selectedTag === 'new') {
-        matchesTag = true;
-      } else if (selectedTag === 'favorites') {
-        matchesTag = favorites.includes(template.id);
-      } else if (selectedTag === 'classics') {
-        matchesTag = template.category === 'classic' || template.category === 'popular';
-      } else if (selectedTag === 'videos') {
-        matchesTag = template.type === 'video';
-      } else if (selectedTag === 'images') {
-        matchesTag = template.type !== 'video';
-      } else if (selectedTag === 'desi') {
-        matchesTag = template.category === 'desi';
-      } else if (selectedTag === 'reaction') {
-        matchesTag = template.category === 'reaction';
-      } else if (selectedTag === 'comparison') {
-        matchesTag = template.category === 'comparison';
-      } else if (selectedTag === 'multi-panel') {
-        matchesTag = template.category === 'multi-panel';
-      } else if (selectedTag === 'all') {
-        matchesTag = true;
+        return template.category === 'social' || (template.tags && template.tags.includes('social'));
+      }
+      if (selectedTag === 'images') return template.type !== 'video';
+      if (selectedTag === 'videos') return template.type === 'video';
+      if (selectedTag === 'reaction') {
+        return template.category === 'reaction' || (template.tags && template.tags.includes('reaction'));
+      }
+      if (selectedTag === 'classics') {
+        return template.category === 'classic' || (template.tags && template.tags.includes('classic'));
+      }
+      if (selectedTag === 'multi-panel') {
+        return template.category === 'multi-panel' || (template.tags && template.tags.includes('multi-panel'));
       }
 
-      return matchesSearch && matchesTag;
+      return template.category === selectedTag;
     }).sort((a, b) => {
-      if (selectedTag === 'new') {
-        return templateNumericId(b) - templateNumericId(a);
-      }
-      if (sortBy === 'trending' || sortBy === 'popular') {
-        return (b.trendingScore || 0) - (a.trendingScore || 0);
-      }
-      if (sortBy === 'newest') {
-        return templateNumericId(b) - templateNumericId(a);
-      }
-      if (sortBy === 'name') {
-        return (a.name || '').localeCompare(b.name || '');
-      }
-      return 0;
+      if (sortBy === 'popular') return (b.trendingScore || 0) - (a.trendingScore || 0);
+      if (sortBy === 'newest') return templateNumericId(b) - templateNumericId(a);
+      if (sortBy === 'name') return a.name.localeCompare(b.name);
+      return (b.trendingScore || 0) - (a.trendingScore || 0);
     });
-  }, [searchQuery, selectedTag, sortBy, favorites, templatesList]);
+  }, [templatesList, searchQuery, selectedTag, sortBy, favorites]);
 
-  // Pagination / Progressive loading for maximum scroll performance
+  // Curated Shelves Data
+  const trendingShelfTemplates = useMemo(() => {
+    return templatesList
+      .filter(t => t.category !== 'social' && !(t.tags && t.tags.includes('social')))
+      .sort((a, b) => (b.trendingScore || 0) - (a.trendingScore || 0))
+      .slice(0, 14);
+  }, [templatesList]);
+
+  const socialShelfTemplates = useMemo(() => {
+    return templatesList.filter(t => t.category === 'social' || (t.tags && t.tags.includes('social'))).slice(0, 6);
+  }, [templatesList]);
+
+  const workShelfTemplates = useMemo(() => {
+    const workKeywords = [
+      'meeting', 'fine', 'skeleton', 'clown', 'bernie', 'same picture', 'paid', 
+      'lenny', 'harold', 'brain', 'homies', 'scientist', 'kermit'
+    ];
+    return templatesList.filter(t => 
+      t.category !== 'social' && (
+        workKeywords.some(k => t.name.toLowerCase().includes(k)) ||
+        (t.tags && t.tags.some(tag => workKeywords.some(k => tag.toLowerCase().includes(k))))
+      )
+    ).slice(0, 10);
+  }, [templatesList]);
+
+  const relationshipShelfTemplates = useMemo(() => {
+    const relKeywords = ['boyfriend', 'cat', 'thinking about other', 'padme', 'friendship ended', 'drake', 'buttons', 'couple'];
+    return templatesList.filter(t => 
+      t.category !== 'social' && (
+        relKeywords.some(k => t.name.toLowerCase().includes(k)) ||
+        (t.tags && t.tags.some(tag => relKeywords.some(k => tag.toLowerCase().includes(k))))
+      )
+    ).slice(0, 10);
+  }, [templatesList]);
+
+  const reactionsShelfTemplates = useMemo(() => {
+    const reactKeywords = ['hotline', 'disaster', 'change my mind', 'spiderman pointing', 'pikachu', 'roll safe', 'simply', 'batman'];
+    return templatesList.filter(t => 
+      t.category !== 'social' && (
+        t.category === 'reaction' ||
+        reactKeywords.some(k => t.name.toLowerCase().includes(k)) ||
+        (t.tags && t.tags.some(tag => reactKeywords.some(k => tag.toLowerCase().includes(k))))
+      )
+    ).slice(0, 10);
+  }, [templatesList]);
+
+  // Determine active view mode: Shelves vs Grid
+  const isGridView = searchQuery.trim().length > 0 || selectedTag !== 'featured';
+
+  // Pagination for grid
   const PAGE_SIZE = 24;
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const sentinelRef = useRef(null);
 
-  // Reset pagination whenever search, category tag, or sort order changes
   useEffect(() => {
     setVisibleCount(PAGE_SIZE);
   }, [searchQuery, selectedTag, sortBy]);
@@ -714,7 +761,6 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom, on
     return filteredTemplates.slice(0, visibleCount);
   }, [filteredTemplates, visibleCount]);
 
-  // Infinite scroll observer to seamlessly load subsequent batches on scroll
   useEffect(() => {
     if (visibleCount >= filteredTemplates.length) return;
     const sentinel = sentinelRef.current;
@@ -734,7 +780,6 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom, on
     }
   }, [visibleCount, filteredTemplates.length]);
 
-  // Distribute filtered templates across columns for true Pinterest-style masonry
   const masonryColumns = useMemo(() => {
     const cols = Array.from({ length: columnsCount }, () => []);
     displayedTemplates.forEach((template, index) => {
@@ -744,151 +789,294 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom, on
   }, [displayedTemplates, columnsCount]);
 
   const currentSortOption = SORT_OPTIONS.find(opt => opt.id === sortBy) || SORT_OPTIONS[0];
-  const currentSlide = HERO_SLIDES[activeSlideIndex] || HERO_SLIDES[0];
+
+  const handleSelectVibe = (vibe) => {
+    setSelectedVibe(vibe.id);
+    setAiPromptText(vibe.prompt);
+    if (onOpenAiGenerator) {
+      onOpenAiGenerator(vibe.prompt);
+    }
+  };
+
+  const handleOpenAiPrompt = (e) => {
+    e?.preventDefault?.();
+    if (onOpenAiGenerator) {
+      onOpenAiGenerator(aiPromptText.trim() || 'Make a hilarious meme about my Monday routine');
+    }
+  };
+
+  const handleShelfSeeAll = (tagId, sortOption = 'trending') => {
+    setSelectedTag(tagId);
+    setSortBy(sortOption);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const cutoutFileInputRef = useRef(null);
+
+  const handleCutoutImageSelected = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const isVideo = file.type.startsWith('video/');
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const dataUrl = event.target?.result;
+      if (dataUrl && onSelectTemplate) {
+        onSelectTemplate({
+          id: `upload-${Date.now()}`,
+          name: file.name.replace(/\.[^/.]+$/, '') || (isVideo ? 'Uploaded Video' : 'Uploaded Meme'),
+          imageUrl: dataUrl,
+          rawImageUrl: dataUrl,
+          videoUrl: isVideo ? dataUrl : undefined,
+          type: isVideo ? 'video' : 'image',
+          category: 'custom',
+          width: 800,
+          height: 800
+        });
+      }
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
+
+  const handleFeatureClick = (feature) => {
+    const actionKey = typeof feature === 'string' ? feature : (feature?.action || feature?.id);
+    if (actionKey === 'stickers') {
+      const targetTemplate = templatesList.find(t => t.id === 'drake' || t.name.toLowerCase().includes('drake')) || templatesList[0];
+      if (onSelectTemplate && targetTemplate) {
+        onSelectTemplate({
+          ...targetTemplate,
+          initialTab: 'stickers',
+          initialStickersModal: true
+        });
+      }
+    } else if (actionKey === 'faceswap') {
+      const targetTemplate = templatesList.find(t => t.id === 'drake' || t.name.toLowerCase().includes('drake')) || templatesList[0];
+      if (onSelectTemplate && targetTemplate) {
+        onSelectTemplate({
+          ...targetTemplate,
+          initialFaceSwap: true
+        });
+      }
+    } else if (actionKey === 'video') {
+      if (onCreateCustom) onCreateCustom('video');
+    } else if (actionKey === 'custom') {
+      if (onCreateCustom) onCreateCustom('image');
+    } else if (actionKey === 'social') {
+      const waTemplate = templatesList.find(t => t.id?.includes('whatsapp') || t.id?.includes('tweet')) || socialShelfTemplates[0];
+      if (onSelectTemplate && waTemplate) {
+        onSelectTemplate(waTemplate);
+      } else {
+        setSelectedTag('social');
+      }
+    } else if (actionKey === 'ai') {
+      if (onOpenAiGenerator) {
+        onOpenAiGenerator();
+      }
+    } else if (actionKey === 'upload') {
+      cutoutFileInputRef.current?.click();
+    }
+  };
+
+  // Carousel State & Touch/Autoplay controls for Hero Banner Studio Features
+  const [activeSlideIndex, setActiveSlideIndex] = useState(0);
+  const [isCarouselHovered, setIsCarouselHovered] = useState(false);
+  const touchStartRef = useRef({ x: null, y: null });
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.__SET_HERO_SLIDE__ = (idx) => {
+        setActiveSlideIndex(idx);
+      };
+    }
+    if (isCarouselHovered) return;
+    const timer = setInterval(() => {
+      if (typeof window !== 'undefined' && window.__PAUSE_CAROUSEL__) return;
+      setActiveSlideIndex((prev) => (prev + 1) % STUDIO_HERO_SLIDES.length);
+    }, 5500);
+    return () => clearInterval(timer);
+  }, [isCarouselHovered]);
+
+  const handleNextSlide = (e) => {
+    e?.stopPropagation?.();
+    setActiveSlideIndex((prev) => (prev + 1) % STUDIO_HERO_SLIDES.length);
+  };
+
+  const handlePrevSlide = (e) => {
+    e?.stopPropagation?.();
+    setActiveSlideIndex((prev) => (prev - 1 + STUDIO_HERO_SLIDES.length) % STUDIO_HERO_SLIDES.length);
+  };
+
+  const handleDotClick = (index) => {
+    setActiveSlideIndex(index);
+  };
+
+  const handleTouchStart = (e) => {
+    const touch = e.touches[0];
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+  };
+
+  const handleTouchEnd = (e) => {
+    if (!touchStartRef.current.x) return;
+    const touch = e.changedTouches[0];
+    const deltaX = touch.clientX - touchStartRef.current.x;
+    const deltaY = touch.clientY - touchStartRef.current.y;
+    if (Math.abs(deltaX) > 40 && Math.abs(deltaX) > Math.abs(deltaY)) {
+      if (deltaX < 0) {
+        handleNextSlide();
+      } else {
+        handlePrevSlide();
+      }
+    }
+    touchStartRef.current = { x: null, y: null };
+  };
+
+  const currentSlide = STUDIO_HERO_SLIDES[activeSlideIndex] || STUDIO_HERO_SLIDES[0];
+
+  const handleResetToFeatured = () => {
+    setSelectedTag('featured');
+    setSearchQuery('');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   return (
     <div className="template-discovery animate-fade-in">
-      <div className="discovery-header">
-        {/* Flagship Carousel Hero Banner with Dynamic Aurora Backlights */}
-        <div 
-          ref={heroBannerRef}
-          className={`hero-banner-wrapper ${currentSlide.glowTheme}`}
-          onMouseEnter={() => setIsCarouselHovered(true)}
-          onMouseLeave={() => setIsCarouselHovered(false)}
-          onTouchStart={(e) => { setIsCarouselHovered(true); handleTouchStart(e); }}
-          onTouchEnd={(e) => { setIsCarouselHovered(false); handleTouchEnd(e); }}
-        >
-          <div className="hero-glow-orb hero-glow-orb-1" aria-hidden="true" />
-          <div className="hero-glow-orb hero-glow-orb-2" aria-hidden="true" />
-          <div className="hero-glow-orb hero-glow-orb-3" aria-hidden="true" />
-
-          {/* Carousel Left / Right Navigation Controls */}
-          <button 
-            type="button"
-            className="hero-carousel-nav hero-nav-prev" 
-            onClick={handlePrevSlide} 
-            aria-label="Previous slide"
+      {/* 1. STUDIO FEATURES: Flagship Hero Banner Carousel (ON TOP OF HOMESCREEN) */}
+      {!isGridView && (
+        <section className="features-carousel-section" aria-label="Studio Features Showcase">
+          {/* Flagship Hero Banner Carousel with Primary Orange Glow Glass Effect */}
+          <div 
+            className={`hero-banner-wrapper ${currentSlide.glowTheme}`}
+            onMouseEnter={() => setIsCarouselHovered(true)}
+            onMouseLeave={() => setIsCarouselHovered(false)}
+            onTouchStart={(e) => { setIsCarouselHovered(true); handleTouchStart(e); }}
+            onTouchEnd={(e) => { setIsCarouselHovered(false); handleTouchEnd(e); }}
           >
-            <ChevronLeft size={16} />
-          </button>
+            <div className="hero-glow-orb hero-glow-orb-1" aria-hidden="true" />
 
-          <button 
-            type="button"
-            className="hero-carousel-nav hero-nav-next" 
-            onClick={handleNextSlide} 
-            aria-label="Next slide"
-          >
-            <ChevronRight size={16} />
-          </button>
+            {/* Carousel Left / Right Navigation Controls (Desktop hover arrows) */}
+            <button 
+              type="button"
+              className="hero-carousel-nav hero-nav-prev" 
+              onClick={handlePrevSlide} 
+              aria-label="Previous feature banner"
+            >
+              <ChevronLeft size={16} />
+            </button>
 
-          <div className="hero-banner glass-card">
-            <div className="hero-slides-container">
-              {HERO_SLIDES.map((slide, idx) => {
-                const isActive = idx === activeSlideIndex;
-                return (
-                  <div
-                    key={slide.id}
-                    className={`hero-slide-inner slide-${slide.id} ${isActive ? 'active' : 'inactive'}`}
-                    aria-hidden={!isActive}
-                  >
-                    <div className="hero-card-header">
-                      <div className="hero-text-content">
-                        <div className={`hero-free-badge ${slide.badgeClass}`}>
-                          <span className={`hero-free-dot ${slide.badgeDotClass}`} />
-                          <span>{slide.badgeText}</span>
+            <button 
+              type="button"
+              className="hero-carousel-nav hero-nav-next" 
+              onClick={handleNextSlide} 
+              aria-label="Next feature banner"
+            >
+              <ChevronRight size={16} />
+            </button>
+
+            <div className="hero-banner">
+              <div className="hero-slides-viewport">
+                <div
+                  className="hero-slides-track"
+                  style={{ transform: `translateX(-${activeSlideIndex * 100}%)` }}
+                >
+                  {STUDIO_HERO_SLIDES.map((slide, idx) => {
+                    const isActive = idx === activeSlideIndex;
+                    const SlideIcon = slide.icon;
+                    const SecIcon = slide.secondaryIcon;
+                    return (
+                      <div
+                        key={slide.id}
+                        className={`hero-slide-inner slide-${slide.id} ${isActive ? 'active' : ''}`}
+                      >
+                        <div className="hero-card-header">
+                          <div className="hero-text-content">
+                            <div className={`hero-free-badge ${slide.badgeClass}`}>
+                              <span className={`hero-free-dot ${slide.badgeDotClass}`} />
+                              <span>{slide.badgeText}</span>
+                            </div>
+                            <h2 className="hero-title">
+                              <span className="hero-title-line hero-title-line-1">
+                                <span className="hero-title-main">{slide.titleMain}</span>
+                              </span>
+                              <br />
+                              <span className="hero-title-line hero-title-line-2">
+                                <span className={`hero-title-gradient ${slide.titleGradClass}`}>
+                                  {slide.titleGradient}
+                                </span>
+                              </span>
+                            </h2>
+                            <p className="hero-tagline">{slide.tagline}</p>
+                          </div>
+
+                          <div className="hero-rocket-graphic" aria-hidden="true">
+                            {slide.renderGraphic()}
+                          </div>
                         </div>
-                        <h2 className="hero-title">
-                          <span className="hero-title-line hero-title-line-1">
-                            <span className="hero-title-main">{slide.titleMain}</span>
-                          </span>
-                          <br />
-                          <span className="hero-title-line hero-title-line-2">
-                            <span className={`hero-title-gradient ${slide.titleGradClass}`}>
-                              {slide.titleGradient}
-                            </span>
-                          </span>
-                        </h2>
-                        {slide.tagline && (
-                          <p className="hero-tagline">
-                            {slide.tagline}
-                          </p>
-                        )}
-                        {/* Screen-reader text for test compatibility (only once) */}
-                        {idx === 0 && (
-                          <span style={{ position: 'absolute', opacity: 0, pointerEvents: 'none', width: 0, height: 0, overflow: 'hidden' }}>
-                            Unleash Your Inner Meme Lord
-                          </span>
-                        )}
-                      </div>
 
-                      <div className="hero-rocket-graphic" aria-hidden="true">
-                        {slide.renderGraphic()}
-                      </div>
-                    </div>
-
-                    <div className="hero-actions">
-                      {slide.actions.map(action => {
-                        const IconComponent = action.icon;
-                        return (
+                        <div className="hero-actions">
                           <button
-                            key={action.id}
                             type="button"
-                            className={`studio-pill-btn ${action.variant}`}
-                            onClick={() => action.onClick({
-                              onCreateCustom,
-                              onSelectTemplate,
-                              goToSlide: handleDotClick,
-                              templatesList,
-                              onOpenAiGenerator,
-                              triggerCutoutUpload: () => cutoutFileInputRef.current?.click()
-                            })}
-                            tabIndex={isActive ? 0 : -1}
+                            className={`studio-pill-btn ${slide.primaryVariant}`}
+                            onClick={() => handleFeatureClick(slide)}
+                            aria-label={slide.title}
                           >
-                            <IconComponent size={17} className="studio-pill-icon" />
-                            <span className="studio-pill-text">{action.label}</span>
+                            <SlideIcon size={17} className="studio-pill-icon" />
+                            <span className="studio-pill-text">{slide.title}</span>
                           </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
 
-            {/* Hidden file input for Banner 4 Cutout Sticker upload */}
-            <input
-              type="file"
-              ref={cutoutFileInputRef}
-              style={{ display: 'none' }}
-              accept="image/*"
-              onChange={handleCutoutImageSelected}
-            />
+                          {slide.secondaryLabel && (
+                            <button
+                              type="button"
+                              className={`studio-pill-btn ${slide.secondaryVariant}`}
+                              onClick={() => handleFeatureClick(slide.secondaryAction)}
+                              aria-label={slide.secondaryLabel}
+                            >
+                              <SecIcon size={17} className="studio-pill-icon" />
+                              <span className="studio-pill-text">{slide.secondaryLabel}</span>
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
 
-            {/* Carousel Dot / Pill Indicators */}
-            <div className="hero-carousel-indicators" role="tablist" aria-label="Hero carousel navigation">
-              {HERO_SLIDES.map((slide, idx) => (
-                <button
-                  key={slide.id}
-                  type="button"
-                  className={`hero-indicator-dot ${idx === activeSlideIndex ? 'active' : ''}`}
-                  onClick={() => handleDotClick(idx)}
-                  aria-label={`Slide ${idx + 1}: ${slide.titleMain} ${slide.titleGradient}`}
-                  aria-selected={idx === activeSlideIndex}
-                  role="tab"
-                />
-              ))}
+              {/* Hidden file input for Cutout Sticker upload */}
+              <input
+                type="file"
+                ref={cutoutFileInputRef}
+                style={{ display: 'none' }}
+                accept="image/*,video/*"
+                onChange={handleCutoutImageSelected}
+              />
+
+              {/* Carousel Dot / Pill Indicators */}
+              <div className="hero-carousel-indicators" role="tablist" aria-label="Studio features navigation">
+                {STUDIO_HERO_SLIDES.map((slide, idx) => (
+                  <button
+                    key={slide.id}
+                    type="button"
+                    className={`hero-indicator-dot ${idx === activeSlideIndex ? 'active' : ''}`}
+                    onClick={() => handleDotClick(idx)}
+                    aria-label={`Slide ${idx + 1}: ${slide.titleMain} ${slide.titleGradient}`}
+                    aria-selected={idx === activeSlideIndex}
+                    role="tab"
+                  />
+                ))}
+              </div>
             </div>
           </div>
-        </div>
-      </div>
+        </section>
+      )}
 
-      {/* Side-by-side Search & Standalone Sort Pill */}
-      <div className="search-filter-row">
+      {/* 2. Top Search & Filter Bar (Below Carousel Banner Section) */}
+      <div className="discovery-top-bar">
         <div className="search-pill-container">
-          <Search className="search-pill-icon" size={19} />
+          <Search className="search-pill-icon" size={18} />
           <input
+            ref={searchInputRef}
             type="text"
-            placeholder={isMobile ? "Search templates" : "Search templates (Drake, Wojak, Cat)"}
+            placeholder={isMobile ? "Search templates (Drake, Cat)..." : "Search templates (Drake, Wojak, Cat, Work)..."}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="search-pill-input"
@@ -900,13 +1088,12 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom, on
               onClick={() => setSearchQuery('')}
               aria-label="Clear search"
             >
-              ✕
+              <X size={15} />
             </button>
           )}
         </div>
 
-        {/* Standalone Sort Container */}
-        {/* Filter Toggle Button */}
+        {/* Sort Popover Button */}
         <div className="sort-pill-wrapper" ref={sortRef}>
           <button
             type="button"
@@ -916,10 +1103,9 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom, on
             title={`Sorted by: ${currentSortOption.label}`}
             aria-label="Filter and sort templates"
           >
-            <SlidersHorizontal size={18} />
+            <SlidersHorizontal size={17} />
           </button>
 
-          {/* Floating Sort Dropdown */}
           <AnimatePresence>
             {isSortOpen && (
               <motion.div
@@ -942,8 +1128,8 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom, on
                         setIsSortOpen(false);
                       }}
                     >
-                      <span className="sort-item-icon" style={{ display: 'flex', alignItems: 'center' }}>
-                        <OptIcon size={16} color={opt.color || '#ff5e36'} />
+                      <span className="sort-item-icon">
+                        <OptIcon size={15} color={opt.color || '#ff5e36'} />
                       </span>
                       <span className="sort-item-label">{opt.label}</span>
                       {sortBy === opt.id && <Check size={14} className="sort-check" />}
@@ -956,150 +1142,605 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom, on
         </div>
       </div>
 
-      {/* Category Chips Row Matching Mockup */}
-      <div className="discovery-tags-scroll">
+      {/* 3. Quick Action Navigation Strip / Category Tags (Below Search Bar) */}
+      <div className="quick-actions-strip" role="tablist">
         {TAGS.map((tag) => {
           const isActive = selectedTag === tag.id;
+          const TagIcon = tag.icon;
           return (
             <button
               key={tag.id}
               type="button"
-              className={`discovery-tag-pill ${isActive ? 'active' : ''}`}
-              onClick={() => setSelectedTag(tag.id)}
+              className={`quick-pill-btn ${isActive ? 'active' : ''}`}
+              onClick={() => {
+                setSelectedTag(tag.id);
+                if (tag.id === 'featured') {
+                  setSearchQuery('');
+                }
+              }}
+              role="tab"
+              aria-selected={isActive}
             >
-              <span className="tag-label">{tag.label}</span>
+              <TagIcon size={14} className="quick-pill-icon" />
+              <span>{tag.label}</span>
               {tag.id === 'favorites' && favorites.length > 0 && (
-                <span className="tag-count-badge">{favorites.length}</span>
+                <span className="quick-pill-count">{favorites.length}</span>
               )}
             </button>
           );
         })}
       </div>
 
-      {/* Main Template Grid */}
-      <div className="templates-section">
-        {filteredTemplates.length > 0 ? (
-          <>
-          <div className="template-grid template-masonry-wrapper">
-            {masonryColumns.map((colItems, colIdx) => (
-              <div key={colIdx} className="template-masonry-col">
-                {colItems.map(({ template, originalIndex }) => {
-                  // Exactly 1 in 4 cards (25% contrast ratio), alternating diagonally across columns
-                  const isContrast = (originalIndex % 8 === 2) || (originalIndex % 8 === 7);
-                  const badge = getTemplateBadge(template, originalIndex);
-                  const BadgeIcon = badge.icon;
-                  return (
-                    <div
-                      key={template.id}
-                      className={`template-card ${isContrast ? 'template-card-contrast template-card-light' : ''}`}
-                      onClick={() => onSelectTemplate(template)}
-                    >
-                      {/* Top-Left Dynamic Category Badge */}
-                      <span 
-                        className={`card-sticker-tag ${badge.iconOnly ? 'card-sticker-icon-only' : ''}`} 
-                        style={{ borderColor: `${badge.color}45` }}
-                        title={template.type === 'video' ? 'Video Template' : badge.label}
-                      >
-                        <BadgeIcon size={badge.iconOnly ? 13 : 11} strokeWidth={2.6} className="badge-flame-icon" style={{ color: badge.color }} />
-                        {badge.label ? badge.label : null}
-                      </span>
-
-                      {/* Top-Right Favorite Star Button (Icon Only) */}
-                      <button
-                        type="button"
-                        className={`card-favorite-btn ${favorites.includes(template.id) ? 'active' : ''}`}
-                        onClick={(e) => toggleFavorite(e, template.id)}
-                        title={favorites.includes(template.id) ? 'Remove favorite' : 'Add to favorites'}
-                        aria-label={favorites.includes(template.id) ? 'Remove from favorites' : 'Add to favorites'}
-                      >
-                        <Star 
-                          size={13} 
-                          fill={favorites.includes(template.id) ? "#facc15" : "none"} 
-                          color={favorites.includes(template.id) ? "#facc15" : "rgba(255, 255, 255, 0.72)"} 
-                          strokeWidth={favorites.includes(template.id) ? 2.2 : 1.8}
-                        />
-                      </button>
-
-                      <div 
-                        className="template-image-wrapper" 
-                        style={{ 
-                          position: 'relative', 
-                          aspectRatio: (template.width && template.height)
-                            ? `${Math.max(0.75, Math.min(1.12, template.width / template.height))}`
-                            : '1 / 1'
-                        }}
-                      >
-                        <img
-                          src={template.type === 'video' ? template.thumbnailUrl : template.imageUrl}
-                          alt={template.name}
-                          loading="lazy"
-                          decoding="async"
-                          onLoad={(e) => {
-                            const img = e.currentTarget;
-                            if (img.naturalWidth && img.naturalHeight && img.parentElement) {
-                              const ratio = img.naturalWidth / img.naturalHeight;
-                              const clamped = Math.max(0.75, Math.min(1.12, ratio));
-                              img.parentElement.style.aspectRatio = `${clamped}`;
-                            }
-                          }}
-                          onError={(e) => {
-                            // One-shot fallback for dead hotlinks (Imgflip rotation/CORS takedowns)
-                            const el = e.currentTarget;
-                            if (el.dataset.fbk || !template.fallbackUrl) return;
-                            el.dataset.fbk = '1';
-                            el.src = template.fallbackUrl;
-                          }}
-                        />
-                        
-                        {template.type === 'video' && (
-                          <div className="card-video-duration-badge">
-                            {typeof template.durationMs === 'number' && Number.isFinite(template.durationMs)
-                              ? `${Math.round(template.durationMs / 1000)}s`
-                              : 'HD'}
-                          </div>
-                        )}
-
-                        {/* View Count Badge moved to bottom-right of template image */}
-                        <div className="card-views-bottom-right-badge">
-                          <Eye size={11} />
-                          <span>{((templateNumericId(template) % 30) + 12)}K</span>
-                        </div>
-                      </div>
-
-                      {/* Card Bottom Meta Bar with Full-Width Template Label */}
-                      <div className="template-card-footer">
-                        <span className="card-footer-title" title={template.name}>{template.name}</span>
-                      </div>
-                    </div>
-                  );
-                })}
+      {/* VIEW MODE 1: FEATURED SHELVES (Default Homescreen) */}
+      {!isGridView ? (
+        <div className="featured-shelves-container">
+          {/* 1. SHELF 1: 🔥 Trending Memes with Cartoon Number Badges */}
+          <section className="curated-shelf-section">
+            <div className="shelf-header-row">
+              <div className="shelf-title-left">
+                <div className="shelf-icon-badge flame-badge">
+                  <Flame size={16} />
+                </div>
+                <div>
+                  <h3 className="shelf-heading">Trending Memes</h3>
+                  <span className="shelf-subtext">● Updated today</span>
+                </div>
               </div>
-            ))}
-          </div>
-          {visibleCount < filteredTemplates.length && (
-            <div ref={sentinelRef} className="masonry-sentinel">
               <button
                 type="button"
-                className="studio-pill-btn secondary masonry-load-more-btn"
-                onClick={() => setVisibleCount((prev) => Math.min(prev + PAGE_SIZE, filteredTemplates.length))}
+                className="shelf-see-all-btn"
+                onClick={() => handleShelfSeeAll('all', 'trending')}
               >
-                Load more templates ({filteredTemplates.length - visibleCount} remaining)
+                <span>See all</span>
+                <ChevronRight size={14} />
+              </button>
+            </div>
+
+            <div className="shelf-horizontal-scroll">
+              {trendingShelfTemplates.map((template, idx) => {
+                const rankNumber = idx + 1;
+                return (
+                  <div
+                    key={template.id}
+                    className="shelf-meme-card"
+                    onClick={() => onSelectTemplate(template)}
+                  >
+                    {/* 3D-Styled Cartoon Number Badge for Top 3 Trending Cards */}
+                    {rankNumber <= 3 && (
+                      <div className={`shelf-rank-badge rank-${rankNumber}`}>
+                        <span>{rankNumber}</span>
+                      </div>
+                    )}
+
+                    <button
+                      type="button"
+                      className={`shelf-favorite-btn ${favorites.includes(template.id) ? 'active' : ''}`}
+                      onClick={(e) => toggleFavorite(e, template.id)}
+                      title={favorites.includes(template.id) ? 'Remove favorite' : 'Add to favorites'}
+                      aria-label="Toggle favorite"
+                    >
+                      <Star
+                        size={12}
+                        fill={favorites.includes(template.id) ? "#facc15" : "none"}
+                        color={favorites.includes(template.id) ? "#facc15" : "rgba(255, 255, 255, 0.75)"}
+                      />
+                    </button>
+
+                    <div className="shelf-card-thumb-wrap">
+                      <img
+                        src={template.imageUrl || template.thumbnailUrl}
+                        alt={template.name}
+                        loading="lazy"
+                        decoding="async"
+                        className="shelf-card-img"
+                        onError={(e) => {
+                          if (e.currentTarget.dataset.fbk || !template.fallbackUrl) return;
+                          e.currentTarget.dataset.fbk = '1';
+                          e.currentTarget.src = template.fallbackUrl;
+                        }}
+                      />
+                      <div className="shelf-card-views">
+                        <Eye size={10} />
+                        <span>{((templateNumericId(template) % 30) + 14)}K</span>
+                      </div>
+                    </div>
+
+                    <div className="shelf-card-info">
+                      <span className="shelf-card-name" title={template.name}>{template.name}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+
+          {/* 3. AI MEME STUDIO GENERATOR CONTAINER (BELOW TRENDING MEMES) */}
+          <div className="hero-banner-wrapper glow-theme-ai ai-studio-generator-wrapper">
+            <div className="hero-glow-orb hero-glow-orb-1" aria-hidden="true" />
+            <div className="hero-banner ai-studio-banner-card" role="region" aria-label="AI Meme Studio Generator">
+              <div className="hero-card-header">
+                <div className="hero-text-content">
+                  <div className="hero-free-badge badge-cyan">
+                    <span className="hero-free-dot dot-cyan" />
+                    <span>✨ POWERED BY GEMINI 2.5</span>
+                  </div>
+                  <h2 className="hero-title">
+                    <span className="hero-title-line hero-title-line-1">
+                      <span className="hero-title-main">AI MEME STUDIO</span>
+                    </span>
+                    <br />
+                    <span className="hero-title-line hero-title-line-2">
+                      <span className="hero-title-gradient grad-sunset">PROMPT GENERATOR</span>
+                    </span>
+                  </h2>
+                  <p className="hero-tagline">
+                    Turn any idea into viral memes with smart AI captions
+                  </p>
+                </div>
+
+                <div className="hero-rocket-graphic" aria-hidden="true">
+                  <GraphicAiRobot3D />
+                </div>
+              </div>
+
+              {/* Creative Vibe / Style Quick Selector */}
+              <div className="ai-vibe-modes-row" role="region" aria-label="Creative Vibe Selector">
+                <span className="ai-vibe-label">Quick Vibe:</span>
+                <div className="ai-vibe-pill-list">
+                  {AI_VIBE_MODES.map((vibe) => (
+                    <button
+                      key={vibe.id}
+                      type="button"
+                      className={`ai-vibe-pill ${selectedVibe === vibe.id ? 'active' : ''}`}
+                      onClick={() => handleSelectVibe(vibe)}
+                      title={`Generate ${vibe.label} meme`}
+                    >
+                      <span className="ai-vibe-emoji">{vibe.emoji}</span>
+                      <span className="ai-vibe-name">{vibe.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Interactive Prompt Input Box */}
+              <form onSubmit={handleOpenAiPrompt} className="ai-hero-input-form">
+                <div className="ai-hero-input-row">
+                  <div className="ai-input-prefix">
+                    <Wand2 size={16} className="ai-hero-input-icon" />
+                  </div>
+                  <input
+                    type="text"
+                    className="ai-hero-prompt-input"
+                    placeholder="Make a meme about Monday morning meetings..."
+                    value={aiPromptText}
+                    onChange={(e) => setAiPromptText(e.target.value)}
+                  />
+                  {aiPromptText ? (
+                    <button
+                      type="button"
+                      className="ai-hero-clear-btn"
+                      onClick={() => setAiPromptText('')}
+                      title="Clear prompt"
+                      aria-label="Clear prompt"
+                    >
+                      <X size={14} />
+                    </button>
+                  ) : null}
+                  <button
+                    type="submit"
+                    className="ai-hero-submit-btn"
+                    title="Generate with AI"
+                    aria-label="Generate with AI"
+                  >
+                    <ArrowUp size={16} strokeWidth={2.6} />
+                  </button>
+                </div>
+              </form>
+
+              {/* Quick Prompt Suggestion Chips for Instant 1-Tap Inspiration */}
+              <div className="ai-hero-prompts-wrapper">
+                <div className="ai-prompts-label-row">
+                  <Sparkles size={11} className="ai-prompts-label-icon" />
+                  <span className="ai-prompts-label">Instant Ideas:</span>
+                </div>
+                <div className="ai-hero-quick-prompts">
+                  {QUICK_PROMPTS.map((promptText, pIdx) => (
+                    <button
+                      key={pIdx}
+                      type="button"
+                      className="ai-hero-prompt-chip"
+                      onClick={() => {
+                        setAiPromptText(promptText);
+                        if (onOpenAiGenerator) {
+                          onOpenAiGenerator(promptText);
+                        }
+                      }}
+                    >
+                      <Sparkles size={11} className="chip-sparkle" />
+                      <span>{promptText}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Test Compatibility & Creative Tagline */}
+              <div className="ai-hero-footnote">
+                <div className="ai-footnote-text">
+                  <Zap size={12} className="ai-footnote-icon" />
+                  <span>Unleash your creativity with AI meme maker & curated templates</span>
+                </div>
+                <div className="ai-hero-stats-pill">
+                  <span>⚡ Instant AI Generation</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* FEATURE CALLOUT BANNER: "Create your own custom meme" */}
+          <motion.div
+            className="feature-promo-banner"
+            onClick={onCreateCustom}
+            whileHover={{ scale: 1.01 }}
+            whileTap={{ scale: 0.98 }}
+            role="button"
+            tabIndex={0}
+          >
+            <div className="promo-banner-left">
+              <div className="promo-banner-icon-squircle">
+                <LayoutGrid size={22} />
+              </div>
+              <div className="promo-banner-texts">
+                <div className="promo-banner-title-row">
+                  <h4 className="promo-banner-title">Create your own meme</h4>
+                  <span className="promo-banner-pill">NEW</span>
+                </div>
+                <p className="promo-banner-desc">
+                  Use any custom layout, stickers or photo to create memes
+                </p>
+              </div>
+            </div>
+            <div className="promo-banner-arrow-btn" aria-hidden="true">
+              <ChevronRight size={18} />
+            </div>
+          </motion.div>
+
+          {/* SHELF 2: 📱 Social Media Cards Shelf (Twitter, Instagram, WhatsApp) */}
+          <section className="curated-shelf-section">
+            <div className="shelf-header-row">
+              <div className="shelf-title-left">
+                <div className="shelf-icon-badge social-badge">
+                  <Share2 size={16} />
+                </div>
+                <div>
+                  <h3 className="shelf-heading">Social Media Cards</h3>
+                  <span className="shelf-subtext">● Twitter, WhatsApp & Instagram</span>
+                </div>
+              </div>
+              <button
+                type="button"
+                className="shelf-see-all-btn"
+                onClick={() => handleShelfSeeAll('social')}
+              >
+                <span>See all</span>
+                <ChevronRight size={14} />
+              </button>
+            </div>
+
+            <div className="shelf-horizontal-scroll">
+              {socialShelfTemplates.map((template) => {
+                const isTweet = template.id?.includes('tweet');
+                const isInsta = template.id?.includes('instagram');
+                const isWa = template.id?.includes('whatsapp');
+                const tagLabel = isTweet ? '𝕏 Post' : isInsta ? 'IG Post' : isWa ? 'WA Chat' : 'Interactive';
+                const cardClass = isTweet ? 'social-card-x' : isInsta ? 'social-card-ig' : isWa ? 'social-card-wa' : '';
+
+                return (
+                  <div
+                    key={template.id}
+                    className={`shelf-meme-card social-shelf-card ${cardClass}`}
+                    onClick={() => onSelectTemplate(template)}
+                  >
+                    <span className="social-card-tag">{tagLabel}</span>
+                    <div className="shelf-card-thumb-wrap">
+                      <img
+                        src={template.imageUrl || template.thumbnailUrl}
+                        alt={template.name}
+                        loading="lazy"
+                        className="shelf-card-img"
+                      />
+                    </div>
+                    <div className="shelf-card-info">
+                      <span className="shelf-card-name" title={template.name}>{template.name}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+
+          {/* SHELF 3: 💼 Work & Office Memes */}
+          <section className="curated-shelf-section">
+            <div className="shelf-header-row">
+              <div className="shelf-title-left">
+                <div className="shelf-icon-badge work-badge">
+                  <Briefcase size={16} />
+                </div>
+                <div>
+                  <h3 className="shelf-heading">Work & Office Memes</h3>
+                  <span className="shelf-subtext">● Relatable 9-to-5 & tech humor</span>
+                </div>
+              </div>
+              <button
+                type="button"
+                className="shelf-see-all-btn"
+                onClick={() => handleShelfSeeAll('all')}
+              >
+                <span>See all</span>
+                <ChevronRight size={14} />
+              </button>
+            </div>
+
+            <div className="shelf-horizontal-scroll">
+              {workShelfTemplates.map((template) => (
+                <div
+                  key={template.id}
+                  className="shelf-meme-card"
+                  onClick={() => onSelectTemplate(template)}
+                >
+                  <div className="shelf-card-thumb-wrap">
+                    <img
+                      src={template.imageUrl || template.thumbnailUrl}
+                      alt={template.name}
+                      loading="lazy"
+                      className="shelf-card-img"
+                    />
+                    <div className="shelf-card-views">
+                      <Eye size={10} />
+                      <span>{((templateNumericId(template) % 25) + 18)}K</span>
+                    </div>
+                  </div>
+                  <div className="shelf-card-info">
+                    <span className="shelf-card-name" title={template.name}>{template.name}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* SHELF 4: 💑 Relationships & Dating */}
+          <section className="curated-shelf-section">
+            <div className="shelf-header-row">
+              <div className="shelf-title-left">
+                <div className="shelf-icon-badge heart-badge">
+                  <Heart size={16} />
+                </div>
+                <div>
+                  <h3 className="shelf-heading">Relationships & Life</h3>
+                  <span className="shelf-subtext">● Dating, couples & friendships</span>
+                </div>
+              </div>
+              <button
+                type="button"
+                className="shelf-see-all-btn"
+                onClick={() => handleShelfSeeAll('all')}
+              >
+                <span>See all</span>
+                <ChevronRight size={14} />
+              </button>
+            </div>
+
+            <div className="shelf-horizontal-scroll">
+              {relationshipShelfTemplates.map((template) => (
+                <div
+                  key={template.id}
+                  className="shelf-meme-card"
+                  onClick={() => onSelectTemplate(template)}
+                >
+                  <div className="shelf-card-thumb-wrap">
+                    <img
+                      src={template.imageUrl || template.thumbnailUrl}
+                      alt={template.name}
+                      loading="lazy"
+                      className="shelf-card-img"
+                    />
+                    <div className="shelf-card-views">
+                      <Eye size={10} />
+                      <span>{((templateNumericId(template) % 35) + 12)}K</span>
+                    </div>
+                  </div>
+                  <div className="shelf-card-info">
+                    <span className="shelf-card-name" title={template.name}>{template.name}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* SHELF 5: ⚡ Reactions & Viral Classics */}
+          <section className="curated-shelf-section">
+            <div className="shelf-header-row">
+              <div className="shelf-title-left">
+                <div className="shelf-icon-badge react-badge">
+                  <Zap size={16} />
+                </div>
+                <div>
+                  <h3 className="shelf-heading">Reactions & Classics</h3>
+                  <span className="shelf-subtext">● Timeless internet gold</span>
+                </div>
+              </div>
+              <button
+                type="button"
+                className="shelf-see-all-btn"
+                onClick={() => handleShelfSeeAll('reaction')}
+              >
+                <span>See all</span>
+                <ChevronRight size={14} />
+              </button>
+            </div>
+
+            <div className="shelf-horizontal-scroll">
+              {reactionsShelfTemplates.map((template) => (
+                <div
+                  key={template.id}
+                  className="shelf-meme-card"
+                  onClick={() => onSelectTemplate(template)}
+                >
+                  <div className="shelf-card-thumb-wrap">
+                    <img
+                      src={template.imageUrl || template.thumbnailUrl}
+                      alt={template.name}
+                      loading="lazy"
+                      className="shelf-card-img"
+                    />
+                    <div className="shelf-card-views">
+                      <Eye size={10} />
+                      <span>{((templateNumericId(template) % 28) + 20)}K</span>
+                    </div>
+                  </div>
+                  <div className="shelf-card-info">
+                    <span className="shelf-card-name" title={template.name}>{template.name}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        </div>
+      ) : (
+        /* VIEW MODE 2: RESPONSIVE MASONRY GRID VIEW (Search, Category Filters, "See All") */
+        <div className="grid-browse-container">
+          {/* Breadcrumb / Return Pill */}
+          <div className="grid-header-actions">
+            <button
+              type="button"
+              className="back-to-featured-btn"
+              onClick={handleResetToFeatured}
+            >
+              <span>← Back to Featured</span>
+            </button>
+            <div className="grid-results-count">
+              {filteredTemplates.length} {filteredTemplates.length === 1 ? 'template' : 'templates'} found
+            </div>
+          </div>
+
+          {filteredTemplates.length > 0 ? (
+            <>
+              <div className="template-grid template-masonry-wrapper">
+                {masonryColumns.map((colItems, colIdx) => (
+                  <div key={colIdx} className="template-masonry-col">
+                    {colItems.map(({ template, originalIndex }) => {
+                      const badge = getTemplateBadge(template, originalIndex);
+                      const BadgeIcon = badge.icon;
+                      return (
+                        <div
+                          key={template.id}
+                          className="template-card"
+                          onClick={() => onSelectTemplate(template)}
+                        >
+                          {/* Top-Left Category Badge */}
+                          <span 
+                            className={`card-sticker-tag ${badge.iconOnly ? 'card-sticker-icon-only' : ''}`} 
+                            style={{ borderColor: `${badge.color}45` }}
+                            title={template.type === 'video' ? 'Video Template' : badge.label}
+                          >
+                            <BadgeIcon size={badge.iconOnly ? 13 : 11} strokeWidth={2.6} style={{ color: badge.color }} />
+                            {badge.label ? badge.label : null}
+                          </span>
+
+                          {/* Top-Right Favorite Star Button */}
+                          <button
+                            type="button"
+                            className={`card-favorite-btn ${favorites.includes(template.id) ? 'active' : ''}`}
+                            onClick={(e) => toggleFavorite(e, template.id)}
+                            title={favorites.includes(template.id) ? 'Remove favorite' : 'Add to favorites'}
+                            aria-label={favorites.includes(template.id) ? 'Remove from favorites' : 'Add to favorites'}
+                          >
+                            <Star 
+                              size={13} 
+                              fill={favorites.includes(template.id) ? "#facc15" : "none"} 
+                              color={favorites.includes(template.id) ? "#facc15" : "rgba(255, 255, 255, 0.72)"} 
+                              strokeWidth={favorites.includes(template.id) ? 2.2 : 1.8}
+                            />
+                          </button>
+
+                          <div 
+                            className="template-image-wrapper" 
+                            style={{ 
+                              position: 'relative', 
+                              aspectRatio: (template.width && template.height)
+                                ? `${Math.max(0.75, Math.min(1.12, template.width / template.height))}`
+                                : '1 / 1'
+                            }}
+                          >
+                            <img
+                              src={template.type === 'video' ? template.thumbnailUrl : template.imageUrl}
+                              alt={template.name}
+                              loading="lazy"
+                              decoding="async"
+                              onError={(e) => {
+                                const el = e.currentTarget;
+                                if (el.dataset.fbk || !template.fallbackUrl) return;
+                                el.dataset.fbk = '1';
+                                el.src = template.fallbackUrl;
+                              }}
+                            />
+                            
+                            {template.type === 'video' && (
+                              <div className="card-video-duration-badge">
+                                {typeof template.durationMs === 'number' && Number.isFinite(template.durationMs)
+                                  ? `${Math.round(template.durationMs / 1000)}s`
+                                  : 'HD'}
+                              </div>
+                            )}
+
+                            <div className="card-views-bottom-right-badge">
+                              <Eye size={11} />
+                              <span>{((templateNumericId(template) % 30) + 12)}K</span>
+                            </div>
+                          </div>
+
+                          <div className="template-card-footer">
+                            <span className="card-footer-title" title={template.name}>{template.name}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
+
+              {visibleCount < filteredTemplates.length && (
+                <div ref={sentinelRef} className="masonry-sentinel">
+                  <button
+                    type="button"
+                    className="studio-pill-btn secondary masonry-load-more-btn"
+                    onClick={() => setVisibleCount((prev) => Math.min(prev + PAGE_SIZE, filteredTemplates.length))}
+                  >
+                    Load more templates ({filteredTemplates.length - visibleCount} remaining)
+                  </button>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="empty-state">
+              <ImageIcon className="empty-icon" />
+              <h3>No Meme Templates Found</h3>
+              <p>
+                {selectedTag === 'favorites' 
+                  ? 'You haven\'t starred any templates yet. Click the star on any meme to save it here!' 
+                  : 'Try searching for a different keyword or browse all categories!'}
+              </p>
+              <button
+                type="button"
+                className="studio-pill-btn primary"
+                onClick={handleResetToFeatured}
+                style={{ marginTop: '16px' }}
+              >
+                Back to Featured Memes
               </button>
             </div>
           )}
-        </>
-        ) : (
-          <div className="empty-state glass-card">
-            <ImageIcon className="empty-icon" />
-            <h3>No Meme Templates Found</h3>
-            <p>
-              {selectedTag === 'favorites' 
-                ? 'You haven\'t starred any templates yet. Click the star on any meme to save it here!' 
-                : 'Try searching for a different keyword or browse all categories!'}
-            </p>
-          </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
