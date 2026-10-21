@@ -1204,10 +1204,64 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom, on
                     className="shelf-meme-card"
                     onClick={() => onSelectTemplate(template)}
                   >
-                    {/* 3D-Styled Cartoon Number Badge for Top 3 Trending Cards */}
+                    {/* Hero Star Ranking Badge for Top 3 Trending Cards */}
                     {rankNumber <= 3 && (
-                      <div className={`shelf-rank-badge rank-${rankNumber}`}>
-                        <span>{rankNumber}</span>
+                      <div
+                        className={`shelf-rank-badge rank-${rankNumber}`}
+                        title={`Trending #${rankNumber}`}
+                        aria-label={`Trending Rank ${rankNumber}`}
+                      >
+                        <svg
+                          className="shelf-rank-star-svg"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                          aria-hidden="true"
+                        >
+                          <defs>
+                            <linearGradient
+                              id={`rankStarGrad-${rankNumber}`}
+                              x1="12"
+                              y1="1.5"
+                              x2="12"
+                              y2="21"
+                              gradientUnits="userSpaceOnUse"
+                            >
+                              {rankNumber === 1 && (
+                                <>
+                                  <stop offset="0%" stopColor="#ff6b35" />
+                                  <stop offset="100%" stopColor="#e11d48" />
+                                </>
+                              )}
+                              {rankNumber === 2 && (
+                                <>
+                                  <stop offset="0%" stopColor="#fbbf24" />
+                                  <stop offset="100%" stopColor="#d97706" />
+                                </>
+                              )}
+                              {rankNumber === 3 && (
+                                <>
+                                  <stop offset="0%" stopColor="#fde047" />
+                                  <stop offset="100%" stopColor="#ca8a04" />
+                                </>
+                              )}
+                            </linearGradient>
+                          </defs>
+                          <polygon
+                            points="12 1.5 15.2 8 22.3 9 17.1 14 18.4 21 12 17.6 5.6 21 6.9 14 1.7 9 8.8 8 12 1.5"
+                            fill={`url(#rankStarGrad-${rankNumber})`}
+                            stroke="rgba(255, 255, 255, 0.7)"
+                            strokeWidth="1.2"
+                            strokeLinejoin="round"
+                          />
+                          <circle
+                            cx="12"
+                            cy="13"
+                            r="4.8"
+                            fill="rgba(0, 0, 0, 0.22)"
+                          />
+                        </svg>
+                        <span className="shelf-rank-number">{rankNumber}</span>
                       </div>
                     )}
 
