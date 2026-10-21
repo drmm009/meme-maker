@@ -3,7 +3,7 @@ import { MEME_TEMPLATES } from '../data/templates';
 import { VIDEO_MEME_TEMPLATES } from '../data/videoTemplates';
 import { fetchOpenSourceMemes } from '../services/memeService';
 import {
-  Plus, Upload,
+  Plus, Upload, Laugh, Code,
   Search, Sparkles, Image as ImageIcon, Video,
   Flame, Star, Drama, Clapperboard, LayoutGrid, Layers, Check,
   Smile, ArrowDownAZ, Zap, ChevronRight, ChevronLeft, ArrowRight, Eye, Wand2, Share2,
@@ -34,10 +34,10 @@ const QUICK_PROMPTS = [
 ];
 
 export const AI_VIBE_MODES = [
-  { id: 'roast', emoji: '🔥', label: 'Roast Mode', prompt: 'Roast my daily morning routine and procrastination' },
-  { id: 'sarcastic', emoji: '😂', label: 'Sarcastic', prompt: 'When the code works on the first try and you suspect a trap' },
-  { id: 'wholesome', emoji: '🐱', label: 'Wholesome', prompt: 'My cat looking at me with unconditional love and judgment' },
-  { id: 'tech', emoji: '🧠', label: 'Tech Humor', prompt: 'Pushing directly to production on a Friday afternoon' },
+  { id: 'roast', icon: Flame, emoji: '🔥', label: 'Roast Mode', prompt: 'Roast my daily morning routine and procrastination' },
+  { id: 'sarcastic', icon: Laugh, emoji: '😂', label: 'Sarcastic', prompt: 'When the code works on the first try and you suspect a trap' },
+  { id: 'wholesome', icon: Heart, emoji: '🐱', label: 'Wholesome', prompt: 'My cat looking at me with unconditional love and judgment' },
+  { id: 'tech', icon: Code, emoji: '🧠', label: 'Tech Humor', prompt: 'Pushing directly to production on a Friday afternoon' },
 ];
 
 const SORT_OPTIONS = [
@@ -1282,30 +1282,11 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom, on
                 </div>
               </div>
 
-              {/* Creative Vibe / Style Quick Selector */}
-              <div className="ai-vibe-modes-row" role="region" aria-label="Creative Vibe Selector">
-                <span className="ai-vibe-label">Quick Vibe:</span>
-                <div className="ai-vibe-pill-list">
-                  {AI_VIBE_MODES.map((vibe) => (
-                    <button
-                      key={vibe.id}
-                      type="button"
-                      className={`ai-vibe-pill ${selectedVibe === vibe.id ? 'active' : ''}`}
-                      onClick={() => handleSelectVibe(vibe)}
-                      title={`Generate ${vibe.label} meme`}
-                    >
-                      <span className="ai-vibe-emoji">{vibe.emoji}</span>
-                      <span className="ai-vibe-name">{vibe.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Interactive Prompt Input Box */}
+              {/* Interactive Prompt Input Box (Search Bar UI) */}
               <form onSubmit={handleOpenAiPrompt} className="ai-hero-input-form">
                 <div className="ai-hero-input-row">
                   <div className="ai-input-prefix">
-                    <Wand2 size={16} className="ai-hero-input-icon" />
+                    <Wand2 size={18} className="ai-hero-input-icon" />
                   </div>
                   <input
                     type="text"
@@ -1335,6 +1316,28 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom, on
                   </button>
                 </div>
               </form>
+
+              {/* Creative Vibe / Style Quick Selector (Placed Below Input Box) */}
+              <div className="ai-vibe-modes-row" role="region" aria-label="Creative Vibe Selector">
+                <span className="ai-vibe-label">Quick Vibe:</span>
+                <div className="ai-vibe-pill-list">
+                  {AI_VIBE_MODES.map((vibe) => {
+                    const VibeIcon = vibe.icon;
+                    return (
+                      <button
+                        key={vibe.id}
+                        type="button"
+                        className={`ai-vibe-pill ${selectedVibe === vibe.id ? 'active' : ''}`}
+                        onClick={() => handleSelectVibe(vibe)}
+                        title={`Generate ${vibe.label} meme`}
+                      >
+                        {VibeIcon ? <VibeIcon size={14} className="ai-vibe-icon" /> : null}
+                        <span className="ai-vibe-name">{vibe.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
           </div>
 
