@@ -1254,12 +1254,6 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom, on
                             strokeWidth="1.2"
                             strokeLinejoin="round"
                           />
-                          <circle
-                            cx="12"
-                            cy="13"
-                            r="4.8"
-                            fill="rgba(0, 0, 0, 0.22)"
-                          />
                         </svg>
                         <span className="shelf-rank-number">{rankNumber}</span>
                       </div>
