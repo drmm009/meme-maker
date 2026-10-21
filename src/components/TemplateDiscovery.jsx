@@ -1335,43 +1335,6 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom, on
                   </button>
                 </div>
               </form>
-
-              {/* Quick Prompt Suggestion Chips for Instant 1-Tap Inspiration */}
-              <div className="ai-hero-prompts-wrapper">
-                <div className="ai-prompts-label-row">
-                  <Sparkles size={11} className="ai-prompts-label-icon" />
-                  <span className="ai-prompts-label">Instant Ideas:</span>
-                </div>
-                <div className="ai-hero-quick-prompts">
-                  {QUICK_PROMPTS.map((promptText, pIdx) => (
-                    <button
-                      key={pIdx}
-                      type="button"
-                      className="ai-hero-prompt-chip"
-                      onClick={() => {
-                        setAiPromptText(promptText);
-                        if (onOpenAiGenerator) {
-                          onOpenAiGenerator(promptText);
-                        }
-                      }}
-                    >
-                      <Sparkles size={11} className="chip-sparkle" />
-                      <span>{promptText}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Test Compatibility & Creative Tagline */}
-              <div className="ai-hero-footnote">
-                <div className="ai-footnote-text">
-                  <Zap size={12} className="ai-footnote-icon" />
-                  <span>Unleash your creativity with AI meme maker & curated templates</span>
-                </div>
-                <div className="ai-hero-stats-pill">
-                  <span>⚡ Instant AI Generation</span>
-                </div>
-              </div>
             </div>
           </div>
 

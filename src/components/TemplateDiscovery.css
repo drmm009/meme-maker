@@ -600,7 +600,7 @@ input.search-pill-input[type="text"]::placeholder {
 
 /* Interactive Prompt Input Box */
 .ai-hero-input-form {
-  margin: 0 0 14px 0;
+  margin: 0;
   width: 100%;
   position: relative;
   z-index: 1;
@@ -1809,7 +1809,7 @@ input.search-pill-input[type="text"]::placeholder {
 }
 
 .ai-studio-banner-card {
-  padding: 22px 22px 16px 22px !important;
+  padding: 22px 22px 20px 22px !important;
 }
 
 .ai-studio-banner-card .hero-card-header {
