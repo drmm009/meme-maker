@@ -1338,34 +1338,6 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom, on
             </div>
           </div>
 
-          {/* FEATURE CALLOUT BANNER: "Create your own custom meme" */}
-          <motion.div
-            className="feature-promo-banner"
-            onClick={onCreateCustom}
-            whileHover={{ scale: 1.01 }}
-            whileTap={{ scale: 0.98 }}
-            role="button"
-            tabIndex={0}
-          >
-            <div className="promo-banner-left">
-              <div className="promo-banner-icon-squircle">
-                <LayoutGrid size={22} />
-              </div>
-              <div className="promo-banner-texts">
-                <div className="promo-banner-title-row">
-                  <h4 className="promo-banner-title">Create your own meme</h4>
-                  <span className="promo-banner-pill">NEW</span>
-                </div>
-                <p className="promo-banner-desc">
-                  Use any custom layout, stickers or photo to create memes
-                </p>
-              </div>
-            </div>
-            <div className="promo-banner-arrow-btn" aria-hidden="true">
-              <ChevronRight size={18} />
-            </div>
-          </motion.div>
-
           {/* SHELF 2: 📱 Social Media Cards Shelf (Twitter, Instagram, WhatsApp) */}
           <section className="curated-shelf-section">
             <div className="shelf-header-row">
@@ -1428,7 +1400,7 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom, on
                   <Briefcase size={20} />
                 </div>
                 <div>
-                  <h3 className="shelf-heading">Work & Office Memes</h3>
+                  <h3 className="shelf-heading">Work & Office</h3>
                   <span className="shelf-subtext">Relatable 9-to-5 & tech humor</span>
                 </div>
               </div>
@@ -1526,7 +1498,7 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom, on
                   <Zap size={20} />
                 </div>
                 <div>
-                  <h3 className="shelf-heading">Reactions & Classics</h3>
+                  <h3 className="shelf-heading">Reaction & Classic</h3>
                   <span className="shelf-subtext">Timeless internet gold</span>
                 </div>
               </div>
