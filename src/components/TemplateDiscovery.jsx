@@ -1178,11 +1178,11 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom, on
             <div className="shelf-header-row">
               <div className="shelf-title-left">
                 <div className="shelf-icon-badge flame-badge">
-                  <Flame size={16} />
+                  <Flame size={20} />
                 </div>
                 <div>
                   <h3 className="shelf-heading">Trending Memes</h3>
-                  <span className="shelf-subtext">● Updated today</span>
+                  <span className="shelf-subtext">Updated today</span>
                 </div>
               </div>
               <button
@@ -1408,11 +1408,11 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom, on
             <div className="shelf-header-row">
               <div className="shelf-title-left">
                 <div className="shelf-icon-badge social-badge">
-                  <Share2 size={16} />
+                  <Share2 size={20} />
                 </div>
                 <div>
                   <h3 className="shelf-heading">Social Media Cards</h3>
-                  <span className="shelf-subtext">● Twitter, WhatsApp & Instagram</span>
+                  <span className="shelf-subtext">Twitter, WhatsApp & Instagram</span>
                 </div>
               </div>
               <button
@@ -1462,11 +1462,11 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom, on
             <div className="shelf-header-row">
               <div className="shelf-title-left">
                 <div className="shelf-icon-badge work-badge">
-                  <Briefcase size={16} />
+                  <Briefcase size={20} />
                 </div>
                 <div>
                   <h3 className="shelf-heading">Work & Office Memes</h3>
-                  <span className="shelf-subtext">● Relatable 9-to-5 & tech humor</span>
+                  <span className="shelf-subtext">Relatable 9-to-5 & tech humor</span>
                 </div>
               </div>
               <button
@@ -1511,11 +1511,11 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom, on
             <div className="shelf-header-row">
               <div className="shelf-title-left">
                 <div className="shelf-icon-badge heart-badge">
-                  <Heart size={16} />
+                  <Heart size={20} />
                 </div>
                 <div>
                   <h3 className="shelf-heading">Relationships & Life</h3>
-                  <span className="shelf-subtext">● Dating, couples & friendships</span>
+                  <span className="shelf-subtext">Dating, couples & friendships</span>
                 </div>
               </div>
               <button
@@ -1560,11 +1560,11 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom, on
             <div className="shelf-header-row">
               <div className="shelf-title-left">
                 <div className="shelf-icon-badge react-badge">
-                  <Zap size={16} />
+                  <Zap size={20} />
                 </div>
                 <div>
                   <h3 className="shelf-heading">Reactions & Classics</h3>
-                  <span className="shelf-subtext">● Timeless internet gold</span>
+                  <span className="shelf-subtext">Timeless internet gold</span>
                 </div>
               </div>
               <button
