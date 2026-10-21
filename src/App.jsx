@@ -520,7 +520,7 @@ function App() {
                   <h1 className="brand-title">MEME</h1>
                   <span className="brand-pro-badge">PRO</span>
                 </div>
-                <span className="brand-tagline">STUDIO</span>
+                <span className="brand-tagline">Studio</span>
               </div>
             </div>
 

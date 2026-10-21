@@ -415,8 +415,8 @@ export const STUDIO_HERO_SLIDES = [
     badgeText: '🚀 100% FREE APP',
     badgeClass: 'badge-emerald',
     badgeDotClass: 'dot-emerald',
-    titleMain: 'UNLEASH YOUR',
-    titleGradient: 'VIRAL MEME IDEAS',
+    titleMain: 'Unleash Your',
+    titleGradient: 'Viral Meme Ideas',
     titleGradClass: 'grad-sunset',
     tagline: 'Unleash your viral meme ideas with custom layouts.',
     glowTheme: 'glow-theme-studio',
@@ -436,8 +436,8 @@ export const STUDIO_HERO_SLIDES = [
     badgeText: '🎬 TIMELINE & AUDIO SYNC',
     badgeClass: 'badge-cyan',
     badgeDotClass: 'dot-cyan',
-    titleMain: 'CREATE VIRAL',
-    titleGradient: 'MEME VIDEOS',
+    titleMain: 'Create Viral',
+    titleGradient: 'Meme Videos',
     titleGradClass: 'grad-electric',
     tagline: 'Trim video clips, sync audio & curved captions',
     glowTheme: 'glow-theme-ai',
@@ -457,8 +457,8 @@ export const STUDIO_HERO_SLIDES = [
     badgeText: '🔥 100% FREE AI CUTOUT',
     badgeClass: 'badge-mint',
     badgeDotClass: 'dot-mint',
-    titleMain: 'REMOVE BACKGROUND',
-    titleGradient: 'MAKE STICKERS',
+    titleMain: 'Remove Background',
+    titleGradient: 'Make Stickers',
     titleGradClass: 'grad-mint-cyan',
     tagline: 'Extract clean cutout stickers in 1 tap for any photo.',
     glowTheme: 'glow-theme-cutout',
@@ -478,8 +478,8 @@ export const STUDIO_HERO_SLIDES = [
     badgeText: '🎭 100% FREE FACE SWAP',
     badgeClass: 'badge-amber',
     badgeDotClass: 'dot-amber',
-    titleMain: 'SWAP YOUR FACE',
-    titleGradient: 'INTO ANY MEME',
+    titleMain: 'Swap Your Face',
+    titleGradient: 'Into Any Meme',
     titleGradClass: 'grad-amber-fuchsia',
     tagline: 'Swap your face into viral memes instantly without hassle.',
     glowTheme: 'glow-theme-face',
@@ -499,8 +499,8 @@ export const STUDIO_HERO_SLIDES = [
     badgeText: '💬 INTERACTIVE SOCIAL CARDS',
     badgeClass: 'badge-fuchsia',
     badgeDotClass: 'dot-fuchsia',
-    titleMain: 'CREATE REALISTIC',
-    titleGradient: 'SOCIAL CARDS',
+    titleMain: 'Create Realistic',
+    titleGradient: 'Social Cards',
     titleGradClass: 'grad-fuchsia-violet',
     tagline: 'Craft Twitter, WhatsApp & Instagram cards',
     glowTheme: 'glow-theme-face',
@@ -520,8 +520,8 @@ export const STUDIO_HERO_SLIDES = [
     badgeText: '⚡ 100% FREE AI MEMES',
     badgeClass: 'badge-cyan',
     badgeDotClass: 'dot-cyan',
-    titleMain: 'PROMPT-TO-MEME',
-    titleGradient: 'AI PUNCHLINES',
+    titleMain: 'Prompt-To-Meme',
+    titleGradient: 'AI Punchlines',
     titleGradClass: 'grad-electric',
     tagline: 'Turn prompts into viral captions & punchlines',
     glowTheme: 'glow-theme-ai',
@@ -1265,11 +1265,11 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom, on
                   </div>
                   <h2 className="hero-title">
                     <span className="hero-title-line hero-title-line-1">
-                      <span className="hero-title-main">AI MEME STUDIO</span>
+                      <span className="hero-title-main">AI Meme Studio</span>
                     </span>
                     <br />
                     <span className="hero-title-line hero-title-line-2">
-                      <span className="hero-title-gradient grad-sunset">PROMPT GENERATOR</span>
+                      <span className="hero-title-gradient grad-sunset">Prompt Generator</span>
                     </span>
                   </h2>
                   <p className="hero-tagline">

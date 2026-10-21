@@ -2499,24 +2499,26 @@ body {
 
 /* --- Poster typography ------------------------------------- */
 h1, h2, h3,
-.brand-title,
 .hero-banner h2 {
   font-family: 'Plus Jakarta Sans', Inter, system-ui, -apple-system, sans-serif !important;
-  letter-spacing: 0.015em !important;
-  word-spacing: 0.24em !important;
-  text-transform: uppercase !important;
+  letter-spacing: -0.01em !important;
+  word-spacing: normal !important;
+  text-transform: none !important;
 }
 .brand-title {
+  font-family: 'Plus Jakarta Sans', Inter, system-ui, -apple-system, sans-serif !important;
   background: none !important;
   -webkit-text-fill-color: currentColor !important;
   color: var(--text-main) !important;
   font-size: 1.15rem !important;
   line-height: 1.1 !important;
+  text-transform: uppercase !important;
+  letter-spacing: -0.01em !important;
 }
 .brand-tagline {
   color: var(--text-muted) !important;
-  letter-spacing: 0.12em !important;
-  text-transform: uppercase !important;
+  letter-spacing: 0.04em !important;
+  text-transform: none !important;
   font-size: 0.62rem !important;
   font-weight: 700 !important;
 }
@@ -2698,7 +2700,7 @@ h1, h2, h3,
   font-family: 'Plus Jakarta Sans', Inter, system-ui, -apple-system, sans-serif !important;
   font-size: 0.82rem !important;
   letter-spacing: -0.01em !important;
-  text-transform: uppercase !important;
+  text-transform: none !important;
 }
 .template-category {
   color: var(--text-muted) !important;
@@ -3299,7 +3301,7 @@ input[type='text'].search-pill-input:focus {
   -webkit-text-fill-color: var(--text-main) !important;
   color: var(--text-main) !important;
   font-family: 'Plus Jakarta Sans', Inter, system-ui, -apple-system, sans-serif !important;
-  text-transform: uppercase !important;
+  text-transform: none !important;
 }
 
 [data-theme='light'] .brand-title,
