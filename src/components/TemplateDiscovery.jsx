@@ -501,7 +501,7 @@ export const STUDIO_HERO_SLIDES = [
     badgeDotClass: 'dot-fuchsia',
     titleMain: 'CREATE REALISTIC',
     titleGradient: 'SOCIAL CARDS',
-    titleGradClass: 'grad-amber-fuchsia',
+    titleGradClass: 'grad-fuchsia-violet',
     tagline: 'Craft Twitter, WhatsApp & Instagram cards',
     glowTheme: 'glow-theme-face',
     glowColor: 'rgba(217, 70, 239, 0.45)',
