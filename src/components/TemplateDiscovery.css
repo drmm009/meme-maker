@@ -316,23 +316,25 @@ input.search-pill-input[type="text"]::placeholder {
   color: #0f172a !important;
 }
 
-/* Active Category Pill: Studio High-End Solid White Contrast */
+/* Active Category Pill: Option 3 Frosted Charcoal Glass (Spotify / Neutral Monochrome) */
 .discovery-tag-pill.active,
 .quick-pill-btn.active {
-  background: #ffffff !important;
-  border: 1px solid #ffffff !important;
-  color: #090a0f !important;
-  font-weight: 800 !important;
-  box-shadow: 0 4px 16px rgba(255, 255, 255, 0.18) !important;
+  background: rgba(255, 255, 255, 0.16) !important;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.38) !important;
+  color: #ffffff !important;
+  font-weight: 750 !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.22) !important;
 }
 
 .discovery-tag-pill.active:hover,
 .quick-pill-btn.active:hover {
-  background: #ffffff !important;
-  border-color: #ffffff !important;
-  color: #090a0f !important;
+  background: rgba(255, 255, 255, 0.22) !important;
+  border-color: rgba(255, 255, 255, 0.5) !important;
+  color: #ffffff !important;
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(255, 255, 255, 0.25) !important;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
 }
 
 [data-theme='light'] .discovery-tag-pill.active,
@@ -340,13 +342,13 @@ input.search-pill-input[type="text"]::placeholder {
   background: #090a0f !important;
   border: 1px solid #090a0f !important;
   color: #ffffff !important;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15) !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18) !important;
 }
 
 [data-theme='light'] .discovery-tag-pill.active:hover,
 [data-theme='light'] .quick-pill-btn.active:hover {
-  background: #090a0f !important;
-  border-color: #090a0f !important;
+  background: #18181b !important;
+  border-color: #18181b !important;
   color: #ffffff !important;
 }
 
@@ -2674,17 +2676,18 @@ input.search-pill-input[type="text"]::placeholder {
 
 [data-theme='light'] .discovery-tag-pill.active,
 [data-theme='light'] .quick-pill-btn.active {
-  background: var(--primary-gradient, linear-gradient(135deg, #ff5e36 0%, #ec4899 100%)) !important;
-  border: 1px solid transparent !important;
-  box-shadow: none !important;
+  background: #090a0f !important;
+  border: 1px solid #090a0f !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18) !important;
   color: #ffffff !important;
 }
 
 [data-theme='light'] .discovery-tag-pill.active:hover,
 [data-theme='light'] .quick-pill-btn.active:hover {
-  background: var(--primary-gradient-hover, linear-gradient(135deg, #ff4c21 0%, #db2777 100%)) !important;
-  border-color: transparent !important;
-  box-shadow: none !important;
+  background: #18181b !important;
+  border-color: #18181b !important;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22) !important;
+  color: #ffffff !important;
 }
 
 [data-theme='light'] .ai-hero-card {
