@@ -26,11 +26,21 @@
   margin-bottom: 18px;
 }
 
-/* Mobile-only equal vertical spacing (matching top panel to hero banner space) */
+/* Mobile-only spacing for search and category tags */
 @media (max-width: 640px) {
   .search-filter-row,
   .discovery-top-bar {
-    margin-bottom: 8px !important;
+    margin-bottom: 14px !important;
+  }
+
+  .discovery-tags-scroll,
+  .quick-actions-strip {
+    margin-top: 6px !important;
+    margin-bottom: 24px !important;
+    padding: 4px 10px 14px 10px !important;
+    margin-left: -10px !important;
+    margin-right: -10px !important;
+    scroll-padding-left: 10px;
   }
 }
 
@@ -688,13 +698,15 @@ input.search-pill-input[type="text"]::placeholder {
   color: #ffffff;
 }
 
-.ai-hero-prompt-input {
+.ai-hero-prompt-input,
+input.ai-hero-prompt-input {
   flex: 1;
   min-width: 0;
   background: transparent !important;
   border: none !important;
   outline: none !important;
   box-shadow: none !important;
+  border-radius: 0 !important;
   color: var(--text-main, #f5f5f7) !important;
   font-family: inherit;
   font-size: 0.92rem;
@@ -2795,6 +2807,10 @@ input.search-pill-input[type="text"]::placeholder {
 
 [data-theme='light'] .ai-hero-prompt-input {
   color: #0f172a !important;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
 }
 
 [data-theme='light'] .ai-hero-prompt-input::placeholder {

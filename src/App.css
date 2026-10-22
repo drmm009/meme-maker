@@ -2783,7 +2783,7 @@ h1, h2, h3,
   -webkit-backdrop-filter: none !important;
   backdrop-filter: none !important;
 }
-input[type='text']:not(.search-pill-input):not(.bs-search-input):not(.watermark-inner-input),
+input[type='text']:not(.search-pill-input):not(.bs-search-input):not(.watermark-inner-input):not(.ai-hero-prompt-input),
 input[type='number'],
 input[type='email'],
 textarea,
