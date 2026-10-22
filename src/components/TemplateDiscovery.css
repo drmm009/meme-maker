@@ -1728,6 +1728,66 @@ input.search-pill-input[type="text"]::placeholder {
   color: #ffffff !important;
 }
 
+/* Long & Attractive Hero CTA Button (Slide 1 / Studio Editor) */
+.slide-customlayout .hero-actions {
+  max-width: 100%;
+}
+
+.slide-customlayout .studio-pill-btn,
+.studio-pill-btn.studio-pill-long {
+  max-width: 340px !important;
+  min-width: 240px !important;
+  height: 46px !important;
+  padding: 0 24px !important;
+  font-size: 0.94rem !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.01em !important;
+  background: linear-gradient(135deg, #ff5e36 0%, #ff3b30 55%, #e11d48 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.28) !important;
+  box-shadow: 0 6px 24px rgba(255, 94, 54, 0.48), 0 2px 6px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.35) !important;
+  color: #ffffff !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 10px !important;
+  position: relative !important;
+  overflow: hidden !important;
+  border-radius: 9999px !important;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+/* Shimmer gleam light sweep effect on the long attractive button */
+.slide-customlayout .studio-pill-btn::after,
+.studio-pill-btn.studio-pill-long::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.25), transparent);
+  transform: skewX(-20deg);
+  animation: studioBtnGleam 4s infinite ease-in-out;
+}
+
+@keyframes studioBtnGleam {
+  0%, 70% { left: -100%; }
+  100% { left: 200%; }
+}
+
+.slide-customlayout .studio-pill-btn:hover,
+.studio-pill-btn.studio-pill-long:hover {
+  transform: translateY(-2px) scale(1.025) !important;
+  background: linear-gradient(135deg, #ff6b42 0%, #ff493d 55%, #f43f5e 100%) !important;
+  box-shadow: 0 8px 30px rgba(255, 94, 54, 0.62), 0 4px 12px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.45) !important;
+  border-color: rgba(255, 255, 255, 0.45) !important;
+}
+
+.slide-customlayout .studio-pill-btn:active,
+.studio-pill-btn.studio-pill-long:active {
+  transform: translateY(0) scale(0.98) !important;
+}
+
 /* Studio Secondary CTA: Frosted Glass */
 .studio-pill-dark {
   background: rgba(255, 255, 255, 0.08) !important;
@@ -1857,6 +1917,14 @@ input.search-pill-input[type="text"]::placeholder {
     height: 40px !important;
     font-size: 0.8rem !important;
     padding: 0 14px !important;
+  }
+  .slide-customlayout .studio-pill-btn,
+  .studio-pill-btn.studio-pill-long {
+    max-width: 100% !important;
+    min-width: 200px !important;
+    height: 42px !important;
+    font-size: 0.85rem !important;
+    padding: 0 20px !important;
   }
   .carousel-nav-controls {
     display: none;

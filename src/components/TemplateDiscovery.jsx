@@ -411,23 +411,19 @@ export const STUDIO_HERO_SLIDES = [
   {
     id: 'customlayout',
     action: 'custom',
-    title: 'Create Now',
+    title: "Start Creating — It's Free ✨",
     badgeText: '🚀 100% FREE APP',
     badgeClass: 'badge-emerald',
     badgeDotClass: 'dot-emerald',
     titleMain: 'Unleash Your',
     titleGradient: 'Viral Meme Ideas',
     titleGradClass: 'grad-sunset',
-    tagline: 'Unleash your viral meme ideas with custom layouts.',
+    tagline: 'Unleash your viral meme ideas using our studio editor.',
     glowTheme: 'glow-theme-studio',
     glowColor: 'rgba(255, 94, 54, 0.45)',
-    icon: Plus,
+    icon: Sparkles,
     renderGraphic: () => <GraphicRocket3D />,
-    primaryVariant: 'pill-sunset',
-    secondaryLabel: 'AI Generator',
-    secondaryIcon: Sparkles,
-    secondaryVariant: 'studio-pill-dark',
-    secondaryAction: 'ai'
+    primaryVariant: 'pill-sunset studio-pill-long'
   },
   {
     id: 'videotrim',

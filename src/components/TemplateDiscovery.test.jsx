@@ -72,7 +72,7 @@ describe('TemplateDiscovery', () => {
     expect(screen.getByRole('button', { name: 'Generate Stickers' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Face Swap' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Create Viral Video' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Create Now' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /start creating/i })).toBeTruthy();
     expect(screen.getAllByRole('button', { name: 'Upload' }).length).toBeGreaterThan(0);
     expect(screen.getByRole('button', { name: 'Social Cards' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'AI Punchlines' })).toBeTruthy();
@@ -94,7 +94,7 @@ describe('TemplateDiscovery', () => {
     expect(onCreateCustom).toHaveBeenCalledWith('video');
 
     // Click Create Now
-    fireEvent.click(screen.getByRole('button', { name: 'Create Now' }));
+    fireEvent.click(screen.getByRole('button', { name: /start creating/i }));
     expect(onCreateCustom).toHaveBeenCalledWith('image');
 
     // Click AI Punchlines
