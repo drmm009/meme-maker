@@ -220,3 +220,25 @@ h1, h2, h3, h4, h5, h6, .display-font {
     transform: none;
   }
 }
+
+
+/* Heading Subtitles Global Rules */
+.shelf-subtext,
+.hero-tagline,
+.brand-tagline,
+.gallery-subtitle,
+.social-hero-subtitle,
+.promo-banner-desc,
+.empty-state p {
+  color: #ffffff !important;
+}
+
+[data-theme='light'] .shelf-subtext,
+[data-theme='light'] .hero-tagline,
+[data-theme='light'] .brand-tagline,
+[data-theme='light'] .gallery-subtitle,
+[data-theme='light'] .social-hero-subtitle,
+[data-theme='light'] .promo-banner-desc,
+[data-theme='light'] .empty-state p {
+  color: #475569 !important;
+}

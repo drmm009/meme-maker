@@ -1334,7 +1334,7 @@ input.search-pill-input[type="text"]::placeholder {
 
 /* Tagline */
 .hero-tagline {
-  color: #cbd5e1 !important;
+  color: #ffffff !important;
   margin: 6px 0 0 0 !important;
   font-size: 0.82rem !important;
   font-weight: 550 !important;
@@ -1946,7 +1946,7 @@ input.search-pill-input[type="text"]::placeholder {
 
 .shelf-subtext {
   font-size: 0.72rem;
-  color: #8b8f9e;
+  color: #ffffff !important;
   font-weight: 500;
   margin-top: 1px;
 }
@@ -2282,7 +2282,7 @@ input.search-pill-input[type="text"]::placeholder {
 
 .promo-banner-desc {
   font-size: 0.78rem;
-  color: #94a3b8;
+  color: #ffffff !important;
   margin: 3px 0 0 0;
   font-weight: 500;
 }
@@ -2555,7 +2555,7 @@ input.search-pill-input[type="text"]::placeholder {
 
 .empty-state p {
   font-size: 0.84rem;
-  color: #8b8f9e;
+  color: #ffffff !important;
   max-width: 400px;
   margin: 0;
   line-height: 1.4;
@@ -2942,4 +2942,10 @@ input.search-pill-input[type="text"]::placeholder {
 [data-theme='light'] .studio-pill-dark:hover .studio-pill-icon {
   color: #0f172a !important;
   transform: scale(1.08) !important;
+}
+
+[data-theme='light'] .shelf-subtext,
+[data-theme='light'] .promo-banner-desc,
+[data-theme='light'] .empty-state p {
+  color: #475569 !important;
 }
