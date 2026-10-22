@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState, useLayoutEffect } from 'react';
-import { Image as ImageIcon, Sparkles, Type } from 'lucide-react';
 import { getFilterCss, drawImageFiltered } from '../data/photoFilters';
 import { isColorDark } from '../utils/captionLayout';
 
@@ -73,25 +72,6 @@ const drawRoundRect = (ctx, x, y, width, height, radius) => {
   ctx.fill();
 };
 
-const drawCustomRoundRect = (ctx, x, y, width, height, radii) => {
-  if (width <= 0 || height <= 0) return;
-  const { tl = 0, tr = 0, br = 0, bl = 0 } = typeof radii === 'number'
-    ? { tl: radii, tr: radii, br: radii, bl: radii }
-    : radii;
-  ctx.beginPath();
-  ctx.moveTo(x + tl, y);
-  ctx.lineTo(x + width - tr, y);
-  ctx.quadraticCurveTo(x + width, y, x + width, y + tr);
-  ctx.lineTo(x + width, y + height - br);
-  ctx.quadraticCurveTo(x + width, y + height, x + width - br, y + height);
-  ctx.lineTo(x + bl, y + height);
-  ctx.quadraticCurveTo(x, y + height, x, y + height - bl);
-  ctx.lineTo(x, y + tl);
-  ctx.quadraticCurveTo(x, y, x + tl, y);
-  ctx.closePath();
-  ctx.fill();
-};
-
 export const sampleFaceLighting = (ctx, cx, cy, radius) => {
   try {
     const r = Math.max(12, Math.round(radius * 0.75));
@@ -124,7 +104,7 @@ export const sampleFaceLighting = (ctx, cx, cy, radius) => {
     const warmth = Math.min(35, Math.round((redExcess / 90) * 25));
 
     return { brightness, warmth, avgR, avgG, avgB };
-  } catch (e) {
+  } catch  {
     return { brightness: 100, warmth: 0 };
   }
 };
@@ -540,10 +520,26 @@ const tweetSharePath = createPath2D("M18 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM6 15a3 3
 // Instagram & iOS WhatsApp vector paths
 const instagramSendPath = createPath2D("M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z");
 const iosChevronPath = createPath2D("M15 18l-6-6 6-6");
-const iosVideoPath = createPath2D("M4 6.5A2.5 2.5 0 0 0 1.5 9v6A2.5 2.5 0 0 0 4 17.5h9a2.5 2.5 0 0 0 2.5-2.5V9A2.5 2.5 0 0 0 13 6.5H4zm13.78 3.03a1 1 0 0 0-1.28.96v3.02a1 1 0 0 0 1.28.96l3.5-1.5a1 1 0 0 0 .72-.96v-1a1 1 0 0 0-.72-.96l-3.5-1.5z");
 const iosPhonePath = createPath2D("M6.62 10.79a15.05 15.05 0 0 0 6.59 6.59l2.2-2.2a1 1 0 0 1 1.01-.24c1.12.37 2.33.57 3.58.57a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1.02l-2.2 2.2z");
 
 export const socialCardImageCache = new Map();
+const MAX_SOCIAL_IMAGE_CACHE = 50;
+
+export const setSocialCardImage = (key, img) => {
+  if (socialCardImageCache.size >= MAX_SOCIAL_IMAGE_CACHE) {
+    const oldestKey = socialCardImageCache.keys().next().value;
+    if (oldestKey) {
+      const oldImg = socialCardImageCache.get(oldestKey);
+      if (oldImg) {
+        oldImg.onload = null;
+        oldImg.onerror = null;
+        oldImg.src = '';
+      }
+      socialCardImageCache.delete(oldestKey);
+    }
+  }
+  socialCardImageCache.set(key, img);
+};
 
 export const parseLikesCount = (likesText) => {
   if (!likesText || typeof likesText !== 'string') return '';
@@ -1047,7 +1043,7 @@ export const drawInstagramCard = (ctx, cardW, cap) => {
         }
       };
       cached.src = postImageSrc;
-      socialCardImageCache.set(postImageSrc, cached);
+      setSocialCardImage(postImageSrc, cached);
     }
 
     if (cached.complete) {
@@ -1915,6 +1911,11 @@ function getOrCreateDieCutSilhouette(imgSource, color, width, height) {
 
   if (dieCutSilhouetteCache.size > 80) {
     const firstKey = dieCutSilhouetteCache.keys().next().value;
+    const oldCanvas = dieCutSilhouetteCache.get(firstKey);
+    if (oldCanvas) {
+      oldCanvas.width = 0;
+      oldCanvas.height = 0;
+    }
     dieCutSilhouetteCache.delete(firstKey);
   }
   dieCutSilhouetteCache.set(key, silCanvas);
@@ -2031,7 +2032,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     slotImages,
     slotTransforms,
     onUpdateSlotTransform,
-    isVideoPlaying = true,
+    _isVideoPlaying = true,
     watermark,
     canvasBgColor = '#ffffff',
     drawings = [],
@@ -2041,9 +2042,9 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     brushColor = '#ff2a5f',
     brushSize = 10,
     canvasHeader,
-    onUpdateCanvasHeader,
+    _onUpdateCanvasHeader,
     canvasFooter,
-    onUpdateCanvasFooter,
+    _onUpdateCanvasFooter,
     demotivational,
     canvasFlipX = false
   },
@@ -2289,6 +2290,8 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
 
   const handlePointerDownRef = useRef(null);
   const handlePointerMoveRef = useRef(null);
+  const handlePointerUpRef = useRef(null);
+  handlePointerUpRef.current = handlePointerUp;
   const handlePointerEndRef = useRef(null);
 
   // rAF batching for high-DPI drag, resize, and rotate operations (prevents event flooding)
@@ -5107,7 +5110,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     const handleGlobalUp = (e) => {
       if (isDragging.current || isDrawingActive.current) {
         if (handlePointerEndRef.current) handlePointerEndRef.current(e);
-        else handlePointerUp();
+        else handlePointerUpRef.current?.();
       }
     };
     window.addEventListener('mousemove', handleGlobalMove);

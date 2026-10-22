@@ -15,7 +15,7 @@ const AiCaptionModal = lazy(() => import('./components/AiCaptionModal'));
 import { MEME_TEMPLATES } from './data/templates';
 import { INITIAL_NOTIFICATIONS } from './data/notifications';
 import { idbPutMeme, idbGetAllMemes, idbGetMeme, idbDeleteMeme, dataURLToBlob, createThumbnail, toMetadata } from './utils/galleryStore';
-import { Sparkles, Grid, LayoutGrid, FolderHeart, User, Sun, Moon, Bell, Plus, Users, Compass } from 'lucide-react';
+import { LayoutGrid, FolderHeart, User, Sun, Moon, Bell, Plus, Users, Compass } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import './App.css';
 
@@ -126,6 +126,21 @@ function App() {
   const [savedMemes, setSavedMemes] = useState([]);
   const [galleryReady, setGalleryReady] = useState(false);
   const fullUrlCache = React.useRef(new Map());
+
+  // Cleanup object URLs on unmount/pagehide to prevent mobile Safari memory leaks
+  useEffect(() => {
+    const cleanupUrls = () => {
+      fullUrlCache.current.forEach((url) => {
+        try { URL.revokeObjectURL(url); } catch { /* ignore */ }
+      });
+      fullUrlCache.current.clear();
+    };
+    window.addEventListener('pagehide', cleanupUrls);
+    return () => {
+      window.removeEventListener('pagehide', cleanupUrls);
+      cleanupUrls();
+    };
+  }, []);
 
   // One-time load + migration from legacy localStorage key
   useEffect(() => {
@@ -458,6 +473,15 @@ function App() {
     try {
       const record = await idbGetMeme(meme.id);
       if (record?.imageBlob) {
+        // Bound cache to 40 items max (LRU eviction for mobile/Safari memory)
+        if (fullUrlCache.current.size >= 40) {
+          const oldestKey = fullUrlCache.current.keys().next().value;
+          const oldestUrl = fullUrlCache.current.get(oldestKey);
+          if (oldestUrl) {
+            try { URL.revokeObjectURL(oldestUrl); } catch { /* ignore */ }
+          }
+          fullUrlCache.current.delete(oldestKey);
+        }
         const url = URL.createObjectURL(record.imageBlob);
         fullUrlCache.current.set(meme.id, url);
         return url;

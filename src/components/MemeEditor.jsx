@@ -5,19 +5,18 @@ import { FONTS } from '../data/stickers';
 import confetti from 'canvas-confetti';
 import {
   Type, Plus, Trash2, Undo, Redo, Download, Share2, Sparkles, Copy, Blend,
-  Sliders, SlidersHorizontal, Settings, Smile, Sticker, ArrowLeft, Save, Check, RefreshCw,
-  Image as ImageIcon, Search, X, Upload, RotateCw, ZoomIn, Crop, LayoutGrid, Scissors, Play, Pause, FolderHeart, Droplet, Monitor,
-  Highlighter, Palette, Sun, Moon, ChevronDown, ChevronLeft, PencilLine, Move, ArrowDownRight, Wand2,
-  Layers, ArrowUp, ArrowDown, ChevronsUp, ChevronsDown, Eye, EyeOff, Lock, Unlock, FlipHorizontal,
-  PanelTop, PanelBottom, MessageSquare, MessageSquareQuote, Flame, Tv, MessageCircle, Shield, Circle, TrendingDown, Ban,
+  Sliders, Settings, Smile, Sticker, ArrowLeft, Save, Check, RefreshCw,
+  X, Upload, RotateCw, Crop, LayoutGrid, Droplet,
+  Highlighter, Palette, Sun, ChevronDown, PencilLine, ArrowDownRight, Wand2,
+  Layers, ArrowUp, ArrowDown, Eye, FlipHorizontal,
+  PanelTop, PanelBottom, MessageSquare, MessageSquareQuote, Flame, Tv, MessageCircle, Shield, Ban,
   AlignLeft, AlignCenter, AlignRight,
   Brush, SunMedium, ImagePlus, LayoutTemplate, Rows3, WandSparkles, ScanFace,
-  CheckCheck, ArrowLeftRight, User
+  CheckCheck, User
 } from 'lucide-react';
 import AiCaptionModal from './AiCaptionModal';
 import MemeStylesModal, { TwitterVerifiedBadge, InstagramVerifiedBadge, InstagramLogo, WhatsAppLogo, IG_PRESET_IMAGES } from './MemeStylesModal';
 import FaceMorphModal from './FaceMorphModal';
-import BottomSheet from './BottomSheet';
 import MemeStickersBottomSheet from './editor/MemeStickersBottomSheet';
 import EmojiBottomSheet from './editor/EmojiBottomSheet';
 import TemplatePickerBottomSheet from './editor/TemplatePickerBottomSheet';
@@ -25,10 +24,9 @@ import PhotoFiltersBottomSheet from './editor/PhotoFiltersBottomSheet';
 import BubbleChatBottomSheet from './editor/BubbleChatBottomSheet';
 import FacePinpointOverlay from './FacePinpointOverlay';
 import { fuseFaceIntoTemplate } from '../utils/faceGraftEngine';
-import { detectFaceOnTemplate } from '../utils/faceLandmarkerService';
-import { downloadImageHelper, recordCanvasAsVideo } from '../utils/downloadHelper';
+import { downloadImageHelper } from '../utils/downloadHelper';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MEME_TEMPLATES, CATEGORIES } from '../data/templates';
+import { MEME_TEMPLATES } from '../data/templates';
 import { fetchOpenSourceMemes } from '../services/memeService';
 import VideoTrimmer from './VideoTrimmer';
 import AspectRatioDropdown from './AspectRatioDropdown';
@@ -61,9 +59,9 @@ export const XSocialLogo = ({ size = 16, style = {}, className = "" }) => (
   </svg>
 );
 
-export const isSocialCardCaption = (c) => Boolean(c && (c.isTweetCard || c.isInstagramCard || c.isWhatsAppCard));
+const isSocialCardCaption = (c) => Boolean(c && (c.isTweetCard || c.isInstagramCard || c.isWhatsAppCard));
 
-export const TEXT_EFFECTS = [
+const TEXT_EFFECTS = [
   {
     id: 'flat',
     name: 'Flat',
@@ -232,7 +230,7 @@ const secondaryVariants = {
   }
 };
 
-export default function MemeEditor({ template, onBack, onSaveToGallery, theme, onToggleTheme }) {
+export default function MemeEditor({ template, onBack, onSaveToGallery, _theme, _onToggleTheme }) {
   const [imageLayers, setImageLayers] = useState(() => {
     return (template?.imageLayers || []).map((img, idx) => ({
       ...img,
@@ -330,7 +328,6 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
   const [slotTransforms, setSlotTransforms] = useState(template?.slotTransforms || []);
 
   const [activeTemplate, setActiveTemplate] = useState(template);
-  const pickingTemplateRef = useRef(false);
 
   useEffect(() => {
     setActiveTemplate(template);
@@ -350,7 +347,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
 
   const [aspectRatio, setAspectRatio] = useState(template?.aspectRatio || 'original');
   
-  const [imageFit, setImageFit] = useState(template?.imageFit || 'contain');
+  const imageFit = template?.imageFit || 'contain';
 
   // Open-source templates for Image Layer / Slot overlay picker
   const [imagePickerTarget, setImagePickerTarget] = useState(null); // 'layer' | 'replaceTemplate' | { slot: idx }
@@ -476,12 +473,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     if (template?.id?.includes('whatsapp')) return 'whatsapp';
     return 'tweet';
   });
-  const handleOpenSocialModal = (platform = 'tweet') => {
-    setSocialModalPlatform(platform);
-    setShowStylesModal(true);
-  };
-
-  const handleOpenSocialModalForActiveCard = (targetPlatform) => {
+    const handleOpenSocialModalForActiveCard = (targetPlatform) => {
     let platform = targetPlatform;
     const currentActiveCap = captions.find((c) => c.id === activeLayerId);
     const targetCap = (currentActiveCap && isSocialCardCaption(currentActiveCap))
@@ -613,17 +605,14 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
 
   const [activeTab, setActiveTab] = useState('text'); // 'text' | 'stickers' | 'images' | 'draw' | 'watermark'
   const [isMobileTabsFolded, setIsMobileTabsFolded] = useState(true);
-  const [showWatermarkMenu, setShowWatermarkMenu] = useState(false);
   const [showFontMenu, setShowFontMenu] = useState(false);
   const [showTextEffectsMenu, setShowTextEffectsMenu] = useState(false);
   const showTextCurveMenu = showTextEffectsMenu;
   const setShowTextCurveMenu = setShowTextEffectsMenu;
   const [showTextBlurMenu, setShowTextBlurMenu] = useState(false);
   const [showTextBgMenu, setShowTextBgMenu] = useState(false);
-  const [showImageFilterMenu, setShowImageFilterMenu] = useState(false);
   const [showFilterPresets, setShowFilterPresets] = useState(false);
   const [showLayerMenu, setShowLayerMenu] = useState(false);
-  const [showDrawSettings, setShowDrawSettings] = useState(false);
   const [activeSubmenu, setActiveSubmenu] = useState(null); // 'font' | 'color' | 'align' | 'effects' | 'bg' | 'blur' | 'bubble' | 'tweetTheme' | 'tweetTrend' | 'drawSettings' | 'watermark' | 'canvasBg' | 'banner' | 'filters'
   const handleToggleSubmenu = (menuName) => {
     setActiveSubmenu(prev => prev === menuName ? null : menuName);
@@ -643,12 +632,10 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     filterString: 'none',
     filterScope: 'all'
   });
-  const [filterTarget, setFilterTarget] = useState('canvas'); // 'canvas' | 'layer'
 
   const handleTabClick = (tabId) => {
     setActiveTab(tabId);
     setActiveLayerId(null);
-    setShowDrawSettings(false);
     setShowFontMenu(false);
     setShowTextEffectsMenu(false);
     setShowTextBlurMenu(false);
@@ -676,34 +663,22 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
   const [drawTool, setDrawTool] = useState(null); // 'brush' | 'eraser' | null (deactivated by default)
   const [brushColor, setBrushColor] = useState('#ff2a5f');
   const [brushSize, setBrushSize] = useState(10);
-  const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const [exportedImageUri, setExportedImageUri] = useState(null);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [showAiModal, setShowAiModal] = useState(false);
   const [showBubbleLayouts, setShowBubbleLayouts] = useState(false);
-  const [showHeaderFooterMenu, setShowHeaderFooterMenu] = useState(false);
-  const [showTextAlignMenu, setShowTextAlignMenu] = useState(false);
   const [lastUsedSettingButton, setLastUsedSettingButton] = useState(null);
   const contextToolbarRef = useRef(null);
-  const [showTweetThemeMenu, setShowTweetThemeMenu] = useState(false);
-  const [showTweetTrendMenu, setShowTweetTrendMenu] = useState(false);
   const [exportFormat, setExportFormat] = useState('png'); // 'png' | 'jpeg' | 'webp'
   const [exportQuality, setExportQuality] = useState(0.92);
   const [exportPreset, setExportPreset] = useState('hd'); // 'hd' | 'discord' | 'compact'
   const [exportFileSize, setExportFileSize] = useState(null);
   const [exportDropdownOpen, setExportDropdownOpen] = useState(false);
   const exportDropdownRef = useRef(null);
-  const [directCopyStatus, setDirectCopyStatus] = useState(false);
-  const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
-  const [exportedVideoUrl, setExportedVideoUrl] = useState(null);
   const [isSaved, setIsSaved] = useState(false);
   const [memeCustomName, setMemeCustomName] = useState('');
-  const [isFontPickerOpen, setIsFontPickerOpen] = useState(false);
-  const [showVideoTrimmer, setShowVideoTrimmer] = useState(false);
   const [pendingVideoLayer, setPendingVideoLayer] = useState(null);
-  const [isRecording, setIsRecording] = useState(false);
-  const [recordProgress, setRecordProgress] = useState(0);
-  const [isVideoPlaying, setIsVideoPlaying] = useState(true);
+  const isVideoPlaying = true;
 
   // Watermark state â€” persisted in localStorage (quota-safe: session state survives write failures)
   const [watermark, setWatermark] = useState(() => {
@@ -1034,21 +1009,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     pushHistory(captions, stickers, imageLayers, nextDrawings);
   };
 
-  const handleOpenSaveModal = () => {
-    setActiveLayerId(null);
-    if (canvasRef.current) {
-      const dataUrl = canvasRef.current.exportCleanImage
-        ? canvasRef.current.exportCleanImage('image/png')
-        : canvasRef.current.toDataURL('image/png');
-      setExportedImageUri(dataUrl);
-      const cleaned = cleanTemplateName(template?.name);
-      const defaultName = cleaned || (captions[0]?.text && captions[0].text !== 'TOP TEXT' ? captions[0].text : '') || 'My Meme';
-      setMemeCustomName(defaultName);
-      setIsSaveModalOpen(true);
-    }
-  };
-
-  const updateExportUriAndSize = (format = exportFormat, quality = exportQuality) => {
+    const updateExportUriAndSize = (format = exportFormat, quality = exportQuality) => {
     if (!canvasRef.current) return;
     const mimeType = format === 'jpeg' ? 'image/jpeg' : (format === 'webp' ? 'image/webp' : 'image/png');
     const q = format === 'png' ? undefined : quality;
@@ -1087,17 +1048,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     }
   };
 
-  const handleExport = () => {
-    setActiveLayerId(null);
-    setTimeout(() => {
-      if (canvasRef.current) {
-        updateExportUriAndSize(exportFormat, exportQuality);
-        setIsExportModalOpen(true);
-      }
-    }, 50);
-  };
-
-  // Chat & Speech Bubble Generator (iPhone, WhatsApp, Comic)
+    // Chat & Speech Bubble Generator (iPhone, WhatsApp, Comic)
   const handleAddBubble = (data = {}) => {
     const style = typeof data === 'string' ? data : (data.style || 'imessage-send');
     const text = (typeof data === 'object' && data.text) ? data.text : (
@@ -1266,36 +1217,6 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
       width: nextWidth
     });
   };
-
-  const handleConvertToBubble = () => {
-    if (!activeCaption) return;
-    if (activeCaption.bubbleStyle) {
-      setShowBubbleLayouts(true);
-      return;
-    }
-
-    const nextBg = '#007aff';
-    const nextColor = '#ffffff';
-    const nextFont = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    const nextStroke = 'transparent';
-    const nextStrokeWidth = 0;
-    const nextWidth = activeCaption.width || 0.65;
-
-    updateActiveCaptionProps({
-      bubbleStyle: 'imessage-send',
-      bgColor: nextBg,
-      color: nextColor,
-      fontFamily: nextFont,
-      stroke: nextStroke,
-      strokeWidth: nextStrokeWidth,
-      width: nextWidth
-    });
-    setShowBubbleLayouts(true);
-    setShowBubbleBottomSheet(true);
-  };
-
-  const handleAddSpeechBubble = handleAddBubble;
-
   // AI Meme Caption Application
   const handleApplyAiCaption = (captionText, target = 'caption') => {
     if (target === 'header') {
@@ -1501,8 +1422,6 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
       pushHistory(nextCaps, stickers, imageLayers, drawings, nextHeader, canvasFooter);
     }
   };
-  const handleAddModernHeader = handleToggleCanvasHeader;
-
   // 1-Tap Modern Meme Footer Extension (Canvas extension below meme image with normal caption layer)
   const handleToggleCanvasFooter = () => {
     const nextState = !canvasFooter.enabled;
@@ -1554,8 +1473,6 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
       pushHistory(nextCaps, stickers, imageLayers, drawings, canvasHeader, nextFooter);
     }
   };
-  const handleAddModernFooter = handleToggleCanvasFooter;
-
   // 1-Tap Toggle Both Modern Header & Footer Extensions
   const handleToggleCanvasBoth = () => {
     const bothAlreadyEnabled = canvasHeader.enabled && canvasFooter.enabled;
@@ -1649,104 +1566,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
   };
 
   // Meme Culture Staples & Social Formats Handlers
-  const handleToggleDemotivational = (data = {}) => {
-    const willEnable = !demotivational.enabled;
-    const titleText = (data.title || demotivational.title || 'PROCRASTINATION').toUpperCase();
-    const subtitleText = data.subtitle || demotivational.subtitle || 'Hard work pays off in the future, laziness pays off now.';
-
-    const nextDemo = {
-      enabled: willEnable,
-      title: titleText,
-      subtitle: subtitleText
-    };
-    setDemotivational(nextDemo);
-
-    if (willEnable) {
-      setCanvasBgColor('#000000');
-      window.dispatchEvent(new CustomEvent('liveCanvasBgColor', { detail: '#000000' }));
-
-      // Clean existing demotivational captions
-      const cleanCaps = captions.filter(c => !c.isDemotivationalTitle && !c.isDemotivationalSubtitle);
-      const maxZ = Math.max(-1, ...cleanCaps.map(c => c.zIndex ?? -1), ...stickers.map(s => s.zIndex ?? -1), ...(imageLayers || []).map(i => i.zIndex ?? -1));
-
-      const titleCap = {
-        id: `cap-demo-title-${Date.now()}`,
-        text: titleText,
-        x: 0.5,
-        y: 0.82,
-        fontSize: 48,
-        fontFamily: '"Times New Roman", Times, serif',
-        color: '#ffffff',
-        stroke: 'transparent',
-        strokeWidth: 0,
-        align: 'center',
-        width: 0.88,
-        isDemotivationalTitle: true,
-        zIndex: maxZ + 1
-      };
-
-      const subtitleCap = {
-        id: `cap-demo-sub-${Date.now() + 1}`,
-        text: subtitleText,
-        x: 0.5,
-        y: 0.90,
-        fontSize: 22,
-        fontFamily: 'Georgia, serif',
-        color: '#ffffff',
-        stroke: 'transparent',
-        strokeWidth: 0,
-        align: 'center',
-        width: 0.84,
-        isDemotivationalSubtitle: true,
-        zIndex: maxZ + 2
-      };
-
-      const nextCaps = [...cleanCaps, titleCap, subtitleCap];
-      setCaptions(nextCaps);
-      setActiveLayerId(titleCap.id);
-      setActiveTab('text');
-      pushHistory(nextCaps, stickers, imageLayers, drawings, canvasHeader, canvasFooter, nextDemo);
-    } else {
-      const nextCaps = captions.filter(c => !c.isDemotivationalTitle && !c.isDemotivationalSubtitle);
-      setCaptions(nextCaps);
-      if (activeCaption?.isDemotivationalTitle || activeCaption?.isDemotivationalSubtitle) {
-        setActiveLayerId(null);
-      }
-      pushHistory(nextCaps, stickers, imageLayers, drawings, canvasHeader, canvasFooter, nextDemo);
-    }
-  };
-
-  const handleAddBreakingNews = (data = {}) => {
-    const headline = data.headline || "LOCAL MAN ADMITS HE HAS NO IDEA WHAT HE'S DOING";
-    const channel = data.channel || "MEME NEWS 24";
-    const ticker = data.ticker || "DEVELOPING STORY - DETAILS TO FOLLOW";
-    const maxZ = Math.max(-1, ...captions.map(c => c.zIndex ?? -1), ...stickers.map(s => s.zIndex ?? -1), ...(imageLayers || []).map(i => i.zIndex ?? -1));
-
-    const newCap = {
-      id: `cap-news-${Date.now()}`,
-      text: headline,
-      newsHeadline: headline,
-      newsChannel: channel,
-      newsTicker: ticker,
-      isBreakingNews: true,
-      x: 0.5,
-      y: 0.88,
-      width: 0.96,
-      fontSize: 28,
-      color: '#facc15',
-      stroke: 'transparent',
-      strokeWidth: 0,
-      zIndex: maxZ + 1
-    };
-
-    const nextCaps = [...captions, newCap];
-    setCaptions(nextCaps);
-    setActiveLayerId(newCap.id);
-    setActiveTab('text');
-    pushHistory(nextCaps, stickers, imageLayers, drawings, canvasHeader, canvasFooter, demotivational);
-  };
-
-  const handleAddTweetCard = (data = {}) => {
+      const handleAddTweetCard = (data = {}) => {
     const name = data.name || 'Elon Musk';
     const handle = data.handle || '@elonmusk';
     const text = data.text || 'thinking about deleting the database and moving to the woods';
@@ -1899,50 +1719,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     pushHistory(nextCaps, stickers, imageLayers, drawings, canvasHeader, canvasFooter, demotivational);
   };
 
-  const handleAddChatBubble = (data = {}) => {
-    const style = data.style || 'imessage-send';
-    const text = data.text || 'are you free to hop on a quick 5-min call?';
-    const maxZ = Math.max(-1, ...captions.map(c => c.zIndex ?? -1), ...stickers.map(s => s.zIndex ?? -1), ...(imageLayers || []).map(i => i.zIndex ?? -1));
-
-    let bgColor = '#007aff';
-    let textColor = '#ffffff';
-    if (style === 'imessage-receive') {
-      bgColor = '#e9e9eb';
-      textColor = '#000000';
-    } else if (style === 'whatsapp-send') {
-      bgColor = '#005c4b';
-      textColor = '#ffffff';
-    } else if (style === 'whatsapp-receive') {
-      bgColor = '#202c33';
-      textColor = '#ffffff';
-    }
-
-    const pos = getNonOverlappingPosition('phrase', captions, stickers, imageLayers);
-
-    const newCap = {
-      id: `cap-chat-${Date.now()}`,
-      text: text,
-      bubbleStyle: style,
-      bgColor: bgColor,
-      color: textColor,
-      stroke: 'transparent',
-      strokeWidth: 0,
-      x: pos.x,
-      y: pos.y,
-      fontSize: 26,
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-      width: 0.72,
-      zIndex: maxZ + 1
-    };
-
-    const nextCaps = [...captions, newCap];
-    setCaptions(nextCaps);
-    setActiveLayerId(newCap.id);
-    setActiveTab('text');
-    pushHistory(nextCaps, stickers, imageLayers, drawings, canvasHeader, canvasFooter, demotivational);
-  };
-
-  // Toggle Text Case: ALL CAPS <-> Sentence Case <-> lowercase
+    // Toggle Text Case: ALL CAPS <-> Sentence Case <-> lowercase
   const handleToggleTextCase = () => {
     if (!activeCaption || !activeCaption.text) return;
     const txt = activeCaption.text;
@@ -2077,19 +1854,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     }
   };
 
-  const updateActiveStickerScale = (scaleValue) => {
-    if (!activeLayerId) return;
-    const nextStickers = stickers.map((stk) => {
-      if (stk.id === activeLayerId) {
-        return { ...stk, scale: scaleValue };
-      }
-      return stk;
-    });
-    setStickers(nextStickers);
-    pushHistory(captions, nextStickers);
-  };
-
-  const commitAddImageLayer = (src, trimStart, trimEnd) => {
+    const commitAddImageLayer = (src, trimStart, trimEnd) => {
     const pos = getNonOverlappingPosition('image', captions, stickers, imageLayers);
     const maxZ = Math.max(-1, ...captions.map(c => c.zIndex ?? -1), ...stickers.map(s => s.zIndex ?? -1), ...(imageLayers || []).map(i => i.zIndex ?? -1));
     const newImgLayer = {
@@ -2173,19 +1938,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     setShowFaceMorphModal(true);
   };
 
-  const handleRetargetFace = () => {
-    if (templateFaceMorph?.isLayerSwap) {
-      const target = imageLayers.find(l => l.id === templateFaceMorph.layerId) || stickers.find(s => s.id === templateFaceMorph.layerId);
-      if (target) {
-        handleStartMorphFace(target);
-        return;
-      }
-    }
-    setActiveLayerId(null);
-    setIsPinpointingFace(true);
-  };
-
-  const handleConfirmPinpoint = () => {
+    const handleConfirmPinpoint = () => {
     setActiveLayerId(null);
     setIsPinpointingFace(false);
     let lighting = null;
@@ -2540,73 +2293,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     commitLayerStack(list);
   };
 
-  const handleZIndex = (dir) => {
-    if (!activeLayerId) return;
-    moveLayer(activeLayerId, dir === 1 ? 'forward' : 'backward');
-  };
-
-  const toggleLayerVisibility = (id) => {
-    if (!id) return;
-    const isCap = captions.some(c => c.id === id);
-    const isStk = stickers.some(s => s.id === id);
-    const isImg = imageLayers.some(i => i.id === id);
-
-    let nextCaps = captions;
-    let nextStks = stickers;
-    let nextImgs = imageLayers;
-
-    if (isCap) {
-      nextCaps = captions.map(c => c.id === id ? { ...c, hidden: !c.hidden } : c);
-      setCaptions(nextCaps);
-    } else if (isStk) {
-      nextStks = stickers.map(s => s.id === id ? { ...s, hidden: !s.hidden } : s);
-      setStickers(nextStks);
-    } else if (isImg) {
-      nextImgs = imageLayers.map(i => i.id === id ? { ...i, hidden: !i.hidden } : i);
-      setImageLayers(nextImgs);
-    }
-
-    if (activeLayerId === id) {
-      const target = [...nextCaps, ...nextStks, ...nextImgs].find(i => i.id === id);
-      if (target?.hidden) {
-        const prevSticker = stickers.find((s) => s.id === id);
-        const prevCaption = captions.find((c) => c.id === id);
-        const prevImg = imageLayers.find((img) => img.id === id);
-        if (prevSticker || (prevCaption && isSocialCardCaption(prevCaption)) || prevImg) {
-          setActiveTab('images');
-        }
-        setActiveLayerId(null);
-      }
-    }
-
-    pushHistory(nextCaps, nextStks, nextImgs, drawings);
-  };
-
-  const toggleLayerLock = (id) => {
-    if (!id) return;
-    const isCap = captions.some(c => c.id === id);
-    const isStk = stickers.some(s => s.id === id);
-    const isImg = imageLayers.some(i => i.id === id);
-
-    let nextCaps = captions;
-    let nextStks = stickers;
-    let nextImgs = imageLayers;
-
-    if (isCap) {
-      nextCaps = captions.map(c => c.id === id ? { ...c, locked: !c.locked } : c);
-      setCaptions(nextCaps);
-    } else if (isStk) {
-      nextStks = stickers.map(s => s.id === id ? { ...s, locked: !s.locked } : s);
-      setStickers(nextStks);
-    } else if (isImg) {
-      nextImgs = imageLayers.map(i => i.id === id ? { ...i, locked: !i.locked } : i);
-      setImageLayers(nextImgs);
-    }
-
-    pushHistory(nextCaps, nextStks, nextImgs, drawings);
-  };
-
-  const handleDeleteLayer = (targetId) => {
+        const handleDeleteLayer = (targetId) => {
     const idToDelete = (typeof targetId === 'string' && targetId) ? targetId : activeLayerId;
     if (!idToDelete) return;
     const capToDelete = captions.find(c => c.id === idToDelete);
@@ -2819,90 +2506,14 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     return hex.toLowerCase() === '#ffffff' ? '#000000' : 'transparent';
   };
 
-  const handleFileUploadSlot = (slotIndex, e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (evt) => {
-      if (evt.target?.result) {
-        const nextImages = [...slotImages];
-        nextImages[slotIndex] = evt.target.result;
-        setSlotImages(nextImages);
-
-        const nextTransforms = [...slotTransforms];
-        nextTransforms[slotIndex] = { offsetX: 0, offsetY: 0, scale: 1.5 };
-        setSlotTransforms(nextTransforms);
-      }
-    };
-    reader.readAsDataURL(file);
-    e.target.value = '';
-  };
-
-  const updateSlotTransform = (slotIndex, updateFn) => {
+    const updateSlotTransform = (slotIndex, updateFn) => {
     const nextTransforms = [...slotTransforms];
     const prev = nextTransforms[slotIndex] || { offsetX: 0, offsetY: 0, scale: 1.5 };
     nextTransforms[slotIndex] = updateFn(prev);
     setSlotTransforms(nextTransforms);
   };
 
-  const handleTextPanel = (slotIndex) => {
-    // 1. Fill the slot with a 1x1 white transparent image to prevent it from acting as an "empty" slot for hit testing
-    const whitePixelUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=';
-    
-    const nextImages = [...slotImages];
-    nextImages[slotIndex] = whitePixelUrl;
-    setSlotImages(nextImages);
-
-    // 2. Add a centered text caption for that slot
-    const totalSlots = layoutDef.slots;
-    const isVert = layoutDef.id === '2-vert' || layoutDef.id === '3-stacked';
-    const isHoriz = layoutDef.id === '2-horiz' || layoutDef.id === '3-horiz';
-    const isGrid = layoutDef.id === '4-grid';
-    const isHybrid = layoutDef.id === '3-hybrid';
-
-    let cx = 0.5;
-    let cy = 0.5;
-
-    if (isVert) {
-      cy = (slotIndex + 0.5) / totalSlots;
-    } else if (isHoriz) {
-      cx = (slotIndex + 0.5) / totalSlots;
-    } else if (isGrid) {
-      cx = (slotIndex % 2 === 0 ? 0.25 : 0.75);
-      cy = (Math.floor(slotIndex / 2) === 0 ? 0.25 : 0.75);
-    } else if (isHybrid) {
-      if (slotIndex === 0) {
-        cx = 0.5;
-        cy = 0.25;
-      } else {
-        cx = (slotIndex === 1 ? 0.25 : 0.75);
-        cy = 0.75;
-      }
-    }
-
-    const newCap = {
-      id: `cap-${Date.now()}`,
-      text: 'ADD TEXT HERE',
-      x: cx,
-      y: cy,
-      fontSize: 45,
-      color: '#000000', // Black text for white panel
-      stroke: 'transparent',
-      align: 'center',
-      fontFamily: 'Impact, sans-serif',
-      rotation: 0,
-      width: undefined
-    };
-    
-    const nextCaps = [...captions, newCap];
-    setCaptions(nextCaps);
-    setActiveLayerId(newCap.id);
-    setActiveTab('text');
-    setActiveSlotAction(null);
-    pushHistory(nextCaps, stickers);
-  };
-
-  // Emoji & Sticker Handlers
+    // Emoji & Sticker Handlers
   const handleAddSticker = (stickerObj) => {
     const pos = getNonOverlappingPosition('sticker', captions, stickers, imageLayers);
     const maxZ = Math.max(-1, ...captions.map(c => c.zIndex ?? -1), ...stickers.map(s => s.zIndex ?? -1), ...(imageLayers || []).map(i => i.zIndex ?? -1));
@@ -2968,17 +2579,18 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
   const isElementSelected = Boolean(activeLayerId || activeCaption || activeSticker || activeImageLayer);
 
   useEffect(() => {
-    const isFiltersOpen = (!activeCaption && !activeSticker && activeTab === 'filters') || (activeImageLayer && showImageFilterMenu);
+    const isFiltersOpen = !activeCaption && !activeSticker && activeTab === 'filters';
     if (isFiltersOpen) {
-      setTimeout(() => {
+      const timer = setTimeout(() => {
         const activeFilterId = activeImageLayer ? (activeImageLayer.filterId || 'original') : (imageFilters.preset || 'original');
         const el = document.getElementById('filter-item-' + activeFilterId);
         if (el) {
           el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
         }
       }, 50);
+      return () => clearTimeout(timer);
     }
-  }, [activeTab, activeImageLayer?.id, activeImageLayer?.filterId, imageFilters.preset]);
+  }, [activeTab, activeCaption, activeSticker, activeImageLayer, imageFilters.preset]);
 
   const activeFontObj = FONTS.find((f) => f.family === (activeCaption?.fontFamily || 'Impact, sans-serif'))
     || FONTS.find((f) => activeCaption?.fontFamily?.toLowerCase().includes('comic') && f.id.toLowerCase().includes('comic'))
@@ -2997,18 +2609,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     updateActiveCaption('fontFamily', FONTS[nextIndex].family);
   };
 
-  const handleCycleOpacity = () => {
-    if (!activeCaption) return;
-    const currentOpacity = activeCaption.opacity !== undefined ? Number(activeCaption.opacity) : 1;
-    let nextOpacity = 1;
-    if (currentOpacity >= 0.9) nextOpacity = 0.75;
-    else if (currentOpacity >= 0.7) nextOpacity = 0.5;
-    else if (currentOpacity >= 0.4) nextOpacity = 0.25;
-    else nextOpacity = 1;
-    updateActiveCaption('opacity', nextOpacity);
-  };
-
-  const ASPECT_RATIOS = [
+    const ASPECT_RATIOS = [
     { value: 'original', label: 'Original Image' },
     { value: '1:1', label: '1:1 (Square)' },
     { value: '4:5', label: '4:5 (Portrait)' },
@@ -3016,13 +2617,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     { value: '16:9', label: '16:9 (Video)' }
   ];
 
-  const handleCycleAspectRatio = () => {
-    const currentIndex = ASPECT_RATIOS.findIndex((a) => a.value === aspectRatio);
-    const nextIndex = (currentIndex + 1) % ASPECT_RATIOS.length;
-    setAspectRatio(ASPECT_RATIOS[nextIndex].value);
-  };
-
-  const handleCycleWatermarkPosition = () => {
+    const handleCycleWatermarkPosition = () => {
     const positions = [
       { id: 'bottom-right', label: 'Bottom Right' },
       { id: 'bottom-left', label: 'Bottom Left' },
@@ -3055,14 +2650,6 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     if (url.startsWith('data:image/')) return false;
     return /\.(mp4|webm|ogg|mov|m4v)(\?.*)?$/i.test(url);
   };
-  const hasVideoContent = (
-    isVideoUrl(template?.imageUrl) ||
-    isVideoUrl(template?.rawImageUrl) ||
-    (imageLayers || []).some((l) => isVideoUrl(l.url)) ||
-    (slotImages || []).some((s) => isVideoUrl(s)) ||
-    (template?.slotImages || []).some((s) => isVideoUrl(s))
-  );
-
   const cleanTemplateName = (rawName) => {
     if (!rawName) return '';
     return rawName
@@ -3073,28 +2660,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
       .trim();
   };
 
-  const handlePreview = () => {
-    setActiveLayerId(null);
-    if (canvasRef.current) {
-      const dataUrl = canvasRef.current.exportCleanImage
-        ? canvasRef.current.exportCleanImage('image/png')
-        : canvasRef.current.toDataURL('image/png');
-      setExportedImageUri(dataUrl);
-
-      const cleaned = cleanTemplateName(template?.name);
-      const defaultName = cleaned || (captions[0]?.text && captions[0].text !== 'TOP TEXT' ? captions[0].text : '') || 'My Meme';
-      setMemeCustomName(defaultName);
-      
-      setExportedVideoUrl(null);
-      setIsPreviewModalOpen(true);
-      
-      if (hasVideoContent) {
-        handleGenerateVideo();
-      }
-    }
-  };
-
-  // Renders canvas to dataURL without handles, then runs the callback action
+    // Renders canvas to dataURL without handles, then runs the callback action
   const handleQuickExport = (action) => {
     setActiveLayerId(null);
     setExportDropdownOpen(false);
@@ -3110,36 +2676,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     }
   };
 
-  const handleDirectCopyImage = () => {
-    handleQuickExport(async (dataUrl) => {
-      try {
-        const res = await fetch(dataUrl);
-        const blob = await res.blob();
-        if (typeof ClipboardItem !== 'undefined' && navigator.clipboard?.write) {
-          await navigator.clipboard.write([
-            new ClipboardItem({ 'image/png': blob })
-          ]);
-        } else {
-          await navigator.clipboard.writeText(dataUrl);
-        }
-        setDirectCopyStatus(true);
-        triggerConfetti();
-        setTimeout(() => setDirectCopyStatus(false), 2200);
-      } catch (e) {
-        console.warn('Direct image copy failed, trying writeText fallback:', e);
-        try {
-          await navigator.clipboard.writeText(dataUrl);
-          setDirectCopyStatus(true);
-          triggerConfetti();
-          setTimeout(() => setDirectCopyStatus(false), 2200);
-        } catch (err2) {
-          console.error('Direct copy failed completely:', err2);
-        }
-      }
-    });
-  };
-
-  const handleConfirmSave = () => {
+    const handleConfirmSave = () => {
     const dataUrl = (canvasRef.current?.exportCleanImage ? canvasRef.current.exportCleanImage('image/png') : canvasRef.current?.toDataURL('image/png')) || exportedImageUri;
     if (dataUrl) {
       const finalName = memeCustomName.trim() || 'My Meme';
@@ -3165,45 +2702,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
     }
   };
 
-  const handleGenerateVideo = async () => {
-    if (hasVideoContent) {
-      const canvas = canvasRef.current;
-      if (!canvas) return;
-
-      if (typeof canvas.resetVideoTimestamps === 'function') {
-        canvas.resetVideoTimestamps();
-      }
-      setIsVideoPlaying(true);
-      
-      await new Promise(resolve => setTimeout(resolve, 200));
-
-      const filename = `meme-video-${template?.id || 'custom'}-${Date.now()}`;
-      const videoLayer = (imageLayers || []).find((l) => isVideoUrl(l.url) && (l.trimEnd !== undefined || l.trimStart !== undefined));
-      const durationMs = (videoLayer && videoLayer.trimEnd !== undefined)
-        ? Math.max((videoLayer.trimEnd - (videoLayer.trimStart || 0)) * 1000, 1000)
-        : 6000;
-      setIsRecording(true);
-      setRecordProgress(0);
-      try {
-        let mediaElements = [];
-        if (typeof canvas.getVideoElements === 'function') {
-          mediaElements = canvas.getVideoElements();
-        }
-        // Pass true for returnUrlOnly
-        const videoUrl = await recordCanvasAsVideo(canvas, filename, durationMs, (p) => setRecordProgress(p), mediaElements, true);
-        setExportedVideoUrl(videoUrl);
-        triggerConfetti();
-      } catch (err) {
-        console.error('Video export failed:', err);
-        alert('Video export failed. Try saving as image instead.');
-      } finally {
-        setIsRecording(false);
-        setRecordProgress(0);
-      }
-    }
-  };
-
-  const handleDownloadImage = async () => {
+    const handleDownloadImage = async () => {
     if (exportedImageUri) {
       const ext = exportFormat === 'jpeg' ? 'jpg' : exportFormat;
       const filename = `meme-${template?.id || 'custom'}-${Date.now()}.${ext}`;
@@ -7997,7 +7496,6 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, theme, o
 
           {/* TAB 3: MEDIA OVERLAY CONTROLS */}
           {activeTab === 'images' && (() => {
-            const isVideoLayer = activeImageLayer && isVideoUrl(activeImageLayer.url);
             return (
               <div className="tab-content animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {/* Header Action Buttons: Upload Media | Pick Template (+ Delete if media layer selected) */}

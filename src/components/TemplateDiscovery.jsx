@@ -3,10 +3,10 @@ import { MEME_TEMPLATES } from '../data/templates';
 import { VIDEO_MEME_TEMPLATES } from '../data/videoTemplates';
 import { fetchOpenSourceMemes } from '../services/memeService';
 import {
-  Plus, Upload, Laugh, Code,
+  Upload, Laugh, Code,
   Search, Sparkles, Image as ImageIcon, Video,
   Flame, Star, Drama, Clapperboard, LayoutGrid, Layers, Check,
-  Smile, ArrowDownAZ, Zap, ChevronRight, ChevronLeft, ArrowRight, Eye, Wand2, Share2,
+  Smile, ArrowDownAZ, Zap, ChevronRight, ChevronLeft, Eye, Wand2, Share2,
   Briefcase, Heart, ArrowUp, X, SlidersHorizontal, Scissors
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -33,7 +33,7 @@ const QUICK_PROMPTS = [
   '🚀 Pushing directly to prod'
 ];
 
-export const AI_VIBE_MODES = [
+const AI_VIBE_MODES = [
   { id: 'roast', icon: Flame, emoji: '🔥', label: 'Roast Mode', prompt: 'Roast my daily morning routine and procrastination' },
   { id: 'sarcastic', icon: Laugh, emoji: '😂', label: 'Sarcastic', prompt: 'When the code works on the first try and you suspect a trap' },
   { id: 'wholesome', icon: Heart, emoji: '🐱', label: 'Wholesome', prompt: 'My cat looking at me with unconditional love and judgment' },
@@ -407,7 +407,7 @@ function GraphicSocialChat3D() {
 }
 
 /* --- Carousel Slides Configuration (Studio Features in Primary Hero Banner UI) --- */
-export const STUDIO_HERO_SLIDES = [
+const STUDIO_HERO_SLIDES = [
   {
     id: 'customlayout',
     action: 'custom',
@@ -544,7 +544,7 @@ export function templateNumericId(t) {
 }
 
 // Compute dynamic, contextual badges so templates show a variety of labels
-export function getTemplateBadge(template, index = 0) {
+function getTemplateBadge(template, index = 0) {
   if (!template) return { label: 'Popular', icon: Flame, color: '#ff5e36' };
   if (template.type === 'video') {
     return { label: '', iconOnly: true, icon: Video, color: '#38bdf8' };

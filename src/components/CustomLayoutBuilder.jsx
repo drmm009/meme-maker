@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { LAYOUT_OPTIONS, MEME_TEMPLATES, CATEGORIES } from '../data/templates';
 import { fetchOpenSourceMemes } from '../services/memeService';
-import { Upload, ArrowRight, ArrowLeft, Move, ZoomIn, ZoomOut, RefreshCw, Sparkles, Image as ImageIcon, X, Search, Plus, Minus, Type, Square, Smartphone, Monitor, RectangleVertical, Grid } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Upload, ArrowRight, ZoomIn, ZoomOut, RefreshCw, Sparkles, Image as ImageIcon, X, Search, Plus, Minus, Grid } from 'lucide-react';
+import { motion } from 'framer-motion';
 import ModalPortal from './ModalPortal';
 import './CustomLayoutBuilder.css';
 const isVideoUrl = (url) => {
@@ -23,7 +23,7 @@ export default function CustomLayoutBuilder({
   savedState,
   onSaveState,
   onLayoutComplete,
-  onBack
+  _onBack
 }) {
   const [step, setStep] = useState(savedState?.step || 1); // Step 1: Layout Selection | Step 2: Populate Images
   const [selectedLayout, setSelectedLayout] = useState(
@@ -170,10 +170,6 @@ export default function CustomLayoutBuilder({
     ctx.clearRect(0, 0, width, height);
 
     const totalSlots = selectedLayout.slots;
-    const isVert = selectedLayout.id === '2-vert' || selectedLayout.id === '3-stacked';
-    const isHoriz = selectedLayout.id === '2-horiz' || selectedLayout.id === '3-horiz';
-    const isGrid = selectedLayout.id === '4-grid';
-    const isHybrid = selectedLayout.id === '3-hybrid';
 
     const loadedImages = await Promise.all(
       Array.from({ length: totalSlots }).map(async (_, idx) => {
