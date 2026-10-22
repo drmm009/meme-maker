@@ -4,10 +4,16 @@ import { AI_MEME_CATEGORIES, generateMemeCaptionsWithGemini } from '../data/aiMe
 import { safeGet, safeSet, safeRemove } from '../utils/storage';
 import BottomSheet from './BottomSheet';
 
-export default function AiCaptionModal({ isOpen, onClose, onApplyCaption, templateName }) {
+export default function AiCaptionModal({ isOpen, onClose, onApplyCaption, templateName, initialPrompt = '' }) {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [targetMode, setTargetMode] = useState('caption'); // 'caption' | 'header'
-  const [customPrompt, setCustomPrompt] = useState('');
+  const [customPrompt, setCustomPrompt] = useState(initialPrompt || '');
+
+  useEffect(() => {
+    if (initialPrompt) {
+      setCustomPrompt(initialPrompt);
+    }
+  }, [initialPrompt]);
   const [geminiApiKey, setGeminiApiKey] = useState(() => safeGet('gemini_api_key', '') || '');
   const [showKeyInput, setShowKeyInput] = useState(false);
   const [captions, setCaptions] = useState([]);
