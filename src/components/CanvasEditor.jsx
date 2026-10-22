@@ -2291,7 +2291,6 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
   const handlePointerDownRef = useRef(null);
   const handlePointerMoveRef = useRef(null);
   const handlePointerUpRef = useRef(null);
-  handlePointerUpRef.current = handlePointerUp;
   const handlePointerEndRef = useRef(null);
 
   // rAF batching for high-DPI drag, resize, and rotate operations (prevents event flooding)
@@ -2328,6 +2327,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     handlePointerDownRef.current = handlePointerDown;
     handlePointerMoveRef.current = handlePointerMove;
     handlePointerEndRef.current = handlePointerEnd;
+    handlePointerUpRef.current = handlePointerUp;
   });
 
   // Native non-passive touch listeners: handle drag & drawing AND block page scroll

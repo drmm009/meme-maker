@@ -753,8 +753,6 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, _theme, 
 
   // Reset tweet toolbar submenus on active layer change
   useEffect(() => {
-    setShowTweetThemeMenu(false);
-    setShowTweetTrendMenu(false);
     setLastUsedSettingButton(null);
   }, [activeLayerId]);
 
@@ -3057,9 +3055,7 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, _theme, 
                         } else {
                           await navigator.clipboard.writeText(uri);
                         }
-                        setDirectCopyStatus(true);
                         triggerConfetti();
-                        setTimeout(() => setDirectCopyStatus(false), 2200);
                       } catch(e) { console.warn(e); }
                     }},
                     { icon: <Share2 style={{width:16,height:16}} />, label: 'Share', action: async (uri) => {
@@ -3200,10 +3196,6 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, _theme, 
                     setShowTextBlurMenu(false);
                     setShowTextBgMenu(false);
                     setShowBubbleLayouts(false);
-                    setShowTweetThemeMenu(false);
-                    setShowTweetTrendMenu(false);
-                    setShowHeaderFooterMenu(false);
-                    setShowTextAlignMenu(false);
                     if (!id) {
                       setActiveLayerId(null);
                       setActiveSubmenu(null);
