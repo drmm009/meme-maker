@@ -285,15 +285,29 @@
   padding: calc(64px + env(safe-area-inset-top, 0px)) 10px calc(75px + env(safe-area-inset-bottom, 0px));
 }
 .main-content-container.editor-view-mode {
-  padding-top: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  width: 100% !important;
+  max-width: 100vw !important;
+  height: 100% !important;
+  max-height: 100dvh !important;
+  overflow: hidden !important;
+}
+html.editor-view-locked,
+body.editor-view-locked {
+  overflow: hidden !important;
+  height: 100% !important;
+  max-height: 100dvh !important;
+  overscroll-behavior: none !important;
 }
 .persistent-builder-view {
   width: 100%;
 }
 .persistent-builder-view.active-view {
   display: block !important;
-  height: auto !important;
-  overflow: visible !important;
+  height: 100% !important;
+  max-height: 100dvh !important;
+  overflow: hidden !important;
   animation: fadeInView 0.22s ease-out;
 }
 .persistent-builder-view.hidden-view {

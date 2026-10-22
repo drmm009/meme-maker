@@ -203,11 +203,25 @@ function App() {
     };
   }, []);
 
-  // Auto-scroll window to top on view or template changes so editor is instantly visible
+  // Auto-scroll window to top on view or template changes and lock scroll in editor modes
   useEffect(() => {
     window.scrollTo(0, 0);
     document.documentElement.scrollTop = 0;
     document.body.scrollTop = 0;
+
+    const isEditorView = currentView === 'editor' || currentView === 'video-editor' || currentView === 'custom-builder';
+    if (isEditorView) {
+      document.body.classList.add('editor-view-locked');
+      document.documentElement.classList.add('editor-view-locked');
+    } else {
+      document.body.classList.remove('editor-view-locked');
+      document.documentElement.classList.remove('editor-view-locked');
+    }
+
+    return () => {
+      document.body.classList.remove('editor-view-locked');
+      document.documentElement.classList.remove('editor-view-locked');
+    };
   }, [currentView, selectedTemplate]);
 
   // Prevent background scrolling whenever any modal is open across the entire app

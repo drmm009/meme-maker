@@ -2336,7 +2336,9 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     if (!wrapper) return;
 
     const onTouchStart = (e) => {
-      if (isDrawingMode && e.cancelable) e.preventDefault();
+      if (e.cancelable && e.target !== editableRef.current) {
+        e.preventDefault();
+      }
       if (handlePointerDownRef.current) handlePointerDownRef.current(e);
     };
 
@@ -2357,33 +2359,47 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     wrapper.addEventListener('touchstart', onTouchStart, { passive: false });
     wrapper.addEventListener('touchmove', onTouchMove, { passive: false });
     wrapper.addEventListener('touchend', onTouchEnd, { passive: false });
+    wrapper.addEventListener('touchcancel', onTouchEnd, { passive: false });
 
     return () => {
       wrapper.removeEventListener('touchstart', onTouchStart);
       wrapper.removeEventListener('touchmove', onTouchMove);
       wrapper.removeEventListener('touchend', onTouchEnd);
+      wrapper.removeEventListener('touchcancel', onTouchEnd);
     };
   }, []);
 
-  // Global window listeners for mouse drag & drawing so it doesn't stop when cursor moves outside canvas
+  // Global window listeners for mouse & touch drag so continuous dragging outside canvas never freezes
   useEffect(() => {
-    const onGlobalMouseMove = (e) => {
+    const onGlobalPointerMove = (e) => {
       if ((isDragging.current || isDrawingActive.current) && handlePointerMoveRef.current) {
-        handlePointerMoveRef.current(e);
+        if (!wrapperRef.current || !wrapperRef.current.contains(e.target)) {
+          handlePointerMoveRef.current(e);
+        }
       }
     };
-    const onGlobalMouseUp = (e) => {
-      if ((isDragging.current || isDrawingActive.current) && handlePointerEndRef.current) {
-        handlePointerEndRef.current(e);
+    const onGlobalPointerEnd = (e) => {
+      if (isDragging.current || isDrawingActive.current) {
+        if (handlePointerEndRef.current) {
+          handlePointerEndRef.current(e);
+        } else if (handlePointerUpRef.current) {
+          handlePointerUpRef.current();
+        }
       }
     };
 
-    window.addEventListener('mousemove', onGlobalMouseMove);
-    window.addEventListener('mouseup', onGlobalMouseUp);
+    window.addEventListener('mousemove', onGlobalPointerMove);
+    window.addEventListener('mouseup', onGlobalPointerEnd);
+    window.addEventListener('touchmove', onGlobalPointerMove, { passive: false });
+    window.addEventListener('touchend', onGlobalPointerEnd);
+    window.addEventListener('touchcancel', onGlobalPointerEnd);
 
     return () => {
-      window.removeEventListener('mousemove', onGlobalMouseMove);
-      window.removeEventListener('mouseup', onGlobalMouseUp);
+      window.removeEventListener('mousemove', onGlobalPointerMove);
+      window.removeEventListener('mouseup', onGlobalPointerEnd);
+      window.removeEventListener('touchmove', onGlobalPointerMove);
+      window.removeEventListener('touchend', onGlobalPointerEnd);
+      window.removeEventListener('touchcancel', onGlobalPointerEnd);
     };
   }, []);
 
@@ -3716,7 +3732,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
   };
 
   const handlePointerDown = (e) => {
-    if (e.cancelable && isDrawingMode) {
+    if (e.cancelable && e.target !== editableRef.current) {
       e.preventDefault();
     }
     const coords = getCanvasCoords(e);
@@ -4193,6 +4209,14 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         isDragging.current = true;
         dragTarget.current = hitLayer;
         dragStartCoords.current = coords;
+        hasDragged.current = false;
+
+        // Prevent browser selection / autoscroll during drag
+        document.body.style.userSelect = 'none';
+        document.body.style.webkitUserSelect = 'none';
+        if (window.getSelection) {
+          window.getSelection().removeAllRanges();
+        }
 
         const isCap = hitLayer.type === 'caption' || hitLayer.type?.startsWith('resize_caption_') || hitLayer.type === 'rotate_caption';
         const isStk = hitLayer.type === 'sticker' || hitLayer.type?.startsWith('resize_sticker_') || hitLayer.type === 'rotate_sticker';
@@ -4307,6 +4331,8 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     isDragging.current = false;
     hasDragged.current = false;
     dragTarget.current = null;
+    document.body.style.userSelect = '';
+    document.body.style.webkitUserSelect = '';
 
     if (wasCleanTap && tappedType === 'empty-slot') {
       // Slot actions are now handled by DOM overlays on the canvas
@@ -5100,34 +5126,6 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     if (baseImgRef.current) renderCanvas(baseImgRef.current);
   };
 
-  // Global window listeners so fast mouse or touch drags don't freeze when leaving the canvas element
-  useEffect(() => {
-    const handleGlobalMove = (e) => {
-      if (isDragging.current && handlePointerMoveRef.current) {
-        handlePointerMoveRef.current(e);
-      }
-    };
-    const handleGlobalUp = (e) => {
-      if (isDragging.current || isDrawingActive.current) {
-        if (handlePointerEndRef.current) handlePointerEndRef.current(e);
-        else handlePointerUpRef.current?.();
-      }
-    };
-    window.addEventListener('mousemove', handleGlobalMove);
-    window.addEventListener('mouseup', handleGlobalUp);
-    window.addEventListener('touchmove', handleGlobalMove, { passive: false });
-    window.addEventListener('touchend', handleGlobalUp);
-    window.addEventListener('touchcancel', handleGlobalUp);
-    return () => {
-      window.removeEventListener('mousemove', handleGlobalMove);
-      window.removeEventListener('mouseup', handleGlobalUp);
-      window.removeEventListener('touchmove', handleGlobalMove);
-      window.removeEventListener('touchend', handleGlobalUp);
-      window.removeEventListener('touchcancel', handleGlobalUp);
-    };
-  }, []);
-
-  
   useEffect(() => {
     if (baseImgRef.current || isNativeLayout) {
       // Just force a re-render. To force a re-render in CanvasEditor we just call renderCanvas.
@@ -5214,15 +5212,13 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
       onMouseDown={handlePointerDown}
       onMouseMove={handlePointerMove}
       onMouseUp={handlePointerEnd}
-      onTouchStart={handlePointerDown}
-      onTouchMove={handlePointerMove}
-      onTouchEnd={handlePointerEnd}
-      onTouchCancel={handlePointerEnd}
+      onDragStart={(e) => e.preventDefault()}
       onWheel={handleWheel}
     >
       <canvas
         ref={canvasRef}
         className="meme-canvas"
+        onDragStart={(e) => e.preventDefault()}
         style={{
           touchAction: 'none',
           userSelect: 'none',
