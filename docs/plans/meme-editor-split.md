@@ -72,6 +72,24 @@ Each phase is its own commit. After each one, `npm test`, `npm run lint` and `np
 
 CSS (`MemeEditor.css`, 2,076 lines) gets split along with the components in phase 4. It is redesigned in the separate design-system step.
 
+## Safety net (phase 0, done)
+
+`src/components/MemeEditor.test.jsx` replaces `CanvasEditor` with a stub that records its props. The tests check what MemeEditor *sends* to the canvas: default and template captions, add caption, edit text, undo/redo, delete with undo, unique IDs, every sidebar tab, draw mode, drawings with undo, and canvas flip. I checked them by breaking undo and caption creation, and four tests failed as expected.
+
+The tests can't see Konva rendering, export, AI, or real device layout. Before merging each phase, run `npm run dev` and check by hand:
+
+- [ ] Open a template from the discovery screen. The image and TOP/BOTTOM text show.
+- [ ] Drag, resize and rotate a caption. Edit its text, font, color, background and effect.
+- [ ] Add an emoji sticker and a meme sticker. Duplicate one, reorder layers, delete one.
+- [ ] Add an image layer and remove its background (Magic Eraser).
+- [ ] Draw with brush, marker and glow. Undo a stroke, then clear all.
+- [ ] Toggle header, footer and both. Try a demotivational template.
+- [ ] Add a tweet card, an Instagram card and a WhatsApp card, and edit their fields.
+- [ ] Do a face swap: accept it, then revert it.
+- [ ] Undo/redo across several kinds of edits, including Ctrl+Z / Ctrl+Y.
+- [ ] Export PNG and JPG, copy to clipboard, save to gallery.
+- [ ] Check the phone layout (DevTools ~390px wide): the dock folds and unfolds, and the bottom sheets open.
+
 ## Done when
 - `MemeEditor.jsx` is under 300 lines and no file in `editor/` is over about 600.
 - Undo/redo behaves as before. The editor has tests, and they pass in CI.
