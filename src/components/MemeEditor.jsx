@@ -43,192 +43,10 @@ import {
   getNonOverlappingPosition,
   isColorDark,
 } from '../utils/captionLayout';
+import CanvasColorPicker from './editor/CanvasColorPicker';
+import { TEXT_EFFECTS, secondaryVariants } from './editor/constants';
+import { isSocialCardCaption, getContrastStroke, isVideoUrl, cleanTemplateName } from './editor/memeEditorUtils';
 import './MemeEditor.css';
-
-export const XSocialLogo = ({ size = 16, style = {}, className = "" }) => (
-  <svg
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="currentColor"
-    className={className}
-    style={{ display: 'inline-block', verticalAlign: 'middle', flexShrink: 0, ...style }}
-    aria-hidden="true"
-  >
-    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-  </svg>
-);
-
-const isSocialCardCaption = (c) => Boolean(c && (c.isTweetCard || c.isInstagramCard || c.isWhatsAppCard));
-
-const TEXT_EFFECTS = [
-  {
-    id: 'flat',
-    name: 'Flat',
-    title: 'Flat (Classic standard text)',
-    curve: 0,
-    renderLabel: () => (
-      <span style={{ fontWeight: 800, color: '#ffffff', letterSpacing: '0.3px' }}>
-        Flat
-      </span>
-    )
-  },
-  {
-    id: 'arch',
-    name: 'Arch',
-    title: 'Arch (Curved upward text)',
-    curve: 40,
-    renderLabel: () => (
-      <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, color: '#ffffff' }}>
-        <span style={{ display: 'inline-block', transform: 'translateY(1.5px)' }}>A</span>
-        <span style={{ display: 'inline-block', transform: 'translateY(-1.5px)' }}>r</span>
-        <span style={{ display: 'inline-block', transform: 'translateY(-1.5px)' }}>c</span>
-        <span style={{ display: 'inline-block', transform: 'translateY(1.5px)' }}>h</span>
-      </span>
-    )
-  },
-  {
-    id: 'smile',
-    name: 'Smile',
-    title: 'Smile (Curved downward text)',
-    curve: -40,
-    renderLabel: () => (
-      <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, color: '#ffffff' }}>
-        <span style={{ display: 'inline-block', transform: 'translateY(-1.5px)' }}>S</span>
-        <span style={{ display: 'inline-block', transform: 'translateY(0px)' }}>m</span>
-        <span style={{ display: 'inline-block', transform: 'translateY(1.8px)' }}>i</span>
-        <span style={{ display: 'inline-block', transform: 'translateY(0px)' }}>l</span>
-        <span style={{ display: 'inline-block', transform: 'translateY(-1.5px)' }}>e</span>
-      </span>
-    )
-  },
-  {
-    id: 'shadow',
-    name: 'Shadow',
-    title: 'Shadow (Bold meme drop shadow)',
-    curve: 0,
-    renderLabel: () => (
-      <span style={{
-        fontWeight: 800,
-        color: '#ffffff',
-        textShadow: '2px 2px 0px #000000, 3px 3px 2px rgba(0,0,0,0.85)',
-        letterSpacing: '0.3px'
-      }}>
-        Shadow
-      </span>
-    )
-  },
-  {
-    id: 'glow',
-    name: 'Glow',
-    title: 'Glow (Neon cyan electric aura)',
-    curve: 0,
-    renderLabel: () => (
-      <span style={{
-        fontWeight: 800,
-        color: '#ffffff',
-        textShadow: '0 0 4px #00f0ff, 0 0 10px #00f0ff, 0 0 16px #00f0ff',
-        letterSpacing: '0.3px'
-      }}>
-        Glow
-      </span>
-    )
-  },
-  {
-    id: 'glitch',
-    name: 'Glitch',
-    title: 'Glitch (Chromatic aberration red/cyan split)',
-    curve: 0,
-    renderLabel: () => (
-      <span style={{
-        fontWeight: 800,
-        color: '#ffffff',
-        textShadow: '-1.5px 0 #ff0055, 1.5px 0 #00ffff',
-        letterSpacing: '0.5px'
-      }}>
-        Glitch
-      </span>
-    )
-  },
-  {
-    id: '3d',
-    name: '3D',
-    title: '3D (Extruded pop layered shadow)',
-    curve: 0,
-    renderLabel: () => (
-      <span style={{
-        fontWeight: 800,
-        color: '#ffffff',
-        textShadow: '1px 1px 0 #ea580c, 2px 2px 0 #c2410c, 3px 3px 0 #000000',
-        letterSpacing: '0.5px'
-      }}>
-        3D
-      </span>
-    )
-  },
-  {
-    id: 'hollow',
-    name: 'Hollow',
-    title: 'Hollow (Transparent outline text)',
-    curve: 0,
-    renderLabel: () => (
-      <span style={{
-        fontWeight: 900,
-        color: 'transparent',
-        WebkitTextStroke: '1px #ffffff',
-        letterSpacing: '0.5px'
-      }}>
-        Hollow
-      </span>
-    )
-  }
-];
-
-function CanvasColorPicker({ canvasBgColor, setCanvasBgColor }) {
-  const [localColor, setLocalColor] = React.useState(canvasBgColor);
-  const timerRef = React.useRef(null);
-
-  React.useEffect(() => {
-    setLocalColor(canvasBgColor);
-  }, [canvasBgColor]);
-
-  const handleChange = (e) => {
-    const val = e.target.value;
-    setLocalColor(val);
-    window.dispatchEvent(new CustomEvent('liveCanvasBgColor', { detail: val }));
-    
-    if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(() => {
-      setCanvasBgColor(val);
-    }, 150); // debounce setting main state
-  };
-
-  return (
-    <div
-      className="btn btn-xs vid-ctx-btn"
-      style={{ position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '4px 10px', borderRadius: '10px' }}
-      title="Canvas Color"
-    >
-      <div style={{ width: 14, height: 14, borderRadius: '50%', background: localColor || '#ffffff', border: '2px solid rgba(255,255,255,0.4)' }} />
-      <span style={{ fontSize: '0.75rem', fontWeight: 600 }}>Canvas Color</span>
-      <input type="color" value={localColor || '#ffffff'} onChange={handleChange} style={{ position: 'absolute', opacity: 0, inset: 0, cursor: 'pointer', width: '100%', height: '100%' }} />
-    </div>
-  );
-}
-
-const secondaryVariants = {
-  initial: { opacity: 0, x: 20 },
-  animate: {
-    opacity: 1,
-    x: 0,
-    transition: { duration: 0.18, ease: [0.22, 1, 0.36, 1] }
-  },
-  exit: {
-    opacity: 0,
-    x: -16,
-    transition: { duration: 0.12, ease: [0.22, 1, 0.36, 1] }
-  }
-};
 
 export default function MemeEditor({ template, onBack, onSaveToGallery, _theme, _onToggleTheme }) {
   const [imageLayers, setImageLayers] = useState(() => {
@@ -2499,11 +2317,6 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, _theme, 
     }
   };
 
-  const getContrastStroke = (hex) => {
-    if (!hex) return '#000000';
-    return hex.toLowerCase() === '#ffffff' ? '#000000' : 'transparent';
-  };
-
     const updateSlotTransform = (slotIndex, updateFn) => {
     const nextTransforms = [...slotTransforms];
     const prev = nextTransforms[slotIndex] || { offsetX: 0, offsetY: 0, scale: 1.5 };
@@ -2640,23 +2453,6 @@ export default function MemeEditor({ template, onBack, onSaveToGallery, _theme, 
   };
 
   // Detect if meme has any video content (background or overlay layers)
-  const isVideoUrl = (url) => {
-    if (!url || typeof url !== 'string') return false;
-    if (url.includes('#type=video')) return true;
-    if (url.includes('#type=image')) return false;
-    if (url.startsWith('data:video/')) return true;
-    if (url.startsWith('data:image/')) return false;
-    return /\.(mp4|webm|ogg|mov|m4v)(\?.*)?$/i.test(url);
-  };
-  const cleanTemplateName = (rawName) => {
-    if (!rawName) return '';
-    return rawName
-      .replace(/\b\d+x\d+\b/gi, '')
-      .replace(/\bGrid\b/gi, '')
-      .replace(/\bCustom\b/gi, '')
-      .replace(/\s+/g, ' ')
-      .trim();
-  };
 
     // Renders canvas to dataURL without handles, then runs the callback action
   const handleQuickExport = (action) => {

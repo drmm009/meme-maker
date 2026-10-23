@@ -58,8 +58,11 @@ Each phase is its own commit. After each one, `npm test`, `npm run lint` and `np
 0. **Safety net.**
    - Add `MemeEditor.test.jsx` covering: renders with a template, add caption, edit its text, add sticker, undo, redo, switch each tab.
    - Add a manual checklist covering export PNG, a social card, face morph, background removal and the mobile layout.
-1. **Move constants and pure helpers out** (about 300 lines). No behavior change.
-   - Moves: `XSocialLogo`, `TEXT_EFFECTS`, `CanvasColorPicker`, `secondaryVariants`, `isSocialCardCaption`, `getContrastStroke`, `cleanTemplateName`, `isVideoUrl`.
+1. **Move constants and pure helpers out.** *Done:* MemeEditor.jsx went from 8,084 to 7,880 lines.
+   - `editor/constants.jsx`: `TEXT_EFFECTS` (it contains JSX, hence `.jsx`) and `secondaryVariants`
+   - `editor/CanvasColorPicker.jsx`
+   - `editor/memeEditorUtils.js`: `isSocialCardCaption`, `getContrastStroke`, `isVideoUrl`, `cleanTemplateName`
+   - Deleted `XSocialLogo`: it was exported but nothing used it.
 2. **Create the store.**
    - Move document state and its handlers (captions, layers, stickers, header/footer, social cards, drawing) into `useMemeEditorStore`.
    - Replace `pushHistory` / `applySnapshot` with zundo.
