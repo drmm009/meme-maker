@@ -1,17 +1,14 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import CanvasEditor, { TWEET_TREND_PRESETS } from './CanvasEditor';
 import { FONTS } from '../data/stickers';
 import {
-  Type, Plus, Trash2, Undo, Redo, Download, Share2, Sparkles, Copy, Blend,
-  Sliders, Settings, Smile, Sticker, ArrowLeft, Save, Check, RefreshCw,
-  X, Upload, RotateCw, Crop, LayoutGrid, Droplet,
-  Highlighter, Palette, Sun, ChevronDown, PencilLine, ArrowDownRight, Wand2,
-  Layers, ArrowUp, ArrowDown, Eye, FlipHorizontal,
-  PanelTop, PanelBottom, MessageSquare, MessageSquareQuote, Flame, Tv, MessageCircle, Shield, Ban,
-  AlignLeft, AlignCenter, AlignRight,
-  Brush, SunMedium, ImagePlus, LayoutTemplate, Rows3, WandSparkles, ScanFace,
-  CheckCheck, User
+  Type, Plus, Trash2, Undo, Sparkles, Copy, Blend, Sliders, Settings, Smile, Sticker,
+  ArrowLeft, Check, RefreshCw, X, Upload, RotateCw, Crop, LayoutGrid, Droplet, Highlighter,
+  Palette, Sun, PencilLine, ArrowDownRight, Wand2, Layers, ArrowUp, ArrowDown, Eye,
+  FlipHorizontal, PanelTop, PanelBottom, MessageSquare, MessageSquareQuote, Flame, Tv,
+  MessageCircle, Shield, Ban, AlignLeft, AlignCenter, AlignRight, Brush, SunMedium,
+  ImagePlus, LayoutTemplate, Rows3, WandSparkles, ScanFace, CheckCheck, User
 } from 'lucide-react';
 import AiCaptionModal from './AiCaptionModal';
 import MemeStylesModal, { TwitterVerifiedBadge, InstagramVerifiedBadge, InstagramLogo, WhatsAppLogo, IG_PRESET_IMAGES } from './MemeStylesModal';
@@ -22,12 +19,10 @@ import TemplatePickerBottomSheet from './editor/TemplatePickerBottomSheet';
 import PhotoFiltersBottomSheet from './editor/PhotoFiltersBottomSheet';
 import BubbleChatBottomSheet from './editor/BubbleChatBottomSheet';
 import FacePinpointOverlay from './FacePinpointOverlay';
-import { downloadImageHelper } from '../utils/downloadHelper';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MEME_TEMPLATES } from '../data/templates';
 import { fetchOpenSourceMemes } from '../services/memeService';
 import VideoTrimmer from './VideoTrimmer';
-import AspectRatioDropdown from './AspectRatioDropdown';
 import { PHOTO_FILTERS } from '../data/photoFilters';
 import { safeGet, safeSet } from '../utils/storage';
 import { blobToDataURL } from '../utils/galleryStore';
@@ -42,17 +37,13 @@ import {
 import CanvasColorPicker from './editor/CanvasColorPicker';
 import { TEXT_EFFECTS, secondaryVariants } from './editor/constants';
 import { isSocialCardCaption, getContrastStroke, isVideoUrl } from './editor/memeEditorUtils';
-import {
-  createMemeEditorStore,
-  MemeEditorStoreContext,
-  useMemeEditorStore,
-  useMemeEditorHistory,
-} from './editor/store/useMemeEditorStore';
+import { createMemeEditorStore, MemeEditorStoreContext, useMemeEditorStore } from './editor/store/useMemeEditorStore';
 import { useEditorShortcuts } from './editor/hooks/useEditorShortcuts';
-import { useExport, triggerConfetti } from './editor/hooks/useExport';
+import { useExport } from './editor/hooks/useExport';
 import { useBackgroundRemoval } from './editor/hooks/useBackgroundRemoval';
 import { useFaceMorph } from './editor/hooks/useFaceMorph';
 import ExportPage from './editor/top-bar/ExportPage';
+import EditorTopBar from './editor/top-bar/EditorTopBar';
 import './MemeEditor.css';
 
 export default function MemeEditor(props) {
@@ -82,7 +73,6 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
   const activeTemplate = useMemeEditorStore((s) => s.activeTemplate);
   const setActiveTemplate = useMemeEditorStore((s) => s.setActiveTemplate);
   const aspectRatio = useMemeEditorStore((s) => s.aspectRatio);
-  const setAspectRatio = useMemeEditorStore((s) => s.setAspectRatio);
   const canvasBgColor = useMemeEditorStore((s) => s.canvasBgColor);
   const setCanvasBgColor = useMemeEditorStore((s) => s.setCanvasBgColor);
   const canvasFlipX = useMemeEditorStore((s) => s.canvasFlipX);
@@ -102,8 +92,6 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
   const handleUndo = useMemeEditorStore((s) => s.undo);
   const handleRedo = useMemeEditorStore((s) => s.redo);
   const nudgeLayer = useMemeEditorStore((s) => s.nudgeLayer);
-  const canUndo = useMemeEditorHistory((s) => s.pastStates.length > 0);
-  const canRedo = useMemeEditorHistory((s) => s.futureStates.length > 0);
 
   // Native Multi-Panel Layout Support
   const isNativeLayout = template?.isNativeLayout || false;
@@ -1616,14 +1604,6 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
     updateActiveCaption('fontFamily', FONTS[nextIndex].family);
   };
 
-    const ASPECT_RATIOS = [
-    { value: 'original', label: 'Original Image' },
-    { value: '1:1', label: '1:1 (Square)' },
-    { value: '4:5', label: '4:5 (Portrait)' },
-    { value: '9:16', label: '9:16 (Story)' },
-    { value: '16:9', label: '16:9 (Video)' }
-  ];
-
     const handleCycleWatermarkPosition = () => {
     const positions = [
       { id: 'bottom-right', label: 'Bottom Right' },
@@ -1692,183 +1672,19 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
       ) : (
     <div className="meme-editor-container animate-fade-in">
       {/* Editor Top Bar (Mobile-Friendly Compact) */}
-      <div className="editor-topbar glass-card flex-between">
-        <button className="btn btn-ghost btn-xs back-btn" onClick={onBack}>
-          <ArrowLeft className="icon-sm" /> Back
-        </button>
-
-        <div className="history-actions flex-gap">
-          <button
-            className="btn btn-icon btn-xs hover-lift"
-            onClick={handleUndo}
-            disabled={!canUndo}
-            title="Undo"
-            style={{ 
-              opacity: canUndo ? 1 : 0.4, 
-              cursor: canUndo ? 'pointer' : 'not-allowed',
-              background: 'rgba(255, 255, 255, 0.1)',
-              backdropFilter: 'blur(12px)',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-              borderRadius: '12px',
-              padding: '8px',
-              color: 'currentColor',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-              transition: 'all 0.3s ease',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}
-          >
-            <Undo className="icon-xs" />
-          </button>
-          <button
-            className="btn btn-icon btn-xs hover-lift"
-            onClick={handleRedo}
-            disabled={!canRedo}
-            title="Redo"
-            style={{ 
-              opacity: canRedo ? 1 : 0.4, 
-              cursor: canRedo ? 'pointer' : 'not-allowed',
-              background: 'rgba(255, 255, 255, 0.1)',
-              backdropFilter: 'blur(12px)',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-              borderRadius: '12px',
-              padding: '8px',
-              color: 'currentColor',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-              transition: 'all 0.3s ease',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}
-          >
-            <Redo className="icon-xs" />
-          </button>
-          <div style={{ display: 'none' }}></div>
-        </div>
-
-        <div className="header-actions flex-gap" style={{ display: 'flex', alignItems: 'center' }}>
-          <AspectRatioDropdown 
-            value={aspectRatio}
-            onChange={(val) => {
-              setAspectRatio(val);
-              pushHistoryDebounced();
-            }}
-            options={ASPECT_RATIOS}
-          />
-
-          <div style={{ position: 'relative' }} ref={exportDropdownRef}>
-            <motion.button
-              className="btn btn-primary shadow-glow btn-xs"
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setExportDropdownOpen(prev => !prev)}
-              style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
-            >
-              <Download className="icon-xs" />
-              <span>Export</span>
-              <ChevronDown className="icon-xs" style={{ transition: 'transform 0.2s', transform: exportDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)' }} />
-            </motion.button>
-
-            <AnimatePresence>
-              {exportDropdownOpen && (
-                <motion.div
-                  initial={{ opacity: 0, y: -8, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -8, scale: 0.95 }}
-                  transition={{ duration: 0.15, ease: 'easeOut' }}
-                  style={{
-                    position: 'absolute',
-                    top: 'calc(100% + 8px)',
-                    right: 0,
-                    minWidth: '190px',
-                    background: 'rgba(18, 18, 26, 0.92)',
-                    backdropFilter: 'blur(20px)',
-                    border: '1px solid rgba(255, 255, 255, 0.12)',
-                    borderRadius: '14px',
-                    boxShadow: '0 16px 48px rgba(0,0,0,0.6)',
-                    zIndex: 9999,
-                    overflow: 'hidden',
-                    padding: '6px'
-                  }}
-                >
-                  {[
-                    { icon: <Download style={{width:16,height:16}} />, label: 'Download PNG', action: (uri) => {
-                      const filename = `meme-${template?.id || 'custom'}-${Date.now()}.png`;
-                      downloadImageHelper(uri, filename);
-                      triggerConfetti();
-                    }},
-                    { icon: <Copy style={{width:16,height:16}} />, label: 'Copy Image', action: async (uri) => {
-                      try {
-                        const res = await fetch(uri);
-                        const blob = await res.blob();
-                        if (typeof ClipboardItem !== 'undefined' && navigator.clipboard?.write) {
-                          await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
-                        } else {
-                          await navigator.clipboard.writeText(uri);
-                        }
-                        triggerConfetti();
-                      } catch(e) { console.warn(e); }
-                    }},
-                    { icon: <Share2 style={{width:16,height:16}} />, label: 'Share', action: async (uri) => {
-                      try {
-                        const res = await fetch(uri);
-                        const blob = await res.blob();
-                        const file = new File([blob], `meme-${Date.now()}.png`, { type: 'image/png' });
-                        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                          await navigator.share({ title: memeCustomName || 'My Meme', text: 'Check out this meme! 😂', files: [file] });
-                          triggerConfetti();
-                        } else {
-                          await navigator.clipboard.writeText(uri);
-                        }
-                      } catch(e) { if (e.name !== 'AbortError') console.warn(e); }
-                    }},
-                    { icon: <Save style={{width:16,height:16}} />, label: 'Save to Gallery', action: (uri) => {
-                      const finalName = memeCustomName.trim() || 'My Meme';
-                      onSaveToGallery({
-                        id: `meme-${Date.now()}`,
-                        name: finalName,
-                        imageUrl: uri,
-                        rawImageUrl: template?.rawImageUrl || template?.imageUrl,
-                        captions: JSON.parse(JSON.stringify(captions)),
-                        stickers: JSON.parse(JSON.stringify(stickers)),
-                        imageLayers: JSON.parse(JSON.stringify(imageLayers)),
-                        aspectRatio, imageFit, isNativeLayout, layoutDef, slotImages, slotTransforms,
-                        createdAt: new Date().toISOString()
-                      });
-                      triggerConfetti();
-                    }},
-                  ].map(({ icon, label, action }, i) => (
-                    <button
-                      key={i}
-                      onClick={() => handleQuickExport(action)}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '10px',
-                        width: '100%',
-                        padding: '10px 14px',
-                        background: 'transparent',
-                        border: 'none',
-                        borderRadius: '10px',
-                        color: 'rgba(255,255,255,0.85)',
-                        fontSize: '0.875rem',
-                        fontWeight: 500,
-                        cursor: 'pointer',
-                        textAlign: 'left',
-                        transition: 'background 0.15s ease',
-                      }}
-                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
-                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                    >
-                      {icon} {label}
-                    </button>
-                  ))}
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        </div>
-      </div>
+      <EditorTopBar
+        exportDropdownOpen={exportDropdownOpen}
+        exportDropdownRef={exportDropdownRef}
+        handleQuickExport={handleQuickExport}
+        imageFit={imageFit}
+        isNativeLayout={isNativeLayout}
+        layoutDef={layoutDef}
+        memeCustomName={memeCustomName}
+        onBack={onBack}
+        onSaveToGallery={onSaveToGallery}
+        setExportDropdownOpen={setExportDropdownOpen}
+        template={template}
+      />
       
       <div className="editor-main">
 
