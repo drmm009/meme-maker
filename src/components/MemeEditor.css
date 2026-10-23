@@ -245,18 +245,6 @@
   position: relative;
   overflow: hidden;
 }
-
-@media (min-width: 769px) {
-  .editor-sidebar {
-    width: 370px !important;
-    min-width: 370px !important;
-    max-width: 370px !important;
-    height: 100% !important;
-    max-height: 100% !important;
-    flex-shrink: 0 !important;
-    overflow: hidden !important;
-  }
-}
 .editor-sidebar::before {
   content: '';
   position: absolute;

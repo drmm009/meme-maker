@@ -19,7 +19,6 @@ export function useCanvasFrameActions() {
   const setActiveSubmenu = useEditorUiStore((s) => s.setActiveSubmenu);
   const activeLayerId = useMemeEditorStore((s) => s.activeLayerId);
   const canvasFooter = useMemeEditorStore((s) => s.canvasFooter);
-  const watermark = useEditorUiStore((s) => s.watermark);
 
   const handleSetCanvasBgColor = (val) => {
     setCanvasBgColor(val);
@@ -255,17 +254,5 @@ export function useCanvasFrameActions() {
     }
   };
 
-    const handleCycleWatermarkPosition = () => {
-    const positions = [
-      { id: 'bottom-right', label: 'Bottom Right' },
-      { id: 'bottom-left', label: 'Bottom Left' },
-      { id: 'top-left', label: 'Top Left' },
-      { id: 'top-right', label: 'Top Right' }
-    ];
-    const currentIndex = positions.findIndex(p => p.id === watermark.position);
-    const nextIndex = (currentIndex + 1) % positions.length;
-    updateWatermark('position', positions[nextIndex].id);
-  };
-
-  return { handleSetCanvasBgColor, handleToggleCanvasHeader, handleToggleCanvasFooter, handleToggleCanvasBoth, handleToggleCanvasFlip, handleWatermarkImageUpload, handleCycleWatermarkPosition };
+  return { handleSetCanvasBgColor, handleToggleCanvasHeader, handleToggleCanvasFooter, handleToggleCanvasBoth, handleToggleCanvasFlip, handleWatermarkImageUpload };
 }

@@ -1,4 +1,6 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
+import VideoTrimmer from '../VideoTrimmer';
 import AiCaptionModal from '../AiCaptionModal';
 import MemeStylesModal from '../MemeStylesModal';
 import FaceMorphModal from '../FaceMorphModal';
@@ -38,7 +40,10 @@ export default function EditorModals({
   template,
   updateActiveCaptionProps,
   updateActiveImageLayer,
+  commitAddImageLayer,
 }) {
+  const pendingVideoLayer = useEditorUiStore((s) => s.pendingVideoLayer);
+  const setPendingVideoLayer = useEditorUiStore((s) => s.setPendingVideoLayer);
   const imagePickerTarget = useEditorUiStore((s) => s.imagePickerTarget);
   const openSourceTemplates = useEditorUiStore((s) => s.openSourceTemplates);
   const setImagePickerTarget = useEditorUiStore((s) => s.setImagePickerTarget);
@@ -172,6 +177,21 @@ export default function EditorModals({
           faceTarget={morphTargetLayerId ? null : faceTarget}
           targetLabel={morphTargetLayerId ? "Selected Image Layer" : null}
         />
+      )}
+
+      {/* Video trimmer: a portal so it escapes the canvas stacking context */}
+      {pendingVideoLayer && createPortal(
+        <VideoTrimmer
+          videoUrl={pendingVideoLayer}
+          trimStart={0}
+          trimEnd={null}
+          onApply={(start, end) => {
+            commitAddImageLayer(pendingVideoLayer, start, end);
+            setPendingVideoLayer(null);
+          }}
+          onClose={() => setPendingVideoLayer(null)}
+        />,
+        document.body
       )}
     </>
   );

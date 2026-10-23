@@ -35,12 +35,12 @@ export default function SecondaryToolbar({
   handleAddPresetPhrase,
   handleUndoDrawing,
   handleWatermarkImageUpload,
+  handleSetCanvasBgColor,
 }) {
   const activeSubmenu = useEditorUiStore((s) => s.activeSubmenu);
   const activeTab = useEditorUiStore((s) => s.activeTab);
   const drawTool = useEditorUiStore((s) => s.drawTool);
   const canvasBgColor = useMemeEditorStore((s) => s.canvasBgColor);
-  const setCanvasBgColor = useMemeEditorStore((s) => s.setCanvasBgColor);
   const activeLayerId = useMemeEditorStore((s) => s.activeLayerId);
 
   return (
@@ -585,7 +585,7 @@ export default function SecondaryToolbar({
                     type="button"
                     className={`color-swatch-btn ${canvasBgColor === c ? 'active' : ''}`}
                     title={c === 'transparent' ? 'Transparent' : `Canvas background ${c}`}
-                    onClick={() => setCanvasBgColor(c)}
+                    onClick={() => handleSetCanvasBgColor(c)}
                     style={{
                       width: 22,
                       height: 22,
@@ -619,7 +619,7 @@ export default function SecondaryToolbar({
                   <input
                     type="color"
                     value={canvasBgColor || '#000000'}
-                    onChange={(e) => setCanvasBgColor(e.target.value)}
+                    onChange={(e) => handleSetCanvasBgColor(e.target.value)}
                     style={{ position: 'absolute', opacity: 0, inset: 0, cursor: 'pointer', width: '100%', height: '100%' }}
                   />
                 </div>

@@ -152,7 +152,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
 
 
   const { handleOpenSocialModalForActiveCard, handleUpdateSocialCard, handleAddTweetCard, handleAddInstagramCard, handleAddWhatsAppCard } = useSocialCardActions();
-  const { handleSetCanvasBgColor, handleToggleCanvasHeader, handleToggleCanvasFooter, handleToggleCanvasBoth, handleToggleCanvasFlip, handleWatermarkImageUpload, handleCycleWatermarkPosition } = useCanvasFrameActions();
+  const { handleSetCanvasBgColor, handleToggleCanvasHeader, handleToggleCanvasFooter, handleToggleCanvasBoth, handleToggleCanvasFlip, handleWatermarkImageUpload } = useCanvasFrameActions();
   const showTextCurveMenu = showTextEffectsMenu;
   const setShowTextCurveMenu = setShowTextEffectsMenu;
 
@@ -188,8 +188,6 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
     originalTemplateImgRef, handleStartMorphFace, handleConfirmPinpoint, handleApplyFaceMorph,
     handleUpdateTemplateMorphProgress, handleChangeFace, handleRevertTemplateFace, handleFinalizeTemplateFace,
   } = useFaceMorph({ canvasRef });
-  const watermarkInputRef = useRef(null);
-  const watermarkTextInputRef = useRef(null);
   const tabButtonsRef = useRef(null);
 
   // Auto-scroll active tab into view horizontally
@@ -234,7 +232,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
   }, [lastUsedSettingButton, showFontMenu, showTextCurveMenu, showTextBlurMenu, showTextBgMenu, showBubbleLayouts]);
 
   const { handleAddDrawing, handleClearDrawings, handleUndoDrawing } = useDrawingActions();
-  const { handleApplyAiCaption, handleAddCaption, handleAddCurvedText, handleAddPresetPhrase, handleToggleTextCase, handleCycleTextAlignment, updateActiveCaption, updateActiveCaptionProps, getActiveTextEffectId, handleApplyTextEffect, handleSetCaptionBg, handleCycleFont } = useCaptionActions({ activeCaption, activeFontObj, handleToggleCanvasHeader });
+  const { handleApplyAiCaption, handleAddCaption, handleAddCurvedText, handleAddPresetPhrase, handleToggleTextCase, handleCycleTextAlignment, updateActiveCaptionProps, handleSetCaptionBg } = useCaptionActions({ activeCaption, handleToggleCanvasHeader });
   const { commitAddImageLayer, handleAddImageLayer, handleFileUploadImageLayer, updateActiveImageLayer, moveLayer, handleDeleteLayer, handleDuplicateLayer, handleRotateLayer, handleFlipActiveLayer, handleToggleDieCutSticker, handleSetDieCutColor, updateSlotTransform, handleAddSticker, handleAddGraphicSticker } = useLayerActions({ activeCaption, activeImageLayer, activeSticker, updateActiveCaptionProps });
   
 
@@ -487,6 +485,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
               <div className="editor-toolbars-dock-anchor">
                 {/* ─── Layer Toolbar (Secondary Toolbar) ─── */}
                 <SecondaryToolbar
+                  handleSetCanvasBgColor={handleSetCanvasBgColor}
                   handleWatermarkImageUpload={handleWatermarkImageUpload}
                   handleUndoDrawing={handleUndoDrawing}
                   handleAddPresetPhrase={handleAddPresetPhrase}
@@ -550,6 +549,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
 
       {/* Bottom sheets and modals */}
       <EditorModals
+        commitAddImageLayer={commitAddImageLayer}
         activeCaption={activeCaption}
         activeImageLayer={activeImageLayer}
         currentEditingSocialCard={currentEditingSocialCard}

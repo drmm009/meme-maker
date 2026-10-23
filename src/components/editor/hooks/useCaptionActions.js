@@ -1,9 +1,8 @@
-import { FONTS } from '../../../data/stickers';
 import { getNonOverlappingPosition, isColorDark } from '../../../utils/captionLayout';
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
 import { useEditorUiStore } from '../store/useEditorUiStore';
 
-export function useCaptionActions({ activeCaption, activeFontObj, handleToggleCanvasHeader }) {
+export function useCaptionActions({ activeCaption, handleToggleCanvasHeader }) {
   const canvasHeader = useMemeEditorStore((s) => s.canvasHeader);
   const captions = useMemeEditorStore((s) => s.captions);
   const setCaptions = useMemeEditorStore((s) => s.setCaptions);
@@ -220,35 +219,6 @@ export function useCaptionActions({ activeCaption, activeFontObj, handleToggleCa
     pushHistory();
   };
 
-  const getActiveTextEffectId = (cap) => {
-    if (!cap) return 'flat';
-    if (cap.effect) return cap.effect;
-    if (cap.curve > 0) return 'arch';
-    if (cap.curve < 0) return 'smile';
-    return 'flat';
-  };
-
-  const handleApplyTextEffect = (effectId) => {
-    if (!activeCaption) return;
-    const current = getActiveTextEffectId(activeCaption);
-
-    // Clicking active effect toggles back to flat
-    if (current === effectId && effectId !== 'flat') {
-      updateActiveCaptionProps({ curve: 0, effect: 'flat' });
-      return;
-    }
-
-    if (effectId === 'flat') {
-      updateActiveCaptionProps({ curve: 0, effect: 'flat' });
-    } else if (effectId === 'arch') {
-      updateActiveCaptionProps({ curve: 40, effect: 'arch' });
-    } else if (effectId === 'smile') {
-      updateActiveCaptionProps({ curve: -40, effect: 'smile' });
-    } else {
-      updateActiveCaptionProps({ curve: 0, effect: effectId });
-    }
-  };
-
   const handleSetCaptionBg = (bg) => {
     if (!activeCaption) return;
     if (bg === 'none' || (activeCaption.bgColor === bg && activeCaption.bgStyle !== 'banner')) {
@@ -287,16 +257,5 @@ export function useCaptionActions({ activeCaption, activeFontObj, handleToggleCa
     }
   };
 
-  const handleCycleFont = () => {
-    if (!activeCaption) return;
-    const currentFamily = activeCaption.fontFamily || 'Impact, sans-serif';
-    let currentIndex = FONTS.findIndex((f) => f.family === currentFamily);
-    if (currentIndex === -1) {
-      currentIndex = FONTS.findIndex((f) => f.id === activeFontObj.id);
-    }
-    const nextIndex = ((currentIndex >= 0 ? currentIndex : 0) + 1) % FONTS.length;
-    updateActiveCaption('fontFamily', FONTS[nextIndex].family);
-  };
-
-  return { handleApplyAiCaption, handleAddCaption, handleAddCurvedText, handleAddPresetPhrase, handleToggleTextCase, handleCycleTextAlignment, updateActiveCaption, updateActiveCaptionProps, getActiveTextEffectId, handleApplyTextEffect, handleSetCaptionBg, handleCycleFont };
+  return { handleApplyAiCaption, handleAddCaption, handleAddCurvedText, handleAddPresetPhrase, handleToggleTextCase, handleCycleTextAlignment, updateActiveCaptionProps, handleSetCaptionBg };
 }

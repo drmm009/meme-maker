@@ -4,7 +4,6 @@ import FaceMorphToolbar from './FaceMorphToolbar';
 import ImageLayerToolbar from './ImageLayerToolbar';
 import StickerToolbar from './StickerToolbar';
 import CaptionToolbar from './CaptionToolbar';
-import { useMemeEditorStore } from '../store/useMemeEditorStore';
 import { useEditorUiStore } from '../store/useEditorUiStore';
 
 export default function ContextToolbar({
@@ -35,7 +34,6 @@ export default function ContextToolbar({
   handleUpdateTemplateMorphProgress,
 }) {
   const showBubbleLayouts = useEditorUiStore((s) => s.showBubbleLayouts);
-  const templateFaceMorph = useMemeEditorStore((s) => s.templateFaceMorph);
 
   return (
     <>
