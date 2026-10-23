@@ -336,7 +336,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
   const [pendingVideoLayer, setPendingVideoLayer] = useState(null);
   const isVideoPlaying = true;
 
-  // Watermark state â€” persisted in localStorage (quota-safe: session state survives write failures)
+  // Watermark state — persisted in localStorage (quota-safe: session state survives write failures)
   const [watermark, setWatermark] = useState(() => {
     const parsed = safeGet('meme-maker-watermark', null);
     if (parsed && typeof parsed === 'object') {
@@ -994,8 +994,8 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
       tweetHandle: handle,
       tweetVerified: verified,
       tweetTheme: theme,
-      tweetTime: data.time || '10:42 PM Â· Oct 8, 2026',
-      tweetMetrics: data.metrics || (TWEET_TREND_PRESETS?.viral?.text || 'ðŸ’¬ 14.2K    ðŸ” 62.8K    â¤ï¸ 420.5K    ðŸ“Š 18.2M'),
+      tweetTime: data.time || '10:42 PM · Oct 8, 2026',
+      tweetMetrics: data.metrics || (TWEET_TREND_PRESETS?.viral?.text || '💬 14.2K    🔁 62.8K    ❤️ 420.5K    📊 18.2M'),
       tweetMetricsId: 'viral',
       tweetTrendRank: 'viral',
       tweetTopic: TWEET_TREND_PRESETS?.viral?.topic || 'Trending in World',
@@ -1077,9 +1077,9 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
   };
 
   const handleAddWhatsAppCard = (data = {}) => {
-    const contactName = data.contactName || 'Mom â¤ï¸';
+    const contactName = data.contactName || 'Mom ❤️';
     const status = data.status || 'online';
-    const text = data.text || 'Please remember to eat vegetables and donâ€™t stay up until 4 AM arguing with strangers on the internet.';
+    const text = data.text || 'Please remember to eat vegetables and don’t stay up until 4 AM arguing with strangers on the internet.';
     const direction = data.direction || 'received';
     const ticks = data.ticks || 'blue';
     const time = data.time || '11:42 PM';
@@ -1087,8 +1087,8 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
       ? data.messages
       : [
           { id: 'm1', text: text, direction: direction, time: time, ticks: ticks },
-          { id: 'm2', text: 'I am eating healthy right now mom! ðŸ‘', direction: 'sent', time: '11:43 PM', ticks: 'blue' },
-          { id: 'm3', text: 'Pizza is not a vegetable. I can see your location at Dominoâ€™s.', direction: 'received', time: '11:44 PM', ticks: 'blue' }
+          { id: 'm2', text: 'I am eating healthy right now mom! 👍', direction: 'sent', time: '11:43 PM', ticks: 'blue' },
+          { id: 'm3', text: 'Pizza is not a vegetable. I can see your location at Domino’s.', direction: 'received', time: '11:44 PM', ticks: 'blue' }
         ];
     const theme = data.theme || 'dark';
     const showHeader = data.showHeader !== false;
@@ -1798,7 +1798,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
                 <button
                   className="btn btn-secondary hover-lift"
                   onClick={handleCopyToClipboard}
-                  title={clipboardCopied ? 'Image copied!' : 'Copy image to clipboard â€” paste into Discord, Twitter, etc.'}
+                  title={clipboardCopied ? 'Image copied!' : 'Copy image to clipboard — paste into Discord, Twitter, etc.'}
                   style={{
                     background: clipboardCopied ? 'rgba(34, 197, 94, 0.15)' : undefined,
                     borderColor: clipboardCopied ? 'rgba(34, 197, 94, 0.4)' : undefined,
@@ -1953,7 +1953,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
                         const blob = await res.blob();
                         const file = new File([blob], `meme-${Date.now()}.png`, { type: 'image/png' });
                         if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                          await navigator.share({ title: memeCustomName || 'My Meme', text: 'Check out this meme! ðŸ˜‚', files: [file] });
+                          await navigator.share({ title: memeCustomName || 'My Meme', text: 'Check out this meme! 😂', files: [file] });
                           triggerConfetti();
                         } else {
                           await navigator.clipboard.writeText(uri);
@@ -2189,9 +2189,9 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
                 />
               </div>
 
-              {/* â”€â”€â”€ Bottom Toolbars Dock Anchor (Main Toolbar on top of main dock, Layer Toolbar floats above it) â”€â”€â”€ */}
+              {/* ─── Bottom Toolbars Dock Anchor (Main Toolbar on top of main dock, Layer Toolbar floats above it) ─── */}
               <div className="editor-toolbars-dock-anchor">
-                {/* â”€â”€â”€ Layer Toolbar (Secondary Toolbar) â”€â”€â”€ */}
+                {/* ─── Layer Toolbar (Secondary Toolbar) ─── */}
                 <AnimatePresence>
                 {Boolean(
                   Boolean(activeCaption || activeSticker || activeImageLayer) ||
@@ -3033,7 +3033,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
                       </motion.div>
                     )}
 
-                    {/* 14. Die-Cut Color Picker â€” Appears on Secondary Toolbar when Die-Cut is active on sticker / emoji */}
+                    {/* 14. Die-Cut Color Picker — Appears on Secondary Toolbar when Die-Cut is active on sticker / emoji */}
                     {activeSticker && activeSticker.dieCut && !activeSubmenu && (
                       <motion.div
                         key={`stk-diecut-${activeSticker.id}`}
@@ -3168,8 +3168,8 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
                           <button
                             type="button"
                             className="layer-action-btn layer-action-btn-rotate"
-                            title="Rotate 90Â°"
-                            aria-label="Rotate 90Â°"
+                            title="Rotate 90°"
+                            aria-label="Rotate 90°"
                             onClick={handleRotateLayer}
                           >
                             <RotateCw style={{ width: 16, height: 16 }} />
@@ -3252,7 +3252,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
                 )}
               </AnimatePresence>
 
-            {/* â”€â”€â”€ 2. Main Context Toolbar â”€â”€â”€ */}
+            {/* ─── 2. Main Context Toolbar ─── */}
             <AnimatePresence>
               {((activeCaption || activeSticker || activeImageLayer || templateFaceMorph) || (isMobileTabsFolded && !activeCaption && !activeSticker && !activeImageLayer)) && (isMobileTabsFolded || templateFaceMorph) && (
                 <motion.div
@@ -4824,7 +4824,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
                         <path d="M4 18C4 11.3726 9.37258 6 16 6H20" />
                         <path d="M16 2L20 6L16 10" />
                       </svg>
-                      <span>{activeCaption ? (activeCaption.curve ? `Arc (${activeCaption.curve > 0 ? '+' : ''}${activeCaption.curve}Â°)` : 'Curve') : 'Curved Text'}</span>
+                      <span>{activeCaption ? (activeCaption.curve ? `Arc (${activeCaption.curve > 0 ? '+' : ''}${activeCaption.curve}°)` : 'Curve') : 'Curved Text'}</span>
                     </button>
 
                     {/* Unified Header & Footer Segmented Control */}
@@ -5614,7 +5614,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
                     >
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <span style={{ fontSize: '0.9rem', fontWeight: 900 }}>ð•</span>
+                          <span style={{ fontSize: '0.9rem', fontWeight: 900 }}>𝕏</span>
                           <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#fff' }}>X / Tweet Card</span>
                         </div>
                         <div style={{ display: 'flex', gap: '3px' }}>
@@ -5918,7 +5918,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
                             className="form-input"
                             value={activeCaption.igTopCommentText || ''}
                             onChange={(e) => updateActiveCaption('igTopCommentText', e.target.value)}
-                            placeholder="e.g. AGI when? ðŸ˜‚ðŸ‘"
+                            placeholder="e.g. AGI when? 😂👏"
                             style={{ width: '100%', fontSize: '0.8rem', padding: '4px 8px' }}
                           />
                         </div>
@@ -5978,7 +5978,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
                           <input
                             type="text"
                             className="form-input"
-                            value={activeCaption.waContactName || 'Mom â¤ï¸'}
+                            value={activeCaption.waContactName || 'Mom ❤️'}
                             onChange={(e) => updateActiveCaption('waContactName', e.target.value)}
                             style={{ width: '100%', fontSize: '0.8rem', padding: '4px 8px' }}
                           />
@@ -6015,7 +6015,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
                             const nextDir = lastMsg?.direction === 'sent' ? 'received' : 'sent';
                             const newMsg = {
                               id: `m_${Date.now()}`,
-                              text: nextDir === 'sent' ? 'Sure thing! ðŸ‘' : 'Sounds good!',
+                              text: nextDir === 'sent' ? 'Sure thing! 👍' : 'Sounds good!',
                               direction: nextDir,
                               time: '11:45 PM',
                               ticks: 'blue'
@@ -6146,7 +6146,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
                                           cursor: 'pointer'
                                         }}
                                       >
-                                        {t === 'blue' ? 'âœ“âœ“' : t === 'grey' ? 'âœ“âœ“' : 'âœ“'}
+                                        {t === 'blue' ? '✓✓' : t === 'grey' ? '✓✓' : '✓'}
                                       </button>
                                     ))}
                                   </div>
@@ -6562,7 +6562,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
                   </div>
                 )}
 
-                {/* VideoTrimmer Modal â€” rendered as portal to escape canvas z-index stacking context */}
+                {/* VideoTrimmer Modal — rendered as portal to escape canvas z-index stacking context */}
                 {pendingVideoLayer && createPortal(
                   <VideoTrimmer
                     videoUrl={pendingVideoLayer}
@@ -6842,7 +6842,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
                               textOverflow: 'ellipsis',
                               maxWidth: '70px'
                             }}>
-                              {filterItem.name.replace(' ðŸ”¥', '')}
+                              {filterItem.name.replace(' 🔥', '')}
                             </span>
                           </button>
                         );
