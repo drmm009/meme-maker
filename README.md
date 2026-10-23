@@ -1,6 +1,6 @@
 # Meme Creator Studio
 
-Browser-first meme studio: templates, custom multi-panel builder, Konva canvas editor, FFmpeg video export, local gallery. PWA + Capacitor wrapper.
+Browser-first meme studio: templates, custom multi-panel builder, canvas-2D image editor, Konva video editor, FFmpeg video export, local gallery. PWA + Capacitor wrapper.
 
 ## Run
 - `npm install`
