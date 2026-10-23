@@ -1,6 +1,6 @@
 # Meme Creator Studio
 
-Browser-first meme maker: React 19 + Vite 8, Konva canvas editor, FFmpeg WASM video export, PWA, wrapped for Android with Capacitor. No backend — everything runs client-side and persists in `localStorage`.
+Browser-first meme maker: React 19 + Vite 8, Konva canvas editor, FFmpeg WASM video export, PWA, wrapped for Android with Capacitor. No backend — everything runs client-side. The gallery persists in IndexedDB (`src/utils/galleryStore.js`); settings, favorites and watermark use `localStorage` (`src/utils/storage.js`).
 
 ## Commands
 - `npm run dev` — Vite dev server on http://localhost:5173
