@@ -84,15 +84,12 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
   const editableRef = useRef(null);
   const imageCacheRef = useRef({});
   const loadingMediaRef = useRef({});
-  const [canvasScale, setCanvasScale] = useState(1);
   const [naturalSize, setNaturalSize] = useState({ w: 800, h: 800 });
 
   const isDragging = useRef(false);
   const snappingLines = useRef({ horizontal: null, vertical: null });
   const dragTarget = useRef(null);
-  // Double-tap detection: track last tap time and layer id
   const [editingCaptionId, setEditingCaptionId] = useState(null);
-  const [editingCaptionText, setEditingCaptionText] = useState('');
 
   useEffect(() => {
     if (editingCaptionId && activeLayerId !== editingCaptionId) {
@@ -229,35 +226,6 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
 
   const activeCaption = captions.find((c) => c.id === activeLayerId);
 
-  // Compute exact scale ratio synchronously so font scale is accurate
-  const updateScaleSync = () => {
-    if (canvasRef.current) {
-      const rect = canvasRef.current.getBoundingClientRect();
-      if (rect.width > 0 && canvasW > 0) {
-        setCanvasScale(rect.width / canvasW);
-      }
-    }
-  };
-
-  useLayoutEffect(() => {
-    updateScaleSync();
-  }, [canvasW, imgSrc, totalCanvasH]);
-
-  useEffect(() => {
-    updateScaleSync();
-    window.addEventListener('resize', updateScaleSync);
-    const ro = typeof ResizeObserver !== 'undefined' && canvasRef.current
-      ? new ResizeObserver(() => updateScaleSync())
-      : null;
-    if (ro && canvasRef.current) {
-      ro.observe(canvasRef.current);
-    }
-    return () => {
-      window.removeEventListener('resize', updateScaleSync);
-      if (ro) ro.disconnect();
-    };
-  }, [canvasW, imgSrc]);
-
   // Focus textarea ONLY when explicitly called (not on selection change, never on Social Cards)
   const focusTextarea = () => {
     if (activeCaption?.isTweetCard || activeCaption?.isInstagramCard || activeCaption?.isWhatsAppCard) return;
@@ -274,7 +242,6 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
 
   const handlePointerDownRef = useRef(null);
   const handlePointerMoveRef = useRef(null);
-  const handlePointerUpRef = useRef(null);
   const handlePointerEndRef = useRef(null);
 
   // rAF batching for high-DPI drag, resize, and rotate operations (prevents event flooding)
@@ -283,7 +250,6 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     handlePointerDownRef.current = handlePointerDown;
     handlePointerMoveRef.current = handlePointerMove;
     handlePointerEndRef.current = handlePointerEnd;
-    handlePointerUpRef.current = handlePointerUp;
   });
 
   // Native non-passive touch listeners: handle drag & drawing AND block page scroll
@@ -336,11 +302,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     };
     const onGlobalPointerEnd = (e) => {
       if (isDragging.current || isDrawingActive.current) {
-        if (handlePointerEndRef.current) {
-          handlePointerEndRef.current(e);
-        } else if (handlePointerUpRef.current) {
-          handlePointerUpRef.current();
-        }
+        if (handlePointerEndRef.current) handlePointerEndRef.current(e);
       }
     };
 
@@ -362,14 +324,14 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
   const baseImgRef = useRef(null);
   const {
     handlePointerDown, handleTextOverlayPointerDown, handleTextOverlayPointerEnd,
-    handlePointerEnd, handlePointerMove, handlePointerUp, handleWheel
+    handlePointerEnd, handlePointerMove, handleWheel
   } = useCanvasInteraction({
-    activeIsNativeLayout, activeLayoutDef, baseImgRef, canvasH, canvasRef, canvasW,
+    activeIsNativeLayout, activeLayoutDef, canvasH, canvasRef, canvasW,
     dragTarget, editableRef, focusTextarea, getCaptionCenterY, getImageLayerCenterY,
     getStickerCenterY, headerExtH, imageCacheRef, isDragging, isDrawingActive, isDrawingMode,
     isFooterEnabled, isHeaderEnabled, onAddDrawing, onDeleteLayer, onSelectLayer,
     onUpdateCaptionBounds, onUpdateImageLayerBounds, onUpdateSlotTransform,
-    onUpdateStickerBounds, setEditingCaptionId, setEditingCaptionText, snappingLines,
+    onUpdateStickerBounds, setEditingCaptionId, snappingLines,
     totalCanvasH
   });
   const compCanvasRef = useRef(null);
@@ -386,28 +348,14 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     });
   }, [captions, stickers, activeLayerId, imageLayers, slotImages, slotTransforms, activeIsNativeLayout, editingCaptionId, aspectRatio, imageFit, watermark, drawings, isDrawingMode, imgSrc, filters, liveBgColor, canvasHeader, canvasFooter, demotivational, canvasFlipX]);
 
-  useEffect(() => {
-    if (baseImgRef.current || isNativeLayout) {
-      // Just force a re-render. To force a re-render in CanvasEditor we just call renderCanvas.
-      // But renderCanvas is inside the component body, so it is accessible.
-      // Let's check if renderCanvas is defined in the body... yes.
-      // We will inject a dummy state update to force the component to re-execute and thus call renderCanvas via the existing mechanisms, OR just call renderCanvas directly.
-      // Wait, renderCanvas takes the image. 
-      if (typeof renderCanvas === 'function') {
-         renderCanvas(baseImgRef.current);
-      }
-    }
-  }, [liveBgColor, isNativeLayout]);
-  
-// Keep focus on active caption whenever selected (not for social cards)
+
+  // Keep focus on active caption whenever selected (not for social cards)
   useEffect(() => {
     const isSocial = activeCaption?.isTweetCard || activeCaption?.isInstagramCard || activeCaption?.isWhatsAppCard;
     if (activeCaption && !isSocial && editingCaptionId === activeCaption.id) {
       focusTextarea();
     }
   }, [activeCaption?.id, editingCaptionId]);
-
-  const computedFontSize = activeCaption ? (activeCaption.fontSize || 50) * (canvasScale || 1) : 18;
 
   return (
     <div

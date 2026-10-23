@@ -9,12 +9,12 @@ import { useMemeEditorStore } from '../../editor/store/useMemeEditorStore';
 import { useEditorUiStore } from '../../editor/store/useEditorUiStore';
 
 export function useCanvasInteraction({
-  activeIsNativeLayout, activeLayoutDef, baseImgRef, canvasH, canvasRef, canvasW,
+  activeIsNativeLayout, activeLayoutDef, canvasH, canvasRef, canvasW,
   dragTarget, editableRef, focusTextarea, getCaptionCenterY, getImageLayerCenterY,
   getStickerCenterY, headerExtH, imageCacheRef, isDragging, isDrawingActive, isDrawingMode,
   isFooterEnabled, isHeaderEnabled, onAddDrawing, onDeleteLayer, onSelectLayer,
   onUpdateCaptionBounds, onUpdateImageLayerBounds, onUpdateSlotTransform,
-  onUpdateStickerBounds, setEditingCaptionId, setEditingCaptionText, snappingLines,
+  onUpdateStickerBounds, setEditingCaptionId, snappingLines,
   totalCanvasH
 }) {
   const currentStroke = useRef(null);
@@ -37,18 +37,6 @@ export function useCanvasInteraction({
   const imageLayers = useMemeEditorStore((s) => s.imageLayers);
   const slotImages = useMemeEditorStore((s) => s.slotImages);
   const slotTransforms = useMemeEditorStore((s) => s.slotTransforms);
-
-  const flushDragBatch = () => {
-    if (dragRafRef.current) {
-      cancelAnimationFrame(dragRafRef.current);
-      dragRafRef.current = null;
-    }
-    if (pendingDragRef.current) {
-      const fn = pendingDragRef.current;
-      pendingDragRef.current = null;
-      fn();
-    }
-  };
 
   const scheduleDragBatch = (fn) => {
     pendingDragRef.current = fn;
@@ -680,7 +668,6 @@ export function useCanvasInteraction({
       const isSocial = tappedCap?.isTweetCard || tappedCap?.isInstagramCard || tappedCap?.isWhatsAppCard;
       if (!isSocial) {
         setEditingCaptionId(tappedId);
-        setEditingCaptionText(tappedCap ? tappedCap.text : '');
         focusTextarea();
       } else {
         setEditingCaptionId(null);
@@ -1435,32 +1422,6 @@ export function useCanvasInteraction({
     });
   };
 
-  const handlePointerUp = () => {
-    flushDragBatch();
-    if (canvasRef.current && !isDrawingMode) {
-      canvasRef.current.style.cursor = 'default';
-    }
-    if (isDrawingMode && isDrawingActive.current) {
-      isDrawingActive.current = false;
-      lastDrawPoint.current = null;
-      if (currentStroke.current) {
-        const strokeToSave = currentStroke.current;
-        currentStroke.current = null;
-        if (strokeToSave.points.length > 0 && onAddDrawing) {
-          onAddDrawing(strokeToSave);
-        }
-      }
-      return;
-    }
-    isDragging.current = false;
-    hasDragged.current = false;
-    dragTarget.current = null;
-    if (snappingLines.current.horizontal !== null || snappingLines.current.vertical !== null) {
-      snappingLines.current = { horizontal: null, vertical: null };
-    }
-    if (baseImgRef.current) renderCanvas(baseImgRef.current);
-  };
-
   const handleWheel = (e) => {
     if (!activeIsNativeLayout || !activeLayoutDef || !onUpdateSlotTransform) return;
     const canvas = canvasRef.current;
@@ -1503,5 +1464,5 @@ export function useCanvasInteraction({
     }
   };
 
-  return { handlePointerDown, handleTextOverlayPointerDown, handleTextOverlayPointerEnd, handlePointerEnd, handlePointerMove, handlePointerUp, handleWheel };
+  return { handlePointerDown, handleTextOverlayPointerDown, handleTextOverlayPointerEnd, handlePointerEnd, handlePointerMove, handleWheel };
 }
