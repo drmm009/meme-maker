@@ -22,6 +22,11 @@ const CanvasMedia = ({ item, isSelected, onSelect, onChange, canvasDimensions })
   chromaRef.current = chromaKey;
   const keyCanvasRef = useRef(null);
   const [keyed, setKeyed] = useState(false);
+  const keyedRef = useRef(false);
+  // Show the keyed canvas only once a frame has actually been keyed (the video may not have loaded yet).
+  const syncKeyed = (ok) => {
+    if (ok !== keyedRef.current) { keyedRef.current = ok; setKeyed(ok); }
+  };
 
   // Draws the current video frame keyed into the offscreen canvas. Returns false if it couldn't.
   const keyFrame = (vid) => {
@@ -55,10 +60,12 @@ const CanvasMedia = ({ item, isSelected, onSelect, onChange, canvasDimensions })
   // Effects call the latest keyFrame through a ref, like itemRef.
   const keyFrameRef = useRef(keyFrame);
   keyFrameRef.current = keyFrame;
+  const syncKeyedRef = useRef(syncKeyed);
+  syncKeyedRef.current = syncKeyed;
 
   useEffect(() => {
     if (item.type !== 'video' || !image) return;
-    setKeyed(Boolean(chromaKey) && keyFrameRef.current(image));
+    syncKeyed(Boolean(chromaKey) && keyFrameRef.current(image));
     imageRef.current?.getLayer()?.batchDraw();
   }, [image, chromaKey, item.type]);
 
@@ -182,7 +189,7 @@ const CanvasMedia = ({ item, isSelected, onSelect, onChange, canvasDimensions })
       if ('requestVideoFrameCallback' in vid) {
         const updateFrame = () => {
           if (imageRef.current && imageRef.current.visible()) {
-            if (chromaRef.current) keyFrameRef.current(vid);
+            if (chromaRef.current) syncKeyedRef.current(keyFrameRef.current(vid));
             imageRef.current.getLayer()?.batchDraw();
           }
           rvfcId = vid.requestVideoFrameCallback(updateFrame);
