@@ -134,6 +134,20 @@ describe('VideoEditor', () => {
     expect(store().items[0]).toMatchObject({ text: 'WHEN IT WORKS', fontSize: 150, align: 'right' });
   });
 
+  it('turns green-screen removal on, tunes it and turns it off', () => {
+    act(() => store().addItem({ type: 'video', url: 'a.mp4', durationMs: 2000 }));
+    const { container } = render(<VideoEditor onBack={() => {}} />);
+    fireEvent.click(clips(container)[0]);
+    fireEvent.click(screen.getByText('Green screen'));
+    expect(store().items[0].chromaKey).toEqual({ color: 'auto', similarity: 0.22, blend: 0.08 });
+    const [strength, edges] = screen.getAllByRole('slider');
+    fireEvent.change(strength, { target: { value: '30' } });
+    fireEvent.change(edges, { target: { value: '12' } });
+    expect(store().items[0].chromaKey).toMatchObject({ similarity: 0.3, blend: 0.12 });
+    fireEvent.click(screen.getByText('Turn off'));
+    expect(store().items[0].chromaKey).toBe(null);
+  });
+
   it('calls onBack from the close button', () => {
     const onBack = vi.fn();
     render(<VideoEditor onBack={onBack} />);

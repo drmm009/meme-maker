@@ -2,11 +2,12 @@ import React, { useState } from 'react';
 import {
   Type, Sticker, Smile, LayoutGrid, Image as ImageIcon, Film, Clapperboard, Music, AudioLines,
   Check, Gauge, Volume2, VolumeX, Palette, Square, RotateCw, Minimize, Crop, Maximize, Copy, Trash2,
-  Scissors, PencilLine, ALargeSmall, TextAlignStart, TextAlignCenter, TextAlignEnd, SlidersHorizontal
+  Scissors, PencilLine, ALargeSmall, TextAlignStart, TextAlignCenter, TextAlignEnd, SlidersHorizontal, WandSparkles, Pipette
 } from 'lucide-react';
 import { useEditorStore } from '../../store/useVideoEditorStore';
 import { FONTS } from '../../data/stickers';
 import { DEFAULT_FADE_MS } from '../../utils/audioFades';
+import { DEFAULT_CHROMA_KEY } from '../../utils/chromaKey';
 
 // White outline on dark text, black on light text.
 const getContrastStroke = (hexColor) => {
@@ -113,7 +114,39 @@ function TextPanel({ item }) {
   );
 }
 
-const PANELS = { volume: VolumePanel, size: SizePanel, text: TextPanel };
+function GreenScreenPanel({ item }) {
+  const key = item.chromaKey;
+  if (!key) return null;
+  const setKey = (patch) => update(item.id, { chromaKey: { ...key, ...patch } });
+  const strength = Math.round(key.similarity * 100);
+  const softness = Math.round(key.blend * 100);
+  const detecting = key.color === 'auto';
+  return (
+    <>
+      <label className="vt-slider-row">
+        <span>Strength</span>
+        <input type="range" min="5" max="50" step="1" value={strength} onChange={(e) => setKey({ similarity: Number(e.target.value) / 100 })} />
+        <output>{strength}</output>
+      </label>
+      <label className="vt-slider-row">
+        <span>Edges</span>
+        <input type="range" min="0" max="30" step="1" value={softness} onChange={(e) => setKey({ blend: Number(e.target.value) / 100 })} />
+        <output>{softness}</output>
+      </label>
+      <div className="vt-chip-row">
+        <label className="vt-chip vt-swatch-chip" title="Pick the screen colour">
+          <span className="vt-swatch" style={{ background: detecting ? DEFAULT_CHROMA_KEY.color : key.color }} />
+          {detecting ? 'Detecting…' : 'Colour'}
+          <input type="color" className="vt-hidden-input" value={detecting ? DEFAULT_CHROMA_KEY.color : key.color} onChange={(e) => setKey({ color: e.target.value })} />
+        </label>
+        <button type="button" className="vt-chip" onClick={() => setKey({ color: 'auto' })}><Pipette size={14} /> Re-detect</button>
+        <button type="button" className="vt-chip" onClick={() => update(item.id, { chromaKey: null })}>Turn off</button>
+      </div>
+    </>
+  );
+}
+
+const PANELS = { volume: VolumePanel, size: SizePanel, text: TextPanel, greenscreen: GreenScreenPanel };
 
 function ClipTools({ item, panel, setPanel }) {
   const aspectRatio = useEditorStore((s) => s.canvasAspectRatio);
@@ -160,6 +193,14 @@ function ClipTools({ item, panel, setPanel }) {
   if (item.type === 'video') {
     const rate = item.playbackRate || 1;
     tools.push(
+      <RailButton key="greenscreen" label="Green screen" Icon={WandSparkles} active={Boolean(item.chromaKey)} onClick={() => {
+        if (!item.chromaKey) {
+          update(item.id, { chromaKey: { ...DEFAULT_CHROMA_KEY, color: 'auto' } });
+          setPanel('greenscreen');
+        } else {
+          togglePanel('greenscreen');
+        }
+      }} />,
       <RailButton key="speed" label={`${rate}×`} Icon={Gauge} onClick={() => {
         const next = SPEEDS[(SPEEDS.indexOf(rate) + 1) % SPEEDS.length];
         update(item.id, { playbackRate: next, endMs: item.startMs + (item.endMs - item.startMs) * (rate / next) });

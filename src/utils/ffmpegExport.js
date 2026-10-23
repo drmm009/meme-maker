@@ -3,6 +3,7 @@ import { fetchFile, toBlobURL } from '@ffmpeg/util';
 import Konva from 'konva';
 import { generateGridImage } from './gridHelper';
 import { fadeFilter } from './audioFades';
+import { chromaKeyFilter } from './chromaKey';
 
 let ffmpeg = null;
 let loadPromise = null;
@@ -190,7 +191,8 @@ export const exportVideoFFmpeg = async (items = [], durationMs = 7000, canvasAsp
       // Images/stickers loop infinitely and do not need a PTS offset, which saves massive memory buffering.
       const pbRate = typeof item.playbackRate === 'number' && !isNaN(item.playbackRate) ? item.playbackRate : 1.0;
       const ptsOffset = isVideo ? `+${startT}/TB` : '';
-      filterComplex += `[${inputIndex}:v]setpts=(PTS-STARTPTS)/${pbRate}${ptsOffset},scale=${w}:${h}[vis${inputIndex}];`;
+      const keyFilter = isVideo ? chromaKeyFilter(item.chromaKey) : '';
+      filterComplex += `[${inputIndex}:v]setpts=(PTS-STARTPTS)/${pbRate}${ptsOffset},scale=${w}:${h}${keyFilter}[vis${inputIndex}];`;
       filterComplex += `[${currentBgIndex === 0 ? '0:v' : `bg${currentBgIndex}`}][vis${inputIndex}]overlay=${x}:${y}:enable='between(t,${startT},${endT})':eof_action=pass:shortest=0[bg${currentBgIndex + 1}];`;
       
       currentBgIndex++;

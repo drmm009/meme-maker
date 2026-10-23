@@ -4,6 +4,10 @@ import { Stage, Layer, Rect, Image as KonvaImage, Text as KonvaText, Transformer
 import { useEditorStore } from '../../store/useVideoEditorStore';
 import { useShallow } from 'zustand/react/shallow';
 import { clipGain } from '../../utils/audioFades';
+import { applyChromaKey, sampleKeyColor, suggestTolerance } from '../../utils/chromaKey';
+
+// Green-screen frames are keyed at most this many pixels on the long side; Konva scales them up.
+const KEY_MAX_SIDE = 640;
 
 // Custom component to handle Image and Video rendering on Konva Canvas
 const CanvasMedia = ({ item, isSelected, onSelect, onChange, canvasDimensions }) => {
@@ -11,6 +15,52 @@ const CanvasMedia = ({ item, isSelected, onSelect, onChange, canvasDimensions })
   const imageRef = useRef(null);
   const trRef = useRef(null);
   const itemRef = useRef(item);
+
+  // Green screen: video frames go through an offscreen canvas with the key colour made transparent.
+  const chromaKey = item.type === 'video' && item.chromaKey ? item.chromaKey : null;
+  const chromaRef = useRef(chromaKey);
+  chromaRef.current = chromaKey;
+  const keyCanvasRef = useRef(null);
+  const [keyed, setKeyed] = useState(false);
+
+  // Draws the current video frame keyed into the offscreen canvas. Returns false if it couldn't.
+  const keyFrame = (vid) => {
+    const key = chromaRef.current;
+    if (!key || !vid?.videoWidth) return false;
+    const scale = Math.min(1, KEY_MAX_SIDE / Math.max(vid.videoWidth, vid.videoHeight));
+    const w = Math.max(1, Math.round(vid.videoWidth * scale));
+    const h = Math.max(1, Math.round(vid.videoHeight * scale));
+    const canvas = keyCanvasRef.current || (keyCanvasRef.current = document.createElement('canvas'));
+    if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    try {
+      ctx.drawImage(vid, 0, 0, w, h);
+      const frame = ctx.getImageData(0, 0, w, h);
+      if (key.color === 'auto') {
+        // First keyed frame: pick the actual screen colour from the corners, tune the tolerances to it, and remember both.
+        const color = sampleKeyColor(frame.data, w, h);
+        chromaRef.current = { ...key, color, ...suggestTolerance(color) };
+        useEditorStore.getState().updateItem(item.id, { chromaKey: chromaRef.current });
+      }
+      applyChromaKey(frame.data, chromaRef.current);
+      ctx.putImageData(frame, 0, 0);
+      return true;
+    } catch (e) {
+      // A cross-origin video without CORS headers can't be read back; show it unkeyed.
+      console.warn('[green screen] could not key this video', e);
+      return false;
+    }
+  };
+
+  // Effects call the latest keyFrame through a ref, like itemRef.
+  const keyFrameRef = useRef(keyFrame);
+  keyFrameRef.current = keyFrame;
+
+  useEffect(() => {
+    if (item.type !== 'video' || !image) return;
+    setKeyed(Boolean(chromaKey) && keyFrameRef.current(image));
+    imageRef.current?.getLayer()?.batchDraw();
+  }, [image, chromaKey, item.type]);
 
   useEffect(() => {
     itemRef.current = item;
@@ -132,6 +182,7 @@ const CanvasMedia = ({ item, isSelected, onSelect, onChange, canvasDimensions })
       if ('requestVideoFrameCallback' in vid) {
         const updateFrame = () => {
           if (imageRef.current && imageRef.current.visible()) {
+            if (chromaRef.current) keyFrameRef.current(vid);
             imageRef.current.getLayer()?.batchDraw();
           }
           rvfcId = vid.requestVideoFrameCallback(updateFrame);
@@ -273,7 +324,7 @@ const CanvasMedia = ({ item, isSelected, onSelect, onChange, canvasDimensions })
     <React.Fragment>
       <KonvaImage
         ref={imageRef}
-        image={image}
+        image={keyed && chromaKey ? keyCanvasRef.current : image}
         x={item.x || 0}
         y={item.y || 0}
         width={item.width || 200}
