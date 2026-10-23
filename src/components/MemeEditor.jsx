@@ -20,6 +20,7 @@ import SecondaryToolbar from './editor/context-toolbars/SecondaryToolbar';
 import EditorModals from './editor/EditorModals';
 import EditorSidebar from './editor/EditorSidebar';
 import { createEditorUiStore, EditorUiStoreContext, useEditorUiStore } from './editor/store/useEditorUiStore';
+import { useDrawingActions } from './editor/hooks/useDrawingActions';
 import './MemeEditor.css';
 
 export default function MemeEditor(props) {
@@ -63,7 +64,6 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
   const templateFaceMorph = useMemeEditorStore((s) => s.templateFaceMorph);
   const imageFilters = useMemeEditorStore((s) => s.imageFilters);
   const drawings = useMemeEditorStore((s) => s.drawings);
-  const setDrawings = useMemeEditorStore((s) => s.setDrawings);
   const pushHistory = useMemeEditorStore((s) => s.pushHistory);
   const pushHistoryDebounced = useMemeEditorStore((s) => s.pushHistoryDebounced);
   const handleUndo = useMemeEditorStore((s) => s.undo);
@@ -386,24 +386,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
     pushHistory();
   };
 
-  const handleAddDrawing = (newDrawing) => {
-    const nextDrawings = [...drawings, newDrawing];
-    setDrawings(nextDrawings);
-    pushHistory();
-  };
-
-  const handleClearDrawings = () => {
-    setDrawings([]);
-    pushHistory();
-  };
-
-  const handleUndoDrawing = () => {
-    if (drawings.length === 0) return;
-    const nextDrawings = drawings.slice(0, -1);
-    setDrawings(nextDrawings);
-    pushHistory();
-  };
-
+  const { handleAddDrawing, handleClearDrawings, handleUndoDrawing } = useDrawingActions();
     // Chat & Speech Bubble Generator (iPhone, WhatsApp, Comic)
   const handleAddBubble = (data = {}) => {
     const style = typeof data === 'string' ? data : (data.style || 'imessage-send');
