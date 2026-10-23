@@ -172,6 +172,19 @@ describe('createMemeEditorStore', () => {
     expect(canRedo(store)).toBe(true);
   });
 
+  it('nudgeLayer moves the matching caption, sticker or image layer', () => {
+    vi.useFakeTimers();
+    store.getState().setStickers([{ id: 'stk', x: 0.2, y: 0.2 }]);
+    const top = store.getState().captions[0];
+    store.getState().nudgeLayer(top.id, 0.01, -0.02);
+    store.getState().nudgeLayer('stk', 0.1, 0);
+    store.getState().nudgeLayer('missing', 1, 1);
+    expect(store.getState().captions[0]).toMatchObject({ x: top.x + 0.01, y: top.y - 0.02 });
+    expect(store.getState().stickers[0].x).toBeCloseTo(0.3);
+    vi.advanceTimersByTime(HISTORY_DEBOUNCE_MS);
+    expect(store.temporal.getState().pastStates).toHaveLength(1);
+  });
+
   it('separate stores do not share state', () => {
     const other = createMemeEditorStore(TEMPLATE);
     addCaption(store, 'A');

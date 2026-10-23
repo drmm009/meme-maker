@@ -73,7 +73,17 @@ Each phase is its own commit. After each one, `npm test`, `npm run lint` and `np
      - Undo now also restores the face-swap "original" image link along with the image.
      - Undo/redo cancels a pending typing checkpoint, so it can no longer wipe out redo a moment later.
    - Known, unchanged: the compact "Flip Canvas" button doesn't save a checkpoint, so its flip lands in the next undo step. Ctrl+Z inside a text box is the browser's own text undo.
-3. **Extract hooks:** `useExport`, `useBackgroundRemoval`, `useFaceMorph`, `useEditorShortcuts`.
+3. **Extract hooks.** *Done:* MemeEditor.jsx is down to 6,973 lines.
+   - `editor/hooks/`:
+     - `useEditorShortcuts`: keyboard and paste. The pure `getShortcutCommand` has its own tests.
+     - `useExport`: format/quality presets, download, copy, share, save to gallery.
+     - `useBackgroundRemoval`
+     - `useFaceMorph`
+   - New store action `nudgeLayer`, plus `useMemeEditorStoreApi()` for reading fresh state in async code.
+   - Fixed along the way:
+     - Arrow keys used to move a layer by 1 (or 10) *canvas widths*, because positions are 0..1 fractions. Nudges are now 0.5% (5% with Shift).
+     - Background removal applies its result by layer ID to the latest state. Before, a different selection or other edits made during the multi-second removal could be overwritten.
+   - Not tested by hand: an actual face swap, which needs `face_swap_server.py` and its model. The modal and its "server offline" path were checked.
 4. **Extract panels, one per commit,** smallest first: ExportPanel → EditorTopBar → CanvasTab → DrawTab → FiltersTab → MediaTab → context toolbars → social-card editors → TextTab → EditorModals. Once the store exists, each panel is mostly cut-and-paste plus a store selector.
 5. **Remove duplicate UI.** The compact tab tools (5182–5521) and the sidebar tabs (5522–7970) seem to repeat the same controls, probably one set for mobile and one for desktop. Check which is which, then build both from shared components.
 6. **Point `CanvasEditor` at the store** instead of passing ~100 props, then plan its own split the same way.

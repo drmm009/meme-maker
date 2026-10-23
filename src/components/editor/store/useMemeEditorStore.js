@@ -212,6 +212,18 @@ export function createMemeEditorStore(template) {
           setTemplateFaceMorph: fieldSetter(set, 'templateFaceMorph'),
           setImageFilters: fieldSetter(set, 'imageFilters'),
 
+          // Move a caption, sticker or image layer by (dx, dy), e.g. from arrow keys.
+          nudgeLayer: (id, dx, dy) => {
+            for (const key of ['captions', 'stickers', 'imageLayers']) {
+              const layers = get()[key];
+              if (layers.some((layer) => layer.id === id)) {
+                set({ [key]: layers.map((layer) => (layer.id === id ? { ...layer, x: layer.x + dx, y: layer.y + dy } : layer)) });
+                get().pushHistoryDebounced();
+                return;
+              }
+            }
+          },
+
           // Record the current document as an undo step.
           pushHistory: () => {
             cancelPendingHistory();
@@ -259,6 +271,11 @@ function useStoreFromContext() {
   const store = useContext(MemeEditorStoreContext);
   if (!store) throw new Error('useMemeEditorStore must be used inside MemeEditorStoreContext');
   return store;
+}
+
+// The store itself, for reading fresh state inside async handlers (store.getState()).
+export function useMemeEditorStoreApi() {
+  return useStoreFromContext();
 }
 
 export function useMemeEditorStore(selector) {

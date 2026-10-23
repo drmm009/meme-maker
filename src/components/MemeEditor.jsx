@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import CanvasEditor, { TWEET_TREND_PRESETS } from './CanvasEditor';
 import { FONTS } from '../data/stickers';
-import confetti from 'canvas-confetti';
 import {
   Type, Plus, Trash2, Undo, Redo, Download, Share2, Sparkles, Copy, Blend,
   Sliders, Settings, Smile, Sticker, ArrowLeft, Save, Check, RefreshCw,
@@ -23,7 +22,6 @@ import TemplatePickerBottomSheet from './editor/TemplatePickerBottomSheet';
 import PhotoFiltersBottomSheet from './editor/PhotoFiltersBottomSheet';
 import BubbleChatBottomSheet from './editor/BubbleChatBottomSheet';
 import FacePinpointOverlay from './FacePinpointOverlay';
-import { fuseFaceIntoTemplate } from '../utils/faceGraftEngine';
 import { downloadImageHelper } from '../utils/downloadHelper';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MEME_TEMPLATES } from '../data/templates';
@@ -31,9 +29,8 @@ import { fetchOpenSourceMemes } from '../services/memeService';
 import VideoTrimmer from './VideoTrimmer';
 import AspectRatioDropdown from './AspectRatioDropdown';
 import { PHOTO_FILTERS } from '../data/photoFilters';
-import { removeBackground } from '@imgly/background-removal';
 import { safeGet, safeSet } from '../utils/storage';
-import { blobToDataURL, dataURLToBlob } from '../utils/galleryStore';
+import { blobToDataURL } from '../utils/galleryStore';
 import {
   PRESET_PHRASES,
   BUBBLE_LAYOUT_OPTIONS,
@@ -44,13 +41,17 @@ import {
 } from '../utils/captionLayout';
 import CanvasColorPicker from './editor/CanvasColorPicker';
 import { TEXT_EFFECTS, secondaryVariants } from './editor/constants';
-import { isSocialCardCaption, getContrastStroke, isVideoUrl, cleanTemplateName } from './editor/memeEditorUtils';
+import { isSocialCardCaption, getContrastStroke, isVideoUrl } from './editor/memeEditorUtils';
 import {
   createMemeEditorStore,
   MemeEditorStoreContext,
   useMemeEditorStore,
   useMemeEditorHistory,
 } from './editor/store/useMemeEditorStore';
+import { useEditorShortcuts } from './editor/hooks/useEditorShortcuts';
+import { useExport, triggerConfetti } from './editor/hooks/useExport';
+import { useBackgroundRemoval } from './editor/hooks/useBackgroundRemoval';
+import { useFaceMorph } from './editor/hooks/useFaceMorph';
 import './MemeEditor.css';
 
 export default function MemeEditor(props) {
@@ -91,7 +92,6 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
   const setCanvasFooter = useMemeEditorStore((s) => s.setCanvasFooter);
   const demotivational = useMemeEditorStore((s) => s.demotivational);
   const templateFaceMorph = useMemeEditorStore((s) => s.templateFaceMorph);
-  const setTemplateFaceMorph = useMemeEditorStore((s) => s.setTemplateFaceMorph);
   const imageFilters = useMemeEditorStore((s) => s.imageFilters);
   const setImageFilters = useMemeEditorStore((s) => s.setImageFilters);
   const drawings = useMemeEditorStore((s) => s.drawings);
@@ -100,6 +100,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
   const pushHistoryDebounced = useMemeEditorStore((s) => s.pushHistoryDebounced);
   const handleUndo = useMemeEditorStore((s) => s.undo);
   const handleRedo = useMemeEditorStore((s) => s.redo);
+  const nudgeLayer = useMemeEditorStore((s) => s.nudgeLayer);
   const canUndo = useMemeEditorHistory((s) => s.pastStates.length > 0);
   const canRedo = useMemeEditorHistory((s) => s.futureStates.length > 0);
 
@@ -262,15 +263,6 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
     setActiveLayerId(targetId);
     setShowStylesModal(false);
   };
-  const [showFaceMorphModal, setShowFaceMorphModal] = useState(false);
-  const [morphTargetLayerId, setMorphTargetLayerId] = useState(null);
-  const [morphTargetUrl, setMorphTargetUrl] = useState(null);
-  const [isPinpointingFace, setIsPinpointingFace] = useState(false);
-  const [faceTarget, setFaceTarget] = useState({ x: 0.5, y: 0.38, radius: 0.14 });
-  const [sampledFaceLighting, setSampledFaceLighting] = useState(null);
-  const [extractedMemeFace, setExtractedMemeFace] = useState(null);
-  const [isHoldingCanvasCompare, setIsHoldingCanvasCompare] = useState(false);
-  const originalTemplateImgRef = useRef(null);
 
   const handleSetCanvasBgColor = (val) => {
     setCanvasBgColor(val);
@@ -332,26 +324,15 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
   const [showEmojiModal, setShowEmojiModal] = useState(false);
   const [showFiltersModal, setShowFiltersModal] = useState(false);
   const [showBubbleBottomSheet, setShowBubbleBottomSheet] = useState(false);
-  const [isRemovingBg, setIsRemovingBg] = useState(false);
 
   // Freehand Drawing state
   const [drawTool, setDrawTool] = useState(null); // 'brush' | 'eraser' | null (deactivated by default)
   const [brushColor, setBrushColor] = useState('#ff2a5f');
   const [brushSize, setBrushSize] = useState(10);
-  const [exportedImageUri, setExportedImageUri] = useState(null);
-  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [showAiModal, setShowAiModal] = useState(false);
   const [showBubbleLayouts, setShowBubbleLayouts] = useState(false);
   const [lastUsedSettingButton, setLastUsedSettingButton] = useState(null);
   const contextToolbarRef = useRef(null);
-  const [exportFormat, setExportFormat] = useState('png'); // 'png' | 'jpeg' | 'webp'
-  const [exportQuality, setExportQuality] = useState(0.92);
-  const [exportPreset, setExportPreset] = useState('hd'); // 'hd' | 'discord' | 'compact'
-  const [exportFileSize, setExportFileSize] = useState(null);
-  const [exportDropdownOpen, setExportDropdownOpen] = useState(false);
-  const exportDropdownRef = useRef(null);
-  const [isSaved, setIsSaved] = useState(false);
-  const [memeCustomName, setMemeCustomName] = useState('');
   const [pendingVideoLayer, setPendingVideoLayer] = useState(null);
   const isVideoPlaying = true;
 
@@ -394,6 +375,22 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
   };
 
   const canvasRef = useRef(null);
+  const {
+    exportedImageUri, isExportModalOpen, setIsExportModalOpen,
+    exportFormat, exportQuality, exportPreset, exportFileSize,
+    exportDropdownOpen, setExportDropdownOpen, exportDropdownRef,
+    isSaved, memeCustomName, setMemeCustomName, clipboardCopied, shareCopied,
+    handleSelectExportFormat, handleSelectExportQuality, handleSelectExportPreset,
+    handleQuickExport, handleConfirmSave, handleDownloadImage, handleCopyToClipboard, handleShareImage,
+  } = useExport({ canvasRef, template, onSaveToGallery, layout: { imageFit, isNativeLayout, layoutDef } });
+  const { isRemovingBg, handleRemoveBackground } = useBackgroundRemoval();
+  const {
+    showFaceMorphModal, setShowFaceMorphModal, morphTargetLayerId, setMorphTargetLayerId,
+    morphTargetUrl, setMorphTargetUrl, isPinpointingFace, setIsPinpointingFace, faceTarget, setFaceTarget,
+    sampledFaceLighting, extractedMemeFace, isHoldingCanvasCompare, setIsHoldingCanvasCompare,
+    originalTemplateImgRef, handleStartMorphFace, handleConfirmPinpoint, handleApplyFaceMorph,
+    handleUpdateTemplateMorphProgress, handleChangeFace, handleRevertTemplateFace, handleFinalizeTemplateFace,
+  } = useFaceMorph({ canvasRef });
   const watermarkInputRef = useRef(null);
   const watermarkTextInputRef = useRef(null);
   const tabButtonsRef = useRef(null);
@@ -407,18 +404,6 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
       }
     }
   }, [activeTab]);
-
-  // Close export dropdown when clicking outside
-  useEffect(() => {
-    if (!exportDropdownOpen) return;
-    const handleClickOutside = (e) => {
-      if (exportDropdownRef.current && !exportDropdownRef.current.contains(e.target)) {
-        setExportDropdownOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [exportDropdownOpen]);
 
   // Ensure Text tab is active by default when user reaches editor and no layer is auto-selected
   useEffect(() => {
@@ -452,122 +437,6 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
   }, [lastUsedSettingButton, showFontMenu, showTextCurveMenu, showTextBlurMenu, showTextBgMenu, showBubbleLayouts]);
 
   // Keyboard shortcuts: Ctrl+Z (undo), Ctrl+Y / Ctrl+Shift+Z (redo), Delete (delete layer), Escape (deselect)
-  // Subscribe-once via ref mirror: the ref always points at the latest closure, so typing
-  // and arrow-nudges don't re-attach document listeners on every render.
-  const keyHandlerRef = useRef(null);
-  keyHandlerRef.current = (e) => {
-      // Skip if focus is inside a text input / textarea / contenteditable
-      const tag = document.activeElement?.tagName?.toLowerCase();
-      const isEditing =
-        tag === 'input' ||
-        tag === 'textarea' ||
-        document.activeElement?.isContentEditable;
-      if (isEditing) return;
-
-      const isMac = navigator.platform?.toUpperCase().includes('MAC');
-      const ctrl = isMac ? e.metaKey : e.ctrlKey;
-
-      if (ctrl && !e.shiftKey && e.key === 'z') {
-        e.preventDefault();
-        handleUndo();
-      } else if (ctrl && (e.key === 'y' || (e.shiftKey && e.key === 'z'))) {
-        e.preventDefault();
-        handleRedo();
-      } else if ((e.key === 'Delete' || e.key === 'Backspace') && activeLayerId) {
-        e.preventDefault();
-        handleDeleteLayer();
-      } else if (ctrl && e.key === 'd' && activeLayerId) {
-        e.preventDefault();
-        handleDuplicateLayer();
-      } else if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) && activeLayerId) {
-        e.preventDefault();
-        const moveAmount = e.shiftKey ? 10 : 1;
-        const dx = e.key === 'ArrowLeft' ? -moveAmount : (e.key === 'ArrowRight' ? moveAmount : 0);
-        const dy = e.key === 'ArrowUp' ? -moveAmount : (e.key === 'ArrowDown' ? moveAmount : 0);
-        
-        const cIdx = captions.findIndex(c => c.id === activeLayerId);
-        if (cIdx > -1) {
-           const newCaps = [...captions];
-           newCaps[cIdx] = { ...newCaps[cIdx], x: newCaps[cIdx].x + dx, y: newCaps[cIdx].y + dy };
-           setCaptions(newCaps);
-           pushHistoryDebounced();
-        } else {
-           const sIdx = stickers.findIndex(s => s.id === activeLayerId);
-           if (sIdx > -1) {
-             const newStks = [...stickers];
-             newStks[sIdx] = { ...newStks[sIdx], x: newStks[sIdx].x + dx, y: newStks[sIdx].y + dy };
-             setStickers(newStks);
-             pushHistoryDebounced();
-           } else {
-             const iIdx = imageLayers.findIndex(i => i.id === activeLayerId);
-             if (iIdx > -1) {
-               const newImgs = [...imageLayers];
-               newImgs[iIdx] = { ...newImgs[iIdx], x: newImgs[iIdx].x + dx, y: newImgs[iIdx].y + dy };
-               setImageLayers(newImgs);
-               pushHistoryDebounced();
-             }
-           }
-        }
-      } else if ((e.key === ']' || e.key === '}') && activeLayerId) {
-        e.preventDefault();
-        if (ctrl && e.shiftKey) {
-          moveLayer(activeLayerId, 'front');
-        } else {
-          moveLayer(activeLayerId, 'forward');
-        }
-      } else if ((e.key === '[' || e.key === '{') && activeLayerId) {
-        e.preventDefault();
-        if (ctrl && e.shiftKey) {
-          moveLayer(activeLayerId, 'back');
-        } else {
-          moveLayer(activeLayerId, 'backward');
-        }
-      } else if (e.key === 'Escape') {
-        setActiveLayerId(null);
-      }
-    };
-
-  useEffect(() => {
-    const h = (e) => keyHandlerRef.current?.(e);
-    document.addEventListener('keydown', h);
-    return () => document.removeEventListener('keydown', h);
-  }, []);
-
-  // Global clipboard paste listener (Ctrl+V image/gif onto canvas) â€” subscribe once, same pattern
-  const pasteHandlerRef = useRef(null);
-  pasteHandlerRef.current = (e) => {
-      const tag = document.activeElement?.tagName?.toLowerCase();
-      const isEditing = tag === 'input' || tag === 'textarea' || document.activeElement?.isContentEditable;
-      if (isEditing) return;
-
-      const items = e.clipboardData?.items;
-      if (!items) return;
-
-      for (let i = 0; i < items.length; i++) {
-        const item = items[i];
-        if (item.type && item.type.indexOf('image') !== -1) {
-          e.preventDefault();
-          const file = item.getAsFile();
-          if (file) {
-            blobToDataURL(file).then((url) => {
-              commitAddImageLayer(url);
-              setPasteToast(true);
-              setTimeout(() => setPasteToast(false), 2600);
-            }).catch((err) => {
-              console.error('Failed to convert pasted image to data URL:', err);
-            });
-          }
-          break;
-        }
-      }
-    };
-
-  useEffect(() => {
-    const h = (e) => pasteHandlerRef.current?.(e);
-    window.addEventListener('paste', h);
-    return () => window.removeEventListener('paste', h);
-  }, []);
-
   const handleToggleCanvasFlip = () => {
     const nextFlip = !canvasFlipX;
     setCanvasFlipX(nextFlip);
@@ -590,45 +459,6 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
     const nextDrawings = drawings.slice(0, -1);
     setDrawings(nextDrawings);
     pushHistory();
-  };
-
-    const updateExportUriAndSize = (format = exportFormat, quality = exportQuality) => {
-    if (!canvasRef.current) return;
-    const mimeType = format === 'jpeg' ? 'image/jpeg' : (format === 'webp' ? 'image/webp' : 'image/png');
-    const q = format === 'png' ? undefined : quality;
-    const dataUrl = canvasRef.current.exportCleanImage
-      ? canvasRef.current.exportCleanImage(mimeType, q)
-      : canvasRef.current.toDataURL(mimeType, q);
-    setExportedImageUri(dataUrl);
-    // Base64 size estimation
-    const bytes = Math.round((dataUrl.length * 3) / 4);
-    setExportFileSize(bytes);
-  };
-
-  const handleSelectExportFormat = (fmt) => {
-    setExportFormat(fmt);
-    updateExportUriAndSize(fmt, exportQuality);
-  };
-
-  const handleSelectExportQuality = (q) => {
-    setExportQuality(q);
-    updateExportUriAndSize(exportFormat, q);
-  };
-
-  const handleSelectExportPreset = (preset) => {
-    setExportPreset(preset);
-    if (preset === 'hd') {
-      setExportFormat('png');
-      updateExportUriAndSize('png', 1.0);
-    } else if (preset === 'discord') {
-      setExportFormat('jpeg');
-      setExportQuality(0.85);
-      updateExportUriAndSize('jpeg', 0.85);
-    } else if (preset === 'compact') {
-      setExportFormat('webp');
-      setExportQuality(0.75);
-      updateExportUriAndSize('webp', 0.75);
-    }
   };
 
     // Chat & Speech Bubble Generator (iPhone, WhatsApp, Comic)
@@ -1480,298 +1310,6 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
     }
   };
 
-  const handleStartMorphFace = (explicitTarget = null) => {
-    // 1. Identify if a target layer was explicitly passed, or if activeImageLayer / activeSticker is selected
-    // Note: React onClick passes a SyntheticEvent (which has nativeEvent/dispatchConfig), so ignore SyntheticEvents!
-    let targetLayer = null;
-    if (explicitTarget && typeof explicitTarget === 'object' && ('url' in explicitTarget || 'src' in explicitTarget) && !('nativeEvent' in explicitTarget)) {
-      targetLayer = explicitTarget;
-    } else if (activeImageLayer && (activeImageLayer.url || activeImageLayer.src)) {
-      targetLayer = activeImageLayer;
-    } else if (activeSticker && (activeSticker.url || activeSticker.src)) {
-      targetLayer = activeSticker;
-    }
-
-    if (targetLayer) {
-      const url = targetLayer.url || targetLayer.src;
-      if (url) {
-        setMorphTargetLayerId(targetLayer.id);
-        setMorphTargetUrl(url);
-        setSampledFaceLighting(null);
-        setExtractedMemeFace(null);
-        setShowFaceMorphModal(true);
-        return;
-      }
-    }
-
-    // 2. Fallback: Targeting background meme template
-    setMorphTargetLayerId(null);
-    setMorphTargetUrl(null);
-    setActiveLayerId(null);
-    let lighting = null;
-    let patch = null;
-    if (canvasRef.current?.sampleFaceLighting) {
-      lighting = canvasRef.current.sampleFaceLighting(faceTarget.x, faceTarget.y, faceTarget.radius);
-      setSampledFaceLighting(lighting);
-    }
-    if (canvasRef.current?.extractFacePatch) {
-      patch = canvasRef.current.extractFacePatch(faceTarget.x, faceTarget.y, faceTarget.radius, 400);
-      setExtractedMemeFace(patch);
-    }
-    setShowFaceMorphModal(true);
-  };
-
-    const handleConfirmPinpoint = () => {
-    setActiveLayerId(null);
-    setIsPinpointingFace(false);
-    let lighting = null;
-    let patch = null;
-    if (canvasRef.current?.sampleFaceLighting) {
-      lighting = canvasRef.current.sampleFaceLighting(faceTarget.x, faceTarget.y, faceTarget.radius);
-      setSampledFaceLighting(lighting);
-    }
-    if (canvasRef.current?.extractFacePatch) {
-      patch = canvasRef.current.extractFacePatch(faceTarget.x, faceTarget.y, faceTarget.radius, 400);
-      setExtractedMemeFace(patch);
-    }
-    setShowFaceMorphModal(true);
-  };
-
-  const handleApplyFaceMorph = async ({
-    url,
-    originalFaceUrl,
-    faceName,
-    flipX,
-    brightness,
-    contrast,
-    warmth,
-    morphProgress,
-    landmarksA,
-    landmarksB,
-    triangles,
-    isNeuralSwap,
-    neuralSwappedFullImage
-  }) => {
-    setShowFaceMorphModal(false);
-
-    // CASE 1: Swapping an image layer or graphic sticker on top of canvas
-    if (morphTargetLayerId) {
-      const swappedResultUrl = neuralSwappedFullImage || url;
-      if (swappedResultUrl) {
-        let origUrl = null;
-        let nextImgLayers = imageLayers;
-        let nextStickers = stickers;
-        const isImg = imageLayers.some(l => l.id === morphTargetLayerId);
-        if (isImg) {
-          nextImgLayers = imageLayers.map((l) => {
-            if (l.id === morphTargetLayerId) {
-              origUrl = l.originalUrl || l.url;
-              return {
-                ...l,
-                url: swappedResultUrl,
-                originalUrl: origUrl
-              };
-            }
-            return l;
-          });
-          setImageLayers(nextImgLayers);
-        } else {
-          nextStickers = stickers.map((s) => {
-            if (s.id === morphTargetLayerId) {
-              origUrl = s.originalUrl || s.url;
-              return {
-                ...s,
-                url: swappedResultUrl,
-                originalUrl: origUrl
-              };
-            }
-            return s;
-          });
-          setStickers(nextStickers);
-        }
-
-        const morphState = {
-          isLayerSwap: true,
-          layerId: morphTargetLayerId,
-          cleanOriginalUrl: origUrl,
-          photoUrl: originalFaceUrl || url,
-          faceName: faceName || 'Face Swap'
-        };
-        setTemplateFaceMorph(morphState);
-        setActiveLayerId(null);
-        pushHistory();
-      }
-      setMorphTargetLayerId(null);
-      setMorphTargetUrl(null);
-      return;
-    }
-
-    // CASE 2: Swapping background meme template
-    const cleanOriginalUrl = (originalTemplateImgRef.current && !originalTemplateImgRef.current.startsWith('data:'))
-      ? originalTemplateImgRef.current
-      : (activeTemplate?.originalUrl || (activeTemplate?.imageUrl && !activeTemplate.imageUrl.startsWith('data:') ? activeTemplate.imageUrl : null) || activeTemplate?.imageUrl);
-    
-    if (!originalTemplateImgRef.current || originalTemplateImgRef.current.startsWith('data:')) {
-      originalTemplateImgRef.current = cleanOriginalUrl;
-    }
-
-    if (isNeuralSwap && neuralSwappedFullImage) {
-      setActiveTemplate(prev => ({
-        ...prev,
-        rawImageUrl: neuralSwappedFullImage,
-        imageUrl: neuralSwappedFullImage,
-        originalUrl: prev?.originalUrl || cleanOriginalUrl
-      }));
-
-      const morphState = {
-        faceTarget: { ...faceTarget },
-        photoUrl: originalFaceUrl || url,
-        originalFaceUrl: originalFaceUrl || url,
-        faceName: faceName || 'AI Neural Swap',
-        morphProgress: 1.0,
-        warmth: 0,
-        brightness: 100,
-        contrast: 100,
-        flipX: false,
-        cleanOriginalUrl,
-        isNeuralSwap: true
-      };
-
-      setTemplateFaceMorph(morphState);
-      setActiveLayerId(null);
-      pushHistory();
-      return;
-    }
-
-    const baseImg = cleanOriginalUrl;
-
-    const fusedDataUrl = await fuseFaceIntoTemplate({
-      baseImg,
-      faceTarget,
-      photoImg: originalFaceUrl || url,
-      morphedPatch: url,
-      landmarksA,
-      landmarksB,
-      triangles,
-      morphProgress: morphProgress !== undefined ? morphProgress : 0.85,
-      warmth: warmth || 0,
-      brightness: brightness || 0,
-      flipX: !!flipX
-    });
-
-    if (fusedDataUrl) {
-      setActiveTemplate(prev => ({
-        ...prev,
-        rawImageUrl: fusedDataUrl,
-        imageUrl: fusedDataUrl,
-        originalUrl: prev?.originalUrl || cleanOriginalUrl
-      }));
-
-      const morphState = {
-        faceTarget: { ...faceTarget },
-        photoUrl: url || originalFaceUrl,
-        originalFaceUrl: originalFaceUrl || url,
-        faceName: faceName || 'Face Morph',
-        morphProgress: morphProgress !== undefined ? morphProgress : 0.85,
-        warmth: warmth || 0,
-        brightness: brightness || 0,
-        contrast: contrast || 100,
-        flipX: !!flipX,
-        cleanOriginalUrl,
-        landmarksA,
-        landmarksB,
-        triangles
-      };
-
-      setTemplateFaceMorph(morphState);
-      setActiveLayerId(null);
-      pushHistory();
-    }
-  };
-
-  const handleUpdateTemplateMorphProgress = async (newVal) => {
-    if (!templateFaceMorph) return;
-    const progress = Math.max(0, Math.min(1, newVal));
-    setTemplateFaceMorph(prev => ({ ...prev, morphProgress: progress }));
-
-    const cleanUrl = templateFaceMorph.cleanOriginalUrl || activeTemplate?.originalUrl;
-    const fusedDataUrl = await fuseFaceIntoTemplate({
-      baseImg: cleanUrl,
-      faceTarget: templateFaceMorph.faceTarget,
-      photoImg: templateFaceMorph.originalFaceUrl || templateFaceMorph.photoUrl,
-      landmarksA: templateFaceMorph.landmarksA,
-      landmarksB: templateFaceMorph.landmarksB,
-      triangles: templateFaceMorph.triangles,
-      morphProgress: progress,
-      warmth: templateFaceMorph.warmth || 0,
-      brightness: templateFaceMorph.brightness || 0,
-      flipX: templateFaceMorph.flipX
-    });
-
-    if (fusedDataUrl) {
-      setActiveTemplate(prev => ({
-        ...prev,
-        rawImageUrl: fusedDataUrl,
-        imageUrl: fusedDataUrl,
-        originalUrl: prev?.originalUrl || cleanUrl
-      }));
-    }
-  };
-
-  const handleChangeFace = () => {
-    if (templateFaceMorph?.isLayerSwap) {
-      const target = imageLayers.find(l => l.id === templateFaceMorph.layerId) || stickers.find(s => s.id === templateFaceMorph.layerId);
-      if (target) {
-        handleStartMorphFace(target);
-        return;
-      }
-    }
-    setShowFaceMorphModal(true);
-  };
-
-  const handleRevertTemplateFace = () => {
-    if (!templateFaceMorph) return;
-    if (templateFaceMorph.isLayerSwap) {
-      const cleanUrl = templateFaceMorph.cleanOriginalUrl;
-      let nextImgs = imageLayers;
-      let nextStks = stickers;
-      if (cleanUrl) {
-        nextImgs = imageLayers.map(l => l.id === templateFaceMorph.layerId ? { ...l, url: cleanUrl } : l);
-        nextStks = stickers.map(s => s.id === templateFaceMorph.layerId ? { ...s, url: cleanUrl } : s);
-        setImageLayers(nextImgs);
-        setStickers(nextStks);
-      }
-      setTemplateFaceMorph(null);
-      pushHistory();
-      return;
-    }
-    const cleanUrl = templateFaceMorph.cleanOriginalUrl || activeTemplate?.originalUrl;
-    if (cleanUrl) {
-      setActiveTemplate(prev => ({
-        ...prev,
-        rawImageUrl: cleanUrl,
-        imageUrl: cleanUrl,
-        originalUrl: null
-      }));
-    }
-    setTemplateFaceMorph(null);
-    pushHistory();
-  };
-
-  const handleFinalizeTemplateFace = () => {
-    if (templateFaceMorph?.isLayerSwap) {
-      setTemplateFaceMorph(null);
-      pushHistory();
-      return;
-    }
-    setActiveTemplate(prev => ({
-      ...prev,
-      originalUrl: null
-    }));
-    setTemplateFaceMorph(null);
-    pushHistory();
-  };
-
   const updateActiveImageLayer = (key, value) => {
     if (!activeLayerId) return;
     const nextImgLayers = imageLayers.map((layer) => {
@@ -1900,83 +1438,6 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
   };
 
   
-  const handleRemoveBackground = async () => {
-    const processImg = async (url) => {
-      let blob;
-      if (typeof url === 'string' && url.startsWith('data:')) {
-        blob = dataURLToBlob(url);
-      } else {
-        const res = await fetch(url);
-        blob = await res.blob();
-      }
-      return await removeBackground(blob);
-    };
-
-    if (activeImageLayer) {
-        if (activeImageLayer.originalUrl) {
-          updateActiveImageLayer({
-            url: activeImageLayer.originalUrl,
-            originalUrl: null
-          });
-          return;
-        }
-
-        try {
-          setIsRemovingBg(true);
-          const imgBlob = await processImg(activeImageLayer.url);
-          const newUrl = await blobToDataURL(imgBlob);
-          updateActiveImageLayer({
-            url: newUrl,
-            originalUrl: activeImageLayer.url
-          });
-        } catch (err) {
-          console.error('Failed to remove background:', err);
-          alert('Failed to remove background: ' + (err.message || err.toString()));
-        } finally {
-          setIsRemovingBg(false);
-        }
-    } else if (activeSticker) {
-        if (activeSticker.originalUrl) {
-          const nextStks = stickers.map((s) => (s.id === activeSticker.id ? { ...s, src: activeSticker.originalUrl, url: activeSticker.originalUrl, originalUrl: null } : s));
-          setStickers(nextStks);
-          pushHistoryDebounced();
-          return;
-        }
-
-        try {
-          setIsRemovingBg(true);
-          const oldUrl = activeSticker.url || activeSticker.src;
-          const imgBlob = await processImg(oldUrl);
-          const newUrl = await blobToDataURL(imgBlob);
-          const nextStks = stickers.map((s) => (s.id === activeSticker.id ? { ...s, src: newUrl, url: newUrl, originalUrl: oldUrl } : s));
-          setStickers(nextStks);
-          pushHistoryDebounced();
-        } catch (err) {
-          console.error('Failed to remove background:', err);
-          alert('Failed to remove background: ' + (err.message || err.toString()));
-        } finally {
-          setIsRemovingBg(false);
-        }
-    } else if (activeTemplate && (activeTemplate.rawImageUrl || activeTemplate.imageUrl)) {
-        if (activeTemplate.originalUrl) {
-          setActiveTemplate({ ...activeTemplate, rawImageUrl: activeTemplate.originalUrl, imageUrl: activeTemplate.originalUrl, originalUrl: null });
-          return;
-        }
-
-        try {
-          setIsRemovingBg(true);
-          const oldUrl = activeTemplate.rawImageUrl || activeTemplate.imageUrl;
-          const imgBlob = await processImg(oldUrl);
-          const newUrl = await blobToDataURL(imgBlob);
-          setActiveTemplate({ ...activeTemplate, rawImageUrl: newUrl, imageUrl: newUrl, originalUrl: oldUrl });
-        } catch (err) {
-          console.error('Failed to remove background:', err);
-          alert('Failed to remove background: ' + (err.message || err.toString()));
-        } finally {
-          setIsRemovingBg(false);
-        }
-    }
-  };
 
 
 
@@ -2174,128 +1635,26 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
     updateWatermark('position', positions[nextIndex].id);
   };
 
-  const triggerConfetti = () => {
-    try {
-      confetti({
-        particleCount: 60,
-        spread: 70,
-        origin: { y: 0.6 }
+  useEditorShortcuts({
+    activeLayerId,
+    onUndo: handleUndo,
+    onRedo: handleRedo,
+    onDelete: () => handleDeleteLayer(),
+    onDuplicate: () => handleDuplicateLayer(),
+    onNudge: (dx, dy) => nudgeLayer(activeLayerId, dx, dy),
+    onMoveLayer: (action) => moveLayer(activeLayerId, action),
+    onDeselect: () => setActiveLayerId(null),
+    onPasteImage: (file) => {
+      blobToDataURL(file).then((url) => {
+        commitAddImageLayer(url);
+        setPasteToast(true);
+        setTimeout(() => setPasteToast(false), 2600);
+      }).catch((err) => {
+        console.error('Failed to convert pasted image to data URL:', err);
       });
-    } catch {
-      // Confetti fallback
-    }
-  };
+    },
+  });
 
-  // Detect if meme has any video content (background or overlay layers)
-
-    // Renders canvas to dataURL without handles, then runs the callback action
-  const handleQuickExport = (action) => {
-    setActiveLayerId(null);
-    setExportDropdownOpen(false);
-    if (canvasRef.current) {
-      const dataUrl = canvasRef.current.exportCleanImage
-        ? canvasRef.current.exportCleanImage('image/png')
-        : canvasRef.current.toDataURL('image/png');
-      setExportedImageUri(dataUrl);
-      const cleaned = cleanTemplateName(template?.name);
-      const defaultName = cleaned || (captions[0]?.text && captions[0].text !== 'TOP TEXT' ? captions[0].text : '') || 'My Meme';
-      setMemeCustomName(defaultName);
-      action(dataUrl);
-    }
-  };
-
-    const handleConfirmSave = () => {
-    const dataUrl = (canvasRef.current?.exportCleanImage ? canvasRef.current.exportCleanImage('image/png') : canvasRef.current?.toDataURL('image/png')) || exportedImageUri;
-    if (dataUrl) {
-      const finalName = memeCustomName.trim() || 'My Meme';
-      onSaveToGallery({
-        id: `meme-${Date.now()}`,
-        name: finalName,
-        imageUrl: dataUrl,
-        rawImageUrl: template?.rawImageUrl || template?.imageUrl,
-        captions: JSON.parse(JSON.stringify(captions)),
-        stickers: JSON.parse(JSON.stringify(stickers)),
-        imageLayers: JSON.parse(JSON.stringify(imageLayers)),
-        aspectRatio,
-        imageFit,
-        isNativeLayout,
-        layoutDef,
-        slotImages,
-        slotTransforms,
-        createdAt: new Date().toISOString()
-      });
-      setIsSaved(true);
-      triggerConfetti();
-      setTimeout(() => setIsSaved(false), 3000);
-    }
-  };
-
-    const handleDownloadImage = async () => {
-    if (exportedImageUri) {
-      const ext = exportFormat === 'jpeg' ? 'jpg' : exportFormat;
-      const filename = `meme-${template?.id || 'custom'}-${Date.now()}.${ext}`;
-      await downloadImageHelper(exportedImageUri, filename);
-      triggerConfetti();
-    }
-  };
-
-  const [clipboardCopied, setClipboardCopied] = useState(false);
-
-  const handleCopyToClipboard = async () => {
-    if (!exportedImageUri) return;
-    try {
-      const res = await fetch(exportedImageUri);
-      const blob = await res.blob();
-      if (typeof ClipboardItem !== 'undefined' && navigator.clipboard?.write) {
-        // Modern clipboard API â€” copies actual image, pasteable into Discord/Twitter/etc.
-        await navigator.clipboard.write([
-          new ClipboardItem({ 'image/png': blob })
-        ]);
-      } else {
-        // Fallback: copy the data URL as text
-        await navigator.clipboard.writeText(exportedImageUri);
-      }
-      setClipboardCopied(true);
-      triggerConfetti();
-      setTimeout(() => setClipboardCopied(false), 2500);
-    } catch (err) {
-      console.warn('Copy to clipboard failed:', err);
-    }
-  };
-
-  const [shareCopied, setShareCopied] = useState(false);
-
-  const handleShareImage = async () => {
-    if (!exportedImageUri) return;
-    try {
-      // Convert data URL to Blob for Web Share API
-      const res = await fetch(exportedImageUri);
-      const blob = await res.blob();
-      const ext = exportFormat === 'jpeg' ? 'jpg' : exportFormat;
-      const mimeType = exportFormat === 'jpeg' ? 'image/jpeg' : (exportFormat === 'webp' ? 'image/webp' : 'image/png');
-      const file = new File([blob], `meme-${Date.now()}.${ext}`, { type: mimeType });
-
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        // Native share sheet (mobile / Chrome Android / Safari iOS)
-        await navigator.share({
-          title: memeCustomName || 'My Meme',
-          text: 'Check out this meme I made! ðŸ˜‚',
-          files: [file],
-        });
-        triggerConfetti();
-      } else {
-        // Desktop fallback: copy data URL to clipboard
-        await navigator.clipboard.writeText(exportedImageUri);
-        setShareCopied(true);
-        setTimeout(() => setShareCopied(false), 2500);
-      }
-    } catch (err) {
-      // User cancelled share or clipboard not available â€” silently ignore
-      if (err.name !== 'AbortError') {
-        console.warn('Share failed:', err);
-      }
-    }
-  };
   const getDockHeight = () => {
     if (aspectRatio === '16:9') return '45vh';
     if (aspectRatio === '1:1') return '40vh';
