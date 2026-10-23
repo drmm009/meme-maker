@@ -1,8 +1,7 @@
 import React, { useEffect, useRef, useState, useLayoutEffect } from 'react';
 import { useMemeEditorStore } from './editor/store/useMemeEditorStore';
 import { useEditorUiStore } from './editor/store/useEditorUiStore';
-import { wrapText } from './canvas/draw/text';
-import { getWhatsAppCardHeight } from './canvas/draw/socialCards/whatsapp';
+import { getBandHeight, getCanvasSize, makeLayerCenters } from './canvas/layout/canvasLayout';
 import { renderScene } from './canvas/render/renderScene';
 import { useCanvasInteraction } from './canvas/interaction/useCanvasInteraction';
 
@@ -99,128 +98,18 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
 
 
   const imgSrc = template?.canvasOnly ? null : (template?.rawImageUrl || imageUrl || template?.imageUrl);
-  let canvasW = 1080;
-  let canvasH = 1080;
-  let rawW = 1080;
-  let rawH = 1080;
+  const { canvasW, canvasH } = getCanvasSize(aspectRatio, template, naturalSize);
 
-  if (aspectRatio === '16:9') {
-    rawW = 1920;
-    rawH = 1080;
-  } else if (aspectRatio === '9:16') {
-    rawW = 1080;
-    rawH = 1920;
-  } else if (aspectRatio === '4:5') {
-    rawW = 1080;
-    rawH = 1350;
-  } else if (aspectRatio === 'original') {
-    rawW = template?.width || naturalSize.w || 1080;
-    rawH = template?.height || naturalSize.h || 1080;
-  }
-  
-  // Normalize canvas internal resolution to max dimension 1080
-  // This keeps font sizes consistent relative to the canvas across all aspect ratios
-  // and prevents performance issues from huge original image resolutions
-  
-  const maxDim = Math.max(rawW, rawH);
-  if (maxDim > 0) {
-    canvasW = Math.round((rawW / maxDim) * 1080);
-    canvasH = Math.round((rawH / maxDim) * 1080);
-  }
-
-  // Header Canvas Extension calculations
+  // Optional header/footer bands extend the canvas above and below the image area.
   const isHeaderEnabled = !!canvasHeader?.enabled;
-  const headerCap = captions.find(c => c.isHeaderCaption);
-  let headerExtH = 0;
-  if (isHeaderEnabled) {
-    if (headerCap) {
-      const hFontSize = headerCap.fontSize || 50;
-      const hFontFamily = headerCap.fontFamily || 'Montserrat, sans-serif';
-      let linesCount = 1;
-      if (typeof document !== 'undefined') {
-        const tempCanvas = document.createElement('canvas');
-        const tempCtx = tempCanvas.getContext('2d');
-        if (tempCtx) {
-          tempCtx.font = `bold ${hFontSize}px ${hFontFamily}`;
-          const wrapped = wrapText(tempCtx, headerCap.text || '', (headerCap.width || 0.92) * canvasW);
-          linesCount = Math.max(1, wrapped.length);
-        }
-      }
-      const hLineHeight = hFontSize * 1.35;
-      const hPadY = Math.max(22, Math.round(hFontSize * 0.6));
-      headerExtH = Math.max(110, Math.round(linesCount * hLineHeight + hPadY * 2));
-    } else {
-      headerExtH = canvasHeader?.height || 140;
-    }
-  }
-
-  // Footer Canvas Extension calculations
   const isFooterEnabled = !!canvasFooter?.enabled;
-  const footerCap = captions.find(c => c.isFooterCaption);
-  let footerExtH = 0;
-  if (isFooterEnabled) {
-    if (footerCap) {
-      const fFontSize = footerCap.fontSize || 50;
-      const fFontFamily = footerCap.fontFamily || 'Montserrat, sans-serif';
-      let linesCount = 1;
-      if (typeof document !== 'undefined') {
-        const tempCanvas = document.createElement('canvas');
-        const tempCtx = tempCanvas.getContext('2d');
-        if (tempCtx) {
-          tempCtx.font = `bold ${fFontSize}px ${fFontFamily}`;
-          const wrapped = wrapText(tempCtx, footerCap.text || '', (footerCap.width || 0.92) * canvasW);
-          linesCount = Math.max(1, wrapped.length);
-        }
-      }
-      const fLineHeight = fFontSize * 1.35;
-      const fPadY = Math.max(22, Math.round(fFontSize * 0.6));
-      footerExtH = Math.max(110, Math.round(linesCount * fLineHeight + fPadY * 2));
-    } else {
-      footerExtH = canvasFooter?.height || 140;
-    }
-  }
-
+  const headerExtH = getBandHeight(canvasHeader, captions.find(c => c.isHeaderCaption), canvasW);
+  const footerExtH = getBandHeight(canvasFooter, captions.find(c => c.isFooterCaption), canvasW);
   const totalCanvasH = canvasH + headerExtH + footerExtH;
 
-  // Layer Center Y position in canvas pixels (anchors meme image layers to the image area below header)
-  const getCaptionCenterY = (cap, customCanvas = null) => {
-    if (!cap) return 0;
-    const activeCanvas = customCanvas || canvasRef.current;
-    if (cap.isHeaderCaption) {
-      if (cap.hasCustomPos) {
-        return (cap.y ?? 0) * (activeCanvas?.height || totalCanvasH);
-      }
-      return headerExtH / 2;
-    }
-    if (cap.isFooterCaption) {
-      if (cap.hasCustomPos) {
-        return (cap.y ?? 0) * (activeCanvas?.height || totalCanvasH);
-      }
-      return headerExtH + canvasH + (footerExtH / 2);
-    }
-    const currentH = activeCanvas?.height || canvasH;
-    const rawY = headerExtH + (cap.y ?? 0.5) * canvasH;
-    if (cap.isWhatsAppCard && activeCanvas) {
-      const cardW = Math.max(180, (cap.width || 0.82) * (activeCanvas.width || canvasW));
-      const ctx = activeCanvas.getContext ? activeCanvas.getContext('2d') : null;
-      const cardH = getWhatsAppCardHeight(ctx, cap, cardW);
-      const minMargin = 16;
-      if (cardH <= currentH - minMargin * 2) {
-        const minY = cardH / 2 + minMargin;
-        const maxY = currentH - cardH / 2 - minMargin;
-        return Math.max(minY, Math.min(maxY, rawY));
-      }
-    }
-    return rawY;
-  };
-
-  const getStickerCenterY = (stk) => {
-    return headerExtH + ((stk?.y) || 0) * canvasH;
-  };
-
-  const getImageLayerCenterY = (img) => {
-    return headerExtH + ((img?.y) || 0) * canvasH;
-  };
+  const { getCaptionCenterY, getStickerCenterY, getImageLayerCenterY } = makeLayerCenters({
+    canvasRef, canvasW, canvasH, headerExtH, footerExtH, totalCanvasH
+  });
   
   const activeFilters = filters || { brightness: 100, contrast: 100, saturation: 100, grayscale: 0, blur: 0 };
 
