@@ -12,7 +12,8 @@ Browser-first meme maker: React 19 + Vite 8, Konva canvas editor, FFmpeg WASM vi
 
 ## Layout
 - `src/App.jsx` — top-level view switching (discovery, editor, explore, gallery, social)
-- `src/components/MemeEditor.jsx` (~8k lines) and `CanvasEditor.jsx` (~5k lines) — the image editor. Very large; edit surgically, and prefer extracting pieces into `src/components/editor/` over growing them.
+- `src/components/MemeEditor.jsx` (~2k lines: handlers + layout) and `CanvasEditor.jsx` (~5k lines, Konva) — the image editor. UI panels live in `src/components/editor/`: `top-bar/`, `tabs/` (sidebar tabs), `social-cards/`, `context-toolbars/` (toolbars under the canvas), `EditorSidebar.jsx`, `EditorModals.jsx`; logic in `editor/hooks/` and `editor/store/`. Add new UI as panels there rather than growing MemeEditor. See `docs/plans/meme-editor-split.md`.
+- Toolbar submenus are `motion.div` children of `AnimatePresence`; keep them direct children (don't wrap them in components) or exit animations break.
 - `src/components/editor/store/useMemeEditorStore.js` — the image editor's document state (captions, layers, header/footer, drawings…) and undo/redo, one store per editor via React context. Call `pushHistory()` after a user edit to make it an undo step; plain setters don't record history.
 - `src/components/video-editor/` — video editor (timeline, canvas preview, audio); state in `src/store/useVideoEditorStore.js` (zustand + zundo undo)
 - `src/components/editor/` — bottom-sheet tools (stickers, emoji, filters, bubbles, template picker), each with a `.test.jsx`

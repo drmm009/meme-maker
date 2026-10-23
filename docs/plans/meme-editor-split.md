@@ -84,7 +84,20 @@ Each phase is its own commit. After each one, `npm test`, `npm run lint` and `np
      - Arrow keys used to move a layer by 1 (or 10) *canvas widths*, because positions are 0..1 fractions. Nudges are now 0.5% (5% with Shift).
      - Background removal applies its result by layer ID to the latest state. Before, a different selection or other edits made during the multi-second removal could be overwritten.
    - Not tested by hand: an actual face swap, which needs `face_swap_server.py` and its model. The modal and its "server offline" path were checked.
-4. **Extract panels, one per commit,** smallest first: ExportPanel → EditorTopBar → CanvasTab → DrawTab → FiltersTab → MediaTab → context toolbars → social-card editors → TextTab → EditorModals. Once the store exists, each panel is mostly cut-and-paste plus a store selector.
+4. **Extract panels, one per commit.** *Done:* 26 components and 27 commits. MemeEditor.jsx is down to 2,045 lines, and its JSX is about 400 lines of layout.
+   - `editor/top-bar/`: ExportPage, EditorTopBar
+   - `editor/tabs/`: CanvasTab, DrawTab, MediaTab, FiltersTab, TextTab, plus `text/` TextToolbar and CaptionStyleControls
+   - `editor/social-cards/`: Chyron, Tweet, Instagram and WhatsApp card editors
+   - `editor/context-toolbars/`: ContextToolbar (CaptionToolbar, StickerToolbar, ImageLayerToolbar, FaceMorphToolbar, TabQuickTools) and SecondaryToolbar (`secondary/` LayerActionsBar, DrawSettingsBar, WatermarkBar, HeaderFooterBar)
+   - `editor/EditorSidebar.jsx`, `editor/EditorModals.jsx`
+   - Each panel reads store fields itself and gets everything else as props.
+   - The split was done with an AST tool that finds the variables each JSX block uses. Every step was checked with a parse, lint (no new unused or undefined names) and the editor tests before committing.
+   - Still above ~600 lines:
+     - `SecondaryToolbar` (747): its animated submenus must stay direct children of one `AnimatePresence`.
+     - `CaptionToolbar` (608)
+   - Long prop lists point to shared UI state (active tab/submenu, which modal is open) that should become a small UI store: `EditorSidebar` has 58 props, `EditorModals` 43, `ContextToolbar` 41.
+   - Found: nothing ever calls `setIsExportModalOpen(true)`, so `ExportPage` and the export format/quality presets in `useExport` are unreachable, both here and before the refactor. Either wire it up (e.g. an "Advanced export…" item in the Export menu) or delete it.
+   - Still in MemeEditor: about 1,550 lines of handlers (captions, layers, bubbles, social cards, header/footer) and the `<CanvasEditor>` call (phase 6).
 5. **Remove duplicate UI.** The compact tab tools (5182–5521) and the sidebar tabs (5522–7970) seem to repeat the same controls, probably one set for mobile and one for desktop. Check which is which, then build both from shared components.
 6. **Point `CanvasEditor` at the store** instead of passing ~100 props, then plan its own split the same way.
 
