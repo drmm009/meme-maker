@@ -34,15 +34,11 @@ import MediaTab from './editor/tabs/MediaTab';
 import DrawTab from './editor/tabs/DrawTab';
 import CanvasTab from './editor/tabs/CanvasTab';
 import TextTab from './editor/tabs/TextTab';
-import TabQuickTools from './editor/context-toolbars/TabQuickTools';
-import FaceMorphToolbar from './editor/context-toolbars/FaceMorphToolbar';
-import ImageLayerToolbar from './editor/context-toolbars/ImageLayerToolbar';
-import StickerToolbar from './editor/context-toolbars/StickerToolbar';
-import CaptionToolbar from './editor/context-toolbars/CaptionToolbar';
 import LayerActionsBar from './editor/context-toolbars/secondary/LayerActionsBar';
 import DrawSettingsBar from './editor/context-toolbars/secondary/DrawSettingsBar';
 import WatermarkBar from './editor/context-toolbars/secondary/WatermarkBar';
 import HeaderFooterBar from './editor/context-toolbars/secondary/HeaderFooterBar';
+import ContextToolbar from './editor/context-toolbars/ContextToolbar';
 import './MemeEditor.css';
 
 export default function MemeEditor(props) {
@@ -2563,89 +2559,49 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
               </AnimatePresence>
 
             {/* ─── 2. Main Context Toolbar ─── */}
-            <AnimatePresence>
-              {((activeCaption || activeSticker || activeImageLayer || templateFaceMorph) || (isMobileTabsFolded && !activeCaption && !activeSticker && !activeImageLayer)) && (isMobileTabsFolded || templateFaceMorph) && (
-                <motion.div
-                  ref={contextToolbarRef}
-                  className={`editor-floating-toolbar video-context-toolbar ${showBubbleLayouts ? 'bubble-mode-left' : ''}`}
-                  initial={{ opacity: 0, height: 0, paddingTop: 0, paddingBottom: 0, marginTop: 0, marginBottom: 0, overflow: 'hidden' }}
-                  animate={{ opacity: 1, height: 64, paddingTop: 5, paddingBottom: 5, marginTop: 2, marginBottom: 0 }}
-                  exit={{ opacity: 0, height: 0, paddingTop: 0, paddingBottom: 0, marginTop: 0, marginBottom: 0, overflow: 'hidden' }}
-                  transition={{ duration: 0.25, ease: 'easeInOut' }}
-                >
-                  {/* Text Controls when caption is active */}
-                  <CaptionToolbar
-                    activeCaption={activeCaption}
-                    activeFontObj={activeFontObj}
-                    activeSubmenu={activeSubmenu}
-                    handleOpenSocialModalForActiveCard={handleOpenSocialModalForActiveCard}
-                    handleSetCaptionBg={handleSetCaptionBg}
-                    handleToggleSubmenu={handleToggleSubmenu}
-                    setActiveSubmenu={setActiveSubmenu}
-                    setShowBubbleBottomSheet={setShowBubbleBottomSheet}
-                    showBubbleBottomSheet={showBubbleBottomSheet}
-                    showStylesModal={showStylesModal}
-                    updateActiveCaptionProps={updateActiveCaptionProps}
-                  />
-
-                  {/* Sticker controls */}
-                  <StickerToolbar activeSticker={activeSticker} handleFlipActiveLayer={handleFlipActiveLayer} handleToggleDieCutSticker={handleToggleDieCutSticker} />
-
-                  {/* Image Layer controls */}
-                  <ImageLayerToolbar
-                    activeImageLayer={activeImageLayer}
-                    handleRemoveBackground={handleRemoveBackground}
-                    handleStartMorphFace={handleStartMorphFace}
-                    isRemovingBg={isRemovingBg}
-                    setShowFiltersModal={setShowFiltersModal}
-                    showFiltersModal={showFiltersModal}
-                  />
-
-
-
-                  {/* ON-TEMPLATE FACE MORPH TOOLBAR */}
-                  <FaceMorphToolbar
-                    activeCaption={activeCaption}
-                    activeImageLayer={activeImageLayer}
-                    activeSticker={activeSticker}
-                    handleChangeFace={handleChangeFace}
-                    handleFinalizeTemplateFace={handleFinalizeTemplateFace}
-                    handleRevertTemplateFace={handleRevertTemplateFace}
-                    isHoldingCanvasCompare={isHoldingCanvasCompare}
-                    setIsHoldingCanvasCompare={setIsHoldingCanvasCompare}
-                  />
-
-                  {/* TAB SPECIFIC TOOLS (when nothing selected and not in template face morph) */}
-                  {/* TEXT TAB */}
-                  <TabQuickTools
-                    activeCaption={activeCaption}
-                    activeImageLayer={activeImageLayer}
-                    activeSticker={activeSticker}
-                    activeSubmenu={activeSubmenu}
-                    activeTab={activeTab}
-                    drawTool={drawTool}
-                    handleAddBubble={handleAddBubble}
-                    handleAddCaption={handleAddCaption}
-                    handleFileUploadImageLayer={handleFileUploadImageLayer}
-                    handleToggleSubmenu={handleToggleSubmenu}
-                    setActiveSubmenu={setActiveSubmenu}
-                    setDrawTool={setDrawTool}
-                    setImagePickerTarget={setImagePickerTarget}
-                    setShowAiModal={setShowAiModal}
-                    setShowBubbleBottomSheet={setShowBubbleBottomSheet}
-                    setShowEmojiModal={setShowEmojiModal}
-                    setShowFaceMorphModal={setShowFaceMorphModal}
-                    setShowFiltersModal={setShowFiltersModal}
-                    setShowMemeStickersModal={setShowMemeStickersModal}
-                    showBubbleBottomSheet={showBubbleBottomSheet}
-                    showFiltersModal={showFiltersModal}
-                    updateWatermark={updateWatermark}
-                    watermark={watermark}
-                  />
-
-                </motion.div>
-              )}
-            </AnimatePresence>
+            <ContextToolbar
+              activeCaption={activeCaption}
+              activeFontObj={activeFontObj}
+              activeImageLayer={activeImageLayer}
+              activeSticker={activeSticker}
+              activeSubmenu={activeSubmenu}
+              activeTab={activeTab}
+              contextToolbarRef={contextToolbarRef}
+              drawTool={drawTool}
+              handleAddBubble={handleAddBubble}
+              handleAddCaption={handleAddCaption}
+              handleChangeFace={handleChangeFace}
+              handleFileUploadImageLayer={handleFileUploadImageLayer}
+              handleFinalizeTemplateFace={handleFinalizeTemplateFace}
+              handleFlipActiveLayer={handleFlipActiveLayer}
+              handleOpenSocialModalForActiveCard={handleOpenSocialModalForActiveCard}
+              handleRemoveBackground={handleRemoveBackground}
+              handleRevertTemplateFace={handleRevertTemplateFace}
+              handleSetCaptionBg={handleSetCaptionBg}
+              handleStartMorphFace={handleStartMorphFace}
+              handleToggleDieCutSticker={handleToggleDieCutSticker}
+              handleToggleSubmenu={handleToggleSubmenu}
+              isHoldingCanvasCompare={isHoldingCanvasCompare}
+              isMobileTabsFolded={isMobileTabsFolded}
+              isRemovingBg={isRemovingBg}
+              setActiveSubmenu={setActiveSubmenu}
+              setDrawTool={setDrawTool}
+              setImagePickerTarget={setImagePickerTarget}
+              setIsHoldingCanvasCompare={setIsHoldingCanvasCompare}
+              setShowAiModal={setShowAiModal}
+              setShowBubbleBottomSheet={setShowBubbleBottomSheet}
+              setShowEmojiModal={setShowEmojiModal}
+              setShowFaceMorphModal={setShowFaceMorphModal}
+              setShowFiltersModal={setShowFiltersModal}
+              setShowMemeStickersModal={setShowMemeStickersModal}
+              showBubbleBottomSheet={showBubbleBottomSheet}
+              showBubbleLayouts={showBubbleLayouts}
+              showFiltersModal={showFiltersModal}
+              showStylesModal={showStylesModal}
+              updateActiveCaptionProps={updateActiveCaptionProps}
+              updateWatermark={updateWatermark}
+              watermark={watermark}
+            />
           </div>
 
         </div>
