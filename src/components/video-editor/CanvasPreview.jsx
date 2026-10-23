@@ -5,6 +5,7 @@ import { useEditorStore } from '../../store/useVideoEditorStore';
 import { useShallow } from 'zustand/react/shallow';
 import { clipGain } from '../../utils/audioFades';
 import { applyChromaKey, sampleKeyColor, suggestTolerance } from '../../utils/chromaKey';
+import { REST_FRAME, animationLengthMs, applyTextFrame, textAnimFrame } from '../../utils/textAnimation';
 
 // Green-screen frames are keyed at most this many pixels on the long side; Konva scales them up.
 const KEY_MAX_SIDE = 640;
@@ -402,7 +403,10 @@ const CanvasMedia = ({ item, isSelected, onSelect, onChange, canvasDimensions })
 // Custom Text Component to handle visibility outside React render cycle
 const CanvasText = ({ item, isSelected, onSelect, onChange, onEditStart, isEditing }) => {
   const textRef = useRef(null);
+  const groupRef = useRef(null);
   const bgRectRef = useRef(null);
+  const lastFrameRef = useRef(REST_FRAME);
+  const previewingRef = useRef(false);
   const trRef = useRef(null);
   const itemRef = useRef(item);
 
@@ -412,6 +416,17 @@ const CanvasText = ({ item, isSelected, onSelect, onChange, onEditStart, isEditi
   useEffect(() => {
     itemRef.current = item;
   }, [item]);
+
+  // Animations play during playback (and in a quick preview when one is picked); paused text rests,
+  // so a pop-in doesn't make text invisible while you edit it.
+  const applyFrame = (frame) => {
+    const group = groupRef.current;
+    const node = textRef.current;
+    if (!group || !node || (frame === REST_FRAME && lastFrameRef.current === REST_FRAME)) return;
+    applyTextFrame(group, node, frame);
+    lastFrameRef.current = frame;
+    group.getLayer()?.batchDraw();
+  };
 
   useEffect(() => {
     const unsub = useEditorStore.subscribe((state) => {
@@ -425,9 +440,44 @@ const CanvasText = ({ item, isSelected, onSelect, onChange, onEditStart, isEditi
         if (trRef.current) trRef.current.visible(isVisible);
         node.getLayer()?.batchDraw();
       }
+      if (previewingRef.current) return;
+      applyFrame(state.isPlaying && latestItem.animation
+        ? textAnimFrame(latestItem, state.playhead - latestItem.startMs)
+        : REST_FRAME);
     });
     return unsub;
   }, [item.startMs, item.endMs]);
+
+  // A one-off run of the animation from the start, when it is picked from the tools.
+  useEffect(() => {
+    let frameId = null;
+    const onPreview = (e) => {
+      if (e.detail?.id !== itemRef.current.id) return;
+      const latest = useEditorStore.getState().items.find((i) => i.id === itemRef.current.id);
+      if (!latest?.animation) return;
+      cancelAnimationFrame(frameId);
+      previewingRef.current = true;
+      const runMs = Math.min(1400, animationLengthMs(latest)) + 300;
+      const t0 = performance.now();
+      const tick = (now) => {
+        const t = now - t0;
+        if (t > runMs) {
+          previewingRef.current = false;
+          applyFrame(REST_FRAME);
+          return;
+        }
+        applyFrame(textAnimFrame(latest, t));
+        frameId = requestAnimationFrame(tick);
+      };
+      frameId = requestAnimationFrame(tick);
+    };
+    window.addEventListener('vt-preview-text-animation', onPreview);
+    return () => {
+      window.removeEventListener('vt-preview-text-animation', onPreview);
+      cancelAnimationFrame(frameId);
+      previewingRef.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (isSelected && trRef.current && textRef.current) {
@@ -447,6 +497,7 @@ const CanvasText = ({ item, isSelected, onSelect, onChange, onEditStart, isEditi
 
   return (
     <React.Fragment>
+      <Group ref={groupRef}>
       {hasBg && (
         <Rect
           ref={bgRectRef}
@@ -527,6 +578,7 @@ const CanvasText = ({ item, isSelected, onSelect, onChange, onEditStart, isEditi
           node.scaleY(1);
         }}
       />
+      </Group>
       {isSelected && (
         <Transformer 
           ref={trRef} 

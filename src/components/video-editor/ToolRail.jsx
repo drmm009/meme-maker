@@ -2,12 +2,13 @@ import React, { useState } from 'react';
 import {
   Type, Sticker, Smile, LayoutGrid, Image as ImageIcon, Film, Clapperboard, Music, AudioLines,
   Check, Gauge, Volume2, VolumeX, Palette, Square, RotateCw, Minimize, Crop, Maximize, Copy, Trash2,
-  Scissors, PencilLine, ALargeSmall, TextAlignStart, TextAlignCenter, TextAlignEnd, SlidersHorizontal, WandSparkles, Pipette
+  Scissors, PencilLine, ALargeSmall, TextAlignStart, TextAlignCenter, TextAlignEnd, SlidersHorizontal, WandSparkles, Pipette, Sparkles
 } from 'lucide-react';
 import { useEditorStore } from '../../store/useVideoEditorStore';
 import { FONTS } from '../../data/stickers';
 import { DEFAULT_FADE_MS } from '../../utils/audioFades';
 import { DEFAULT_CHROMA_KEY } from '../../utils/chromaKey';
+import { TEXT_ANIMATIONS } from '../../utils/textAnimation';
 
 // White outline on dark text, black on light text.
 const getContrastStroke = (hexColor) => {
@@ -146,7 +147,29 @@ function GreenScreenPanel({ item }) {
   );
 }
 
-const PANELS = { volume: VolumePanel, size: SizePanel, text: TextPanel, greenscreen: GreenScreenPanel };
+function AnimationPanel({ item }) {
+  const current = item.animation || null;
+  return (
+    <div className="vt-chip-row">
+      {TEXT_ANIMATIONS.map((a) => (
+        <button
+          key={a.label}
+          type="button"
+          className={`vt-chip${current === a.id ? ' is-on' : ''}`}
+          onClick={() => {
+            update(item.id, { animation: a.id });
+            // Show it straight away; the editor otherwise animates text only during playback.
+            if (a.id) window.dispatchEvent(new CustomEvent('vt-preview-text-animation', { detail: { id: item.id } }));
+          }}
+        >
+          {a.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+const PANELS = { volume: VolumePanel, size: SizePanel, text: TextPanel, greenscreen: GreenScreenPanel, animation: AnimationPanel };
 
 function ClipTools({ item, panel, setPanel }) {
   const aspectRatio = useEditorStore((s) => s.canvasAspectRatio);
@@ -171,6 +194,7 @@ function ClipTools({ item, panel, setPanel }) {
       }}>
         <span className="vt-tool-font" style={{ fontFamily: font.family }}>Aa</span>
       </RailButton>,
+      <RailButton key="animate" label="Animate" Icon={Sparkles} active={panel === 'animation' || Boolean(item.animation)} onClick={() => togglePanel('animation')} />,
       <RailButton key="size" label="Size" Icon={ALargeSmall} active={panel === 'size'} onClick={() => togglePanel('size')} />,
       <label key="color" className="vt-tool">
         <span className="vt-tool-icon"><Palette size={22} strokeWidth={1.8} style={{ color: item.color || '#fff' }} /></span>

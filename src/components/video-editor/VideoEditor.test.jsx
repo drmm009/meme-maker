@@ -148,6 +148,22 @@ describe('VideoEditor', () => {
     expect(store().items[0].chromaKey).toBe(null);
   });
 
+  it('picks a text animation and previews it', () => {
+    const previews = [];
+    const onPreview = (e) => previews.push(e.detail.id);
+    window.addEventListener('vt-preview-text-animation', onPreview);
+    const { container } = render(<VideoEditor onBack={() => {}} />);
+    fireEvent.click(screen.getByText('Text'));
+    fireEvent.click(clips(container)[0]);
+    fireEvent.click(screen.getByText('Animate'));
+    fireEvent.click(screen.getByText('Typewriter'));
+    expect(store().items[0].animation).toBe('typewriter');
+    expect(previews).toEqual([store().items[0].id]);
+    fireEvent.click(screen.getByText('None'));
+    expect(store().items[0].animation).toBe(null);
+    window.removeEventListener('vt-preview-text-animation', onPreview);
+  });
+
   it('calls onBack from the close button', () => {
     const onBack = vi.fn();
     render(<VideoEditor onBack={onBack} />);

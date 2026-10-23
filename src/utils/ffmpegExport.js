@@ -4,6 +4,7 @@ import Konva from 'konva';
 import { generateGridImage } from './gridHelper';
 import { fadeFilter } from './audioFades';
 import { chromaKeyFilter } from './chromaKey';
+import { REST_FRAME, animationSteps, applyTextFrame, shakeExpressions } from './textAnimation';
 
 let ffmpeg = null;
 let loadPromise = null;
@@ -200,7 +201,7 @@ export const exportVideoFFmpeg = async (items = [], durationMs = 7000, canvasAsp
     }
 
     // Helper to render text into a transparent PNG buffer matching the output resolution
-    const renderTextToPNG = async (item, w, h, ratio) => {
+    const renderTextToPNG = async (item, w, h, ratio, frame = REST_FRAME) => {
       return new Promise((resolve) => {
         try {
           const container = document.createElement('div');
@@ -214,6 +215,7 @@ export const exportVideoFFmpeg = async (items = [], durationMs = 7000, canvasAsp
           const stage = new Konva.Stage({ container, width: w, height: h });
           const layer = new Konva.Layer();
           stage.add(layer);
+          const group = new Konva.Group();
 
           const textX = (typeof item.x === 'number' && !isNaN(item.x) ? item.x : 0) * ratio;
           const textY = (typeof item.y === 'number' && !isNaN(item.y) ? item.y : 0) * ratio;
@@ -250,10 +252,13 @@ export const exportVideoFFmpeg = async (items = [], durationMs = 7000, canvasAsp
               cornerRadius: 6 * ratio,
               rotation: item.rotation || 0,
             });
-            layer.add(bgRect);
+            group.add(bgRect);
           }
 
-          layer.add(textNode);
+          group.add(textNode);
+          layer.add(group);
+          // Animation frame (offsets are in 800-wide stage units, like item.x).
+          applyTextFrame(group, textNode, { ...frame, dx: frame.dx * ratio, dy: frame.dy * ratio });
           layer.draw();
 
           const dataURL = stage.toDataURL({ pixelRatio: 1 });
@@ -299,24 +304,34 @@ export const exportVideoFFmpeg = async (items = [], durationMs = 7000, canvasAsp
       });
     };
 
-    // Add text items via PNG overlay for pixel-perfect font, stroke, and rotation support
+    // Add text items via PNG overlay for pixel-perfect font, stroke, and rotation support.
+    // Animated text is a run of stills (pop, typewriter); shake moves one still with overlay expressions.
     for (const item of textItems) {
       const startT = Math.max(0, (typeof item.startMs === 'number' && !isNaN(item.startMs) ? item.startMs : 0) / 1000);
       const endT = Math.max(startT + 0.05, (typeof item.endMs === 'number' && !isNaN(item.endMs) ? item.endMs : safeDurationMs) / 1000);
-      
-      const fileName = `text_${inputIndex}.png`;
-      const pngData = await renderTextToPNG(item, canvasW, canvasH, konvaRatio);
-      if (!pngData || pngData.byteLength === 0) continue;
-      
-      await ff.writeFile(fileName, pngData);
-      filesToDelete.push(fileName);
-      
-      command.push('-loop', '1', '-i', fileName);
-      
-      filterComplex += `[${currentBgIndex === 0 ? '0:v' : `bg${currentBgIndex}`}][${inputIndex}:v]overlay=0:0:enable='between(t,${startT},${endT})':eof_action=pass:shortest=0[bg${currentBgIndex + 1}];`;
-      
-      currentBgIndex++;
-      inputIndex++;
+      const steps = animationSteps({ ...item, startMs: startT * 1000, endMs: endT * 1000 });
+      const shake = item.animation === 'shake' ? shakeExpressions(item, startT, konvaRatio) : null;
+      const position = shake ? `x='${shake.x}':y='${shake.y}'` : '0:0';
+
+      for (const [i, step] of steps.entries()) {
+        const fromT = (startT + step.fromMs / 1000).toFixed(3);
+        const toT = Math.min(endT, startT + step.toMs / 1000).toFixed(3);
+        const fileName = `text_${inputIndex}.png`;
+        const pngData = await renderTextToPNG(item, canvasW, canvasH, konvaRatio, step.frame);
+        if (!pngData || pngData.byteLength === 0) continue;
+
+        await ff.writeFile(fileName, pngData);
+        filesToDelete.push(fileName);
+
+        command.push('-loop', '1', '-i', fileName);
+
+        // Steps hand over exactly (gte/lt); the last one runs to the clip's end inclusive.
+        const enable = i === steps.length - 1 ? `between(t,${fromT},${toT})` : `gte(t,${fromT})*lt(t,${toT})`;
+        filterComplex += `[${currentBgIndex === 0 ? '0:v' : `bg${currentBgIndex}`}][${inputIndex}:v]overlay=${position}:enable='${enable}':eof_action=pass:shortest=0[bg${currentBgIndex + 1}];`;
+
+        currentBgIndex++;
+        inputIndex++;
+      }
     }
 
     if (layoutId) {
