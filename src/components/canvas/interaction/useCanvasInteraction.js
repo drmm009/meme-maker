@@ -8,6 +8,7 @@ import { getTweetCardHeight } from '../draw/socialCards/tweet';
 import { getInstagramCardHeight } from '../draw/socialCards/instagram';
 import { useMemeEditorStore } from '../../editor/store/useMemeEditorStore';
 import { useEditorUiStore } from '../../editor/store/useEditorUiStore';
+import { isSocialCardCaption } from '../../editor/memeEditorUtils';
 
 export function useCanvasInteraction({
   activeIsNativeLayout, activeLayoutDef, canvasH, canvasRef, canvasW,
@@ -519,7 +520,7 @@ export function useCanvasInteraction({
       if (hitLayer.type === 'caption') {
         const now = Date.now();
         const clickedCap = captions.find(c => c.id === hitLayer.id);
-        const isSocial = clickedCap?.isTweetCard || clickedCap?.isInstagramCard || clickedCap?.isWhatsAppCard;
+        const isSocial = isSocialCardCaption(clickedCap);
         if (!isSocial && lastTapRef.current.id === hitLayer.id && (now - lastTapRef.current.time) < 350) {
           setEditingCaptionId(hitLayer.id);
           focusTextarea();
@@ -667,7 +668,7 @@ export function useCanvasInteraction({
     if (wasCleanTap && tappedType === 'caption' && tappedId) {
       if (onSelectLayer) onSelectLayer(tappedId);
       const tappedCap = captions.find(c => c.id === tappedId);
-      const isSocial = tappedCap?.isTweetCard || tappedCap?.isInstagramCard || tappedCap?.isWhatsAppCard;
+      const isSocial = isSocialCardCaption(tappedCap);
       if (!isSocial) {
         setEditingCaptionId(tappedId);
         focusTextarea();
@@ -1333,7 +1334,7 @@ export function useCanvasInteraction({
 
       const scaleFactor = Math.max(0.1, Math.min(maxAllowedScale, proj));
 
-      const isSocial = cap.isTweetCard || cap.isInstagramCard || cap.isWhatsAppCard;
+      const isSocial = isSocialCardCaption(cap);
       const defaultCardWidth = cap.isWhatsAppCard ? 0.84 : 0.88;
       const initFontSize = initialLayerPos.current.initialFontSize || cap.fontSize || (isSocial ? 16 : 50);
       const newFontSize = Math.max(10, Math.min(220, Math.round(initFontSize * scaleFactor)));

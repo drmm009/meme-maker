@@ -1,10 +1,14 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useMemeEditorStore } from './editor/store/useMemeEditorStore';
 import { useEditorUiStore } from './editor/store/useEditorUiStore';
+import { isSocialCardCaption } from './editor/memeEditorUtils';
 import { getBandHeight, getCanvasSize, makeLayerCenters } from './canvas/layout/canvasLayout';
 import { renderScene } from './canvas/render/renderScene';
 import { useCanvasInteraction } from './canvas/interaction/useCanvasInteraction';
+import CaptionTextOverlay from './canvas/CaptionTextOverlay';
 
+// The meme canvas: works out the layout, draws the scene with renderScene, and hands pointer
+// input to useCanvasInteraction. Drawing and hit testing live in ./canvas.
 const CanvasEditor = React.forwardRef(function CanvasEditor(
   {
     imageUrl,
@@ -41,12 +45,12 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
   const canvasFlipX = useMemeEditorStore((s) => s.canvasFlipX);
   const watermark = useEditorUiStore((s) => s.watermark);
 
-  
+  // The colour picker previews the background through a window event before committing to the store.
   const [liveBgColor, setLiveBgColor] = useState(canvasBgColor);
   useEffect(() => {
     setLiveBgColor(canvasBgColor);
   }, [canvasBgColor]);
-  
+
   useEffect(() => {
     const handler = (e) => {
       setLiveBgColor(e.detail);
@@ -57,35 +61,18 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
 
   const internalRef = useRef(null);
   const canvasRef = ref || internalRef;
-  const activeIsNativeLayout = isNativeLayout;
-  const activeLayoutDef = layoutDef;
-
-  useEffect(() => {
-    if (canvasRef.current) {
-      canvasRef.current.resetVideoTimestamps = () => {
-        Object.values(imageCacheRef.current).forEach((media) => {
-          if (media && media.tagName === 'VIDEO') {
-            const trimStart = media._trimStart || 0;
-            media.currentTime = trimStart;
-            media.play().catch(() => {});
-          }
-        });
-      };
-      canvasRef.current.getVideoElements = () => {
-        return Object.values(imageCacheRef.current).filter((media) => media && media.tagName === 'VIDEO');
-      };
-    }
-  }, [canvasRef]);
-
   const wrapperRef = useRef(null);
   const editableRef = useRef(null);
+  const baseImgRef = useRef(null);
+  const compCanvasRef = useRef(null);
   const imageCacheRef = useRef({});
   const loadingMediaRef = useRef({});
-  const [naturalSize, setNaturalSize] = useState({ w: 800, h: 800 });
-
+  // Written by the interaction hook, read by the renderer (snap guides, handles).
   const isDragging = useRef(false);
   const snappingLines = useRef({ horizontal: null, vertical: null });
   const dragTarget = useRef(null);
+
+  const [naturalSize, setNaturalSize] = useState({ w: 800, h: 800 });
   const [editingCaptionId, setEditingCaptionId] = useState(null);
 
   useEffect(() => {
@@ -94,7 +81,8 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     }
   }, [editingCaptionId, activeLayerId]);
 
-
+  const activeIsNativeLayout = isNativeLayout;
+  const activeLayoutDef = layoutDef;
   const imgSrc = template?.canvasOnly ? null : (template?.rawImageUrl || imageUrl || template?.imageUrl);
   const { canvasW, canvasH } = getCanvasSize(aspectRatio, template, naturalSize);
 
@@ -108,14 +96,15 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
   const { getCaptionCenterY, getStickerCenterY, getImageLayerCenterY } = makeLayerCenters({
     canvasRef, canvasW, canvasH, headerExtH, footerExtH, totalCanvasH
   });
-  
+
   const activeFilters = filters || { brightness: 100, contrast: 100, saturation: 100, grayscale: 0, blur: 0 };
 
   const activeCaption = captions.find((c) => c.id === activeLayerId);
+  const showTextOverlay = !isDrawingMode && activeCaption && !isSocialCardCaption(activeCaption);
 
   // Focus textarea ONLY when explicitly called (not on selection change, never on Social Cards)
   const focusTextarea = () => {
-    if (activeCaption?.isTweetCard || activeCaption?.isInstagramCard || activeCaption?.isWhatsAppCard) return;
+    if (isSocialCardCaption(activeCaption)) return;
     if (editableRef.current) {
       try {
         editableRef.current.focus();
@@ -127,7 +116,6 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     }
   };
 
-  const baseImgRef = useRef(null);
   const {
     handlePointerDown, handleTextOverlayPointerDown, handleTextOverlayPointerEnd,
     handlePointerEnd, handlePointerMove, handleWheel
@@ -140,7 +128,6 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     onUpdateStickerBounds, setEditingCaptionId, snappingLines,
     totalCanvasH, wrapperRef
   });
-  const compCanvasRef = useRef(null);
 
   useEffect(() => {
     renderScene({
@@ -154,11 +141,9 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     });
   }, [captions, stickers, activeLayerId, imageLayers, slotImages, slotTransforms, activeIsNativeLayout, editingCaptionId, aspectRatio, imageFit, watermark, drawings, isDrawingMode, imgSrc, filters, liveBgColor, canvasHeader, canvasFooter, demotivational, canvasFlipX]);
 
-
   // Keep focus on active caption whenever selected (not for social cards)
   useEffect(() => {
-    const isSocial = activeCaption?.isTweetCard || activeCaption?.isInstagramCard || activeCaption?.isWhatsAppCard;
-    if (activeCaption && !isSocial && editingCaptionId === activeCaption.id) {
+    if (activeCaption && !isSocialCardCaption(activeCaption) && editingCaptionId === activeCaption.id) {
       focusTextarea();
     }
   }, [activeCaption?.id, editingCaptionId]);
@@ -205,68 +190,18 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         }}
       />
 
-      {/* SEAMLESS LIVE CANVAS TEXT EDITOR — ONLY FOR REGULAR CAPTIONS, NOT SOCIAL CARDS */}
-      {!isDrawingMode && activeCaption && !activeCaption.isTweetCard && !activeCaption.isInstagramCard && !activeCaption.isWhatsAppCard && (
-        <textarea
-          ref={editableRef}
-          className="seamless-live-text-editor"
-          spellCheck={false}
-          autoCorrect="off"
-          autoCapitalize="off"
-          style={{
-            position: 'absolute',
-            left: activeCaption ? `${activeCaption.x * 100}%` : '-9999px',
-            top: activeCaption
-              ? (activeCaption.isHeaderCaption && !activeCaption.hasCustomPos
-                  ? `${((headerExtH / 2) / Math.max(1, totalCanvasH)) * 100}%`
-                  : (activeCaption.isFooterCaption && !activeCaption.hasCustomPos)
-                  ? `${(((headerExtH + canvasH + (footerExtH / 2))) / Math.max(1, totalCanvasH)) * 100}%`
-                  : `${(((headerExtH + activeCaption.y * canvasH) / Math.max(1, totalCanvasH)) * 100)}%`)
-              : '-9999px',
-            transform: activeCaption ? `translate(-50%, -50%) rotate(${activeCaption.rotation || 0}deg)` : 'translate(-50%, -50%)',
-            width: activeCaption ? `${Math.min(95, Math.max(35, (activeCaption.width || 0.8) * 100))}%` : '1px',
-            minHeight: activeCaption ? '44px' : '1px',
-            opacity: 0.001,
-            pointerEvents: activeCaption ? 'auto' : 'none',
-            color: 'transparent',
-            caretColor: 'transparent',
-            background: 'transparent',
-            border: 'none',
-            outline: 'none',
-            resize: 'none',
-            zIndex: activeCaption ? 15 : -1,
-            padding: '0',
-            margin: '0',
-            fontSize: '16px',
-            touchAction: 'manipulation',
-            overflow: 'hidden'
-          }}
-          rows={2}
-          value={activeCaption ? (activeCaption.text || '') : ''}
-          onChange={(e) => {
-            if (activeCaption && onUpdateCaptionText) {
-              onUpdateCaptionText(activeCaption.id, e.target.value);
-            }
-          }}
-          onFocus={(e) => {
-            try {
-              const len = e.target.value.length;
-              e.target.setSelectionRange(len, len);
-            } catch {
-              // Selection fallback
-            }
-          }}
-          onBlur={() => {
-            setEditingCaptionId(null);
-          }}
-          onTouchStart={(e) => {
-            handleTextOverlayPointerDown(e);
-          }}
-          onTouchEnd={(e) => {
-            handleTextOverlayPointerEnd(e);
-          }}
-          onMouseDown={handleTextOverlayPointerDown}
-          onMouseUp={handleTextOverlayPointerEnd}
+      {showTextOverlay && (
+        <CaptionTextOverlay
+          caption={activeCaption}
+          editableRef={editableRef}
+          headerExtH={headerExtH}
+          canvasH={canvasH}
+          footerExtH={footerExtH}
+          totalCanvasH={totalCanvasH}
+          onChangeText={(text) => onUpdateCaptionText?.(activeCaption.id, text)}
+          onBlur={() => setEditingCaptionId(null)}
+          onPointerDown={handleTextOverlayPointerDown}
+          onPointerEnd={handleTextOverlayPointerEnd}
         />
       )}
     </div>
