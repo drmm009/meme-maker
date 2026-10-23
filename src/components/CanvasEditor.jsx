@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useReducer, useRef, useState } from 'react';
 import { useMemeEditorStore } from './editor/store/useMemeEditorStore';
 import { useEditorUiStore } from './editor/store/useEditorUiStore';
 import { isSocialCardCaption } from './editor/memeEditorUtils';
@@ -74,6 +74,8 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
 
   const [naturalSize, setNaturalSize] = useState({ w: 800, h: 800 });
   const [editingCaptionId, setEditingCaptionId] = useState(null);
+  // Redraws for changes that live in refs rather than state (e.g. snap guides cleared on release).
+  const [redrawTick, requestRedraw] = useReducer((n) => n + 1, 0);
 
   useEffect(() => {
     if (editingCaptionId && activeLayerId !== editingCaptionId) {
@@ -125,7 +127,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     getStickerCenterY, headerExtH, imageCacheRef, isDragging, isDrawingMode,
     isFooterEnabled, isHeaderEnabled, onAddDrawing, onDeleteLayer, onSelectLayer,
     onUpdateCaptionBounds, onUpdateImageLayerBounds, onUpdateSlotTransform,
-    onUpdateStickerBounds, setEditingCaptionId, snappingLines,
+    onUpdateStickerBounds, requestRedraw, setEditingCaptionId, snappingLines,
     totalCanvasH, wrapperRef
   });
 
@@ -139,7 +141,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
       isNativeLayout, liveBgColor, loadingMediaRef, naturalSize, setNaturalSize, slotImages,
       slotTransforms, snappingLines, stickers, totalCanvasH, watermark
     });
-  }, [captions, stickers, activeLayerId, imageLayers, slotImages, slotTransforms, activeIsNativeLayout, editingCaptionId, aspectRatio, imageFit, watermark, drawings, isDrawingMode, imgSrc, filters, liveBgColor, canvasHeader, canvasFooter, demotivational, canvasFlipX]);
+  }, [captions, stickers, activeLayerId, imageLayers, slotImages, slotTransforms, activeIsNativeLayout, editingCaptionId, aspectRatio, imageFit, watermark, drawings, isDrawingMode, imgSrc, filters, liveBgColor, canvasHeader, canvasFooter, demotivational, canvasFlipX, redrawTick]);
 
   // Keep focus on active caption whenever selected (not for social cards)
   useEffect(() => {

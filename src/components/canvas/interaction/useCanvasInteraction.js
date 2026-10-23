@@ -16,7 +16,7 @@ export function useCanvasInteraction({
   getStickerCenterY, headerExtH, imageCacheRef, isDragging, isDrawingMode,
   isFooterEnabled, isHeaderEnabled, onAddDrawing, onDeleteLayer, onSelectLayer,
   onUpdateCaptionBounds, onUpdateImageLayerBounds, onUpdateSlotTransform,
-  onUpdateStickerBounds, setEditingCaptionId, snappingLines,
+  onUpdateStickerBounds, requestRedraw, setEditingCaptionId, snappingLines,
   totalCanvasH, wrapperRef
 }) {
   const isDrawingActive = useRef(false);
@@ -658,6 +658,9 @@ export function useCanvasInteraction({
     hasDragged.current = false;
     dragTarget.current = null;
     document.body.style.userSelect = '';
+    // The last frame drawn mid-drag shows drag-only feedback (snap guides, size and angle pills): redraw without it.
+    snappingLines.current = { horizontal: null, vertical: null };
+    if (tappedType) requestRedraw();
     document.body.style.webkitUserSelect = '';
 
     if (wasCleanTap && tappedType === 'empty-slot') {
