@@ -1991,9 +1991,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
         />
       </div>
 
-
-
-      {/* Meme Stickers & Overlays Bottom Sheet */}
+      {/* Bottom sheets and modals */}
       <EditorModals
         activeCaption={activeCaption}
         activeImageLayer={activeImageLayer}
