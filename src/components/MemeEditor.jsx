@@ -2,12 +2,11 @@ import { useState, useRef, useEffect } from 'react';
 import CanvasEditor, { TWEET_TREND_PRESETS } from './CanvasEditor';
 import { FONTS } from '../data/stickers';
 import {
-  Type, Plus, Trash2, Sparkles, Copy, Blend, Settings, Smile, Sticker, Check, RefreshCw, X,
-  Upload, RotateCw, Crop, LayoutGrid, Droplet, Highlighter, Palette, Sun, PencilLine,
-  ArrowDownRight, Wand2, Layers, ArrowUp, ArrowDown, Eye, FlipHorizontal, PanelTop,
-  PanelBottom, MessageSquareQuote, Flame, Tv, MessageCircle, Shield, Ban, AlignLeft,
-  AlignCenter, AlignRight, Brush, SunMedium, ImagePlus, LayoutTemplate, Rows3,
-  WandSparkles, ScanFace, CheckCheck, User
+  Type, Plus, Trash2, Sparkles, Copy, Blend, Settings, Smile, Check, RefreshCw, X, Upload,
+  RotateCw, Crop, LayoutGrid, Droplet, Palette, PencilLine, ArrowDownRight, Wand2, Layers,
+  ArrowUp, ArrowDown, Eye, FlipHorizontal, PanelTop, PanelBottom, MessageSquareQuote,
+  Flame, Tv, MessageCircle, Shield, Ban, AlignLeft, AlignCenter, AlignRight, Rows3,
+  ScanFace, CheckCheck, User
 } from 'lucide-react';
 import AiCaptionModal from './AiCaptionModal';
 import MemeStylesModal, { TwitterVerifiedBadge, InstagramVerifiedBadge, IG_PRESET_IMAGES } from './MemeStylesModal';
@@ -38,6 +37,7 @@ import MediaTab from './editor/tabs/MediaTab';
 import DrawTab from './editor/tabs/DrawTab';
 import CanvasTab from './editor/tabs/CanvasTab';
 import TextTab from './editor/tabs/TextTab';
+import TabQuickTools from './editor/context-toolbars/TabQuickTools';
 import './MemeEditor.css';
 
 export default function MemeEditor(props) {
@@ -3742,335 +3742,31 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
 
                   {/* TAB SPECIFIC TOOLS (when nothing selected and not in template face morph) */}
                   {/* TEXT TAB */}
-                  {!(activeCaption || activeSticker || activeImageLayer) && !templateFaceMorph && activeTab === "text" && (
-                    <div style={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}>
-                      <button
-                        className="btn btn-xs vid-ctx-btn vid-ctx-btn-primary vid-ctx-btn-add-text"
-                        data-action="add-text"
-                        onClick={handleAddCaption}
-                        title="Add Text Caption"
-                      >
-                        <Plus style={{ width: 14, height: 14, color: '#ffffff' }} /> <span>Add Text</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        data-setting-btn="banner"
-                        className={`btn btn-xs vid-ctx-btn vid-ctx-btn-banner ${(canvasHeader.enabled || canvasFooter.enabled || activeSubmenu === 'banner') ? 'active' : ''}`}
-                        onClick={() => handleToggleSubmenu('banner')}
-                        title="Header & Footer Canvas Extensions (Top / Bottom)"
-                      >
-                        <Rows3 style={{ width: 13, height: 13, color: '#ffffff' }} />
-                        <span>Header / Footer</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        data-setting-btn="bubble"
-                        className={`btn btn-xs vid-ctx-btn vid-ctx-btn-bubble ${showBubbleBottomSheet ? 'active' : ''}`}
-                        onClick={() => {
-                          if (activeCaption) {
-                            setShowBubbleBottomSheet(true);
-                          } else {
-                            handleAddBubble();
-                            setShowBubbleBottomSheet(true);
-                          }
-                          setActiveSubmenu(null);
-                        }}
-                        title="Add Chat & Speech Bubble (iPhone, WhatsApp, Comic)"
-                      >
-                        <MessageSquareQuote style={{ width: 13, height: 13, color: '#ffffff' }} /> <span>Bubble</span>
-                      </button>
-
-                      <button
-                        className="btn btn-xs vid-ctx-btn vid-ctx-btn-ai"
-                        data-action="ai-captions"
-                        onClick={() => setShowAiModal(true)}
-                        title="AI Meme Captions"
-                      >
-                        <WandSparkles style={{ width: 13, height: 13, color: '#ffffff' }} className="vid-ai-sparkle-icon" /> <span>AI Captions</span>
-                      </button>
-                    </div>
-                  )}
-
-                  {/* IMAGES TAB */}
-                  {!(activeCaption || activeSticker || activeImageLayer) && !templateFaceMorph && activeTab === 'images' && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-                      <label
-                        className="btn btn-xs vid-ctx-btn"
-                        style={{
-                          padding: '5px 14px',
-                          fontSize: '0.8rem',
-                          fontWeight: 600,
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '6px',
-                          borderRadius: '12px',
-                          flexShrink: 0,
-                          cursor: 'pointer',
-                          margin: 0
-                        }}
-                        title="Upload Image or Video"
-                      >
-                        <ImagePlus style={{ width: 14, height: 14, color: 'var(--cyber-cyan)' }} />
-                        <span>Upload</span>
-                        <input
-                          type="file"
-                          accept="image/*,video/*"
-                          style={{ display: 'none' }}
-                          onChange={handleFileUploadImageLayer}
-                        />
-                      </label>
-
-                      <button
-                        className="btn btn-xs vid-ctx-btn"
-                        onClick={() => setImagePickerTarget('layer')}
-                        style={{
-                          padding: '5px 14px',
-                          fontSize: '0.8rem',
-                          fontWeight: 600,
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '6px',
-                          borderRadius: '12px',
-                          flexShrink: 0
-                        }}
-                        title="Add Image from Templates"
-                      >
-                        <LayoutTemplate style={{ width: 14, height: 14, color: 'var(--cyber-cyan)' }} />
-                        <span>Template</span>
-                      </button>
-
-                      <button
-                        className="btn btn-xs vid-ctx-btn"
-                        onClick={() => setShowMemeStickersModal(true)}
-                        style={{
-                          padding: '5px 14px',
-                          fontSize: '0.8rem',
-                          fontWeight: 600,
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '6px',
-                          borderRadius: '12px',
-                          flexShrink: 0
-                        }}
-                        title="Add Meme Stickers"
-                      >
-                        <Sticker style={{ width: 14, height: 14, color: 'var(--cyber-cyan)' }} />
-                        <span>Stickers</span>
-                      </button>
-
-                      <button
-                        className="btn btn-xs vid-ctx-btn"
-                        onClick={() => setShowEmojiModal(true)}
-                        style={{
-                          padding: '5px 14px',
-                          fontSize: '0.8rem',
-                          fontWeight: 600,
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '6px',
-                          borderRadius: '12px',
-                          flexShrink: 0
-                        }}
-                        title="Add Emojis"
-                      >
-                        <Smile style={{ width: 14, height: 14, color: 'var(--cyber-cyan)' }} />
-                        <span>Emojis</span>
-                      </button>
-                    </div>
-                  )}
-
-                  {/* DRAW TAB */}
-                  {!(activeCaption || activeSticker || activeImageLayer) && activeTab === 'draw' && (
-                    <div
-                      className="draw-toolbar-group"
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '8px',
-                        flexShrink: 0,
-                        marginInline: 'auto'
-                      }}
-                    >
-                      <button
-                        className={`btn btn-xs vid-ctx-btn ${drawTool === 'brush' ? 'active' : ''}`}
-                        onClick={() => {
-                          setDrawTool('brush');
-                          setActiveSubmenu('drawSettings');
-                        }}
-                        style={{
-                          padding: '5px 14px',
-                          fontSize: '0.8rem',
-                          fontWeight: 600,
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '6px',
-                          borderRadius: '12px',
-                          background: drawTool === 'brush' ? 'var(--primary-gradient)' : undefined,
-                          color: drawTool === 'brush' ? '#ffffff' : undefined,
-                          border: drawTool === 'brush' ? '1px solid var(--cyber-cyan)' : undefined,
-                          flexShrink: 0
-                        }}
-                        title="Brush: Solid clean brush stroke"
-                      >
-                        <Brush style={{ width: 14, height: 14 }} />
-                        <span>Brush</span>
-                      </button>
-
-                      <button
-                        className={`btn btn-xs vid-ctx-btn ${drawTool === 'highlighter' ? 'active' : ''}`}
-                        onClick={() => {
-                          setDrawTool('highlighter');
-                          setActiveSubmenu('drawSettings');
-                        }}
-                        style={{
-                          padding: '5px 14px',
-                          fontSize: '0.8rem',
-                          fontWeight: 600,
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '6px',
-                          borderRadius: '12px',
-                          background: drawTool === 'highlighter' ? 'var(--primary-gradient)' : undefined,
-                          color: drawTool === 'highlighter' ? '#ffffff' : undefined,
-                          border: drawTool === 'highlighter' ? '1px solid var(--cyber-cyan)' : undefined,
-                          flexShrink: 0
-                        }}
-                        title="Marker: Translucent highlighter"
-                      >
-                        <Highlighter style={{ width: 14, height: 14 }} />
-                        <span>Marker</span>
-                      </button>
-
-                      <button
-                        className={`btn btn-xs vid-ctx-btn ${drawTool === 'glow' ? 'active' : ''}`}
-                        onClick={() => {
-                          setDrawTool('glow');
-                          setActiveSubmenu('drawSettings');
-                        }}
-                        style={{
-                          padding: '5px 14px',
-                          fontSize: '0.8rem',
-                          fontWeight: 600,
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '6px',
-                          borderRadius: '12px',
-                          background: drawTool === 'glow' ? 'var(--primary-gradient)' : undefined,
-                          color: drawTool === 'glow' ? '#ffffff' : undefined,
-                          border: drawTool === 'glow' ? '1px solid var(--cyber-cyan)' : undefined,
-                          flexShrink: 0
-                        }}
-                        title="Glow: Neon laser glow"
-                      >
-                        <SunMedium style={{ width: 14, height: 14 }} />
-                        <span>Glow</span>
-                      </button>
-                    </div>
-                  )}
-
-                  {/* CANVAS TAB */}
-                  {!(activeCaption || activeSticker || activeImageLayer) && !templateFaceMorph && (activeTab === 'canvas' || activeTab === 'watermark') && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-                      <button
-                        className={`btn btn-xs vid-ctx-btn ${activeSubmenu === 'canvasBg' ? 'active' : ''}`}
-                        onClick={() => handleToggleSubmenu('canvasBg')}
-                        title="Canvas Color"
-                      >
-                        <div style={{ width: 14, height: 14, borderRadius: '50%', background: canvasBgColor || '#000000', border: '1.5px solid rgba(255,255,255,0.6)' }} />
-                        <span>Canvas Color</span>
-                      </button>
-
-                      <button
-                        className="btn btn-xs vid-ctx-btn"
-                        onClick={() => setCanvasFlipX(prev => !prev)}
-                        title="Flip Canvas Horizontal"
-                      >
-                        <FlipHorizontal style={{ width: 13, height: 13 }} />
-                        <span>Flip Canvas</span>
-                      </button>
-
-                      {(() => {
-                        const isWatermarkActive = Boolean(
-                          watermark?.enabled &&
-                          (watermark?.text || '').replace(/^@+/, '').trim().length > 0
-                        );
-                        return (
-                          <button
-                            className={`btn btn-xs vid-ctx-btn ${(activeSubmenu === 'watermark' || isWatermarkActive) ? 'active' : ''}`}
-                            onClick={() => {
-                              if (!watermark?.enabled) updateWatermark('enabled', true);
-                              handleToggleSubmenu('watermark');
-                            }}
-                            title="Watermark Settings"
-                          >
-                            <Droplet style={{ width: 13, height: 13 }} />
-                            <span>Watermark</span>
-                          </button>
-                        );
-                      })()}
-                    </div>
-                  )}
-
-                  {/* FILTERS TAB */}
-                  {!(activeCaption || activeSticker || activeImageLayer) && !templateFaceMorph && activeTab === 'filters' && (
-                    <div
-                      className="filters-toolbar-group"
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '8px',
-                        flexShrink: 0,
-                        marginInline: 'auto'
-                      }}
-                    >
-                      <button
-                        className="btn btn-xs vid-ctx-btn"
-                        title="Swap faces with another photo using AI"
-                        onClick={() => setShowFaceMorphModal(true)}
-                        style={{
-                          padding: '4px 12px',
-                          fontSize: '0.75rem',
-                          fontWeight: 600,
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '6px',
-                          borderRadius: '12px',
-                          background: 'rgba(255, 255, 255, 0.08)',
-                          border: '1px solid var(--glass-border)',
-                          flexShrink: 0
-                        }}
-                      >
-                        <ScanFace style={{ width: 13, height: 13, color: 'var(--cyber-cyan)' }} />
-                        <span>Face Swap</span>
-                      </button>
-
-                      <button
-                        className={`btn btn-xs vid-ctx-btn ${showFiltersModal ? 'active' : ''}`}
-                        title="Photo Filters"
-                        onClick={() => setShowFiltersModal(true)}
-                        style={{
-                          padding: '4px 12px',
-                          fontSize: '0.75rem',
-                          fontWeight: 600,
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '6px',
-                          borderRadius: '12px',
-                          background: showFiltersModal ? 'var(--primary-gradient)' : 'rgba(255, 255, 255, 0.08)',
-                          border: showFiltersModal ? '1px solid var(--cyber-cyan)' : '1px solid var(--glass-border)',
-                          color: '#ffffff',
-                          flexShrink: 0
-                        }}
-                      >
-                        <Sun style={{ width: 13, height: 13, color: '#f59e0b' }} />
-                        <span>Filters</span>
-                      </button>
-                    </div>
-                  )}
+                  <TabQuickTools
+                    activeCaption={activeCaption}
+                    activeImageLayer={activeImageLayer}
+                    activeSticker={activeSticker}
+                    activeSubmenu={activeSubmenu}
+                    activeTab={activeTab}
+                    drawTool={drawTool}
+                    handleAddBubble={handleAddBubble}
+                    handleAddCaption={handleAddCaption}
+                    handleFileUploadImageLayer={handleFileUploadImageLayer}
+                    handleToggleSubmenu={handleToggleSubmenu}
+                    setActiveSubmenu={setActiveSubmenu}
+                    setDrawTool={setDrawTool}
+                    setImagePickerTarget={setImagePickerTarget}
+                    setShowAiModal={setShowAiModal}
+                    setShowBubbleBottomSheet={setShowBubbleBottomSheet}
+                    setShowEmojiModal={setShowEmojiModal}
+                    setShowFaceMorphModal={setShowFaceMorphModal}
+                    setShowFiltersModal={setShowFiltersModal}
+                    setShowMemeStickersModal={setShowMemeStickersModal}
+                    showBubbleBottomSheet={showBubbleBottomSheet}
+                    showFiltersModal={showFiltersModal}
+                    updateWatermark={updateWatermark}
+                    watermark={watermark}
+                  />
 
                 </motion.div>
               )}
