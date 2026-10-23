@@ -1,11 +1,12 @@
 import React from 'react';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Undo2 } from 'lucide-react';
 import { DRAW_COLORS } from '../../../../utils/captionLayout';
 import { useMemeEditorStore } from '../../store/useMemeEditorStore';
 import { useEditorUiStore } from '../../store/useEditorUiStore';
 
 export default function DrawSettingsBar({
   handleClearDrawings,
+  handleUndoDrawing,
 }) {
   const brushColor = useEditorUiStore((s) => s.brushColor);
   const brushSize = useEditorUiStore((s) => s.brushSize);
@@ -104,6 +105,32 @@ export default function DrawSettingsBar({
         />
         <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'inherit', minWidth: '22px' }}>{brushSize}px</span>
       </div>
+
+      <button
+        type="button"
+        className="btn btn-icon btn-xs vid-ctx-btn"
+        onClick={handleUndoDrawing}
+        disabled={drawings.length === 0}
+        style={{
+          width: 36,
+          height: 36,
+          minWidth: 36,
+          minHeight: 36,
+          borderRadius: '50%',
+          padding: 0,
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexShrink: 0,
+          opacity: drawings.length === 0 ? 0.35 : 1,
+          cursor: drawings.length === 0 ? 'not-allowed' : 'pointer',
+          color: '#ffffff'
+        }}
+        title="Undo last stroke"
+        aria-label="Undo last stroke"
+      >
+        <Undo2 style={{ width: 15, height: 15 }} />
+      </button>
 
       <button
         type="button"

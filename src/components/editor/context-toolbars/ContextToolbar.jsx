@@ -30,15 +30,17 @@ export default function ContextToolbar({
   setIsHoldingCanvasCompare,
   setShowFaceMorphModal,
   updateActiveCaptionProps,
+  handleAddCurvedText,
+  handleToggleCanvasFlip,
+  handleUpdateTemplateMorphProgress,
 }) {
-  const isMobileTabsFolded = useEditorUiStore((s) => s.isMobileTabsFolded);
   const showBubbleLayouts = useEditorUiStore((s) => s.showBubbleLayouts);
   const templateFaceMorph = useMemeEditorStore((s) => s.templateFaceMorph);
 
   return (
     <>
       <AnimatePresence>
-        {((activeCaption || activeSticker || activeImageLayer || templateFaceMorph) || (isMobileTabsFolded && !activeCaption && !activeSticker && !activeImageLayer)) && (isMobileTabsFolded || templateFaceMorph) && (
+        {(
           <motion.div
             ref={contextToolbarRef}
             className={`editor-floating-toolbar video-context-toolbar ${showBubbleLayouts ? 'bubble-mode-left' : ''}`}
@@ -71,6 +73,7 @@ export default function ContextToolbar({
 
             {/* ON-TEMPLATE FACE MORPH TOOLBAR */}
             <FaceMorphToolbar
+              handleUpdateTemplateMorphProgress={handleUpdateTemplateMorphProgress}
               activeCaption={activeCaption}
               activeImageLayer={activeImageLayer}
               activeSticker={activeSticker}
@@ -89,7 +92,9 @@ export default function ContextToolbar({
               activeSticker={activeSticker}
               handleAddBubble={handleAddBubble}
               handleAddCaption={handleAddCaption}
+              handleAddCurvedText={handleAddCurvedText}
               handleFileUploadImageLayer={handleFileUploadImageLayer}
+              handleToggleCanvasFlip={handleToggleCanvasFlip}
               setShowFaceMorphModal={setShowFaceMorphModal}
             />
 

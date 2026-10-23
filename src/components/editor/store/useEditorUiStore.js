@@ -44,7 +44,6 @@ export function buildInitialUi(template) {
     activeTab: 'text', // 'text' | 'images' | 'draw' | 'canvas' | 'watermark' | 'filters'
     activeSubmenu: null, // 'font' | 'color' | 'align' | 'effects' | 'bg' | 'blur' | 'bubble' | 'tweetTheme' | 'tweetTrend' | 'drawSettings' | 'watermark' | 'canvasBg' | 'banner' | 'filters'
     lastUsedSettingButton: null,
-    isMobileTabsFolded: true,
     showFontMenu: false,
     showTextEffectsMenu: false,
     showTextBlurMenu: false,

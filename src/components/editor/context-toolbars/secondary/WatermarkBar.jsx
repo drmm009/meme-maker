@@ -1,12 +1,38 @@
 import React from 'react';
-import { Type, Blend, ArrowDownRight } from 'lucide-react';
+import { Type, Blend, ArrowDownRight, ImageUp, X } from 'lucide-react';
 import { useEditorUiStore } from '../../store/useEditorUiStore';
 
-export default function WatermarkBar() {
+export default function WatermarkBar({
+  handleWatermarkImageUpload,
+}) {
   const updateWatermark = useEditorUiStore((s) => s.updateWatermark);
   const watermark = useEditorUiStore((s) => s.watermark);
   return (
     <>
+      {watermark?.imageUrl ? (
+        <button
+          type="button"
+          className="btn btn-icon btn-xs vid-ctx-btn active"
+          onClick={() => updateWatermark('imageUrl', null)}
+          title="Remove logo (use text watermark)"
+          aria-label="Remove watermark logo"
+          style={{ position: 'relative', padding: 0, overflow: 'hidden' }}
+        >
+          <img src={watermark.imageUrl} alt="" style={{ width: 22, height: 22, objectFit: 'contain' }} />
+          <X style={{ position: 'absolute', top: 1, right: 1, width: 10, height: 10 }} />
+        </button>
+      ) : (
+        <label
+          className="btn btn-icon btn-xs vid-ctx-btn"
+          title="Upload logo as watermark"
+          aria-label="Upload watermark logo"
+          style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
+        >
+          <ImageUp style={{ width: 15, height: 15 }} />
+          <input type="file" accept="image/*" onChange={handleWatermarkImageUpload} style={{ display: 'none' }} />
+        </label>
+      )}
+
       <button
         className="btn btn-icon btn-xs vid-ctx-btn"
         style={{ position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}

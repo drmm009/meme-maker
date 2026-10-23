@@ -2,7 +2,7 @@ import { TWEET_TREND_PRESETS } from '../../CanvasEditor';
 import { FONTS } from '../../../data/stickers';
 import { Blend, Smile, PanelTop, Flame, Tv, MessageCircle, Ban, AlignLeft, AlignCenter, AlignRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { COLOR_SWATCHES } from '../../../utils/captionLayout';
+import { COLOR_SWATCHES, PRESET_PHRASES } from '../../../utils/captionLayout';
 import { TEXT_EFFECTS, secondaryVariants } from '../constants';
 import { isSocialCardCaption, getContrastStroke } from '../memeEditorUtils';
 import LayerActionsBar from './secondary/LayerActionsBar';
@@ -32,6 +32,9 @@ export default function SecondaryToolbar({
   moveLayer,
   updateActiveCaptionProps,
   updateActiveImageLayer,
+  handleAddPresetPhrase,
+  handleUndoDrawing,
+  handleWatermarkImageUpload,
 }) {
   const activeSubmenu = useEditorUiStore((s) => s.activeSubmenu);
   const activeTab = useEditorUiStore((s) => s.activeTab);
@@ -546,6 +549,7 @@ export default function SecondaryToolbar({
                 style={{ display: 'flex', alignItems: 'center', gap: '5px', flexShrink: 0 }}
               >
                 <DrawSettingsBar
+                  handleUndoDrawing={handleUndoDrawing}
                   handleClearDrawings={handleClearDrawings}
                 />
               </motion.div>
@@ -561,7 +565,7 @@ export default function SecondaryToolbar({
                 exit="exit"
                 style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}
               >
-                <WatermarkBar />
+                <WatermarkBar handleWatermarkImageUpload={handleWatermarkImageUpload} />
               </motion.div>
             )}
 
@@ -619,6 +623,30 @@ export default function SecondaryToolbar({
                     style={{ position: 'absolute', opacity: 0, inset: 0, cursor: 'pointer', width: '100%', height: '100%' }}
                   />
                 </div>
+              </motion.div>
+            )}
+
+            {/* 12. Quick Phrases Submenu */}
+            {!isElementSelected && activeTab === 'text' && activeSubmenu === 'phrases' && (
+              <motion.div
+                key="text-phrases"
+                variants={secondaryVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}
+              >
+                {PRESET_PHRASES.map((phrase) => (
+                  <button
+                    key={phrase}
+                    type="button"
+                    className="btn btn-xs vid-ctx-btn"
+                    onClick={() => handleAddPresetPhrase(phrase)}
+                    style={{ whiteSpace: 'nowrap' }}
+                  >
+                    <span>{phrase}</span>
+                  </button>
+                ))}
               </motion.div>
             )}
 

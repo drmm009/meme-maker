@@ -11,6 +11,7 @@ export default function FaceMorphToolbar({
   handleRevertTemplateFace,
   isHoldingCanvasCompare,
   setIsHoldingCanvasCompare,
+  handleUpdateTemplateMorphProgress,
 }) {
   const templateFaceMorph = useMemeEditorStore((s) => s.templateFaceMorph);
 
@@ -39,6 +40,27 @@ export default function FaceMorphToolbar({
             <RefreshCw style={{ width: 12, height: 12, color: 'var(--cyber-cyan)' }} />
             <span>Change Face</span>
           </button>
+
+          {templateFaceMorph.landmarksA && (
+            <label
+              title="Morph intensity"
+              style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0, fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)' }}
+            >
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.05"
+                aria-label="Morph intensity"
+                value={templateFaceMorph.morphProgress !== undefined ? templateFaceMorph.morphProgress : 0.85}
+                onChange={(e) => handleUpdateTemplateMorphProgress(parseFloat(e.target.value))}
+                style={{ width: 90, accentColor: 'var(--cyber-cyan)', height: '4px' }}
+              />
+              <span style={{ color: 'var(--cyber-cyan)', minWidth: 30 }}>
+                {Math.round((templateFaceMorph.morphProgress !== undefined ? templateFaceMorph.morphProgress : 0.85) * 100)}%
+              </span>
+            </label>
+          )}
 
           <button
             className="btn btn-xs vid-ctx-btn"

@@ -74,7 +74,6 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
   const setSocialModalPlatform = useEditorUiStore((s) => s.setSocialModalPlatform);
   const activeTab = useEditorUiStore((s) => s.activeTab);
   const setActiveTab = useEditorUiStore((s) => s.setActiveTab);
-  const setIsMobileTabsFolded = useEditorUiStore((s) => s.setIsMobileTabsFolded);
   const showFontMenu = useEditorUiStore((s) => s.showFontMenu);
   const setShowFontMenu = useEditorUiStore((s) => s.setShowFontMenu);
   const showTextEffectsMenu = useEditorUiStore((s) => s.showTextEffectsMenu);
@@ -169,11 +168,6 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
       setActiveSubmenu('drawSettings');
     } else {
       setActiveSubmenu(null);
-    }
-    if (window.innerWidth <= 768) {
-      setIsMobileTabsFolded(true);
-    } else {
-      setIsMobileTabsFolded(false);
     }
   };
 
@@ -295,14 +289,6 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
     },
   });
 
-  const getDockHeight = () => {
-    if (aspectRatio === '16:9') return '45vh';
-    if (aspectRatio === '1:1') return '40vh';
-    if (aspectRatio === '4:5') return '35vh';
-    if (aspectRatio === '9:16') return '32vh';
-    return '38vh';
-  };
-
   return (
     <div className="meme-editor-container animate-fade-in">
       {/* Editor Top Bar (Mobile-Friendly Compact) */}
@@ -401,9 +387,6 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
                       setActiveSubmenu(null);
                       setShowBubbleBottomSheet(false);
                       return;
-                    }
-                    if (window.innerWidth <= 768) {
-                      setIsMobileTabsFolded(true);
                     }
                     if (captions.some(c => c.id === id)) {
                       setActiveTab('text');
@@ -504,6 +487,9 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
               <div className="editor-toolbars-dock-anchor">
                 {/* ─── Layer Toolbar (Secondary Toolbar) ─── */}
                 <SecondaryToolbar
+                  handleWatermarkImageUpload={handleWatermarkImageUpload}
+                  handleUndoDrawing={handleUndoDrawing}
+                  handleAddPresetPhrase={handleAddPresetPhrase}
                   activeCaption={activeCaption}
                   activeImageLayer={activeImageLayer}
                   activeSticker={activeSticker}
@@ -527,6 +513,9 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
 
             {/* ─── 2. Main Context Toolbar ─── */}
             <ContextToolbar
+              handleUpdateTemplateMorphProgress={handleUpdateTemplateMorphProgress}
+              handleAddCurvedText={handleAddCurvedText}
+              handleToggleCanvasFlip={handleToggleCanvasFlip}
               activeCaption={activeCaption}
               activeFontObj={activeFontObj}
               activeImageLayer={activeImageLayer}
@@ -555,48 +544,8 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
         </div>
       </div>
         
-      {/* Sidebar Controls Tabs */}
-        <EditorSidebar
-          activeCaption={activeCaption}
-          activeFontObj={activeFontObj}
-          activeImageLayer={activeImageLayer}
-          commitAddImageLayer={commitAddImageLayer}
-          getActiveTextEffectId={getActiveTextEffectId}
-          getDockHeight={getDockHeight}
-          handleAddBubble={handleAddBubble}
-          handleAddCaption={handleAddCaption}
-          handleAddCurvedText={handleAddCurvedText}
-          handleAddPresetPhrase={handleAddPresetPhrase}
-          handleApplyBubbleStyle={handleApplyBubbleStyle}
-          handleApplyTextEffect={handleApplyTextEffect}
-          handleChangeFace={handleChangeFace}
-          handleClearDrawings={handleClearDrawings}
-          handleCycleFont={handleCycleFont}
-          handleCycleWatermarkPosition={handleCycleWatermarkPosition}
-          handleDeleteLayer={handleDeleteLayer}
-          handleFileUploadImageLayer={handleFileUploadImageLayer}
-          handleFinalizeTemplateFace={handleFinalizeTemplateFace}
-          handleRevertTemplateFace={handleRevertTemplateFace}
-          handleSetCanvasBgColor={handleSetCanvasBgColor}
-          handleSetCaptionBg={handleSetCaptionBg}
-          handleStartMorphFace={handleStartMorphFace}
-          handleTabClick={handleTabClick}
-          handleToggleCanvasBoth={handleToggleCanvasBoth}
-          handleToggleCanvasFlip={handleToggleCanvasFlip}
-          handleToggleCanvasFooter={handleToggleCanvasFooter}
-          handleToggleCanvasHeader={handleToggleCanvasHeader}
-          handleToggleTextCase={handleToggleTextCase}
-          handleUndoDrawing={handleUndoDrawing}
-          handleUpdateTemplateMorphProgress={handleUpdateTemplateMorphProgress}
-          handleWatermarkImageUpload={handleWatermarkImageUpload}
-          tabButtonsRef={tabButtonsRef}
-          template={template}
-          updateActiveCaption={updateActiveCaption}
-          updateActiveCaptionProps={updateActiveCaptionProps}
-          updateActiveImageLayer={updateActiveImageLayer}
-          watermarkInputRef={watermarkInputRef}
-          watermarkTextInputRef={watermarkTextInputRef}
-        />
+      {/* Tab dock */}
+      <EditorSidebar handleTabClick={handleTabClick} tabButtonsRef={tabButtonsRef} />
       </div>
 
       {/* Bottom sheets and modals */}

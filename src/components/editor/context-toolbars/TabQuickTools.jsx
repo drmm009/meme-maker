@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, Smile, Sticker, Droplet, Highlighter, Sun, FlipHorizontal, MessageSquareQuote, Brush, SunMedium, ImagePlus, LayoutTemplate, Rows3, WandSparkles, ScanFace } from 'lucide-react';
+import { Plus, Spline, Quote, Smile, Sticker, Droplet, Highlighter, Sun, FlipHorizontal, MessageSquareQuote, Brush, SunMedium, ImagePlus, LayoutTemplate, Rows3, WandSparkles, ScanFace } from 'lucide-react';
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
 import { useEditorUiStore } from '../store/useEditorUiStore';
 
@@ -9,7 +9,9 @@ export default function TabQuickTools({
   activeSticker,
   handleAddBubble,
   handleAddCaption,
+  handleAddCurvedText,
   handleFileUploadImageLayer,
+  handleToggleCanvasFlip,
   setShowFaceMorphModal,
 }) {
   const activeSubmenu = useEditorUiStore((s) => s.activeSubmenu);
@@ -32,7 +34,6 @@ export default function TabQuickTools({
   const canvasHeader = useMemeEditorStore((s) => s.canvasHeader);
   const canvasFooter = useMemeEditorStore((s) => s.canvasFooter);
   const canvasBgColor = useMemeEditorStore((s) => s.canvasBgColor);
-  const setCanvasFlipX = useMemeEditorStore((s) => s.setCanvasFlipX);
 
   return (
     <>
@@ -45,6 +46,25 @@ export default function TabQuickTools({
             title="Add Text Caption"
           >
             <Plus style={{ width: 14, height: 14, color: '#ffffff' }} /> <span>Add Text</span>
+          </button>
+
+          <button
+            type="button"
+            className="btn btn-xs vid-ctx-btn"
+            onClick={handleAddCurvedText}
+            title="Add Curved Text"
+          >
+            <Spline style={{ width: 13, height: 13, color: '#ffffff' }} /> <span>Curved</span>
+          </button>
+
+          <button
+            type="button"
+            data-setting-btn="phrases"
+            className={`btn btn-xs vid-ctx-btn ${activeSubmenu === 'phrases' ? 'active' : ''}`}
+            onClick={() => handleToggleSubmenu('phrases')}
+            title="Quick Phrases"
+          >
+            <Quote style={{ width: 13, height: 13, color: '#ffffff' }} /> <span>Phrases</span>
           </button>
 
           <button
@@ -279,7 +299,7 @@ export default function TabQuickTools({
 
           <button
             className="btn btn-xs vid-ctx-btn"
-            onClick={() => setCanvasFlipX(prev => !prev)}
+            onClick={handleToggleCanvasFlip}
             title="Flip Canvas Horizontal"
           >
             <FlipHorizontal style={{ width: 13, height: 13 }} />
