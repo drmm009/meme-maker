@@ -69,31 +69,6 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
   const handleUndo = useMemeEditorStore((s) => s.undo);
   const handleRedo = useMemeEditorStore((s) => s.redo);
   const nudgeLayer = useMemeEditorStore((s) => s.nudgeLayer);
-
-  // Native Multi-Panel Layout Support
-  const isNativeLayout = template?.isNativeLayout || false;
-  const layoutDef = template?.layoutDef || null;
-
-  useEffect(() => {
-    setActiveTemplate(template);
-    const socialCap = template?.defaultCaptions?.find((c) => isSocialCardCaption(c));
-    if (socialCap) {
-      setActiveLayerId(socialCap.id);
-      if (socialCap.isInstagramCard) setSocialModalPlatform('instagram');
-      else if (socialCap.isWhatsAppCard) setSocialModalPlatform('whatsapp');
-      else setSocialModalPlatform('tweet');
-      setShowStylesModal(true);
-    } else {
-      setActiveLayerId(null);
-    }
-    setActiveTab('text');
-  }, [template, setActiveTemplate, setActiveLayerId, setActiveTab, setSocialModalPlatform, setShowStylesModal]);
-
-
-  
-  const imageFit = template?.imageFit || 'contain';
-
-  // Open-source templates for Image Layer / Slot overlay picker
   const imagePickerTarget = useEditorUiStore((s) => s.imagePickerTarget);
   const setImagePickerTarget = useEditorUiStore((s) => s.setImagePickerTarget);
   const openSourceTemplates = useEditorUiStore((s) => s.openSourceTemplates);
@@ -145,6 +120,33 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
   const pendingVideoLayer = useEditorUiStore((s) => s.pendingVideoLayer);
   const setPendingVideoLayer = useEditorUiStore((s) => s.setPendingVideoLayer);
   const watermark = useEditorUiStore((s) => s.watermark);
+  const handleToggleSubmenu = useEditorUiStore((s) => s.toggleSubmenu);
+  const updateWatermark = useEditorUiStore((s) => s.updateWatermark);
+
+  // Native Multi-Panel Layout Support
+  const isNativeLayout = template?.isNativeLayout || false;
+  const layoutDef = template?.layoutDef || null;
+
+  useEffect(() => {
+    setActiveTemplate(template);
+    const socialCap = template?.defaultCaptions?.find((c) => isSocialCardCaption(c));
+    if (socialCap) {
+      setActiveLayerId(socialCap.id);
+      if (socialCap.isInstagramCard) setSocialModalPlatform('instagram');
+      else if (socialCap.isWhatsAppCard) setSocialModalPlatform('whatsapp');
+      else setSocialModalPlatform('tweet');
+      setShowStylesModal(true);
+    } else {
+      setActiveLayerId(null);
+    }
+    setActiveTab('text');
+  }, [template, setActiveTemplate, setActiveLayerId, setActiveTab, setSocialModalPlatform, setShowStylesModal]);
+
+
+  
+  const imageFit = template?.imageFit || 'contain';
+
+  // Open-source templates for Image Layer / Slot overlay picker
 
   useEffect(() => {
     let isMounted = true;
@@ -283,7 +285,6 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
 
   const showTextCurveMenu = showTextEffectsMenu;
   const setShowTextCurveMenu = setShowTextEffectsMenu;
-  const handleToggleSubmenu = useEditorUiStore((s) => s.toggleSubmenu);
 
   const handleTabClick = (tabId) => {
     setActiveTab(tabId);
@@ -311,7 +312,6 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
 
 
 
-  const updateWatermark = useEditorUiStore((s) => s.updateWatermark);
 
   const handleWatermarkImageUpload = (e) => {
     const file = e.target.files?.[0];
