@@ -159,7 +159,27 @@ Phases, each its own commit with the same checks (tests, lint baseline, build, b
      - face swap (face-lighting sampler)
 
      The chyron can't be created in the app, so only its unit test covers it.
-9. **Split the render effect.** Turn the 1,287-line effect into `renderScene(ctx, scene)` plus per-layer painters (`paintBackground`, `paintSlots`, `paintImageLayers`, `paintStickers`, `paintCaptions`, `paintHeaderFooter`, `paintWatermark`, `paintSelection`). The effect only builds `scene` from store state and calls it. That makes rendering readable, and it can be tested with a recording fake context.
+9. **Split the render effect.** *Done:* CanvasEditor.jsx is down to 2,025 lines, from 3,306.
+   - The 1,287-line effect is now `renderScene(scene)` in `src/components/canvas/render/` (217 lines). It attaches the face-morph helpers, then `renderCanvas` runs the painters in drawing order:
+     1. `getImageArea`
+     2. `paintBase`: base image or multi-panel slots
+     3. `paintHeaderFooter`
+     4. `paintLayers`: a z-ordered loop that calls `paintImageLayer` (227), `paintSticker` (95) and `paintCaption` (300)
+     5. `paintDrawings`
+     6. `paintWatermark`
+     7. `paintOverlays`: global-filter composite, selection handles, snapping guides
+   - `handles.js` holds the selection-UI drawers. The unused `drawRoundHandle` was dropped.
+   - Done in three commits by AST tools that worked out each painter's inputs:
+     - Nothing a painter reads is reassigned.
+     - The only outer variable written, the active layer's handle drawer, is returned by `paintLayers`. Inside it, the per-type painters set it through `setActiveHandleDrawer`, so early returns still behave.
+     - The effect keeps its exact dependency list.
+   - Checked in the browser on one meme combining:
+     - header/footer, an image layer, an emoji sticker with handles
+     - an iPhone bubble, curved text, a drawing
+     - a watermark, and a whole-meme black-and-white filter
+
+     Also checked: a 2×2 multi-panel layout. No errors. Snapping guides only show mid-drag and weren't captured.
+   - Still to do: unit tests with a recording fake context. The painters now take plain inputs, so this is feasible.
 10. **Extract interaction** into `useCanvasInteraction`: hit testing as pure functions (`hitTestLayer`, `hitTestHandle`) with unit tests, plus the drag/resize/rotate/draw state machine behind the pointer handlers. The arrow-key nudge bug from phase 3 came from the 0..1 coordinate convention, so the hit-test tests should pin those units down.
 11. **Afterwards:** CanvasEditor should be a ~300-line component that wires the canvas element, refs, `renderScene` and `useCanvasInteraction`.
 
