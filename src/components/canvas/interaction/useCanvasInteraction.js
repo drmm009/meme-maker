@@ -1,4 +1,5 @@
 import { useRef } from 'react';
+import { clientToCanvas, getStickerBoxSize, isInBox, rotatePoint } from './geometry';
 import { getCurveSagitta, wrapText } from '../draw/text';
 import { getWhatsAppCardHeight } from '../draw/socialCards/whatsapp';
 import { getBreakingNewsHeight } from '../draw/chyron';
@@ -63,42 +64,7 @@ export function useCanvasInteraction({
     }
   };
 
-  // Helper to rotate point for hit testing
-  const rotatePoint = (px, py, cx, cy, angle) => {
-    const rad = angle * Math.PI / 180;
-    const dx = px - cx;
-    const dy = py - cy;
-    return {
-      x: cx + dx * Math.cos(rad) - dy * Math.sin(rad),
-      y: cy + dx * Math.sin(rad) + dy * Math.cos(rad)
-    };
-  };
-
-  const getCanvasCoords = (e) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return { x: 0, y: 0 };
-    const rect = canvas.getBoundingClientRect();
-    let clientX = 0, clientY = 0;
-    
-    if (e.touches && e.touches.length > 0) {
-      clientX = e.touches[0].clientX;
-      clientY = e.touches[0].clientY;
-    } else if (e.changedTouches && e.changedTouches.length > 0) {
-      clientX = e.changedTouches[0].clientX;
-      clientY = e.changedTouches[0].clientY;
-    } else if (e.clientX !== undefined && e.clientY !== undefined) {
-      clientX = e.clientX;
-      clientY = e.clientY;
-    }
-    
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
-    
-    return {
-      x: (clientX - rect.left) * scaleX,
-      y: (clientY - rect.top) * scaleY
-    };
-  };
+  const getCanvasCoords = (e) => clientToCanvas(e, canvasRef.current);
 
   const handlePointerDown = (e) => {
     if (e.cancelable && e.target !== editableRef.current) {
@@ -153,7 +119,7 @@ export function useCanvasInteraction({
       if (activeStk && !activeStk.locked) {
         const cx = activeStk.x * canvas.width;
         const cy = getStickerCenterY(activeStk);
-        const stkSize = (activeStk.scale || 1.0) * 52;
+        const stkSize = getStickerBoxSize(activeStk);
         const p = rotatePoint(coords.x, coords.y, cx, cy, -(activeStk.rotation || 0));
         const hs = stkSize / 2 + 6;
 
@@ -393,9 +359,9 @@ export function useCanvasInteraction({
           const stk = layer;
           const cx = stk.x * canvas.width;
           const cy = getStickerCenterY(stk);
-          const stkSize = (stk.scale || 1.0) * 52;
+          const stkSize = getStickerBoxSize(stk);
           const p = rotatePoint(coords.x, coords.y, cx, cy, -(stk.rotation || 0));
-          if (p.x >= cx - stkSize / 2 - 6 && p.x <= cx + stkSize / 2 + 6 && p.y >= cy - stkSize / 2 - 6 && p.y <= cy + stkSize / 2 + 6) {
+          if (isInBox(p, cx, cy, stkSize, stkSize, 6)) {
             hitLayer = { 
               id: stk.id, 
               type: 'sticker', 
@@ -460,7 +426,7 @@ export function useCanvasInteraction({
              const bannerY = - ((lines.length - 1) * lineHeight) / 2 - lineHeight / 2 - padY;
              hitBox = (p.y >= cy + bannerY && p.y <= cy + bannerY + boxHeight);
           } else {
-             hitBox = (p.x >= cx - boxWidth / 2 && p.x <= cx + boxWidth / 2 && p.y >= cy - boxHeight / 2 && p.y <= cy + boxHeight / 2);
+             hitBox = isInBox(p, cx, cy, boxWidth, boxHeight);
           }
 
           if (hitBox) {
@@ -501,7 +467,7 @@ export function useCanvasInteraction({
             const h = imgLayer.boxHeight || imgLayer.height || (baseH * fitScale * scale);
 
             const p = rotatePoint(coords.x, coords.y, cx, cy, -(imgLayer.rotation || 0));
-            if (p.x >= cx - w / 2 && p.x <= cx + w / 2 && p.y >= cy - h / 2 && p.y <= cy + h / 2) {
+            if (isInBox(p, cx, cy, w, h)) {
               hitLayer = { 
                 id: imgLayer.id, 
                 type: 'imageLayer', 
@@ -740,7 +706,7 @@ export function useCanvasInteraction({
       if (activeStk && !activeStk.locked) {
         const cx = activeStk.x * canvas.width;
         const cy = getStickerCenterY(activeStk);
-        const stkSize = (activeStk.scale || 1.0) * 52;
+        const stkSize = getStickerBoxSize(activeStk);
         const p = rotatePoint(coords.x, coords.y, cx, cy, -(activeStk.rotation || 0));
         const hs = stkSize / 2 + 6;
 
@@ -753,7 +719,7 @@ export function useCanvasInteraction({
         if (Math.hypot(p.x - (cx + hs), p.y - (cy + hs)) <= 24) {
           canvas.style.cursor = 'nwse-resize'; return;
         }
-        if (p.x >= cx - stkSize / 2 - 6 && p.x <= cx + stkSize / 2 + 6 && p.y >= cy - stkSize / 2 - 6 && p.y <= cy + stkSize / 2 + 6) {
+        if (isInBox(p, cx, cy, stkSize, stkSize, 6)) {
           canvas.style.cursor = 'move'; return;
         }
       }
@@ -875,7 +841,7 @@ export function useCanvasInteraction({
           if (Math.hypot(p.x - (cx - hw), p.y - cy) <= 22 || Math.hypot(p.x - (cx + hw), p.y - cy) <= 22) {
             canvas.style.cursor = 'ew-resize'; return;
           }
-          if (p.x >= cx - w / 2 && p.x <= cx + w / 2 && p.y >= cy - h / 2 && p.y <= cy + h / 2) {
+          if (isInBox(p, cx, cy, w, h)) {
             canvas.style.cursor = 'move'; return;
           }
         }
@@ -891,9 +857,9 @@ export function useCanvasInteraction({
       if (stk.hidden) continue;
       const cx = stk.x * canvas.width;
       const cy = getStickerCenterY(stk);
-      const stkSize = (stk.scale || 1.0) * 52;
+      const stkSize = getStickerBoxSize(stk);
       const p = rotatePoint(coords.x, coords.y, cx, cy, -(stk.rotation || 0));
-      if (p.x >= cx - stkSize / 2 && p.x <= cx + stkSize / 2 && p.y >= cy - stkSize / 2 && p.y <= cy + stkSize / 2) {
+      if (isInBox(p, cx, cy, stkSize, stkSize)) {
         canvas.style.cursor = 'pointer';
         return;
       }
@@ -912,7 +878,7 @@ export function useCanvasInteraction({
         const w = l.boxWidth || l.width || (baseW * fitScale * scale);
         const h = l.boxHeight || l.height || (baseH * fitScale * scale);
         const p = rotatePoint(coords.x, coords.y, cx, cy, -(l.rotation || 0));
-        if (p.x >= cx - w / 2 && p.x <= cx + w / 2 && p.y >= cy - h / 2 && p.y <= cy + h / 2) {
+        if (isInBox(p, cx, cy, w, h)) {
           canvas.style.cursor = 'pointer';
           return;
         }
@@ -958,7 +924,7 @@ export function useCanvasInteraction({
           boxWidth = Math.max(180, (cap.width || 0.84) * canvas.width);
           boxHeight = getWhatsAppCardHeight(ctx, cap, boxWidth);
         }
-        if (p.x >= cx - boxWidth / 2 && p.x <= cx + boxWidth / 2 && p.y >= cy - boxHeight / 2 && p.y <= cy + boxHeight / 2) {
+        if (isInBox(p, cx, cy, boxWidth, boxHeight)) {
           canvas.style.cursor = 'pointer';
           return;
         }
@@ -1296,7 +1262,7 @@ export function useCanvasInteraction({
       const centerY = initialLayerPos.current.centerY ?? (headerExtH + initialLayerPos.current.y * canvasH);
 
       const currentDist = Math.hypot(coords.x - centerX, coords.y - centerY);
-      const initDist = initialLayerPos.current.initialDist || Math.max(10, (stk.scale || 1.0) * 52 * 0.7);
+      const initDist = initialLayerPos.current.initialDist || Math.max(10, getStickerBoxSize(stk) * 0.7);
       const initScale = initialLayerPos.current.scale || 1.0;
 
       const scaleFactor = currentDist / initDist;
