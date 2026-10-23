@@ -98,8 +98,18 @@ Each phase is its own commit. After each one, `npm test`, `npm run lint` and `np
    - Long prop lists point to shared UI state (active tab/submenu, which modal is open) that should become a small UI store: `EditorSidebar` has 58 props, `EditorModals` 43, `ContextToolbar` 41.
    - Found and removed: nothing ever opened the full-screen export page (`setIsExportModalOpen(true)` was never called), so `ExportPage`, its format/quality presets in `useExport` and its CSS were deleted (about 500 lines). This also fixed Save to Gallery naming the first save "My Meme": the name is now passed to the menu action instead of read from state set a moment earlier.
    - Still in MemeEditor: about 1,550 lines of handlers (captions, layers, bubbles, social cards, header/footer) and the `<CanvasEditor>` call (phase 6).
-5. **Remove duplicate UI.** The compact tab tools (5182–5521) and the sidebar tabs (5522–7970) seem to repeat the same controls, probably one set for mobile and one for desktop. Check which is which, then build both from shared components.
-6. **Point `CanvasEditor` at the store** instead of passing ~100 props, then plan its own split the same way.
+5. **Move handlers out and add a UI store.** *Done:* MemeEditor.jsx is down to 635 lines, from 2,045.
+   - `editor/store/useEditorUiStore.js`: a per-editor store for shared UI state:
+     - active tab and submenu
+     - open menus and modals
+     - brush settings
+     - pending media and the paste toast
+     - the watermark, saved through a store subscription
+   - Handler hooks in `editor/hooks/`: `useCaptionActions`, `useLayerActions`, `useSocialCardActions`, `useBubbleActions`, `useCanvasFrameActions`, `useDrawingActions`. Each reads the stores itself and takes at most four arguments (derived selection values or other hooks' handlers). Helpers used only inside a hook stay private.
+   - Panels now read store-backed values directly instead of receiving them as props. A tool rehomed them top-down: MemeEditor → sidebar/toolbars/modals → tabs/submenus. For example, EditorSidebar went from 58 props to 39, and EditorModals from 43 to 27.
+   - What's still passed as props: handlers, plus derived values like `activeCaption` / `activeSticker` / `isElementSelected`. A `useActiveLayers()` hook would remove most of the derived ones.
+6. **Remove duplicate UI.** The per-tab quick tools (`TabQuickTools`) and the sidebar tabs seem to repeat the same controls, probably one set for mobile and one for desktop. Check which is which, then build both from shared components.
+7. **Point `CanvasEditor` at the store** instead of passing ~100 props, then plan its own split the same way.
 
 CSS (`MemeEditor.css`, 2,076 lines) gets split along with the components in phase 4. It is redesigned in the separate design-system step.
 
