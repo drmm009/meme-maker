@@ -411,7 +411,7 @@ const STUDIO_HERO_SLIDES = [
   {
     id: 'customlayout',
     action: 'custom',
-    title: "Start Creating — It's Free ✨",
+    title: "Start Creating ✨",
     badgeText: '🚀 100% FREE APP',
     badgeClass: 'badge-emerald',
     badgeDotClass: 'dot-emerald',
@@ -570,7 +570,7 @@ function getTemplateBadge(template, index = 0) {
   return { label: 'Popular', icon: Flame, color: '#ff5e36' };
 }
 
-export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom, onOpenAiGenerator }) {
+export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom, onOpenAiGenerator, onNavigateExplore }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTag, setSelectedTag] = useState('featured');
   const [sortBy, setSortBy] = useState('trending');
@@ -802,9 +802,13 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom, on
   };
 
   const handleShelfSeeAll = (tagId, sortOption = 'trending') => {
-    setSelectedTag(tagId);
-    setSortBy(sortOption);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (onNavigateExplore) {
+      onNavigateExplore(tagId);
+    } else {
+      setSelectedTag(tagId);
+      setSortBy(sortOption);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
   const cutoutFileInputRef = useRef(null);
@@ -1009,15 +1013,30 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom, on
                         </div>
 
                         <div className="hero-actions">
-                          <button
-                            type="button"
-                            className={`studio-pill-btn ${slide.primaryVariant}`}
-                            onClick={() => handleFeatureClick(slide)}
-                            aria-label={slide.title}
-                          >
-                            <SlideIcon size={17} className="studio-pill-icon" />
-                            <span className="studio-pill-text">{slide.title}</span>
-                          </button>
+                          {slide.id === 'customlayout' ? (
+                            <button
+                              type="button"
+                              className="hero-pill-capsule-cta"
+                              onClick={() => handleFeatureClick(slide)}
+                              aria-label={slide.title}
+                            >
+                              <Sparkles size={17} className="hero-pill-capsule-icon" />
+                              <span className="hero-pill-capsule-text">Start Creating</span>
+                              <span className="hero-pill-capsule-knob" aria-hidden="true">
+                                <ChevronRight size={17} strokeWidth={2.8} />
+                              </span>
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              className={`studio-pill-btn ${slide.primaryVariant}`}
+                              onClick={() => handleFeatureClick(slide)}
+                              aria-label={slide.title}
+                            >
+                              <SlideIcon size={17} className="studio-pill-icon" />
+                              <span className="studio-pill-text">{slide.title}</span>
+                            </button>
+                          )}
 
                           {slide.secondaryLabel && (
                             <button
@@ -1316,9 +1335,6 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom, on
                       <span className="hero-title-gradient grad-sunset">Prompt Generator</span>
                     </span>
                   </h2>
-                  <p className="hero-tagline">
-                    Turn any idea into viral memes with smart AI captions
-                  </p>
                 </div>
 
                 <div className="hero-rocket-graphic" aria-hidden="true">

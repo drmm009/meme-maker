@@ -1,0 +1,146 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 393 852" width="393" height="852">
+  <defs>
+    <linearGradient id="bg-video-grad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#090a10"/>
+      <stop offset="100%" stop-color="#0b0d16"/>
+    </linearGradient>
+    <linearGradient id="accent-cyan" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#06b6d4"/>
+      <stop offset="100%" stop-color="#0891b2"/>
+    </linearGradient>
+    <linearGradient id="accent-indigo" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#4f6bff"/>
+      <stop offset="100%" stop-color="#3b52d9"/>
+    </linearGradient>
+    <linearGradient id="track-video" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#2563eb"/>
+      <stop offset="100%" stop-color="#3b82f6"/>
+    </linearGradient>
+    <linearGradient id="track-audio" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#ea580c"/>
+      <stop offset="100%" stop-color="#f59e0b"/>
+    </linearGradient>
+    <!-- Dot Matrix Pattern -->
+    <pattern id="dot-matrix-video" width="20" height="20" patternUnits="userSpaceOnUse">
+      <circle cx="10" cy="10" r="1.2" fill="#ffffff" opacity="0.12"/>
+    </pattern>
+  </defs>
+
+  <!-- Device Base Background -->
+  <rect width="393" height="852" fill="url(#bg-video-grad)" rx="44"/>
+  <rect x="0" y="50" width="393" height="420" fill="url(#dot-matrix-video)"/>
+
+  <!-- Device Notch / Island -->
+  <rect x="132" y="11" width="129" height="34" rx="17" fill="#000000"/>
+  <circle cx="236" cy="28" r="5" fill="#141824"/>
+
+  <!-- Status Bar -->
+  <text x="36" y="32" font-family="-apple-system, Inter, sans-serif" font-weight="600" font-size="14" fill="#ffffff">9:41</text>
+  <text x="357" y="32" text-anchor="end" font-family="-apple-system, Inter, sans-serif" font-weight="600" font-size="12" fill="#ffffff" opacity="0.85">5G 100%</text>
+
+  <!-- Top Floating Controls -->
+  <g id="Top_Controls" transform="translate(20, 60)">
+    <!-- Back Pill -->
+    <rect x="0" y="0" width="76" height="36" rx="9" fill="#141824" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+    <text x="38" y="23" text-anchor="middle" font-family="-apple-system, Inter, sans-serif" font-weight="500" font-size="13" fill="#cbd5e1">← Back</text>
+
+    <!-- Ratio Dropdown Capsule -->
+    <rect x="120" y="0" width="112" height="36" rx="9" fill="#141824" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+    <text x="168" y="23" text-anchor="middle" font-family="'Geist Mono', monospace" font-weight="500" font-size="12" fill="#ffffff">9:16 Reel ▾</text>
+
+    <!-- Export Button -->
+    <rect x="263" y="0" width="90" height="36" rx="9" fill="url(#accent-cyan)"/>
+    <text x="308" y="23" text-anchor="middle" font-family="-apple-system, Inter, sans-serif" font-weight="600" font-size="13" fill="#ffffff">Export MP4</text>
+  </g>
+
+  <!-- Video Viewport Preview (9:16 Aspect) -->
+  <g id="Video_Viewport" transform="translate(112, 114)">
+    <rect width="168" height="298" rx="16" fill="#1e293b" stroke="rgba(255,255,255,0.12)" stroke-width="1" filter="drop-shadow(0 12px 32px rgba(0,0,0,0.6))"/>
+    
+    <!-- Diagonal Stripes pattern inside video -->
+    <path d="M0 40 L168 180 M0 80 L168 220 M0 120 L168 260 M0 160 L168 300 M0 200 L110 298" stroke="#334155" stroke-width="2"/>
+    <circle cx="84" cy="140" r="28" fill="#475569" opacity="0.4"/>
+    
+    <!-- Video Subtitle Meme Layer -->
+    <rect x="14" y="210" width="140" height="36" rx="6" fill="#000000" opacity="0.6"/>
+    <text x="84" y="233" text-anchor="middle" font-family="Impact, -apple-system, sans-serif" font-size="15" font-weight="900" fill="#ffffff" letter-spacing="0.5">WAIT FOR IT... 💀</text>
+  </g>
+
+  <!-- Multi-Track Timeline Sequencer -->
+  <g id="Timeline_Sequencer" transform="translate(0, 440)">
+    <!-- Sequencer Dark Background -->
+    <rect width="393" height="412" rx="24" fill="#0f121d" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+
+    <!-- Timecode Ruler -->
+    <g id="Ruler" transform="translate(0, 0)">
+      <rect width="393" height="30" fill="#121624"/>
+      <!-- Tick Marks and Time Labels -->
+      <text x="30" y="20" font-family="'Geist Mono', monospace" font-size="10" fill="#64748b">00:00</text>
+      <text x="110" y="20" font-family="'Geist Mono', monospace" font-size="10" fill="#64748b">00:02</text>
+      <text x="190" y="20" font-family="'Geist Mono', monospace" font-size="10" fill="#64748b">00:04</text>
+      <text x="270" y="20" font-family="'Geist Mono', monospace" font-size="10" fill="#64748b">00:06</text>
+      <text x="350" y="20" font-family="'Geist Mono', monospace" font-size="10" fill="#64748b">00:08</text>
+
+      <!-- Minor Ticks -->
+      <line x1="70" y1="20" x2="70" y2="28" stroke="#334155" stroke-width="1"/>
+      <line x1="150" y1="20" x2="150" y2="28" stroke="#334155" stroke-width="1"/>
+      <line x1="230" y1="20" x2="230" y2="28" stroke="#334155" stroke-width="1"/>
+      <line x1="310" y1="20" x2="310" y2="28" stroke="#334155" stroke-width="1"/>
+    </g>
+
+    <!-- Track Lanes Container -->
+    <g id="Tracks" transform="translate(20, 44)">
+      <!-- Track 1: Video Lane -->
+      <g transform="translate(0, 0)">
+        <rect width="353" height="42" rx="8" fill="#141825" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+        <!-- Video Clip Block -->
+        <rect x="10" y="4" width="280" height="34" rx="6" fill="url(#track-video)"/>
+        <text x="24" y="25" font-family="'Geist Mono', monospace" font-size="11" font-weight="600" fill="#ffffff">📹 Video Clip 1</text>
+        <!-- Drag handles at clip edges -->
+        <line x1="284" y1="12" x2="284" y2="30" stroke="#ffffff" opacity="0.6" stroke-width="2"/>
+      </g>
+
+      <!-- Track 2: Text Subtitles Lane -->
+      <g transform="translate(0, 52)">
+        <rect width="353" height="42" rx="8" fill="#141825" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+        <!-- Subtitle Clip Block -->
+        <rect x="70" y="4" width="200" height="34" rx="6" fill="#059669"/>
+        <text x="84" y="25" font-family="'Geist Mono', monospace" font-size="11" font-weight="600" fill="#ffffff">T  "WAIT FOR IT..."</text>
+      </g>
+
+      <!-- Track 3: Audio Lane -->
+      <g transform="translate(0, 104)">
+        <rect width="353" height="42" rx="8" fill="#141825" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+        <!-- Audio Clip Block -->
+        <rect x="10" y="4" width="310" height="34" rx="6" fill="url(#track-audio)"/>
+        <text x="24" y="25" font-family="'Geist Mono', monospace" font-size="11" font-weight="600" fill="#ffffff">♫  Phonk_Bass_Drop.mp3</text>
+      </g>
+    </g>
+
+    <!-- Glowing Red Laser Playhead Line -->
+    <g id="Playhead" transform="translate(196, 20)">
+      <!-- Diamond Handle -->
+      <polygon points="0,0 6,8 0,16 -6,8" fill="#ef4444"/>
+      <!-- Slicing Needle -->
+      <line x1="0" y1="16" x2="0" y2="280" stroke="#ef4444" stroke-width="2"/>
+    </g>
+
+    <!-- Bottom Transport Controls -->
+    <g id="Transport_Bar" transform="translate(20, 260)">
+      <!-- Live Timecode Display -->
+      <rect width="140" height="44" rx="10" fill="#161b2a" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+      <text x="70" y="27" text-anchor="middle" font-family="'Geist Mono', monospace" font-size="12" font-weight="600" fill="#ffffff">00:03.42 / 00:07.80</text>
+
+      <!-- Circular Play Button -->
+      <circle cx="210" cy="22" r="24" fill="url(#accent-indigo)"/>
+      <polygon points="204,14 204,30 219,22" fill="#ffffff"/>
+
+      <!-- Split Tool Button -->
+      <rect x="260" width="93" height="44" rx="10" fill="#161b2a" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+      <text x="306" y="27" text-anchor="middle" font-family="-apple-system, Inter, sans-serif" font-size="12" font-weight="600" fill="#cbd5e1">✂ Split</text>
+    </g>
+  </g>
+
+  <!-- Home Indicator Bar -->
+  <rect x="127" y="838" width="139" height="5" rx="2.5" fill="#ffffff" opacity="0.3"/>
+</svg>

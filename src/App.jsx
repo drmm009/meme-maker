@@ -12,16 +12,18 @@ const VideoEditor = lazy(() => import('./components/video-editor/VideoEditor'));
 const NotificationsModal = lazy(() => import('./components/NotificationsModal'));
 const SocialFeed = lazy(() => import('./components/SocialFeed'));
 const AiCaptionModal = lazy(() => import('./components/AiCaptionModal'));
+const ExploreView = lazy(() => import('./components/ExploreView'));
 import { MEME_TEMPLATES } from './data/templates';
 import { INITIAL_NOTIFICATIONS } from './data/notifications';
 import { idbPutMeme, idbGetAllMemes, idbGetMeme, idbDeleteMeme, dataURLToBlob, createThumbnail, toMetadata } from './utils/galleryStore';
-import { LayoutGrid, FolderHeart, User, Sun, Moon, Bell, Plus, Users, Compass } from 'lucide-react';
+import { LayoutGrid, FolderHeart, User, Sun, Moon, Bell, Plus, Users, Compass, Home } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import './App.css';
 
 function App() {
   const [currentView, setCurrentView] = useState('templates'); // 'templates' | 'custom-builder' | 'editor' | 'video-editor' | 'gallery'
-  const [builderMode, setBuilderMode] = useState('image'); // 'image' | 'video'
+  const [builderMode, setBuilderMode] = useState('image');
+  const [exploreCategory, setExploreCategory] = useState('all'); // 'image' | 'video'
   const [selectedTemplate, setSelectedTemplate] = useState(MEME_TEMPLATES[0]);
 
   // Dynamic world-class theme system (Dark default with sunset-orange palette)
@@ -209,7 +211,7 @@ function App() {
     document.documentElement.scrollTop = 0;
     document.body.scrollTop = 0;
 
-    const isEditorView = currentView === 'editor' || currentView === 'video-editor' || currentView === 'custom-builder';
+    const isEditorView = currentView === 'editor' || currentView === 'video-editor';
     if (isEditorView) {
       document.body.classList.add('editor-view-locked');
       document.documentElement.classList.add('editor-view-locked');
@@ -301,7 +303,7 @@ function App() {
 
   const handleCustomLayoutComplete = (customTemplate) => {
     setSelectedTemplate(customTemplate);
-    if (builderMode === 'video') {
+    if (builderMode === 'video' || customTemplate?.type === 'video') {
       setVideoSessionKey((k) => k + 1);
       setHasOpenedVideoEditor(true);
       setCurrentView('video-editor');
@@ -524,7 +526,7 @@ function App() {
       <div className="app-static-bg" aria-hidden="true" />
 
       {/* Top Navbar Header - HIDDEN ON EDITOR & BUILDER VIEWS FOR BIGGER CANVAS */}
-      {currentView !== 'editor' && currentView !== 'video-editor' && currentView !== 'custom-builder' && (
+      {currentView !== 'editor' && currentView !== 'video-editor' && (
         <header className="app-header glass-card">
           <div className="header-container flex-between">
             <div className="app-brand flex-gap" onClick={() => setCurrentView('templates')}>
@@ -567,6 +569,12 @@ function App() {
               <button
                 className={`nav-link ${currentView === 'templates' ? 'active' : ''}`}
                 onClick={() => setCurrentView('templates')}
+              >
+                <Home className="icon-xs" /> Home
+              </button>
+              <button
+                className={`nav-link ${currentView === 'explore' ? 'active' : ''}`}
+                onClick={() => setCurrentView('explore')}
               >
                 <Compass className="icon-xs" /> Explore
               </button>
@@ -633,7 +641,7 @@ function App() {
 
       {/* Main Content Area with Animated Motion Transitions */}
       {/* Main Content Area with Animated Transitions & Persistent Builder Tabs */}
-      <main className={`main-content-container ${currentView === 'editor' || currentView === 'video-editor' || currentView === 'custom-builder' ? 'editor-view-mode' : ''}`}>
+      <main className={`main-content-container ${currentView === 'editor' || currentView === 'video-editor' ? 'editor-view-mode' : ''}`}>
         <AnimatePresence mode="wait">
           {currentView === 'templates' && (
             <motion.div
@@ -647,7 +655,29 @@ function App() {
                 onSelectTemplate={handleSelectTemplate}
                 onCreateCustom={handleCreateCustom}
                 onOpenAiGenerator={handleOpenAiGenerator}
+                onNavigateExplore={(cat) => {
+                  if (cat) setExploreCategory(cat);
+                  setCurrentView('explore');
+                }}
               />
+            </motion.div>
+          )}
+
+                    {currentView === 'explore' && (
+            <motion.div
+              key="explore"
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              transition={{ duration: 0.25 }}
+            >
+              <Suspense fallback={<div className="glass-card" style={{ padding: '48px 24px', textAlign: 'center' }}>Loading explore templates…</div>}>
+                <ExploreView
+                  initialCategory={exploreCategory}
+                  onSelectTemplate={handleSelectTemplate}
+                  onCreateCustom={handleCreateCustom}
+                />
+              </Suspense>
             </motion.div>
           )}
 
@@ -706,6 +736,7 @@ function App() {
                   key={`custom-builder-${customBuilderKey}`}
                   savedState={customBuilderState}
                   onSaveState={setCustomBuilderState}
+                  onSelectTemplate={handleSelectTemplate}
                   onLayoutComplete={handleCustomLayoutComplete}
                   onBack={() => setCurrentView('templates')}
                 />
@@ -761,32 +792,29 @@ function App() {
       </main>
 
       {/* Floating Island Capsule Dock - Hidden during editing for maximum canvas space */}
-      {currentView !== 'editor' && currentView !== 'video-editor' && currentView !== 'custom-builder' && (
+      {currentView !== 'editor' && currentView !== 'video-editor' && (
         <nav className="floating-island-dock">
           <button
             className={`dock-nav-item ${currentView === 'templates' ? 'active' : ''}`}
             onClick={() => setCurrentView('templates')}
           >
-            <Compass className="dock-icon" size={20} />
-            <span className="dock-label">Explore</span>
+            <Home className="dock-icon" size={20} />
+            <span className="dock-label">Home</span>
             {currentView === 'templates' && <span className="dock-active-dot" />}
           </button>
 
           <button
-            className={`dock-nav-item ${currentView === 'gallery' ? 'active' : ''}`}
-            onClick={() => setCurrentView('gallery')}
+            className={`dock-nav-item ${currentView === 'explore' ? 'active' : ''}`}
+            onClick={() => setCurrentView('explore')}
           >
-            <FolderHeart className="dock-icon" size={20} />
-            <span className="dock-label">My Studio</span>
-            {savedMemes.length > 0 && (
-              <span className="dock-count-badge">{savedMemes.length}</span>
-            )}
-            {currentView === 'gallery' && <span className="dock-active-dot" />}
+            <Compass className="dock-icon" size={20} />
+            <span className="dock-label">Explore</span>
+            {currentView === 'explore' && <span className="dock-active-dot" />}
           </button>
 
           <div className="dock-creator-wrapper">
             <motion.button
-              className="dock-creator-squircle"
+              className={`dock-creator-squircle ${currentView === 'custom-builder' ? 'active' : ''}`}
               whileHover={{ scale: 1.08 }}
               whileTap={{ scale: 0.92 }}
               onClick={() => {
@@ -798,6 +826,7 @@ function App() {
               <Plus size={22} strokeWidth={2.8} />
             </motion.button>
             <span className="dock-creator-label">Creator</span>
+            {currentView === 'custom-builder' && <span className="dock-active-dot" style={{ bottom: '-6px' }} />}
           </div>
 
           <button
@@ -810,11 +839,15 @@ function App() {
           </button>
 
           <button
-            className="dock-nav-item"
-            onClick={() => setAccountModalOpen(true)}
+            className={`dock-nav-item ${currentView === 'gallery' ? 'active' : ''}`}
+            onClick={() => setCurrentView('gallery')}
           >
-            <User className="dock-icon" size={20} />
-            <span className="dock-label">Profile</span>
+            <FolderHeart className="dock-icon" size={20} />
+            <span className="dock-label">My Studio</span>
+            {savedMemes.length > 0 && (
+              <span className="dock-count-badge">{savedMemes.length}</span>
+            )}
+            {currentView === 'gallery' && <span className="dock-active-dot" />}
           </button>
         </nav>
       )}

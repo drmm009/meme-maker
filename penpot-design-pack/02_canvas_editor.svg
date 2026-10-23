@@ -1,0 +1,179 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 393 852" width="393" height="852">
+  <defs>
+    <linearGradient id="bg-editor-grad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#090a10"/>
+      <stop offset="100%" stop-color="#0b0e17"/>
+    </linearGradient>
+    <linearGradient id="accent-indigo" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#4f6bff"/>
+      <stop offset="100%" stop-color="#3b52d9"/>
+    </linearGradient>
+    <linearGradient id="sheet-grad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#121624"/>
+      <stop offset="100%" stop-color="#0b0d16"/>
+    </linearGradient>
+    <!-- Dot Matrix Pattern -->
+    <pattern id="dot-matrix" width="20" height="20" patternUnits="userSpaceOnUse">
+      <circle cx="10" cy="10" r="1.2" fill="#ffffff" opacity="0.12"/>
+    </pattern>
+  </defs>
+
+  <!-- Device Base Background -->
+  <rect width="393" height="852" fill="url(#bg-editor-grad)" rx="44"/>
+
+  <!-- Dot Matrix Canvas Artboard Area -->
+  <rect x="0" y="50" width="393" height="520" fill="url(#dot-matrix)"/>
+
+  <!-- Device Notch / Island -->
+  <rect x="132" y="11" width="129" height="34" rx="17" fill="#000000"/>
+  <circle cx="236" cy="28" r="5" fill="#141824"/>
+
+  <!-- Status Bar -->
+  <text x="36" y="32" font-family="-apple-system, Inter, sans-serif" font-weight="600" font-size="14" fill="#ffffff">9:41</text>
+  <text x="357" y="32" text-anchor="end" font-family="-apple-system, Inter, sans-serif" font-weight="600" font-size="12" fill="#ffffff" opacity="0.85">5G 100%</text>
+
+  <!-- Top Floating Controls -->
+  <g id="Top_Controls" transform="translate(20, 60)">
+    <!-- Back Pill -->
+    <rect x="0" y="0" width="76" height="36" rx="9" fill="#141824" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+    <text x="38" y="23" text-anchor="middle" font-family="-apple-system, Inter, sans-serif" font-weight="500" font-size="13" fill="#cbd5e1">← Back</text>
+
+    <!-- Ratio Dropdown Capsule -->
+    <rect x="120" y="0" width="112" height="36" rx="9" fill="#141824" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+    <text x="168" y="23" text-anchor="middle" font-family="'Geist Mono', monospace" font-weight="500" font-size="12" fill="#ffffff">1:1 Square ▾</text>
+
+    <!-- Export Button -->
+    <rect x="277" y="0" width="76" height="36" rx="9" fill="url(#accent-indigo)"/>
+    <text x="315" y="23" text-anchor="middle" font-family="-apple-system, Inter, sans-serif" font-weight="600" font-size="13" fill="#ffffff">Export ▾</text>
+  </g>
+
+  <!-- Main Meme Canvas Artboard -->
+  <g id="Meme_Artboard" transform="translate(46, 120)">
+    <!-- Meme Image Card -->
+    <rect width="300" height="300" rx="16" fill="#eab308" filter="drop-shadow(0 12px 32px rgba(0,0,0,0.6))"/>
+    
+    <!-- Stylized 'This is fine' dog room illustration -->
+    <rect x="0" y="0" width="300" height="300" rx="16" fill="#ca8a04"/>
+    <!-- Room fire flames -->
+    <path d="M0 300 L0 180 Q 40 100 80 220 T 160 160 T 240 240 T 300 170 L300 300 Z" fill="#eab308"/>
+    <path d="M0 300 L0 230 Q 30 150 70 250 T 150 200 T 230 270 T 300 220 L300 300 Z" fill="#f97316"/>
+    <!-- Table and mug -->
+    <rect x="180" y="190" width="80" height="12" rx="2" fill="#713f12"/>
+    <rect x="215" y="202" width="10" height="60" fill="#713f12"/>
+    <rect x="200" y="174" width="22" height="16" rx="2" fill="#ffffff"/>
+    <path d="M222 178 Q 230 182 222 186" fill="none" stroke="#ffffff" stroke-width="2"/>
+    <!-- Dog character in center -->
+    <circle cx="130" cy="170" r="32" fill="#eab308"/>
+    <circle cx="118" cy="162" r="7" fill="#ffffff"/>
+    <circle cx="118" cy="162" r="3.5" fill="#000000"/>
+    <circle cx="142" cy="162" r="7" fill="#ffffff"/>
+    <circle cx="142" cy="162" r="3.5" fill="#000000"/>
+    <ellipse cx="130" cy="178" rx="8" ry="4" fill="#000000"/>
+    <!-- Little brown hat -->
+    <ellipse cx="130" cy="140" rx="16" ry="4" fill="#713f12"/>
+    <rect x="122" y="125" width="16" height="15" rx="3" fill="#713f12"/>
+
+    <!-- Active Text Layer: "THIS IS TOTALLY FINE" -->
+    <!-- Figma Selection Box & Handles -->
+    <rect x="14" y="195" width="272" height="54" fill="none" stroke="#4f6bff" stroke-width="1.5" stroke-dasharray="none"/>
+    <!-- 4 Corner Node Handles -->
+    <rect x="11" y="192" width="6" height="6" fill="#ffffff" stroke="#4f6bff" stroke-width="1.5"/>
+    <rect x="283" y="192" width="6" height="6" fill="#ffffff" stroke="#4f6bff" stroke-width="1.5"/>
+    <rect x="11" y="246" width="6" height="6" fill="#ffffff" stroke="#4f6bff" stroke-width="1.5"/>
+    <rect x="283" y="246" width="6" height="6" fill="#ffffff" stroke="#4f6bff" stroke-width="1.5"/>
+
+    <!-- Text Layer with Heavy Meme Stroke -->
+    <text x="150" y="235" text-anchor="middle" font-family="Impact, -apple-system, sans-serif" font-size="28" font-weight="900" fill="#ffffff" stroke="#000000" stroke-width="4" paint-order="stroke fill" letter-spacing="0.5">THIS IS TOTALLY FINE</text>
+  </g>
+
+  <!-- Figma-Style Property Inspector Bottom Drawer -->
+  <g id="Property_Inspector" transform="translate(0, 450)">
+    <!-- Sheet Container -->
+    <rect width="393" height="402" rx="24" fill="url(#sheet-grad)" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+    
+    <!-- Drag Handle Pill -->
+    <rect x="177" y="10" width="38" height="4" rx="2" fill="#ffffff" opacity="0.2"/>
+
+    <!-- Tool Tabs Header (Text, Style, Stickers, AI Neural, Layers) -->
+    <g transform="translate(20, 24)">
+      <!-- Tab 1: Text (Active) -->
+      <rect x="0" y="0" width="66" height="34" rx="8" fill="#1e243a" stroke="#4f6bff" stroke-width="1"/>
+      <text x="33" y="22" text-anchor="middle" font-family="-apple-system, Inter, sans-serif" font-weight="600" font-size="12" fill="#4f6bff">T  Text</text>
+
+      <!-- Tab 2: Style -->
+      <rect x="72" y="0" width="66" height="34" rx="8" fill="#141824" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+      <text x="105" y="22" text-anchor="middle" font-family="-apple-system, Inter, sans-serif" font-weight="500" font-size="12" fill="#94a3b8">Style</text>
+
+      <!-- Tab 3: Stickers -->
+      <rect x="144" y="0" width="66" height="34" rx="8" fill="#141824" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+      <text x="177" y="22" text-anchor="middle" font-family="-apple-system, Inter, sans-serif" font-weight="500" font-size="12" fill="#94a3b8">Stickers</text>
+
+      <!-- Tab 4: AI Neural -->
+      <rect x="216" y="0" width="66" height="34" rx="8" fill="#141824" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+      <text x="249" y="22" text-anchor="middle" font-family="-apple-system, Inter, sans-serif" font-weight="500" font-size="12" fill="#94a3b8">AI Tools</text>
+
+      <!-- Tab 5: Layers -->
+      <rect x="288" y="0" width="65" height="34" rx="8" fill="#141824" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+      <text x="320" y="22" text-anchor="middle" font-family="-apple-system, Inter, sans-serif" font-weight="500" font-size="12" fill="#94a3b8">Layers</text>
+    </g>
+
+    <!-- Inspector Property Rows (2-Column Grid) -->
+    <g transform="translate(20, 78)">
+      <!-- Row 1: Font & Size -->
+      <g transform="translate(0, 0)">
+        <!-- Font Dropdown Field -->
+        <rect width="170" height="42" rx="9" fill="#161b2a" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+        <text x="12" y="26" font-family="'Geist Mono', monospace" font-size="10" fill="#64748b">FONT</text>
+        <text x="60" y="26" font-family="-apple-system, Inter, sans-serif" font-weight="600" font-size="13" fill="#ffffff">Impact</text>
+        <text x="156" y="26" text-anchor="end" font-size="11" fill="#64748b">▾</text>
+
+        <!-- Size Stepper Field -->
+        <rect x="183" width="170" height="42" rx="9" fill="#161b2a" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+        <text x="195" y="26" font-family="'Geist Mono', monospace" font-size="10" fill="#64748b">SIZE</text>
+        <text x="250" y="26" font-family="'Geist Mono', monospace" font-weight="600" font-size="13" fill="#ffffff">36px</text>
+        <text x="339" y="26" text-anchor="end" font-size="11" fill="#64748b">▾</text>
+      </g>
+
+      <!-- Row 2: Fill Color & Stroke Outline -->
+      <g transform="translate(0, 52)">
+        <!-- Fill Field -->
+        <rect width="170" height="42" rx="9" fill="#161b2a" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+        <text x="12" y="26" font-family="'Geist Mono', monospace" font-size="10" fill="#64748b">FILL</text>
+        <rect x="52" y="13" width="16" height="16" rx="4" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+        <text x="76" y="26" font-family="'Geist Mono', monospace" font-weight="600" font-size="12" fill="#ffffff">#FFFFFF</text>
+
+        <!-- Stroke Field -->
+        <rect x="183" width="170" height="42" rx="9" fill="#161b2a" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+        <text x="195" y="26" font-family="'Geist Mono', monospace" font-size="10" fill="#64748b">STROKE</text>
+        <rect x="252" y="13" width="16" height="16" rx="4" fill="#000000" stroke="#475569" stroke-width="1"/>
+        <text x="276" y="26" font-family="'Geist Mono', monospace" font-weight="600" font-size="12" fill="#ffffff">2px Black</text>
+      </g>
+
+      <!-- Row 3: Curvature Arc Slider -->
+      <g transform="translate(0, 104)">
+        <rect width="353" height="54" rx="10" fill="#161b2a" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+        <text x="14" y="22" font-family="'Geist Mono', monospace" font-size="10" fill="#64748b" letter-spacing="0.5">CURVATURE ARC</text>
+        <text x="339" y="22" text-anchor="end" font-family="'Geist Mono', monospace" font-weight="600" font-size="11" fill="#4f6bff">+42°</text>
+        <!-- Slider Track & Thumb -->
+        <rect x="14" y="34" width="325" height="5" rx="2.5" fill="#242c44"/>
+        <rect x="14" y="34" width="220" height="5" rx="2.5" fill="#4f6bff"/>
+        <circle cx="234" cy="36.5" r="8" fill="#ffffff" stroke="#4f6bff" stroke-width="2"/>
+      </g>
+    </g>
+
+    <!-- Bottom Quick Action Tool Bar -->
+    <g transform="translate(20, 260)">
+      <rect width="112" height="38" rx="9" fill="#1c2237" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+      <text x="56" y="24" text-anchor="middle" font-family="-apple-system, Inter, sans-serif" font-weight="500" font-size="12" fill="#ffffff">+ Add Layer</text>
+
+      <rect x="120" width="112" height="38" rx="9" fill="#1c2237" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+      <text x="176" y="24" text-anchor="middle" font-family="-apple-system, Inter, sans-serif" font-weight="500" font-size="12" fill="#ffffff">✨ AI Ideas</text>
+
+      <rect x="241" width="112" height="38" rx="9" fill="#1c2237" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+      <text x="297" y="24" text-anchor="middle" font-family="-apple-system, Inter, sans-serif" font-weight="500" font-size="12" fill="#ef4444">Delete</text>
+    </g>
+  </g>
+
+  <!-- Home Indicator Bar -->
+  <rect x="127" y="838" width="139" height="5" rx="2.5" fill="#ffffff" opacity="0.3"/>
+</svg>

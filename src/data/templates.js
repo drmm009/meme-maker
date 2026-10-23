@@ -12,7 +12,7 @@ export const MEME_TEMPLATES = [
     "aspectRatio": "1:1",
     "trendingScore": 198,
     "canvasOnly": true,
-    "canvasBgColor": "#000000",
+    "canvasBgColor": "#ffffff",
     "defaultCaptions": [
       {
         "id": "cap-tweet-template",
@@ -20,7 +20,7 @@ export const MEME_TEMPLATES = [
         "tweetName": "Elon Musk",
         "tweetHandle": "@elonmusk",
         "tweetVerified": true,
-        "tweetTheme": "dark",
+        "tweetTheme": "light",
         "tweetTime": "10:42 PM · Oct 8, 2026",
         "tweetMetrics": "💬 14.2K    🔁 62.8K    ❤️ 420.5K    📊 18.2M",
         "tweetMetricsId": "viral",
@@ -31,7 +31,7 @@ export const MEME_TEMPLATES = [
         "y": 0.5,
         "width": 0.88,
         "fontSize": 18,
-        "color": "#ffffff",
+        "color": "#0f1419",
         "stroke": "transparent",
         "strokeWidth": 0,
         "zIndex": 1
@@ -51,7 +51,7 @@ export const MEME_TEMPLATES = [
     "aspectRatio": "1:1",
     "trendingScore": 195,
     "canvasOnly": true,
-    "canvasBgColor": "#000000",
+    "canvasBgColor": "#ffffff",
     "defaultCaptions": [
       {
         "id": "cap-ig-template",
@@ -67,13 +67,13 @@ export const MEME_TEMPLATES = [
         "igSharesCount": "295",
         "igFollowText": "",
         "igTime": "28 September",
-        "igTheme": "dark",
+        "igTheme": "light",
         "isInstagramCard": true,
         "x": 0.5,
         "y": 0.5,
         "width": 0.88,
         "fontSize": 15,
-        "color": "#ffffff",
+        "color": "#262626",
         "stroke": "transparent",
         "strokeWidth": 0,
         "zIndex": 1
@@ -93,7 +93,7 @@ export const MEME_TEMPLATES = [
     "aspectRatio": "1:1",
     "trendingScore": 192,
     "canvasOnly": true,
-    "canvasBgColor": "#0b141a",
+    "canvasBgColor": "#efeae2",
     "defaultCaptions": [
       {
         "id": "cap-wa-template",
@@ -104,11 +104,11 @@ export const MEME_TEMPLATES = [
         "waDirection": "sent",
         "waTicks": "blue",
         "waTime": "12:28 PM",
-        "waTheme": "dark",
+        "waTheme": "light",
         "waShowHeader": true,
         "waShowFooter": true,
         "waShowDoodles": true,
-        "waAvatarBg": "#202c33",
+        "waAvatarBg": "#dfe5e7",
         "waMessages": [
           { "id": "m1", "text": "Hi, I need some help.", "direction": "sent", "time": "12:28 PM", "ticks": "blue" },
           { "id": "m2", "text": "Hello. Are you looking for advertising in newspaper. Please let us know what kind of ad you are looking to advertise. We will reply you shortly", "direction": "received", "time": "12:31 PM", "ticks": "none" },
@@ -122,7 +122,7 @@ export const MEME_TEMPLATES = [
         "y": 0.5,
         "width": 0.82,
         "fontSize": 14.5,
-        "color": "#ffffff",
+        "color": "#111b21",
         "stroke": "transparent",
         "strokeWidth": 0,
         "zIndex": 1

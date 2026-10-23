@@ -1,0 +1,206 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 393 852" width="393" height="852">
+  <defs>
+    <linearGradient id="bg-grad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#090a10"/>
+      <stop offset="100%" stop-color="#0c0e17"/>
+    </linearGradient>
+    <linearGradient id="accent-indigo" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#4f6bff"/>
+      <stop offset="100%" stop-color="#3b52d9"/>
+    </linearGradient>
+    <linearGradient id="card-grad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#141824"/>
+      <stop offset="100%" stop-color="#0f121d"/>
+    </linearGradient>
+    <linearGradient id="btn-quick-1" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#181d2f"/>
+      <stop offset="100%" stop-color="#111422"/>
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+
+  <!-- Background Base -->
+  <rect width="393" height="852" fill="url(#bg-grad)" rx="44"/>
+
+  <!-- Device Notch / Island -->
+  <rect x="132" y="11" width="129" height="34" rx="17" fill="#000000"/>
+  <circle cx="236" cy="28" r="5" fill="#141824"/>
+
+  <!-- Status Bar -->
+  <text x="36" y="32" font-family="-apple-system, Inter, sans-serif" font-weight="600" font-size="14" fill="#ffffff" letter-spacing="-0.3">9:41</text>
+  <text x="357" y="32" text-anchor="end" font-family="-apple-system, Inter, sans-serif" font-weight="600" font-size="12" fill="#ffffff" opacity="0.85">5G 100%</text>
+
+  <!-- Studio Header -->
+  <g id="Header" transform="translate(20, 60)">
+    <!-- App Logo Icon -->
+    <rect x="0" y="0" width="40" height="40" rx="10" fill="url(#accent-indigo)"/>
+    <path d="M12 16 L20 12 L28 16 L20 20 Z" fill="#ffffff" opacity="0.95"/>
+    <path d="M12 21 L20 25 L28 21" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+    <path d="M12 26 L20 30 L28 26" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+
+    <!-- App Title & Tag -->
+    <text x="50" y="18" font-family="-apple-system, Inter, sans-serif" font-weight="700" font-size="17" fill="#ffffff" letter-spacing="-0.4">Apex Studio</text>
+    <text x="50" y="33" font-family="'Geist Mono', monospace" font-weight="600" font-size="10" fill="#4f6bff" letter-spacing="1">PRO ENGINE v2</text>
+
+    <!-- Header Actions -->
+    <rect x="277" y="2" width="36" height="36" rx="9" fill="#141824" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+    <path d="M295 13 A 6 6 0 1 1 289 19 M289 14 L289 19 L294 19" fill="none" stroke="#94a3b8" stroke-width="1.8" stroke-linecap="round"/>
+    
+    <rect x="319" y="2" width="36" height="36" rx="9" fill="#141824" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+    <circle cx="337" cy="20" r="4" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+    <path d="M337 13 L337 15 M337 25 L337 27 M330 20 L332 20 M342 20 L344 20" stroke="#94a3b8" stroke-width="1.8" stroke-linecap="round"/>
+  </g>
+
+  <!-- Quick-Action Deck -->
+  <g id="Quick_Deck" transform="translate(20, 120)">
+    <!-- Custom Image Artboard Card -->
+    <g transform="translate(0, 0)">
+      <rect width="170" height="82" rx="14" fill="url(#btn-quick-1)" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+      <rect x="14" y="14" width="28" height="28" rx="7" fill="#1e243a"/>
+      <path d="M20 28 L25 22 L31 29 M30 25 L34 30" fill="none" stroke="#4f6bff" stroke-width="1.6" stroke-linecap="round"/>
+      <text x="156" y="26" text-anchor="end" font-family="'Geist Mono', monospace" font-size="9" fill="#64748b" letter-spacing="0.8">ARTBOARD</text>
+      <text x="14" y="63" font-family="-apple-system, Inter, sans-serif" font-weight="600" font-size="14" fill="#ffffff">Custom Image</text>
+      <path d="M146 60 L154 60 M150 56 L154 60 L150 64" fill="none" stroke="#4f6bff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+
+    <!-- Video Sequencer Card -->
+    <g transform="translate(183, 0)">
+      <rect width="170" height="82" rx="14" fill="url(#btn-quick-1)" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+      <rect x="14" y="14" width="28" height="28" rx="7" fill="#1a2736"/>
+      <path d="M21 21 L31 21 L31 32 L21 32 Z M31 24 L36 21 L36 32 L31 29" fill="none" stroke="#06b6d4" stroke-width="1.6" stroke-linejoin="round"/>
+      <text x="156" y="26" text-anchor="end" font-family="'Geist Mono', monospace" font-size="9" fill="#64748b" letter-spacing="0.8">SEQUENCE</text>
+      <text x="14" y="63" font-family="-apple-system, Inter, sans-serif" font-weight="600" font-size="14" fill="#ffffff">Video Studio</text>
+      <path d="M146 60 L154 60 M150 56 L154 60 L150 64" fill="none" stroke="#06b6d4" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+  </g>
+
+  <!-- Command Palette Bar (Raycast Style) -->
+  <g id="Command_Bar" transform="translate(20, 218)">
+    <rect width="353" height="44" rx="11" fill="#111422" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+    <!-- Search Icon -->
+    <circle cx="28" cy="22" r="6" fill="none" stroke="#64748b" stroke-width="1.8"/>
+    <path d="M33 27 L39 33" stroke="#64748b" stroke-width="1.8" stroke-linecap="round"/>
+    <!-- Placeholder Text -->
+    <text x="48" y="27" font-family="-apple-system, Inter, sans-serif" font-size="13" fill="#64748b">Search templates (Drake, Wojak, Cat)...</text>
+    <!-- Hotkey Badge -->
+    <rect x="312" y="10" width="31" height="24" rx="5" fill="#181d2f" stroke="rgba(255,255,255,0.07)" stroke-width="1"/>
+    <text x="327" y="26" text-anchor="middle" font-family="'Geist Mono', monospace" font-size="11" fill="#94a3b8">⌘K</text>
+  </g>
+
+  <!-- Filter Chips Track -->
+  <g id="Filters" transform="translate(20, 274)">
+    <!-- Active Chip: All Artboards -->
+    <rect x="0" y="0" width="112" height="32" rx="8" fill="url(#accent-indigo)"/>
+    <text x="56" y="20" text-anchor="middle" font-family="-apple-system, Inter, sans-serif" font-weight="600" font-size="12" fill="#ffffff">All Artboards</text>
+
+    <!-- Chip 2: Trending -->
+    <rect x="118" y="0" width="94" height="32" rx="8" fill="#121624" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+    <text x="165" y="20" text-anchor="middle" font-family="-apple-system, Inter, sans-serif" font-weight="500" font-size="12" fill="#94a3b8">⚡ Trending</text>
+
+    <!-- Chip 3: Video Memes -->
+    <rect x="218" y="0" width="108" height="32" rx="8" fill="#121624" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+    <text x="272" y="20" text-anchor="middle" font-family="-apple-system, Inter, sans-serif" font-weight="500" font-size="12" fill="#94a3b8">🎬 Video Clips</text>
+
+    <!-- Chip 4: More -->
+    <rect x="332" y="0" width="21" height="32" rx="8" fill="#121624" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+    <text x="342" y="20" text-anchor="middle" font-family="-apple-system, Inter, sans-serif" font-weight="500" font-size="12" fill="#94a3b8">›</text>
+  </g>
+
+  <!-- Curated Templates Header -->
+  <g transform="translate(20, 328)">
+    <text x="0" y="10" font-family="'Geist Mono', monospace" font-size="10" fill="#64748b" font-weight="600" letter-spacing="1">CURATED ARTBOARDS</text>
+    <text x="353" y="10" text-anchor="end" font-family="'Geist Mono', monospace" font-size="10" fill="#4f6bff" font-weight="600">128 ITEMS</text>
+  </g>
+
+  <!-- Bento Grid of Templates -->
+  <g id="Bento_Grid" transform="translate(20, 350)">
+    <!-- Card 1: Drake Hotline Bling -->
+    <g transform="translate(0, 0)">
+      <rect width="170" height="200" rx="16" fill="url(#card-grad)" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+      <!-- Media Preview Box -->
+      <rect x="1" y="1" width="168" height="135" rx="15" fill="#eab308"/>
+      <path d="M1 68 L169 68" stroke="#ca8a04" stroke-width="1.5"/>
+      <!-- Drake stylized meme faces -->
+      <circle cx="45" cy="36" r="16" fill="#ca8a04" opacity="0.3"/>
+      <text x="85" y="42" font-family="-apple-system, Inter, sans-serif" font-weight="700" font-size="12" fill="#713f12">Nah...</text>
+      <circle cx="45" cy="102" r="16" fill="#ca8a04" opacity="0.4"/>
+      <text x="85" y="108" font-family="-apple-system, Inter, sans-serif" font-weight="700" font-size="12" fill="#713f12">Yeah!</text>
+      <!-- Tag overlay -->
+      <rect x="10" y="106" width="62" height="20" rx="5" fill="#000000" opacity="0.75"/>
+      <text x="41" y="120" text-anchor="middle" font-family="'Geist Mono', monospace" font-size="9" fill="#ffffff" font-weight="600">HD • 1:1</text>
+      <!-- Star Button -->
+      <circle cx="148" cy="22" r="12" fill="#000000" opacity="0.6"/>
+      <path d="M148 16 L150 20 L154 21 L151 24 L152 28 L148 26 L144 28 L145 24 L142 21 L146 20 Z" fill="#facc15"/>
+      <!-- Card Details -->
+      <text x="12" y="160" font-family="-apple-system, Inter, sans-serif" font-weight="600" font-size="13" fill="#ffffff">Drake Hotline Bling</text>
+      <text x="12" y="180" font-family="'Geist Mono', monospace" font-size="10" fill="#64748b">CLASSIC</text>
+      <text x="158" y="180" text-anchor="end" font-family="'Geist Mono', monospace" font-size="10" fill="#22c55e" font-weight="600">99% HOT</text>
+    </g>
+
+    <!-- Card 2: Distracted Boyfriend -->
+    <g transform="translate(183, 0)">
+      <rect width="170" height="200" rx="16" fill="url(#card-grad)" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+      <!-- Media Preview Box with diagonal lines pattern -->
+      <rect x="1" y="1" width="168" height="135" rx="15" fill="#1e293b"/>
+      <path d="M20 1 L169 110 M40 1 L169 90 M60 1 L169 70 M80 1 L169 50" stroke="#334155" stroke-width="1.5"/>
+      <rect x="10" y="106" width="56" height="20" rx="5" fill="#000000" opacity="0.75"/>
+      <text x="38" y="120" text-anchor="middle" font-family="'Geist Mono', monospace" font-size="9" fill="#38bdf8" font-weight="600">🎬 4.2s</text>
+      <circle cx="148" cy="22" r="12" fill="#000000" opacity="0.6"/>
+      <path d="M148 16 L150 20 L154 21 L151 24 L152 28 L148 26 L144 28 L145 24 L142 21 L146 20 Z" fill="none" stroke="#94a3b8" stroke-width="1.2"/>
+      <!-- Card Details -->
+      <text x="12" y="160" font-family="-apple-system, Inter, sans-serif" font-weight="600" font-size="13" fill="#ffffff">Distracted Boyfriend</text>
+      <text x="12" y="180" font-family="'Geist Mono', monospace" font-size="10" fill="#64748b">VIDEO</text>
+      <text x="158" y="180" text-anchor="end" font-family="'Geist Mono', monospace" font-size="10" fill="#94a3b8">1080p</text>
+    </g>
+
+    <!-- Card 3: Doge Wow -->
+    <g transform="translate(0, 214)">
+      <rect width="170" height="170" rx="16" fill="url(#card-grad)" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+      <rect x="1" y="1" width="168" height="115" rx="15" fill="#ca8a04"/>
+      <circle cx="84" cy="58" r="32" fill="#fde047" opacity="0.4"/>
+      <text x="84" y="64" text-anchor="middle" font-family="-apple-system, Inter, sans-serif" font-weight="800" font-size="16" fill="#713f12">DOGE</text>
+      <rect x="10" y="86" width="62" height="20" rx="5" fill="#000000" opacity="0.75"/>
+      <text x="41" y="100" text-anchor="middle" font-family="'Geist Mono', monospace" font-size="9" fill="#ffffff" font-weight="600">HD • 1:1</text>
+      <text x="12" y="142" font-family="-apple-system, Inter, sans-serif" font-weight="600" font-size="13" fill="#ffffff">Much Doge Wow</text>
+      <text x="12" y="158" font-family="'Geist Mono', monospace" font-size="10" fill="#64748b">REACTION</text>
+      <text x="158" y="158" text-anchor="end" font-family="'Geist Mono', monospace" font-size="10" fill="#22c55e" font-weight="600">95% HOT</text>
+    </g>
+
+    <!-- Card 4: This is Fine Dog -->
+    <g transform="translate(183, 214)">
+      <rect width="170" height="170" rx="16" fill="url(#card-grad)" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+      <rect x="1" y="1" width="168" height="115" rx="15" fill="#b45309"/>
+      <path d="M10 110 Q 50 30 84 90 T 160 110" fill="#f59e0b" opacity="0.8"/>
+      <text x="84" y="64" text-anchor="middle" font-family="-apple-system, Inter, sans-serif" font-weight="800" font-size="15" fill="#ffffff">☕ IT'S FINE</text>
+      <rect x="10" y="86" width="62" height="20" rx="5" fill="#000000" opacity="0.75"/>
+      <text x="41" y="100" text-anchor="middle" font-family="'Geist Mono', monospace" font-size="9" fill="#ffffff" font-weight="600">HD • 1:1</text>
+      <text x="12" y="142" font-family="-apple-system, Inter, sans-serif" font-weight="600" font-size="13" fill="#ffffff">This Is Fine Dog</text>
+      <text x="12" y="158" font-family="'Geist Mono', monospace" font-size="10" fill="#64748b">PANEL</text>
+      <text x="158" y="158" text-anchor="end" font-family="'Geist Mono', monospace" font-size="10" fill="#22c55e" font-weight="600">98% HOT</text>
+    </g>
+  </g>
+
+  <!-- Floating Island Bottom Navigation Dock -->
+  <g id="Dock" transform="translate(56, 770)">
+    <rect width="280" height="58" rx="29" fill="#111422" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+    
+    <!-- Active Capsule: Discover -->
+    <rect x="8" y="7" width="98" height="44" rx="22" fill="url(#accent-indigo)"/>
+    <path d="M30 24 L36 24 L36 30 L30 30 Z M40 24 L46 24 L46 30 L40 30 Z M30 34 L36 34 L36 40 L30 40 Z M40 34 L46 34 L46 40 L40 40 Z" fill="#ffffff"/>
+    <text x="54" y="34" font-family="-apple-system, Inter, sans-serif" font-weight="600" font-size="12" fill="#ffffff">Discover</text>
+
+    <!-- Nav Item 2: Builder -->
+    <path d="M136 25 L145 34 M143 23 L149 29 L147 31 L141 25 Z" fill="none" stroke="#94a3b8" stroke-width="1.8" stroke-linecap="round"/>
+    <text x="154" y="34" font-family="-apple-system, Inter, sans-serif" font-weight="500" font-size="12" fill="#94a3b8">Builder</text>
+
+    <!-- Nav Item 3: Vault -->
+    <path d="M222 25 L227 25 L229 27 L237 27 L237 36 L222 36 Z" fill="none" stroke="#94a3b8" stroke-width="1.8" stroke-linejoin="round"/>
+    <text x="245" y="34" font-family="-apple-system, Inter, sans-serif" font-weight="500" font-size="12" fill="#94a3b8">Vault</text>
+  </g>
+
+  <!-- Home Indicator Bar -->
+  <rect x="127" y="838" width="139" height="5" rx="2.5" fill="#ffffff" opacity="0.3"/>
+</svg>

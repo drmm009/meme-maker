@@ -307,8 +307,15 @@ body.editor-view-locked {
   display: block !important;
   height: 100% !important;
   max-height: 100dvh !important;
-  overflow: hidden !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  -webkit-overflow-scrolling: touch;
   animation: fadeInView 0.22s ease-out;
+}
+.main-content-container:not(.editor-view-mode) .persistent-builder-view.active-view {
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
 }
 .persistent-builder-view.hidden-view {
   display: none !important;
@@ -1074,7 +1081,10 @@ body.modal-open {
     margin-left: 4px;
   }
   .custom-layout-builder {
-    padding: 0 0 80px 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
   }
   .wizard-progress-bar {
     margin: 0 0 16px 0 !important;
@@ -1103,7 +1113,10 @@ body.modal-open {
 }
 
 .custom-layout-builder {
-  padding: 20px;
+  padding: 0 !important;
+  margin: 0 !important;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* Container Queries for Panel Upload Buttons */

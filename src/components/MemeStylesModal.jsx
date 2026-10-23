@@ -474,7 +474,7 @@ export default function MemeStylesModal({
   const [tweetHandle, setTweetHandle] = useState('@elonmusk');
   const [tweetText, setTweetText] = useState('thinking about deleting the database and moving to the woods');
   const [tweetVerified, setTweetVerified] = useState(true);
-  const [tweetTheme, setTweetTheme] = useState('dark');
+  const [tweetTheme, setTweetTheme] = useState('light');
   const [tweetAvatarBg, setTweetAvatarBg] = useState('linear-gradient(135deg, #0ea5e9, #38bdf8)');
 
   // 2. Instagram State
@@ -505,11 +505,11 @@ export default function MemeStylesModal({
   const [waName, setWaName] = useState('+91 81210 03003');
   const [waStatus, setWaStatus] = useState('last seen yesterday at 6:43 PM');
   const [waDatePill, setWaDatePill] = useState('Yesterday');
-  const [waTheme, setWaTheme] = useState('dark');
+  const [waTheme, setWaTheme] = useState('light');
   const [waShowHeader, setWaShowHeader] = useState(true);
   const [waShowFooter, setWaShowFooter] = useState(true);
   const [waShowDoodles, setWaShowDoodles] = useState(true);
-  const [waAvatarBg, setWaAvatarBg] = useState('#202c33');
+  const [waAvatarBg, setWaAvatarBg] = useState('#dfe5e7');
   const [waMessages, setWaMessages] = useState(WHATSAPP_PERSONAS[0].messages);
   const [activeWaMsgIndex, setActiveWaMsgIndex] = useState(0);
 
