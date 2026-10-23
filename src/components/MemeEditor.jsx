@@ -2,14 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import CanvasEditor, { TWEET_TREND_PRESETS } from './CanvasEditor';
 import { FONTS } from '../data/stickers';
 import { Type, Sparkles, Copy, Check, RefreshCw, LayoutGrid, PencilLine } from 'lucide-react';
-import AiCaptionModal from './AiCaptionModal';
-import MemeStylesModal, { IG_PRESET_IMAGES } from './MemeStylesModal';
-import FaceMorphModal from './FaceMorphModal';
-import MemeStickersBottomSheet from './editor/MemeStickersBottomSheet';
-import EmojiBottomSheet from './editor/EmojiBottomSheet';
-import TemplatePickerBottomSheet from './editor/TemplatePickerBottomSheet';
-import PhotoFiltersBottomSheet from './editor/PhotoFiltersBottomSheet';
-import BubbleChatBottomSheet from './editor/BubbleChatBottomSheet';
+import { IG_PRESET_IMAGES } from './MemeStylesModal';
 import FacePinpointOverlay from './FacePinpointOverlay';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MEME_TEMPLATES } from '../data/templates';
@@ -32,6 +25,7 @@ import CanvasTab from './editor/tabs/CanvasTab';
 import TextTab from './editor/tabs/TextTab';
 import ContextToolbar from './editor/context-toolbars/ContextToolbar';
 import SecondaryToolbar from './editor/context-toolbars/SecondaryToolbar';
+import EditorModals from './editor/EditorModals';
 import './MemeEditor.css';
 
 export default function MemeEditor(props) {
@@ -55,7 +49,6 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
   const activeLayerId = useMemeEditorStore((s) => s.activeLayerId);
   const setActiveLayerId = useMemeEditorStore((s) => s.setActiveLayerId);
   const slotImages = useMemeEditorStore((s) => s.slotImages);
-  const setSlotImages = useMemeEditorStore((s) => s.setSlotImages);
   const slotTransforms = useMemeEditorStore((s) => s.slotTransforms);
   const setSlotTransforms = useMemeEditorStore((s) => s.setSlotTransforms);
   const activeTemplate = useMemeEditorStore((s) => s.activeTemplate);
@@ -72,7 +65,6 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
   const demotivational = useMemeEditorStore((s) => s.demotivational);
   const templateFaceMorph = useMemeEditorStore((s) => s.templateFaceMorph);
   const imageFilters = useMemeEditorStore((s) => s.imageFilters);
-  const setImageFilters = useMemeEditorStore((s) => s.setImageFilters);
   const drawings = useMemeEditorStore((s) => s.drawings);
   const setDrawings = useMemeEditorStore((s) => s.setDrawings);
   const pushHistory = useMemeEditorStore((s) => s.pushHistory);
@@ -2079,112 +2071,51 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
 
 
       {/* Meme Stickers & Overlays Bottom Sheet */}
-      <MemeStickersBottomSheet
-        isOpen={showMemeStickersModal}
-        onClose={() => setShowMemeStickersModal(false)}
-        onSelectSticker={(sticker) => handleAddGraphicSticker(sticker)}
-      />
-
-      {/* Emoji Stickers Bottom Sheet */}
-      <EmojiBottomSheet
-        isOpen={showEmojiModal}
-        onClose={() => setShowEmojiModal(false)}
-        onSelectEmoji={(emoji) => handleAddSticker(emoji)}
-      />
-
-      {/* Image Layer Template Picker Bottom Sheet */}
-      <TemplatePickerBottomSheet
-        isOpen={imagePickerTarget !== null}
-        onClose={() => setImagePickerTarget(null)}
-        templates={openSourceTemplates}
-        onSelectTemplate={(tmpl) => {
-          if (imagePickerTarget?.slot !== undefined) {
-            const nextImages = [...slotImages];
-            nextImages[imagePickerTarget.slot] = tmpl.imageUrl;
-            setSlotImages(nextImages);
-
-            const nextTransforms = [...slotTransforms];
-            nextTransforms[imagePickerTarget.slot] = { offsetX: 0, offsetY: 0, scale: 1.5 };
-            setSlotTransforms(nextTransforms);
-          } else {
-            handleAddImageLayer(tmpl.imageUrl);
-          }
-          setImagePickerTarget(null);
-        }}
-      />
-
-      {/* Photo Filters Bottom Sheet */}
-      <PhotoFiltersBottomSheet
-        isOpen={showFiltersModal}
-        onClose={() => setShowFiltersModal(false)}
-        activeImageLayer={activeImageLayer}
-        imageFilters={imageFilters}
-        setImageFilters={setImageFilters}
-        updateActiveImageLayer={updateActiveImageLayer}
-        previewImage={(() => {
-          if (activeImageLayer) {
-            return activeImageLayer.originalUrl || activeImageLayer.url || activeImageLayer.src;
-          }
-          if (imageLayers && imageLayers.length > 0) {
-            return imageLayers[0].originalUrl || imageLayers[0].url || imageLayers[0].src;
-          }
-          return activeTemplate?.imageUrl || template?.imageUrl;
-        })()}
-      />
-
-      {/* Bubble Chat & Speech Layouts Bottom Sheet */}
-      <BubbleChatBottomSheet
-        isOpen={showBubbleBottomSheet}
-        onClose={() => setShowBubbleBottomSheet(false)}
+      <EditorModals
         activeCaption={activeCaption}
-        onApplyBubbleStyle={handleApplyBubbleStyle}
-        onRemoveBubbleStyle={() => updateActiveCaptionProps({ bubbleStyle: null })}
+        activeImageLayer={activeImageLayer}
+        currentEditingSocialCard={currentEditingSocialCard}
+        extractedMemeFace={extractedMemeFace}
+        faceTarget={faceTarget}
+        handleAddGraphicSticker={handleAddGraphicSticker}
+        handleAddImageLayer={handleAddImageLayer}
+        handleAddInstagramCard={handleAddInstagramCard}
+        handleAddSticker={handleAddSticker}
+        handleAddTweetCard={handleAddTweetCard}
+        handleAddWhatsAppCard={handleAddWhatsAppCard}
+        handleApplyAiCaption={handleApplyAiCaption}
+        handleApplyBubbleStyle={handleApplyBubbleStyle}
+        handleApplyFaceMorph={handleApplyFaceMorph}
+        handleUpdateSocialCard={handleUpdateSocialCard}
+        imagePickerTarget={imagePickerTarget}
+        morphTargetLayerId={morphTargetLayerId}
+        morphTargetUrl={morphTargetUrl}
+        openSourceTemplates={openSourceTemplates}
+        originalTemplateImgRef={originalTemplateImgRef}
+        sampledFaceLighting={sampledFaceLighting}
+        setImagePickerTarget={setImagePickerTarget}
+        setIsPinpointingFace={setIsPinpointingFace}
+        setMorphTargetLayerId={setMorphTargetLayerId}
+        setMorphTargetUrl={setMorphTargetUrl}
+        setShowAiModal={setShowAiModal}
+        setShowBubbleBottomSheet={setShowBubbleBottomSheet}
+        setShowEmojiModal={setShowEmojiModal}
+        setShowFaceMorphModal={setShowFaceMorphModal}
+        setShowFiltersModal={setShowFiltersModal}
+        setShowMemeStickersModal={setShowMemeStickersModal}
+        setShowStylesModal={setShowStylesModal}
+        showAiModal={showAiModal}
+        showBubbleBottomSheet={showBubbleBottomSheet}
+        showEmojiModal={showEmojiModal}
+        showFaceMorphModal={showFaceMorphModal}
+        showFiltersModal={showFiltersModal}
+        showMemeStickersModal={showMemeStickersModal}
+        showStylesModal={showStylesModal}
+        socialModalPlatform={socialModalPlatform}
+        template={template}
+        updateActiveCaptionProps={updateActiveCaptionProps}
+        updateActiveImageLayer={updateActiveImageLayer}
       />
-
-
-      {/* AI Meme Caption Generator Modal */}
-      <AiCaptionModal
-        isOpen={showAiModal}
-        onClose={() => setShowAiModal(false)}
-        onApplyCaption={handleApplyAiCaption}
-        templateName={template?.name}
-      />
-
-      {/* Meme Style Modal (Unified Social Cards Studio) */}
-      <MemeStylesModal
-        isOpen={showStylesModal}
-        onClose={() => setShowStylesModal(false)}
-        initialPlatform={socialModalPlatform}
-        cardData={currentEditingSocialCard || null}
-        onUpdateCard={handleUpdateSocialCard}
-        onAddTweetCard={handleAddTweetCard}
-        onAddInstagramCard={handleAddInstagramCard}
-        onAddWhatsAppCard={handleAddWhatsAppCard}
-      />
-
-      {/* Face Morph & Swap Studio Modal */}
-      {showFaceMorphModal && (
-        <FaceMorphModal
-          isOpen={showFaceMorphModal}
-          onClose={() => {
-            setShowFaceMorphModal(false);
-            setMorphTargetLayerId(null);
-            setMorphTargetUrl(null);
-          }}
-          onApplyFaceMorph={handleApplyFaceMorph}
-          onOpenPinpoint={() => setIsPinpointingFace(true)}
-          initialLighting={sampledFaceLighting}
-          memeFacePatch={extractedMemeFace}
-          memeTemplateUrl={
-            morphTargetUrl ||
-            (morphTargetLayerId
-              ? (imageLayers.find((l) => l.id === morphTargetLayerId)?.url || stickers.find((s) => s.id === morphTargetLayerId)?.url)
-              : (originalTemplateImgRef.current || activeTemplate?.originalUrl || activeTemplate?.imageUrl))
-          }
-          faceTarget={morphTargetLayerId ? null : faceTarget}
-          targetLabel={morphTargetLayerId ? "Selected Image Layer" : null}
-        />
-      )}
 
     </div>
       )}
