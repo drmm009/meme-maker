@@ -12,6 +12,9 @@ const debounce = (func, wait) => {
 // An "Item" represents a single piece of media on the timeline (Video, Image, Text)
 // A "Track" is a horizontal row on the timeline that holds Items.
 
+const MIN_SPLIT_MS = 100;
+const newItemId = () => `item-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+
 const calculateDuration = (items) => {
   if (!items || items.length === 0) return 7000;
   const validEnds = items.map(i => i.endMs).filter(t => typeof t === 'number' && !isNaN(t) && t > 0);
@@ -55,9 +58,29 @@ export const useEditorStore = create(temporal((set, get) => ({
   setGridOverlayUrl: (url) => set({ gridOverlayUrl: url }),
   
   addItem: (item) => set((state) => {
+    // Auto-assign empty slot if applicable
+    let slotIndex = item.slotIndex;
+    if (slotIndex === undefined && (item.type === 'image' || item.type === 'video') && state.layoutSlots.length > 0) {
+      const usedSlots = new Set(state.items.filter(i => i.slotIndex !== undefined).map(i => i.slotIndex));
+      for (let i = 0; i < state.layoutSlots.length; i++) {
+        if (!usedSlots.has(i)) {
+          slotIndex = i;
+          break;
+        }
+      }
+    }
+
+    // Videos join the end of the main sequence (in a multi-panel layout they play side by side
+    // from the playhead instead); sounds go at the playhead. An explicit startMs wins.
     let startMs = state.playhead;
-    let endMs = state.playhead + (item.durationMs || 3000);
-    
+    if (Number.isFinite(item.startMs) && (item.type === 'video' || item.type === 'audio')) {
+      startMs = item.startMs;
+    } else if (item.type === 'video' && slotIndex === undefined) {
+      const sequenceEnds = state.items.filter(i => i.type === 'video' && i.slotIndex === undefined).map(i => i.endMs).filter(t => Number.isFinite(t));
+      startMs = sequenceEnds.length > 0 ? Math.max(...sequenceEnds) : 0;
+    }
+    let endMs = startMs + (item.durationMs || 3000);
+
     if (item.type !== 'video' && item.type !== 'audio') {
       const videos = state.items.filter(i => i.type === 'video');
       const validVideoEnds = videos.map(v => v.endMs).filter(t => typeof t === 'number' && !isNaN(t) && t > 0);
@@ -73,18 +96,6 @@ export const useEditorStore = create(temporal((set, get) => ({
     }
     
     endMs = Math.min(100000, Number.isFinite(endMs) ? endMs : 7000);
-    
-    // Auto-assign empty slot if applicable
-    let slotIndex = item.slotIndex;
-    if (slotIndex === undefined && (item.type === 'image' || item.type === 'video') && state.layoutSlots.length > 0) {
-      const usedSlots = new Set(state.items.filter(i => i.slotIndex !== undefined).map(i => i.slotIndex));
-      for (let i = 0; i < state.layoutSlots.length; i++) {
-        if (!usedSlots.has(i)) {
-          slotIndex = i;
-          break;
-        }
-      }
-    }
 
     const visualItems = state.items.filter(i => i.type === 'text' || i.type === 'sticker' || i.type === 'image');
     const offset = (visualItems.length % 6) * 35;
@@ -93,14 +104,16 @@ export const useEditorStore = create(temporal((set, get) => ({
 
     const newItems = [...state.items, { 
       ...item, 
-      id: `item-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+      id: newItemId(),
       startMs: startMs,
       endMs: endMs,
       x: defaultX, y: defaultY, scale: 1, rotation: 0,
       slotIndex,
       playbackRate: 1,
       muted: false,
-      thumbnailUrl: item.thumbnailUrl || null
+      thumbnailUrl: item.thumbnailUrl || null,
+      // Length of the source media, so trims can stop at its real start and end.
+      sourceDurationMs: item.sourceDurationMs ?? ((item.type === 'video' || item.type === 'audio') ? item.durationMs : undefined)
     }];
 
     return {
@@ -124,6 +137,37 @@ export const useEditorStore = create(temporal((set, get) => ({
       items: newItems,
       duration: calculateDuration(newItems)
     };
+  }),
+
+  // Cut a clip in two at atMs; the right half continues the same footage and becomes selected.
+  splitItem: (id, atMs) => set((state) => {
+    const index = state.items.findIndex(i => i.id === id);
+    const item = state.items[index];
+    if (!item || atMs <= item.startMs + MIN_SPLIT_MS || atMs >= item.endMs - MIN_SPLIT_MS) return {};
+    const isMedia = item.type === 'video' || item.type === 'audio';
+    const right = {
+      ...item,
+      id: newItemId(),
+      startMs: atMs,
+      ...(isMedia ? { trimStartMs: (item.trimStartMs || 0) + (atMs - item.startMs) * (item.playbackRate || 1), fadeInMs: 0 } : {})
+    };
+    const left = { ...item, endMs: atMs, ...(isMedia ? { fadeOutMs: 0 } : {}) };
+    const items = [...state.items];
+    items.splice(index, 1, left, right);
+    return { items, activeItemId: right.id };
+  }),
+
+  // Copy a clip with all its settings: media goes right after the original, overlays are nudged.
+  duplicateItem: (id) => set((state) => {
+    const item = state.items.find(i => i.id === id);
+    if (!item) return {};
+    const isMedia = item.type === 'video' || item.type === 'audio';
+    const len = item.endMs - item.startMs;
+    const copy = isMedia
+      ? { ...item, id: newItemId(), startMs: item.endMs, endMs: Math.min(100000, item.endMs + len) }
+      : { ...item, id: newItemId(), x: (item.x || 0) + 20, y: (item.y || 0) + 20 };
+    const items = [...state.items, copy];
+    return { items, activeItemId: copy.id, duration: calculateDuration(items) };
   }),
 
   deleteItem: (id) => set((state) => {

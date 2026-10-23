@@ -2,6 +2,7 @@ import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { fetchFile, toBlobURL } from '@ffmpeg/util';
 import Konva from 'konva';
 import { generateGridImage } from './gridHelper';
+import { fadeFilter } from './audioFades';
 
 let ffmpeg = null;
 let loadPromise = null;
@@ -173,7 +174,7 @@ export const exportVideoFFmpeg = async (items = [], durationMs = 7000, canvasAsp
             const vol = (typeof item.volume === 'number' && !isNaN(item.volume)) ? item.volume : 1.0;
             const atempo = pbRate !== 1.0 ? `,atempo=${pbRate}` : '';
             const delayFilter = startMs > 0 ? `,adelay=${startMs}|${startMs}` : '';
-            filterComplex += `[${inputIndex}:a]atrim=0:${sourceTrimSec},asetpts=PTS-STARTPTS,aformat=channel_layouts=stereo:sample_rates=44100${atempo}${delayFilter},volume=${vol}[aud${inputIndex}];`;
+            filterComplex += `[${inputIndex}:a]atrim=0:${sourceTrimSec},asetpts=PTS-STARTPTS,aformat=channel_layouts=stereo:sample_rates=44100${atempo}${fadeFilter(item, timelineDurSec)}${delayFilter},volume=${vol}[aud${inputIndex}];`;
             audioStreams.push(`[aud${inputIndex}]`);
           }
         }
@@ -380,7 +381,7 @@ export const exportVideoFFmpeg = async (items = [], durationMs = 7000, canvasAsp
           atempoFilter = `,atempo=${rate}`;
         }
         const delayFilter = startMs > 0 ? `,adelay=${startMs}|${startMs}` : '';
-        filterComplex += `[${inputIndex}:a]atrim=0:${clipDurSec},asetpts=PTS-STARTPTS${atempoFilter},aformat=channel_layouts=stereo:sample_rates=44100${delayFilter},volume=${vol}[aud${inputIndex}];`;
+        filterComplex += `[${inputIndex}:a]atrim=0:${clipDurSec},asetpts=PTS-STARTPTS${atempoFilter},aformat=channel_layouts=stereo:sample_rates=44100${fadeFilter(item, clipDurSec / rate)}${delayFilter},volume=${vol}[aud${inputIndex}];`;
         audioStreams.push(`[aud${inputIndex}]`);
       }
 

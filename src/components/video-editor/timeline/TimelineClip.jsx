@@ -22,14 +22,12 @@ const clipLabel = (item) => {
   return item.name || item.type;
 };
 
-// One clip on a track. Tap selects; once selected it can be dragged and, except audio, trimmed from either end.
+// One clip on a track. Tap selects; once selected it can be dragged and trimmed from either end.
 export default function TimelineClip({ item, left, width, selected, pxPerSec, onSnap }) {
   const thumb = item.type === 'video' ? item.thumbnailUrl : (item.type === 'image' || item.type === 'sticker') ? item.url : null;
-  const canTrim = item.type !== 'audio';
 
   const startDrag = (e, action) => {
     if (!selected || e.button > 0) return;
-    if (action !== 'move' && !canTrim) return;
     e.stopPropagation();
     e.preventDefault();
     const store = useEditorStore.getState();
@@ -38,6 +36,13 @@ export default function TimelineClip({ item, left, width, selected, pxPerSec, on
     const trimStartMs = item.trimStartMs || 0;
     const points = [0, store.playhead, ...store.items.filter((i) => i.id !== item.id).flatMap((i) => [i.startMs, i.endMs])];
     const threshold = pxToMs(10, pxPerSec);
+    // Media can't be trimmed past the start of its footage, and a sound can't run past the end of its file.
+    const rate = item.playbackRate || 1;
+    const isMedia = item.type === 'video' || item.type === 'audio';
+    const earliestStart = isMedia ? startMs - trimStartMs / rate : 0;
+    const latestEnd = item.type === 'audio' && item.sourceDurationMs
+      ? startMs + (item.sourceDurationMs - trimStartMs) / rate
+      : MAX_MS;
 
     const onMove = (ev) => {
       const delta = pxToMs(ev.clientX - startX, pxPerSec);
@@ -55,13 +60,15 @@ export default function TimelineClip({ item, left, width, selected, pxPerSec, on
         let s = startMs + delta;
         const sn = findSnap(s, points, threshold);
         if (sn !== null) { s = sn; snap = sn; }
-        s = Math.max(0, Math.min(s, endMs - MIN_CLIP_MS));
-        patch = { startMs: s, trimStartMs: Math.max(0, trimStartMs + (s - startMs)) };
+        s = Math.max(0, earliestStart, Math.min(s, endMs - MIN_CLIP_MS));
+        patch = isMedia
+          ? { startMs: s, trimStartMs: Math.max(0, trimStartMs + (s - startMs) * rate) }
+          : { startMs: s };
       } else {
         let end = endMs + delta;
         const sn = findSnap(end, points, threshold);
         if (sn !== null) { end = sn; snap = sn; }
-        patch = { endMs: Math.min(MAX_MS, Math.max(startMs + MIN_CLIP_MS, end)) };
+        patch = { endMs: Math.min(MAX_MS, latestEnd, Math.max(startMs + MIN_CLIP_MS, end)) };
       }
       onSnap(snap);
       useEditorStore.getState().updateItem(item.id, patch);
@@ -103,7 +110,7 @@ export default function TimelineClip({ item, left, width, selected, pxPerSec, on
       {item.muted && (item.type === 'video' || item.type === 'audio') && (
         <span className="vt-clip-badge" aria-label="Muted"><VolumeX size={11} /></span>
       )}
-      {selected && canTrim && (
+      {selected && (
         <>
           <span className="vt-clip-handle vt-clip-handle--start" onPointerDown={(e) => startDrag(e, 'trim-start')} aria-label="Trim start" />
           <span className="vt-clip-handle vt-clip-handle--end" onPointerDown={(e) => startDrag(e, 'trim-end')} aria-label="Trim end" />

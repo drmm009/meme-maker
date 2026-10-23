@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useStore } from 'zustand';
-import { X, Share, Play, Pause, Undo2, Redo2, ChevronUp, ChevronDown, Download, Copy, Check } from 'lucide-react';
+import { X, Share, Play, Pause, Undo2, Redo2, ChevronUp, ChevronDown, Download, Copy, Check, History } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import CanvasPreview from './CanvasPreview';
 import TimelinePanel from './timeline/TimelinePanel';
@@ -11,6 +11,7 @@ import { exportVideoFFmpeg } from '../../utils/ffmpegExport';
 import AspectRatioDropdown from '../AspectRatioDropdown';
 import { useAudioPlaybackSync } from './useAudioPlaybackSync';
 import { usePlaybackLoop, togglePlayback } from './usePlaybackLoop';
+import { useVideoDraft } from './useVideoDraft';
 import { formatClock, getContentEnd } from './timeline/timelineMath';
 import './video-editor.css';
 
@@ -38,6 +39,14 @@ function Clock() {
     </div>
   );
 }
+
+const timeAgo = (ms) => {
+  const min = Math.round((Date.now() - ms) / 60000);
+  if (min < 1) return 'just now';
+  if (min < 60) return `${min} min ago`;
+  const h = Math.round(min / 60);
+  return h < 24 ? `${h} h ago` : `${Math.round(h / 24)} d ago`;
+};
 
 const changeAspectRatio = (newRatio) => {
   const store = useEditorStore.getState();
@@ -95,6 +104,8 @@ export default function VideoEditor({ template, onBack }) {
       store.addItem({ type: 'image', url: template.imageUrl, name: template.name });
     }
   }, [template?.id]);
+
+  const draft = useVideoDraft();
 
   useEffect(() => {
     if (!menuOpen) return undefined;
@@ -207,6 +218,18 @@ export default function VideoEditor({ template, onBack }) {
             )}
           </AnimatePresence>
         </div>
+
+        {draft.offer && (
+          <div className="vt-draft" role="status">
+            <History size={16} aria-hidden="true" />
+            <span className="vt-draft-text">
+              Continue your last video?
+              <small>{draft.offer.clips} {draft.offer.clips === 1 ? 'clip' : 'clips'} · {timeAgo(draft.offer.savedAt)}</small>
+            </span>
+            <button type="button" className="vt-draft-restore" onClick={draft.restore}>Restore</button>
+            <button type="button" className="vt-draft-close" onClick={draft.dismiss} aria-label="Dismiss"><X size={16} /></button>
+          </div>
+        )}
 
         {mode === 'preview' && (
           <button type="button" className="vt-edit-handle" onClick={() => setMode('edit')}>

@@ -3,6 +3,7 @@ import Konva from 'konva';
 import { Stage, Layer, Rect, Image as KonvaImage, Text as KonvaText, Transformer, Line, Group } from 'react-konva';
 import { useEditorStore } from '../../store/useVideoEditorStore';
 import { useShallow } from 'zustand/react/shallow';
+import { clipGain } from '../../utils/audioFades';
 
 // Custom component to handle Image and Video rendering on Konva Canvas
 const CanvasMedia = ({ item, isSelected, onSelect, onChange, canvasDimensions }) => {
@@ -163,6 +164,8 @@ const CanvasMedia = ({ item, isSelected, onSelect, onChange, canvasDimensions })
         if (vid.muted !== targetMuted) {
           vid.muted = targetMuted;
         }
+        const gain = clipGain(latestItem, state.playhead);
+        if (Math.abs(vid.volume - gain) > 0.01) vid.volume = gain;
 
         // Handle visibility dynamically without React
         const isVisible = !latestItem.hidden && relativeTimeMs >= 0 && state.playhead <= latestItem.endMs;

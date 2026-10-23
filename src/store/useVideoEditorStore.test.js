@@ -14,12 +14,70 @@ describe('video editor store', () => {
     expect(store().duration).toBe(7000);
   });
 
-  it('places a video at the playhead and pads the duration by 3s', () => {
+  it('starts the first video at 0 and pads the duration by 3s', () => {
+    store().setPlayhead(4000);
     store().addItem({ type: 'video', url: 'a.mp4', durationMs: 10000 });
     const [video] = store().items;
-    expect(video).toMatchObject({ type: 'video', startMs: 0, endMs: 10000, muted: false, playbackRate: 1 });
+    expect(video).toMatchObject({ type: 'video', startMs: 0, endMs: 10000, muted: false, playbackRate: 1, sourceDurationMs: 10000 });
     expect(video.id).toMatch(/^item-/);
     expect(store().duration).toBe(13000);
+  });
+
+  it('appends later videos after the last one, wherever the playhead is', () => {
+    store().addItem({ type: 'video', url: 'a.mp4', durationMs: 3000 });
+    store().setPlayhead(1000);
+    store().addItem({ type: 'video', url: 'b.mp4', durationMs: 2000 });
+    expect(store().items[1]).toMatchObject({ startMs: 3000, endMs: 5000 });
+  });
+
+  it('puts sounds at the playhead and honours an explicit start', () => {
+    store().addItem({ type: 'video', url: 'a.mp4', durationMs: 8000 });
+    store().setPlayhead(2500);
+    store().addItem({ type: 'audio', url: 'boom.mp3', durationMs: 1000 });
+    store().addItem({ type: 'video', url: 'c.mp4', durationMs: 1000, startMs: 500 });
+    expect(store().items[1]).toMatchObject({ startMs: 2500, endMs: 3500 });
+    expect(store().items[2]).toMatchObject({ startMs: 500, endMs: 1500 });
+  });
+
+  it('plays layout-slot videos side by side from the playhead', () => {
+    store().setLayoutSlots([{ x: 0 }, { x: 1 }]);
+    store().addItem({ type: 'video', url: 'a.mp4', durationMs: 3000 });
+    store().addItem({ type: 'video', url: 'b.mp4', durationMs: 3000 });
+    expect(store().items.map((i) => i.startMs)).toEqual([0, 0]);
+  });
+
+  it('splits a clip at a time and keeps the footage continuous', () => {
+    store().addItem({ type: 'video', url: 'a.mp4', durationMs: 4000 });
+    const { id } = store().items[0];
+    store().updateItem(id, { playbackRate: 2, trimStartMs: 500, fadeInMs: 300, fadeOutMs: 300 });
+    store().splitItem(id, 1000);
+    const [left, right] = store().items;
+    expect(left).toMatchObject({ id, startMs: 0, endMs: 1000, fadeInMs: 300, fadeOutMs: 0 });
+    expect(right).toMatchObject({ startMs: 1000, endMs: 4000, trimStartMs: 2500, fadeInMs: 0, fadeOutMs: 300 });
+    expect(right.id).not.toBe(id);
+    expect(store().activeItemId).toBe(right.id);
+  });
+
+  it('ignores a split too close to a clip edge', () => {
+    store().addItem({ type: 'text', text: 'A' });
+    const { id } = store().items[0];
+    store().splitItem(id, 50);
+    store().splitItem(id, 99999);
+    expect(store().items).toHaveLength(1);
+  });
+
+  it('duplicates media after the original and nudges overlays, keeping settings', () => {
+    store().addItem({ type: 'video', url: 'a.mp4', durationMs: 2000 });
+    store().addItem({ type: 'text', text: 'T' });
+    const [video, text] = store().items;
+    store().updateItem(video.id, { muted: true, playbackRate: 2 });
+    store().updateItem(text.id, { rotation: 45 });
+    store().duplicateItem(video.id);
+    store().duplicateItem(text.id);
+    const [, , videoCopy, textCopy] = store().items;
+    expect(videoCopy).toMatchObject({ startMs: 2000, endMs: 4000, muted: true, playbackRate: 2 });
+    expect(textCopy).toMatchObject({ rotation: 45, x: text.x + 20, y: text.y + 20 });
+    expect(store().activeItemId).toBe(textCopy.id);
   });
 
   it('stretches overlays across the whole video', () => {

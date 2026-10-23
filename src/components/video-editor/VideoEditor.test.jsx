@@ -100,6 +100,40 @@ describe('VideoEditor', () => {
     expect(store().isPlaying).toBe(false);
   });
 
+  it('splits the selected clip at the playhead', () => {
+    act(() => store().addItem({ type: 'video', url: 'a.mp4', durationMs: 4000 }));
+    const { container } = render(<VideoEditor onBack={() => {}} />);
+    fireEvent.click(clips(container)[0]);
+    act(() => store().setPlayhead(1500));
+    fireEvent.click(screen.getByText('Split'));
+    expect(store().items.map((i) => [i.startMs, i.endMs])).toEqual([[0, 1500], [1500, 4000]]);
+    expect(clips(container)).toHaveLength(2);
+  });
+
+  it('sets volume and fades from the volume panel', () => {
+    act(() => store().addItem({ type: 'audio', url: 'boom.mp3', durationMs: 2000 }));
+    const { container } = render(<VideoEditor onBack={() => {}} />);
+    fireEvent.click(clips(container)[0]);
+    fireEvent.click(screen.getByText('Volume'));
+    fireEvent.change(screen.getByRole('slider'), { target: { value: '40' } });
+    fireEvent.click(screen.getByText('Fade in'));
+    expect(store().items[0]).toMatchObject({ volume: 0.4, fadeInMs: 600 });
+    fireEvent.click(screen.getByText('Fade in'));
+    expect(store().items[0].fadeInMs).toBe(0);
+  });
+
+  it('edits, resizes and aligns text from the rail', () => {
+    const { container } = render(<VideoEditor onBack={() => {}} />);
+    fireEvent.click(screen.getByText('Text'));
+    fireEvent.click(clips(container)[0]);
+    fireEvent.click(screen.getByText('Edit'));
+    fireEvent.change(screen.getByPlaceholderText('Type your text'), { target: { value: 'WHEN IT WORKS' } });
+    fireEvent.click(screen.getByText('Size'));
+    fireEvent.change(screen.getByRole('slider'), { target: { value: '150' } });
+    fireEvent.click(screen.getByText('Align'));
+    expect(store().items[0]).toMatchObject({ text: 'WHEN IT WORKS', fontSize: 150, align: 'right' });
+  });
+
   it('calls onBack from the close button', () => {
     const onBack = vi.fn();
     render(<VideoEditor onBack={onBack} />);
