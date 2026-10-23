@@ -63,11 +63,16 @@ Each phase is its own commit. After each one, `npm test`, `npm run lint` and `np
    - `editor/CanvasColorPicker.jsx`
    - `editor/memeEditorUtils.js`: `isSocialCardCaption`, `getContrastStroke`, `isVideoUrl`, `cleanTemplateName`
    - Deleted `XSocialLogo`: it was exported but nothing used it.
-2. **Create the store.**
-   - Move document state and its handlers (captions, layers, stickers, header/footer, social cards, drawing) into `useMemeEditorStore`.
-   - Replace `pushHistory` / `applySnapshot` with zundo.
-   - MemeEditor still renders the same JSX, just reading from the store.
-   - This is the riskiest phase, so it gets the most manual testing.
+2. **Create the store.** *Done:* MemeEditor.jsx is down to 7,613 lines.
+   - `editor/store/useMemeEditorStore.js` holds the 16 document fields, with setters that work like `useState` setters.
+   - Each editor gets its own store through React context, so templates and tests never share state.
+   - Undo/redo now runs on zundo, but **keeps the existing checkpoints**. zundo's automatic recording is paused, and the 62 `pushHistory()` calls still decide what counts as one step. zundo holds the stacks and applies undo/redo. This replaced `useMemeHistory`, `buildInitialSnapshot` and `applySnapshot`, and `pushHistory()` no longer takes arguments because it snapshots the store.
+   - Handlers stay in the component for now. They move out with the panels in phases 3–4, where they can go into hooks or store actions together with the JSX that uses them.
+   - Fixed along the way:
+     - Undoing back to the start used to restore a slightly different meme (font size 45 instead of 50, new caption IDs, missing panel captions). It now restores the exact starting state.
+     - Undo now also restores the face-swap "original" image link along with the image.
+     - Undo/redo cancels a pending typing checkpoint, so it can no longer wipe out redo a moment later.
+   - Known, unchanged: the compact "Flip Canvas" button doesn't save a checkpoint, so its flip lands in the next undo step. Ctrl+Z inside a text box is the browser's own text undo.
 3. **Extract hooks:** `useExport`, `useBackgroundRemoval`, `useFaceMorph`, `useEditorShortcuts`.
 4. **Extract panels, one per commit,** smallest first: ExportPanel → EditorTopBar → CanvasTab → DrawTab → FiltersTab → MediaTab → context toolbars → social-card editors → TextTab → EditorModals. Once the store exists, each panel is mostly cut-and-paste plus a store selector.
 5. **Remove duplicate UI.** The compact tab tools (5182–5521) and the sidebar tabs (5522–7970) seem to repeat the same controls, probably one set for mobile and one for desktop. Check which is which, then build both from shared components.
