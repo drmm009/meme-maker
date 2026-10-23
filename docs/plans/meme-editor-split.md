@@ -1,6 +1,6 @@
 # Plan: split `MemeEditor.jsx`
 
-Status: proposed (2026-10-23). No code changed yet.
+Status: phases 0–11 done (2026-10-23). The tables below describe the starting point; each phase records what changed.
 
 ## Where it stands
 
@@ -128,7 +128,7 @@ Each phase is its own commit. After each one, `npm test`, `npm run lint` and `np
    - The inline bounds/text callbacks became the store actions `patchLayer` and `updateCaptionText` (both tested). It now takes 13 props: the ref, derived values (compare-mode image, drawing mode), template layout info and event callbacks.
    - The editor tests' CanvasEditor stub reads the same store values, so they still check what the canvas renders from.
 
-## Next: split `CanvasEditor.jsx` (5,300 lines)
+## Split `CanvasEditor.jsx` (5,300 lines → 213)
 
 It draws with the **plain canvas 2D API** (`getContext('2d')`), not Konva; Konva is only used by the video editor. Today it has two halves:
 
@@ -180,8 +180,35 @@ Phases, each its own commit with the same checks (tests, lint baseline, build, b
 
      Also checked: a 2×2 multi-panel layout. No errors. Snapping guides only show mid-drag and weren't captured.
    - Still to do: unit tests with a recording fake context. The painters now take plain inputs, so this is feasible.
-10. **Extract interaction** into `useCanvasInteraction`: hit testing as pure functions (`hitTestLayer`, `hitTestHandle`) with unit tests, plus the drag/resize/rotate/draw state machine behind the pointer handlers. The arrow-key nudge bug from phase 3 came from the 0..1 coordinate convention, so the hit-test tests should pin those units down.
-11. **Afterwards:** CanvasEditor should be a ~300-line component that wires the canvas element, refs, `renderScene` and `useCanvasInteraction`.
+10. **Extract interaction.** *Done:* the pointer handlers and their drag state are in `src/components/canvas/interaction/useCanvasInteraction.js` (1,479 lines).
+    - Pure geometry is in `geometry.js`, with tests:
+      - `rotatePoint`
+      - `isInBox`, the centred-box test that eight call sites had written out by hand
+      - `clientToCanvas`, which maps a mouse or touch event to canvas pixels
+      - `getStickerBoxSize`, which replaces five copies of `(scale || 1) × 52`
+    - The tests pin down the units: layer x/y are 0..1 of the image area, and hit tests work in canvas pixels.
+    - Not done as planned: there is no single `hitTestLayer`/`hitTestHandle`. Each layer type measures its box differently (wrapped text, card heights, image aspect), so the per-type loops stay in the hook and call the shared helpers.
+    - Behaviour kept: sticker pointer-down still pads the hit box by 6px, and hover does not (`isInBox`'s `pad` argument).
+11. **Cleanup.** *Done:* CanvasEditor.jsx is 213 lines, down from 522 after phase 10. It reads the stores, works out the layout, calls `useCanvasInteraction` and `renderScene`, and renders the canvas plus the caption overlay.
+    - `canvas/layout/canvasLayout.js`, with tests:
+      - `getCanvasSize`
+      - `getBandHeight`, which replaces the duplicated header and footer blocks
+      - `makeLayerCenters`, the layer centre-Y functions
+    - `usePointerListeners.js` attaches the non-passive touch listeners and the window drag listeners. `useCanvasInteraction` calls it and owns `isDrawingActive`.
+    - `canvas/CaptionTextOverlay.jsx` is the invisible textarea used for in-place caption editing. The social-card checks use `isSocialCardCaption`.
+    - Dead code removed:
+      - `canvasScale` and its two resize effects, which only fed the unused `computedFontSize`
+      - the write-only `editingCaptionText`
+      - an effect calling an out-of-scope `renderCanvas`
+      - the `resetVideoTimestamps`/`getVideoElements` canvas properties, which nothing read
+      - `handlePointerUp` and `flushDragBatch`. `handlePointerUp` only ran as a fallback for a ref that is always set, and it called `renderCanvas`, which was never in scope there.
+    - Bug fixed (its own commit): nothing redrew the canvas after a drag, so snap guides and the size/angle pills from the last mid-drag frame stayed on screen. `handlePointerEnd` now clears the guides and asks CanvasEditor to redraw.
+    - Checked in the browser, with no new console errors:
+      - caption drag (snap guide clears on release), rotate, undo, resize (pill clears), in-place typing
+      - drawing a stroke
+      - emoji sticker add, drag, resize and delete
+      - header + footer bands sized to two-line captions, with the edit overlay centred in the header band
+    - Not checked this time: wheel zoom on multi-panel slots, image layers, touch input (the pane only sends mouse events).
 
 CSS (`MemeEditor.css`, 2,076 lines) gets split along with the components in phase 4. It is redesigned in the separate design-system step.
 
