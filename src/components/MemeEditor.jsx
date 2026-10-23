@@ -5,9 +5,7 @@ import { Check, RefreshCw } from 'lucide-react';
 import { IG_PRESET_IMAGES } from './MemeStylesModal';
 import FacePinpointOverlay from './FacePinpointOverlay';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MEME_TEMPLATES } from '../data/templates';
 import { fetchOpenSourceMemes } from '../services/memeService';
-import { safeGet, safeSet } from '../utils/storage';
 import { blobToDataURL } from '../utils/galleryStore';
 import { getNonOverlappingPosition, isColorDark } from '../utils/captionLayout';
 import { isSocialCardCaption, isVideoUrl } from './editor/memeEditorUtils';
@@ -21,14 +19,18 @@ import ContextToolbar from './editor/context-toolbars/ContextToolbar';
 import SecondaryToolbar from './editor/context-toolbars/SecondaryToolbar';
 import EditorModals from './editor/EditorModals';
 import EditorSidebar from './editor/EditorSidebar';
+import { createEditorUiStore, EditorUiStoreContext, useEditorUiStore } from './editor/store/useEditorUiStore';
 import './MemeEditor.css';
 
 export default function MemeEditor(props) {
   const [store] = useState(() => createMemeEditorStore(props.template));
+  const [uiStore] = useState(() => createEditorUiStore(props.template));
   useEffect(() => () => store.getState().cancelPendingHistory(), [store]);
   return (
     <MemeEditorStoreContext.Provider value={store}>
-      <MemeEditorContent {...props} />
+      <EditorUiStoreContext.Provider value={uiStore}>
+        <MemeEditorContent {...props} />
+      </EditorUiStoreContext.Provider>
     </MemeEditorStoreContext.Provider>
   );
 }
@@ -85,15 +87,64 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
       setActiveLayerId(null);
     }
     setActiveTab('text');
-  }, [template, setActiveTemplate, setActiveLayerId]);
+  }, [template, setActiveTemplate, setActiveLayerId, setActiveTab, setSocialModalPlatform, setShowStylesModal]);
 
 
   
   const imageFit = template?.imageFit || 'contain';
 
   // Open-source templates for Image Layer / Slot overlay picker
-  const [imagePickerTarget, setImagePickerTarget] = useState(null); // 'layer' | 'replaceTemplate' | { slot: idx }
-  const [openSourceTemplates, setOpenSourceTemplates] = useState(MEME_TEMPLATES);
+  const imagePickerTarget = useEditorUiStore((s) => s.imagePickerTarget);
+  const setImagePickerTarget = useEditorUiStore((s) => s.setImagePickerTarget);
+  const openSourceTemplates = useEditorUiStore((s) => s.openSourceTemplates);
+  const setOpenSourceTemplates = useEditorUiStore((s) => s.setOpenSourceTemplates);
+  const showStylesModal = useEditorUiStore((s) => s.showStylesModal);
+  const setShowStylesModal = useEditorUiStore((s) => s.setShowStylesModal);
+  const socialModalPlatform = useEditorUiStore((s) => s.socialModalPlatform);
+  const setSocialModalPlatform = useEditorUiStore((s) => s.setSocialModalPlatform);
+  const activeTab = useEditorUiStore((s) => s.activeTab);
+  const setActiveTab = useEditorUiStore((s) => s.setActiveTab);
+  const isMobileTabsFolded = useEditorUiStore((s) => s.isMobileTabsFolded);
+  const setIsMobileTabsFolded = useEditorUiStore((s) => s.setIsMobileTabsFolded);
+  const showFontMenu = useEditorUiStore((s) => s.showFontMenu);
+  const setShowFontMenu = useEditorUiStore((s) => s.setShowFontMenu);
+  const showTextEffectsMenu = useEditorUiStore((s) => s.showTextEffectsMenu);
+  const setShowTextEffectsMenu = useEditorUiStore((s) => s.setShowTextEffectsMenu);
+  const showTextBlurMenu = useEditorUiStore((s) => s.showTextBlurMenu);
+  const setShowTextBlurMenu = useEditorUiStore((s) => s.setShowTextBlurMenu);
+  const showTextBgMenu = useEditorUiStore((s) => s.showTextBgMenu);
+  const setShowTextBgMenu = useEditorUiStore((s) => s.setShowTextBgMenu);
+  const showFilterPresets = useEditorUiStore((s) => s.showFilterPresets);
+  const setShowFilterPresets = useEditorUiStore((s) => s.setShowFilterPresets);
+  const showLayerMenu = useEditorUiStore((s) => s.showLayerMenu);
+  const setShowLayerMenu = useEditorUiStore((s) => s.setShowLayerMenu);
+  const activeSubmenu = useEditorUiStore((s) => s.activeSubmenu);
+  const setActiveSubmenu = useEditorUiStore((s) => s.setActiveSubmenu);
+  const pasteToast = useEditorUiStore((s) => s.pasteToast);
+  const setPasteToast = useEditorUiStore((s) => s.setPasteToast);
+  const showMemeStickersModal = useEditorUiStore((s) => s.showMemeStickersModal);
+  const setShowMemeStickersModal = useEditorUiStore((s) => s.setShowMemeStickersModal);
+  const showEmojiModal = useEditorUiStore((s) => s.showEmojiModal);
+  const setShowEmojiModal = useEditorUiStore((s) => s.setShowEmojiModal);
+  const showFiltersModal = useEditorUiStore((s) => s.showFiltersModal);
+  const setShowFiltersModal = useEditorUiStore((s) => s.setShowFiltersModal);
+  const showBubbleBottomSheet = useEditorUiStore((s) => s.showBubbleBottomSheet);
+  const setShowBubbleBottomSheet = useEditorUiStore((s) => s.setShowBubbleBottomSheet);
+  const drawTool = useEditorUiStore((s) => s.drawTool);
+  const setDrawTool = useEditorUiStore((s) => s.setDrawTool);
+  const brushColor = useEditorUiStore((s) => s.brushColor);
+  const setBrushColor = useEditorUiStore((s) => s.setBrushColor);
+  const brushSize = useEditorUiStore((s) => s.brushSize);
+  const setBrushSize = useEditorUiStore((s) => s.setBrushSize);
+  const showAiModal = useEditorUiStore((s) => s.showAiModal);
+  const setShowAiModal = useEditorUiStore((s) => s.setShowAiModal);
+  const showBubbleLayouts = useEditorUiStore((s) => s.showBubbleLayouts);
+  const setShowBubbleLayouts = useEditorUiStore((s) => s.setShowBubbleLayouts);
+  const lastUsedSettingButton = useEditorUiStore((s) => s.lastUsedSettingButton);
+  const setLastUsedSettingButton = useEditorUiStore((s) => s.setLastUsedSettingButton);
+  const pendingVideoLayer = useEditorUiStore((s) => s.pendingVideoLayer);
+  const setPendingVideoLayer = useEditorUiStore((s) => s.setPendingVideoLayer);
+  const watermark = useEditorUiStore((s) => s.watermark);
 
   useEffect(() => {
     let isMounted = true;
@@ -105,29 +156,11 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [setOpenSourceTemplates]);
 
   const activeImageLayer = imageLayers.find((i) => i.id === activeLayerId);
 
 
-  const [showStylesModal, setShowStylesModal] = useState(() => {
-    return Boolean(
-      template && (
-        template.category === 'social' ||
-        template.isSocialTemplate ||
-        (template.defaultCaptions && template.defaultCaptions.some((c) => isSocialCardCaption(c)))
-      )
-    );
-  });
-  const [socialModalPlatform, setSocialModalPlatform] = useState(() => {
-    const socialCap = template?.defaultCaptions?.find((c) => isSocialCardCaption(c));
-    if (socialCap?.isInstagramCard) return 'instagram';
-    if (socialCap?.isWhatsAppCard) return 'whatsapp';
-    if (socialCap?.isTweetCard) return 'tweet';
-    if (template?.id?.includes('instagram')) return 'instagram';
-    if (template?.id?.includes('whatsapp')) return 'whatsapp';
-    return 'tweet';
-  });
     const handleOpenSocialModalForActiveCard = (targetPlatform) => {
     let platform = targetPlatform;
     const currentActiveCap = captions.find((c) => c.id === activeLayerId);
@@ -248,22 +281,9 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
     }));
   };
 
-  const [activeTab, setActiveTab] = useState('text'); // 'text' | 'stickers' | 'images' | 'draw' | 'watermark'
-  const [isMobileTabsFolded, setIsMobileTabsFolded] = useState(true);
-  const [showFontMenu, setShowFontMenu] = useState(false);
-  const [showTextEffectsMenu, setShowTextEffectsMenu] = useState(false);
   const showTextCurveMenu = showTextEffectsMenu;
   const setShowTextCurveMenu = setShowTextEffectsMenu;
-  const [showTextBlurMenu, setShowTextBlurMenu] = useState(false);
-  const [showTextBgMenu, setShowTextBgMenu] = useState(false);
-  const [showFilterPresets, setShowFilterPresets] = useState(false);
-  const [showLayerMenu, setShowLayerMenu] = useState(false);
-  const [activeSubmenu, setActiveSubmenu] = useState(null); // 'font' | 'color' | 'align' | 'effects' | 'bg' | 'blur' | 'bubble' | 'tweetTheme' | 'tweetTrend' | 'drawSettings' | 'watermark' | 'canvasBg' | 'banner' | 'filters'
-  const handleToggleSubmenu = (menuName) => {
-    setActiveSubmenu(prev => prev === menuName ? null : menuName);
-    setLastUsedSettingButton(menuName);
-  };
-  const [pasteToast, setPasteToast] = useState(false);
+  const handleToggleSubmenu = useEditorUiStore((s) => s.toggleSubmenu);
 
   const handleTabClick = (tabId) => {
     setActiveTab(tabId);
@@ -284,48 +304,14 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
       setIsMobileTabsFolded(false);
     }
   };
-  const [showMemeStickersModal, setShowMemeStickersModal] = useState(false);
-  const [showEmojiModal, setShowEmojiModal] = useState(false);
-  const [showFiltersModal, setShowFiltersModal] = useState(false);
-  const [showBubbleBottomSheet, setShowBubbleBottomSheet] = useState(false);
 
   // Freehand Drawing state
-  const [drawTool, setDrawTool] = useState(null); // 'brush' | 'eraser' | null (deactivated by default)
-  const [brushColor, setBrushColor] = useState('#ff2a5f');
-  const [brushSize, setBrushSize] = useState(10);
-  const [showAiModal, setShowAiModal] = useState(false);
-  const [showBubbleLayouts, setShowBubbleLayouts] = useState(false);
-  const [lastUsedSettingButton, setLastUsedSettingButton] = useState(null);
   const contextToolbarRef = useRef(null);
-  const [pendingVideoLayer, setPendingVideoLayer] = useState(null);
   const isVideoPlaying = true;
 
-  // Watermark state — persisted in localStorage (quota-safe: session state survives write failures)
-  const [watermark, setWatermark] = useState(() => {
-    const parsed = safeGet('meme-maker-watermark', null);
-    if (parsed && typeof parsed === 'object') {
-      if (parsed.text === '@username') parsed.text = '';
-      return parsed;
-    }
-    return {
-      enabled: false,
-      text: '',
-      imageUrl: null,
-      position: 'bottom-right', // 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'
-      opacity: 0.5,
-      size: 24,
-      color: '#ffffff'
-    };
-  });
 
-  // Save watermark config to localStorage whenever it changes
-  useEffect(() => {
-    safeSet('meme-maker-watermark', watermark);
-  }, [watermark]);
 
-  const updateWatermark = (key, value) => {
-    setWatermark(prev => ({ ...prev, [key]: value }));
-  };
+  const updateWatermark = useEditorUiStore((s) => s.updateWatermark);
 
   const handleWatermarkImageUpload = (e) => {
     const file = e.target.files?.[0];
@@ -366,12 +352,12 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
   useEffect(() => {
     setActiveLayerId(null);
     setActiveTab('text');
-  }, [setActiveLayerId]);
+  }, [setActiveLayerId, setActiveTab]);
 
   // Reset tweet toolbar submenus on active layer change
   useEffect(() => {
     setLastUsedSettingButton(null);
-  }, [activeLayerId]);
+  }, [activeLayerId, setLastUsedSettingButton]);
 
   // When bubble layout opens, scroll to the beginning (left)
   useEffect(() => {
