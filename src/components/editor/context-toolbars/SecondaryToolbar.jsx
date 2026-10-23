@@ -50,7 +50,7 @@ export default function SecondaryToolbar({
           Boolean(activeCaption || activeSticker || activeImageLayer) ||
           (!isElementSelected && activeTab === 'draw' && (activeSubmenu === 'drawSettings' || Boolean(drawTool))) ||
           (!isElementSelected && (activeTab === 'canvas' || activeTab === 'watermark') && (activeSubmenu === 'watermark' || activeSubmenu === 'canvasBg')) ||
-          (!isElementSelected && activeTab === 'text' && activeSubmenu === 'banner')
+          (!isElementSelected && activeTab === 'text' && (activeSubmenu === 'banner' || activeSubmenu === 'phrases'))
         ) && (
           <motion.div
             className="editor-secondary-toolbar"

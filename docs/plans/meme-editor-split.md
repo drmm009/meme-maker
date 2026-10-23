@@ -108,7 +108,18 @@ Each phase is its own commit. After each one, `npm test`, `npm run lint` and `np
    - Handler hooks in `editor/hooks/`: `useCaptionActions`, `useLayerActions`, `useSocialCardActions`, `useBubbleActions`, `useCanvasFrameActions`, `useDrawingActions`. Each reads the stores itself and takes at most four arguments (derived selection values or other hooks' handlers). Helpers used only inside a hook stay private.
    - Panels now read store-backed values directly instead of receiving them as props. A tool rehomed them top-down: MemeEditor → sidebar/toolbars/modals → tabs/submenus. For example, EditorSidebar went from 58 props to 39, and EditorModals from 43 to 27.
    - What's still passed as props: handlers, plus derived values like `activeCaption` / `activeSticker` / `isElementSelected`. A `useActiveLayers()` hook would remove most of the derived ones.
-6. **Remove duplicate UI.** The per-tab quick tools (`TabQuickTools`) and the sidebar tabs seem to repeat the same controls, probably one set for mobile and one for desktop. Check which is which, then build both from shared components.
+6. **Remove duplicate UI (desktop fix).** *Done.* Desktop showed both UIs at once: a cramped side panel and the phone toolbars, in the top-left of a large, mostly empty screen.
+   - Desktop now uses the phone layout. The tab dock stays compact at every width, the  editor layout rules in App.css apply everywhere, and the fixed 370px desktop sidebar rule in MemeEditor.css is gone. The canvas, toolbars and dock are centered and scale with the screen (e.g. a 1080x720 canvas at 1920x1080).
+   - Desktop-only features moved into the phone toolbars first:
+     - Curved Text and Quick Phrases (text quick tools, plus a phrases submenu)
+     - undo last stroke
+     - watermark logo upload
+     - face-morph intensity slider
+   - The video trimmer moved to EditorModals.
+   - The Canvas Color submenu now keeps the header/footer background and text contrast in sync, and the Canvas flip records an undo step.
+   - Deleted ,  and CanvasColorPicker, about 2,700 lines. The chyron editor was dead: nothing creates breaking-news captions.
+   - Only on the old desktop panel and not ported: switching an image layer back to stretch fit. The phone crop toggle switches between crop and fit.
+
 7. **Point `CanvasEditor` at the store** instead of passing ~100 props, then plan its own split the same way.
 
 CSS (`MemeEditor.css`, 2,076 lines) gets split along with the components in phase 4. It is redesigned in the separate design-system step.

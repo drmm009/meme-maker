@@ -12,7 +12,7 @@ Browser-first meme maker: React 19 + Vite 8, Konva canvas editor, FFmpeg WASM vi
 
 ## Layout
 - `src/App.jsx` — top-level view switching (discovery, editor, explore, gallery, social)
-- `src/components/MemeEditor.jsx` (~2k lines: handlers + layout) and `CanvasEditor.jsx` (~5k lines, Konva) — the image editor. UI panels live in `src/components/editor/`: `top-bar/`, `tabs/` (sidebar tabs), `social-cards/`, `context-toolbars/` (toolbars under the canvas), `EditorSidebar.jsx`, `EditorModals.jsx`; logic in `editor/hooks/` and `editor/store/`. Add new UI as panels there rather than growing MemeEditor. See `docs/plans/meme-editor-split.md`.
+- `src/components/MemeEditor.jsx` (~2k lines: handlers + layout) and `CanvasEditor.jsx` (~5k lines, Konva) — the image editor. UI panels live in `src/components/editor/`: `top-bar/`, `context-toolbars/` (all editing tools, above the dock), `EditorSidebar.jsx` (the tab dock), `EditorModals.jsx`. The editor uses the same phone-style layout at every width; logic in `editor/hooks/` and `editor/store/`. Add new UI as panels there rather than growing MemeEditor. See `docs/plans/meme-editor-split.md`.
 - Toolbar submenus are `motion.div` children of `AnimatePresence`; keep them direct children (don't wrap them in components) or exit animations break.
 - `src/components/editor/store/useEditorUiStore.js` — the image editor's shared UI state (active tab/submenu, open menus and modals, brush, watermark). Not undoable. Panels read it directly; don't thread these values through props.
 - `src/components/editor/hooks/use*Actions.js` — edit handlers grouped by feature (captions, layers, social cards, bubbles, canvas frame, drawing).
