@@ -1,5 +1,6 @@
 import { useRef } from 'react';
 import { clientToCanvas, getStickerBoxSize, isInBox, rotatePoint } from './geometry';
+import { usePointerListeners } from './usePointerListeners';
 import { getCurveSagitta, wrapText } from '../draw/text';
 import { getWhatsAppCardHeight } from '../draw/socialCards/whatsapp';
 import { getBreakingNewsHeight } from '../draw/chyron';
@@ -11,12 +12,13 @@ import { useEditorUiStore } from '../../editor/store/useEditorUiStore';
 export function useCanvasInteraction({
   activeIsNativeLayout, activeLayoutDef, canvasH, canvasRef, canvasW,
   dragTarget, editableRef, focusTextarea, getCaptionCenterY, getImageLayerCenterY,
-  getStickerCenterY, headerExtH, imageCacheRef, isDragging, isDrawingActive, isDrawingMode,
+  getStickerCenterY, headerExtH, imageCacheRef, isDragging, isDrawingMode,
   isFooterEnabled, isHeaderEnabled, onAddDrawing, onDeleteLayer, onSelectLayer,
   onUpdateCaptionBounds, onUpdateImageLayerBounds, onUpdateSlotTransform,
   onUpdateStickerBounds, setEditingCaptionId, snappingLines,
-  totalCanvasH
+  totalCanvasH, wrapperRef
 }) {
+  const isDrawingActive = useRef(false);
   const currentStroke = useRef(null);
   const dragRafRef = useRef(null);
   const dragStartCoords = useRef({ x: 0, y: 0 });
@@ -1463,6 +1465,11 @@ export function useCanvasInteraction({
       });
     }
   };
+
+  usePointerListeners({
+    wrapperRef, editableRef, isDragging, isDrawingActive,
+    handlePointerDown, handlePointerMove, handlePointerEnd
+  });
 
   return { handlePointerDown, handleTextOverlayPointerDown, handleTextOverlayPointerEnd, handlePointerEnd, handlePointerMove, handleWheel };
 }

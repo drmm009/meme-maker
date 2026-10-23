@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useLayoutEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useMemeEditorStore } from './editor/store/useMemeEditorStore';
 import { useEditorUiStore } from './editor/store/useEditorUiStore';
 import { getBandHeight, getCanvasSize, makeLayerCenters } from './canvas/layout/canvasLayout';
@@ -59,8 +59,6 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
   const canvasRef = ref || internalRef;
   const activeIsNativeLayout = isNativeLayout;
   const activeLayoutDef = layoutDef;
-
-  const isDrawingActive = useRef(false);
 
   useEffect(() => {
     if (canvasRef.current) {
@@ -129,87 +127,6 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     }
   };
 
-  const handlePointerDownRef = useRef(null);
-  const handlePointerMoveRef = useRef(null);
-  const handlePointerEndRef = useRef(null);
-
-  // rAF batching for high-DPI drag, resize, and rotate operations (prevents event flooding)
-
-  useLayoutEffect(() => {
-    handlePointerDownRef.current = handlePointerDown;
-    handlePointerMoveRef.current = handlePointerMove;
-    handlePointerEndRef.current = handlePointerEnd;
-  });
-
-  // Native non-passive touch listeners: handle drag & drawing AND block page scroll
-  useEffect(() => {
-    const wrapper = wrapperRef.current;
-    if (!wrapper) return;
-
-    const onTouchStart = (e) => {
-      if (e.cancelable && e.target !== editableRef.current) {
-        e.preventDefault();
-      }
-      if (handlePointerDownRef.current) handlePointerDownRef.current(e);
-    };
-
-    const onTouchMove = (e) => {
-      if (e.cancelable) {
-        e.preventDefault();
-        e.stopPropagation();
-      }
-      if ((isDragging.current || isDrawingActive.current) && handlePointerMoveRef.current) {
-        handlePointerMoveRef.current(e);
-      }
-    };
-
-    const onTouchEnd = (e) => {
-      if (handlePointerEndRef.current) handlePointerEndRef.current(e);
-    };
-
-    wrapper.addEventListener('touchstart', onTouchStart, { passive: false });
-    wrapper.addEventListener('touchmove', onTouchMove, { passive: false });
-    wrapper.addEventListener('touchend', onTouchEnd, { passive: false });
-    wrapper.addEventListener('touchcancel', onTouchEnd, { passive: false });
-
-    return () => {
-      wrapper.removeEventListener('touchstart', onTouchStart);
-      wrapper.removeEventListener('touchmove', onTouchMove);
-      wrapper.removeEventListener('touchend', onTouchEnd);
-      wrapper.removeEventListener('touchcancel', onTouchEnd);
-    };
-  }, []);
-
-  // Global window listeners for mouse & touch drag so continuous dragging outside canvas never freezes
-  useEffect(() => {
-    const onGlobalPointerMove = (e) => {
-      if ((isDragging.current || isDrawingActive.current) && handlePointerMoveRef.current) {
-        if (!wrapperRef.current || !wrapperRef.current.contains(e.target)) {
-          handlePointerMoveRef.current(e);
-        }
-      }
-    };
-    const onGlobalPointerEnd = (e) => {
-      if (isDragging.current || isDrawingActive.current) {
-        if (handlePointerEndRef.current) handlePointerEndRef.current(e);
-      }
-    };
-
-    window.addEventListener('mousemove', onGlobalPointerMove);
-    window.addEventListener('mouseup', onGlobalPointerEnd);
-    window.addEventListener('touchmove', onGlobalPointerMove, { passive: false });
-    window.addEventListener('touchend', onGlobalPointerEnd);
-    window.addEventListener('touchcancel', onGlobalPointerEnd);
-
-    return () => {
-      window.removeEventListener('mousemove', onGlobalPointerMove);
-      window.removeEventListener('mouseup', onGlobalPointerEnd);
-      window.removeEventListener('touchmove', onGlobalPointerMove);
-      window.removeEventListener('touchend', onGlobalPointerEnd);
-      window.removeEventListener('touchcancel', onGlobalPointerEnd);
-    };
-  }, []);
-
   const baseImgRef = useRef(null);
   const {
     handlePointerDown, handleTextOverlayPointerDown, handleTextOverlayPointerEnd,
@@ -217,11 +134,11 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
   } = useCanvasInteraction({
     activeIsNativeLayout, activeLayoutDef, canvasH, canvasRef, canvasW,
     dragTarget, editableRef, focusTextarea, getCaptionCenterY, getImageLayerCenterY,
-    getStickerCenterY, headerExtH, imageCacheRef, isDragging, isDrawingActive, isDrawingMode,
+    getStickerCenterY, headerExtH, imageCacheRef, isDragging, isDrawingMode,
     isFooterEnabled, isHeaderEnabled, onAddDrawing, onDeleteLayer, onSelectLayer,
     onUpdateCaptionBounds, onUpdateImageLayerBounds, onUpdateSlotTransform,
     onUpdateStickerBounds, setEditingCaptionId, snappingLines,
-    totalCanvasH
+    totalCanvasH, wrapperRef
   });
   const compCanvasRef = useRef(null);
 
