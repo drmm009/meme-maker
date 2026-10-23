@@ -161,6 +161,21 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
   }, [setOpenSourceTemplates]);
 
   const activeImageLayer = imageLayers.find((i) => i.id === activeLayerId);
+  const activeCaption = captions.find((c) => c.id === activeLayerId);
+  const currentEditingSocialCard = (activeCaption && isSocialCardCaption(activeCaption))
+    ? activeCaption
+    : captions.find(c => {
+        if (socialModalPlatform === 'whatsapp') return c.isWhatsAppCard;
+        if (socialModalPlatform === 'instagram') return c.isInstagramCard;
+        return c.isTweetCard;
+      }) || captions.find(c => isSocialCardCaption(c));
+  const activeSticker = stickers.find((s) => s.id === activeLayerId);
+  const isElementSelected = Boolean(activeLayerId || activeCaption || activeSticker || activeImageLayer);
+  const activeFontObj = FONTS.find((f) => f.family === (activeCaption?.fontFamily || 'Impact, sans-serif'))
+    || FONTS.find((f) => activeCaption?.fontFamily?.toLowerCase().includes('comic') && f.id.toLowerCase().includes('comic'))
+    || FONTS.find((f) => (activeCaption?.fontFamily?.toLowerCase().includes('apple') || activeCaption?.fontFamily?.toLowerCase().includes('system')) && f.id.toLowerCase().includes('apple'))
+    || FONTS.find((f) => activeCaption?.fontFamily?.toLowerCase().includes(f.id.toLowerCase()))
+    || FONTS[0];
 
 
   const { handleOpenSocialModalForActiveCard, handleUpdateSocialCard, handleAddTweetCard, handleAddInstagramCard, handleAddWhatsAppCard } = useSocialCardActions();
@@ -834,15 +849,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
     pushHistory();
   };
 
-  const activeCaption = captions.find((c) => c.id === activeLayerId);
   const { handleAddBubble, handleApplyBubbleStyle } = useBubbleActions({ activeCaption, updateActiveCaptionProps });
-  const currentEditingSocialCard = (activeCaption && isSocialCardCaption(activeCaption))
-    ? activeCaption
-    : captions.find(c => {
-        if (socialModalPlatform === 'whatsapp') return c.isWhatsAppCard;
-        if (socialModalPlatform === 'instagram') return c.isInstagramCard;
-        return c.isTweetCard;
-      }) || captions.find(c => isSocialCardCaption(c));
 
   useEffect(() => {
     if (showFontMenu && activeCaption?.fontFamily) {
@@ -855,8 +862,6 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
       }, 50);
     }
   }, [showFontMenu, activeCaption?.fontFamily]);
-  const activeSticker = stickers.find((s) => s.id === activeLayerId);
-  const isElementSelected = Boolean(activeLayerId || activeCaption || activeSticker || activeImageLayer);
 
   useEffect(() => {
     const isFiltersOpen = !activeCaption && !activeSticker && activeTab === 'filters';
@@ -872,11 +877,6 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
     }
   }, [activeTab, activeCaption, activeSticker, activeImageLayer, imageFilters.preset]);
 
-  const activeFontObj = FONTS.find((f) => f.family === (activeCaption?.fontFamily || 'Impact, sans-serif'))
-    || FONTS.find((f) => activeCaption?.fontFamily?.toLowerCase().includes('comic') && f.id.toLowerCase().includes('comic'))
-    || FONTS.find((f) => (activeCaption?.fontFamily?.toLowerCase().includes('apple') || activeCaption?.fontFamily?.toLowerCase().includes('system')) && f.id.toLowerCase().includes('apple'))
-    || FONTS.find((f) => activeCaption?.fontFamily?.toLowerCase().includes(f.id.toLowerCase()))
-    || FONTS[0];
 
   const handleCycleFont = () => {
     if (!activeCaption) return;
