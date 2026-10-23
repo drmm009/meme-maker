@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import CanvasEditor, { TWEET_TREND_PRESETS } from './CanvasEditor';
 import { FONTS } from '../data/stickers';
-import { Type, Sparkles, Copy, Check, RefreshCw, LayoutGrid, PencilLine } from 'lucide-react';
+import { Check, RefreshCw } from 'lucide-react';
 import { IG_PRESET_IMAGES } from './MemeStylesModal';
 import FacePinpointOverlay from './FacePinpointOverlay';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -18,14 +18,10 @@ import { useBackgroundRemoval } from './editor/hooks/useBackgroundRemoval';
 import { useFaceMorph } from './editor/hooks/useFaceMorph';
 import ExportPage from './editor/top-bar/ExportPage';
 import EditorTopBar from './editor/top-bar/EditorTopBar';
-import FiltersTab from './editor/tabs/FiltersTab';
-import MediaTab from './editor/tabs/MediaTab';
-import DrawTab from './editor/tabs/DrawTab';
-import CanvasTab from './editor/tabs/CanvasTab';
-import TextTab from './editor/tabs/TextTab';
 import ContextToolbar from './editor/context-toolbars/ContextToolbar';
 import SecondaryToolbar from './editor/context-toolbars/SecondaryToolbar';
 import EditorModals from './editor/EditorModals';
+import EditorSidebar from './editor/EditorSidebar';
 import './MemeEditor.css';
 
 export default function MemeEditor(props) {
@@ -1933,139 +1929,66 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
       </div>
         
       {/* Sidebar Controls Tabs */}
-        <div 
-          className={`editor-sidebar glass-card ${isMobileTabsFolded ? 'folded' : ''}`}
-          style={{ '--dock-height': getDockHeight() }}
-        >
-          <div 
-            ref={tabButtonsRef}
-            className="tab-buttons"
-            onWheel={(e) => {
-              if (e.deltaY !== 0) {
-                e.currentTarget.scrollLeft += e.deltaY;
-              }
-            }}
-          >
-            <button
-              className={`tab-btn ${activeTab === 'draw' ? 'active' : ''}`}
-              onClick={() => {
-                handleTabClick('draw');
-                setActiveLayerId(null);
-                setDrawTool('brush');
-              }}
-            >
-              <PencilLine className="icon-xs" /> <span>Draw</span>
-            </button>
-            <button
-              className={`tab-btn ${activeTab === 'images' ? 'active' : ''}`}
-              onClick={() => handleTabClick('images')}
-            >
-              <Copy className="icon-xs" /> <span>Media</span>
-            </button>
-            <button
-              className={`tab-btn ${activeTab === 'text' ? 'active' : ''}`}
-              onClick={() => handleTabClick('text')}
-            >
-              <Type className="icon-xs" /> <span>Text</span>
-            </button>
-            <button
-              className={`tab-btn ${activeTab === 'filters' ? 'active' : ''}`}
-              onClick={() => handleTabClick('filters')}
-            >
-              <Sparkles className="icon-xs" /> <span>AI/Filters</span>
-            </button>
-            <button
-              className={`tab-btn ${(activeTab === 'canvas' || activeTab === 'watermark') ? 'active' : ''}`}
-              onClick={() => handleTabClick('canvas')}
-            >
-              <LayoutGrid className="icon-xs" /> <span>Canvas</span>
-            </button>
-            
-          </div>
-
-
-
-            {/* TAB 5: CANVAS & WATERMARK */}
-            <CanvasTab
-              activeTab={activeTab}
-              handleCycleWatermarkPosition={handleCycleWatermarkPosition}
-              handleSetCanvasBgColor={handleSetCanvasBgColor}
-              handleToggleCanvasFlip={handleToggleCanvasFlip}
-              handleWatermarkImageUpload={handleWatermarkImageUpload}
-              updateWatermark={updateWatermark}
-              watermark={watermark}
-              watermarkInputRef={watermarkInputRef}
-              watermarkTextInputRef={watermarkTextInputRef}
-            />
-            {/* TAB 4: FREEHAND DRAWING */}
-            <DrawTab
-              activeTab={activeTab}
-              brushColor={brushColor}
-              brushSize={brushSize}
-              drawTool={drawTool}
-              handleClearDrawings={handleClearDrawings}
-              handleUndoDrawing={handleUndoDrawing}
-              setBrushColor={setBrushColor}
-              setBrushSize={setBrushSize}
-              setDrawTool={setDrawTool}
-            />
-
-          {/* TAB 1: TEXT CONTROLS */}
-          <TextTab
-            activeCaption={activeCaption}
-            activeFontObj={activeFontObj}
-            activeTab={activeTab}
-            getActiveTextEffectId={getActiveTextEffectId}
-            handleAddBubble={handleAddBubble}
-            handleAddCaption={handleAddCaption}
-            handleAddCurvedText={handleAddCurvedText}
-            handleAddPresetPhrase={handleAddPresetPhrase}
-            handleApplyBubbleStyle={handleApplyBubbleStyle}
-            handleApplyTextEffect={handleApplyTextEffect}
-            handleCycleFont={handleCycleFont}
-            handleDeleteLayer={handleDeleteLayer}
-            handleSetCanvasBgColor={handleSetCanvasBgColor}
-            handleSetCaptionBg={handleSetCaptionBg}
-            handleToggleCanvasBoth={handleToggleCanvasBoth}
-            handleToggleCanvasFooter={handleToggleCanvasFooter}
-            handleToggleCanvasHeader={handleToggleCanvasHeader}
-            handleToggleTextCase={handleToggleTextCase}
-            setActiveSubmenu={setActiveSubmenu}
-            setShowAiModal={setShowAiModal}
-            setShowBubbleBottomSheet={setShowBubbleBottomSheet}
-            updateActiveCaption={updateActiveCaption}
-            updateActiveCaptionProps={updateActiveCaptionProps}
-          />
-
-
-          {/* TAB 3: MEDIA OVERLAY CONTROLS */}
-          <MediaTab
-            activeImageLayer={activeImageLayer}
-            activeTab={activeTab}
-            commitAddImageLayer={commitAddImageLayer}
-            handleChangeFace={handleChangeFace}
-            handleDeleteLayer={handleDeleteLayer}
-            handleFileUploadImageLayer={handleFileUploadImageLayer}
-            handleFinalizeTemplateFace={handleFinalizeTemplateFace}
-            handleRevertTemplateFace={handleRevertTemplateFace}
-            handleUpdateTemplateMorphProgress={handleUpdateTemplateMorphProgress}
-            pendingVideoLayer={pendingVideoLayer}
-            setImagePickerTarget={setImagePickerTarget}
-            setPendingVideoLayer={setPendingVideoLayer}
-            updateActiveImageLayer={updateActiveImageLayer}
-          />
-
-          {/* TAB 4: AI / FILTERS */}
-          <FiltersTab
-            activeImageLayer={activeImageLayer}
-            activeTab={activeTab}
-            handleStartMorphFace={handleStartMorphFace}
-            setShowFilterPresets={setShowFilterPresets}
-            setShowFiltersModal={setShowFiltersModal}
-            showFilterPresets={showFilterPresets}
-            template={template}
-          />
-        </div>
+        <EditorSidebar
+          activeCaption={activeCaption}
+          activeFontObj={activeFontObj}
+          activeImageLayer={activeImageLayer}
+          activeTab={activeTab}
+          brushColor={brushColor}
+          brushSize={brushSize}
+          commitAddImageLayer={commitAddImageLayer}
+          drawTool={drawTool}
+          getActiveTextEffectId={getActiveTextEffectId}
+          getDockHeight={getDockHeight}
+          handleAddBubble={handleAddBubble}
+          handleAddCaption={handleAddCaption}
+          handleAddCurvedText={handleAddCurvedText}
+          handleAddPresetPhrase={handleAddPresetPhrase}
+          handleApplyBubbleStyle={handleApplyBubbleStyle}
+          handleApplyTextEffect={handleApplyTextEffect}
+          handleChangeFace={handleChangeFace}
+          handleClearDrawings={handleClearDrawings}
+          handleCycleFont={handleCycleFont}
+          handleCycleWatermarkPosition={handleCycleWatermarkPosition}
+          handleDeleteLayer={handleDeleteLayer}
+          handleFileUploadImageLayer={handleFileUploadImageLayer}
+          handleFinalizeTemplateFace={handleFinalizeTemplateFace}
+          handleRevertTemplateFace={handleRevertTemplateFace}
+          handleSetCanvasBgColor={handleSetCanvasBgColor}
+          handleSetCaptionBg={handleSetCaptionBg}
+          handleStartMorphFace={handleStartMorphFace}
+          handleTabClick={handleTabClick}
+          handleToggleCanvasBoth={handleToggleCanvasBoth}
+          handleToggleCanvasFlip={handleToggleCanvasFlip}
+          handleToggleCanvasFooter={handleToggleCanvasFooter}
+          handleToggleCanvasHeader={handleToggleCanvasHeader}
+          handleToggleTextCase={handleToggleTextCase}
+          handleUndoDrawing={handleUndoDrawing}
+          handleUpdateTemplateMorphProgress={handleUpdateTemplateMorphProgress}
+          handleWatermarkImageUpload={handleWatermarkImageUpload}
+          isMobileTabsFolded={isMobileTabsFolded}
+          pendingVideoLayer={pendingVideoLayer}
+          setActiveSubmenu={setActiveSubmenu}
+          setBrushColor={setBrushColor}
+          setBrushSize={setBrushSize}
+          setDrawTool={setDrawTool}
+          setImagePickerTarget={setImagePickerTarget}
+          setPendingVideoLayer={setPendingVideoLayer}
+          setShowAiModal={setShowAiModal}
+          setShowBubbleBottomSheet={setShowBubbleBottomSheet}
+          setShowFilterPresets={setShowFilterPresets}
+          setShowFiltersModal={setShowFiltersModal}
+          showFilterPresets={showFilterPresets}
+          tabButtonsRef={tabButtonsRef}
+          template={template}
+          updateActiveCaption={updateActiveCaption}
+          updateActiveCaptionProps={updateActiveCaptionProps}
+          updateActiveImageLayer={updateActiveImageLayer}
+          updateWatermark={updateWatermark}
+          watermark={watermark}
+          watermarkInputRef={watermarkInputRef}
+          watermarkTextInputRef={watermarkTextInputRef}
+        />
       </div>
 
 
