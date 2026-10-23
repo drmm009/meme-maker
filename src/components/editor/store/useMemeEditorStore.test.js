@@ -185,6 +185,24 @@ describe('createMemeEditorStore', () => {
     expect(store.temporal.getState().pastStates).toHaveLength(1);
   });
 
+  it('patchLayer merges props into one layer and records a debounced step', () => {
+    vi.useFakeTimers();
+    store.getState().setStickers([{ id: 'a', x: 0.1 }, { id: 'b', x: 0.2 }]);
+    store.getState().patchLayer('stickers', 'b', { x: 0.5, rotation: 30 });
+    expect(store.getState().stickers).toEqual([{ id: 'a', x: 0.1 }, { id: 'b', x: 0.5, rotation: 30 }]);
+    vi.advanceTimersByTime(HISTORY_DEBOUNCE_MS);
+    expect(store.temporal.getState().pastStates).toHaveLength(1);
+  });
+
+  it('updateCaptionText sets text, or merges an object of props', () => {
+    vi.useFakeTimers();
+    const [top] = store.getState().captions;
+    store.getState().updateCaptionText(top.id, 'HELLO');
+    expect(store.getState().captions[0].text).toBe('HELLO');
+    store.getState().updateCaptionText(top.id, { text: 'BYE', fontSize: 70 });
+    expect(store.getState().captions[0]).toMatchObject({ text: 'BYE', fontSize: 70 });
+  });
+
   it('separate stores do not share state', () => {
     const other = createMemeEditorStore(TEMPLATE);
     addCaption(store, 'A');

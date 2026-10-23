@@ -10,7 +10,23 @@ const canvas = { props: null };
 
 vi.mock('./CanvasEditor', async () => {
   const React = await import('react');
-  const CanvasEditorStub = React.forwardRef(function CanvasEditorStub(props, ref) {
+  const { useMemeEditorStore } = await import('./editor/store/useMemeEditorStore');
+  const { useEditorUiStore } = await import('./editor/store/useEditorUiStore');
+  const CanvasEditorStub = React.forwardRef(function CanvasEditorStub(ownProps, ref) {
+    // The real CanvasEditor reads the meme and drawing settings from the stores;
+    // record them alongside its props so tests see everything it renders from.
+    const doc = useMemeEditorStore((s) => s);
+    const ui = useEditorUiStore((s) => s);
+    const props = {
+      captions: doc.captions,
+      stickers: doc.stickers,
+      imageLayers: doc.imageLayers,
+      drawings: doc.drawings,
+      activeLayerId: doc.activeLayerId,
+      canvasFlipX: doc.canvasFlipX,
+      drawTool: ui.drawTool,
+      ...ownProps,
+    };
     canvas.props = props;
     React.useImperativeHandle(ref, () => ({ toDataURL: () => 'data:image/png;base64,STUB' }));
     return (

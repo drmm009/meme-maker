@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState, useLayoutEffect } from 'react';
 import { getFilterCss, drawImageFiltered } from '../data/photoFilters';
 import { isColorDark } from '../utils/captionLayout';
+import { useMemeEditorStore } from './editor/store/useMemeEditorStore';
+import { useEditorUiStore } from './editor/store/useEditorUiStore';
 
 const wrapText = (ctx, text, maxWidth) => {
   if (!text) return [];
@@ -2012,15 +2014,8 @@ function renderDieCutEmoji(ctx, emoji, fontSize, borderColor = '#ffffff', border
 
 const CanvasEditor = React.forwardRef(function CanvasEditor(
   {
-    template,
     imageUrl,
-    captions = [],
-    stickers = [],
-    imageLayers = [],
-    aspectRatio = 'original',
     imageFit = 'cover',
-    filters = { brightness: 100, contrast: 100, saturation: 100, grayscale: 0, blur: 0 },
-    activeLayerId,
     onSelectLayer,
     onDeleteLayer,
     onUpdateCaptionBounds,
@@ -2029,27 +2024,33 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     onUpdateCaptionText,
     isNativeLayout,
     layoutDef,
-    slotImages,
-    slotTransforms,
     onUpdateSlotTransform,
-    _isVideoPlaying = true,
-    watermark,
-    canvasBgColor = '#ffffff',
-    drawings = [],
     onAddDrawing,
     isDrawingMode = false,
-    drawTool = 'brush',
-    brushColor = '#ff2a5f',
-    brushSize = 10,
-    canvasHeader,
-    _onUpdateCanvasHeader,
-    canvasFooter,
-    _onUpdateCanvasFooter,
-    demotivational,
-    canvasFlipX = false
   },
   ref
 ) {
+  // Meme document and shared UI state come from the editor stores.
+  const template = useMemeEditorStore((s) => s.activeTemplate);
+  const captions = useMemeEditorStore((s) => s.captions);
+  const stickers = useMemeEditorStore((s) => s.stickers);
+  const imageLayers = useMemeEditorStore((s) => s.imageLayers);
+  const aspectRatio = useMemeEditorStore((s) => s.aspectRatio);
+  const filters = useMemeEditorStore((s) => s.imageFilters);
+  const activeLayerId = useMemeEditorStore((s) => s.activeLayerId);
+  const slotImages = useMemeEditorStore((s) => s.slotImages);
+  const slotTransforms = useMemeEditorStore((s) => s.slotTransforms);
+  const canvasBgColor = useMemeEditorStore((s) => s.canvasBgColor);
+  const drawings = useMemeEditorStore((s) => s.drawings);
+  const canvasHeader = useMemeEditorStore((s) => s.canvasHeader);
+  const canvasFooter = useMemeEditorStore((s) => s.canvasFooter);
+  const demotivational = useMemeEditorStore((s) => s.demotivational);
+  const canvasFlipX = useMemeEditorStore((s) => s.canvasFlipX);
+  const watermark = useEditorUiStore((s) => s.watermark);
+  const drawTool = useEditorUiStore((s) => s.drawTool);
+  const brushColor = useEditorUiStore((s) => s.brushColor);
+  const brushSize = useEditorUiStore((s) => s.brushSize);
+
   
   const [liveBgColor, setLiveBgColor] = useState(canvasBgColor);
   useEffect(() => {

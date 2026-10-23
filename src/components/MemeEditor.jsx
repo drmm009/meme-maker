@@ -42,32 +42,19 @@ export default function MemeEditor(props) {
 function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggleTheme }) {
   // Document state lives in the editor store (see editor/store/useMemeEditorStore.js)
   const imageLayers = useMemeEditorStore((s) => s.imageLayers);
-  const setImageLayers = useMemeEditorStore((s) => s.setImageLayers);
   const stickers = useMemeEditorStore((s) => s.stickers);
-  const setStickers = useMemeEditorStore((s) => s.setStickers);
   const captions = useMemeEditorStore((s) => s.captions);
-  const setCaptions = useMemeEditorStore((s) => s.setCaptions);
   const activeLayerId = useMemeEditorStore((s) => s.activeLayerId);
   const setActiveLayerId = useMemeEditorStore((s) => s.setActiveLayerId);
-  const slotImages = useMemeEditorStore((s) => s.slotImages);
-  const slotTransforms = useMemeEditorStore((s) => s.slotTransforms);
   const activeTemplate = useMemeEditorStore((s) => s.activeTemplate);
   const setActiveTemplate = useMemeEditorStore((s) => s.setActiveTemplate);
-  const aspectRatio = useMemeEditorStore((s) => s.aspectRatio);
-  const canvasBgColor = useMemeEditorStore((s) => s.canvasBgColor);
-  const canvasFlipX = useMemeEditorStore((s) => s.canvasFlipX);
-  const canvasHeader = useMemeEditorStore((s) => s.canvasHeader);
-  const setCanvasHeader = useMemeEditorStore((s) => s.setCanvasHeader);
-  const canvasFooter = useMemeEditorStore((s) => s.canvasFooter);
-  const setCanvasFooter = useMemeEditorStore((s) => s.setCanvasFooter);
-  const demotivational = useMemeEditorStore((s) => s.demotivational);
   const templateFaceMorph = useMemeEditorStore((s) => s.templateFaceMorph);
   const imageFilters = useMemeEditorStore((s) => s.imageFilters);
-  const drawings = useMemeEditorStore((s) => s.drawings);
-  const pushHistoryDebounced = useMemeEditorStore((s) => s.pushHistoryDebounced);
   const handleUndo = useMemeEditorStore((s) => s.undo);
   const handleRedo = useMemeEditorStore((s) => s.redo);
   const nudgeLayer = useMemeEditorStore((s) => s.nudgeLayer);
+  const patchLayer = useMemeEditorStore((s) => s.patchLayer);
+  const updateCaptionText = useMemeEditorStore((s) => s.updateCaptionText);
   const setOpenSourceTemplates = useEditorUiStore((s) => s.setOpenSourceTemplates);
   const setShowStylesModal = useEditorUiStore((s) => s.setShowStylesModal);
   const socialModalPlatform = useEditorUiStore((s) => s.socialModalPlatform);
@@ -88,13 +75,10 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
   const setPasteToast = useEditorUiStore((s) => s.setPasteToast);
   const setShowBubbleBottomSheet = useEditorUiStore((s) => s.setShowBubbleBottomSheet);
   const drawTool = useEditorUiStore((s) => s.drawTool);
-  const brushColor = useEditorUiStore((s) => s.brushColor);
-  const brushSize = useEditorUiStore((s) => s.brushSize);
   const showBubbleLayouts = useEditorUiStore((s) => s.showBubbleLayouts);
   const setShowBubbleLayouts = useEditorUiStore((s) => s.setShowBubbleLayouts);
   const lastUsedSettingButton = useEditorUiStore((s) => s.lastUsedSettingButton);
   const setLastUsedSettingButton = useEditorUiStore((s) => s.setLastUsedSettingButton);
-  const watermark = useEditorUiStore((s) => s.watermark);
 
   // Native Multi-Panel Layout Support
   const isNativeLayout = template?.isNativeLayout || false;
@@ -173,7 +157,6 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
 
   // Freehand Drawing state
   const contextToolbarRef = useRef(null);
-  const isVideoPlaying = true;
 
 
 
@@ -359,20 +342,11 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
 
                 <CanvasEditor
                   ref={canvasRef}
-                  template={activeTemplate}
                   imageUrl={isHoldingCanvasCompare ? (templateFaceMorph?.cleanOriginalUrl || activeTemplate?.originalUrl) : (activeTemplate?.rawImageUrl || activeTemplate?.imageUrl)}
-                  captions={captions}
-                  stickers={stickers}
-                  imageLayers={imageLayers}
-                  aspectRatio={aspectRatio}
                   imageFit={imageFit}
-                  filters={imageFilters}
                   isNativeLayout={isNativeLayout}
                   layoutDef={layoutDef}
-                  slotImages={slotImages}
-                  slotTransforms={slotTransforms}
                   onUpdateSlotTransform={updateSlotTransform}
-                  activeLayerId={activeLayerId}
                   onDeleteLayer={handleDeleteLayer}
                   onSelectLayer={(id) => {
                     setShowFontMenu(false);
@@ -393,67 +367,12 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
                     setActiveSubmenu(null);
                     setShowBubbleBottomSheet(false);
                   }}
-                  onUpdateCaptionBounds={(id, newProps) => {
-                    const nextCaps = captions.map((c) => (c.id === id ? { ...c, ...newProps } : c));
-                    setCaptions(nextCaps);
-                    pushHistoryDebounced();
-                  }}
-                  onUpdateStickerBounds={(id, newProps) => {
-                    const nextStk = stickers.map((s) => (s.id === id ? { ...s, ...newProps } : s));
-                    setStickers(nextStk);
-                    pushHistoryDebounced();
-                  }}
-                  onUpdateImageLayerBounds={(id, newProps) => {
-                    const nextImgLayers = imageLayers.map((l) => (l.id === id ? { ...l, ...newProps } : l));
-                    setImageLayers(nextImgLayers);
-                    pushHistoryDebounced();
-                  }}
-                  onUpdateCaptionText={(id, text) => {
-                    setCaptions((prevCaps) => {
-                      const nextCaps = prevCaps.map((c) => {
-                        if (c.id === id) {
-                          if (typeof text === 'object') {
-                            return { ...c, ...text };
-                          }
-                          const updated = { ...c, text };
-                          if (c.isBreakingNews) {
-                            updated.newsHeadline = text;
-                          }
-                          return updated;
-                        }
-                        return c;
-                      });
-                      pushHistoryDebounced();
-                      return nextCaps;
-                    });
-                  }}
-                  isVideoPlaying={isVideoPlaying}
-                  watermark={watermark}
-                  canvasBgColor={canvasBgColor}
-                  drawings={drawings}
+                  onUpdateCaptionBounds={(id, props) => patchLayer('captions', id, props)}
+                  onUpdateStickerBounds={(id, props) => patchLayer('stickers', id, props)}
+                  onUpdateImageLayerBounds={(id, props) => patchLayer('imageLayers', id, props)}
+                  onUpdateCaptionText={updateCaptionText}
                   onAddDrawing={handleAddDrawing}
                   isDrawingMode={!isElementSelected && activeTab === 'draw' && Boolean(drawTool)}
-                  drawTool={drawTool}
-                  brushColor={brushColor}
-                  brushSize={brushSize}
-                  canvasHeader={canvasHeader}
-                  onUpdateCanvasHeader={(props) => {
-                    setCanvasHeader((prev) => {
-                      const upd = { ...prev, ...props };
-                      pushHistoryDebounced();
-                      return upd;
-                    });
-                  }}
-                  canvasFooter={canvasFooter}
-                  onUpdateCanvasFooter={(props) => {
-                    setCanvasFooter((prev) => {
-                      const upd = { ...prev, ...props };
-                      pushHistoryDebounced();
-                      return upd;
-                    });
-                  }}
-                  demotivational={demotivational}
-                  canvasFlipX={canvasFlipX}
                 />
 
                 {isRemovingBg && (

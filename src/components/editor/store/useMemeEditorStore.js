@@ -212,6 +212,25 @@ export function createMemeEditorStore(template) {
           setTemplateFaceMorph: fieldSetter(set, 'templateFaceMorph'),
           setImageFilters: fieldSetter(set, 'imageFilters'),
 
+          // Merge props into one caption / sticker / image layer (canvas drags, resizes, rotations).
+          // key: 'captions' | 'stickers' | 'imageLayers'
+          patchLayer: (key, id, patch) => {
+            set((state) => ({ [key]: state[key].map((layer) => (layer.id === id ? { ...layer, ...patch } : layer)) }));
+            get().pushHistoryDebounced();
+          },
+
+          // Inline text edit on the canvas: a string, or an object of caption props.
+          updateCaptionText: (id, text) => {
+            set((state) => ({
+              captions: state.captions.map((c) => {
+                if (c.id !== id) return c;
+                if (typeof text === 'object') return { ...c, ...text };
+                return c.isBreakingNews ? { ...c, text, newsHeadline: text } : { ...c, text };
+              }),
+            }));
+            get().pushHistoryDebounced();
+          },
+
           // Move a caption, sticker or image layer by (dx, dy), e.g. from arrow keys.
           nudgeLayer: (id, dx, dy) => {
             for (const key of ['captions', 'stickers', 'imageLayers']) {
