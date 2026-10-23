@@ -1,20 +1,21 @@
 import React from 'react';
 import { Type, Plus, Settings, Upload, Droplet, Palette, Wand2, MessageSquareQuote, Flame, CheckCheck, User } from 'lucide-react';
 import { TwitterVerifiedBadge, InstagramVerifiedBadge } from '../../MemeStylesModal';
+import { useEditorUiStore } from '../store/useEditorUiStore';
 
 export default function CaptionToolbar({
   activeCaption,
   activeFontObj,
-  activeSubmenu,
   handleOpenSocialModalForActiveCard,
   handleSetCaptionBg,
-  handleToggleSubmenu,
-  setActiveSubmenu,
-  setShowBubbleBottomSheet,
-  showBubbleBottomSheet,
-  showStylesModal,
   updateActiveCaptionProps,
 }) {
+  const activeSubmenu = useEditorUiStore((s) => s.activeSubmenu);
+  const handleToggleSubmenu = useEditorUiStore((s) => s.toggleSubmenu);
+  const setActiveSubmenu = useEditorUiStore((s) => s.setActiveSubmenu);
+  const setShowBubbleBottomSheet = useEditorUiStore((s) => s.setShowBubbleBottomSheet);
+  const showBubbleBottomSheet = useEditorUiStore((s) => s.showBubbleBottomSheet);
+  const showStylesModal = useEditorUiStore((s) => s.showStylesModal);
   return (
     <>
       {activeCaption && (

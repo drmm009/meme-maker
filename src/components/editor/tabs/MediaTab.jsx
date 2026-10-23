@@ -3,10 +3,10 @@ import { createPortal } from 'react-dom';
 import { Plus, Trash2, Smile, Check, X, ImagePlus } from 'lucide-react';
 import VideoTrimmer from '../../VideoTrimmer';
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
+import { useEditorUiStore } from '../store/useEditorUiStore';
 
 export default function MediaTab({
   activeImageLayer,
-  activeTab,
   commitAddImageLayer,
   handleChangeFace,
   handleDeleteLayer,
@@ -14,11 +14,12 @@ export default function MediaTab({
   handleFinalizeTemplateFace,
   handleRevertTemplateFace,
   handleUpdateTemplateMorphProgress,
-  pendingVideoLayer,
-  setImagePickerTarget,
-  setPendingVideoLayer,
   updateActiveImageLayer,
 }) {
+  const activeTab = useEditorUiStore((s) => s.activeTab);
+  const pendingVideoLayer = useEditorUiStore((s) => s.pendingVideoLayer);
+  const setImagePickerTarget = useEditorUiStore((s) => s.setImagePickerTarget);
+  const setPendingVideoLayer = useEditorUiStore((s) => s.setPendingVideoLayer);
   const templateFaceMorph = useMemeEditorStore((s) => s.templateFaceMorph);
 
   return (

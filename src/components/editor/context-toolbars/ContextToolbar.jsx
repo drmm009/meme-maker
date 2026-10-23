@@ -1,4 +1,3 @@
-import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import TabQuickTools from './TabQuickTools';
 import FaceMorphToolbar from './FaceMorphToolbar';
@@ -32,25 +31,8 @@ export default function ContextToolbar({
   setShowFaceMorphModal,
   updateActiveCaptionProps,
 }) {
-  const activeSubmenu = useEditorUiStore((s) => s.activeSubmenu);
-  const activeTab = useEditorUiStore((s) => s.activeTab);
-  const drawTool = useEditorUiStore((s) => s.drawTool);
-  const handleToggleSubmenu = useEditorUiStore((s) => s.toggleSubmenu);
   const isMobileTabsFolded = useEditorUiStore((s) => s.isMobileTabsFolded);
-  const setActiveSubmenu = useEditorUiStore((s) => s.setActiveSubmenu);
-  const setDrawTool = useEditorUiStore((s) => s.setDrawTool);
-  const setImagePickerTarget = useEditorUiStore((s) => s.setImagePickerTarget);
-  const setShowAiModal = useEditorUiStore((s) => s.setShowAiModal);
-  const setShowBubbleBottomSheet = useEditorUiStore((s) => s.setShowBubbleBottomSheet);
-  const setShowEmojiModal = useEditorUiStore((s) => s.setShowEmojiModal);
-  const setShowFiltersModal = useEditorUiStore((s) => s.setShowFiltersModal);
-  const setShowMemeStickersModal = useEditorUiStore((s) => s.setShowMemeStickersModal);
-  const showBubbleBottomSheet = useEditorUiStore((s) => s.showBubbleBottomSheet);
   const showBubbleLayouts = useEditorUiStore((s) => s.showBubbleLayouts);
-  const showFiltersModal = useEditorUiStore((s) => s.showFiltersModal);
-  const showStylesModal = useEditorUiStore((s) => s.showStylesModal);
-  const updateWatermark = useEditorUiStore((s) => s.updateWatermark);
-  const watermark = useEditorUiStore((s) => s.watermark);
   const templateFaceMorph = useMemeEditorStore((s) => s.templateFaceMorph);
 
   return (
@@ -69,14 +51,8 @@ export default function ContextToolbar({
             <CaptionToolbar
               activeCaption={activeCaption}
               activeFontObj={activeFontObj}
-              activeSubmenu={activeSubmenu}
               handleOpenSocialModalForActiveCard={handleOpenSocialModalForActiveCard}
               handleSetCaptionBg={handleSetCaptionBg}
-              handleToggleSubmenu={handleToggleSubmenu}
-              setActiveSubmenu={setActiveSubmenu}
-              setShowBubbleBottomSheet={setShowBubbleBottomSheet}
-              showBubbleBottomSheet={showBubbleBottomSheet}
-              showStylesModal={showStylesModal}
               updateActiveCaptionProps={updateActiveCaptionProps}
             />
 
@@ -89,8 +65,6 @@ export default function ContextToolbar({
               handleRemoveBackground={handleRemoveBackground}
               handleStartMorphFace={handleStartMorphFace}
               isRemovingBg={isRemovingBg}
-              setShowFiltersModal={setShowFiltersModal}
-              showFiltersModal={showFiltersModal}
             />
 
 
@@ -113,26 +87,10 @@ export default function ContextToolbar({
               activeCaption={activeCaption}
               activeImageLayer={activeImageLayer}
               activeSticker={activeSticker}
-              activeSubmenu={activeSubmenu}
-              activeTab={activeTab}
-              drawTool={drawTool}
               handleAddBubble={handleAddBubble}
               handleAddCaption={handleAddCaption}
               handleFileUploadImageLayer={handleFileUploadImageLayer}
-              handleToggleSubmenu={handleToggleSubmenu}
-              setActiveSubmenu={setActiveSubmenu}
-              setDrawTool={setDrawTool}
-              setImagePickerTarget={setImagePickerTarget}
-              setShowAiModal={setShowAiModal}
-              setShowBubbleBottomSheet={setShowBubbleBottomSheet}
-              setShowEmojiModal={setShowEmojiModal}
               setShowFaceMorphModal={setShowFaceMorphModal}
-              setShowFiltersModal={setShowFiltersModal}
-              setShowMemeStickersModal={setShowMemeStickersModal}
-              showBubbleBottomSheet={showBubbleBottomSheet}
-              showFiltersModal={showFiltersModal}
-              updateWatermark={updateWatermark}
-              watermark={watermark}
             />
 
           </motion.div>

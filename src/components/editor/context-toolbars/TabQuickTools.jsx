@@ -1,32 +1,33 @@
 import React from 'react';
 import { Plus, Smile, Sticker, Droplet, Highlighter, Sun, FlipHorizontal, MessageSquareQuote, Brush, SunMedium, ImagePlus, LayoutTemplate, Rows3, WandSparkles, ScanFace } from 'lucide-react';
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
+import { useEditorUiStore } from '../store/useEditorUiStore';
 
 export default function TabQuickTools({
   activeCaption,
   activeImageLayer,
   activeSticker,
-  activeSubmenu,
-  activeTab,
-  drawTool,
   handleAddBubble,
   handleAddCaption,
   handleFileUploadImageLayer,
-  handleToggleSubmenu,
-  setActiveSubmenu,
-  setDrawTool,
-  setImagePickerTarget,
-  setShowAiModal,
-  setShowBubbleBottomSheet,
-  setShowEmojiModal,
   setShowFaceMorphModal,
-  setShowFiltersModal,
-  setShowMemeStickersModal,
-  showBubbleBottomSheet,
-  showFiltersModal,
-  updateWatermark,
-  watermark,
 }) {
+  const activeSubmenu = useEditorUiStore((s) => s.activeSubmenu);
+  const activeTab = useEditorUiStore((s) => s.activeTab);
+  const drawTool = useEditorUiStore((s) => s.drawTool);
+  const handleToggleSubmenu = useEditorUiStore((s) => s.toggleSubmenu);
+  const setActiveSubmenu = useEditorUiStore((s) => s.setActiveSubmenu);
+  const setDrawTool = useEditorUiStore((s) => s.setDrawTool);
+  const setImagePickerTarget = useEditorUiStore((s) => s.setImagePickerTarget);
+  const setShowAiModal = useEditorUiStore((s) => s.setShowAiModal);
+  const setShowBubbleBottomSheet = useEditorUiStore((s) => s.setShowBubbleBottomSheet);
+  const setShowEmojiModal = useEditorUiStore((s) => s.setShowEmojiModal);
+  const setShowFiltersModal = useEditorUiStore((s) => s.setShowFiltersModal);
+  const setShowMemeStickersModal = useEditorUiStore((s) => s.setShowMemeStickersModal);
+  const showBubbleBottomSheet = useEditorUiStore((s) => s.showBubbleBottomSheet);
+  const showFiltersModal = useEditorUiStore((s) => s.showFiltersModal);
+  const updateWatermark = useEditorUiStore((s) => s.updateWatermark);
+  const watermark = useEditorUiStore((s) => s.watermark);
   const templateFaceMorph = useMemeEditorStore((s) => s.templateFaceMorph);
   const canvasHeader = useMemeEditorStore((s) => s.canvasHeader);
   const canvasFooter = useMemeEditorStore((s) => s.canvasFooter);

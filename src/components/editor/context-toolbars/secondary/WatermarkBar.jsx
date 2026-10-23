@@ -1,10 +1,10 @@
 import React from 'react';
 import { Type, Blend, ArrowDownRight } from 'lucide-react';
+import { useEditorUiStore } from '../../store/useEditorUiStore';
 
-export default function WatermarkBar({
-  updateWatermark,
-  watermark,
-}) {
+export default function WatermarkBar() {
+  const updateWatermark = useEditorUiStore((s) => s.updateWatermark);
+  const watermark = useEditorUiStore((s) => s.watermark);
   return (
     <>
       <button

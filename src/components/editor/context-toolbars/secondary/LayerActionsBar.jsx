@@ -2,6 +2,7 @@ import React from 'react';
 import { Trash2, Copy, RotateCw, Crop, Layers, ArrowUp, ArrowDown, FlipHorizontal, AlignLeft, AlignCenter, AlignRight } from 'lucide-react';
 import { isSocialCardCaption } from '../../memeEditorUtils';
 import { useMemeEditorStore } from '../../store/useMemeEditorStore';
+import { useEditorUiStore } from '../../store/useEditorUiStore';
 
 export default function LayerActionsBar({
   activeCaption,
@@ -13,10 +14,10 @@ export default function LayerActionsBar({
   handleRotateLayer,
   handleToggleTextCase,
   moveLayer,
-  setShowLayerMenu,
-  showLayerMenu,
   updateActiveImageLayer,
 }) {
+  const setShowLayerMenu = useEditorUiStore((s) => s.setShowLayerMenu);
+  const showLayerMenu = useEditorUiStore((s) => s.showLayerMenu);
   const activeLayerId = useMemeEditorStore((s) => s.activeLayerId);
 
   return (

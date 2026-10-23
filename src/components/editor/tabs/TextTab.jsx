@@ -1,14 +1,13 @@
-import React from 'react';
 import { Type, Sparkles, PanelTop, PanelBottom } from 'lucide-react';
 import { PRESET_PHRASES, isColorDark } from '../../../utils/captionLayout';
 import CaptionStyleControls from './text/CaptionStyleControls';
 import TextToolbar from './text/TextToolbar';
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
+import { useEditorUiStore } from '../store/useEditorUiStore';
 
 export default function TextTab({
   activeCaption,
   activeFontObj,
-  activeTab,
   getActiveTextEffectId,
   handleAddBubble,
   handleAddCaption,
@@ -24,12 +23,11 @@ export default function TextTab({
   handleToggleCanvasFooter,
   handleToggleCanvasHeader,
   handleToggleTextCase,
-  setActiveSubmenu,
-  setShowAiModal,
-  setShowBubbleBottomSheet,
   updateActiveCaption,
   updateActiveCaptionProps,
 }) {
+  const activeTab = useEditorUiStore((s) => s.activeTab);
+  const setActiveSubmenu = useEditorUiStore((s) => s.setActiveSubmenu);
   const canvasHeader = useMemeEditorStore((s) => s.canvasHeader);
   const canvasFooter = useMemeEditorStore((s) => s.canvasFooter);
   const canvasBgColor = useMemeEditorStore((s) => s.canvasBgColor);
@@ -51,8 +49,6 @@ export default function TextTab({
             handleToggleCanvasBoth={handleToggleCanvasBoth}
             handleToggleCanvasFooter={handleToggleCanvasFooter}
             handleToggleCanvasHeader={handleToggleCanvasHeader}
-            setShowAiModal={setShowAiModal}
-            setShowBubbleBottomSheet={setShowBubbleBottomSheet}
           />
 
           {/* ACTIVE CAPTION CONTROLS */}

@@ -2,6 +2,7 @@ import React from 'react';
 import { Plus, Trash2, PanelTop, PanelBottom, MessageSquare, Rows3, WandSparkles } from 'lucide-react';
 import { COLOR_SWATCHES } from '../../../../utils/captionLayout';
 import { useMemeEditorStore } from '../../store/useMemeEditorStore';
+import { useEditorUiStore } from '../../store/useEditorUiStore';
 
 export default function TextToolbar({
   activeCaption,
@@ -12,9 +13,9 @@ export default function TextToolbar({
   handleToggleCanvasBoth,
   handleToggleCanvasFooter,
   handleToggleCanvasHeader,
-  setShowAiModal,
-  setShowBubbleBottomSheet,
 }) {
+  const setShowAiModal = useEditorUiStore((s) => s.setShowAiModal);
+  const setShowBubbleBottomSheet = useEditorUiStore((s) => s.setShowBubbleBottomSheet);
   const canvasHeader = useMemeEditorStore((s) => s.canvasHeader);
   const canvasFooter = useMemeEditorStore((s) => s.canvasFooter);
   const activeLayerId = useMemeEditorStore((s) => s.activeLayerId);

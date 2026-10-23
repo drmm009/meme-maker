@@ -1,14 +1,15 @@
 import React from 'react';
 import { Sparkles, Wand2, ScanFace } from 'lucide-react';
+import { useEditorUiStore } from '../store/useEditorUiStore';
 
 export default function ImageLayerToolbar({
   activeImageLayer,
   handleRemoveBackground,
   handleStartMorphFace,
   isRemovingBg,
-  setShowFiltersModal,
-  showFiltersModal,
 }) {
+  const setShowFiltersModal = useEditorUiStore((s) => s.setShowFiltersModal);
+  const showFiltersModal = useEditorUiStore((s) => s.showFiltersModal);
   return (
     <>
       {activeImageLayer && (

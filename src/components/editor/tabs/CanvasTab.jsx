@@ -3,18 +3,19 @@ import { RefreshCw, Upload, LayoutGrid, Droplet, FlipHorizontal } from 'lucide-r
 import { COLOR_SWATCHES } from '../../../utils/captionLayout';
 import CanvasColorPicker from '../CanvasColorPicker';
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
+import { useEditorUiStore } from '../store/useEditorUiStore';
 
 export default function CanvasTab({
-  activeTab,
   handleCycleWatermarkPosition,
   handleSetCanvasBgColor,
   handleToggleCanvasFlip,
   handleWatermarkImageUpload,
-  updateWatermark,
-  watermark,
   watermarkInputRef,
   watermarkTextInputRef,
 }) {
+  const activeTab = useEditorUiStore((s) => s.activeTab);
+  const updateWatermark = useEditorUiStore((s) => s.updateWatermark);
+  const watermark = useEditorUiStore((s) => s.watermark);
   const canvasFlipX = useMemeEditorStore((s) => s.canvasFlipX);
   const canvasBgColor = useMemeEditorStore((s) => s.canvasBgColor);
 

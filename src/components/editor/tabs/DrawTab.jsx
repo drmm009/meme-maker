@@ -2,18 +2,19 @@ import React from 'react';
 import { Trash2, Undo, Highlighter, Palette, Brush, SunMedium } from 'lucide-react';
 import { DRAW_COLORS } from '../../../utils/captionLayout';
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
+import { useEditorUiStore } from '../store/useEditorUiStore';
 
 export default function DrawTab({
-  activeTab,
-  brushColor,
-  brushSize,
-  drawTool,
   handleClearDrawings,
   handleUndoDrawing,
-  setBrushColor,
-  setBrushSize,
-  setDrawTool,
 }) {
+  const activeTab = useEditorUiStore((s) => s.activeTab);
+  const brushColor = useEditorUiStore((s) => s.brushColor);
+  const brushSize = useEditorUiStore((s) => s.brushSize);
+  const drawTool = useEditorUiStore((s) => s.drawTool);
+  const setBrushColor = useEditorUiStore((s) => s.setBrushColor);
+  const setBrushSize = useEditorUiStore((s) => s.setBrushSize);
+  const setDrawTool = useEditorUiStore((s) => s.setDrawTool);
   const drawings = useMemeEditorStore((s) => s.drawings);
 
   return (

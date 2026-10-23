@@ -1,4 +1,3 @@
-import React from 'react';
 import { TWEET_TREND_PRESETS } from '../../CanvasEditor';
 import { FONTS } from '../../../data/stickers';
 import { Blend, Smile, PanelTop, Flame, Tv, MessageCircle, Ban, AlignLeft, AlignCenter, AlignRight } from 'lucide-react';
@@ -36,15 +35,7 @@ export default function SecondaryToolbar({
 }) {
   const activeSubmenu = useEditorUiStore((s) => s.activeSubmenu);
   const activeTab = useEditorUiStore((s) => s.activeTab);
-  const brushColor = useEditorUiStore((s) => s.brushColor);
-  const brushSize = useEditorUiStore((s) => s.brushSize);
   const drawTool = useEditorUiStore((s) => s.drawTool);
-  const setBrushColor = useEditorUiStore((s) => s.setBrushColor);
-  const setBrushSize = useEditorUiStore((s) => s.setBrushSize);
-  const setShowLayerMenu = useEditorUiStore((s) => s.setShowLayerMenu);
-  const showLayerMenu = useEditorUiStore((s) => s.showLayerMenu);
-  const updateWatermark = useEditorUiStore((s) => s.updateWatermark);
-  const watermark = useEditorUiStore((s) => s.watermark);
   const canvasBgColor = useMemeEditorStore((s) => s.canvasBgColor);
   const setCanvasBgColor = useMemeEditorStore((s) => s.setCanvasBgColor);
   const activeLayerId = useMemeEditorStore((s) => s.activeLayerId);
@@ -555,12 +546,7 @@ export default function SecondaryToolbar({
                 style={{ display: 'flex', alignItems: 'center', gap: '5px', flexShrink: 0 }}
               >
                 <DrawSettingsBar
-                  brushColor={brushColor}
-                  brushSize={brushSize}
-                  drawTool={drawTool}
                   handleClearDrawings={handleClearDrawings}
-                  setBrushColor={setBrushColor}
-                  setBrushSize={setBrushSize}
                 />
               </motion.div>
             )}
@@ -575,7 +561,7 @@ export default function SecondaryToolbar({
                 exit="exit"
                 style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}
               >
-                <WatermarkBar updateWatermark={updateWatermark} watermark={watermark} />
+                <WatermarkBar />
               </motion.div>
             )}
 
@@ -733,8 +719,6 @@ export default function SecondaryToolbar({
                   handleRotateLayer={handleRotateLayer}
                   handleToggleTextCase={handleToggleTextCase}
                   moveLayer={moveLayer}
-                  setShowLayerMenu={setShowLayerMenu}
-                  showLayerMenu={showLayerMenu}
                   updateActiveImageLayer={updateActiveImageLayer}
                 />
               </motion.div>

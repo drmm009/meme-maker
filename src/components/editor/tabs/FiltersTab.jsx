@@ -2,16 +2,17 @@ import React from 'react';
 import { Sliders, ArrowLeft, ScanFace } from 'lucide-react';
 import { PHOTO_FILTERS } from '../../../data/photoFilters';
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
+import { useEditorUiStore } from '../store/useEditorUiStore';
 
 export default function FiltersTab({
   activeImageLayer,
-  activeTab,
   handleStartMorphFace,
-  setShowFilterPresets,
-  setShowFiltersModal,
-  showFilterPresets,
   template,
 }) {
+  const activeTab = useEditorUiStore((s) => s.activeTab);
+  const setShowFilterPresets = useEditorUiStore((s) => s.setShowFilterPresets);
+  const setShowFiltersModal = useEditorUiStore((s) => s.setShowFiltersModal);
+  const showFilterPresets = useEditorUiStore((s) => s.showFilterPresets);
   const imageFilters = useMemeEditorStore((s) => s.imageFilters);
   const setImageFilters = useMemeEditorStore((s) => s.setImageFilters);
   const imageLayers = useMemeEditorStore((s) => s.imageLayers);
