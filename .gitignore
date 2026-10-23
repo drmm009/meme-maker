@@ -40,3 +40,6 @@ lint*.txt
 sw.js
 workbox-*.js
 design-preview/
+
+# Retired copies and scratch files (see CLAUDE.md)
+_old/
