@@ -1,778 +1,247 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useStore } from 'zustand';
-import {
-  Play, Pause, SkipBack, Download, Trash2, VolumeX, Volume2,
-  ArrowLeft, Maximize, Crop, Minimize, Undo, Redo,
-  ChevronDown, ChevronUp, Type, Share2, Copy, Check,
-  Video as VideoIcon, RotateCw
-} from 'lucide-react';
-import Timeline from './Timeline';
+import { X, Share, Play, Pause, Undo2, Redo2, ChevronUp, ChevronDown, Download, Copy, Check } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import CanvasPreview from './CanvasPreview';
+import TimelinePanel from './timeline/TimelinePanel';
+import ToolRail from './ToolRail';
+import AddMedia from './AddMedia';
 import { useEditorStore } from '../../store/useVideoEditorStore';
 import { exportVideoFFmpeg } from '../../utils/ffmpegExport';
-import { FONTS } from '../../data/stickers';
-import './video-editor.css';
 import AspectRatioDropdown from '../AspectRatioDropdown';
 import { useAudioPlaybackSync } from './useAudioPlaybackSync';
-import { motion, AnimatePresence } from 'framer-motion';
-
-const getContrastStroke = (hexColor) => {
-  if (!hexColor) return '#000000';
-  hexColor = hexColor.replace('#', '');
-  if (hexColor.length === 3) hexColor = hexColor.split('').map(c => c + c).join('');
-  const r = parseInt(hexColor.substr(0, 2), 16) || 0;
-  const g = parseInt(hexColor.substr(2, 2), 16) || 0;
-  const b = parseInt(hexColor.substr(4, 2), 16) || 0;
-  const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
-  return luminance < 0.5 ? '#ffffff' : '#000000';
-};
-
-const PlayheadDisplay = ({ isTimelineFolded }) => {
-  const playhead = useEditorStore(state => state.playhead);
-  const draggingTime = useEditorStore(state => state.draggingTime);
-  const activeItemId = useEditorStore(state => state.activeItemId);
-  
-  // Only vanish if an item is selected AND the timeline is not folded.
-  if (activeItemId && !isTimelineFolded) return null;
-  return (
-    <div style={{
-      fontFamily: '"SF Mono", "Roboto Mono", monospace',
-      fontSize: '0.85rem',
-      fontWeight: 600,
-      color: 'var(--text-main)',
-      background: 'var(--bg-surface-2)',
-      border: '1px solid var(--glass-border)',
-      borderRadius: '8px',
-      padding: '4px 10px',
-      letterSpacing: '0.05em',
-      display: 'inline-flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      minWidth: '70px',
-      boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.5)'
-    }}>
-      <span style={{ color: 'var(--cyber-cyan, #67e8f9)', marginRight: '2px' }}>
-        {((draggingTime !== null ? draggingTime : playhead) / 1000).toFixed(2)}
-      </span>
-      <span style={{ opacity: 0.5, fontSize: '0.75rem' }}>s</span>
-    </div>
-  );
-};
-
-const FoldedProgressBar = () => {
-  const playhead = useEditorStore(state => state.playhead);
-  const items = useEditorStore(state => state.items);
-  const duration = useEditorStore(state => state.duration);
-  const maxDur = items.length > 0 ? Math.max(...items.map(i => i.endMs)) : duration;
-  const progress = Math.min(100, (playhead / Math.max(1, maxDur)) * 100);
-
-  const containerRef = useRef(null);
-
-  const handlePointerDown = (e) => {
-    e.preventDefault();
-    const container = containerRef.current;
-    if (!container) return;
-
-    const updatePlayhead = (clientX) => {
-      const rect = container.getBoundingClientRect();
-      const x = Math.max(0, Math.min(clientX - rect.left, rect.width));
-      const newTime = (x / rect.width) * maxDur;
-      useEditorStore.getState().setPlayhead(newTime);
-    };
-
-    updatePlayhead(e.clientX);
-
-    const handlePointerMove = (ev) => {
-      updatePlayhead(ev.clientX);
-    };
-
-    const handlePointerUp = () => {
-      window.removeEventListener('pointermove', handlePointerMove);
-      window.removeEventListener('pointerup', handlePointerUp);
-    };
-
-    window.addEventListener('pointermove', handlePointerMove);
-    window.addEventListener('pointerup', handlePointerUp);
-  };
-
-  return (
-    <div
-      ref={containerRef}
-      onPointerDown={handlePointerDown}
-      style={{
-        position: 'absolute',
-        top: '-16px', // Float completely above the pill dock
-        left: '4%',
-        width: '92%', // Slightly inset from the pill edges
-        height: '16px',
-        cursor: 'pointer',
-        zIndex: 10,
-        display: 'flex',
-        alignItems: 'center'
-      }}
-    >
-      <div style={{
-        width: '100%',
-        height: '4px',
-        background: 'rgba(255,255,255,0.15)',
-        position: 'relative',
-        borderRadius: '2px'
-      }}>
-        <div style={{
-          height: '100%',
-          width: `${progress}%`,
-          background: 'var(--cyber-cyan, #67e8f9)',
-          boxShadow: '0 0 8px var(--cyber-cyan, #67e8f9)',
-          position: 'relative'
-        }}>
-          <div style={{
-            position: 'absolute',
-            right: '-6px',
-            top: '50%',
-            transform: 'translateY(-50%)',
-            width: '12px',
-            height: '12px',
-            backgroundColor: '#ffffff',
-            borderRadius: '50%',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.5), 0 0 8px var(--cyber-cyan, #67e8f9)',
-            pointerEvents: 'none' // Let the container handle the drag events
-          }} />
-        </div>
-      </div>
-    </div>
-  );
-};
+import { usePlaybackLoop, togglePlayback } from './usePlaybackLoop';
+import { formatClock, getContentEnd } from './timeline/timelineMath';
+import './video-editor.css';
 
 const VIDEO_ASPECT_RATIOS = [
-  { value: 16/9, label: '16:9' },
-  { value: 9/16, label: '9:16' },
-  { value: 1/1,  label: '1:1'  },
-  { value: 4/3,  label: '4:3'  },
+  { value: 16 / 9, label: '16:9' },
+  { value: 9 / 16, label: '9:16' },
+  { value: 1 / 1, label: '1:1' },
+  { value: 4 / 3, label: '4:3' },
 ];
 
-export default function VideoEditor({ template, onBack, _theme, _onToggleTheme }) {
-  const {
-    isPlaying, setIsPlaying, addItem, canvasAspectRatio,
-    isExporting, exportProgress, setIsExporting, setExportProgress,
-    activeItemId, removeItem, items, updateItem, clearItems,
-    canvasDimensions, setLayoutSlots, playhead
-  } = useEditorStore();
+// Kept in their own components so the per-frame playhead updates don't re-render the editor.
+function AudioSync() {
+  const items = useEditorStore((s) => s.items);
+  useAudioPlaybackSync(items);
+  return null;
+}
 
-  useAudioPlaybackSync(items, isPlaying, playhead);
+function Clock() {
+  const playhead = useEditorStore((s) => s.draggingTime ?? s.playhead);
+  const end = useEditorStore((s) => getContentEnd(s.items, 0));
+  return (
+    <div className="vt-clock">
+      <span className="vt-clock-now">{formatClock(playhead)}</span>
+      <span className="vt-clock-total"> / {formatClock(end)}</span>
+    </div>
+  );
+}
 
-  const pastStates   = useStore(useEditorStore.temporal, s => s.pastStates);
-  const futureStates = useStore(useEditorStore.temporal, s => s.futureStates);
-  const undo         = useStore(useEditorStore.temporal, s => s.undo);
-  const redo         = useStore(useEditorStore.temporal, s => s.redo);
+const changeAspectRatio = (newRatio) => {
+  const store = useEditorStore.getState();
+  const oldRatio = store.canvasAspectRatio;
+  store.setCanvasAspectRatio(newRatio);
+  if (store.layoutSlots?.length) {
+    const scaleY = (800 / newRatio) / (800 / oldRatio);
+    store.setLayoutSlots(store.layoutSlots.map((slot) => ({ ...slot, y: slot.y * scaleY, height: slot.height * scaleY })));
+  }
+};
 
-  const canvasPreviewRef   = useRef(null);
-  const exportDropdownRef  = useRef(null);
+const copyFrame = () => {
+  const el = document.querySelector('.video-canvas-area canvas');
+  el?.toBlob(async (blob) => {
+    try {
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+    } catch (e) {
+      console.warn(e);
+    }
+  });
+};
 
-  const [isTimelineFolded, setIsTimelineFolded]   = useState(false);
-  const [exportDropdownOpen, setExportDropdownOpen] = useState(false);
-  const [exportDone, setExportDone]               = useState(false);
+export default function VideoEditor({ template, onBack }) {
+  const isPlaying = useEditorStore((s) => s.isPlaying);
+  const canvasAspectRatio = useEditorStore((s) => s.canvasAspectRatio);
+  const isExporting = useEditorStore((s) => s.isExporting);
+  const exportProgress = useEditorStore((s) => s.exportProgress);
+  const hasItems = useEditorStore((s) => s.items.length > 0);
+  const canUndo = useStore(useEditorStore.temporal, (s) => s.pastStates.length > 0);
+  const canRedo = useStore(useEditorStore.temporal, (s) => s.futureStates.length > 0);
+  const { undo, redo } = useEditorStore.temporal.getState();
 
-  const activeItem = items.find(i => i.id === activeItemId);
+  const [mode, setMode] = useState('edit');
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [exportDone, setExportDone] = useState(false);
+  const addRef = useRef(null);
+  const menuRef = useRef(null);
 
-  const getDockHeight = () => {
-    // 16:9
-    if (Math.abs(canvasAspectRatio - 1.778) < 0.1) return '45vh';
-    // 1:1
-    if (Math.abs(canvasAspectRatio - 1) < 0.1) return '40vh';
-    // 4:5
-    if (Math.abs(canvasAspectRatio - 0.8) < 0.1) return '35vh';
-    // 9:16
-    if (Math.abs(canvasAspectRatio - 0.5625) < 0.1) return '32vh';
-    return '38vh';
-  };
-
-  // Close export dropdown on outside click
-  useEffect(() => {
-    if (!exportDropdownOpen) return;
-    const handler = (e) => {
-      if (exportDropdownRef.current && !exportDropdownRef.current.contains(e.target)) {
-        setExportDropdownOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [exportDropdownOpen]);
-
-  // Deselect items on global click (non-canvas, non-timeline)
-  useEffect(() => {
-    const handleGlobalClick = (e) => {
-      if (e.target.tagName.toLowerCase() === 'canvas') return;
-      if (e.target.closest('.timeline-item-clip')) return;
-      if (e.target.closest('button, select, input, textarea')) return;
-      useEditorStore.getState().setActiveItem(null);
-    };
-    window.addEventListener('pointerdown', handleGlobalClick);
-    return () => window.removeEventListener('pointerdown', handleGlobalClick);
-  }, []);
+  usePlaybackLoop();
 
   // Template hand-off
   useEffect(() => {
-    if (template?.id) {
-      clearItems();
-      setLayoutSlots(template.slots || []);
-      if (template.category !== 'custom') {
-        if (template.type === 'video') {
-          addItem({
-            type: 'video',
-            url: template.videoUrl,
-            thumbnailUrl: template.thumbnailUrl,
-            name: template.name,
-            durationMs: template.durationMs || 10000,
-            width: template.width,
-            height: template.height
-          });
-          // Add default captions if the template ships with them
-          if (template.defaultCaptions && template.defaultCaptions.length > 0) {
-            template.defaultCaptions.forEach(cap => addItem({ type: 'text', ...cap }));
-          }
-        } else {
-          addItem({ type: 'image', url: template.imageUrl, name: template.name });
-        }
-      }
+    if (!template?.id) return;
+    const store = useEditorStore.getState();
+    store.clearItems();
+    store.setLayoutSlots(template.slots || []);
+    if (template.category === 'custom') return;
+    if (template.type === 'video') {
+      store.addItem({
+        type: 'video', url: template.videoUrl, thumbnailUrl: template.thumbnailUrl, name: template.name,
+        durationMs: template.durationMs || 10000, width: template.width, height: template.height
+      });
+      (template.defaultCaptions || []).forEach((cap) => store.addItem({ type: 'text', ...cap }));
+    } else {
+      store.addItem({ type: 'image', url: template.imageUrl, name: template.name });
     }
   }, [template?.id]);
 
+  useEffect(() => {
+    if (!menuOpen) return undefined;
+    const onDown = (e) => { if (!menuRef.current?.contains(e.target)) setMenuOpen(false); };
+    document.addEventListener('pointerdown', onDown);
+    return () => document.removeEventListener('pointerdown', onDown);
+  }, [menuOpen]);
+
+  // Space plays/pauses, Delete removes the selected clip (not while typing).
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.target.closest?.('input, textarea, select, [contenteditable="true"]')) return;
+      if (e.code === 'Space') {
+        e.preventDefault();
+        togglePlayback();
+      } else if (e.key === 'Delete' || e.key === 'Backspace') {
+        const { activeItemId, removeItem } = useEditorStore.getState();
+        if (activeItemId) removeItem(activeItemId);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
   const handleExport = async () => {
-    setExportDropdownOpen(false);
-    setIsExporting(true);
-    setExportProgress(0);
+    setMenuOpen(false);
+    const store = useEditorStore.getState();
+    store.setIsExporting(true);
+    store.setExportProgress(0);
     try {
-      const state = useEditorStore.getState();
-      const validEndTimes = (state.items || []).map(i => i.endMs).filter(t => typeof t === 'number' && !isNaN(t) && t > 0);
-      const maxEndMs = validEndTimes.length > 0 ? Math.max(...validEndTimes) : (state.duration || 7000);
       await exportVideoFFmpeg(
-        state.items || [],
-        maxEndMs,
-        state.canvasAspectRatio || (16 / 9),
-        state.canvasDimensions || { width: 800, height: 600 },
-        state.layoutId,
-        (progress) => setExportProgress(progress)
+        store.items || [],
+        getContentEnd(store.items || [], store.duration || 7000),
+        store.canvasAspectRatio || 16 / 9,
+        store.canvasDimensions || { width: 800, height: 600 },
+        store.layoutId,
+        (progress) => useEditorStore.getState().setExportProgress(progress)
       );
-      setIsExporting(false);
-      setExportProgress(0);
       setExportDone(true);
       setTimeout(() => setExportDone(false), 3000);
     } catch (err) {
       console.error(err);
       alert('Export failed: ' + err.message);
-      setIsExporting(false);
+    } finally {
+      useEditorStore.getState().setIsExporting(false);
+      useEditorStore.getState().setExportProgress(0);
     }
   };
 
-  // Glass button style matching MemeEditor undo/redo
-  const glassIconBtn = (disabled) => ({
-    opacity: disabled ? 0.4 : 1,
-    cursor: disabled ? 'not-allowed' : 'pointer',
-    background: 'rgba(255, 255, 255, 0.1)',
-    backdropFilter: 'blur(12px)',
-    border: '1px solid rgba(255, 255, 255, 0.2)',
-    borderRadius: '12px',
-    padding: '8px',
-    color: 'currentColor',
-    boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-    transition: 'all 0.3s ease',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-  });
-
+  const deselectOnBackground = (e) => {
+    if (e.target === e.currentTarget) useEditorStore.getState().setActiveItem(null);
+  };
 
   return (
-    <div className="meme-editor-container animate-fade-in video-editor-container">
+    <div className={`vt-editor is-${mode}`}>
+      <AudioSync />
 
-      {/* ── Top Header ─────────────────────────────── */}
-      <div className="editor-topbar glass-card flex-between">
-
-        {/* Left: Back + Undo/Redo */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <button className="btn btn-ghost btn-xs back-btn" onClick={onBack}>
-            <ArrowLeft className="icon-sm" /> <span>Back</span>
-          </button>
-          <div style={{ display: 'flex', gap: '6px' }}>
-            <button
-              className="btn btn-icon btn-xs hover-lift"
-              onClick={() => undo()}
-              disabled={pastStates.length === 0}
-              title="Undo"
-              style={glassIconBtn(pastStates.length === 0)}
-            >
-              <Undo className="icon-xs" />
-            </button>
-            <button
-              className="btn btn-icon btn-xs hover-lift"
-              onClick={() => redo()}
-              disabled={futureStates.length === 0}
-              title="Redo"
-              style={glassIconBtn(futureStates.length === 0)}
-            >
-              <Redo className="icon-xs" />
-            </button>
-          </div>
-        </div>
-
-        {/* Center: Title */}
-        <div className="desktop-only" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <VideoIcon style={{ width: 16, height: 16, color: 'var(--cyber-cyan, #67e8f9)' }} />
-          <span style={{ fontSize: '0.9rem', fontWeight: 700, letterSpacing: '0.03em', color: 'var(--text-main)' }}>
-            Video Editor
-          </span>
-        </div>
-
-        {/* Right: Aspect Ratio + Export Dropdown */}
-        <div className="header-actions flex-gap" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <AspectRatioDropdown
-            value={canvasAspectRatio}
-            options={VIDEO_ASPECT_RATIOS}
-            onChange={(newRatio) => {
-              const store = useEditorStore.getState();
-              const oldRatio = store.canvasAspectRatio;
-              store.setCanvasAspectRatio(newRatio);
-              if (store.layoutSlots && store.layoutSlots.length > 0) {
-                const scaleY = (800 / newRatio) / (800 / oldRatio);
-                store.setLayoutSlots(store.layoutSlots.map(slot => ({
-                  ...slot,
-                  y: slot.y * scaleY,
-                  height: slot.height * scaleY
-                })));
-              }
-            }}
-          />
-
-          {/* Export Dropdown */}
-          <div style={{ position: 'relative' }} ref={exportDropdownRef}>
-            <motion.button
-              className="btn btn-primary shadow-glow btn-xs"
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setExportDropdownOpen(p => !p)}
-              disabled={isExporting}
-              style={{ display: 'flex', alignItems: 'center', gap: '6px', opacity: isExporting ? 0.6 : 1 }}
-            >
-              {exportDone ? <Check className="icon-xs" /> : <Download className="icon-xs" />}
-              <span>{isExporting ? `${Math.round(exportProgress)}%` : exportDone ? 'Done!' : 'Export'}</span>
-              <ChevronDown className="icon-xs" style={{ transition: 'transform 0.2s', transform: exportDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)' }} />
-            </motion.button>
-
-            <AnimatePresence>
-              {exportDropdownOpen && (
-                <motion.div
-                  initial={{ opacity: 0, y: -8, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -8, scale: 0.95 }}
-                  transition={{ duration: 0.15, ease: 'easeOut' }}
-                  style={{
-                    position: 'absolute',
-                    top: 'calc(100% + 8px)',
-                    right: 0,
-                    minWidth: '190px',
-                    background: 'rgba(14, 14, 22, 0.95)',
-                    backdropFilter: 'blur(24px)',
-                    border: '1px solid rgba(255, 255, 255, 0.12)',
-                    borderRadius: '14px',
-                    boxShadow: '0 20px 60px rgba(0,0,0,0.7)',
-                    zIndex: 9999,
-                    overflow: 'hidden',
-                    padding: '6px'
-                  }}
-                >
-                  {[
-                    { icon: <Download style={{ width: 15, height: 15 }} />, label: 'Export Video', action: handleExport },
-                    { icon: <Copy    style={{ width: 15, height: 15 }} />, label: 'Copy Frame',  action: async () => {
-                      setExportDropdownOpen(false);
-                      // fallback: grab current canvas snapshot
-                      const el = document.querySelector('.video-canvas-area canvas');
-                      if (el) {
-                        el.toBlob(async (blob) => {
-                          try {
-                            await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
-                          } catch(e) { console.warn(e); }
-                        });
-                      }
-                    }},
-                    { icon: <Share2  style={{ width: 15, height: 15 }} />, label: 'Share',       action: () => { setExportDropdownOpen(false); handleExport(); } },
-                  ].map(({ icon, label, action }, i) => (
-                    <button
-                      key={i}
-                      onClick={action}
-                      className="vid-export-menu-item"
-                    >
-                      {icon} {label}
-                    </button>
-                  ))}
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        </div>
-      </div>
-
-      {/* ── Main Area ───────────────────────────────── */}
-      <main
-        className="editor-main video-editor-main"
-        style={{ '--dock-height': getDockHeight() }}
-        onPointerDown={(e) => {
-          if (e.target === e.currentTarget) useEditorStore.getState().setActiveItem(null);
-        }}
-      >
-
-        {/* Canvas Area */}
+      <section className="vt-stage" onPointerDown={deselectOnBackground}>
         <div
-          className="canvas-wrapper canvas-area video-canvas-area"
-          onPointerDown={(e) => {
-            if (e.target === e.currentTarget) useEditorStore.getState().setActiveItem(null);
-          }}
-          style={{
-            flex: Math.max(0.4, Math.min(1.5, canvasAspectRatio)),
-            '--canvas-aspect-ratio': canvasAspectRatio,
-            position: 'relative'
-          }}
+          className="vt-stage-frame video-canvas-area"
+          style={{ '--canvas-aspect-ratio': canvasAspectRatio }}
+          onPointerDown={deselectOnBackground}
         >
-          {/* Floating Context Toolbar */}
-          <AnimatePresence>
-            {activeItem && isTimelineFolded && (
-              <motion.div
-                className={`video-context-toolbar ${canvasAspectRatio < 1 ? 'portrait' : ''}`}
-                initial={{ opacity: 0, y: -10, x: '-50%' }}
-                animate={{ opacity: 1, y: 0, x: '-50%' }}
-                exit={{ opacity: 0, y: -10, x: '-50%' }}
-                transition={{ duration: 0.2, ease: 'easeOut' }}
-              >
-                {/* Video controls */}
-                {activeItem.type === 'video' && (<>
-                  <select
-                    className="vid-ctx-select"
-                    value={activeItem.playbackRate || 1}
-                    onChange={(e) => {
-                      const newRate = parseFloat(e.target.value);
-                      const oldRate = activeItem.playbackRate || 1;
-                      const dur = activeItem.endMs - activeItem.startMs;
-                      updateItem(activeItem.id, { playbackRate: newRate, endMs: activeItem.startMs + (dur * (oldRate / newRate)) });
-                    }}
-                    title="Speed"
-                  >
-                    <option value={0.5}>0.5×</option>
-                    <option value={1}>1×</option>
-                    <option value={1.5}>1.5×</option>
-                    <option value={2}>2×</option>
-                  </select>
-                  <button
-                    className={`btn btn-icon btn-xs vid-ctx-btn ${activeItem.muted ? 'active' : ''}`}
-                    onClick={() => updateItem(activeItem.id, { muted: !activeItem.muted })}
-                    title={activeItem.muted ? 'Unmute' : 'Mute'}
-                  >
-                    {activeItem.muted ? <VolumeX style={{ width: 14, height: 14 }} /> : <Volume2 style={{ width: 14, height: 14 }} />}
-                  </button>
-                </>)}
-
-                {/* Text controls */}
-                {activeItem.type === 'text' && (<>
-                  <button
-                    className="btn btn-xs vid-ctx-btn vid-ctx-btn-font"
-                    title="Next Font"
-                    onClick={() => {
-                      const current = activeItem.fontFamily || 'Impact, sans-serif';
-                      let idx = FONTS.findIndex(f => f.family === current);
-                      if (idx === -1) idx = 0;
-                      const next = FONTS[(idx + 1) % FONTS.length];
-                      updateItem(activeItem.id, { fontFamily: next.family });
-                    }}
-                    style={{ fontFamily: activeItem.fontFamily, fontSize: '0.75rem', padding: '4px 10px', maxWidth: 90, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}
-                  >
-                    <Type className="vid-font-icon" style={{ width: 12, height: 12, marginRight: 4, flexShrink: 0 }} />
-                    <span className="vid-font-label">{(FONTS.find(f => f.family === activeItem.fontFamily) || FONTS[0]).id || (FONTS.find(f => f.family === activeItem.fontFamily) || FONTS[0]).name.split(' ')[0]}</span>
-                  </button>
-
-                  <div className="vid-ctx-btn" style={{ position: 'relative', overflow: 'hidden', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 8 }}>
-                    <div style={{ width: 16, height: 16, borderRadius: '50%', background: activeItem.color || '#fff', border: '1.5px solid rgba(255,255,255,0.4)' }} />
-                    <input
-                      type="color"
-                      value={activeItem.color || '#ffffff'}
-                      onChange={e => updateItem(activeItem.id, { color: e.target.value, stroke: getContrastStroke(e.target.value) })}
-                      style={{ position: 'absolute', opacity: 0, inset: 0, cursor: 'pointer' }}
-                    />
-                  </div>
-
-                  <button
-                    className="btn btn-xs vid-ctx-btn"
-                    title="Toggle BG"
-                    onClick={() => {
-                      if (!activeItem.bgColor || activeItem.bgColor === 'none') {
-                        updateItem(activeItem.id, { bgColor: 'white', color: '#000000', stroke: 'transparent' });
-                      } else if (activeItem.bgColor === 'white') {
-                        updateItem(activeItem.id, { bgColor: 'black', color: '#ffffff', stroke: 'transparent' });
-                      } else {
-                        updateItem(activeItem.id, { bgColor: 'none', color: activeItem.color === '#000000' ? '#ffffff' : activeItem.color, stroke: '#000000' });
-                      }
-                    }}
-                    style={{
-                      padding: '4px 8px',
-                      fontSize: '0.72rem',
-                      background: activeItem.bgColor === 'white' ? '#fff' : activeItem.bgColor === 'black' ? '#000' : undefined,
-                      color: activeItem.bgColor === 'white' ? '#000' : activeItem.bgColor === 'black' ? '#fff' : undefined,
-                    }}
-                  >
-                    BG
-                  </button>
-                </>)}
-
-                {/* Sticker / Emoji controls */}
-                {activeItem.type === 'sticker' && (
-                  <button
-                    className="btn btn-icon btn-xs vid-ctx-btn"
-                    title="Rotate 90°"
-                    onClick={() => {
-                      const nextRot = ((activeItem.rotation || 0) + 90) % 360;
-                      updateItem(activeItem.id, { rotation: nextRot });
-                    }}
-                  >
-                    <RotateCw style={{ width: 14, height: 14 }} />
-                  </button>
-                )}
-
-                {/* Image controls */}
-                {activeItem.type === 'image' && (<>
-                  <button
-                    className="btn btn-icon btn-xs vid-ctx-btn"
-                    title="Rotate 90°"
-                    onClick={() => {
-                      const nextRot = ((activeItem.rotation || 0) + 90) % 360;
-                      updateItem(activeItem.id, { rotation: nextRot });
-                    }}
-                  >
-                    <RotateCw style={{ width: 14, height: 14 }} />
-                  </button>
-                  <button
-                    className="btn btn-icon btn-xs vid-ctx-btn"
-                    title="Fit"
-                    onClick={() => {
-                      const ir = (activeItem.width||200)/(activeItem.height||200);
-                      const cr = canvasDimensions.width/canvasDimensions.height;
-                      const s = ir > cr ? canvasDimensions.width/(activeItem.width||200) : canvasDimensions.height/(activeItem.height||200);
-                      const w = (activeItem.width||200)*s, h = (activeItem.height||200)*s;
-                      updateItem(activeItem.id, { x:(canvasDimensions.width-w)/2, y:(canvasDimensions.height-h)/2, scaleX:s, scaleY:s });
-                    }}
-                  ><Minimize style={{ width:14,height:14 }} /></button>
-                  <button
-                    className="btn btn-icon btn-xs vid-ctx-btn"
-                    title="Crop/Cover"
-                    onClick={() => {
-                      const ir = (activeItem.width||200)/(activeItem.height||200);
-                      const cr = canvasDimensions.width/canvasDimensions.height;
-                      const s = ir > cr ? canvasDimensions.height/(activeItem.height||200) : canvasDimensions.width/(activeItem.width||200);
-                      const w = (activeItem.width||200)*s, h = (activeItem.height||200)*s;
-                      updateItem(activeItem.id, { x:(canvasDimensions.width-w)/2, y:(canvasDimensions.height-h)/2, scaleX:s, scaleY:s });
-                    }}
-                  ><Crop style={{ width:14,height:14 }} /></button>
-                  <button
-                    className="btn btn-icon btn-xs vid-ctx-btn"
-                    title="Stretch"
-                    onClick={() => updateItem(activeItem.id, {
-                      x:0, y:0,
-                      scaleX: canvasDimensions.width/(activeItem.width||200),
-                      scaleY: canvasDimensions.height/(activeItem.height||200)
-                    })}
-                  ><Maximize style={{ width:14,height:14 }} /></button>
-                </>)}
-
-                {/* Shared Duplicate / Delete */}
-                <div className="vid-ctx-divider" style={{ width: 1, height: 20, background: 'rgba(255,255,255,0.2)', margin: '0 4px' }} />
-                <button
-                  className="btn btn-icon btn-xs vid-ctx-btn"
-                  title="Duplicate"
-                  onClick={() => {
-                    const newItem = { ...activeItem, id: Date.now().toString(), x: (activeItem.x || 0) + 20, y: (activeItem.y || 0) + 20 };
-                    useEditorStore.getState().addItem(newItem);
-                  }}
-                ><Copy style={{ width:14,height:14 }} /></button>
-                <button
-                  className="btn btn-icon btn-xs vid-ctx-btn vid-ctx-btn-delete"
-                  style={{ background: 'rgba(239, 68, 68, 0.85)', color: '#ffffff', border: '1px solid rgba(239, 68, 68, 1)' }}
-                  title="Delete"
-                  onClick={() => {
-                    useEditorStore.getState().removeItem(activeItem.id);
-                    useEditorStore.getState().setActiveItem(null);
-                  }}
-                ><Trash2 style={{ width:14,height:14 }} /></button>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          <CanvasPreview ref={canvasPreviewRef} />
-
-          {/* Export Overlay */}
-          {isExporting && (
-            <div className="vid-export-overlay">
-              <div className="vid-export-overlay-inner">
-                <div style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '12px' }}>Rendering Video…</div>
-                <div className="vid-export-progress-track">
-                  <div className="vid-export-progress-fill" style={{ width: `${exportProgress}%` }} />
-                </div>
-                <div style={{ marginTop: '8px', fontSize: '0.85rem', opacity: 0.7 }}>{Math.round(exportProgress)}%</div>
-              </div>
-            </div>
+          <CanvasPreview />
+          {!hasItems && (
+            <button type="button" className="vt-stage-empty" onClick={() => addRef.current?.open('video')}>
+              <span className="vt-stage-empty-icon"><Play size={22} /></span>
+              <span className="vt-stage-empty-title">Start with a video or photo</span>
+              <span className="vt-stage-empty-sub">Or add text, stickers and sounds from the tools below.</span>
+            </button>
+          )}
+          {mode === 'edit' && (
+            <button type="button" className="vt-collapse" onClick={() => setMode('preview')} aria-label="Full screen preview">
+              <ChevronDown size={22} strokeWidth={2.5} />
+            </button>
           )}
         </div>
 
-        {/* ── Timeline / Dock ─────────────────────────── */}
-        <section
-          className={`tools-panel glass-card timeline-section video-timeline-section${isTimelineFolded ? ' folded' : ''}`}
-          style={{ flex: Math.max(0.5, Math.min(2, 1 / canvasAspectRatio)) }}
-        >
+        <button type="button" className="vt-fab vt-fab--close" onClick={onBack} aria-label="Close editor">
+          <X size={22} strokeWidth={2.5} />
+        </button>
 
+        <div className="vt-ratio">
+          <AspectRatioDropdown value={canvasAspectRatio} options={VIDEO_ASPECT_RATIOS} onChange={changeAspectRatio} />
+        </div>
 
-          {/* Timeline content — hidden when folded on mobile */}
-          {isTimelineFolded && <FoldedProgressBar />}
-          <div className="timeline-content-wrap">
-            {/* Playback Controls */}
-            <div className="timeline-controls-wrap" style={isTimelineFolded ? { position: 'relative', width: '100%', justifyContent: 'center' } : undefined}>
-              <div className="vid-playback-group">
-                <button
-                  className="btn btn-icon vid-play-btn"
-                  onClick={() => useEditorStore.getState().setPlayhead(0)}
-                  title="Rewind"
-                >
-                  <SkipBack className="icon-sm" />
-                </button>
-                <button
-                  className={`btn btn-icon vid-play-btn ${isPlaying ? 'playing' : ''}`}
-                  onClick={() => {
-                    const state = useEditorStore.getState();
-                    const actualDuration = state.items.length > 0
-                      ? Math.max(...state.items.map(i => i.endMs))
-                      : state.duration;
-                    if (!state.isPlaying) {
-                      if (state.playhead >= actualDuration - 10) state.setPlayhead(0);
-                      state.setIsPlaying(true);
-                    } else {
-                      setIsPlaying(!isPlaying);
-                    }
-                  }}
-                  title={isPlaying ? 'Pause' : 'Play'}
-                >
-                  {isPlaying ? <Pause className="icon-sm" /> : <Play className="icon-sm" />}
-                </button>
-                <PlayheadDisplay isTimelineFolded={isTimelineFolded} />
-              </div>
+        <div className="vt-export" ref={menuRef}>
+          <button
+            type="button"
+            className="vt-fab vt-fab--export"
+            onClick={() => setMenuOpen((o) => !o)}
+            disabled={isExporting}
+            aria-label="Export"
+            aria-expanded={menuOpen}
+          >
+            {exportDone ? <Check size={22} strokeWidth={2.5} /> : <Share size={21} strokeWidth={2.4} />}
+          </button>
+          <AnimatePresence>
+            {menuOpen && (
+              <motion.div
+                className="vt-menu"
+                initial={{ opacity: 0, y: -6, scale: 0.96 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -6, scale: 0.96 }}
+                transition={{ duration: 0.15 }}
+              >
+                <button type="button" className="vt-menu-item" onClick={handleExport}><Download size={16} /> Export video</button>
+                <button type="button" className="vt-menu-item" onClick={() => { setMenuOpen(false); copyFrame(); }}><Copy size={16} /> Copy frame</button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
 
-              {(!activeItem || isTimelineFolded) && (
-                <button 
-                  className="btn btn-icon vid-play-btn mobile-only-flex"
-                  onClick={() => setIsTimelineFolded(p => !p)}
-                  title={isTimelineFolded ? "Unfold Timeline" : "Fold Timeline"}
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', ...(isTimelineFolded ? { position: 'absolute', right: '0' } : {}) }}
-                >
-                  {isTimelineFolded ? <ChevronUp className="icon-sm" /> : <ChevronDown className="icon-sm" />}
-                </button>
-              )}
+        {mode === 'preview' && (
+          <button type="button" className="vt-edit-handle" onClick={() => setMode('edit')}>
+            <span>Edit</span>
+            <ChevronUp size={20} strokeWidth={2.5} />
+          </button>
+        )}
 
-              {/* Active item property controls (desktop / unfolded) */}
-              {activeItem && !isTimelineFolded && (
-                <div className="flex-gap align-center" style={{ flexWrap: 'wrap' }}>
-                  {activeItem.type === 'video' && (<>
-                    <select
-                      className="input-field glass-card"
-                      style={{ width: '72px', padding: '4px 6px', fontSize: '0.82rem' }}
-                      value={activeItem.playbackRate || 1}
-                      onChange={e => {
-                        const newRate = parseFloat(e.target.value);
-                        const oldRate = activeItem.playbackRate || 1;
-                        const dur = activeItem.endMs - activeItem.startMs;
-                        updateItem(activeItem.id, { playbackRate: newRate, endMs: activeItem.startMs + (dur * (oldRate / newRate)) });
-                      }}
-                      title="Speed"
-                    >
-                      <option value={0.5}>0.5×</option>
-                      <option value={1}>1×</option>
-                      <option value={1.5}>1.5×</option>
-                      <option value={2}>2×</option>
-                    </select>
-                    <button
-                      className={`btn btn-icon ${activeItem.muted ? 'btn-primary shadow-glow' : ''}`}
-                      onClick={() => updateItem(activeItem.id, { muted: !activeItem.muted })}
-                      title={activeItem.muted ? 'Unmute' : 'Mute'}
-                    >
-                      {activeItem.muted ? <VolumeX className="icon-sm" /> : <Volume2 className="icon-sm" />}
-                    </button>
-                  </>)}
-
-                  {activeItem.type === 'text' && (<>
-                    <button
-                      className="btn btn-secondary"
-                      style={{ fontFamily: activeItem.fontFamily, padding: '4px 10px', maxWidth: 120, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}
-                      onClick={() => {
-                        const current = activeItem.fontFamily || 'Impact, sans-serif';
-                        let idx = FONTS.findIndex(f => f.family === current);
-                        if (idx === -1) idx = 0;
-                        updateItem(activeItem.id, { fontFamily: FONTS[(idx + 1) % FONTS.length].family });
-                      }}
-                    >
-                      <Type className="icon-xs" style={{ marginRight: 4 }} />
-                      {(FONTS.find(f => f.family === activeItem.fontFamily) || FONTS[0]).id || (FONTS.find(f => f.family === activeItem.fontFamily) || FONTS[0]).name.split(' ')[0]}
-                    </button>
-                    <div className="btn btn-icon btn-secondary" style={{ position: 'relative', overflow: 'hidden' }}>
-                      <div style={{ width: 16, height: 16, borderRadius: '50%', background: activeItem.color || '#fff', border: '1px solid rgba(255,255,255,0.5)' }} />
-                      <input
-                        type="color"
-                        value={activeItem.color || '#ffffff'}
-                        onChange={e => updateItem(activeItem.id, { color: e.target.value, stroke: getContrastStroke(e.target.value) })}
-                        style={{ position: 'absolute', opacity: 0, inset: 0, cursor: 'pointer' }}
-                      />
-                    </div>
-                  </>)}
-
-                  {activeItem.type === 'image' && (<>
-                    <button className="btn btn-icon btn-secondary" title="Fit"
-                      onClick={() => {
-                        const ir=(activeItem.width||200)/(activeItem.height||200), cr=canvasDimensions.width/canvasDimensions.height;
-                        const s=ir>cr?canvasDimensions.width/(activeItem.width||200):canvasDimensions.height/(activeItem.height||200);
-                        const w=(activeItem.width||200)*s,h=(activeItem.height||200)*s;
-                        updateItem(activeItem.id,{x:(canvasDimensions.width-w)/2,y:(canvasDimensions.height-h)/2,scaleX:s,scaleY:s});
-                      }}><Minimize className="icon-sm"/></button>
-                    <button className="btn btn-icon btn-secondary" title="Cover"
-                      onClick={() => {
-                        const ir=(activeItem.width||200)/(activeItem.height||200),cr=canvasDimensions.width/canvasDimensions.height;
-                        const s=ir>cr?canvasDimensions.height/(activeItem.height||200):canvasDimensions.width/(activeItem.width||200);
-                        const w=(activeItem.width||200)*s,h=(activeItem.height||200)*s;
-                        updateItem(activeItem.id,{x:(canvasDimensions.width-w)/2,y:(canvasDimensions.height-h)/2,scaleX:s,scaleY:s});
-                      }}><Crop className="icon-sm"/></button>
-                    <button className="btn btn-icon btn-secondary" title="Stretch"
-                      onClick={() => updateItem(activeItem.id,{x:0,y:0,scaleX:canvasDimensions.width/(activeItem.width||200),scaleY:canvasDimensions.height/(activeItem.height||200)})}
-                    ><Maximize className="icon-sm"/></button>
-                  </>)}
-
-                  <button
-                    className="btn btn-icon"
-                    style={{ background: 'rgba(239, 68, 68, 0.85)', color: '#ffffff', border: '1px solid rgba(239, 68, 68, 1)' }}
-                    onClick={() => removeItem(activeItemId)}
-                    title="Delete"
-                  >
-                    <Trash2 className="icon-sm" />
-                  </button>
-                </div>
-              )}
+        {isExporting && (
+          <div className="vt-export-overlay" role="status">
+            <div className="vt-export-ring" style={{ '--p': Math.round(exportProgress) }}>
+              <span>{Math.round(exportProgress)}%</span>
             </div>
-
-            {/* Timeline tracks */}
-            <div style={{
-              display: 'flex',
-              flexDirection: 'column',
-              width: '100%',
-              flex: isTimelineFolded ? '0 0 0px' : '1 1 0%',
-              minHeight: 0,
-              overflow: 'hidden',
-              opacity: isTimelineFolded ? 0 : 1,
-              pointerEvents: isTimelineFolded ? 'none' : 'auto',
-              visibility: isTimelineFolded ? 'hidden' : 'visible'
-            }}>
-              <Timeline />
-            </div>
+            <p>Rendering your video…</p>
           </div>
-        </section>
-      </main>
+        )}
+      </section>
+
+      <div className="vt-transport">
+        <Clock />
+        <button type="button" className="vt-play" onClick={togglePlayback} aria-label={isPlaying ? 'Pause' : 'Play'}>
+          {isPlaying ? <Pause size={24} fill="currentColor" /> : <Play size={24} fill="currentColor" style={{ marginLeft: 3 }} />}
+        </button>
+        <div className="vt-history">
+          <button type="button" className="vt-icon-btn" onClick={() => undo()} disabled={!canUndo} aria-label="Undo"><Undo2 size={24} /></button>
+          <button type="button" className="vt-icon-btn" onClick={() => redo()} disabled={!canRedo} aria-label="Redo"><Redo2 size={24} /></button>
+        </div>
+      </div>
+
+      <div className="vt-timeline-wrap" aria-hidden={mode !== 'edit'}>
+        <TimelinePanel onAddVideo={() => addRef.current?.open('video')} />
+      </div>
+
+      <ToolRail onAdd={(kind) => addRef.current?.open(kind)} />
+      <AddMedia ref={addRef} />
     </div>
   );
 }

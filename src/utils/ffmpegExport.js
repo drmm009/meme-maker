@@ -90,8 +90,8 @@ export const exportVideoFFmpeg = async (items = [], durationMs = 7000, canvasAsp
     const audioStreams = [];
     const filesToDelete = [];
 
-    const visualItems = items.filter(item => item.type === 'video' || item.type === 'image' || item.type === 'sticker');
-    const textItems = items.filter(item => item.type === 'text');
+    const visualItems = items.filter(item => !item.hidden && (item.type === 'video' || item.type === 'image' || item.type === 'sticker'));
+    const textItems = items.filter(item => !item.hidden && item.type === 'text');
 
     for (const item of visualItems) {
       if (!item.url) continue;
@@ -341,7 +341,7 @@ export const exportVideoFFmpeg = async (items = [], durationMs = 7000, canvasAsp
     }
 
     // Process standalone audio items (sound effects, background music, audio clips)
-    const audioItems = items.filter(item => item.type === 'audio');
+    const audioItems = items.filter(item => !item.hidden && item.type === 'audio');
     for (const item of audioItems) {
       if (!item.url) continue;
       let fileData;

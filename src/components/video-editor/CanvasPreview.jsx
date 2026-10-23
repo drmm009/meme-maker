@@ -141,7 +141,7 @@ const CanvasMedia = ({ item, isSelected, onSelect, onChange, canvasDimensions })
       // Animation loop strictly for syncing time and visibility
       // We still need a lightweight animation loop to sync currentTime with playhead
       const unsub = useEditorStore.subscribe((state) => {
-        const latestItem = itemRef.current;
+        const latestItem = state.items.find((i) => i.id === itemRef.current.id) || itemRef.current;
         
         const targetRate = latestItem.playbackRate || 1;
         const relativeTimeMs = state.playhead - latestItem.startMs;
@@ -159,13 +159,13 @@ const CanvasMedia = ({ item, isSelected, onSelect, onChange, canvasDimensions })
         
         // Restore unmuted playback so the user can hear the video while editing!
         // The unique URL hash added above prevents the browser from stalling when unmuting the same Blob.
-        const targetMuted = latestItem.muted || false;
+        const targetMuted = Boolean(latestItem.muted || latestItem.hidden);
         if (vid.muted !== targetMuted) {
           vid.muted = targetMuted;
         }
 
         // Handle visibility dynamically without React
-        const isVisible = relativeTimeMs >= 0 && state.playhead <= latestItem.endMs;
+        const isVisible = !latestItem.hidden && relativeTimeMs >= 0 && state.playhead <= latestItem.endMs;
         const node = imageRef.current;
         if (node && node.visible() !== isVisible) {
           node.visible(isVisible);
@@ -245,8 +245,8 @@ const CanvasMedia = ({ item, isSelected, onSelect, onChange, canvasDimensions })
   useEffect(() => {
     if (item.type === 'video') return;
     const unsub = useEditorStore.subscribe((state) => {
-      const latestItem = itemRef.current;
-      const isVisible = state.playhead >= latestItem.startMs && state.playhead <= latestItem.endMs;
+      const latestItem = state.items.find((i) => i.id === itemRef.current.id) || itemRef.current;
+      const isVisible = !latestItem.hidden && state.playhead >= latestItem.startMs && state.playhead <= latestItem.endMs;
       
       const node = imageRef.current;
       if (node && node.visible() !== isVisible) {
@@ -354,8 +354,8 @@ const CanvasText = ({ item, isSelected, onSelect, onChange, onEditStart, isEditi
 
   useEffect(() => {
     const unsub = useEditorStore.subscribe((state) => {
-      const latestItem = itemRef.current;
-      const isVisible = state.playhead >= latestItem.startMs && state.playhead <= latestItem.endMs;
+      const latestItem = state.items.find((i) => i.id === itemRef.current.id) || itemRef.current;
+      const isVisible = !latestItem.hidden && state.playhead >= latestItem.startMs && state.playhead <= latestItem.endMs;
       
       const node = textRef.current;
       if (node && node.visible() !== isVisible) {
