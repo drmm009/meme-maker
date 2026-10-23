@@ -1,4 +1,4 @@
-import { TWEET_TREND_PRESETS } from '../../CanvasEditor';
+import { TWEET_TREND_PRESETS } from '../../canvas/draw/socialCards/tweet';
 import { FONTS } from '../../../data/stickers';
 import { Blend, Smile, PanelTop, Flame, Tv, MessageCircle, Ban, AlignLeft, AlignCenter, AlignRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';

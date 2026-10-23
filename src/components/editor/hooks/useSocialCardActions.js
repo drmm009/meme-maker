@@ -1,4 +1,4 @@
-import { TWEET_TREND_PRESETS } from '../../CanvasEditor';
+import { TWEET_TREND_PRESETS } from '../../canvas/draw/socialCards/tweet';
 import { IG_PRESET_IMAGES } from '../../MemeStylesModal';
 import { isSocialCardCaption } from '../memeEditorUtils';
 import { useMemeEditorStore } from '../store/useMemeEditorStore';

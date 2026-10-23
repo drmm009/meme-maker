@@ -3,7 +3,7 @@ import {
   getWhatsAppCardMetrics,
   getWhatsAppCardHeight,
   getWhatsAppCardScale
-} from './CanvasEditor';
+} from './canvas/draw/socialCards/whatsapp';
 
 describe('WhatsApp Card Metrics & Canvas Layout', () => {
   const sampleMessages = [
