@@ -120,7 +120,38 @@ Each phase is its own commit. After each one, `npm test`, `npm run lint` and `np
    - Deleted `editor/tabs/`, `editor/social-cards/` and CanvasColorPicker, about 2,700 lines. The chyron editor was dead: nothing creates breaking-news captions.
    - Only on the old desktop panel and not ported: switching an image layer back to stretch fit. The phone crop toggle switches between crop and fit.
 
-7. **Point `CanvasEditor` at the store** instead of passing ~100 props, then plan its own split the same way.
+7. **Point `CanvasEditor` at the store.** *Done.* The call was ~100 lines but only 36 props.
+   - CanvasEditor now reads 19 store-backed values itself:
+     - meme data: captions, stickers, layers, slots, header/footer, drawings, flip, filters, template
+     - UI state: watermark, brush, draw tool
+   - Three props it ignored were dropped: `isVideoPlaying`, `onUpdateCanvasHeader`, `onUpdateCanvasFooter`.
+   - The inline bounds/text callbacks became the store actions `patchLayer` and `updateCaptionText` (both tested). It now takes 13 props: the ref, derived values (compare-mode image, drawing mode), template layout info and event callbacks.
+   - The editor tests' CanvasEditor stub reads the same store values, so they still check what the canvas renders from.
+
+## Next: split `CanvasEditor.jsx` (5,300 lines)
+
+It draws with the **plain canvas 2D API** (`getContext('2d')`), not Konva; Konva is only used by the video editor. Today it has two halves:
+
+| Lines | What |
+|---|---|
+| 1–2014 | ~50 pure drawing functions, no React: `wrapText`, `drawCurvedText`, `drawSpeechBubble` (172), `drawBreakingNewsChyron`, the tweet card (163), Instagram card (322), WhatsApp card + icons + doodle pattern (~690), die-cut rendering (~120), SVG paths, `TWEET_TREND_PRESETS` |
+| 2015–5304 | the component: 25 refs, 10 effects, **one render effect of 1,287 lines** that draws the whole scene, pointer handlers (down 575, move 500, hover cursor 236, end 46, wheel 41), and 108 lines of JSX |
+
+Phases, each its own commit with the same checks (tests, lint baseline, build, browser):
+
+8. **Move the pure drawing functions out** to `src/components/canvas/draw/`:
+   - `text.js`: wrap, curved text, effects, round rect
+   - `speechBubble.js`
+   - `chyron.js`
+   - `socialCards/tweet.js`, `instagram.js`, `whatsapp.js` (+ icons)
+   - `dieCut.js`
+   - `paths.js`
+   - `faceLighting.js`
+
+   No behavior change, and nothing in them touches React. Add unit tests for the pure helpers that don't need a canvas: `wrapText` with a fake `measureText`, `parseLikesCount`, `parseTweetMetrics`, the card-height functions. Point `TWEET_TREND_PRESETS` importers at the new module. CanvasEditor drops to about 3,300 lines.
+9. **Split the render effect.** Turn the 1,287-line effect into `renderScene(ctx, scene)` plus per-layer painters (`paintBackground`, `paintSlots`, `paintImageLayers`, `paintStickers`, `paintCaptions`, `paintHeaderFooter`, `paintWatermark`, `paintSelection`). The effect only builds `scene` from store state and calls it. That makes rendering readable, and it can be tested with a recording fake context.
+10. **Extract interaction** into `useCanvasInteraction`: hit testing as pure functions (`hitTestLayer`, `hitTestHandle`) with unit tests, plus the drag/resize/rotate/draw state machine behind the pointer handlers. The arrow-key nudge bug from phase 3 came from the 0..1 coordinate convention, so the hit-test tests should pin those units down.
+11. **Afterwards:** CanvasEditor should be a ~300-line component that wires the canvas element, refs, `renderScene` and `useCanvasInteraction`.
 
 CSS (`MemeEditor.css`, 2,076 lines) gets split along with the components in phase 4. It is redesigned in the separate design-system step.
 
@@ -128,7 +159,7 @@ CSS (`MemeEditor.css`, 2,076 lines) gets split along with the components in phas
 
 `src/components/MemeEditor.test.jsx` replaces `CanvasEditor` with a stub that records its props. The tests check what MemeEditor *sends* to the canvas: default and template captions, add caption, edit text, undo/redo, delete with undo, unique IDs, every sidebar tab, draw mode, drawings with undo, and canvas flip. I checked them by breaking undo and caption creation, and four tests failed as expected.
 
-The tests can't see Konva rendering, export, AI, or real device layout. Before merging each phase, run `npm run dev` and check by hand:
+The tests can't see canvas rendering, export, AI, or real device layout. Before merging each phase, run `npm run dev` and check by hand:
 
 - [ ] Open a template from the discovery screen. The image and TOP/BOTTOM text show.
 - [ ] Drag, resize and rotate a caption. Edit its text, font, color, background and effect.
