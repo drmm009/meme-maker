@@ -85,7 +85,7 @@ Each phase is its own commit. After each one, `npm test`, `npm run lint` and `np
      - Background removal applies its result by layer ID to the latest state. Before, a different selection or other edits made during the multi-second removal could be overwritten.
    - Not tested by hand: an actual face swap, which needs `face_swap_server.py` and its model. The modal and its "server offline" path were checked.
 4. **Extract panels, one per commit.** *Done:* 26 components and 27 commits. MemeEditor.jsx is down to 2,045 lines, and its JSX is about 400 lines of layout.
-   - `editor/top-bar/`: ExportPage, EditorTopBar
+   - `editor/top-bar/`: EditorTopBar
    - `editor/tabs/`: CanvasTab, DrawTab, MediaTab, FiltersTab, TextTab, plus `text/` TextToolbar and CaptionStyleControls
    - `editor/social-cards/`: Chyron, Tweet, Instagram and WhatsApp card editors
    - `editor/context-toolbars/`: ContextToolbar (CaptionToolbar, StickerToolbar, ImageLayerToolbar, FaceMorphToolbar, TabQuickTools) and SecondaryToolbar (`secondary/` LayerActionsBar, DrawSettingsBar, WatermarkBar, HeaderFooterBar)
@@ -96,7 +96,7 @@ Each phase is its own commit. After each one, `npm test`, `npm run lint` and `np
      - `SecondaryToolbar` (747): its animated submenus must stay direct children of one `AnimatePresence`.
      - `CaptionToolbar` (608)
    - Long prop lists point to shared UI state (active tab/submenu, which modal is open) that should become a small UI store: `EditorSidebar` has 58 props, `EditorModals` 43, `ContextToolbar` 41.
-   - Found: nothing ever calls `setIsExportModalOpen(true)`, so `ExportPage` and the export format/quality presets in `useExport` are unreachable, both here and before the refactor. Either wire it up (e.g. an "Advanced export…" item in the Export menu) or delete it.
+   - Found and removed: nothing ever opened the full-screen export page (`setIsExportModalOpen(true)` was never called), so `ExportPage`, its format/quality presets in `useExport` and its CSS were deleted (about 500 lines). This also fixed Save to Gallery naming the first save "My Meme": the name is now passed to the menu action instead of read from state set a moment earlier.
    - Still in MemeEditor: about 1,550 lines of handlers (captions, layers, bubbles, social cards, header/footer) and the `<CanvasEditor>` call (phase 6).
 5. **Remove duplicate UI.** The compact tab tools (5182–5521) and the sidebar tabs (5522–7970) seem to repeat the same controls, probably one set for mobile and one for desktop. Check which is which, then build both from shared components.
 6. **Point `CanvasEditor` at the store** instead of passing ~100 props, then plan its own split the same way.

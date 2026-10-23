@@ -1433,97 +1433,12 @@ input:checked + .slider.round:before {
 }
 
 /* Export Page Styles */
-.export-page-container {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  background: var(--bg-main);
-  padding-bottom: 70px; /* Space for mobile nav if it exists */
-}
-
-
-
-.export-content {
-  display: flex;
-  flex-wrap: wrap;
-  flex: 1;
-  padding: 24px;
-  gap: 24px;
-  max-width: 1200px;
-  margin: 0 auto;
-  width: 100%;
-}
-
-.export-preview-panel {
-  flex: 1 1 600px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 24px;
-  position: relative;
-}
 
 .export-preview-img {
   max-width: 100%;
   max-height: 70vh;
   object-fit: contain;
   border-radius: 8px;
-}
-
-.export-controls-panel {
-  flex: 1 1 350px;
-  padding: 32px 24px;
-  display: flex;
-  flex-direction: column;
-  border-radius: 12px;
-  align-self: flex-start;
-}
-
-.export-controls-panel label {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--text-muted);
-  margin-bottom: 8px;
-  display: block;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.export-controls-panel .form-input {
-  font-size: 1.1rem;
-  padding: 14px;
-  background: rgba(0,0,0,0.2);
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 8px;
-}
-
-.export-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.export-actions .btn {
-  width: 100%;
-  padding: 16px;
-  font-size: 1.05rem;
-  font-weight: 700;
-  border-radius: 8px;
-  display: flex;
-  justify-content: center;
-  gap: 8px;
-}
-
-.export-actions .btn-secondary {
-  background: rgba(255,255,255,0.05);
-}
-
-.export-help-text {
-  font-size: 0.8rem;
-  color: var(--text-muted);
-  text-align: center;
-  margin-top: 32px;
-  opacity: 0.7;
 }
 
 /* Mobile Adjustments for Export Page */
@@ -1558,58 +1473,11 @@ input:checked + .slider.round:before {
 }
 
 @media (max-width: 768px) {
-  .export-page-container {
-    padding-bottom: 80px; 
-    overflow-y: auto; /* Ensure the page can scroll if content is tall */
-  }
-  
-  .export-content {
-    padding: 24px 0px 0px 0px; 
-    display: block; /* Disable flexbox to prevent child shrinking bugs */
-  }
-  
-  .export-preview-panel {
-    padding: 0px;
-    width: 100%;
-    border-radius: 0px; 
-    height: 55vh; /* Increased from 45vh to make the image bigger */
-    display: block; /* Remove flexbox completely from this container */
-    text-align: center;
-    overflow: hidden; 
-    margin-bottom: 12px; /* Reduced from 24px */
-  }
   
   .export-preview-img {
     height: 100%; /* Fill the 45vh container exactly */
     width: 100%;
     object-fit: contain;
-  }
-  
-  .export-controls-panel {
-    padding: 0 16px; /* Removed top/bottom padding since it has no background now */
-    width: 100%;
-    flex: 0 0 auto;
-    /* Keep default glass-card borders and radius so it perfectly matches the curved topbar */
-  }
-  
-  .export-controls-panel .form-input {
-    font-size: 1rem;
-    padding: 12px;
-  }
-  
-  .export-actions {
-    gap: 12px;
-    flex-direction: row; /* Put buttons side by side */
-    margin-top: 8px; /* Reduced from 16px */
-  }
-  
-  .export-actions .btn {
-    padding: 8px 12px;
-    font-size: 0.85rem;
-  }
-  
-  .export-help-text {
-    display: none; /* Hide help text to save space */
   }
 
   .timeline-dropdown-btn {
@@ -2887,8 +2755,7 @@ select {
 /* ============================================================
    EDITOR BACK BUTTON (MATCHING ASPECT RATIO BUTTON UI / BG)
    ============================================================ */
-.back-btn,
-.export-back-btn {
+.back-btn {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -2914,21 +2781,18 @@ select {
 }
 
 .aspect-ratio-display:hover,
-.back-btn:hover,
-.export-back-btn:hover {
+.back-btn:hover {
   background: rgba(255, 255, 255, 0.12) !important;
   border-color: rgba(255, 255, 255, 0.22) !important;
   color: var(--text-main, #ffffff) !important;
 }
 
-.back-btn:active,
-.export-back-btn:active {
+.back-btn:active {
   background: rgba(255, 255, 255, 0.14) !important;
   transform: scale(0.96) !important;
 }
 
-.back-btn svg,
-.export-back-btn svg {
+.back-btn svg {
   width: 14px !important;
   height: 14px !important;
   opacity: 0.85 !important;
@@ -2936,27 +2800,23 @@ select {
   stroke: currentColor !important;
 }
 
-[data-theme='light'] .back-btn,
-[data-theme='light'] .export-back-btn {
+[data-theme='light'] .back-btn {
   background: rgba(0, 0, 0, 0.05) !important;
   border: 1px solid rgba(0, 0, 0, 0.12) !important;
   color: #0f172a !important;
   box-shadow: none !important;
 }
 
-[data-theme='light'] .back-btn:hover,
-[data-theme='light'] .export-back-btn:hover {
+[data-theme='light'] .back-btn:hover {
   background: rgba(0, 0, 0, 0.08) !important;
   border-color: rgba(0, 0, 0, 0.2) !important;
 }
 
-[data-theme='light'] .back-btn:active,
-[data-theme='light'] .export-back-btn:active {
+[data-theme='light'] .back-btn:active {
   background: rgba(0, 0, 0, 0.1) !important;
 }
 
-[data-theme='light'] .back-btn svg,
-[data-theme='light'] .export-back-btn svg {
+[data-theme='light'] .back-btn svg {
   color: #0f172a !important;
   stroke: #0f172a !important;
 }
@@ -4292,7 +4152,6 @@ input:checked + .slider.round.watermark-toggle {
      ============================================================ */
   .back-btn,
   .wizard-back-btn,
-  .export-back-btn,
   .editor-topbar button:has(svg.lucide-arrow-left),
   .editor-topbar > button:first-child:has(svg) {
     display: inline-flex !important;
@@ -4320,7 +4179,6 @@ input:checked + .slider.round.watermark-toggle {
 
   .back-btn svg,
   .wizard-back-btn svg,
-  .export-back-btn svg,
   .editor-topbar button:has(svg.lucide-arrow-left) svg,
   .editor-topbar > button:first-child:has(svg) svg {
     width: 14px !important;
@@ -4332,7 +4190,6 @@ input:checked + .slider.round.watermark-toggle {
 
   .back-btn:hover,
   .wizard-back-btn:hover,
-  .export-back-btn:hover,
   .editor-topbar button:has(svg.lucide-arrow-left):hover,
   .editor-topbar > button:first-child:has(svg):hover {
     background: rgba(255, 255, 255, 0.12) !important;
@@ -4341,7 +4198,6 @@ input:checked + .slider.round.watermark-toggle {
 
   .back-btn:active,
   .wizard-back-btn:active,
-  .export-back-btn:active,
   .editor-topbar button:has(svg.lucide-arrow-left):active,
   .editor-topbar > button:first-child:has(svg):active {
     background: rgba(255, 255, 255, 0.14) !important;
@@ -4350,7 +4206,6 @@ input:checked + .slider.round.watermark-toggle {
 
   [data-theme='light'] .back-btn,
   [data-theme='light'] .wizard-back-btn,
-  [data-theme='light'] .export-back-btn,
   [data-theme='light'] .editor-topbar button:has(svg.lucide-arrow-left),
   [data-theme='light'] .editor-topbar > button:first-child:has(svg) {
     background: rgba(0, 0, 0, 0.05) !important;
@@ -4360,15 +4215,13 @@ input:checked + .slider.round.watermark-toggle {
   }
 
   [data-theme='light'] .back-btn:hover,
-  [data-theme='light'] .wizard-back-btn:hover,
-  [data-theme='light'] .export-back-btn:hover {
+  [data-theme='light'] .wizard-back-btn:hover {
     background: rgba(0, 0, 0, 0.08) !important;
     border-color: rgba(0, 0, 0, 0.2) !important;
   }
 
   [data-theme='light'] .back-btn:active,
-  [data-theme='light'] .wizard-back-btn:active,
-  [data-theme='light'] .export-back-btn:active {
+  [data-theme='light'] .wizard-back-btn:active {
     background: rgba(0, 0, 0, 0.1) !important;
   }
 }

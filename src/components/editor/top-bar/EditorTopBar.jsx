@@ -21,7 +21,6 @@ export default function EditorTopBar({
   imageFit,
   isNativeLayout,
   layoutDef,
-  memeCustomName,
   onBack,
   onSaveToGallery,
   setExportDropdownOpen,
@@ -159,24 +158,23 @@ export default function EditorTopBar({
                         triggerConfetti();
                       } catch(e) { console.warn(e); }
                     }},
-                    { icon: <Share2 style={{width:16,height:16}} />, label: 'Share', action: async (uri) => {
+                    { icon: <Share2 style={{width:16,height:16}} />, label: 'Share', action: async (uri, name) => {
                       try {
                         const res = await fetch(uri);
                         const blob = await res.blob();
                         const file = new File([blob], `meme-${Date.now()}.png`, { type: 'image/png' });
                         if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                          await navigator.share({ title: memeCustomName || 'My Meme', text: 'Check out this meme! 😂', files: [file] });
+                          await navigator.share({ title: name, text: 'Check out this meme! 😂', files: [file] });
                           triggerConfetti();
                         } else {
                           await navigator.clipboard.writeText(uri);
                         }
                       } catch(e) { if (e.name !== 'AbortError') console.warn(e); }
                     }},
-                    { icon: <Save style={{width:16,height:16}} />, label: 'Save to Gallery', action: (uri) => {
-                      const finalName = memeCustomName.trim() || 'My Meme';
+                    { icon: <Save style={{width:16,height:16}} />, label: 'Save to Gallery', action: (uri, name) => {
                       onSaveToGallery({
                         id: `meme-${Date.now()}`,
-                        name: finalName,
+                        name,
                         imageUrl: uri,
                         rawImageUrl: template?.rawImageUrl || template?.imageUrl,
                         captions: JSON.parse(JSON.stringify(captions)),

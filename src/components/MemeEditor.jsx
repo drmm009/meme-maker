@@ -16,7 +16,6 @@ import { useEditorShortcuts } from './editor/hooks/useEditorShortcuts';
 import { useExport } from './editor/hooks/useExport';
 import { useBackgroundRemoval } from './editor/hooks/useBackgroundRemoval';
 import { useFaceMorph } from './editor/hooks/useFaceMorph';
-import ExportPage from './editor/top-bar/ExportPage';
 import EditorTopBar from './editor/top-bar/EditorTopBar';
 import ContextToolbar from './editor/context-toolbars/ContextToolbar';
 import SecondaryToolbar from './editor/context-toolbars/SecondaryToolbar';
@@ -340,14 +339,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
   };
 
   const canvasRef = useRef(null);
-  const {
-    exportedImageUri, isExportModalOpen, setIsExportModalOpen,
-    exportFormat, exportQuality, exportPreset, exportFileSize,
-    exportDropdownOpen, setExportDropdownOpen, exportDropdownRef,
-    isSaved, memeCustomName, setMemeCustomName, clipboardCopied, shareCopied,
-    handleSelectExportFormat, handleSelectExportQuality, handleSelectExportPreset,
-    handleQuickExport, handleConfirmSave, handleDownloadImage, handleCopyToClipboard, handleShareImage,
-  } = useExport({ canvasRef, template, onSaveToGallery, layout: { imageFit, isNativeLayout, layoutDef } });
+  const { exportDropdownOpen, setExportDropdownOpen, exportDropdownRef, handleQuickExport } = useExport({ canvasRef, template });
   const { isRemovingBg, handleRemoveBackground } = useBackgroundRemoval();
   const {
     showFaceMorphModal, setShowFaceMorphModal, morphTargetLayerId, setMorphTargetLayerId,
@@ -1621,31 +1613,6 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
   };
 
   return (
-    <AnimatePresence mode="wait">
-      {isExportModalOpen ? (
-        <motion.div key="export" className="export-page-container" initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }} transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}>
-          <ExportPage
-            clipboardCopied={clipboardCopied}
-            exportFileSize={exportFileSize}
-            exportFormat={exportFormat}
-            exportPreset={exportPreset}
-            exportQuality={exportQuality}
-            exportedImageUri={exportedImageUri}
-            handleConfirmSave={handleConfirmSave}
-            handleCopyToClipboard={handleCopyToClipboard}
-            handleDownloadImage={handleDownloadImage}
-            handleSelectExportFormat={handleSelectExportFormat}
-            handleSelectExportPreset={handleSelectExportPreset}
-            handleSelectExportQuality={handleSelectExportQuality}
-            handleShareImage={handleShareImage}
-            isSaved={isSaved}
-            memeCustomName={memeCustomName}
-            setIsExportModalOpen={setIsExportModalOpen}
-            setMemeCustomName={setMemeCustomName}
-            shareCopied={shareCopied}
-          />
-        </motion.div>
-      ) : (
     <div className="meme-editor-container animate-fade-in">
       {/* Editor Top Bar (Mobile-Friendly Compact) */}
       <EditorTopBar
@@ -1655,7 +1622,6 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
         imageFit={imageFit}
         isNativeLayout={isNativeLayout}
         layoutDef={layoutDef}
-        memeCustomName={memeCustomName}
         onBack={onBack}
         onSaveToGallery={onSaveToGallery}
         setExportDropdownOpen={setExportDropdownOpen}
@@ -2039,7 +2005,5 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
       />
 
     </div>
-      )}
-    </AnimatePresence>
   );
 }

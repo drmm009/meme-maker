@@ -10,8 +10,9 @@ const canvas = { props: null };
 
 vi.mock('./CanvasEditor', async () => {
   const React = await import('react');
-  const CanvasEditorStub = React.forwardRef(function CanvasEditorStub(props, _ref) {
+  const CanvasEditorStub = React.forwardRef(function CanvasEditorStub(props, ref) {
     canvas.props = props;
+    React.useImperativeHandle(ref, () => ({ toDataURL: () => 'data:image/png;base64,STUB' }));
     return (
       <div data-testid="canvas-stub">
         {props.captions.map((c) => (
@@ -60,8 +61,8 @@ const deselect = () => act(() => canvas.props.onSelectLayer(null));
 const undoButton = () => screen.getByTitle('Undo');
 const redoButton = () => screen.getByTitle('Redo');
 
-function renderEditor(template = TEMPLATE) {
-  return render(<MemeEditor template={template} onBack={vi.fn()} onSaveToGallery={vi.fn()} />);
+function renderEditor(template = TEMPLATE, onSaveToGallery = vi.fn()) {
+  return render(<MemeEditor template={template} onBack={vi.fn()} onSaveToGallery={onSaveToGallery} />);
 }
 
 describe('MemeEditor', () => {
@@ -164,6 +165,19 @@ describe('MemeEditor', () => {
 
     fireEvent.click(undoButton());
     expect(canvas.props.drawings).toHaveLength(0);
+  }, 30000);
+
+  it('Save to Gallery names the meme after the template on the first save', () => {
+    const onSave = vi.fn();
+    renderEditor(TEMPLATE, onSave);
+    fireEvent.click(screen.getByText('Export'));
+    fireEvent.click(screen.getByText('Save to Gallery'));
+    expect(onSave).toHaveBeenCalledTimes(1);
+    expect(onSave.mock.calls[0][0]).toMatchObject({
+      name: 'Test Template',
+      imageUrl: 'data:image/png;base64,STUB',
+    });
+    expect(onSave.mock.calls[0][0].captions.map((c) => c.text)).toEqual(['TOP TEXT', 'BOTTOM TEXT']);
   }, 30000);
 
   it('flips the canvas from the Canvas tab', () => {
