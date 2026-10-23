@@ -139,16 +139,26 @@ It draws with the **plain canvas 2D API** (`getContext('2d')`), not Konva; Konva
 
 Phases, each its own commit with the same checks (tests, lint baseline, build, browser):
 
-8. **Move the pure drawing functions out** to `src/components/canvas/draw/`:
-   - `text.js`: wrap, curved text, effects, round rect
-   - `speechBubble.js`
-   - `chyron.js`
-   - `socialCards/tweet.js`, `instagram.js`, `whatsapp.js` (+ icons)
-   - `dieCut.js`
-   - `paths.js`
-   - `faceLighting.js`
+8. **Move the pure drawing functions out.** *Done:* CanvasEditor.jsx is down to 3,306 lines, from 5,300.
+   - 10 modules in `src/components/canvas/draw/`:
+     - `text.js` (233 lines): wrap, curved text, effects, round rect
+     - `speechBubble.js` (175)
+     - `chyron.js` (60)
+     - `paths.js` (25)
+     - `faceLighting.js` (36)
+     - `dieCut.js` (119)
+     - `socialCards/shared.js` (61): image cache, like-count parsing, shared icons
+     - `socialCards/tweet.js` (267), `socialCards/instagram.js` (356), `socialCards/whatsapp.js` (696)
+   - Moved verbatim by an AST tool that also wrote each module's imports. The dependency graph has no cycles, and caches stay private to their module.
+   - `draw.test.js` covers `wrapText` (with a fake `measureText`), `getCurveSagitta`, `getBreakingNewsHeight`, `parseLikesCount` and `parseTweetMetrics`. The existing WhatsApp layout test now imports from the new module.
+   - Checked in the browser:
+     - captions and curved text
+     - a speech bubble
+     - a die-cut sticker
+     - tweet, Instagram and WhatsApp cards
+     - face swap (face-lighting sampler)
 
-   No behavior change, and nothing in them touches React. Add unit tests for the pure helpers that don't need a canvas: `wrapText` with a fake `measureText`, `parseLikesCount`, `parseTweetMetrics`, the card-height functions. Point `TWEET_TREND_PRESETS` importers at the new module. CanvasEditor drops to about 3,300 lines.
+     The chyron can't be created in the app, so only its unit test covers it.
 9. **Split the render effect.** Turn the 1,287-line effect into `renderScene(ctx, scene)` plus per-layer painters (`paintBackground`, `paintSlots`, `paintImageLayers`, `paintStickers`, `paintCaptions`, `paintHeaderFooter`, `paintWatermark`, `paintSelection`). The effect only builds `scene` from store state and calls it. That makes rendering readable, and it can be tested with a recording fake context.
 10. **Extract interaction** into `useCanvasInteraction`: hit testing as pure functions (`hitTestLayer`, `hitTestHandle`) with unit tests, plus the drag/resize/rotate/draw state machine behind the pointer handlers. The arrow-key nudge bug from phase 3 came from the 0..1 coordinate convention, so the hit-test tests should pin those units down.
 11. **Afterwards:** CanvasEditor should be a ~300-line component that wires the canvas element, refs, `renderScene` and `useCanvasInteraction`.
