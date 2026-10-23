@@ -6,6 +6,7 @@ import { useShallow } from 'zustand/react/shallow';
 import { clipGain } from '../../utils/audioFades';
 import { applyChromaKey, sampleKeyColor, suggestTolerance } from '../../utils/chromaKey';
 import { REST_FRAME, animationLengthMs, applyTextFrame, textAnimFrame } from '../../utils/textAnimation';
+import { decodeGif, frameIndexAt, isGifUrl } from '../../utils/gif';
 
 // Green-screen frames are keyed at most this many pixels on the long side; Konva scales them up.
 const KEY_MAX_SIDE = 640;
@@ -16,6 +17,20 @@ const CanvasMedia = ({ item, isSelected, onSelect, onChange, canvasDimensions })
   const imageRef = useRef(null);
   const trRef = useRef(null);
   const itemRef = useRef(item);
+
+  const gifRef = useRef(null);
+  // Draws the GIF frame for this playhead into the GIF canvas; true if the frame changed.
+  const drawGifFrame = (playhead, it) => {
+    const gif = gifRef.current;
+    if (!gif) return false;
+    const index = frameIndexAt(gif.durations, playhead - it.startMs);
+    if (index === gif.index) return false;
+    const ctx = gif.canvas.getContext('2d');
+    ctx.clearRect(0, 0, gif.canvas.width, gif.canvas.height);
+    ctx.drawImage(gif.frames[index], 0, 0);
+    gif.index = index;
+    return true;
+  };
 
   // Green screen: video frames go through an offscreen canvas with the key colour made transparent.
   const chromaKey = item.type === 'video' && item.chromaKey ? item.chromaKey : null;
@@ -128,7 +143,8 @@ const CanvasMedia = ({ item, isSelected, onSelect, onChange, canvasDimensions })
       const img = new window.Image();
       img.src = item.url;
       img.onload = () => {
-        setImage(img);
+        // An animated GIF may already be showing its decoded frames; keep that canvas.
+        setImage(gifRef.current?.canvas || img);
         positionMedia(img.width, img.height);
       };
     } else if (item.type === 'video' && item.url) {
@@ -303,6 +319,29 @@ const CanvasMedia = ({ item, isSelected, onSelect, onChange, canvasDimensions })
     }
   }, [item.url, item.type, canvasDimensions]);
 
+  // Animated GIF stickers: decode the frames once, then show the one the playhead is on, so they
+  // animate during playback in step with the export.
+  useEffect(() => {
+    if (item.type === 'video' || !(item.isGif || isGifUrl(item.url))) return undefined;
+    let cancelled = false;
+    decodeGif(item.url)
+      .then((gif) => {
+        if (cancelled || !gif) return;
+        const canvas = document.createElement('canvas');
+        canvas.width = gif.width;
+        canvas.height = gif.height;
+        gifRef.current = { ...gif, canvas, index: -1 };
+        drawGifFrame(useEditorStore.getState().playhead, itemRef.current);
+        setImage(canvas);
+      })
+      .catch((e) => console.warn('[gif sticker] showing the first frame only', e));
+    return () => {
+      cancelled = true;
+      gifRef.current?.frames.forEach((frame) => frame.close());
+      gifRef.current = null;
+    };
+  }, [item.url, item.type, item.isGif]);
+
   // Generic visibility loop for non-video items (video handles its own visibility above)
   useEffect(() => {
     if (item.type === 'video') return;
@@ -316,6 +355,7 @@ const CanvasMedia = ({ item, isSelected, onSelect, onChange, canvasDimensions })
         if (trRef.current) trRef.current.visible(isVisible);
         node.getLayer()?.batchDraw();
       }
+      if (node && isVisible && drawGifFrame(state.playhead, latestItem)) node.getLayer()?.batchDraw();
     });
     return unsub;
   }, [item.type, item.startMs, item.endMs]);

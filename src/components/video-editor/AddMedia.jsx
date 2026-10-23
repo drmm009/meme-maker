@@ -6,6 +6,7 @@ import MemeStickersBottomSheet from '../editor/MemeStickersBottomSheet';
 import TemplatePickerBottomSheet from '../editor/TemplatePickerBottomSheet';
 import AudioModal from './AudioModal';
 import VideoClipsBottomSheet from './VideoClipsBottomSheet';
+import GifBottomSheet from './GifBottomSheet';
 
 const addItem = (item) => useEditorStore.getState().addItem(item);
 
@@ -67,7 +68,7 @@ const emojiToDataUrl = (emoji) => {
 };
 
 // Everything that adds to the timeline: file pickers, sheets and modals. The tool rail
-// calls ref.open(kind) with one of: text, stickers, emoji, templates, photo, video, clips, sounds, audio.
+// calls ref.open(kind) with one of: text, stickers, emoji, gifs, templates, photo, video, clips, sounds, audio.
 const AddMedia = forwardRef(function AddMedia(_props, ref) {
   const [sheet, setSheet] = useState(null);
   const [templates, setTemplates] = useState(undefined);
@@ -121,6 +122,11 @@ const AddMedia = forwardRef(function AddMedia(_props, ref) {
         onClose={close}
         templates={templates}
         onSelectTemplate={(t) => { addItem({ type: 'image', url: t.imageUrl, name: t.name }); close(); }}
+      />
+      <GifBottomSheet
+        isOpen={sheet === 'gifs'}
+        onClose={close}
+        onSelect={(g) => { addItem({ type: 'sticker', url: g.url, name: g.title, isGif: true }); close(); }}
       />
       <AudioModal isOpen={sheet === 'sounds'} onClose={close} />
       <VideoClipsBottomSheet

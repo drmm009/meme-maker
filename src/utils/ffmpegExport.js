@@ -4,6 +4,7 @@ import Konva from 'konva';
 import { generateGridImage } from './gridHelper';
 import { fadeFilter } from './audioFades';
 import { chromaKeyFilter } from './chromaKey';
+import { gifPaletteFilter, isGifUrl } from './gif';
 import { REST_FRAME, animationSteps, applyTextFrame, shakeExpressions } from './textAnimation';
 
 let ffmpeg = null;
@@ -49,7 +50,9 @@ export const loadFFmpeg = async () => {
   return loadPromise;
 };
 
-export const exportVideoFFmpeg = async (items = [], durationMs = 7000, canvasAspectRatio = 16/9, canvasDimensions = { width: 800, height: 600 }, layoutId = null, onProgress = () => {}) => {
+// format 'gif' renders a silent, palette-optimised GIF instead of an MP4.
+export const exportVideoFFmpeg = async (items = [], durationMs = 7000, canvasAspectRatio = 16/9, canvasDimensions = { width: 800, height: 600 }, layoutId = null, onProgress = () => {}, { format = 'mp4' } = {}) => {
+  const isGifOut = format === 'gif';
   try {
     const ff = await loadFFmpeg();
     if (typeof ff.off === 'function') ff.off('progress');
@@ -100,6 +103,8 @@ export const exportVideoFFmpeg = async (items = [], durationMs = 7000, canvasAsp
       if (!item.url) continue;
       
       const isVideo = item.type === 'video';
+      // Animated GIF stickers are timed like video (they start playing at the clip's start).
+      const isGif = !isVideo && (item.isGif || isGifUrl(item.url));
       
       const rawW = (item.width || 100) * (item.scaleX || item.scale || 1) * konvaRatio;
       const rawH = (item.height || 100) * (item.scaleY || item.scale || 1) * konvaRatio;
@@ -139,11 +144,13 @@ export const exportVideoFFmpeg = async (items = [], durationMs = 7000, canvasAsp
       }
       if (!fileData || fileData.byteLength === 0) continue;
 
-      const fileName = isVideo ? `input_${inputIndex}.mp4` : `input_${inputIndex}.png`;
+      const fileName = isVideo ? `input_${inputIndex}.mp4` : isGif ? `input_${inputIndex}.gif` : `input_${inputIndex}.png`;
       await ff.writeFile(fileName, fileData);
       filesToDelete.push(fileName);
 
-      if (!isVideo) {
+      if (isGif) {
+        command.push('-ignore_loop', '0', '-i', fileName);
+      } else if (!isVideo) {
         command.push('-loop', '1', '-i', fileName);
       } else {
         const trimStartSec = Math.max(0, (typeof item.trimStartMs === 'number' && !isNaN(item.trimStartMs) ? item.trimStartMs : 0) / 1000);
@@ -152,7 +159,7 @@ export const exportVideoFFmpeg = async (items = [], durationMs = 7000, canvasAsp
         }
         command.push('-i', fileName);
 
-        if (!item.muted) {
+        if (!item.muted && !isGifOut) {
           let videoHasAudio = false;
           try {
             // Use FFmpeg to quickly check if an audio stream exists in this file
@@ -191,7 +198,7 @@ export const exportVideoFFmpeg = async (items = [], durationMs = 7000, canvasAsp
       // Force scale and correctly offset PTS for videos so they don't expire before their start time.
       // Images/stickers loop infinitely and do not need a PTS offset, which saves massive memory buffering.
       const pbRate = typeof item.playbackRate === 'number' && !isNaN(item.playbackRate) ? item.playbackRate : 1.0;
-      const ptsOffset = isVideo ? `+${startT}/TB` : '';
+      const ptsOffset = isVideo || isGif ? `+${startT}/TB` : '';
       const keyFilter = isVideo ? chromaKeyFilter(item.chromaKey) : '';
       filterComplex += `[${inputIndex}:v]setpts=(PTS-STARTPTS)/${pbRate}${ptsOffset},scale=${w}:${h}${keyFilter}[vis${inputIndex}];`;
       filterComplex += `[${currentBgIndex === 0 ? '0:v' : `bg${currentBgIndex}`}][vis${inputIndex}]overlay=${x}:${y}:enable='between(t,${startT},${endT})':eof_action=pass:shortest=0[bg${currentBgIndex + 1}];`;
@@ -361,7 +368,7 @@ export const exportVideoFFmpeg = async (items = [], durationMs = 7000, canvasAsp
     // Process standalone audio items (sound effects, background music, audio clips)
     const audioItems = items.filter(item => !item.hidden && item.type === 'audio');
     for (const item of audioItems) {
-      if (!item.url) continue;
+      if (!item.url || isGifOut) continue;
       let fileData;
       try {
         fileData = await fetchFile(item.url);
@@ -412,7 +419,11 @@ export const exportVideoFFmpeg = async (items = [], durationMs = 7000, canvasAsp
       filterComplex += `${allAudioInputs}amix=inputs=${mixCount}:duration=first:dropout_transition=0,volume=${mixCount}[final_audio];`;
     }
 
-    const finalVideoMap = currentBgIndex === 0 ? '0:v' : `[bg${currentBgIndex}]`;
+    let finalVideoMap = currentBgIndex === 0 ? '0:v' : `[bg${currentBgIndex}]`;
+    if (isGifOut) {
+      filterComplex += `${gifPaletteFilter(currentBgIndex === 0 ? '[0:v]' : finalVideoMap, canvasW, canvasH, '[gifout]')};`;
+      finalVideoMap = '[gifout]';
+    }
     const finalAudioMap = audioStreams.length > 0 ? '[final_audio]' : '1:a';
 
     if (filterComplex && filterComplex.endsWith(';')) filterComplex = filterComplex.slice(0, -1);
@@ -421,18 +432,22 @@ export const exportVideoFFmpeg = async (items = [], durationMs = 7000, canvasAsp
       command.push('-filter_complex', filterComplex);
     }
 
-    const outputFileName = 'output.mp4';
+    const outputFileName = isGifOut ? 'output.gif' : 'output.mp4';
 
-    command.push(
-      '-map', finalVideoMap,
-      '-map', finalAudioMap, 
-      '-c:v', 'libx264',
-      '-preset', 'ultrafast',
-      '-c:a', 'aac',
-      '-b:a', '192k',
-      '-t', durationSec.toString(),
-      outputFileName
-    );
+    if (isGifOut) {
+      command.push('-map', finalVideoMap, '-loop', '0', '-t', durationSec.toString(), outputFileName);
+    } else {
+      command.push(
+        '-map', finalVideoMap,
+        '-map', finalAudioMap, 
+        '-c:v', 'libx264',
+        '-preset', 'ultrafast',
+        '-c:a', 'aac',
+        '-b:a', '192k',
+        '-t', durationSec.toString(),
+        outputFileName
+      );
+    }
 
     if (import.meta.env?.DEV) console.log("[FFmpeg Command]", command.join(' '));
     const retCode = await ff.exec(command);
@@ -442,13 +457,13 @@ export const exportVideoFFmpeg = async (items = [], durationMs = 7000, canvasAsp
 
     // Read and clean up
     const data = await ff.readFile(outputFileName);
-    const blob = new Blob([data.buffer], { type: 'video/mp4' });
+    const blob = new Blob([data.buffer], { type: isGifOut ? 'image/gif' : 'video/mp4' });
     const url = URL.createObjectURL(blob);
 
     try {
       const a = document.createElement('a');
       a.href = url;
-      a.download = `pro-edit-ffmpeg-${Date.now()}.mp4`;
+      a.download = `pro-edit-ffmpeg-${Date.now()}.${isGifOut ? 'gif' : 'mp4'}`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);

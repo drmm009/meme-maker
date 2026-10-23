@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useStore } from 'zustand';
-import { X, Share, Play, Pause, Undo2, Redo2, ChevronUp, ChevronDown, Download, Copy, Check, History } from 'lucide-react';
+import { X, Share, Play, Pause, Undo2, Redo2, ChevronUp, ChevronDown, Download, Copy, Check, History, ImagePlay } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import CanvasPreview from './CanvasPreview';
 import TimelinePanel from './timeline/TimelinePanel';
@@ -82,6 +82,7 @@ export default function VideoEditor({ template, onBack }) {
   const [mode, setMode] = useState('edit');
   const [menuOpen, setMenuOpen] = useState(false);
   const [exportDone, setExportDone] = useState(false);
+  const [exportFormat, setExportFormat] = useState('mp4');
   const addRef = useRef(null);
   const menuRef = useRef(null);
 
@@ -130,8 +131,9 @@ export default function VideoEditor({ template, onBack }) {
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
-  const handleExport = async () => {
+  const handleExport = async (format = 'mp4') => {
     setMenuOpen(false);
+    setExportFormat(format);
     const store = useEditorStore.getState();
     store.setIsExporting(true);
     store.setExportProgress(0);
@@ -142,7 +144,8 @@ export default function VideoEditor({ template, onBack }) {
         store.canvasAspectRatio || 16 / 9,
         store.canvasDimensions || { width: 800, height: 600 },
         store.layoutId,
-        (progress) => useEditorStore.getState().setExportProgress(progress)
+        (progress) => useEditorStore.getState().setExportProgress(progress),
+        { format }
       );
       setExportDone(true);
       setTimeout(() => setExportDone(false), 3000);
@@ -212,7 +215,8 @@ export default function VideoEditor({ template, onBack }) {
                 exit={{ opacity: 0, y: -6, scale: 0.96 }}
                 transition={{ duration: 0.15 }}
               >
-                <button type="button" className="vt-menu-item" onClick={handleExport}><Download size={16} /> Export video</button>
+                <button type="button" className="vt-menu-item" onClick={() => handleExport('mp4')}><Download size={16} /> Export video</button>
+                <button type="button" className="vt-menu-item" onClick={() => handleExport('gif')}><ImagePlay size={16} /> Export GIF</button>
                 <button type="button" className="vt-menu-item" onClick={() => { setMenuOpen(false); copyFrame(); }}><Copy size={16} /> Copy frame</button>
               </motion.div>
             )}
@@ -243,7 +247,7 @@ export default function VideoEditor({ template, onBack }) {
             <div className="vt-export-ring" style={{ '--p': Math.round(exportProgress) }}>
               <span>{Math.round(exportProgress)}%</span>
             </div>
-            <p>Rendering your video…</p>
+            <p>{exportFormat === 'gif' ? 'Making your GIF…' : 'Rendering your video…'}</p>
           </div>
         )}
       </section>

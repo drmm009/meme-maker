@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import {
   Type, Sticker, Smile, LayoutGrid, Image as ImageIcon, Film, Clapperboard, Music, AudioLines,
   Check, Gauge, Volume2, VolumeX, Palette, Square, RotateCw, Minimize, Crop, Maximize, Copy, Trash2,
-  Scissors, PencilLine, ALargeSmall, TextAlignStart, TextAlignCenter, TextAlignEnd, SlidersHorizontal, WandSparkles, Pipette, Sparkles
+  Scissors, PencilLine, ALargeSmall, TextAlignStart, TextAlignCenter, TextAlignEnd, SlidersHorizontal, WandSparkles, Pipette, Sparkles, ImagePlay
 } from 'lucide-react';
 import { useEditorStore } from '../../store/useVideoEditorStore';
 import { FONTS } from '../../data/stickers';
@@ -25,6 +25,7 @@ const ADD_TOOLS = [
   { kind: 'text', label: 'Text', Icon: Type },
   { kind: 'stickers', label: 'Stickers', Icon: Sticker },
   { kind: 'emoji', label: 'Emoji', Icon: Smile },
+  { kind: 'gifs', label: 'GIFs', Icon: ImagePlay },
   { kind: 'templates', label: 'Templates', Icon: LayoutGrid },
   { kind: 'photo', label: 'Photo', Icon: ImageIcon },
   { kind: 'video', label: 'Video', Icon: Film },
