@@ -3,7 +3,7 @@ import CanvasEditor, { TWEET_TREND_PRESETS } from './CanvasEditor';
 import { FONTS } from '../data/stickers';
 import {
   Type, Sparkles, Copy, Blend, Smile, Check, RefreshCw, LayoutGrid, PencilLine, PanelTop,
-  PanelBottom, Flame, Tv, MessageCircle, Ban, AlignLeft, AlignCenter, AlignRight, Rows3
+  Flame, Tv, MessageCircle, Ban, AlignLeft, AlignCenter, AlignRight
 } from 'lucide-react';
 import AiCaptionModal from './AiCaptionModal';
 import MemeStylesModal, { IG_PRESET_IMAGES } from './MemeStylesModal';
@@ -42,6 +42,7 @@ import CaptionToolbar from './editor/context-toolbars/CaptionToolbar';
 import LayerActionsBar from './editor/context-toolbars/secondary/LayerActionsBar';
 import DrawSettingsBar from './editor/context-toolbars/secondary/DrawSettingsBar';
 import WatermarkBar from './editor/context-toolbars/secondary/WatermarkBar';
+import HeaderFooterBar from './editor/context-toolbars/secondary/HeaderFooterBar';
 import './MemeEditor.css';
 
 export default function MemeEditor(props) {
@@ -2463,72 +2464,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
                         exit="exit"
                         style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}
                       >
-                        <button
-                          type="button"
-                          className={`btn btn-xs vid-ctx-btn ${canvasHeader.enabled ? 'active' : ''}`}
-                          onClick={handleToggleCanvasHeader}
-                          title="Toggle Header Extension"
-                          style={{
-                            padding: '4px 12px',
-                            fontSize: '0.75rem',
-                            fontWeight: 600,
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '5px',
-                            borderRadius: '8px',
-                            flexShrink: 0,
-                            background: canvasHeader.enabled ? 'var(--primary-gradient)' : undefined,
-                            border: canvasHeader.enabled ? '1px solid var(--cyber-cyan)' : undefined,
-                            color: canvasHeader.enabled ? '#ffffff' : undefined
-                          }}
-                        >
-                          <PanelTop style={{ width: 13, height: 13 }} />
-                          <span>Header</span>
-                        </button>
-                        <button
-                          type="button"
-                          className={`btn btn-xs vid-ctx-btn ${canvasFooter.enabled ? 'active' : ''}`}
-                          onClick={handleToggleCanvasFooter}
-                          title="Toggle Footer Extension"
-                          style={{
-                            padding: '4px 12px',
-                            fontSize: '0.75rem',
-                            fontWeight: 600,
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '5px',
-                            borderRadius: '8px',
-                            flexShrink: 0,
-                            background: canvasFooter.enabled ? 'var(--primary-gradient)' : undefined,
-                            border: canvasFooter.enabled ? '1px solid var(--cyber-cyan)' : undefined,
-                            color: canvasFooter.enabled ? '#ffffff' : undefined
-                          }}
-                        >
-                          <PanelBottom style={{ width: 13, height: 13 }} />
-                          <span>Footer</span>
-                        </button>
-                        <button
-                          type="button"
-                          className={`btn btn-xs vid-ctx-btn ${(canvasHeader.enabled && canvasFooter.enabled) ? 'active' : ''}`}
-                          onClick={handleToggleCanvasBoth}
-                          title="Toggle Both Header & Footer Extensions"
-                          style={{
-                            padding: '4px 12px',
-                            fontSize: '0.75rem',
-                            fontWeight: 600,
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '5px',
-                            borderRadius: '8px',
-                            flexShrink: 0,
-                            background: (canvasHeader.enabled && canvasFooter.enabled) ? 'var(--primary-gradient)' : undefined,
-                            border: (canvasHeader.enabled && canvasFooter.enabled) ? '1px solid var(--cyber-cyan)' : undefined,
-                            color: (canvasHeader.enabled && canvasFooter.enabled) ? '#ffffff' : undefined
-                          }}
-                        >
-                          <Rows3 style={{ width: 13, height: 13 }} />
-                          <span>Both</span>
-                        </button>
+                        <HeaderFooterBar handleToggleCanvasBoth={handleToggleCanvasBoth} handleToggleCanvasFooter={handleToggleCanvasFooter} handleToggleCanvasHeader={handleToggleCanvasHeader} />
                       </motion.div>
                     )}
 
