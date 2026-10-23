@@ -6,16 +6,13 @@ import DrawTab from './tabs/DrawTab';
 import CanvasTab from './tabs/CanvasTab';
 import TextTab from './tabs/TextTab';
 import { useMemeEditorStore } from './store/useMemeEditorStore';
+import { useEditorUiStore } from './store/useEditorUiStore';
 
 export default function EditorSidebar({
   activeCaption,
   activeFontObj,
   activeImageLayer,
-  activeTab,
-  brushColor,
-  brushSize,
   commitAddImageLayer,
-  drawTool,
   getActiveTextEffectId,
   getDockHeight,
   handleAddBubble,
@@ -44,29 +41,33 @@ export default function EditorSidebar({
   handleUndoDrawing,
   handleUpdateTemplateMorphProgress,
   handleWatermarkImageUpload,
-  isMobileTabsFolded,
-  pendingVideoLayer,
-  setActiveSubmenu,
-  setBrushColor,
-  setBrushSize,
-  setDrawTool,
-  setImagePickerTarget,
-  setPendingVideoLayer,
-  setShowAiModal,
-  setShowBubbleBottomSheet,
-  setShowFilterPresets,
-  setShowFiltersModal,
-  showFilterPresets,
   tabButtonsRef,
   template,
   updateActiveCaption,
   updateActiveCaptionProps,
   updateActiveImageLayer,
-  updateWatermark,
-  watermark,
   watermarkInputRef,
   watermarkTextInputRef,
 }) {
+  const activeTab = useEditorUiStore((s) => s.activeTab);
+  const brushColor = useEditorUiStore((s) => s.brushColor);
+  const brushSize = useEditorUiStore((s) => s.brushSize);
+  const drawTool = useEditorUiStore((s) => s.drawTool);
+  const isMobileTabsFolded = useEditorUiStore((s) => s.isMobileTabsFolded);
+  const pendingVideoLayer = useEditorUiStore((s) => s.pendingVideoLayer);
+  const setActiveSubmenu = useEditorUiStore((s) => s.setActiveSubmenu);
+  const setBrushColor = useEditorUiStore((s) => s.setBrushColor);
+  const setBrushSize = useEditorUiStore((s) => s.setBrushSize);
+  const setDrawTool = useEditorUiStore((s) => s.setDrawTool);
+  const setImagePickerTarget = useEditorUiStore((s) => s.setImagePickerTarget);
+  const setPendingVideoLayer = useEditorUiStore((s) => s.setPendingVideoLayer);
+  const setShowAiModal = useEditorUiStore((s) => s.setShowAiModal);
+  const setShowBubbleBottomSheet = useEditorUiStore((s) => s.setShowBubbleBottomSheet);
+  const setShowFilterPresets = useEditorUiStore((s) => s.setShowFilterPresets);
+  const setShowFiltersModal = useEditorUiStore((s) => s.setShowFiltersModal);
+  const showFilterPresets = useEditorUiStore((s) => s.showFilterPresets);
+  const updateWatermark = useEditorUiStore((s) => s.updateWatermark);
+  const watermark = useEditorUiStore((s) => s.watermark);
   const setActiveLayerId = useMemeEditorStore((s) => s.setActiveLayerId);
 
   return (

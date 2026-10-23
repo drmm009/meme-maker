@@ -11,16 +11,12 @@ import DrawSettingsBar from './secondary/DrawSettingsBar';
 import WatermarkBar from './secondary/WatermarkBar';
 import HeaderFooterBar from './secondary/HeaderFooterBar';
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
+import { useEditorUiStore } from '../store/useEditorUiStore';
 
 export default function SecondaryToolbar({
   activeCaption,
   activeImageLayer,
   activeSticker,
-  activeSubmenu,
-  activeTab,
-  brushColor,
-  brushSize,
-  drawTool,
   handleClearDrawings,
   handleCycleTextAlignment,
   handleDeleteLayer,
@@ -35,15 +31,20 @@ export default function SecondaryToolbar({
   handleToggleTextCase,
   isElementSelected,
   moveLayer,
-  setBrushColor,
-  setBrushSize,
-  setShowLayerMenu,
-  showLayerMenu,
   updateActiveCaptionProps,
   updateActiveImageLayer,
-  updateWatermark,
-  watermark,
 }) {
+  const activeSubmenu = useEditorUiStore((s) => s.activeSubmenu);
+  const activeTab = useEditorUiStore((s) => s.activeTab);
+  const brushColor = useEditorUiStore((s) => s.brushColor);
+  const brushSize = useEditorUiStore((s) => s.brushSize);
+  const drawTool = useEditorUiStore((s) => s.drawTool);
+  const setBrushColor = useEditorUiStore((s) => s.setBrushColor);
+  const setBrushSize = useEditorUiStore((s) => s.setBrushSize);
+  const setShowLayerMenu = useEditorUiStore((s) => s.setShowLayerMenu);
+  const showLayerMenu = useEditorUiStore((s) => s.showLayerMenu);
+  const updateWatermark = useEditorUiStore((s) => s.updateWatermark);
+  const watermark = useEditorUiStore((s) => s.watermark);
   const canvasBgColor = useMemeEditorStore((s) => s.canvasBgColor);
   const setCanvasBgColor = useMemeEditorStore((s) => s.setCanvasBgColor);
   const activeLayerId = useMemeEditorStore((s) => s.activeLayerId);

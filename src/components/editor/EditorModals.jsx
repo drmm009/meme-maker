@@ -8,6 +8,7 @@ import TemplatePickerBottomSheet from './TemplatePickerBottomSheet';
 import PhotoFiltersBottomSheet from './PhotoFiltersBottomSheet';
 import BubbleChatBottomSheet from './BubbleChatBottomSheet';
 import { useMemeEditorStore } from './store/useMemeEditorStore';
+import { useEditorUiStore } from './store/useEditorUiStore';
 
 export default function EditorModals({
   activeCaption,
@@ -25,35 +26,35 @@ export default function EditorModals({
   handleApplyBubbleStyle,
   handleApplyFaceMorph,
   handleUpdateSocialCard,
-  imagePickerTarget,
   morphTargetLayerId,
   morphTargetUrl,
-  openSourceTemplates,
   originalTemplateImgRef,
   sampledFaceLighting,
-  setImagePickerTarget,
   setIsPinpointingFace,
   setMorphTargetLayerId,
   setMorphTargetUrl,
-  setShowAiModal,
-  setShowBubbleBottomSheet,
-  setShowEmojiModal,
   setShowFaceMorphModal,
-  setShowFiltersModal,
-  setShowMemeStickersModal,
-  setShowStylesModal,
-  showAiModal,
-  showBubbleBottomSheet,
-  showEmojiModal,
   showFaceMorphModal,
-  showFiltersModal,
-  showMemeStickersModal,
-  showStylesModal,
-  socialModalPlatform,
   template,
   updateActiveCaptionProps,
   updateActiveImageLayer,
 }) {
+  const imagePickerTarget = useEditorUiStore((s) => s.imagePickerTarget);
+  const openSourceTemplates = useEditorUiStore((s) => s.openSourceTemplates);
+  const setImagePickerTarget = useEditorUiStore((s) => s.setImagePickerTarget);
+  const setShowAiModal = useEditorUiStore((s) => s.setShowAiModal);
+  const setShowBubbleBottomSheet = useEditorUiStore((s) => s.setShowBubbleBottomSheet);
+  const setShowEmojiModal = useEditorUiStore((s) => s.setShowEmojiModal);
+  const setShowFiltersModal = useEditorUiStore((s) => s.setShowFiltersModal);
+  const setShowMemeStickersModal = useEditorUiStore((s) => s.setShowMemeStickersModal);
+  const setShowStylesModal = useEditorUiStore((s) => s.setShowStylesModal);
+  const showAiModal = useEditorUiStore((s) => s.showAiModal);
+  const showBubbleBottomSheet = useEditorUiStore((s) => s.showBubbleBottomSheet);
+  const showEmojiModal = useEditorUiStore((s) => s.showEmojiModal);
+  const showFiltersModal = useEditorUiStore((s) => s.showFiltersModal);
+  const showMemeStickersModal = useEditorUiStore((s) => s.showMemeStickersModal);
+  const showStylesModal = useEditorUiStore((s) => s.showStylesModal);
+  const socialModalPlatform = useEditorUiStore((s) => s.socialModalPlatform);
   const slotImages = useMemeEditorStore((s) => s.slotImages);
   const setSlotImages = useMemeEditorStore((s) => s.setSlotImages);
   const slotTransforms = useMemeEditorStore((s) => s.slotTransforms);

@@ -6,16 +6,14 @@ import ImageLayerToolbar from './ImageLayerToolbar';
 import StickerToolbar from './StickerToolbar';
 import CaptionToolbar from './CaptionToolbar';
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
+import { useEditorUiStore } from '../store/useEditorUiStore';
 
 export default function ContextToolbar({
   activeCaption,
   activeFontObj,
   activeImageLayer,
   activeSticker,
-  activeSubmenu,
-  activeTab,
   contextToolbarRef,
-  drawTool,
   handleAddBubble,
   handleAddCaption,
   handleChangeFace,
@@ -28,28 +26,31 @@ export default function ContextToolbar({
   handleSetCaptionBg,
   handleStartMorphFace,
   handleToggleDieCutSticker,
-  handleToggleSubmenu,
   isHoldingCanvasCompare,
-  isMobileTabsFolded,
   isRemovingBg,
-  setActiveSubmenu,
-  setDrawTool,
-  setImagePickerTarget,
   setIsHoldingCanvasCompare,
-  setShowAiModal,
-  setShowBubbleBottomSheet,
-  setShowEmojiModal,
   setShowFaceMorphModal,
-  setShowFiltersModal,
-  setShowMemeStickersModal,
-  showBubbleBottomSheet,
-  showBubbleLayouts,
-  showFiltersModal,
-  showStylesModal,
   updateActiveCaptionProps,
-  updateWatermark,
-  watermark,
 }) {
+  const activeSubmenu = useEditorUiStore((s) => s.activeSubmenu);
+  const activeTab = useEditorUiStore((s) => s.activeTab);
+  const drawTool = useEditorUiStore((s) => s.drawTool);
+  const handleToggleSubmenu = useEditorUiStore((s) => s.toggleSubmenu);
+  const isMobileTabsFolded = useEditorUiStore((s) => s.isMobileTabsFolded);
+  const setActiveSubmenu = useEditorUiStore((s) => s.setActiveSubmenu);
+  const setDrawTool = useEditorUiStore((s) => s.setDrawTool);
+  const setImagePickerTarget = useEditorUiStore((s) => s.setImagePickerTarget);
+  const setShowAiModal = useEditorUiStore((s) => s.setShowAiModal);
+  const setShowBubbleBottomSheet = useEditorUiStore((s) => s.setShowBubbleBottomSheet);
+  const setShowEmojiModal = useEditorUiStore((s) => s.setShowEmojiModal);
+  const setShowFiltersModal = useEditorUiStore((s) => s.setShowFiltersModal);
+  const setShowMemeStickersModal = useEditorUiStore((s) => s.setShowMemeStickersModal);
+  const showBubbleBottomSheet = useEditorUiStore((s) => s.showBubbleBottomSheet);
+  const showBubbleLayouts = useEditorUiStore((s) => s.showBubbleLayouts);
+  const showFiltersModal = useEditorUiStore((s) => s.showFiltersModal);
+  const showStylesModal = useEditorUiStore((s) => s.showStylesModal);
+  const updateWatermark = useEditorUiStore((s) => s.updateWatermark);
+  const watermark = useEditorUiStore((s) => s.watermark);
   const templateFaceMorph = useMemeEditorStore((s) => s.templateFaceMorph);
 
   return (

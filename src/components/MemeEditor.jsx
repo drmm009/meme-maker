@@ -68,17 +68,12 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
   const handleUndo = useMemeEditorStore((s) => s.undo);
   const handleRedo = useMemeEditorStore((s) => s.redo);
   const nudgeLayer = useMemeEditorStore((s) => s.nudgeLayer);
-  const imagePickerTarget = useEditorUiStore((s) => s.imagePickerTarget);
-  const setImagePickerTarget = useEditorUiStore((s) => s.setImagePickerTarget);
-  const openSourceTemplates = useEditorUiStore((s) => s.openSourceTemplates);
   const setOpenSourceTemplates = useEditorUiStore((s) => s.setOpenSourceTemplates);
-  const showStylesModal = useEditorUiStore((s) => s.showStylesModal);
   const setShowStylesModal = useEditorUiStore((s) => s.setShowStylesModal);
   const socialModalPlatform = useEditorUiStore((s) => s.socialModalPlatform);
   const setSocialModalPlatform = useEditorUiStore((s) => s.setSocialModalPlatform);
   const activeTab = useEditorUiStore((s) => s.activeTab);
   const setActiveTab = useEditorUiStore((s) => s.setActiveTab);
-  const isMobileTabsFolded = useEditorUiStore((s) => s.isMobileTabsFolded);
   const setIsMobileTabsFolded = useEditorUiStore((s) => s.setIsMobileTabsFolded);
   const showFontMenu = useEditorUiStore((s) => s.showFontMenu);
   const setShowFontMenu = useEditorUiStore((s) => s.setShowFontMenu);
@@ -88,39 +83,19 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
   const setShowTextBlurMenu = useEditorUiStore((s) => s.setShowTextBlurMenu);
   const showTextBgMenu = useEditorUiStore((s) => s.showTextBgMenu);
   const setShowTextBgMenu = useEditorUiStore((s) => s.setShowTextBgMenu);
-  const showFilterPresets = useEditorUiStore((s) => s.showFilterPresets);
   const setShowFilterPresets = useEditorUiStore((s) => s.setShowFilterPresets);
-  const showLayerMenu = useEditorUiStore((s) => s.showLayerMenu);
-  const setShowLayerMenu = useEditorUiStore((s) => s.setShowLayerMenu);
-  const activeSubmenu = useEditorUiStore((s) => s.activeSubmenu);
   const setActiveSubmenu = useEditorUiStore((s) => s.setActiveSubmenu);
   const pasteToast = useEditorUiStore((s) => s.pasteToast);
   const setPasteToast = useEditorUiStore((s) => s.setPasteToast);
-  const showMemeStickersModal = useEditorUiStore((s) => s.showMemeStickersModal);
-  const setShowMemeStickersModal = useEditorUiStore((s) => s.setShowMemeStickersModal);
-  const showEmojiModal = useEditorUiStore((s) => s.showEmojiModal);
-  const setShowEmojiModal = useEditorUiStore((s) => s.setShowEmojiModal);
-  const showFiltersModal = useEditorUiStore((s) => s.showFiltersModal);
-  const setShowFiltersModal = useEditorUiStore((s) => s.setShowFiltersModal);
-  const showBubbleBottomSheet = useEditorUiStore((s) => s.showBubbleBottomSheet);
   const setShowBubbleBottomSheet = useEditorUiStore((s) => s.setShowBubbleBottomSheet);
   const drawTool = useEditorUiStore((s) => s.drawTool);
-  const setDrawTool = useEditorUiStore((s) => s.setDrawTool);
   const brushColor = useEditorUiStore((s) => s.brushColor);
-  const setBrushColor = useEditorUiStore((s) => s.setBrushColor);
   const brushSize = useEditorUiStore((s) => s.brushSize);
-  const setBrushSize = useEditorUiStore((s) => s.setBrushSize);
-  const showAiModal = useEditorUiStore((s) => s.showAiModal);
-  const setShowAiModal = useEditorUiStore((s) => s.setShowAiModal);
   const showBubbleLayouts = useEditorUiStore((s) => s.showBubbleLayouts);
   const setShowBubbleLayouts = useEditorUiStore((s) => s.setShowBubbleLayouts);
   const lastUsedSettingButton = useEditorUiStore((s) => s.lastUsedSettingButton);
   const setLastUsedSettingButton = useEditorUiStore((s) => s.setLastUsedSettingButton);
-  const pendingVideoLayer = useEditorUiStore((s) => s.pendingVideoLayer);
-  const setPendingVideoLayer = useEditorUiStore((s) => s.setPendingVideoLayer);
   const watermark = useEditorUiStore((s) => s.watermark);
-  const handleToggleSubmenu = useEditorUiStore((s) => s.toggleSubmenu);
-  const updateWatermark = useEditorUiStore((s) => s.updateWatermark);
 
   // Native Multi-Panel Layout Support
   const isNativeLayout = template?.isNativeLayout || false;
@@ -532,11 +507,6 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
                   activeCaption={activeCaption}
                   activeImageLayer={activeImageLayer}
                   activeSticker={activeSticker}
-                  activeSubmenu={activeSubmenu}
-                  activeTab={activeTab}
-                  brushColor={brushColor}
-                  brushSize={brushSize}
-                  drawTool={drawTool}
                   handleClearDrawings={handleClearDrawings}
                   handleCycleTextAlignment={handleCycleTextAlignment}
                   handleDeleteLayer={handleDeleteLayer}
@@ -551,14 +521,8 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
                   handleToggleTextCase={handleToggleTextCase}
                   isElementSelected={isElementSelected}
                   moveLayer={moveLayer}
-                  setBrushColor={setBrushColor}
-                  setBrushSize={setBrushSize}
-                  setShowLayerMenu={setShowLayerMenu}
-                  showLayerMenu={showLayerMenu}
                   updateActiveCaptionProps={updateActiveCaptionProps}
                   updateActiveImageLayer={updateActiveImageLayer}
-                  updateWatermark={updateWatermark}
-                  watermark={watermark}
                 />
 
             {/* ─── 2. Main Context Toolbar ─── */}
@@ -567,10 +531,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
               activeFontObj={activeFontObj}
               activeImageLayer={activeImageLayer}
               activeSticker={activeSticker}
-              activeSubmenu={activeSubmenu}
-              activeTab={activeTab}
               contextToolbarRef={contextToolbarRef}
-              drawTool={drawTool}
               handleAddBubble={handleAddBubble}
               handleAddCaption={handleAddCaption}
               handleChangeFace={handleChangeFace}
@@ -583,27 +544,11 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
               handleSetCaptionBg={handleSetCaptionBg}
               handleStartMorphFace={handleStartMorphFace}
               handleToggleDieCutSticker={handleToggleDieCutSticker}
-              handleToggleSubmenu={handleToggleSubmenu}
               isHoldingCanvasCompare={isHoldingCanvasCompare}
-              isMobileTabsFolded={isMobileTabsFolded}
               isRemovingBg={isRemovingBg}
-              setActiveSubmenu={setActiveSubmenu}
-              setDrawTool={setDrawTool}
-              setImagePickerTarget={setImagePickerTarget}
               setIsHoldingCanvasCompare={setIsHoldingCanvasCompare}
-              setShowAiModal={setShowAiModal}
-              setShowBubbleBottomSheet={setShowBubbleBottomSheet}
-              setShowEmojiModal={setShowEmojiModal}
               setShowFaceMorphModal={setShowFaceMorphModal}
-              setShowFiltersModal={setShowFiltersModal}
-              setShowMemeStickersModal={setShowMemeStickersModal}
-              showBubbleBottomSheet={showBubbleBottomSheet}
-              showBubbleLayouts={showBubbleLayouts}
-              showFiltersModal={showFiltersModal}
-              showStylesModal={showStylesModal}
               updateActiveCaptionProps={updateActiveCaptionProps}
-              updateWatermark={updateWatermark}
-              watermark={watermark}
             />
           </div>
 
@@ -615,11 +560,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
           activeCaption={activeCaption}
           activeFontObj={activeFontObj}
           activeImageLayer={activeImageLayer}
-          activeTab={activeTab}
-          brushColor={brushColor}
-          brushSize={brushSize}
           commitAddImageLayer={commitAddImageLayer}
-          drawTool={drawTool}
           getActiveTextEffectId={getActiveTextEffectId}
           getDockHeight={getDockHeight}
           handleAddBubble={handleAddBubble}
@@ -648,26 +589,11 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
           handleUndoDrawing={handleUndoDrawing}
           handleUpdateTemplateMorphProgress={handleUpdateTemplateMorphProgress}
           handleWatermarkImageUpload={handleWatermarkImageUpload}
-          isMobileTabsFolded={isMobileTabsFolded}
-          pendingVideoLayer={pendingVideoLayer}
-          setActiveSubmenu={setActiveSubmenu}
-          setBrushColor={setBrushColor}
-          setBrushSize={setBrushSize}
-          setDrawTool={setDrawTool}
-          setImagePickerTarget={setImagePickerTarget}
-          setPendingVideoLayer={setPendingVideoLayer}
-          setShowAiModal={setShowAiModal}
-          setShowBubbleBottomSheet={setShowBubbleBottomSheet}
-          setShowFilterPresets={setShowFilterPresets}
-          setShowFiltersModal={setShowFiltersModal}
-          showFilterPresets={showFilterPresets}
           tabButtonsRef={tabButtonsRef}
           template={template}
           updateActiveCaption={updateActiveCaption}
           updateActiveCaptionProps={updateActiveCaptionProps}
           updateActiveImageLayer={updateActiveImageLayer}
-          updateWatermark={updateWatermark}
-          watermark={watermark}
           watermarkInputRef={watermarkInputRef}
           watermarkTextInputRef={watermarkTextInputRef}
         />
@@ -690,31 +616,15 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
         handleApplyBubbleStyle={handleApplyBubbleStyle}
         handleApplyFaceMorph={handleApplyFaceMorph}
         handleUpdateSocialCard={handleUpdateSocialCard}
-        imagePickerTarget={imagePickerTarget}
         morphTargetLayerId={morphTargetLayerId}
         morphTargetUrl={morphTargetUrl}
-        openSourceTemplates={openSourceTemplates}
         originalTemplateImgRef={originalTemplateImgRef}
         sampledFaceLighting={sampledFaceLighting}
-        setImagePickerTarget={setImagePickerTarget}
         setIsPinpointingFace={setIsPinpointingFace}
         setMorphTargetLayerId={setMorphTargetLayerId}
         setMorphTargetUrl={setMorphTargetUrl}
-        setShowAiModal={setShowAiModal}
-        setShowBubbleBottomSheet={setShowBubbleBottomSheet}
-        setShowEmojiModal={setShowEmojiModal}
         setShowFaceMorphModal={setShowFaceMorphModal}
-        setShowFiltersModal={setShowFiltersModal}
-        setShowMemeStickersModal={setShowMemeStickersModal}
-        setShowStylesModal={setShowStylesModal}
-        showAiModal={showAiModal}
-        showBubbleBottomSheet={showBubbleBottomSheet}
-        showEmojiModal={showEmojiModal}
         showFaceMorphModal={showFaceMorphModal}
-        showFiltersModal={showFiltersModal}
-        showMemeStickersModal={showMemeStickersModal}
-        showStylesModal={showStylesModal}
-        socialModalPlatform={socialModalPlatform}
         template={template}
         updateActiveCaptionProps={updateActiveCaptionProps}
         updateActiveImageLayer={updateActiveImageLayer}
