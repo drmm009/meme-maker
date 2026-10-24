@@ -16,12 +16,13 @@
   --vt-clip-image: #ff5e36;
   --vt-clip-audio: #2dd4bf;
 
-  position: relative;
+  /* Pinned to the screen like the image editor: viewport heights (100vh/100dvh) come out wrong
+     in iOS home-screen apps and left an empty band under the tool rail. */
+  --vt-safe-top: env(safe-area-inset-top, 0px);
+  position: fixed;
+  inset: 0;
   display: flex;
   flex-direction: column;
-  width: 100%;
-  height: 100vh;
-  height: 100dvh;
   overflow: hidden;
   background: var(--vt-bg);
   color: var(--vt-text);
@@ -38,10 +39,11 @@
   flex: 1 1 auto;
   min-height: 0;
   display: flex;
-  padding: 72px 14px 6px;
+  /* The app draws under the iPhone status bar (black-translucent), so keep clear of it. */
+  padding: calc(72px + var(--vt-safe-top)) 14px 6px;
   transition: padding 0.35s var(--vt-ease);
 }
-.vt-editor.is-preview .vt-stage { padding: 0; }
+.vt-editor.is-preview .vt-stage { padding: var(--vt-safe-top) 0 0; }
 
 .vt-stage-frame {
   position: relative;
@@ -58,7 +60,7 @@
 
 .vt-fab {
   position: absolute;
-  top: 14px;
+  top: calc(14px + var(--vt-safe-top));
   z-index: 20;
   width: 48px;
   height: 48px;
@@ -78,12 +80,12 @@
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
 }
-.vt-export { position: absolute; top: 14px; right: 14px; z-index: 30; }
+.vt-export { position: absolute; top: calc(14px + var(--vt-safe-top)); right: 14px; z-index: 30; }
 .vt-fab--export { position: static; background: var(--vt-grad); box-shadow: var(--vt-glow); }
 
 .vt-ratio {
   position: absolute;
-  top: 22px;
+  top: calc(22px + var(--vt-safe-top));
   left: 50%;
   transform: translateX(-50%);
   z-index: 20;
@@ -697,7 +699,7 @@
 /* ── Restore-draft banner ───────────────────────────────────── */
 .vt-draft {
   position: absolute;
-  top: 74px;
+  top: calc(74px + var(--vt-safe-top));
   left: 50%;
   z-index: 35;
   transform: translateX(-50%);
@@ -893,7 +895,7 @@
 /* ── Busy pill (clip jobs like reverse) ─────────────────────── */
 .vt-busy {
   position: absolute;
-  top: 74px;
+  top: calc(74px + var(--vt-safe-top));
   left: 50%;
   z-index: 36;
   transform: translateX(-50%);
