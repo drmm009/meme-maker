@@ -2,7 +2,7 @@ import { Plus, Spline, Quote, Smile, Sticker, Droplet, Highlighter, Sun, FlipHor
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
 import { useEditorUiStore } from '../store/useEditorUiStore';
 
-// The editor's tools by group (the group is the editor's activeTab), shown in the bottom bar.
+// The editor's tools by section (the editor's activeTab), shown in the island when a section is open.
 // Each tool: { id, label, title, Icon, active?, onClick } or, for file pickers, { accept, onFile }.
 export function useTabTools({
   handleAddBubble,
@@ -39,7 +39,7 @@ export function useTabTools({
 
   return {
     text: [
-      { id: 'add-text', label: 'Text', title: 'Add Text Caption', Icon: Plus, onClick: handleAddCaption },
+      { id: 'add-text', label: 'Add Text', title: 'Add Text Caption', Icon: Plus, onClick: handleAddCaption },
       { id: 'ai', label: 'AI Captions', title: 'AI Meme Captions', Icon: WandSparkles, onClick: () => setShowAiModal(true) },
       { id: 'phrases', label: 'Phrases', title: 'Quick Phrases', Icon: Quote, active: activeSubmenu === 'phrases', onClick: () => toggleSubmenu('phrases') },
       { id: 'bubble', label: 'Bubble', title: 'Add Chat & Speech Bubble', Icon: MessageSquareQuote, active: showBubbleBottomSheet, onClick: () => { handleAddBubble(); setShowBubbleBottomSheet(true); setActiveSubmenu(null); } },

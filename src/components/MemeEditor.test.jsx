@@ -76,8 +76,17 @@ const captionTexts = () => screen.queryAllByTestId('caption').map((el) => el.tex
 const deselect = () => act(() => canvas.props.onSelectLayer(null));
 const undoButton = () => screen.getByTitle('Undo');
 const redoButton = () => screen.getByTitle('Redo');
-// Every tool sits in the bottom bar's single row.
-const addTextFromMenu = () => fireEvent.click(screen.getByTitle('Add Text Caption'));
+// The island shows sections; a section swaps in its tools with a Back button.
+const backButton = () => screen.queryByLabelText('Back to sections');
+const openTab = (label) => {
+  if (backButton()) fireEvent.click(backButton());
+  const nav = screen.getByRole('navigation', { name: 'Editor sections' });
+  fireEvent.click([...nav.querySelectorAll('button')].find((b) => b.textContent === label));
+};
+const addTextFromMenu = () => {
+  if (!screen.queryByTitle('Add Text Caption')) openTab('Text');
+  fireEvent.click(screen.getByTitle('Add Text Caption'));
+};
 
 function renderEditor(template = TEMPLATE, onSaveToGallery = vi.fn()) {
   return render(<MemeEditor template={template} onBack={vi.fn()} onSaveToGallery={onSaveToGallery} />);
@@ -158,27 +167,32 @@ describe('MemeEditor', () => {
     expect(captionTexts()).toHaveLength(4);
   }, 30000);
 
-  it('shows every tool in one row and swaps in layer tools with Done', () => {
+  it('opens each section in the island and goes back', () => {
     renderEditor();
-    const bar = screen.getByRole('toolbar', { name: 'Editor tools' });
-    for (const title of ['Add Text Caption', 'Add Meme Stickers', 'Brush: solid stroke', 'Photo Filters', 'Flip Canvas Horizontal']) {
-      expect(bar.querySelector(`[title="${title}"]`), title).toBeTruthy();
+    for (const label of ['Draw', 'Media', 'Text', 'AI', 'Canvas']) {
+      openTab(label);
+      expect(screen.getByRole('navigation', { name: `${label} tools` })).toBeTruthy();
+      fireEvent.click(backButton());
+      expect(screen.getByRole('navigation', { name: 'Editor sections' })).toBeTruthy();
     }
+  }, 30000);
+
+  it('swaps a selected layer’s tools into the island with Done', () => {
+    renderEditor();
     addTextFromMenu();
-    expect(screen.queryByRole('toolbar', { name: 'Editor tools' })).toBeNull();
     expect(screen.getByRole('toolbar', { name: 'Layer tools' })).toBeTruthy();
     fireEvent.click(screen.getByText('Done'));
     expect(canvas.props.activeLayerId).toBe(null);
-    expect(screen.getByRole('toolbar', { name: 'Editor tools' })).toBeTruthy();
+    expect(screen.getByRole('navigation', { name: 'Text tools' })).toBeTruthy();
   }, 30000);
 
   it('turns on drawing mode on the Draw tab', () => {
     renderEditor();
-    fireEvent.click(screen.getByTitle('Brush: solid stroke'));
+    openTab('Draw');
     expect(canvas.props.isDrawingMode).toBe(true);
     expect(canvas.props.drawTool).toBe('brush');
-    // Tapping the active brush again stops drawing.
-    fireEvent.click(screen.getByTitle('Brush: solid stroke'));
+    // Going back to the sections stops drawing.
+    fireEvent.click(backButton());
     expect(canvas.props.isDrawingMode).toBe(false);
   }, 30000);
 
@@ -206,6 +220,7 @@ describe('MemeEditor', () => {
 
   it('flips the canvas from the Canvas tab', () => {
     renderEditor();
+    openTab('Canvas');
     expect(canvas.props.canvasFlipX).toBeFalsy();
     fireEvent.click(screen.getAllByTitle(/Flip (Canvas|base template) Horizontal/i)[0]);
     expect(canvas.props.canvasFlipX).toBe(true);
