@@ -119,14 +119,14 @@ const placeMedia = (item, aspectRatio, mode) => {
   return { x: (dims.width - w0 * s) / 2, y: (dims.height - h0 * s) / 2, scaleX: s, scaleY: s };
 };
 
-function RailButton({ label, Icon, onClick, active, danger, dim, children }) {
+function RailButton({ label, Icon, onClick, active, danger, dim, done, children }) {
   return (
     <button
       type="button"
-      className={`vt-tool${active ? ' is-active' : ''}${danger ? ' is-danger' : ''}${dim ? ' is-dim' : ''}`}
+      className={`vt-tool${active ? ' is-active' : ''}${danger ? ' is-danger' : ''}${dim ? ' is-dim' : ''}${done ? ' is-done' : ''}`}
       onClick={onClick}
     >
-      <span className="vt-tool-icon">{children || <Icon size={20} strokeWidth={2} />}</span>
+      <span className="vt-tool-icon">{children || <Icon size={19} strokeWidth={1.9} />}</span>
       <span className="vt-tool-label">{label}</span>
     </button>
   );
@@ -655,7 +655,7 @@ function ClipTools({ item, panel, setPanel }) {
 
   return (
     <>
-      <RailButton label="Done" Icon={Check} active onClick={() => store().setActiveItem(null)} />
+      <RailButton label="Done" Icon={Check} done onClick={() => store().setActiveItem(null)} />
       <span className="vt-rail-divider" aria-hidden="true" />
       {tools}
     </>
@@ -713,7 +713,7 @@ export default function ToolRail({ onAdd }) {
             aria-pressed={!activeItem && sec.id === section.id}
             onClick={() => openSection(sec.id)}
           >
-            <sec.Icon size={18} strokeWidth={2.2} />
+            <sec.Icon size={20} strokeWidth={1.8} />
             <span>{sec.label}</span>
           </button>
         ))}
