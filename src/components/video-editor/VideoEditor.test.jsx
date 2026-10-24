@@ -50,16 +50,16 @@ describe('VideoEditor', () => {
     expect(screen.queryByText('Photo')).toBeNull();
   });
 
-  it('opens the tools of a section in a drop-up and closes it on a second tap', () => {
+  it('swaps the dock to a section’s tools and goes back to the sections', () => {
     render(<VideoEditor onBack={() => {}} />);
     fireEvent.click(screen.getByText('Media'));
-    expect(screen.getByRole('menu', { name: 'Media tools' })).toBeTruthy();
-    for (const label of ['Photo', 'Video', 'Clips', 'Templates']) expect(screen.getByRole('menuitem', { name: label })).toBeTruthy();
+    expect(screen.getByRole('navigation', { name: 'Media tools' })).toBeTruthy();
+    for (const label of ['Photo', 'Video', 'Clips', 'Templates']) expect(screen.getByText(label)).toBeTruthy();
+    expect(screen.queryByText('Audio')).toBeNull();
+    fireEvent.click(screen.getByLabelText('Back to sections'));
+    expect(screen.getByRole('navigation', { name: 'Sections' })).toBeTruthy();
     fireEvent.click(screen.getByText('Audio'));
-    expect(screen.queryByRole('menu', { name: 'Media tools' })).toBeNull();
-    expect(screen.getByRole('menuitem', { name: 'Voice' })).toBeTruthy();
-    fireEvent.click(screen.getByText('Audio'));
-    expect(screen.queryByRole('menu')).toBeNull();
+    expect(screen.getByText('Voice')).toBeTruthy();
   });
 
   it('adds a text clip from the rail and shows it on the timeline', () => {

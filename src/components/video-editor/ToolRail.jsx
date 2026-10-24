@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
   Type, Sticker, Smile, LayoutGrid, Image as ImageIcon, Film, Clapperboard, Music,
   Check, Gauge, Volume2, VolumeX, Palette, Square, RotateCw, Minimize, Crop, Maximize, Copy, Trash2,
-  Scissors, PencilLine, ALargeSmall, TextAlignStart, TextAlignCenter, TextAlignEnd, SlidersHorizontal, WandSparkles, Pipette, Sparkles, ImagePlay, PaintBucket, Zap, Snowflake, Rewind, Repeat, ZoomIn, BringToFront, SendToBack, Blend, Mic, ArrowRightLeft, Frame, Plus, Upload, Library, Laugh, SquarePlay, Captions
+  Scissors, PencilLine, ALargeSmall, TextAlignStart, TextAlignCenter, TextAlignEnd, SlidersHorizontal, WandSparkles, Pipette, Sparkles, ImagePlay, PaintBucket, Zap, Snowflake, Rewind, Repeat, ZoomIn, BringToFront, SendToBack, Blend, Mic, ArrowRightLeft, Frame, Plus, Upload, Library, Laugh, SquarePlay, Captions, ChevronLeft
 } from 'lucide-react';
 import { useEditorStore, clipEffectBase, sourceTimeMs } from '../../store/useVideoEditorStore';
 import { captureFrame, renderClipEffect } from '../../utils/clipEffects';
@@ -664,11 +664,11 @@ function ClipTools({ item, panel, setPanel }) {
 
 // Bottom tool rail: add tools, or the selected clip's tools (with an optional slider/text panel above).
 const sectionOfTool = (kind) => SECTIONS.find((sec) => sec.tools.some((t) => t.kind === kind));
-const MENU_W = 184;
 
-// Bottom section: a dock of sections, each opening a drop-up menu of its tools (a one-tool section
-// runs its tool directly). A selected clip gets its own tool row above the dock; panels (sliders,
-// SFX, voice…) open above everything.
+// Bottom section: a dock of sections, styled like the app's bottom nav. Tapping a section swaps the
+// dock to its tools, with a back button to the sections (a one-tool section runs its tool
+// directly). A selected clip gets its own tool row above the dock; panels (sliders, SFX, voice…)
+// open above everything. Same pattern as the image editor's dock.
 export default function ToolRail({ onAdd }) {
   const activeItem = useEditorStore((s) => s.items.find((i) => i.id === s.activeItemId));
   const [panelState, setPanelState] = useState({ id: null, name: null });
@@ -680,54 +680,34 @@ export default function ToolRail({ onAdd }) {
     return { id: ownerId, name: typeof fn === 'function' ? fn(current) : fn };
   });
   const Panel = panel && PANELS[panel];
-  const [menu, setMenu] = useState(null); // { id, left } of the open drop-up
-  const wrapRef = useRef(null);
-
-  // Tapping anywhere else closes the drop-up; so does selecting a clip.
-  useEffect(() => {
-    if (!menu) return undefined;
-    const onDown = (e) => { if (!wrapRef.current?.contains(e.target)) setMenu(null); };
-    document.addEventListener('pointerdown', onDown);
-    return () => document.removeEventListener('pointerdown', onDown);
-  }, [menu]);
-  useEffect(() => { if (activeItem) setMenu(null); }, [activeItem]);
+  const [openId, setOpenId] = useState(null); // section whose tools fill the dock, or null
+  const [lastId, setLastId] = useState('media'); // last section used, highlighted on the main dock
+  // Selecting a clip brings back the sections (the clip's own tools show above them).
+  const activeId = activeItem?.id;
+  useEffect(() => { if (activeId) setOpenId(null); }, [activeId]);
 
   const runTool = (t) => {
-    setMenu(null);
     if (t.panel) setPanel((p) => (p === t.kind ? null : t.kind));
     else { setPanel(null); onAdd(t.kind); }
   };
 
-  // Opening a section deselects any clip and closes panels; tapping its tab again closes the menu.
-  const openSection = (sec, tab) => {
+  // Opening a section deselects any clip and closes panels.
+  const openSection = (sec) => {
     if (activeItem) useEditorStore.getState().setActiveItem(null);
-    if (sec.tools.length === 1) { setMenu(null); setPanelState({ id: null, name: null }); runTool(sec.tools[0]); return; }
-    if (menu?.id === sec.id) { setMenu(null); return; }
     setPanelState({ id: null, name: null });
-    const wrap = wrapRef.current.getBoundingClientRect();
-    const r = tab.getBoundingClientRect();
-    const center = r.left + r.width / 2 - wrap.left;
-    setMenu({ id: sec.id, left: Math.max(8, Math.min(wrap.width - MENU_W - 8, center - MENU_W / 2)) });
+    setLastId(sec.id);
+    if (sec.tools.length === 1) runTool(sec.tools[0]);
+    else setOpenId(sec.id);
   };
 
-  const menuSection = menu && SECTIONS.find((sec) => sec.id === menu.id);
+  const open = openId && SECTIONS.find((sec) => sec.id === openId);
   const panelSection = !activeItem && panel ? sectionOfTool(panel) : null;
 
   return (
-    <div className="vt-rail-wrap" ref={wrapRef}>
+    <div className="vt-rail-wrap">
       {Panel && (
         <div className="vt-panel" role="group" aria-label="Clip settings">
           <Panel item={activeItem} onMore={() => { setPanel(null); onAdd('sounds'); }} />
-        </div>
-      )}
-      {menuSection && (
-        <div className="vt-dropup" role="menu" aria-label={`${menuSection.label} tools`} style={{ left: menu.left, width: MENU_W }}>
-          {menuSection.tools.map((t) => (
-            <button key={t.kind} type="button" role="menuitem" className="vt-dropup-item" onClick={() => runTool(t)}>
-              <t.Icon size={20} />
-              <span>{t.label}</span>
-            </button>
-          ))}
         </div>
       )}
       {activeItem && (
@@ -735,24 +715,40 @@ export default function ToolRail({ onAdd }) {
           <ClipTools item={activeItem} panel={panel} setPanel={setPanel} />
         </div>
       )}
-      <nav className="vt-dock" aria-label="Sections">
-        {SECTIONS.map((sec) => {
-          const on = !activeItem && (menu?.id === sec.id || panelSection?.id === sec.id);
-          return (
-            <button
-              key={sec.id}
-              type="button"
-              className={`vt-dock-tab${on ? ' is-active' : ''}`}
-              aria-expanded={sec.tools.length > 1 ? menu?.id === sec.id : undefined}
-              onClick={(e) => openSection(sec, e.currentTarget)}
-            >
-              <sec.Icon className="vt-dock-icon" size={20} />
-              <span className="vt-dock-label">{sec.label}</span>
-              {on && <span className="vt-dock-dot" />}
-            </button>
-          );
-        })}
-      </nav>
+      {open ? (
+        <nav key={open.id} className="vt-dock vt-dock--tools" aria-label={`${open.label} tools`}>
+          <button type="button" className="vt-dock-tab vt-dock-back" onClick={() => { setOpenId(null); setPanelState({ id: null, name: null }); }} aria-label="Back to sections" title="Back">
+            <ChevronLeft className="vt-dock-icon" size={22} />
+            <span className="vt-dock-label">{open.label}</span>
+          </button>
+          <span className="vt-dock-divider" aria-hidden="true" />
+          <div className="vt-dock-tools">
+            {open.tools.map((t) => {
+              const on = !activeItem && t.panel && panel === t.kind;
+              return (
+                <button key={t.kind} type="button" className={`vt-dock-tab vt-dock-tool${on ? ' is-active' : ''}`} onClick={() => runTool(t)}>
+                  <t.Icon className="vt-dock-icon" size={20} />
+                  <span className="vt-dock-label">{t.label}</span>
+                  {on && <span className="vt-dock-dot" />}
+                </button>
+              );
+            })}
+          </div>
+        </nav>
+      ) : (
+        <nav className="vt-dock" aria-label="Sections">
+          {SECTIONS.map((sec) => {
+            const on = !activeItem && (panelSection ? panelSection.id === sec.id : lastId === sec.id);
+            return (
+              <button key={sec.id} type="button" className={`vt-dock-tab${on ? ' is-active' : ''}`} onClick={() => openSection(sec)}>
+                <sec.Icon className="vt-dock-icon" size={20} />
+                <span className="vt-dock-label">{sec.label}</span>
+                {on && <span className="vt-dock-dot" />}
+              </button>
+            );
+          })}
+        </nav>
+      )}
     </div>
   );
 }
