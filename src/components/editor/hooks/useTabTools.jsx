@@ -1,4 +1,4 @@
-import { Plus, Spline, Quote, Smile, Sticker, Droplet, Highlighter, Sun, FlipHorizontal, MessageSquareQuote, Brush, SunMedium, ImagePlus, LayoutTemplate, Rows3, WandSparkles, ScanFace } from 'lucide-react';
+import { Plus, Smile, Sticker, Droplet, Highlighter, Sun, FlipHorizontal, MessageSquareQuote, Brush, SunMedium, ImagePlus, LayoutTemplate, Rows3, WandSparkles, ScanFace } from 'lucide-react';
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
 import { useEditorUiStore } from '../store/useEditorUiStore';
 
@@ -7,7 +7,6 @@ import { useEditorUiStore } from '../store/useEditorUiStore';
 export function useTabTools({
   handleAddBubble,
   handleAddCaption,
-  handleAddCurvedText,
   handleFileUploadImageLayer,
   handleToggleCanvasFlip,
   setShowFaceMorphModal,
@@ -41,9 +40,7 @@ export function useTabTools({
     text: [
       { id: 'add-text', label: 'Add Text', title: 'Add Text Caption', Icon: Plus, onClick: handleAddCaption },
       { id: 'ai', label: 'AI Captions', title: 'AI Meme Captions', Icon: WandSparkles, onClick: () => setShowAiModal(true) },
-      { id: 'phrases', label: 'Phrases', title: 'Quick Phrases', Icon: Quote, active: activeSubmenu === 'phrases', onClick: () => toggleSubmenu('phrases') },
       { id: 'bubble', label: 'Bubble', title: 'Add Chat & Speech Bubble', Icon: MessageSquareQuote, active: showBubbleBottomSheet, onClick: () => { handleAddBubble(); setShowBubbleBottomSheet(true); setActiveSubmenu(null); } },
-      { id: 'curved', label: 'Curved', title: 'Add Curved Text', Icon: Spline, onClick: handleAddCurvedText },
       { id: 'banner', label: 'Header/Footer', title: 'Header & Footer bands', Icon: Rows3, active: canvasHeader.enabled || canvasFooter.enabled || activeSubmenu === 'banner', onClick: () => toggleSubmenu('banner') },
     ],
     images: [

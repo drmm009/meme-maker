@@ -203,7 +203,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
   }, [lastUsedSettingButton, showFontMenu, showTextCurveMenu, showTextBlurMenu, showTextBgMenu, showBubbleLayouts]);
 
   const { handleAddDrawing, handleClearDrawings, handleUndoDrawing } = useDrawingActions();
-  const { handleApplyAiCaption, handleAddCaption, handleAddCurvedText, handleAddPresetPhrase, handleToggleTextCase, handleCycleTextAlignment, updateActiveCaptionProps, handleSetCaptionBg } = useCaptionActions({ activeCaption, handleToggleCanvasHeader });
+  const { handleApplyAiCaption, handleAddCaption, handleAddPresetPhrase, handleToggleTextCase, handleCycleTextAlignment, updateActiveCaptionProps, handleSetCaptionBg } = useCaptionActions({ activeCaption, handleToggleCanvasHeader });
   const { commitAddImageLayer, handleAddImageLayer, handleFileUploadImageLayer, updateActiveImageLayer, moveLayer, handleDeleteLayer, handleDuplicateLayer, handleRotateLayer, handleFlipActiveLayer, handleToggleDieCutSticker, handleSetDieCutColor, updateSlotTransform, handleAddSticker, handleAddGraphicSticker } = useLayerActions({ activeCaption, activeImageLayer, activeSticker, updateActiveCaptionProps });
   
 
@@ -425,7 +425,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
       {/* Tab dock */}
       <EditorSidebar
         handleTabClick={handleTabClick}
-        toolHandlers={{ handleAddBubble, handleAddCaption, handleAddCurvedText, handleFileUploadImageLayer, handleToggleCanvasFlip, setShowFaceMorphModal }}
+        toolHandlers={{ handleAddBubble, handleAddCaption, handleFileUploadImageLayer, handleToggleCanvasFlip, setShowFaceMorphModal }}
         layerTools={(
           <ContextToolbar
             handleUpdateTemplateMorphProgress={handleUpdateTemplateMorphProgress}
