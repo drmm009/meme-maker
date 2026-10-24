@@ -2,11 +2,12 @@ import React, { useState } from 'react';
 import {
   Type, Sticker, Smile, LayoutGrid, Image as ImageIcon, Film, Clapperboard, Music, AudioLines,
   Check, Gauge, Volume2, VolumeX, Palette, Square, RotateCw, Minimize, Crop, Maximize, Copy, Trash2,
-  Scissors, PencilLine, ALargeSmall, TextAlignStart, TextAlignCenter, TextAlignEnd, SlidersHorizontal, WandSparkles, Pipette, Sparkles, ImagePlay, PaintBucket, Zap, Snowflake, Rewind, Repeat, ZoomIn, BringToFront, SendToBack
+  Scissors, PencilLine, ALargeSmall, TextAlignStart, TextAlignCenter, TextAlignEnd, SlidersHorizontal, WandSparkles, Pipette, Sparkles, ImagePlay, PaintBucket, Zap, Snowflake, Rewind, Repeat, ZoomIn, BringToFront, SendToBack, Blend
 } from 'lucide-react';
 import { useEditorStore, clipEffectBase, sourceTimeMs } from '../../store/useVideoEditorStore';
 import { captureFrame, renderClipEffect } from '../../utils/clipEffects';
 import { clipPunchTimes } from '../../utils/zoomPunch';
+import { FILTER_PRESETS } from '../../utils/clipFilters';
 import { FONTS } from '../../data/stickers';
 import { DEFAULT_FADE_MS } from '../../utils/audioFades';
 import { DEFAULT_CHROMA_KEY } from '../../utils/chromaKey';
@@ -293,7 +294,39 @@ function PunchPanel({ item }) {
   );
 }
 
-const PANELS = { volume: VolumePanel, size: SizePanel, text: TextPanel, greenscreen: GreenScreenPanel, animation: AnimationPanel, background: BackgroundPanel, sfx: SfxPanel, punch: PunchPanel };
+const FILTER_SLIDERS = [
+  { key: 'brightness', label: 'Bright' },
+  { key: 'contrast', label: 'Contrast' },
+  { key: 'saturation', label: 'Colour' },
+];
+
+function FilterPanel({ item }) {
+  const filter = item.filter || {};
+  const set = (patch) => update(item.id, { filter: { ...filter, ...patch } });
+  return (
+    <>
+      <div className="vt-chip-row">
+        {FILTER_PRESETS.map((p) => (
+          <button key={p.label} type="button" className={`vt-chip${(filter.preset ?? null) === p.id ? ' is-on' : ''}`} onClick={() => set({ preset: p.id })}>
+            {p.label}
+          </button>
+        ))}
+      </div>
+      {FILTER_SLIDERS.map(({ key, label }) => {
+        const value = Math.round(filter[key] || 0);
+        return (
+          <label key={key} className="vt-slider-row">
+            <span>{label}</span>
+            <input type="range" min="-100" max="100" step="1" value={value} onChange={(e) => set({ [key]: Number(e.target.value) })} />
+            <output>{value > 0 ? `+${value}` : value}</output>
+          </label>
+        );
+      })}
+    </>
+  );
+}
+
+const PANELS = { volume: VolumePanel, size: SizePanel, text: TextPanel, greenscreen: GreenScreenPanel, animation: AnimationPanel, background: BackgroundPanel, sfx: SfxPanel, punch: PunchPanel, filter: FilterPanel };
 
 function ClipTools({ item, panel, setPanel }) {
   const aspectRatio = useEditorStore((s) => s.canvasAspectRatio);
@@ -372,7 +405,10 @@ function ClipTools({ item, panel, setPanel }) {
     );
   }
   if (item.type === 'image' || item.type === 'video') {
+    const preset = FILTER_PRESETS.find((p) => p.id === (item.filter?.preset ?? null));
+    const filtered = Boolean(item.filter && (item.filter.preset || item.filter.brightness || item.filter.contrast || item.filter.saturation));
     tools.push(
+      <RailButton key="filter" label={filtered && preset?.id ? preset.label : 'Filters'} Icon={Blend} active={panel === 'filter' || filtered} onClick={() => togglePanel('filter')} />,
       <RailButton key="fit" label="Fit" Icon={Minimize} onClick={() => update(item.id, placeMedia(item, aspectRatio, 'fit'))} />,
       <RailButton key="cover" label="Fill" Icon={Crop} onClick={() => update(item.id, placeMedia(item, aspectRatio, 'cover'))} />,
       <RailButton key="stretch" label="Stretch" Icon={Maximize} onClick={() => update(item.id, placeMedia(item, aspectRatio, 'stretch'))} />

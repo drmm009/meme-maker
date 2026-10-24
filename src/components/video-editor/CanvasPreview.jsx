@@ -9,6 +9,7 @@ import { REST_FRAME, animationLengthMs, applyTextFrame, textAnimFrame } from '..
 import { decodeGif, frameIndexAt, isGifUrl } from '../../utils/gif';
 import { clipPunchTimes, punchZoom } from '../../utils/zoomPunch';
 import { drawOrder } from '../../utils/layerOrder';
+import { filterCss, resolveFilter } from '../../utils/clipFilters';
 
 // Zoom-punch in the preview: crop into the middle of the source so the clip zooms inside its own
 // frame (the export scales up and crops back the same way). Returns true if the crop changed.
@@ -30,6 +31,8 @@ const applyPunch = (node, zoom) => {
 
 // Green-screen frames are keyed at most this many pixels on the long side; Konva scales them up.
 const KEY_MAX_SIDE = 640;
+// Photos with a filter are processed once, so they keep more detail.
+const STILL_FX_MAX_SIDE = 1280;
 
 // Custom component to handle Image and Video rendering on Konva Canvas
 const CanvasMedia = ({ item, isSelected, onSelect, onChange, canvasDimensions }) => {
@@ -52,11 +55,16 @@ const CanvasMedia = ({ item, isSelected, onSelect, onChange, canvasDimensions })
     return true;
   };
 
-  // Green screen: video frames go through an offscreen canvas with the key colour made transparent.
+  // Frame effects: green screen (video) and colour filters (video and photo) are drawn through an
+  // offscreen canvas, keying first and then filtering, the same order as the export.
   const chromaKey = item.type === 'video' && item.chromaKey ? item.chromaKey : null;
   const chromaRef = useRef(chromaKey);
   chromaRef.current = chromaKey;
+  const css = item.type === 'video' || item.type === 'image' ? filterCss(resolveFilter(item.filter)) : '';
+  const cssRef = useRef(css);
+  cssRef.current = css;
   const keyCanvasRef = useRef(null);
+  const scratchCanvasRef = useRef(null);
   const [keyed, setKeyed] = useState(false);
   const keyedRef = useRef(false);
   // Show the keyed canvas only once a frame has actually been keyed (the video may not have loaded yet).
@@ -64,18 +72,30 @@ const CanvasMedia = ({ item, isSelected, onSelect, onChange, canvasDimensions })
     if (ok !== keyedRef.current) { keyedRef.current = ok; setKeyed(ok); }
   };
 
-  // Draws the current video frame keyed into the offscreen canvas. Returns false if it couldn't.
-  const keyFrame = (vid) => {
+  // Draws the current frame (video) or the picture (photo) with its effects into the offscreen
+  // canvas. Returns false if there is nothing to do or it couldn't.
+  const keyFrame = (src) => {
     const key = chromaRef.current;
-    if (!key || !vid?.videoWidth) return false;
-    const scale = Math.min(1, KEY_MAX_SIDE / Math.max(vid.videoWidth, vid.videoHeight));
-    const w = Math.max(1, Math.round(vid.videoWidth * scale));
-    const h = Math.max(1, Math.round(vid.videoHeight * scale));
+    const filter = cssRef.current;
+    const sw = src?.videoWidth || src?.naturalWidth || 0;
+    const sh = src?.videoHeight || src?.naturalHeight || 0;
+    if ((!key && !filter) || !sw) return false;
+    const scale = Math.min(1, (src.videoWidth ? KEY_MAX_SIDE : STILL_FX_MAX_SIDE) / Math.max(sw, sh));
+    const w = Math.max(1, Math.round(sw * scale));
+    const h = Math.max(1, Math.round(sh * scale));
     const canvas = keyCanvasRef.current || (keyCanvasRef.current = document.createElement('canvas'));
     if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
     const ctx = canvas.getContext('2d', { willReadFrequently: true });
     try {
-      ctx.drawImage(vid, 0, 0, w, h);
+      ctx.filter = 'none';
+      ctx.clearRect(0, 0, w, h);
+      if (!key) {
+        ctx.filter = filter;
+        ctx.drawImage(src, 0, 0, w, h);
+        ctx.filter = 'none';
+        return true;
+      }
+      ctx.drawImage(src, 0, 0, w, h);
       const frame = ctx.getImageData(0, 0, w, h);
       if (key.color === 'auto') {
         // First keyed frame: pick the actual screen colour from the corners, tune the tolerances to it, and remember both.
@@ -85,6 +105,18 @@ const CanvasMedia = ({ item, isSelected, onSelect, onChange, canvasDimensions })
       }
       applyChromaKey(frame.data, chromaRef.current);
       ctx.putImageData(frame, 0, 0);
+      if (filter) {
+        // Filter the keyed pixels: copy them aside, then draw them back through the filter.
+        const scratch = scratchCanvasRef.current || (scratchCanvasRef.current = document.createElement('canvas'));
+        if (scratch.width !== w || scratch.height !== h) { scratch.width = w; scratch.height = h; }
+        const sctx = scratch.getContext('2d');
+        sctx.clearRect(0, 0, w, h);
+        sctx.drawImage(canvas, 0, 0);
+        ctx.clearRect(0, 0, w, h);
+        ctx.filter = filter;
+        ctx.drawImage(scratch, 0, 0);
+        ctx.filter = 'none';
+      }
       return true;
     } catch (e) {
       // A cross-origin video without CORS headers can't be read back; show it unkeyed.
@@ -100,10 +132,11 @@ const CanvasMedia = ({ item, isSelected, onSelect, onChange, canvasDimensions })
   syncKeyedRef.current = syncKeyed;
 
   useEffect(() => {
-    if (item.type !== 'video' || !image) return;
-    syncKeyed(Boolean(chromaKey) && keyFrameRef.current(image));
+    // Photos only (GIF stickers draw their own frames); a GIF's canvas has no naturalWidth.
+    if ((item.type !== 'video' && item.type !== 'image') || !image) return;
+    syncKeyed(Boolean(chromaKey || css) && keyFrameRef.current(image));
     imageRef.current?.getLayer()?.batchDraw();
-  }, [image, chromaKey, item.type]);
+  }, [image, chromaKey, css, item.type]);
 
   useEffect(() => {
     itemRef.current = item;
@@ -226,7 +259,7 @@ const CanvasMedia = ({ item, isSelected, onSelect, onChange, canvasDimensions })
       if ('requestVideoFrameCallback' in vid) {
         const updateFrame = () => {
           if (imageRef.current && imageRef.current.visible()) {
-            if (chromaRef.current) syncKeyedRef.current(keyFrameRef.current(vid));
+            if (chromaRef.current || cssRef.current) syncKeyedRef.current(keyFrameRef.current(vid));
             imageRef.current.getLayer()?.batchDraw();
           }
           rvfcId = vid.requestVideoFrameCallback(updateFrame);
@@ -393,7 +426,7 @@ const CanvasMedia = ({ item, isSelected, onSelect, onChange, canvasDimensions })
     <React.Fragment>
       <KonvaImage
         ref={imageRef}
-        image={keyed && chromaKey ? keyCanvasRef.current : image}
+        image={keyed && (chromaKey || css) ? keyCanvasRef.current : image}
         x={item.x || 0}
         y={item.y || 0}
         width={item.width || 200}

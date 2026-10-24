@@ -9,6 +9,7 @@ import { ExportCancelledError, etaSeconds, overallPercent, parseFfmpegTime } fro
 import { downloadBlob } from './shareFile';
 import { clipPunchTimes, punchFilter } from './zoomPunch';
 import { drawOrder } from './layerOrder';
+import { filterChain, resolveFilter } from './clipFilters';
 import { REST_FRAME, animationSteps, applyTextFrame, shakeExpressions } from './textAnimation';
 
 let ffmpeg = null;
@@ -230,7 +231,9 @@ export const exportVideoFFmpeg = async (items = [], durationMs = 7000, canvasAsp
       const pbRate = typeof item.playbackRate === 'number' && !isNaN(item.playbackRate) ? item.playbackRate : 1.0;
       const ptsOffset = isVideo || isGif ? `+${startT}/TB` : '';
       const keyFilter = isVideo ? chromaKeyFilter(item.chromaKey) : '';
-      filterComplex += `[${inputIndex}:v]setpts=(PTS-STARTPTS)/${pbRate}${ptsOffset},scale=${w}:${h}${isVideo ? punchFilter(clipPunchTimes(item), w, h) : ''}${keyFilter}[vis${inputIndex}];`;
+      // Colour filters on videos and photos (not stickers), after keying like the preview.
+      const colourFilter = isVideo || (item.type === 'image' && !isGif) ? filterChain(resolveFilter(item.filter)) : '';
+      filterComplex += `[${inputIndex}:v]setpts=(PTS-STARTPTS)/${pbRate}${ptsOffset},scale=${w}:${h}${isVideo ? punchFilter(clipPunchTimes(item), w, h) : ''}${keyFilter}${colourFilter}[vis${inputIndex}];`;
       filterComplex += `[${currentBgIndex === 0 ? '0:v' : `bg${currentBgIndex}`}][vis${inputIndex}]overlay=${x}:${y}:enable='between(t,${startT},${endT})':eof_action=pass:shortest=0[bg${currentBgIndex + 1}];`;
       
       currentBgIndex++;

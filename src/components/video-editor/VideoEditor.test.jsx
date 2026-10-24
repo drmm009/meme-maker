@@ -257,6 +257,18 @@ describe('VideoEditor', () => {
     expect(drawOrder(store().items).map((i) => i.type)).toEqual(['text', 'sticker']);
   });
 
+  it('applies a filter preset and adjustments to a video', () => {
+    act(() => store().addItem({ type: 'video', url: 'a.mp4', durationMs: 2000 }));
+    const { container } = render(<VideoEditor onBack={() => {}} />);
+    fireEvent.click(clips(container)[0]);
+    fireEvent.click(screen.getByText('Filters'));
+    fireEvent.click(screen.getByText('Vintage'));
+    const [bright] = screen.getAllByRole('slider');
+    fireEvent.change(bright, { target: { value: '30' } });
+    expect(store().items[0].filter).toEqual({ preset: 'vintage', brightness: 30 });
+    expect(screen.getAllByText('Vintage').length).toBeGreaterThan(1);
+  });
+
   it('calls onBack from the close button', () => {
     const onBack = vi.fn();
     render(<VideoEditor onBack={onBack} />);
