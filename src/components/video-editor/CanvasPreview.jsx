@@ -8,6 +8,7 @@ import { applyChromaKey, sampleKeyColor, suggestTolerance } from '../../utils/ch
 import { REST_FRAME, animationLengthMs, applyTextFrame, textAnimFrame } from '../../utils/textAnimation';
 import { decodeGif, frameIndexAt, isGifUrl } from '../../utils/gif';
 import { clipPunchTimes, punchZoom } from '../../utils/zoomPunch';
+import { drawOrder } from '../../utils/layerOrder';
 
 // Zoom-punch in the preview: crop into the middle of the source so the clip zooms inside its own
 // frame (the export scales up and crops back the same way). Returns true if the crop changed.
@@ -847,25 +848,8 @@ const CanvasPreview = forwardRef((props, ref) => {
               listening={false} 
             />
 
-            {items.filter(i => i.type === 'image' || i.type === 'video').map((item) => (
-              <CanvasMedia
-                key={item.id}
-                item={item}
-                canvasDimensions={logicalDimensions}
-                isSelected={activeItemId === item.id}
-                isVisible={true}
-                onSelect={(e) => {
-                  e.cancelBubble = true;
-                  setActiveItem(item.id);
-                }}
-                onChange={(newAttrs) => {
-                  updateItem(item.id, newAttrs);
-                }}
-              />
-            ))}
-          </Layer>
-          <Layer id="static-layer">
-            {items.filter(i => i.type === 'text' || i.type === 'sticker').map((item) => {
+            {/* One layer, bottom to top in the same order as the export (utils/layerOrder). */}
+            {drawOrder(items).map((item) => {
               if (item.type === 'text') {
                 return (
                   <CanvasText
@@ -917,7 +901,7 @@ const CanvasPreview = forwardRef((props, ref) => {
                 );
               }
               
-              // Sticker
+              // Photo, video or sticker
               return (
                 <CanvasMedia
                   key={item.id}

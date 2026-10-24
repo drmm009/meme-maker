@@ -244,6 +244,19 @@ describe('VideoEditor', () => {
     expect(store().items[0].punches).toEqual([]);
   });
 
+  it('brings a sticker in front of text', async () => {
+    const { drawOrder } = await import('../../utils/layerOrder');
+    act(() => {
+      store().addItem({ type: 'sticker', url: 'a.png' });
+      store().addItem({ type: 'text', text: 'TOP' });
+    });
+    const { container } = render(<VideoEditor onBack={() => {}} />);
+    expect(drawOrder(store().items).map((i) => i.type)).toEqual(['sticker', 'text']);
+    fireEvent.click(clips(container).find((c) => c.className.includes('vt-clip--sticker')));
+    fireEvent.click(screen.getByText('Forward'));
+    expect(drawOrder(store().items).map((i) => i.type)).toEqual(['text', 'sticker']);
+  });
+
   it('calls onBack from the close button', () => {
     const onBack = vi.fn();
     render(<VideoEditor onBack={onBack} />);

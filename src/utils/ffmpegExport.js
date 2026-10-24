@@ -8,6 +8,7 @@ import { gifPaletteFilter, isGifUrl } from './gif';
 import { ExportCancelledError, etaSeconds, overallPercent, parseFfmpegTime } from './exportProgress';
 import { downloadBlob } from './shareFile';
 import { clipPunchTimes, punchFilter } from './zoomPunch';
+import { drawOrder } from './layerOrder';
 import { REST_FRAME, animationSteps, applyTextFrame, shakeExpressions } from './textAnimation';
 
 let ffmpeg = null;
@@ -126,9 +127,9 @@ export const exportVideoFFmpeg = async (items = [], durationMs = 7000, canvasAsp
       prepDone++;
     };
 
-    for (const item of visualItems) {
-      prepStep();
-      if (!item.url) continue;
+    // One photo, video or sticker: fetch it, scale/position it, overlay it for its time range.
+    const addVisual = async (item) => {
+      if (!item.url) return;
       
       const isVideo = item.type === 'video';
       // Animated GIF stickers are timed like video (they start playing at the clip's start).
@@ -168,9 +169,9 @@ export const exportVideoFFmpeg = async (items = [], durationMs = 7000, canvasAsp
         }
       } catch (err) {
         console.warn(`[FFmpeg Export] Could not fetch visual item from ${item.url}:`, err);
-        continue;
+        return;
       }
-      if (!fileData || fileData.byteLength === 0) continue;
+      if (!fileData || fileData.byteLength === 0) return;
 
       const fileName = isVideo ? `input_${inputIndex}.mp4` : isGif ? `input_${inputIndex}.gif` : `input_${inputIndex}.png`;
       await ff.writeFile(fileName, fileData);
@@ -233,7 +234,7 @@ export const exportVideoFFmpeg = async (items = [], durationMs = 7000, canvasAsp
       
       currentBgIndex++;
       inputIndex++;
-    }
+    };
 
     // Helper to render text into a transparent PNG buffer matching the output resolution
     const renderTextToPNG = async (item, w, h, ratio, frame = REST_FRAME) => {
@@ -341,8 +342,7 @@ export const exportVideoFFmpeg = async (items = [], durationMs = 7000, canvasAsp
 
     // Add text items via PNG overlay for pixel-perfect font, stroke, and rotation support.
     // Animated text is a run of stills (pop, typewriter); shake moves one still with overlay expressions.
-    for (const item of textItems) {
-      prepStep();
+    const addText = async (item) => {
       const startT = Math.max(0, (typeof item.startMs === 'number' && !isNaN(item.startMs) ? item.startMs : 0) / 1000);
       const endT = Math.max(startT + 0.05, (typeof item.endMs === 'number' && !isNaN(item.endMs) ? item.endMs : safeDurationMs) / 1000);
       const steps = animationSteps({ ...item, startMs: startT * 1000, endMs: endT * 1000 });
@@ -368,6 +368,13 @@ export const exportVideoFFmpeg = async (items = [], durationMs = 7000, canvasAsp
         currentBgIndex++;
         inputIndex++;
       }
+    };
+
+    // Everything visible, bottom to top in the same order as the preview.
+    for (const item of drawOrder([...visualItems, ...textItems])) {
+      prepStep();
+      if (item.type === 'text') await addText(item);
+      else await addVisual(item);
     }
 
     if (layoutId) {

@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { temporal } from 'zundo';
+import { moveLayer as moveLayerInItems } from '../utils/layerOrder';
 
 const debounce = (func, wait) => {
   let timeout;
@@ -234,6 +235,12 @@ export const useEditorStore = create(temporal((set, get) => ({
         };
     const items = state.items.map(i => (i.id === id ? { ...i, ...patch } : i));
     return { items, duration: calculateDuration(items) };
+  }),
+
+  // Bring forward (dir 1) or send back (dir -1) past the nearest item on screen with it.
+  moveLayer: (id, dir) => set((state) => {
+    const items = moveLayerInItems(state.items, id, dir);
+    return items === state.items ? {} : { items };
   }),
 
   // Copy a clip with all its settings: media goes right after the original, overlays are nudged.

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import {
   Type, Sticker, Smile, LayoutGrid, Image as ImageIcon, Film, Clapperboard, Music, AudioLines,
   Check, Gauge, Volume2, VolumeX, Palette, Square, RotateCw, Minimize, Crop, Maximize, Copy, Trash2,
-  Scissors, PencilLine, ALargeSmall, TextAlignStart, TextAlignCenter, TextAlignEnd, SlidersHorizontal, WandSparkles, Pipette, Sparkles, ImagePlay, PaintBucket, Zap, Snowflake, Rewind, Repeat, ZoomIn
+  Scissors, PencilLine, ALargeSmall, TextAlignStart, TextAlignCenter, TextAlignEnd, SlidersHorizontal, WandSparkles, Pipette, Sparkles, ImagePlay, PaintBucket, Zap, Snowflake, Rewind, Repeat, ZoomIn, BringToFront, SendToBack
 } from 'lucide-react';
 import { useEditorStore, clipEffectBase, sourceTimeMs } from '../../store/useVideoEditorStore';
 import { captureFrame, renderClipEffect } from '../../utils/clipEffects';
@@ -381,6 +381,12 @@ function ClipTools({ item, panel, setPanel }) {
   if (item.type === 'image' || item.type === 'sticker') {
     tools.push(
       <RailButton key="rotate" label="Rotate" Icon={RotateCw} onClick={() => update(item.id, { rotation: ((item.rotation || 0) + 90) % 360 })} />
+    );
+  }
+  if (item.type !== 'audio') {
+    tools.push(
+      <RailButton key="forward" label="Forward" Icon={BringToFront} onClick={() => store().moveLayer(item.id, 1)} />,
+      <RailButton key="back" label="Back" Icon={SendToBack} onClick={() => store().moveLayer(item.id, -1)} />
     );
   }
   tools.push(
