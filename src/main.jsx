@@ -4,6 +4,7 @@ import './styles/theme.css'
 import './index.css'
 import './styles/core.css'
 import App from './App.jsx'
+import { watchStandaloneViewport } from './utils/standaloneViewport'
 import React from 'react';
 
 class ErrorBoundary extends React.Component {
@@ -30,6 +31,8 @@ class ErrorBoundary extends React.Component {
     return this.props.children;
   }
 }
+
+watchStandaloneViewport();
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
