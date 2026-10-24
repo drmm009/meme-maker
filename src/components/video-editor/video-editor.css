@@ -21,8 +21,6 @@
   --vt-safe-top: env(safe-area-inset-top, 0px);
   position: fixed;
   inset: 0;
-  /* iOS home-screen apps report a short viewport; see src/utils/standaloneViewport.js. */
-  height: var(--app-height, auto);
   display: flex;
   flex-direction: column;
   overflow: hidden;
