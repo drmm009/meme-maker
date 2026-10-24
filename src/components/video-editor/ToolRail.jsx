@@ -1,13 +1,16 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Type, Sticker, Smile, LayoutGrid, Image as ImageIcon, Film, Clapperboard, Music, AudioLines,
   Check, Gauge, Volume2, VolumeX, Palette, Square, RotateCw, Minimize, Crop, Maximize, Copy, Trash2,
-  Scissors, PencilLine, ALargeSmall, TextAlignStart, TextAlignCenter, TextAlignEnd, SlidersHorizontal, WandSparkles, Pipette, Sparkles, ImagePlay, PaintBucket, Zap, Snowflake, Rewind, Repeat, ZoomIn, BringToFront, SendToBack, Blend
+  Scissors, PencilLine, ALargeSmall, TextAlignStart, TextAlignCenter, TextAlignEnd, SlidersHorizontal, WandSparkles, Pipette, Sparkles, ImagePlay, PaintBucket, Zap, Snowflake, Rewind, Repeat, ZoomIn, BringToFront, SendToBack, Blend, Mic
 } from 'lucide-react';
 import { useEditorStore, clipEffectBase, sourceTimeMs } from '../../store/useVideoEditorStore';
 import { captureFrame, renderClipEffect } from '../../utils/clipEffects';
 import { clipPunchTimes } from '../../utils/zoomPunch';
 import { FILTER_PRESETS } from '../../utils/clipFilters';
+import { canRecordVoice, startVoiceRecording } from '../../utils/voiceRecorder';
+import { togglePlayback } from './usePlaybackLoop';
+import { formatClock } from './timeline/timelineMath';
 import { FONTS } from '../../data/stickers';
 import { DEFAULT_FADE_MS } from '../../utils/audioFades';
 import { DEFAULT_CHROMA_KEY } from '../../utils/chromaKey';
@@ -37,6 +40,7 @@ const ADD_TOOLS = [
   { kind: 'sfx', label: 'SFX', Icon: Zap, panel: true },
   { kind: 'sounds', label: 'Sounds', Icon: Music },
   { kind: 'audio', label: 'Audio', Icon: AudioLines },
+  { kind: 'voice', label: 'Voice', Icon: Mic, panel: true },
   { kind: 'background', label: 'Background', Icon: PaintBucket, panel: true },
 ];
 
@@ -326,7 +330,83 @@ function FilterPanel({ item }) {
   );
 }
 
-const PANELS = { volume: VolumePanel, size: SizePanel, text: TextPanel, greenscreen: GreenScreenPanel, animation: AnimationPanel, background: BackgroundPanel, sfx: SfxPanel, punch: PunchPanel, filter: FilterPanel };
+// Voiceover: recording plays the video from the playhead so you can talk over it; stopping (or the
+// video ending) drops the recording on the timeline where it started.
+function VoicePanel() {
+  const [state, setState] = useState('idle'); // idle | starting | recording
+  const [elapsed, setElapsed] = useState(0);
+  const [error, setError] = useState(null);
+  const recRef = useRef(null);
+  const startMsRef = useRef(0);
+
+  const finish = async () => {
+    const rec = recRef.current;
+    if (!rec) return;
+    recRef.current = null;
+    const st = useEditorStore.getState();
+    if (st.isPlaying) st.setIsPlaying(false);
+    const { blob, type, durationMs } = await rec.stop();
+    setState('idle');
+    if (!blob.size || durationMs < 300) return;
+    const count = useEditorStore.getState().items.filter((i) => i.isVoiceover).length;
+    useEditorStore.getState().addItem({
+      type: 'audio', url: URL.createObjectURL(blob), name: `Voiceover ${count + 1}`, icon: '🎙️',
+      durationMs, startMs: startMsRef.current, mimeType: type, isVoiceover: true,
+    });
+  };
+  const finishRef = useRef(finish);
+  finishRef.current = finish;
+
+  const start = async () => {
+    setError(null);
+    if (!canRecordVoice()) { setError('This browser can’t record audio.'); return; }
+    setState('starting');
+    try {
+      recRef.current = await startVoiceRecording();
+      if (!useEditorStore.getState().isPlaying) togglePlayback();
+      startMsRef.current = useEditorStore.getState().playhead;
+      setElapsed(0);
+      setState('recording');
+    } catch (e) {
+      setState('idle');
+      setError(e?.name === 'NotAllowedError'
+        ? 'Microphone access is blocked. Allow it in your browser settings to record.'
+        : 'Couldn’t start the microphone.');
+    }
+  };
+
+  // Count up while recording, and stop when playback stops (paused, or the video ended).
+  useEffect(() => {
+    if (state !== 'recording') return undefined;
+    const t0 = performance.now();
+    const timer = setInterval(() => setElapsed(performance.now() - t0), 250);
+    const unsub = useEditorStore.subscribe((s, p) => { if (p.isPlaying && !s.isPlaying) finishRef.current(); });
+    return () => { clearInterval(timer); unsub(); };
+  }, [state]);
+  // Closing the panel keeps what was recorded.
+  useEffect(() => () => { finishRef.current(); }, []);
+
+  const recording = state === 'recording';
+  return (
+    <div className="vt-voice">
+      <button
+        type="button"
+        className={`vt-rec-btn${recording ? ' is-recording' : ''}`}
+        onClick={recording ? finish : start}
+        disabled={state === 'starting'}
+        aria-label={recording ? 'Stop recording' : 'Start recording'}
+      >
+        <span />
+      </button>
+      <div className="vt-voice-text">
+        <strong>{recording ? `Recording ${formatClock(elapsed)}` : 'Record a voiceover'}</strong>
+        <span>{error || (recording ? 'Tap to stop. It lands where you started.' : 'The video plays from the playhead so you can talk over it.')}</span>
+      </div>
+    </div>
+  );
+}
+
+const PANELS = { volume: VolumePanel, size: SizePanel, text: TextPanel, greenscreen: GreenScreenPanel, animation: AnimationPanel, background: BackgroundPanel, sfx: SfxPanel, punch: PunchPanel, filter: FilterPanel, voice: VoicePanel };
 
 function ClipTools({ item, panel, setPanel }) {
   const aspectRatio = useEditorStore((s) => s.canvasAspectRatio);

@@ -17,6 +17,12 @@ vi.mock('../../utils/clipEffects', () => ({
   captureFrame: vi.fn(() => Promise.resolve('blob:still')),
   renderClipEffect: vi.fn(() => Promise.resolve({ url: 'blob:rev', durationMs: 2000 })),
 }));
+vi.mock('../../utils/voiceRecorder', () => ({
+  canRecordVoice: () => true,
+  startVoiceRecording: vi.fn(() => Promise.resolve({
+    stop: () => Promise.resolve({ blob: new Blob(['voice'], { type: 'audio/webm' }), type: 'audio/webm', durationMs: 1500 }),
+  })),
+}));
 vi.mock('../../services/memeService', () => ({ fetchOpenSourceMemes: () => Promise.resolve([]) }));
 
 const store = () => useEditorStore.getState();
@@ -267,6 +273,21 @@ describe('VideoEditor', () => {
     fireEvent.change(bright, { target: { value: '30' } });
     expect(store().items[0].filter).toEqual({ preset: 'vintage', brightness: 30 });
     expect(screen.getAllByText('Vintage').length).toBeGreaterThan(1);
+  });
+
+  it('records a voiceover over the video and drops it where it started', async () => {
+    URL.createObjectURL = vi.fn(() => 'blob:voice');
+    act(() => store().addItem({ type: 'video', url: 'a.mp4', durationMs: 5000 }));
+    render(<VideoEditor onBack={() => {}} />);
+    act(() => store().setPlayhead(1000));
+    fireEvent.click(screen.getByText('Voice'));
+    await act(async () => { fireEvent.click(screen.getByLabelText('Start recording')); });
+    expect(store().isPlaying).toBe(true);
+    expect(screen.getByText(/Recording/)).toBeTruthy();
+    await act(async () => { fireEvent.click(screen.getByLabelText('Stop recording')); });
+    expect(store().isPlaying).toBe(false);
+    const voice = store().items.find((i) => i.isVoiceover);
+    expect(voice).toMatchObject({ type: 'audio', url: 'blob:voice', name: 'Voiceover 1', startMs: 1000, endMs: 2500, mimeType: 'audio/webm' });
   });
 
   it('calls onBack from the close button', () => {

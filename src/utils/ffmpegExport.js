@@ -10,6 +10,7 @@ import { downloadBlob } from './shareFile';
 import { clipPunchTimes, punchFilter } from './zoomPunch';
 import { drawOrder } from './layerOrder';
 import { filterChain, resolveFilter } from './clipFilters';
+import { extensionForType } from './voiceRecorder';
 import { REST_FRAME, animationSteps, applyTextFrame, shakeExpressions } from './textAnimation';
 
 let ffmpeg = null;
@@ -419,8 +420,9 @@ export const exportVideoFFmpeg = async (items = [], durationMs = 7000, canvasAsp
       }
       if (!fileData || fileData.byteLength === 0) continue;
 
-      let ext = 'mp3';
-      if (item.url) {
+      // Recordings and uploads are blob: URLs with no extension; their stored type names the file.
+      let ext = item.mimeType ? extensionForType(item.mimeType) : 'mp3';
+      if (item.url && !item.mimeType) {
         const match = item.url.match(/\.(mp3|wav|ogg|m4a|aac|webm)(\?.*)?$/i);
         if (match) ext = match[1].toLowerCase();
       }

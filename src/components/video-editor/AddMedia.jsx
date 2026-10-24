@@ -51,7 +51,7 @@ const addUploadedFile = (file, type) => {
   media.onloadedmetadata = async () => {
     const durationMs = Math.round(media.duration * 1000);
     const thumbnailUrl = type === 'video' ? await generateThumbnail(url) : null;
-    addItem({ type, url, durationMs, width: media.videoWidth, height: media.videoHeight, name: file.name, thumbnailUrl });
+    addItem({ type, url, durationMs, width: media.videoWidth, height: media.videoHeight, name: file.name, thumbnailUrl, mimeType: file.type || undefined });
   };
 };
 
