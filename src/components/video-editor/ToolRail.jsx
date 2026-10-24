@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import {
   Type, Sticker, Smile, LayoutGrid, Image as ImageIcon, Film, Clapperboard, Music, AudioLines,
   Check, Gauge, Volume2, VolumeX, Palette, Square, RotateCw, Minimize, Crop, Maximize, Copy, Trash2,
-  Scissors, PencilLine, ALargeSmall, TextAlignStart, TextAlignCenter, TextAlignEnd, SlidersHorizontal, WandSparkles, Pipette, Sparkles, ImagePlay
+  Scissors, PencilLine, ALargeSmall, TextAlignStart, TextAlignCenter, TextAlignEnd, SlidersHorizontal, WandSparkles, Pipette, Sparkles, ImagePlay, PaintBucket
 } from 'lucide-react';
 import { useEditorStore } from '../../store/useVideoEditorStore';
 import { FONTS } from '../../data/stickers';
@@ -32,7 +32,10 @@ const ADD_TOOLS = [
   { kind: 'clips', label: 'Clips', Icon: Clapperboard },
   { kind: 'sounds', label: 'Sounds', Icon: Music },
   { kind: 'audio', label: 'Audio', Icon: AudioLines },
+  { kind: 'background', label: 'Background', Icon: PaintBucket, panel: true },
 ];
+
+const BACKGROUND_SWATCHES = ['#ffffff', '#000000', '#1a1d27', '#ff5e36', '#ec4899', '#facc15', '#22c55e', '#3b82f6'];
 
 const SPEEDS = [0.5, 1, 1.5, 2];
 const TEXT_BACKGROUNDS = ['none', 'white', 'black'];
@@ -170,7 +173,32 @@ function AnimationPanel({ item }) {
   );
 }
 
-const PANELS = { volume: VolumePanel, size: SizePanel, text: TextPanel, greenscreen: GreenScreenPanel, animation: AnimationPanel };
+function BackgroundPanel() {
+  const color = useEditorStore((s) => s.backgroundColor || '#ffffff');
+  const setColor = useEditorStore((s) => s.setBackgroundColor);
+  return (
+    <div className="vt-swatch-row" role="radiogroup" aria-label="Background colour">
+      {BACKGROUND_SWATCHES.map((c) => (
+        <button
+          key={c}
+          type="button"
+          role="radio"
+          aria-checked={color.toLowerCase() === c}
+          aria-label={c}
+          className={`vt-swatch-btn${color.toLowerCase() === c ? ' is-on' : ''}`}
+          style={{ background: c }}
+          onClick={() => setColor(c)}
+        />
+      ))}
+      <label className={`vt-swatch-btn vt-swatch-custom${BACKGROUND_SWATCHES.includes(color.toLowerCase()) ? '' : ' is-on'}`} title="Custom colour">
+        <Palette size={16} />
+        <input type="color" className="vt-hidden-input" value={color} onChange={(e) => setColor(e.target.value)} />
+      </label>
+    </div>
+  );
+}
+
+const PANELS = { volume: VolumePanel, size: SizePanel, text: TextPanel, greenscreen: GreenScreenPanel, animation: AnimationPanel, background: BackgroundPanel };
 
 function ClipTools({ item, panel, setPanel }) {
   const aspectRatio = useEditorStore((s) => s.canvasAspectRatio);
@@ -269,11 +297,12 @@ function ClipTools({ item, panel, setPanel }) {
 export default function ToolRail({ onAdd }) {
   const activeItem = useEditorStore((s) => s.items.find((i) => i.id === s.activeItemId));
   const [panelState, setPanelState] = useState({ id: null, name: null });
-  // A panel belongs to the clip it was opened for; selecting another clip closes it.
-  const panel = activeItem && panelState.id === activeItem.id ? panelState.name : null;
+  // A panel belongs to the clip it was opened for (or to "nothing selected"); selecting another closes it.
+  const ownerId = activeItem?.id ?? null;
+  const panel = panelState.id === ownerId ? panelState.name : null;
   const setPanel = (fn) => setPanelState((prev) => {
-    const current = activeItem && prev.id === activeItem.id ? prev.name : null;
-    return { id: activeItem?.id ?? null, name: typeof fn === 'function' ? fn(current) : fn };
+    const current = prev.id === ownerId ? prev.name : null;
+    return { id: ownerId, name: typeof fn === 'function' ? fn(current) : fn };
   });
   const Panel = panel && PANELS[panel];
 
@@ -287,7 +316,15 @@ export default function ToolRail({ onAdd }) {
       <nav className="vt-rail" aria-label={activeItem ? 'Clip tools' : 'Add to video'}>
         {activeItem
           ? <ClipTools item={activeItem} panel={panel} setPanel={setPanel} />
-          : ADD_TOOLS.map((t) => <RailButton key={t.kind} label={t.label} Icon={t.Icon} onClick={() => onAdd(t.kind)} />)}
+          : ADD_TOOLS.map((t) => (
+            <RailButton
+              key={t.kind}
+              label={t.label}
+              Icon={t.Icon}
+              active={t.panel && panel === t.kind}
+              onClick={() => (t.panel ? setPanel((p) => (p === t.kind ? null : t.kind)) : onAdd(t.kind))}
+            />
+          ))}
       </nav>
     </div>
   );

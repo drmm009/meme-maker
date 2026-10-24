@@ -683,13 +683,14 @@ const GridOverlay = ({ layoutId, width, height }) => {
 };
 
 const CanvasPreview = forwardRef((props, ref) => {
-  const { items, activeItemId, setActiveItem, updateItem, canvasAspectRatio, setCanvasDimensions, layoutId } = useEditorStore(
+  const { items, activeItemId, setActiveItem, updateItem, canvasAspectRatio, backgroundColor, setCanvasDimensions, layoutId } = useEditorStore(
     useShallow(state => ({
       items: state.items,
       activeItemId: state.activeItemId,
       setActiveItem: state.setActiveItem,
       updateItem: state.updateItem,
       canvasAspectRatio: state.canvasAspectRatio,
+      backgroundColor: state.backgroundColor,
       setCanvasDimensions: state.setCanvasDimensions,
       layoutId: state.layoutId
     }))
@@ -822,7 +823,7 @@ const CanvasPreview = forwardRef((props, ref) => {
               y={0} 
               width={800} 
               height={800 / canvasAspectRatio} 
-              fill="white" 
+              fill={backgroundColor || '#ffffff'} 
               listening={false} 
             />
 

@@ -32,6 +32,7 @@ export const useEditorStore = create(temporal((set, get) => ({
   duration: 7000, // Total project duration (7 seconds default)
   
   canvasAspectRatio: 4/3, // Default to 4:3 (Classic)
+  backgroundColor: '#ffffff', // Canvas colour behind everything (shows around letterboxed media)
   canvasDimensions: { width: 800, height: 600 }, // Actual pixel dimensions on screen
   gridOverlayUrl: null, // Transparent layout lines from Step 2
   
@@ -49,6 +50,7 @@ export const useEditorStore = create(temporal((set, get) => ({
   setIsExporting: (exporting) => set({ isExporting: exporting }),
   setExportProgress: (progress) => set({ exportProgress: progress }),
   setCanvasAspectRatio: (ratio) => set({ canvasAspectRatio: ratio }),
+  setBackgroundColor: (color) => set({ backgroundColor: color }),
   setCanvasDimensions: (dim) => set({ canvasDimensions: dim }),
   setPlayhead: (time) => set({ playhead: Math.max(0, Math.min(time, get().duration)) }),
   setIsPlaying: (playing) => set({ isPlaying: playing }),
@@ -193,6 +195,7 @@ export const useEditorStore = create(temporal((set, get) => ({
     layoutId: state.layoutId,
     layoutSlots: state.layoutSlots,
     canvasAspectRatio: state.canvasAspectRatio,
+    backgroundColor: state.backgroundColor,
     gridOverlayUrl: state.gridOverlayUrl
   }),
   limit: 20,

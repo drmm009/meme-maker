@@ -50,8 +50,11 @@ export const loadFFmpeg = async () => {
   return loadPromise;
 };
 
+// #rrggbb -> FFmpeg 0xRRGGBB (anything else falls back to white).
+const ffmpegColor = (hex) => (/^#[0-9a-f]{6}$/i.test(hex || '') ? `0x${hex.slice(1).toUpperCase()}` : 'white');
+
 // format 'gif' renders a silent, palette-optimised GIF instead of an MP4.
-export const exportVideoFFmpeg = async (items = [], durationMs = 7000, canvasAspectRatio = 16/9, canvasDimensions = { width: 800, height: 600 }, layoutId = null, onProgress = () => {}, { format = 'mp4' } = {}) => {
+export const exportVideoFFmpeg = async (items = [], durationMs = 7000, canvasAspectRatio = 16/9, canvasDimensions = { width: 800, height: 600 }, layoutId = null, onProgress = () => {}, { format = 'mp4', backgroundColor = '#ffffff' } = {}) => {
   const isGifOut = format === 'gif';
   try {
     const ff = await loadFFmpeg();
@@ -85,7 +88,7 @@ export const exportVideoFFmpeg = async (items = [], durationMs = 7000, canvasAsp
 
     const command = [
       '-f', 'lavfi',
-      '-i', `color=c=white:s=${canvasW}x${canvasH}:d=${durationSec}`,
+      '-i', `color=c=${ffmpegColor(backgroundColor)}:s=${canvasW}x${canvasH}:d=${durationSec}`,
       '-f', 'lavfi',
       '-i', `anullsrc=r=44100:cl=stereo:d=${durationSec}`
     ];

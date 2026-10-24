@@ -3,8 +3,8 @@ import { projectFromState, collectBlobUrls, restoreProject } from './videoDraftS
 
 describe('videoDraftStore', () => {
   it('keeps only project fields from the editor state', () => {
-    const state = { items: [], duration: 7000, canvasAspectRatio: 1, layoutSlots: [], playhead: 900, isPlaying: true, activeItemId: 'x' };
-    expect(projectFromState(state)).toEqual({ items: [], duration: 7000, canvasAspectRatio: 1, layoutSlots: [] });
+    const state = { items: [], duration: 7000, canvasAspectRatio: 1, backgroundColor: '#000000', layoutSlots: [], playhead: 900, isPlaying: true, activeItemId: 'x' };
+    expect(projectFromState(state)).toEqual({ items: [], duration: 7000, canvasAspectRatio: 1, backgroundColor: '#000000', layoutSlots: [] });
   });
 
   it('finds the blob URLs a project needs, once each', () => {

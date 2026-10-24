@@ -8,7 +8,7 @@ const DRAFTS = 'drafts';
 const MEDIA = 'media';
 const DRAFT_ID = 'current';
 
-export const PROJECT_KEYS = ['items', 'duration', 'canvasAspectRatio', 'layoutId', 'layoutSlots', 'gridOverlayUrl'];
+export const PROJECT_KEYS = ['items', 'duration', 'canvasAspectRatio', 'backgroundColor', 'layoutId', 'layoutSlots', 'gridOverlayUrl'];
 
 const isBlobUrl = (u) => typeof u === 'string' && u.startsWith('blob:');
 

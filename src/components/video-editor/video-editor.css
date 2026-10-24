@@ -773,3 +773,20 @@
 .gif-grid::-webkit-scrollbar, .vclip-grid::-webkit-scrollbar { width: 6px; }
 .gif-grid::-webkit-scrollbar-thumb, .vclip-grid::-webkit-scrollbar-thumb { border-radius: 3px; background: rgba(255, 255, 255, 0.18); }
 .gif-grid::-webkit-scrollbar-track, .vclip-grid::-webkit-scrollbar-track { background: transparent; }
+
+/* ── Background swatches ────────────────────────────────────── */
+.vt-swatch-row { display: flex; flex-wrap: wrap; gap: 10px; }
+.vt-swatch-btn {
+  position: relative;
+  width: 34px;
+  height: 34px;
+  border: 2px solid rgba(255, 255, 255, 0.18);
+  border-radius: 50%;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  color: var(--vt-text);
+  transition: transform 0.15s var(--vt-ease);
+}
+.vt-swatch-btn.is-on { border-color: #fff; box-shadow: 0 0 0 3px rgba(255, 94, 54, 0.6); transform: scale(1.06); }
+.vt-swatch-custom { background: conic-gradient(#ff5e36, #facc15, #22c55e, #3b82f6, #ec4899, #ff5e36); }

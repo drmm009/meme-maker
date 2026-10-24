@@ -145,7 +145,7 @@ export default function VideoEditor({ template, onBack }) {
         store.canvasDimensions || { width: 800, height: 600 },
         store.layoutId,
         (progress) => useEditorStore.getState().setExportProgress(progress),
-        { format }
+        { format, backgroundColor: store.backgroundColor }
       );
       setExportDone(true);
       setTimeout(() => setExportDone(false), 3000);

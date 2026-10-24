@@ -5,7 +5,8 @@ import { loadVideoDraft, restoreProject, saveVideoDraft } from '../../utils/vide
 const SAVE_DELAY_MS = 700;
 
 const projectChanged = (s, p) =>
-  s.items !== p.items || s.canvasAspectRatio !== p.canvasAspectRatio || s.layoutSlots !== p.layoutSlots;
+  s.items !== p.items || s.canvasAspectRatio !== p.canvasAspectRatio || s.layoutSlots !== p.layoutSlots
+  || s.backgroundColor !== p.backgroundColor;
 
 // Auto-saves the project after each edit and offers to bring back the previous draft.
 // Call it after the template hand-off so the hand-off itself doesn't count as an edit.

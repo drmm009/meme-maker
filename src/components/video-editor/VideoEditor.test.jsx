@@ -164,6 +164,15 @@ describe('VideoEditor', () => {
     window.removeEventListener('vt-preview-text-animation', onPreview);
   });
 
+  it('sets the canvas background from the rail', () => {
+    render(<VideoEditor onBack={() => {}} />);
+    fireEvent.click(screen.getByText('Background'));
+    fireEvent.click(screen.getByLabelText('#000000'));
+    expect(store().backgroundColor).toBe('#000000');
+    expect(screen.getByLabelText('#000000').getAttribute('aria-checked')).toBe('true');
+    act(() => store().setBackgroundColor('#ffffff'));
+  });
+
   it('calls onBack from the close button', () => {
     const onBack = vi.fn();
     render(<VideoEditor onBack={onBack} />);
