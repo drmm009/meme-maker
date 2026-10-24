@@ -124,6 +124,7 @@ export default function TimelineClip({ item, left, width, selected, pxPerSec, on
           ))}
         </div>
       )}
+      {item.transitionIn?.type && <span className="vt-transition-mark" aria-hidden="true" />}
       {item.type === 'video' && clipPunchTimes(item).map((t) => (
         <span key={t} className="vt-punch-mark" style={{ left: ((t - item.startMs) / 1000) * pxPerSec }} aria-hidden="true" />
       ))}

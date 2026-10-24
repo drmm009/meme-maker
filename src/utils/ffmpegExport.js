@@ -11,6 +11,7 @@ import { clipPunchTimes, punchFilter } from './zoomPunch';
 import { drawOrder } from './layerOrder';
 import { filterChain, resolveFilter } from './clipFilters';
 import { extensionForType } from './voiceRecorder';
+import { transitionFilters } from './clipTransitions';
 import { REST_FRAME, animationSteps, applyTextFrame, shakeExpressions } from './textAnimation';
 
 let ffmpeg = null;
@@ -232,10 +233,13 @@ export const exportVideoFFmpeg = async (items = [], durationMs = 7000, canvasAsp
       const pbRate = typeof item.playbackRate === 'number' && !isNaN(item.playbackRate) ? item.playbackRate : 1.0;
       const ptsOffset = isVideo || isGif ? `+${startT}/TB` : '';
       const keyFilter = isVideo ? chromaKeyFilter(item.chromaKey) : '';
+      // Transitions at cuts in the main sequence (fade via alpha, zoom, slide as an x offset).
+      const transition = isVideo || item.isFreeze ? transitionFilters(items, item, w, h, konvaRatio) : { chain: '', dx: null };
+      const overlayPos = transition.dx ? `x='${x}+(${transition.dx})':y=${y}` : `${x}:${y}`;
       // Colour filters on videos and photos (not stickers), after keying like the preview.
       const colourFilter = isVideo || (item.type === 'image' && !isGif) ? filterChain(resolveFilter(item.filter)) : '';
-      filterComplex += `[${inputIndex}:v]setpts=(PTS-STARTPTS)/${pbRate}${ptsOffset},scale=${w}:${h}${isVideo ? punchFilter(clipPunchTimes(item), w, h) : ''}${keyFilter}${colourFilter}[vis${inputIndex}];`;
-      filterComplex += `[${currentBgIndex === 0 ? '0:v' : `bg${currentBgIndex}`}][vis${inputIndex}]overlay=${x}:${y}:enable='between(t,${startT},${endT})':eof_action=pass:shortest=0[bg${currentBgIndex + 1}];`;
+      filterComplex += `[${inputIndex}:v]setpts=(PTS-STARTPTS)/${pbRate}${ptsOffset},scale=${w}:${h}${isVideo ? punchFilter(clipPunchTimes(item), w, h) : ''}${keyFilter}${colourFilter}${transition.chain}[vis${inputIndex}];`;
+      filterComplex += `[${currentBgIndex === 0 ? '0:v' : `bg${currentBgIndex}`}][vis${inputIndex}]overlay=${overlayPos}:enable='between(t,${startT},${endT})':eof_action=pass:shortest=0[bg${currentBgIndex + 1}];`;
       
       currentBgIndex++;
       inputIndex++;

@@ -290,6 +290,24 @@ describe('VideoEditor', () => {
     expect(voice).toMatchObject({ type: 'audio', url: 'blob:voice', name: 'Voiceover 1', startMs: 1000, endMs: 2500, mimeType: 'audio/webm' });
   });
 
+  it('sets a transition on a clip that follows another', () => {
+    act(() => {
+      store().addItem({ type: 'video', url: 'a.mp4', durationMs: 2000 });
+      store().addItem({ type: 'video', url: 'b.mp4', durationMs: 2000 });
+    });
+    const { container } = render(<VideoEditor onBack={() => {}} />);
+    const [first, second] = clips(container);
+    fireEvent.click(first);
+    expect(screen.queryByText('Transition')).toBeNull();
+    fireEvent.click(second);
+    fireEvent.click(screen.getByText('Transition'));
+    fireEvent.click(screen.getByText('Fade'));
+    expect(store().items[1].transitionIn).toEqual({ type: 'fade', durationMs: 500 });
+    expect(container.querySelector('.vt-transition-mark')).toBeTruthy();
+    fireEvent.click(screen.getByText('None'));
+    expect(store().items[1].transitionIn).toBe(null);
+  });
+
   it('calls onBack from the close button', () => {
     const onBack = vi.fn();
     render(<VideoEditor onBack={onBack} />);

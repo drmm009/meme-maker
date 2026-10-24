@@ -10,6 +10,7 @@ import { decodeGif, frameIndexAt, isGifUrl } from '../../utils/gif';
 import { clipPunchTimes, punchZoom } from '../../utils/zoomPunch';
 import { drawOrder } from '../../utils/layerOrder';
 import { filterCss, resolveFilter } from '../../utils/clipFilters';
+import { transitionFrame } from '../../utils/clipTransitions';
 
 // Zoom-punch in the preview: crop into the middle of the source so the clip zooms inside its own
 // frame (the export scales up and crops back the same way). Returns true if the crop changed.
@@ -27,6 +28,21 @@ const applyPunch = (node, zoom) => {
   const ch = ih / zoom;
   node.crop({ x: (iw - cw) / 2, y: (ih - ch) / 2, width: cw, height: ch });
   return true;
+};
+
+// Per-frame motion of a sequence clip: zoom-punches and transitions (zoom multiplies), the
+// transition's fade and sideways slide. Returns true if anything changed.
+const applyMotion = (node, item, state) => {
+  const tr = transitionFrame(state.items, item, state.playhead);
+  let changed = applyPunch(node, punchZoom(clipPunchTimes(item), state.playhead) * tr.zoom);
+  if (Math.abs(node.opacity() - tr.opacity) > 0.001) { node.opacity(tr.opacity); changed = true; }
+  const x = (item.x || 0) + tr.dx;
+  if (Math.abs(node.x() - x) > 0.01 && (tr.dx !== 0 || node.getAttr('slid'))) {
+    node.x(x);
+    node.setAttr('slid', tr.dx !== 0);
+    changed = true;
+  }
+  return changed;
 };
 
 // Green-screen frames are keyed at most this many pixels on the long side; Konva scales them up.
@@ -303,7 +319,7 @@ const CanvasMedia = ({ item, isSelected, onSelect, onChange, canvasDimensions })
           if (trRef.current) trRef.current.visible(isVisible);
           node.getLayer()?.batchDraw();
         }
-        if (node && applyPunch(node, punchZoom(clipPunchTimes(latestItem), state.playhead))) node.getLayer()?.batchDraw();
+        if (node && applyMotion(node, latestItem, state)) node.getLayer()?.batchDraw();
 
         let needsRedraw = false;
 
@@ -410,6 +426,7 @@ const CanvasMedia = ({ item, isSelected, onSelect, onChange, canvasDimensions })
         node.getLayer()?.batchDraw();
       }
       if (node && isVisible && drawGifFrame(state.playhead, latestItem)) node.getLayer()?.batchDraw();
+      if (node && latestItem.isFreeze && applyMotion(node, latestItem, state)) node.getLayer()?.batchDraw();
     });
     return unsub;
   }, [item.type, item.startMs, item.endMs]);

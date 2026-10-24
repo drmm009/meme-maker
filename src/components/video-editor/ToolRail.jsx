@@ -2,12 +2,13 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
   Type, Sticker, Smile, LayoutGrid, Image as ImageIcon, Film, Clapperboard, Music, AudioLines,
   Check, Gauge, Volume2, VolumeX, Palette, Square, RotateCw, Minimize, Crop, Maximize, Copy, Trash2,
-  Scissors, PencilLine, ALargeSmall, TextAlignStart, TextAlignCenter, TextAlignEnd, SlidersHorizontal, WandSparkles, Pipette, Sparkles, ImagePlay, PaintBucket, Zap, Snowflake, Rewind, Repeat, ZoomIn, BringToFront, SendToBack, Blend, Mic
+  Scissors, PencilLine, ALargeSmall, TextAlignStart, TextAlignCenter, TextAlignEnd, SlidersHorizontal, WandSparkles, Pipette, Sparkles, ImagePlay, PaintBucket, Zap, Snowflake, Rewind, Repeat, ZoomIn, BringToFront, SendToBack, Blend, Mic, ArrowRightLeft
 } from 'lucide-react';
 import { useEditorStore, clipEffectBase, sourceTimeMs } from '../../store/useVideoEditorStore';
 import { captureFrame, renderClipEffect } from '../../utils/clipEffects';
 import { clipPunchTimes } from '../../utils/zoomPunch';
 import { FILTER_PRESETS } from '../../utils/clipFilters';
+import { DEFAULT_TRANSITION_MS, TRANSITIONS, previousClip } from '../../utils/clipTransitions';
 import { canRecordVoice, startVoiceRecording } from '../../utils/voiceRecorder';
 import { togglePlayback } from './usePlaybackLoop';
 import { formatClock } from './timeline/timelineMath';
@@ -406,7 +407,33 @@ function VoicePanel() {
   );
 }
 
-const PANELS = { volume: VolumePanel, size: SizePanel, text: TextPanel, greenscreen: GreenScreenPanel, animation: AnimationPanel, background: BackgroundPanel, sfx: SfxPanel, punch: PunchPanel, filter: FilterPanel, voice: VoicePanel };
+function TransitionPanel({ item }) {
+  const current = item.transitionIn || {};
+  const ms = current.durationMs || DEFAULT_TRANSITION_MS;
+  const set = (patch) => update(item.id, { transitionIn: { durationMs: ms, ...current, ...patch } });
+  return (
+    <>
+      <div className="vt-chip-row">
+        {TRANSITIONS.map((t) => (
+          <button key={t.label} type="button" className={`vt-chip${(current.type ?? null) === t.id ? ' is-on' : ''}`}
+            onClick={() => (t.id ? set({ type: t.id }) : update(item.id, { transitionIn: null }))}>
+            {t.label}
+          </button>
+        ))}
+      </div>
+      {current.type && (
+        <label className="vt-slider-row">
+          <span>Length</span>
+          <input type="range" min="200" max="1200" step="50" value={ms} onChange={(e) => set({ durationMs: Number(e.target.value) })} />
+          <output>{(ms / 1000).toFixed(2)}s</output>
+        </label>
+      )}
+      <p className="vt-panel-hint">Plays where the previous clip ends and this one starts.</p>
+    </>
+  );
+}
+
+const PANELS = { volume: VolumePanel, size: SizePanel, text: TextPanel, greenscreen: GreenScreenPanel, animation: AnimationPanel, background: BackgroundPanel, sfx: SfxPanel, punch: PunchPanel, filter: FilterPanel, voice: VoicePanel, transition: TransitionPanel };
 
 function ClipTools({ item, panel, setPanel }) {
   const aspectRatio = useEditorStore((s) => s.canvasAspectRatio);
@@ -466,6 +493,12 @@ function ClipTools({ item, panel, setPanel }) {
         const next = SPEEDS[(SPEEDS.indexOf(rate) + 1) % SPEEDS.length];
         update(item.id, { playbackRate: next, endMs: item.startMs + (item.endMs - item.startMs) * (rate / next) });
       }} />
+    );
+  }
+  if (previousClip(store().items, item)) {
+    const label = TRANSITIONS.find((t) => t.id === item.transitionIn?.type)?.label;
+    tools.push(
+      <RailButton key="transition" label={label || 'Transition'} Icon={ArrowRightLeft} active={panel === 'transition' || Boolean(item.transitionIn?.type)} onClick={() => togglePanel('transition')} />
     );
   }
   if (item.type === 'video') {
