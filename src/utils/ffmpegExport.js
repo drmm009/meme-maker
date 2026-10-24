@@ -5,10 +5,23 @@ import { generateGridImage } from './gridHelper';
 import { fadeFilter } from './audioFades';
 import { chromaKeyFilter } from './chromaKey';
 import { gifPaletteFilter, isGifUrl } from './gif';
+import { ExportCancelledError, etaSeconds, overallPercent, parseFfmpegTime } from './exportProgress';
+import { downloadBlob } from './shareFile';
 import { REST_FRAME, animationSteps, applyTextFrame, shakeExpressions } from './textAnimation';
 
 let ffmpeg = null;
 let loadPromise = null;
+let cancelRequested = false;
+
+// Stop the running export: FFmpeg's worker is terminated (the next export loads a fresh one).
+export const cancelExport = () => {
+  cancelRequested = true;
+  if (ffmpeg) {
+    try { ffmpeg.terminate(); } catch { /* already gone */ }
+    ffmpeg = null;
+    loadPromise = null;
+  }
+};
 
 export const loadFFmpeg = async () => {
   if (ffmpeg && ffmpeg.loaded) return ffmpeg;
@@ -54,16 +67,17 @@ export const loadFFmpeg = async () => {
 const ffmpegColor = (hex) => (/^#[0-9a-f]{6}$/i.test(hex || '') ? `0x${hex.slice(1).toUpperCase()}` : 'white');
 
 // format 'gif' renders a silent, palette-optimised GIF instead of an MP4.
-export const exportVideoFFmpeg = async (items = [], durationMs = 7000, canvasAspectRatio = 16/9, canvasDimensions = { width: 800, height: 600 }, layoutId = null, onProgress = () => {}, { format = 'mp4', backgroundColor = '#ffffff' } = {}) => {
+export const exportVideoFFmpeg = async (items = [], durationMs = 7000, canvasAspectRatio = 16/9, canvasDimensions = { width: 800, height: 600 }, layoutId = null, onProgress = () => {}, { format = 'mp4', backgroundColor = '#ffffff', download = true } = {}) => {
   const isGifOut = format === 'gif';
   try {
+    cancelRequested = false;
+    // onProgress(percent 0..100, { phase: 'preparing' | 'rendering', etaSec })
+    let phaseStart = performance.now();
+    const report = (phase, fraction) => onProgress(overallPercent(phase, fraction), { phase, etaSec: etaSeconds(performance.now() - phaseStart, fraction) });
+    const checkCancel = () => { if (cancelRequested) throw new ExportCancelledError(); };
+    report('preparing', 0);
     const ff = await loadFFmpeg();
-    if (typeof ff.off === 'function') ff.off('progress');
-    ff.on('progress', ({ progress }) => {
-      // Clamp progress between 0 and 100
-      let p = Math.max(0, Math.min(progress * 100, 100));
-      onProgress(p);
-    });
+    checkCancel();
 
     const safeDurationMs = (typeof durationMs === 'number' && !isNaN(durationMs) && durationMs > 0) ? durationMs : 7000;
     const durationSec = Math.max(0.1, safeDurationMs / 1000);
@@ -102,7 +116,17 @@ export const exportVideoFFmpeg = async (items = [], durationMs = 7000, canvasAsp
     const visualItems = items.filter(item => !item.hidden && (item.type === 'video' || item.type === 'image' || item.type === 'sticker'));
     const textItems = items.filter(item => !item.hidden && item.type === 'text');
 
+    // Preparing progress: one step per clip as its input is fetched or drawn.
+    const prepTotal = Math.max(1, items.filter((i) => !i.hidden && i.type !== 'audio').length + (isGifOut ? 0 : items.filter((i) => !i.hidden && i.type === 'audio').length));
+    let prepDone = 0;
+    const prepStep = () => {
+      checkCancel();
+      report('preparing', prepDone / prepTotal);
+      prepDone++;
+    };
+
     for (const item of visualItems) {
+      prepStep();
       if (!item.url) continue;
       
       const isVideo = item.type === 'video';
@@ -317,6 +341,7 @@ export const exportVideoFFmpeg = async (items = [], durationMs = 7000, canvasAsp
     // Add text items via PNG overlay for pixel-perfect font, stroke, and rotation support.
     // Animated text is a run of stills (pop, typewriter); shake moves one still with overlay expressions.
     for (const item of textItems) {
+      prepStep();
       const startT = Math.max(0, (typeof item.startMs === 'number' && !isNaN(item.startMs) ? item.startMs : 0) / 1000);
       const endT = Math.max(startT + 0.05, (typeof item.endMs === 'number' && !isNaN(item.endMs) ? item.endMs : safeDurationMs) / 1000);
       const steps = animationSteps({ ...item, startMs: startT * 1000, endMs: endT * 1000 });
@@ -371,6 +396,7 @@ export const exportVideoFFmpeg = async (items = [], durationMs = 7000, canvasAsp
     // Process standalone audio items (sound effects, background music, audio clips)
     const audioItems = items.filter(item => !item.hidden && item.type === 'audio');
     for (const item of audioItems) {
+      if (!isGifOut) prepStep();
       if (!item.url || isGifOut) continue;
       let fileData;
       try {
@@ -453,33 +479,47 @@ export const exportVideoFFmpeg = async (items = [], durationMs = 7000, canvasAsp
     }
 
     if (import.meta.env?.DEV) console.log("[FFmpeg Command]", command.join(' '));
-    const retCode = await ff.exec(command);
+    checkCancel();
+    phaseStart = performance.now();
+    report('rendering', 0);
+    const onLog = ({ message }) => {
+      const t = parseFfmpegTime(message);
+      if (t !== null) report('rendering', t / durationSec);
+    };
+    ff.on('log', onLog);
+    let retCode;
+    try {
+      retCode = await ff.exec(command);
+    } catch (e) {
+      if (cancelRequested) throw new ExportCancelledError();
+      throw e;
+    } finally {
+      try { ff.off('log', onLog); } catch { /* terminated */ }
+    }
     if (retCode !== 0) {
       throw new Error(`FFmpeg command failed with code ${retCode}. Check browser console for logs.`);
     }
 
+    report('rendering', 1);
+
     // Read and clean up
     const data = await ff.readFile(outputFileName);
     const blob = new Blob([data.buffer], { type: isGifOut ? 'image/gif' : 'video/mp4' });
-    const url = URL.createObjectURL(blob);
+    const fileName = `meme-studio-${Date.now()}.${isGifOut ? 'gif' : 'mp4'}`;
 
     try {
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `pro-edit-ffmpeg-${Date.now()}.${isGifOut ? 'gif' : 'mp4'}`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      if (download) downloadBlob(blob, fileName);
     } finally {
-      URL.revokeObjectURL(url);
       for (const f of filesToDelete) {
          try { await ff.deleteFile(f); } catch(e){}
       }
       try { await ff.deleteFile(outputFileName); } catch(e){}
     }
 
-    return true;
+    // The caller can share or save the file itself (pass download: false).
+    return { blob, fileName };
   } catch (error) {
+    if (cancelRequested || error instanceof ExportCancelledError) throw new ExportCancelledError();
     console.error("FFmpeg Export Error Detailed:", error);
     if (error instanceof Error) {
       throw error;

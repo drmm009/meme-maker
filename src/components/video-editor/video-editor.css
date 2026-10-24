@@ -801,3 +801,91 @@
   background-position: center;
   box-shadow: inset -1px 0 0 rgba(0, 0, 0, 0.35);
 }
+
+/* ── Export progress details ────────────────────────────────── */
+.vt-export-overlay .vt-export-phase { color: var(--vt-text); font-size: 15px; }
+.vt-export-overlay .vt-export-eta { margin-top: -8px; font-size: 13px; font-variant-numeric: tabular-nums; }
+.vt-export-cancel {
+  margin-top: 4px;
+  padding: 9px 22px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--vt-text);
+  font-weight: 700;
+  cursor: pointer;
+}
+.vt-export-cancel:hover { background: rgba(255, 255, 255, 0.06); }
+
+/* ── Export ready card ──────────────────────────────────────── */
+.vt-ready {
+  position: absolute;
+  inset: 0;
+  z-index: 45;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(7, 8, 12, 0.78);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  animation: vt-panel-in 0.25s var(--vt-ease);
+}
+.vt-ready-card {
+  position: relative;
+  width: min(100%, 340px);
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 22px;
+  background: #161922;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+  box-sizing: border-box;
+}
+.vt-ready-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 1;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.45);
+  color: #fff;
+  cursor: pointer;
+}
+.vt-ready-preview {
+  width: 100%;
+  min-height: 0;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #000;
+  display: grid;
+  place-items: center;
+}
+.vt-ready-preview img, .vt-ready-preview video { display: block; width: 100%; max-height: 32vh; object-fit: contain; }
+.vt-ready-title { margin: 6px 0 0; font-size: 17px; font-weight: 800; }
+.vt-ready-sub { margin: 0; color: var(--vt-muted); font-size: 12px; text-align: center; word-break: break-all; }
+.vt-ready-actions { display: flex; gap: 10px; width: 100%; margin-top: 6px; }
+.vt-ready-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 14px;
+  background: transparent;
+  color: var(--vt-text);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.vt-ready-btn.is-primary { border-color: transparent; background: var(--vt-grad); box-shadow: var(--vt-glow); }

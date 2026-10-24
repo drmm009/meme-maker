@@ -6,8 +6,10 @@ import CanvasPreview from './CanvasPreview';
 import TimelinePanel from './timeline/TimelinePanel';
 import ToolRail from './ToolRail';
 import AddMedia from './AddMedia';
+import ExportReadyCard from './ExportReadyCard';
 import { useEditorStore } from '../../store/useVideoEditorStore';
-import { exportVideoFFmpeg } from '../../utils/ffmpegExport';
+import { exportVideoFFmpeg, cancelExport } from '../../utils/ffmpegExport';
+import { ExportCancelledError, formatEta } from '../../utils/exportProgress';
 import AspectRatioDropdown from '../AspectRatioDropdown';
 import { useAudioPlaybackSync } from './useAudioPlaybackSync';
 import { usePlaybackLoop, togglePlayback } from './usePlaybackLoop';
@@ -83,6 +85,8 @@ export default function VideoEditor({ template, onBack }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [exportDone, setExportDone] = useState(false);
   const [exportFormat, setExportFormat] = useState('mp4');
+  const [exportInfo, setExportInfo] = useState({ phase: 'preparing', etaSec: null });
+  const [exported, setExported] = useState(null); // { blob, fileName } of the last finished export
   const addRef = useRef(null);
   const menuRef = useRef(null);
 
@@ -134,24 +138,31 @@ export default function VideoEditor({ template, onBack }) {
   const handleExport = async (format = 'mp4') => {
     setMenuOpen(false);
     setExportFormat(format);
+    setExportInfo({ phase: 'preparing', etaSec: null });
     const store = useEditorStore.getState();
     store.setIsExporting(true);
     store.setExportProgress(0);
     try {
-      await exportVideoFFmpeg(
+      const result = await exportVideoFFmpeg(
         store.items || [],
         getContentEnd(store.items || [], store.duration || 7000),
         store.canvasAspectRatio || 16 / 9,
         store.canvasDimensions || { width: 800, height: 600 },
         store.layoutId,
-        (progress) => useEditorStore.getState().setExportProgress(progress),
-        { format, backgroundColor: store.backgroundColor }
+        (progress, info) => {
+          useEditorStore.getState().setExportProgress(progress);
+          if (info) setExportInfo(info);
+        },
+        { format, backgroundColor: store.backgroundColor, download: false }
       );
+      setExported(result);
       setExportDone(true);
       setTimeout(() => setExportDone(false), 3000);
     } catch (err) {
-      console.error(err);
-      alert('Export failed: ' + err.message);
+      if (!(err instanceof ExportCancelledError)) {
+        console.error(err);
+        alert('Export failed: ' + err.message);
+      }
     } finally {
       useEditorStore.getState().setIsExporting(false);
       useEditorStore.getState().setExportProgress(0);
@@ -242,12 +253,20 @@ export default function VideoEditor({ template, onBack }) {
           </button>
         )}
 
+        {exported && !isExporting && <ExportReadyCard result={exported} onClose={() => setExported(null)} />}
+
         {isExporting && (
           <div className="vt-export-overlay" role="status">
             <div className="vt-export-ring" style={{ '--p': Math.round(exportProgress) }}>
               <span>{Math.round(exportProgress)}%</span>
             </div>
-            <p>{exportFormat === 'gif' ? 'Making your GIF…' : 'Rendering your video…'}</p>
+            <p className="vt-export-phase">
+              {exportInfo.phase === 'preparing'
+                ? 'Preparing your media…'
+                : exportFormat === 'gif' ? 'Making your GIF…' : 'Rendering your video…'}
+            </p>
+            <p className="vt-export-eta">{formatEta(exportInfo.etaSec) || ' '}</p>
+            <button type="button" className="vt-export-cancel" onClick={cancelExport}>Cancel</button>
           </div>
         )}
       </section>

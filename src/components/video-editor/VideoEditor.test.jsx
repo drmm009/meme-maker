@@ -6,9 +6,13 @@ import React from 'react';
 import { render, screen, fireEvent, cleanup, act } from '@testing-library/react';
 import VideoEditor from './VideoEditor';
 import { useEditorStore } from '../../store/useVideoEditorStore';
+import { exportVideoFFmpeg } from '../../utils/ffmpegExport';
 
 vi.mock('./CanvasPreview', () => ({ default: () => <div data-testid="canvas-preview" /> }));
-vi.mock('../../utils/ffmpegExport', () => ({ exportVideoFFmpeg: vi.fn(() => Promise.resolve()) }));
+vi.mock('../../utils/ffmpegExport', () => ({
+  exportVideoFFmpeg: vi.fn(() => Promise.resolve({ blob: new Blob(['x'], { type: 'video/mp4' }), fileName: 'meme-studio-1.mp4' })),
+  cancelExport: vi.fn(),
+}));
 vi.mock('../../services/memeService', () => ({ fetchOpenSourceMemes: () => Promise.resolve([]) }));
 
 const store = () => useEditorStore.getState();
@@ -171,6 +175,20 @@ describe('VideoEditor', () => {
     expect(store().backgroundColor).toBe('#000000');
     expect(screen.getByLabelText('#000000').getAttribute('aria-checked')).toBe('true');
     act(() => store().setBackgroundColor('#ffffff'));
+  });
+
+  it('exports without auto-downloading and shows the ready card', async () => {
+    URL.createObjectURL = vi.fn(() => 'blob:test');
+    URL.revokeObjectURL = vi.fn();
+    act(() => store().addItem({ type: 'video', url: 'a.mp4', durationMs: 2000 }));
+    render(<VideoEditor onBack={() => {}} />);
+    fireEvent.click(screen.getByLabelText('Export'));
+    await act(async () => { fireEvent.click(screen.getByText('Export video')); });
+    expect(exportVideoFFmpeg.mock.calls.at(-1)[6]).toMatchObject({ format: 'mp4', download: false, backgroundColor: '#ffffff' });
+    expect(await screen.findByText('Your video is ready')).toBeTruthy();
+    expect(screen.getByText('Save')).toBeTruthy();
+    fireEvent.click(screen.getByLabelText('Close'));
+    expect(screen.queryByText('Your video is ready')).toBeNull();
   });
 
   it('calls onBack from the close button', () => {
