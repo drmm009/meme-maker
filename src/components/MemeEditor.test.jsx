@@ -76,6 +76,10 @@ const captionTexts = () => screen.queryAllByTestId('caption').map((el) => el.tex
 const deselect = () => act(() => canvas.props.onSelectLayer(null));
 const undoButton = () => screen.getByTitle('Undo');
 const redoButton = () => screen.getByTitle('Redo');
+// Dock tabs open a drop-up menu of their tools.
+const dockTab = (label) => screen.getAllByText(label).map((el) => el.closest('.ie-tab')).find(Boolean);
+const openTab = (label) => fireEvent.click(dockTab(label));
+const addTextFromMenu = () => { openTab('Text'); fireEvent.click(screen.getByTitle('Add Text Caption')); };
 
 function renderEditor(template = TEMPLATE, onSaveToGallery = vi.fn()) {
   return render(<MemeEditor template={template} onBack={vi.fn()} onSaveToGallery={onSaveToGallery} />);
@@ -107,7 +111,7 @@ describe('MemeEditor', () => {
 
   it('adds a caption from the Text tab and selects it', () => {
     renderEditor();
-    fireEvent.click(screen.getByTitle('Add Text Caption'));
+    addTextFromMenu();
     expect(captionTexts()).toEqual(['TOP TEXT', 'BOTTOM TEXT', 'NEW TEXT']);
     const added = canvas.props.captions[2];
     expect(canvas.props.activeLayerId).toBe(added.id);
@@ -124,7 +128,7 @@ describe('MemeEditor', () => {
     renderEditor();
     expect(undoButton().disabled).toBe(true);
 
-    fireEvent.click(screen.getByTitle('Add Text Caption'));
+    addTextFromMenu();
     expect(captionTexts()).toHaveLength(3);
     expect(undoButton().disabled).toBe(false);
 
@@ -148,9 +152,9 @@ describe('MemeEditor', () => {
 
   it('keeps independent captions after several adds', () => {
     renderEditor();
-    fireEvent.click(screen.getByTitle('Add Text Caption'));
+    addTextFromMenu();
     deselect();
-    fireEvent.click(screen.getByTitle('Add Text Caption'));
+    addTextFromMenu();
     const ids = canvas.props.captions.map((c) => c.id);
     expect(new Set(ids).size).toBe(ids.length);
     expect(captionTexts()).toHaveLength(4);
@@ -159,17 +163,26 @@ describe('MemeEditor', () => {
   it('switches between every sidebar tab without crashing', () => {
     renderEditor();
     for (const label of ['Draw', 'Media', 'AI/Filters', 'Canvas', 'Text']) {
-      const tab = screen.getAllByText(label).find((el) => el.closest('.tab-btn'));
+      const tab = dockTab(label);
       expect(tab, `tab "${label}"`).toBeTruthy();
-      fireEvent.click(tab.closest('.tab-btn'));
-      expect(tab.closest('.tab-btn').className).toContain('active');
+      fireEvent.click(tab);
+      expect(tab.className).toContain('is-active');
+      expect(screen.getByRole('menu', { name: `${label} tools` })).toBeTruthy();
     }
+  }, 30000);
+
+  it('opens and closes a tab menu, and keeps tab tools out of the toolbar', () => {
+    renderEditor();
+    expect(screen.queryByTitle('Add Text Caption')).toBeNull();
+    openTab('Media');
+    for (const label of ['Upload', 'Template', 'Stickers', 'Emojis']) expect(screen.getByRole('menuitem', { name: label })).toBeTruthy();
+    openTab('Media');
+    expect(screen.queryByRole('menu')).toBeNull();
   }, 30000);
 
   it('turns on drawing mode on the Draw tab', () => {
     renderEditor();
-    const drawTab = screen.getAllByText('Draw').find((el) => el.closest('.tab-btn'));
-    fireEvent.click(drawTab.closest('.tab-btn'));
+    openTab('Draw');
     expect(canvas.props.isDrawingMode).toBe(true);
     expect(canvas.props.drawTool).toBe('brush');
   }, 30000);
@@ -186,7 +199,7 @@ describe('MemeEditor', () => {
   it('Save to Gallery names the meme after the template on the first save', () => {
     const onSave = vi.fn();
     renderEditor(TEMPLATE, onSave);
-    fireEvent.click(screen.getByText('Export'));
+    fireEvent.click(screen.getByLabelText('Export'));
     fireEvent.click(screen.getByText('Save to Gallery'));
     expect(onSave).toHaveBeenCalledTimes(1);
     expect(onSave.mock.calls[0][0]).toMatchObject({
@@ -198,8 +211,7 @@ describe('MemeEditor', () => {
 
   it('flips the canvas from the Canvas tab', () => {
     renderEditor();
-    const canvasTab = screen.getAllByText('Canvas').find((el) => el.closest('.tab-btn'));
-    fireEvent.click(canvasTab.closest('.tab-btn'));
+    openTab('Canvas');
     expect(canvas.props.canvasFlipX).toBeFalsy();
     fireEvent.click(screen.getAllByTitle(/Flip (Canvas|base template) Horizontal/i)[0]);
     expect(canvas.props.canvasFlipX).toBe(true);

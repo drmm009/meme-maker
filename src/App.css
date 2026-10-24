@@ -1012,10 +1012,10 @@ body.modal-open {
   background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0.4) 100%) !important;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08) !important;
 }
-.meme-editor-container:has(.editor-sidebar.folded) .editor-main {
+.meme-editor-container:has(.ie-dock) .editor-main {
   justify-content: center !important;
 }
-.meme-editor-container:has(.editor-sidebar.folded) .meme-canvas {
+.meme-editor-container:has(.ie-dock) .meme-canvas {
   max-height: 100% !important;
   max-width: 100% !important;
 }

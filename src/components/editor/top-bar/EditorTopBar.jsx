@@ -1,5 +1,5 @@
 import React from 'react';
-import { Undo, Redo, Download, Share2, Copy, ArrowLeft, Save, ChevronDown } from 'lucide-react';
+import { Undo2, Redo2, Download, Share2, Copy, X, Save, Share } from 'lucide-react';
 import { downloadImageHelper } from '../../../utils/downloadHelper';
 import { motion, AnimatePresence } from 'framer-motion';
 import AspectRatioDropdown from '../../AspectRatioDropdown';
@@ -41,63 +41,14 @@ export default function EditorTopBar({
 
   return (
     <>
-      <div className="editor-topbar glass-card flex-between">
-        <button className="btn btn-ghost btn-xs back-btn" onClick={onBack}>
-          <ArrowLeft className="icon-sm" /> Back
+      {/* Same layout as the video editor's: close, aspect ratio, history and export. */}
+      <div className="ie-topbar">
+        <button type="button" className="ie-fab" onClick={onBack} aria-label="Back" title="Back">
+          <X size={18} strokeWidth={2.5} />
         </button>
 
-        <div className="history-actions flex-gap">
-          <button
-            className="btn btn-icon btn-xs hover-lift"
-            onClick={handleUndo}
-            disabled={!canUndo}
-            title="Undo"
-            style={{ 
-              opacity: canUndo ? 1 : 0.4, 
-              cursor: canUndo ? 'pointer' : 'not-allowed',
-              background: 'rgba(255, 255, 255, 0.1)',
-              backdropFilter: 'blur(12px)',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-              borderRadius: '12px',
-              padding: '8px',
-              color: 'currentColor',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-              transition: 'all 0.3s ease',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}
-          >
-            <Undo className="icon-xs" />
-          </button>
-          <button
-            className="btn btn-icon btn-xs hover-lift"
-            onClick={handleRedo}
-            disabled={!canRedo}
-            title="Redo"
-            style={{ 
-              opacity: canRedo ? 1 : 0.4, 
-              cursor: canRedo ? 'pointer' : 'not-allowed',
-              background: 'rgba(255, 255, 255, 0.1)',
-              backdropFilter: 'blur(12px)',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-              borderRadius: '12px',
-              padding: '8px',
-              color: 'currentColor',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-              transition: 'all 0.3s ease',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}
-          >
-            <Redo className="icon-xs" />
-          </button>
-          <div style={{ display: 'none' }}></div>
-        </div>
-
-        <div className="header-actions flex-gap" style={{ display: 'flex', alignItems: 'center' }}>
-          <AspectRatioDropdown 
+        <div className="ie-topbar-center">
+          <AspectRatioDropdown
             value={aspectRatio}
             onChange={(val) => {
               setAspectRatio(val);
@@ -105,17 +56,27 @@ export default function EditorTopBar({
             }}
             options={ASPECT_RATIOS}
           />
+        </div>
 
-          <div style={{ position: 'relative' }} ref={exportDropdownRef}>
+        <div className="ie-topbar-right">
+          <button type="button" className="ie-icon-btn" onClick={handleUndo} disabled={!canUndo} title="Undo" aria-label="Undo">
+            <Undo2 size={20} />
+          </button>
+          <button type="button" className="ie-icon-btn" onClick={handleRedo} disabled={!canRedo} title="Redo" aria-label="Redo">
+            <Redo2 size={20} />
+          </button>
+
+          <div className="ie-export" ref={exportDropdownRef}>
             <motion.button
-              className="btn btn-primary shadow-glow btn-xs"
-              whileTap={{ scale: 0.95 }}
+              type="button"
+              className="ie-fab ie-fab--export"
+              whileTap={{ scale: 0.92 }}
               onClick={() => setExportDropdownOpen(prev => !prev)}
-              style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+              aria-label="Export"
+              aria-expanded={exportDropdownOpen}
+              title="Export"
             >
-              <Download className="icon-xs" />
-              <span>Export</span>
-              <ChevronDown className="icon-xs" style={{ transition: 'transform 0.2s', transform: exportDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)' }} />
+              <Share size={17} strokeWidth={2.4} />
             </motion.button>
 
             <AnimatePresence>

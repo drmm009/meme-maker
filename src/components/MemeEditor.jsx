@@ -171,18 +171,6 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
     originalTemplateImgRef, handleStartMorphFace, handleConfirmPinpoint, handleApplyFaceMorph,
     handleUpdateTemplateMorphProgress, handleChangeFace, handleRevertTemplateFace, handleFinalizeTemplateFace,
   } = useFaceMorph({ canvasRef });
-  const tabButtonsRef = useRef(null);
-
-  // Auto-scroll active tab into view horizontally
-  useEffect(() => {
-    if (tabButtonsRef.current) {
-      const activeBtn = tabButtonsRef.current.querySelector('.tab-btn.active');
-      if (activeBtn) {
-        activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-      }
-    }
-  }, [activeTab]);
-
   // Ensure Text tab is active by default when user reaches editor and no layer is auto-selected
   useEffect(() => {
     setActiveLayerId(null);
@@ -432,17 +420,12 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
             {/* ─── 2. Main Context Toolbar ─── */}
             <ContextToolbar
               handleUpdateTemplateMorphProgress={handleUpdateTemplateMorphProgress}
-              handleAddCurvedText={handleAddCurvedText}
-              handleToggleCanvasFlip={handleToggleCanvasFlip}
               activeCaption={activeCaption}
               activeFontObj={activeFontObj}
               activeImageLayer={activeImageLayer}
               activeSticker={activeSticker}
               contextToolbarRef={contextToolbarRef}
-              handleAddBubble={handleAddBubble}
-              handleAddCaption={handleAddCaption}
               handleChangeFace={handleChangeFace}
-              handleFileUploadImageLayer={handleFileUploadImageLayer}
               handleFinalizeTemplateFace={handleFinalizeTemplateFace}
               handleFlipActiveLayer={handleFlipActiveLayer}
               handleOpenSocialModalForActiveCard={handleOpenSocialModalForActiveCard}
@@ -454,7 +437,6 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
               isHoldingCanvasCompare={isHoldingCanvasCompare}
               isRemovingBg={isRemovingBg}
               setIsHoldingCanvasCompare={setIsHoldingCanvasCompare}
-              setShowFaceMorphModal={setShowFaceMorphModal}
               updateActiveCaptionProps={updateActiveCaptionProps}
             />
           </div>
@@ -463,7 +445,10 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
       </div>
         
       {/* Tab dock */}
-      <EditorSidebar handleTabClick={handleTabClick} tabButtonsRef={tabButtonsRef} />
+      <EditorSidebar
+        handleTabClick={handleTabClick}
+        toolHandlers={{ handleAddBubble, handleAddCaption, handleAddCurvedText, handleFileUploadImageLayer, handleToggleCanvasFlip, setShowFaceMorphModal }}
+      />
       </div>
 
       {/* Bottom sheets and modals */}

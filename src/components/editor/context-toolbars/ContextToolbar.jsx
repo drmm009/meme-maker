@@ -1,10 +1,10 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import TabQuickTools from './TabQuickTools';
 import FaceMorphToolbar from './FaceMorphToolbar';
 import ImageLayerToolbar from './ImageLayerToolbar';
 import StickerToolbar from './StickerToolbar';
 import CaptionToolbar from './CaptionToolbar';
 import { useEditorUiStore } from '../store/useEditorUiStore';
+import { useMemeEditorStore } from '../store/useMemeEditorStore';
 
 export default function ContextToolbar({
   activeCaption,
@@ -12,10 +12,7 @@ export default function ContextToolbar({
   activeImageLayer,
   activeSticker,
   contextToolbarRef,
-  handleAddBubble,
-  handleAddCaption,
   handleChangeFace,
-  handleFileUploadImageLayer,
   handleFinalizeTemplateFace,
   handleFlipActiveLayer,
   handleOpenSocialModalForActiveCard,
@@ -27,19 +24,21 @@ export default function ContextToolbar({
   isHoldingCanvasCompare,
   isRemovingBg,
   setIsHoldingCanvasCompare,
-  setShowFaceMorphModal,
   updateActiveCaptionProps,
-  handleAddCurvedText,
-  handleToggleCanvasFlip,
   handleUpdateTemplateMorphProgress,
 }) {
   const showBubbleLayouts = useEditorUiStore((s) => s.showBubbleLayouts);
+  const templateFaceMorph = useMemeEditorStore((s) => s.templateFaceMorph);
+  // Only a selected layer (or the on-template face morph) has a tool row; each tab's own tools
+  // live in the dock's drop-up menus (EditorSidebar).
+  const show = Boolean(activeCaption || activeSticker || activeImageLayer || templateFaceMorph);
 
   return (
     <>
       <AnimatePresence>
-        {(
+        {show && (
           <motion.div
+            key="context-toolbar"
             ref={contextToolbarRef}
             className={`editor-floating-toolbar video-context-toolbar ${showBubbleLayouts ? 'bubble-mode-left' : ''}`}
             initial={{ opacity: 0, height: 0, paddingTop: 0, paddingBottom: 0, marginTop: 0, marginBottom: 0, overflow: 'hidden' }}
@@ -80,20 +79,6 @@ export default function ContextToolbar({
               handleRevertTemplateFace={handleRevertTemplateFace}
               isHoldingCanvasCompare={isHoldingCanvasCompare}
               setIsHoldingCanvasCompare={setIsHoldingCanvasCompare}
-            />
-
-            {/* TAB SPECIFIC TOOLS (when nothing selected and not in template face morph) */}
-            {/* TEXT TAB */}
-            <TabQuickTools
-              activeCaption={activeCaption}
-              activeImageLayer={activeImageLayer}
-              activeSticker={activeSticker}
-              handleAddBubble={handleAddBubble}
-              handleAddCaption={handleAddCaption}
-              handleAddCurvedText={handleAddCurvedText}
-              handleFileUploadImageLayer={handleFileUploadImageLayer}
-              handleToggleCanvasFlip={handleToggleCanvasFlip}
-              setShowFaceMorphModal={setShowFaceMorphModal}
             />
 
           </motion.div>
