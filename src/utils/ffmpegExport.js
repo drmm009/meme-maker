@@ -69,7 +69,7 @@ export const loadFFmpeg = async () => {
 const ffmpegColor = (hex) => (/^#[0-9a-f]{6}$/i.test(hex || '') ? `0x${hex.slice(1).toUpperCase()}` : 'white');
 
 // format 'gif' renders a silent, palette-optimised GIF instead of an MP4.
-export const exportVideoFFmpeg = async (items = [], durationMs = 7000, canvasAspectRatio = 16/9, canvasDimensions = { width: 800, height: 600 }, layoutId = null, onProgress = () => {}, { format = 'mp4', backgroundColor = '#ffffff', download = true } = {}) => {
+export const exportVideoFFmpeg = async (items = [], durationMs = 7000, canvasAspectRatio = 16/9, canvasDimensions = { width: 800, height: 600 }, layoutId = null, onProgress = () => {}, { format = 'mp4', backgroundColor = '#ffffff', download = true, resolution = 720 } = {}) => {
   const isGifOut = format === 'gif';
   try {
     cancelRequested = false;
@@ -84,16 +84,17 @@ export const exportVideoFFmpeg = async (items = [], durationMs = 7000, canvasAsp
     const safeDurationMs = (typeof durationMs === 'number' && !isNaN(durationMs) && durationMs > 0) ? durationMs : 7000;
     const durationSec = Math.max(0.1, safeDurationMs / 1000);
     
-    // Target 1280x720 canvas in FFmpeg (or scaled by aspect ratio)
+    // Output canvas: 720p (long side 1280) or 1080p (long side 1920), shaped by the aspect ratio.
     const safeAspect = (typeof canvasAspectRatio === 'number' && !isNaN(canvasAspectRatio) && canvasAspectRatio > 0) ? canvasAspectRatio : (16 / 9);
-    let canvasW = 1280;
-    let canvasH = 720;
+    const longSide = resolution >= 1080 ? 1920 : 1280;
+    let canvasW;
+    let canvasH;
     if (safeAspect < 1) {
-      canvasH = 1280;
-      canvasW = Math.round(1280 * safeAspect);
+      canvasH = longSide;
+      canvasW = Math.round(longSide * safeAspect);
     } else {
-      canvasW = 1280;
-      canvasH = Math.round(1280 / safeAspect);
+      canvasW = longSide;
+      canvasH = Math.round(longSide / safeAspect);
     }
     
     // Ensure even dimensions
@@ -478,7 +479,8 @@ export const exportVideoFFmpeg = async (items = [], durationMs = 7000, canvasAsp
         '-map', finalVideoMap,
         '-map', finalAudioMap, 
         '-c:v', 'libx264',
-        '-preset', 'ultrafast',
+        // 720p favours speed; 1080p a better encode (slower, smaller for its quality).
+        ...(resolution >= 1080 ? ['-preset', 'veryfast', '-crf', '21'] : ['-preset', 'ultrafast']),
         '-c:a', 'aac',
         '-b:a', '192k',
         '-t', durationSec.toString(),

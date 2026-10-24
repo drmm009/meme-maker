@@ -136,7 +136,7 @@ export default function VideoEditor({ template, onBack }) {
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
-  const handleExport = async (format = 'mp4') => {
+  const handleExport = async (format = 'mp4', resolution = 720) => {
     setMenuOpen(false);
     setExportFormat(format);
     setExportInfo({ phase: 'preparing', etaSec: null });
@@ -154,7 +154,7 @@ export default function VideoEditor({ template, onBack }) {
           useEditorStore.getState().setExportProgress(progress);
           if (info) setExportInfo(info);
         },
-        { format, backgroundColor: store.backgroundColor, download: false }
+        { format, resolution, backgroundColor: store.backgroundColor, download: false }
       );
       setExported(result);
       setExportDone(true);
@@ -227,7 +227,12 @@ export default function VideoEditor({ template, onBack }) {
                 exit={{ opacity: 0, y: -6, scale: 0.96 }}
                 transition={{ duration: 0.15 }}
               >
-                <button type="button" className="vt-menu-item" onClick={() => handleExport('mp4')}><Download size={16} /> Export video</button>
+                <button type="button" className="vt-menu-item" onClick={() => handleExport('mp4', 720)}>
+                  <Download size={16} /> <span className="vt-menu-label">Export video<small>720p · faster</small></span>
+                </button>
+                <button type="button" className="vt-menu-item" onClick={() => handleExport('mp4', 1080)}>
+                  <Download size={16} /> <span className="vt-menu-label">Export video<small>1080p · sharper, slower</small></span>
+                </button>
                 <button type="button" className="vt-menu-item" onClick={() => handleExport('gif')}><ImagePlay size={16} /> Export GIF</button>
                 <button type="button" className="vt-menu-item" onClick={() => { setMenuOpen(false); copyFrame(); }}><Copy size={16} /> Copy frame</button>
               </motion.div>
