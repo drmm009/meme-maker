@@ -126,7 +126,7 @@ function RailButton({ label, Icon, onClick, active, danger, dim, done, children 
       className={`vt-tool${active ? ' is-active' : ''}${danger ? ' is-danger' : ''}${dim ? ' is-dim' : ''}${done ? ' is-done' : ''}`}
       onClick={onClick}
     >
-      <span className="vt-tool-icon">{children || <Icon size={17} strokeWidth={1.9} />}</span>
+      <span className="vt-tool-icon">{children || <Icon size={18} />}</span>
       <span className="vt-tool-label">{label}</span>
     </button>
   );
@@ -663,6 +663,12 @@ function ClipTools({ item, panel, setPanel }) {
 }
 
 // Bottom tool rail: add tools, or the selected clip's tools (with an optional slider/text panel above).
+const sectionOfTool = (kind) => SECTIONS.find((sec) => sec.tools.some((t) => t.kind === kind));
+const MENU_W = 184;
+
+// Bottom section: a dock of sections, each opening a drop-up menu of its tools (a one-tool section
+// runs its tool directly). A selected clip gets its own tool row above the dock; panels (sliders,
+// SFX, voice…) open above everything.
 export default function ToolRail({ onAdd }) {
   const activeItem = useEditorStore((s) => s.items.find((i) => i.id === s.activeItemId));
   const [panelState, setPanelState] = useState({ id: null, name: null });
@@ -674,49 +680,78 @@ export default function ToolRail({ onAdd }) {
     return { id: ownerId, name: typeof fn === 'function' ? fn(current) : fn };
   });
   const Panel = panel && PANELS[panel];
-  const [sectionId, setSectionId] = useState('media');
-  const section = SECTIONS.find((sec) => sec.id === sectionId) || SECTIONS[0];
+  const [menu, setMenu] = useState(null); // { id, left } of the open drop-up
+  const wrapRef = useRef(null);
 
-  // Picking a section from the dock closes any panel and, if a clip is selected, deselects it.
-  const openSection = (id) => {
-    setSectionId(id);
-    setPanelState({ id: null, name: null });
-    if (activeItem) useEditorStore.getState().setActiveItem(null);
+  // Tapping anywhere else closes the drop-up; so does selecting a clip.
+  useEffect(() => {
+    if (!menu) return undefined;
+    const onDown = (e) => { if (!wrapRef.current?.contains(e.target)) setMenu(null); };
+    document.addEventListener('pointerdown', onDown);
+    return () => document.removeEventListener('pointerdown', onDown);
+  }, [menu]);
+  useEffect(() => { if (activeItem) setMenu(null); }, [activeItem]);
+
+  const runTool = (t) => {
+    setMenu(null);
+    if (t.panel) setPanel((p) => (p === t.kind ? null : t.kind));
+    else { setPanel(null); onAdd(t.kind); }
   };
 
+  // Opening a section deselects any clip and closes panels; tapping its tab again closes the menu.
+  const openSection = (sec, tab) => {
+    if (activeItem) useEditorStore.getState().setActiveItem(null);
+    if (sec.tools.length === 1) { setMenu(null); setPanelState({ id: null, name: null }); runTool(sec.tools[0]); return; }
+    if (menu?.id === sec.id) { setMenu(null); return; }
+    setPanelState({ id: null, name: null });
+    const wrap = wrapRef.current.getBoundingClientRect();
+    const r = tab.getBoundingClientRect();
+    const center = r.left + r.width / 2 - wrap.left;
+    setMenu({ id: sec.id, left: Math.max(8, Math.min(wrap.width - MENU_W - 8, center - MENU_W / 2)) });
+  };
+
+  const menuSection = menu && SECTIONS.find((sec) => sec.id === menu.id);
+  const panelSection = !activeItem && panel ? sectionOfTool(panel) : null;
+
   return (
-    <div className="vt-rail-wrap">
+    <div className="vt-rail-wrap" ref={wrapRef}>
       {Panel && (
         <div className="vt-panel" role="group" aria-label="Clip settings">
           <Panel item={activeItem} onMore={() => { setPanel(null); onAdd('sounds'); }} />
         </div>
       )}
-      <div className="vt-rail" role="toolbar" aria-label={activeItem ? 'Clip tools' : `${section.label} tools`}>
-        {activeItem
-          ? <ClipTools item={activeItem} panel={panel} setPanel={setPanel} />
-          : section.tools.map((t) => (
-            <RailButton
-              key={t.kind}
-              label={t.label}
-              Icon={t.Icon}
-              active={t.panel && panel === t.kind}
-              onClick={() => (t.panel ? setPanel((p) => (p === t.kind ? null : t.kind)) : onAdd(t.kind))}
-            />
+      {menuSection && (
+        <div className="vt-dropup" role="menu" aria-label={`${menuSection.label} tools`} style={{ left: menu.left, width: MENU_W }}>
+          {menuSection.tools.map((t) => (
+            <button key={t.kind} type="button" role="menuitem" className="vt-dropup-item" onClick={() => runTool(t)}>
+              <t.Icon size={20} />
+              <span>{t.label}</span>
+            </button>
           ))}
-      </div>
+        </div>
+      )}
+      {activeItem && (
+        <div className="vt-rail" role="toolbar" aria-label="Clip tools">
+          <ClipTools item={activeItem} panel={panel} setPanel={setPanel} />
+        </div>
+      )}
       <nav className="vt-dock" aria-label="Sections">
-        {SECTIONS.map((sec) => (
-          <button
-            key={sec.id}
-            type="button"
-            className={`vt-dock-tab${!activeItem && sec.id === section.id ? ' is-active' : ''}`}
-            aria-pressed={!activeItem && sec.id === section.id}
-            onClick={() => openSection(sec.id)}
-          >
-            <sec.Icon size={19} strokeWidth={1.8} />
-            <span>{sec.label}</span>
-          </button>
-        ))}
+        {SECTIONS.map((sec) => {
+          const on = !activeItem && (menu?.id === sec.id || panelSection?.id === sec.id);
+          return (
+            <button
+              key={sec.id}
+              type="button"
+              className={`vt-dock-tab${on ? ' is-active' : ''}`}
+              aria-expanded={sec.tools.length > 1 ? menu?.id === sec.id : undefined}
+              onClick={(e) => openSection(sec, e.currentTarget)}
+            >
+              <sec.Icon className="vt-dock-icon" size={20} />
+              <span className="vt-dock-label">{sec.label}</span>
+              {on && <span className="vt-dock-dot" />}
+            </button>
+          );
+        })}
       </nav>
     </div>
   );

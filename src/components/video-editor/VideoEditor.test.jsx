@@ -46,7 +46,20 @@ describe('VideoEditor', () => {
     expect(container.querySelector('.vt-editor.is-edit')).toBeTruthy();
     expect(screen.getByText('Start with a video or photo')).toBeTruthy();
     expect(screen.getByText('Add a video')).toBeTruthy();
-    for (const label of ['Media', 'Text', 'Stickers', 'Audio', 'Canvas', 'Photo', 'Video', 'Clips', 'Templates']) expect(screen.getByText(label)).toBeTruthy();
+    for (const label of ['Media', 'Text', 'Stickers', 'Audio', 'Canvas']) expect(screen.getByText(label)).toBeTruthy();
+    expect(screen.queryByText('Photo')).toBeNull();
+  });
+
+  it('opens the tools of a section in a drop-up and closes it on a second tap', () => {
+    render(<VideoEditor onBack={() => {}} />);
+    fireEvent.click(screen.getByText('Media'));
+    expect(screen.getByRole('menu', { name: 'Media tools' })).toBeTruthy();
+    for (const label of ['Photo', 'Video', 'Clips', 'Templates']) expect(screen.getByRole('menuitem', { name: label })).toBeTruthy();
+    fireEvent.click(screen.getByText('Audio'));
+    expect(screen.queryByRole('menu', { name: 'Media tools' })).toBeNull();
+    expect(screen.getByRole('menuitem', { name: 'Voice' })).toBeTruthy();
+    fireEvent.click(screen.getByText('Audio'));
+    expect(screen.queryByRole('menu')).toBeNull();
   });
 
   it('adds a text clip from the rail and shows it on the timeline', () => {
@@ -69,7 +82,7 @@ describe('VideoEditor', () => {
     expect(screen.queryByText('Add text')).toBeNull();
     fireEvent.click(screen.getByText('Done'));
     expect(store().activeItemId).toBe(null);
-    expect(screen.getByText('Add text')).toBeTruthy();
+    expect(screen.queryByRole('toolbar', { name: 'Clip tools' })).toBeNull();
   });
 
   it('duplicates and deletes the selected clip', () => {
@@ -186,8 +199,8 @@ describe('VideoEditor', () => {
 
   it('sets the canvas background from the rail', () => {
     render(<VideoEditor onBack={() => {}} />);
+    // Canvas has one tool, so its tab opens the background panel directly.
     fireEvent.click(screen.getByText('Canvas'));
-    fireEvent.click(screen.getByText('Background'));
     fireEvent.click(screen.getByLabelText('#000000'));
     expect(store().backgroundColor).toBe('#000000');
     expect(screen.getByLabelText('#000000').getAttribute('aria-checked')).toBe('true');
