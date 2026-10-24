@@ -1,7 +1,23 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Music, VolumeX } from 'lucide-react';
 import { useEditorStore } from '../../../store/useVideoEditorStore';
 import { findSnap, pxToMs } from './timelineMath';
+import { filmstripTiles, loadFilmstrip } from '../../../utils/filmstrip';
+
+// Inner height of a video clip (56px row minus borders); filmstrip tiles are this tall.
+const VIDEO_TILE_H = 52;
+
+// Frames sampled along a video, or null while they load (the clip shows its thumbnail meanwhile).
+function useFilmstrip(url, enabled) {
+  const [strip, setStrip] = useState(null);
+  useEffect(() => {
+    if (!enabled || !url) return undefined;
+    let alive = true;
+    loadFilmstrip(url).then((s) => { if (alive) setStrip(s); }).catch(() => {});
+    return () => { alive = false; };
+  }, [url, enabled]);
+  return strip;
+}
 
 const MAX_MS = 100000;
 const MIN_CLIP_MS = 100;
@@ -24,7 +40,13 @@ const clipLabel = (item) => {
 
 // One clip on a track. Tap selects; once selected it can be dragged and trimmed from either end.
 export default function TimelineClip({ item, left, width, selected, pxPerSec, onSnap }) {
-  const thumb = item.type === 'video' ? item.thumbnailUrl : (item.type === 'image' || item.type === 'sticker') ? item.url : null;
+  const strip = useFilmstrip(item.url, item.type === 'video');
+  const thumb = item.type === 'video'
+    ? (strip ? null : item.thumbnailUrl)
+    : (item.type === 'image' || item.type === 'sticker') ? item.url : null;
+  const tiles = strip
+    ? filmstripTiles({ width, tileWidth: VIDEO_TILE_H * strip.aspect, trimStartMs: item.trimStartMs || 0, rate: item.playbackRate || 1, pxPerSec, frameTimes: strip.times })
+    : [];
 
   const startDrag = (e, action) => {
     if (!selected || e.button > 0) return;
@@ -94,6 +116,13 @@ export default function TimelineClip({ item, left, width, selected, pxPerSec, on
       onClick={(e) => { e.stopPropagation(); useEditorStore.getState().setActiveItem(item.id); }}
       onPointerDown={(e) => startDrag(e, 'move')}
     >
+      {tiles.length > 0 && (
+        <div className="vt-filmstrip" aria-hidden="true">
+          {tiles.map((t) => (
+            <span key={t.left} style={{ left: t.left, width: t.width, backgroundImage: `url(${strip.srcs[t.frame]})` }} />
+          ))}
+        </div>
+      )}
       {item.type === 'audio' && (
         <div className="vt-clip-wave" aria-hidden="true">
           {waveBars(item.id, Math.max(8, Math.floor(width / 5))).map((h, i) => <span key={i} style={{ height: `${h}%` }} />)}

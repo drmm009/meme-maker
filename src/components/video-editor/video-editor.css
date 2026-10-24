@@ -790,3 +790,14 @@
 }
 .vt-swatch-btn.is-on { border-color: #fff; box-shadow: 0 0 0 3px rgba(255, 94, 54, 0.6); transform: scale(1.06); }
 .vt-swatch-custom { background: conic-gradient(#ff5e36, #facc15, #22c55e, #3b82f6, #ec4899, #ff5e36); }
+
+/* ── Filmstrip tiles on video clips ─────────────────────────── */
+.vt-filmstrip { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.vt-filmstrip span {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background-size: cover;
+  background-position: center;
+  box-shadow: inset -1px 0 0 rgba(0, 0, 0, 0.35);
+}
