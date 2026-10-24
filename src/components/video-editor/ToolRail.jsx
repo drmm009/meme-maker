@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
-  Type, Sticker, Smile, LayoutGrid, Image as ImageIcon, Film, Clapperboard, Music, AudioLines,
+  Type, Sticker, Smile, LayoutGrid, Image as ImageIcon, Film, Clapperboard, Music,
   Check, Gauge, Volume2, VolumeX, Palette, Square, RotateCw, Minimize, Crop, Maximize, Copy, Trash2,
-  Scissors, PencilLine, ALargeSmall, TextAlignStart, TextAlignCenter, TextAlignEnd, SlidersHorizontal, WandSparkles, Pipette, Sparkles, ImagePlay, PaintBucket, Zap, Snowflake, Rewind, Repeat, ZoomIn, BringToFront, SendToBack, Blend, Mic, ArrowRightLeft
+  Scissors, PencilLine, ALargeSmall, TextAlignStart, TextAlignCenter, TextAlignEnd, SlidersHorizontal, WandSparkles, Pipette, Sparkles, ImagePlay, PaintBucket, Zap, Snowflake, Rewind, Repeat, ZoomIn, BringToFront, SendToBack, Blend, Mic, ArrowRightLeft, Frame, Plus, Upload, Library, Laugh, SquarePlay
 } from 'lucide-react';
 import { useEditorStore, clipEffectBase, sourceTimeMs } from '../../store/useVideoEditorStore';
 import { captureFrame, renderClipEffect } from '../../utils/clipEffects';
@@ -29,20 +29,31 @@ const getContrastStroke = (hexColor) => {
   return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255 < 0.5 ? '#ffffff' : '#000000';
 };
 
-const ADD_TOOLS = [
-  { kind: 'text', label: 'Text', Icon: Type },
-  { kind: 'stickers', label: 'Stickers', Icon: Sticker },
-  { kind: 'emoji', label: 'Emoji', Icon: Smile },
-  { kind: 'gifs', label: 'GIFs', Icon: ImagePlay },
-  { kind: 'templates', label: 'Templates', Icon: LayoutGrid },
-  { kind: 'photo', label: 'Photo', Icon: ImageIcon },
-  { kind: 'video', label: 'Video', Icon: Film },
-  { kind: 'clips', label: 'Clips', Icon: Clapperboard },
-  { kind: 'sfx', label: 'SFX', Icon: Zap, panel: true },
-  { kind: 'sounds', label: 'Sounds', Icon: Music },
-  { kind: 'audio', label: 'Audio', Icon: AudioLines },
-  { kind: 'voice', label: 'Voice', Icon: Mic, panel: true },
-  { kind: 'background', label: 'Background', Icon: PaintBucket, panel: true },
+// The add tools, grouped like the image editor: a dock of sections, each section's tools as chips.
+const SECTIONS = [
+  { id: 'media', label: 'Media', Icon: Film, tools: [
+    { kind: 'photo', label: 'Photo', Icon: ImageIcon },
+    { kind: 'video', label: 'Video', Icon: SquarePlay },
+    { kind: 'clips', label: 'Clips', Icon: Clapperboard },
+    { kind: 'templates', label: 'Templates', Icon: LayoutGrid },
+  ] },
+  { id: 'text', label: 'Text', Icon: Type, tools: [
+    { kind: 'text', label: 'Add text', Icon: Plus },
+  ] },
+  { id: 'stickers', label: 'Stickers', Icon: Sticker, tools: [
+    { kind: 'stickers', label: 'Meme', Icon: Laugh },
+    { kind: 'emoji', label: 'Emoji', Icon: Smile },
+    { kind: 'gifs', label: 'GIFs', Icon: ImagePlay },
+  ] },
+  { id: 'audio', label: 'Audio', Icon: Music, tools: [
+    { kind: 'sfx', label: 'SFX', Icon: Zap, panel: true },
+    { kind: 'sounds', label: 'Sounds', Icon: Library },
+    { kind: 'audio', label: 'Upload', Icon: Upload },
+    { kind: 'voice', label: 'Voice', Icon: Mic, panel: true },
+  ] },
+  { id: 'canvas', label: 'Canvas', Icon: Frame, tools: [
+    { kind: 'background', label: 'Background', Icon: PaintBucket, panel: true },
+  ] },
 ];
 
 const BACKGROUND_SWATCHES = ['#ffffff', '#000000', '#1a1d27', '#ff5e36', '#ec4899', '#facc15', '#22c55e', '#3b82f6'];
@@ -112,7 +123,7 @@ function RailButton({ label, Icon, onClick, active, danger, dim, children }) {
       className={`vt-tool${active ? ' is-active' : ''}${danger ? ' is-danger' : ''}${dim ? ' is-dim' : ''}`}
       onClick={onClick}
     >
-      <span className="vt-tool-icon">{children || <Icon size={22} strokeWidth={1.8} />}</span>
+      <span className="vt-tool-icon">{children || <Icon size={20} strokeWidth={2} />}</span>
       <span className="vt-tool-label">{label}</span>
     </button>
   );
@@ -564,6 +575,15 @@ export default function ToolRail({ onAdd }) {
     return { id: ownerId, name: typeof fn === 'function' ? fn(current) : fn };
   });
   const Panel = panel && PANELS[panel];
+  const [sectionId, setSectionId] = useState('media');
+  const section = SECTIONS.find((sec) => sec.id === sectionId) || SECTIONS[0];
+
+  // Picking a section from the dock closes any panel and, if a clip is selected, deselects it.
+  const openSection = (id) => {
+    setSectionId(id);
+    setPanelState({ id: null, name: null });
+    if (activeItem) useEditorStore.getState().setActiveItem(null);
+  };
 
   return (
     <div className="vt-rail-wrap">
@@ -572,10 +592,10 @@ export default function ToolRail({ onAdd }) {
           <Panel item={activeItem} onMore={() => { setPanel(null); onAdd('sounds'); }} />
         </div>
       )}
-      <nav className="vt-rail" aria-label={activeItem ? 'Clip tools' : 'Add to video'}>
+      <div className="vt-rail" role="toolbar" aria-label={activeItem ? 'Clip tools' : `${section.label} tools`}>
         {activeItem
           ? <ClipTools item={activeItem} panel={panel} setPanel={setPanel} />
-          : ADD_TOOLS.map((t) => (
+          : section.tools.map((t) => (
             <RailButton
               key={t.kind}
               label={t.label}
@@ -584,6 +604,20 @@ export default function ToolRail({ onAdd }) {
               onClick={() => (t.panel ? setPanel((p) => (p === t.kind ? null : t.kind)) : onAdd(t.kind))}
             />
           ))}
+      </div>
+      <nav className="vt-dock" aria-label="Sections">
+        {SECTIONS.map((sec) => (
+          <button
+            key={sec.id}
+            type="button"
+            className={`vt-dock-tab${!activeItem && sec.id === section.id ? ' is-active' : ''}`}
+            aria-pressed={!activeItem && sec.id === section.id}
+            onClick={() => openSection(sec.id)}
+          >
+            <sec.Icon size={18} strokeWidth={2.2} />
+            <span>{sec.label}</span>
+          </button>
+        ))}
       </nav>
     </div>
   );

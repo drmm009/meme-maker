@@ -526,46 +526,94 @@
   box-shadow: 0 2px 8px rgba(255, 94, 54, 0.7);
 }
 
-/* ── Tool rail ──────────────────────────────────────────────── */
+/* ── Bottom section: tool chips over a floating dock (matches the image editor) ── */
+.vt-rail-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 10px calc(10px + env(safe-area-inset-bottom, 0px));
+}
 .vt-rail {
-  flex-shrink: 0;
   display: flex;
   justify-content: safe center;
-  gap: 2px;
+  gap: 6px;
+  max-width: 100%;
   overflow-x: auto;
   scrollbar-width: none;
-  padding: 10px 8px calc(10px + env(safe-area-inset-bottom));
-  background: var(--vt-bg);
-  border-top: 1px solid var(--vt-line);
+  padding: 2px 2px 6px;
 }
 .vt-rail::-webkit-scrollbar { display: none; }
 .vt-tool {
   position: relative;
   flex: 0 0 auto;
-  min-width: 68px;
+  min-width: 62px;
+  height: 54px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
-  padding: 6px 4px;
-  border: none;
-  border-radius: 14px;
-  background: none;
-  color: var(--vt-text);
-  font-size: 12px;
-  font-weight: 700;
+  justify-content: center;
+  gap: 3px;
+  padding: 5px 10px;
+  border: 0.8px solid rgba(255, 255, 255, 0.14);
+  border-radius: 20px;
+  background: #16181f;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.01em;
   cursor: pointer;
-  transition: background 0.15s, transform 0.15s var(--vt-ease);
+  transition: transform 0.15s var(--vt-ease), background 0.15s, border-color 0.15s;
 }
-.vt-tool:hover { background: rgba(255, 255, 255, 0.05); }
+.vt-tool:hover { background: #1d2029; border-color: rgba(255, 255, 255, 0.24); }
 .vt-tool:active { transform: scale(0.94); }
-.vt-tool-icon { width: 28px; height: 28px; display: grid; place-items: center; }
+.vt-tool-icon { width: 22px; height: 22px; display: grid; place-items: center; }
 .vt-tool-label { white-space: nowrap; }
-.vt-tool.is-active .vt-tool-icon { color: var(--vt-accent); }
+.vt-tool.is-active {
+  border-color: rgba(255, 94, 54, 0.75);
+  background: rgba(255, 94, 54, 0.14);
+  box-shadow: 0 4px 14px rgba(255, 94, 54, 0.25);
+}
+.vt-tool.is-active .vt-tool-icon { color: #ff8a6b; }
 .vt-tool.is-danger { color: #ff6b6b; }
-.vt-tool-font { font-size: 21px; font-weight: 700; line-height: 1; }
+.vt-tool.is-danger:hover { border-color: rgba(255, 107, 107, 0.5); }
+.vt-tool-font { font-size: 18px; font-weight: 700; line-height: 1; }
 .vt-hidden-input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
-.vt-rail-divider { flex: 0 0 1px; align-self: stretch; margin: 8px 4px; background: var(--vt-line); }
+.vt-rail-divider { flex: 0 0 1px; align-self: stretch; margin: 8px 2px; background: var(--vt-line); }
+
+.vt-dock {
+  display: flex;
+  gap: 2px;
+  max-width: 100%;
+  padding: 6px;
+  border: 0.8px solid rgba(255, 255, 255, 0.14);
+  border-radius: 9999px;
+  background: #13161f;
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.8), 0 0 20px rgba(255, 94, 54, 0.2);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.vt-dock::-webkit-scrollbar { display: none; }
+.vt-dock-tab {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 6px 10px;
+  border: none;
+  border-radius: 20px;
+  background: none;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.15s, transform 0.15s var(--vt-ease);
+}
+.vt-dock-tab:hover { color: #fff; }
+.vt-dock-tab:active { transform: scale(0.95); }
+.vt-dock-tab.is-active { background: var(--vt-grad); color: #fff; font-weight: 800; box-shadow: 0 6px 16px -6px rgba(255, 94, 54, 0.7); }
 
 /* ── Meme clips sheet (rendered in a portal, outside .vt-editor) ── */
 .vclip-grid {

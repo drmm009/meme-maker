@@ -27,6 +27,8 @@ vi.mock('../../services/memeService', () => ({ fetchOpenSourceMemes: () => Promi
 
 const store = () => useEditorStore.getState();
 const clips = (container) => [...container.querySelectorAll('.vt-clip')];
+// Add tools live in dock sections, reached the way a user would.
+const addTextFromRail = () => { fireEvent.click(screen.getByText('Text')); fireEvent.click(screen.getByText('Add text')); };
 
 beforeEach(() => {
   store().clearItems();
@@ -40,12 +42,12 @@ describe('VideoEditor', () => {
     expect(container.querySelector('.vt-editor.is-edit')).toBeTruthy();
     expect(screen.getByText('Start with a video or photo')).toBeTruthy();
     expect(screen.getByText('Add a video')).toBeTruthy();
-    for (const label of ['Text', 'Stickers', 'Emoji', 'Photo', 'Video', 'Sounds']) expect(screen.getByText(label)).toBeTruthy();
+    for (const label of ['Media', 'Text', 'Stickers', 'Audio', 'Canvas', 'Photo', 'Video', 'Clips', 'Templates']) expect(screen.getByText(label)).toBeTruthy();
   });
 
   it('adds a text clip from the rail and shows it on the timeline', () => {
     const { container } = render(<VideoEditor onBack={() => {}} />);
-    fireEvent.click(screen.getByText('Text'));
+    addTextFromRail();
     expect(store().items).toHaveLength(1);
     expect(store().items[0]).toMatchObject({ type: 'text', text: 'NEW TEXT' });
     expect(clips(container)).toHaveLength(1);
@@ -55,20 +57,20 @@ describe('VideoEditor', () => {
 
   it('swaps the rail to clip tools on select and back on Done', () => {
     const { container } = render(<VideoEditor onBack={() => {}} />);
-    fireEvent.click(screen.getByText('Text'));
+    addTextFromRail();
     fireEvent.click(clips(container)[0]);
     expect(store().activeItemId).toBe(store().items[0].id);
     expect(clips(container)[0].className).toContain('is-selected');
     expect(screen.getByText('Background')).toBeTruthy();
-    expect(screen.queryByText('Stickers')).toBeNull();
+    expect(screen.queryByText('Add text')).toBeNull();
     fireEvent.click(screen.getByText('Done'));
     expect(store().activeItemId).toBe(null);
-    expect(screen.getByText('Stickers')).toBeTruthy();
+    expect(screen.getByText('Add text')).toBeTruthy();
   });
 
   it('duplicates and deletes the selected clip', () => {
     const { container } = render(<VideoEditor onBack={() => {}} />);
-    fireEvent.click(screen.getByText('Text'));
+    addTextFromRail();
     fireEvent.click(clips(container)[0]);
     fireEvent.click(screen.getByText('Duplicate'));
     expect(store().items).toHaveLength(2);
@@ -138,7 +140,7 @@ describe('VideoEditor', () => {
 
   it('edits, resizes and aligns text from the rail', () => {
     const { container } = render(<VideoEditor onBack={() => {}} />);
-    fireEvent.click(screen.getByText('Text'));
+    addTextFromRail();
     fireEvent.click(clips(container)[0]);
     fireEvent.click(screen.getByText('Edit'));
     fireEvent.change(screen.getByPlaceholderText('Type your text'), { target: { value: 'WHEN IT WORKS' } });
@@ -167,7 +169,7 @@ describe('VideoEditor', () => {
     const onPreview = (e) => previews.push(e.detail.id);
     window.addEventListener('vt-preview-text-animation', onPreview);
     const { container } = render(<VideoEditor onBack={() => {}} />);
-    fireEvent.click(screen.getByText('Text'));
+    addTextFromRail();
     fireEvent.click(clips(container)[0]);
     fireEvent.click(screen.getByText('Animate'));
     fireEvent.click(screen.getByText('Typewriter'));
@@ -180,6 +182,7 @@ describe('VideoEditor', () => {
 
   it('sets the canvas background from the rail', () => {
     render(<VideoEditor onBack={() => {}} />);
+    fireEvent.click(screen.getByText('Canvas'));
     fireEvent.click(screen.getByText('Background'));
     fireEvent.click(screen.getByLabelText('#000000'));
     expect(store().backgroundColor).toBe('#000000');
@@ -206,6 +209,7 @@ describe('VideoEditor', () => {
     act(() => store().addItem({ type: 'video', url: 'a.mp4', durationMs: 5000 }));
     render(<VideoEditor onBack={() => {}} />);
     act(() => store().setPlayhead(1200));
+    fireEvent.click(screen.getByText('Audio'));
     fireEvent.click(screen.getByText('SFX'));
     fireEvent.click(screen.getByText('Vine Boom'));
     const sound = store().items.find((i) => i.type === 'audio');
@@ -280,6 +284,7 @@ describe('VideoEditor', () => {
     act(() => store().addItem({ type: 'video', url: 'a.mp4', durationMs: 5000 }));
     render(<VideoEditor onBack={() => {}} />);
     act(() => store().setPlayhead(1000));
+    fireEvent.click(screen.getByText('Audio'));
     fireEvent.click(screen.getByText('Voice'));
     await act(async () => { fireEvent.click(screen.getByLabelText('Start recording')); });
     expect(store().isPlaying).toBe(true);
