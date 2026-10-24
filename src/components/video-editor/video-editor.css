@@ -58,7 +58,7 @@
   border-radius: 18px !important;
   box-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.9) !important;
 }
-.vt-editor.is-preview .vt-stage-frame .canvas-container #stage-sink-wrapper { border-radius: 0 0 26px 26px !important; }
+.vt-editor.is-preview .vt-stage-frame .canvas-container #stage-sink-wrapper { border-radius: 26px !important; }
 
 .vt-fab {
   position: absolute;
