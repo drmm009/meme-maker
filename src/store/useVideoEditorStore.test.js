@@ -175,4 +175,17 @@ describe('video editor store', () => {
     store().setPlayhead(999999);
     expect(store().playhead).toBe(7000);
   });
+
+  it('replaces, restyles and removes auto captions in one step each', () => {
+    const s = () => useEditorStore.getState();
+    s().addItem({ type: 'text', text: 'TOP' });
+    s().setAutoCaptions([{ type: 'text', autoCaption: true, text: 'A', startMs: 0, endMs: 500 }, { type: 'text', autoCaption: true, text: 'B', startMs: 500, endMs: 900 }]);
+    expect(s().items.filter((i) => i.autoCaption).map((i) => [i.text, i.startMs, i.endMs])).toEqual([['A', 0, 500], ['B', 500, 900]]);
+    s().setAutoCaptions([{ type: 'text', autoCaption: true, text: 'C', startMs: 100, endMs: 600 }]);
+    expect(s().items.map((i) => i.text)).toEqual(['TOP', 'C']);
+    s().restyleAutoCaptions((i) => ({ text: i.text.toLowerCase() }));
+    expect(s().items.map((i) => i.text)).toEqual(['TOP', 'c']);
+    s().removeAutoCaptions();
+    expect(s().items.map((i) => i.text)).toEqual(['TOP']);
+  });
 });

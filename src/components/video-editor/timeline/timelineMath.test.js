@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { msToPx, pxToMs, clampZoom, formatClock, getContentEnd, findSnap, getRulerMarks, orderTracks } from './timelineMath';
+import { msToPx, pxToMs, clampZoom, formatClock, getContentEnd, findSnap, getRulerMarks, orderTracks, timelineRows } from './timelineMath';
 
 describe('timelineMath', () => {
   it('converts between time and pixels at a zoom level', () => {
@@ -37,5 +37,10 @@ describe('timelineMath', () => {
   it('orders tracks overlays-first, then video, then audio', () => {
     const items = [{ id: 'a', type: 'audio' }, { id: 'v', type: 'video' }, { id: 't', type: 'text' }, { id: 's', type: 'sticker' }, { id: 't2', type: 'text' }];
     expect(orderTracks(items).map((i) => i.id)).toEqual(['t', 't2', 's', 'v', 'a']);
+  });
+
+  it('puts all auto captions in one row', () => {
+    const items = [{ id: 'v', type: 'video' }, { id: 'c1', type: 'text', autoCaption: true }, { id: 't', type: 'text' }, { id: 'c2', type: 'text', autoCaption: true }];
+    expect(timelineRows(items).map((row) => row.map((i) => i.id))).toEqual([['c1', 'c2'], ['t'], ['v']]);
   });
 });

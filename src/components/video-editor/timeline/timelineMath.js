@@ -52,3 +52,15 @@ export const orderTracks = (items) =>
     .map((item, index) => ({ item, index }))
     .sort((a, b) => (TRACK_ORDER[a.item.type] ?? 5) - (TRACK_ORDER[b.item.type] ?? 5) || a.index - b.index)
     .map(({ item }) => item);
+
+// Timeline rows: one per clip, except auto captions, which share one row (where the first is).
+export const timelineRows = (items) => {
+  const rows = [];
+  let captions = null;
+  for (const item of orderTracks(items)) {
+    if (!item.autoCaption) rows.push([item]);
+    else if (captions) captions.push(item);
+    else { captions = [item]; rows.push(captions); }
+  }
+  return rows;
+};

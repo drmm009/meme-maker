@@ -12,6 +12,7 @@ import { drawOrder } from './layerOrder';
 import { filterChain, resolveFilter } from './clipFilters';
 import { extensionForType } from './voiceRecorder';
 import { transitionFilters } from './clipTransitions';
+import { captionFrames, concatList, splitCaptionTrack } from './captionTrack';
 import { REST_FRAME, animationSteps, applyTextFrame, shakeExpressions } from './textAnimation';
 
 let ffmpeg = null;
@@ -128,7 +129,8 @@ export const exportVideoFFmpeg = async (items = [], durationMs = 7000, canvasAsp
     const filesToDelete = [];
 
     const visualItems = items.filter(item => !item.hidden && (item.type === 'video' || item.type === 'image' || item.type === 'sticker'));
-    const textItems = items.filter(item => !item.hidden && item.type === 'text');
+    // Auto captions share one image-sequence input (see captionTrack); other text is one input each.
+    const { track: captionTrack, rest: textItems } = splitCaptionTrack(items.filter(item => !item.hidden && item.type === 'text'));
 
     // Preparing progress: one step per clip as its input is fetched or drawn.
     const prepTotal = Math.max(1, items.filter((i) => !i.hidden && i.type !== 'audio').length + (isGifOut ? 0 : items.filter((i) => !i.hidden && i.type === 'audio').length));
@@ -388,6 +390,28 @@ export const exportVideoFFmpeg = async (items = [], durationMs = 7000, canvasAsp
       prepStep();
       if (item.type === 'text') await addText(item);
       else await addVisual(item);
+    }
+
+    // Auto captions on top: every frame as a full-canvas PNG, played back as one concat input.
+    if (captionTrack.length > 0) {
+      const frames = captionFrames(captionTrack);
+      const files = [];
+      for (const [i, f] of frames.entries()) {
+        if (i === 0 || frames[i - 1].item !== f.item) prepStep();
+        const fileName = `cap_${i}.png`;
+        await ff.writeFile(fileName, await renderTextToPNG(f.item, canvasW, canvasH, konvaRatio, f.frame));
+        filesToDelete.push(fileName);
+        files.push(fileName);
+      }
+      const blank = 'cap_blank.png';
+      await ff.writeFile(blank, await renderTextToPNG({ text: ' ', stroke: 'transparent', color: 'transparent' }, canvasW, canvasH, konvaRatio));
+      await ff.writeFile('captions.txt', new TextEncoder().encode(concatList(frames, files, blank, safeDurationMs)));
+      filesToDelete.push(blank, 'captions.txt');
+      command.push('-f', 'concat', '-safe', '0', '-i', 'captions.txt');
+      filterComplex += `[${inputIndex}:v]fps=30,format=rgba[cap${inputIndex}];`;
+      filterComplex += `[${currentBgIndex === 0 ? '0:v' : `bg${currentBgIndex}`}][cap${inputIndex}]overlay=0:0:eof_action=pass:shortest=0[bg${currentBgIndex + 1}];`;
+      currentBgIndex++;
+      inputIndex++;
     }
 
     if (layoutId) {

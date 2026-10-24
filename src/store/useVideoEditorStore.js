@@ -237,6 +237,25 @@ export const useEditorStore = create(temporal((set, get) => ({
     return { items, duration: calculateDuration(items) };
   }),
 
+  // Auto captions: replace any earlier ones with `captions` (text items with their own times),
+  // in one undo step.
+  setAutoCaptions: (captions) => set((state) => {
+    const kept = state.items.filter(i => !i.autoCaption);
+    const added = captions.map((c) => ({ scale: 1, rotation: 0, playbackRate: 1, muted: false, ...c, id: newItemId() }));
+    const items = [...kept, ...added];
+    return { items, activeItemId: kept.some(i => i.id === state.activeItemId) ? state.activeItemId : null, duration: calculateDuration(items) };
+  }),
+
+  // Restyle every auto caption (patch is a function of the caption, e.g. new style props).
+  restyleAutoCaptions: (patch) => set((state) => ({
+    items: state.items.map(i => (i.autoCaption ? { ...i, ...patch(i) } : i)),
+  })),
+
+  removeAutoCaptions: () => set((state) => {
+    const items = state.items.filter(i => !i.autoCaption);
+    return { items, activeItemId: items.some(i => i.id === state.activeItemId) ? state.activeItemId : null, duration: calculateDuration(items) };
+  }),
+
   // Bring forward (dir 1) or send back (dir -1) past the nearest item on screen with it.
   moveLayer: (id, dir) => set((state) => {
     const items = moveLayerInItems(state.items, id, dir);

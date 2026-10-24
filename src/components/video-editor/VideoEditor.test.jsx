@@ -23,6 +23,10 @@ vi.mock('../../utils/voiceRecorder', () => ({
     stop: () => Promise.resolve({ blob: new Blob(['voice'], { type: 'audio/webm' }), type: 'audio/webm', durationMs: 1500 }),
   })),
 }));
+vi.mock('../../utils/autoCaptions', () => ({
+  generateCaptions: vi.fn(() => Promise.resolve({ captions: [{ text: 'this is', startMs: 0, endMs: 600 }, { text: 'fine.', startMs: 600, endMs: 1200 }], clips: 1 })),
+}));
+vi.mock('../../utils/transcriber', () => ({ cancelTranscription: vi.fn() }));
 vi.mock('../../services/memeService', () => ({ fetchOpenSourceMemes: () => Promise.resolve([]) }));
 
 const store = () => useEditorStore.getState();
@@ -311,6 +315,22 @@ describe('VideoEditor', () => {
     expect(container.querySelector('.vt-transition-mark')).toBeTruthy();
     fireEvent.click(screen.getByText('None'));
     expect(store().items[1].transitionIn).toBe(null);
+  });
+
+  it('generates auto captions from speech, restyles and removes them', async () => {
+    render(<VideoEditor onBack={() => {}} />);
+    act(() => { store().addItem({ type: 'video', url: 'blob:talk', durationMs: 2000 }); store().setActiveItem(null); });
+    fireEvent.click(screen.getByText('Text'));
+    fireEvent.click(screen.getByText('Captions'));
+    await act(async () => { fireEvent.click(screen.getByText('Generate captions')); });
+    const captions = () => store().items.filter((i) => i.autoCaption);
+    expect(captions().map((i) => [i.text, i.startMs, i.endMs])).toEqual([['THIS IS', 0, 600], ['FINE.', 600, 1200]]);
+    expect(screen.getByText('2 captions added. Tap one to edit it.')).toBeTruthy();
+    fireEvent.click(screen.getByText('Typewriter'));
+    expect(captions().map((i) => [i.text, i.animation])).toEqual([['this is', 'typewriter'], ['fine.', 'typewriter']]);
+    fireEvent.click(screen.getByText('Remove'));
+    expect(captions()).toHaveLength(0);
+    expect(store().items).toHaveLength(1);
   });
 
   it('calls onBack from the close button', () => {

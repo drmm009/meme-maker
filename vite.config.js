@@ -5,6 +5,8 @@ import { VitePWA } from 'vite-plugin-pwa'
 // https://vite.dev/config/
 export default defineConfig({
   base: './',
+  // The speech worker imports transformers.js at runtime, which needs an ES module worker.
+  worker: { format: 'es' },
   test: {
     exclude: ['node_modules/**', 'dist/**', 'android/**', '_old/**'],
     testTimeout: 30000,

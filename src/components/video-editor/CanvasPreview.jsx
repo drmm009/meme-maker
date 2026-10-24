@@ -552,6 +552,16 @@ const CanvasText = ({ item, isSelected, onSelect, onChange, onEditStart }) => {
     group.getLayer()?.batchDraw();
   };
 
+  // A background added while the text is off screen mounts visible; match it to the text.
+  useEffect(() => {
+    const rect = bgRectRef.current;
+    const node = textRef.current;
+    if (rect && node && rect.visible() !== node.visible()) {
+      rect.visible(node.visible());
+      rect.getLayer()?.batchDraw();
+    }
+  }, [hasBg]);
+
   useEffect(() => {
     const unsub = useEditorStore.subscribe((state) => {
       const latestItem = state.items.find((i) => i.id === itemRef.current.id) || itemRef.current;
@@ -641,6 +651,7 @@ const CanvasText = ({ item, isSelected, onSelect, onChange, onEditStart }) => {
         text={item.text !== undefined ? item.text : 'Sample Text'}
         x={item.x || 50}
         y={item.y || 50}
+        width={item.width || undefined}
         fontSize={item.fontSize || 32}
         fontFamily={item.fontFamily || 'Impact, sans-serif'}
         fontStyle="bold"
@@ -694,7 +705,8 @@ const CanvasText = ({ item, isSelected, onSelect, onChange, onEditStart }) => {
             x: node.x(),
             y: node.y(),
             rotation: node.rotation(),
-            fontSize: Math.max(10, (item.fontSize || 32) * scaleX)
+            fontSize: Math.max(10, (item.fontSize || 32) * scaleX),
+            ...(item.width ? { width: item.width * scaleX } : {})
           });
           
           // Reset scale to 1 to keep text crisp for the next render
