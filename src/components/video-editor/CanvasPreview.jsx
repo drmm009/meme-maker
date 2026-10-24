@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle, useMemo } from 'react';
-import Konva from 'konva';
 import { Stage, Layer, Rect, Image as KonvaImage, Text as KonvaText, Transformer, Line, Group } from 'react-konva';
 import { useEditorStore } from '../../store/useVideoEditorStore';
 import { useShallow } from 'zustand/react/shallow';
@@ -158,6 +157,8 @@ const CanvasMedia = ({ item, isSelected, onSelect, onChange, canvasDimensions })
     itemRef.current = item;
   }, [item]);
 
+  // Effects call the latest positionMedia through a ref (it closes over item and onChange).
+  const positionMediaRef = useRef(null);
   const positionMedia = (naturalWidth, naturalHeight) => {
     if (!item.isPositioned && canvasDimensions) {
       const store = useEditorStore.getState();
@@ -206,6 +207,7 @@ const CanvasMedia = ({ item, isSelected, onSelect, onChange, canvasDimensions })
       onChange({ ...item, isPositioned: true, x, y, width: w, height: h });
     }
   };
+  positionMediaRef.current = positionMedia;
 
   useEffect(() => {
     if ((item.type === 'image' || item.type === 'sticker') && item.url) {
@@ -214,7 +216,7 @@ const CanvasMedia = ({ item, isSelected, onSelect, onChange, canvasDimensions })
       img.onload = () => {
         // An animated GIF may already be showing its decoded frames; keep that canvas.
         setImage(gifRef.current?.canvas || img);
-        positionMedia(img.width, img.height);
+        positionMediaRef.current(img.width, img.height);
       };
     } else if (item.type === 'video' && item.url) {
       const vid = document.createElement('video');
@@ -230,7 +232,7 @@ const CanvasMedia = ({ item, isSelected, onSelect, onChange, canvasDimensions })
       vid.preservesPitch = false; // Prevents severe audio-resampling lag when playbackRate != 1
       
       vid.addEventListener('loadedmetadata', () => {
-        positionMedia(vid.videoWidth, vid.videoHeight);
+        positionMediaRef.current(vid.videoWidth, vid.videoHeight);
       });
       
       // Trick browser anti-throttling by making it slightly visible and fixed off-screen
@@ -350,7 +352,7 @@ const CanvasMedia = ({ item, isSelected, onSelect, onChange, canvasDimensions })
             }
             if (!playPromise && Math.abs(vid.currentTime - mediaTimeSec) > 0.05) {
               vid.currentTime = mediaTimeSec;
-              needsRedraw = true;
+              needsRedraw = !('requestVideoFrameCallback' in vid);
             }
           }
         } else {
@@ -359,11 +361,22 @@ const CanvasMedia = ({ item, isSelected, onSelect, onChange, canvasDimensions })
             vid.pause();
           }
         }
+
+        // Browsers without requestVideoFrameCallback get no per-frame redraws from it: redraw on each
+        // playback tick, and once a scrub's seek has a frame to show.
+        if (needsRedraw && node) {
+          const draw = () => {
+            if (chromaRef.current || cssRef.current) syncKeyedRef.current(keyFrameRef.current(vid));
+            node.getLayer()?.batchDraw();
+          };
+          if (state.isPlaying) draw();
+          else vid.addEventListener('seeked', draw, { once: true });
+        }
       });
       
       // Ensure first frame draws when video is ready
       vid.onloadedmetadata = () => {
-        positionMedia(vid.videoWidth, vid.videoHeight);
+        positionMediaRef.current(vid.videoWidth, vid.videoHeight);
       };
       vid.onloadeddata = () => {
         const layer = imageRef.current?.getLayer();
@@ -387,7 +400,7 @@ const CanvasMedia = ({ item, isSelected, onSelect, onChange, canvasDimensions })
         }
       };
     }
-  }, [item.url, item.type, canvasDimensions]);
+  }, [item.url, item.type, item.id, canvasDimensions]);
 
   // Animated GIF stickers: decode the frames once, then show the one the playhead is on, so they
   // animate during playback in step with the export.
@@ -484,7 +497,7 @@ const CanvasMedia = ({ item, isSelected, onSelect, onChange, canvasDimensions })
             y: newY,
           });
         }}
-        onTransformEnd={(e) => {
+        onTransformEnd={() => {
           const node = imageRef.current;
           onChange({
             ...item,
@@ -512,7 +525,7 @@ const CanvasMedia = ({ item, isSelected, onSelect, onChange, canvasDimensions })
 };
 
 // Custom Text Component to handle visibility outside React render cycle
-const CanvasText = ({ item, isSelected, onSelect, onChange, onEditStart, isEditing }) => {
+const CanvasText = ({ item, isSelected, onSelect, onChange, onEditStart }) => {
   const textRef = useRef(null);
   const groupRef = useRef(null);
   const bgRectRef = useRef(null);
@@ -648,7 +661,7 @@ const CanvasText = ({ item, isSelected, onSelect, onChange, onEditStart, isEditi
             e.target.getLayer()?.batchDraw();
           }
         }}
-        onTransform={(e) => {
+        onTransform={() => {
           if (bgRectRef.current && textRef.current) {
             const node = textRef.current;
             bgRectRef.current.setAttrs({
@@ -672,7 +685,7 @@ const CanvasText = ({ item, isSelected, onSelect, onChange, onEditStart, isEditi
         onDragEnd={(e) => {
           onChange({ ...item, x: e.target.x(), y: e.target.y() });
         }}
-        onTransformEnd={(e) => {
+        onTransformEnd={() => {
           const node = textRef.current;
           const scaleX = node.scaleX();
           
@@ -754,7 +767,7 @@ const GridOverlay = ({ layoutId, width, height }) => {
 };
 
 const CanvasPreview = forwardRef((props, ref) => {
-  const { items, activeItemId, setActiveItem, updateItem, canvasAspectRatio, backgroundColor, setCanvasDimensions, layoutId } = useEditorStore(
+  const { items, activeItemId, setActiveItem, updateItem, canvasAspectRatio, backgroundColor, layoutId } = useEditorStore(
     useShallow(state => ({
       items: state.items,
       activeItemId: state.activeItemId,
@@ -762,14 +775,13 @@ const CanvasPreview = forwardRef((props, ref) => {
       updateItem: state.updateItem,
       canvasAspectRatio: state.canvasAspectRatio,
       backgroundColor: state.backgroundColor,
-      setCanvasDimensions: state.setCanvasDimensions,
       layoutId: state.layoutId
     }))
   );
   const containerRef = useRef(null);
   const stageRef = useRef(null);
   const hiddenInputRef = useRef(null);
-  const [dimensions, setDimensions] = useState({ width: 800, height: 450 });
+  const [dimensions] = useState({ width: 800, height: 450 });
   const [editingTextData, setEditingTextData] = useState(null);
 
   const logicalDimensions = useMemo(() => ({ width: 800, height: 800 / canvasAspectRatio }), [canvasAspectRatio]);
@@ -906,7 +918,6 @@ const CanvasPreview = forwardRef((props, ref) => {
                     key={item.id}
                     item={item}
                     isSelected={activeItemId === item.id}
-                    isEditing={editingTextData?.id === item.id}
                     onSelect={(e) => {
                       e.cancelBubble = true;
                       setActiveItem(item.id);

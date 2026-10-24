@@ -93,8 +93,12 @@ export default function VideoEditor({ template, onBack }) {
 
   usePlaybackLoop();
 
-  // Template hand-off
+  // Template hand-off: runs once per template (reading the latest one through a ref).
+  const templateRef = useRef(template);
+  templateRef.current = template;
+  const templateId = template?.id;
   useEffect(() => {
+    const template = templateRef.current;
     if (!template?.id) return;
     const store = useEditorStore.getState();
     store.clearItems();
@@ -109,7 +113,7 @@ export default function VideoEditor({ template, onBack }) {
     } else {
       store.addItem({ type: 'image', url: template.imageUrl, name: template.name });
     }
-  }, [template?.id]);
+  }, [templateId]);
 
   const draft = useVideoDraft();
 

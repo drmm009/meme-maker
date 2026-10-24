@@ -18,6 +18,12 @@ let ffmpeg = null;
 let loadPromise = null;
 let cancelRequested = false;
 
+// FFmpeg's chatter (version banner, stream info, a progress line per frame) used to go to console.error
+// on every export. The last lines are kept for failures instead.
+const RECENT_LOG_LINES = 60;
+const recentLog = [];
+export const recentFfmpegLog = () => recentLog.slice();
+
 // Stop the running export: FFmpeg's worker is terminated (the next export loads a fresh one).
 export const cancelExport = () => {
   cancelRequested = true;
@@ -36,7 +42,9 @@ export const loadFFmpeg = async () => {
     try {
       const ff = new FFmpeg();
       ff.on('log', ({ message }) => {
-        console.error('[FFmpeg Log]', message);
+        // Kept quietly; printed only when a job fails (see recentFfmpegLog).
+        recentLog.push(message);
+        if (recentLog.length > RECENT_LOG_LINES) recentLog.shift();
       });
       
       const baseUrl = import.meta.env.BASE_URL || './';
@@ -197,11 +205,7 @@ export const exportVideoFFmpeg = async (items = [], durationMs = 7000, canvasAsp
           try {
             // Use FFmpeg to quickly check if an audio stream exists in this file
             const ret = await ff.exec(['-i', fileName, '-map', '0:a', '-c', 'copy', '-f', 'null', '-']);
-            if (ret === 0) {
-              videoHasAudio = true;
-            } else {
-              console.log(`[FFmpeg Export] No audio stream found in ${fileName}`);
-            }
+            videoHasAudio = ret === 0;
           } catch (e) {
             videoHasAudio = false;
             console.warn(`[FFmpeg Export] FFmpeg probe for audio failed:`, e);
@@ -343,7 +347,7 @@ export const exportVideoFFmpeg = async (items = [], durationMs = 7000, canvasAsp
               });
               return;
             }
-          } catch (e2) {}
+          } catch {}
           resolve(new Uint8Array(0));
         }
       });
@@ -530,16 +534,16 @@ export const exportVideoFFmpeg = async (items = [], durationMs = 7000, canvasAsp
       if (download) downloadBlob(blob, fileName);
     } finally {
       for (const f of filesToDelete) {
-         try { await ff.deleteFile(f); } catch(e){}
+         try { await ff.deleteFile(f); } catch {}
       }
-      try { await ff.deleteFile(outputFileName); } catch(e){}
+      try { await ff.deleteFile(outputFileName); } catch {}
     }
 
     // The caller can share or save the file itself (pass download: false).
     return { blob, fileName };
   } catch (error) {
     if (cancelRequested || error instanceof ExportCancelledError) throw new ExportCancelledError();
-    console.error("FFmpeg Export Error Detailed:", error);
+    console.error('[FFmpeg Export] failed:', error, `\nLast FFmpeg output:\n${recentLog.slice(-20).join('\n')}`);
     if (error instanceof Error) {
       throw error;
     } else {
