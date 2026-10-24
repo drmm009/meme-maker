@@ -3033,6 +3033,32 @@ input[type='text'].search-pill-input:focus {
   background: #f1e9dd !important;
 }
 
+/* Layout picker (video builder): a 3-column grid of cards, each with a small wireframe preview.
+   These base rules were lost in an earlier CSS refactor, leaving only the phone-width override,
+   so at wider widths the cards stacked and the previews collapsed to thin lines. */
+.icon-layout-grid-3x2 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(2, auto);
+  gap: 14px;
+  max-width: 480px;
+  margin: 0 auto;
+}
+.icon-layout-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 10px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+.wireframe-container {
+  width: 60px;
+  height: 60px;
+}
+
 /* --- Builder: Clean, accurate layout icons without overpowering orange --- */
 .wireframe-container {
   background: transparent !important;
