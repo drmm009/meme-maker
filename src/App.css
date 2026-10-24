@@ -290,16 +290,21 @@
   width: 100% !important;
   max-width: 100vw !important;
   height: 100% !important;
-  max-height: 100dvh !important;
   overflow: hidden !important;
 }
-/* No 100dvh cap here: in iOS home-screen apps 100dvh is short by the status bar, and capping the
-   page at it clipped the full-screen editors, leaving an empty band at the bottom. */
+/* No 100dvh heights on the editor chain (html > #root > .app-root > main > builder view): in iOS
+   home-screen apps 100dvh is short by the status bar, and iOS clipped the full-screen (fixed)
+   editors to main, leaving an empty band at the bottom. 100% is the full screen. */
 html.editor-view-locked,
 body.editor-view-locked {
   overflow: hidden !important;
   height: 100% !important;
   overscroll-behavior: none !important;
+}
+/* The app root otherwise only has min-height: 100dvh, and main (overflow: hidden) takes its height. */
+html.editor-view-locked #root,
+html.editor-view-locked .app-root {
+  height: 100% !important;
 }
 .persistent-builder-view {
   width: 100%;
@@ -307,7 +312,6 @@ body.editor-view-locked {
 .persistent-builder-view.active-view {
   display: block !important;
   height: 100% !important;
-  max-height: 100dvh !important;
   overflow-y: auto !important;
   overflow-x: hidden !important;
   -webkit-overflow-scrolling: touch;
