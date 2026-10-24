@@ -3,6 +3,7 @@ import { Music, VolumeX } from 'lucide-react';
 import { useEditorStore } from '../../../store/useVideoEditorStore';
 import { findSnap, pxToMs } from './timelineMath';
 import { filmstripTiles, loadFilmstrip } from '../../../utils/filmstrip';
+import { clipPunchTimes } from '../../../utils/zoomPunch';
 
 // Inner height of a video clip (56px row minus borders); filmstrip tiles are this tall.
 const VIDEO_TILE_H = 52;
@@ -123,6 +124,9 @@ export default function TimelineClip({ item, left, width, selected, pxPerSec, on
           ))}
         </div>
       )}
+      {item.type === 'video' && clipPunchTimes(item).map((t) => (
+        <span key={t} className="vt-punch-mark" style={{ left: ((t - item.startMs) / 1000) * pxPerSec }} aria-hidden="true" />
+      ))}
       {item.type === 'audio' && (
         <div className="vt-clip-wave" aria-hidden="true">
           {waveBars(item.id, Math.max(8, Math.floor(width / 5))).map((h, i) => <span key={i} style={{ height: `${h}%` }} />)}

@@ -2,13 +2,16 @@ import React, { useState } from 'react';
 import {
   Type, Sticker, Smile, LayoutGrid, Image as ImageIcon, Film, Clapperboard, Music, AudioLines,
   Check, Gauge, Volume2, VolumeX, Palette, Square, RotateCw, Minimize, Crop, Maximize, Copy, Trash2,
-  Scissors, PencilLine, ALargeSmall, TextAlignStart, TextAlignCenter, TextAlignEnd, SlidersHorizontal, WandSparkles, Pipette, Sparkles, ImagePlay, PaintBucket
+  Scissors, PencilLine, ALargeSmall, TextAlignStart, TextAlignCenter, TextAlignEnd, SlidersHorizontal, WandSparkles, Pipette, Sparkles, ImagePlay, PaintBucket, Zap, Snowflake, Rewind, Repeat, ZoomIn
 } from 'lucide-react';
-import { useEditorStore } from '../../store/useVideoEditorStore';
+import { useEditorStore, clipEffectBase, sourceTimeMs } from '../../store/useVideoEditorStore';
+import { captureFrame, renderClipEffect } from '../../utils/clipEffects';
+import { clipPunchTimes } from '../../utils/zoomPunch';
 import { FONTS } from '../../data/stickers';
 import { DEFAULT_FADE_MS } from '../../utils/audioFades';
 import { DEFAULT_CHROMA_KEY } from '../../utils/chromaKey';
 import { TEXT_ANIMATIONS } from '../../utils/textAnimation';
+import { SOUND_EFFECTS } from '../../data/soundEffects';
 
 // White outline on dark text, black on light text.
 const getContrastStroke = (hexColor) => {
@@ -30,6 +33,7 @@ const ADD_TOOLS = [
   { kind: 'photo', label: 'Photo', Icon: ImageIcon },
   { kind: 'video', label: 'Video', Icon: Film },
   { kind: 'clips', label: 'Clips', Icon: Clapperboard },
+  { kind: 'sfx', label: 'SFX', Icon: Zap, panel: true },
   { kind: 'sounds', label: 'Sounds', Icon: Music },
   { kind: 'audio', label: 'Audio', Icon: AudioLines },
   { kind: 'background', label: 'Background', Icon: PaintBucket, panel: true },
@@ -47,6 +51,42 @@ const ALIGNS = [
 const MIN_SPLIT_MS = 100;
 
 const update = (id, patch) => useEditorStore.getState().updateItem(id, patch);
+
+// Runs a slow clip job (FFmpeg render, frame grab) under a busy label; one at a time, never during export.
+const runJob = async (label, job) => {
+  const st = useEditorStore.getState();
+  if (st.busy || st.isExporting) return;
+  st.setBusy(label);
+  try {
+    await job();
+    useEditorStore.getState().setBusy(null);
+  } catch (e) {
+    console.warn('[clip effect]', e);
+    const message = e?.message || 'That didn’t work. Try again.';
+    useEditorStore.getState().setBusy(message);
+    setTimeout(() => { if (useEditorStore.getState().busy === message) useEditorStore.getState().setBusy(null); }, 3500);
+  }
+};
+
+// Freeze the frame under the playhead (the still is cut from what's showing, effects included).
+const freezeAtPlayhead = (item, playhead) => runJob('Freezing frame…', async () => {
+  const url = await captureFrame(item.url, sourceTimeMs(item, Math.min(Math.max(playhead, item.startMs), item.endMs)));
+  useEditorStore.getState().insertFreeze(item.id, playhead, url);
+});
+
+// Reverse/boomerang toggle: tapping the active effect switches it off.
+const toggleClipEffect = (item, effect) => {
+  if (item.effect === effect) {
+    useEditorStore.getState().applyClipEffect(item.id, null);
+    return;
+  }
+  const base = clipEffectBase(item);
+  const lengthMs = (base.endMs - item.startMs) * (item.playbackRate || 1);
+  runJob(effect === 'reverse' ? 'Reversing clip…' : 'Making a boomerang…', async () => {
+    const rendered = await renderClipEffect(base.url, effect, { startMs: base.trimStartMs, lengthMs });
+    useEditorStore.getState().applyClipEffect(item.id, effect, rendered);
+  });
+};
 
 // Picture placement on the 800-wide logical stage: contain, cover, or stretch to fill.
 const placeMedia = (item, aspectRatio, mode) => {
@@ -198,7 +238,62 @@ function BackgroundPanel() {
   );
 }
 
-const PANELS = { volume: VolumePanel, size: SizePanel, text: TextPanel, greenscreen: GreenScreenPanel, animation: AnimationPanel, background: BackgroundPanel };
+// The meme sounds people reach for most, one tap each.
+const QUICK_SFX_IDS = ['vine_boom', 'bruh', 'airhorn', 'emotional_damage', 'metal_pipe', 'bonk', 'huh', 'anime_wow', 'faah', 'minecraft_oof'];
+const QUICK_SFX = QUICK_SFX_IDS.map((id) => SOUND_EFFECTS.find((s) => s.id === id)).filter(Boolean);
+
+function SfxPanel({ onMore }) {
+  const [justAdded, setJustAdded] = useState(null);
+  const add = (sound) => {
+    useEditorStore.getState().addItem({ type: 'audio', url: sound.url, name: sound.name, durationMs: sound.durationMs || 3000, icon: sound.icon });
+    try { new Audio(sound.url).play().catch(() => {}); } catch { /* preview is optional */ }
+    setJustAdded(sound.id);
+    setTimeout(() => setJustAdded((id) => (id === sound.id ? null : id)), 900);
+  };
+  return (
+    <div className="vt-chip-row">
+      {QUICK_SFX.map((s) => (
+        <button key={s.id} type="button" className={`vt-chip${justAdded === s.id ? ' is-on' : ''}`} onClick={() => add(s)}>
+          <span aria-hidden="true">{s.icon}</span>
+          <span>{s.name.replace(/\s*\(.*\)$/, '')}</span>
+        </button>
+      ))}
+      <button type="button" className="vt-chip" onClick={onMore}><Music size={14} /> More sounds</button>
+    </div>
+  );
+}
+
+function PunchPanel({ item }) {
+  const playhead = useEditorStore((s) => s.playhead);
+  const inside = playhead >= item.startMs && playhead <= item.endMs;
+  const punches = item.punches || [];
+  const visible = clipPunchTimes(item);
+  const add = () => {
+    if (inside) update(item.id, { punches: [...punches, sourceTimeMs(item, playhead)].sort((a, b) => a - b) });
+  };
+  // The punch whose moment is closest to the playhead (within half a second).
+  const nearest = () => {
+    let best = -1;
+    let bestDist = 500;
+    punches.forEach((s, i) => {
+      const d = Math.abs(item.startMs + (s - (item.trimStartMs || 0)) / (item.playbackRate || 1) - playhead);
+      if (d <= bestDist) { best = i; bestDist = d; }
+    });
+    return best;
+  };
+  return (
+    <>
+      <div className="vt-chip-row">
+        <button type="button" className={`vt-chip${inside ? ' is-on' : ''}`} onClick={add} disabled={!inside}><ZoomIn size={14} /> Punch at playhead</button>
+        <button type="button" className="vt-chip" onClick={() => { const i = nearest(); if (i >= 0) update(item.id, { punches: punches.filter((_, j) => j !== i) }); }}>Remove nearest</button>
+        <button type="button" className="vt-chip" onClick={() => update(item.id, { punches: [] })}>Clear all ({visible.length})</button>
+      </div>
+      <p className="vt-panel-hint">Tip: press play and tap Punch on the beat.</p>
+    </>
+  );
+}
+
+const PANELS = { volume: VolumePanel, size: SizePanel, text: TextPanel, greenscreen: GreenScreenPanel, animation: AnimationPanel, background: BackgroundPanel, sfx: SfxPanel, punch: PunchPanel };
 
 function ClipTools({ item, panel, setPanel }) {
   const aspectRatio = useEditorStore((s) => s.canvasAspectRatio);
@@ -260,6 +355,15 @@ function ClipTools({ item, panel, setPanel }) {
       }} />
     );
   }
+  if (item.type === 'video') {
+    const insideClip = playhead >= item.startMs && playhead <= item.endMs;
+    tools.push(
+      <RailButton key="freeze" label="Freeze" Icon={Snowflake} dim={!insideClip} onClick={() => insideClip && freezeAtPlayhead(item, playhead)} />,
+      <RailButton key="reverse" label="Reverse" Icon={Rewind} active={item.effect === 'reverse'} onClick={() => toggleClipEffect(item, 'reverse')} />,
+      <RailButton key="boomerang" label="Boomerang" Icon={Repeat} active={item.effect === 'boomerang'} onClick={() => toggleClipEffect(item, 'boomerang')} />,
+      <RailButton key="punch" label="Punch" Icon={ZoomIn} active={panel === 'punch' || Boolean(item.punches?.length)} onClick={() => togglePanel('punch')} />
+    );
+  }
   if (item.type === 'video' || item.type === 'audio') {
     tools.push(
       <RailButton key="volume" label="Volume" Icon={SlidersHorizontal} active={panel === 'volume'} onClick={() => togglePanel('volume')} />,
@@ -310,7 +414,7 @@ export default function ToolRail({ onAdd }) {
     <div className="vt-rail-wrap">
       {Panel && (
         <div className="vt-panel" role="group" aria-label="Clip settings">
-          <Panel item={activeItem} />
+          <Panel item={activeItem} onMore={() => { setPanel(null); onAdd('sounds'); }} />
         </div>
       )}
       <nav className="vt-rail" aria-label={activeItem ? 'Clip tools' : 'Add to video'}>

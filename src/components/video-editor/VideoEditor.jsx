@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useStore } from 'zustand';
-import { X, Share, Play, Pause, Undo2, Redo2, ChevronUp, ChevronDown, Download, Copy, Check, History, ImagePlay } from 'lucide-react';
+import { X, Share, Play, Pause, Undo2, Redo2, ChevronUp, ChevronDown, Download, Copy, Check, History, ImagePlay, LoaderCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import CanvasPreview from './CanvasPreview';
 import TimelinePanel from './timeline/TimelinePanel';
@@ -77,6 +77,7 @@ export default function VideoEditor({ template, onBack }) {
   const isExporting = useEditorStore((s) => s.isExporting);
   const exportProgress = useEditorStore((s) => s.exportProgress);
   const hasItems = useEditorStore((s) => s.items.length > 0);
+  const busy = useEditorStore((s) => s.busy);
   const canUndo = useStore(useEditorStore.temporal, (s) => s.pastStates.length > 0);
   const canRedo = useStore(useEditorStore.temporal, (s) => s.futureStates.length > 0);
   const { undo, redo } = useEditorStore.temporal.getState();
@@ -211,7 +212,7 @@ export default function VideoEditor({ template, onBack }) {
             type="button"
             className="vt-fab vt-fab--export"
             onClick={() => setMenuOpen((o) => !o)}
-            disabled={isExporting}
+            disabled={isExporting || Boolean(busy)}
             aria-label="Export"
             aria-expanded={menuOpen}
           >
@@ -233,6 +234,13 @@ export default function VideoEditor({ template, onBack }) {
             )}
           </AnimatePresence>
         </div>
+
+        {busy && (
+          <div className="vt-busy" role="status">
+            {/…$/.test(busy) && <LoaderCircle size={16} className="vt-spin" aria-hidden="true" />}
+            <span>{busy}</span>
+          </div>
+        )}
 
         {draft.offer && (
           <div className="vt-draft" role="status">

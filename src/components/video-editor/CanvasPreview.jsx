@@ -7,6 +7,25 @@ import { clipGain } from '../../utils/audioFades';
 import { applyChromaKey, sampleKeyColor, suggestTolerance } from '../../utils/chromaKey';
 import { REST_FRAME, animationLengthMs, applyTextFrame, textAnimFrame } from '../../utils/textAnimation';
 import { decodeGif, frameIndexAt, isGifUrl } from '../../utils/gif';
+import { clipPunchTimes, punchZoom } from '../../utils/zoomPunch';
+
+// Zoom-punch in the preview: crop into the middle of the source so the clip zooms inside its own
+// frame (the export scales up and crops back the same way). Returns true if the crop changed.
+const applyPunch = (node, zoom) => {
+  const img = node.image();
+  if (!img) return false;
+  if (zoom <= 1.0001) {
+    if (!node.cropWidth()) return false;
+    node.crop({ x: 0, y: 0, width: 0, height: 0 });
+    return true;
+  }
+  const iw = img.videoWidth || img.width;
+  const ih = img.videoHeight || img.height;
+  const cw = iw / zoom;
+  const ch = ih / zoom;
+  node.crop({ x: (iw - cw) / 2, y: (ih - ch) / 2, width: cw, height: ch });
+  return true;
+};
 
 // Green-screen frames are keyed at most this many pixels on the long side; Konva scales them up.
 const KEY_MAX_SIDE = 640;
@@ -250,6 +269,7 @@ const CanvasMedia = ({ item, isSelected, onSelect, onChange, canvasDimensions })
           if (trRef.current) trRef.current.visible(isVisible);
           node.getLayer()?.batchDraw();
         }
+        if (node && applyPunch(node, punchZoom(clipPunchTimes(latestItem), state.playhead))) node.getLayer()?.batchDraw();
 
         let needsRedraw = false;
 

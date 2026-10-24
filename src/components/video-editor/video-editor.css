@@ -889,3 +889,44 @@
   cursor: pointer;
 }
 .vt-ready-btn.is-primary { border-color: transparent; background: var(--vt-grad); box-shadow: var(--vt-glow); }
+
+/* ── Busy pill (clip jobs like reverse) ─────────────────────── */
+.vt-busy {
+  position: absolute;
+  top: 74px;
+  left: 50%;
+  z-index: 36;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: calc(100% - 28px);
+  padding: 9px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  background: rgba(22, 25, 34, 0.95);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  font-size: 14px;
+  font-weight: 700;
+  box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.8);
+  animation: vt-panel-in 0.2s var(--vt-ease);
+}
+.vt-spin { animation: vt-spin 0.9s linear infinite; color: var(--vt-accent); }
+@keyframes vt-spin { to { transform: rotate(360deg); } }
+
+/* ── Zoom-punch markers and panel hint ──────────────────────── */
+.vt-punch-mark {
+  position: absolute;
+  top: 3px;
+  width: 10px;
+  height: 10px;
+  margin-left: -5px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: var(--vt-accent);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+}
+.vt-panel-hint { margin: 0; color: var(--vt-muted); font-size: 12px; }
+.vt-chip:disabled { opacity: 0.45; cursor: default; }

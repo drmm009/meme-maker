@@ -66,6 +66,48 @@ describe('video editor store', () => {
     expect(store().items).toHaveLength(1);
   });
 
+  it('freezes a frame mid-clip: split, hold, and push everything after it', () => {
+    store().addItem({ type: 'video', url: 'a.mp4', durationMs: 4000 });
+    store().addItem({ type: 'text', text: 'T' });
+    store().setPlayhead(3000);
+    store().addItem({ type: 'audio', url: 'boom.mp3', durationMs: 500 });
+    const [video] = store().items;
+    store().updateItem(video.id, { x: 10, y: 20, width: 400, height: 225, scaleX: 2, scaleY: 2, playbackRate: 2 });
+    store().insertFreeze(video.id, 1000, 'blob:still', 1500);
+    const [left, still, right, text, boom] = store().items;
+    expect(left).toMatchObject({ id: video.id, startMs: 0, endMs: 1000 });
+    expect(still).toMatchObject({ type: 'image', url: 'blob:still', isFreeze: true, startMs: 1000, endMs: 2500, x: 10, y: 20, width: 400, height: 225, scaleX: 2, isPositioned: true });
+    expect(right).toMatchObject({ startMs: 2500, endMs: 5500, trimStartMs: 2000 });
+    expect(text).toMatchObject({ startMs: 0, endMs: 5500 });
+    expect(boom).toMatchObject({ startMs: 4500, endMs: 5000 });
+    expect(store().activeItemId).toBe(still.id);
+  });
+
+  it('puts the freeze before or after the clip when the playhead is at an edge', () => {
+    store().addItem({ type: 'video', url: 'a.mp4', durationMs: 2000 });
+    store().addItem({ type: 'video', url: 'b.mp4', durationMs: 2000 });
+    const [a] = store().items;
+    store().insertFreeze(a.id, 1950, 'blob:end', 1000);
+    expect(store().items.map((i) => [i.type, i.startMs, i.endMs])).toEqual([
+      ['video', 0, 2000], ['image', 2000, 3000], ['video', 3000, 5000],
+    ]);
+    store().insertFreeze(a.id, 0, 'blob:start', 500);
+    expect(store().items.slice(0, 2).map((i) => [i.type, i.startMs, i.endMs])).toEqual([['image', 0, 500], ['video', 500, 2500]]);
+  });
+
+  it('swaps in reversed and boomerang renders and restores the original', () => {
+    store().addItem({ type: 'video', url: 'a.mp4', durationMs: 6000 });
+    const { id } = store().items[0];
+    store().updateItem(id, { trimStartMs: 1000, endMs: 2000 });
+    store().applyClipEffect(id, 'reverse', { url: 'blob:rev', durationMs: 2000 });
+    expect(store().items[0]).toMatchObject({ url: 'blob:rev', effect: 'reverse', trimStartMs: 0, sourceDurationMs: 2000, endMs: 2000 });
+    store().applyClipEffect(id, 'boomerang', { url: 'blob:boom', durationMs: 4000 });
+    expect(store().items[0]).toMatchObject({ url: 'blob:boom', effect: 'boomerang', endMs: 4000 });
+    expect(store().items[0].original).toMatchObject({ url: 'a.mp4', trimStartMs: 1000, endMs: 2000 });
+    store().applyClipEffect(id, null);
+    expect(store().items[0]).toMatchObject({ url: 'a.mp4', trimStartMs: 1000, endMs: 2000, sourceDurationMs: 6000, effect: null, original: null });
+  });
+
   it('duplicates media after the original and nudges overlays, keeping settings', () => {
     store().addItem({ type: 'video', url: 'a.mp4', durationMs: 2000 });
     store().addItem({ type: 'text', text: 'T' });

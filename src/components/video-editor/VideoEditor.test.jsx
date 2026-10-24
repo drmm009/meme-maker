@@ -13,6 +13,10 @@ vi.mock('../../utils/ffmpegExport', () => ({
   exportVideoFFmpeg: vi.fn(() => Promise.resolve({ blob: new Blob(['x'], { type: 'video/mp4' }), fileName: 'meme-studio-1.mp4' })),
   cancelExport: vi.fn(),
 }));
+vi.mock('../../utils/clipEffects', () => ({
+  captureFrame: vi.fn(() => Promise.resolve('blob:still')),
+  renderClipEffect: vi.fn(() => Promise.resolve({ url: 'blob:rev', durationMs: 2000 })),
+}));
 vi.mock('../../services/memeService', () => ({ fetchOpenSourceMemes: () => Promise.resolve([]) }));
 
 const store = () => useEditorStore.getState();
@@ -189,6 +193,55 @@ describe('VideoEditor', () => {
     expect(screen.getByText('Save')).toBeTruthy();
     fireEvent.click(screen.getByLabelText('Close'));
     expect(screen.queryByText('Your video is ready')).toBeNull();
+  });
+
+  it('drops a sound effect at the playhead with one tap', () => {
+    window.HTMLMediaElement.prototype.play = vi.fn(() => Promise.resolve());
+    act(() => store().addItem({ type: 'video', url: 'a.mp4', durationMs: 5000 }));
+    render(<VideoEditor onBack={() => {}} />);
+    act(() => store().setPlayhead(1200));
+    fireEvent.click(screen.getByText('SFX'));
+    fireEvent.click(screen.getByText('Vine Boom'));
+    const sound = store().items.find((i) => i.type === 'audio');
+    expect(sound).toMatchObject({ name: 'Vine Boom', url: '/sounds/vine_boom.mp3', startMs: 1200 });
+  });
+
+  it('freezes the frame under the playhead', async () => {
+    act(() => store().addItem({ type: 'video', url: 'a.mp4', durationMs: 4000 }));
+    const { container } = render(<VideoEditor onBack={() => {}} />);
+    fireEvent.click(clips(container)[0]);
+    act(() => store().setPlayhead(1500));
+    await act(async () => { fireEvent.click(screen.getByText('Freeze')); });
+    const still = store().items.find((i) => i.isFreeze);
+    expect(still).toMatchObject({ url: 'blob:still', startMs: 1500, endMs: 3000 });
+    expect(store().busy).toBe(null);
+  });
+
+  it('reverses a clip and switches it back', async () => {
+    act(() => store().addItem({ type: 'video', url: 'a.mp4', durationMs: 2000 }));
+    const { container } = render(<VideoEditor onBack={() => {}} />);
+    fireEvent.click(clips(container)[0]);
+    await act(async () => { fireEvent.click(screen.getByText('Reverse')); });
+    expect(store().items[0]).toMatchObject({ url: 'blob:rev', effect: 'reverse' });
+    fireEvent.click(screen.getByText('Reverse'));
+    expect(store().items[0]).toMatchObject({ url: 'a.mp4', effect: null });
+  });
+
+  it('adds zoom punches at the playhead and clears them', () => {
+    act(() => store().addItem({ type: 'video', url: 'a.mp4', durationMs: 4000 }));
+    const { container } = render(<VideoEditor onBack={() => {}} />);
+    fireEvent.click(clips(container)[0]);
+    fireEvent.click(screen.getByText('Punch'));
+    act(() => store().setPlayhead(1200));
+    fireEvent.click(screen.getByText('Punch at playhead'));
+    act(() => store().setPlayhead(2500));
+    fireEvent.click(screen.getByText('Punch at playhead'));
+    expect(store().items[0].punches).toEqual([1200, 2500]);
+    expect(container.querySelectorAll('.vt-punch-mark')).toHaveLength(2);
+    fireEvent.click(screen.getByText('Remove nearest'));
+    expect(store().items[0].punches).toEqual([1200]);
+    fireEvent.click(screen.getByText(/Clear all/));
+    expect(store().items[0].punches).toEqual([]);
   });
 
   it('calls onBack from the close button', () => {

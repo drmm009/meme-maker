@@ -13,6 +13,24 @@ const debounce = (func, wait) => {
 // A "Track" is a horizontal row on the timeline that holds Items.
 
 const MIN_SPLIT_MS = 100;
+export const FREEZE_MS = 1500;
+
+// Where a freeze frame goes for a playhead inside a clip: there, or the clip's start or end when
+// the playhead is too close to an edge to split.
+export const freezeCutMs = (item, atMs) => {
+  if (atMs <= item.startMs + MIN_SPLIT_MS) return item.startMs;
+  if (atMs >= item.endMs - MIN_SPLIT_MS) return item.endMs;
+  return atMs;
+};
+
+// The clip as it was before reverse/boomerang (its own fields when it has no effect).
+export const clipEffectBase = (item) => item.original || {
+  url: item.url, trimStartMs: item.trimStartMs || 0, endMs: item.endMs,
+  sourceDurationMs: item.sourceDurationMs, thumbnailUrl: item.thumbnailUrl
+};
+
+// Time in the source footage shown at timeline time atMs.
+export const sourceTimeMs = (item, atMs) => (item.trimStartMs || 0) + (atMs - item.startMs) * (item.playbackRate || 1);
 const newItemId = () => `item-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 
 const calculateDuration = (items) => {
@@ -33,6 +51,7 @@ export const useEditorStore = create(temporal((set, get) => ({
   
   canvasAspectRatio: 4/3, // Default to 4:3 (Classic)
   backgroundColor: '#ffffff', // Canvas colour behind everything (shows around letterboxed media)
+  busy: null, // Label of a long-running clip job (e.g. 'Reversing clip…'), or null
   canvasDimensions: { width: 800, height: 600 }, // Actual pixel dimensions on screen
   gridOverlayUrl: null, // Transparent layout lines from Step 2
   
@@ -51,6 +70,7 @@ export const useEditorStore = create(temporal((set, get) => ({
   setExportProgress: (progress) => set({ exportProgress: progress }),
   setCanvasAspectRatio: (ratio) => set({ canvasAspectRatio: ratio }),
   setBackgroundColor: (color) => set({ backgroundColor: color }),
+  setBusy: (label) => set({ busy: label }),
   setCanvasDimensions: (dim) => set({ canvasDimensions: dim }),
   setPlayhead: (time) => set({ playhead: Math.max(0, Math.min(time, get().duration)) }),
   setIsPlaying: (playing) => set({ isPlaying: playing }),
@@ -157,6 +177,63 @@ export const useEditorStore = create(temporal((set, get) => ({
     const items = [...state.items];
     items.splice(index, 1, left, right);
     return { items, activeItemId: right.id };
+  }),
+
+  // Freeze frame: hold a still of the clip at atMs for freezeMs. The clip splits at the cut (near an
+  // edge the still goes before or after it instead), clips after the cut move later, and clips
+  // spanning the cut (a caption over the whole video, say) stretch to cover the hold.
+  insertFreeze: (id, atMs, imageUrl, freezeMs = FREEZE_MS) => set((state) => {
+    const video = state.items.find(i => i.id === id);
+    if (!video || atMs < video.startMs || atMs > video.endMs) return {};
+    const cut = freezeCutMs(video, atMs);
+    const rate = video.playbackRate || 1;
+    const still = {
+      id: newItemId(), type: 'image', url: imageUrl, name: 'Freeze frame', isFreeze: true,
+      startMs: cut, endMs: cut + freezeMs,
+      x: video.x, y: video.y, width: video.width, height: video.height,
+      scaleX: video.scaleX, scaleY: video.scaleY, rotation: video.rotation || 0,
+      isPositioned: true, slotIndex: video.slotIndex, scale: 1, playbackRate: 1, muted: false
+    };
+    const shift = (item) => ({ ...item, startMs: item.startMs + freezeMs, endMs: item.endMs + freezeMs });
+    const items = [];
+    for (const item of state.items) {
+      if (item.id === id) {
+        if (cut === item.startMs) items.push(still, shift(item));
+        else if (cut === item.endMs) items.push(item, still);
+        else {
+          items.push(
+            { ...item, endMs: cut, fadeOutMs: 0 },
+            still,
+            { ...shift(item), id: newItemId(), startMs: cut + freezeMs, trimStartMs: (item.trimStartMs || 0) + (cut - item.startMs) * rate, fadeInMs: 0 }
+          );
+        }
+      } else if (item.startMs >= cut) items.push(shift(item));
+      else if (item.endMs > cut) items.push({ ...item, endMs: item.endMs + freezeMs });
+      else items.push(item);
+    }
+    return { items, activeItemId: still.id, duration: calculateDuration(items) };
+  }),
+
+  // Reverse or boomerang a video clip with a pre-rendered file ({ url, durationMs } of the visible
+  // section), keeping the original so the effect can be switched off or swapped. effect null restores it.
+  applyClipEffect: (id, effect, rendered) => set((state) => {
+    const item = state.items.find(i => i.id === id);
+    if (!item) return {};
+    const base = clipEffectBase(item);
+    const patch = !effect
+      ? { ...base, effect: null, original: null }
+      : {
+          url: rendered.url,
+          effect,
+          original: base,
+          punches: [], // they were placed on the original footage
+          trimStartMs: 0,
+          sourceDurationMs: rendered.durationMs,
+          // The render can be shorter than asked (long clips are capped), so size the clip from it.
+          endMs: item.startMs + rendered.durationMs / (item.playbackRate || 1)
+        };
+    const items = state.items.map(i => (i.id === id ? { ...i, ...patch } : i));
+    return { items, duration: calculateDuration(items) };
   }),
 
   // Copy a clip with all its settings: media goes right after the original, overlays are nudged.
