@@ -417,28 +417,6 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
                   updateActiveImageLayer={updateActiveImageLayer}
                 />
 
-            {/* ─── 2. Main Context Toolbar ─── */}
-            <ContextToolbar
-              handleUpdateTemplateMorphProgress={handleUpdateTemplateMorphProgress}
-              activeCaption={activeCaption}
-              activeFontObj={activeFontObj}
-              activeImageLayer={activeImageLayer}
-              activeSticker={activeSticker}
-              contextToolbarRef={contextToolbarRef}
-              handleChangeFace={handleChangeFace}
-              handleFinalizeTemplateFace={handleFinalizeTemplateFace}
-              handleFlipActiveLayer={handleFlipActiveLayer}
-              handleOpenSocialModalForActiveCard={handleOpenSocialModalForActiveCard}
-              handleRemoveBackground={handleRemoveBackground}
-              handleRevertTemplateFace={handleRevertTemplateFace}
-              handleSetCaptionBg={handleSetCaptionBg}
-              handleStartMorphFace={handleStartMorphFace}
-              handleToggleDieCutSticker={handleToggleDieCutSticker}
-              isHoldingCanvasCompare={isHoldingCanvasCompare}
-              isRemovingBg={isRemovingBg}
-              setIsHoldingCanvasCompare={setIsHoldingCanvasCompare}
-              updateActiveCaptionProps={updateActiveCaptionProps}
-            />
           </div>
 
         </div>
@@ -448,6 +426,29 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
       <EditorSidebar
         handleTabClick={handleTabClick}
         toolHandlers={{ handleAddBubble, handleAddCaption, handleAddCurvedText, handleFileUploadImageLayer, handleToggleCanvasFlip, setShowFaceMorphModal }}
+        layerTools={(
+          <ContextToolbar
+            handleUpdateTemplateMorphProgress={handleUpdateTemplateMorphProgress}
+            activeCaption={activeCaption}
+            activeFontObj={activeFontObj}
+            activeImageLayer={activeImageLayer}
+            activeSticker={activeSticker}
+            contextToolbarRef={contextToolbarRef}
+            handleChangeFace={handleChangeFace}
+            handleFinalizeTemplateFace={handleFinalizeTemplateFace}
+            handleFlipActiveLayer={handleFlipActiveLayer}
+            handleOpenSocialModalForActiveCard={handleOpenSocialModalForActiveCard}
+            handleRemoveBackground={handleRemoveBackground}
+            handleRevertTemplateFace={handleRevertTemplateFace}
+            handleSetCaptionBg={handleSetCaptionBg}
+            handleStartMorphFace={handleStartMorphFace}
+            handleToggleDieCutSticker={handleToggleDieCutSticker}
+            isHoldingCanvasCompare={isHoldingCanvasCompare}
+            isRemovingBg={isRemovingBg}
+            setIsHoldingCanvasCompare={setIsHoldingCanvasCompare}
+            updateActiveCaptionProps={updateActiveCaptionProps}
+          />
+        )}
       />
       </div>
 

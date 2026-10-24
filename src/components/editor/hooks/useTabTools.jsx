@@ -2,7 +2,7 @@ import { Plus, Spline, Quote, Smile, Sticker, Droplet, Highlighter, Sun, FlipHor
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
 import { useEditorUiStore } from '../store/useEditorUiStore';
 
-// The tools behind each dock tab, shown in the dock when the tab is open.
+// The editor's tools by group (the group is the editor's activeTab), shown in the bottom bar.
 // Each tool: { id, label, title, Icon, active?, onClick } or, for file pickers, { accept, onFile }.
 export function useTabTools({
   handleAddBubble,
@@ -39,18 +39,18 @@ export function useTabTools({
 
   return {
     text: [
-      { id: 'add-text', label: 'Add Text', title: 'Add Text Caption', Icon: Plus, onClick: handleAddCaption },
-      { id: 'curved', label: 'Curved', title: 'Add Curved Text', Icon: Spline, onClick: handleAddCurvedText },
-      { id: 'phrases', label: 'Phrases', title: 'Quick Phrases', Icon: Quote, active: activeSubmenu === 'phrases', onClick: () => toggleSubmenu('phrases') },
-      { id: 'banner', label: 'Header/Footer', title: 'Header & Footer bands', Icon: Rows3, active: canvasHeader.enabled || canvasFooter.enabled || activeSubmenu === 'banner', onClick: () => toggleSubmenu('banner') },
-      { id: 'bubble', label: 'Bubble', title: 'Add Chat & Speech Bubble', Icon: MessageSquareQuote, active: showBubbleBottomSheet, onClick: () => { handleAddBubble(); setShowBubbleBottomSheet(true); setActiveSubmenu(null); } },
+      { id: 'add-text', label: 'Text', title: 'Add Text Caption', Icon: Plus, onClick: handleAddCaption },
       { id: 'ai', label: 'AI Captions', title: 'AI Meme Captions', Icon: WandSparkles, onClick: () => setShowAiModal(true) },
+      { id: 'phrases', label: 'Phrases', title: 'Quick Phrases', Icon: Quote, active: activeSubmenu === 'phrases', onClick: () => toggleSubmenu('phrases') },
+      { id: 'bubble', label: 'Bubble', title: 'Add Chat & Speech Bubble', Icon: MessageSquareQuote, active: showBubbleBottomSheet, onClick: () => { handleAddBubble(); setShowBubbleBottomSheet(true); setActiveSubmenu(null); } },
+      { id: 'curved', label: 'Curved', title: 'Add Curved Text', Icon: Spline, onClick: handleAddCurvedText },
+      { id: 'banner', label: 'Header/Footer', title: 'Header & Footer bands', Icon: Rows3, active: canvasHeader.enabled || canvasFooter.enabled || activeSubmenu === 'banner', onClick: () => toggleSubmenu('banner') },
     ],
     images: [
-      { id: 'upload', label: 'Upload', title: 'Upload Image or Video', Icon: ImagePlus, accept: 'image/*,video/*', onFile: handleFileUploadImageLayer },
-      { id: 'template', label: 'Template', title: 'Add Image from Templates', Icon: LayoutTemplate, onClick: () => setImagePickerTarget('layer') },
       { id: 'stickers', label: 'Stickers', title: 'Add Meme Stickers', Icon: Sticker, onClick: () => setShowMemeStickersModal(true) },
       { id: 'emojis', label: 'Emojis', title: 'Add Emojis', Icon: Smile, onClick: () => setShowEmojiModal(true) },
+      { id: 'upload', label: 'Photo', title: 'Upload Image or Video', Icon: ImagePlus, accept: 'image/*,video/*', onFile: handleFileUploadImageLayer },
+      { id: 'template', label: 'Template', title: 'Add Image from Templates', Icon: LayoutTemplate, onClick: () => setImagePickerTarget('layer') },
     ],
     draw: [
       { id: 'brush', label: 'Brush', title: 'Brush: solid stroke', Icon: Brush, active: drawTool === 'brush', onClick: () => pickDrawTool('brush') },

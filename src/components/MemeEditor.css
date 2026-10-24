@@ -52,7 +52,7 @@
   align-items: center;
   justify-content: center;
   position: relative;
-  padding: 8px 16px 72px 16px; /* room for a selected layer's tool row */
+  padding: 8px 16px 56px 16px; /* room for the floating layer and settings bars */
   box-sizing: border-box;
   overflow: visible;
 }
@@ -62,7 +62,7 @@
     padding: 4px 2px 2px 2px;
   }
   .canvas-viewport {
-    padding: 4px 2px 72px 2px;
+    padding: 4px 2px 56px 2px;
   }
 }
 
@@ -2054,66 +2054,86 @@
 .ie-export { position: relative; }
 [data-theme='light'] .ie-fab:not(.ie-fab--export) { background: rgba(0, 0, 0, 0.06); }
 
-/* Dock: icons and labels follow the app's bottom nav (.dock-nav-item in App.css). */
-.ie-dock-wrap { position: relative; flex-shrink: 0; z-index: 400; }
-.ie-dock {
+/* Bottom bar: one scrolling row of round buttons, the same style as the top bar's. */
+.ie-bar {
+  position: relative;
+  z-index: 400;
+  flex-shrink: 0;
+  min-height: 84px;
+  box-sizing: border-box;
   display: flex;
-  padding: 4px 8px calc(6px + env(safe-area-inset-bottom, 0px));
+  align-items: center;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 10px 12px calc(10px + env(safe-area-inset-bottom, 0px));
   border-top: 1px solid rgba(255, 255, 255, 0.07);
   background: var(--bg-dark);
 }
-[data-theme='light'] .ie-dock { border-top-color: rgba(0, 0, 0, 0.08); }
-.ie-tab {
-  flex: 1;
-  min-width: 0;
+.ie-bar::-webkit-scrollbar { display: none; }
+/* Fade the right edge so the row reads as scrollable. */
+.ie-bar { -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent); }
+[data-theme='light'] .ie-bar { border-top-color: rgba(0, 0, 0, 0.08); }
+.ie-bar-group { display: flex; align-items: flex-start; flex-shrink: 0; }
+.ie-bar-divider { flex: 0 0 1px; align-self: flex-start; height: 26px; margin: 9px 6px 0; background: rgba(255, 255, 255, 0.1); }
+[data-theme='light'] .ie-bar-divider { background: rgba(0, 0, 0, 0.1); }
+.ie-btn {
+  flex: 0 0 auto;
+  min-width: 58px;
+  margin: 0;
+  padding: 0 3px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
-  padding: 8px 0 4px;
+  gap: 5px;
   border: none;
   background: none;
-  color: var(--text-muted);
+  color: var(--text-main);
   font: inherit;
-  font-size: 0.68rem;
-  font-weight: 650;
   cursor: pointer;
-  user-select: none;
   -webkit-tap-highlight-color: transparent;
-  transition: color 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.ie-tab:hover { color: var(--text-main); }
-.ie-tab-icon { transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1); }
-.ie-tab.is-active { color: #ff5e36; }
-.ie-tab.is-active .ie-tab-icon { transform: translateY(-1px); }
-.ie-tab.is-active .ie-tab-label { font-weight: 800; }
-.ie-tab-dot { width: 14px; height: 3px; margin-top: 1px; border-radius: 9999px; background: #ff5e36; }
-
-.ie-tab:not(.is-active)::after { content: ''; height: 4px; }
-
-/* An open tab: back button, then the tab's tools (scrolls sideways when they don't fit). */
-.ie-dock--tools { align-items: stretch; padding-left: 0; padding-right: 0; animation: ie-tools-in 0.22s cubic-bezier(0.16, 1, 0.3, 1); }
-@keyframes ie-tools-in {
-  from { opacity: 0; transform: translateX(16px); }
-  to { opacity: 1; transform: none; }
+.ie-btn-circle {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  transition: transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1), background 0.15s;
 }
-.ie-tab--back { flex: 0 0 64px; color: var(--text-main); }
-.ie-tab--back .ie-tab-label { max-width: 60px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ie-dock-divider { flex: 0 0 1px; align-self: center; height: 32px; background: rgba(255, 255, 255, 0.1); }
-[data-theme='light'] .ie-dock-divider { background: rgba(0, 0, 0, 0.1); }
-.ie-dock-tools {
-  flex: 1;
+[data-theme='light'] .ie-btn-circle { background: rgba(0, 0, 0, 0.06); }
+.ie-btn:hover .ie-btn-circle { background: rgba(255, 255, 255, 0.12); }
+.ie-btn:active .ie-btn-circle { transform: scale(0.92); }
+.ie-btn-label { font-size: 0.68rem; font-weight: 650; color: var(--text-muted); white-space: nowrap; transition: color 0.15s; }
+.ie-btn.is-on .ie-btn-circle { background: linear-gradient(135deg, #ff5e36 0%, #ec4899 100%); color: #fff; box-shadow: 0 8px 20px -8px rgba(255, 94, 54, 0.7); }
+.ie-btn.is-on .ie-btn-label { color: #ff5e36; font-weight: 800; }
+.ie-btn--done .ie-btn-circle { background: var(--text-main); color: var(--bg-dark); }
+.ie-btn--done .ie-btn-label { color: var(--text-main); }
+
+/* Layer tools use the bar's 44px circles and spacing. */
+.ie-bar--layer .editor-floating-toolbar .vid-ctx-btn:not(.bubble-layout-btn),
+.ie-bar--layer .editor-floating-toolbar button:not(.bubble-layout-btn) { height: 64px !important; min-height: 64px !important; max-height: 64px !important; min-width: 58px !important; gap: 5px !important; justify-content: flex-start !important; }
+.ie-bar--layer .editor-floating-toolbar button:not(.bubble-layout-btn) svg { width: 44px !important; height: 44px !important; padding: 12px !important; background: rgba(255, 255, 255, 0.08); }
+.ie-bar--layer .editor-floating-toolbar .vid-color-swatch-disc,
+.ie-bar--layer .editor-floating-toolbar .vid-ctx-bg-badge { margin: 14px !important; box-shadow: 0 0 0 14px rgba(255, 255, 255, 0.08) !important; }
+.ie-bar--layer .editor-floating-toolbar .vid-ctx-btn.active .vid-ctx-bg-badge { box-shadow: 0 0 0 14px #ff5e36 !important; }
+
+/* A selected layer's tools take over the bar (ContextToolbar renders inside it). */
+.ie-bar--layer { padding-right: 0; }
+.ie-bar--layer .video-context-toolbar {
+  position: relative !important;
+  inset: auto !important;
+  transform: none !important;
+  flex: 1 1 auto;
   min-width: 0;
-  display: flex;
-  justify-content: safe center;
-  overflow-x: auto;
-  scrollbar-width: none;
-  padding: 0 18px 0 6px;
-  /* Fade the right edge so a row that scrolls looks like it does. */
-  -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 22px), transparent);
-  mask-image: linear-gradient(90deg, #000 calc(100% - 22px), transparent);
+  width: auto !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 0 12px 0 0 !important;
+  justify-content: flex-start !important;
+  border-radius: 0;
+  box-shadow: none !important;
 }
-.ie-dock-tools::-webkit-scrollbar { display: none; }
-.ie-tool { flex: 0 0 auto; min-width: 56px; padding-left: 6px; padding-right: 6px; margin: 0; white-space: nowrap; }
+
 .ie-swatch { display: block; flex-shrink: 0; margin: 2px; border-radius: 50%; border: 1.5px solid rgba(255, 255, 255, 0.6); }
 
