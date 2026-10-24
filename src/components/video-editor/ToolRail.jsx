@@ -126,7 +126,7 @@ function RailButton({ label, Icon, onClick, active, danger, dim, done, children 
       className={`vt-tool${active ? ' is-active' : ''}${danger ? ' is-danger' : ''}${dim ? ' is-dim' : ''}${done ? ' is-done' : ''}`}
       onClick={onClick}
     >
-      <span className="vt-tool-icon">{children || <Icon size={19} strokeWidth={1.9} />}</span>
+      <span className="vt-tool-icon">{children || <Icon size={17} strokeWidth={1.9} />}</span>
       <span className="vt-tool-label">{label}</span>
     </button>
   );
@@ -713,7 +713,7 @@ export default function ToolRail({ onAdd }) {
             aria-pressed={!activeItem && sec.id === section.id}
             onClick={() => openSection(sec.id)}
           >
-            <sec.Icon size={20} strokeWidth={1.8} />
+            <sec.Icon size={19} strokeWidth={1.8} />
             <span>{sec.label}</span>
           </button>
         ))}

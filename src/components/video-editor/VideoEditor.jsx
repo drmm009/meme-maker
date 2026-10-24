@@ -204,7 +204,7 @@ export default function VideoEditor({ template, onBack }) {
         </div>
 
         <button type="button" className="vt-fab vt-fab--close" onClick={onBack} aria-label="Close editor">
-          <X size={22} strokeWidth={2.5} />
+          <X size={18} strokeWidth={2.5} />
         </button>
 
         <div className="vt-ratio">
@@ -220,7 +220,7 @@ export default function VideoEditor({ template, onBack }) {
             aria-label="Export"
             aria-expanded={menuOpen}
           >
-            {exportDone ? <Check size={22} strokeWidth={2.5} /> : <Share size={21} strokeWidth={2.4} />}
+            {exportDone ? <Check size={18} strokeWidth={2.5} /> : <Share size={17} strokeWidth={2.4} />}
           </button>
           <AnimatePresence>
             {menuOpen && (
@@ -291,11 +291,11 @@ export default function VideoEditor({ template, onBack }) {
       <div className="vt-transport">
         <Clock />
         <button type="button" className="vt-play" onClick={togglePlayback} aria-label={isPlaying ? 'Pause' : 'Play'}>
-          {isPlaying ? <Pause size={24} fill="currentColor" /> : <Play size={24} fill="currentColor" style={{ marginLeft: 3 }} />}
+          {isPlaying ? <Pause size={20} fill="currentColor" /> : <Play size={20} fill="currentColor" style={{ marginLeft: 2 }} />}
         </button>
         <div className="vt-history">
-          <button type="button" className="vt-icon-btn" onClick={() => undo()} disabled={!canUndo} aria-label="Undo"><Undo2 size={24} /></button>
-          <button type="button" className="vt-icon-btn" onClick={() => redo()} disabled={!canRedo} aria-label="Redo"><Redo2 size={24} /></button>
+          <button type="button" className="vt-icon-btn" onClick={() => undo()} disabled={!canUndo} aria-label="Undo"><Undo2 size={20} /></button>
+          <button type="button" className="vt-icon-btn" onClick={() => redo()} disabled={!canRedo} aria-label="Redo"><Redo2 size={20} /></button>
         </div>
       </div>
 
