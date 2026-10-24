@@ -76,9 +76,13 @@ const captionTexts = () => screen.queryAllByTestId('caption').map((el) => el.tex
 const deselect = () => act(() => canvas.props.onSelectLayer(null));
 const undoButton = () => screen.getByTitle('Undo');
 const redoButton = () => screen.getByTitle('Redo');
-// Dock tabs open a drop-up menu of their tools.
+// Tapping a dock tab swaps the dock to its tools; Back returns to the tabs.
+const backButton = () => screen.queryByLabelText('Back to sections');
 const dockTab = (label) => screen.getAllByText(label).map((el) => el.closest('.ie-tab')).find(Boolean);
-const openTab = (label) => fireEvent.click(dockTab(label));
+const openTab = (label) => {
+  if (backButton()) fireEvent.click(backButton());
+  fireEvent.click(dockTab(label));
+};
 const addTextFromMenu = () => { openTab('Text'); fireEvent.click(screen.getByTitle('Add Text Caption')); };
 
 function renderEditor(template = TEMPLATE, onSaveToGallery = vi.fn()) {
@@ -163,21 +167,22 @@ describe('MemeEditor', () => {
   it('switches between every sidebar tab without crashing', () => {
     renderEditor();
     for (const label of ['Draw', 'Media', 'AI/Filters', 'Canvas', 'Text']) {
-      const tab = dockTab(label);
-      expect(tab, `tab "${label}"`).toBeTruthy();
-      fireEvent.click(tab);
-      expect(tab.className).toContain('is-active');
-      expect(screen.getByRole('menu', { name: `${label} tools` })).toBeTruthy();
+      openTab(label);
+      expect(screen.getByRole('navigation', { name: `${label} tools` })).toBeTruthy();
+      fireEvent.click(backButton());
+      expect(dockTab(label).className).toContain('is-active');
     }
   }, 30000);
 
-  it('opens and closes a tab menu, and keeps tab tools out of the toolbar', () => {
+  it('shows the tools of a tab in the dock and goes back to the tabs', () => {
     renderEditor();
     expect(screen.queryByTitle('Add Text Caption')).toBeNull();
     openTab('Media');
-    for (const label of ['Upload', 'Template', 'Stickers', 'Emojis']) expect(screen.getByRole('menuitem', { name: label })).toBeTruthy();
-    openTab('Media');
-    expect(screen.queryByRole('menu')).toBeNull();
+    for (const label of ['Upload', 'Template', 'Stickers', 'Emojis']) expect(screen.getByText(label)).toBeTruthy();
+    expect(screen.queryByText('Draw')).toBeNull();
+    fireEvent.click(backButton());
+    expect(screen.getByRole('navigation', { name: 'Editor sections' })).toBeTruthy();
+    expect(screen.queryByText('Emojis')).toBeNull();
   }, 30000);
 
   it('turns on drawing mode on the Draw tab', () => {

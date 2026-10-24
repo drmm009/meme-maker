@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
-import { Type, Sparkles, ImagePlus, LayoutGrid, PencilLine } from 'lucide-react';
+import { useState } from 'react';
+import { Type, Sparkles, ImagePlus, LayoutGrid, PencilLine, ChevronLeft } from 'lucide-react';
 import { useMemeEditorStore } from './store/useMemeEditorStore';
 import { useEditorUiStore } from './store/useEditorUiStore';
 import { useTabTools } from './hooks/useTabTools';
@@ -11,80 +11,74 @@ const TABS = [
   { id: 'filters', label: 'AI/Filters', Icon: Sparkles },
   { id: 'canvas', label: 'Canvas', Icon: LayoutGrid },
 ];
-const MENU_W = 196;
 
-// The editor's tab dock, styled like the app's bottom nav. Tapping a tab selects it and opens a
-// drop-up menu of its tools (tapping it again closes the menu); a selected layer's tools show in
-// the toolbar above instead.
+// The editor's dock, styled like the app's bottom nav. Tapping a tab swaps the dock to that tab's
+// tools, with a back button that returns to the tabs; a selected layer's tools show in the
+// toolbar above.
 export default function EditorSidebar({ handleTabClick, toolHandlers }) {
   const activeTab = useEditorUiStore((s) => s.activeTab);
   const setDrawTool = useEditorUiStore((s) => s.setDrawTool);
   const setActiveLayerId = useMemeEditorStore((s) => s.setActiveLayerId);
-  const activeLayerId = useMemeEditorStore((s) => s.activeLayerId);
   const tools = useTabTools(toolHandlers);
-  const [menu, setMenu] = useState(null); // { tab, left }
-  const wrapRef = useRef(null);
+  const [openTab, setOpenTab] = useState(null); // tab whose tools fill the dock, or null for the tabs
 
-  // Tapping elsewhere closes the menu; so does selecting a layer.
-  useEffect(() => {
-    if (!menu) return undefined;
-    const onDown = (e) => { if (!wrapRef.current?.contains(e.target)) setMenu(null); };
-    document.addEventListener('pointerdown', onDown);
-    return () => document.removeEventListener('pointerdown', onDown);
-  }, [menu]);
-  useEffect(() => { if (activeLayerId) setMenu(null); }, [activeLayerId]);
-
-  const openTab = (tab, el) => {
-    if (menu?.tab === tab.id) { setMenu(null); return; }
+  const enterTab = (tab) => {
     handleTabClick(tab.id);
     if (tab.id === 'draw') { setActiveLayerId(null); setDrawTool('brush'); }
-    const wrap = wrapRef.current.getBoundingClientRect();
-    const r = el.getBoundingClientRect();
-    const center = r.left + r.width / 2 - wrap.left;
-    setMenu({ tab: tab.id, left: Math.max(8, Math.min(wrap.width - MENU_W - 8, center - MENU_W / 2)) });
+    setOpenTab(tab.id);
   };
 
   const isActive = (id) => activeTab === id || (id === 'canvas' && activeTab === 'watermark');
-  const menuTools = menu ? tools[menu.tab] : null;
-  const menuTab = menu && TABS.find((t) => t.id === menu.tab);
+  const tab = openTab && TABS.find((t) => t.id === openTab);
+
+  if (tab) {
+    return (
+      <div className="ie-dock-wrap">
+        <nav key={tab.id} className="ie-dock ie-dock--tools" aria-label={`${tab.label} tools`}>
+          <button type="button" className="ie-tab ie-tab--back" onClick={() => setOpenTab(null)} aria-label="Back to sections" title="Back">
+            <ChevronLeft className="ie-tab-icon" size={22} />
+            <span className="ie-tab-label">{tab.label}</span>
+          </button>
+          <span className="ie-dock-divider" aria-hidden="true" />
+          <div className="ie-dock-tools">
+            {tools[tab.id].map((t) => (t.onFile ? (
+              <label key={t.id} className="ie-tab ie-tool" title={t.title}>
+                <t.Icon className="ie-tab-icon" size={20} />
+                <span className="ie-tab-label">{t.label}</span>
+                <input type="file" accept={t.accept} hidden onChange={t.onFile} />
+              </label>
+            ) : (
+              <button
+                key={t.id}
+                type="button"
+                className={`ie-tab ie-tool${t.active ? ' is-active' : ''}`}
+                title={t.title}
+                onClick={t.onClick}
+              >
+                <t.Icon className="ie-tab-icon" size={20} />
+                <span className="ie-tab-label">{t.label}</span>
+                {t.active && <span className="ie-tab-dot" />}
+              </button>
+            )))}
+          </div>
+        </nav>
+      </div>
+    );
+  }
 
   return (
-    <div className="ie-dock-wrap" ref={wrapRef}>
-      {menuTools && (
-        <div className="ie-dropup" role="menu" aria-label={`${menuTab.label} tools`} style={{ left: menu.left, width: MENU_W }}>
-          {menuTools.map((t) => (t.onFile ? (
-            <label key={t.id} className="ie-dropup-item" role="menuitem" title={t.title}>
-              <t.Icon size={20} />
-              <span>{t.label}</span>
-              <input type="file" accept={t.accept} hidden onChange={(e) => { setMenu(null); t.onFile(e); }} />
-            </label>
-          ) : (
-            <button
-              key={t.id}
-              type="button"
-              role="menuitem"
-              className={`ie-dropup-item${t.active ? ' is-on' : ''}`}
-              title={t.title}
-              onClick={() => { setMenu(null); t.onClick(); }}
-            >
-              <t.Icon size={20} />
-              <span>{t.label}</span>
-            </button>
-          )))}
-        </div>
-      )}
+    <div className="ie-dock-wrap">
       <nav className="ie-dock" aria-label="Editor sections">
-        {TABS.map((tab) => (
+        {TABS.map((t) => (
           <button
-            key={tab.id}
+            key={t.id}
             type="button"
-            className={`ie-tab${isActive(tab.id) ? ' is-active' : ''}`}
-            aria-expanded={menu?.tab === tab.id}
-            onClick={(e) => openTab(tab, e.currentTarget)}
+            className={`ie-tab${isActive(t.id) ? ' is-active' : ''}`}
+            onClick={() => enterTab(t)}
           >
-            <tab.Icon className="ie-tab-icon" size={20} />
-            <span className="ie-tab-label">{tab.label}</span>
-            {isActive(tab.id) && <span className="ie-tab-dot" />}
+            <t.Icon className="ie-tab-icon" size={20} />
+            <span className="ie-tab-label">{t.label}</span>
+            {isActive(t.id) && <span className="ie-tab-dot" />}
           </button>
         ))}
       </nav>

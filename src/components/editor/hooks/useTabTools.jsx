@@ -2,7 +2,7 @@ import { Plus, Spline, Quote, Smile, Sticker, Droplet, Highlighter, Sun, FlipHor
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
 import { useEditorUiStore } from '../store/useEditorUiStore';
 
-// The tools behind each dock tab, shown in the tab's drop-up menu.
+// The tools behind each dock tab, shown in the dock when the tab is open.
 // Each tool: { id, label, title, Icon, active?, onClick } or, for file pickers, { accept, onFile }.
 export function useTabTools({
   handleAddBubble,
@@ -40,10 +40,10 @@ export function useTabTools({
   return {
     text: [
       { id: 'add-text', label: 'Add Text', title: 'Add Text Caption', Icon: Plus, onClick: handleAddCaption },
-      { id: 'curved', label: 'Curved Text', title: 'Add Curved Text', Icon: Spline, onClick: handleAddCurvedText },
+      { id: 'curved', label: 'Curved', title: 'Add Curved Text', Icon: Spline, onClick: handleAddCurvedText },
       { id: 'phrases', label: 'Phrases', title: 'Quick Phrases', Icon: Quote, active: activeSubmenu === 'phrases', onClick: () => toggleSubmenu('phrases') },
-      { id: 'banner', label: 'Header / Footer', title: 'Header & Footer bands', Icon: Rows3, active: canvasHeader.enabled || canvasFooter.enabled || activeSubmenu === 'banner', onClick: () => toggleSubmenu('banner') },
-      { id: 'bubble', label: 'Chat Bubble', title: 'Add Chat & Speech Bubble', Icon: MessageSquareQuote, active: showBubbleBottomSheet, onClick: () => { handleAddBubble(); setShowBubbleBottomSheet(true); setActiveSubmenu(null); } },
+      { id: 'banner', label: 'Header/Footer', title: 'Header & Footer bands', Icon: Rows3, active: canvasHeader.enabled || canvasFooter.enabled || activeSubmenu === 'banner', onClick: () => toggleSubmenu('banner') },
+      { id: 'bubble', label: 'Bubble', title: 'Add Chat & Speech Bubble', Icon: MessageSquareQuote, active: showBubbleBottomSheet, onClick: () => { handleAddBubble(); setShowBubbleBottomSheet(true); setActiveSubmenu(null); } },
       { id: 'ai', label: 'AI Captions', title: 'AI Meme Captions', Icon: WandSparkles, onClick: () => setShowAiModal(true) },
     ],
     images: [
@@ -62,8 +62,8 @@ export function useTabTools({
       { id: 'photo-filters', label: 'Filters', title: 'Photo Filters', Icon: Sun, active: showFiltersModal, onClick: () => setShowFiltersModal(true) },
     ],
     canvas: [
-      { id: 'canvas-bg', label: 'Canvas Color', title: 'Canvas Color', Icon: CanvasSwatch, active: activeSubmenu === 'canvasBg', onClick: () => toggleSubmenu('canvasBg') },
-      { id: 'flip', label: 'Flip Canvas', title: 'Flip Canvas Horizontal', Icon: FlipHorizontal, onClick: handleToggleCanvasFlip },
+      { id: 'canvas-bg', label: 'Color', title: 'Canvas Color', Icon: CanvasSwatch, active: activeSubmenu === 'canvasBg', onClick: () => toggleSubmenu('canvasBg') },
+      { id: 'flip', label: 'Flip', title: 'Flip Canvas Horizontal', Icon: FlipHorizontal, onClick: handleToggleCanvasFlip },
       { id: 'watermark', label: 'Watermark', title: 'Watermark Settings', Icon: Droplet, active: activeSubmenu === 'watermark' || watermarkOn, onClick: () => { if (!watermark?.enabled) updateWatermark('enabled', true); toggleSubmenu('watermark'); } },
     ],
   };
