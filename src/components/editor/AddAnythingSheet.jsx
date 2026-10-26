@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Search, X } from 'lucide-react';
 
 // Section names for the sheet's groups (keys are the editor's activeTab values).
-export const GROUP_LABELS = { text: 'Text', images: 'Stickers and media', filters: 'AI and photo', draw: 'Draw', canvas: 'Canvas' };
+const GROUP_LABELS = { text: 'Text', images: 'Stickers and media', filters: 'AI and photo', draw: 'Draw', canvas: 'Canvas' };
 const GROUP_ORDER = ['text', 'images', 'filters', 'draw', 'canvas'];
 
 const matches = (t, group, q) => `${t.label} ${t.title} ${t.keywords || ''} ${GROUP_LABELS[group]}`.toLowerCase().includes(q);
