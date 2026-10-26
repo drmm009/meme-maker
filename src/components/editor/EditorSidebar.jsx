@@ -1,36 +1,39 @@
 import { useState } from 'react';
-import { Type, Sticker, PencilLine, Sun, Plus, Check } from 'lucide-react';
+import { Plus, Check, Sparkles, ImagePlus, Paintbrush, SlidersHorizontal } from 'lucide-react';
 import { useMemeEditorStore } from './store/useMemeEditorStore';
 import { useEditorUiStore } from './store/useEditorUiStore';
 import { useTabTools } from './hooks/useTabTools';
-import AddAnythingSheet from './AddAnythingSheet';
+import OrbitOverlay from './OrbitOverlay';
 
-// One island button: icon over a small label, like the app's bottom nav.
-function Item({ Icon, label, on, className = '', ...props }) {
-  return (
-    <button type="button" className={`ie-island-item${on ? ' is-on' : ''} ${className}`} {...props}>
-      <Icon className="ie-island-icon" size={20} />
-      <span className="ie-island-label">{label}</span>
-    </button>
-  );
-}
+// Quick chips when nothing is selected, as [section, tool id, label, icon colour, active style].
+// Active style: 'amber' / 'white' fill the chip (deep-fry, top band); others just tint the icon.
+const CHIPS = [
+  ['text', 'add-text', '+ Caption', '#ff5e36'],
+  ['text', 'bubble', '+ Bubble', '#38bdf8'],
+  ['text', 'social', 'Social Card', '#34d399'],
+  ['images', 'stickers', 'Stickers', '#fbbf24'],
+  ['images', 'emojis', 'Emojis', '#fbbf24'],
+  ['filters', 'face-swap', 'Face Swap', '#f472b6'],
+  ['filters', 'deep-fry', 'Deep-Fry', '#fbbf24', 'amber'],
+  ['filters', 'remove-bg', null, '#c084fc'],
+  ['canvas', 'top-band', 'Top Band', '#f5f5f7', 'white'],
+  ['canvas', 'watermark', 'Watermark', '#ff5e36'],
+];
 
 // What the inspector card calls the selected layer.
-const layerKind = (layer, kind) => {
-  if (kind === 'sticker') return 'Sticker';
-  if (kind === 'image') return 'Image';
-  if (layer.isTweetCard) return 'Tweet card';
-  if (layer.isInstagramCard) return 'Instagram post';
-  if (layer.isWhatsAppCard) return 'WhatsApp chat';
-  if (layer.bubbleStyle) return 'Chat bubble';
+const captionKind = (c) => {
+  if (c.isTweetCard) return 'Tweet';
+  if (c.isInstagramCard) return 'Instagram';
+  if (c.isWhatsAppCard) return 'WhatsApp';
+  if (c.bubbleStyle) return 'Bubble';
   return 'Text';
 };
 
-// The editor's bottom area, in three states:
-// - a calm island like the app's home nav: two shortcuts, a central "+" that opens a searchable
-//   sheet with every tool, two shortcuts;
-// - while drawing: the brush tools with Done;
-// - with a layer selected: an inspector card naming the layer, with its tools (layerTools) and Done.
+// The editor's bottom deck (Concept 1, "Orbit & Halo"):
+// - nothing selected: a strip of quick chips over a trigger bar (AI Roast, media, the "+" nucleus,
+//   draw, filters); "+" opens OrbitOverlay (command palette and orbit);
+// - drawing: brush tools with Done;
+// - a layer selected: a "<kind> Studio" inspector card with the layer's tools (layerTools) and Done.
 export default function EditorSidebar({ handleTabClick, toolHandlers, layerTools }) {
   const activeTab = useEditorUiStore((s) => s.activeTab);
   const drawTool = useEditorUiStore((s) => s.drawTool);
@@ -43,40 +46,40 @@ export default function EditorSidebar({ handleTabClick, toolHandlers, layerTools
   const stickers = useMemeEditorStore((s) => s.stickers);
   const imageLayers = useMemeEditorStore((s) => s.imageLayers);
   const tools = useTabTools(toolHandlers);
-  const [sheetOpen, setSheetOpen] = useState(false);
+  const [orbitOpen, setOrbitOpen] = useState(false);
 
   const drawing = activeTab === 'draw' && Boolean(drawTool);
   const stopDrawing = () => { setDrawTool(null); setActiveSubmenu(null); };
+  const tool = (section, id) => tools[section].find((t) => t.id === id);
 
   // Run a tool from its section (the editor's activeTab), switching section first unless already
   // there, so a tool that toggles a settings bar can close it again.
-  const run = (group, t) => {
-    if (group === 'draw') {
+  const run = (section, t) => {
+    if (section === 'draw') {
       handleTabClick('draw');
       setActiveLayerId(null);
       t.onClick();
       return;
     }
-    if (group !== activeTab) handleTabClick(group);
+    if (section !== activeTab) handleTabClick(section);
     t.onClick?.();
   };
-  const tool = (group, id) => tools[group].find((t) => t.id === id);
 
   if (activeLayerId || templateFaceMorph) {
     const caption = captions.find((c) => c.id === activeLayerId);
     const sticker = !caption && stickers.find((s) => s.id === activeLayerId);
     const image = !caption && !sticker && imageLayers.find((l) => l.id === activeLayerId);
-    const kind = caption ? layerKind(caption, 'caption') : sticker ? 'Sticker' : image ? 'Image' : 'Face swap';
-    const name = caption ? (caption.text || '').replace(/\s+/g, ' ').trim() : '';
+    const kind = caption ? captionKind(caption) : sticker ? 'Sticker' : image ? 'Image' : 'Face swap';
+    const name = caption ? (caption.text || '').replace(/\s+/g, ' ').trim() : sticker ? (sticker.name || sticker.emoji || '') : '';
     return (
-      <div className="ie-island-wrap">
+      <div className="ie-deck">
         <div className="ie-inspector" role="toolbar" aria-label="Layer tools">
           <div className="ie-inspector-head">
-            <span className="ie-inspector-kind">{kind}</span>
+            <span className="ie-inspector-kind">{kind} Studio</span>
             {name && <span className="ie-inspector-name">{name}</span>}
             {activeLayerId && (
               <button type="button" className="ie-inspector-done" onClick={() => setActiveLayerId(null)}>
-                <Check size={16} strokeWidth={2.6} />
+                <Check size={13} strokeWidth={3} />
                 <span>Done</span>
               </button>
             )}
@@ -89,13 +92,21 @@ export default function EditorSidebar({ handleTabClick, toolHandlers, layerTools
 
   if (drawing) {
     return (
-      <div className="ie-island-wrap">
-        <div className="ie-island ie-island--tools" role="toolbar" aria-label="Drawing tools">
-          <Item Icon={Check} label="Done" className="ie-island-done" onClick={stopDrawing} />
-          <span className="ie-island-divider" aria-hidden="true" />
-          <div className="ie-island-scroll">
+      <div className="ie-deck">
+        <div className="ie-inspector" role="toolbar" aria-label="Drawing tools">
+          <div className="ie-inspector-head">
+            <span className="ie-inspector-kind">Draw Studio</span>
+            <button type="button" className="ie-inspector-done" onClick={stopDrawing}>
+              <Check size={13} strokeWidth={3} />
+              <span>Done</span>
+            </button>
+          </div>
+          <div className="ie-chips">
             {tools.draw.map((t) => (
-              <Item key={t.id} Icon={t.Icon} label={t.label} on={drawTool === t.id} title={t.title} aria-pressed={drawTool === t.id} onClick={t.onClick} />
+              <button key={t.id} type="button" className={`ie-chip${drawTool === t.id ? ' is-fill-coral' : ''}`} title={t.title} aria-pressed={drawTool === t.id} onClick={t.onClick}>
+                <t.Icon size={14} style={{ color: drawTool === t.id ? '#fff' : '#ff5e36' }} />
+                <span>{t.label}</span>
+              </button>
             ))}
           </div>
         </div>
@@ -103,20 +114,66 @@ export default function EditorSidebar({ handleTabClick, toolHandlers, layerTools
     );
   }
 
+  const upload = tool('images', 'upload');
   return (
-    <div className="ie-island-wrap">
-      <nav className="ie-island" aria-label="Editor tools">
-        <Item Icon={Type} label="Text" title="Add Text Caption" onClick={() => run('text', tool('text', 'add-text'))} />
-        <Item Icon={Sticker} label="Stickers" title="Add Meme Stickers" onClick={() => run('images', tool('images', 'stickers'))} />
-        <div className="ie-island-plus-wrap">
-          <button type="button" className="ie-island-plus" onClick={() => setSheetOpen(true)} aria-label="Add anything" aria-haspopup="dialog" title="Add anything">
-            <Plus size={24} strokeWidth={2.6} />
+    <div className="ie-deck">
+      <div className="ie-chips" role="toolbar" aria-label="Quick tools">
+        {CHIPS.map(([section, id, label, color, fill]) => {
+          const t = tool(section, id);
+          if (!t) return null;
+          const filled = fill && t.active;
+          return (
+            <button
+              key={id}
+              type="button"
+              className={`ie-chip${filled ? ` is-fill-${fill}` : ''}`}
+              title={t.title}
+              aria-pressed={Boolean(t.active)}
+              onClick={() => run(section, t)}
+            >
+              <t.Icon size={14} style={{ color: filled ? 'currentColor' : color }} />
+              <span>{label || t.label}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      <nav className="ie-trigger" aria-label="Editor tools">
+        <div className="ie-trigger-side">
+          <button type="button" className="ie-trigger-pill" title="AI Meme Captions" onClick={() => run('text', tool('text', 'ai'))}>
+            <Sparkles size={14} style={{ color: '#ff5e36' }} />
+            <span>AI Roast</span>
+          </button>
+          <label className="ie-trigger-square" title={upload.title} aria-label="Add a photo or video">
+            <ImagePlus size={17} />
+            <input type="file" accept={upload.accept} hidden onChange={(e) => { run('images', upload); upload.onFile(e); }} />
+          </label>
+        </div>
+
+        <button
+          type="button"
+          className={`ie-nucleus${orbitOpen ? ' is-open' : ''}`}
+          onClick={() => setOrbitOpen((v) => !v)}
+          aria-label="Add anything"
+          aria-haspopup="dialog"
+          aria-expanded={orbitOpen}
+          title="Add anything"
+        >
+          <Plus size={24} strokeWidth={2.6} />
+        </button>
+
+        <div className="ie-trigger-side ie-trigger-side--end">
+          <button type="button" className="ie-trigger-square" title="Draw on the meme" aria-label="Draw" onClick={() => run('draw', tool('draw', 'brush'))}>
+            <Paintbrush size={17} />
+          </button>
+          <button type="button" className="ie-trigger-pill" title="Photo Filters" onClick={() => run('filters', tool('filters', 'photo-filters'))}>
+            <SlidersHorizontal size={14} />
+            <span>Filters</span>
           </button>
         </div>
-        <Item Icon={PencilLine} label="Draw" title="Draw on the meme" onClick={() => run('draw', tool('draw', 'brush'))} />
-        <Item Icon={Sun} label="Filters" title="Photo Filters" onClick={() => run('filters', tool('filters', 'photo-filters'))} />
       </nav>
-      {sheetOpen && <AddAnythingSheet tools={tools} onPick={run} onClose={() => setSheetOpen(false)} />}
+
+      {orbitOpen && <OrbitOverlay tools={tools} onPick={run} onClose={() => setOrbitOpen(false)} />}
     </div>
   );
 }

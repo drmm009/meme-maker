@@ -76,14 +76,14 @@ const captionTexts = () => screen.queryAllByTestId('caption').map((el) => el.tex
 const deselect = () => act(() => canvas.props.onSelectLayer(null));
 const undoButton = () => screen.getByTitle('Undo');
 const redoButton = () => screen.getByTitle('Redo');
-// The bottom bar has shortcuts and a "+" that opens a searchable sheet with every tool.
+// The bottom deck: quick chips over a trigger bar whose "+" opens a command palette and orbit.
 const bar = () => screen.getByRole('navigation', { name: 'Editor tools' });
 const openSheet = () => fireEvent.click(screen.getByLabelText('Add anything'));
 const pickFromSheet = (title) => {
   openSheet();
   fireEvent.click(within(screen.getByRole('dialog', { name: 'Add anything' })).getByTitle(title));
 };
-const addTextFromMenu = () => fireEvent.click(within(bar()).getByTitle('Add Text Caption'));
+const addTextFromMenu = () => fireEvent.click(within(screen.getByRole('toolbar', { name: 'Quick tools' })).getByTitle('Add Text Caption'));
 
 function renderEditor(template = TEMPLATE, onSaveToGallery = vi.fn()) {
   return render(<MemeEditor template={template} onBack={vi.fn()} onSaveToGallery={onSaveToGallery} />);
@@ -164,7 +164,7 @@ describe('MemeEditor', () => {
     expect(captionTexts()).toHaveLength(4);
   }, 30000);
 
-  it('lists every tool in the + sheet and filters it by search', () => {
+  it('lists every tool in the + palette and filters it by search', () => {
     renderEditor();
     openSheet();
     const sheet = screen.getByRole('dialog', { name: 'Add anything' });
@@ -182,16 +182,31 @@ describe('MemeEditor', () => {
     renderEditor();
     addTextFromMenu();
     const card = screen.getByRole('toolbar', { name: 'Layer tools' });
-    expect(within(card).getByText('Text')).toBeTruthy();
+    expect(within(card).getByText('Text Studio')).toBeTruthy();
     expect(within(card).getByText('NEW TEXT')).toBeTruthy();
     fireEvent.click(within(card).getByText('Done'));
     expect(canvas.props.activeLayerId).toBe(null);
     expect(bar()).toBeTruthy();
   }, 30000);
 
+  it('toggles deep-fry and the top band from the quick chips', () => {
+    renderEditor();
+    const chips = screen.getByRole('toolbar', { name: 'Quick tools' });
+    const deepFry = within(chips).getByTitle('Deep-fried filter');
+    const topBand = within(chips).getByTitle('White band above the meme');
+    expect(deepFry.getAttribute('aria-pressed')).toBe('false');
+    fireEvent.click(deepFry);
+    expect(within(chips).getByTitle('Deep-fried filter').getAttribute('aria-pressed')).toBe('true');
+    fireEvent.click(within(chips).getByTitle('Deep-fried filter'));
+    expect(within(chips).getByTitle('Deep-fried filter').getAttribute('aria-pressed')).toBe('false');
+    // Turning the band on adds its caption and selects it, so the inspector card opens.
+    fireEvent.click(topBand);
+    expect(within(screen.getByRole('toolbar', { name: 'Layer tools' })).getByText(/solve the bug/)).toBeTruthy();
+  }, 30000);
+
   it('draws from the Draw shortcut and stops on Done', () => {
     renderEditor();
-    fireEvent.click(within(bar()).getByText('Draw'));
+    fireEvent.click(within(bar()).getByLabelText('Draw'));
     expect(canvas.props.isDrawingMode).toBe(true);
     expect(canvas.props.drawTool).toBe('brush');
     fireEvent.click(within(screen.getByRole('toolbar', { name: 'Drawing tools' })).getByText('Marker'));
@@ -222,7 +237,7 @@ describe('MemeEditor', () => {
     expect(onSave.mock.calls[0][0].captions.map((c) => c.text)).toEqual(['TOP TEXT', 'BOTTOM TEXT']);
   }, 30000);
 
-  it('flips the canvas from the + sheet', () => {
+  it('flips the canvas from the + palette', () => {
     renderEditor();
     expect(canvas.props.canvasFlipX).toBeFalsy();
     pickFromSheet('Flip Canvas Horizontal');

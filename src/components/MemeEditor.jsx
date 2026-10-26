@@ -425,7 +425,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, _theme, _onToggl
       {/* Tab dock */}
       <EditorSidebar
         handleTabClick={handleTabClick}
-        toolHandlers={{ handleAddBubble, handleAddCaption, handleFileUploadImageLayer, handleToggleCanvasFlip, setShowFaceMorphModal }}
+        toolHandlers={{ handleAddBubble, handleAddCaption, handleFileUploadImageLayer, handleToggleCanvasFlip, handleToggleCanvasHeader, handleRemoveBackground, setShowFaceMorphModal }}
         layerTools={(
           <ContextToolbar
             handleUpdateTemplateMorphProgress={handleUpdateTemplateMorphProgress}
