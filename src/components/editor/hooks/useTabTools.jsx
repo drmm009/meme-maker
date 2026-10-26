@@ -3,7 +3,7 @@ import { useMemeEditorStore } from '../store/useMemeEditorStore';
 import { useEditorUiStore } from '../store/useEditorUiStore';
 
 // The editor's tools by section (the editor's activeTab), shown in the island when a section is open.
-// Each tool: { id, label, title, Icon, active?, onClick } or, for file pickers, { accept, onFile }.
+// Each tool: { id, label, title, keywords, Icon, active?, onClick } or, for file pickers, { accept, onFile }.
 export function useTabTools({
   handleAddBubble,
   handleAddCaption,
@@ -38,30 +38,30 @@ export function useTabTools({
 
   return {
     text: [
-      { id: 'add-text', label: 'Add Text', title: 'Add Text Caption', Icon: Plus, onClick: handleAddCaption },
-      { id: 'ai', label: 'AI Captions', title: 'AI Meme Captions', Icon: WandSparkles, onClick: () => setShowAiModal(true) },
-      { id: 'bubble', label: 'Bubble', title: 'Add Chat & Speech Bubble', Icon: MessageSquareQuote, active: showBubbleBottomSheet, onClick: () => { handleAddBubble(); setShowBubbleBottomSheet(true); setActiveSubmenu(null); } },
-      { id: 'banner', label: 'Header/Footer', title: 'Header & Footer bands', Icon: Rows3, active: canvasHeader.enabled || canvasFooter.enabled || activeSubmenu === 'banner', onClick: () => toggleSubmenu('banner') },
+      { id: 'add-text', keywords: 'caption impact words top bottom', label: 'Add Text', title: 'Add Text Caption', Icon: Plus, onClick: handleAddCaption },
+      { id: 'ai', keywords: 'generate funny caption gemini roast', label: 'AI Captions', title: 'AI Meme Captions', Icon: WandSparkles, onClick: () => setShowAiModal(true) },
+      { id: 'bubble', keywords: 'chat speech imessage whatsapp comic tweet instagram social card', label: 'Bubble', title: 'Add Chat & Speech Bubble', Icon: MessageSquareQuote, active: showBubbleBottomSheet, onClick: () => { handleAddBubble(); setShowBubbleBottomSheet(true); setActiveSubmenu(null); } },
+      { id: 'banner', keywords: 'white band top bottom header footer', label: 'Header/Footer', title: 'Header & Footer bands', Icon: Rows3, active: canvasHeader.enabled || canvasFooter.enabled || activeSubmenu === 'banner', onClick: () => toggleSubmenu('banner') },
     ],
     images: [
-      { id: 'stickers', label: 'Stickers', title: 'Add Meme Stickers', Icon: Sticker, onClick: () => setShowMemeStickersModal(true) },
-      { id: 'emojis', label: 'Emojis', title: 'Add Emojis', Icon: Smile, onClick: () => setShowEmojiModal(true) },
-      { id: 'upload', label: 'Photo', title: 'Upload Image or Video', Icon: ImagePlus, accept: 'image/*,video/*', onFile: handleFileUploadImageLayer },
-      { id: 'template', label: 'Template', title: 'Add Image from Templates', Icon: LayoutTemplate, onClick: () => setImagePickerTarget('layer') },
+      { id: 'stickers', keywords: 'meme sticker', label: 'Stickers', title: 'Add Meme Stickers', Icon: Sticker, onClick: () => setShowMemeStickersModal(true) },
+      { id: 'emojis', keywords: 'emoji smiley', label: 'Emojis', title: 'Add Emojis', Icon: Smile, onClick: () => setShowEmojiModal(true) },
+      { id: 'upload', keywords: 'image video photo gallery layer', label: 'Photo', title: 'Upload Image or Video', Icon: ImagePlus, accept: 'image/*,video/*', onFile: handleFileUploadImageLayer },
+      { id: 'template', keywords: 'meme image layer', label: 'Template', title: 'Add Image from Templates', Icon: LayoutTemplate, onClick: () => setImagePickerTarget('layer') },
     ],
     draw: [
-      { id: 'brush', label: 'Brush', title: 'Brush: solid stroke', Icon: Brush, active: drawTool === 'brush', onClick: () => pickDrawTool('brush') },
-      { id: 'highlighter', label: 'Marker', title: 'Marker: translucent highlighter', Icon: Highlighter, active: drawTool === 'highlighter', onClick: () => pickDrawTool('highlighter') },
-      { id: 'glow', label: 'Glow', title: 'Glow: neon stroke', Icon: SunMedium, active: drawTool === 'glow', onClick: () => pickDrawTool('glow') },
+      { id: 'brush', keywords: 'draw pen paint', label: 'Brush', title: 'Brush: solid stroke', Icon: Brush, active: drawTool === 'brush', onClick: () => pickDrawTool('brush') },
+      { id: 'highlighter', keywords: 'draw marker highlight', label: 'Marker', title: 'Marker: translucent highlighter', Icon: Highlighter, active: drawTool === 'highlighter', onClick: () => pickDrawTool('highlighter') },
+      { id: 'glow', keywords: 'draw neon', label: 'Glow', title: 'Glow: neon stroke', Icon: SunMedium, active: drawTool === 'glow', onClick: () => pickDrawTool('glow') },
     ],
     filters: [
-      { id: 'face-swap', label: 'Face Swap', title: 'Swap faces with another photo using AI', Icon: ScanFace, onClick: () => setShowFaceMorphModal(true) },
-      { id: 'photo-filters', label: 'Filters', title: 'Photo Filters', Icon: Sun, active: showFiltersModal, onClick: () => setShowFiltersModal(true) },
+      { id: 'face-swap', keywords: 'face swap morph ai', label: 'Face Swap', title: 'Swap faces with another photo using AI', Icon: ScanFace, onClick: () => setShowFaceMorphModal(true) },
+      { id: 'photo-filters', keywords: 'filter deep fry adjust brightness', label: 'Filters', title: 'Photo Filters', Icon: Sun, active: showFiltersModal, onClick: () => setShowFiltersModal(true) },
     ],
     canvas: [
-      { id: 'canvas-bg', label: 'Color', title: 'Canvas Color', Icon: CanvasSwatch, active: activeSubmenu === 'canvasBg', onClick: () => toggleSubmenu('canvasBg') },
-      { id: 'flip', label: 'Flip', title: 'Flip Canvas Horizontal', Icon: FlipHorizontal, onClick: handleToggleCanvasFlip },
-      { id: 'watermark', label: 'Watermark', title: 'Watermark Settings', Icon: Droplet, active: activeSubmenu === 'watermark' || watermarkOn, onClick: () => { if (!watermark?.enabled) updateWatermark('enabled', true); toggleSubmenu('watermark'); } },
+      { id: 'canvas-bg', keywords: 'background colour color', label: 'Color', title: 'Canvas Color', Icon: CanvasSwatch, active: activeSubmenu === 'canvasBg', onClick: () => toggleSubmenu('canvasBg') },
+      { id: 'flip', keywords: 'mirror flip canvas', label: 'Flip', title: 'Flip Canvas Horizontal', Icon: FlipHorizontal, onClick: handleToggleCanvasFlip },
+      { id: 'watermark', keywords: 'logo username signature', label: 'Watermark', title: 'Watermark Settings', Icon: Droplet, active: activeSubmenu === 'watermark' || watermarkOn, onClick: () => { if (!watermark?.enabled) updateWatermark('enabled', true); toggleSubmenu('watermark'); } },
     ],
   };
 }

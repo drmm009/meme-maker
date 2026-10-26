@@ -4,7 +4,7 @@
 // passes it, so these tests assert on editor state rather than pixels.
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import React from 'react';
-import { render, screen, fireEvent, cleanup, act } from '@testing-library/react';
+import { render, screen, fireEvent, cleanup, act, within } from '@testing-library/react';
 
 const canvas = { props: null };
 
@@ -76,17 +76,14 @@ const captionTexts = () => screen.queryAllByTestId('caption').map((el) => el.tex
 const deselect = () => act(() => canvas.props.onSelectLayer(null));
 const undoButton = () => screen.getByTitle('Undo');
 const redoButton = () => screen.getByTitle('Redo');
-// The island shows sections; a section swaps in its tools with a Back button.
-const backButton = () => screen.queryByLabelText('Back to sections');
-const openTab = (label) => {
-  if (backButton()) fireEvent.click(backButton());
-  const nav = screen.getByRole('navigation', { name: 'Editor sections' });
-  fireEvent.click([...nav.querySelectorAll('button')].find((b) => b.textContent === label));
+// The bottom bar has shortcuts and a "+" that opens a searchable sheet with every tool.
+const bar = () => screen.getByRole('navigation', { name: 'Editor tools' });
+const openSheet = () => fireEvent.click(screen.getByLabelText('Add anything'));
+const pickFromSheet = (title) => {
+  openSheet();
+  fireEvent.click(within(screen.getByRole('dialog', { name: 'Add anything' })).getByTitle(title));
 };
-const addTextFromMenu = () => {
-  if (!screen.queryByTitle('Add Text Caption')) openTab('Text');
-  fireEvent.click(screen.getByTitle('Add Text Caption'));
-};
+const addTextFromMenu = () => fireEvent.click(within(bar()).getByTitle('Add Text Caption'));
 
 function renderEditor(template = TEMPLATE, onSaveToGallery = vi.fn()) {
   return render(<MemeEditor template={template} onBack={vi.fn()} onSaveToGallery={onSaveToGallery} />);
@@ -167,32 +164,39 @@ describe('MemeEditor', () => {
     expect(captionTexts()).toHaveLength(4);
   }, 30000);
 
-  it('opens each section in the island and goes back', () => {
+  it('lists every tool in the + sheet and filters it by search', () => {
     renderEditor();
-    for (const label of ['Draw', 'Media', 'Text', 'AI', 'Canvas']) {
-      openTab(label);
-      expect(screen.getByRole('navigation', { name: `${label} tools` })).toBeTruthy();
-      fireEvent.click(backButton());
-      expect(screen.getByRole('navigation', { name: 'Editor sections' })).toBeTruthy();
+    openSheet();
+    const sheet = screen.getByRole('dialog', { name: 'Add anything' });
+    for (const title of ['Add Text Caption', 'AI Meme Captions', 'Add Meme Stickers', 'Photo Filters', 'Watermark Settings', 'Brush: solid stroke']) {
+      expect(within(sheet).getByTitle(title), title).toBeTruthy();
     }
+    fireEvent.change(within(sheet).getByLabelText('Search tools'), { target: { value: 'tweet' } });
+    expect(within(sheet).getByTitle('Add Chat & Speech Bubble')).toBeTruthy();
+    expect(within(sheet).queryByTitle('Watermark Settings')).toBeNull();
+    fireEvent.change(within(sheet).getByLabelText('Search tools'), { target: { value: 'zzz' } });
+    expect(within(sheet).getByText(/No tool matches/)).toBeTruthy();
   }, 30000);
 
-  it('swaps a selected layer’s tools into the island with Done', () => {
+  it('shows an inspector card for the selected layer with Done', () => {
     renderEditor();
     addTextFromMenu();
-    expect(screen.getByRole('toolbar', { name: 'Layer tools' })).toBeTruthy();
-    fireEvent.click(screen.getByText('Done'));
+    const card = screen.getByRole('toolbar', { name: 'Layer tools' });
+    expect(within(card).getByText('Text')).toBeTruthy();
+    expect(within(card).getByText('NEW TEXT')).toBeTruthy();
+    fireEvent.click(within(card).getByText('Done'));
     expect(canvas.props.activeLayerId).toBe(null);
-    expect(screen.getByRole('navigation', { name: 'Text tools' })).toBeTruthy();
+    expect(bar()).toBeTruthy();
   }, 30000);
 
-  it('turns on drawing mode on the Draw tab', () => {
+  it('draws from the Draw shortcut and stops on Done', () => {
     renderEditor();
-    openTab('Draw');
+    fireEvent.click(within(bar()).getByText('Draw'));
     expect(canvas.props.isDrawingMode).toBe(true);
     expect(canvas.props.drawTool).toBe('brush');
-    // Going back to the sections stops drawing.
-    fireEvent.click(backButton());
+    fireEvent.click(within(screen.getByRole('toolbar', { name: 'Drawing tools' })).getByText('Marker'));
+    expect(canvas.props.drawTool).toBe('highlighter');
+    fireEvent.click(screen.getByText('Done'));
     expect(canvas.props.isDrawingMode).toBe(false);
   }, 30000);
 
@@ -218,11 +222,10 @@ describe('MemeEditor', () => {
     expect(onSave.mock.calls[0][0].captions.map((c) => c.text)).toEqual(['TOP TEXT', 'BOTTOM TEXT']);
   }, 30000);
 
-  it('flips the canvas from the Canvas tab', () => {
+  it('flips the canvas from the + sheet', () => {
     renderEditor();
-    openTab('Canvas');
     expect(canvas.props.canvasFlipX).toBeFalsy();
-    fireEvent.click(screen.getAllByTitle(/Flip (Canvas|base template) Horizontal/i)[0]);
+    pickFromSheet('Flip Canvas Horizontal');
     expect(canvas.props.canvasFlipX).toBe(true);
   }, 30000);
 });
