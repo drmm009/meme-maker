@@ -179,7 +179,16 @@ Phases, each its own commit with the same checks (tests, lint baseline, build, b
      - a watermark, and a whole-meme black-and-white filter
 
      Also checked: a 2×2 multi-panel layout. No errors. Snapping guides only show mid-drag and weren't captured.
-   - Still to do: unit tests with a recording fake context. The painters now take plain inputs, so this is feasible.
+   - Painter tests (done later): `canvas/testing/recordingContext.js` is a fake 2D context. It records each call with the canvas position it lands on (it tracks translate, rotate and scale) and the colour, font, opacity and dash in force.
+     - `render/paintCaption.test.js`, `paintLayers.test.js` and `paintScene.test.js` cover:
+       - caption wrapping, stroke, opacity, rotation, alignment, backgrounds, contrast flips and banners
+       - stickers, and image layers in fit, stretch and crop
+       - z-order
+       - the base image (contain, cover, stretch, flip, demotivational, multi-panel)
+       - bands, drawings, the watermark and snap guides
+       - a full renderScene pass, and the clean export without handles
+     - They also check that each selection box is drawn exactly where the hit tests put it.
+     - To check the tests themselves, five deliberate painter bugs were introduced one at a time, and each made a test fail.
 10. **Extract interaction.** *Done:* the pointer handlers and their drag state are in `src/components/canvas/interaction/useCanvasInteraction.js` (1,479 lines).
     - Pure geometry is in `geometry.js`, with tests:
       - `rotatePoint`
