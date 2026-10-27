@@ -1,8 +1,26 @@
 // Freehand drawing: a stroke is started on pointer down and painted straight onto the canvas as
 // the pointer moves (no React render per point); it is saved to the store on release.
+import type { Point } from './geometry';
+
+export type DrawTool = 'brush' | 'highlighter' | 'glow' | 'eraser';
+
+export interface Stroke {
+  id: string;
+  type: string;
+  mode: 'pen' | 'highlighter' | 'glow' | 'eraser';
+  color: string;
+  size: number;
+  points: Point[];
+}
 
 // A new stroke at `point`. The eraser paints in the canvas background colour.
-export function startStroke({ drawTool, canvasBgColor, brushColor, brushSize, point }) {
+export function startStroke({ drawTool, canvasBgColor, brushColor, brushSize, point }: {
+  drawTool: DrawTool | string | null | undefined;
+  canvasBgColor?: string;
+  brushColor: string;
+  brushSize: number;
+  point: Point;
+}): Stroke {
   const isEraser = drawTool === 'eraser';
   return {
     id: `brush-${Date.now()}`,
@@ -14,7 +32,7 @@ export function startStroke({ drawTool, canvasBgColor, brushColor, brushSize, po
   };
 }
 
-const applyStrokeStyle = (ctx, stroke) => {
+const applyStrokeStyle = (ctx: CanvasRenderingContext2D, stroke: Stroke) => {
   if (stroke.mode === 'highlighter') {
     ctx.globalAlpha = 0.45;
   } else if (stroke.mode === 'glow') {
@@ -24,7 +42,7 @@ const applyStrokeStyle = (ctx, stroke) => {
 };
 
 // The dot shown as soon as the pointer goes down.
-export function paintStrokeDot(ctx, stroke, point) {
+export function paintStrokeDot(ctx: CanvasRenderingContext2D, stroke: Stroke, point: Point): void {
   ctx.save();
   ctx.fillStyle = stroke.color;
   applyStrokeStyle(ctx, stroke);
@@ -34,7 +52,7 @@ export function paintStrokeDot(ctx, stroke, point) {
   ctx.restore();
 }
 
-export function paintStrokeSegment(ctx, stroke, from, to) {
+export function paintStrokeSegment(ctx: CanvasRenderingContext2D, stroke: Stroke, from: Point, to: Point): void {
   ctx.save();
   ctx.strokeStyle = stroke.color;
   ctx.lineWidth = stroke.size;

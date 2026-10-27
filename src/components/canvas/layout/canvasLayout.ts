@@ -1,3 +1,4 @@
+import type { MemeCaption } from '../../../model/memeDocument';
 import { wrapText } from '../draw/text';
 import { getWhatsAppCardHeight } from '../draw/socialCards/whatsapp';
 
@@ -5,14 +6,18 @@ import { getWhatsAppCardHeight } from '../draw/socialCards/whatsapp';
 // consistent relative to the canvas across aspect ratios, and huge originals stay cheap.
 export const CANVAS_MAX_DIM = 1080;
 
-const ASPECT_SIZES = {
+const ASPECT_SIZES: Record<string, [number, number]> = {
   '16:9': [1920, 1080],
   '9:16': [1080, 1920],
   '4:5': [1080, 1350],
 };
 
 // Image-area size in canvas pixels for an aspect ratio ('original' follows the template or loaded image).
-export function getCanvasSize(aspectRatio, template, naturalSize) {
+export function getCanvasSize(
+  aspectRatio: string,
+  template: { width?: number; height?: number } | null | undefined,
+  naturalSize: { w: number; h: number }
+): { canvasW: number; canvasH: number } {
   let rawW = 1080;
   let rawH = 1080;
   if (ASPECT_SIZES[aspectRatio]) {
@@ -29,7 +34,7 @@ export function getCanvasSize(aspectRatio, template, naturalSize) {
   };
 }
 
-let measureCtx = null;
+let measureCtx: CanvasRenderingContext2D | null = null;
 const getMeasureCtx = () => {
   if (!measureCtx && typeof document !== 'undefined') {
     measureCtx = document.createElement('canvas').getContext('2d');
@@ -37,9 +42,21 @@ const getMeasureCtx = () => {
   return measureCtx;
 };
 
+// A header or footer band: on or off, and its height when it has no caption.
+export interface Band {
+  enabled?: boolean;
+  height?: number;
+  bgColor?: string;
+}
+
 // Height of the header or footer band added above/below the image: tall enough for its
 // caption's wrapped text, or the band's own height when it has no caption. 0 when disabled.
-export function getBandHeight(band, cap, canvasW, ctx = getMeasureCtx()) {
+export function getBandHeight(
+  band: Band | null | undefined,
+  cap: Pick<MemeCaption, 'fontSize' | 'fontFamily' | 'text' | 'width'> | null | undefined,
+  canvasW: number,
+  ctx: CanvasRenderingContext2D | null = getMeasureCtx()
+): number {
   if (!band?.enabled) return 0;
   if (!cap) return band.height || 140;
   const fontSize = cap.fontSize || 50;
@@ -55,9 +72,22 @@ export function getBandHeight(band, cap, canvasW, ctx = getMeasureCtx()) {
   return Math.max(110, Math.round(linesCount * lineHeight + padY * 2));
 }
 
+// What placing a caption vertically needs (a caption, or a hit on one).
+export type CaptionPlacement = Partial<Pick<MemeCaption, 'width' | 'isHeaderCaption' | 'isFooterCaption' | 'hasCustomPos' | 'isWhatsAppCard'>> & { y?: number };
+
+// A canvas as the centre helpers read it (a real <canvas>, or a stand-in in tests).
+type MeasuredCanvas = { width: number; height: number; getContext?: (kind: '2d') => CanvasRenderingContext2D | null };
+
 // Layer centre Y in canvas pixels. Layer y is 0..1 of the image area, which sits below the header band.
-export function makeLayerCenters({ canvasRef, canvasW, canvasH, headerExtH, footerExtH, totalCanvasH }) {
-  const getCaptionCenterY = (cap, customCanvas = null) => {
+export function makeLayerCenters({ canvasRef, canvasW, canvasH, headerExtH, footerExtH, totalCanvasH }: {
+  canvasRef: { current: MeasuredCanvas | null };
+  canvasW: number;
+  canvasH: number;
+  headerExtH: number;
+  footerExtH: number;
+  totalCanvasH: number;
+}) {
+  const getCaptionCenterY = (cap: CaptionPlacement | null | undefined, customCanvas: MeasuredCanvas | null = null): number => {
     if (!cap) return 0;
     const activeCanvas = customCanvas || canvasRef.current;
     if (cap.isHeaderCaption) {
@@ -88,9 +118,9 @@ export function makeLayerCenters({ canvasRef, canvasW, canvasH, headerExtH, foot
     return rawY;
   };
 
-  const getStickerCenterY = (stk) => headerExtH + ((stk?.y) || 0) * canvasH;
+  const getStickerCenterY = (stk: { y?: number } | null | undefined): number => headerExtH + ((stk?.y) || 0) * canvasH;
 
-  const getImageLayerCenterY = (img) => headerExtH + ((img?.y) || 0) * canvasH;
+  const getImageLayerCenterY = (img: { y?: number } | null | undefined): number => headerExtH + ((img?.y) || 0) * canvasH;
 
   return { getCaptionCenterY, getStickerCenterY, getImageLayerCenterY };
 }

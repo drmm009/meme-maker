@@ -2,20 +2,82 @@
 // header/footer band. Each returns a hit describing the layer as it was when the drag started,
 // or null. `scene` holds the canvas, its 2D context, the layers, the image cache and the
 // centre-y helpers from canvasLayout.
+import type { CropRect, LoadedImage, MemeCaption, MemeImageLayer, MemeSticker } from '../../../model/memeDocument';
 import { getStickerBoxSize, isInBox, rotatePoint } from './geometry';
+import type { Point } from './geometry';
 import {
   findHandle, getCaptionBox, getCaptionCenterX, getCaptionHandles, getImageLayerBox,
   getImageLayerHandles, getStickerHandles
 } from './layerBoxes';
+import type { HandleType } from './layerBoxes';
+
+// The canvas as hit testing sees it (a real <canvas>, or a stand-in in tests).
+export interface SceneCanvas {
+  width: number;
+  height: number;
+  getBoundingClientRect?: () => { width: number };
+}
+
+export interface HitScene {
+  canvas: SceneCanvas;
+  ctx: CanvasRenderingContext2D | null;
+  captions: MemeCaption[];
+  stickers: MemeSticker[];
+  imageLayers: MemeImageLayer[];
+  imageCache: Record<string, LoadedImage | undefined>;
+  getCaptionCenterY: (cap: MemeCaption, canvas?: SceneCanvas | null) => number;
+  getStickerCenterY: (stk: MemeSticker) => number;
+  getImageLayerCenterY: (img: MemeImageLayer) => number;
+}
+
+// A grabbed layer or handle, with what dragging it needs from the moment it was grabbed.
+export interface LayerHit {
+  id: string;
+  type: HandleType | 'sticker' | 'caption' | 'imageLayer';
+  x: number;
+  y: number;
+  scale?: number;
+  rotation?: number;
+  locked?: boolean;
+  isHeaderCaption?: boolean;
+  isFooterCaption?: boolean;
+  hasCustomPos?: boolean;
+  boxWidth?: number;
+  boxHeight?: number;
+  width?: number;
+  height?: number;
+  fontSize?: number;
+  initialFontSize?: number;
+  initialWidth?: number;
+  initialBoxWidth?: number;
+  initialBoxHeight?: number;
+  initialDist?: number;
+  handleRelX?: number;
+  handleRelY?: number;
+  hasCustomWidth?: boolean;
+  baseW?: number;
+  baseH?: number;
+  fitScale?: number;
+  crop?: CropRect;
+  fitMode?: MemeImageLayer['fitMode'];
+}
+
+// Header/footer band geometry for hitBandCaption and the hover cursor.
+export interface Bands {
+  isHeaderEnabled: boolean;
+  isFooterEnabled: boolean;
+  headerExtH: number;
+  canvasH: number;
+}
 
 // Canvas pixels per screen pixel, so handles stay big enough to touch however the canvas is scaled.
-const getScreenScale = (canvas) => (canvas.getBoundingClientRect
+const getScreenScale = (canvas: SceneCanvas) => (canvas.getBoundingClientRect
   ? canvas.width / Math.max(1, canvas.getBoundingClientRect().width)
   : 2.5);
 
 // The selected layer's handle under `coords`. `hover` uses the smaller caption radii the cursor
 // feedback uses. Locked layers have no handles.
-export function hitActiveHandle(scene, coords, activeLayerId, { hover = false } = {}) {
+export function hitActiveHandle(scene: HitScene, coords: Point, activeLayerId: string | null | undefined, { hover = false }: { hover?: boolean } = {}): LayerHit | null {
   const { canvas, ctx, captions, stickers, imageLayers, imageCache } = scene;
   if (!activeLayerId) return null;
 
@@ -97,7 +159,7 @@ export function hitActiveHandle(scene, coords, activeLayerId, { hover = false } 
 }
 
 // Is `coords` on the selected layer's body (where a drag moves it)? Locked layers aren't movable.
-export function isOnActiveBody(scene, coords, activeLayerId) {
+export function isOnActiveBody(scene: HitScene, coords: Point, activeLayerId: string | null | undefined): boolean {
   const { canvas, ctx, captions, stickers, imageLayers, imageCache } = scene;
   if (!activeLayerId) return false;
 
@@ -128,7 +190,7 @@ export function isOnActiveBody(scene, coords, activeLayerId) {
   return false;
 }
 
-const hitSticker = (scene, stk, coords) => {
+const hitSticker = (scene: HitScene, stk: MemeSticker, coords: Point): LayerHit | null => {
   const cx = stk.x * scene.canvas.width;
   const cy = scene.getStickerCenterY(stk);
   const size = getStickerBoxSize(stk);
@@ -137,7 +199,7 @@ const hitSticker = (scene, stk, coords) => {
   return { id: stk.id, type: 'sticker', x: stk.x, y: stk.y, scale: stk.scale || 1.0, rotation: stk.rotation || 0, locked: !!stk.locked };
 };
 
-const hitCaption = (scene, cap, coords) => {
+const hitCaption = (scene: HitScene, cap: MemeCaption, coords: Point): LayerHit | null => {
   const { canvas, ctx } = scene;
   const cx = getCaptionCenterX(cap, canvas.width);
   const cy = scene.getCaptionCenterY(cap, canvas);
@@ -175,7 +237,7 @@ const hitCaption = (scene, cap, coords) => {
   };
 };
 
-const hitImageLayer = (scene, img, coords) => {
+const hitImageLayer = (scene: HitScene, img: MemeImageLayer, coords: Point): LayerHit | null => {
   const cached = scene.imageCache[img.url];
   if (!cached) return null;
   const cx = img.x * scene.canvas.width;
@@ -203,24 +265,23 @@ const hitImageLayer = (scene, img, coords) => {
 
 // The topmost visible layer under `coords` (highest zIndex first; on a tie, image layers, then
 // stickers, then captions). Captions need a 2D context to measure, so they're skipped without one.
-export function hitLayerAt(scene, coords) {
-  const layers = [
-    ...(scene.imageLayers || []).map((l) => ({ layer: l, hit: hitImageLayer })),
-    ...(scene.stickers || []).map((l) => ({ layer: l, hit: hitSticker })),
-    ...(scene.captions || []).map((l) => ({ layer: l, hit: hitCaption }))
+export function hitLayerAt(scene: HitScene, coords: Point): LayerHit | null {
+  const layers: { layer: { zIndex?: number; hidden?: boolean }; test: () => LayerHit | null }[] = [
+    ...(scene.imageLayers || []).map((l) => ({ layer: l, test: () => hitImageLayer(scene, l, coords) })),
+    ...(scene.stickers || []).map((l) => ({ layer: l, test: () => hitSticker(scene, l, coords) })),
+    ...(scene.captions || []).map((l) => ({ layer: l, test: () => (scene.ctx ? hitCaption(scene, l, coords) : null) }))
   ];
   layers.sort((a, b) => (b.layer.zIndex ?? 0) - (a.layer.zIndex ?? 0));
-  for (const { layer, hit } of layers) {
+  for (const { layer, test } of layers) {
     if (layer.hidden) continue;
-    if (hit === hitCaption && !scene.ctx) continue;
-    const result = hit(scene, layer, coords);
+    const result = test();
     if (result) return result;
   }
   return null;
 }
 
 // A tap on an enabled header or footer band selects its caption (while it sits in the band).
-export function hitBandCaption(captions, coords, { isHeaderEnabled, isFooterEnabled, headerExtH, canvasH }) {
+export function hitBandCaption(captions: MemeCaption[], coords: Point, { isHeaderEnabled, isFooterEnabled, headerExtH, canvasH }: Bands): LayerHit | null {
   const inHeader = isHeaderEnabled && coords.y <= headerExtH;
   const inFooter = !inHeader && isFooterEnabled && coords.y >= headerExtH + canvasH;
   if (!inHeader && !inFooter) return null;

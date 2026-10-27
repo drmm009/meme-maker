@@ -1,8 +1,10 @@
 // The mouse cursor over the canvas: a handle's own cursor, "move" over the selected layer,
 // "pointer" over anything selectable, otherwise "default".
 import { hitActiveHandle, hitBandCaption, hitLayerAt, isOnActiveBody } from './hitTest';
+import type { Bands, HitScene } from './hitTest';
+import type { Point } from './geometry';
 
-const HANDLE_CURSORS = {
+const HANDLE_CURSORS: Record<string, string> = {
   delete_layer: 'pointer',
   rotate_sticker: 'grab',
   rotate_caption: 'grab',
@@ -18,7 +20,7 @@ const HANDLE_CURSORS = {
   resize_imageLayer_b: 'ns-resize',
 };
 
-export function getHoverCursor(scene, coords, activeLayerId, bands) {
+export function getHoverCursor(scene: HitScene, coords: Point, activeLayerId: string | null | undefined, bands: Bands): string {
   const handle = hitActiveHandle(scene, coords, activeLayerId, { hover: true });
   if (handle) return HANDLE_CURSORS[handle.type] || 'pointer';
   if (isOnActiveBody(scene, coords, activeLayerId)) return 'move';

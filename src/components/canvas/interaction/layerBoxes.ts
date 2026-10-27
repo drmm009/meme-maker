@@ -1,17 +1,43 @@
 // Where each layer's box and handles sit, in canvas pixels. Shared by hit testing, the hover
 // cursor and dragging, so a click always lands where the cursor said it would.
+import type { LoadedImage, MemeCaption, MemeImageLayer, MemeSticker } from '../../../model/memeDocument';
 import { getCurveSagitta, wrapText } from '../draw/text';
 import { getWhatsAppCardHeight } from '../draw/socialCards/whatsapp';
 import { getBreakingNewsHeight } from '../draw/chyron';
 import { getTweetCardHeight } from '../draw/socialCards/tweet';
 import { getInstagramCardHeight } from '../draw/socialCards/instagram';
 import { getStickerBoxSize } from './geometry';
+import type { Point } from './geometry';
 
 // Image layers fit inside a square this many pixels wide at scale 1.
 export const IMAGE_LAYER_FIT = 320;
 
+export type HandleType =
+  | 'delete_layer'
+  | 'rotate_sticker' | 'resize_sticker_br'
+  | 'rotate_caption' | 'resize_caption_l' | 'resize_caption_r' | 'resize_caption_br'
+  | 'rotate_imageLayer' | 'resize_imageLayer_br'
+  | 'resize_imageLayer_t' | 'resize_imageLayer_b' | 'resize_imageLayer_l' | 'resize_imageLayer_r';
+
+// A handle's centre and how close a pointer must be to grab it.
+export interface Handle {
+  type: HandleType;
+  x: number;
+  y: number;
+  r: number;
+}
+
+export interface CaptionBox {
+  boxWidth: number;
+  boxHeight: number;
+  lines: string[];
+  lineHeight: number;
+  padY: number;
+  hasBg: boolean;
+}
+
 // A caption's centre x. WhatsApp cards are kept inside the canvas, as the painter draws them.
-export const getCaptionCenterX = (cap, canvasWidth) => {
+export const getCaptionCenterX = (cap: Pick<MemeCaption, 'x' | 'isWhatsAppCard' | 'width'>, canvasWidth: number): number => {
   let cx = (cap.x ?? 0.5) * canvasWidth;
   if (cap.isWhatsAppCard) {
     const cardW = Math.max(180, (cap.width || 0.82) * canvasWidth);
@@ -27,9 +53,14 @@ export const getCaptionCenterX = (cap, canvasWidth) => {
 // A caption's box. `handles` gives plain text the roomier box its selection handles sit on;
 // otherwise it's the snug box a tap must land in. Without a 2D context (tests), plain text
 // measures as zero width.
-export const getCaptionBox = (ctx, cap, canvasWidth, { handles = false } = {}) => {
+export const getCaptionBox = (
+  ctx: CanvasRenderingContext2D | null,
+  cap: MemeCaption,
+  canvasWidth: number,
+  { handles = false }: { handles?: boolean } = {}
+): CaptionBox => {
   const fontSize = cap.fontSize || 50;
-  let lines = [cap.text || ''];
+  let lines: string[] = [cap.text || ''];
   let maxLineWidth = 0;
   if (ctx) {
     ctx.font = `bold ${fontSize}px ${cap.fontFamily || 'Impact, sans-serif'}`;
@@ -37,7 +68,7 @@ export const getCaptionBox = (ctx, cap, canvasWidth, { handles = false } = {}) =
     for (const line of lines) maxLineWidth = Math.max(maxLineWidth, ctx.measureText(line).width);
   }
   const isBubble = !!cap.bubbleStyle;
-  const hasBg = (cap.bgColor && cap.bgColor !== 'transparent' && cap.bgColor !== 'none') || isBubble;
+  const hasBg = Boolean(cap.bgColor && cap.bgColor !== 'transparent' && cap.bgColor !== 'none') || isBubble;
   const boxedBg = hasBg && cap.bgStyle !== 'banner';
   const padX = isBubble ? Math.max(24, fontSize * 0.5)
     : boxedBg ? Math.max(16, fontSize * 0.35)
@@ -72,7 +103,7 @@ export const getCaptionBox = (ctx, cap, canvasWidth, { handles = false } = {}) =
 };
 
 // An image layer's drawn size. `cached` is its loaded image.
-export const getImageLayerBox = (layer, cached) => {
+export const getImageLayerBox = (layer: MemeImageLayer, cached: LoadedImage): { baseW: number; baseH: number; fitScale: number; scale: number; w: number; h: number } => {
   const baseW = cached.width || 200;
   const baseH = cached.height || 200;
   const scale = layer.scale || 1.0;
@@ -82,8 +113,7 @@ export const getImageLayerBox = (layer, cached) => {
   return { baseW, baseH, fitScale, scale, w, h };
 };
 
-// Handles, as { type, x, y, r }: the handle's centre and how close a pointer must be.
-export const getStickerHandles = (stk, cx, cy) => {
+export const getStickerHandles = (stk: MemeSticker, cx: number, cy: number): Handle[] => {
   const size = getStickerBoxSize(stk);
   const hs = size / 2 + 6;
   return [
@@ -93,7 +123,7 @@ export const getStickerHandles = (stk, cx, cy) => {
   ];
 };
 
-export const getCaptionHandles = (cx, cy, boxWidth, boxHeight, hitRadius, deleteRadius) => {
+export const getCaptionHandles = (cx: number, cy: number, boxWidth: number, boxHeight: number, hitRadius: number, deleteRadius: number): Handle[] => {
   const topY = cy - boxHeight / 2;
   const bottomY = cy + boxHeight / 2;
   const leftX = cx - boxWidth / 2;
@@ -108,7 +138,7 @@ export const getCaptionHandles = (cx, cy, boxWidth, boxHeight, hitRadius, delete
 };
 
 // Face-swap layers keep their corner handles inside the oval; crop mode only has edge handles.
-export const getImageLayerHandles = (layer, cx, cy, w, h) => {
+export const getImageLayerHandles = (layer: MemeImageLayer, cx: number, cy: number, w: number, h: number): Handle[] => {
   const hw = w / 2 + 6;
   const hh = h / 2 + 6;
   if (layer.isFaceMorph) {
@@ -138,8 +168,8 @@ export const getImageLayerHandles = (layer, cx, cy, w, h) => {
 };
 
 // The first handle in reach of `p`, or (closest) the nearest one in reach.
-export const findHandle = (p, handles, { closest = false } = {}) => {
-  let best = null;
+export const findHandle = (p: Point, handles: Handle[], { closest = false }: { closest?: boolean } = {}): Handle | null => {
+  let best: Handle | null = null;
   let bestDist = Infinity;
   for (const h of handles) {
     const dist = Math.hypot(p.x - h.x, p.y - h.y);
@@ -150,8 +180,14 @@ export const findHandle = (p, handles, { closest = false } = {}) => {
   return best;
 };
 
+// A multi-image layout: its id (e.g. '2-vert') and how many panels it has.
+export interface LayoutDef {
+  id: string;
+  slots: number;
+}
+
 // Which panel of a multi-image layout (activeLayoutDef) contains `coords`, or -1.
-export const findSlotAt = (coords, layoutDef, { canvasW, canvasH, headerExtH }) => {
+export const findSlotAt = (coords: Point, layoutDef: LayoutDef, { canvasW, canvasH, headerExtH }: { canvasW: number; canvasH: number; headerExtH: number }): number => {
   const totalSlots = layoutDef.slots;
   const isVert = layoutDef.id === '2-vert' || layoutDef.id === '3-stacked';
   const isHoriz = layoutDef.id === '2-horiz' || layoutDef.id === '3-horiz';

@@ -1,16 +1,56 @@
 // What a drag does to a layer. Each function takes the drag's start (from getDragStart) and the
 // pointer in canvas pixels, and returns the patch for the layer's bounds (null: no change).
+import type { CropRect, LoadedImage, MemeCaption, MemeImageLayer, MemeSticker } from '../../../model/memeDocument';
 import { getStickerBoxSize, rotatePoint } from './geometry';
+import type { Point } from './geometry';
 import { IMAGE_LAYER_FIT } from './layerBoxes';
+import type { LayerHit, SceneCanvas } from './hitTest';
+import type { CaptionPlacement } from '../layout/canvasLayout';
 import { isSocialCardCaption } from '../../editor/memeEditorUtils';
 
-const isCaptionHit = (t) => t === 'caption' || t?.startsWith('resize_caption_') || t === 'rotate_caption';
-const isStickerHit = (t) => t === 'sticker' || t?.startsWith('resize_sticker_') || t === 'rotate_sticker';
-const isImageHit = (t) => t === 'imageLayer' || t?.startsWith('resize_imageLayer_') || t === 'rotate_imageLayer';
+const isCaptionHit = (t: string) => t === 'caption' || t.startsWith('resize_caption_') || t === 'rotate_caption';
+const isStickerHit = (t: string) => t === 'sticker' || t.startsWith('resize_sticker_') || t === 'rotate_sticker';
+const isImageHit = (t: string) => t === 'imageLayer' || t.startsWith('resize_imageLayer_') || t === 'rotate_imageLayer';
+
+// The layer as it was when the drag started.
+export interface DragStart {
+  x: number;
+  y: number;
+  centerX: number;
+  centerY: number;
+  width?: number;
+  height?: number;
+  boxWidth?: number;
+  boxHeight?: number;
+  scale: number;
+  rotation: number;
+  initialDist: number;
+  initialFontSize: number;
+  initialWidth: number;
+  initialBoxWidth?: number;
+  initialBoxHeight?: number;
+  handleRelX?: number;
+  handleRelY?: number;
+  hasCustomWidth?: boolean;
+  crop?: CropRect;
+  fitMode?: MemeImageLayer['fitMode'];
+}
+
+// Centre-y helpers from canvasLayout (layer y is a fraction of the image area).
+export interface LayerCenters {
+  getCaptionCenterY: (cap: CaptionPlacement) => number;
+  getStickerCenterY: (layer: { y?: number }) => number;
+  getImageLayerCenterY: (layer: { y?: number }) => number;
+}
 
 // Snapshot of the hit layer when the drag starts. Header and footer captions sitting in their
 // band are measured against the whole canvas height, everything else against the image area.
-export function getDragStart(hit, coords, { canvas, canvasH, headerExtH, totalCanvasH, getCaptionCenterY, getStickerCenterY, getImageLayerCenterY }) {
+export function getDragStart(
+  hit: LayerHit,
+  coords: Point,
+  { canvas, canvasH, headerExtH, totalCanvasH, getCaptionCenterY, getStickerCenterY, getImageLayerCenterY }:
+    LayerCenters & { canvas: SceneCanvas; canvasH: number; headerExtH: number; totalCanvasH: number }
+): DragStart {
   const centerX = hit.x * canvas.width;
   const centerY = isCaptionHit(hit.type) ? getCaptionCenterY(hit)
     : isStickerHit(hit.type) ? getStickerCenterY(hit)
@@ -44,14 +84,14 @@ export function getDragStart(hit, coords, { canvas, canvasH, headerExtH, totalCa
 }
 
 // The layer's centre in canvas pixels during the drag.
-export const getDragCenter = (start, canvasWidth, headerExtH, canvasH) => ({
+export const getDragCenter = (start: Pick<DragStart, 'x' | 'y'> & Partial<Pick<DragStart, 'centerX' | 'centerY'>>, canvasWidth: number, headerExtH: number, canvasH: number): Point => ({
   x: start.centerX ?? (start.x * canvasWidth),
   y: start.centerY ?? (headerExtH + start.y * canvasH)
 });
 
 // Rotation in degrees from the centre to the pointer (the handle sits above the centre), snapped
 // to the nearest right angle within 3.5 degrees.
-export function getRotation(center, coords) {
+export function getRotation(center: Point, coords: Point): number {
   let angleDeg = (Math.atan2(coords.y - center.y, coords.x - center.x) * 180 / Math.PI) + 90;
   const normalized = ((angleDeg % 360) + 360) % 360;
   for (const snap of [0, 90, 180, 270, 360]) {
@@ -63,8 +103,21 @@ export function getRotation(center, coords) {
   return angleDeg;
 }
 
+export type ImageLayerPatch = Partial<Pick<MemeImageLayer, 'x' | 'y' | 'width' | 'height' | 'boxWidth' | 'boxHeight' | 'scale' | 'crop' | 'fitMode'>>;
+
+interface ImageResize {
+  handleType: string;
+  coords: Point;
+  start: DragStart;
+  layer: MemeImageLayer;
+  cached: LoadedImage | undefined;
+  canvasWidth: number;
+  headerExtH: number;
+  canvasH: number;
+}
+
 // Crop mode: an edge handle trims that side of the image, keeping the opposite edge in place.
-function cropImageLayer({ handleType, coords, start, layer, cached, center, canvasWidth, headerExtH, canvasH }) {
+function cropImageLayer({ handleType, coords, start, layer, cached, center, canvasWidth, headerExtH, canvasH }: ImageResize & { center: Point }): ImageLayerPatch | null {
   const initW = start.boxWidth || start.width || 160;
   const initH = start.boxHeight || start.height || 160;
   const initCrop = start.crop || { x: 0, y: 0, width: 1, height: 1 };
@@ -82,11 +135,11 @@ function cropImageLayer({ handleType, coords, start, layer, cached, center, canv
   }
 
   const local = rotatePoint(coords.x, coords.y, center.x, center.y, -rot);
-  const place = (localX, localY) => {
+  const place = (localX: number, localY: number) => {
     const c = rotatePoint(localX, localY, center.x, center.y, rot);
     return { x: c.x / canvasWidth, y: (c.y - headerExtH) / canvasH };
   };
-  const clamp = (target, minPx, full, max) => {
+  const clamp = (target: number, minPx: number, full: number, max: number) => {
     const min = Math.min(max, Math.max(0.02, minPx / full));
     return Math.max(min, Math.min(max, target));
   };
@@ -129,7 +182,7 @@ function cropImageLayer({ handleType, coords, start, layer, cached, center, canv
 
 // Image layer handles: crop in crop mode; otherwise edges stretch one axis (switching "fit" to
 // "stretch") and the corner scales both.
-export function resizeImageLayer({ handleType, coords, start, layer, cached, canvasWidth, headerExtH, canvasH }) {
+export function resizeImageLayer({ handleType, coords, start, layer, cached, canvasWidth, headerExtH, canvasH }: ImageResize): ImageLayerPatch | null {
   const center = getDragCenter(start, canvasWidth, headerExtH, canvasH);
   if (layer.fitMode === 'crop' || start.fitMode === 'crop') {
     return cropImageLayer({ handleType, coords, start, layer, cached, center, canvasWidth, headerExtH, canvasH });
@@ -157,7 +210,9 @@ export function resizeImageLayer({ handleType, coords, start, layer, cached, can
 }
 
 // Sticker corner: scale with the pointer's distance from the centre.
-export function resizeSticker({ coords, start, sticker, canvasWidth, headerExtH, canvasH }) {
+export function resizeSticker({ coords, start, sticker, canvasWidth, headerExtH, canvasH }: {
+  coords: Point; start: DragStart; sticker: MemeSticker; canvasWidth: number; headerExtH: number; canvasH: number;
+}): { scale: number } {
   const center = getDragCenter(start, canvasWidth, headerExtH, canvasH);
   const initDist = start.initialDist || Math.max(10, getStickerBoxSize(sticker) * 0.7);
   const scaleFactor = Math.hypot(coords.x - center.x, coords.y - center.y) / initDist;
@@ -166,7 +221,9 @@ export function resizeSticker({ coords, start, sticker, canvasWidth, headerExtH,
 
 // Caption handles: the sides change the wrap width, the corner scales font size and width.
 // Either way the (rotated) box stays 8px inside the canvas.
-export function resizeCaption({ handleType, coords, start, caption, canvas, headerExtH, canvasH }) {
+export function resizeCaption({ handleType, coords, start, caption, canvas, headerExtH, canvasH }: {
+  handleType: string; coords: Point; start: DragStart; caption: MemeCaption; canvas: SceneCanvas; headerExtH: number; canvasH: number;
+}): { width: number; hasCustomWidth: true } | { fontSize: number; width: number } {
   const center = getDragCenter(start, canvas.width, headerExtH, canvasH);
   const rot = start.rotation || 0;
   const local = rotatePoint(coords.x, coords.y, center.x, center.y, -rot);
@@ -215,7 +272,17 @@ const SNAP_DIST = 0.015;
 // Moving a layer by (dx, dy), as fractions of the canvas / image area. Captions stay inside the
 // canvas; the position snaps to the centre lines and to other layers' centres, which are
 // returned as guides ({ horizontal, vertical }) for the renderer.
-export function moveLayer({ target, start, dx, dy, canvas, canvasH, captions, stickers, imageLayers }) {
+export function moveLayer({ target, start, dx, dy, canvas, canvasH, captions, stickers, imageLayers }: {
+  target: Pick<LayerHit, 'id' | 'type' | 'isHeaderCaption' | 'isFooterCaption'>;
+  start: Pick<DragStart, 'x' | 'y'> & Partial<Pick<DragStart, 'rotation' | 'boxWidth' | 'boxHeight' | 'width'>>;
+  dx: number;
+  dy: number;
+  canvas: SceneCanvas;
+  canvasH: number;
+  captions: { id: string; x: number; y: number }[];
+  stickers: { id: string; x: number; y: number }[];
+  imageLayers?: { id: string; x: number; y: number }[];
+}): { x: number; y: number; guides: { horizontal: number | null; vertical: number | null } } {
   let x = start.x + dx;
   let y = start.y + dy;
 
@@ -235,8 +302,8 @@ export function moveLayer({ target, start, dx, dy, canvas, canvasH, captions, st
     y = Math.max(minY, Math.min(maxY, y));
   }
 
-  let horizontal = null;
-  let vertical = null;
+  let horizontal: number | null = null;
+  let vertical: number | null = null;
   if (Math.abs(x - 0.5) < SNAP_DIST) { x = 0.5; vertical = 0.5; }
   if (Math.abs(y - 0.5) < SNAP_DIST) { y = 0.5; horizontal = 0.5; }
   for (const other of [...captions, ...stickers, ...(imageLayers || [])]) {

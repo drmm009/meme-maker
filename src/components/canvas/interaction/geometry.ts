@@ -1,12 +1,18 @@
 // Pure geometry used by canvas hit testing. Coordinates are canvas pixels.
+import type { MemeSticker } from '../../../model/memeDocument';
+
+export interface Point {
+  x: number;
+  y: number;
+}
 
 // Stickers are drawn as a square of this many pixels at scale 1.
 export const STICKER_BASE_SIZE = 52;
 
-export const getStickerBoxSize = (stk) => (stk.scale || 1.0) * STICKER_BASE_SIZE;
+export const getStickerBoxSize = (stk: Pick<MemeSticker, 'scale'>): number => (stk.scale || 1.0) * STICKER_BASE_SIZE;
 
 // Rotate (px, py) around (cx, cy) by `angle` degrees.
-export const rotatePoint = (px, py, cx, cy, angle) => {
+export const rotatePoint = (px: number, py: number, cx: number, cy: number, angle: number): Point => {
   const rad = angle * Math.PI / 180;
   const dx = px - cx;
   const dy = py - cy;
@@ -17,11 +23,19 @@ export const rotatePoint = (px, py, cx, cy, angle) => {
 };
 
 // Is `p` inside the w x h box centred on (cx, cy), grown by `pad` on every side?
-export const isInBox = (p, cx, cy, w, h, pad = 0) =>
+export const isInBox = (p: Point, cx: number, cy: number, w: number, h: number, pad = 0): boolean =>
   p.x >= cx - w / 2 - pad && p.x <= cx + w / 2 + pad && p.y >= cy - h / 2 - pad && p.y <= cy + h / 2 + pad;
 
+// A mouse or touch event, as clientToCanvas reads it.
+export interface PointerLike {
+  touches?: ArrayLike<{ clientX: number; clientY: number }>;
+  changedTouches?: ArrayLike<{ clientX: number; clientY: number }>;
+  clientX?: number;
+  clientY?: number;
+}
+
 // Mouse or touch event -> canvas pixel coordinates (the canvas may be drawn scaled by CSS).
-export const clientToCanvas = (e, canvas) => {
+export const clientToCanvas = (e: PointerLike, canvas: HTMLCanvasElement | null | undefined): Point => {
   if (!canvas) return { x: 0, y: 0 };
   const rect = canvas.getBoundingClientRect();
   let clientX = 0, clientY = 0;
