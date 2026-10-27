@@ -74,7 +74,18 @@ export function attachPreviewVideo({ item, itemRef, imageRef, trRef, setImage, o
     const latest = state.items.find((i) => i.id === itemRef.current.id) || itemRef.current;
     const target = videoTimeSec(latest, state.playhead);
 
-    // Paused and already on the right frame: nothing to do.
+    // Visibility and motion first: hiding a clip, or landing exactly on its first frame, changes
+    // nothing about the video's time.
+    const visible = isOnScreen(latest, state.playhead);
+    const node = imageRef.current;
+    if (node && node.visible() !== visible) {
+      node.visible(visible);
+      if (trRef.current) trRef.current.visible(visible);
+      node.getLayer()?.batchDraw();
+    }
+    if (node && applyMotion(node, latest, state)) node.getLayer()?.batchDraw();
+
+    // Paused and already on the right frame: nothing to do for the video itself.
     if (!state.isPlaying && Math.abs(vid.currentTime - target) < 0.05) return;
 
     const rate = latest.playbackRate || 1;
@@ -84,15 +95,6 @@ export function attachPreviewVideo({ item, itemRef, imageRef, trRef, setImage, o
     if (vid.muted !== muted) vid.muted = muted;
     const gain = clipGain(latest, state.playhead);
     if (Math.abs(vid.volume - gain) > 0.01) vid.volume = gain;
-
-    const visible = isOnScreen(latest, state.playhead);
-    const node = imageRef.current;
-    if (node && node.visible() !== visible) {
-      node.visible(visible);
-      if (trRef.current) trRef.current.visible(visible);
-      node.getLayer()?.batchDraw();
-    }
-    if (node && applyMotion(node, latest, state)) node.getLayer()?.batchDraw();
 
     const plan = videoSyncPlan({
       playing: state.isPlaying, visible, paused: vid.paused, pending: Boolean(playPromise),
