@@ -1,5 +1,8 @@
 // Pure decisions behind the Konva preview (CanvasPreview and its parts). Positions and sizes are
-// in the preview's 800-wide stage units.
+// in the preview's 800-wide stage units. How text is drawn lives in utils/textLayer (shared with
+// the export).
+import type { Clip, LayoutSlot, Placed, TextClip } from '../../../model/videoProject';
+import { cornerForCenter, rotatedCenter } from '../../../utils/rotation';
 
 export const STAGE_WIDTH = 800;
 
@@ -8,9 +11,18 @@ const KEY_MAX_SIDE = 640;
 // Photos with a filter are processed once, so they keep more detail.
 const STILL_FX_MAX_SIDE = 1280;
 
+type PlacementPatch = Required<Pick<Placed, 'isPositioned' | 'x' | 'y' | 'width' | 'height'>> &
+  Partial<Pick<Placed, 'scaleX' | 'scaleY'>> & { crop?: undefined };
+
 // Where newly loaded media goes (null once it has been placed): fitted inside its layout panel,
 // or fitted and centred on the canvas. Stickers keep their natural size.
-export function fitPlacement(item, naturalWidth, naturalHeight, canvas, slots = []) {
+export function fitPlacement(
+  item: Pick<Clip, 'type'> & Pick<Placed, 'isPositioned' | 'slotIndex'>,
+  naturalWidth: number,
+  naturalHeight: number,
+  canvas: { width: number; height: number } | null | undefined,
+  slots: LayoutSlot[] = []
+): PlacementPatch | null {
   if (item.isPositioned || !canvas) return null;
   const slot = item.slotIndex !== undefined ? slots[item.slotIndex] : null;
   if (slot) {
@@ -36,20 +48,44 @@ export function fitPlacement(item, naturalWidth, naturalHeight, canvas, slots = 
 
 // The layout panel a photo or video was dropped on (by its centre), or undefined. Stickers float
 // over the layout and never join a panel.
-export function dropSlotIndex(item, x, y, slots = []) {
+export function dropSlotIndex(
+  item: Pick<Clip, 'type'> & Pick<Placed, 'width' | 'height' | 'scaleX' | 'scaleY'>,
+  x: number,
+  y: number,
+  slots: LayoutSlot[] = []
+): number | undefined {
   if (item.type === 'sticker' || slots.length === 0) return undefined;
-  const cx = x + (item.width * (item.scaleX || 1)) / 2;
-  const cy = y + (item.height * (item.scaleY || 1)) / 2;
+  const cx = x + ((item.width ?? NaN) * (item.scaleX || 1)) / 2;
+  const cy = y + ((item.height ?? NaN) * (item.scaleY || 1)) / 2;
   const index = slots.findIndex((s) => cx >= s.x && cx <= s.x + s.width && cy >= s.y && cy <= s.y + s.height);
   return index === -1 ? undefined : index;
 }
 
+// Turning a clip to `rotation` degrees about its centre. Konva turns clips about their corner
+// (x, y), so the corner moves to keep the centre where it was.
+export function rotateAboutCenter(item: Placed, rotation: number): { rotation: number; x: number; y: number } {
+  const w = (item.width || 200) * (item.scaleX || 1);
+  const h = (item.height || 200) * (item.scaleY || 1);
+  const center = rotatedCenter(item.x || 0, item.y || 0, w, h, item.rotation || 0);
+  return { rotation, ...cornerForCenter(center, w, h, rotation) };
+}
+
 // Is the clip on screen at this playhead (ms)? Both ends are inclusive.
-export const isOnScreen = (item, playhead) => !item.hidden && playhead >= item.startMs && playhead <= item.endMs;
+export const isOnScreen = (item: Pick<Clip, 'hidden' | 'startMs' | 'endMs'>, playhead: number): boolean =>
+  !item.hidden && playhead >= item.startMs && playhead <= item.endMs;
 
 // The time (s) in a video's own footage that the preview should show at this playhead.
-export const videoTimeSec = (item, playhead) =>
+export const videoTimeSec = (item: { startMs: number; trimStartMs?: number; playbackRate?: number }, playhead: number): number =>
   (item.trimStartMs || 0) / 1000 + ((playhead - item.startMs) / 1000) * (item.playbackRate || 1);
+
+export interface VideoSyncState {
+  playing: boolean;
+  visible: boolean;
+  paused: boolean;
+  pending: boolean;
+  drift: number;
+  frameCallbacks: boolean;
+}
 
 // What a preview <video> should do on a store update, as { seek, play, pause, redraw }:
 // - playing: start it if it's paused (seeking first if it's off by more than 0.1s); if it's already
@@ -60,7 +96,7 @@ export const videoTimeSec = (item, playhead) =>
 // `pending`: a play() is still starting (seeking or pausing then would abort it).
 // `frameCallbacks`: the browser redraws on each new frame (requestVideoFrameCallback); without it
 // the preview redraws itself while playing and after a scrub's seek.
-export function videoSyncPlan({ playing, visible, paused, pending, drift, frameCallbacks }) {
+export function videoSyncPlan({ playing, visible, paused, pending, drift, frameCallbacks }: VideoSyncState): { seek: boolean; play: boolean; pause: boolean; redraw: boolean } {
   const plan = { seek: false, play: false, pause: false, redraw: false };
   if (!visible) {
     plan.pause = !paused && !pending;
@@ -81,7 +117,7 @@ export function videoSyncPlan({ playing, visible, paused, pending, drift, frameC
 }
 
 // Zoom-punch: the centred part of an iw x ih frame to show at this zoom, or null for the full frame.
-export const punchCrop = (iw, ih, zoom) => {
+export const punchCrop = (iw: number, ih: number, zoom: number): { x: number; y: number; width: number; height: number } | null => {
   if (zoom <= 1.0001) return null;
   const width = iw / zoom;
   const height = ih / zoom;
@@ -89,43 +125,17 @@ export const punchCrop = (iw, ih, zoom) => {
 };
 
 // Size of the offscreen canvas a green-screen or filtered frame is drawn into.
-export const effectCanvasSize = (sourceWidth, sourceHeight, isVideo) => {
+export const effectCanvasSize = (sourceWidth: number, sourceHeight: number, isVideo: boolean): { width: number; height: number } => {
   const scale = Math.min(1, (isVideo ? KEY_MAX_SIDE : STILL_FX_MAX_SIDE) / Math.max(sourceWidth, sourceHeight));
   return { width: Math.max(1, Math.round(sourceWidth * scale)), height: Math.max(1, Math.round(sourceHeight * scale)) };
 };
 
-// How a text clip is drawn. With a background box, the outline is off unless one was picked.
-export function textStyle(item) {
-  const fontSize = item.fontSize || 32;
-  const hasBg = Boolean(item.bgColor) && item.bgColor !== 'none' && item.bgColor !== 'transparent';
-  return {
-    text: item.text !== undefined ? item.text : 'Sample Text',
-    x: item.x || 50,
-    y: item.y || 50,
-    width: item.width || undefined,
-    fontSize,
-    fontFamily: item.fontFamily || 'Impact, sans-serif',
-    fill: item.color || (item.bgColor === 'white' ? '#000000' : '#ffffff'),
-    stroke: item.stroke || (hasBg ? 'transparent' : '#000000'),
-    strokeWidth: hasBg && item.stroke === 'transparent' ? 0 : (item.strokeWidth || Math.max(2, fontSize / 25)),
-    letterSpacing: -fontSize * 0.05,
-    align: item.align || 'center',
-    hasBg,
-    bgFill: item.bgColor === 'white' ? '#ffffff' : (item.bgColor === 'black' ? '#000000' : item.bgColor),
-  };
-}
-
-// The background box around text at (x, y) of the given size and scale: 8px wider each side, 4px taller.
-export const textBoxAround = ({ x, y, width, height, scaleX = 1, scaleY = 1 }) => ({
-  x: x - 8,
-  y: y - 4,
-  width: width * scaleX + 16,
-  height: height * scaleY + 8,
-});
-
 // What a transformer resize of text saves: the scale goes into the font size (and wrap width),
 // so the text stays crisp at scale 1.
-export const textResize = (item, { x, y, rotation, scaleX }) => ({
+export const textResize = (
+  item: Pick<TextClip, 'fontSize' | 'width'>,
+  { x, y, rotation, scaleX }: { x: number; y: number; rotation: number; scaleX: number }
+): { x: number; y: number; rotation: number; fontSize: number; width?: number } => ({
   x,
   y,
   rotation,
@@ -135,7 +145,7 @@ export const textResize = (item, { x, y, rotation, scaleX }) => ({
 
 // The stage size that fits the available space at this aspect ratio, and its scale from the
 // 800-wide stage units.
-export const fitStage = (availableWidth, availableHeight, aspect) => {
+export const fitStage = (availableWidth: number, availableHeight: number, aspect: number): { width: number; height: number; scale: number } => {
   let width = availableWidth;
   let height = availableWidth / aspect;
   if (height > availableHeight) {

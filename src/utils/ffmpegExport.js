@@ -9,6 +9,7 @@ import { drawOrder } from './layerOrder';
 import { captionFrames, concatList, splitCaptionTrack } from './captionTrack';
 import { REST_FRAME, applyTextFrame } from './textAnimation';
 import { audioExtension, createExportGraph, outputSize, textStills, visualSize } from './exportGraph';
+import { hasTextBox, textAttrs, textBoxAttrs } from './textLayer';
 
 let ffmpeg = null;
 let loadPromise = null;
@@ -94,8 +95,9 @@ const rasterizeSvg = (url, w, h) => new Promise((resolve) => {
   img.src = url;
 });
 
-// Text drawn with Konva (like the preview) into a transparent w x h PNG, at one animation frame.
-// `ratio` converts the 800-wide preview to the output. Empty on failure.
+// Text drawn with Konva into a transparent w x h PNG, at one animation frame, from the same
+// definitions as the preview (textLayer). `ratio` converts the 800-wide preview to the output.
+// Empty on failure.
 const renderTextToPNG = (item, w, h, ratio, frame = REST_FRAME) => new Promise((resolve) => {
   try {
     const container = document.createElement('div');
@@ -111,42 +113,9 @@ const renderTextToPNG = (item, w, h, ratio, frame = REST_FRAME) => new Promise((
     stage.add(layer);
     const group = new Konva.Group();
 
-    const textX = (typeof item.x === 'number' && !isNaN(item.x) ? item.x : 0) * ratio;
-    const textY = (typeof item.y === 'number' && !isNaN(item.y) ? item.y : 0) * ratio;
-    const fontSize = Math.max(10, (typeof item.fontSize === 'number' && !isNaN(item.fontSize) ? item.fontSize : 32) * ratio);
-
-    const textNode = new Konva.Text({
-      x: textX,
-      y: textY,
-      text: item.text || 'Sample Text',
-      fontSize: fontSize,
-      fontFamily: item.fontFamily || 'Impact, sans-serif',
-      fontStyle: 'bold',
-      fill: item.color || '#ffffff',
-      stroke: item.stroke || '#000000',
-      strokeWidth: (typeof item.strokeWidth === 'number' && !isNaN(item.strokeWidth) ? item.strokeWidth : Math.max(2, fontSize / 25)) * ratio,
-      width: item.width ? item.width * ratio : undefined,
-      align: item.align || 'center',
-      rotation: item.rotation || 0,
-      scaleX: 1,
-      scaleY: 1,
-      letterSpacing: (-fontSize * 0.05) * ratio,
-      lineJoin: 'miter',
-      miterLimit: 2,
-    });
-
-    if (item.bgColor && item.bgColor !== 'none' && item.bgColor !== 'transparent') {
-      const bgFill = item.bgColor === 'white' ? '#ffffff' : (item.bgColor === 'black' ? '#000000' : item.bgColor);
-      const bgRect = new Konva.Rect({
-        x: textX - 8 * ratio,
-        y: textY - 4 * ratio,
-        width: textNode.width() + 16 * ratio,
-        height: textNode.height() + 8 * ratio,
-        fill: bgFill,
-        cornerRadius: 6 * ratio,
-        rotation: item.rotation || 0,
-      });
-      group.add(bgRect);
+    const textNode = new Konva.Text({ ...textAttrs(item, ratio), scaleX: 1, scaleY: 1 });
+    if (hasTextBox(item)) {
+      group.add(new Konva.Rect(textBoxAttrs(item, { x: textNode.x(), y: textNode.y(), width: textNode.width(), height: textNode.height() }, ratio)));
     }
 
     group.add(textNode);
@@ -174,15 +143,13 @@ const renderTextToPNG = (item, w, h, ratio, frame = REST_FRAME) => new Promise((
       canvas.height = h;
       const ctx = canvas.getContext('2d');
       if (ctx) {
-        const textX = (typeof item.x === 'number' && !isNaN(item.x) ? item.x : 0) * ratio;
-        const textY = (typeof item.y === 'number' && !isNaN(item.y) ? item.y : 0) * ratio;
-        const fontSize = Math.max(10, (typeof item.fontSize === 'number' && !isNaN(item.fontSize) ? item.fontSize : 32) * ratio);
-        ctx.font = `bold ${fontSize}px ${item.fontFamily || 'Impact, sans-serif'}`;
-        ctx.fillStyle = item.color || '#ffffff';
-        ctx.strokeStyle = item.stroke || '#000000';
-        ctx.lineWidth = Math.max(2, fontSize / 25) * ratio;
-        ctx.strokeText(item.text || '', textX, textY + fontSize);
-        ctx.fillText(item.text || '', textX, textY + fontSize);
+        const a = textAttrs(item, ratio);
+        ctx.font = `bold ${a.fontSize}px ${a.fontFamily}`;
+        ctx.fillStyle = a.fill;
+        ctx.strokeStyle = a.stroke;
+        ctx.lineWidth = a.strokeWidth;
+        ctx.strokeText(a.text, a.x, a.y + a.fontSize);
+        ctx.fillText(a.text, a.x, a.y + a.fontSize);
         canvas.toBlob(blob => {
           if (blob) {
             blob.arrayBuffer().then(buf => resolve(new Uint8Array(buf))).catch(() => resolve(new Uint8Array(0)));

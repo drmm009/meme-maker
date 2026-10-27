@@ -13,6 +13,7 @@ import { canRecordVoice, startVoiceRecording } from '../../utils/voiceRecorder';
 import { CAPTION_STYLES, captionItems, captionStyle } from '../../utils/captionChunks';
 import { speechClips } from '../../utils/clipAudio';
 import { togglePlayback } from './usePlaybackLoop';
+import { rotateAboutCenter } from './preview/previewMath';
 import { formatClock } from './timeline/timelineMath';
 import { FONTS } from '../../data/stickers';
 import { DEFAULT_FADE_MS } from '../../utils/audioFades';
@@ -639,7 +640,7 @@ function ClipTools({ item, panel, setPanel }) {
   }
   if (item.type === 'image' || item.type === 'sticker') {
     tools.push(
-      <RailButton key="rotate" label="Rotate" Icon={RotateCw} onClick={() => update(item.id, { rotation: ((item.rotation || 0) + 90) % 360 })} />
+      <RailButton key="rotate" label="Rotate" Icon={RotateCw} onClick={() => update(item.id, rotateAboutCenter(item, ((item.rotation || 0) + 90) % 360))} />
     );
   }
   if (item.type !== 'audio') {

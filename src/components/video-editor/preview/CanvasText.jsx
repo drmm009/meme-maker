@@ -1,17 +1,20 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useLayoutEffect, useRef } from 'react';
 import { Rect, Text as KonvaText, Transformer, Group } from 'react-konva';
-import { textBoxAround, textResize, textStyle } from './previewMath';
+import { hasTextBox, textAttrs, textBoxAttrs } from '../../../utils/textLayer';
+import { textResize } from './previewMath';
 import { useTextPlayback } from './useTextPlayback';
 
-// A text clip on the preview, with its optional background box. Tapping it starts editing
-// (onEditStart); resizing it changes the font size.
+// A text clip on the preview, with its optional background box, drawn from utils/textLayer (the
+// export draws its text with the same definitions). Tapping it starts editing (onEditStart);
+// resizing it changes the font size.
 const CanvasText = ({ item, isSelected, onSelect, onChange, onEditStart }) => {
   const textRef = useRef(null);
   const groupRef = useRef(null);
   const bgRectRef = useRef(null);
   const trRef = useRef(null);
   const itemRef = useRef(item);
-  const style = textStyle(item);
+  const attrs = textAttrs(item);
+  const boxed = hasTextBox(item);
 
   useEffect(() => {
     itemRef.current = item;
@@ -25,7 +28,7 @@ const CanvasText = ({ item, isSelected, onSelect, onChange, onEditStart }) => {
       rect.visible(node.visible());
       rect.getLayer()?.batchDraw();
     }
-  }, [style.hasBg]);
+  }, [boxed]);
 
   useTextPlayback(item, { itemRef, groupRef, textRef, bgRectRef, trRef });
 
@@ -46,16 +49,28 @@ const CanvasText = ({ item, isSelected, onSelect, onChange, onEditStart }) => {
   }, [isSelected, item.text, item.fontFamily, item.fontSize, item.width]);
 
   // The background box around the text node as it is now (dragged, scaled, rotated).
-  const boxAroundNode = (node) => textBoxAround({
-    x: node.x(), y: node.y(), width: node.width(), height: node.height(), scaleX: node.scaleX(), scaleY: node.scaleY()
+  const boxAroundNode = (node) => ({
+    ...textBoxAttrs(item, { x: node.x(), y: node.y(), width: node.width(), height: node.height(), scaleX: node.scaleX(), scaleY: node.scaleY() }),
+    rotation: node.rotation(),
   });
 
+  // The box needs the text's measured size, which only exists once the node is mounted: fit it
+  // after every render (the first render can only guess, below).
+  useLayoutEffect(() => {
+    const textNode = textRef.current;
+    if (bgRectRef.current && textNode) {
+      bgRectRef.current.setAttrs(boxAroundNode(textNode));
+      textNode.getLayer()?.batchDraw();
+    }
+  });
+
+  // Before the text node has measured itself, size the box from the clip.
   const node = textRef.current;
-  const box = textBoxAround({
-    x: style.x,
-    y: style.y,
+  const box = textBoxAttrs(item, {
+    x: attrs.x,
+    y: attrs.y,
     width: item.width || node?.width() || 120,
-    height: node?.height() || style.fontSize,
+    height: node?.height() || attrs.fontSize,
     scaleX: node?.scaleX() || 1,
     scaleY: node?.scaleY() || 1,
   });
@@ -67,44 +82,21 @@ const CanvasText = ({ item, isSelected, onSelect, onChange, onEditStart }) => {
   return (
     <React.Fragment>
       <Group ref={groupRef}>
-        {style.hasBg && (
-          <Rect
-            ref={bgRectRef}
-            {...box}
-            fill={style.bgFill}
-            cornerRadius={6}
-            rotation={item.rotation || 0}
-            listening={false}
-          />
-        )}
+        {boxed && <Rect ref={bgRectRef} {...box} listening={false} />}
         <KonvaText
           id={`text-${item.id}`}
           ref={textRef}
-          text={style.text}
-          x={style.x}
-          y={style.y}
-          width={style.width}
-          fontSize={style.fontSize}
-          fontFamily={style.fontFamily}
-          fontStyle="bold"
-          fill={style.fill}
-          stroke={style.stroke}
-          strokeWidth={style.strokeWidth}
-          letterSpacing={style.letterSpacing}
-          lineJoin="miter"
-          miterLimit={2}
-          align={style.align}
+          {...attrs}
           draggable
           onDragMove={(e) => {
             if (bgRectRef.current) {
-              const { x, y } = boxAroundNode(e.target);
-              bgRectRef.current.position({ x, y });
+              bgRectRef.current.position({ x: e.target.x(), y: e.target.y() });
               e.target.getLayer()?.batchDraw();
             }
           }}
           onTransform={() => {
             if (bgRectRef.current && textRef.current) {
-              bgRectRef.current.setAttrs({ ...boxAroundNode(textRef.current), rotation: textRef.current.rotation() });
+              bgRectRef.current.setAttrs(boxAroundNode(textRef.current));
               textRef.current.getLayer()?.batchDraw();
             }
           }}

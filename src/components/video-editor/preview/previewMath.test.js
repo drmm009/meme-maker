@@ -1,8 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import {
-  dropSlotIndex, effectCanvasSize, fitPlacement, fitStage, isOnScreen, punchCrop, textBoxAround,
-  textResize, textStyle, videoSyncPlan, videoTimeSec
+  dropSlotIndex, effectCanvasSize, fitPlacement, fitStage, isOnScreen, punchCrop, rotateAboutCenter,
+  textResize, videoSyncPlan, videoTimeSec
 } from './previewMath';
+import { rotatedCenter } from '../../../utils/rotation';
 
 const canvas = { width: 800, height: 450 };
 
@@ -105,31 +106,27 @@ describe('frames', () => {
   });
 });
 
+describe('rotateAboutCenter', () => {
+  it('turns a clip in place, moving its corner so the centre stays put', () => {
+    const photo = { x: 100, y: 50, width: 200, height: 100 };
+    const turned = rotateAboutCenter(photo, 90);
+    expect(turned.rotation).toBe(90);
+    const centre = rotatedCenter(turned.x, turned.y, 200, 100, 90);
+    expect(centre.x).toBeCloseTo(200);
+    expect(centre.y).toBeCloseTo(100);
+  });
+
+  it('accounts for scale and the current rotation', () => {
+    const sticker = { x: 10, y: 20, width: 50, height: 50, scaleX: 2, scaleY: 2, rotation: 90 };
+    const before = rotatedCenter(10, 20, 100, 100, 90);
+    const turned = rotateAboutCenter(sticker, 180);
+    const after = rotatedCenter(turned.x, turned.y, 100, 100, 180);
+    expect(after.x).toBeCloseTo(before.x);
+    expect(after.y).toBeCloseTo(before.y);
+  });
+});
+
 describe('text', () => {
-  it('draws white Impact with a black outline by default', () => {
-    expect(textStyle({})).toMatchObject({
-      text: 'Sample Text', x: 50, y: 50, fontSize: 32, fontFamily: 'Impact, sans-serif',
-      fill: '#ffffff', stroke: '#000000', strokeWidth: 2, align: 'center', hasBg: false
-    });
-    expect(textStyle({ text: '' }).text).toBe('');
-  });
-
-  it('drops the outline on a background box and picks a readable colour on white', () => {
-    expect(textStyle({ bgColor: 'black' })).toMatchObject({ hasBg: true, bgFill: '#000000', fill: '#ffffff', stroke: 'transparent' });
-    expect(textStyle({ bgColor: 'white' })).toMatchObject({ bgFill: '#ffffff', fill: '#000000' });
-    expect(textStyle({ bgColor: '#ff0', stroke: 'transparent' }).strokeWidth).toBe(0);
-    expect(textStyle({ bgColor: 'none' }).hasBg).toBe(false);
-  });
-
-  it('scales the outline and tightens the spacing with the font size', () => {
-    expect(textStyle({ fontSize: 100 })).toMatchObject({ strokeWidth: 4, letterSpacing: -5 });
-  });
-
-  it('puts the background box 8px out at the sides and 4px at the top and bottom', () => {
-    expect(textBoxAround({ x: 100, y: 300, width: 80, height: 40 })).toEqual({ x: 92, y: 296, width: 96, height: 48 });
-    expect(textBoxAround({ x: 0, y: 0, width: 80, height: 40, scaleX: 2, scaleY: 2 })).toMatchObject({ width: 176, height: 88 });
-  });
-
   it('turns a resize into font size (and wrap width), at least 10px', () => {
     expect(textResize({ fontSize: 40 }, { x: 1, y: 2, rotation: 15, scaleX: 2 })).toEqual({ x: 1, y: 2, rotation: 15, fontSize: 80 });
     expect(textResize({ fontSize: 40, width: 300 }, { x: 0, y: 0, rotation: 0, scaleX: 0.5 })).toMatchObject({ fontSize: 20, width: 150 });

@@ -90,6 +90,7 @@ const CanvasMedia = ({ item, isSelected, onSelect, onChange, canvasDimensions })
         crop={item.crop}
         scaleX={item.scaleX || 1}
         scaleY={item.scaleY || 1}
+        rotation={item.rotation || 0}
         draggable
         onClick={onSelect}
         onTap={onSelect}
@@ -101,7 +102,7 @@ const CanvasMedia = ({ item, isSelected, onSelect, onChange, canvasDimensions })
         }}
         onTransformEnd={() => {
           const node = imageRef.current;
-          onChange({ ...item, x: node.x(), y: node.y(), scaleX: node.scaleX(), scaleY: node.scaleY() });
+          onChange({ ...item, x: node.x(), y: node.y(), scaleX: node.scaleX(), scaleY: node.scaleY(), rotation: node.rotation() });
         }}
       />
       {isSelected && (

@@ -74,6 +74,25 @@ describe('createExportGraph', () => {
     expect(filters[4]).toMatch(/^\[4:v\]setpts=\(PTS-STARTPTS\)\/1\+2\/TB,/);
   });
 
+  it('turns rotated clips like the preview: about their corner, placed by their centre', () => {
+    const g = graphFor();
+    // 100 x 50 at (100, 50), a quarter turn: the preview puts its centre at (75, 100).
+    g.addVisual({ type: 'sticker', url: 's', x: 100, y: 50, width: 100, height: 50, rotation: 90, startMs: 0, endMs: 1000 }, { fileName: 'input_2.png', kind: 'still', ratio: 1, items: [] });
+    const [chain, place] = filtersOf(g.finish().command);
+    expect(chain).toBe('[2:v]setpts=(PTS-STARTPTS)/1,scale=100:50,format=rgba,rotate=1.570796:ow=50:oh=100:c=none[vis2]');
+    expect(place).toMatch(/^\[0:v\]\[vis2\]overlay=50:50:/);
+  });
+
+  it('leaves unturned clips (0 or a full turn) as they are', () => {
+    for (const rotation of [0, 360]) {
+      const g = graphFor();
+      g.addVisual({ type: 'image', url: 'p', x: 10, y: 20, width: 100, height: 50, rotation }, { fileName: 'input_2.png', kind: 'still', ratio: 1, items: [] });
+      const [chain, place] = filtersOf(g.finish().command);
+      expect(chain).not.toContain('rotate');
+      expect(place).toMatch(/overlay=10:20:/);
+    }
+  });
+
   it('mixes a video\'s sound only when it has one, isn\'t muted and isn\'t a GIF export', () => {
     const video = { type: 'video', url: 'v', startMs: 1000, endMs: 3000, playbackRate: 2, volume: 0.5 };
     const withSound = graphFor();
