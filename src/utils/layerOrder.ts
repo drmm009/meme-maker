@@ -1,25 +1,29 @@
 // Drawing order of the video editor's visual items, shared by the preview and the export.
 // By default videos sit at the bottom, then photos, stickers, and text on top, each in the order
 // added. Bring forward / send back give an item an explicit `z` that overrides this.
+import type { Clip, ClipType } from '../model/videoProject';
 
-const GROUP = { video: 0, image: 1, sticker: 2, text: 3 };
+// What ordering needs to know about a clip.
+export type Layered = Pick<Clip, 'id' | 'type' | 'z' | 'startMs' | 'endMs'>;
+
+const GROUP: Partial<Record<ClipType, number>> = { video: 0, image: 1, sticker: 2, text: 3 };
 const GROUP_SPAN = 1e6;
 
-export const layerZ = (item, index) => (Number.isFinite(item.z) ? item.z : (GROUP[item.type] ?? 4) * GROUP_SPAN + index);
+export const layerZ = (item: Layered, index: number): number => (item.z !== undefined && Number.isFinite(item.z) ? item.z : (GROUP[item.type] ?? 4) * GROUP_SPAN + index);
 
 // Visual items (audio excluded), bottom to top.
-export const drawOrder = (items) => items
+export const drawOrder = <T extends Layered>(items: T[]): T[] => items
   .map((item, index) => ({ item, z: layerZ(item, index) }))
   .filter(({ item }) => item.type !== 'audio')
   .sort((a, b) => a.z - b.z)
   .map(({ item }) => item);
 
-const overlaps = (a, b) => a.startMs < b.endMs && b.startMs < a.endMs;
+const overlaps = (a: Layered, b: Layered) => a.startMs < b.endMs && b.startMs < a.endMs;
 
 // Items with `id` moved one step up (dir 1) or down (dir -1), past the nearest item it overlaps
 // in time (moving past one that is never on screen with it would change nothing you can see).
 // Returns the same array when there is nothing to move past.
-export const moveLayer = (items, id, dir) => {
+export const moveLayer = <T extends Layered>(items: T[], id: string, dir: 1 | -1): T[] => {
   const ranked = items
     .map((item, index) => ({ item, z: layerZ(item, index) }))
     .filter(({ item }) => item.type !== 'audio')

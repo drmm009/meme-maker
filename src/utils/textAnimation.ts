@@ -1,7 +1,20 @@
 // Text clip animations shared by the live preview and the FFmpeg export.
 // item.animation is 'pop', 'shake', 'typewriter' or empty. Times are ms from the clip's start.
+import type Konva from 'konva';
+import type { TextAnimation, TextClip } from '../model/videoProject';
 
-export const TEXT_ANIMATIONS = [
+// How animated text looks at a moment: scale and fade about its centre, a shake offset (stage
+// units), and how many characters the typewriter shows (Infinity = all).
+export interface TextFrame {
+  scale: number;
+  opacity: number;
+  dx: number;
+  dy: number;
+  chars: number;
+}
+export type AnimatedText = Pick<TextClip, 'text' | 'fontSize' | 'animation' | 'startMs' | 'endMs'>;
+
+export const TEXT_ANIMATIONS: { id: TextAnimation | null; label: string }[] = [
   { id: null, label: 'None' },
   { id: 'pop', label: 'Pop in' },
   { id: 'shake', label: 'Shake' },
@@ -14,23 +27,23 @@ const TYPE_CHAR_MS = 55;
 // Shake is two sines (not random) so the export can reproduce it exactly with an FFmpeg expression.
 const SHAKE = { fx: 9, fy: 13, phaseY: 1.3, yRatio: 0.6 };
 
-export const REST_FRAME = Object.freeze({ scale: 1, opacity: 1, dx: 0, dy: 0, chars: Infinity });
+export const REST_FRAME: Readonly<TextFrame> = Object.freeze({ scale: 1, opacity: 1, dx: 0, dy: 0, chars: Infinity });
 
-const clamp01 = (v) => Math.min(1, Math.max(0, v));
-const easeOutCubic = (p) => 1 - (1 - p) ** 3;
+const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
+const easeOutCubic = (p: number) => 1 - (1 - p) ** 3;
 
 // Characters the typewriter reveals: everything but line breaks.
-export const typedLength = (item) => (item.text || '').replace(/\n/g, '').length;
+export const typedLength = (item: Pick<TextClip, 'text'>): number => (item.text || '').replace(/\n/g, '').length;
 
 // Time per character: 55ms, or quicker so typing finishes within 80% of a short clip.
-export const typeCharMs = (item) => {
+export const typeCharMs = (item: Pick<TextClip, 'text' | 'startMs' | 'endMs'>): number => {
   const len = Math.max(1, typedLength(item));
   return Math.min(TYPE_CHAR_MS, (0.8 * Math.max(0, item.endMs - item.startMs)) / len);
 };
 
-export const shakeAmplitude = (item) => Math.max(3, (item.fontSize || 32) * 0.06);
+export const shakeAmplitude = (item: Pick<TextClip, 'fontSize'>): number => Math.max(3, (item.fontSize || 32) * 0.06);
 
-export const shakeOffset = (item, tMs) => {
+export const shakeOffset = (item: Pick<TextClip, 'fontSize'>, tMs: number): { dx: number; dy: number } => {
   const a = shakeAmplitude(item);
   const t = tMs / 1000;
   return {
@@ -40,12 +53,12 @@ export const shakeOffset = (item, tMs) => {
 };
 
 // Overshoot to 112% by 70% of the pop, then settle to 100%.
-const popScale = (p) => (p < 0.7
+const popScale = (p: number) => (p < 0.7
   ? POP_PEAK * easeOutCubic(p / 0.7)
   : POP_PEAK - (POP_PEAK - 1) * easeOutCubic((p - 0.7) / 0.3));
 
 // How the text looks `tMs` into its clip.
-export const textAnimFrame = (item, tMs) => {
+export const textAnimFrame = (item: AnimatedText, tMs: number): Readonly<TextFrame> => {
   const t = Math.max(0, tMs);
   switch (item.animation) {
     case 'pop': {
@@ -65,7 +78,7 @@ export const textAnimFrame = (item, tMs) => {
 };
 
 // How long the animation runs before the text rests (shake never rests).
-export const animationLengthMs = (item) => {
+export const animationLengthMs = (item: AnimatedText): number => {
   if (item.animation === 'pop') return POP_MS;
   if (item.animation === 'typewriter') return typeCharMs(item) * typedLength(item);
   if (item.animation === 'shake') return Infinity;
@@ -75,9 +88,9 @@ export const animationLengthMs = (item) => {
 // The export renders a still per step: [{ fromMs, toMs, frame }] covering the clip.
 // Pop steps at the video frame rate; typewriter steps per character (at most 80 steps);
 // none and shake are one still (shake moves the still with shakeExpressions instead).
-export const animationSteps = (item, fps = 30) => {
+export const animationSteps = (item: AnimatedText, fps = 30): { fromMs: number; toMs: number; frame: Readonly<TextFrame> }[] => {
   const len = Math.max(0, item.endMs - item.startMs);
-  const steps = [];
+  const steps: { fromMs: number; toMs: number; frame: Readonly<TextFrame> }[] = [];
   if (item.animation === 'pop') {
     const step = 1000 / fps;
     for (let t = 0; t < Math.min(POP_MS, len); t += step) {
@@ -99,7 +112,7 @@ export const animationSteps = (item, fps = 30) => {
 };
 
 // FFmpeg overlay x/y expressions reproducing shakeOffset, in output pixels.
-export const shakeExpressions = (item, startSec, ratio) => {
+export const shakeExpressions = (item: Pick<TextClip, 'fontSize'>, startSec: number, ratio: number): { x: string; y: string } => {
   const a = shakeAmplitude(item) * ratio;
   const t = `(t-${startSec.toFixed(3)})`;
   return {
@@ -112,17 +125,19 @@ export const shakeExpressions = (item, startSec, ratio) => {
 
 // Clip rectangles, in the text node's own coordinates, that reveal its first `chars` characters
 // line by line while keeping the final layout (centred lines don't shift as they type).
-export const revealRects = (textNode, chars) => {
+export const revealRects = (textNode: Konva.Text, chars: number): { x: number; y: number; width: number; height: number }[] => {
   const lines = textNode.textArr || [];
   const lineH = textNode.fontSize() * textNode.lineHeight();
   const width = textNode.width();
   const align = textNode.align();
   const pad = textNode.padding();
   const margin = (textNode.strokeWidth() || 0) + 2;
-  const measure = (s) => (typeof textNode._getTextWidth === 'function'
-    ? textNode._getTextWidth(s)
+  // Konva's own width measure when present (it includes letter spacing), else an equivalent.
+  const internal = textNode as unknown as { _getTextWidth?: (s: string) => number };
+  const measure = (s: string) => (typeof internal._getTextWidth === 'function'
+    ? internal._getTextWidth(s)
     : textNode.measureSize(s).width + textNode.letterSpacing() * s.length);
-  const rects = [];
+  const rects: { x: number; y: number; width: number; height: number }[] = [];
   let left = chars;
   lines.forEach((line, i) => {
     if (left <= 0) return;
@@ -137,7 +152,7 @@ export const revealRects = (textNode, chars) => {
 
 // Apply a frame to a group holding the text (and its background box): scale and fade about the
 // text's centre, shake offset, and the typewriter clip.
-export const applyTextFrame = (group, textNode, frame) => {
+export const applyTextFrame = (group: Konva.Group, textNode: Konva.Text, frame: Readonly<TextFrame>): void => {
   const w = textNode.width() * textNode.scaleX();
   const h = textNode.height() * textNode.scaleY();
   const px = textNode.x() + w / 2;

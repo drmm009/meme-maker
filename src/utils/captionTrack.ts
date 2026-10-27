@@ -1,12 +1,22 @@
 // Export helper: auto captions go out as one image sequence (FFmpeg concat list) instead of one
 // looped input per caption and animation step, which would be hundreds of inputs for a long video.
 import { animationSteps } from './textAnimation';
+import type { TextFrame } from './textAnimation';
+import type { TextClip } from '../model/videoProject';
+
+// One still of the track: what to draw and when (timeline ms).
+export interface CaptionFrame {
+  item: TextClip;
+  frame: Readonly<TextFrame>;
+  fromMs: number;
+  toMs: number;
+}
 
 // Auto captions that can share the track: in time order, not overlapping, not shaking (shake moves
 // the overlay, which a shared track can't do). The rest export like any other text.
-export const splitCaptionTrack = (textItems) => {
-  const track = [];
-  const rest = [];
+export const splitCaptionTrack = (textItems: TextClip[]): { track: TextClip[]; rest: TextClip[] } => {
+  const track: TextClip[] = [];
+  const rest: TextClip[] = [];
   const candidates = textItems.filter((i) => i.autoCaption && i.animation !== 'shake').sort((a, b) => a.startMs - b.startMs);
   let lastEnd = -Infinity;
   for (const item of candidates) {
@@ -18,15 +28,15 @@ export const splitCaptionTrack = (textItems) => {
 };
 
 // Frames of the track: [{ item, frame, fromMs, toMs }] (timeline ms), one per animation step.
-export const captionFrames = (track) => track.flatMap((item) =>
+export const captionFrames = (track: TextClip[]): CaptionFrame[] => track.flatMap((item) =>
   animationSteps(item).map((step) => ({ item, frame: step.frame, fromMs: item.startMs + step.fromMs, toMs: item.startMs + step.toMs })));
 
 // ffconcat text for frames whose images are `files[i]`, with `blank` filling the gaps, over
 // totalMs. Durations come from rounded absolute times so they don't drift over a long video.
-export const concatList = (frames, files, blank, totalMs) => {
+export const concatList = (frames: CaptionFrame[], files: string[], blank: string, totalMs: number): string => {
   const lines = ['ffconcat version 1.0'];
-  const sec = (ms) => Math.round(ms) / 1000;
-  const entry = (file, fromMs, toMs) => {
+  const sec = (ms: number) => Math.round(ms) / 1000;
+  const entry = (file: string, fromMs: number, toMs: number) => {
     const d = sec(toMs) - sec(fromMs);
     if (d > 0) lines.push(`file ${file}`, `duration ${d.toFixed(3)}`);
   };

@@ -1,7 +1,7 @@
 // Divider lines of a multi-panel layout, as [x1, y1, x2, y2], for a width x height canvas. The
 // preview (GridOverlay) and the export (gridHelper) both draw these, so they always match.
 // '1-panel', 'custom-grid' (drawn from its slots) and unknown layouts have none.
-export const gridLines = (layoutId, width, height) => {
+export const gridLines = (layoutId: string | null | undefined, width: number, height: number): [number, number, number, number][] => {
   switch (layoutId) {
     case '2-vert':
       return [[0, height / 2, width, height / 2]];

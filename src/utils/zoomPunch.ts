@@ -1,11 +1,12 @@
 // Zoom-punch: a quick zoom into a video clip and back, at chosen moments.
 // item.punches holds those moments in source-footage ms, so splits, trims and freeze frames keep
 // each punch on the same moment of the video. The preview and the FFmpeg export share these curves.
+import type { VideoClip } from '../model/videoProject';
 
 export const PUNCH = { amp: 0.25, riseMs: 80, fallMs: 320 };
 
 // Timeline times (ms) of a clip's punches that fall inside the clip.
-export const clipPunchTimes = (item) => {
+export const clipPunchTimes = (item: Pick<VideoClip, 'playbackRate' | 'trimStartMs' | 'punches' | 'startMs' | 'endMs'>): number[] => {
   const rate = item.playbackRate || 1;
   const trim = item.trimStartMs || 0;
   return (item.punches || [])
@@ -14,7 +15,7 @@ export const clipPunchTimes = (item) => {
 };
 
 // Zoom factor (1 = none) at timeline time tMs: fast linear rise, eased fall.
-export const punchZoom = (times, tMs) => {
+export const punchZoom = (times: number[], tMs: number): number => {
   let z = 1;
   for (const p of times) {
     const d = tMs - p;
@@ -26,7 +27,7 @@ export const punchZoom = (times, tMs) => {
 
 // FFmpeg filters (leading comma) that zoom a w x h stream by the punch curve and crop back to w x h,
 // or '' with no punches. `t` is timeline seconds (the clip's stream is already offset to its start).
-export const punchFilter = (times, w, h) => {
+export const punchFilter = (times: number[], w: number, h: number): string => {
   if (!times.length) return '';
   const r = PUNCH.riseMs / 1000;
   const f = PUNCH.fallMs / 1000;

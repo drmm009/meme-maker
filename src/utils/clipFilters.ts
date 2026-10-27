@@ -1,8 +1,19 @@
 // Colour filters for video and photo clips, shared by the preview (a CSS filter string on a canvas)
 // and the export (an FFmpeg chain doing the same maths). item.filter = { preset, brightness,
 // contrast, saturation } with the three adjustments in -100..100.
+import type { ClipFilter } from '../model/videoProject';
 
-export const FILTER_PRESETS = [
+// A filter as numbers: CSS filter amounts (1 = unchanged; hue in degrees).
+export interface FilterValues {
+  brightness: number;
+  contrast: number;
+  saturate: number;
+  sepia: number;
+  hue: number;
+}
+type Matrix = number[][];
+
+export const FILTER_PRESETS: { id: string | null; label: string; values: Partial<FilterValues> }[] = [
   { id: null, label: 'None', values: {} },
   { id: 'bw', label: 'B&W', values: { saturate: 0, contrast: 1.1 } },
   { id: 'vintage', label: 'Vintage', values: { sepia: 0.45, saturate: 0.85, contrast: 1.05, brightness: 1.05 } },
@@ -12,32 +23,35 @@ export const FILTER_PRESETS = [
   { id: 'deepfried', label: 'Deep fried', values: { saturate: 3, contrast: 1.8, brightness: 1.15, hue: -12 } },
 ];
 
-const NEUTRAL = { brightness: 1, contrast: 1, saturate: 1, sepia: 0, hue: 0 };
+const NEUTRAL: FilterValues = { brightness: 1, contrast: 1, saturate: 1, sepia: 0, hue: 0 };
 
 // Numbers for a clip's filter: the preset's, then the sliders on top (brightness and contrast
 // 0.5x-1.5x, saturation 0x-2x). Null when the result changes nothing.
-export const resolveFilter = (filter) => {
+export const resolveFilter = (filter: ClipFilter | null | undefined): FilterValues | null => {
   if (!filter) return null;
   const preset = FILTER_PRESETS.find((p) => p.id === (filter.preset ?? null)) || FILTER_PRESETS[0];
-  const v = { ...NEUTRAL, ...preset.values };
-  const adj = (key) => (Number.isFinite(filter[key]) ? filter[key] / 100 : 0);
+  const v: FilterValues = { ...NEUTRAL, ...preset.values };
+  const adj = (key: 'brightness' | 'contrast' | 'saturation') => {
+    const amount = filter[key];
+    return typeof amount === 'number' && Number.isFinite(amount) ? amount / 100 : 0;
+  };
   v.brightness *= 1 + adj('brightness') * 0.5;
   v.contrast *= 1 + adj('contrast') * 0.5;
   v.saturate *= 1 + adj('saturation');
-  const neutral = Object.keys(NEUTRAL).every((k) => Math.abs(v[k] - NEUTRAL[k]) < 1e-6);
+  const neutral = (Object.keys(NEUTRAL) as (keyof FilterValues)[]).every((k) => Math.abs(v[k] - NEUTRAL[k]) < 1e-6);
   return neutral ? null : v;
 };
 
 // CSS filter for the preview. Order matters and matches the export: colour matrix
 // (saturate, sepia, hue) first, then brightness, then contrast.
-export const filterCss = (v) => (v
+export const filterCss = (v: FilterValues | null): string => (v
   ? `saturate(${v.saturate}) sepia(${v.sepia}) hue-rotate(${v.hue}deg) brightness(${v.brightness}) contrast(${v.contrast})`
   : '');
 
-const mul = (a, b) => a.map((row) => [0, 1, 2].map((j) => row[0] * b[0][j] + row[1] * b[1][j] + row[2] * b[2][j]));
+const mul = (a: Matrix, b: Matrix): Matrix => a.map((row) => [0, 1, 2].map((j) => row[0] * b[0][j] + row[1] * b[1][j] + row[2] * b[2][j]));
 
 // The CSS Filter Effects matrices for saturate, sepia and hue-rotate, combined in that order.
-export const colorMatrix = (v) => {
+export const colorMatrix = (v: Pick<FilterValues, 'saturate' | 'sepia' | 'hue'>): Matrix => {
   const s = v.saturate;
   const sat = [
     [0.213 + 0.787 * s, 0.715 - 0.715 * s, 0.072 - 0.072 * s],
@@ -68,8 +82,8 @@ const MAX_SATURATE_PASS = 2.2;
 
 // The browser applies saturate, sepia and hue-rotate one after another, clamping after each; the
 // export does the same, so these are the colour matrices to apply, in order (identities skipped).
-export const colorPasses = (v) => {
-  const passes = [];
+export const colorPasses = (v: FilterValues): Matrix[] => {
+  const passes: Matrix[] = [];
   if (Math.abs(v.saturate - 1) > 1e-6) {
     const count = v.saturate > MAX_SATURATE_PASS ? Math.ceil(Math.log(v.saturate) / Math.log(MAX_SATURATE_PASS)) : 1;
     const s = v.saturate ** (1 / count);
@@ -81,15 +95,15 @@ export const colorPasses = (v) => {
 };
 
 // The same filter for one RGB pixel (0..255), step by step with clamping, as the export computes it.
-export const applyFilterToPixel = (v, rgb) => {
-  const clamp = (x) => Math.min(255, Math.max(0, x));
+export const applyFilterToPixel = (v: FilterValues, rgb: number[]): number[] => {
+  const clamp = (x: number) => Math.min(255, Math.max(0, x));
   let px = rgb;
   for (const m of colorPasses(v)) px = m.map((row) => clamp(row[0] * px[0] + row[1] * px[1] + row[2] * px[2]));
   return px.map((x) => clamp((clamp(x * v.brightness) - 127.5) * v.contrast + 127.5));
 };
 
 // FFmpeg filters (leading comma) for a clip's filter, or ''.
-export const filterChain = (v) => {
+export const filterChain = (v: FilterValues | null): string => {
   if (!v) return '';
   const mixers = colorPasses(v).map((matrix) => {
     const m = matrix.map((row) => row.map((x) => x.toFixed(4)));
