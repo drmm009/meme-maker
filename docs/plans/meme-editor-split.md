@@ -209,6 +209,29 @@ Phases, each its own commit with the same checks (tests, lint baseline, build, b
       - emoji sticker add, drag, resize and delete
       - header + footer bands sized to two-line captions, with the edit overlay centred in the header band
     - Not checked this time: wheel zoom on multi-panel slots, image layers, touch input (the pane only sends mouse events).
+12. **Finish the split.** *Done:*
+    - `useCanvasInteraction.js` went from 1,479 to 364 lines. The calculations moved into pure modules in `canvas/interaction/`, with tests:
+      - `layerBoxes.js`: caption and image-layer boxes, handle positions, `findHandle`, `findSlotAt`. This replaces four copies of the caption-box maths, three of the image-layer sizing and two of the slot lookup.
+      - `hitTest.js`: `hitActiveHandle`, `isOnActiveBody`, `hitLayerAt` (topmost by zIndex) and `hitBandCaption`. This is the single per-type hit test that phase 10 didn't get to.
+      - `hoverCursor.js`: the cursor, built from those same hit tests.
+      - `dragMath.js`: `getDragStart`, `getRotation` (right-angle snapping), `resizeImageLayer` (including crop), `resizeSticker`, `resizeCaption` and `moveLayer` (clamping and snap guides).
+      - `freehand.js`: brush strokes.
+    - Behaviour changed on purpose:
+      - The hover cursor now uses the click hit tests, so it matches what a click actually grabs: face-swap and crop handles, the footer band, and the sticker's 6px slack.
+      - An unreachable drag branch that called an undefined `onUpdateImageLayerPosition` was removed.
+    - `MemeEditor.jsx` went from 489 to 239 lines:
+      - `editor/CanvasStage.jsx` is the canvas area: paste toast, background-removal overlay, face pinpointing, tap-to-deselect and the canvas select handler.
+      - `useEditorSetup` holds the start-up effects. Their order is kept: the template effect runs first, then the "start on Text" reset.
+      - `useActiveLayer` works out the selected layer, the social card being edited and the font.
+      - `useToolbarAutoScroll` holds the four scroll-into-view effects and owns the layer toolbar ref.
+    - Checked in the browser at phone size by driving real mouse events on the canvas and reading the store:
+      - caption drag, centre snap, rotate (snaps to 90), corner resize, side-handle width and its double-tap reset, delete handle, hover cursors
+      - a freehand stroke
+      - header-band tap
+      - sticker resize, move and rotate
+      - image-layer stretch and crop (the opposite edge stays put)
+      - tapping around the canvas deselects
+    - Not checked: wheel zoom on multi-panel slots (`findSlotAt` has unit tests) and real touch input.
 
 CSS (`MemeEditor.css`, 2,076 lines) gets split along with the components in phase 4. It is redesigned in the separate design-system step.
 
