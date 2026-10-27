@@ -1,8 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   getWhatsAppCardMetrics,
-  getWhatsAppCardHeight,
-  getWhatsAppCardScale
+  getWhatsAppCardHeight
 } from './canvas/draw/socialCards/whatsapp';
 
 describe('WhatsApp Card Metrics & Canvas Layout', () => {

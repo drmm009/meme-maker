@@ -7,8 +7,6 @@ export function paintWatermark({
     targetCtx.globalAlpha = watermark.opacity || 0.5;
 
     const pad = 20;
-    let wx = 0;
-    let wy = 0;
 
     const getPositions = (w, h) => {
       const pos = watermark.position || 'bottom-right';

@@ -5,7 +5,6 @@ import {
   Camera,
   RefreshCw,
   Check,
-  X,
   Eye,
   AlertCircle
 } from 'lucide-react';
@@ -28,7 +27,7 @@ async function ensureDataUrl(src) {
         const ctx = c.getContext('2d');
         ctx.drawImage(img, 0, 0);
         resolve(c.toDataURL('image/jpeg', 0.92));
-      } catch (err) {
+      } catch {
         resolve(src);
       }
     };
@@ -88,12 +87,14 @@ export default function FaceMorphModal({
         if (data.status === 'online' && data.model_available) {
           isOnline = true;
         }
-      } catch (e) {
+      } catch {
         try {
           const res2 = await fetch('http://127.0.0.1:5174/api/face-swap/status');
           const data2 = await res2.json();
           if (data2.status === 'online') isOnline = true;
-        } catch (e2) {}
+        } catch {
+          // Server offline
+        }
       }
 
       if (isMounted) {
@@ -114,7 +115,7 @@ export default function FaceMorphModal({
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ image: targetUrl })
             });
-          } catch (e) {
+          } catch {
             detectRes = await fetch('http://127.0.0.1:5174/api/face-swap/detect-faces', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -174,7 +175,7 @@ export default function FaceMorphModal({
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
-      } catch (err) {
+      } catch {
         resp = await fetch('http://127.0.0.1:5174/api/face-swap', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -206,10 +207,13 @@ export default function FaceMorphModal({
     }
   }, [memeTemplateUrl, memeFacePatch, faceTarget, selectedTargetIndex, swapAllFaces]);
 
-  // Trigger Neural Face Swap when selection changes
+  // Trigger Neural Face Swap when selection changes. The latest runNeuralFaceSwap is read through a
+  // ref so a new template or face patch alone doesn't start another (slow) swap.
+  const runNeuralFaceSwapRef = useRef(runNeuralFaceSwap);
+  runNeuralFaceSwapRef.current = runNeuralFaceSwap;
   useEffect(() => {
     if (isNeuralAvailable && selectedImageSrc && isOpen) {
-      runNeuralFaceSwap(selectedImageSrc, selectedTargetIndex, swapAllFaces);
+      runNeuralFaceSwapRef.current(selectedImageSrc, selectedTargetIndex, swapAllFaces);
     }
   }, [isNeuralAvailable, selectedImageSrc, selectedTargetIndex, swapAllFaces, isOpen]);
 

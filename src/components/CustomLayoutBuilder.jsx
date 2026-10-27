@@ -4,7 +4,7 @@ import { Image as ImageIcon, X, Plus, Minus, Grid, Clapperboard, Share2, Type } 
 import { motion } from 'framer-motion';
 import './CustomLayoutBuilder.css';
 
-export const VIDEO_LAYOUT_OPTIONS = [
+const VIDEO_LAYOUT_OPTIONS = [
   {
     id: 'video-header',
     name: 'Header Text Video',
@@ -35,7 +35,7 @@ export const VIDEO_LAYOUT_OPTIONS = [
   }
 ];
 
-export const SOCIAL_LAYOUT_OPTIONS = [
+const SOCIAL_LAYOUT_OPTIONS = [
   {
     id: 'social-tweet-card',
     name: 'Tweet / X Post Card',
@@ -59,7 +59,7 @@ export const SOCIAL_LAYOUT_OPTIONS = [
   }
 ];
 
-export const createLayoutTemplate = (layout) => {
+const createLayoutTemplate = (layout) => {
   const width = 800;
   const height = 800;
   const canvas = document.createElement('canvas');
@@ -176,12 +176,8 @@ export const createLayoutTemplate = (layout) => {
 };
 
 export default function CustomLayoutBuilder({
-  savedState,
-  onSaveState,
   onLayoutComplete,
-  onSelectTemplate,
-  onBack,
-  _onBack
+  onSelectTemplate
 }) {
   const [isConfiguringCustom, setIsConfiguringCustom] = useState(false);
   const [customCols, setCustomCols] = useState(2);

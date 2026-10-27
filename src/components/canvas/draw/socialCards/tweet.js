@@ -78,7 +78,6 @@ export const getTweetCardHeight = (ctx, cap, cardW) => {
   const pad = Math.round(18 * scale);
   const avatarSize = Math.round(40 * scale);
   const bodyFontSize = Math.round(Math.max(12, (cap.fontSize || 18) * scale));
-  const timeFontSize = Math.round(13 * scale);
   const metricsFontSize = Math.round(13 * scale);
   const iconSize = Math.round(15 * scale);
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { motion, AnimatePresence, useDragControls } from 'framer-motion';
 import { X } from 'lucide-react';
 import ModalPortal from './ModalPortal';
@@ -17,7 +17,6 @@ export default function BottomSheet({
   className = '',
   contentStyle = {}
 }) {
-  const [isDragging, setIsDragging] = useState(false);
   const dragControls = useDragControls();
 
   // Lock body scroll when open
@@ -64,9 +63,7 @@ export default function BottomSheet({
               dragListener={false}
               dragConstraints={{ top: 0 }}
               dragElastic={{ top: 0, bottom: 0.25 }}
-              onDragStart={() => setIsDragging(true)}
               onDragEnd={(e, { offset, velocity }) => {
-                setIsDragging(false);
                 if (offset.y > 80 || velocity.y > 300) {
                   onClose();
                 }

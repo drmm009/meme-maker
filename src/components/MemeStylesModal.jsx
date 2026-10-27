@@ -1,12 +1,13 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  X, Plus, User, AtSign, Sparkles, Dices, Check,
+  Plus, User, AtSign, Sparkles, Dices, Check,
   MessageCircle, Repeat, Heart, Bookmark, Share2,
-  Phone, Video, MoreVertical, Send, CheckCheck,
-  Upload, Image as ImageIcon, Trash2, ArrowLeftRight, ChevronLeft, ChevronRight, ChevronDown,
-  Newspaper, Rocket, Trophy, Smile, Briefcase, Calendar, Paperclip, Camera, Mic
+  Phone, Send,
+  Upload, Image as ImageIcon, Trash2, ChevronLeft, ChevronRight, ChevronDown,
+  Newspaper, Rocket, Trophy, Smile, Briefcase, Paperclip, Camera, Mic
 } from 'lucide-react';
 import BottomSheet from './BottomSheet';
+import { IG_PRESET_IMAGES } from '../data/igPresetImages';
 
 const WHATSAPP_DOODLE_CSS_BG = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Cg fill='none' stroke='%23ffffff' stroke-width='1.2' stroke-linecap='round' stroke-linejoin='round' opacity='0.045'%3E%3Cpath d='M15 15h20v14H24l-6 5v-5h-3z'/%3E%3Ccircle cx='110' cy='30' r='8'/%3E%3Cpath d='M110 26v4l3 2'/%3E%3Cpath d='M150 40c0-4 4-8 8-8s8 4 8 8c0 8-16 16-16 16s-16-8-16-16c0-4 4-8 8-8s8 4 8 8z'/%3E%3Ccircle cx='55' cy='75' r='3' fill='%23fff'/%3E%3Cpath d='M58 75V62h10v10'/%3E%3Ccircle cx='68' cy='72' r='3' fill='%23fff'/%3E%3Crect x='130' y='100' width='16' height='12' rx='2'/%3E%3Ccircle cx='138' cy='106' r='3'/%3E%3Ccircle cx='40' cy='130' r='9'/%3E%3Ccircle cx='37' cy='128' r='1' fill='%23fff'/%3E%3Ccircle cx='43' cy='128' r='1' fill='%23fff'/%3E%3Cpath d='M37 133a4 4 0 0 0 6 0'/%3E%3Cpath d='M95 145l2 4 5 1-4 3 1 5-4-3-4 3 1-5-4-3 5-1z'/%3E%3Cpath d='M150 155l3 3 6-7m-4 4l3 3 6-7'/%3E%3C/g%3E%3C/svg%3E")`;
 
@@ -56,29 +57,6 @@ export const WhatsAppCheckmarks = ({ ticks = 'blue', size = 14 }) => {
       <span>✓</span>{isDouble && <span>✓</span>}
     </span>
   );
-};
-
-/* ─── Modern iOS WhatsApp Header Glyphs ─── */
-const IOSVideoGlyph = ({ size = 18, color = '#007aff' }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill={color} style={{ flexShrink: 0 }}>
-    <path d="M4 6.5A2.5 2.5 0 0 0 1.5 9v6A2.5 2.5 0 0 0 4 17.5h9a2.5 2.5 0 0 0 2.5-2.5V9A2.5 2.5 0 0 0 13 6.5H4zm13.78 3.03a1 1 0 0 0-1.28.96v3.02a1 1 0 0 0 1.28.96l3.5-1.5a1 1 0 0 0 .72-.96v-1a1 1 0 0 0-.72-.96l-3.5-1.5z" />
-  </svg>
-);
-
-const IOSPhoneGlyph = ({ size = 17, color = '#007aff' }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill={color} style={{ flexShrink: 0 }}>
-    <path d="M6.62 10.79a15.05 15.05 0 0 0 6.59 6.59l2.2-2.2a1 1 0 0 1 1.01-.24c1.12.37 2.33.57 3.58.57a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1.02l-2.2 2.2z" />
-  </svg>
-);
-
-/* ─── Standalone Crisp Preset Post Images for Instagram ─── */
-export const IG_PRESET_IMAGES = {
-  inc42: `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600"><rect width="600" height="600" fill="%23f7f5f0"/><defs><pattern id="dots" width="18" height="18" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1.5" fill="%23d6d0c4"/></pattern></defs><rect width="600" height="600" fill="url(%23dots)"/><rect x="25" y="25" width="550" height="550" rx="16" fill="%23ffffff" stroke="%23e5e0d8" stroke-width="2"/><text x="45" y="70" fill="%23b91c1c" font-size="26" font-family="sans-serif" font-weight="900" letter-spacing="1">INSIDE TANMAY BHAT'S</text><text x="45" y="112" fill="%23111827" font-size="34" font-family="sans-serif" font-weight="900">STARTUP PORTFOLIO</text><text x="45" y="142" fill="%234b5563" font-size="14" font-family="sans-serif" font-weight="700">19 Startup Bets From The Creator-Turned-Investor</text><rect x="45" y="165" width="180" height="180" rx="10" fill="%23f9fafb" stroke="%23e5e7eb"/><rect x="45" y="165" width="180" height="28" rx="6" fill="%23b91c1c"/><text x="135" y="184" fill="%23ffffff" font-size="12" font-family="sans-serif" font-weight="800" text-anchor="middle">FINTECH</text><text x="60" y="222" fill="%231f2937" font-size="14" font-family="sans-serif" font-weight="700">◆ TRACKK</text><text x="60" y="252" fill="%231f2937" font-size="14" font-family="sans-serif" font-weight="700">◆ smallcase</text><text x="60" y="282" fill="%231f2937" font-size="14" font-family="sans-serif" font-weight="700">◆ EquityList</text><text x="60" y="312" fill="%231f2937" font-size="14" font-family="sans-serif" font-weight="700">◆ Flint.money</text><circle cx="310" cy="255" r="70" fill="%23fee2e2"/><circle cx="310" cy="255" r="62" fill="%23b91c1c"/><text x="310" y="266" fill="%23ffffff" font-size="32" font-family="sans-serif" font-weight="900" text-anchor="middle">TB</text><text x="310" y="340" fill="%23b91c1c" font-size="38" font-family="sans-serif" font-weight="900" text-anchor="middle">$</text><rect x="375" y="165" width="180" height="180" rx="10" fill="%23f9fafb" stroke="%23e5e7eb"/><rect x="375" y="165" width="180" height="28" rx="6" fill="%23b91c1c"/><text x="465" y="184" fill="%23ffffff" font-size="12" font-family="sans-serif" font-weight="800" text-anchor="middle">MEDIA &amp; ENT</text><text x="390" y="222" fill="%231f2937" font-size="14" font-family="sans-serif" font-weight="700">★ RIGI TV</text><text x="390" y="252" fill="%231f2937" font-size="14" font-family="sans-serif" font-weight="700">★ HYPD.</text><text x="390" y="282" fill="%231f2937" font-size="14" font-family="sans-serif" font-weight="700">★ atom.com</text><text x="390" y="312" fill="%231f2937" font-size="14" font-family="sans-serif" font-weight="700">★ Unikon.ai</text><rect x="45" y="365" width="160" height="120" rx="10" fill="%23f9fafb" stroke="%23e5e7eb"/><rect x="45" y="365" width="160" height="26" rx="6" fill="%23b91c1c"/><text x="125" y="382" fill="%23ffffff" font-size="11" font-family="sans-serif" font-weight="800" text-anchor="middle">CLEAN TECH</text><text x="58" y="420" fill="%231f2937" font-size="13" font-family="sans-serif" font-weight="700">alt carbon</text><rect x="220" y="365" width="160" height="120" rx="10" fill="%23f9fafb" stroke="%23e5e7eb"/><rect x="220" y="365" width="160" height="26" rx="6" fill="%23b91c1c"/><text x="300" y="382" fill="%23ffffff" font-size="11" font-family="sans-serif" font-weight="800" text-anchor="middle">ECOMMERCE</text><text x="235" y="420" fill="%231f2937" font-size="13" font-family="sans-serif" font-weight="700">ROTORIS</text><rect x="395" y="365" width="160" height="120" rx="10" fill="%23f9fafb" stroke="%23e5e7eb"/><rect x="395" y="365" width="160" height="26" rx="6" fill="%23b91c1c"/><text x="475" y="382" fill="%23ffffff" font-size="11" font-family="sans-serif" font-weight="800" text-anchor="middle">HEALTH TECH</text><text x="410" y="420" fill="%231f2937" font-size="13" font-family="sans-serif" font-weight="700">ULTRAHUMAN</text><text x="45" y="525" fill="%239ca3af" font-size="11" font-family="sans-serif">Note: This is not an exhaustive list. · Inc42 Datalabs</text></svg>`,
-  zuck: `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600"><defs><linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="%230f172a"/><stop offset="50%" stop-color="%231e1b4b"/><stop offset="100%" stop-color="%23311042"/></linearGradient><linearGradient id="glow" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="%2306b6d4"/><stop offset="100%" stop-color="%238b5cf6"/></linearGradient></defs><rect width="600" height="600" fill="url(%23g1)"/><circle cx="300" cy="240" r="140" fill="none" stroke="url(%23glow)" stroke-width="4" opacity="0.6"/><polygon points="260,180 380,240 260,300" fill="%2338bdf8"/><rect x="120" y="420" width="360" height="40" rx="12" fill="%231e293b" stroke="%2338bdf8" stroke-width="1.5"/><text x="300" y="446" fill="%23f8fafc" font-size="18" font-family="sans-serif" font-weight="700" text-anchor="middle">META CONNECT 2026 // OPEN WEIGHTS</text><text x="300" y="520" fill="%2394a3b8" font-size="15" font-family="sans-serif" text-anchor="middle">⚡ Keynote Livestream &amp; Demo</text></svg>`,
-  egg: `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600"><rect width="600" height="600" fill="%23fdfaf5"/><defs><radialGradient id="eggShade" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="%23ffedd5"/><stop offset="50%" stop-color="%23ea580c"/><stop offset="100%" stop-color="%239a3412"/></radialGradient><filter id="eggShadow"><feDropShadow dx="0" dy="25" stdDeviation="20" flood-opacity="0.18"/></filter></defs><ellipse cx="300" cy="310" rx="135" ry="175" fill="url(%23eggShade)" filter="url(%23eggShadow)"/><ellipse cx="270" cy="240" rx="30" ry="45" fill="%23fff" opacity="0.3" transform="rotate(-15 270 240)"/><text x="300" y="540" fill="%23431407" font-size="16" font-family="sans-serif" font-weight="800" letter-spacing="2" text-anchor="middle">%23EGGGANG · 58.9M LIKES</text></svg>`,
-  cat: `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600"><rect width="600" height="600" fill="%23fef3c7"/><circle cx="300" cy="330" r="160" fill="%23f97316"/><polygon points="190,210 240,110 270,200" fill="%23ea580c"/><polygon points="205,195 240,130 260,195" fill="%23fda4af"/><polygon points="410,210 360,110 330,200" fill="%23ea580c"/><polygon points="395,195 360,130 340,195" fill="%23fda4af"/><circle cx="240" cy="310" r="28" fill="%23fff"/><circle cx="244" cy="310" r="16" fill="%231e293b"/><circle cx="250" cy="304" r="6" fill="%23fff"/><circle cx="360" cy="310" r="28" fill="%23fff"/><circle cx="356" cy="310" r="16" fill="%231e293b"/><circle cx="362" cy="304" r="6" fill="%23fff"/><polygon points="300,345 288,335 312,335" fill="%23f43f5e"/><path d="M288 348 Q300 365 312 348" stroke="%23431407" stroke-width="4" fill="none"/><line x1="170" y1="330" x2="250" y2="340" stroke="%23ea580c" stroke-width="4"/><line x1="160" y1="355" x2="250" y2="355" stroke="%23ea580c" stroke-width="4"/><line x1="430" y1="330" x2="350" y2="340" stroke="%23ea580c" stroke-width="4"/><line x1="440" y1="355" x2="350" y2="355" stroke="%23ea580c" stroke-width="4"/><text x="300" y="540" fill="%237c2d12" font-size="18" font-family="sans-serif" font-weight="700" text-anchor="middle">ZERO THOUGHTS BEHIND THESE EYES</text></svg>`,
-  aesthetic: `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600"><rect width="600" height="600" fill="%23e0e7ff"/><defs><linearGradient id="warmBg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="%23fce7f3"/><stop offset="100%" stop-color="%23ede9fe"/></linearGradient></defs><rect width="600" height="600" fill="url(%23warmBg)"/><rect x="140" y="100" width="320" height="220" rx="16" fill="%231e293b"/><rect x="155" y="115" width="290" height="185" rx="8" fill="%230f172a"/><circle cx="300" cy="205" r="30" fill="%23a855f7" opacity="0.8"/><text x="300" y="270" fill="%2338bdf8" font-size="14" font-family="monospace" text-anchor="middle">npm run romanticize-life</text><circle cx="300" cy="420" r="70" fill="%23ffffff" stroke="%23cbd5e1" stroke-width="3"/><circle cx="300" cy="420" r="55" fill="%2310b981"/><ellipse cx="300" cy="420" rx="35" ry="20" fill="%23d1fae5" opacity="0.8"/><text x="300" y="550" fill="%23475569" font-size="16" font-family="serif" font-style="italic" text-anchor="middle">matcha latte + 0 unread slacks ✨</text></svg>`,
-  startup: `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600"><rect width="600" height="600" fill="%23090d16"/><defs><linearGradient id="termGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="%23131b2e"/><stop offset="100%" stop-color="%230d121f"/></linearGradient></defs><rect x="50" y="60" width="500" height="480" rx="14" fill="url(%23termGrad)" stroke="%231e293b" stroke-width="2"/><circle cx="80" cy="88" r="6" fill="%23ef4444"/><circle cx="102" cy="88" r="6" fill="%23f59e0b"/><circle cx="124" cy="88" r="6" fill="%2310b981"/><text x="80" y="150" fill="%23ec4899" font-size="18" font-family="monospace" font-weight="700">const<tspan fill="%2338bdf8"> startup </tspan><tspan fill="%23fff">=</tspan><tspan fill="%23e2e8f0"> {</tspan></text><text x="110" y="195" fill="%2394a3b8" font-size="16" font-family="monospace">funding:<tspan fill="%2322c55e"> '$50M'</tspan>,</text><text x="110" y="240" fill="%2394a3b8" font-size="16" font-family="monospace">revenue:<tspan fill="%23f43f5e"> '$0.00'</tspan>,</text><text x="110" y="285" fill="%2394a3b8" font-size="16" font-family="monospace">vibes:<tspan fill="%23a855f7"> 'immaculate'</tspan>,</text><text x="110" y="330" fill="%2394a3b8" font-size="16" font-family="monospace">ai_engineers:<tspan fill="%23eab308"> 42</tspan></text><text x="80" y="375" fill="%23e2e8f0" font-size="18" font-family="monospace">};</text><rect x="80" y="420" width="440" height="60" rx="8" fill="%2310b981" opacity="0.15" stroke="%2310b981" stroke-width="1"/><text x="100" y="456" fill="%2334d399" font-size="15" font-family="monospace">✔ Deployment complete to 14 regions</text></svg>`
 };
 
 /* ─── Twitter / X Presets & Data ─── */
@@ -353,19 +331,6 @@ const WHATSAPP_PERSONAS = [
   }
 ];
 
-const RANDOM_DIALOGUES = [
-  [
-    { id: 'r1', text: 'Are you alive? You haven’t sent a meme in 45 minutes.', direction: 'received', time: '4:20 PM', ticks: 'blue' },
-    { id: 'r2', text: 'Barely surviving this meeting that could have been a silent nod.', direction: 'sent', time: '4:21 PM', ticks: 'blue' },
-    { id: 'r3', text: 'Hang in there, sending emergency coffee via thoughts & prayers.', direction: 'received', time: '4:22 PM', ticks: 'blue' }
-  ],
-  [
-    { id: 'r1', text: 'Hey, quick question about that code you wrote 3 years ago.', direction: 'received', time: '5:01 PM', ticks: 'blue' },
-    { id: 'r2', text: 'I was a different person back then, please do not hold me accountable.', direction: 'sent', time: '5:02 PM', ticks: 'blue' },
-    { id: 'r3', text: 'Well it broke production in 14 countries. Have a great weekend!', direction: 'received', time: '5:03 PM', ticks: 'blue' }
-  ]
-];
-
 /* ─── Harmonized BottomSheet Input Style (Matching Add Template Search Bar) ─── */
 const inputStyle = {
   width: '100%',
@@ -613,12 +578,6 @@ export default function MemeStylesModal({
       if (removedIdx <= prev) return Math.max(0, prev - 1);
       return prev;
     });
-  };
-
-  const handleRandomWaDialogue = () => {
-    const pick = RANDOM_DIALOGUES[Math.floor(Math.random() * RANDOM_DIALOGUES.length)];
-    setWaMessages(pick);
-    setActiveWaMsgIndex(0);
   };
 
   // Header Title and Icon per platform

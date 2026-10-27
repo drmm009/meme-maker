@@ -11,7 +11,7 @@ export function paintLayers({
   const setActiveHandleDrawer = (drawer) => { activeHandleDrawer = drawer; };
 
   // Reset filter for text/stickers/image-layers overlay (safe on all browsers)
-  try { targetCtx.filter = 'none'; } catch(e) {}
+  try { targetCtx.filter = 'none'; } catch { /* unsupported */ }
 
   // Render Custom Image Overlay Layers
   const allLayers = [

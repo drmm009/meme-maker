@@ -633,7 +633,7 @@ export function useCanvasInteraction({
     }
   };
 
-  const handlePointerEnd = (e) => {
+  const handlePointerEnd = () => {
     if (canvasRef.current && !isDrawingMode) {
       canvasRef.current.style.cursor = 'default';
     }

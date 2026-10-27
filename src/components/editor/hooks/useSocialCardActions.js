@@ -1,5 +1,5 @@
 import { TWEET_TREND_PRESETS } from '../../canvas/draw/socialCards/tweet';
-import { IG_PRESET_IMAGES } from '../../MemeStylesModal';
+import { IG_PRESET_IMAGES } from '../../../data/igPresetImages';
 import { isSocialCardCaption } from '../memeEditorUtils';
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
 import { useEditorUiStore } from '../store/useEditorUiStore';

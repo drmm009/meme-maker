@@ -131,24 +131,34 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     totalCanvasH, wrapperRef
   });
 
+  // The scene's inputs, read through a ref: the redraw effect below fires on its listed triggers
+  // only, and everything else in here is derived from them.
+  const sceneRef = useRef(null);
+  sceneRef.current = {
+    activeCaption, activeFilters, activeIsNativeLayout, activeLayerId, activeLayoutDef,
+    baseImgRef, canvasBgColor, canvasFlipX, canvasFooter, canvasH, canvasHeader, canvasRef,
+    canvasW, captions, compCanvasRef, demotivational, dragTarget, drawings, footerExtH,
+    getCaptionCenterY, getImageLayerCenterY, getStickerCenterY, headerExtH, imageCacheRef,
+    imageFit, imageLayers, imgSrc, isDragging, isDrawingMode, isFooterEnabled, isHeaderEnabled,
+    isNativeLayout, liveBgColor, loadingMediaRef, naturalSize, setNaturalSize, slotImages,
+    slotTransforms, snappingLines, stickers, totalCanvasH, watermark
+  };
+
   useEffect(() => {
-    renderScene({
-      activeCaption, activeFilters, activeIsNativeLayout, activeLayerId, activeLayoutDef,
-      baseImgRef, canvasBgColor, canvasFlipX, canvasFooter, canvasH, canvasHeader, canvasRef,
-      canvasW, captions, compCanvasRef, demotivational, dragTarget, drawings, footerExtH,
-      getCaptionCenterY, getImageLayerCenterY, getStickerCenterY, headerExtH, imageCacheRef,
-      imageFit, imageLayers, imgSrc, isDragging, isDrawingMode, isFooterEnabled, isHeaderEnabled,
-      isNativeLayout, liveBgColor, loadingMediaRef, naturalSize, setNaturalSize, slotImages,
-      slotTransforms, snappingLines, stickers, totalCanvasH, watermark
-    });
+    renderScene(sceneRef.current);
   }, [captions, stickers, activeLayerId, imageLayers, slotImages, slotTransforms, activeIsNativeLayout, editingCaptionId, aspectRatio, imageFit, watermark, drawings, isDrawingMode, imgSrc, filters, liveBgColor, canvasHeader, canvasFooter, demotivational, canvasFlipX, redrawTick]);
 
-  // Keep focus on active caption whenever selected (not for social cards)
+  // Keep focus on active caption whenever selected (not for social cards). Runs on a new
+  // selection or edit only, not on every keystroke, so the cursor isn't moved while typing.
+  const focusTextareaRef = useRef(focusTextarea);
+  focusTextareaRef.current = focusTextarea;
+  const activeCaptionId = activeCaption?.id;
+  const activeCaptionEditable = Boolean(activeCaption) && !isSocialCardCaption(activeCaption);
   useEffect(() => {
-    if (activeCaption && !isSocialCardCaption(activeCaption) && editingCaptionId === activeCaption.id) {
-      focusTextarea();
+    if (activeCaptionEditable && editingCaptionId === activeCaptionId) {
+      focusTextareaRef.current();
     }
-  }, [activeCaption?.id, editingCaptionId]);
+  }, [activeCaptionId, activeCaptionEditable, editingCaptionId]);
 
   return (
     <div

@@ -379,8 +379,7 @@ export const drawWhatsAppCard = (ctx, cardW, cap) => {
     bodyFontSize,
     timeFontSize,
     bubbleLayouts,
-    totalH,
-    messages
+    totalH
   } = metrics;
 
   const nameFontSize = Math.round(15 * scale);

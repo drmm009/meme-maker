@@ -223,7 +223,7 @@ export const drawInstagramCard = (ctx, cardW, cap) => {
       }
       try {
         ctx.drawImage(cached, sx, sy, sw, sh, startX, postImageY, cardW, postImageH);
-      } catch (err) {
+      } catch {
         // Fallback
       }
       ctx.restore();
