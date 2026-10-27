@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "oxlint",
+    "typecheck": "tsc -p tsconfig.json",
     "test": "vitest run",
     "preview": "vite preview",
     "deploy": "gh-pages -d dist"
@@ -41,6 +42,7 @@
     "jsdom": "^30.1.2",
     "oxlint": "^1.75.0",
     "puppeteer": "^25.5.0",
+    "typescript": "^7.0.2",
     "vite": "^8.2.0",
     "vite-plugin-pwa": "^1.3.0",
     "vitest": "^5.0.4"

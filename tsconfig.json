@@ -1,0 +1,23 @@
+{
+  // Type checking only (Vite builds the app). TypeScript files are strict; existing JavaScript is
+  // allowed alongside and converted file by file (it isn't type-checked until it becomes .ts/.tsx).
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "allowJs": true,
+    "checkJs": false,
+    "isolatedModules": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "types": ["vite/client"]
+  },
+  "include": ["src"]
+}
