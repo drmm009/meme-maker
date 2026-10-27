@@ -1,0 +1,624 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`exportVideoFFmpeg command > 1080p portrait with auto captions as one image sequence 1`] = `
+{
+  "captionsList": "ffconcat version 1.0
+file cap_blank.png
+duration 0.200
+file cap_0.png
+duration 0.033
+file cap_1.png
+duration 0.034
+file cap_2.png
+duration 0.033
+file cap_3.png
+duration 0.033
+file cap_4.png
+duration 0.034
+file cap_5.png
+duration 0.033
+file cap_6.png
+duration 0.033
+file cap_7.png
+duration 0.034
+file cap_8.png
+duration 0.033
+file cap_9.png
+duration 0.033
+file cap_10.png
+duration 0.034
+file cap_11.png
+duration 0.333
+file cap_blank.png
+duration 0.100
+file cap_12.png
+duration 0.033
+file cap_13.png
+duration 0.034
+file cap_14.png
+duration 0.033
+file cap_15.png
+duration 0.033
+file cap_16.png
+duration 0.034
+file cap_17.png
+duration 0.033
+file cap_18.png
+duration 0.033
+file cap_19.png
+duration 0.034
+file cap_20.png
+duration 0.033
+file cap_21.png
+duration 0.033
+file cap_22.png
+duration 0.034
+file cap_23.png
+duration 0.233
+file cap_blank.png
+duration 0.900
+file cap_24.png
+duration 0.033
+file cap_25.png
+duration 0.034
+file cap_26.png
+duration 0.033
+file cap_27.png
+duration 0.033
+file cap_28.png
+duration 0.034
+file cap_29.png
+duration 0.033
+file cap_30.png
+duration 0.033
+file cap_31.png
+duration 0.034
+file cap_32.png
+duration 0.033
+file cap_33.png
+duration 0.033
+file cap_34.png
+duration 0.034
+file cap_35.png
+duration 0.133
+file cap_blank.png
+duration 1.000
+file cap_blank.png
+",
+  "files": [
+    "input_2.mp4",
+    "cap_0.png",
+    "cap_1.png",
+    "cap_2.png",
+    "cap_3.png",
+    "cap_4.png",
+    "cap_5.png",
+    "cap_6.png",
+    "cap_7.png",
+    "cap_8.png",
+    "cap_9.png",
+    "cap_10.png",
+    "cap_11.png",
+    "cap_12.png",
+    "cap_13.png",
+    "cap_14.png",
+    "cap_15.png",
+    "cap_16.png",
+    "cap_17.png",
+    "cap_18.png",
+    "cap_19.png",
+    "cap_20.png",
+    "cap_21.png",
+    "cap_22.png",
+    "cap_23.png",
+    "cap_24.png",
+    "cap_25.png",
+    "cap_26.png",
+    "cap_27.png",
+    "cap_28.png",
+    "cap_29.png",
+    "cap_30.png",
+    "cap_31.png",
+    "cap_32.png",
+    "cap_33.png",
+    "cap_34.png",
+    "cap_35.png",
+    "cap_blank.png",
+    "captions.txt",
+  ],
+  "filters": [
+    "[2:v]setpts=(PTS-STARTPTS)/1+0/TB,scale=608:1080[vis2]",
+    "[0:v][vis2]overlay=0:0:enable='between(t,0,4)':eof_action=pass:shortest=0[bg1]",
+    "[3:v]fps=30,format=rgba[cap3]",
+    "[bg1][cap3]overlay=0:0:eof_action=pass:shortest=0[bg2]",
+  ],
+  "inputs": [
+    "-f",
+    "lavfi",
+    "-i",
+    "color=c=0xFFFFFF:s=1080x1920:d=4",
+    "-f",
+    "lavfi",
+    "-i",
+    "anullsrc=r=44100:cl=stereo:d=4",
+    "-i",
+    "input_2.mp4",
+    "-f",
+    "concat",
+    "-safe",
+    "0",
+    "-i",
+    "captions.txt",
+  ],
+  "output": [
+    "-map",
+    "[bg2]",
+    "-map",
+    "1:a",
+    "-c:v",
+    "libx264",
+    "-preset",
+    "veryfast",
+    "-crf",
+    "21",
+    "-c:a",
+    "aac",
+    "-b:a",
+    "192k",
+    "-t",
+    "4",
+    "output.mp4",
+  ],
+}
+`;
+
+exports[`exportVideoFFmpeg command > an empty project is just the background colour and silence 1`] = `
+{
+  "filters": [],
+  "inputs": [
+    "-f",
+    "lavfi",
+    "-i",
+    "color=c=white:s=1280x720:d=1",
+    "-f",
+    "lavfi",
+    "-i",
+    "anullsrc=r=44100:cl=stereo:d=1",
+  ],
+  "output": [
+    "-map",
+    "0:v",
+    "-map",
+    "1:a",
+    "-c:v",
+    "libx264",
+    "-preset",
+    "ultrafast",
+    "-c:a",
+    "aac",
+    "-b:a",
+    "192k",
+    "-t",
+    "1",
+    "output.mp4",
+  ],
+}
+`;
+
+exports[`exportVideoFFmpeg command > gif: animated text and a grid layout, sounds left out 1`] = `
+{
+  "files": [
+    "input_2.png",
+    "text_3.png",
+    "text_4.png",
+    "text_5.png",
+    "text_6.png",
+    "text_7.png",
+    "text_8.png",
+    "text_9.png",
+    "text_10.png",
+    "text_11.png",
+    "text_12.png",
+    "text_13.png",
+    "text_14.png",
+    "text_15.png",
+    "text_16.png",
+    "text_17.png",
+    "text_18.png",
+    "text_19.png",
+    "grid_20.png",
+  ],
+  "filters": [
+    "[2:v]setpts=(PTS-STARTPTS)/1,scale=640:640[vis2]",
+    "[0:v][vis2]overlay=0:0:enable='between(t,0,2)':eof_action=pass:shortest=0[bg1]",
+    "[bg1][3:v]overlay=0:0:enable='gte(t,0.000)*lt(t,0.033)':eof_action=pass:shortest=0[bg2]",
+    "[bg2][4:v]overlay=0:0:enable='gte(t,0.033)*lt(t,0.067)':eof_action=pass:shortest=0[bg3]",
+    "[bg3][5:v]overlay=0:0:enable='gte(t,0.067)*lt(t,0.100)':eof_action=pass:shortest=0[bg4]",
+    "[bg4][6:v]overlay=0:0:enable='gte(t,0.100)*lt(t,0.133)':eof_action=pass:shortest=0[bg5]",
+    "[bg5][7:v]overlay=0:0:enable='gte(t,0.133)*lt(t,0.167)':eof_action=pass:shortest=0[bg6]",
+    "[bg6][8:v]overlay=0:0:enable='gte(t,0.167)*lt(t,0.200)':eof_action=pass:shortest=0[bg7]",
+    "[bg7][9:v]overlay=0:0:enable='gte(t,0.200)*lt(t,0.233)':eof_action=pass:shortest=0[bg8]",
+    "[bg8][10:v]overlay=0:0:enable='gte(t,0.233)*lt(t,0.267)':eof_action=pass:shortest=0[bg9]",
+    "[bg9][11:v]overlay=0:0:enable='gte(t,0.267)*lt(t,0.300)':eof_action=pass:shortest=0[bg10]",
+    "[bg10][12:v]overlay=0:0:enable='gte(t,0.300)*lt(t,0.333)':eof_action=pass:shortest=0[bg11]",
+    "[bg11][13:v]overlay=0:0:enable='gte(t,0.333)*lt(t,0.367)':eof_action=pass:shortest=0[bg12]",
+    "[bg12][14:v]overlay=0:0:enable='between(t,0.367,2.000)':eof_action=pass:shortest=0[bg13]",
+    "[bg13][15:v]overlay=x='4.80*sin(2*PI*9*(t-0.500))':y='2.88*sin(2*PI*13*(t-0.500)+1.3)':enable='between(t,0.500,1.500)':eof_action=pass:shortest=0[bg14]",
+    "[bg14][16:v]overlay=0:0:enable='gte(t,0.000)*lt(t,0.055)':eof_action=pass:shortest=0[bg15]",
+    "[bg15][17:v]overlay=0:0:enable='gte(t,0.055)*lt(t,0.110)':eof_action=pass:shortest=0[bg16]",
+    "[bg16][18:v]overlay=0:0:enable='gte(t,0.110)*lt(t,0.165)':eof_action=pass:shortest=0[bg17]",
+    "[bg17][19:v]overlay=0:0:enable='between(t,0.165,1.000)':eof_action=pass:shortest=0[bg18]",
+    "[bg18][20:v]overlay=0:0:eof_action=pass:shortest=0[bg19]",
+    "[bg19]fps=15,scale=480:-2:flags=lanczos,split[gifa][gifb]",
+    "[gifa]palettegen=stats_mode=diff[gifpal]",
+    "[gifb][gifpal]paletteuse=dither=bayer:bayer_scale=4:diff_mode=rectangle[gifout]",
+  ],
+  "inputs": [
+    "-f",
+    "lavfi",
+    "-i",
+    "color=c=0xFFFFFF:s=1280x1280:d=2",
+    "-f",
+    "lavfi",
+    "-i",
+    "anullsrc=r=44100:cl=stereo:d=2",
+    "-loop",
+    "1",
+    "-i",
+    "input_2.png",
+    "-loop",
+    "1",
+    "-i",
+    "text_3.png",
+    "-loop",
+    "1",
+    "-i",
+    "text_4.png",
+    "-loop",
+    "1",
+    "-i",
+    "text_5.png",
+    "-loop",
+    "1",
+    "-i",
+    "text_6.png",
+    "-loop",
+    "1",
+    "-i",
+    "text_7.png",
+    "-loop",
+    "1",
+    "-i",
+    "text_8.png",
+    "-loop",
+    "1",
+    "-i",
+    "text_9.png",
+    "-loop",
+    "1",
+    "-i",
+    "text_10.png",
+    "-loop",
+    "1",
+    "-i",
+    "text_11.png",
+    "-loop",
+    "1",
+    "-i",
+    "text_12.png",
+    "-loop",
+    "1",
+    "-i",
+    "text_13.png",
+    "-loop",
+    "1",
+    "-i",
+    "text_14.png",
+    "-loop",
+    "1",
+    "-i",
+    "text_15.png",
+    "-loop",
+    "1",
+    "-i",
+    "text_16.png",
+    "-loop",
+    "1",
+    "-i",
+    "text_17.png",
+    "-loop",
+    "1",
+    "-i",
+    "text_18.png",
+    "-loop",
+    "1",
+    "-i",
+    "text_19.png",
+    "-loop",
+    "1",
+    "-i",
+    "grid_20.png",
+  ],
+  "output": [
+    "-map",
+    "[gifout]",
+    "-loop",
+    "0",
+    "-t",
+    "2",
+    "output.gif",
+  ],
+  "texts": [
+    {
+      "clip": null,
+      "fontSize": 76.80000000000001,
+      "hasBox": false,
+      "opacity": 0,
+      "scale": 0,
+      "text": "POP",
+    },
+    {
+      "clip": null,
+      "fontSize": 76.80000000000001,
+      "hasBox": false,
+      "opacity": 0.2380952380952381,
+      "scale": 0.39776724424787746,
+      "text": "POP",
+    },
+    {
+      "clip": null,
+      "fontSize": 76.80000000000001,
+      "hasBox": false,
+      "opacity": 0.4761904761904762,
+      "scale": 0.688066039502941,
+      "text": "POP",
+    },
+    {
+      "clip": null,
+      "fontSize": 76.80000000000001,
+      "hasBox": false,
+      "opacity": 0.7142857142857142,
+      "scale": 0.8878205509609093,
+      "text": "POP",
+    },
+    {
+      "clip": null,
+      "fontSize": 76.80000000000001,
+      "hasBox": false,
+      "opacity": 0.9523809523809524,
+      "scale": 1.0139549438175013,
+      "text": "POP",
+    },
+    {
+      "clip": null,
+      "fontSize": 76.80000000000001,
+      "hasBox": false,
+      "opacity": 1,
+      "scale": 1.0833933832684355,
+      "text": "POP",
+    },
+    {
+      "clip": null,
+      "fontSize": 76.80000000000001,
+      "hasBox": false,
+      "opacity": 1,
+      "scale": 1.1130600345094308,
+      "text": "POP",
+    },
+    {
+      "clip": null,
+      "fontSize": 76.80000000000001,
+      "hasBox": false,
+      "opacity": 1,
+      "scale": 1.1198790627362056,
+      "text": "POP",
+    },
+    {
+      "clip": null,
+      "fontSize": 76.80000000000001,
+      "hasBox": false,
+      "opacity": 1,
+      "scale": 1.0599887221202413,
+      "text": "POP",
+    },
+    {
+      "clip": null,
+      "fontSize": 76.80000000000001,
+      "hasBox": false,
+      "opacity": 1,
+      "scale": 1.0129575639779722,
+      "text": "POP",
+    },
+    {
+      "clip": null,
+      "fontSize": 76.80000000000001,
+      "hasBox": false,
+      "opacity": 1,
+      "scale": 1.0004799097769619,
+      "text": "POP",
+    },
+    {
+      "clip": null,
+      "fontSize": 76.80000000000001,
+      "hasBox": false,
+      "opacity": 1,
+      "scale": 1,
+      "text": "POP",
+    },
+    {
+      "clip": null,
+      "fontSize": 51.2,
+      "hasBox": false,
+      "opacity": 1,
+      "scale": 1,
+      "text": "SHAKE",
+    },
+    {
+      "clip": "clipped",
+      "fontSize": 51.2,
+      "hasBox": false,
+      "opacity": 1,
+      "scale": 1,
+      "text": "TYPE",
+    },
+    {
+      "clip": "clipped",
+      "fontSize": 51.2,
+      "hasBox": false,
+      "opacity": 1,
+      "scale": 1,
+      "text": "TYPE",
+    },
+    {
+      "clip": "clipped",
+      "fontSize": 51.2,
+      "hasBox": false,
+      "opacity": 1,
+      "scale": 1,
+      "text": "TYPE",
+    },
+    {
+      "clip": null,
+      "fontSize": 51.2,
+      "hasBox": false,
+      "opacity": 1,
+      "scale": 1,
+      "text": "TYPE",
+    },
+  ],
+}
+`;
+
+exports[`exportVideoFFmpeg command > mp4: two videos with a transition, a photo, a GIF sticker, text and two sounds 1`] = `
+{
+  "files": [
+    "input_2.mp4",
+    "input_3.mp4",
+    "input_4.png",
+    "input_5.gif",
+    "text_6.png",
+    "audio_7.webm",
+    "audio_8.mp3",
+  ],
+  "filters": [
+    "[2:a]atrim=0:3,asetpts=PTS-STARTPTS,aformat=channel_layouts=stereo:sample_rates=44100,afade=t=in:st=0:d=0.300,afade=t=out:st=2.700:d=0.300,volume=0.8[aud2]",
+    "[2:v]setpts=(PTS-STARTPTS)/1+0/TB,scale=1280:720,scale=w='1280*(1+0.25*if(between((t-1.000),0,0.08),(t-1.000)/0.08,if(between((t-1.000),0.08,0.400),pow(1-((t-1.000)-0.08)/0.32,2),0)))':h='720*(1+0.25*if(between((t-1.000),0,0.08),(t-1.000)/0.08,if(between((t-1.000),0.08,0.400),pow(1-((t-1.000)-0.08)/0.32,2),0)))':eval=frame,crop=1280:720,colorchannelmixer=rr=0.2130:rg=0.7150:rb=0.0720:gr=0.2130:gg=0.7150:gb=0.0720:br=0.2130:bg=0.7150:bb=0.0720,lutrgb=r='clip((min(val*1.0000,255)-127.5)*1.1000+127.5,0,255)':g='clip((min(val*1.0000,255)-127.5)*1.1000+127.5,0,255)':b='clip((min(val*1.0000,255)-127.5)*1.1000+127.5,0,255)',format=yuva420p,fade=t=out:st=2.750:d=0.250:alpha=1[vis2]",
+    "[0:v][vis2]overlay=0:0:enable='between(t,0,3)':eof_action=pass:shortest=0[bg1]",
+    "[3:v]setpts=(PTS-STARTPTS)/1.5+3/TB,scale=1280:720,format=yuva420p,chromakey=0x00FF00:0.300:0.100,despill=type=green,format=yuva420p,fade=t=in:st=3.000:d=0.250:alpha=1[vis3]",
+    "[bg1][vis3]overlay=0:0:enable='between(t,3,5)':eof_action=pass:shortest=0[bg2]",
+    "[4:v]setpts=(PTS-STARTPTS)/1,scale=384:288,colorchannelmixer=rr=0.8820:rg=0.1072:rb=0.0108:gr=0.0320:gg=0.9572:gb=0.0108:br=0.0320:bg=0.1072:bb=0.8608,colorchannelmixer=rr=0.7268:rg=0.3460:rb=0.0850:gr=0.1570:gg=0.8587:gb=0.0756:br=0.1224:bg=0.2403:bb=0.6090,lutrgb=r='clip((min(val*1.1550,255)-127.5)*1.0500+127.5,0,255)':g='clip((min(val*1.1550,255)-127.5)*1.0500+127.5,0,255)':b='clip((min(val*1.1550,255)-127.5)*1.0500+127.5,0,255)'[vis4]",
+    "[bg2][vis4]overlay=160:80:enable='between(t,1,4)':eof_action=pass:shortest=0[bg3]",
+    "[5:v]setpts=(PTS-STARTPTS)/1+0/TB,scale=192:192[vis5]",
+    "[bg3][vis5]overlay=960:32:enable='between(t,0,5)':eof_action=pass:shortest=0[bg4]",
+    "[bg4][6:v]overlay=0:0:enable='between(t,0.000,5.000)':eof_action=pass:shortest=0[bg5]",
+    "[7:a]atrim=0:1,asetpts=PTS-STARTPTS,aformat=channel_layouts=stereo:sample_rates=44100,adelay=1000|1000,volume=0.5[aud7]",
+    "[8:a]atrim=0:0.8,asetpts=PTS-STARTPTS,atempo=2,aformat=channel_layouts=stereo:sample_rates=44100,volume=1[aud8]",
+    "[1:a][aud2][aud7][aud8]amix=inputs=4:duration=first:dropout_transition=0,volume=4[final_audio]",
+  ],
+  "inputs": [
+    "-f",
+    "lavfi",
+    "-i",
+    "color=c=0x1A1D27:s=1280x720:d=5",
+    "-f",
+    "lavfi",
+    "-i",
+    "anullsrc=r=44100:cl=stereo:d=5",
+    "-ss",
+    "0.5",
+    "-i",
+    "input_2.mp4",
+    "-i",
+    "input_3.mp4",
+    "-loop",
+    "1",
+    "-i",
+    "input_4.png",
+    "-ignore_loop",
+    "0",
+    "-i",
+    "input_5.gif",
+    "-loop",
+    "1",
+    "-i",
+    "text_6.png",
+    "-ss",
+    "0.2",
+    "-i",
+    "audio_7.webm",
+    "-i",
+    "audio_8.mp3",
+  ],
+  "output": [
+    "-map",
+    "[bg5]",
+    "-map",
+    "[final_audio]",
+    "-c:v",
+    "libx264",
+    "-preset",
+    "ultrafast",
+    "-c:a",
+    "aac",
+    "-b:a",
+    "192k",
+    "-t",
+    "5",
+    "output.mp4",
+  ],
+  "texts": [
+    {
+      "clip": null,
+      "fontSize": 64,
+      "hasBox": true,
+      "opacity": 1,
+      "scale": 1,
+      "text": "WHEN IT WORKS",
+    },
+  ],
+}
+`;
+
+exports[`exportVideoFFmpeg command > skips media that fails to load, silent videos and muted sounds 1`] = `
+{
+  "files": [
+    "input_2.mp4",
+    "audio_3.wav",
+  ],
+  "filters": [
+    "[2:v]setpts=(PTS-STARTPTS)/1+0/TB,scale=1280:720[vis2]",
+    "[0:v][vis2]overlay=0:0:enable='between(t,0,2)':eof_action=pass:shortest=0[bg1]",
+  ],
+  "inputs": [
+    "-f",
+    "lavfi",
+    "-i",
+    "color=c=0xFFFFFF:s=1280x720:d=2",
+    "-f",
+    "lavfi",
+    "-i",
+    "anullsrc=r=44100:cl=stereo:d=2",
+    "-i",
+    "input_2.mp4",
+    "-i",
+    "audio_3.wav",
+  ],
+  "output": [
+    "-map",
+    "[bg1]",
+    "-map",
+    "1:a",
+    "-c:v",
+    "libx264",
+    "-preset",
+    "ultrafast",
+    "-c:a",
+    "aac",
+    "-b:a",
+    "192k",
+    "-t",
+    "2",
+    "output.mp4",
+  ],
+}
+`;
