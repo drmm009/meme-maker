@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import type { PointerEvent, ReactNode } from 'react';
-import { ChevronDown, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 export interface SheetAction {
@@ -21,7 +21,7 @@ interface SheetProps {
 const CLOSE_DRAG_PX = 70;
 
 // A panel docked at the bottom of the editor (not a modal: the canvas above stays usable).
-// Close it with the chevron, a tap on the handle, or by dragging the handle or header down.
+// Close it with a tap on the handle, or by dragging the handle or header down.
 export default function Sheet({ title, onClose, badge, action, className = '', children }: SheetProps) {
   const sheetRef = useRef<HTMLElement>(null);
   const drag = useRef<{ y: number; dy: number } | null>(null);
@@ -55,12 +55,9 @@ export default function Sheet({ title, onClose, badge, action, className = '', c
           {action && (
             <button type="button" className="ui-sheet-action" onClick={action.onClick}>
               {action.label}
-              <span className="ui-sheet-action-icon"><ActionIcon size={16} strokeWidth={2.4} /></span>
+              <span className="ui-sheet-action-icon"><ActionIcon size={18} strokeWidth={2.2} /></span>
             </button>
           )}
-          <button type="button" className="ui-icon-btn ui-icon-btn--ghost" onClick={onClose} aria-label="Close" title="Close">
-            <ChevronDown size={20} />
-          </button>
         </div>
       </header>
       <div className="ui-sheet-body">{children}</div>

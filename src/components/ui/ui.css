@@ -2,14 +2,16 @@
    (anything portalled out of it needs the class too). */
 .ui-theme {
   --ui-bg: #0c0d11;
-  --ui-surface: #191a1f;
-  --ui-surface-2: #25262c;
-  --ui-surface-3: #303139;
-  --ui-glass: rgba(29, 30, 36, 0.94);
+  --ui-surface: #1f2025;
+  --ui-surface-2: #34363c;
+  --ui-surface-3: #3e4046;
+  --ui-glass: rgba(58, 59, 65, 0.92);
   --ui-line: rgba(255, 255, 255, 0.07);
   --ui-line-strong: rgba(255, 255, 255, 0.14);
   --ui-text: #f4f4f6;
-  --ui-muted: #9b9ca6;
+  --ui-muted: #a5a6ad;
+  --ui-accent-tint: #4c3025;
+  --ui-accent-edge: #e2674b;
   --ui-faint: #6c6d77;
   --ui-accent: #ff5a36;
   --ui-accent-hover: #ff6d4d;
@@ -113,6 +115,7 @@
 }
 .ui-seg--fill { display: flex; }
 .ui-seg--fill .ui-seg-btn { flex: 1; }
+.ui-seg--divided, .ui-seg--fill { background: #3d3d40; }
 .ui-seg-btn {
   position: relative;
   min-width: 40px;
@@ -140,7 +143,10 @@
 .ui-seg-btn.is-on + .ui-seg-btn::before,
 .ui-seg-btn.is-on::before { opacity: 0; }
 .ui-seg-btn.is-on { background: var(--ui-surface-3); color: var(--ui-text); font-weight: 600; }
-.ui-seg--fill .ui-seg-btn + .ui-seg-btn::before { content: ''; width: 1px; height: 14px; left: 0; background: var(--ui-line-strong); }
+.ui-seg--fill .ui-seg-btn + .ui-seg-btn::before,
+.ui-seg--divided .ui-seg-btn + .ui-seg-btn::before { content: ''; width: 1px; height: 16px; left: 0; background: rgba(255, 255, 255, 0.28); }
+.ui-seg--divided .ui-seg-btn { height: 34px; padding: 0 12px; font-size: 14px; color: var(--ui-muted); }
+.ui-seg--divided .ui-seg-btn.is-on { background: transparent; color: var(--ui-text); font-weight: 500; }
 
 /* ── Dock ────────────────────────────────────────────────── */
 .ui-dock {
@@ -149,7 +155,7 @@
   padding: 5px;
   border: 1px solid rgba(255, 255, 255, 0.13);
   border-radius: 999px;
-  background: #2a2b31;
+  background: #2f3238;
   box-shadow: 0 14px 34px -10px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 .ui-dock-item {
@@ -180,33 +186,46 @@
 .ui-float {
   display: flex;
   align-items: stretch;
-  gap: 2px;
-  padding: 5px 6px;
-  border: 1px solid var(--ui-line-strong);
-  border-radius: var(--ui-radius-lg);
-  background: rgba(38, 39, 46, 0.94);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  box-shadow: var(--ui-shadow);
+  gap: 4px;
+  padding: 6px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(74, 75, 81, 0.94), rgba(52, 53, 59, 0.94));
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 16px 36px -12px rgba(0, 0, 0, 0.8);
 }
 .ui-float-item {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 3px;
-  min-width: 46px;
-  height: 46px;
-  padding: 0 6px;
+  gap: 4px;
+  min-width: 50px;
+  height: 54px;
+  padding: 0 4px;
   border: none;
-  border-radius: var(--ui-radius-md);
+  border-radius: 14px;
   background: transparent;
-  color: var(--ui-text);
-  font-size: 11px;
+  color: #ececf0;
+  font-size: 12px;
   font-weight: 500;
   cursor: pointer;
 }
-.ui-float-item.is-on { background: var(--ui-accent-soft); color: var(--ui-accent-text); }
+.ui-float-item.is-on { color: var(--ui-accent-text); }
+/* The pointer at the layer: under the bar, or above it when the bar sits below the layer. */
+.ui-float-tail {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  margin-left: -6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgb(58, 59, 65);
+  transform: rotate(45deg);
+  pointer-events: none;
+}
+.ui-float-tail--bottom { bottom: -6px; border-top: none; border-left: none; }
+.ui-float-tail--top { top: -6px; border-bottom: none; border-right: none; }
 .ui-float-item--danger { color: var(--ui-text); }
 .ui-float-item--danger:hover { color: var(--ui-danger); }
 
@@ -216,7 +235,7 @@
   flex-direction: column;
   min-height: 0;
   max-height: 100%;
-  border-top: 1px solid var(--ui-line-strong);
+  border-top: 1px solid rgba(255, 255, 255, 0.09);
   border-radius: 24px 24px 0 0;
   background: var(--ui-surface);
   box-shadow: 0 -18px 40px -16px rgba(0, 0, 0, 0.8);
@@ -241,11 +260,11 @@
 .ui-sheet-handle::before {
   content: '';
   display: block;
-  width: 38px;
+  width: 36px;
   height: 4px;
   margin: 0 auto;
   border-radius: 4px;
-  background: var(--ui-line-strong);
+  background: #57565b;
 }
 .ui-sheet-head {
   display: flex;
@@ -272,11 +291,11 @@
 .ui-sheet-action-icon {
   display: grid;
   place-items: center;
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
-  background: var(--ui-surface-3);
-  color: var(--ui-text);
+  background: #3b383f;
+  color: var(--ui-accent-text);
 }
 .ui-sheet-body {
   flex: 1;
@@ -289,28 +308,28 @@
 .ui-sheet-body::-webkit-scrollbar { display: none; }
 
 .ui-badge {
-  padding: 3px 8px;
-  border: 1px solid rgba(255, 90, 54, 0.45);
-  border-radius: 6px;
-  background: var(--ui-accent-soft);
-  color: var(--ui-accent-text);
-  font-size: 10.5px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #6a513c;
+  color: #f6e1d0;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
   text-transform: uppercase;
   white-space: nowrap;
 }
 
 /* ── Sections and rows ───────────────────────────────────── */
-.ui-section { padding: 12px 0; }
-.ui-section + .ui-section { border-top: 1px solid var(--ui-line); }
+.ui-section { padding: 10px 0; }
+/* A rule above the section, where the layout changes (as in the mockup: under the caption chips, above Adjustments). */
+.ui-section--rule { margin-top: 6px; padding-top: 16px; border-top: 1px solid rgba(255, 255, 255, 0.08); }
 .ui-section-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
-.ui-section-title { margin: 0; font-size: 16px; font-weight: 600; }
+.ui-section-title { margin: 0; font-size: 17px; font-weight: 600; }
 .ui-section-aside { color: var(--ui-muted); font-size: 12px; }
 
 .ui-row { display: flex; align-items: center; gap: 12px; min-height: 40px; }
 .ui-row + .ui-row { margin-top: 6px; }
-.ui-row-label { flex-shrink: 0; width: 76px; color: var(--ui-muted); font-size: 14px; }
+.ui-row-label { flex-shrink: 0; width: 80px; color: var(--ui-muted); font-size: 15px; }
 .ui-row-control { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; }
 .ui-row-control--end { justify-content: flex-end; }
 .ui-row-control > .ui-seg--fill, .ui-row-control > .ui-chips { flex: 1; min-width: 0; }
@@ -331,11 +350,11 @@
   align-items: center;
   gap: 6px;
   max-width: 170px;
-  height: 34px;
-  padding: 0 14px;
-  border: 1px solid transparent;
+  height: 36px;
+  padding: 0 15px;
+  border: none;
   border-radius: 999px;
-  background: var(--ui-surface-2);
+  background: #3a3c42;
   color: var(--ui-text);
   font-size: 13px;
   font-weight: 500;
@@ -343,7 +362,7 @@
   cursor: pointer;
 }
 .ui-chip > span { overflow: hidden; text-overflow: ellipsis; }
-.ui-chip.is-on { border-color: var(--ui-accent); background: var(--ui-accent-soft); color: var(--ui-text); }
+.ui-chip.is-on { background: #4b4d54; }
 
 /* ── Text field ──────────────────────────────────────────── */
 .ui-field {
@@ -370,29 +389,29 @@
   color: var(--ui-text) !important;
 }
 .ui-theme .ui-field:focus,
-.ui-theme .ui-field--accent { border-color: var(--ui-accent) !important; background: rgba(255, 90, 54, 0.1) !important; }
+.ui-theme .ui-field--accent { border-color: var(--ui-accent-edge) !important; background: var(--ui-accent-tint) !important; }
 
 /* ── Square toggles (font tiles, B / I / U) ──────────────── */
 .ui-toggle {
   flex-shrink: 0;
   display: inline-grid;
   place-items: center;
-  min-width: 40px;
+  min-width: 38px;
   height: 40px;
-  padding: 0 10px;
-  border: 1.5px solid transparent;
+  padding: 0 8px;
+  border: 1px solid transparent;
   border-radius: var(--ui-radius-sm);
   background: transparent;
-  color: var(--ui-text);
+  color: #8f9098;
   font-size: 17px;
   cursor: pointer;
 }
-.ui-toggle.is-on { background: var(--ui-accent-soft); color: var(--ui-accent-text); }
-.ui-toggle--tile { min-width: 50px; height: 44px; background: var(--ui-surface-2); font-size: 19px; }
-.ui-toggle--tile.is-on { border-color: var(--ui-accent); background: rgba(255, 90, 54, 0.16); color: var(--ui-text); }
+.ui-toggle.is-on { color: #fff; }
+.ui-toggle--tile { min-width: 54px; height: 44px; border-color: rgba(255, 255, 255, 0.06); background: #33333a; color: #fff; font-size: 20px; }
+.ui-toggle--tile.is-on { border: 1.5px solid var(--ui-accent-edge); background: var(--ui-accent-tint); }
 
 /* ── Swatches ────────────────────────────────────────────── */
-.ui-swatches { display: flex; align-items: center; gap: 10px; overflow-x: auto; scrollbar-width: none; padding: 3px; }
+.ui-swatches { display: flex; align-items: center; gap: 12px; overflow-x: auto; scrollbar-width: none; padding: 3px; }
 .ui-swatches::-webkit-scrollbar { display: none; }
 .ui-swatch {
   position: relative;
@@ -400,11 +419,12 @@
   width: 30px;
   height: 30px;
   padding: 0;
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  border: none;
   border-radius: 50%;
   cursor: pointer;
 }
-.ui-swatch.is-on { box-shadow: 0 0 0 2px var(--ui-surface), 0 0 0 4px var(--ui-accent); }
+.ui-swatch[aria-label='#000000'] { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.25); }
+.ui-swatch.is-on { box-shadow: 0 0 0 3px var(--ui-surface), 0 0 0 5px var(--swatch, var(--ui-accent)); }
 .ui-swatch--none {
   background: linear-gradient(135deg, transparent 45%, var(--ui-danger) 45%, var(--ui-danger) 55%, transparent 55%), var(--ui-surface-2);
 }
@@ -415,51 +435,56 @@
   color: #fff;
   overflow: hidden;
 }
+.ui-swatch--custom svg { pointer-events: none; }
 .ui-swatch--custom input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; border: none; padding: 0; }
 
-/* ── Slider ──────────────────────────────────────────────── */
+/* ── Slider (scoped under .ui-theme to beat App.css's global input[type=range] rules) ──────────────────────────────────────────────── */
 .ui-slider-wrap { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; color: var(--ui-muted); }
 .ui-slider-value { flex-shrink: 0; min-width: 34px; color: var(--ui-muted); font-size: 12px; font-variant-numeric: tabular-nums; text-align: right; }
-.ui-slider {
+.ui-theme .ui-slider {
   --pct: 50%;
   flex: 1;
   min-width: 0;
   height: 26px;
   margin: 0;
+  border-radius: 0;
   background: transparent;
+  box-shadow: none;
   -webkit-appearance: none;
   appearance: none;
   cursor: pointer;
 }
-.ui-slider::-webkit-slider-runnable-track {
+.ui-theme .ui-slider::-webkit-slider-runnable-track {
   height: 4px;
   border-radius: 4px;
-  background: linear-gradient(to right, var(--ui-accent) var(--pct), var(--ui-surface-3) var(--pct));
+  background: linear-gradient(to right, var(--ui-accent) var(--pct), #3b3e43 var(--pct));
 }
-.ui-slider::-moz-range-track { height: 4px; border-radius: 4px; background: var(--ui-surface-3); }
-.ui-slider::-moz-range-progress { height: 4px; border-radius: 4px; background: var(--ui-accent); }
-.ui-slider::-webkit-slider-thumb {
+.ui-theme .ui-slider::-moz-range-track { height: 4px; border-radius: 4px; background: var(--ui-surface-3); }
+.ui-theme .ui-slider::-moz-range-progress { height: 4px; border-radius: 4px; background: var(--ui-accent); }
+.ui-theme .ui-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
-  width: 22px;
-  height: 22px;
-  margin-top: -9px;
+  transform: none;
+  width: 24px;
+  height: 24px;
+  margin-top: -10px;
   border: none;
   border-radius: 50%;
   background: #fff;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
 }
-.ui-slider::-moz-range-thumb { width: 22px; height: 22px; border: none; border-radius: 50%; background: #fff; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45); }
+.ui-theme .ui-slider::-webkit-slider-thumb:hover { transform: none; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45); }
+.ui-theme .ui-slider::-moz-range-thumb { width: 22px; height: 22px; border: none; border-radius: 50%; background: #fff; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45); }
 
 /* ── Switch ──────────────────────────────────────────────── */
 .ui-switch {
   position: relative;
   flex-shrink: 0;
-  width: 46px;
+  width: 48px;
   height: 28px;
   padding: 0;
   border: none;
   border-radius: 999px;
-  background: var(--ui-surface-3);
+  background: #3a3b40;
   cursor: pointer;
   transition: background 0.18s;
 }
@@ -489,13 +514,13 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-  min-height: 74px;
+  min-height: 78px;
   padding: 10px 6px;
-  border: 1px solid var(--ui-line);
-  border-radius: var(--ui-radius-md);
-  background: var(--ui-surface-2);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  background: #33363c;
   color: var(--ui-text);
-  font-size: 12.5px;
+  font-size: 13.5px;
   font-weight: 500;
   line-height: 1.2;
   text-align: center;

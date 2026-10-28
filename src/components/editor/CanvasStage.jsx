@@ -24,6 +24,7 @@ export default function CanvasStage({
   const pasteToast = useEditorUiStore((s) => s.pasteToast);
   const sheet = useEditorUiStore((s) => s.sheet);
   const openSheet = useEditorUiStore((s) => s.openSheet);
+  const closeSheet = useEditorUiStore((s) => s.closeSheet);
   const setShowBubbleBottomSheet = useEditorUiStore((s) => s.setShowBubbleBottomSheet);
 
   const {
@@ -31,10 +32,11 @@ export default function CanvasStage({
     handleConfirmPinpoint, originalTemplateImgRef
   } = faceMorph;
 
-  // Tapping around the canvas deselects.
+  // Tapping around the canvas closes the open sheet, or else deselects.
   const handleWrapperPointerDown = (e) => {
-    if (e.target !== e.currentTarget || !activeLayerId) return;
-    setActiveLayerId(null);
+    if (e.target !== e.currentTarget) return;
+    if (sheet) closeSheet();
+    else if (activeLayerId) setActiveLayerId(null);
   };
 
   // Selecting on the canvas: with a layer's sheet open, the sheet follows the selection (picking a

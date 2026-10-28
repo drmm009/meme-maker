@@ -41,7 +41,7 @@ describe('UI kit', () => {
     expect(onBold).toHaveBeenCalled();
   });
 
-  it('Sheet: header action, and closing from the chevron or handle', () => {
+  it('Sheet: header action, and closing from the handle', () => {
     const onClose = vi.fn();
     const onAdd = vi.fn();
     render(<Sheet title="Text" badge="New" onClose={onClose} action={{ label: 'Add Text', onClick: onAdd }}><p>body</p></Sheet>);
@@ -49,9 +49,8 @@ describe('UI kit', () => {
     expect(screen.getByText('New')).toBeTruthy();
     fireEvent.click(screen.getByText('Add Text'));
     expect(onAdd).toHaveBeenCalled();
-    fireEvent.click(screen.getByLabelText('Close'));
     fireEvent.click(screen.getByLabelText('Close Text'));
-    expect(onClose).toHaveBeenCalledTimes(2);
+    expect(onClose).toHaveBeenCalledTimes(1);
   });
 
   it('SwatchRow: picks a swatch or a custom colour', () => {

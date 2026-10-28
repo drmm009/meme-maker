@@ -63,17 +63,17 @@ export default function TextSheet({ actions, onClose }: { actions: EditorActions
           ))}
         </ChipRow>
 
-        {!caption && <p className="ie-empty">No text yet. Tap Add Text to write one.</p>}
+        {!caption && <p className="ie-empty">{captions.length ? 'Pick a caption to edit it.' : 'No text yet. Tap Add Text to write one.'}</p>}
 
         {caption && kind === 'card' && <CardControls caption={caption} actions={actions} />}
 
         {caption && kind === 'caption' && (
           <>
-            <Section>
+            <Section rule>
               <textarea
                 className="ui-field ui-field--accent"
                 aria-label="Caption text"
-                rows={2}
+                rows={1}
                 value={caption.text || ''}
                 onChange={(e) => updateCaptionText(caption.id, e.target.value)}
               />
@@ -95,13 +95,13 @@ export default function TextSheet({ actions, onClose }: { actions: EditorActions
               </Row>
               <div data-section="size">
                 <Row label="Size">
-                  <Slider label="Text size" min={16} max={160} value={caption.fontSize || 50} onChange={(v) => live({ fontSize: v })} format={(v) => `${v}`} />
+                  <Slider label="Text size" min={16} max={160} value={caption.fontSize || 50} onChange={(v) => live({ fontSize: v })} />
                 </Row>
               </div>
               <Row label="Style">
-                <Toggle label="Bold" active={caption.bold !== false} onClick={() => set({ bold: caption.bold === false })}><Bold size={18} strokeWidth={2.6} /></Toggle>
-                <Toggle label="Italic" active={Boolean(caption.italic)} onClick={() => set({ italic: !caption.italic })}><Italic size={18} /></Toggle>
-                <Toggle label="Underline" active={Boolean(caption.underline)} onClick={() => set({ underline: !caption.underline })}><Underline size={18} /></Toggle>
+                <Toggle label="Bold" active={caption.bold !== false} onClick={() => set({ bold: caption.bold === false })}><Bold size={20} strokeWidth={3} /></Toggle>
+                <Toggle label="Italic" active={Boolean(caption.italic)} onClick={() => set({ italic: !caption.italic })}><Italic size={19} /></Toggle>
+                <Toggle label="Underline" active={Boolean(caption.underline)} onClick={() => set({ underline: !caption.underline })}><Underline size={19} /></Toggle>
                 <span className="ie-row-spacer" />
                 <span className="ie-inline-label">Stroke</span>
                 <Switch label="Stroke" checked={strokeOn} onChange={(on) => set({ stroke: on ? getContrastStroke(caption.color || '#ffffff') : 'transparent' })} />
@@ -117,7 +117,7 @@ export default function TextSheet({ actions, onClose }: { actions: EditorActions
               </Row>
             </Section>
 
-            <Section title="Box">
+            <Section title="Box" rule>
               <Row label="Fill">
                 <SwatchRow
                   ariaLabel="Text box colour"
@@ -143,7 +143,7 @@ export default function TextSheet({ actions, onClose }: { actions: EditorActions
                 </Row>
               )}
               <Row label="Opacity">
-                <Slider label="Text opacity" min={0.1} max={1} step={0.05} value={Number(caption.opacity ?? 1)} onChange={(v) => live({ opacity: v })} format={(v) => `${Math.round(v * 100)}%`} />
+                <Slider label="Text opacity" min={0.1} max={1} step={0.05} value={Number(caption.opacity ?? 1)} onChange={(v) => live({ opacity: v })} />
               </Row>
             </Section>
 
@@ -164,7 +164,7 @@ export default function TextSheet({ actions, onClose }: { actions: EditorActions
           </>
         )}
 
-        <Section title="Add">
+        <Section title="Add" rule>
           <TileGrid>
             <Tile label="AI Captions" Icon={WandSparkles} title="AI meme captions" onClick={() => setShowAiModal(true)} />
             <Tile label="Bubble" Icon={MessageSquareQuote} title="Chat and speech bubbles" onClick={() => { actions.handleAddBubble(); setShowBubbleBottomSheet(true); }} />

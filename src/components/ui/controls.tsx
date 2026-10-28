@@ -1,11 +1,12 @@
 // Small form controls for sheets: sections, label rows, chips, toggles, swatches, sliders,
 // switches and tiles.
 import type { ChangeEvent, CSSProperties, ReactNode } from 'react';
+import { Pipette } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
-export function Section({ title, aside, id, children }: { title?: string; aside?: ReactNode; id?: string; children: ReactNode }) {
+export function Section({ title, aside, id, rule, children }: { title?: string; aside?: ReactNode; id?: string; rule?: boolean; children: ReactNode }) {
   return (
-    <div className="ui-section" id={id} data-section={id}>
+    <div className={`ui-section${rule ? ' ui-section--rule' : ''}`} id={id} data-section={id}>
       {(title || aside) && (
         <div className="ui-section-head">
           {title && <h3 className="ui-section-title">{title}</h3>}
@@ -98,12 +99,13 @@ export function SwatchRow({ colors, value, onChange, ariaLabel, custom = true }:
           aria-label={c === 'transparent' ? 'None' : c}
           title={c === 'transparent' ? 'None' : c}
           className={`ui-swatch${c === 'transparent' ? ' ui-swatch--none' : ''}${sameColor(c, value) ? ' is-on' : ''}`}
-          style={c === 'transparent' ? undefined : { background: c }}
+          style={c === 'transparent' ? undefined : ({ background: c, '--swatch': c } as CSSProperties)}
           onClick={() => onChange(c)}
         />
       ))}
       {custom && (
         <label className={`ui-swatch ui-swatch--custom${isCustom ? ' is-on' : ''}`} title="Custom colour" aria-label="Custom colour">
+          <Pipette size={15} strokeWidth={2.2} />
           <input type="color" value={isCustom && value?.startsWith('#') && value.length === 7 ? value : '#ff5a36'} onChange={(e: ChangeEvent<HTMLInputElement>) => onChange(e.target.value)} />
         </label>
       )}

@@ -14,7 +14,7 @@ export default function FaceSwapSheet({ morphProgress, actions }: FaceSwapSheetP
     <Sheet title="Face Swap" onClose={actions.handleFinalizeTemplateFace}>
       <Section>
         <Row label="Strength">
-          <Slider label="Morph intensity" min={0} max={1} step={0.01} value={morphProgress ?? 0.85} onChange={(v) => actions.handleUpdateTemplateMorphProgress(v)} format={(v) => `${Math.round(v * 100)}%`} />
+          <Slider label="Morph intensity" min={0} max={1} step={0.01} value={morphProgress ?? 0.85} onChange={(v) => actions.handleUpdateTemplateMorphProgress(v)} />
         </Row>
       </Section>
       <Section>

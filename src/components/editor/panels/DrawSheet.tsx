@@ -33,10 +33,10 @@ export default function DrawSheet({ actions, onClose }: { actions: EditorActions
           <SwatchRow ariaLabel="Brush colour" colors={DRAW_COLORS} value={brushColor} onChange={setBrushColor} />
         </Row>
         <Row label="Size">
-          <Slider label="Brush size" min={2} max={50} value={brushSize} onChange={setBrushSize} format={(v) => `${v}px`} />
+          <Slider label="Brush size" min={2} max={50} value={brushSize} onChange={setBrushSize} />
         </Row>
       </Section>
-      <Section>
+      <Section rule>
         <div className="ie-layer-actions">
           <button type="button" className="ui-btn" disabled={!drawings.length} onClick={actions.handleUndoDrawing}><Undo2 size={16} />Undo stroke</button>
           <button type="button" className="ui-btn ui-btn--danger" disabled={!drawings.length} onClick={actions.handleClearDrawings}><Trash2 size={16} />Clear all</button>

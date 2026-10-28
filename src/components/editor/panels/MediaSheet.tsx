@@ -35,7 +35,7 @@ export default function MediaSheet({ actions, onClose }: { actions: EditorAction
       </Section>
 
       {imageLayers.length > 0 && (
-        <Section title="On the meme">
+        <Section title="On the meme" rule>
           <ChipRow ariaLabel="Images">
             {imageLayers.map((l, i) => <Chip key={l.id} label={`Image ${i + 1}`} active={l.id === id} onClick={() => setActiveLayerId(l.id)} />)}
           </ChipRow>
@@ -44,7 +44,7 @@ export default function MediaSheet({ actions, onClose }: { actions: EditorAction
 
       {image && id && (
         <>
-          <Section title="Selected image">
+          <Section title="Selected image" rule>
             <TileGrid>
               <Tile label={image.fitMode === 'crop' ? 'Done cropping' : 'Crop'} Icon={Crop} active={image.fitMode === 'crop'} onClick={() => actions.updateActiveImageLayer('fitMode', image.fitMode === 'crop' ? 'fit' : 'crop')} />
               <Tile label="Flip" Icon={FlipHorizontal} active={Boolean(image.flipX)} onClick={() => actions.handleFlipActiveLayer()} />

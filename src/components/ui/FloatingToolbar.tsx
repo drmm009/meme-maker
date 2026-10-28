@@ -15,6 +15,8 @@ export interface ToolbarItem {
 
 interface FloatingToolbarProps {
   items: ToolbarItem[];
+  // A pointer on the bar's top or bottom edge, x pixels from its left.
+  tail?: { side: 'top' | 'bottom'; x: number } | null;
   ariaLabel: string;
   className?: string;
   style?: CSSProperties;
@@ -22,7 +24,7 @@ interface FloatingToolbarProps {
 }
 
 // A pill of icon-over-label tools that floats over the content (over a selected layer, say).
-export default function FloatingToolbar({ items, ariaLabel, className = '', style, toolbarRef }: FloatingToolbarProps) {
+export default function FloatingToolbar({ items, ariaLabel, className = '', style, toolbarRef, tail }: FloatingToolbarProps) {
   return (
     <div ref={toolbarRef} className={`ui-float ${className}`} role="toolbar" aria-label={ariaLabel} style={style}>
       {items.map(({ id, label, onClick, Icon, icon, title, active, danger }) => (
@@ -34,10 +36,11 @@ export default function FloatingToolbar({ items, ariaLabel, className = '', styl
           aria-pressed={active === undefined ? undefined : active}
           onClick={onClick}
         >
-          {icon ?? (Icon ? <Icon size={18} strokeWidth={2} /> : null)}
+          {icon ?? (Icon ? <Icon size={22} strokeWidth={1.8} /> : null)}
           <span>{label}</span>
         </button>
       ))}
+      {tail && <span className={`ui-float-tail ui-float-tail--${tail.side}`} style={{ left: tail.x }} aria-hidden="true" />}
     </div>
   );
 }

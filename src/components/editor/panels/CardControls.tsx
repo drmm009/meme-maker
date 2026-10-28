@@ -42,13 +42,13 @@ export default function CardControls({ caption, actions }: { caption: Caption; a
 
   return (
     <>
-      <Section>
+      <Section rule>
         <button type="button" className="ui-btn ie-wide-btn" onClick={() => actions.handleOpenSocialModalForActiveCard(platform)}>
           <Settings size={16} />Edit card details
         </button>
       </Section>
 
-      <Section title="Look">
+      <Section title="Look" rule>
         {caption.isTweetCard && (
           <>
             <Row label="Theme">

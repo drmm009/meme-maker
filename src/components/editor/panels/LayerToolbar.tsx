@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { RefObject } from 'react';
-import { Baseline, Bold, Trash2, Settings, SlidersHorizontal, Copy, Scaling, FlipHorizontal, Scissors, Crop, Wand2, Ellipsis } from 'lucide-react';
+import { Trash2, Settings, SlidersHorizontal, Copy, Scaling, FlipHorizontal, Scissors, Crop, Wand2, Ellipsis } from 'lucide-react';
 import { FloatingToolbar } from '../../ui';
 import type { ToolbarItem } from '../../ui';
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
@@ -14,6 +14,18 @@ import type { EditorActions } from './selection';
 // is open (the sheet has the full controls) and while the layer is being dragged.
 type LayerCanvas = HTMLCanvasElement & { activeLayerBox?: LayerBox | null };
 
+// The text-size glyph: an A between two rules.
+function SizeIcon() {
+  return (
+    <svg width={23} height={23} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M5 3.5h14" />
+      <path d="M8 17l4-10 4 10" />
+      <path d="M9.6 13.2h4.8" />
+      <path d="M5 20.5h2M10.5 20.5h3M17 20.5h2" />
+    </svg>
+  );
+}
+
 export default function LayerToolbar({ canvasRef, actions }: { canvasRef: RefObject<LayerCanvas | null>; actions: EditorActions }) {
   const { id, kind, caption, sticker, image } = useSelection();
   const sheet: string | null = useEditorUiStore((s: { sheet: string | null }) => s.sheet);
@@ -21,7 +33,7 @@ export default function LayerToolbar({ canvasRef, actions }: { canvasRef: RefObj
   const faceMorph = useMemeEditorStore((s: { templateFaceMorph: unknown }) => s.templateFaceMorph);
   const [box, setBox] = useState<LayerBox | null>(null);
   const [pressing, setPressing] = useState(false);
-  const [pos, setPos] = useState<{ left: number; top: number } | null>(null);
+  const [pos, setPos] = useState<{ left: number; top: number; below: boolean; tailX: number } | null>(null);
   const [tick, setTick] = useState(0);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -67,10 +79,10 @@ export default function LayerToolbar({ canvasRef, actions }: { canvasRef: RefObj
   let items: ToolbarItem[] = [];
   if (kind === 'caption' && caption) {
     items = [
-      { id: 'font', label: 'Font', icon: <span className="ie-font-glyph" style={{ fontFamily: caption.fontFamily }}>Ar</span>, onClick: () => openSheet('text', 'font') },
-      { id: 'size', label: 'Size', Icon: Baseline, onClick: () => openSheet('text', 'size') },
+      { id: 'font', label: 'Font', icon: <span className="ie-glyph">Ar</span>, onClick: () => openSheet('text', 'font') },
+      { id: 'size', label: 'Size', icon: <SizeIcon />, onClick: () => openSheet('text', 'size') },
       { id: 'color', label: 'Color', icon: <span className="ie-color-dot" style={{ background: caption.color || '#ffffff' }} />, onClick: () => openSheet('text', 'color') },
-      { id: 'bold', label: 'Bold', Icon: Bold, active: caption.bold !== false, onClick: () => actions.updateActiveCaptionProps({ bold: caption.bold === false }) },
+      { id: 'bold', label: 'Bold', title: caption.bold === false ? 'Make bold' : 'Make regular', icon: <span className="ie-glyph ie-glyph--bold" style={{ opacity: caption.bold === false ? 0.55 : 1 }}>B</span>, onClick: () => actions.updateActiveCaptionProps({ bold: caption.bold === false }) },
       del,
     ];
   } else if (kind === 'card' && caption) {
@@ -105,6 +117,7 @@ export default function LayerToolbar({ canvasRef, actions }: { canvasRef: RefObj
       ariaLabel="Layer tools"
       className="ie-layer-toolbar"
       items={items}
+      tail={pos ? { side: pos.below ? 'top' : 'bottom', x: pos.tailX } : null}
       style={{ left: pos?.left ?? 0, top: pos?.top ?? 0, visibility: pos && !pressing ? 'visible' : 'hidden' }}
     />
   );

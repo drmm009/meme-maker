@@ -81,7 +81,8 @@ const redoButton = () => screen.getByTitle('Redo');
 const bar = () => screen.getByRole('navigation', { name: 'Editor tools' });
 const sheet = (name) => screen.getByRole('dialog', { name });
 const openSection = (title) => fireEvent.click(within(bar()).getByTitle(title));
-const closeSheet = () => fireEvent.click(screen.getByLabelText('Close'));
+// Sheets close from their handle (or a tap around the canvas).
+const closeSheet = () => fireEvent.click(screen.getByLabelText(/^Close /));
 const addTextFromMenu = () => {
   if (!screen.queryByRole('dialog', { name: 'Text' })) openSection('Text');
   fireEvent.click(within(sheet('Text')).getByText('Add Text'));
@@ -191,11 +192,11 @@ describe('MemeEditor', () => {
     addTextFromMenu();
     closeSheet();
     const tools = layerToolbar();
-    for (const name of ['Font', 'Size', 'Color', 'Bold', 'Delete']) expect(within(tools).getByTitle(name)).toBeTruthy();
-    fireEvent.click(within(tools).getByTitle('Bold'));
+    for (const name of ['Font', 'Size', 'Color', 'Bold', 'Delete']) expect(within(tools).getByText(name)).toBeTruthy();
+    fireEvent.click(within(tools).getByText('Bold'));
     expect(canvas.props.captions[2].bold).toBe(false);
     // Font opens the Text sheet on the selected caption.
-    fireEvent.click(within(layerToolbar()).getByTitle('Font'));
+    fireEvent.click(within(layerToolbar()).getByText('Font'));
     expect(within(sheet('Text')).getByLabelText('Caption text').value).toBe('NEW TEXT');
   }, 30000);
 
@@ -266,6 +267,17 @@ describe('MemeEditor', () => {
     openSection('Photo grading and effects');
     fireEvent.click(within(sheet('Photo Grading & Effects')).getByRole('switch', { name: 'Flip Canvas Horizontal' }));
     expect(canvas.props.canvasFlipX).toBe(true);
+  }, 30000);
+
+  it('a tap around the canvas closes the open sheet, and then deselects', () => {
+    const { container } = renderEditor();
+    openSection('Text');
+    const wrapper = container.querySelector('.canvas-wrapper');
+    fireEvent.pointerDown(wrapper);
+    expect(screen.queryByRole('dialog', { name: 'Text' })).toBeNull();
+    expect(canvas.props.activeLayerId).toBe(canvas.props.captions[0].id);
+    fireEvent.pointerDown(wrapper);
+    expect(canvas.props.activeLayerId).toBe(null);
   }, 30000);
 
   it('the open sheet follows the selection: picking a caption switches Sticker to Text', () => {

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Circle, Flame, Contrast, Film, SunMoon, Coffee, Blend, Skull, Droplets, Sparkles, Sun, SunDim, ImagePlus, X } from 'lucide-react';
+import { Circle, Flame, Contrast, Film, SunMoon, Coffee, Blend, Skull, Droplets, Sparkles, Sun, SunDim, SunMedium, ImagePlus, X } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Sheet, Section, Row, SwatchRow, Slider, Switch, TileGrid, Tile, SegmentedControl } from '../../ui';
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
@@ -22,9 +22,9 @@ const ICONS: Record<string, LucideIcon> = {
   sepia: Coffee, invert: Blend, wasted: Skull, blur: Droplets,
 };
 const ADJUSTMENTS = [
-  { key: 'brightness', label: 'Brightness', min: 40, max: 200 },
-  { key: 'contrast', label: 'Contrast', min: 40, max: 250 },
-  { key: 'saturation', label: 'Saturation', min: 0, max: 300 },
+  { key: 'brightness', label: 'Brightness', min: 40, max: 200, StartIcon: SunDim, EndIcon: Sun },
+  { key: 'contrast', label: 'Contrast', min: 40, max: 250, StartIcon: Contrast, EndIcon: Contrast },
+  { key: 'saturation', label: 'Saturation', min: 0, max: 300, StartIcon: SunMedium, EndIcon: SunMedium },
 ];
 const CANVAS_COLORS = ['#ffffff', '#000000', '#1e293b', '#ff5a36', '#ffd60a', '#0a84ff', 'transparent'];
 const WATERMARK_SPOTS = [
@@ -77,33 +77,28 @@ export default function FxSheet({ actions, onClose }: { actions: EditorActions; 
 
   const targets = [
     ...(image ? [{ value: 'layer' as const, label: 'Image' }] : []),
-    { value: 'photo' as const, label: 'Photo' },
-    { value: 'meme' as const, label: 'Whole meme' },
+    { value: 'photo' as const, label: 'Canvas Photo' },
+    { value: 'meme' as const, label: 'Whole Meme' },
   ];
 
   return (
     <Sheet title="Photo Grading & Effects" badge={preset !== 'original' ? presetLabel(preset) : undefined} onClose={onClose}>
-      <Section>
-        <Row label="Target">
-          <SegmentedControl ariaLabel="Apply to" variant="fill" value={target} options={targets} onChange={pickTarget} />
-        </Row>
-      </Section>
-      <Section>
+      <Section title="Target" aside={<SegmentedControl ariaLabel="Apply to" variant="divided" value={target} options={targets} onChange={pickTarget} />}>
         <TileGrid>
           {PRESETS.map((p) => (
             <Tile key={p.id} label={p.name} Icon={ICONS[p.id] || Sparkles} active={preset === p.id} onClick={() => applyPreset(p)} />
           ))}
         </TileGrid>
       </Section>
-      <Section title="Adjustments">
+      <Section title="Adjustments" rule>
         {ADJUSTMENTS.map((a) => (
           <Row key={a.key} label={a.label}>
-            <Slider label={a.label} min={a.min} max={a.max} value={value(a.key)} onChange={(v) => adjust(a.key, v)} StartIcon={SunDim} EndIcon={Sun} />
+            <Slider label={a.label} min={a.min} max={a.max} value={value(a.key)} onChange={(v) => adjust(a.key, v)} StartIcon={a.StartIcon} EndIcon={a.EndIcon} />
           </Row>
         ))}
       </Section>
 
-      <Section title="Canvas">
+      <Section title="Canvas" rule>
         <Row label="Background">
           <SwatchRow ariaLabel="Canvas colour" colors={CANVAS_COLORS} value={canvasBgColor} onChange={actions.handleSetCanvasBgColor} />
         </Row>
@@ -130,10 +125,10 @@ export default function FxSheet({ actions, onClose }: { actions: EditorActions; 
               <SegmentedControl ariaLabel="Watermark position" variant="fill" value={watermark.position || 'bottom-right'} options={WATERMARK_SPOTS} onChange={(p) => updateWatermark('position', p)} />
             </Row>
             <Row label="Size">
-              <Slider label="Watermark size" min={12} max={48} value={watermark.size || 24} onChange={(v) => updateWatermark('size', v)} format={(v) => `${v}`} />
+              <Slider label="Watermark size" min={12} max={48} value={watermark.size || 24} onChange={(v) => updateWatermark('size', v)} />
             </Row>
             <Row label="Opacity">
-              <Slider label="Watermark opacity" min={0.1} max={1} step={0.05} value={watermark.opacity ?? 0.5} onChange={(v) => updateWatermark('opacity', v)} format={(v) => `${Math.round(v * 100)}%`} />
+              <Slider label="Watermark opacity" min={0.1} max={1} step={0.05} value={watermark.opacity ?? 0.5} onChange={(v) => updateWatermark('opacity', v)} />
             </Row>
             <Row label="Color">
               <SwatchRow ariaLabel="Watermark colour" colors={['#ffffff', '#000000', '#ff5a36', '#ffd60a']} value={watermark.color || '#ffffff'} onChange={(c) => updateWatermark('color', c)} />

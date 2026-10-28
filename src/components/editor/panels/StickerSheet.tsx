@@ -38,7 +38,7 @@ export default function StickerSheet({ actions, onClose }: { actions: EditorActi
         </Section>
 
         {stickers.length > 0 && (
-          <Section title="On the meme">
+          <Section title="On the meme" rule>
             <ChipRow ariaLabel="Stickers">
               {stickers.map((s) => <Chip key={s.id} label={stickerLabel(s)} active={s.id === id} onClick={() => setActiveLayerId(s.id)} />)}
             </ChipRow>
@@ -47,9 +47,9 @@ export default function StickerSheet({ actions, onClose }: { actions: EditorActi
 
         {sticker && id && (
           <>
-            <Section title="Selected sticker" id="size">
+            <Section title="Selected sticker" id="size" rule>
               <Row label="Size">
-                <Slider label="Sticker size" min={0.3} max={6} step={0.05} value={sticker.scale || 1} onChange={(v) => patchLayer('stickers', id, { scale: v })} format={(v) => `${Math.round(v * 100)}%`} />
+                <Slider label="Sticker size" min={0.3} max={6} step={0.05} value={sticker.scale || 1} onChange={(v) => patchLayer('stickers', id, { scale: v })} />
               </Row>
               <Row label="Flip" end>
                 <Switch label="Flip sticker" checked={Boolean(sticker.flipX)} onChange={() => actions.handleFlipActiveLayer()} />

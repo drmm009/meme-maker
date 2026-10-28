@@ -5,7 +5,7 @@ import type { EditorActions } from './selection';
 // The selected layer's arrange row, at the bottom of its sheet: duplicate, rotate, stack order, delete.
 export default function LayerActions({ id, actions }: { id: string; actions: EditorActions }) {
   return (
-    <Section title="Layer">
+    <Section title="Layer" rule>
       <div className="ie-layer-actions">
         <button type="button" className="ui-btn" onClick={() => actions.handleDuplicateLayer(id)} title="Duplicate"><Copy size={16} />Duplicate</button>
         <button type="button" className="ui-btn" onClick={() => actions.handleRotateLayer()} title="Rotate 90°" aria-label="Rotate 90°"><RotateCw size={16} /></button>
