@@ -28,7 +28,7 @@ export default function ToolDock({ items, active, onSelect, ariaLabel }: ToolDoc
           title={title || label}
           onClick={() => onSelect(id)}
         >
-          <Icon size={23} strokeWidth={1.7} />
+          <Icon size={21} strokeWidth={2.1} />
           <span>{label}</span>
         </button>
       ))}

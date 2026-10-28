@@ -172,11 +172,11 @@ describe('MemeEditor', () => {
   it('opens each section of the dock as a sheet with its tools', () => {
     renderEditor();
     const expectations = {
-      Text: ['AI meme captions', 'White band above the meme'],
-      'Stickers and emoji': ['Add Meme Stickers', 'Add Emojis'],
-      'Photos, videos and cutouts': ['Upload Image or Video', 'Add Image from Templates'],
       'Draw on the meme': ['Brush: solid stroke', 'Marker: translucent highlighter'],
-      'Photo grading and effects': ['Flip Canvas Horizontal', 'Watermark'],
+      'Photos, videos, stickers and emoji': ['Upload Image or Video', 'Add Image from Templates', 'Add Meme Stickers', 'Add Emojis'],
+      Text: ['AI meme captions', 'Chat and speech bubbles'],
+      'AI tools and photo filters': ['AI meme captions', 'Swap faces with another photo using AI', 'Remove the background'],
+      'Canvas colour, bands and watermark': ['Flip Canvas Horizontal', 'White band above the meme', 'Watermark'],
     };
     for (const [section, titles] of Object.entries(expectations)) {
       openSection(section);
@@ -214,17 +214,17 @@ describe('MemeEditor', () => {
     expect(canvas.props.activeLayerId).toBe(canvas.props.captions[1].id);
   }, 30000);
 
-  it('applies a filter preset from Fx and adds the top band from Text', () => {
+  it('applies a filter preset from AI/Filters and adds the top band from Canvas', () => {
     renderEditor();
-    openSection('Photo grading and effects');
-    const deepFry = within(sheet('Photo Grading & Effects')).getByText('Deep Fried 🔥').closest('button');
+    openSection('AI tools and photo filters');
+    const deepFry = within(sheet('AI & Filters')).getByText('Deep Fried 🔥').closest('button');
     expect(deepFry.getAttribute('aria-pressed')).toBe('false');
     fireEvent.click(deepFry);
-    expect(within(sheet('Photo Grading & Effects')).getByText('Deep Fried 🔥').closest('button').getAttribute('aria-pressed')).toBe('true');
-    expect(within(sheet('Photo Grading & Effects')).getByText('Deep Fried')).toBeTruthy();
+    expect(within(sheet('AI & Filters')).getByText('Deep Fried 🔥').closest('button').getAttribute('aria-pressed')).toBe('true');
+    expect(within(sheet('AI & Filters')).getByText('Deep Fried')).toBeTruthy();
     closeSheet();
-    openSection('Text');
-    fireEvent.click(within(sheet('Text')).getByTitle('White band above the meme'));
+    openSection('Canvas colour, bands and watermark');
+    fireEvent.click(within(sheet('Canvas')).getByRole('switch', { name: 'White band above the meme' }));
     expect(captionTexts().some((t) => /solve the bug/.test(t))).toBe(true);
   }, 30000);
 
@@ -261,11 +261,11 @@ describe('MemeEditor', () => {
     expect(onSave.mock.calls[0][0].captions.map((c) => c.text)).toEqual(['TOP TEXT', 'BOTTOM TEXT']);
   }, 30000);
 
-  it('flips the canvas from the Fx sheet', () => {
+  it('flips the canvas from the Canvas sheet', () => {
     renderEditor();
     expect(canvas.props.canvasFlipX).toBeFalsy();
-    openSection('Photo grading and effects');
-    fireEvent.click(within(sheet('Photo Grading & Effects')).getByRole('switch', { name: 'Flip Canvas Horizontal' }));
+    openSection('Canvas colour, bands and watermark');
+    fireEvent.click(within(sheet('Canvas')).getByRole('switch', { name: 'Flip Canvas Horizontal' }));
     expect(canvas.props.canvasFlipX).toBe(true);
   }, 30000);
 
@@ -280,10 +280,10 @@ describe('MemeEditor', () => {
     expect(canvas.props.activeLayerId).toBe(null);
   }, 30000);
 
-  it('the open sheet follows the selection: picking a caption switches Sticker to Text', () => {
+  it('the open sheet follows the selection: picking a caption switches Media to Text', () => {
     renderEditor();
-    openSection('Stickers and emoji');
-    expect(sheet('Sticker')).toBeTruthy();
+    openSection('Photos, videos, stickers and emoji');
+    expect(sheet('Media')).toBeTruthy();
     act(() => canvas.props.onSelectLayer(canvas.props.captions[1].id));
     expect(within(sheet('Text')).getByLabelText('Caption text').value).toBe('BOTTOM TEXT');
   }, 30000);

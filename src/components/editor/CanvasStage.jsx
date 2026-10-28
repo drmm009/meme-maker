@@ -40,14 +40,14 @@ export default function CanvasStage({
   };
 
   // Selecting on the canvas: with a layer's sheet open, the sheet follows the selection (picking a
-  // sticker while editing text switches to the Sticker sheet). Fx works on any layer, so it stays.
+  // sticker while editing text switches to the Media sheet). AI & Filters and Canvas work whatever
+  // is selected, so they stay.
   const handleSelectLayer = (id) => {
     setActiveLayerId(id || null);
     setShowBubbleBottomSheet(false);
-    if (!id || !sheet || sheet === 'fx' || sheet === 'draw') return;
+    if (!id || !sheet || sheet === 'fx' || sheet === 'draw' || sheet === 'canvas') return;
     const target = captions.some((c) => c.id === id) ? 'text'
-      : stickers.some((s) => s.id === id) ? 'sticker'
-      : imageLayers.some((l) => l.id === id) ? 'media' : sheet;
+      : stickers.some((s) => s.id === id) || imageLayers.some((l) => l.id === id) ? 'media' : sheet;
     if (target !== sheet) openSheet(target);
   };
 

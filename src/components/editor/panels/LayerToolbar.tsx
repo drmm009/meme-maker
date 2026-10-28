@@ -95,7 +95,7 @@ export default function LayerToolbar({ canvasRef, actions }: { canvasRef: RefObj
     ];
   } else if (kind === 'sticker' && sticker) {
     items = [
-      { id: 'size', label: 'Size', Icon: Scaling, onClick: () => openSheet('sticker', 'size') },
+      { id: 'size', label: 'Size', Icon: Scaling, onClick: () => openSheet('media', 'size') },
       { id: 'flip', label: 'Flip', Icon: FlipHorizontal, active: Boolean(sticker.flipX), onClick: () => actions.handleFlipActiveLayer() },
       { id: 'diecut', label: 'Die-cut', Icon: Scissors, active: Boolean(sticker.dieCut), onClick: () => actions.handleToggleDieCutSticker() },
       dup,

@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
-import { Bold, Italic, Underline, WandSparkles, MessageSquareQuote, Share2, PanelTop, PanelBottom, CaseSensitive } from 'lucide-react';
+import { Bold, Italic, Underline, WandSparkles, MessageSquareQuote, Share2, CaseSensitive } from 'lucide-react';
 import { Sheet, Section, Row, ChipRow, Chip, Toggle, SwatchRow, Slider, Switch, TileGrid, Tile, SegmentedControl } from '../../ui';
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
 import { useEditorUiStore } from '../store/useEditorUiStore';
@@ -26,8 +26,6 @@ export default function TextSheet({ actions, onClose }: { actions: EditorActions
   const setActiveLayerId = useMemeEditorStore((s: { setActiveLayerId: (id: string | null) => void }) => s.setActiveLayerId);
   const patchLayer = useMemeEditorStore((s: { patchLayer: (key: string, id: string, patch: object) => void }) => s.patchLayer);
   const updateCaptionText = useMemeEditorStore((s: { updateCaptionText: (id: string, text: string) => void }) => s.updateCaptionText);
-  const canvasHeader = useMemeEditorStore((s: { canvasHeader: { enabled: boolean } }) => s.canvasHeader);
-  const canvasFooter = useMemeEditorStore((s: { canvasFooter: { enabled: boolean } }) => s.canvasFooter);
   const sheetFocus: string | null = useEditorUiStore((s: { sheetFocus: string | null }) => s.sheetFocus);
   const setShowAiModal = useEditorUiStore((s: { setShowAiModal: (v: boolean) => void }) => s.setShowAiModal);
   const setShowBubbleBottomSheet = useEditorUiStore((s: { setShowBubbleBottomSheet: (v: boolean) => void }) => s.setShowBubbleBottomSheet);
@@ -169,8 +167,6 @@ export default function TextSheet({ actions, onClose }: { actions: EditorActions
             <Tile label="AI Captions" Icon={WandSparkles} title="AI meme captions" onClick={() => setShowAiModal(true)} />
             <Tile label="Bubble" Icon={MessageSquareQuote} title="Chat and speech bubbles" onClick={() => { actions.handleAddBubble(); setShowBubbleBottomSheet(true); }} />
             <Tile label="Social Card" Icon={Share2} title="Fake tweet, Instagram or WhatsApp card" onClick={() => { setSocialModalPlatform('tweet'); setShowStylesModal(true); }} />
-            <Tile label="Top Band" Icon={PanelTop} title="White band above the meme" active={canvasHeader.enabled} onClick={actions.handleToggleCanvasHeader} />
-            <Tile label="Bottom Band" Icon={PanelBottom} title="White band below the meme" active={canvasFooter.enabled} onClick={actions.handleToggleCanvasFooter} />
             {caption?.bubbleStyle ? <Tile label="Bubble Style" Icon={MessageSquareQuote} onClick={() => setShowBubbleBottomSheet(true)} /> : null}
           </TileGrid>
         </Section>

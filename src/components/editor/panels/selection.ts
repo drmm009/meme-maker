@@ -18,7 +18,7 @@ export interface Selection {
 export type EditorActions = Record<string, any>;
 
 // Which sheet edits each kind of layer.
-export const SHEET_FOR_KIND: Record<LayerKind, string> = { caption: 'text', card: 'text', sticker: 'sticker', image: 'media' };
+export const SHEET_FOR_KIND: Record<LayerKind, string> = { caption: 'text', card: 'text', sticker: 'media', image: 'media' };
 
 export function useSelection(): Selection {
   const id: string | null = useMemeEditorStore((s: { activeLayerId: string | null }) => s.activeLayerId);
