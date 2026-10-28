@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Image as KonvaImage, Transformer } from 'react-konva';
 import { useEditorStore } from '../../../store/useVideoEditorStore';
 import { applyMotion } from './nodeMotion';
-import { dropSlotIndex, fitPlacement, isOnScreen } from './previewMath';
+import { dropSlotIndex, fitPlacement, isOnScreen, mediaAttrs } from './previewMath';
 import { attachPreviewVideo } from './previewVideo';
 import { useFrameEffects } from './useFrameEffects';
 import { drawGifFrame, useGifFrames } from './useGifFrames';
@@ -83,14 +83,7 @@ const CanvasMedia = ({ item, isSelected, onSelect, onChange, canvasDimensions })
       <KonvaImage
         ref={imageRef}
         image={effectImage || image}
-        x={item.x || 0}
-        y={item.y || 0}
-        width={item.width || 200}
-        height={item.height || 200}
-        crop={item.crop}
-        scaleX={item.scaleX || 1}
-        scaleY={item.scaleY || 1}
-        rotation={item.rotation || 0}
+        {...mediaAttrs(item)}
         draggable
         onClick={onSelect}
         onTap={onSelect}

@@ -61,6 +61,18 @@ export function dropSlotIndex(
   return index === -1 ? undefined : index;
 }
 
+// A photo, sticker or video's Konva.Image attributes, as the preview and the export draw it.
+export const mediaAttrs = (item: Placed & { crop?: { x: number; y: number; width: number; height: number } }) => ({
+  x: item.x || 0,
+  y: item.y || 0,
+  width: item.width || 200,
+  height: item.height || 200,
+  crop: item.crop,
+  scaleX: item.scaleX || 1,
+  scaleY: item.scaleY || 1,
+  rotation: item.rotation || 0,
+});
+
 // Turning a clip to `rotation` degrees about its centre. Konva turns clips about their corner
 // (x, y), so the corner moves to keep the centre where it was.
 export function rotateAboutCenter(item: Placed, rotation: number): { rotation: number; x: number; y: number } {

@@ -5,6 +5,9 @@
 // The picture is composited bottom to top: the background colour is [0:v], and every overlay
 // produces the next layer [bg1], [bg2], ... Input 1 is silence, which keeps the soundtrack the
 // full length; sounds are mixed onto it.
+//
+// With `encodedVideo` (the frame-by-frame WebCodecs export), input 0 is that already-encoded
+// picture instead: it's copied as is, and only the soundtrack is built.
 import type { AudioClip, ImageClip, Media, Placed, StickerClip, TextClip, VideoClip } from '../model/videoProject';
 import { fadeFilter } from './audioFades';
 import { chromaKeyFilter } from './chromaKey';
@@ -103,20 +106,22 @@ export interface ExportGraph {
   addStill(fileName: string, position?: string, enable?: string | null): void;
   addCaptionTrack(listFile: string): void;
   addAudio(item: AudioClip, fileName: string): void;
+  // A video clip's own sound only (with `encodedVideo`, where its picture is already drawn).
+  addVideoSoundtrack(item: VideoClip, fileName: string): void;
   finish(opts?: { resolution?: number }): { command: string[]; outputFileName: string; durationSec: number };
 }
 
-export function createExportGraph({ width, height, durationMs, backgroundColor, gifOut = false }: {
+export function createExportGraph({ width, height, durationMs, backgroundColor, gifOut = false, encodedVideo }: {
   width: number;
   height: number;
   durationMs: number;
   backgroundColor?: string;
   gifOut?: boolean;
+  encodedVideo?: string;
 }): ExportGraph {
   const durationSec = Math.max(0.1, durationMs / 1000);
   const inputs = [
-    '-f', 'lavfi',
-    '-i', `color=c=${ffmpegColor(backgroundColor)}:s=${width}x${height}:d=${durationSec}`,
+    ...(encodedVideo ? ['-i', encodedVideo] : ['-f', 'lavfi', '-i', `color=c=${ffmpegColor(backgroundColor)}:s=${width}x${height}:d=${durationSec}`]),
     '-f', 'lavfi',
     '-i', `anullsrc=r=44100:cl=stereo:d=${durationSec}`
   ];
@@ -126,6 +131,19 @@ export function createExportGraph({ width, height, durationMs, backgroundColor, 
   let index = 2;
 
   const top = () => (layer === 0 ? '0:v' : `bg${layer}`);
+  // A video file as an input (trimmed to the clip's start), with its sound mixed in when it has one.
+  const addVideoInput = (video: VideoClip, fileName: string, hasAudio: boolean) => {
+    const trimStartSec = Math.max(0, num(video.trimStartMs, 0) / 1000);
+    if (trimStartSec > 0) inputs.push('-ss', trimStartSec.toString());
+    inputs.push('-i', fileName);
+    if (!video.muted && !gifOut && hasAudio) {
+      const startMs = Math.max(0, Math.round(num(video.startMs, 0)));
+      const timelineSec = Math.max(0.1, (num(video.endMs, startMs + 3000) - startMs) / 1000);
+      const rate = num(video.playbackRate, 1.0);
+      filters.push(audioChain(index, video, { trimSec: timelineSec * rate, rate, atempo: rate !== 1.0 ? 'after' : null, fadeSec: timelineSec }));
+      sounds.push(`[aud${index}]`);
+    }
+  };
   const overlay = (source: string, position: string, enable?: string | null) => {
     filters.push(`[${top()}][${source}]overlay=${position}:${enable ? `enable='${enable}':` : ''}eof_action=pass:shortest=0[bg${layer + 1}]`);
     layer++;
@@ -147,17 +165,7 @@ export function createExportGraph({ width, height, durationMs, backgroundColor, 
       } else if (!isVideo) {
         inputs.push('-loop', '1', '-i', fileName);
       } else {
-        const video = item as VideoClip;
-        const trimStartSec = Math.max(0, num(video.trimStartMs, 0) / 1000);
-        if (trimStartSec > 0) inputs.push('-ss', trimStartSec.toString());
-        inputs.push('-i', fileName);
-        if (!video.muted && !gifOut && hasAudio) {
-          const startMs = Math.max(0, Math.round(num(video.startMs, 0)));
-          const timelineSec = Math.max(0.1, (num(video.endMs, startMs + 3000) - startMs) / 1000);
-          const rate = num(video.playbackRate, 1.0);
-          filters.push(audioChain(index, video, { trimSec: timelineSec * rate, rate, atempo: rate !== 1.0 ? 'after' : null, fadeSec: timelineSec }));
-          sounds.push(`[aud${index}]`);
-        }
+        addVideoInput(item as VideoClip, fileName, hasAudio);
       }
 
       const { start, end } = clipSpan(item, durationMs);
@@ -209,6 +217,11 @@ export function createExportGraph({ width, height, durationMs, backgroundColor, 
       index++;
     },
 
+    addVideoSoundtrack(item, fileName) {
+      addVideoInput(item, fileName, true);
+      index++;
+    },
+
     // A sound clip (music, effect, voiceover). Muted sounds still take an input number.
     addAudio(item, fileName) {
       const trimStartSec = Math.max(0, num(item.trimStartMs, 0) / 1000);
@@ -240,7 +253,18 @@ export function createExportGraph({ width, height, durationMs, backgroundColor, 
       if (graph.length > 0) command.push('-filter_complex', graph.join(';'));
 
       const outputFileName = gifOut ? 'output.gif' : 'output.mp4';
-      if (gifOut) {
+      if (encodedVideo) {
+        command.push(
+          '-map', '0:v',
+          '-map', sounds.length > 0 ? '[final_audio]' : '1:a',
+          '-c:v', 'copy',
+          '-c:a', 'aac',
+          '-b:a', '192k',
+          '-t', durationSec.toString(),
+          '-movflags', '+faststart',
+          outputFileName
+        );
+      } else if (gifOut) {
         command.push('-map', videoMap, '-loop', '0', '-t', durationSec.toString(), outputFileName);
       } else {
         command.push(

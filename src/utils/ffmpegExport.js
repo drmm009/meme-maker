@@ -164,10 +164,10 @@ const renderTextToPNG = (item, w, h, ratio, frame = REST_FRAME) => new Promise((
   }
 });
 
-// Renders the project to an MP4 (or, with format 'gif', a silent palette-optimised GIF) and returns
-// { blob, fileName }. Fetches each clip into FFmpeg's file system and hands it to the command
-// builder (exportGraph.js), then runs FFmpeg.
-export const exportVideoFFmpeg = async (items = [], durationMs = 7000, canvasAspectRatio = 16/9, canvasDimensions = { width: 800, height: 600 }, layoutId = null, onProgress = () => {}, { format = 'mp4', backgroundColor = '#ffffff', download = true, resolution = 720 } = {}) => {
+// The whole render in FFmpeg: fetches each clip into FFmpeg's file system and hands it to the
+// command builder (exportGraph), then runs FFmpeg. Used for GIFs, and for MP4s when the browser
+// can't encode them itself.
+const exportWithFFmpeg = async (items = [], durationMs = 7000, canvasAspectRatio = 16/9, canvasDimensions = { width: 800, height: 600 }, layoutId = null, onProgress = () => {}, { format = 'mp4', backgroundColor = '#ffffff', download = true, resolution = 720 } = {}) => {
   const isGifOut = format === 'gif';
   try {
     cancelRequested = false;
@@ -363,4 +363,138 @@ export const exportVideoFFmpeg = async (items = [], durationMs = 7000, canvasAsp
       throw new Error(typeof error === 'string' ? error : JSON.stringify(error));
     }
   }
+};
+
+const safeDuration = (ms) => ((typeof ms === 'number' && !isNaN(ms) && ms > 0) ? ms : 7000);
+
+// The finished file, saved straight away unless the caller shares or saves it itself.
+const deliver = (data, download) => {
+  const blob = new Blob([data], { type: 'video/mp4' });
+  const fileName = `meme-studio-${Date.now()}.mp4`;
+  if (download) downloadBlob(blob, fileName);
+  return { blob, fileName };
+};
+
+// Mixes the clips' sound onto an encoded, silent picture with FFmpeg (the picture is copied, not
+// re-encoded). onProgress gets 0..1 through the mix.
+const mixSound = async (picture, sounds, { width, height, durationMs, onProgress, checkCancel }) => {
+  const ff = await loadFFmpeg();
+  checkCancel();
+  const graph = createExportGraph({ width, height, durationMs, encodedVideo: 'picture.mp4' });
+  const files = [];
+  const write = async (name, data) => {
+    await ff.writeFile(name, data);
+    files.push(name);
+  };
+  try {
+    await write('picture.mp4', picture);
+    for (const item of sounds) {
+      checkCancel();
+      let data;
+      try {
+        data = await fetchFile(item.url);
+      } catch (err) {
+        console.warn(`[export] Could not fetch the sound of ${item.url}:`, err);
+        continue;
+      }
+      if (!data || data.byteLength === 0) continue;
+      if (item.type === 'video') {
+        const name = `input_${graph.nextIndex}.mp4`;
+        await write(name, data);
+        let hasAudio = false;
+        try {
+          hasAudio = await ff.exec(['-i', name, '-map', '0:a', '-c', 'copy', '-f', 'null', '-']) === 0;
+        } catch { /* no sound track */ }
+        if (hasAudio) graph.addVideoSoundtrack(item, name);
+      } else {
+        // Recordings and uploads are blob: URLs with no extension; their stored type names the file.
+        const name = `audio_${graph.nextIndex}.${audioExtension(item)}`;
+        await write(name, data);
+        graph.addAudio(item, name);
+      }
+    }
+    const { command, outputFileName, durationSec } = graph.finish();
+    if (import.meta.env?.DEV) console.log('[FFmpeg mix]', command.join(' '));
+    const onLog = ({ message }) => {
+      const t = parseFfmpegTime(message);
+      if (t !== null) onProgress(t / durationSec);
+    };
+    ff.on('log', onLog);
+    let retCode;
+    try {
+      retCode = await ff.exec(command);
+    } catch (e) {
+      if (cancelRequested) throw new ExportCancelledError();
+      throw e;
+    } finally {
+      try { ff.off('log', onLog); } catch { /* terminated */ }
+    }
+    if (retCode !== 0) throw new Error(`FFmpeg sound mix failed with code ${retCode}`);
+    files.push(outputFileName);
+    return await ff.readFile(outputFileName);
+  } finally {
+    for (const f of files) {
+      try { await ff.deleteFile(f); } catch { /* already gone */ }
+    }
+  }
+};
+
+// MP4 drawn frame by frame with the preview's own renderer and encoded by the browser
+// (webCodecsExport), with the sound mixed in by FFmpeg (skipped, with FFmpeg never loaded, when
+// the project is silent).
+const exportWithWebCodecs = async (items, durationMs, canvasAspectRatio, layoutId, onProgress, { backgroundColor = '#ffffff', download = true, resolution = 720, layoutSlots = [] } = {}) => {
+  cancelRequested = false;
+  let phaseStart = performance.now();
+  const report = (phase, fraction) => onProgress(overallPercent(phase, fraction), { phase, etaSec: etaSeconds(performance.now() - phaseStart, fraction) });
+  const checkCancel = () => { if (cancelRequested) throw new ExportCancelledError(); };
+  report('preparing', 0);
+
+  const safeDurationMs = safeDuration(durationMs);
+  const aspect = (typeof canvasAspectRatio === 'number' && canvasAspectRatio > 0) ? canvasAspectRatio : 16 / 9;
+  const { width, height } = outputSize(aspect, resolution);
+  const sounds = items.filter((i) => !i.hidden && !i.muted && i.url && (i.type === 'video' || i.type === 'audio'));
+  // With sound to mix, drawing the picture is most of the work and the mix the last 10%.
+  const pictureShare = sounds.length ? 0.9 : 1;
+
+  const { encodeProjectVideo } = await import('./webCodecsExport');
+  const picture = await encodeProjectVideo({
+    items, width, height, aspect, durationMs: safeDurationMs, backgroundColor, layoutId, layoutSlots,
+    onLoaded: () => {
+      report('preparing', 1);
+      phaseStart = performance.now();
+    },
+    onFrame: (done, total) => report('rendering', (done / total) * pictureShare),
+    isCancelled: () => cancelRequested,
+  });
+  checkCancel();
+  const file = sounds.length
+    ? await mixSound(picture, sounds, {
+      width, height, durationMs: safeDurationMs, checkCancel,
+      onProgress: (f) => report('rendering', pictureShare + (1 - pictureShare) * Math.min(1, f)),
+    })
+    : picture;
+  report('rendering', 1);
+  return deliver(file, download);
+};
+
+// Renders the project to an MP4 (or, with format 'gif', a silent palette-optimised GIF) and returns
+// { blob, fileName }. MP4s are drawn frame by frame with the preview's own renderer and encoded by
+// the browser (WebCodecs) when it can; otherwise, or if that fails part-way, FFmpeg renders the
+// whole thing. Options: { format, resolution, backgroundColor, download, layoutSlots,
+// encoder: 'auto' | 'ffmpeg' }.
+export const exportVideoFFmpeg = async (items = [], durationMs = 7000, canvasAspectRatio = 16/9, canvasDimensions = { width: 800, height: 600 }, layoutId = null, onProgress = () => {}, options = {}) => {
+  const { format = 'mp4', resolution = 720, encoder = 'auto' } = options;
+  if (format !== 'gif' && encoder !== 'ffmpeg') {
+    const { width, height } = outputSize(canvasAspectRatio, resolution);
+    const { canEncodeMp4 } = await import('./webCodecsExport');
+    if (await canEncodeMp4(width, height)) {
+      try {
+        return await exportWithWebCodecs(items, durationMs, canvasAspectRatio, layoutId, onProgress, options);
+      } catch (error) {
+        if (cancelRequested || error instanceof ExportCancelledError) throw new ExportCancelledError();
+        console.warn('[export] Frame-by-frame export failed; rendering with FFmpeg instead.', error);
+      }
+    }
+  }
+  return exportWithFFmpeg(items, durationMs, canvasAspectRatio, canvasDimensions, layoutId, onProgress, options);
 };

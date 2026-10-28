@@ -124,6 +124,21 @@ describe('createExportGraph', () => {
     expect(command.slice(command.indexOf('-map'), command.indexOf('-map') + 4)).toEqual(['-map', '0:v', '-map', '[final_audio]']);
   });
 
+  it('with an encoded picture, copies it and builds only the soundtrack', () => {
+    const g = graphFor({ encodedVideo: 'picture.mp4' });
+    g.addVideoSoundtrack({ type: 'video', url: 'v', startMs: 1000, endMs: 3000, trimStartMs: 500 }, 'input_2.mp4');
+    const { command } = g.finish();
+    expect(command.slice(0, 8)).toEqual(['-i', 'picture.mp4', '-f', 'lavfi', '-i', 'anullsrc=r=44100:cl=stereo:d=4', '-ss', '0.5']);
+    expect(filtersOf(command)[0]).toBe('[2:a]atrim=0:2,asetpts=PTS-STARTPTS,aformat=channel_layouts=stereo:sample_rates=44100,adelay=1000|1000,volume=1[aud2]');
+    expect(command.slice(command.indexOf('-map'))).toEqual(['-map', '0:v', '-map', '[final_audio]', '-c:v', 'copy', '-c:a', 'aac', '-b:a', '192k', '-t', '4', '-movflags', '+faststart', 'output.mp4']);
+  });
+
+  it('with an encoded picture and no sound, adds silence', () => {
+    const { command } = graphFor({ encodedVideo: 'picture.mp4' }).finish();
+    expect(command).not.toContain('-filter_complex');
+    expect(command.slice(command.indexOf('-map'), command.indexOf('-map') + 4)).toEqual(['-map', '0:v', '-map', '1:a']);
+  });
+
   it('adds the caption track as one concat input at 30fps', () => {
     const g = graphFor();
     g.addCaptionTrack('captions.txt');

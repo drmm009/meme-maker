@@ -158,7 +158,7 @@ export default function VideoEditor({ template, onBack }) {
           useEditorStore.getState().setExportProgress(progress);
           if (info) setExportInfo(info);
         },
-        { format, resolution, backgroundColor: store.backgroundColor, download: false }
+        { format, resolution, backgroundColor: store.backgroundColor, layoutSlots: store.layoutSlots, download: false }
       );
       setExported(result);
       setExportDone(true);
