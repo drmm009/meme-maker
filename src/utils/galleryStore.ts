@@ -1,16 +1,18 @@
 // Minimal IndexedDB gallery store — no external deps.
-// DB: meme-creator / store: memes / keyPath: id
-// Record: { id, name, createdAt, thumbnailUrl, imageBlob, rawImageUrl, captions, stickers, imageLayers, aspectRatio, imageFit, isNativeLayout, layoutDef, slotImages, slotTransforms }
+// DB: meme-creator / store: memes / keyPath: id. Records are GalleryRecords (model/galleryRecord):
+// they're saved with a format version and upgraded to the current one as they're read.
+import { migrateGalleryRecord } from '../model/galleryRecord';
+import type { GalleryRecord } from '../model/galleryRecord';
 
 const DB_NAME = 'meme-creator';
 const STORE = 'memes';
 const DB_VERSION = 1;
 
-let dbPromise = null;
+let dbPromise: Promise<IDBDatabase> | null = null;
 
-function openDB() {
+function openDB(): Promise<IDBDatabase> {
   if (dbPromise) return dbPromise;
-  dbPromise = new Promise((resolve, reject) => {
+  dbPromise = new Promise<IDBDatabase>((resolve, reject) => {
     try {
       const req = indexedDB.open(DB_NAME, DB_VERSION);
       req.onupgradeneeded = () => {
@@ -29,17 +31,15 @@ function openDB() {
   return dbPromise;
 }
 
-function tx(mode) {
+function tx(mode: IDBTransactionMode): Promise<IDBObjectStore> {
   return openDB().then(
     (db) =>
-      new Promise((resolve, reject) => {
+      new Promise<IDBObjectStore>((resolve, reject) => {
         try {
           const t = db.transaction(STORE, mode);
           const store = t.objectStore(STORE);
-          t.oncomplete = () => resolve();
           t.onerror = () => reject(t.error);
-          // Resolve with store immediately; callers use request events.
-          // We resolve store via a separate tick to keep API simple.
+          // Resolve with the store right away; callers wait on their own requests.
           resolve(store);
         } catch (e) {
           reject(e);
@@ -48,35 +48,35 @@ function tx(mode) {
   );
 }
 
-function reqToPromise(req) {
-  return new Promise((resolve, reject) => {
+function reqToPromise<T>(req: IDBRequest<T>): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
     req.onsuccess = () => resolve(req.result);
     req.onerror = () => reject(req.error);
   });
 }
 
-export async function idbPutMeme(record) {
+export async function idbPutMeme(record: GalleryRecord): Promise<void> {
   const store = await tx('readwrite');
   await reqToPromise(store.put(record));
 }
 
-export async function idbGetMeme(id) {
+export async function idbGetMeme(id: string): Promise<GalleryRecord | null> {
   const store = await tx('readonly');
-  return reqToPromise(store.get(id));
+  return migrateGalleryRecord(await reqToPromise(store.get(id)));
 }
 
-export async function idbGetAllMemes() {
+export async function idbGetAllMemes(): Promise<GalleryRecord[]> {
   const store = await tx('readonly');
-  const all = await reqToPromise(store.getAll());
-  return Array.isArray(all) ? all : [];
+  const all: unknown = await reqToPromise(store.getAll());
+  return Array.isArray(all) ? all.map(migrateGalleryRecord).filter((r): r is GalleryRecord => r !== null) : [];
 }
 
-export async function idbDeleteMeme(id) {
+export async function idbDeleteMeme(id: string): Promise<void> {
   const store = await tx('readwrite');
   await reqToPromise(store.delete(id));
 }
 
-export function dataURLToBlob(dataUrl) {
+export function dataURLToBlob(dataUrl: string): Blob {
   const [head, b64] = String(dataUrl).split(',');
   const mime = /data:(.*?);base64/.exec(head)?.[1] || 'image/png';
   const bin = atob(b64 || '');
@@ -85,13 +85,13 @@ export function dataURLToBlob(dataUrl) {
   return new Blob([bytes], { type: mime });
 }
 
-export async function blobToDataURL(blob) {
+export async function blobToDataURL(blob: Blob | string | null | undefined): Promise<string> {
   if (!blob) return '';
   if (typeof blob === 'string') return blob;
   if (typeof FileReader !== 'undefined') {
-    return new Promise((resolve, reject) => {
+    return new Promise<string>((resolve, reject) => {
       const reader = new FileReader();
-      reader.onload = () => resolve(reader.result);
+      reader.onload = () => resolve(reader.result as string);
       reader.onerror = () => reject(reader.error || new Error('Failed to read blob'));
       reader.readAsDataURL(blob);
     });
@@ -102,13 +102,13 @@ export async function blobToDataURL(blob) {
   for (let i = 0; i < bytes.byteLength; i++) {
     binary += String.fromCharCode(bytes[i]);
   }
-  const base64 = typeof btoa !== 'undefined' ? btoa(binary) : Buffer.from(buffer).toString('base64');
+  const base64 = btoa(binary);
   const mime = blob.type || 'image/png';
   return `data:${mime};base64,${base64}`;
 }
 
-export function createThumbnail(dataUrl, maxSide = 320) {
-  return new Promise((resolve) => {
+export function createThumbnail(dataUrl: string, maxSide = 320): Promise<string> {
+  return new Promise<string>((resolve) => {
     try {
       const img = new Image();
       img.onload = () => {
@@ -119,7 +119,7 @@ export function createThumbnail(dataUrl, maxSide = 320) {
           const c = document.createElement('canvas');
           c.width = w;
           c.height = h;
-          c.getContext('2d').drawImage(img, 0, 0, w, h);
+          c.getContext('2d')?.drawImage(img, 0, 0, w, h);
           resolve(c.toDataURL('image/jpeg', 0.7));
         } catch {
           resolve(dataUrl.slice(0, 200000));
@@ -134,7 +134,7 @@ export function createThumbnail(dataUrl, maxSide = 320) {
 }
 
 // Metadata kept in React state (small). Full bytes stay in IDB.
-export function toMetadata(record) {
+export function toMetadata(record: GalleryRecord) {
   return {
     id: record.id,
     name: record.name,

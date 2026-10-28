@@ -16,6 +16,7 @@ const ExploreView = lazy(() => import('./components/ExploreView'));
 import { MEME_TEMPLATES } from './data/templates';
 import { INITIAL_NOTIFICATIONS } from './data/notifications';
 import { idbPutMeme, idbGetAllMemes, idbGetMeme, idbDeleteMeme, dataURLToBlob, createThumbnail, toMetadata } from './utils/galleryStore';
+import { galleryRecord } from './model/galleryRecord';
 import { LayoutGrid, FolderHeart, User, Sun, Moon, Bell, Plus, Users, Compass, Home } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import './App.css';
@@ -166,23 +167,13 @@ function App() {
                   const thumbnailUrl = imageUrl.startsWith('data:image')
                     ? await createThumbnail(imageUrl)
                     : imageUrl;
-                  const record = {
+                  const record = galleryRecord(m, {
                     id,
                     name: m.name || 'My Meme',
                     createdAt: m.createdAt || new Date().toISOString(),
                     thumbnailUrl,
                     imageBlob: imageUrl.startsWith('data:image') ? dataURLToBlob(imageUrl) : null,
-                    rawImageUrl: m.rawImageUrl || null,
-                    captions: m.captions || [],
-                    stickers: m.stickers || m.defaultStickers || [],
-                    imageLayers: m.imageLayers || [],
-                    aspectRatio: m.aspectRatio,
-                    imageFit: m.imageFit,
-                    isNativeLayout: m.isNativeLayout,
-                    layoutDef: m.layoutDef,
-                    slotImages: m.slotImages,
-                    slotTransforms: m.slotTransforms,
-                  };
+                  });
                   await idbPutMeme(record);
                   migrated.push(toMetadata(record));
                 } catch { /* skip corrupt entry */ }
@@ -428,23 +419,13 @@ function App() {
           const thumbnailUrl = imageUrl.startsWith('data:image')
             ? await createThumbnail(imageUrl)
             : imageUrl;
-          const record = {
+          const record = galleryRecord(newMeme, {
             id,
             name: finalName,
             createdAt,
             thumbnailUrl,
             imageBlob: imageUrl.startsWith('data:image') ? dataURLToBlob(imageUrl) : null,
-            rawImageUrl: newMeme.rawImageUrl || null,
-            captions: newMeme.captions || [],
-            stickers: newMeme.stickers || newMeme.defaultStickers || [],
-            imageLayers: newMeme.imageLayers || [],
-            aspectRatio: newMeme.aspectRatio,
-            imageFit: newMeme.imageFit,
-            isNativeLayout: newMeme.isNativeLayout,
-            layoutDef: newMeme.layoutDef,
-            slotImages: newMeme.slotImages,
-            slotTransforms: newMeme.slotTransforms,
-          };
+          });
           await idbPutMeme(record);
           setSavedMemes((cur) =>
             cur.map((m) =>
