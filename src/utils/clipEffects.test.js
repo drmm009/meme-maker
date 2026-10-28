@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 
-vi.mock('./ffmpegExport', () => ({ loadFFmpeg: vi.fn() }));
+vi.mock('./ffmpegExport', () => ({ loadFFmpeg: vi.fn(), runFFmpeg: vi.fn() }));
 const { effectArgs } = await import('./clipEffects');
 
 describe('effectArgs', () => {

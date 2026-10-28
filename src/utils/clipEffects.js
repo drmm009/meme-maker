@@ -1,6 +1,6 @@
 // Browser-side jobs behind the meme effects: grab a still for a freeze frame, and pre-render a
 // clip's visible section reversed or as a boomerang with the app's FFmpeg.
-import { loadFFmpeg } from './ffmpegExport';
+import { loadFFmpeg, runFFmpeg } from './ffmpegExport';
 
 const STILL_MAX_SIDE = 1280;
 // Reversing holds every frame in memory, so renders are capped in size and length.
@@ -55,9 +55,9 @@ export async function renderClipEffect(url, effect, { startMs, lengthMs }) {
   await ff.writeFile(input, new Uint8Array(await (await fetch(url)).arrayBuffer()));
   try {
     const opts = { startSec: startMs / 1000, lengthSec, input, output };
-    let code = await ff.exec(effectArgs(effect, opts));
+    let code = await runFFmpeg(ff, effectArgs(effect, opts));
     // A clip without sound can't be given a reversed soundtrack; try again silent.
-    if (code !== 0 && effect === 'reverse') code = await ff.exec(effectArgs(effect, { ...opts, withAudio: false }));
+    if (code !== 0 && effect === 'reverse') code = await runFFmpeg(ff, effectArgs(effect, { ...opts, withAudio: false }));
     if (code !== 0) throw new Error(`Couldn't render the ${effect} (FFmpeg code ${code}).`);
     const data = await ff.readFile(output);
     return {

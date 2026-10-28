@@ -31,6 +31,59 @@ export const cancelExport = () => {
   }
 };
 
+// FFmpeg's engine died ("Aborted()") or a command went silent: that FFmpeg is discarded, and the
+// next job loads a fresh one.
+export class FFmpegCrashedError extends Error {
+  constructor(reason) {
+    super(`FFmpeg ${reason}`);
+    this.name = 'FFmpegCrashedError';
+  }
+}
+
+// A running command that prints nothing for this long is taken to be stuck (a render prints
+// progress several times a second).
+const IDLE_LIMIT_MS = 60000;
+
+const discardFFmpeg = (ff) => {
+  if (ffmpeg === ff) {
+    ffmpeg = null;
+    loadPromise = null;
+  }
+  try { ff.terminate(); } catch { /* already gone */ }
+};
+
+// ff.exec with crash and hang detection. Once FFmpeg's engine aborts, every later command would
+// wait forever; instead this FFmpeg is terminated (which ends the waiting command) and the
+// command throws FFmpegCrashedError. Cancelling still ends a command with its usual error.
+export const runFFmpeg = async (ff, args) => {
+  let lastActivity = Date.now();
+  let failure = null;
+  const fail = (reason) => {
+    if (failure) return;
+    failure = reason;
+    discardFFmpeg(ff);
+  };
+  const onLog = ({ message }) => {
+    lastActivity = Date.now();
+    if (/Aborted\(\)/.test(message || '')) fail('crashed');
+  };
+  ff.on('log', onLog);
+  const watchdog = setInterval(() => {
+    if (Date.now() - lastActivity > IDLE_LIMIT_MS) fail('stopped responding');
+  }, 5000);
+  try {
+    const code = await ff.exec(args);
+    if (failure) throw new FFmpegCrashedError(failure);
+    return code;
+  } catch (e) {
+    if (failure) throw new FFmpegCrashedError(failure);
+    throw e;
+  } finally {
+    clearInterval(watchdog);
+    try { ff.off('log', onLog); } catch { /* terminated */ }
+  }
+};
+
 export const loadFFmpeg = async () => {
   if (ffmpeg && ffmpeg.loaded) return ffmpeg;
   if (loadPromise) return loadPromise;
@@ -234,8 +287,9 @@ const exportWithFFmpeg = async (items = [], durationMs = 7000, canvasAspectRatio
       if (isVideo && !item.muted && !isGifOut) {
         try {
           // Use FFmpeg to quickly check if an audio stream exists in this file
-          hasAudio = await ff.exec(['-i', fileName, '-map', '0:a', '-c', 'copy', '-f', 'null', '-']) === 0;
+          hasAudio = await runFFmpeg(ff, ['-i', fileName, '-map', '0:a', '-c', 'copy', '-f', 'null', '-']) === 0;
         } catch (e) {
+          if (e instanceof FFmpegCrashedError) throw e;
           console.warn(`[FFmpeg Export] FFmpeg probe for audio failed:`, e);
         }
       }
@@ -325,7 +379,7 @@ const exportWithFFmpeg = async (items = [], durationMs = 7000, canvasAspectRatio
     ff.on('log', onLog);
     let retCode;
     try {
-      retCode = await ff.exec(command);
+      retCode = await runFFmpeg(ff, command);
     } catch (e) {
       if (cancelRequested) throw new ExportCancelledError();
       throw e;
@@ -403,8 +457,11 @@ const mixSound = async (picture, sounds, { width, height, durationMs, onProgress
         await write(name, data);
         let hasAudio = false;
         try {
-          hasAudio = await ff.exec(['-i', name, '-map', '0:a', '-c', 'copy', '-f', 'null', '-']) === 0;
-        } catch { /* no sound track */ }
+          hasAudio = await runFFmpeg(ff, ['-i', name, '-map', '0:a', '-c', 'copy', '-f', 'null', '-']) === 0;
+        } catch (e) {
+          if (e instanceof FFmpegCrashedError) throw e;
+          // No sound track.
+        }
         if (hasAudio) graph.addVideoSoundtrack(item, name);
       } else {
         // Recordings and uploads are blob: URLs with no extension; their stored type names the file.
@@ -422,7 +479,7 @@ const mixSound = async (picture, sounds, { width, height, durationMs, onProgress
     ff.on('log', onLog);
     let retCode;
     try {
-      retCode = await ff.exec(command);
+      retCode = await runFFmpeg(ff, command);
     } catch (e) {
       if (cancelRequested) throw new ExportCancelledError();
       throw e;
@@ -496,5 +553,12 @@ export const exportVideoFFmpeg = async (items = [], durationMs = 7000, canvasAsp
       }
     }
   }
-  return exportWithFFmpeg(items, durationMs, canvasAspectRatio, canvasDimensions, layoutId, onProgress, options);
+  try {
+    return await exportWithFFmpeg(items, durationMs, canvasAspectRatio, canvasDimensions, layoutId, onProgress, options);
+  } catch (error) {
+    // A crashed FFmpeg has been replaced by now: one more try on a fresh one.
+    if (!(error instanceof FFmpegCrashedError) || cancelRequested) throw error;
+    console.warn('[export] FFmpeg crashed; trying once more with a fresh FFmpeg.', error);
+    return exportWithFFmpeg(items, durationMs, canvasAspectRatio, canvasDimensions, layoutId, onProgress, options);
+  }
 };

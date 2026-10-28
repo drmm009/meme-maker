@@ -62,7 +62,9 @@ vi.mock('konva', () => {
   return { default: { Stage, Layer: Node, Group: Node, Text, Rect: Node } };
 });
 
-import { exportVideoFFmpeg } from './ffmpegExport';
+// Tests share a module cache (isolate: false): load the export fresh, so it uses this file's mocks.
+vi.resetModules();
+const { exportVideoFFmpeg } = await import('./ffmpegExport');
 
 beforeEach(() => {
   ff.writes = [];

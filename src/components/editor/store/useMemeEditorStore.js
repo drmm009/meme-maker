@@ -176,7 +176,8 @@ const fieldSetter = (set, key) => (valueOrUpdater) =>
     [key]: typeof valueOrUpdater === 'function' ? valueOrUpdater(state[key]) : valueOrUpdater
   }));
 
-export function createMemeEditorStore(template) {
+// `initialDocument` (a restored draft) replaces the template's starting document.
+export function createMemeEditorStore(template, initialDocument = null) {
   let committed = null;
   let debounceTimer = null;
 
@@ -194,6 +195,7 @@ export function createMemeEditorStore(template) {
 
         return {
           ...buildInitialDocument(template),
+          ...initialDocument,
 
           setCaptions: fieldSetter(set, 'captions'),
           setStickers: fieldSetter(set, 'stickers'),

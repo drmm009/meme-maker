@@ -15,22 +15,31 @@ import { useSocialCardActions } from './editor/hooks/useSocialCardActions';
 import { useBubbleActions } from './editor/hooks/useBubbleActions';
 import { useCaptionActions } from './editor/hooks/useCaptionActions';
 import { useLayerActions } from './editor/hooks/useLayerActions';
+import { useMemeDraft } from './editor/hooks/useMemeDraft';
 import EditorTopBar from './editor/top-bar/EditorTopBar';
 import CanvasStage from './editor/CanvasStage';
 import ContextToolbar from './editor/context-toolbars/ContextToolbar';
 import SecondaryToolbar from './editor/context-toolbars/SecondaryToolbar';
 import EditorModals from './editor/EditorModals';
 import EditorSidebar from './editor/EditorSidebar';
+import DraftOffer from './editor/DraftOffer';
 import './MemeEditor.css';
 
 export default function MemeEditor(props) {
-  const [store] = useState(() => createMemeEditorStore(props.template));
+  // Restoring a draft starts a fresh editing session on the draft's template and document.
+  const [session, setSession] = useState({ id: 0, template: props.template, document: null });
+  const restoreDraft = (document) => setSession((s) => ({ id: s.id + 1, template: document.activeTemplate || s.template, document }));
+  return <MemeEditorSession key={session.id} {...props} template={session.template} initialDocument={session.document} onRestoreDraft={restoreDraft} />;
+}
+
+function MemeEditorSession({ initialDocument, onRestoreDraft, ...props }) {
+  const [store] = useState(() => createMemeEditorStore(props.template, initialDocument));
   const [uiStore] = useState(() => createEditorUiStore(props.template));
   useEffect(() => () => store.getState().cancelPendingHistory(), [store]);
   return (
     <MemeEditorStoreContext.Provider value={store}>
       <EditorUiStoreContext.Provider value={uiStore}>
-        <MemeEditorContent {...props} />
+        <MemeEditorContent {...props} restoredDraft={Boolean(initialDocument)} onRestoreDraft={onRestoreDraft} />
       </EditorUiStoreContext.Provider>
     </MemeEditorStoreContext.Provider>
   );
@@ -38,7 +47,7 @@ export default function MemeEditor(props) {
 
 // Wires the editor's pieces together. Document state lives in editor/store/useMemeEditorStore.js,
 // shared UI state in editor/store/useEditorUiStore.js, and edit handlers in editor/hooks/.
-function MemeEditorContent({ template, onBack, onSaveToGallery }) {
+function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, onRestoreDraft }) {
   const activeLayerId = useMemeEditorStore((s) => s.activeLayerId);
   const setActiveLayerId = useMemeEditorStore((s) => s.setActiveLayerId);
   const handleUndo = useMemeEditorStore((s) => s.undo);
@@ -61,6 +70,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery }) {
   const imageFit = template?.imageFit || 'contain';
 
   useEditorSetup(template);
+  const draft = useMemeDraft({ restored: restoredDraft, onRestore: onRestoreDraft });
   const { activeCaption, activeSticker, activeImageLayer, currentEditingSocialCard, isElementSelected, activeFontObj } = useActiveLayer();
   const contextToolbarRef = useToolbarAutoScroll({ activeCaption, activeSticker, activeImageLayer });
 
@@ -129,6 +139,8 @@ function MemeEditorContent({ template, onBack, onSaveToGallery }) {
         setExportDropdownOpen={setExportDropdownOpen}
         template={template}
       />
+
+      {draft.offer && <DraftOffer offer={draft.offer} onRestore={draft.restore} onDismiss={draft.dismiss} />}
 
       <div className="editor-main">
         <div className="editor-workspace">

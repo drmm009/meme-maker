@@ -44,8 +44,10 @@ vi.mock('./webCodecsExport', async () => {
   };
 });
 
-import { exportVideoFFmpeg } from './ffmpegExport';
-import { ExportCancelledError } from './exportProgress';
+// Tests share a module cache (isolate: false): load the export fresh, so it uses this file's mocks.
+vi.resetModules();
+const { exportVideoFFmpeg } = await import('./ffmpegExport');
+const { ExportCancelledError } = await import('./exportProgress');
 
 beforeEach(() => {
   ff.execs = [];

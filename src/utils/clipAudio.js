@@ -45,14 +45,14 @@ const decodeWithWebAudio = async (url) => {
 
 // Some containers (WebM on Safari, for one) do not decode in Web Audio; FFmpeg reads them instead.
 const extractWithFFmpeg = async (item, from, to) => {
-  const { loadFFmpeg } = await import('./ffmpegExport');
+  const { loadFFmpeg, runFFmpeg } = await import('./ffmpegExport');
   const { fetchFile } = await import('@ffmpeg/util');
   const ff = await loadFFmpeg();
   const input = `speech_in_${Date.now()}`;
   const output = `${input}.pcm`;
   await ff.writeFile(input, await fetchFile(item.url));
   try {
-    await ff.exec(['-ss', from.toFixed(3), '-t', (to - from).toFixed(3), '-i', input, '-vn', '-ac', '1', '-ar', String(SPEECH_RATE), '-f', 'f32le', output]);
+    await runFFmpeg(ff, ['-ss', from.toFixed(3), '-t', (to - from).toFixed(3), '-i', input, '-vn', '-ac', '1', '-ar', String(SPEECH_RATE), '-f', 'f32le', output]);
     const bytes = await ff.readFile(output);
     return new Float32Array(bytes.buffer, bytes.byteOffset, Math.floor(bytes.byteLength / 4)).slice();
   } finally {
