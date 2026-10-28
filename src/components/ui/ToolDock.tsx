@@ -1,9 +1,10 @@
-import type { LucideIcon } from 'lucide-react';
+import type { ComponentType } from 'react';
 
 export interface DockItem {
   id: string;
   label: string;
-  Icon: LucideIcon;
+  // A lucide icon, or any icon taking the same size/strokeWidth props.
+  Icon: ComponentType<{ size?: number; strokeWidth?: number }>;
   title?: string;
 }
 
@@ -27,7 +28,7 @@ export default function ToolDock({ items, active, onSelect, ariaLabel }: ToolDoc
           title={title || label}
           onClick={() => onSelect(id)}
         >
-          <Icon size={20} strokeWidth={1.9} />
+          <Icon size={23} strokeWidth={1.7} />
           <span>{label}</span>
         </button>
       ))}

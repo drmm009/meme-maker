@@ -1,4 +1,4 @@
-import { Type, Smile, Copy, Pencil, WandSparkles } from 'lucide-react';
+import { Type, Copy, PenLine, WandSparkles } from 'lucide-react';
 import { ToolDock } from '../../ui';
 import type { DockItem } from '../../ui';
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
@@ -13,11 +13,24 @@ import FxSheet from './FxSheet';
 import FaceSwapSheet from './FaceSwapSheet';
 import './panels.css';
 
+// A round sticker face with its corner peeling (lucide's sticker is square).
+function StickerIcon({ size = 24, strokeWidth = 2 }: { size?: number; strokeWidth?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 21a9 9 0 1 1 9-9" />
+      <path d="M21 12c-4.5 0-9 3.5-9 9" />
+      <path d="M9 10h.01" />
+      <path d="M14.5 10h.01" />
+      <path d="M9.5 14.2c.9.7 2 .9 3 .4" />
+    </svg>
+  );
+}
+
 const DOCK: DockItem[] = [
   { id: 'text', label: 'Text', Icon: Type, title: 'Text' },
-  { id: 'sticker', label: 'Sticker', Icon: Smile, title: 'Stickers and emoji' },
+  { id: 'sticker', label: 'Sticker', Icon: StickerIcon, title: 'Stickers and emoji' },
   { id: 'media', label: 'Media', Icon: Copy, title: 'Photos, videos and cutouts' },
-  { id: 'draw', label: 'Draw', Icon: Pencil, title: 'Draw on the meme' },
+  { id: 'draw', label: 'Draw', Icon: PenLine, title: 'Draw on the meme' },
   { id: 'fx', label: 'Fx', Icon: WandSparkles, title: 'Photo grading and effects' },
 ];
 
