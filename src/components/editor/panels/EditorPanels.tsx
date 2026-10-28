@@ -1,5 +1,5 @@
 import { Type, Copy, PenLine, Sparkles, LayoutGrid } from 'lucide-react';
-import { ToolDock } from '../../ui';
+import { ToolDock, ToolStrip } from '../../ui';
 import type { DockItem } from '../../ui';
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
 import { useEditorUiStore } from '../store/useEditorUiStore';
@@ -11,6 +11,7 @@ import MediaSheet from './MediaSheet';
 import DrawSheet from './DrawSheet';
 import FxSheet from './FxSheet';
 import FaceSwapSheet from './FaceSwapSheet';
+import { DRAW_TOOLS } from './drawTools';
 import './panels.css';
 
 // Text sits in the middle; the open section is the wide gradient pill.
@@ -24,11 +25,17 @@ const DOCK: DockItem[] = [
 
 const SHEETS = { text: TextSheet, media: MediaSheet, draw: DrawSheet, fx: FxSheet, canvas: CanvasSheet };
 
-// The bottom of the editor: the section dock, or the open section's sheet in its place.
+// The bottom of the editor: the section dock (with the open section's tool strip above it), or the
+// open sheet in its place. Draw keeps its strip above the brush settings so brushes can be switched.
 export default function EditorPanels({ actions }: { actions: EditorActions }) {
   const sheet: keyof typeof SHEETS | null = useEditorUiStore((s: { sheet: keyof typeof SHEETS | null }) => s.sheet);
   const openSheet = useEditorUiStore((s: { openSheet: (sheet: string, focus?: string | null) => void }) => s.openSheet);
   const closeSheet = useEditorUiStore((s: { closeSheet: () => void }) => s.closeSheet);
+  const dockTab: string | null = useEditorUiStore((s: { dockTab: string | null }) => s.dockTab);
+  const drawTool: string | null = useEditorUiStore((s: { drawTool: string | null }) => s.drawTool);
+  const showDrawTools = useEditorUiStore((s: { showDrawTools: () => void }) => s.showDrawTools);
+  const pickDrawTool = useEditorUiStore((s: { pickDrawTool: (tool: string) => void }) => s.pickDrawTool);
+  const leaveDock = useEditorUiStore((s: { leaveDock: () => void }) => s.leaveDock);
   const setActiveLayerId = useMemeEditorStore((s: { setActiveLayerId: (id: string | null) => void }) => s.setActiveLayerId);
   const faceMorph = useMemeEditorStore((s: { templateFaceMorph: { morphProgress?: number } | null }) => s.templateFaceMorph);
   const { kind } = useSelection();
@@ -41,10 +48,15 @@ export default function EditorPanels({ actions }: { actions: EditorActions }) {
     );
   }
 
+  const drawStrip = dockTab === 'draw' && (
+    <ToolStrip ariaLabel="Draw tools" items={DRAW_TOOLS} active={drawTool} onSelect={pickDrawTool} />
+  );
+
   const SheetComponent = sheet ? SHEETS[sheet] : null;
   if (SheetComponent) {
     return (
       <div className="ie-panels ie-panels--sheet">
+        {sheet === 'draw' && drawStrip}
         <SheetComponent actions={actions} onClose={closeSheet} />
       </div>
     );
@@ -52,12 +64,21 @@ export default function EditorPanels({ actions }: { actions: EditorActions }) {
 
   return (
     <div className="ie-panels">
+      {drawStrip}
       <ToolDock
         ariaLabel="Editor tools"
         items={DOCK}
-        active={kind ? SHEET_FOR_KIND[kind] : null}
+        active={dockTab || (kind ? SHEET_FOR_KIND[kind] : null)}
         onSelect={(id) => {
-          if (id === 'draw') setActiveLayerId(null);
+          if (id === 'draw') {
+            // Draw shows its brushes; tapping it again leaves drawing.
+            if (dockTab === 'draw') leaveDock();
+            else {
+              setActiveLayerId(null);
+              showDrawTools();
+            }
+            return;
+          }
           openSheet(id);
         }}
       />

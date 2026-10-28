@@ -6,6 +6,8 @@ export { default as SegmentedControl } from './SegmentedControl';
 export type { SegmentOption } from './SegmentedControl';
 export { default as ToolDock } from './ToolDock';
 export type { DockItem } from './ToolDock';
+export { default as ToolStrip } from './ToolStrip';
+export type { StripItem } from './ToolStrip';
 export { default as FloatingToolbar } from './FloatingToolbar';
 export type { ToolbarItem } from './FloatingToolbar';
 export { default as Sheet } from './Sheet';

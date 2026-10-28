@@ -37,14 +37,28 @@ describe('createEditorUiStore', () => {
     expect(createEditorUiStore(null).getState().watermark).toMatchObject({ text: '@me', enabled: true });
   });
 
-  it('opens one sheet at a time; Draw picks the brush and closing stops drawing', () => {
+  it('opens one sheet at a time', () => {
     const store = createEditorUiStore(null);
     store.getState().openSheet('text', 'font');
     expect(store.getState()).toMatchObject({ sheet: 'text', sheetFocus: 'font', drawTool: null });
-    store.getState().openSheet('draw');
-    expect(store.getState()).toMatchObject({ sheet: 'draw', sheetFocus: null, drawTool: 'brush', activeTab: 'draw' });
     store.getState().closeSheet();
-    expect(store.getState()).toMatchObject({ sheet: null, drawTool: null, activeTab: 'text' });
+    expect(store.getState()).toMatchObject({ sheet: null, sheetFocus: null });
+  });
+
+  it('Draw: the strip first, a brush turns drawing on, closing its settings keeps drawing', () => {
+    const store = createEditorUiStore(null);
+    store.getState().showDrawTools();
+    expect(store.getState()).toMatchObject({ dockTab: 'draw', drawTool: null, sheet: null });
+    store.getState().pickDrawTool('glow');
+    expect(store.getState()).toMatchObject({ dockTab: 'draw', drawTool: 'glow', sheet: 'draw', activeTab: 'draw' });
+    store.getState().closeSheet();
+    expect(store.getState()).toMatchObject({ dockTab: 'draw', drawTool: 'glow', sheet: null });
+    store.getState().leaveDock();
+    expect(store.getState()).toMatchObject({ dockTab: null, drawTool: null, activeTab: 'text' });
+    // Opening another section's sheet also stops drawing.
+    store.getState().pickDrawTool('brush');
+    store.getState().openSheet('text');
+    expect(store.getState()).toMatchObject({ dockTab: null, drawTool: null, sheet: 'text' });
   });
 
   it('setters accept a value or an updater', () => {

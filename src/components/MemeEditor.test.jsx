@@ -172,7 +172,6 @@ describe('MemeEditor', () => {
   it('opens each section of the dock as a sheet with its tools', () => {
     renderEditor();
     const expectations = {
-      'Draw on the meme': ['Brush: solid stroke', 'Marker: translucent highlighter'],
       'Photos, videos, stickers and emoji': ['Upload Image or Video', 'Add Image from Templates', 'Add Meme Stickers', 'Add Emojis'],
       Text: ['AI meme captions', 'Chat and speech bubbles'],
       'AI tools and photo filters': ['AI meme captions', 'Swap faces with another photo using AI', 'Remove the background'],
@@ -228,15 +227,40 @@ describe('MemeEditor', () => {
     expect(captionTexts().some((t) => /solve the bug/.test(t))).toBe(true);
   }, 30000);
 
-  it('draws while the Draw sheet is open and stops when it closes', () => {
+  it('Draw shows Brush, Glow and Marker; a brush opens its settings and drawing stays on until Draw is tapped again', () => {
     renderEditor();
     openSection('Draw on the meme');
-    expect(canvas.props.isDrawingMode).toBe(true);
-    expect(canvas.props.drawTool).toBe('brush');
-    fireEvent.click(within(sheet('Draw')).getByText('Marker'));
-    expect(canvas.props.drawTool).toBe('highlighter');
-    closeSheet();
+    const strip = screen.getByRole('toolbar', { name: 'Draw tools' });
+    expect(within(strip).getAllByRole('button').map((b) => b.textContent)).toEqual(['Brush', 'Glow', 'Marker']);
     expect(canvas.props.isDrawingMode).toBe(false);
+
+    fireEvent.click(within(strip).getByText('Marker'));
+    expect(canvas.props.drawTool).toBe('highlighter');
+    expect(canvas.props.isDrawingMode).toBe(true);
+    const settings = sheet('Marker');
+    expect(within(settings).getByLabelText('Brush colour')).toBeTruthy();
+    expect(within(settings).getByLabelText('Brush size')).toBeTruthy();
+    expect(within(settings).getByText('Clear drawing')).toBeTruthy();
+
+    // Switching brush from the strip above the open settings.
+    fireEvent.click(within(screen.getByRole('toolbar', { name: 'Draw tools' })).getByText('Glow'));
+    expect(sheet('Glow')).toBeTruthy();
+    closeSheet();
+    expect(canvas.props.isDrawingMode).toBe(true);
+    expect(within(bar()).getByTitle('Draw on the meme').getAttribute('aria-pressed')).toBe('true');
+
+    openSection('Draw on the meme');
+    expect(canvas.props.isDrawingMode).toBe(false);
+    expect(screen.queryByRole('toolbar', { name: 'Draw tools' })).toBeNull();
+  }, 30000);
+
+  it('clears the drawing from the brush settings', () => {
+    renderEditor();
+    act(() => canvas.props.onAddDrawing({ points: [0, 0, 10, 10], color: '#fff', size: 4, tool: 'brush' }));
+    openSection('Draw on the meme');
+    fireEvent.click(within(screen.getByRole('toolbar', { name: 'Draw tools' })).getByText('Brush'));
+    fireEvent.click(within(sheet('Brush')).getByText('Clear drawing'));
+    expect(canvas.props.drawings).toHaveLength(0);
   }, 30000);
 
   it('records drawings and clears them', () => {

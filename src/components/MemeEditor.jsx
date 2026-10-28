@@ -55,7 +55,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, o
   const handleRedo = useMemeEditorStore((s) => s.redo);
   const nudgeLayer = useMemeEditorStore((s) => s.nudgeLayer);
   const setPasteToast = useEditorUiStore((s) => s.setPasteToast);
-  const sheet = useEditorUiStore((s) => s.sheet);
+  const dockTab = useEditorUiStore((s) => s.dockTab);
   const drawTool = useEditorUiStore((s) => s.drawTool);
 
   // Native Multi-Panel Layout Support
@@ -143,7 +143,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, o
             imageFit={imageFit}
             isNativeLayout={isNativeLayout}
             layoutDef={layoutDef}
-            isDrawingMode={sheet === 'draw' && Boolean(drawTool)}
+            isDrawingMode={dockTab === 'draw' && Boolean(drawTool)}
             isRemovingBg={isRemovingBg}
             onAddDrawing={handleAddDrawing}
             onDeleteLayer={handleDeleteLayer}

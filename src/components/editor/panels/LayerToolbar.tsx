@@ -59,7 +59,8 @@ export default function LayerToolbar({ canvasRef, actions }: { canvasRef: RefObj
     };
   }, [canvasRef]);
 
-  const shown = Boolean(id && kind && !sheet && !faceMorph);
+  const dockTab: string | null = useEditorUiStore((s: { dockTab: string | null }) => s.dockTab);
+  const shown = Boolean(id && kind && !sheet && !dockTab && !faceMorph);
 
   useLayoutEffect(() => {
     const canvas = canvasRef.current;

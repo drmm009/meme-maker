@@ -2,7 +2,7 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import { Type, Sticker } from 'lucide-react';
-import { TopBar, SegmentedControl, ToolDock, FloatingToolbar, Sheet, SwatchRow, Slider, Switch, Tile, Toggle } from './index';
+import { TopBar, SegmentedControl, ToolDock, ToolStrip, FloatingToolbar, Sheet, SwatchRow, Slider, Switch, Tile, Toggle } from './index';
 
 afterEach(cleanup);
 
@@ -30,6 +30,14 @@ describe('UI kit', () => {
     expect(screen.getByTitle('Text').getAttribute('aria-pressed')).toBe('true');
     fireEvent.click(screen.getByTitle('Sticker'));
     expect(onSelect).toHaveBeenCalledWith('sticker');
+  });
+
+  it('ToolStrip: marks the picked tool and reports picks', () => {
+    const onSelect = vi.fn();
+    render(<ToolStrip ariaLabel="Draw tools" active="glow" onSelect={onSelect} items={[{ id: 'brush', label: 'Brush', Icon: Type }, { id: 'glow', label: 'Glow', Icon: Sticker }]} />);
+    expect(screen.getByRole('button', { name: 'Glow' }).getAttribute('aria-pressed')).toBe('true');
+    fireEvent.click(screen.getByRole('button', { name: 'Brush' }));
+    expect(onSelect).toHaveBeenCalledWith('brush');
   });
 
   it('FloatingToolbar: labelled tools with active state', () => {

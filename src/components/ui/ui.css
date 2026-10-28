@@ -189,6 +189,36 @@
   font-weight: 700;
 }
 
+/* ── Tool strip (above the dock) ─────────────────────────── */
+.ui-strip {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  padding: 0 16px 10px;
+  animation: ui-strip-in 0.2s ease-out;
+}
+@keyframes ui-strip-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+.ui-strip-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 40px;
+  padding: 0 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  background: #2a2b30;
+  color: #d4d5db;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: 0 10px 24px -12px rgba(0, 0, 0, 0.8);
+}
+.ui-strip-btn.is-on { border-color: transparent; background: linear-gradient(100deg, #ec6a43, #d9549a); color: #fff; }
+
 /* ── Floating toolbar ────────────────────────────────────── */
 .ui-float {
   display: flex;
