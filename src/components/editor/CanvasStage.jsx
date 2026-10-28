@@ -2,7 +2,6 @@ import { Check, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import CanvasEditor from '../CanvasEditor';
 import FacePinpointOverlay from '../FacePinpointOverlay';
-import { isSocialCardCaption } from './memeEditorUtils';
 import { useMemeEditorStore } from './store/useMemeEditorStore';
 import { useEditorUiStore } from './store/useEditorUiStore';
 
@@ -23,13 +22,8 @@ export default function CanvasStage({
   const patchLayer = useMemeEditorStore((s) => s.patchLayer);
   const updateCaptionText = useMemeEditorStore((s) => s.updateCaptionText);
   const pasteToast = useEditorUiStore((s) => s.pasteToast);
-  const setActiveTab = useEditorUiStore((s) => s.setActiveTab);
-  const setActiveSubmenu = useEditorUiStore((s) => s.setActiveSubmenu);
-  const setShowFontMenu = useEditorUiStore((s) => s.setShowFontMenu);
-  const setShowTextEffectsMenu = useEditorUiStore((s) => s.setShowTextEffectsMenu);
-  const setShowTextBlurMenu = useEditorUiStore((s) => s.setShowTextBlurMenu);
-  const setShowTextBgMenu = useEditorUiStore((s) => s.setShowTextBgMenu);
-  const setShowBubbleLayouts = useEditorUiStore((s) => s.setShowBubbleLayouts);
+  const sheet = useEditorUiStore((s) => s.sheet);
+  const openSheet = useEditorUiStore((s) => s.openSheet);
   const setShowBubbleBottomSheet = useEditorUiStore((s) => s.setShowBubbleBottomSheet);
 
   const {
@@ -37,29 +31,22 @@ export default function CanvasStage({
     handleConfirmPinpoint, originalTemplateImgRef
   } = faceMorph;
 
-  // Tapping around the canvas deselects; leaving a sticker, image or social card goes to Images.
+  // Tapping around the canvas deselects.
   const handleWrapperPointerDown = (e) => {
     if (e.target !== e.currentTarget || !activeLayerId) return;
-    const prevCaption = captions.find((c) => c.id === activeLayerId);
-    if (stickers.some((s) => s.id === activeLayerId) || (prevCaption && isSocialCardCaption(prevCaption)) || imageLayers.some((img) => img.id === activeLayerId)) {
-      setActiveTab('images');
-    }
     setActiveLayerId(null);
   };
 
-  // Selecting on the canvas closes the text submenus; selecting a caption switches to Text.
+  // Selecting on the canvas: with a layer's sheet open, the sheet follows the selection (picking a
+  // sticker while editing text switches to the Sticker sheet). Fx works on any layer, so it stays.
   const handleSelectLayer = (id) => {
-    setShowFontMenu(false);
-    setShowTextEffectsMenu(false);
-    setShowTextBlurMenu(false);
-    setShowTextBgMenu(false);
-    setShowBubbleLayouts(false);
-    if (id && captions.some((c) => c.id === id)) {
-      setActiveTab('text');
-    }
     setActiveLayerId(id || null);
-    setActiveSubmenu(null);
     setShowBubbleBottomSheet(false);
+    if (!id || !sheet || sheet === 'fx' || sheet === 'draw') return;
+    const target = captions.some((c) => c.id === id) ? 'text'
+      : stickers.some((s) => s.id === id) ? 'sticker'
+      : imageLayers.some((l) => l.id === id) ? 'media' : sheet;
+    if (target !== sheet) openSheet(target);
   };
 
   return (

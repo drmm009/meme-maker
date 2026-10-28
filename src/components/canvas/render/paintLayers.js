@@ -2,6 +2,16 @@ import { paintImageLayer } from './paintImageLayer';
 import { paintSticker } from './paintSticker';
 import { paintCaption } from './paintCaption';
 
+// Keeps canvas.activeLayerBox current and fires 'activelayerbox' on the canvas when it changes.
+export function reportActiveLayerBox(canvas, box) {
+  if (!canvas) return;
+  const key = box ? [box.x, box.y, box.w, box.h, box.rotation].map((n) => Math.round(n)).join(',') : '';
+  if (key === canvas.activeLayerBoxKey) return;
+  canvas.activeLayerBox = box;
+  canvas.activeLayerBoxKey = key;
+  canvas.dispatchEvent?.(new CustomEvent('activelayerbox', { detail: box }));
+}
+
 export function paintLayers({
   activeLayerId, baseImgRef, canvas, captions, dragTarget,
   getCaptionCenterY, getImageLayerCenterY, getStickerCenterY, imageCacheRef, imageLayers,
@@ -9,6 +19,10 @@ export function paintLayers({
 }) {
   let activeHandleDrawer = null;
   const setActiveHandleDrawer = (drawer) => { activeHandleDrawer = drawer; };
+  // The selected layer's box in canvas pixels ({ x, y } centre, w, h, rotation), for UI that
+  // floats over it (see reportActiveLayerBox).
+  let activeBox = null;
+  const reportActiveBox = (box) => { activeBox = box; };
 
   // Reset filter for text/stickers/image-layers overlay (safe on all browsers)
   try { targetCtx.filter = 'none'; } catch { /* unsupported */ }
@@ -27,20 +41,21 @@ export function paintLayers({
     if (layer._type === 'imageLayer') {
       paintImageLayer({
         activeLayerId, baseImgRef, canvas, getImageLayerCenterY, imageCacheRef, isDrawingMode,
-        layer, renderCanvas, setActiveHandleDrawer, targetCtx
+        layer, renderCanvas, reportActiveBox, setActiveHandleDrawer, targetCtx
       });
     } else if (layer._type === 'sticker') {
       paintSticker({
         activeLayerId, baseImgRef, canvas, getStickerCenterY, imageCacheRef, isDrawingMode, layer,
-        loadingMediaRef, renderCanvas, setActiveHandleDrawer, targetCtx
+        loadingMediaRef, renderCanvas, reportActiveBox, setActiveHandleDrawer, targetCtx
       });
     } else if (layer._type === 'caption') {
       paintCaption({
         activeLayerId, canvas, dragTarget, getCaptionCenterY, isDragging, isDrawingMode, layer,
-        setActiveHandleDrawer, targetCtx
+        reportActiveBox, setActiveHandleDrawer, targetCtx
       });
     }
   });
 
+  reportActiveLayerBox(canvas, activeBox);
   return activeHandleDrawer;
 }

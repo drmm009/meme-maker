@@ -42,6 +42,8 @@ function initialSocialModalPlatform(template) {
 export function buildInitialUi(template) {
   return {
     activeTab: 'text', // 'text' | 'images' | 'draw' | 'canvas' | 'watermark' | 'filters'
+    sheet: null, // the open bottom sheet: 'text' | 'sticker' | 'media' | 'draw' | 'fx' | null
+    sheetFocus: null, // the section the sheet scrolls to when opened: 'font' | 'size' | 'color' | null
     activeSubmenu: null, // 'font' | 'color' | 'align' | 'effects' | 'bg' | 'blur' | 'bubble' | 'tweetTheme' | 'tweetTrend' | 'drawSettings' | 'watermark' | 'canvasBg' | 'banner' | 'filters'
     lastUsedSettingButton: null,
     showFontMenu: false,
@@ -96,6 +98,22 @@ export function createEditorUiStore(template) {
     })),
 
     updateWatermark: (key, value) => set((state) => ({ watermark: { ...state.watermark, [key]: value } })),
+
+    // Open a bottom sheet (scrolled to `focus`). The Draw sheet is drawing mode: it picks the brush
+    // and leaves it again on close.
+    openSheet: (sheet, focus = null) => set((state) => ({
+      sheet,
+      sheetFocus: focus,
+      activeSubmenu: null,
+      drawTool: sheet === 'draw' ? (state.drawTool || 'brush') : null,
+      activeTab: sheet === 'draw' ? 'draw' : state.activeTab === 'draw' ? 'text' : state.activeTab,
+    })),
+    closeSheet: () => set((state) => ({
+      sheet: null,
+      sheetFocus: null,
+      drawTool: null,
+      activeTab: state.activeTab === 'draw' ? 'text' : state.activeTab,
+    })),
   }));
 
   // Keep the watermark settings across sessions.

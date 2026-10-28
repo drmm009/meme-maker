@@ -49,6 +49,7 @@ vi.mock('@imgly/background-removal', () => ({ removeBackground: vi.fn() }));
 vi.mock('canvas-confetti', () => ({ default: vi.fn() }));
 vi.mock('../services/memeService', () => ({ fetchOpenSourceMemes: vi.fn(() => Promise.resolve([])) }));
 vi.mock('../utils/faceGraftEngine', () => ({ fuseFaceIntoTemplate: vi.fn() }));
+vi.mock('../utils/memeDraftStore', async (importOriginal) => ({ ...(await importOriginal()), loadMemeDraft: async () => null, saveMemeDraft: async () => {} }));
 
 import MemeEditor from './MemeEditor';
 
@@ -76,14 +77,17 @@ const captionTexts = () => screen.queryAllByTestId('caption').map((el) => el.tex
 const deselect = () => act(() => canvas.props.onSelectLayer(null));
 const undoButton = () => screen.getByTitle('Undo');
 const redoButton = () => screen.getByTitle('Redo');
-// The bottom deck: quick chips over a trigger bar whose "+" opens a command palette and orbit.
+// The bottom dock opens one sheet per section (Text, Sticker, Media, Draw, Fx).
 const bar = () => screen.getByRole('navigation', { name: 'Editor tools' });
-const openSheet = () => fireEvent.click(screen.getByLabelText('Add anything'));
-const pickFromSheet = (title) => {
-  openSheet();
-  fireEvent.click(within(screen.getByRole('dialog', { name: 'Add anything' })).getByTitle(title));
+const sheet = (name) => screen.getByRole('dialog', { name });
+const openSection = (title) => fireEvent.click(within(bar()).getByTitle(title));
+const closeSheet = () => fireEvent.click(screen.getByLabelText('Close'));
+const addTextFromMenu = () => {
+  if (!screen.queryByRole('dialog', { name: 'Text' })) openSection('Text');
+  fireEvent.click(within(sheet('Text')).getByText('Add Text'));
 };
-const addTextFromMenu = () => fireEvent.click(within(screen.getByRole('toolbar', { name: 'Quick tools' })).getByTitle('Add Text Caption'));
+// Hidden (no accessible name) until the real canvas reports where the layer is, so find it by label.
+const layerToolbar = () => screen.getByLabelText('Layer tools');
 
 function renderEditor(template = TEMPLATE, onSaveToGallery = vi.fn()) {
   return render(<MemeEditor template={template} onBack={vi.fn()} onSaveToGallery={onSaveToGallery} />);
@@ -164,54 +168,73 @@ describe('MemeEditor', () => {
     expect(captionTexts()).toHaveLength(4);
   }, 30000);
 
-  it('lists every tool in the + palette and filters it by search', () => {
+  it('opens each section of the dock as a sheet with its tools', () => {
     renderEditor();
-    openSheet();
-    const sheet = screen.getByRole('dialog', { name: 'Add anything' });
-    for (const title of ['Add Text Caption', 'AI Meme Captions', 'Add Meme Stickers', 'Photo Filters', 'Watermark Settings', 'Brush: solid stroke']) {
-      expect(within(sheet).getByTitle(title), title).toBeTruthy();
+    const expectations = {
+      Text: ['AI meme captions', 'White band above the meme'],
+      'Stickers and emoji': ['Add Meme Stickers', 'Add Emojis'],
+      'Photos, videos and cutouts': ['Upload Image or Video', 'Add Image from Templates'],
+      'Draw on the meme': ['Brush: solid stroke', 'Marker: translucent highlighter'],
+      'Photo grading and effects': ['Flip Canvas Horizontal', 'Watermark'],
+    };
+    for (const [section, titles] of Object.entries(expectations)) {
+      openSection(section);
+      const panel = screen.getByRole('dialog');
+      for (const title of titles) expect(within(panel).getByTitle(title), title).toBeTruthy();
+      closeSheet();
     }
-    fireEvent.change(within(sheet).getByLabelText('Search tools'), { target: { value: 'tweet' } });
-    expect(within(sheet).getByTitle('Add Chat & Speech Bubble')).toBeTruthy();
-    expect(within(sheet).queryByTitle('Watermark Settings')).toBeNull();
-    fireEvent.change(within(sheet).getByLabelText('Search tools'), { target: { value: 'zzz' } });
-    expect(within(sheet).getByText(/No tool matches/)).toBeTruthy();
-  }, 30000);
-
-  it('shows an inspector card for the selected layer with Done', () => {
-    renderEditor();
-    addTextFromMenu();
-    const card = screen.getByRole('toolbar', { name: 'Layer tools' });
-    expect(within(card).getByText('Text Studio')).toBeTruthy();
-    expect(within(card).getByText('NEW TEXT')).toBeTruthy();
-    fireEvent.click(within(card).getByText('Done'));
-    expect(canvas.props.activeLayerId).toBe(null);
     expect(bar()).toBeTruthy();
   }, 30000);
 
-  it('toggles deep-fry and the top band from the quick chips', () => {
+  it('shows the floating tools for the selected caption once its sheet closes', () => {
     renderEditor();
-    const chips = screen.getByRole('toolbar', { name: 'Quick tools' });
-    const deepFry = within(chips).getByTitle('Deep-fried filter');
-    const topBand = within(chips).getByTitle('White band above the meme');
-    expect(deepFry.getAttribute('aria-pressed')).toBe('false');
-    fireEvent.click(deepFry);
-    expect(within(chips).getByTitle('Deep-fried filter').getAttribute('aria-pressed')).toBe('true');
-    fireEvent.click(within(chips).getByTitle('Deep-fried filter'));
-    expect(within(chips).getByTitle('Deep-fried filter').getAttribute('aria-pressed')).toBe('false');
-    // Turning the band on adds its caption and selects it, so the inspector card opens.
-    fireEvent.click(topBand);
-    expect(within(screen.getByRole('toolbar', { name: 'Layer tools' })).getByText(/solve the bug/)).toBeTruthy();
+    addTextFromMenu();
+    closeSheet();
+    const tools = layerToolbar();
+    for (const name of ['Font', 'Size', 'Color', 'Bold', 'Delete']) expect(within(tools).getByTitle(name)).toBeTruthy();
+    fireEvent.click(within(tools).getByTitle('Bold'));
+    expect(canvas.props.captions[2].bold).toBe(false);
+    // Font opens the Text sheet on the selected caption.
+    fireEvent.click(within(layerToolbar()).getByTitle('Font'));
+    expect(within(sheet('Text')).getByLabelText('Caption text').value).toBe('NEW TEXT');
   }, 30000);
 
-  it('draws from the Draw shortcut and stops on Done', () => {
+  it('edits the selected caption from the Text sheet', () => {
     renderEditor();
-    fireEvent.click(within(bar()).getByLabelText('Draw'));
+    openSection('Text');
+    const panel = sheet('Text');
+    fireEvent.change(within(panel).getByLabelText('Caption text'), { target: { value: 'ME AT 3AM' } });
+    expect(captionTexts()[0]).toBe('ME AT 3AM');
+    fireEvent.click(within(panel).getByRole('button', { name: 'Italic' }));
+    expect(canvas.props.captions[0].italic).toBe(true);
+    fireEvent.click(within(panel).getByRole('switch', { name: 'Stroke' }));
+    expect(canvas.props.captions[0].stroke).toBe('transparent');
+    fireEvent.click(within(panel).getByText('BOTTOM TEXT'));
+    expect(canvas.props.activeLayerId).toBe(canvas.props.captions[1].id);
+  }, 30000);
+
+  it('applies a filter preset from Fx and adds the top band from Text', () => {
+    renderEditor();
+    openSection('Photo grading and effects');
+    const deepFry = within(sheet('Photo Grading & Effects')).getByText('Deep Fried 🔥').closest('button');
+    expect(deepFry.getAttribute('aria-pressed')).toBe('false');
+    fireEvent.click(deepFry);
+    expect(within(sheet('Photo Grading & Effects')).getByText('Deep Fried 🔥').closest('button').getAttribute('aria-pressed')).toBe('true');
+    expect(within(sheet('Photo Grading & Effects')).getByText('Deep Fried')).toBeTruthy();
+    closeSheet();
+    openSection('Text');
+    fireEvent.click(within(sheet('Text')).getByTitle('White band above the meme'));
+    expect(captionTexts().some((t) => /solve the bug/.test(t))).toBe(true);
+  }, 30000);
+
+  it('draws while the Draw sheet is open and stops when it closes', () => {
+    renderEditor();
+    openSection('Draw on the meme');
     expect(canvas.props.isDrawingMode).toBe(true);
     expect(canvas.props.drawTool).toBe('brush');
-    fireEvent.click(within(screen.getByRole('toolbar', { name: 'Drawing tools' })).getByText('Marker'));
+    fireEvent.click(within(sheet('Draw')).getByText('Marker'));
     expect(canvas.props.drawTool).toBe('highlighter');
-    fireEvent.click(screen.getByText('Done'));
+    closeSheet();
     expect(canvas.props.isDrawingMode).toBe(false);
   }, 30000);
 
@@ -237,10 +260,19 @@ describe('MemeEditor', () => {
     expect(onSave.mock.calls[0][0].captions.map((c) => c.text)).toEqual(['TOP TEXT', 'BOTTOM TEXT']);
   }, 30000);
 
-  it('flips the canvas from the + palette', () => {
+  it('flips the canvas from the Fx sheet', () => {
     renderEditor();
     expect(canvas.props.canvasFlipX).toBeFalsy();
-    pickFromSheet('Flip Canvas Horizontal');
+    openSection('Photo grading and effects');
+    fireEvent.click(within(sheet('Photo Grading & Effects')).getByRole('switch', { name: 'Flip Canvas Horizontal' }));
     expect(canvas.props.canvasFlipX).toBe(true);
+  }, 30000);
+
+  it('the open sheet follows the selection: picking a caption switches Sticker to Text', () => {
+    renderEditor();
+    openSection('Stickers and emoji');
+    expect(sheet('Sticker')).toBeTruthy();
+    act(() => canvas.props.onSelectLayer(canvas.props.captions[1].id));
+    expect(within(sheet('Text')).getByLabelText('Caption text').value).toBe('BOTTOM TEXT');
   }, 30000);
 });

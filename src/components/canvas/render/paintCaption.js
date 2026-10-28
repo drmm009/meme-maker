@@ -6,10 +6,11 @@ import { drawBreakingNewsChyron, getBreakingNewsHeight } from '../draw/chyron';
 import { drawTweetCard, getTweetCardHeight } from '../draw/socialCards/tweet';
 import { drawInstagramCard, getInstagramCardHeight } from '../draw/socialCards/instagram';
 import { drawSpeechBubble } from '../draw/speechBubble';
+import { captionFont, underlineMetrics } from '../draw/captionFont';
 
 export function paintCaption({
   activeLayerId, canvas, dragTarget, getCaptionCenterY, isDragging, isDrawingMode, layer,
-  setActiveHandleDrawer, targetCtx
+  reportActiveBox, setActiveHandleDrawer, targetCtx
 }) {
   const cap = layer;
 let cx = (cap.x ?? 0.5) * canvas.width;
@@ -47,7 +48,7 @@ if (cap.blur && Number(cap.blur) > 0) {
 
 const fontSize = cap.fontSize || 50;
 const fontFamily = cap.fontFamily || 'Impact, sans-serif';
-targetCtx.font = `bold ${fontSize}px ${fontFamily}`;
+targetCtx.font = captionFont({ ...cap, fontFamily }, fontSize);
 const align = cap.align || 'center';
 targetCtx.textAlign = align;
 targetCtx.textBaseline = 'middle';
@@ -182,12 +183,27 @@ if (cap.isBreakingNews) {
         textColor,
         cap.effect
       );
+      if (cap.underline && line.trim()) {
+        const w = targetCtx.measureText(line).width;
+        const x0 = align === 'left' ? textAnchorX : align === 'right' ? textAnchorX - w : textAnchorX - w / 2;
+        const { offset, thickness } = underlineMetrics(fontSize);
+        targetCtx.save();
+        if (shouldStroke) {
+          targetCtx.strokeStyle = cap.stroke;
+          targetCtx.lineWidth = Math.max(2, (cap.strokeWidth || fontSize / 7) / 2);
+          targetCtx.strokeRect(x0, ly + offset, w, thickness);
+        }
+        targetCtx.fillStyle = textColor;
+        targetCtx.fillRect(x0, ly + offset, w, thickness);
+        targetCtx.restore();
+      }
     }
   });
 }
 
 if (cap.id === activeLayerId && !isDrawingMode) {
   const rot = cap.rotation || 0;
+  reportActiveBox?.({ x: cx, y: cy, w: boxWidth, h: boxHeight, rotation: rot });
   setActiveHandleDrawer((uiCtx) => {
     uiCtx.save();
     uiCtx.translate(cx, cy);

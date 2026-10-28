@@ -3,7 +3,7 @@ import { renderDieCutEmoji, renderDieCutImage } from '../draw/dieCut';
 
 export function paintSticker({
   activeLayerId, baseImgRef, canvas, getStickerCenterY, imageCacheRef, isDrawingMode, layer,
-  loadingMediaRef, renderCanvas, setActiveHandleDrawer, targetCtx
+  loadingMediaRef, renderCanvas, reportActiveBox, setActiveHandleDrawer, targetCtx
 }) {
   const stk = layer;
 
@@ -21,6 +21,7 @@ targetCtx.textBaseline = 'middle';
 
 if (stk.id === activeLayerId && !isDrawingMode) {
   const rot = stk.rotation || 0;
+  reportActiveBox?.({ x: sx, y: sy, w: stkSize + 12, h: stkSize + 12, rotation: rot });
   setActiveHandleDrawer((uiCtx) => {
     uiCtx.save();
     uiCtx.translate(sx, sy);

@@ -37,6 +37,16 @@ describe('createEditorUiStore', () => {
     expect(createEditorUiStore(null).getState().watermark).toMatchObject({ text: '@me', enabled: true });
   });
 
+  it('opens one sheet at a time; Draw picks the brush and closing stops drawing', () => {
+    const store = createEditorUiStore(null);
+    store.getState().openSheet('text', 'font');
+    expect(store.getState()).toMatchObject({ sheet: 'text', sheetFocus: 'font', drawTool: null });
+    store.getState().openSheet('draw');
+    expect(store.getState()).toMatchObject({ sheet: 'draw', sheetFocus: null, drawTool: 'brush', activeTab: 'draw' });
+    store.getState().closeSheet();
+    expect(store.getState()).toMatchObject({ sheet: null, drawTool: null, activeTab: 'text' });
+  });
+
   it('setters accept a value or an updater', () => {
     const store = createEditorUiStore(null);
     store.getState().setBrushSize(14);

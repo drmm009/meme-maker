@@ -71,6 +71,28 @@ describe('paintCaption: text', () => {
   });
 });
 
+describe('paintCaption: bold, italic, underline', () => {
+  it('is bold unless bold is false, and italic when asked', () => {
+    expect(textsDrawn(paint({ ...base, text: 'A', bold: false }).ctx)[0].font).toBe('normal 50px Impact, sans-serif');
+    expect(textsDrawn(paint({ ...base, text: 'A', italic: true }).ctx)[0].font).toBe('italic bold 50px Impact, sans-serif');
+  });
+
+  it('underlines each line under its own text, in the text colour', () => {
+    // "HI" is 60px wide, centred on 400; the line sits 0.42 x 50 below the line's middle.
+    const { ctx } = paint({ ...base, text: 'HI', underline: true, color: '#ff0000' });
+    const [line] = callsNamed(ctx, 'fillRect');
+    expect(line.args.slice(0, 3)).toEqual([-30, 21, 60]);
+    expect(line.state.fillStyle).toBe('#ff0000');
+    expect(callsNamed(paint({ ...base, text: 'HI' }).ctx, 'fillRect')).toHaveLength(0);
+  });
+
+  it('measures its box with the same font it draws with', () => {
+    const ctx = createRecordingContext();
+    getCaptionBox(ctx, { ...base, text: 'A', italic: true, bold: false }, 800);
+    expect(ctx.font).toBe('italic normal 50px Impact, sans-serif');
+  });
+});
+
 describe('paintCaption: backgrounds', () => {
   it('draws a rounded box behind the text and flips white text to black on white', () => {
     const { ctx } = paint({ ...base, text: 'HI', bgColor: 'white', color: '#ffffff' });

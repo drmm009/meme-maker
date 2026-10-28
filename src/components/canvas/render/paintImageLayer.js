@@ -3,7 +3,7 @@ import { getFilterCss, drawImageFiltered } from '../../../data/photoFilters';
 
 export function paintImageLayer({
   activeLayerId, baseImgRef, canvas, getImageLayerCenterY, imageCacheRef, isDrawingMode,
-  layer, renderCanvas, setActiveHandleDrawer, targetCtx
+  layer, renderCanvas, reportActiveBox, setActiveHandleDrawer, targetCtx
 }) {
   const imgLayer = layer;
 const cx = imgLayer.x * canvas.width;
@@ -110,6 +110,7 @@ if (cached) {
     const hw = w / 2 + 6;
     const hh = h / 2 + 6;
     const rot = imgLayer.rotation || 0;
+    reportActiveBox?.({ x: cx, y: cy, w: hw * 2, h: hh * 2, rotation: rot });
 
     setActiveHandleDrawer((uiCtx) => {
       uiCtx.save();

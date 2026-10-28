@@ -7,14 +7,12 @@ import FaceMorphModal from '../FaceMorphModal';
 import MemeStickersBottomSheet from './MemeStickersBottomSheet';
 import EmojiBottomSheet from './EmojiBottomSheet';
 import TemplatePickerBottomSheet from './TemplatePickerBottomSheet';
-import PhotoFiltersBottomSheet from './PhotoFiltersBottomSheet';
 import BubbleChatBottomSheet from './BubbleChatBottomSheet';
 import { useMemeEditorStore } from './store/useMemeEditorStore';
 import { useEditorUiStore } from './store/useEditorUiStore';
 
 export default function EditorModals({
   activeCaption,
-  activeImageLayer,
   currentEditingSocialCard,
   extractedMemeFace,
   faceTarget,
@@ -39,7 +37,6 @@ export default function EditorModals({
   showFaceMorphModal,
   template,
   updateActiveCaptionProps,
-  updateActiveImageLayer,
   commitAddImageLayer,
 }) {
   const pendingVideoLayer = useEditorUiStore((s) => s.pendingVideoLayer);
@@ -50,13 +47,11 @@ export default function EditorModals({
   const setShowAiModal = useEditorUiStore((s) => s.setShowAiModal);
   const setShowBubbleBottomSheet = useEditorUiStore((s) => s.setShowBubbleBottomSheet);
   const setShowEmojiModal = useEditorUiStore((s) => s.setShowEmojiModal);
-  const setShowFiltersModal = useEditorUiStore((s) => s.setShowFiltersModal);
   const setShowMemeStickersModal = useEditorUiStore((s) => s.setShowMemeStickersModal);
   const setShowStylesModal = useEditorUiStore((s) => s.setShowStylesModal);
   const showAiModal = useEditorUiStore((s) => s.showAiModal);
   const showBubbleBottomSheet = useEditorUiStore((s) => s.showBubbleBottomSheet);
   const showEmojiModal = useEditorUiStore((s) => s.showEmojiModal);
-  const showFiltersModal = useEditorUiStore((s) => s.showFiltersModal);
   const showMemeStickersModal = useEditorUiStore((s) => s.showMemeStickersModal);
   const showStylesModal = useEditorUiStore((s) => s.showStylesModal);
   const socialModalPlatform = useEditorUiStore((s) => s.socialModalPlatform);
@@ -64,8 +59,6 @@ export default function EditorModals({
   const setSlotImages = useMemeEditorStore((s) => s.setSlotImages);
   const slotTransforms = useMemeEditorStore((s) => s.slotTransforms);
   const setSlotTransforms = useMemeEditorStore((s) => s.setSlotTransforms);
-  const imageFilters = useMemeEditorStore((s) => s.imageFilters);
-  const setImageFilters = useMemeEditorStore((s) => s.setImageFilters);
   const imageLayers = useMemeEditorStore((s) => s.imageLayers);
   const activeTemplate = useMemeEditorStore((s) => s.activeTemplate);
   const stickers = useMemeEditorStore((s) => s.stickers);
@@ -104,25 +97,6 @@ export default function EditorModals({
           }
           setImagePickerTarget(null);
         }}
-      />
-
-      {/* Photo Filters Bottom Sheet */}
-      <PhotoFiltersBottomSheet
-        isOpen={showFiltersModal}
-        onClose={() => setShowFiltersModal(false)}
-        activeImageLayer={activeImageLayer}
-        imageFilters={imageFilters}
-        setImageFilters={setImageFilters}
-        updateActiveImageLayer={updateActiveImageLayer}
-        previewImage={(() => {
-          if (activeImageLayer) {
-            return activeImageLayer.originalUrl || activeImageLayer.url || activeImageLayer.src;
-          }
-          if (imageLayers && imageLayers.length > 0) {
-            return imageLayers[0].originalUrl || imageLayers[0].url || imageLayers[0].src;
-          }
-          return activeTemplate?.imageUrl || template?.imageUrl;
-        })()}
       />
 
       {/* Bubble Chat & Speech Layouts Bottom Sheet */}

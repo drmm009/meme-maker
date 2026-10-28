@@ -4,7 +4,6 @@ import { createMemeEditorStore, MemeEditorStoreContext, useMemeEditorStore } fro
 import { createEditorUiStore, EditorUiStoreContext, useEditorUiStore } from './editor/store/useEditorUiStore';
 import { useEditorSetup } from './editor/hooks/useEditorSetup';
 import { useActiveLayer } from './editor/hooks/useActiveLayer';
-import { useToolbarAutoScroll } from './editor/hooks/useToolbarAutoScroll';
 import { useEditorShortcuts } from './editor/hooks/useEditorShortcuts';
 import { useExport } from './editor/hooks/useExport';
 import { useBackgroundRemoval } from './editor/hooks/useBackgroundRemoval';
@@ -18,11 +17,12 @@ import { useLayerActions } from './editor/hooks/useLayerActions';
 import { useMemeDraft } from './editor/hooks/useMemeDraft';
 import EditorTopBar from './editor/top-bar/EditorTopBar';
 import CanvasStage from './editor/CanvasStage';
-import ContextToolbar from './editor/context-toolbars/ContextToolbar';
-import SecondaryToolbar from './editor/context-toolbars/SecondaryToolbar';
 import EditorModals from './editor/EditorModals';
-import EditorSidebar from './editor/EditorSidebar';
 import DraftOffer from './editor/DraftOffer';
+import EditorPanels from './editor/panels/EditorPanels';
+import LayerToolbar from './editor/panels/LayerToolbar';
+import AspectBar from './editor/panels/AspectBar';
+import './ui';
 import './MemeEditor.css';
 
 export default function MemeEditor(props) {
@@ -46,22 +46,16 @@ function MemeEditorSession({ initialDocument, onRestoreDraft, ...props }) {
 }
 
 // Wires the editor's pieces together. Document state lives in editor/store/useMemeEditorStore.js,
-// shared UI state in editor/store/useEditorUiStore.js, and edit handlers in editor/hooks/.
+// shared UI state in editor/store/useEditorUiStore.js, edit handlers in editor/hooks/, and the
+// panels (dock, sheets, layer toolbar) in editor/panels/ on the shared UI kit (components/ui).
 function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, onRestoreDraft }) {
   const activeLayerId = useMemeEditorStore((s) => s.activeLayerId);
   const setActiveLayerId = useMemeEditorStore((s) => s.setActiveLayerId);
   const handleUndo = useMemeEditorStore((s) => s.undo);
   const handleRedo = useMemeEditorStore((s) => s.redo);
   const nudgeLayer = useMemeEditorStore((s) => s.nudgeLayer);
-  const activeTab = useEditorUiStore((s) => s.activeTab);
-  const setActiveTab = useEditorUiStore((s) => s.setActiveTab);
-  const setShowFontMenu = useEditorUiStore((s) => s.setShowFontMenu);
-  const setShowTextEffectsMenu = useEditorUiStore((s) => s.setShowTextEffectsMenu);
-  const setShowTextBlurMenu = useEditorUiStore((s) => s.setShowTextBlurMenu);
-  const setShowTextBgMenu = useEditorUiStore((s) => s.setShowTextBgMenu);
-  const setShowFilterPresets = useEditorUiStore((s) => s.setShowFilterPresets);
-  const setActiveSubmenu = useEditorUiStore((s) => s.setActiveSubmenu);
   const setPasteToast = useEditorUiStore((s) => s.setPasteToast);
+  const sheet = useEditorUiStore((s) => s.sheet);
   const drawTool = useEditorUiStore((s) => s.drawTool);
 
   // Native Multi-Panel Layout Support
@@ -71,8 +65,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, o
 
   useEditorSetup(template);
   const draft = useMemeDraft({ restored: restoredDraft, onRestore: onRestoreDraft });
-  const { activeCaption, activeSticker, activeImageLayer, currentEditingSocialCard, isElementSelected, activeFontObj } = useActiveLayer();
-  const contextToolbarRef = useToolbarAutoScroll({ activeCaption, activeSticker, activeImageLayer });
+  const { activeCaption, activeSticker, activeImageLayer, currentEditingSocialCard } = useActiveLayer();
 
   const canvasRef = useRef(null);
   const { exportDropdownOpen, setExportDropdownOpen, exportDropdownRef, handleQuickExport } = useExport({ canvasRef, template });
@@ -81,28 +74,28 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, o
   const {
     showFaceMorphModal, setShowFaceMorphModal, morphTargetLayerId, setMorphTargetLayerId,
     morphTargetUrl, setMorphTargetUrl, setIsPinpointingFace, faceTarget,
-    sampledFaceLighting, extractedMemeFace, isHoldingCanvasCompare, setIsHoldingCanvasCompare,
+    sampledFaceLighting, extractedMemeFace, setIsHoldingCanvasCompare,
     originalTemplateImgRef, handleStartMorphFace, handleApplyFaceMorph,
     handleUpdateTemplateMorphProgress, handleChangeFace, handleRevertTemplateFace, handleFinalizeTemplateFace,
   } = faceMorph;
 
   const { handleOpenSocialModalForActiveCard, handleUpdateSocialCard, handleAddTweetCard, handleAddInstagramCard, handleAddWhatsAppCard } = useSocialCardActions();
-  const { handleSetCanvasBgColor, handleToggleCanvasHeader, handleToggleCanvasFooter, handleToggleCanvasBoth, handleToggleCanvasFlip, handleWatermarkImageUpload } = useCanvasFrameActions();
+  const { handleSetCanvasBgColor, handleToggleCanvasHeader, handleToggleCanvasFooter, handleToggleCanvasFlip, handleWatermarkImageUpload } = useCanvasFrameActions();
   const { handleAddDrawing, handleClearDrawings, handleUndoDrawing } = useDrawingActions();
-  const { handleApplyAiCaption, handleAddCaption, handleAddPresetPhrase, handleToggleTextCase, handleCycleTextAlignment, updateActiveCaptionProps, handleSetCaptionBg } = useCaptionActions({ activeCaption, handleToggleCanvasHeader });
+  const { handleApplyAiCaption, handleAddCaption, handleToggleTextCase, updateActiveCaptionProps, handleSetCaptionBg } = useCaptionActions({ activeCaption, handleToggleCanvasHeader });
   const { commitAddImageLayer, handleAddImageLayer, handleFileUploadImageLayer, updateActiveImageLayer, moveLayer, handleDeleteLayer, handleDuplicateLayer, handleRotateLayer, handleFlipActiveLayer, handleToggleDieCutSticker, handleSetDieCutColor, updateSlotTransform, handleAddSticker, handleAddGraphicSticker } = useLayerActions({ activeCaption, activeImageLayer, activeSticker, updateActiveCaptionProps });
   const { handleAddBubble, handleApplyBubbleStyle } = useBubbleActions({ activeCaption, updateActiveCaptionProps });
 
-  // Switching section deselects and closes any open text menu; Draw opens its brush settings.
-  const handleTabClick = (tabId) => {
-    setActiveTab(tabId);
-    setActiveLayerId(null);
-    setShowFontMenu(false);
-    setShowTextEffectsMenu(false);
-    setShowTextBlurMenu(false);
-    setShowTextBgMenu(false);
-    setShowFilterPresets(false);
-    setActiveSubmenu(tabId === 'draw' ? 'drawSettings' : null);
+  // Everything the panels can do, in one object (see editor/panels/selection.ts).
+  const actions = {
+    handleAddCaption, handleToggleTextCase, updateActiveCaptionProps, handleSetCaptionBg, handleAddBubble,
+    handleOpenSocialModalForActiveCard,
+    handleSetCanvasBgColor, handleToggleCanvasHeader, handleToggleCanvasFooter, handleToggleCanvasFlip, handleWatermarkImageUpload,
+    handleClearDrawings, handleUndoDrawing,
+    handleFileUploadImageLayer, updateActiveImageLayer, moveLayer, handleDeleteLayer, handleDuplicateLayer, handleRotateLayer,
+    handleFlipActiveLayer, handleToggleDieCutSticker, handleSetDieCutColor,
+    handleRemoveBackground, isRemovingBg, setShowFaceMorphModal, handleStartMorphFace,
+    handleUpdateTemplateMorphProgress, handleChangeFace, handleRevertTemplateFace, handleFinalizeTemplateFace, setIsHoldingCanvasCompare,
   };
 
   useEditorShortcuts({
@@ -126,7 +119,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, o
   });
 
   return (
-    <div className="meme-editor-container animate-fade-in">
+    <div className="meme-editor-container ui-theme animate-fade-in">
       <EditorTopBar
         exportDropdownOpen={exportDropdownOpen}
         exportDropdownRef={exportDropdownRef}
@@ -143,83 +136,30 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, o
       {draft.offer && <DraftOffer offer={draft.offer} onRestore={draft.restore} onDismiss={draft.dismiss} />}
 
       <div className="editor-main">
+        <AspectBar />
         <div className="editor-workspace">
           <CanvasStage
             canvasRef={canvasRef}
             imageFit={imageFit}
             isNativeLayout={isNativeLayout}
             layoutDef={layoutDef}
-            isDrawingMode={!isElementSelected && activeTab === 'draw' && Boolean(drawTool)}
+            isDrawingMode={sheet === 'draw' && Boolean(drawTool)}
             isRemovingBg={isRemovingBg}
             onAddDrawing={handleAddDrawing}
             onDeleteLayer={handleDeleteLayer}
             onUpdateSlotTransform={updateSlotTransform}
             faceMorph={faceMorph}
           >
-            {/* The selected layer's quick actions and the setting bars float above the bottom deck. */}
-            <div className="editor-toolbars-dock-anchor">
-              <SecondaryToolbar
-                handleSetCanvasBgColor={handleSetCanvasBgColor}
-                handleWatermarkImageUpload={handleWatermarkImageUpload}
-                handleUndoDrawing={handleUndoDrawing}
-                handleAddPresetPhrase={handleAddPresetPhrase}
-                activeCaption={activeCaption}
-                activeImageLayer={activeImageLayer}
-                activeSticker={activeSticker}
-                handleClearDrawings={handleClearDrawings}
-                handleCycleTextAlignment={handleCycleTextAlignment}
-                handleDeleteLayer={handleDeleteLayer}
-                handleDuplicateLayer={handleDuplicateLayer}
-                handleFlipActiveLayer={handleFlipActiveLayer}
-                handleRotateLayer={handleRotateLayer}
-                handleSetCaptionBg={handleSetCaptionBg}
-                handleSetDieCutColor={handleSetDieCutColor}
-                handleToggleCanvasBoth={handleToggleCanvasBoth}
-                handleToggleCanvasFooter={handleToggleCanvasFooter}
-                handleToggleCanvasHeader={handleToggleCanvasHeader}
-                handleToggleTextCase={handleToggleTextCase}
-                isElementSelected={isElementSelected}
-                moveLayer={moveLayer}
-                updateActiveCaptionProps={updateActiveCaptionProps}
-                updateActiveImageLayer={updateActiveImageLayer}
-              />
-            </div>
+            <LayerToolbar canvasRef={canvasRef} actions={actions} />
           </CanvasStage>
         </div>
 
-        <EditorSidebar
-          handleTabClick={handleTabClick}
-          toolHandlers={{ handleAddBubble, handleAddCaption, handleFileUploadImageLayer, handleToggleCanvasFlip, handleToggleCanvasHeader, handleRemoveBackground, setShowFaceMorphModal }}
-          layerTools={(
-            <ContextToolbar
-              handleUpdateTemplateMorphProgress={handleUpdateTemplateMorphProgress}
-              activeCaption={activeCaption}
-              activeFontObj={activeFontObj}
-              activeImageLayer={activeImageLayer}
-              activeSticker={activeSticker}
-              contextToolbarRef={contextToolbarRef}
-              handleChangeFace={handleChangeFace}
-              handleFinalizeTemplateFace={handleFinalizeTemplateFace}
-              handleFlipActiveLayer={handleFlipActiveLayer}
-              handleOpenSocialModalForActiveCard={handleOpenSocialModalForActiveCard}
-              handleRemoveBackground={handleRemoveBackground}
-              handleRevertTemplateFace={handleRevertTemplateFace}
-              handleSetCaptionBg={handleSetCaptionBg}
-              handleStartMorphFace={handleStartMorphFace}
-              handleToggleDieCutSticker={handleToggleDieCutSticker}
-              isHoldingCanvasCompare={isHoldingCanvasCompare}
-              isRemovingBg={isRemovingBg}
-              setIsHoldingCanvasCompare={setIsHoldingCanvasCompare}
-              updateActiveCaptionProps={updateActiveCaptionProps}
-            />
-          )}
-        />
+        <EditorPanels actions={actions} />
       </div>
 
       <EditorModals
         commitAddImageLayer={commitAddImageLayer}
         activeCaption={activeCaption}
-        activeImageLayer={activeImageLayer}
         currentEditingSocialCard={currentEditingSocialCard}
         extractedMemeFace={extractedMemeFace}
         faceTarget={faceTarget}
@@ -244,7 +184,6 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, o
         showFaceMorphModal={showFaceMorphModal}
         template={template}
         updateActiveCaptionProps={updateActiveCaptionProps}
-        updateActiveImageLayer={updateActiveImageLayer}
       />
     </div>
   );

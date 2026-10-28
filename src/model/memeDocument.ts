@@ -32,6 +32,10 @@ export interface MemeCaption extends MemeLayerBase {
   bubbleStyle?: string;
   curve?: number;
   effect?: string;
+  // Captions are bold unless bold is false.
+  bold?: boolean;
+  italic?: boolean;
+  underline?: boolean;
   blur?: number;
   // Header/footer captions sit in their band until dragged out (hasCustomPos; y then spans the whole canvas).
   isHeaderCaption?: boolean;
