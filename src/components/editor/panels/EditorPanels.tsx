@@ -1,4 +1,4 @@
-import { Type, Sticker, Images, PenLine, Sparkles } from 'lucide-react';
+import { Type, Smile, Copy, Pencil, WandSparkles } from 'lucide-react';
 import { ToolDock } from '../../ui';
 import type { DockItem } from '../../ui';
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
@@ -15,10 +15,10 @@ import './panels.css';
 
 const DOCK: DockItem[] = [
   { id: 'text', label: 'Text', Icon: Type, title: 'Text' },
-  { id: 'sticker', label: 'Sticker', Icon: Sticker, title: 'Stickers and emoji' },
-  { id: 'media', label: 'Media', Icon: Images, title: 'Photos, videos and cutouts' },
-  { id: 'draw', label: 'Draw', Icon: PenLine, title: 'Draw on the meme' },
-  { id: 'fx', label: 'Fx', Icon: Sparkles, title: 'Photo grading and effects' },
+  { id: 'sticker', label: 'Sticker', Icon: Smile, title: 'Stickers and emoji' },
+  { id: 'media', label: 'Media', Icon: Copy, title: 'Photos, videos and cutouts' },
+  { id: 'draw', label: 'Draw', Icon: Pencil, title: 'Draw on the meme' },
+  { id: 'fx', label: 'Fx', Icon: WandSparkles, title: 'Photo grading and effects' },
 ];
 
 const SHEETS = { text: TextSheet, sticker: StickerSheet, media: MediaSheet, draw: DrawSheet, fx: FxSheet };
