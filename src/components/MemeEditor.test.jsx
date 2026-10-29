@@ -24,6 +24,7 @@ vi.mock('./CanvasEditor', async () => {
       drawings: doc.drawings,
       activeLayerId: doc.activeLayerId,
       canvasFlipX: doc.canvasFlipX,
+      canvasBgColor: doc.canvasBgColor,
       drawTool: ui.drawTool,
       ...ownProps,
     };
@@ -88,6 +89,7 @@ const addTextFromMenu = () => {
   fireEvent.click(within(sheet('Text')).getByText('Add Text'));
 };
 // Hidden (no accessible name) until the real canvas reports where the layer is, so find it by label.
+const canvasStrip = () => screen.getByRole('toolbar', { name: 'Canvas tools' });
 const layerToolbar = () => screen.getByLabelText('Layer tools');
 
 function renderEditor(template = TEMPLATE, onSaveToGallery = vi.fn()) {
@@ -175,7 +177,6 @@ describe('MemeEditor', () => {
       'Photos, videos, stickers and emoji': ['Upload Image or Video', 'Add Image from Templates', 'Add Meme Stickers', 'Add Emojis'],
       Text: ['AI meme captions', 'Chat and speech bubbles'],
       'AI tools and photo filters': ['AI meme captions', 'Swap faces with another photo using AI', 'Remove the background'],
-      'Canvas colour, bands and watermark': ['Flip Canvas Horizontal', 'White band above the meme', 'Watermark'],
     };
     for (const [section, titles] of Object.entries(expectations)) {
       openSection(section);
@@ -223,7 +224,7 @@ describe('MemeEditor', () => {
     expect(within(sheet('AI & Filters')).getByText('Deep Fried')).toBeTruthy();
     closeSheet();
     openSection('Canvas colour, bands and watermark');
-    fireEvent.click(within(sheet('Canvas')).getByRole('switch', { name: 'White band above the meme' }));
+    fireEvent.click(within(canvasStrip()).getByText('Header'));
     expect(captionTexts().some((t) => /solve the bug/.test(t))).toBe(true);
   }, 30000);
 
@@ -289,8 +290,33 @@ describe('MemeEditor', () => {
     renderEditor();
     expect(canvas.props.canvasFlipX).toBeFalsy();
     openSection('Canvas colour, bands and watermark');
-    fireEvent.click(within(sheet('Canvas')).getByRole('switch', { name: 'Flip Canvas Horizontal' }));
+    fireEvent.click(within(canvasStrip()).getByText('Mirror'));
     expect(canvas.props.canvasFlipX).toBe(true);
+    expect(within(canvasStrip()).getByText('Mirror').closest('button').getAttribute('aria-pressed')).toBe('true');
+  }, 30000);
+
+  it('Canvas shows Color, Watermark, Mirror, Header and Footer; Color and Watermark open sheets under the strip', () => {
+    renderEditor();
+    openSection('Canvas colour, bands and watermark');
+    expect(within(canvasStrip()).getAllByRole('button').map((b) => b.textContent)).toEqual(['Color', 'Watermark', 'Mirror', 'Header', 'Footer']);
+
+    fireEvent.click(within(canvasStrip()).getByText('Color'));
+    fireEvent.click(within(sheet('Background')).getByRole('radio', { name: '#000000' }));
+    expect(canvas.props.canvasBgColor).toBe('#000000');
+    expect(canvasStrip()).toBeTruthy();
+
+    fireEvent.click(within(canvasStrip()).getByText('Watermark'));
+    const wm = sheet('Watermark');
+    expect(within(wm).getByRole('switch', { name: 'Watermark' }).getAttribute('aria-checked')).toBe('true');
+    fireEvent.change(within(wm).getByLabelText('Watermark name'), { target: { value: 'memelord' } });
+    expect(within(wm).getByLabelText('Watermark name').value).toBe('memelord');
+
+    // Footer switches straight away; tapping Canvas again closes the strip and its sheet.
+    fireEvent.click(within(canvasStrip()).getByText('Footer'));
+    expect(within(canvasStrip()).getByText('Footer').closest('button').getAttribute('aria-pressed')).toBe('true');
+    closeSheet();
+    openSection('Canvas colour, bands and watermark');
+    expect(screen.queryByRole('toolbar', { name: 'Canvas tools' })).toBeNull();
   }, 30000);
 
   it('a tap around the canvas closes the open sheet, and then deselects', () => {

@@ -1,36 +1,46 @@
-import type { ComponentType } from 'react';
+import type { ComponentType, ReactNode } from 'react';
 
 export interface StripItem {
   id: string;
   label: string;
-  Icon: ComponentType<{ size?: number; strokeWidth?: number }>;
+  Icon?: ComponentType<{ size?: number; strokeWidth?: number }>;
+  // Drawn instead of Icon (a colour swatch, say).
+  icon?: ReactNode;
   title?: string;
+  // On/off tools say themselves whether they are on; otherwise the strip's `active` id is.
+  active?: boolean;
 }
 
 interface ToolStripProps {
   items: StripItem[];
-  active: string | null;
+  active?: string | null;
   onSelect: (id: string) => void;
   ariaLabel: string;
+  // 'stacked' puts each label under its icon, so five tools fit across a phone.
+  layout?: 'row' | 'stacked';
 }
 
-// A row of tool buttons above the dock, for the open dock section (Draw: Brush, Glow, Marker).
-export default function ToolStrip({ items, active, onSelect, ariaLabel }: ToolStripProps) {
+// A row of tool buttons above the dock, for the open dock section (Draw: Brush, Glow, Marker;
+// Canvas: Color, Watermark, Mirror, Header, Footer).
+export default function ToolStrip({ items, active = null, onSelect, ariaLabel, layout = 'row' }: ToolStripProps) {
   return (
-    <div className="ui-strip" role="toolbar" aria-label={ariaLabel}>
-      {items.map(({ id, label, Icon, title }) => (
-        <button
-          key={id}
-          type="button"
-          className={`ui-strip-btn${active === id ? ' is-on' : ''}`}
-          aria-pressed={active === id}
-          title={title || label}
-          onClick={() => onSelect(id)}
-        >
-          <Icon size={17} strokeWidth={2.1} />
-          <span>{label}</span>
-        </button>
-      ))}
+    <div className={`ui-strip${layout === 'stacked' ? ' ui-strip--stacked' : ''}`} role="toolbar" aria-label={ariaLabel}>
+      {items.map(({ id, label, Icon, icon, title, active: on }) => {
+        const pressed = on ?? active === id;
+        return (
+          <button
+            key={id}
+            type="button"
+            className={`ui-strip-btn${pressed ? ' is-on' : ''}`}
+            aria-pressed={pressed}
+            title={title || label}
+            onClick={() => onSelect(id)}
+          >
+            {icon ?? (Icon ? <Icon size={layout === 'stacked' ? 19 : 17} strokeWidth={2.1} /> : null)}
+            <span>{label}</span>
+          </button>
+        );
+      })}
     </div>
   );
 }

@@ -47,7 +47,7 @@ describe('createEditorUiStore', () => {
 
   it('Draw: the strip first, a brush turns drawing on, closing its settings keeps drawing', () => {
     const store = createEditorUiStore(null);
-    store.getState().showDrawTools();
+    store.getState().showDockTab('draw');
     expect(store.getState()).toMatchObject({ dockTab: 'draw', drawTool: null, sheet: null });
     store.getState().pickDrawTool('glow');
     expect(store.getState()).toMatchObject({ dockTab: 'draw', drawTool: 'glow', sheet: 'draw', activeTab: 'draw' });
@@ -59,6 +59,18 @@ describe('createEditorUiStore', () => {
     store.getState().pickDrawTool('brush');
     store.getState().openSheet('text');
     expect(store.getState()).toMatchObject({ dockTab: null, drawTool: null, sheet: 'text' });
+  });
+
+  it('Canvas: a strip tool opens its sheet under the strip; leaving the tab closes both', () => {
+    const store = createEditorUiStore(null);
+    store.getState().showDockTab('canvas');
+    store.getState().openTabSheet('watermark');
+    expect(store.getState()).toMatchObject({ dockTab: 'canvas', sheet: 'watermark', drawTool: null });
+    store.getState().closeSheet();
+    expect(store.getState()).toMatchObject({ dockTab: 'canvas', sheet: null });
+    store.getState().openTabSheet('canvasColor');
+    store.getState().leaveDock();
+    expect(store.getState()).toMatchObject({ dockTab: null, sheet: null });
   });
 
   it('setters accept a value or an updater', () => {

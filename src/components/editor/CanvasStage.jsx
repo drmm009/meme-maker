@@ -5,6 +5,9 @@ import FacePinpointOverlay from '../FacePinpointOverlay';
 import { useMemeEditorStore } from './store/useMemeEditorStore';
 import { useEditorUiStore } from './store/useEditorUiStore';
 
+// Sheets that edit the selected layer, so they follow the selection.
+const LAYER_SHEETS = ['text', 'media'];
+
 // The canvas area: the meme canvas with its overlays (paste toast, background-removal spinner,
 // face pinpointing), plus `children` (the floating layer toolbars). Tapping the empty space
 // around the canvas deselects.
@@ -40,12 +43,12 @@ export default function CanvasStage({
   };
 
   // Selecting on the canvas: with a layer's sheet open, the sheet follows the selection (picking a
-  // sticker while editing text switches to the Media sheet). AI & Filters and Canvas work whatever
-  // is selected, so they stay.
+  // sticker while editing text switches to the Media sheet). Other sheets (AI & Filters, brushes,
+  // background, watermark) work whatever is selected, so they stay.
   const handleSelectLayer = (id) => {
     setActiveLayerId(id || null);
     setShowBubbleBottomSheet(false);
-    if (!id || !sheet || sheet === 'fx' || sheet === 'draw' || sheet === 'canvas') return;
+    if (!id || !sheet || !LAYER_SHEETS.includes(sheet)) return;
     const target = captions.some((c) => c.id === id) ? 'text'
       : stickers.some((s) => s.id === id) || imageLayers.some((l) => l.id === id) ? 'media' : sheet;
     if (target !== sheet) openSheet(target);

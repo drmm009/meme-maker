@@ -218,6 +218,19 @@
   box-shadow: 0 10px 24px -12px rgba(0, 0, 0, 0.8);
 }
 .ui-strip-btn.is-on { border-color: transparent; background: linear-gradient(100deg, #ec6a43, #d9549a); color: #fff; }
+.ui-strip--stacked { gap: 8px; }
+.ui-strip--stacked .ui-strip-btn {
+  flex: 1 1 0;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  min-width: 0;
+  max-width: 76px;
+  height: 56px;
+  padding: 0 4px;
+  border-radius: 16px;
+  font-size: 11.5px;
+}
 
 /* ── Floating toolbar ────────────────────────────────────── */
 .ui-float {
@@ -450,6 +463,7 @@
 /* ── Swatches ────────────────────────────────────────────── */
 .ui-swatches { display: flex; align-items: center; gap: 12px; overflow-x: auto; scrollbar-width: none; padding: 3px; }
 .ui-swatches::-webkit-scrollbar { display: none; }
+.ui-swatches--wrap { flex-wrap: wrap; overflow: visible; gap: 14px; }
 .ui-swatch {
   position: relative;
   flex-shrink: 0;

@@ -6,7 +6,9 @@ import { useEditorUiStore } from '../store/useEditorUiStore';
 import { useSelection, SHEET_FOR_KIND } from './selection';
 import type { EditorActions } from './selection';
 import TextSheet from './TextSheet';
-import CanvasSheet from './CanvasSheet';
+import CanvasColorSheet from './CanvasColorSheet';
+import WatermarkSheet from './WatermarkSheet';
+import CanvasStrip from './CanvasStrip';
 import MediaSheet from './MediaSheet';
 import DrawSheet from './DrawSheet';
 import FxSheet from './FxSheet';
@@ -23,17 +25,20 @@ const DOCK: DockItem[] = [
   { id: 'canvas', label: 'Canvas', Icon: LayoutGrid, title: 'Canvas colour, bands and watermark' },
 ];
 
-const SHEETS = { text: TextSheet, media: MediaSheet, draw: DrawSheet, fx: FxSheet, canvas: CanvasSheet };
+const SHEETS = { text: TextSheet, media: MediaSheet, fx: FxSheet, draw: DrawSheet, canvasColor: CanvasColorSheet, watermark: WatermarkSheet };
+// Dock tabs that show a tool strip instead of opening a sheet.
+const STRIP_TABS = ['draw', 'canvas'];
 
 // The bottom of the editor: the section dock (with the open section's tool strip above it), or the
-// open sheet in its place. Draw keeps its strip above the brush settings so brushes can be switched.
+// open sheet in its place. A strip stays above its own tools' sheets (brush settings, background,
+// watermark), so the tools can be switched.
 export default function EditorPanels({ actions }: { actions: EditorActions }) {
   const sheet: keyof typeof SHEETS | null = useEditorUiStore((s: { sheet: keyof typeof SHEETS | null }) => s.sheet);
   const openSheet = useEditorUiStore((s: { openSheet: (sheet: string, focus?: string | null) => void }) => s.openSheet);
   const closeSheet = useEditorUiStore((s: { closeSheet: () => void }) => s.closeSheet);
   const dockTab: string | null = useEditorUiStore((s: { dockTab: string | null }) => s.dockTab);
   const drawTool: string | null = useEditorUiStore((s: { drawTool: string | null }) => s.drawTool);
-  const showDrawTools = useEditorUiStore((s: { showDrawTools: () => void }) => s.showDrawTools);
+  const showDockTab = useEditorUiStore((s: { showDockTab: (tab: string) => void }) => s.showDockTab);
   const pickDrawTool = useEditorUiStore((s: { pickDrawTool: (tool: string) => void }) => s.pickDrawTool);
   const leaveDock = useEditorUiStore((s: { leaveDock: () => void }) => s.leaveDock);
   const setActiveLayerId = useMemeEditorStore((s: { setActiveLayerId: (id: string | null) => void }) => s.setActiveLayerId);
@@ -48,15 +53,15 @@ export default function EditorPanels({ actions }: { actions: EditorActions }) {
     );
   }
 
-  const drawStrip = dockTab === 'draw' && (
-    <ToolStrip ariaLabel="Draw tools" items={DRAW_TOOLS} active={drawTool} onSelect={pickDrawTool} />
-  );
+  const strip = dockTab === 'draw'
+    ? <ToolStrip ariaLabel="Draw tools" items={DRAW_TOOLS} active={drawTool} onSelect={pickDrawTool} />
+    : dockTab === 'canvas' ? <CanvasStrip actions={actions} /> : null;
 
   const SheetComponent = sheet ? SHEETS[sheet] : null;
   if (SheetComponent) {
     return (
       <div className="ie-panels ie-panels--sheet">
-        {sheet === 'draw' && drawStrip}
+        {strip}
         <SheetComponent actions={actions} onClose={closeSheet} />
       </div>
     );
@@ -64,18 +69,18 @@ export default function EditorPanels({ actions }: { actions: EditorActions }) {
 
   return (
     <div className="ie-panels">
-      {drawStrip}
+      {strip}
       <ToolDock
         ariaLabel="Editor tools"
         items={DOCK}
         active={dockTab || (kind ? SHEET_FOR_KIND[kind] : null)}
         onSelect={(id) => {
-          if (id === 'draw') {
-            // Draw shows its brushes; tapping it again leaves drawing.
-            if (dockTab === 'draw') leaveDock();
+          if (STRIP_TABS.includes(id)) {
+            // The tab shows its strip; tapping it again closes it (and stops drawing).
+            if (dockTab === id) leaveDock();
             else {
-              setActiveLayerId(null);
-              showDrawTools();
+              if (id === 'draw') setActiveLayerId(null);
+              showDockTab(id);
             }
             return;
           }

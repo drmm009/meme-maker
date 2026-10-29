@@ -42,8 +42,8 @@ function initialSocialModalPlatform(template) {
 export function buildInitialUi(template) {
   return {
     activeTab: 'text', // 'text' | 'images' | 'draw' | 'canvas' | 'watermark' | 'filters'
-    sheet: null, // the open bottom sheet: 'text' | 'media' | 'draw' | 'fx' | 'canvas' | null
-    dockTab: null, // the dock section whose tool strip shows above the dock: 'draw' | null
+    sheet: null, // the open bottom sheet: 'text' | 'media' | 'fx' | 'draw' | 'canvasColor' | 'watermark' | null
+    dockTab: null, // the dock section whose tool strip shows above the dock: 'draw' | 'canvas' | null
     sheetFocus: null, // the section the sheet scrolls to when opened: 'font' | 'size' | 'color' | null
     activeSubmenu: null, // 'font' | 'color' | 'align' | 'effects' | 'bg' | 'blur' | 'bubble' | 'tweetTheme' | 'tweetTrend' | 'drawSettings' | 'watermark' | 'canvasBg' | 'banner' | 'filters'
     lastUsedSettingButton: null,
@@ -80,6 +80,9 @@ export function buildInitialUi(template) {
 
 const UI_FIELDS = Object.keys(buildInitialUi(null));
 
+// Sheets that belong to a dock tab's strip, closed with it.
+const TAB_SHEETS = ['draw', 'canvasColor', 'watermark'];
+
 // useState-style setter: accepts a value or an updater function.
 const fieldSetter = (set, key) => (valueOrUpdater) =>
   set((state) => ({
@@ -112,14 +115,23 @@ export function createEditorUiStore(template) {
     // Closing a sheet keeps drawing on when it was the brush settings.
     closeSheet: () => set({ sheet: null, sheetFocus: null }),
 
-    // Drawing: the Draw tab shows the brush strip; picking a brush turns drawing on and opens its
-    // settings (colour, size, clear); closing them keeps drawing; leaving the tab stops it.
-    showDrawTools: () => set({ dockTab: 'draw', sheet: null, sheetFocus: null, drawTool: null, activeTab: 'draw' }),
+    // Dock tabs with a tool strip (Draw, Canvas): the tab shows its strip above the dock; a strip
+    // tool can open its own sheet, which keeps the strip (openTabSheet); leaving the tab closes both.
+    showDockTab: (tab) => set((state) => ({
+      dockTab: tab,
+      sheet: null,
+      sheetFocus: null,
+      drawTool: null,
+      activeTab: tab === 'draw' ? 'draw' : state.activeTab === 'draw' ? 'text' : state.activeTab,
+    })),
+    openTabSheet: (sheet) => set({ sheet, sheetFocus: null, activeSubmenu: null }),
+    // Drawing: picking a brush turns drawing on and opens its settings (colour, size, clear);
+    // closing them keeps drawing; leaving the Draw tab stops it.
     pickDrawTool: (tool) => set({ dockTab: 'draw', drawTool: tool, sheet: 'draw', sheetFocus: null, activeSubmenu: null, activeTab: 'draw' }),
     leaveDock: () => set((state) => ({
       dockTab: null,
       drawTool: null,
-      sheet: state.sheet === 'draw' ? null : state.sheet,
+      sheet: TAB_SHEETS.includes(state.sheet) ? null : state.sheet,
       activeTab: state.activeTab === 'draw' ? 'text' : state.activeTab,
     })),
   }));

@@ -82,14 +82,16 @@ interface SwatchRowProps {
   ariaLabel: string;
   // Adds a colour wheel that opens the system picker.
   custom?: boolean;
+  // Wraps onto more lines instead of scrolling sideways.
+  wrap?: boolean;
 }
 
 const sameColor = (a?: string | null, b?: string | null) => (a || '').toLowerCase() === (b || '').toLowerCase();
 
-export function SwatchRow({ colors, value, onChange, ariaLabel, custom = true }: SwatchRowProps) {
+export function SwatchRow({ colors, value, onChange, ariaLabel, custom = true, wrap = false }: SwatchRowProps) {
   const isCustom = Boolean(value) && value !== 'transparent' && !colors.some((c) => sameColor(c, value));
   return (
-    <div className="ui-swatches" role="radiogroup" aria-label={ariaLabel}>
+    <div className={`ui-swatches${wrap ? ' ui-swatches--wrap' : ''}`} role="radiogroup" aria-label={ariaLabel}>
       {colors.map((c) => (
         <button
           key={c}
