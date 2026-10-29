@@ -1,9 +1,8 @@
 import { useState } from 'react';
-import { Circle, Flame, Contrast, Film, SunMoon, Coffee, Blend, Skull, Droplets, Sparkles, Sun, SunDim, SunMedium, WandSparkles, ScanFace, Wand2, Undo2 } from 'lucide-react';
+import { Circle, Flame, Contrast, Film, SunMoon, Coffee, Blend, Skull, Droplets, Sparkles, Sun, SunDim, SunMedium } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Sheet, Section, Row, Slider, TileGrid, Tile, SegmentedControl } from '../../ui';
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
-import { useEditorUiStore } from '../store/useEditorUiStore';
 import { PHOTO_FILTERS } from '../../../data/photoFilters';
 import { useSelection } from './selection';
 import type { EditorActions } from './selection';
@@ -30,14 +29,13 @@ const ADJUSTMENTS = [
 const presetLabel = (id: string) => (PRESETS.find((p) => p.id === id)?.name || '').replace(/[^\p{L}\p{N}&' ]/gu, '').trim();
 
 // "AI & Filters": the AI tools (captions, face swap, background removal), then filter presets and
-// adjustments for the photo, the whole meme or the selected image.
-export default function FxSheet({ actions, onClose }: { actions: EditorActions; onClose: () => void }) {
+// The AI/Filters strip's Filters: presets and brightness/contrast/saturation for the photo, the
+// whole meme or the selected image.
+export default function FiltersSheet({ actions, onClose }: { actions: EditorActions; onClose: () => void }) {
   const imageFilters: FilterValues = useMemeEditorStore((s: { imageFilters: FilterValues }) => s.imageFilters) || {};
   const setImageFilters = useMemeEditorStore((s: { setImageFilters: (fn: (prev: FilterValues) => FilterValues) => void }) => s.setImageFilters);
   const patchLayer = useMemeEditorStore((s: { patchLayer: (key: string, id: string, patch: object) => void }) => s.patchLayer);
   const pushHistoryDebounced = useMemeEditorStore((s: { pushHistoryDebounced: () => void }) => s.pushHistoryDebounced);
-  const bgRemoved = useMemeEditorStore((s: { activeTemplate?: { originalUrl?: string } }) => Boolean(s.activeTemplate?.originalUrl));
-  const setShowAiModal = useEditorUiStore((s: { setShowAiModal: (v: boolean) => void }) => s.setShowAiModal);
   const { id, image } = useSelection();
   const [target, setTarget] = useState<'layer' | 'photo' | 'meme'>(image ? 'layer' : imageFilters.filterScope === 'background' ? 'photo' : 'meme');
   const onLayer = target === 'layer' && Boolean(image && id);
@@ -73,22 +71,8 @@ export default function FxSheet({ actions, onClose }: { actions: EditorActions; 
   ];
 
   return (
-    <Sheet title="AI & Filters" badge={preset !== 'original' ? presetLabel(preset) : undefined} onClose={onClose}>
-      <Section title="AI">
-        <TileGrid>
-          <Tile label="AI Captions" Icon={WandSparkles} title="AI meme captions" onClick={() => setShowAiModal(true)} />
-          <Tile label="Face Swap" Icon={ScanFace} title="Swap faces with another photo using AI" onClick={() => (image ? actions.handleStartMorphFace(image) : actions.setShowFaceMorphModal(true))} />
-          <Tile
-            label={image ? (image.originalUrl ? 'Undo cutout' : 'Cut out') : bgRemoved ? 'Restore BG' : 'Remove BG'}
-            Icon={(image ? image.originalUrl : bgRemoved) ? Undo2 : Wand2}
-            title="Remove the background"
-            disabled={Boolean(actions.isRemovingBg)}
-            active={Boolean(image ? image.originalUrl : bgRemoved)}
-            onClick={() => actions.handleRemoveBackground()}
-          />
-        </TileGrid>
-      </Section>
-      <Section title="Target" rule aside={<SegmentedControl ariaLabel="Apply to" variant="divided" value={target} options={targets} onChange={pickTarget} />}>
+    <Sheet title="Filters" badge={preset !== 'original' ? presetLabel(preset) : undefined} onClose={onClose}>
+      <Section title="Target" aside={<SegmentedControl ariaLabel="Apply to" variant="divided" value={target} options={targets} onChange={pickTarget} />}>
         <TileGrid>
           {PRESETS.map((p) => (
             <Tile key={p.id} label={p.name} Icon={ICONS[p.id] || Sparkles} active={preset === p.id} onClick={() => applyPreset(p)} />

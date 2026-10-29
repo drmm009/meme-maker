@@ -217,6 +217,8 @@
   cursor: pointer;
   box-shadow: 0 10px 24px -12px rgba(0, 0, 0, 0.8);
 }
+.ui-strip-btn .lucide-loader-circle { animation: ui-spin 0.9s linear infinite; }
+@keyframes ui-spin { to { transform: rotate(360deg); } }
 .ui-strip-btn.is-on { border-color: transparent; background: linear-gradient(100deg, #ec6a43, #d9549a); color: #fff; }
 .ui-strip--stacked { gap: 8px; }
 .ui-strip--stacked .ui-strip-btn {

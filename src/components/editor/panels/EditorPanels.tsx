@@ -11,7 +11,8 @@ import WatermarkSheet from './WatermarkSheet';
 import CanvasStrip from './CanvasStrip';
 import MediaSheet from './MediaSheet';
 import DrawSheet from './DrawSheet';
-import FxSheet from './FxSheet';
+import FiltersSheet from './FiltersSheet';
+import AiFiltersStrip from './AiFiltersStrip';
 import FaceSwapSheet from './FaceSwapSheet';
 import { DRAW_TOOLS } from './drawTools';
 import './panels.css';
@@ -25,9 +26,9 @@ const DOCK: DockItem[] = [
   { id: 'canvas', label: 'Canvas', Icon: LayoutGrid, title: 'Canvas colour, bands and watermark' },
 ];
 
-const SHEETS = { text: TextSheet, media: MediaSheet, fx: FxSheet, draw: DrawSheet, canvasColor: CanvasColorSheet, watermark: WatermarkSheet };
+const SHEETS = { text: TextSheet, media: MediaSheet, draw: DrawSheet, canvasColor: CanvasColorSheet, watermark: WatermarkSheet, filters: FiltersSheet };
 // Dock tabs that show a tool strip instead of opening a sheet.
-const STRIP_TABS = ['draw', 'canvas'];
+const STRIP_TABS = ['draw', 'canvas', 'fx'];
 
 // The bottom of the editor: the section dock (with the open section's tool strip above it), or the
 // open sheet in its place. A strip stays above its own tools' sheets (brush settings, background,
@@ -55,7 +56,8 @@ export default function EditorPanels({ actions }: { actions: EditorActions }) {
 
   const strip = dockTab === 'draw'
     ? <ToolStrip ariaLabel="Draw tools" items={DRAW_TOOLS} active={drawTool} onSelect={pickDrawTool} />
-    : dockTab === 'canvas' ? <CanvasStrip actions={actions} /> : null;
+    : dockTab === 'canvas' ? <CanvasStrip actions={actions} />
+    : dockTab === 'fx' ? <AiFiltersStrip actions={actions} /> : null;
 
   const SheetComponent = sheet ? SHEETS[sheet] : null;
   if (SheetComponent) {

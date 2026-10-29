@@ -176,7 +176,6 @@ describe('MemeEditor', () => {
     const expectations = {
       'Photos, videos, stickers and emoji': ['Upload Image or Video', 'Add Image from Templates', 'Add Meme Stickers', 'Add Emojis'],
       Text: ['AI meme captions', 'Chat and speech bubbles'],
-      'AI tools and photo filters': ['AI meme captions', 'Swap faces with another photo using AI', 'Remove the background'],
     };
     for (const [section, titles] of Object.entries(expectations)) {
       openSection(section);
@@ -217,11 +216,12 @@ describe('MemeEditor', () => {
   it('applies a filter preset from AI/Filters and adds the top band from Canvas', () => {
     renderEditor();
     openSection('AI tools and photo filters');
-    const deepFry = within(sheet('AI & Filters')).getByText('Deep Fried 🔥').closest('button');
+    fireEvent.click(within(screen.getByRole('toolbar', { name: 'AI and filter tools' })).getByText('Filters'));
+    const deepFry = within(sheet('Filters')).getByText('Deep Fried 🔥').closest('button');
     expect(deepFry.getAttribute('aria-pressed')).toBe('false');
     fireEvent.click(deepFry);
-    expect(within(sheet('AI & Filters')).getByText('Deep Fried 🔥').closest('button').getAttribute('aria-pressed')).toBe('true');
-    expect(within(sheet('AI & Filters')).getByText('Deep Fried')).toBeTruthy();
+    expect(within(sheet('Filters')).getByText('Deep Fried 🔥').closest('button').getAttribute('aria-pressed')).toBe('true');
+    expect(within(sheet('Filters')).getByText('Deep Fried')).toBeTruthy();
     closeSheet();
     openSection('Canvas colour, bands and watermark');
     fireEvent.click(within(canvasStrip()).getByText('Header'));
@@ -317,6 +317,29 @@ describe('MemeEditor', () => {
     closeSheet();
     openSection('Canvas colour, bands and watermark');
     expect(screen.queryByRole('toolbar', { name: 'Canvas tools' })).toBeNull();
+  }, 30000);
+
+  it('AI/Filters shows Face Swap, Remove BG, AI Caption and Filters; AI Caption opens its studio', () => {
+    renderEditor();
+    openSection('AI tools and photo filters');
+    const strip = screen.getByRole('toolbar', { name: 'AI and filter tools' });
+    expect(within(strip).getAllByRole('button').map((b) => b.textContent)).toEqual(['Face Swap', 'Remove BG', 'AI Caption', 'Filters']);
+    expect(screen.queryByRole('dialog')).toBeNull();
+    fireEvent.click(within(strip).getByText('AI Caption'));
+    expect(document.querySelector('.bottom-sheet-panel')?.textContent).toContain('AI Captions');
+  }, 30000);
+
+  it('Filters opens under the AI/Filters strip; tapping AI/Filters again closes both', () => {
+    renderEditor();
+    openSection('AI tools and photo filters');
+    const strip = () => screen.getByRole('toolbar', { name: 'AI and filter tools' });
+    fireEvent.click(within(strip()).getByText('Filters'));
+    expect(sheet('Filters')).toBeTruthy();
+    expect(within(strip()).getByText('Filters').closest('button').getAttribute('aria-pressed')).toBe('true');
+    closeSheet();
+    expect(strip()).toBeTruthy();
+    openSection('AI tools and photo filters');
+    expect(screen.queryByRole('toolbar', { name: 'AI and filter tools' })).toBeNull();
   }, 30000);
 
   it('a tap around the canvas closes the open sheet, and then deselects', () => {

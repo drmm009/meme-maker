@@ -18,7 +18,7 @@ export default function MediaSheet({ actions, onClose }: { actions: EditorAction
   const setImagePickerTarget = useEditorUiStore((s: { setImagePickerTarget: (v: unknown) => void }) => s.setImagePickerTarget);
   const setShowMemeStickersModal = useEditorUiStore((s: { setShowMemeStickersModal: (v: boolean) => void }) => s.setShowMemeStickersModal);
   const setShowEmojiModal = useEditorUiStore((s: { setShowEmojiModal: (v: boolean) => void }) => s.setShowEmojiModal);
-  const openSheet = useEditorUiStore((s: { openSheet: (sheet: string, focus?: string | null) => void }) => s.openSheet);
+  const openTabSheet = useEditorUiStore((s: { openTabSheet: (sheet: string, tab?: string) => void }) => s.openTabSheet);
   const { id, image, sticker } = useSelection();
   const busy = Boolean(actions.isRemovingBg);
 
@@ -50,7 +50,7 @@ export default function MediaSheet({ actions, onClose }: { actions: EditorAction
             <TileGrid>
               <Tile label={image.fitMode === 'crop' ? 'Done cropping' : 'Crop'} Icon={Crop} active={image.fitMode === 'crop'} onClick={() => actions.updateActiveImageLayer('fitMode', image.fitMode === 'crop' ? 'fit' : 'crop')} />
               <Tile label="Flip" Icon={FlipHorizontal} active={Boolean(image.flipX)} onClick={() => actions.handleFlipActiveLayer()} />
-              <Tile label="Filters" Icon={SlidersHorizontal} onClick={() => openSheet('fx')} />
+              <Tile label="Filters" Icon={SlidersHorizontal} onClick={() => openTabSheet('filters', 'fx')} />
               <Tile label={image.originalUrl ? 'Undo cutout' : 'Cut out'} Icon={image.originalUrl ? Undo2 : Wand2} title="Magic Eraser (Remove Background)" disabled={busy} active={Boolean(image.originalUrl)} onClick={() => actions.handleRemoveBackground()} />
               <Tile label="Face Swap" Icon={ScanFace} onClick={() => actions.handleStartMorphFace(image)} />
             </TileGrid>

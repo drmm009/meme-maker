@@ -42,8 +42,8 @@ function initialSocialModalPlatform(template) {
 export function buildInitialUi(template) {
   return {
     activeTab: 'text', // 'text' | 'images' | 'draw' | 'canvas' | 'watermark' | 'filters'
-    sheet: null, // the open bottom sheet: 'text' | 'media' | 'fx' | 'draw' | 'canvasColor' | 'watermark' | null
-    dockTab: null, // the dock section whose tool strip shows above the dock: 'draw' | 'canvas' | null
+    sheet: null, // the open bottom sheet: 'text' | 'media' | 'draw' | 'canvasColor' | 'watermark' | 'filters' | null
+    dockTab: null, // the dock section whose tool strip shows above the dock: 'draw' | 'canvas' | 'fx' | null
     sheetFocus: null, // the section the sheet scrolls to when opened: 'font' | 'size' | 'color' | null
     activeSubmenu: null, // 'font' | 'color' | 'align' | 'effects' | 'bg' | 'blur' | 'bubble' | 'tweetTheme' | 'tweetTrend' | 'drawSettings' | 'watermark' | 'canvasBg' | 'banner' | 'filters'
     lastUsedSettingButton: null,
@@ -81,7 +81,7 @@ export function buildInitialUi(template) {
 const UI_FIELDS = Object.keys(buildInitialUi(null));
 
 // Sheets that belong to a dock tab's strip, closed with it.
-const TAB_SHEETS = ['draw', 'canvasColor', 'watermark'];
+const TAB_SHEETS = ['draw', 'canvasColor', 'watermark', 'filters'];
 
 // useState-style setter: accepts a value or an updater function.
 const fieldSetter = (set, key) => (valueOrUpdater) =>
@@ -124,7 +124,14 @@ export function createEditorUiStore(template) {
       drawTool: null,
       activeTab: tab === 'draw' ? 'draw' : state.activeTab === 'draw' ? 'text' : state.activeTab,
     })),
-    openTabSheet: (sheet) => set({ sheet, sheetFocus: null, activeSubmenu: null }),
+    // `tab` also switches to that strip (Filters from an image's toolbar opens the AI/Filters strip).
+    openTabSheet: (sheet, tab) => set((state) => ({
+      sheet,
+      sheetFocus: null,
+      activeSubmenu: null,
+      dockTab: tab ?? state.dockTab,
+      drawTool: tab && tab !== 'draw' ? null : state.drawTool,
+    })),
     // Drawing: picking a brush turns drawing on and opens its settings (colour, size, clear);
     // closing them keeps drawing; leaving the Draw tab stops it.
     pickDrawTool: (tool) => set({ dockTab: 'draw', drawTool: tool, sheet: 'draw', sheetFocus: null, activeSubmenu: null, activeTab: 'draw' }),
