@@ -13,6 +13,8 @@ import MediaSheet from './MediaSheet';
 import DrawSheet from './DrawSheet';
 import FiltersSheet from './FiltersSheet';
 import AiFiltersStrip from './AiFiltersStrip';
+import MediaStrip from './MediaStrip';
+import TextStrip from './TextStrip';
 import FaceSwapSheet from './FaceSwapSheet';
 import { DRAW_TOOLS } from './drawTools';
 import './panels.css';
@@ -27,15 +29,11 @@ const DOCK: DockItem[] = [
 ];
 
 const SHEETS = { text: TextSheet, media: MediaSheet, draw: DrawSheet, canvasColor: CanvasColorSheet, watermark: WatermarkSheet, filters: FiltersSheet };
-// Dock tabs that show a tool strip instead of opening a sheet.
-const STRIP_TABS = ['draw', 'canvas', 'fx'];
 
-// The bottom of the editor: the section dock (with the open section's tool strip above it), or the
-// open sheet in its place. A strip stays above its own tools' sheets (brush settings, background,
-// watermark), so the tools can be switched.
+// The bottom of the editor: the dock with the open tab's tool strip above it, or, when one of that
+// tab's sheets is open, the strip above the sheet (so its tools stay one tap away).
 export default function EditorPanels({ actions }: { actions: EditorActions }) {
   const sheet: keyof typeof SHEETS | null = useEditorUiStore((s: { sheet: keyof typeof SHEETS | null }) => s.sheet);
-  const openSheet = useEditorUiStore((s: { openSheet: (sheet: string, focus?: string | null) => void }) => s.openSheet);
   const closeSheet = useEditorUiStore((s: { closeSheet: () => void }) => s.closeSheet);
   const dockTab: string | null = useEditorUiStore((s: { dockTab: string | null }) => s.dockTab);
   const drawTool: string | null = useEditorUiStore((s: { drawTool: string | null }) => s.drawTool);
@@ -56,8 +54,10 @@ export default function EditorPanels({ actions }: { actions: EditorActions }) {
 
   const strip = dockTab === 'draw'
     ? <ToolStrip ariaLabel="Draw tools" items={DRAW_TOOLS} active={drawTool} onSelect={pickDrawTool} />
-    : dockTab === 'canvas' ? <CanvasStrip actions={actions} />
-    : dockTab === 'fx' ? <AiFiltersStrip actions={actions} /> : null;
+    : dockTab === 'media' ? <MediaStrip actions={actions} />
+    : dockTab === 'text' ? <TextStrip actions={actions} />
+    : dockTab === 'fx' ? <AiFiltersStrip actions={actions} />
+    : dockTab === 'canvas' ? <CanvasStrip actions={actions} /> : null;
 
   const SheetComponent = sheet ? SHEETS[sheet] : null;
   if (SheetComponent) {
@@ -77,16 +77,12 @@ export default function EditorPanels({ actions }: { actions: EditorActions }) {
         items={DOCK}
         active={dockTab || (kind ? SHEET_FOR_KIND[kind] : null)}
         onSelect={(id) => {
-          if (STRIP_TABS.includes(id)) {
-            // The tab shows its strip; tapping it again closes it (and stops drawing).
-            if (dockTab === id) leaveDock();
-            else {
-              if (id === 'draw') setActiveLayerId(null);
-              showDockTab(id);
-            }
-            return;
+          // Every tab shows its strip; tapping it again closes it (and stops drawing).
+          if (dockTab === id) leaveDock();
+          else {
+            if (id === 'draw') setActiveLayerId(null);
+            showDockTab(id);
           }
-          openSheet(id);
         }}
       />
     </div>

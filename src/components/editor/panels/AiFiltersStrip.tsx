@@ -10,7 +10,7 @@ import type { EditorActions } from './selection';
 // away (on the selected image, else the template; tap again to restore); Filters opens its sheet.
 export default function AiFiltersStrip({ actions }: { actions: EditorActions }) {
   const sheet: string | null = useEditorUiStore((s: { sheet: string | null }) => s.sheet);
-  const openTabSheet = useEditorUiStore((s: { openTabSheet: (sheet: string, tab?: string) => void }) => s.openTabSheet);
+  const openSheet = useEditorUiStore((s: { openSheet: (sheet: string, focus?: string | null) => void }) => s.openSheet);
   const setShowAiModal = useEditorUiStore((s: { setShowAiModal: (v: boolean) => void }) => s.setShowAiModal);
   const templateBgRemoved = useMemeEditorStore((s: { activeTemplate?: { originalUrl?: string } }) => Boolean(s.activeTemplate?.originalUrl));
   const { image } = useSelection();
@@ -37,7 +37,7 @@ export default function AiFiltersStrip({ actions }: { actions: EditorActions }) 
     } else if (id === 'removebg') {
       if (!busy) actions.handleRemoveBackground();
     } else if (id === 'caption') setShowAiModal(true);
-    else if (id === 'filters') openTabSheet('filters');
+    else if (id === 'filters') openSheet('filters');
   };
 
   return <ToolStrip ariaLabel="AI and filter tools" layout="stacked" items={items} onSelect={onSelect} />;

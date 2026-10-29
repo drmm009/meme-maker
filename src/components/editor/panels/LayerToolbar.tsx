@@ -30,7 +30,6 @@ export default function LayerToolbar({ canvasRef, actions }: { canvasRef: RefObj
   const { id, kind, caption, sticker, image } = useSelection();
   const sheet: string | null = useEditorUiStore((s: { sheet: string | null }) => s.sheet);
   const openSheet = useEditorUiStore((s: { openSheet: (sheet: string, focus?: string | null) => void }) => s.openSheet);
-  const openTabSheet = useEditorUiStore((s: { openTabSheet: (sheet: string, tab?: string) => void }) => s.openTabSheet);
   const faceMorph = useMemeEditorStore((s: { templateFaceMorph: unknown }) => s.templateFaceMorph);
   const [box, setBox] = useState<LayerBox | null>(null);
   const [pressing, setPressing] = useState(false);
@@ -61,7 +60,7 @@ export default function LayerToolbar({ canvasRef, actions }: { canvasRef: RefObj
   }, [canvasRef]);
 
   const dockTab: string | null = useEditorUiStore((s: { dockTab: string | null }) => s.dockTab);
-  const shown = Boolean(id && kind && !sheet && !dockTab && !faceMorph);
+  const shown = Boolean(id && kind && !sheet && dockTab !== 'draw' && !faceMorph);
 
   useLayoutEffect(() => {
     const canvas = canvasRef.current;
@@ -106,7 +105,7 @@ export default function LayerToolbar({ canvasRef, actions }: { canvasRef: RefObj
   } else if (kind === 'image' && image) {
     items = [
       { id: 'crop', label: 'Crop', Icon: Crop, active: image.fitMode === 'crop', onClick: () => actions.updateActiveImageLayer('fitMode', image.fitMode === 'crop' ? 'fit' : 'crop') },
-      { id: 'filters', label: 'Filters', Icon: SlidersHorizontal, onClick: () => openTabSheet('filters', 'fx') },
+      { id: 'filters', label: 'Filters', Icon: SlidersHorizontal, onClick: () => openSheet('filters') },
       { id: 'cutout', label: image.originalUrl ? 'Undo' : 'Cut out', title: 'Remove the background', Icon: Wand2, onClick: () => actions.handleRemoveBackground() },
       { id: 'more', label: 'More', Icon: Ellipsis, onClick: () => openSheet('media') },
       del,

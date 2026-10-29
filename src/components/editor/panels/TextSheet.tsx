@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
-import { Bold, Italic, Underline, WandSparkles, MessageSquareQuote, Share2, CaseSensitive } from 'lucide-react';
+import { Bold, Italic, Underline, MessageSquareQuote, CaseSensitive } from 'lucide-react';
 import { Sheet, Section, Row, ChipRow, Chip, Toggle, SwatchRow, Slider, Switch, TileGrid, Tile, SegmentedControl } from '../../ui';
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
 import { useEditorUiStore } from '../store/useEditorUiStore';
@@ -20,17 +20,15 @@ type Caption = MemeCaption & Record<string, unknown>;
 const hasBox = (c: Caption) => Boolean(c.bgColor && c.bgColor !== 'none' && c.bgColor !== 'transparent');
 const boxValue = (c: Caption) => (!hasBox(c) ? 'transparent' : c.bgColor === 'white' ? '#ffffff' : c.bgColor === 'black' ? '#000000' : c.bgColor);
 
-// The Text sheet: pick a caption, edit its words, font, colour, size and style; add more text.
+// The Text sheet, under the Text strip (which adds text, bubbles and social cards): pick a caption,
+// edit its words, font, colour, size, style, box and effects.
 export default function TextSheet({ actions, onClose }: { actions: EditorActions; onClose: () => void }) {
   const captions: Caption[] = useMemeEditorStore((s: { captions: Caption[] }) => s.captions);
   const setActiveLayerId = useMemeEditorStore((s: { setActiveLayerId: (id: string | null) => void }) => s.setActiveLayerId);
   const patchLayer = useMemeEditorStore((s: { patchLayer: (key: string, id: string, patch: object) => void }) => s.patchLayer);
   const updateCaptionText = useMemeEditorStore((s: { updateCaptionText: (id: string, text: string) => void }) => s.updateCaptionText);
   const sheetFocus: string | null = useEditorUiStore((s: { sheetFocus: string | null }) => s.sheetFocus);
-  const setShowAiModal = useEditorUiStore((s: { setShowAiModal: (v: boolean) => void }) => s.setShowAiModal);
   const setShowBubbleBottomSheet = useEditorUiStore((s: { setShowBubbleBottomSheet: (v: boolean) => void }) => s.setShowBubbleBottomSheet);
-  const setShowStylesModal = useEditorUiStore((s: { setShowStylesModal: (v: boolean) => void }) => s.setShowStylesModal);
-  const setSocialModalPlatform = useEditorUiStore((s: { setSocialModalPlatform: (v: string) => void }) => s.setSocialModalPlatform);
   const { id, kind, caption } = useSelection();
   const bodyRef = useRef<HTMLDivElement>(null);
 
@@ -162,14 +160,13 @@ export default function TextSheet({ actions, onClose }: { actions: EditorActions
           </>
         )}
 
-        <Section title="Add" rule>
-          <TileGrid>
-            <Tile label="AI Captions" Icon={WandSparkles} title="AI meme captions" onClick={() => setShowAiModal(true)} />
-            <Tile label="Bubble" Icon={MessageSquareQuote} title="Chat and speech bubbles" onClick={() => { actions.handleAddBubble(); setShowBubbleBottomSheet(true); }} />
-            <Tile label="Social Card" Icon={Share2} title="Fake tweet, Instagram or WhatsApp card" onClick={() => { setSocialModalPlatform('tweet'); setShowStylesModal(true); }} />
-            {caption?.bubbleStyle ? <Tile label="Bubble Style" Icon={MessageSquareQuote} onClick={() => setShowBubbleBottomSheet(true)} /> : null}
-          </TileGrid>
-        </Section>
+        {caption?.bubbleStyle ? (
+          <Section title="Bubble" rule>
+            <TileGrid columns={2}>
+              <Tile label="Bubble Style" Icon={MessageSquareQuote} onClick={() => setShowBubbleBottomSheet(true)} />
+            </TileGrid>
+          </Section>
+        ) : null}
 
         {id && caption && <LayerActions id={id} actions={actions} />}
       </div>

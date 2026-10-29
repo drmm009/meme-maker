@@ -78,16 +78,20 @@ const captionTexts = () => screen.queryAllByTestId('caption').map((el) => el.tex
 const deselect = () => act(() => canvas.props.onSelectLayer(null));
 const undoButton = () => screen.getByTitle('Undo');
 const redoButton = () => screen.getByTitle('Redo');
-// The bottom dock opens one sheet per section (Text, Sticker, Media, Draw, Fx).
+// Each dock tab shows a strip of its tools above the dock; some tools open a sheet under the strip.
 const bar = () => screen.getByRole('navigation', { name: 'Editor tools' });
 const sheet = (name) => screen.getByRole('dialog', { name });
+const strip = (name) => screen.getByRole('toolbar', { name });
 const openSection = (title) => fireEvent.click(within(bar()).getByTitle(title));
 // Sheets close from their handle (or a tap around the canvas).
 const closeSheet = () => fireEvent.click(screen.getByLabelText(/^Close /));
-const addTextFromMenu = () => {
-  if (!screen.queryByRole('dialog', { name: 'Text' })) openSection('Text');
-  fireEvent.click(within(sheet('Text')).getByText('Add Text'));
+// The Text strip, opening it from the dock unless it already shows.
+const textStrip = () => {
+  if (!screen.queryByRole('toolbar', { name: 'Text tools' })) openSection('Text');
+  return strip('Text tools');
 };
+const addTextFromMenu = () => fireEvent.click(within(textStrip()).getByText('Add Text'));
+const openTextSheet = () => fireEvent.click(within(textStrip()).getByText('Edit'));
 // Hidden (no accessible name) until the real canvas reports where the layer is, so find it by label.
 const canvasStrip = () => screen.getByRole('toolbar', { name: 'Canvas tools' });
 const layerToolbar = () => screen.getByLabelText('Layer tools');
@@ -171,19 +175,39 @@ describe('MemeEditor', () => {
     expect(captionTexts()).toHaveLength(4);
   }, 30000);
 
-  it('opens each section of the dock as a sheet with its tools', () => {
+  it('every dock tab shows its tool strip; tapping the tab again closes it', () => {
     renderEditor();
-    const expectations = {
-      'Photos, videos, stickers and emoji': ['Upload Image or Video', 'Add Image from Templates', 'Add Meme Stickers', 'Add Emojis'],
-      Text: ['AI meme captions', 'Chat and speech bubbles'],
-    };
-    for (const [section, titles] of Object.entries(expectations)) {
-      openSection(section);
-      const panel = screen.getByRole('dialog');
-      for (const title of titles) expect(within(panel).getByTitle(title), title).toBeTruthy();
-      closeSheet();
+    const strips = [
+      ['Draw on the meme', 'Draw tools', ['Brush', 'Glow', 'Marker']],
+      ['Photos, videos, stickers and emoji', 'Media tools', ['Photo', 'Templates', 'Stickers', 'Emoji']],
+      ['Text', 'Text tools', ['Add Text', 'Edit', 'Bubble', 'Social Card']],
+      ['AI tools and photo filters', 'AI and filter tools', ['Face Swap', 'Remove BG', 'AI Caption', 'Filters']],
+      ['Canvas colour, bands and watermark', 'Canvas tools', ['Color', 'Watermark', 'Mirror', 'Header', 'Footer']],
+    ];
+    for (const [tab, name, tools] of strips) {
+      openSection(tab);
+      expect(within(strip(name)).getAllByText(/./).map((el) => el.textContent), name).toEqual(tools);
+      expect(within(bar()).getByTitle(tab).getAttribute('aria-pressed')).toBe('true');
+      expect(screen.queryByRole('dialog')).toBeNull();
     }
-    expect(bar()).toBeTruthy();
+    openSection('Canvas colour, bands and watermark');
+    expect(screen.queryByRole('toolbar', { name: 'Canvas tools' })).toBeNull();
+  }, 30000);
+
+  it('Media adds stickers and emoji from its strip; Templates opens the picker', () => {
+    renderEditor();
+    openSection('Photos, videos, stickers and emoji');
+    fireEvent.click(within(strip('Media tools')).getByText('Emoji'));
+    fireEvent.click(screen.getByTitle('Laugh Cry'));
+    expect(canvas.props.stickers).toHaveLength(1);
+    expect(within(strip('Media tools')).getByLabelText('Photo').getAttribute('type')).toBe('file');
+  }, 30000);
+
+  it('Text: Bubble adds a speech bubble and opens its styles', () => {
+    renderEditor();
+    fireEvent.click(within(textStrip()).getByText('Bubble'));
+    expect(canvas.props.captions.some((c) => c.bubbleStyle)).toBe(true);
+    expect(document.querySelector('.bottom-sheet-panel')).toBeTruthy();
   }, 30000);
 
   it('shows the floating tools for the selected caption once its sheet closes', () => {
@@ -201,8 +225,9 @@ describe('MemeEditor', () => {
 
   it('edits the selected caption from the Text sheet', () => {
     renderEditor();
-    openSection('Text');
+    openTextSheet();
     const panel = sheet('Text');
+    expect(strip('Text tools')).toBeTruthy();
     fireEvent.change(within(panel).getByLabelText('Caption text'), { target: { value: 'ME AT 3AM' } });
     expect(captionTexts()[0]).toBe('ME AT 3AM');
     fireEvent.click(within(panel).getByRole('button', { name: 'Italic' }));
@@ -344,7 +369,7 @@ describe('MemeEditor', () => {
 
   it('a tap around the canvas closes the open sheet, and then deselects', () => {
     const { container } = renderEditor();
-    openSection('Text');
+    openTextSheet();
     const wrapper = container.querySelector('.canvas-wrapper');
     fireEvent.pointerDown(wrapper);
     expect(screen.queryByRole('dialog', { name: 'Text' })).toBeNull();
@@ -356,8 +381,15 @@ describe('MemeEditor', () => {
   it('the open sheet follows the selection: picking a caption switches Media to Text', () => {
     renderEditor();
     openSection('Photos, videos, stickers and emoji');
-    expect(sheet('Media')).toBeTruthy();
+    fireEvent.click(within(strip('Media tools')).getByText('Emoji'));
+    fireEvent.click(screen.getByTitle('Laugh Cry'));
+    fireEvent.click(screen.getByLabelText('Close'));
+    // The new sticker's Size opens the Media sheet under the Media strip.
+    fireEvent.click(within(layerToolbar()).getByText('Size'));
+    expect(within(sheet('Media')).getByLabelText('Sticker size')).toBeTruthy();
+    expect(strip('Media tools')).toBeTruthy();
     act(() => canvas.props.onSelectLayer(canvas.props.captions[1].id));
     expect(within(sheet('Text')).getByLabelText('Caption text').value).toBe('BOTTOM TEXT');
+    expect(strip('Text tools')).toBeTruthy();
   }, 30000);
 });

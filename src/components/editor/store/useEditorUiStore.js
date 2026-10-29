@@ -43,7 +43,7 @@ export function buildInitialUi(template) {
   return {
     activeTab: 'text', // 'text' | 'images' | 'draw' | 'canvas' | 'watermark' | 'filters'
     sheet: null, // the open bottom sheet: 'text' | 'media' | 'draw' | 'canvasColor' | 'watermark' | 'filters' | null
-    dockTab: null, // the dock section whose tool strip shows above the dock: 'draw' | 'canvas' | 'fx' | null
+    dockTab: null, // the dock tab whose tool strip shows: 'draw' | 'media' | 'text' | 'fx' | 'canvas' | null
     sheetFocus: null, // the section the sheet scrolls to when opened: 'font' | 'size' | 'color' | null
     activeSubmenu: null, // 'font' | 'color' | 'align' | 'effects' | 'bg' | 'blur' | 'bubble' | 'tweetTheme' | 'tweetTrend' | 'drawSettings' | 'watermark' | 'canvasBg' | 'banner' | 'filters'
     lastUsedSettingButton: null,
@@ -80,8 +80,8 @@ export function buildInitialUi(template) {
 
 const UI_FIELDS = Object.keys(buildInitialUi(null));
 
-// Sheets that belong to a dock tab's strip, closed with it.
-const TAB_SHEETS = ['draw', 'canvasColor', 'watermark', 'filters'];
+// The dock tab each sheet belongs to: its strip shows above the sheet.
+const SHEET_TAB = { text: 'text', media: 'media', draw: 'draw', canvasColor: 'canvas', watermark: 'canvas', filters: 'fx' };
 
 // useState-style setter: accepts a value or an updater function.
 const fieldSetter = (set, key) => (valueOrUpdater) =>
@@ -103,20 +103,24 @@ export function createEditorUiStore(template) {
 
     updateWatermark: (key, value) => set((state) => ({ watermark: { ...state.watermark, [key]: value } })),
 
-    // Open a section's bottom sheet (scrolled to `focus`); this leaves drawing.
-    openSheet: (sheet, focus = null) => set((state) => ({
-      sheet,
-      sheetFocus: focus,
-      activeSubmenu: null,
-      dockTab: null,
-      drawTool: null,
-      activeTab: state.activeTab === 'draw' ? 'text' : state.activeTab,
-    })),
-    // Closing a sheet keeps drawing on when it was the brush settings.
+    // Every sheet belongs to a dock tab, and opens under that tab's tool strip (scrolled to
+    // `focus`). Opening a sheet of another tab stops drawing.
+    openSheet: (sheet, focus = null) => set((state) => {
+      const tab = SHEET_TAB[sheet] ?? state.dockTab;
+      return {
+        sheet,
+        sheetFocus: focus,
+        activeSubmenu: null,
+        dockTab: tab,
+        drawTool: tab === 'draw' ? state.drawTool : null,
+        activeTab: tab === 'draw' ? 'draw' : state.activeTab === 'draw' ? 'text' : state.activeTab,
+      };
+    }),
+    // Closing a sheet keeps its strip (and drawing, after the brush settings).
     closeSheet: () => set({ sheet: null, sheetFocus: null }),
 
-    // Dock tabs with a tool strip (Draw, Canvas): the tab shows its strip above the dock; a strip
-    // tool can open its own sheet, which keeps the strip (openTabSheet); leaving the tab closes both.
+    // A dock tab shows its strip above the dock; tapping it again (leaveDock) closes the strip and
+    // its sheet and stops drawing.
     showDockTab: (tab) => set((state) => ({
       dockTab: tab,
       sheet: null,
@@ -124,21 +128,14 @@ export function createEditorUiStore(template) {
       drawTool: null,
       activeTab: tab === 'draw' ? 'draw' : state.activeTab === 'draw' ? 'text' : state.activeTab,
     })),
-    // `tab` also switches to that strip (Filters from an image's toolbar opens the AI/Filters strip).
-    openTabSheet: (sheet, tab) => set((state) => ({
-      sheet,
-      sheetFocus: null,
-      activeSubmenu: null,
-      dockTab: tab ?? state.dockTab,
-      drawTool: tab && tab !== 'draw' ? null : state.drawTool,
-    })),
     // Drawing: picking a brush turns drawing on and opens its settings (colour, size, clear);
     // closing them keeps drawing; leaving the Draw tab stops it.
     pickDrawTool: (tool) => set({ dockTab: 'draw', drawTool: tool, sheet: 'draw', sheetFocus: null, activeSubmenu: null, activeTab: 'draw' }),
     leaveDock: () => set((state) => ({
       dockTab: null,
       drawTool: null,
-      sheet: TAB_SHEETS.includes(state.sheet) ? null : state.sheet,
+      sheet: null,
+      sheetFocus: null,
       activeTab: state.activeTab === 'draw' ? 'text' : state.activeTab,
     })),
   }));

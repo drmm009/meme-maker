@@ -1,4 +1,4 @@
-import type { ComponentType, ReactNode } from 'react';
+import type { ChangeEvent, ComponentType, ReactNode } from 'react';
 
 export interface StripItem {
   id: string;
@@ -9,6 +9,9 @@ export interface StripItem {
   title?: string;
   // On/off tools say themselves whether they are on; otherwise the strip's `active` id is.
   active?: boolean;
+  // Makes the button a file picker (onSelect isn't called).
+  accept?: string;
+  onFile?: (e: ChangeEvent<HTMLInputElement>) => void;
 }
 
 interface ToolStripProps {
@@ -25,8 +28,31 @@ interface ToolStripProps {
 export default function ToolStrip({ items, active = null, onSelect, ariaLabel, layout = 'row' }: ToolStripProps) {
   return (
     <div className={`ui-strip${layout === 'stacked' ? ' ui-strip--stacked' : ''}`} role="toolbar" aria-label={ariaLabel}>
-      {items.map(({ id, label, Icon, icon, title, active: on }) => {
+      {items.map(({ id, label, Icon, icon, title, active: on, accept, onFile }) => {
         const pressed = on ?? active === id;
+        const body = (
+          <>
+            {icon ?? (Icon ? <Icon size={layout === 'stacked' ? 19 : 17} strokeWidth={2.1} /> : null)}
+            <span>{label}</span>
+          </>
+        );
+        if (onFile) {
+          return (
+            <label key={id} className="ui-strip-btn" title={title || label}>
+              {body}
+              <input
+                type="file"
+                accept={accept}
+                aria-label={label}
+                hidden
+                onChange={(e) => {
+                  onFile(e);
+                  e.target.value = '';
+                }}
+              />
+            </label>
+          );
+        }
         return (
           <button
             key={id}
@@ -36,8 +62,7 @@ export default function ToolStrip({ items, active = null, onSelect, ariaLabel, l
             title={title || label}
             onClick={() => onSelect(id)}
           >
-            {icon ?? (Icon ? <Icon size={layout === 'stacked' ? 19 : 17} strokeWidth={2.1} /> : null)}
-            <span>{label}</span>
+            {body}
           </button>
         );
       })}

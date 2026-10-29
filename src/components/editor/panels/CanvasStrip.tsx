@@ -15,7 +15,7 @@ export default function CanvasStrip({ actions }: { actions: EditorActions }) {
   const sheet: string | null = useEditorUiStore((s: { sheet: string | null }) => s.sheet);
   const watermarkOn = useEditorUiStore((s: { watermark: { enabled?: boolean } }) => Boolean(s.watermark?.enabled));
   const updateWatermark = useEditorUiStore((s: { updateWatermark: (key: string, value: unknown) => void }) => s.updateWatermark);
-  const openTabSheet = useEditorUiStore((s: { openTabSheet: (sheet: string) => void }) => s.openTabSheet);
+  const openSheet = useEditorUiStore((s: { openSheet: (sheet: string, focus?: string | null) => void }) => s.openSheet);
 
   const swatch = (
     <span
@@ -32,10 +32,10 @@ export default function CanvasStrip({ actions }: { actions: EditorActions }) {
   ];
 
   const onSelect = (id: string) => {
-    if (id === 'color') openTabSheet('canvasColor');
+    if (id === 'color') openSheet('canvasColor');
     else if (id === 'watermark') {
       if (!watermarkOn) updateWatermark('enabled', true);
-      openTabSheet('watermark');
+      openSheet('watermark');
     } else if (id === 'mirror') actions.handleToggleCanvasFlip();
     else if (id === 'header') actions.handleToggleCanvasHeader();
     else if (id === 'footer') actions.handleToggleCanvasFooter();
