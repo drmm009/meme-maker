@@ -93,6 +93,16 @@ export function useCanvasInteraction({
     }
   };
 
+  // A gesture's end applies its last move now and clears the waiting frame, so a frame that never
+  // came (the page was hidden mid-drag) can't hold up every later drag.
+  const flushDragBatch = () => {
+    if (dragRafRef.current) cancelAnimationFrame(dragRafRef.current);
+    dragRafRef.current = null;
+    const pending = pendingDragRef.current;
+    pendingDragRef.current = null;
+    if (pending) pending();
+  };
+
   const getCanvasCoords = (e) => clientToCanvas(e, canvasRef.current);
 
   // A tap on a caption's side handle twice in a row resets it to auto-fit width.
@@ -296,6 +306,7 @@ export function useCanvasInteraction({
 
   const handlePointerEnd = () => {
     if (canvasView.endGesture()) return;
+    flushDragBatch();
     layerPinch.current = null;
     if (canvasRef.current && !isDrawingMode) {
       canvasRef.current.style.cursor = 'default';
