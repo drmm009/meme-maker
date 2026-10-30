@@ -262,18 +262,14 @@ describe('MemeEditor', () => {
     addTextFromMenu();
     closeSheet();
     const tools = layerToolbar();
-    // A button for every part of the Text sheet, then the layer tools.
-    expect([...tools.querySelectorAll('button > span:last-child')].map((s) => s.textContent)).toEqual([
-      'Edit', 'Font', 'Size', 'Color', 'Bold', 'Style', 'Outline', 'Shadow', 'Spacing', 'Box', 'Effects', 'Styles',
-      'Copy', 'Rotate', 'Forward', 'Back', 'Layers', 'Delete',
-    ]);
-    fireEvent.click(within(tools).getByText('Bold'));
-    expect(canvas.props.captions[2].bold).toBe(false);
+    // Five Text sheets, each with its related controls, then the layer tools.
+    expect([...tools.querySelectorAll('button > span:last-child')].map((s) => s.textContent)).toEqual(['Edit', 'Font', 'Style', 'Color', 'Effects', 'Layers', 'Delete']);
 
-    // Each opens a sheet with just its part: Font has the fonts and nothing else.
-    fireEvent.click(within(layerToolbar()).getByText('Font'));
+    // Font: the fonts and saved styles, nothing else.
+    fireEvent.click(within(tools).getByText('Font'));
     const font = sheet('Font');
     expect(within(font).getByLabelText('Upload your own font')).toBeTruthy();
+    expect(within(font).getByRole('group', { name: 'Saved text styles' })).toBeTruthy();
     expect(within(font).queryByLabelText('Caption text')).toBeNull();
     expect(within(font).queryByLabelText('Text size')).toBeNull();
     expect(within(font).queryByRole('group', { name: 'Captions' })).toBeNull();
@@ -283,15 +279,30 @@ describe('MemeEditor', () => {
     expect(within(sheet('Edit text')).getByLabelText('Caption text').value).toBe('NEW TEXT');
     closeSheet();
 
-    fireEvent.click(within(layerToolbar()).getByText('Outline'));
-    const outline = sheet('Outline');
-    expect(within(outline).getByLabelText('Stroke')).toBeTruthy();
-    expect(within(outline).queryByLabelText('Text colour')).toBeNull();
+    // Style: size, bold and the rest, spacing.
+    fireEvent.click(within(layerToolbar()).getByText('Style'));
+    const style = sheet('Style');
+    fireEvent.click(within(style).getByLabelText('Bold'));
+    expect(canvas.props.captions[2].bold).toBe(false);
+    expect(within(style).getByLabelText('Text size')).toBeTruthy();
+    expect(within(style).getByLabelText('Letter spacing')).toBeTruthy();
+    expect(within(style).queryByLabelText('Text colour')).toBeNull();
     closeSheet();
 
-    fireEvent.click(within(layerToolbar()).getByText('Shadow'));
-    fireEvent.change(within(sheet('Shadow')).getByLabelText('Shadow size'), { target: { value: '12' } });
+    // Color: colour, outline and shadow.
+    fireEvent.click(within(layerToolbar()).getByText('Color'));
+    const color = sheet('Color');
+    expect(within(color).getByLabelText('Text colour')).toBeTruthy();
+    expect(within(color).getByLabelText('Stroke')).toBeTruthy();
+    fireEvent.change(within(color).getByLabelText('Shadow size'), { target: { value: '12' } });
     expect(canvas.props.captions[2].shadowSize).toBe(12);
+    closeSheet();
+
+    // Effects: the effects and the box.
+    fireEvent.click(within(layerToolbar()).getByText('Effects'));
+    const effects = sheet('Effects');
+    expect(within(effects).getByRole('group', { name: 'Text effects' })).toBeTruthy();
+    expect(within(effects).getByLabelText('Text opacity')).toBeTruthy();
     closeSheet();
   }, 30000);
 
@@ -299,7 +310,7 @@ describe('MemeEditor', () => {
     renderEditor();
     addTextFromMenu();
     closeSheet();
-    for (const name of ['Font', 'Size', 'Color', 'Bold', 'Layers', 'Delete']) expect(within(layerToolbar()).getByText(name)).toBeTruthy();
+    for (const name of ['Edit', 'Font', 'Style', 'Color', 'Effects', 'Layers', 'Delete']) expect(within(layerToolbar()).getByText(name)).toBeTruthy();
     fireEvent.click(within(layerToolbar()).getByText('Layers'));
     const panel = sheet('Layers');
     const rows = () => within(screen.getByRole('list', { name: 'Layers' })).getAllByRole('listitem').map((li) => li.querySelector('.ie-layer-pick').textContent);
