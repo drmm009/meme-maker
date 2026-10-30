@@ -1,6 +1,6 @@
 import type { MemeCaption } from '../../../model/memeDocument';
 import { wrapText } from '../draw/text';
-import { applyCaptionFont, fittedFontSize } from '../draw/captionFont';
+import { applyCaptionFont, fittedFontSize, spacedText } from '../draw/captionFont';
 import { getWhatsAppCardHeight } from '../draw/socialCards/whatsapp';
 
 // The canvas's internal resolution is capped at this on its longer side. Font sizes stay
@@ -64,7 +64,7 @@ export function getBandHeight(
   let linesCount = 1;
   if (ctx) {
     applyCaptionFont(ctx, cap, fontSize, 'Montserrat, sans-serif');
-    const wrapped = wrapText(ctx, cap.text || '', (cap.width || 0.92) * canvasW);
+    const wrapped = wrapText(ctx, spacedText(ctx, cap.text || '', cap, fontSize), (cap.width || 0.92) * canvasW);
     linesCount = Math.max(1, wrapped.length);
   }
   const lineHeight = fontSize * 1.35;

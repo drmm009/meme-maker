@@ -6,7 +6,7 @@ import { drawBreakingNewsChyron, getBreakingNewsHeight } from '../draw/chyron';
 import { drawTweetCard, getTweetCardHeight } from '../draw/socialCards/tweet';
 import { drawInstagramCard, getInstagramCardHeight } from '../draw/socialCards/instagram';
 import { drawSpeechBubble } from '../draw/speechBubble';
-import { applyCaptionFont, captionGradient, captionLineHeight, fittedFontSize, underlineMetrics } from '../draw/captionFont';
+import { applyCaptionFont, captionGradient, captionLineHeight, fittedFontSize, spacedText, underlineMetrics } from '../draw/captionFont';
 
 export function paintCaption({
   activeLayerId, canvas, dragTarget, getCaptionCenterY, isDragging, isDrawingMode, layer,
@@ -55,7 +55,7 @@ targetCtx.textBaseline = 'middle';
 
 const renderMaxWidth = (cap.width || 0.9) * canvas.width;
 
-const displayString = cap.text || '';
+const displayString = spacedText(targetCtx, cap.text || '', cap, fontSize);
 
 // Use the SAME global wrapText for rendering and hit-testing
 const lines = wrapText(targetCtx, displayString, renderMaxWidth);

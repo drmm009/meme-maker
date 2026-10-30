@@ -7,7 +7,7 @@ import { getBreakingNewsHeight } from '../draw/chyron';
 import { getTweetCardHeight } from '../draw/socialCards/tweet';
 import { getInstagramCardHeight } from '../draw/socialCards/instagram';
 import { getStickerBoxSize } from './geometry';
-import { applyCaptionFont, captionLineHeight, fittedFontSize } from '../draw/captionFont';
+import { applyCaptionFont, captionLineHeight, fittedFontSize, spacedText } from '../draw/captionFont';
 import type { Point } from './geometry';
 
 // Image layers fit inside a square this many pixels wide at scale 1.
@@ -65,7 +65,7 @@ export const getCaptionBox = (
   let maxLineWidth = 0;
   if (ctx) {
     applyCaptionFont(ctx, cap, fontSize);
-    lines = wrapText(ctx, cap.text || '', (cap.width || 0.9) * canvasWidth);
+    lines = wrapText(ctx, spacedText(ctx, cap.text || '', cap, fontSize), (cap.width || 0.9) * canvasWidth);
     for (const line of lines) maxLineWidth = Math.max(maxLineWidth, ctx.measureText(line).width);
   }
   const isBubble = !!cap.bubbleStyle;

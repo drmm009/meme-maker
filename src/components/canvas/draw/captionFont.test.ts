@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { MIN_FIT_SIZE, applyCaptionFont, captionFont, captionGradient, captionLineHeight, fittedFontSize } from './captionFont';
+import { MIN_FIT_SIZE, applyCaptionFont, captionFont, captionGradient, captionLineHeight, fittedFontSize, spacedText } from './captionFont';
 import { familyFromFileName, toCustomFont } from '../../../utils/customFonts';
 
 describe('caption text style', () => {
@@ -60,5 +60,24 @@ describe('shrink to fit', () => {
     expect(one * 11 * 0.5).toBeLessThanOrEqual(200);
     expect(one).toBeLessThan(60);
     expect(fittedFontSize(measuringCtx(), { text: 'SUPERCALIFRAGILISTIC', fontSize: 60, autoFit: true }, 20)).toBe(MIN_FIT_SIZE);
+  });
+});
+
+describe('letter spacing where the canvas has none (Safari)', () => {
+  // A hair space is 2px wide here; other characters 10px.
+  const noSpacingCtx = { font: '', measureText: (t: string) => ({ width: t === '\u200A' ? 2 : t.length * 10 }) } as unknown as CanvasRenderingContext2D;
+
+  it('puts hair spaces between letters, as many as make up the gap', () => {
+    // 0.1 of 40px is a 4px gap: two hair spaces.
+    const g = '\u200A\u200A';
+    expect(spacedText(noSpacingCtx, 'AB CD', { letterSpacing: 0.1 }, 40)).toBe(`A${g}B${g} ${g}C${g}D`);
+    expect(spacedText(noSpacingCtx, 'A\nB', { letterSpacing: 0.1 }, 40)).toBe('A\nB');
+  });
+
+  it('leaves the text alone when the canvas can space letters, or the spacing is none or tighter', () => {
+    const spacingCtx = { font: '', letterSpacing: '0px', measureText: () => ({ width: 2 }) } as unknown as CanvasRenderingContext2D;
+    expect(spacedText(spacingCtx, 'AB', { letterSpacing: 0.1 }, 40)).toBe('AB');
+    expect(spacedText(noSpacingCtx, 'AB', {}, 40)).toBe('AB');
+    expect(spacedText(noSpacingCtx, 'AB', { letterSpacing: -0.1 }, 40)).toBe('AB');
   });
 });

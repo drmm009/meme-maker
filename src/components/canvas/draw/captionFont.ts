@@ -12,7 +12,7 @@ export const captionFont = (
 ): string => `${cap.italic ? 'italic ' : ''}${cap.bold === false ? 'normal' : 'bold'} ${fontSize}px ${cap.fontFamily || fallbackFamily}`;
 
 // Sets the caption's font and letter spacing (`letterSpacing` is a fraction of the font size) on
-// ctx. Browsers without canvas letter spacing simply draw it unspaced.
+// ctx. Browsers without canvas letter spacing (Safari) get it from spacedText instead.
 export function applyCaptionFont(ctx: CanvasRenderingContext2D, cap: FontProps, fontSize: number, fallbackFamily?: string): void {
   ctx.font = captionFont(cap, fontSize, fallbackFamily);
   if ('letterSpacing' in ctx) (ctx as CanvasRenderingContext2D & { letterSpacing: string }).letterSpacing = `${Math.round((cap.letterSpacing || 0) * fontSize * 10) / 10}px`;
@@ -30,13 +30,30 @@ export function fittedFontSize(ctx: CanvasRenderingContext2D | null, cap: FitPro
   const base = cap.fontSize || 50;
   if (!cap.autoFit || !ctx || typeof ctx.measureText !== 'function' || !cap.text) return base;
   const maxLines = cap.maxLines || 2;
-  const words = cap.text.split(/\s+/).filter(Boolean);
   for (let size = base; size > MIN_FIT_SIZE; size -= Math.max(1, Math.round(size * 0.06))) {
     applyCaptionFont(ctx, cap, size, fallbackFamily);
-    const fits = wrapText(ctx, cap.text, maxWidth).length <= maxLines && words.every((w) => ctx.measureText(w).width <= maxWidth);
+    const text = spacedText(ctx, cap.text, cap, size);
+    const fits = wrapText(ctx, text, maxWidth).length <= maxLines && text.split(/[ \n]+/).filter(Boolean).every((w) => ctx.measureText(w).width <= maxWidth);
     if (fits) return size;
   }
   return MIN_FIT_SIZE;
+}
+
+const HAIR_SPACE = '\u200A';
+
+// The caption's text as it is measured and drawn. Where the canvas can't space letters (Safari),
+// positive spacing is made of hair spaces between the letters (as many as make up the gap at the
+// current font), so wrapping, measuring and drawing all see the same spaced text. Tighter-than-
+// normal spacing can't be done that way and is left out.
+export function spacedText(ctx: CanvasRenderingContext2D | null, text: string, cap: Pick<MemeCaption, 'letterSpacing'>, fontSize: number): string {
+  const spacing = (cap.letterSpacing || 0) * fontSize;
+  if (!ctx || !text || spacing <= 0 || 'letterSpacing' in (ctx as object) || typeof ctx.measureText !== 'function') return text;
+  const hair = ctx.measureText(HAIR_SPACE).width;
+  const count = hair > 0 ? Math.round(spacing / hair) : 0;
+  if (!count) return text;
+  const gap = HAIR_SPACE.repeat(count);
+  // Not around line breaks (a hair space beside a space is fine: wrapping only splits on spaces).
+  return Array.from(text).reduce((out, ch, i, all) => (i && ch !== '\n' && all[i - 1] !== '\n' ? out + gap + ch : out + ch), '');
 }
 
 // The distance between a caption's lines (`lineHeight` is a multiple of the font size).
