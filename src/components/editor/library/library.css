@@ -30,3 +30,35 @@
 .ie-saved-rename { padding: 6px 8px; font-size: 13px; }
 .ie-saved-clash { margin-top: 10px; padding: 10px 12px; border-radius: var(--ui-radius-md); background: rgba(255, 255, 255, 0.05); }
 .ie-saved-clash .ie-empty { margin: 0 0 8px; }
+
+/* Shortcuts tab: small <kbd> boxes and their descriptions */
+.ie-shortcuts { display: flex; flex-direction: column; gap: 8px; }
+.ie-shortcuts-note { margin: 0 0 4px; color: var(--ui-muted); font-size: 13px; }
+.ie-shortcuts-list { display: flex; flex-direction: column; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.ie-shortcut-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 38px;
+  padding: 6px 10px;
+  border-radius: var(--ui-radius-sm);
+  background: var(--ui-surface-2);
+}
+.ie-shortcut-keys { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.ie-kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 24px;
+  padding: 2px 7px;
+  border: 1px solid var(--ui-line-strong);
+  border-radius: var(--ui-radius-sm);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--ui-text);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.2);
+}
+.ie-shortcut-label { color: var(--ui-text); font-size: 13px; text-align: right; }

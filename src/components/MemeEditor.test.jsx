@@ -307,6 +307,14 @@ describe('MemeEditor', () => {
     expect(rows()).not.toContain('Punchline');
   }, 30000);
 
+  it('pressing ? opens the sheet on Shortcuts and shows keyboard shortcuts', () => {
+    renderEditor();
+    fireEvent.keyDown(document, { key: '?' });
+    const panel = sheet('History & saved');
+    expect(within(panel).getByText('Undo')).toBeTruthy();
+    expect(within(panel).getByText('Duplicate the selected layer')).toBeTruthy();
+  });
+
   it('Text: shrink to fit with a line limit, and saved styles put on another caption', () => {
     renderEditor();
     openTextSheet();

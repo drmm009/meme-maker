@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { getShortcutCommand, NUDGE_STEP, NUDGE_STEP_LARGE } from './useEditorShortcuts';
+import { forMac } from '../library/shortcutsList';
 
 const key = (k, mods = {}) => ({ key: k, ctrlKey: false, metaKey: false, shiftKey: false, ...mods });
 const win = { isMac: false, hasSelection: true };
@@ -47,5 +48,49 @@ describe('getShortcutCommand', () => {
   it('Escape deselects; other keys do nothing', () => {
     expect(getShortcutCommand(key('Escape'), none)).toEqual({ type: 'deselect' });
     expect(getShortcutCommand(key('a'), win)).toBeNull();
+  });
+
+  it('? maps to help without needing a selection or modifier', () => {
+    expect(getShortcutCommand(key('?'), none)).toEqual({ type: 'help' });
+    expect(getShortcutCommand(key('?'), win)).toEqual({ type: 'help' });
+    expect(getShortcutCommand(key('?'), mac)).toEqual({ type: 'help' });
+  });
+
+  it('every entry in shortcutsList matches a getShortcutCommand outcome', () => {
+    const list = forMac(false);
+    const keyFor = (item, isMac) => {
+      const mod = isMac ? { metaKey: true } : { ctrlKey: true };
+      switch (item.command) {
+        case 'undo': return key('z', mod);
+        case 'redo': return key('y', mod);
+        case 'delete': return key('Delete');
+        case 'duplicate': return key('d', mod);
+        case 'nudge': return key('ArrowUp');
+        case 'order': return item.label.includes('front') ? key('}', { ...mod, shiftKey: true }) : key(']');
+        case 'deselect': return key('Escape');
+        case 'help': return key('?');
+        case null: return null;
+        default: throw new Error(`Untested shortcut: ${item.label}`);
+      }
+    };
+
+    for (const item of list) {
+      const e = keyFor(item, false);
+      if (!e) continue;
+      const cmd = getShortcutCommand(e, { isMac: false, hasSelection: true });
+      expect(cmd?.type).toBe(item.command);
+    }
+
+    const macList = forMac(true);
+    for (const item of macList) {
+      const e = keyFor(item, true);
+      if (!e) continue;
+      const cmd = getShortcutCommand(e, { isMac: true, hasSelection: true });
+      expect(cmd?.type).toBe(item.command);
+    }
+
+    const listedCommands = new Set(list.map((s) => s.command).filter(Boolean));
+    const expected = new Set(['undo', 'redo', 'delete', 'duplicate', 'nudge', 'order', 'deselect', 'help']);
+    expect(listedCommands).toEqual(expected);
   });
 });

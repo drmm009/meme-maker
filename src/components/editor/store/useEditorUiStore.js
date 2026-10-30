@@ -91,6 +91,7 @@ export function buildInitialUi(template) {
     watermark: loadWatermark(),
     customFonts: [], // fonts the person uploaded: [{ family, css }] (utils/customFonts)
     exportPrefs: loadExportPrefs(), // { format: 'png' | 'jpeg' | 'webp', quality: 0.5..1, width: 'full' | 720 | 480 }
+    libraryTab: 'history', // 'history' | 'saved' | 'shortcuts'
   };
 }
 

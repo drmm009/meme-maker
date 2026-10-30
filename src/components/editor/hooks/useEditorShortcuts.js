@@ -1,5 +1,6 @@
-import { useEffect, useRef } from 'react';
+import { useContext, useEffect, useRef } from 'react';
 import { linkIn } from '../../../utils/imageFromLink';
+import { EditorUiStoreContext } from '../store/useEditorUiStore';
 
 const isTypingInField = () => {
   const el = document.activeElement;
@@ -34,12 +35,16 @@ export function getShortcutCommand(e, { isMac, hasSelection }) {
     return { type: 'order', action: ctrl && e.shiftKey ? 'back' : 'backward' };
   }
   if (e.key === 'Escape') return { type: 'deselect' };
+  if (e.key === '?') return { type: 'help' };
   return null;
 }
 
 // Keyboard shortcuts and image paste for the editor. Listeners attach once;
 // the handlers ref always points at the latest render's callbacks.
 export function useEditorShortcuts(handlers) {
+  const uiStore = useContext(EditorUiStoreContext);
+  const uiStoreRef = useRef(uiStore);
+  uiStoreRef.current = uiStore;
   const handlersRef = useRef(handlers);
   handlersRef.current = handlers;
 
@@ -62,6 +67,13 @@ export function useEditorShortcuts(handlers) {
         case 'nudge': h.onNudge(command.dx, command.dy); break;
         case 'order': h.onMoveLayer(command.action); break;
         case 'deselect': h.onDeselect(); break;
+        case 'help':
+          if (uiStoreRef.current) {
+            uiStoreRef.current.getState().setLibraryTab('shortcuts');
+            uiStoreRef.current.getState().openSheet('library');
+          }
+          h.onHelp?.();
+          break;
       }
     };
 

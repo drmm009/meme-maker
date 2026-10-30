@@ -2,8 +2,10 @@ import { useEffect, useReducer, useState } from 'react';
 import { X, FolderPlus, LayoutTemplate, Pencil } from 'lucide-react';
 import { Sheet, Section, SegmentedControl } from '../../ui';
 import { useMemeEditorStoreApi, HISTORY_FIELDS } from '../store/useMemeEditorStore';
+import { useEditorUiStore } from '../store/useEditorUiStore';
 import { historyTimeline } from './historyTimeline';
 import { freeName } from './freeName';
+import { forMac } from './shortcutsList';
 import type { EditorActions } from '../panels/selection';
 import type { MemeProjectSummary } from '../../../utils/memeDraftStore';
 import './library.css';
@@ -166,13 +168,51 @@ function SavedMemes({ actions }: { actions: EditorActions }) {
   );
 }
 
-// History and saved memes, from the top bar: go back to any step, or save, open and delete memes.
+// Keyboard shortcuts list: keys and description.
+function ShortcutsList() {
+  const isMac = typeof navigator !== 'undefined' && /Mac/i.test(navigator.platform || navigator.userAgent);
+  const items = forMac(isMac);
+
+  return (
+    <div className="ie-shortcuts">
+      <p className="ie-shortcuts-note">Shortcuts need a keyboard.</p>
+      <ul className="ie-shortcuts-list" aria-label="Keyboard shortcuts">
+        {items.map((item) => (
+          <li key={item.label} className="ie-shortcut-row">
+            <span className="ie-shortcut-keys">
+              {item.keys.map((k) => (
+                <kbd key={k} className="ie-kbd">{k}</kbd>
+              ))}
+            </span>
+            <span className="ie-shortcut-label">{item.label}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+// History, saved memes and keyboard shortcuts, from the top bar or '?': go back to any step,
+// save/open memes, or browse shortcuts.
 export default function LibrarySheet({ actions, onClose }: { actions: EditorActions; onClose: () => void }) {
-  const [tab, setTab] = useState<'history' | 'saved'>('history');
+  const tab = useEditorUiStore((s: { libraryTab: 'history' | 'saved' | 'shortcuts' }) => s.libraryTab || 'history');
+  const setTab = useEditorUiStore((s: { setLibraryTab: (t: 'history' | 'saved' | 'shortcuts') => void }) => s.setLibraryTab);
   return (
     <Sheet title="History & saved" onClose={onClose}>
-      <SegmentedControl ariaLabel="Show" variant="fill" value={tab} options={[{ value: 'history', label: 'History' }, { value: 'saved', label: 'My memes' }]} onChange={setTab} />
-      <div className="ie-library-body">{tab === 'history' ? <HistoryList /> : <SavedMemes actions={actions} />}</div>
+      <SegmentedControl
+        ariaLabel="Show"
+        variant="fill"
+        value={tab}
+        options={[
+          { value: 'history', label: 'History' },
+          { value: 'saved', label: 'My memes' },
+          { value: 'shortcuts', label: 'Shortcuts' },
+        ]}
+        onChange={setTab}
+      />
+      <div className="ie-library-body">
+        {tab === 'history' ? <HistoryList /> : tab === 'saved' ? <SavedMemes actions={actions} /> : <ShortcutsList />}
+      </div>
     </Sheet>
   );
 }
