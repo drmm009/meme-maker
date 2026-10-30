@@ -41,6 +41,11 @@
 
 .ie-font-row { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; margin: 0 -16px; padding: 2px 16px; }
 .ie-font-row::-webkit-scrollbar { display: none; }
+/* Saved text styles: an "Aa" sample of each, with a small remove button. */
+.ie-style-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.ie-style-chip { position: relative; display: inline-flex; }
+.ie-style-apply { width: 52px; height: 44px; border: 1px solid var(--ui-line); border-radius: var(--ui-radius-sm); background: var(--ui-surface-2); font-size: 20px; cursor: pointer; }
+.ie-style-remove { position: absolute; top: -6px; right: -6px; display: grid; place-items: center; width: 18px; height: 18px; padding: 0; border: none; border-radius: 50%; background: var(--ui-line-strong); color: var(--ui-text); cursor: pointer; }
 .ie-layer-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 /* The Layers sheet's Select mode: line the chosen layers up, group or delete them. */
 .ie-arrange { display: flex; flex-direction: column; gap: 10px; margin: 0 0 12px; padding: 12px; border-radius: var(--ui-radius-md); background: rgba(255, 255, 255, 0.04); }

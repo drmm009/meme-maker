@@ -48,6 +48,9 @@ export interface MemeCaption extends MemeLayerBase {
   // A drop shadow: blur in canvas pixels (0 = none), and its colour.
   shadowSize?: number;
   shadowColor?: string;
+  // Shrink to fit: the text gets smaller (never larger than fontSize) to stay within maxLines lines.
+  autoFit?: boolean;
+  maxLines?: number;
   // A left-to-right two-colour fill instead of `color`.
   gradient?: [string, string] | null;
   blur?: number;

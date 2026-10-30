@@ -1,4 +1,5 @@
 import type { MemeCaption } from '../../../model/memeDocument';
+import { wrapText } from './text';
 
 type FontProps = Pick<MemeCaption, 'bold' | 'italic' | 'fontFamily' | 'letterSpacing'>;
 
@@ -15,6 +16,27 @@ export const captionFont = (
 export function applyCaptionFont(ctx: CanvasRenderingContext2D, cap: FontProps, fontSize: number, fallbackFamily?: string): void {
   ctx.font = captionFont(cap, fontSize, fallbackFamily);
   if ('letterSpacing' in ctx) (ctx as CanvasRenderingContext2D & { letterSpacing: string }).letterSpacing = `${Math.round((cap.letterSpacing || 0) * fontSize * 10) / 10}px`;
+}
+
+// The smallest size shrink-to-fit goes down to.
+export const MIN_FIT_SIZE = 12;
+
+type FitProps = FontProps & Pick<MemeCaption, 'fontSize' | 'text' | 'autoFit' | 'maxLines'>;
+
+// The size a caption is drawn at: its own, or with shrink-to-fit (`autoFit`) the largest size up
+// to its own at which the text wraps into at most `maxLines` lines (2 when unset) inside maxWidth
+// without breaking a word. Painting, hit boxes and band heights all use it.
+export function fittedFontSize(ctx: CanvasRenderingContext2D | null, cap: FitProps, maxWidth: number, fallbackFamily?: string): number {
+  const base = cap.fontSize || 50;
+  if (!cap.autoFit || !ctx || typeof ctx.measureText !== 'function' || !cap.text) return base;
+  const maxLines = cap.maxLines || 2;
+  const words = cap.text.split(/\s+/).filter(Boolean);
+  for (let size = base; size > MIN_FIT_SIZE; size -= Math.max(1, Math.round(size * 0.06))) {
+    applyCaptionFont(ctx, cap, size, fallbackFamily);
+    const fits = wrapText(ctx, cap.text, maxWidth).length <= maxLines && words.every((w) => ctx.measureText(w).width <= maxWidth);
+    if (fits) return size;
+  }
+  return MIN_FIT_SIZE;
 }
 
 // The distance between a caption's lines (`lineHeight` is a multiple of the font size).

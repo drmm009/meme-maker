@@ -7,7 +7,7 @@ import { getBreakingNewsHeight } from '../draw/chyron';
 import { getTweetCardHeight } from '../draw/socialCards/tweet';
 import { getInstagramCardHeight } from '../draw/socialCards/instagram';
 import { getStickerBoxSize } from './geometry';
-import { applyCaptionFont, captionLineHeight } from '../draw/captionFont';
+import { applyCaptionFont, captionLineHeight, fittedFontSize } from '../draw/captionFont';
 import type { Point } from './geometry';
 
 // Image layers fit inside a square this many pixels wide at scale 1.
@@ -60,7 +60,7 @@ export const getCaptionBox = (
   canvasWidth: number,
   { handles = false }: { handles?: boolean } = {}
 ): CaptionBox => {
-  const fontSize = cap.fontSize || 50;
+  const fontSize = fittedFontSize(ctx, cap, (cap.width || 0.9) * canvasWidth);
   let lines: string[] = [cap.text || ''];
   let maxLineWidth = 0;
   if (ctx) {

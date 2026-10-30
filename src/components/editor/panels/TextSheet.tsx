@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
-import { Bold, Italic, Underline, MessageSquareQuote, CaseSensitive, Plus } from 'lucide-react';
+import { Bold, Italic, Underline, MessageSquareQuote, CaseSensitive, Plus, X, BookmarkPlus } from 'lucide-react';
 import { Sheet, Section, Row, ChipRow, Chip, Toggle, SwatchRow, Slider, Switch, TileGrid, Tile, SegmentedControl } from '../../ui';
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
 import { useEditorUiStore } from '../store/useEditorUiStore';
@@ -15,6 +15,8 @@ import { addFontFile, FONT_ACCEPT } from '../../../utils/customFonts';
 import type { CustomFont } from '../../../utils/customFonts';
 import { ensureFontLoaded, redrawCanvas } from '../hooks/useCustomFonts';
 import CardControls from './CardControls';
+import { loadTextStyles, saveTextStyles, styleOf, withStyle } from '../../../utils/textStyles';
+import type { SavedTextStyle } from '../../../utils/textStyles';
 
 const TEXT_COLORS = ['#ffffff', '#000000', '#ff5a36', '#ffd60a', '#34c759', '#0a84ff', '#bf5af2', '#ff375f'];
 const BOX_COLORS = ['transparent', '#ffffff', '#000000', '#ff5a36', '#ffd60a', '#0a84ff'];
@@ -45,6 +47,11 @@ export default function TextSheet({ actions, onClose }: { actions: EditorActions
   const customFonts: CustomFont[] = useEditorUiStore((s: { customFonts: CustomFont[] }) => s.customFonts);
   const setCustomFonts = useEditorUiStore((s: { setCustomFonts: (fonts: CustomFont[]) => void }) => s.setCustomFonts);
   const [fontError, setFontError] = useState('');
+  const [styles, setStyles] = useState<SavedTextStyle[]>(() => loadTextStyles());
+  const keepStyles = (list: SavedTextStyle[]) => {
+    setStyles(list);
+    saveTextStyles(list);
+  };
   const { id, kind, caption } = useSelection();
   const bodyRef = useRef<HTMLDivElement>(null);
 
@@ -127,6 +134,36 @@ export default function TextSheet({ actions, onClose }: { actions: EditorActions
               {fontError && <p className="ie-empty" role="alert">{fontError}</p>}
             </Section>
 
+            <Section title="My styles" id="styles">
+              <div className="ie-style-row" role="group" aria-label="Saved text styles">
+                {styles.map((s, i) => (
+                  <span key={s.id} className="ie-style-chip">
+                    <button
+                      type="button"
+                      className="ie-style-apply"
+                      aria-label={`Use saved style ${i + 1}`}
+                      onClick={() => set(s.style as Partial<Caption>)}
+                      style={{
+                        fontFamily: String(s.style.fontFamily || 'Impact, sans-serif'),
+                        color: String(s.style.color || '#ffffff'),
+                        fontWeight: s.style.bold === false ? 400 : 800,
+                        fontStyle: s.style.italic ? 'italic' : 'normal',
+                        WebkitTextStroke: s.style.stroke && s.style.stroke !== 'transparent' ? `1px ${String(s.style.stroke)}` : undefined,
+                      }}
+                    >
+                      Aa
+                    </button>
+                    <button type="button" className="ie-style-remove" aria-label={`Remove saved style ${i + 1}`} onClick={() => keepStyles(styles.filter((x) => x.id !== s.id))}>
+                      <X size={12} />
+                    </button>
+                  </span>
+                ))}
+                <button type="button" className="ui-btn" onClick={() => keepStyles(withStyle(styles, styleOf(caption as Record<string, unknown>), `style-${Date.now()}`))}>
+                  <BookmarkPlus size={16} />Save this style
+                </button>
+              </div>
+            </Section>
+
             <Section id="color">
               <Row label="Color">
                 <SwatchRow ariaLabel="Text colour" colors={TEXT_COLORS} value={caption.color || '#ffffff'} onChange={(c) => set({ color: c, stroke: strokeOn ? getContrastStroke(c) : 'transparent' })} />
@@ -153,6 +190,16 @@ export default function TextSheet({ actions, onClose }: { actions: EditorActions
                 <Row label="Size">
                   <Slider label="Text size" min={16} max={160} value={caption.fontSize || 50} onChange={(v) => live({ fontSize: v })} />
                 </Row>
+                <Row label="Shrink to fit" end>
+                  <Switch label="Shrink to fit" checked={Boolean(caption.autoFit)} onChange={(autoFit) => set({ autoFit })} />
+                </Row>
+                {caption.autoFit && (
+                  <Row label="Lines">
+                    <ChipRow ariaLabel="Most lines">
+                      {[1, 2, 3, 4].map((n) => <Chip key={n} label={String(n)} active={(caption.maxLines || 2) === n} onClick={() => set({ maxLines: n })} />)}
+                    </ChipRow>
+                  </Row>
+                )}
               </div>
               <Row label="Style">
                 <Toggle label="Bold" active={caption.bold !== false} onClick={() => set({ bold: caption.bold === false })}><Bold size={20} strokeWidth={3} /></Toggle>

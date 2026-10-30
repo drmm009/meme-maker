@@ -281,6 +281,24 @@ describe('MemeEditor', () => {
     expect(canvas.props.captions).toHaveLength(2);
   }, 30000);
 
+  it('Text: shrink to fit with a line limit, and saved styles put on another caption', () => {
+    renderEditor();
+    openTextSheet();
+    const panel = () => sheet('Text');
+    fireEvent.click(within(panel()).getByRole('switch', { name: 'Shrink to fit' }));
+    fireEvent.click(within(within(panel()).getByRole('group', { name: 'Most lines' })).getByText('1'));
+    expect(canvas.props.captions[0]).toMatchObject({ autoFit: true, maxLines: 1 });
+
+    fireEvent.click(within(panel()).getByRole('button', { name: 'Italic' }));
+    fireEvent.click(within(panel()).getByText('Save this style'));
+    expect(within(panel()).getByLabelText('Use saved style 1')).toBeTruthy();
+    fireEvent.click(within(within(panel()).getByRole('group', { name: 'Captions' })).getByText('BOTTOM TEXT'));
+    fireEvent.click(within(panel()).getByLabelText('Use saved style 1'));
+    expect(canvas.props.captions[1]).toMatchObject({ italic: true, autoFit: true, maxLines: 1, text: 'BOTTOM TEXT' });
+    fireEvent.click(within(panel()).getByLabelText('Remove saved style 1'));
+    expect(within(panel()).queryByLabelText('Use saved style 1')).toBeNull();
+  }, 30000);
+
   it('edits the selected caption from the Text sheet', () => {
     renderEditor();
     openTextSheet();

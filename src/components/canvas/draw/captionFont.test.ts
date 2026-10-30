@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { applyCaptionFont, captionFont, captionGradient, captionLineHeight } from './captionFont';
+import { MIN_FIT_SIZE, applyCaptionFont, captionFont, captionGradient, captionLineHeight, fittedFontSize } from './captionFont';
 import { familyFromFileName, toCustomFont } from '../../../utils/customFonts';
 
 describe('caption text style', () => {
@@ -37,5 +37,28 @@ describe('caption text style', () => {
     expect(familyFromFileName('weird<>name!!.woff2')).toBe('weirdname');
     expect(familyFromFileName('.otf')).toBe('Custom font');
     expect(toCustomFont('Comic X').css).toBe('"Comic X", sans-serif');
+  });
+});
+
+describe('shrink to fit', () => {
+  // Every character is half the font size wide.
+  const measuringCtx = () => {
+    const ctx = { font: '', measureText: (t: string) => ({ width: t.length * Number(/(\d+)px/.exec(ctx.font)?.[1] || 10) * 0.5 }) };
+    return ctx as unknown as CanvasRenderingContext2D;
+  };
+
+  it("keeps the caption's own size unless shrink-to-fit is on", () => {
+    expect(fittedFontSize(measuringCtx(), { text: 'A VERY LONG CAPTION INDEED', fontSize: 60 }, 200)).toBe(60);
+    expect(fittedFontSize(null, { text: 'X', fontSize: 60, autoFit: true }, 200)).toBe(60);
+  });
+
+  it('shrinks until the text fits in the allowed lines, never growing', () => {
+    // "HELLO WORLD" at 60px is 330px wide: two lines of 150px in a 200px box.
+    const two = fittedFontSize(measuringCtx(), { text: 'HELLO WORLD', fontSize: 60, autoFit: true }, 200);
+    expect(two).toBe(60);
+    const one = fittedFontSize(measuringCtx(), { text: 'HELLO WORLD', fontSize: 60, autoFit: true, maxLines: 1 }, 200);
+    expect(one * 11 * 0.5).toBeLessThanOrEqual(200);
+    expect(one).toBeLessThan(60);
+    expect(fittedFontSize(measuringCtx(), { text: 'SUPERCALIFRAGILISTIC', fontSize: 60, autoFit: true }, 20)).toBe(MIN_FIT_SIZE);
   });
 });

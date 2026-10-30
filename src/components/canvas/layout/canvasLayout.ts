@@ -1,6 +1,6 @@
 import type { MemeCaption } from '../../../model/memeDocument';
 import { wrapText } from '../draw/text';
-import { applyCaptionFont } from '../draw/captionFont';
+import { applyCaptionFont, fittedFontSize } from '../draw/captionFont';
 import { getWhatsAppCardHeight } from '../draw/socialCards/whatsapp';
 
 // The canvas's internal resolution is capped at this on its longer side. Font sizes stay
@@ -54,13 +54,13 @@ export interface Band {
 // caption's wrapped text, or the band's own height when it has no caption. 0 when disabled.
 export function getBandHeight(
   band: Band | null | undefined,
-  cap: Pick<MemeCaption, 'fontSize' | 'fontFamily' | 'text' | 'width' | 'bold' | 'italic' | 'letterSpacing'> | null | undefined,
+  cap: Pick<MemeCaption, 'fontSize' | 'fontFamily' | 'text' | 'width' | 'bold' | 'italic' | 'letterSpacing' | 'autoFit' | 'maxLines'> | null | undefined,
   canvasW: number,
   ctx: CanvasRenderingContext2D | null = getMeasureCtx()
 ): number {
   if (!band?.enabled) return 0;
   if (!cap) return band.height || 140;
-  const fontSize = cap.fontSize || 50;
+  const fontSize = fittedFontSize(ctx, cap, (cap.width || 0.92) * canvasW, 'Montserrat, sans-serif');
   let linesCount = 1;
   if (ctx) {
     applyCaptionFont(ctx, cap, fontSize, 'Montserrat, sans-serif');
