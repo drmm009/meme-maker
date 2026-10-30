@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Circle, Flame, Contrast, Film, SunMoon, Coffee, Blend, Skull, Droplets, Sparkles, Sun, SunDim, SunMedium, Thermometer, Focus, Aperture } from 'lucide-react';
+import { ChevronDown, Circle, Flame, Contrast, Film, SunMoon, Coffee, Blend, Skull, Droplets, Sparkles, Sun, SunDim, SunMedium, Thermometer, Focus, Aperture } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import { Sheet, Section, Row, Slider, TileGrid, Tile, SegmentedControl } from '../../ui';
+import { Sheet, Section, Row, Slider, TileGrid, Tile } from '../../ui';
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
 import { PHOTO_FILTERS } from '../../../data/photoFilters';
 import { useSelection } from './selection';
@@ -32,9 +32,8 @@ const ADJUSTMENTS = [
 
 const presetLabel = (id: string) => (PRESETS.find((p) => p.id === id)?.name || '').replace(/[^\p{L}\p{N}&' ]/gu, '').trim();
 
-// "AI & Filters": the AI tools (captions, face swap, background removal), then filter presets and
-// The AI/Filters strip's Filters: presets and brightness/contrast/saturation for the photo, the
-// whole meme or the selected image.
+// The AI/Filters strip's Filters: presets for the selected image, or else the meme; the
+// adjustments (brightness, contrast..., background blur) fold away until opened.
 export default function FiltersSheet({ actions, onClose }: { actions: EditorActions; onClose: () => void }) {
   const imageFilters: FilterValues = useMemeEditorStore((s: { imageFilters: FilterValues }) => s.imageFilters) || {};
   const setImageFilters = useMemeEditorStore((s: { setImageFilters: (fn: (prev: FilterValues) => FilterValues) => void }) => s.setImageFilters);
@@ -43,8 +42,8 @@ export default function FiltersSheet({ actions, onClose }: { actions: EditorActi
   const { id, image } = useSelection();
   // Multi-panel layouts have several photos: background blur is for a single one.
   const isLayout = Boolean(actions.isNativeLayout);
-  const [target, setTarget] = useState<'layer' | 'photo' | 'meme'>(image ? 'layer' : imageFilters.filterScope === 'background' ? 'photo' : 'meme');
-  const onLayer = target === 'layer' && Boolean(image && id);
+  const onLayer = Boolean(image && id);
+  const [showAdjust, setShowAdjust] = useState(false);
 
   const layerValues = (image?.filters && typeof image.filters === 'object' ? image.filters : {}) as Record<string, number>;
   const preset = onLayer ? String(image?.filterId || 'original') : String(imageFilters.preset || 'original');
@@ -66,24 +65,9 @@ export default function FiltersSheet({ actions, onClose }: { actions: EditorActi
       pushHistoryDebounced();
     }
   };
-  const pickTarget = (t: 'layer' | 'photo' | 'meme') => {
-    setTarget(t);
-    if (t !== 'layer') setImageFilters((prev: FilterValues) => ({ ...prev, filterScope: t === 'photo' ? 'background' : 'all' }));
-  };
-
-  const targets = [
-    ...(image ? [{ value: 'layer' as const, label: 'Image' }] : []),
-    { value: 'photo' as const, label: 'Photo' },
-    { value: 'meme' as const, label: 'Whole meme' },
-  ];
 
   return (
     <Sheet title="Filters" hideTitle onClose={onClose}>
-      <Section>
-        <Row label="Apply to">
-          <SegmentedControl ariaLabel="Apply to" variant="fill" value={target} options={targets} onChange={pickTarget} />
-        </Row>
-      </Section>
       <Section title={preset !== 'original' ? `Preset: ${presetLabel(preset)}` : 'Preset'}>
         <TileGrid>
           {PRESETS.map((p) => (
@@ -91,22 +75,25 @@ export default function FiltersSheet({ actions, onClose }: { actions: EditorActi
           ))}
         </TileGrid>
       </Section>
-      <Section title="Adjustments" rule>
-        {ADJUSTMENTS.map((a) => (
+      <Section rule>
+        <button type="button" className="ie-fold" aria-expanded={showAdjust} onClick={() => setShowAdjust(!showAdjust)}>
+          Adjustments
+          <ChevronDown size={18} aria-hidden="true" />
+        </button>
+        {showAdjust && ADJUSTMENTS.map((a) => (
           <Row key={a.key} label={a.label}>
             <Slider label={a.label} min={a.min} max={a.max} value={value(a.key)} onChange={(v) => adjust(a.key, v)} StartIcon={a.StartIcon} EndIcon={a.EndIcon} />
           </Row>
         ))}
+        {showAdjust && !onLayer && !isLayout && (
+          <>
+            <Row label="Background blur">
+              <Slider label="Background blur" min={0} max={30} value={Number(imageFilters.bgBlur || 0)} onChange={(v) => actions.setPortraitBlur(v)} StartIcon={Focus} EndIcon={Droplets} />
+            </Row>
+            <p className="ie-empty">{actions.isRemovingBg ? 'Finding the subject…' : 'Blurs the photo behind the person or thing in front.'}</p>
+          </>
+        )}
       </Section>
-      {!onLayer && !isLayout && (
-        <Section title="Portrait" rule>
-          <Row label="Background blur">
-            <Slider label="Background blur" min={0} max={30} value={Number(imageFilters.bgBlur || 0)} onChange={(v) => actions.setPortraitBlur(v)} StartIcon={Focus} EndIcon={Droplets} />
-          </Row>
-          <p className="ie-empty">{actions.isRemovingBg ? 'Finding the subject…' : 'Blurs the photo behind the person or thing in front.'}</p>
-        </Section>
-      )}
-
     </Sheet>
   );
 }

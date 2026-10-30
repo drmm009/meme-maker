@@ -425,6 +425,11 @@ describe('MemeEditor', () => {
     openSection('AI tools and photo filters');
     fireEvent.click(within(screen.getByRole('toolbar', { name: 'AI and filter tools' })).getByText('Filters'));
     const panel = sheet('Filters');
+    // The adjustments stay folded away until asked for.
+    expect(within(panel).queryByLabelText('Warmth')).toBeNull();
+    expect(within(panel).queryByRole('radiogroup', { name: 'Apply to' })).toBeNull();
+    fireEvent.click(within(panel).getByRole('button', { name: 'Adjustments' }));
+    expect(within(panel).getByRole('button', { name: 'Adjustments' }).getAttribute('aria-expanded')).toBe('true');
     expect(Number(within(panel).getByLabelText('Warmth').value)).toBe(0);
     fireEvent.change(within(panel).getByLabelText('Warmth'), { target: { value: '40' } });
     fireEvent.change(within(panel).getByLabelText('Vignette'), { target: { value: '60' } });

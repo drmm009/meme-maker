@@ -363,3 +363,23 @@ div.ie-layer-pick { cursor: default; }
 
 .ie-panels--sheet .ui-chip { height: 34px; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; background: var(--ui-surface-2); }
 .ie-panels--sheet .ui-chip.is-on { border-color: var(--ui-accent); background: rgba(255, 90, 54, 0.15); color: var(--ui-accent); }
+
+/* A row that opens a folded group (Filters > Adjustments). */
+.ie-fold {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 40px;
+  margin-bottom: 4px;
+  padding: 0 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  background: var(--ui-surface-2);
+  color: var(--ui-text);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.ie-fold svg { color: var(--ui-muted); transition: transform 0.2s ease; }
+.ie-fold[aria-expanded='true'] svg { transform: rotate(180deg); }
