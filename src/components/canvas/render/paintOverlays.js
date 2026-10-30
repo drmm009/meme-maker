@@ -1,13 +1,20 @@
 import { drawImageFiltered } from '../../../data/photoFilters';
+import { paintGuideGrid } from '../draw/guideGrid';
 
 export function paintOverlays({
   activeCaption, activeHandleDrawer, applyGlobalFilter, canvas, canvasH, compCanvas, ctx,
-  filterCss, headerExtH, isDragging, skipHandles, snappingLines
+  filterCss, headerExtH, isDragging, showGrid, skipHandles, snappingLines
 }) {
   // If global composition filter is enabled, draw the rendered composition canvas with the filter
   if (applyGlobalFilter && compCanvas) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     drawImageFiltered(ctx, compCanvas, filterCss, 0, 0, canvas.width, canvas.height);
+  }
+
+  // Line-up guides over the image area (Canvas > Grid), under the selection, on screen only.
+  if (showGrid && !skipHandles) {
+    const shown = canvas.getBoundingClientRect?.().width;
+    paintGuideGrid(ctx, 0, headerExtH, canvas.width, canvasH, shown ? canvas.width / shown : 1);
   }
 
   // Draw active layer selection handles and rotation knob on the screen canvas (unfiltered and sharp)

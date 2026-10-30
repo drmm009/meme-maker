@@ -188,7 +188,7 @@ describe('MemeEditor', () => {
       ['Photos, videos, stickers and emoji', 'Media tools', ['Photo', 'Templates', 'Stickers', 'GIFs', 'Emoji']],
       ['Text', 'Text tools', ['Add Text', 'Edit', 'Bubble', 'Social Card']],
       ['AI tools and photo filters', 'AI and filter tools', ['Face Swap', 'Remove BG', 'AI Caption', 'Filters']],
-      ['Canvas colour, bands and watermark', 'Canvas tools', ['Color', 'Watermark', 'Mirror', 'Header', 'Footer', 'Crop', 'Replace']],
+      ['Canvas colour, bands and watermark', 'Canvas tools', ['Color', 'Watermark', 'Mirror', 'Header', 'Footer', 'Grid', 'Crop', 'Replace']],
     ];
     for (const [tab, name, tools] of strips) {
       openSection(tab);
@@ -562,7 +562,7 @@ describe('MemeEditor', () => {
   it('Canvas shows Color, Watermark, Mirror, Header, Footer, Crop and Replace; Color and Watermark open sheets under the strip', () => {
     renderEditor();
     openSection('Canvas colour, bands and watermark');
-    expect(within(canvasStrip()).getAllByRole('button').map((b) => b.textContent)).toEqual(['Color', 'Watermark', 'Mirror', 'Header', 'Footer', 'Crop']);
+    expect(within(canvasStrip()).getAllByRole('button').map((b) => b.textContent)).toEqual(['Color', 'Watermark', 'Mirror', 'Header', 'Footer', 'Grid', 'Crop']);
     // Replace is a file picker.
     expect(within(canvasStrip()).getByText('Replace').closest('label').querySelector('input[accept="image/*"]')).toBeTruthy();
 

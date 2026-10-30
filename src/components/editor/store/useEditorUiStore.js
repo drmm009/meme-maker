@@ -79,6 +79,7 @@ export function buildInitialUi(template) {
     pendingVideoLayer: null,
     showPhotoCrop: false, // the main photo's cropper (editor/crop)
     showGifSheet: false, // the Giphy picker
+    showGrid: false, // line-up guides over the canvas (Canvas > Grid), not exported
     pasteToast: false,
     drawTool: null, // 'brush' | 'highlighter' | 'glow' | 'shape' | 'censor' | null
     shapeKind: 'arrow', // 'arrow' | 'ellipse' | 'rect' | 'line'
