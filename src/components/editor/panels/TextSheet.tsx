@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
 import { Bold, Italic, Underline, MessageSquareQuote, CaseSensitive, Plus, X, BookmarkPlus } from 'lucide-react';
 import { Sheet, Section, Row, ChipRow, Chip, Toggle, SwatchRow, Slider, Switch, TileGrid, Tile, SegmentedControl } from '../../ui';
@@ -39,8 +39,26 @@ const boxValue = (c: Caption) => (!hasBox(c) ? 'transparent' : c.bgColor === 'wh
 const OUTLINE_COLORS = ['#000000', '#ffffff', '#ff2a5f', '#ffe600', '#00f0ff', '#7c3aed'];
 const sameColour = (a: unknown, b: string) => String(a || '').toLowerCase() === b.toLowerCase();
 
+// The caption's parts. Each is also a button on the caption's floating bar (LayerToolbar), which
+// opens this sheet with just that part.
+const TEXT_PARTS = {
+  edit: 'Edit text',
+  font: 'Font',
+  size: 'Size',
+  color: 'Color',
+  style: 'Style',
+  outline: 'Outline',
+  shadow: 'Shadow',
+  spacing: 'Spacing',
+  box: 'Box',
+  effects: 'Effects',
+  styles: 'My styles',
+} as const;
+type TextPart = keyof typeof TEXT_PARTS;
+
 // The Text sheet, under the Text strip (which adds text, bubbles and social cards): pick a caption,
-// edit its words, font, colour, size, style, box and effects.
+// edit its words, font, colour, size, style, outline, shadow, spacing, box and effects. Opened from
+// a floating-bar button it shows only that part.
 export default function TextSheet({ actions, onClose }: { actions: EditorActions; onClose: () => void }) {
   const captions: Caption[] = useMemeEditorStore((s: { captions: Caption[] }) => s.captions);
   const setActiveLayerId = useMemeEditorStore((s: { setActiveLayerId: (id: string | null) => void }) => s.setActiveLayerId);
@@ -57,7 +75,10 @@ export default function TextSheet({ actions, onClose }: { actions: EditorActions
     saveTextStyles(list);
   };
   const { id, kind, caption } = useSelection();
-  const bodyRef = useRef<HTMLDivElement>(null);
+  const part = kind === 'caption' && sheetFocus && sheetFocus in TEXT_PARTS ? (sheetFocus as TextPart) : null;
+  const shows = (p: TextPart) => !part || part === p;
+  // The full sheet heads each part; a part on its own is already what its button said.
+  const heading = (p: TextPart) => (part ? undefined : TEXT_PARTS[p]);
 
   // Opening the sheet with no caption selected picks the first one.
   useEffect(() => {
@@ -65,13 +86,6 @@ export default function TextSheet({ actions, onClose }: { actions: EditorActions
     // Only on open: picking a sticker afterwards closes this sheet anyway.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  // Jump to the section the floating toolbar asked for.
-  useEffect(() => {
-    if (!sheetFocus) return;
-    const el = bodyRef.current?.querySelector(`[data-section="${sheetFocus}"]`);
-    el?.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' });
-  }, [sheetFocus, id]);
 
   const set = (patch: Partial<Caption>) => actions.updateActiveCaptionProps(patch);
   const live = (patch: Partial<Caption>) => id && patchLayer('captions', id, patch);
@@ -94,31 +108,35 @@ export default function TextSheet({ actions, onClose }: { actions: EditorActions
   };
 
   return (
-    <Sheet title="Text" hideTitle onClose={onClose}>
-      <div ref={bodyRef}>
+    <Sheet title={part ? TEXT_PARTS[part] : 'Text'} hideTitle onClose={onClose}>
+      {!part && (
         <ChipRow ariaLabel="Captions">
           {captions.map((c) => (
             <Chip key={c.id} label={captionLabel(c)} active={c.id === id} onClick={() => setActiveLayerId(c.id)} />
           ))}
         </ChipRow>
+      )}
 
-        {!caption && <p className="ie-empty">{captions.length ? 'Pick a caption to edit it.' : 'No text yet. Tap Add Text above to write one.'}</p>}
+      {!caption && <p className="ie-empty">{captions.length ? 'Pick a caption to edit it.' : 'No text yet. Tap Add Text above to write one.'}</p>}
 
-        {caption && kind === 'card' && <CardControls caption={caption} actions={actions} />}
+      {caption && kind === 'card' && <CardControls caption={caption} actions={actions} />}
 
-        {caption && kind === 'caption' && (
-          <>
-            <Section rule>
+      {caption && kind === 'caption' && (
+        <>
+          {shows('edit') && (
+            <Section id="edit" rule={!part}>
               <textarea
                 className="ui-field ui-field--accent"
                 aria-label="Caption text"
-                rows={1}
+                rows={part ? 3 : 1}
                 value={caption.text || ''}
                 onChange={(e) => updateCaptionText(caption.id, e.target.value)}
               />
             </Section>
+          )}
 
-            <Section title="Font" id="font">
+          {shows('font') && (
+            <Section title={heading('font')} id="font">
               <div className="ie-font-row">
                 {FONTS.map((f: { id: string; name: string; family: string; sample?: string }) => (
                   <Toggle key={f.id} variant="tile" label={f.name} active={(caption.fontFamily || 'Impact, sans-serif') === f.family} onClick={() => pickFont(f.family)} style={{ fontFamily: f.family }}>
@@ -137,8 +155,10 @@ export default function TextSheet({ actions, onClose }: { actions: EditorActions
               </div>
               {fontError && <p className="ie-empty" role="alert">{fontError}</p>}
             </Section>
+          )}
 
-            <Section title="My styles" id="styles">
+          {shows('styles') && (
+            <Section title={heading('styles')} id="styles">
               <div className="ie-style-row" role="group" aria-label="Saved text styles">
                 {styles.map((s, i) => (
                   <span key={s.id} className="ie-style-chip">
@@ -167,8 +187,10 @@ export default function TextSheet({ actions, onClose }: { actions: EditorActions
                 </button>
               </div>
             </Section>
+          )}
 
-            <Section id="color">
+          {shows('color') && (
+            <Section title={heading('color')} id="color">
               <Row label="Color">
                 <SwatchRow ariaLabel="Text colour" colors={TEXT_COLORS} value={caption.color || '#ffffff'} onChange={(c) => set({ color: c, ...(strokeOn && sameColour(caption.stroke, c) ? { stroke: getContrastStroke(c) } : {}) })} />
               </Row>
@@ -190,39 +212,38 @@ export default function TextSheet({ actions, onClose }: { actions: EditorActions
                   ))}
                 </div>
               </Row>
-              <div data-section="size">
-                <Row label="Size">
-                  <Slider label="Text size" min={16} max={160} value={caption.fontSize || 50} onChange={(v) => live({ fontSize: v })} />
+            </Section>
+          )}
+
+          {shows('size') && (
+            <Section title={heading('size')} id="size">
+              <Row label="Size">
+                <Slider label="Text size" min={16} max={160} value={caption.fontSize || 50} onChange={(v) => live({ fontSize: v })} />
+              </Row>
+              <Row label="Shrink to fit" end>
+                <Switch label="Shrink to fit" checked={Boolean(caption.autoFit)} onChange={(autoFit) => set({ autoFit })} />
+              </Row>
+              {caption.autoFit && (
+                <Row label="Lines">
+                  <ChipRow ariaLabel="Most lines">
+                    {[1, 2, 3, 4].map((n) => <Chip key={n} label={String(n)} active={(caption.maxLines || 2) === n} onClick={() => set({ maxLines: n })} />)}
+                  </ChipRow>
                 </Row>
-                <Row label="Shrink to fit" end>
-                  <Switch label="Shrink to fit" checked={Boolean(caption.autoFit)} onChange={(autoFit) => set({ autoFit })} />
-                </Row>
-                {caption.autoFit && (
-                  <Row label="Lines">
-                    <ChipRow ariaLabel="Most lines">
-                      {[1, 2, 3, 4].map((n) => <Chip key={n} label={String(n)} active={(caption.maxLines || 2) === n} onClick={() => set({ maxLines: n })} />)}
-                    </ChipRow>
-                  </Row>
-                )}
-              </div>
+              )}
+            </Section>
+          )}
+
+          {shows('style') && (
+            <Section title={heading('style')} id="style">
               <Row label="Style">
                 <Toggle label="Bold" active={caption.bold !== false} onClick={() => set({ bold: caption.bold === false })}><Bold size={20} strokeWidth={3} /></Toggle>
                 <Toggle label="Italic" active={Boolean(caption.italic)} onClick={() => set({ italic: !caption.italic })}><Italic size={19} /></Toggle>
                 <Toggle label="Underline" active={Boolean(caption.underline)} onClick={() => set({ underline: !caption.underline })}><Underline size={19} /></Toggle>
                 <span className="ie-row-spacer" />
-                <span className="ie-inline-label">Stroke</span>
-                <Switch label="Stroke" checked={strokeOn} onChange={(on) => set({ stroke: on ? getContrastStroke(caption.color || '#ffffff') : 'transparent' })} />
+                <button type="button" className="ui-toggle" aria-label="Change case" title="Change case" onClick={actions.handleToggleTextCase}>
+                  <CaseSensitive size={22} />
+                </button>
               </Row>
-              {strokeOn && (
-                <>
-                  <Row label="Outline">
-                    <Slider label="Outline thickness" min={1} max={24} value={Number(caption.strokeWidth || Math.max(3, Math.round(fontSize / 7)))} onChange={(v) => live({ strokeWidth: v })} />
-                  </Row>
-                  <Row label="Color">
-                    <SwatchRow ariaLabel="Outline colour" colors={OUTLINE_COLORS} value={caption.stroke || '#000000'} onChange={(c) => set({ stroke: c })} />
-                  </Row>
-                </>
-              )}
               <Row label="Align">
                 <SegmentedControl
                   ariaLabel="Alignment"
@@ -233,14 +254,28 @@ export default function TextSheet({ actions, onClose }: { actions: EditorActions
                 />
               </Row>
             </Section>
+          )}
 
-            <Section title="Spacing & shadow" rule>
-              <Row label="Letters">
-                <Slider label="Letter spacing" min={-0.05} max={0.5} step={0.01} value={Number(caption.letterSpacing || 0)} onChange={(v) => live({ letterSpacing: v })} />
+          {shows('outline') && (
+            <Section title={heading('outline')} id="outline" rule={!part}>
+              <Row label="Outline" end>
+                <Switch label="Stroke" checked={strokeOn} onChange={(on) => set({ stroke: on ? getContrastStroke(caption.color || '#ffffff') : 'transparent' })} />
               </Row>
-              <Row label="Lines">
-                <Slider label="Line height" min={0.8} max={2} step={0.05} value={Number(caption.lineHeight || 1.2)} onChange={(v) => live({ lineHeight: v })} />
-              </Row>
+              {strokeOn && (
+                <>
+                  <Row label="Thickness">
+                    <Slider label="Outline thickness" min={1} max={24} value={Number(caption.strokeWidth || Math.max(3, Math.round(fontSize / 7)))} onChange={(v) => live({ strokeWidth: v })} />
+                  </Row>
+                  <Row label="Color">
+                    <SwatchRow ariaLabel="Outline colour" colors={OUTLINE_COLORS} value={caption.stroke || '#000000'} onChange={(c) => set({ stroke: c })} />
+                  </Row>
+                </>
+              )}
+            </Section>
+          )}
+
+          {shows('shadow') && (
+            <Section title={heading('shadow')} id="shadow" rule={!part}>
               <Row label="Shadow">
                 <Slider label="Shadow size" min={0} max={30} value={Number(caption.shadowSize || 0)} onChange={(v) => live({ shadowSize: v })} />
               </Row>
@@ -250,8 +285,21 @@ export default function TextSheet({ actions, onClose }: { actions: EditorActions
                 </Row>
               )}
             </Section>
+          )}
 
-            <Section title="Box" rule>
+          {shows('spacing') && (
+            <Section title={heading('spacing')} id="spacing" rule={!part}>
+              <Row label="Letters">
+                <Slider label="Letter spacing" min={-0.05} max={0.5} step={0.01} value={Number(caption.letterSpacing || 0)} onChange={(v) => live({ letterSpacing: v })} />
+              </Row>
+              <Row label="Lines">
+                <Slider label="Line height" min={0.8} max={2} step={0.05} value={Number(caption.lineHeight || 1.2)} onChange={(v) => live({ lineHeight: v })} />
+              </Row>
+            </Section>
+          )}
+
+          {shows('box') && (
+            <Section title={heading('box')} id="box" rule={!part}>
               <Row label="Fill">
                 <SwatchRow
                   ariaLabel="Text box colour"
@@ -280,8 +328,10 @@ export default function TextSheet({ actions, onClose }: { actions: EditorActions
                 <Slider label="Text opacity" min={0.1} max={1} step={0.05} value={Number(caption.opacity ?? 1)} onChange={(v) => live({ opacity: v })} />
               </Row>
             </Section>
+          )}
 
-            <Section title="Effects">
+          {shows('effects') && (
+            <Section title={heading('effects')} id="effects">
               <ChipRow ariaLabel="Text effects">
                 {TEXT_EFFECTS.map((e: { id: string; title: string; curve?: number; renderLabel: () => ReactNode }) => (
                   <Chip
@@ -292,22 +342,21 @@ export default function TextSheet({ actions, onClose }: { actions: EditorActions
                     onClick={() => set({ effect: e.id, curve: e.curve || 0 })}
                   />
                 ))}
-                <Chip label="Change case" Icon={CaseSensitive} onClick={actions.handleToggleTextCase} />
               </ChipRow>
             </Section>
-          </>
-        )}
+          )}
+        </>
+      )}
 
-        {caption?.bubbleStyle ? (
-          <Section title="Bubble" rule>
-            <TileGrid columns={2}>
-              <Tile label="Bubble Style" Icon={MessageSquareQuote} onClick={() => openSheet('bubble')} />
-            </TileGrid>
-          </Section>
-        ) : null}
+      {!part && caption?.bubbleStyle ? (
+        <Section title="Bubble" rule>
+          <TileGrid columns={2}>
+            <Tile label="Bubble Style" Icon={MessageSquareQuote} onClick={() => openSheet('bubble')} />
+          </TileGrid>
+        </Section>
+      ) : null}
 
-        {id && caption && <LayerActions id={id} actions={actions} />}
-      </div>
+      {!part && id && caption && <LayerActions id={id} actions={actions} />}
     </Sheet>
   );
 }

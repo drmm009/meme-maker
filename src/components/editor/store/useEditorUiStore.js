@@ -51,7 +51,7 @@ export function buildInitialUi(template) {
     activeTab: 'text', // 'text' | 'images' | 'draw' | 'canvas' | 'watermark' | 'filters'
     sheet: null, // the open bottom sheet: 'text' | 'media' | 'draw' | 'canvasColor' | 'watermark' | 'filters' | null
     dockTab: null, // the dock tab whose tool strip shows: 'draw' | 'media' | 'text' | 'fx' | 'canvas' | null
-    sheetFocus: null, // the section the sheet scrolls to when opened: 'font' | 'size' | 'color' | null
+    sheetFocus: null, // what part of the sheet to show: a Text part (TEXT_PARTS) alone, 'size' to scroll the Media sheet to, or null
     activeSubmenu: null, // 'font' | 'color' | 'align' | 'effects' | 'bg' | 'blur' | 'bubble' | 'tweetTheme' | 'tweetTrend' | 'drawSettings' | 'watermark' | 'canvasBg' | 'banner' | 'filters'
     lastUsedSettingButton: null,
     showFontMenu: false,

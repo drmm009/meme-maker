@@ -262,12 +262,37 @@ describe('MemeEditor', () => {
     addTextFromMenu();
     closeSheet();
     const tools = layerToolbar();
-    for (const name of ['Font', 'Size', 'Color', 'Bold', 'Layers', 'Delete']) expect(within(tools).getByText(name)).toBeTruthy();
+    // A button for every part of the Text sheet, then the layer tools.
+    expect([...tools.querySelectorAll('button > span:last-child')].map((s) => s.textContent)).toEqual([
+      'Edit', 'Font', 'Size', 'Color', 'Bold', 'Style', 'Outline', 'Shadow', 'Spacing', 'Box', 'Effects', 'Styles',
+      'Copy', 'Rotate', 'Forward', 'Back', 'Layers', 'Delete',
+    ]);
     fireEvent.click(within(tools).getByText('Bold'));
     expect(canvas.props.captions[2].bold).toBe(false);
-    // Font opens the Text sheet on the selected caption.
+
+    // Each opens a sheet with just its part: Font has the fonts and nothing else.
     fireEvent.click(within(layerToolbar()).getByText('Font'));
-    expect(within(sheet('Text')).getByLabelText('Caption text').value).toBe('NEW TEXT');
+    const font = sheet('Font');
+    expect(within(font).getByLabelText('Upload your own font')).toBeTruthy();
+    expect(within(font).queryByLabelText('Caption text')).toBeNull();
+    expect(within(font).queryByLabelText('Text size')).toBeNull();
+    expect(within(font).queryByRole('group', { name: 'Captions' })).toBeNull();
+    closeSheet();
+
+    fireEvent.click(within(layerToolbar()).getByText('Edit'));
+    expect(within(sheet('Edit text')).getByLabelText('Caption text').value).toBe('NEW TEXT');
+    closeSheet();
+
+    fireEvent.click(within(layerToolbar()).getByText('Outline'));
+    const outline = sheet('Outline');
+    expect(within(outline).getByLabelText('Stroke')).toBeTruthy();
+    expect(within(outline).queryByLabelText('Text colour')).toBeNull();
+    closeSheet();
+
+    fireEvent.click(within(layerToolbar()).getByText('Shadow'));
+    fireEvent.change(within(sheet('Shadow')).getByLabelText('Shadow size'), { target: { value: '12' } });
+    expect(canvas.props.captions[2].shadowSize).toBe(12);
+    closeSheet();
   }, 30000);
 
   it('Layers on the floating toolbar lists every layer, top first; select, reorder, hide and lock', () => {

@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { RefObject } from 'react';
-import { Trash2, Settings, SlidersHorizontal, Copy, Scaling, FlipHorizontal, Scissors, Crop, Wand2, Ellipsis, Layers, Palette } from 'lucide-react';
+import { Trash2, Settings, SlidersHorizontal, Copy, Scaling, FlipHorizontal, Scissors, Crop, Wand2, Ellipsis, Layers, Palette, PencilLine, AlignCenter, Blend, UnfoldHorizontal, Square, Sparkles, Bookmark, MessageSquareQuote, RotateCw, ArrowUp, ArrowDown } from 'lucide-react';
 import { FloatingToolbar } from '../../ui';
 import type { ToolbarItem } from '../../ui';
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
@@ -11,7 +11,8 @@ import type { LayerBox } from './placeToolbar';
 import type { EditorActions } from './selection';
 
 // The selected layer's quick tools, floating just above it on the canvas. Hidden while a sheet
-// is open (the sheet has the full controls) and while the layer is being dragged.
+// is open and while the layer is being dragged. A caption gets a button for every part of the Text
+// sheet, each opening the sheet with just that part; the bar scrolls sideways when they don't fit.
 type LayerCanvas = HTMLCanvasElement & { activeLayerBox?: LayerBox | null };
 
 // The text-size glyph: an A between two rules.
@@ -84,10 +85,23 @@ export default function LayerToolbar({ canvasRef, actions }: { canvasRef: RefObj
   let items: ToolbarItem[] = [];
   if (kind === 'caption' && caption) {
     items = [
+      { id: 'edit', label: 'Edit', title: 'Edit the words', Icon: PencilLine, onClick: () => openSheet('text', 'edit') },
       { id: 'font', label: 'Font', icon: <span className="ie-glyph">Ar</span>, onClick: () => openSheet('text', 'font') },
       { id: 'size', label: 'Size', icon: <SizeIcon />, onClick: () => openSheet('text', 'size') },
       { id: 'color', label: 'Color', icon: <span className="ie-color-dot" style={{ background: caption.color || '#ffffff' }} />, onClick: () => openSheet('text', 'color') },
       { id: 'bold', label: 'Bold', title: caption.bold === false ? 'Make bold' : 'Make regular', icon: <span className="ie-glyph ie-glyph--bold" style={{ opacity: caption.bold === false ? 0.55 : 1 }}>B</span>, onClick: () => actions.updateActiveCaptionProps({ bold: caption.bold === false }) },
+      { id: 'style', label: 'Style', title: 'Italic, underline, case and alignment', Icon: AlignCenter, onClick: () => openSheet('text', 'style') },
+      { id: 'outline', label: 'Outline', icon: <span className="ie-glyph ie-glyph--outline">A</span>, onClick: () => openSheet('text', 'outline') },
+      { id: 'shadow', label: 'Shadow', Icon: Blend, onClick: () => openSheet('text', 'shadow') },
+      { id: 'spacing', label: 'Spacing', title: 'Letter and line spacing', Icon: UnfoldHorizontal, onClick: () => openSheet('text', 'spacing') },
+      { id: 'box', label: 'Box', title: 'Box behind the text and opacity', Icon: Square, onClick: () => openSheet('text', 'box') },
+      { id: 'effects', label: 'Effects', Icon: Sparkles, onClick: () => openSheet('text', 'effects') },
+      { id: 'styles', label: 'Styles', title: 'My saved styles', Icon: Bookmark, onClick: () => openSheet('text', 'styles') },
+      ...(caption.bubbleStyle ? [{ id: 'bubble', label: 'Bubble', title: 'Bubble style', Icon: MessageSquareQuote, onClick: () => openSheet('bubble') }] : []),
+      dup,
+      { id: 'rotate', label: 'Rotate', title: 'Rotate 90°', Icon: RotateCw, onClick: () => actions.handleRotateLayer() },
+      { id: 'forward', label: 'Forward', title: 'Bring forward', Icon: ArrowUp, onClick: () => actions.moveLayer(id, 'forward') },
+      { id: 'backward', label: 'Back', title: 'Send backward', Icon: ArrowDown, onClick: () => actions.moveLayer(id, 'backward') },
       layers,
       del,
     ];
