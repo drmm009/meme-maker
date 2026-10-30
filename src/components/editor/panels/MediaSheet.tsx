@@ -7,11 +7,12 @@ import type { EditorActions } from './selection';
 import type { MemeImageLayer } from '../../../model/memeDocument';
 import LayerActions from './LayerActions';
 import StickerControls from './StickerControls';
+import LayerLookControls from './LayerLookControls';
 import type { MemeSticker } from '../../../model/memeDocument';
 
 // The Media sheet, under the Media strip (which adds photos, templates, stickers and emoji): pick an
 // image or sticker on the meme; crop, flip, filter, cut out or face swap the selected image; size,
-// flip and die-cut the selected sticker.
+// flip and die-cut the selected sticker; and how either sits on the meme (LayerLookControls).
 export default function MediaSheet({ actions, onClose }: { actions: EditorActions; onClose: () => void }) {
   const imageLayers: MemeImageLayer[] = useMemeEditorStore((s: { imageLayers: MemeImageLayer[] }) => s.imageLayers || []);
   const setActiveLayerId = useMemeEditorStore((s: { setActiveLayerId: (id: string | null) => void }) => s.setActiveLayerId);
@@ -46,6 +47,7 @@ export default function MediaSheet({ actions, onClose }: { actions: EditorAction
               <Tile label="Face Swap" Icon={ScanFace} onClick={() => actions.handleStartMorphFace(image)} />
             </TileGrid>
           </Section>
+          <LayerLookControls id={id} layer={image} kind="image" />
           <LayerActions id={id} actions={actions} />
         </>
       )}

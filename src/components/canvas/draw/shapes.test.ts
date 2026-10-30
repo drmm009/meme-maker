@@ -125,9 +125,9 @@ describe('shape presets', () => {
   it('puts a head on both ends of a both-ways arrow', () => {
     const ctx = createRecordingContext();
     paintShape(ctx as unknown as CanvasRenderingContext2D, shape({ shape: 'double', points: [{ x: 0, y: 0 }, { x: 100, y: 0 }] }));
-    const ends = callsNamed(ctx, 'lineTo').map((c) => c.args[0]);
-    expect(ends.filter((x) => x === 100).length).toBeGreaterThanOrEqual(2);
-    expect(ends.filter((x) => x === 0).length).toBeGreaterThanOrEqual(1);
+    const ends: number[] = callsNamed(ctx, 'lineTo').map((c: { args: number[] }) => c.args[0]);
+    expect(ends.filter((x: number) => x === 100).length).toBeGreaterThanOrEqual(2);
+    expect(ends.filter((x: number) => x === 0).length).toBeGreaterThanOrEqual(1);
   });
 
   it('sketches a wobbly ring that is the same every time for a shape', () => {

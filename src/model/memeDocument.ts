@@ -2,6 +2,8 @@
 // x is a fraction (0..1) of the canvas width and y a fraction of the image area's height (the area
 // below any header band); both mark the layer's centre. Box sizes and handles are in canvas pixels.
 
+import type { LayerLook } from '../components/canvas/draw/layerLook';
+
 interface MemeLayerBase {
   id: string;
   x: number;
@@ -12,6 +14,7 @@ interface MemeLayerBase {
   hidden?: boolean;
   locked?: boolean;
   flipX?: boolean;
+  flipY?: boolean;
   // 0..1
   opacity?: number;
 }
@@ -57,7 +60,8 @@ export interface MemeCaption extends MemeLayerBase {
   isBreakingNews?: boolean;
 }
 
-export interface MemeSticker extends MemeLayerBase {
+// Blend mode and shadow (stickers and photos), corners and border (photos): canvas/draw/layerLook.
+export interface MemeSticker extends MemeLayerBase, LayerLook {
   // Size multiplier of the 52px base sticker.
   scale?: number;
   emoji?: string;
@@ -76,7 +80,7 @@ export interface CropRect {
   height: number;
 }
 
-export interface MemeImageLayer extends MemeLayerBase {
+export interface MemeImageLayer extends MemeLayerBase, LayerLook {
   url: string;
   scale?: number;
   // Drawn size in canvas pixels (otherwise the image fitted into 320px, times scale).

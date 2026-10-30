@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { paintLayers } from './paintLayers';
 import { paintSticker } from './paintSticker';
 import { paintImageLayer } from './paintImageLayer';
@@ -71,6 +71,31 @@ describe('paintSticker', () => {
     const [box] = callsNamed(handles(), 'roundRect');
     expect(box.args).toEqual([-45, -45, 90, 90, 10]); // 78px sticker + 12
     expect(box.at).toEqual({ x: 355, y: 255 });
+  });
+});
+
+describe('layer look', () => {
+  it('turns a sticker upside down, fades it, blends it and gives it a shadow', () => {
+    const [call] = callsNamed(paintStk({ id: 's1', emoji: '😂', x: 0.5, y: 0.5, flipY: true, opacity: 0.5, blend: 'multiply', shadowSize: 10 }).ctx, 'fillText');
+    expect(call.state.matrix[3]).toBe(-1);
+    expect(call.state).toMatchObject({ globalAlpha: 0.5, globalCompositeOperation: 'multiply', shadowBlur: 10 });
+  });
+
+  it('draws a rounded, bordered photo on its own canvas, then that with the shadow', () => {
+    const img = { width: 320, height: 160 };
+    const off = createRecordingContext();
+    const offCanvas = { width: 0, height: 0, getContext: () => off };
+    const realCreate = document.createElement.bind(document);
+    const spy = vi.spyOn(document, 'createElement').mockImplementation((tag) => (tag === 'canvas' ? offCanvas : realCreate(tag)));
+    const { ctx } = paintImg({ id: 'i1', url: 'p.png', x: 0.5, y: 0.5, fitMode: 'stretch', cornerRadius: 0.5, borderWidth: 10, borderColor: '#ff0000', shadowSize: 12 }, { imageCache: { 'p.png': img } });
+    spy.mockRestore();
+    // 320 x 160 photo + a 10px border each side.
+    expect([offCanvas.width, offCanvas.height]).toEqual([340, 180]);
+    expect(callsNamed(off, 'clip')).toHaveLength(1);
+    expect(callsNamed(off, 'stroke')[0].state).toMatchObject({ lineWidth: 10, strokeStyle: '#ff0000' });
+    const [onMeme] = callsNamed(ctx, 'drawImage');
+    expect(onMeme.args[0]).toBe(offCanvas);
+    expect(onMeme.state.shadowBlur).toBe(12);
   });
 });
 

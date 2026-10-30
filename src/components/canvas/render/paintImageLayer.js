@@ -1,5 +1,6 @@
 import { THEME_BADGE_BG, THEME_CORAL, drawDeleteHandle, drawResizeHandle, drawRotateHandle, drawSelectionBox, drawSideHandle } from './handles';
 import { getFilterCss, drawImageFiltered } from '../../../data/photoFilters';
+import { applyShadow, compositeFor, cornerPx, isFramed, roundRectPath } from '../draw/layerLook';
 
 export function paintImageLayer({
   activeLayerId, baseImgRef, canvas, getImageLayerCenterY, imageCacheRef, isDrawingMode,
@@ -34,12 +35,13 @@ if (cached) {
   if (imgLayer.rotation) {
     targetCtx.rotate((imgLayer.rotation * Math.PI) / 180);
   }
-  if (imgLayer.flipX) {
-    targetCtx.scale(-1, 1);
+  if (imgLayer.flipX || imgLayer.flipY) {
+    targetCtx.scale(imgLayer.flipX ? -1 : 1, imgLayer.flipY ? -1 : 1);
   }
   if (imgLayer.opacity !== undefined) {
     targetCtx.globalAlpha = imgLayer.opacity;
   }
+  targetCtx.globalCompositeOperation = compositeFor(imgLayer);
 
   const scale = imgLayer.scale || 1.0;
   const maxDim = 320;
@@ -52,58 +54,90 @@ if (cached) {
 
   const mode = imgLayer.fitMode || 'fit';
 
-  if (mode === 'crop') {
-    const sx = Math.max(0, Math.min(baseW - 1, (crop.x || 0) * baseW));
-    const sy = Math.max(0, Math.min(baseH - 1, (crop.y || 0) * baseH));
-    const sw = Math.max(1, Math.min(baseW - sx, (crop.width || 1) * baseW));
-    const sh = Math.max(1, Math.min(baseH - sy, (crop.height || 1) * baseH));
+  // The picture itself, centred on ctx's origin.
+  const paintBody = (ctx) => {
+    if (mode === 'crop') {
+      const sx = Math.max(0, Math.min(baseW - 1, (crop.x || 0) * baseW));
+      const sy = Math.max(0, Math.min(baseH - 1, (crop.y || 0) * baseH));
+      const sw = Math.max(1, Math.min(baseW - sx, (crop.width || 1) * baseW));
+      const sh = Math.max(1, Math.min(baseH - sy, (crop.height || 1) * baseH));
 
-    targetCtx.save();
-    targetCtx.beginPath();
-    if (imgLayer.isFaceMorph) {
-      targetCtx.ellipse(0, 0, w / 2, h / 2, 0, 0, Math.PI * 2);
-    } else {
-      targetCtx.rect(-w / 2, -h / 2, w, h);
+      ctx.save();
+      ctx.beginPath();
+      if (imgLayer.isFaceMorph) {
+        ctx.ellipse(0, 0, w / 2, h / 2, 0, 0, Math.PI * 2);
+      } else {
+        ctx.rect(-w / 2, -h / 2, w, h);
+      }
+      ctx.clip();
+      ctx.drawImage(drawSource, sx, sy, sw, sh, -w / 2, -h / 2, w, h);
+      ctx.restore();
+    } else if (mode === 'stretch') {
+      const sx = Math.max(0, Math.min(baseW - 1, (crop.x || 0) * baseW));
+      const sy = Math.max(0, Math.min(baseH - 1, (crop.y || 0) * baseH));
+      const sw = Math.max(1, Math.min(baseW - sx, (crop.width || 1) * baseW));
+      const sh = Math.max(1, Math.min(baseH - sy, (crop.height || 1) * baseH));
+      ctx.drawImage(drawSource, sx, sy, sw, sh, -w / 2, -h / 2, w, h);
+    } else { // fit
+      const hasCrop = (crop.width && crop.width < 1) || (crop.height && crop.height < 1) || (crop.x || 0) > 0 || (crop.y || 0) > 0;
+      const sx = hasCrop ? Math.max(0, Math.min(baseW - 1, (crop.x || 0) * baseW)) : 0;
+      const sy = hasCrop ? Math.max(0, Math.min(baseH - 1, (crop.y || 0) * baseH)) : 0;
+      const sw = hasCrop ? Math.max(1, Math.min(baseW - sx, (crop.width || 1) * baseW)) : baseW;
+      const sh = hasCrop ? Math.max(1, Math.min(baseH - sy, (crop.height || 1) * baseH)) : baseH;
+
+      const imgAspect = sw / sh;
+      const boxAspect = w / h;
+      let drawW = w;
+      let drawH = h;
+
+      if (boxAspect > imgAspect) {
+        drawH = h;
+        drawW = h * imgAspect;
+      } else {
+        drawW = w;
+        drawH = w / imgAspect;
+      }
+
+      ctx.save();
+      ctx.beginPath();
+      if (imgLayer.isFaceMorph) {
+        ctx.ellipse(0, 0, w / 2, h / 2, 0, 0, Math.PI * 2);
+      } else {
+        ctx.rect(-w / 2, -h / 2, w, h);
+      }
+      ctx.clip();
+      ctx.drawImage(drawSource, sx, sy, sw, sh, -drawW / 2, -drawH / 2, drawW, drawH);
+      ctx.restore();
     }
-    targetCtx.clip();
-    targetCtx.drawImage(drawSource, sx, sy, sw, sh, -w / 2, -h / 2, w, h);
-    targetCtx.restore();
-  } else if (mode === 'stretch') {
-    const sx = Math.max(0, Math.min(baseW - 1, (crop.x || 0) * baseW));
-    const sy = Math.max(0, Math.min(baseH - 1, (crop.y || 0) * baseH));
-    const sw = Math.max(1, Math.min(baseW - sx, (crop.width || 1) * baseW));
-    const sh = Math.max(1, Math.min(baseH - sy, (crop.height || 1) * baseH));
-    targetCtx.drawImage(drawSource, sx, sy, sw, sh, -w / 2, -h / 2, w, h);
-  } else { // fit
-    const hasCrop = (crop.width && crop.width < 1) || (crop.height && crop.height < 1) || (crop.x || 0) > 0 || (crop.y || 0) > 0;
-    const sx = hasCrop ? Math.max(0, Math.min(baseW - 1, (crop.x || 0) * baseW)) : 0;
-    const sy = hasCrop ? Math.max(0, Math.min(baseH - 1, (crop.y || 0) * baseH)) : 0;
-    const sw = hasCrop ? Math.max(1, Math.min(baseW - sx, (crop.width || 1) * baseW)) : baseW;
-    const sh = hasCrop ? Math.max(1, Math.min(baseH - sy, (crop.height || 1) * baseH)) : baseH;
+  };
 
-    const imgAspect = sw / sh;
-    const boxAspect = w / h;
-    let drawW = w;
-    let drawH = h;
-
-    if (boxAspect > imgAspect) {
-      drawH = h;
-      drawW = h * imgAspect;
-    } else {
-      drawW = w;
-      drawH = w / imgAspect;
+  // Rounded, bordered or shadowed photos are drawn on their own first: the shadow then follows the
+  // picture (cut-outs included) and isn't clipped away with the corners.
+  const bw = imgLayer.borderWidth || 0;
+  const off = isFramed(imgLayer) && typeof document !== 'undefined' ? document.createElement('canvas') : null;
+  if (off) {
+    off.width = Math.max(1, Math.ceil(w + bw * 2));
+    off.height = Math.max(1, Math.ceil(h + bw * 2));
+  }
+  const frameCtx = off?.getContext('2d');
+  if (off && frameCtx) {
+    const r = cornerPx(imgLayer, w, h);
+    frameCtx.translate(off.width / 2, off.height / 2);
+    frameCtx.save();
+    roundRectPath(frameCtx, -w / 2, -h / 2, w, h, r);
+    frameCtx.clip();
+    paintBody(frameCtx);
+    frameCtx.restore();
+    if (bw > 0) {
+      roundRectPath(frameCtx, -w / 2 - bw / 2, -h / 2 - bw / 2, w + bw, h + bw, r ? r + bw / 2 : 0);
+      frameCtx.lineWidth = bw;
+      frameCtx.strokeStyle = imgLayer.borderColor || '#ffffff';
+      frameCtx.stroke();
     }
-
-    targetCtx.save();
-    targetCtx.beginPath();
-    if (imgLayer.isFaceMorph) {
-      targetCtx.ellipse(0, 0, w / 2, h / 2, 0, 0, Math.PI * 2);
-    } else {
-      targetCtx.rect(-w / 2, -h / 2, w, h);
-    }
-    targetCtx.clip();
-    targetCtx.drawImage(drawSource, sx, sy, sw, sh, -drawW / 2, -drawH / 2, drawW, drawH);
-    targetCtx.restore();
+    applyShadow(targetCtx, imgLayer);
+    targetCtx.drawImage(off, -off.width / 2, -off.height / 2);
+  } else {
+    paintBody(targetCtx);
   }
 
   if (imgLayer.id === activeLayerId && !isDrawingMode) {

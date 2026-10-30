@@ -6,6 +6,7 @@ import { COLOR_SWATCHES } from '../../../utils/captionLayout';
 import { useSelection } from './selection';
 import type { EditorActions } from './selection';
 import LayerActions from './LayerActions';
+import LayerLookControls from './LayerLookControls';
 
 // The selected sticker's controls, in the Media sheet: size, flip, die-cut and its border colour.
 export default function StickerControls({ actions }: { actions: EditorActions }) {
@@ -37,6 +38,7 @@ export default function StickerControls({ actions }: { actions: EditorActions })
           </Row>
         )}
       </Section>
+      <LayerLookControls id={id} layer={sticker} kind="sticker" />
       <LayerActions id={id} actions={actions} />
     </div>
   );

@@ -1,5 +1,6 @@
 import { drawDeleteHandle, drawResizeHandle, drawRotateHandle, drawSelectionBox, drawSideHandle } from './handles';
 import { renderDieCutEmoji, renderDieCutImage } from '../draw/dieCut';
+import { applyShadow, compositeFor } from '../draw/layerLook';
 
 export function paintSticker({
   activeLayerId, baseImgRef, canvas, getStickerCenterY, imageCacheRef, isDrawingMode, layer,
@@ -12,7 +13,7 @@ const sy = getStickerCenterY(stk);
 targetCtx.save();
 targetCtx.translate(sx, sy);
 if (stk.rotation) targetCtx.rotate(stk.rotation * Math.PI / 180);
-if (stk.flipX) targetCtx.scale(-1, 1);
+if (stk.flipX || stk.flipY) targetCtx.scale(stk.flipX ? -1 : 1, stk.flipY ? -1 : 1);
 
 const stkSize = (stk.scale || 1.0) * 52;
 targetCtx.font = `${stkSize}px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif`;
@@ -60,6 +61,11 @@ if (stk.id === activeLayerId && !isDrawingMode) {
     uiCtx.restore();
   });
 }
+
+// Opacity, blend mode and shadow apply to the sticker (not its selection UI, drawn on its own).
+if (stk.opacity !== undefined) targetCtx.globalAlpha = stk.opacity;
+targetCtx.globalCompositeOperation = compositeFor(stk);
+applyShadow(targetCtx, stk);
 
 if (stk.url || stk.imageUrl) {
   const imgUrl = stk.url || stk.imageUrl;

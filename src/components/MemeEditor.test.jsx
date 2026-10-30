@@ -525,6 +525,24 @@ describe('MemeEditor', () => {
     expect(canvas.props.activeLayerId).toBe(null);
   }, 30000);
 
+  it('the Media sheet sets how a sticker sits: upside down, opacity, blend and shadow', () => {
+    renderEditor();
+    openSection('Photos, videos, stickers and emoji');
+    fireEvent.click(within(strip('Media tools')).getByText('Emoji'));
+    fireEvent.click(screen.getByTitle('Laugh Cry'));
+    fireEvent.click(screen.getByLabelText('Close'));
+    fireEvent.click(within(layerToolbar()).getByText('Size'));
+    const media = sheet('Media');
+    fireEvent.click(within(media).getByRole('switch', { name: 'Flip upside down' }));
+    fireEvent.click(within(within(media).getByRole('group', { name: 'Blend mode' })).getByText('Screen'));
+    fireEvent.change(within(media).getByLabelText('Opacity'), { target: { value: '0.5' } });
+    fireEvent.change(within(media).getByLabelText('Shadow size'), { target: { value: '12' } });
+    expect(canvas.props.stickers[0]).toMatchObject({ flipY: true, blend: 'screen', opacity: 0.5, shadowSize: 12 });
+    expect(within(sheet('Media')).getByRole('radiogroup', { name: 'Shadow colour' })).toBeTruthy();
+    // Corners and border are for photos.
+    expect(within(sheet('Media')).queryByLabelText('Corner rounding')).toBeNull();
+  }, 30000);
+
   it('the open sheet follows the selection: picking a caption switches Media to Text', () => {
     renderEditor();
     openSection('Photos, videos, stickers and emoji');
