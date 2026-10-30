@@ -347,6 +347,20 @@ describe('MemeEditor', () => {
     expect(canvas.props.drawings).toHaveLength(0);
   }, 30000);
 
+  it('Export opens a sheet with format, quality and size; the choices are remembered', () => {
+    const { unmount } = renderEditor();
+    fireEvent.click(screen.getByLabelText('Export'));
+    const panel = sheet('Export');
+    for (const name of ['Download', 'Share', 'Copy', 'Save to Gallery']) expect(within(panel).getByText(name)).toBeTruthy();
+    expect(within(panel).queryByLabelText('Quality')).toBeNull();
+    fireEvent.click(within(panel).getByRole('radio', { name: 'JPG' }));
+    expect(within(sheet('Export')).getByLabelText('Quality')).toBeTruthy();
+    unmount();
+    renderEditor();
+    fireEvent.click(screen.getByLabelText('Export'));
+    expect(within(sheet('Export')).getByRole('radio', { name: 'JPG' }).getAttribute('aria-checked')).toBe('true');
+  }, 30000);
+
   it('Save to Gallery names the meme after the template on the first save', () => {
     const onSave = vi.fn();
     renderEditor(TEMPLATE, onSave);

@@ -1,7 +1,7 @@
-import { useState, useRef, useEffect } from 'react';
 import confetti from 'canvas-confetti';
 import { cleanTemplateName } from '../memeEditorUtils';
 import { useMemeEditorStoreApi } from '../store/useMemeEditorStore';
+import { renderExport } from '../export/exportImage';
 
 export const triggerConfetti = () => {
   try {
@@ -15,42 +15,49 @@ export const triggerConfetti = () => {
   }
 };
 
-// Renders the canvas without selection handles.
+// The meme as a full-size PNG data URL, without selection handles.
 const renderCleanImage = (canvas) => (
   canvas.exportCleanImage ? canvas.exportCleanImage('image/png') : canvas.toDataURL('image/png')
 );
 
-// State and actions for the editor's Export menu.
-export function useExport({ canvasRef, template }) {
+// What the Export sheet does: render the meme as a file (format, quality, size), name it, and save
+// it to the gallery (always a full-size PNG, with its layers for re-editing).
+export function useExport({ canvasRef, template, onSaveToGallery, imageFit, isNativeLayout, layoutDef }) {
   const store = useMemeEditorStoreApi();
-  const [exportDropdownOpen, setExportDropdownOpen] = useState(false);
-  const exportDropdownRef = useRef(null);
 
-  // Close export dropdown when clicking outside
-  useEffect(() => {
-    if (!exportDropdownOpen) return;
-    const handleClickOutside = (e) => {
-      if (exportDropdownRef.current && !exportDropdownRef.current.contains(e.target)) {
-        setExportDropdownOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [exportDropdownOpen]);
-
-  // Renders the canvas to a PNG data URL without handles, then runs
-  // action(dataUrl, name) with a default name for the meme.
-  const handleQuickExport = (action) => {
-    store.getState().setActiveLayerId(null);
-    setExportDropdownOpen(false);
-    if (canvasRef.current) {
-      const dataUrl = renderCleanImage(canvasRef.current);
-      const { captions } = store.getState();
-      const cleaned = cleanTemplateName(template?.name);
-      const name = cleaned || (captions[0]?.text && captions[0].text !== 'TOP TEXT' ? captions[0].text : '') || 'My Meme';
-      action(dataUrl, name);
-    }
+  // A default name for the meme: the template's, else the first real caption.
+  const memeName = () => {
+    const { captions } = store.getState();
+    const cleaned = cleanTemplateName(template?.name);
+    return cleaned || (captions[0]?.text && captions[0].text !== 'TOP TEXT' ? captions[0].text : '') || 'My Meme';
   };
 
-  return { exportDropdownOpen, setExportDropdownOpen, exportDropdownRef, handleQuickExport };
+  const canvasSize = () => ({ w: canvasRef.current?.width || 0, h: canvasRef.current?.height || 0 });
+
+  // The meme as a Blob in the chosen format and size (see export/exportImage).
+  const exportBlob = (prefs) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return Promise.reject(new Error('No canvas'));
+    return renderExport(canvas.exportCleanCanvas ? canvas.exportCleanCanvas() : canvas, prefs);
+  };
+
+  const saveToGallery = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const { captions, stickers, imageLayers, aspectRatio, slotImages, slotTransforms } = store.getState();
+    onSaveToGallery({
+      id: `meme-${Date.now()}`,
+      name: memeName(),
+      imageUrl: renderCleanImage(canvas),
+      rawImageUrl: template?.rawImageUrl || template?.imageUrl,
+      captions: JSON.parse(JSON.stringify(captions)),
+      stickers: JSON.parse(JSON.stringify(stickers)),
+      imageLayers: JSON.parse(JSON.stringify(imageLayers)),
+      aspectRatio, imageFit, isNativeLayout, layoutDef, slotImages, slotTransforms,
+      createdAt: new Date().toISOString()
+    });
+    triggerConfetti();
+  };
+
+  return { memeName, canvasSize, exportBlob, saveToGallery };
 }

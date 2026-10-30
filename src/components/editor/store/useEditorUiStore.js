@@ -9,6 +9,8 @@ import { isSocialCardCaption } from '../memeEditorUtils';
 // The meme itself lives in useMemeEditorStore; nothing here is undoable.
 
 const WATERMARK_KEY = 'meme-maker-watermark';
+const EXPORT_PREFS_KEY = 'meme-maker-export-prefs';
+const DEFAULT_EXPORT_PREFS = { format: 'png', quality: 0.9, width: 'full' };
 
 const DEFAULT_WATERMARK = {
   enabled: false,
@@ -27,6 +29,11 @@ function loadWatermark() {
     return parsed;
   }
   return { ...DEFAULT_WATERMARK };
+}
+
+function loadExportPrefs() {
+  const saved = safeGet(EXPORT_PREFS_KEY, null);
+  return saved && typeof saved === 'object' ? { ...DEFAULT_EXPORT_PREFS, ...saved } : { ...DEFAULT_EXPORT_PREFS };
 }
 
 function initialSocialModalPlatform(template) {
@@ -79,13 +86,15 @@ export function buildInitialUi(template) {
     brushColor: '#ff2a5f',
     brushSize: 10,
     watermark: loadWatermark(),
+    exportPrefs: loadExportPrefs(), // { format: 'png' | 'jpeg' | 'webp', quality: 0.5..1, width: 'full' | 720 | 480 }
   };
 }
 
 const UI_FIELDS = Object.keys(buildInitialUi(null));
 
 // The dock tab each sheet belongs to: its strip shows above the sheet.
-const SHEET_TAB = { text: 'text', media: 'media', draw: 'draw', canvasColor: 'canvas', watermark: 'canvas', filters: 'fx' };
+// null: no strip (Export). Sheets not listed (Layers) keep the strip that shows.
+const SHEET_TAB = { text: 'text', media: 'media', draw: 'draw', canvasColor: 'canvas', watermark: 'canvas', filters: 'fx', export: null };
 
 // useState-style setter: accepts a value or an updater function.
 const fieldSetter = (set, key) => (valueOrUpdater) =>
@@ -110,7 +119,7 @@ export function createEditorUiStore(template) {
     // Every sheet belongs to a dock tab, and opens under that tab's tool strip (scrolled to
     // `focus`). Opening a sheet of another tab stops drawing.
     openSheet: (sheet, focus = null) => set((state) => {
-      const tab = SHEET_TAB[sheet] ?? state.dockTab;
+      const tab = sheet in SHEET_TAB ? SHEET_TAB[sheet] : state.dockTab;
       return {
         sheet,
         sheetFocus: focus,
@@ -147,6 +156,7 @@ export function createEditorUiStore(template) {
   // Keep the watermark settings across sessions.
   store.subscribe((state, prev) => {
     if (state.watermark !== prev.watermark) safeSet(WATERMARK_KEY, state.watermark);
+    if (state.exportPrefs !== prev.exportPrefs) safeSet(EXPORT_PREFS_KEY, state.exportPrefs);
   });
 
   return store;

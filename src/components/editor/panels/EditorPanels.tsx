@@ -17,6 +17,7 @@ import MediaStrip from './MediaStrip';
 import TextStrip from './TextStrip';
 import FaceSwapSheet from './FaceSwapSheet';
 import LayersSheet from './LayersSheet';
+import ExportSheet from '../export/ExportSheet';
 import { DRAW_TOOLS } from './drawTools';
 import './panels.css';
 
@@ -29,7 +30,7 @@ const DOCK: DockItem[] = [
   { id: 'canvas', label: 'Canvas', Icon: LayoutGrid, title: 'Canvas colour, bands and watermark' },
 ];
 
-const SHEETS = { text: TextSheet, media: MediaSheet, draw: DrawSheet, canvasColor: CanvasColorSheet, watermark: WatermarkSheet, filters: FiltersSheet, layers: LayersSheet };
+const SHEETS = { text: TextSheet, media: MediaSheet, draw: DrawSheet, canvasColor: CanvasColorSheet, watermark: WatermarkSheet, filters: FiltersSheet, layers: LayersSheet, export: ExportSheet };
 
 // The bottom of the editor: the dock with the open tab's tool strip above it, or, when one of that
 // tab's sheets is open, the strip above the sheet (so its tools stay one tap away).

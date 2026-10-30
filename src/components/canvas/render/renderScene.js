@@ -122,6 +122,17 @@ export function renderScene(scene) {
     return offCanvas.toDataURL('image/png');
   };
 
+  // A copy of the meme as exported (no selection handles), for scaling or encoding.
+  canvas.exportCleanCanvas = () => {
+    renderCanvas(baseImgRef.current, true);
+    const copy = document.createElement('canvas');
+    copy.width = canvas.width;
+    copy.height = canvas.height;
+    copy.getContext('2d')?.drawImage(canvas, 0, 0);
+    renderCanvas(baseImgRef.current, false);
+    return copy;
+  };
+
   canvas.exportCleanImage = (format = 'image/png', quality = 0.92) => {
     renderCanvas(baseImgRef.current, true);
     const res = canvas.toDataURL(format, quality);

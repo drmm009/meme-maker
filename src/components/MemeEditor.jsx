@@ -68,7 +68,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, o
   const { activeCaption, activeSticker, activeImageLayer, currentEditingSocialCard } = useActiveLayer();
 
   const canvasRef = useRef(null);
-  const { exportDropdownOpen, setExportDropdownOpen, exportDropdownRef, handleQuickExport } = useExport({ canvasRef, template });
+  const { memeName, canvasSize, exportBlob, saveToGallery } = useExport({ canvasRef, template, onSaveToGallery, imageFit, isNativeLayout, layoutDef });
   const { isRemovingBg, handleRemoveBackground } = useBackgroundRemoval();
   const faceMorph = useFaceMorph({ canvasRef });
   const {
@@ -96,6 +96,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, o
     handleFlipActiveLayer, handleToggleDieCutSticker, handleSetDieCutColor,
     handleRemoveBackground, isRemovingBg, setShowFaceMorphModal, handleStartMorphFace,
     handleUpdateTemplateMorphProgress, handleChangeFace, handleRevertTemplateFace, handleFinalizeTemplateFace, setIsHoldingCanvasCompare,
+    memeName, canvasSize, exportBlob, saveToGallery,
   };
 
   useEditorShortcuts({
@@ -120,18 +121,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, o
 
   return (
     <div className="meme-editor-container ui-theme animate-fade-in">
-      <EditorTopBar
-        exportDropdownOpen={exportDropdownOpen}
-        exportDropdownRef={exportDropdownRef}
-        handleQuickExport={handleQuickExport}
-        imageFit={imageFit}
-        isNativeLayout={isNativeLayout}
-        layoutDef={layoutDef}
-        onBack={onBack}
-        onSaveToGallery={onSaveToGallery}
-        setExportDropdownOpen={setExportDropdownOpen}
-        template={template}
-      />
+      <EditorTopBar onBack={onBack} />
 
       {draft.offer && <DraftOffer offer={draft.offer} onRestore={draft.restore} onDismiss={draft.dismiss} />}
 
