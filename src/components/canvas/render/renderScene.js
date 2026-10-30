@@ -6,6 +6,7 @@ import { paintHeaderFooter } from './paintHeaderFooter';
 import { paintLayers, reportActiveLayerBox } from './paintLayers';
 import { drawingHandleDrawer, paintDrawings } from './paintDrawings';
 import { drawingBox, isDragDrawing } from '../interaction/drawingHits';
+import { applyPhotoEffects, hasPhotoEffects } from '../draw/photoEffects';
 import { paintWatermark } from './paintWatermark';
 import { paintOverlays } from './paintOverlays';
 
@@ -183,8 +184,12 @@ export function renderScene(scene) {
     paintBase({
       activeIsNativeLayout, activeLayoutDef, baseImgRef, bgFilterCss, canvasFlipX,
       demotivational, imageAreaH, imageAreaW, imageAreaX, imageAreaY, imageCacheRef, imageFit,
-      img, isNativeLayout, liveBgColor: bgColor, renderCanvas, slotImages, slotTransforms, targetCtx
+      img, isNativeLayout, liveBgColor: bgColor, renderCanvas, slotImages, slotTransforms, targetCtx,
+      portrait: { blur: activeFilters?.bgBlur || 0, subjectUrl: activeFilters?.subjectUrl }
     });
+    // Warmth, sharpen and vignette on the photo only.
+    const effects = hasPhotoEffects(activeFilters) ? activeFilters : null;
+    if (effects && filterScope === 'background') applyPhotoEffects(targetCtx, imageAreaX, imageAreaY, imageAreaW, imageAreaH, effects);
 
     paintHeaderFooter({
       canvasBgColor, canvasFooter, canvasH, canvasHeader, canvasW, footerExtH, headerExtH,
@@ -216,6 +221,9 @@ export function renderScene(scene) {
     paintWatermark({
       canvas, imageCacheRef, targetCtx, watermark
     });
+
+    // ...or on the whole meme.
+    if (effects && filterScope !== 'background') applyPhotoEffects(targetCtx, 0, 0, canvas.width, canvas.height, effects);
 
     paintOverlays({
       activeCaption, activeHandleDrawer, applyGlobalFilter, canvas, canvasH, compCanvas, ctx,

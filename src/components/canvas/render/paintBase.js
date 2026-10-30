@@ -1,9 +1,12 @@
 import { drawImageFiltered } from '../../../data/photoFilters';
+import { blurredCopy } from '../draw/photoEffects';
 
 export function paintBase({
   activeIsNativeLayout, activeLayoutDef, baseImgRef, bgFilterCss, canvasFlipX,
   demotivational, imageAreaH, imageAreaW, imageAreaX, imageAreaY, imageCacheRef, imageFit,
-  img, isNativeLayout, liveBgColor, renderCanvas, slotImages, slotTransforms, targetCtx
+  img, isNativeLayout, liveBgColor, renderCanvas, slotImages, slotTransforms, targetCtx,
+  // Background blur: the photo blurred (blur 0..30), with the subject cut out of it on top.
+  portrait = null
 }) {
   // Draw Base Image or Native Layout Slots
   if (activeIsNativeLayout && activeLayoutDef) {
@@ -145,6 +148,23 @@ export function paintBase({
       targetCtx.clip();
     }
     drawImageFiltered(targetCtx, img, bgFilterCss, offsetX, offsetY, drawW, drawH);
+    if (portrait?.blur > 0 && portrait.subjectUrl) {
+      const subject = imageCacheRef.current[portrait.subjectUrl];
+      if (subject) {
+        // The blur scales with the picture, so it looks the same at every canvas size.
+        const blurred = blurredCopy(img, drawW, drawH, portrait.blur * (drawW / 600));
+        if (blurred) drawImageFiltered(targetCtx, blurred, bgFilterCss, offsetX, offsetY, drawW, drawH);
+        drawImageFiltered(targetCtx, subject, bgFilterCss, offsetX, offsetY, drawW, drawH);
+      } else if (!imageCacheRef.current[`${portrait.subjectUrl}#loading`]) {
+        imageCacheRef.current[`${portrait.subjectUrl}#loading`] = true;
+        const cut = new Image();
+        cut.onload = () => {
+          imageCacheRef.current[portrait.subjectUrl] = cut;
+          renderCanvas(baseImgRef.current);
+        };
+        cut.src = portrait.subjectUrl;
+      }
+    }
     targetCtx.restore();
 
     if (demotivational?.enabled) {

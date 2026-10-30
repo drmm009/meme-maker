@@ -72,7 +72,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, o
 
   const canvasRef = useRef(null);
   const { memeName, canvasSize, exportBlob, exportMotion, motionLoops, saveToGallery } = useExport({ canvasRef, template, onSaveToGallery, imageFit, isNativeLayout, layoutDef });
-  const { isRemovingBg, handleRemoveBackground } = useBackgroundRemoval();
+  const { isRemovingBg, handleRemoveBackground, setPortraitBlur } = useBackgroundRemoval();
   const faceMorph = useFaceMorph({ canvasRef });
   const {
     showFaceMorphModal, setShowFaceMorphModal, morphTargetLayerId, setMorphTargetLayerId,
@@ -97,7 +97,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, o
     handleClearDrawings, handleUndoDrawing,
     handleFileUploadImageLayer, updateActiveImageLayer, moveLayer, handleDeleteLayer, handleDuplicateLayer, handleRotateLayer,
     handleFlipActiveLayer, handleToggleDieCutSticker, handleSetDieCutColor,
-    handleRemoveBackground, isRemovingBg, setShowFaceMorphModal, handleStartMorphFace,
+    handleRemoveBackground, setPortraitBlur, isRemovingBg, isNativeLayout, setShowFaceMorphModal, handleStartMorphFace,
     handleUpdateTemplateMorphProgress, handleChangeFace, handleRevertTemplateFace, handleFinalizeTemplateFace, setIsHoldingCanvasCompare,
     memeName, canvasSize, exportBlob, exportMotion, motionLoops, saveToGallery,
   };

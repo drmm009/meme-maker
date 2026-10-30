@@ -26,6 +26,7 @@ vi.mock('./CanvasEditor', async () => {
       activeLayerId: doc.activeLayerId,
       canvasFlipX: doc.canvasFlipX,
       canvasBgColor: doc.canvasBgColor,
+      imageFilters: doc.imageFilters,
       drawTool: ui.drawTool,
       ...ownProps,
     };
@@ -262,6 +263,18 @@ describe('MemeEditor', () => {
     expect(canvas.props.captions[0].stroke).toBe('transparent');
     fireEvent.click(within(panel).getByText('BOTTOM TEXT'));
     expect(canvas.props.activeLayerId).toBe(canvas.props.captions[1].id);
+  }, 30000);
+
+  it('Filters adds warmth, sharpen and vignette, and a background blur for the photo', () => {
+    renderEditor();
+    openSection('AI tools and photo filters');
+    fireEvent.click(within(screen.getByRole('toolbar', { name: 'AI and filter tools' })).getByText('Filters'));
+    const panel = sheet('Filters');
+    expect(Number(within(panel).getByLabelText('Warmth').value)).toBe(0);
+    fireEvent.change(within(panel).getByLabelText('Warmth'), { target: { value: '40' } });
+    fireEvent.change(within(panel).getByLabelText('Vignette'), { target: { value: '60' } });
+    expect(canvas.props.imageFilters).toMatchObject({ warmth: 40, vignette: 60 });
+    expect(within(sheet('Filters')).getByLabelText('Background blur')).toBeTruthy();
   }, 30000);
 
   it('applies a filter preset from AI/Filters and adds the top band from Canvas', () => {

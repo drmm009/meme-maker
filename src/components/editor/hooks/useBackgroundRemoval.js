@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { removeBackground } from '@imgly/background-removal';
 import { blobToDataURL, dataURLToBlob } from '../../../utils/galleryStore';
 import { useMemeEditorStoreApi } from '../store/useMemeEditorStore';
@@ -25,6 +25,7 @@ const reportFailure = (err) => {
 export function useBackgroundRemoval() {
   const store = useMemeEditorStoreApi();
   const [isRemovingBg, setIsRemovingBg] = useState(false);
+  const cuttingSubject = useRef(false);
 
   const run = async (work) => {
     try {
@@ -85,5 +86,27 @@ export function useBackgroundRemoval() {
     }
   };
 
-  return { isRemovingBg, handleRemoveBackground };
+  // Background blur (0..30) on the photo: the first time, the photo's subject is cut out (the same
+  // model as Cut out) and kept with the filters, so it is drawn sharp over the blurred photo.
+  const setPortraitBlur = async (amount) => {
+    const { activeTemplate, imageFilters, setImageFilters, pushHistoryDebounced } = store.getState();
+    const base = activeTemplate?.rawImageUrl || activeTemplate?.imageUrl;
+    if (!base) return;
+    setImageFilters((prev) => ({ ...prev, bgBlur: amount }));
+    if (amount <= 0 || imageFilters?.subjectOf === base) {
+      pushHistoryDebounced();
+      return;
+    }
+    if (cuttingSubject.current) return;
+    cuttingSubject.current = true;
+    await run(async () => {
+      const subjectUrl = await removeImageBackground(base);
+      const s = store.getState();
+      s.setImageFilters((prev) => ({ ...prev, subjectUrl, subjectOf: base }));
+      s.pushHistory();
+    });
+    cuttingSubject.current = false;
+  };
+
+  return { isRemovingBg, handleRemoveBackground, setPortraitBlur };
 }

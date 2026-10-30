@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Circle, Flame, Contrast, Film, SunMoon, Coffee, Blend, Skull, Droplets, Sparkles, Sun, SunDim, SunMedium } from 'lucide-react';
+import { Circle, Flame, Contrast, Film, SunMoon, Coffee, Blend, Skull, Droplets, Sparkles, Sun, SunDim, SunMedium, Thermometer, Focus, Aperture } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Sheet, Section, Row, Slider, TileGrid, Tile, SegmentedControl } from '../../ui';
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
@@ -20,10 +20,14 @@ const ICONS: Record<string, LucideIcon> = {
   original: Circle, 'deep-fried': Flame, punchy: Contrast, vintage: Film, bw: SunMoon,
   sepia: Coffee, invert: Blend, wasted: Skull, blur: Droplets,
 };
+// `base` is the untouched value. Warmth, sharpen and vignette are canvas/draw/photoEffects.
 const ADJUSTMENTS = [
-  { key: 'brightness', label: 'Brightness', min: 40, max: 200, StartIcon: SunDim, EndIcon: Sun },
-  { key: 'contrast', label: 'Contrast', min: 40, max: 250, StartIcon: Contrast, EndIcon: Contrast },
-  { key: 'saturation', label: 'Saturation', min: 0, max: 300, StartIcon: SunMedium, EndIcon: SunMedium },
+  { key: 'brightness', label: 'Brightness', min: 40, max: 200, base: 100, StartIcon: SunDim, EndIcon: Sun },
+  { key: 'contrast', label: 'Contrast', min: 40, max: 250, base: 100, StartIcon: Contrast, EndIcon: Contrast },
+  { key: 'saturation', label: 'Saturation', min: 0, max: 300, base: 100, StartIcon: SunMedium, EndIcon: SunMedium },
+  { key: 'warmth', label: 'Warmth', min: -100, max: 100, base: 0, StartIcon: Thermometer, EndIcon: Thermometer },
+  { key: 'sharpen', label: 'Sharpen', min: 0, max: 100, base: 0, StartIcon: Focus, EndIcon: Focus },
+  { key: 'vignette', label: 'Vignette', min: 0, max: 100, base: 0, StartIcon: Aperture, EndIcon: Aperture },
 ];
 
 const presetLabel = (id: string) => (PRESETS.find((p) => p.id === id)?.name || '').replace(/[^\p{L}\p{N}&' ]/gu, '').trim();
@@ -37,12 +41,15 @@ export default function FiltersSheet({ actions, onClose }: { actions: EditorActi
   const patchLayer = useMemeEditorStore((s: { patchLayer: (key: string, id: string, patch: object) => void }) => s.patchLayer);
   const pushHistoryDebounced = useMemeEditorStore((s: { pushHistoryDebounced: () => void }) => s.pushHistoryDebounced);
   const { id, image } = useSelection();
+  // Multi-panel layouts have several photos: background blur is for a single one.
+  const isLayout = Boolean(actions.isNativeLayout);
   const [target, setTarget] = useState<'layer' | 'photo' | 'meme'>(image ? 'layer' : imageFilters.filterScope === 'background' ? 'photo' : 'meme');
   const onLayer = target === 'layer' && Boolean(image && id);
 
   const layerValues = (image?.filters && typeof image.filters === 'object' ? image.filters : {}) as Record<string, number>;
   const preset = onLayer ? String(image?.filterId || 'original') : String(imageFilters.preset || 'original');
-  const value = (key: string) => Number((onLayer ? layerValues[key] : imageFilters[key]) ?? (key === 'saturation' ? imageFilters.saturate ?? 100 : 100));
+  const base = (key: string) => ADJUSTMENTS.find((a) => a.key === key)?.base ?? 100;
+  const value = (key: string) => Number((onLayer ? layerValues[key] : imageFilters[key]) ?? (key === 'saturation' ? imageFilters.saturate ?? 100 : base(key)));
 
   const applyPreset = (p: FilterPreset) => {
     if (onLayer) actions.updateActiveImageLayer({ filterId: p.id, filter: p.filterString, filters: p.values });
@@ -86,6 +93,14 @@ export default function FiltersSheet({ actions, onClose }: { actions: EditorActi
           </Row>
         ))}
       </Section>
+      {!onLayer && !isLayout && (
+        <Section title="Portrait" rule>
+          <Row label="Background blur">
+            <Slider label="Background blur" min={0} max={30} value={Number(imageFilters.bgBlur || 0)} onChange={(v) => actions.setPortraitBlur(v)} StartIcon={Focus} EndIcon={Droplets} />
+          </Row>
+          <p className="ie-empty">{actions.isRemovingBg ? 'Finding the subject…' : 'Blurs the photo behind the person or thing in front.'}</p>
+        </Section>
+      )}
 
     </Sheet>
   );

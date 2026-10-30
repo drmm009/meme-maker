@@ -1,6 +1,7 @@
 import { THEME_BADGE_BG, THEME_CORAL, drawDeleteHandle, drawResizeHandle, drawRotateHandle, drawSelectionBox, drawSideHandle } from './handles';
 import { getFilterCss, drawImageFiltered } from '../../../data/photoFilters';
 import { applyShadow, compositeFor, cornerPx, isFramed, roundRectPath } from '../draw/layerLook';
+import { applyPhotoEffects, hasPhotoEffects } from '../draw/photoEffects';
 
 export function paintImageLayer({
   activeLayerId, baseImgRef, canvas, getImageLayerCenterY, imageCacheRef, isDrawingMode,
@@ -19,13 +20,16 @@ if (cached) {
   if (imgLayer.filters || imgLayer.filter) {
     const filterObj = imgLayer.filters || imgLayer.filter;
     const filterCss = getFilterCss(filterObj);
-    if (filterCss !== 'none') {
+    // Warmth, sharpen and vignette (canvas/draw/photoEffects) ride along in the filters object.
+    const effects = typeof filterObj === 'object' ? filterObj : null;
+    if (filterCss !== 'none' || hasPhotoEffects(effects)) {
       const tempCanvas = document.createElement('canvas');
       tempCanvas.width = baseW;
       tempCanvas.height = baseH;
       const tempCtx = tempCanvas.getContext('2d');
       // iOS-safe: uses pixel-level fallback on iOS Safari
       drawImageFiltered(tempCtx, cached, filterCss, 0, 0, baseW, baseH);
+      if (hasPhotoEffects(effects)) applyPhotoEffects(tempCtx, 0, 0, baseW, baseH, effects);
       drawSource = tempCanvas;
     }
   }
