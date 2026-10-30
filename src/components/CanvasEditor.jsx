@@ -21,6 +21,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     onUpdateStickerBounds,
     onUpdateImageLayerBounds,
     onUpdateCaptionText,
+    onUpdateDrawing,
     isNativeLayout,
     layoutDef,
     onUpdateSlotTransform,
@@ -46,6 +47,9 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
   const demotivational = useMemeEditorStore((s) => s.demotivational);
   const canvasFlipX = useMemeEditorStore((s) => s.canvasFlipX);
   const watermark = useEditorUiStore((s) => s.watermark);
+  const drawTool = useEditorUiStore((s) => s.drawTool);
+  // Shapes and censor regions can be picked and adjusted unless a freehand brush is in use.
+  const showDrawingHandles = !isDrawingMode || drawTool === 'shape' || drawTool === 'censor';
 
   // The colour picker previews the background through a window event before committing to the store.
   const [liveBgColor, setLiveBgColor] = useState(canvasBgColor);
@@ -142,7 +146,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     dragTarget, editableRef, focusTextarea, getCaptionCenterY, getImageLayerCenterY,
     getStickerCenterY, headerExtH, imageCacheRef, isDragging, isDrawingMode,
     isFooterEnabled, isHeaderEnabled, onAddDrawing, onDeleteLayer, onSelectLayer,
-    onUpdateCaptionBounds, onUpdateImageLayerBounds, onUpdateSlotTransform,
+    onUpdateCaptionBounds, onUpdateDrawing, onUpdateImageLayerBounds, onUpdateSlotTransform,
     onUpdateStickerBounds, requestRedraw, setEditingCaptionId, snappingLines,
     totalCanvasH, wrapperRef
   });
@@ -156,13 +160,13 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     canvasW, captions, compCanvasRef, demotivational, dragTarget, drawings, footerExtH,
     getCaptionCenterY, getImageLayerCenterY, getStickerCenterY, headerExtH, imageCacheRef,
     imageFit, imageLayers, imgSrc, isDragging, isDrawingMode, isFooterEnabled, isHeaderEnabled,
-    isNativeLayout, liveBgColor, loadingMediaRef, naturalSize, setNaturalSize, slotImages,
-    slotTransforms, snappingLines, stickers, totalCanvasH, watermark
+    isNativeLayout, liveBgColor, loadingMediaRef, naturalSize, setNaturalSize, showDrawingHandles,
+    slotImages, slotTransforms, snappingLines, stickers, totalCanvasH, watermark
   };
 
   useEffect(() => {
     renderScene(sceneRef.current);
-  }, [captions, stickers, activeLayerId, imageLayers, slotImages, slotTransforms, activeIsNativeLayout, editingCaptionId, aspectRatio, imageFit, watermark, drawings, isDrawingMode, imgSrc, filters, liveBgColor, canvasHeader, canvasFooter, demotivational, canvasFlipX, redrawTick]);
+  }, [captions, stickers, activeLayerId, imageLayers, slotImages, slotTransforms, activeIsNativeLayout, editingCaptionId, aspectRatio, imageFit, watermark, drawings, isDrawingMode, imgSrc, filters, liveBgColor, canvasHeader, canvasFooter, demotivational, canvasFlipX, showDrawingHandles, redrawTick]);
 
   // Keep focus on active caption whenever selected (not for social cards). Runs on a new
   // selection or edit only, not on every keystroke, so the cursor isn't moved while typing.

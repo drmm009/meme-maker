@@ -1,4 +1,22 @@
 import { paintDragDrawing } from '../draw/shapes';
+import { drawingBox, drawingHandles } from '../interaction/drawingHits';
+import { drawPointHandle, drawSelectionBox } from './handles';
+
+// Screen pixels across a shape's grab points.
+const POINT_HANDLE_PX = 7;
+
+// The selected shape or censor region's selection UI: a box around it (not for lines and arrows)
+// and a grab point on each end or corner. `scale` is canvas pixels per screen pixel.
+export function drawingHandleDrawer(d, scale = 1) {
+  return (uiCtx) => {
+    const handles = drawingHandles(d);
+    if (handles.length === 4) {
+      const b = drawingBox(d);
+      drawSelectionBox(uiCtx, b.x - b.w / 2, b.y - b.h / 2, b.w, b.h, 6 * scale);
+    }
+    handles.forEach(({ at }) => drawPointHandle(uiCtx, at.x, at.y, POINT_HANDLE_PX * scale));
+  };
+}
 
 export function paintDrawings({
   drawings, targetCtx

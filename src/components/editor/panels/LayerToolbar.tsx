@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { RefObject } from 'react';
-import { Trash2, Settings, SlidersHorizontal, Copy, Scaling, FlipHorizontal, Scissors, Crop, Wand2, Ellipsis, Layers } from 'lucide-react';
+import { Trash2, Settings, SlidersHorizontal, Copy, Scaling, FlipHorizontal, Scissors, Crop, Wand2, Ellipsis, Layers, Palette } from 'lucide-react';
 import { FloatingToolbar } from '../../ui';
 import type { ToolbarItem } from '../../ui';
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
@@ -27,9 +27,10 @@ function SizeIcon() {
 }
 
 export default function LayerToolbar({ canvasRef, actions }: { canvasRef: RefObject<LayerCanvas | null>; actions: EditorActions }) {
-  const { id, kind, caption, sticker, image } = useSelection();
+  const { id, kind, caption, sticker, image, drawing } = useSelection();
   const sheet: string | null = useEditorUiStore((s: { sheet: string | null }) => s.sheet);
   const openSheet = useEditorUiStore((s: { openSheet: (sheet: string, focus?: string | null) => void }) => s.openSheet);
+  const pickDrawTool = useEditorUiStore((s: { pickDrawTool: (tool: string) => void }) => s.pickDrawTool);
   const faceMorph = useMemeEditorStore((s: { templateFaceMorph: unknown }) => s.templateFaceMorph);
   const [box, setBox] = useState<LayerBox | null>(null);
   const [pressing, setPressing] = useState(false);
@@ -115,6 +116,13 @@ export default function LayerToolbar({ canvasRef, actions }: { canvasRef: RefObj
       { id: 'cutout', label: image.originalUrl ? 'Undo' : 'Cut out', title: 'Remove the background', Icon: Wand2, onClick: () => actions.handleRemoveBackground() },
       { id: 'more', label: 'More', Icon: Ellipsis, onClick: () => openSheet('media') },
       layers,
+      del,
+    ];
+  } else if (kind === 'shape' && drawing) {
+    // Style opens the Draw sheet on this shape's tool; its settings then change this shape.
+    items = [
+      { id: 'style', label: 'Style', title: drawing.type === 'censor' ? 'Censor style and strength' : 'Shape, colour and width', Icon: Palette, onClick: () => pickDrawTool(drawing.type) },
+      dup,
       del,
     ];
   }

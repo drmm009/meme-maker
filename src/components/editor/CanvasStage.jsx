@@ -18,6 +18,7 @@ export default function CanvasStage({
   const captions = useMemeEditorStore((s) => s.captions);
   const stickers = useMemeEditorStore((s) => s.stickers);
   const imageLayers = useMemeEditorStore((s) => s.imageLayers);
+  const drawings = useMemeEditorStore((s) => s.drawings);
   const activeLayerId = useMemeEditorStore((s) => s.activeLayerId);
   const setActiveLayerId = useMemeEditorStore((s) => s.setActiveLayerId);
   const activeTemplate = useMemeEditorStore((s) => s.activeTemplate);
@@ -49,6 +50,11 @@ export default function CanvasStage({
     setActiveLayerId(id || null);
     setShowBubbleBottomSheet(false);
     if (!id || !sheet || !LAYER_SHEETS.includes(sheet)) return;
+    // A shape or censor region has no layer sheet: its quick tools float over it.
+    if ((drawings || []).some((d) => d.id === id)) {
+      closeSheet();
+      return;
+    }
     const target = captions.some((c) => c.id === id) ? 'text'
       : stickers.some((s) => s.id === id) || imageLayers.some((l) => l.id === id) ? 'media' : sheet;
     if (target !== sheet) openSheet(target);
@@ -101,6 +107,7 @@ export default function CanvasStage({
           onUpdateStickerBounds={(id, props) => patchLayer('stickers', id, props)}
           onUpdateImageLayerBounds={(id, props) => patchLayer('imageLayers', id, props)}
           onUpdateCaptionText={updateCaptionText}
+          onUpdateDrawing={(id, props) => patchLayer('drawings', id, props)}
           onAddDrawing={onAddDrawing}
           isDrawingMode={isDrawingMode}
         />

@@ -15,7 +15,9 @@ export function reportActiveLayerBox(canvas, box) {
 export function paintLayers({
   activeLayerId, baseImgRef, canvas, captions, dragTarget,
   getCaptionCenterY, getImageLayerCenterY, getStickerCenterY, imageCacheRef, imageLayers,
-  isDragging, isDrawingMode, loadingMediaRef, renderCanvas, stickers, targetCtx
+  isDragging, isDrawingMode, loadingMediaRef, renderCanvas, stickers, targetCtx,
+  // False while a shape is selected instead: the scene reports that one's box.
+  reportBox = true
 }) {
   let activeHandleDrawer = null;
   const setActiveHandleDrawer = (drawer) => { activeHandleDrawer = drawer; };
@@ -56,6 +58,6 @@ export function paintLayers({
     }
   });
 
-  reportActiveLayerBox(canvas, activeBox);
+  if (reportBox) reportActiveLayerBox(canvas, activeBox);
   return activeHandleDrawer;
 }

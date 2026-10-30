@@ -331,6 +331,32 @@ describe('MemeEditor', () => {
     expect(canvas.props.drawings).toHaveLength(0);
   }, 30000);
 
+  it('a selected shape can be copied, deleted, restyled and moved', () => {
+    renderEditor();
+    act(() => canvas.props.onAddDrawing({ id: 'arrow-1', type: 'shape', shape: 'arrow', color: '#ffffff', size: 6, points: [{ x: 0, y: 0 }, { x: 80, y: 0 }] }));
+    act(() => canvas.props.onSelectLayer('arrow-1'));
+    expect(['Style', 'Copy', 'Delete'].every((name) => within(layerToolbar()).queryByText(name))).toBe(true);
+
+    fireEvent.click(within(layerToolbar()).getByText('Copy'));
+    expect(canvas.props.drawings).toHaveLength(2);
+    expect(canvas.props.drawings[1].points[0]).toEqual({ x: 24, y: 24 });
+    expect(canvas.props.activeLayerId).toBe(canvas.props.drawings[1].id);
+    fireEvent.click(within(layerToolbar()).getByText('Delete'));
+    expect(canvas.props.drawings.map((d) => d.id)).toEqual(['arrow-1']);
+
+    // Style opens the Shapes sheet on the shape: it shows and changes that shape.
+    act(() => canvas.props.onSelectLayer('arrow-1'));
+    fireEvent.click(within(layerToolbar()).getByText('Style'));
+    expect(canvas.props.drawTool).toBe('shape');
+    expect(within(sheet('Shapes')).getByText('Arrow').closest('button').getAttribute('aria-pressed')).toBe('true');
+    fireEvent.click(within(sheet('Shapes')).getByText('Box'));
+    expect(canvas.props.drawings[0].shape).toBe('rect');
+
+    // Dragging it on the canvas moves it.
+    act(() => canvas.props.onUpdateDrawing('arrow-1', { points: [{ x: 10, y: 10 }, { x: 90, y: 10 }] }));
+    expect(canvas.props.drawings[0].points[0]).toEqual({ x: 10, y: 10 });
+  }, 30000);
+
   it('clears the drawing from the brush settings', () => {
     renderEditor();
     act(() => canvas.props.onAddDrawing({ points: [0, 0, 10, 10], color: '#fff', size: 4, tool: 'brush' }));

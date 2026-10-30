@@ -174,3 +174,19 @@ export const drawRotateHandle = (uiCtx, startX, startY, knobX, knobY) => {
   uiCtx.fill();
   uiCtx.restore();
 };
+
+// A round grab point (a shape's end or corner), radius `r` in canvas pixels.
+export const drawPointHandle = (uiCtx, hx, hy, r) => {
+  uiCtx.save();
+  uiCtx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+  uiCtx.shadowBlur = r * 0.7;
+  uiCtx.beginPath();
+  uiCtx.arc(hx, hy, r, 0, Math.PI * 2);
+  uiCtx.fillStyle = THEME_BADGE_BG;
+  uiCtx.fill();
+  uiCtx.shadowColor = 'transparent';
+  uiCtx.strokeStyle = THEME_CORAL;
+  uiCtx.lineWidth = Math.max(2, r * 0.3);
+  uiCtx.stroke();
+  uiCtx.restore();
+};

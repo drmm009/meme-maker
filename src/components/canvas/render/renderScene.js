@@ -3,8 +3,9 @@ import { sampleFaceLighting } from '../draw/faceLighting';
 import { getImageArea } from './imageArea';
 import { paintBase } from './paintBase';
 import { paintHeaderFooter } from './paintHeaderFooter';
-import { paintLayers } from './paintLayers';
-import { paintDrawings } from './paintDrawings';
+import { paintLayers, reportActiveLayerBox } from './paintLayers';
+import { drawingHandleDrawer, paintDrawings } from './paintDrawings';
+import { drawingBox, isDragDrawing } from '../interaction/drawingHits';
 import { paintWatermark } from './paintWatermark';
 import { paintOverlays } from './paintOverlays';
 
@@ -17,8 +18,8 @@ export function renderScene(scene) {
     canvasW, captions, compCanvasRef, demotivational, dragTarget, drawings, footerExtH,
     getCaptionCenterY, getImageLayerCenterY, getStickerCenterY, headerExtH, imageCacheRef,
     imageFit, imageLayers, imgSrc, isDragging, isDrawingMode, isFooterEnabled, isHeaderEnabled,
-    isNativeLayout, liveBgColor, loadingMediaRef, naturalSize, setNaturalSize, slotImages,
-    slotTransforms, snappingLines, stickers, totalCanvasH, watermark
+    isNativeLayout, liveBgColor, loadingMediaRef, naturalSize, setNaturalSize, showDrawingHandles,
+    slotImages, slotTransforms, snappingLines, stickers, totalCanvasH, watermark
   } = scene;
 
   const canvas = canvasRef.current;
@@ -190,15 +191,27 @@ export function renderScene(scene) {
       isFooterEnabled, isHeaderEnabled, liveBgColor, targetCtx
     });
 
-    const activeHandleDrawer = paintLayers({
+    // A selected shape or censor region gets the selection UI a selected layer would.
+    const activeDrawing = showDrawingHandles
+      ? (drawings || []).find((d) => d.id === activeLayerId && isDragDrawing(d))
+      : null;
+
+    let activeHandleDrawer = paintLayers({
       activeLayerId, baseImgRef, canvas, captions, dragTarget,
       getCaptionCenterY, getImageLayerCenterY, getStickerCenterY, imageCacheRef, imageLayers,
-      isDragging, isDrawingMode, loadingMediaRef, renderCanvas, stickers, targetCtx
+      isDragging, isDrawingMode, loadingMediaRef, renderCanvas, stickers, targetCtx,
+      reportBox: !activeDrawing
     });
 
     paintDrawings({
       drawings, targetCtx
     });
+
+    if (activeDrawing) {
+      reportActiveLayerBox(canvas, drawingBox(activeDrawing));
+      const shown = canvas.getBoundingClientRect?.().width;
+      activeHandleDrawer = drawingHandleDrawer(activeDrawing, shown ? canvas.width / shown : 1);
+    }
 
     paintWatermark({
       canvas, imageCacheRef, targetCtx, watermark

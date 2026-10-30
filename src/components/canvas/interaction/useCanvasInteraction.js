@@ -7,6 +7,7 @@ import { getHoverCursor } from './hoverCursor';
 import { getDragCenter, getDragStart, getRotation, moveLayer, resizeCaption, resizeImageLayer, resizeSticker } from './dragMath';
 import { paintStrokeDot, paintStrokeSegment, startStroke } from './freehand';
 import { isTooSmall, paintDragDrawing, paintDragGuide, startDragDrawing } from '../draw/shapes';
+import { dragDrawingHandle, hitDrawingAt, hitDrawingHandle, isDragDrawing, moveDrawingPoints } from './drawingHits';
 import { useMemeEditorStore } from '../../editor/store/useMemeEditorStore';
 import { useEditorUiStore } from '../../editor/store/useEditorUiStore';
 import { isSocialCardCaption } from '../../editor/memeEditorUtils';
@@ -14,7 +15,15 @@ import { isSocialCardCaption } from '../../editor/memeEditorUtils';
 // A second tap within this many ms counts as a double tap.
 const DOUBLE_TAP_MS = 350;
 
+// How close (in screen pixels) a press has to be to grab a shape's end or corner, or its line.
+const DRAWING_HANDLE_PX = 22;
+const DRAWING_SLACK_PX = 10;
+
+// Canvas pixels per screen pixel.
+const screenScale = (canvas) => canvas.width / Math.max(1, canvas.getBoundingClientRect().width);
+
 // Pointer input on the meme canvas: drawing, selecting, dragging, rotating and resizing layers,
+// moving and resizing shapes and censor regions,
 // panning or pinch-zooming the photos in a multi-panel layout, and zooming the editor's view
 // (canvasView, from useCanvasView). The maths lives in the modules imported above; this hook keeps
 // the gesture state and calls the editor's handlers.
@@ -23,7 +32,7 @@ export function useCanvasInteraction({
   dragTarget, editableRef, focusTextarea, getCaptionCenterY, getImageLayerCenterY,
   getStickerCenterY, headerExtH, imageCacheRef, isDragging, isDrawingMode,
   isFooterEnabled, isHeaderEnabled, onAddDrawing, onDeleteLayer, onSelectLayer,
-  onUpdateCaptionBounds, onUpdateImageLayerBounds, onUpdateSlotTransform,
+  onUpdateCaptionBounds, onUpdateDrawing, onUpdateImageLayerBounds, onUpdateSlotTransform,
   onUpdateStickerBounds, requestRedraw, setEditingCaptionId, snappingLines,
   totalCanvasH, wrapperRef
 }) {
@@ -54,6 +63,7 @@ export function useCanvasInteraction({
   const imageLayers = useMemeEditorStore((s) => s.imageLayers);
   const slotImages = useMemeEditorStore((s) => s.slotImages);
   const slotTransforms = useMemeEditorStore((s) => s.slotTransforms);
+  const drawings = useMemeEditorStore((s) => s.drawings);
 
   const bands = { isHeaderEnabled, isFooterEnabled, headerExtH, canvasH };
   const getScene = (canvas) => ({
@@ -124,6 +134,23 @@ export function useCanvasInteraction({
     return true;
   };
 
+  // A shape or censor region (of `type`, if given) under the pointer: the selected one's ends and
+  // corners first, then the topmost one. Grabbing selects it and starts moving or resizing it.
+  const grabDrawing = (coords, canvas, type) => {
+    const scale = screenScale(canvas);
+    const active = drawings.find((d) => d.id === activeLayerId && isDragDrawing(d) && (!type || d.type === type));
+    const handle = active ? hitDrawingHandle(active, coords, DRAWING_HANDLE_PX * scale) : null;
+    const target = handle ? active : hitDrawingAt(drawings, coords, DRAWING_SLACK_PX * scale, type);
+    if (!target) return false;
+    if (onSelectLayer) onSelectLayer(target.id);
+    setEditingCaptionId(null);
+    isDragging.current = true;
+    hasDragged.current = false;
+    dragTarget.current = { type: handle ? 'drawing_handle' : 'drawing', id: target.id, handle, points: target.points };
+    dragStartCoords.current = coords;
+    return true;
+  };
+
   // A second finger turns whatever the first one started (a drag, a stroke, a shape) into a zoom
   // of the view: the half-done stroke or shape is dropped and the canvas redrawn without it.
   const cancelGesture = () => {
@@ -170,6 +197,8 @@ export function useCanvasInteraction({
     }
 
     if (isDrawingMode && (drawTool === 'shape' || drawTool === 'censor')) {
+      // Pressing an existing one of the kind being drawn moves it; anywhere else starts a new one.
+      if (grabDrawing(coords, canvas, drawTool)) return;
       const snapshot = document.createElement('canvas');
       snapshot.width = canvas.width;
       snapshot.height = canvas.height;
@@ -178,6 +207,8 @@ export function useCanvasInteraction({
         drawing: startDragDrawing(drawTool, coords, { shape: shapeKind, color: brushColor, size: brushSize, fill: shapeFill, censor: censorMode, strength: censorStrength }),
         snapshot,
       };
+      // Counts as drawing, so the window listeners follow the drag and its release off the canvas.
+      isDrawingActive.current = true;
       return;
     }
 
@@ -197,6 +228,8 @@ export function useCanvasInteraction({
       onUpdateCaptionBounds(handleHit.id, { hasCustomWidth: false, width: 0.9 });
       return;
     }
+    // Shapes and censor regions are drawn over the layers, so they are picked first.
+    if (!handleHit && grabDrawing(coords, canvas)) return;
     const hit = handleHit || hitLayerAt(scene, coords) || hitBandCaption(captions, coords, bands);
 
     if (!hit) {
@@ -237,12 +270,19 @@ export function useCanvasInteraction({
     if (dragDrawing.current) {
       const { drawing, snapshot } = dragDrawing.current;
       dragDrawing.current = null;
+      isDrawingActive.current = false;
       const ctx = canvasRef.current?.getContext('2d');
       if (ctx) {
         ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
         ctx.drawImage(snapshot, 0, 0);
       }
-      if (!isTooSmall(drawing) && onAddDrawing) onAddDrawing(drawing);
+      // The new one is selected, so it can be adjusted straight away; a tap deselects.
+      if (!isTooSmall(drawing) && onAddDrawing) {
+        onAddDrawing(drawing);
+        if (onSelectLayer) onSelectLayer(drawing.id);
+      } else if (onSelectLayer) {
+        onSelectLayer(null);
+      }
       return;
     }
     if (isDrawingMode && isDrawingActive.current) {
@@ -371,6 +411,14 @@ export function useCanvasInteraction({
       return;
     }
     if (target.type === 'empty-slot') return;
+
+    if (target.type === 'drawing' || target.type === 'drawing_handle') {
+      const points = target.type === 'drawing'
+        ? moveDrawingPoints(target.points, coords.x - dragStartCoords.current.x, coords.y - dragStartCoords.current.y)
+        : dragDrawingHandle(target.points, target.handle, coords);
+      scheduleDragBatch(() => onUpdateDrawing?.(target.id, { points }));
+      return;
+    }
 
     const start = initialLayerPos.current;
     const id = target.id;

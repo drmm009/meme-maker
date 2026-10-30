@@ -3,6 +3,7 @@ import { getNonOverlappingPosition } from '../../../utils/captionLayout';
 import { isSocialCardCaption, isVideoUrl } from '../memeEditorUtils';
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
 import { useEditorUiStore } from '../store/useEditorUiStore';
+import { duplicateDrawing, isDragDrawing } from '../../canvas/interaction/drawingHits';
 
 export function useLayerActions({ activeCaption, activeImageLayer, activeSticker, updateActiveCaptionProps }) {
   const activeLayerId = useMemeEditorStore((s) => s.activeLayerId);
@@ -25,6 +26,8 @@ export function useLayerActions({ activeCaption, activeImageLayer, activeSticker
   const setSlotTransforms = useMemeEditorStore((s) => s.setSlotTransforms);
   const setShowEmojiModal = useEditorUiStore((s) => s.setShowEmojiModal);
   const setShowMemeStickersModal = useEditorUiStore((s) => s.setShowMemeStickersModal);
+  const drawings = useMemeEditorStore((s) => s.drawings);
+  const setDrawings = useMemeEditorStore((s) => s.setDrawings);
 
   // Horizontal Flip / Mirror for Stickers & Media Overlays
   const handleFlipActiveLayer = () => {
@@ -160,6 +163,13 @@ export function useLayerActions({ activeCaption, activeImageLayer, activeSticker
         const handleDeleteLayer = (targetId) => {
     const idToDelete = (typeof targetId === 'string' && targetId) ? targetId : activeLayerId;
     if (!idToDelete) return;
+    // A shape or censor region.
+    if ((drawings || []).some((d) => d.id === idToDelete)) {
+      setDrawings(drawings.filter((d) => d.id !== idToDelete));
+      if (activeLayerId === idToDelete) setActiveLayerId(null);
+      pushHistory();
+      return;
+    }
     const capToDelete = captions.find(c => c.id === idToDelete);
     const isHeader = capToDelete?.isHeaderCaption || idToDelete === 'header' || (activeCaption?.isHeaderCaption && idToDelete === activeCaption?.id);
     const isFooter = capToDelete?.isFooterCaption || idToDelete === 'footer' || (activeCaption?.isFooterCaption && idToDelete === activeCaption?.id);
@@ -195,6 +205,15 @@ export function useLayerActions({ activeCaption, activeImageLayer, activeSticker
   const handleDuplicateLayer = (targetId) => {
     const idToDup = (typeof targetId === 'string' && targetId) ? targetId : activeLayerId;
     if (!idToDup) return;
+    // A shape or censor region: the copy goes on top.
+    const drawing = (drawings || []).find((d) => d.id === idToDup && isDragDrawing(d));
+    if (drawing) {
+      const newId = `${drawing.type}-${Date.now()}`;
+      setDrawings([...drawings, duplicateDrawing(drawing, newId)]);
+      setActiveLayerId(newId);
+      pushHistory();
+      return;
+    }
     const list = getOrderedLayers();
     const idx = list.findIndex(i => i.id === idToDup);
     if (idx === -1) return;
