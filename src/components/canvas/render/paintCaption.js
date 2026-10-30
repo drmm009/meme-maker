@@ -6,7 +6,7 @@ import { drawBreakingNewsChyron, getBreakingNewsHeight } from '../draw/chyron';
 import { drawTweetCard, getTweetCardHeight } from '../draw/socialCards/tweet';
 import { drawInstagramCard, getInstagramCardHeight } from '../draw/socialCards/instagram';
 import { drawSpeechBubble } from '../draw/speechBubble';
-import { applyCaptionFont, captionGradient, captionLineHeight, fittedFontSize, spacedText, underlineMetrics } from '../draw/captionFont';
+import { applyCaptionFont, captionGradient, captionLineHeight, ensureIndicFonts, fittedFontSize, spacedText, underlineMetrics } from '../draw/captionFont';
 
 export function paintCaption({
   activeLayerId, canvas, dragTarget, getCaptionCenterY, isDragging, isDrawingMode, layer,
@@ -47,6 +47,7 @@ if (cap.blur && Number(cap.blur) > 0) {
 }
 
 const fontFamily = cap.fontFamily || 'Impact, sans-serif';
+ensureIndicFonts(cap.text, () => window.__memeCanvasForceRender?.());
 const fontSize = fittedFontSize(targetCtx, { ...cap, fontFamily }, (cap.width || 0.9) * canvas.width);
 applyCaptionFont(targetCtx, { ...cap, fontFamily }, fontSize);
 const align = cap.align || 'center';

@@ -1,12 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import { MIN_FIT_SIZE, applyCaptionFont, captionFont, captionGradient, captionLineHeight, fittedFontSize, spacedText } from './captionFont';
+import { MIN_FIT_SIZE, applyCaptionFont, captionFont, captionGradient, captionLineHeight, fittedFontSize, spacedText, withIndicFallback } from './captionFont';
 import { familyFromFileName, toCustomFont } from '../../../utils/customFonts';
 
 describe('caption text style', () => {
   it('sets the font and letter spacing (a fraction of the font size) where the browser supports it', () => {
     const ctx = { font: '', letterSpacing: '0px' } as unknown as CanvasRenderingContext2D;
     applyCaptionFont(ctx, { fontFamily: 'Anton, sans-serif', letterSpacing: 0.1, italic: true }, 50);
-    expect(ctx.font).toBe('italic bold 50px Anton, sans-serif');
+    expect(ctx.font).toBe('italic bold 50px Anton, "Mukta", "Baloo Bhai 2", sans-serif');
     expect((ctx as unknown as { letterSpacing: string }).letterSpacing).toBe('5px');
     applyCaptionFont(ctx, {}, 40);
     expect((ctx as unknown as { letterSpacing: string }).letterSpacing).toBe('0px');
@@ -14,7 +14,7 @@ describe('caption text style', () => {
     const old = { font: '' } as unknown as CanvasRenderingContext2D;
     applyCaptionFont(old, { letterSpacing: 0.2 }, 40);
     expect('letterSpacing' in old).toBe(false);
-    expect(captionFont({}, 40)).toBe('bold 40px Impact, sans-serif');
+    expect(captionFont({}, 40)).toBe('bold 40px Impact, "Mukta", "Baloo Bhai 2", sans-serif');
   });
 
   it('spaces lines by lineHeight times the font size (1.2 by default)', () => {
@@ -79,5 +79,13 @@ describe('letter spacing where the canvas has none (Safari)', () => {
     expect(spacedText(spacingCtx, 'AB', { letterSpacing: 0.1 }, 40)).toBe('AB');
     expect(spacedText(noSpacingCtx, 'AB', {}, 40)).toBe('AB');
     expect(spacedText(noSpacingCtx, 'AB', { letterSpacing: -0.1 }, 40)).toBe('AB');
+  });
+});
+
+describe('Hindi and Gujarati in any font', () => {
+  it('tries the bold Indic fonts before the generic family', () => {
+    expect(withIndicFallback('Impact, sans-serif')).toBe('Impact, "Mukta", "Baloo Bhai 2", sans-serif');
+    expect(withIndicFallback('"Permanent Marker", "Comic Sans MS", cursive')).toBe('"Permanent Marker", "Comic Sans MS", "Mukta", "Baloo Bhai 2", cursive');
+    expect(withIndicFallback('"My Font"')).toBe('"My Font", "Mukta", "Baloo Bhai 2"');
   });
 });

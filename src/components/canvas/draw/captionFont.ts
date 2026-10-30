@@ -3,13 +3,39 @@ import { wrapText } from './text';
 
 type FontProps = Pick<MemeCaption, 'bold' | 'italic' | 'fontFamily' | 'letterSpacing'>;
 
+// Bold Hindi (Devanagari) and Gujarati fonts, for letters a Latin font doesn't have.
+export const INDIC_FALLBACK = '"Mukta", "Baloo Bhai 2"';
+const GENERIC = /^(sans-serif|serif|cursive|monospace|fantasy|system-ui)$/i;
+
+// A font list with the Indic fonts tried before the generic family, so Hindi or Gujarati typed in
+// Impact (say) comes out bold rather than in the phone's plain fallback.
+export function withIndicFallback(family: string): string {
+  const parts = family.split(',').map((p) => p.trim()).filter(Boolean);
+  const generic = parts.findIndex((p) => GENERIC.test(p));
+  const at = generic === -1 ? parts.length : generic;
+  return [...parts.slice(0, at), INDIC_FALLBACK, ...parts.slice(at)].join(', ');
+}
+
 // The canvas font for a caption. Captions are bold unless `bold` is false; measuring, hit testing
 // and drawing all use this so a caption's box always fits its text.
 export const captionFont = (
   cap: Pick<MemeCaption, 'bold' | 'italic' | 'fontFamily'>,
   fontSize: number,
   fallbackFamily = 'Impact, sans-serif'
-): string => `${cap.italic ? 'italic ' : ''}${cap.bold === false ? 'normal' : 'bold'} ${fontSize}px ${cap.fontFamily || fallbackFamily}`;
+): string => `${cap.italic ? 'italic ' : ''}${cap.bold === false ? 'normal' : 'bold'} ${fontSize}px ${withIndicFallback(cap.fontFamily || fallbackFamily)}`;
+
+const INDIC_TEXT = /[ऀ-ॿ઀-૿]/;
+let indicRequested = false;
+
+// A canvas doesn't make the page download a web font, so the first time a caption has Hindi or
+// Gujarati letters the fallback fonts are asked for, and the meme redrawn once they arrive.
+export function ensureIndicFonts(text: string | undefined, redraw: () => void): void {
+  if (indicRequested || !text || !INDIC_TEXT.test(text) || typeof document === 'undefined' || !document.fonts?.load) return;
+  indicRequested = true;
+  Promise.all([document.fonts.load('bold 48px Mukta', 'अ'), document.fonts.load('bold 48px "Baloo Bhai 2"', 'અ')])
+    .then(redraw)
+    .catch(() => {});
+}
 
 // Sets the caption's font and letter spacing (`letterSpacing` is a fraction of the font size) on
 // ctx. Browsers without canvas letter spacing (Safari) get it from spacedText instead.

@@ -161,5 +161,12 @@ export const FONTS = [
   { id: 'Pacifico', name: 'Pacifico (Script)', family: 'Pacifico, cursive' },
   { id: 'Lobster', name: 'Lobster (Retro Script)', family: 'Lobster, cursive' },
   { id: 'Playfair Display', name: 'Playfair Display (Serif)', family: '"Playfair Display", Georgia, serif' },
-  { id: 'Press Start 2P', name: 'Press Start 2P (Pixel)', family: '"Press Start 2P", monospace' }
+  { id: 'Press Start 2P', name: 'Press Start 2P (Pixel)', family: '"Press Start 2P", monospace' },
+  // Hindi (Devanagari) and Gujarati: `sample` is the letter their tile shows.
+  { id: 'Mukta', name: 'Mukta (Hindi, bold)', family: 'Mukta, sans-serif', sample: 'अ' },
+  { id: 'Hind', name: 'Hind (Hindi)', family: 'Hind, sans-serif', sample: 'क' },
+  { id: 'Baloo 2', name: 'Baloo (Hindi, round)', family: '"Baloo 2", sans-serif', sample: 'म' },
+  { id: 'Yatra One', name: 'Yatra One (Hindi, display)', family: '"Yatra One", serif', sample: 'य' },
+  { id: 'Baloo Bhai 2', name: 'Baloo Bhai (Gujarati, round)', family: '"Baloo Bhai 2", sans-serif', sample: 'અ' },
+  { id: 'Hind Vadodara', name: 'Hind Vadodara (Gujarati)', family: '"Hind Vadodara", sans-serif', sample: 'ક' }
 ];

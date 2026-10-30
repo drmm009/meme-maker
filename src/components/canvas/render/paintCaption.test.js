@@ -33,7 +33,7 @@ describe('paintCaption: text', () => {
   it('draws a short caption once, centred on its position, in white Impact', () => {
     const [t] = textsDrawn(paint({ ...base, text: 'TOP TEXT' }).ctx);
     expect(t).toMatchObject({ text: 'TOP TEXT', at: { x: 400, y: 120 }, color: '#ffffff', align: 'center' });
-    expect(t.font).toBe('bold 50px Impact, sans-serif');
+    expect(t.font).toBe('bold 50px Impact, "Mukta", "Baloo Bhai 2", sans-serif');
   });
 
   it('wraps long text and stacks the lines around the centre', () => {
@@ -73,8 +73,8 @@ describe('paintCaption: text', () => {
 
 describe('paintCaption: bold, italic, underline', () => {
   it('is bold unless bold is false, and italic when asked', () => {
-    expect(textsDrawn(paint({ ...base, text: 'A', bold: false }).ctx)[0].font).toBe('normal 50px Impact, sans-serif');
-    expect(textsDrawn(paint({ ...base, text: 'A', italic: true }).ctx)[0].font).toBe('italic bold 50px Impact, sans-serif');
+    expect(textsDrawn(paint({ ...base, text: 'A', bold: false }).ctx)[0].font).toBe('normal 50px Impact, "Mukta", "Baloo Bhai 2", sans-serif');
+    expect(textsDrawn(paint({ ...base, text: 'A', italic: true }).ctx)[0].font).toBe('italic bold 50px Impact, "Mukta", "Baloo Bhai 2", sans-serif');
   });
 
   it('underlines each line under its own text, in the text colour', () => {
@@ -102,7 +102,7 @@ describe('paintCaption: bold, italic, underline', () => {
   it('measures its box with the same font it draws with', () => {
     const ctx = createRecordingContext();
     getCaptionBox(ctx, { ...base, text: 'A', italic: true, bold: false }, 800);
-    expect(ctx.font).toBe('italic normal 50px Impact, sans-serif');
+    expect(ctx.font).toBe('italic normal 50px Impact, "Mukta", "Baloo Bhai 2", sans-serif');
   });
 });
 
@@ -135,7 +135,7 @@ describe('paintCaption: backgrounds', () => {
     const { ctx } = paint({ ...base, isTweetCard: true, text: 'just shipped to prod on a friday', authorName: 'Dev' });
     const words = textsDrawn(ctx).map((t) => t.text).join(' ');
     expect(words).toContain('friday');
-    expect(textsDrawn(ctx).some((t) => t.font === 'bold 50px Impact, sans-serif')).toBe(false);
+    expect(textsDrawn(ctx).some((t) => t.font === 'bold 50px Impact, "Mukta", "Baloo Bhai 2", sans-serif')).toBe(false);
   });
 });
 

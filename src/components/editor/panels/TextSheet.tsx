@@ -120,9 +120,9 @@ export default function TextSheet({ actions, onClose }: { actions: EditorActions
 
             <Section title="Font" id="font">
               <div className="ie-font-row">
-                {FONTS.map((f: { id: string; name: string; family: string }) => (
+                {FONTS.map((f: { id: string; name: string; family: string; sample?: string }) => (
                   <Toggle key={f.id} variant="tile" label={f.name} active={(caption.fontFamily || 'Impact, sans-serif') === f.family} onClick={() => pickFont(f.family)} style={{ fontFamily: f.family }}>
-                    Aa
+                    {f.sample || 'Aa'}
                   </Toggle>
                 ))}
                 {customFonts.map((f) => (
