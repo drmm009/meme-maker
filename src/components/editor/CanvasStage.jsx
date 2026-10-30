@@ -9,11 +9,10 @@ import { useEditorUiStore } from './store/useEditorUiStore';
 const LAYER_SHEETS = ['text', 'media'];
 
 // The canvas area: the meme canvas with its overlays (paste toast, background-removal spinner,
-// face pinpointing), plus `children` (the floating layer toolbars). Tapping the empty space
-// around the canvas deselects.
+// face pinpointing). Tapping the empty space around the canvas deselects.
 export default function CanvasStage({
   canvasRef, imageFit, isNativeLayout, layoutDef, isDrawingMode, isRemovingBg,
-  onAddDrawing, onDeleteLayer, onUpdateSlotTransform, faceMorph, onDropMedia, children
+  onAddDrawing, onDeleteLayer, onUpdateSlotTransform, faceMorph, onDropMedia
 }) {
   const captions = useMemeEditorStore((s) => s.captions);
   const stickers = useMemeEditorStore((s) => s.stickers);
@@ -152,8 +151,6 @@ export default function CanvasStage({
           templateImageUrl={originalTemplateImgRef.current || activeTemplate?.originalUrl || activeTemplate?.imageUrl}
         />
       </div>
-
-      {children}
     </div>
   );
 }

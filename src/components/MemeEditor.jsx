@@ -24,7 +24,6 @@ import CanvasStage from './editor/CanvasStage';
 import EditorModals from './editor/EditorModals';
 import DraftOffer from './editor/DraftOffer';
 import EditorPanels from './editor/panels/EditorPanels';
-import LayerToolbar from './editor/panels/LayerToolbar';
 import AspectBar from './editor/panels/AspectBar';
 import FirstRunTour from './editor/panels/FirstRunTour';
 import './ui';
@@ -149,9 +148,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, o
             onUpdateSlotTransform={updateSlotTransform}
             faceMorph={faceMorph}
             onDropMedia={media.handleDropMedia}
-          >
-            <LayerToolbar canvasRef={canvasRef} actions={actions} />
-          </CanvasStage>
+          />
         </div>
 
         <EditorPanels actions={actions} />

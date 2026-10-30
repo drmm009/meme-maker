@@ -207,6 +207,11 @@ describe('MemeEditor', () => {
     fireEvent.click(within(strip('Media tools')).getByText('Emoji'));
     fireEvent.click(screen.getByTitle('Laugh Cry'));
     expect(canvas.props.stickers).toHaveLength(1);
+    // The new sticker is selected, so its tools pill sits where the strip was; deselecting brings it back.
+    expect(layerToolbar()).toBeTruthy();
+    expect(screen.queryByRole('toolbar', { name: 'Media tools' })).toBeNull();
+    act(() => canvas.props.onSelectLayer(null));
+    expect(screen.queryByRole('toolbar', { name: 'Layer tools' })).toBeNull();
     expect(within(strip('Media tools')).getByLabelText('Photo').getAttribute('type')).toBe('file');
   }, 30000);
 
@@ -228,6 +233,7 @@ describe('MemeEditor', () => {
     expect(canvas.props.stickers).toHaveLength(1);
     expect(canvas.props.stickers[0].url).toBeTruthy();
     expect(screen.queryByRole('dialog', { name: 'Stickers' })).toBeNull();
+    act(() => canvas.props.onSelectLayer(null));
     expect(strip('Media tools')).toBeTruthy();
 
     // Tapping the open tool again closes its sheet.

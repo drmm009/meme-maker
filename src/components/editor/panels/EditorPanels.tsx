@@ -25,6 +25,7 @@ import StickersSheet from './StickersSheet';
 import GifSheet from './GifSheet';
 import EmojiSheet from './EmojiSheet';
 import BubbleSheet from './BubbleSheet';
+import LayerToolbar from './LayerToolbar';
 import { DRAW_TOOLS } from './drawTools';
 import './panels.css';
 
@@ -41,7 +42,8 @@ const SHEETS = { text: TextSheet, media: MediaSheet, draw: DrawSheet, canvasColo
   templates: TemplatesSheet, stickers: StickersSheet, gifs: GifSheet, emoji: EmojiSheet, bubble: BubbleSheet };
 
 // The bottom of the editor: the dock with the open tab's tool strip above it, or, when one of that
-// tab's sheets is open, the strip above the sheet (so its tools stay one tap away).
+// tab's sheets is open, the strip above the sheet (so its tools stay one tap away). While a layer is
+// selected (and not drawing), its tools pill (LayerToolbar) takes the strip's place above the dock.
 export default function EditorPanels({ actions }: { actions: EditorActions }) {
   const sheet: keyof typeof SHEETS | null = useEditorUiStore((s: { sheet: keyof typeof SHEETS | null }) => s.sheet);
   const closeSheet = useEditorUiStore((s: { closeSheet: () => void }) => s.closeSheet);
@@ -79,9 +81,10 @@ export default function EditorPanels({ actions }: { actions: EditorActions }) {
     );
   }
 
+  const layerTools = Boolean(kind) && dockTab !== 'draw' && !faceMorph;
   return (
     <div className="ie-panels">
-      {strip}
+      {layerTools ? <LayerToolbar actions={actions} /> : strip}
       <ToolDock
         ariaLabel="Editor tools"
         items={DOCK}

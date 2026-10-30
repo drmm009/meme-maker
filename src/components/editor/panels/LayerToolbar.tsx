@@ -1,74 +1,23 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import type { RefObject } from 'react';
 import { Trash2, Settings, SlidersHorizontal, Copy, Scaling, FlipHorizontal, Scissors, Crop, Wand2, Ellipsis, Layers, Palette, Square, MessageSquareQuote, AlignLeft, AlignCenter, AlignRight } from 'lucide-react';
 import { FloatingToolbar } from '../../ui';
 import type { ToolbarItem } from '../../ui';
-import { useMemeEditorStore } from '../store/useMemeEditorStore';
 import { useEditorUiStore } from '../store/useEditorUiStore';
 import { useSelection } from './selection';
-import { placeToolbar } from './placeToolbar';
-import type { LayerBox } from './placeToolbar';
 import type { EditorActions } from './selection';
 
-// The selected layer's quick tools, floating just above it on the canvas. Hidden while a sheet
-// is open and while the layer is being dragged. A caption's Font, Style, Align, Color and Box
-// each open the Text sheet with just their sections; the bar scrolls sideways if tools don't fit.
-type LayerCanvas = HTMLCanvasElement & { activeLayerBox?: LayerBox | null };
+// The selected layer's quick tools, a pill sitting just above the dock in place of the tab's tool
+// strip (EditorPanels). A caption's Font, Style, Align, Color and Box each open the Text sheet with
+// just their sections; the pill scrolls sideways if tools don't fit.
 
 // The Align button shows the caption's alignment.
 const alignIcon = (align: unknown) => (align === 'left' ? AlignLeft : align === 'right' ? AlignRight : AlignCenter);
 
-export default function LayerToolbar({ canvasRef, actions }: { canvasRef: RefObject<LayerCanvas | null>; actions: EditorActions }) {
+export default function LayerToolbar({ actions }: { actions: EditorActions }) {
   const { id, kind, caption, sticker, image, drawing } = useSelection();
-  const sheet: string | null = useEditorUiStore((s: { sheet: string | null }) => s.sheet);
   const openSheet = useEditorUiStore((s: { openSheet: (sheet: string, focus?: string | null) => void }) => s.openSheet);
   const pickDrawTool = useEditorUiStore((s: { pickDrawTool: (tool: string) => void }) => s.pickDrawTool);
-  const faceMorph = useMemeEditorStore((s: { templateFaceMorph: unknown }) => s.templateFaceMorph);
-  const [box, setBox] = useState<LayerBox | null>(null);
-  const [pressing, setPressing] = useState(false);
-  const [pos, setPos] = useState<{ left: number; top: number; below: boolean; tailX: number } | null>(null);
-  const [tick, setTick] = useState(0);
-  const ref = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas?.addEventListener) return undefined;
-    const onBox = () => setBox(canvas.activeLayerBox || null);
-    const down = () => setPressing(true);
-    const up = () => setPressing(false);
-    const resize = () => setTick((t) => t + 1);
-    onBox();
-    canvas.addEventListener('activelayerbox', onBox);
-    canvas.addEventListener('pointerdown', down);
-    window.addEventListener('pointerup', up);
-    window.addEventListener('pointercancel', up);
-    window.addEventListener('resize', resize);
-    canvas.addEventListener('canvasview', resize);
-    return () => {
-      canvas.removeEventListener('canvasview', resize);
-      canvas.removeEventListener('activelayerbox', onBox);
-      canvas.removeEventListener('pointerdown', down);
-      window.removeEventListener('pointerup', up);
-      window.removeEventListener('pointercancel', up);
-      window.removeEventListener('resize', resize);
-    };
-  }, [canvasRef]);
-
-  const dockTab: string | null = useEditorUiStore((s: { dockTab: string | null }) => s.dockTab);
-  const shown = Boolean(id && kind && !sheet && dockTab !== 'draw' && !faceMorph);
-
-  useLayoutEffect(() => {
-    const canvas = canvasRef.current;
-    const el = ref.current;
-    const parent = el?.offsetParent as HTMLElement | null;
-    if (!shown || !box || !canvas || !el || !parent) {
-      setPos(null);
-      return;
-    }
-    setPos(placeToolbar(box, canvas.getBoundingClientRect(), canvas.width, parent.getBoundingClientRect(), { w: el.offsetWidth, h: el.offsetHeight }));
-  }, [shown, box, kind, tick, canvasRef]);
-
-  if (!shown || !id) return null;
+  if (!id || !kind) return null;
 
   const layers: ToolbarItem = { id: 'layers', label: 'Layers', title: 'All layers: order, hide, lock', Icon: Layers, onClick: () => openSheet('layers') };
   const del: ToolbarItem = { id: 'delete', label: 'Delete', Icon: Trash2, danger: true, onClick: () => actions.handleDeleteLayer(id) };
@@ -122,13 +71,8 @@ export default function LayerToolbar({ canvasRef, actions }: { canvasRef: RefObj
   }
 
   return (
-    <FloatingToolbar
-      toolbarRef={ref}
-      ariaLabel="Layer tools"
-      className="ie-layer-toolbar"
-      items={items}
-      tail={pos ? { side: pos.below ? 'top' : 'bottom', x: pos.tailX } : null}
-      style={{ left: pos?.left ?? 0, top: pos?.top ?? 0, visibility: pos && !pressing ? 'visible' : 'hidden' }}
-    />
+    <div className="ie-layer-dock">
+      <FloatingToolbar ariaLabel="Layer tools" className="ie-layer-toolbar" items={items} />
+    </div>
   );
 }
