@@ -215,12 +215,34 @@ describe('MemeEditor', () => {
     addTextFromMenu();
     closeSheet();
     const tools = layerToolbar();
-    for (const name of ['Font', 'Size', 'Color', 'Bold', 'Delete']) expect(within(tools).getByText(name)).toBeTruthy();
+    for (const name of ['Font', 'Size', 'Color', 'Bold', 'Layers', 'Delete']) expect(within(tools).getByText(name)).toBeTruthy();
     fireEvent.click(within(tools).getByText('Bold'));
     expect(canvas.props.captions[2].bold).toBe(false);
     // Font opens the Text sheet on the selected caption.
     fireEvent.click(within(layerToolbar()).getByText('Font'));
     expect(within(sheet('Text')).getByLabelText('Caption text').value).toBe('NEW TEXT');
+  }, 30000);
+
+  it('Layers on the floating toolbar lists every layer, top first; select, reorder, hide and lock', () => {
+    renderEditor();
+    addTextFromMenu();
+    closeSheet();
+    for (const name of ['Font', 'Size', 'Color', 'Bold', 'Layers', 'Delete']) expect(within(layerToolbar()).getByText(name)).toBeTruthy();
+    fireEvent.click(within(layerToolbar()).getByText('Layers'));
+    const panel = sheet('Layers');
+    const rows = () => within(screen.getByRole('list', { name: 'Layers' })).getAllByRole('listitem').map((li) => li.querySelector('.ie-layer-pick').textContent);
+    expect(rows()).toEqual(['NEW TEXT', 'BOTTOM TEXT', 'TOP TEXT']);
+
+    fireEvent.click(within(panel).getByLabelText('Send NEW TEXT backward'));
+    expect(rows()).toEqual(['BOTTOM TEXT', 'NEW TEXT', 'TOP TEXT']);
+
+    fireEvent.click(within(panel).getByLabelText('Hide TOP TEXT'));
+    expect(canvas.props.captions.find((c) => c.text === 'TOP TEXT').hidden).toBe(true);
+    fireEvent.click(within(panel).getByLabelText('Lock BOTTOM TEXT'));
+    expect(canvas.props.captions.find((c) => c.text === 'BOTTOM TEXT').locked).toBe(true);
+
+    fireEvent.click(within(panel).getByText('TOP TEXT'));
+    expect(canvas.props.activeLayerId).toBe(canvas.props.captions.find((c) => c.text === 'TOP TEXT').id);
   }, 30000);
 
   it('edits the selected caption from the Text sheet', () => {

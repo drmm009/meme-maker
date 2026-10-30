@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { RefObject } from 'react';
-import { Trash2, Settings, SlidersHorizontal, Copy, Scaling, FlipHorizontal, Scissors, Crop, Wand2, Ellipsis } from 'lucide-react';
+import { Trash2, Settings, SlidersHorizontal, Copy, Scaling, FlipHorizontal, Scissors, Crop, Wand2, Ellipsis, Layers } from 'lucide-react';
 import { FloatingToolbar } from '../../ui';
 import type { ToolbarItem } from '../../ui';
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
@@ -75,6 +75,7 @@ export default function LayerToolbar({ canvasRef, actions }: { canvasRef: RefObj
 
   if (!shown || !id) return null;
 
+  const layers: ToolbarItem = { id: 'layers', label: 'Layers', title: 'All layers: order, hide, lock', Icon: Layers, onClick: () => openSheet('layers') };
   const del: ToolbarItem = { id: 'delete', label: 'Delete', Icon: Trash2, danger: true, onClick: () => actions.handleDeleteLayer(id) };
   const dup: ToolbarItem = { id: 'duplicate', label: 'Copy', title: 'Duplicate', Icon: Copy, onClick: () => actions.handleDuplicateLayer(id) };
   let items: ToolbarItem[] = [];
@@ -84,6 +85,7 @@ export default function LayerToolbar({ canvasRef, actions }: { canvasRef: RefObj
       { id: 'size', label: 'Size', icon: <SizeIcon />, onClick: () => openSheet('text', 'size') },
       { id: 'color', label: 'Color', icon: <span className="ie-color-dot" style={{ background: caption.color || '#ffffff' }} />, onClick: () => openSheet('text', 'color') },
       { id: 'bold', label: 'Bold', title: caption.bold === false ? 'Make bold' : 'Make regular', icon: <span className="ie-glyph ie-glyph--bold" style={{ opacity: caption.bold === false ? 0.55 : 1 }}>B</span>, onClick: () => actions.updateActiveCaptionProps({ bold: caption.bold === false }) },
+      layers,
       del,
     ];
   } else if (kind === 'card' && caption) {
@@ -92,6 +94,7 @@ export default function LayerToolbar({ canvasRef, actions }: { canvasRef: RefObj
       { id: 'edit', label: 'Edit', title: 'Edit card details', Icon: Settings, onClick: () => actions.handleOpenSocialModalForActiveCard(platform) },
       { id: 'style', label: 'Style', Icon: SlidersHorizontal, onClick: () => openSheet('text') },
       dup,
+      layers,
       del,
     ];
   } else if (kind === 'sticker' && sticker) {
@@ -100,6 +103,7 @@ export default function LayerToolbar({ canvasRef, actions }: { canvasRef: RefObj
       { id: 'flip', label: 'Flip', Icon: FlipHorizontal, active: Boolean(sticker.flipX), onClick: () => actions.handleFlipActiveLayer() },
       { id: 'diecut', label: 'Die-cut', Icon: Scissors, active: Boolean(sticker.dieCut), onClick: () => actions.handleToggleDieCutSticker() },
       dup,
+      layers,
       del,
     ];
   } else if (kind === 'image' && image) {
@@ -108,6 +112,7 @@ export default function LayerToolbar({ canvasRef, actions }: { canvasRef: RefObj
       { id: 'filters', label: 'Filters', Icon: SlidersHorizontal, onClick: () => openSheet('filters') },
       { id: 'cutout', label: image.originalUrl ? 'Undo' : 'Cut out', title: 'Remove the background', Icon: Wand2, onClick: () => actions.handleRemoveBackground() },
       { id: 'more', label: 'More', Icon: Ellipsis, onClick: () => openSheet('media') },
+      layers,
       del,
     ];
   }

@@ -48,6 +48,15 @@
 .ie-font-row { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; margin: 0 -16px; padding: 2px 16px; }
 .ie-font-row::-webkit-scrollbar { display: none; }
 .ie-layer-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.ie-layers { display: flex; flex-direction: column; gap: 6px; margin: 4px 0 8px; padding: 0; list-style: none; }
+.ie-layer-row { display: flex; align-items: center; gap: 2px; padding: 4px 6px 4px 4px; border: 1.5px solid transparent; border-radius: 12px; background: var(--ui-surface-2); }
+.ie-layer-row.is-on { border-color: var(--ui-accent-edge); background: var(--ui-accent-tint); }
+.ie-layer-row.is-hidden .ie-layer-pick { opacity: 0.45; }
+.ie-layer-row .ui-icon-btn { width: 34px; height: 34px; }
+.ie-layer-row .ui-icon-btn[aria-pressed='true'] { color: var(--ui-accent-text); }
+.ie-layer-pick { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; height: 40px; padding: 0 8px; border: none; background: none; color: var(--ui-text); font-size: 14px; font-weight: 500; text-align: left; cursor: pointer; }
+.ie-layer-pick span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ie-layer-pick svg { flex-shrink: 0; }
 .ie-layer-actions + .ie-layer-actions { margin-top: 8px; }
 .ie-layer-actions > :first-child { flex: 1; }
 .ie-row-spacer { flex: 1; }
