@@ -51,7 +51,6 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
   const canvasFlipX = useMemeEditorStore((s) => s.canvasFlipX);
   const watermark = useEditorUiStore((s) => s.watermark);
   const drawTool = useEditorUiStore((s) => s.drawTool);
-  const showGrid = useEditorUiStore((s) => s.showGrid);
   // Shapes and censor regions can be picked and adjusted unless a freehand brush is in use.
   const showDrawingHandles = !isDrawingMode || drawTool === 'shape' || drawTool === 'censor';
 
@@ -166,7 +165,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     canvasW, captions, compCanvasRef, demotivational, dragTarget, drawings, footerExtH,
     getCaptionCenterY, getImageLayerCenterY, getStickerCenterY, headerExtH, imageCacheRef,
     imageFit, imageLayers, imgSrc, isDragging, isDrawingMode, isFooterEnabled, isHeaderEnabled,
-    isNativeLayout, liveBgColor, loadingMediaRef, naturalSize, setNaturalSize, showDrawingHandles, showGrid,
+    isNativeLayout, liveBgColor, loadingMediaRef, naturalSize, setNaturalSize, showDrawingHandles,
     slotImages, slotTransforms, snappingLines, stickers, totalCanvasH, watermark
   };
 
@@ -179,7 +178,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
 
   useEffect(() => {
     renderScene(sceneRef.current);
-  }, [captions, stickers, activeLayerId, imageLayers, slotImages, slotTransforms, activeIsNativeLayout, editingCaptionId, aspectRatio, imageFit, watermark, drawings, isDrawingMode, imgSrc, filters, liveBgColor, canvasHeader, canvasFooter, demotivational, canvasFlipX, showDrawingHandles, showGrid, canvasBgGradient, canvasW, totalCanvasH, redrawTick]);
+  }, [captions, stickers, activeLayerId, imageLayers, slotImages, slotTransforms, activeIsNativeLayout, editingCaptionId, aspectRatio, imageFit, watermark, drawings, isDrawingMode, imgSrc, filters, liveBgColor, canvasHeader, canvasFooter, demotivational, canvasFlipX, showDrawingHandles, canvasBgGradient, canvasW, totalCanvasH, redrawTick]);
 
   // Keep focus on active caption whenever selected (not for social cards). Runs on a new
   // selection or edit only, not on every keystroke, so the cursor isn't moved while typing.

@@ -189,7 +189,7 @@ describe('MemeEditor', () => {
       ['Photos, videos, stickers and emoji', 'Media tools', ['Photo', 'Templates', 'Stickers', 'GIFs', 'Emoji', 'Link']],
       ['Text', 'Text tools', ['Add Text', 'Edit', 'Bubble', 'Social Card']],
       ['AI tools and photo filters', 'AI and filter tools', ['Face Swap', 'Remove BG', 'AI Caption', 'Filters']],
-      ['Canvas colour, bands and watermark', 'Canvas tools', ['Color', 'Watermark', 'Mirror', 'Header', 'Footer', 'Grid', 'Crop', 'Replace']],
+      ['Canvas colour, bands and watermark', 'Canvas tools', ['Color', 'Watermark', 'Mirror', 'Header', 'Footer', 'Crop']],
     ];
     for (const [tab, name, tools] of strips) {
       openSection(tab);
@@ -638,12 +638,10 @@ describe('MemeEditor', () => {
     expect(within(canvasStrip()).getByText('Mirror').closest('button').getAttribute('aria-pressed')).toBe('true');
   }, 30000);
 
-  it('Canvas shows Color, Watermark, Mirror, Header, Footer, Crop and Replace; Color and Watermark open sheets under the strip', () => {
+  it('Canvas shows Color, Watermark, Mirror, Header, Footer and Crop; Color and Watermark open sheets under the strip', () => {
     renderEditor();
     openSection('Canvas colour, bands and watermark');
-    expect(within(canvasStrip()).getAllByRole('button').map((b) => b.textContent)).toEqual(['Color', 'Watermark', 'Mirror', 'Header', 'Footer', 'Grid', 'Crop']);
-    // Replace is a file picker.
-    expect(within(canvasStrip()).getByText('Replace').closest('label').querySelector('input[accept="image/*"]')).toBeTruthy();
+    expect(within(canvasStrip()).getAllByRole('button').map((b) => b.textContent)).toEqual(['Color', 'Watermark', 'Mirror', 'Header', 'Footer', 'Crop']);
 
     fireEvent.click(within(canvasStrip()).getByText('Color'));
     fireEvent.click(within(sheet('Background')).getByRole('radio', { name: '#000000' }));
@@ -675,21 +673,9 @@ describe('MemeEditor', () => {
     expect(canvas.props.canvasBgColor).toBe('#000000');
   }, 30000);
 
-  it('Replace swaps the main photo and keeps the layers; Crop opens the cropper', async () => {
+  it('Crop opens the cropper', () => {
     renderEditor();
     openSection('Canvas colour, bands and watermark');
-    const before = canvas.props.captions.map((c) => c.text);
-    const input = within(canvasStrip()).getByText('Replace').closest('label').querySelector('input[type=file]');
-    const file = new File([new Uint8Array([137, 80, 78, 71])], 'new.png', { type: 'image/png' });
-    await act(async () => {
-      fireEvent.change(input, { target: { files: [file] } });
-      await new Promise((r) => setTimeout(r, 50));
-    });
-    expect(canvas.props.template.imageUrl.startsWith('data:image/png')).toBe(true);
-    expect(canvas.props.captions.map((c) => c.text)).toEqual(before);
-    fireEvent.click(undoButton());
-    expect(canvas.props.template.imageUrl).toBe('/images/drake-pointing.jpg');
-
     fireEvent.click(within(canvasStrip()).getByText('Crop'));
     const cropper = screen.getByRole('dialog', { name: 'Crop photo' });
     for (const name of ['Free', '1:1', '4:5', '9:16', '16:9']) expect(within(cropper).getByText(name)).toBeTruthy();

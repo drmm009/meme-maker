@@ -86,7 +86,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, o
 
   const { handleOpenSocialModalForActiveCard, handleUpdateSocialCard, handleAddTweetCard, handleAddInstagramCard, handleAddWhatsAppCard } = useSocialCardActions();
   const { handleSetCanvasBgColor, handleSetCanvasBgGradient, handleToggleCanvasHeader, handleToggleCanvasFooter, handleToggleCanvasFlip, handleWatermarkImageUpload } = useCanvasFrameActions();
-  const { handleReplaceMainPhoto, handleApplyMainPhotoCrop, handleRestoreMainPhoto, handleReplaceImageLayer } = usePhotoActions();
+  const { handleApplyMainPhotoCrop, handleRestoreMainPhoto, handleReplaceImageLayer } = usePhotoActions();
   const { handleAlignLayers, handleDistributeLayers, handleGroupLayers, handleUngroupLayers, handleDeleteLayers } = useArrangeActions({ canvasRef });
   const { listProjects, handleSaveProject, handleOpenProject, handleDeleteProject, handleRenameProject } = useProjects({ canvasRef, onOpen: onRestoreDraft });
   const { handleAddDrawing, handleClearDrawings, handleUndoDrawing } = useDrawingActions();
@@ -101,7 +101,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, o
     handleAddCaption, handleToggleTextCase, updateActiveCaptionProps, handleSetCaptionBg, handleAddBubble, handleApplyBubbleStyle,
     handleOpenSocialModalForActiveCard,
     handleSetCanvasBgColor, handleSetCanvasBgGradient, handleToggleCanvasHeader, handleToggleCanvasFooter, handleToggleCanvasFlip, handleWatermarkImageUpload,
-    handleReplaceMainPhoto, handleApplyMainPhotoCrop, handleRestoreMainPhoto, handleReplaceImageLayer,
+    handleApplyMainPhotoCrop, handleRestoreMainPhoto, handleReplaceImageLayer,
     handleAlignLayers, handleDistributeLayers, handleGroupLayers, handleUngroupLayers, handleDeleteLayers,
     listProjects, handleSaveProject, handleOpenProject, handleDeleteProject, handleRenameProject,
     addMediaLink: media.addLink,

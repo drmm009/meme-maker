@@ -29,11 +29,6 @@ export function usePhotoActions() {
     s.pushHistory();
   };
 
-  const handleReplaceMainPhoto = async (e) => {
-    const url = await readFile(e);
-    if (url) setMainPhoto(url);
-  };
-
   const handleApplyMainPhotoCrop = (url) => setMainPhoto(url, { keepUncropped: true });
 
   // Back to the photo before any crop.
@@ -53,5 +48,5 @@ export function usePhotoActions() {
     s.pushHistory();
   };
 
-  return { handleReplaceMainPhoto, handleApplyMainPhotoCrop, handleRestoreMainPhoto, handleReplaceImageLayer };
+  return { handleApplyMainPhotoCrop, handleRestoreMainPhoto, handleReplaceImageLayer };
 }

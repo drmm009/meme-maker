@@ -19,7 +19,7 @@ export function renderScene(scene) {
     canvasW, captions, compCanvasRef, demotivational, dragTarget, drawings, footerExtH,
     getCaptionCenterY, getImageLayerCenterY, getStickerCenterY, headerExtH, imageCacheRef,
     imageFit, imageLayers, imgSrc, isDragging, isDrawingMode, isFooterEnabled, isHeaderEnabled,
-    isNativeLayout, liveBgColor, loadingMediaRef, naturalSize, setNaturalSize, showDrawingHandles, showGrid,
+    isNativeLayout, liveBgColor, loadingMediaRef, naturalSize, setNaturalSize, showDrawingHandles,
     slotImages, slotTransforms, snappingLines, stickers, totalCanvasH, watermark
   } = scene;
 
@@ -240,7 +240,7 @@ export function renderScene(scene) {
 
     paintOverlays({
       activeCaption, activeHandleDrawer, applyGlobalFilter, canvas, canvasH, compCanvas, ctx,
-      filterCss, headerExtH, isDragging, showGrid, skipHandles, snappingLines
+      filterCss, headerExtH, isDragging, skipHandles, snappingLines
     });
   };
 
