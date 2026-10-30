@@ -6,6 +6,7 @@ import { hitActiveHandle, hitBandCaption, hitLayerAt } from './hitTest';
 import { getHoverCursor } from './hoverCursor';
 import { getDragCenter, getDragStart, getRotation, moveLayer, resizeCaption, resizeImageLayer, resizeSticker } from './dragMath';
 import { paintStrokeDot, paintStrokeSegment, startStroke } from './freehand';
+import { isTooSmall, paintDragDrawing, paintDragGuide, startDragDrawing } from '../draw/shapes';
 import { useMemeEditorStore } from '../../editor/store/useMemeEditorStore';
 import { useEditorUiStore } from '../../editor/store/useEditorUiStore';
 import { isSocialCardCaption } from '../../editor/memeEditorUtils';
@@ -27,6 +28,8 @@ export function useCanvasInteraction({
 }) {
   const isDrawingActive = useRef(false);
   const currentStroke = useRef(null);
+  // A shape or censor region being dragged out, with the canvas as it was before the drag.
+  const dragDrawing = useRef(null);
   const dragRafRef = useRef(null);
   const dragStartCoords = useRef({ x: 0, y: 0 });
   const hasDragged = useRef(false);
@@ -40,6 +43,10 @@ export function useCanvasInteraction({
   const canvasBgColor = useMemeEditorStore((s) => s.canvasBgColor);
   const brushColor = useEditorUiStore((s) => s.brushColor);
   const brushSize = useEditorUiStore((s) => s.brushSize);
+  const shapeKind = useEditorUiStore((s) => s.shapeKind);
+  const shapeFill = useEditorUiStore((s) => s.shapeFill);
+  const censorMode = useEditorUiStore((s) => s.censorMode);
+  const censorStrength = useEditorUiStore((s) => s.censorStrength);
   const activeLayerId = useMemeEditorStore((s) => s.activeLayerId);
   const stickers = useMemeEditorStore((s) => s.stickers);
   const captions = useMemeEditorStore((s) => s.captions);
@@ -122,6 +129,18 @@ export function useCanvasInteraction({
     const canvas = canvasRef.current;
     if (!canvas) return;
 
+    if (isDrawingMode && (drawTool === 'shape' || drawTool === 'censor')) {
+      const snapshot = document.createElement('canvas');
+      snapshot.width = canvas.width;
+      snapshot.height = canvas.height;
+      snapshot.getContext('2d')?.drawImage(canvas, 0, 0);
+      dragDrawing.current = {
+        drawing: startDragDrawing(drawTool, coords, { shape: shapeKind, color: brushColor, size: brushSize, fill: shapeFill, censor: censorMode, strength: censorStrength }),
+        snapshot,
+      };
+      return;
+    }
+
     if (isDrawingMode) {
       isDrawingActive.current = true;
       currentStroke.current = startStroke({ drawTool, canvasBgColor, brushColor, brushSize, point: coords });
@@ -171,6 +190,17 @@ export function useCanvasInteraction({
   const handlePointerEnd = () => {
     if (canvasRef.current && !isDrawingMode) {
       canvasRef.current.style.cursor = 'default';
+    }
+    if (dragDrawing.current) {
+      const { drawing, snapshot } = dragDrawing.current;
+      dragDrawing.current = null;
+      const ctx = canvasRef.current?.getContext('2d');
+      if (ctx) {
+        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+        ctx.drawImage(snapshot, 0, 0);
+      }
+      if (!isTooSmall(drawing) && onAddDrawing) onAddDrawing(drawing);
+      return;
     }
     if (isDrawingMode && isDrawingActive.current) {
       isDrawingActive.current = false;
@@ -245,8 +275,22 @@ export function useCanvasInteraction({
   };
 
   const handlePointerMove = (e) => {
-    if (e.cancelable && (isDrawingActive.current || isDragging.current)) {
+    if (e.cancelable && (isDrawingActive.current || dragDrawing.current || isDragging.current)) {
       e.preventDefault();
+    }
+    if (dragDrawing.current) {
+      // Repaint the canvas from before the drag with the shape at its new size.
+      const { drawing, snapshot } = dragDrawing.current;
+      const coords = getCanvasCoords(e);
+      drawing.points[1] = { x: coords.x, y: coords.y };
+      const ctx = canvasRef.current?.getContext('2d');
+      if (ctx) {
+        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+        ctx.drawImage(snapshot, 0, 0);
+        paintDragDrawing(ctx, drawing);
+        paintDragGuide(ctx, drawing);
+      }
+      return;
     }
     if (isDrawingMode && isDrawingActive.current && currentStroke.current) {
       continueStroke(e);

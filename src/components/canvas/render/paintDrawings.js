@@ -1,3 +1,5 @@
+import { paintDragDrawing } from '../draw/shapes';
+
 export function paintDrawings({
   drawings, targetCtx
 }) {
@@ -33,7 +35,9 @@ export function paintDrawings({
     targetCtx.restore();
   };
 
+  // In order, so a censor region also hides the drawings under it.
   (drawings || []).forEach((d) => {
-    drawBrushStroke(d);
+    if (d?.type === 'shape' || d?.type === 'censor') paintDragDrawing(targetCtx, d);
+    else drawBrushStroke(d);
   });
 }

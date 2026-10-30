@@ -178,7 +178,7 @@ describe('MemeEditor', () => {
   it('every dock tab shows its tool strip; tapping the tab again closes it', () => {
     renderEditor();
     const strips = [
-      ['Draw on the meme', 'Draw tools', ['Brush', 'Glow', 'Marker']],
+      ['Draw on the meme', 'Draw tools', ['Brush', 'Glow', 'Marker', 'Shapes', 'Censor']],
       ['Photos, videos, stickers and emoji', 'Media tools', ['Photo', 'Templates', 'Stickers', 'Emoji']],
       ['Text', 'Text tools', ['Add Text', 'Edit', 'Bubble', 'Social Card']],
       ['AI tools and photo filters', 'AI and filter tools', ['Face Swap', 'Remove BG', 'AI Caption', 'Filters']],
@@ -257,7 +257,7 @@ describe('MemeEditor', () => {
     renderEditor();
     openSection('Draw on the meme');
     const strip = screen.getByRole('toolbar', { name: 'Draw tools' });
-    expect(within(strip).getAllByRole('button').map((b) => b.textContent)).toEqual(['Brush', 'Glow', 'Marker']);
+    expect(within(strip).getAllByRole('button').map((b) => b.textContent)).toEqual(['Brush', 'Glow', 'Marker', 'Shapes', 'Censor']);
     expect(canvas.props.isDrawingMode).toBe(false);
 
     fireEvent.click(within(strip).getByText('Marker'));
@@ -278,6 +278,33 @@ describe('MemeEditor', () => {
     openSection('Draw on the meme');
     expect(canvas.props.isDrawingMode).toBe(false);
     expect(screen.queryByRole('toolbar', { name: 'Draw tools' })).toBeNull();
+  }, 30000);
+
+  it('Shapes and Censor: their sheets pick the shape or the censor style, and drawing stays on', () => {
+    renderEditor();
+    openSection('Draw on the meme');
+    fireEvent.click(within(strip('Draw tools')).getByText('Shapes'));
+    expect(canvas.props.drawTool).toBe('shape');
+    expect(canvas.props.isDrawingMode).toBe(true);
+    const shapes = sheet('Shapes');
+    for (const name of ['Arrow', 'Circle', 'Box', 'Line']) expect(within(shapes).getByText(name)).toBeTruthy();
+    expect(within(shapes).queryByRole('switch', { name: 'Fill shape' })).toBeNull();
+    fireEvent.click(within(shapes).getByText('Box'));
+    expect(within(sheet('Shapes')).getByText('Box').closest('button').getAttribute('aria-pressed')).toBe('true');
+    expect(within(sheet('Shapes')).getByRole('switch', { name: 'Fill shape' })).toBeTruthy();
+
+    fireEvent.click(within(strip('Draw tools')).getByText('Censor'));
+    const censor = sheet('Censor');
+    for (const name of ['Blur', 'Pixelate', 'Black bar']) expect(within(censor).getByText(name)).toBeTruthy();
+    expect(within(censor).getByLabelText('Censor strength')).toBeTruthy();
+    fireEvent.click(within(censor).getByText('Black bar'));
+    expect(within(sheet('Censor')).queryByLabelText('Censor strength')).toBeNull();
+
+    // A dragged-out shape is saved like a stroke, and undo removes it.
+    act(() => canvas.props.onAddDrawing({ id: 's', type: 'shape', shape: 'rect', color: '#fff', size: 4, points: [{ x: 0, y: 0 }, { x: 40, y: 40 }] }));
+    expect(canvas.props.drawings).toHaveLength(1);
+    fireEvent.click(undoButton());
+    expect(canvas.props.drawings).toHaveLength(0);
   }, 30000);
 
   it('clears the drawing from the brush settings', () => {

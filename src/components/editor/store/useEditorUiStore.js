@@ -71,7 +71,11 @@ export function buildInitialUi(template) {
     openSourceTemplates: MEME_TEMPLATES,
     pendingVideoLayer: null,
     pasteToast: false,
-    drawTool: null, // 'brush' | 'marker' | 'glow' | null
+    drawTool: null, // 'brush' | 'highlighter' | 'glow' | 'shape' | 'censor' | null
+    shapeKind: 'arrow', // 'arrow' | 'ellipse' | 'rect' | 'line'
+    shapeFill: false,
+    censorMode: 'blur', // 'blur' | 'pixelate' | 'bar'
+    censorStrength: 14,
     brushColor: '#ff2a5f',
     brushSize: 10,
     watermark: loadWatermark(),
