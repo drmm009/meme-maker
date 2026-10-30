@@ -9,6 +9,7 @@ import { paintStrokeDot, paintStrokeSegment, startStroke } from './freehand';
 import { isTooSmall, paintDragDrawing, paintDragGuide, startDragDrawing } from '../draw/shapes';
 import { dragDrawingHandle, hitDrawingAt, hitDrawingHandle, isDragDrawing, moveDrawingPoints } from './drawingHits';
 import { groupMates } from '../../editor/panels/arrange';
+import { pinchChange, pinchPatch } from './layerPinch';
 import { useMemeEditorStore } from '../../editor/store/useMemeEditorStore';
 import { useEditorUiStore } from '../../editor/store/useEditorUiStore';
 import { isSocialCardCaption } from '../../editor/memeEditorUtils';
@@ -19,6 +20,8 @@ const DOUBLE_TAP_MS = 350;
 // How close (in screen pixels) a press has to be to grab a shape's end or corner, or its line.
 const DRAWING_HANDLE_PX = 22;
 const DRAWING_SLACK_PX = 10;
+
+const fingersOf = (e) => ({ a: { x: e.touches[0].clientX, y: e.touches[0].clientY }, b: { x: e.touches[1].clientX, y: e.touches[1].clientY } });
 
 // Canvas pixels per screen pixel.
 const screenScale = (canvas) => canvas.width / Math.max(1, canvas.getBoundingClientRect().width);
@@ -51,6 +54,8 @@ export function useCanvasInteraction({
   const lastTapRef = useRef({ id: null, time: 0 });
   const pendingDragRef = useRef(null);
   const groupStart = useRef([]);
+  // Two fingers on a layer: the layer and the fingers as they came down.
+  const layerPinch = useRef(null);
   const drawTool = useEditorUiStore((s) => s.drawTool);
   const canvasBgColor = useMemeEditorStore((s) => s.canvasBgColor);
   const brushColor = useEditorUiStore((s) => s.brushColor);
@@ -196,6 +201,20 @@ export function useCanvasInteraction({
     const canvas = canvasRef.current;
     if (!canvas) return;
 
+    // Two fingers on a layer (the first one went down on it) resize and turn it.
+    const grabbed = dragTarget.current;
+    const onLayer = grabbed && (grabbed.type === 'caption' || grabbed.type === 'sticker' || grabbed.type === 'imageLayer') && !grabbed.locked;
+    if (e.touches && e.touches.length >= 2 && onLayer) {
+      const list = grabbed.type === 'caption' ? captions : grabbed.type === 'sticker' ? stickers : imageLayers;
+      const layer = list.find((l) => l.id === grabbed.id);
+      if (layer) {
+        layerPinch.current = { kind: grabbed.type, id: layer.id, start: { ...layer }, from: fingersOf(e) };
+        groupStart.current = [];
+        hasDragged.current = true;
+        return;
+      }
+    }
+
     // Two fingers zoom the view, except on a multi-panel layout's photo, which they zoom instead.
     const onSlot = dragTarget.current?.type === 'slot' || dragTarget.current?.type === 'empty-slot';
     if (e.touches && e.touches.length >= 2 && !onSlot) {
@@ -277,6 +296,7 @@ export function useCanvasInteraction({
 
   const handlePointerEnd = () => {
     if (canvasView.endGesture()) return;
+    layerPinch.current = null;
     if (canvasRef.current && !isDrawingMode) {
       canvasRef.current.style.cursor = 'default';
     }
@@ -379,6 +399,18 @@ export function useCanvasInteraction({
       e.preventDefault();
     }
     if (canvasView.moveGesture(e)) return;
+    if (layerPinch.current) {
+      if (e.touches && e.touches.length >= 2) {
+        const { kind, id, start, from } = layerPinch.current;
+        const patch = pinchPatch(kind, start, pinchChange(from, fingersOf(e), start.rotation || 0));
+        scheduleDragBatch(() => {
+          if (kind === 'caption') onUpdateCaptionBounds?.(id, patch);
+          else if (kind === 'sticker') onUpdateStickerBounds?.(id, patch);
+          else onUpdateImageLayerBounds?.(id, patch);
+        });
+      }
+      return;
+    }
     if (dragDrawing.current) {
       // Repaint the canvas from before the drag with the shape at its new size.
       const { drawing, snapshot } = dragDrawing.current;
