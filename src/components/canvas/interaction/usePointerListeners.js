@@ -1,20 +1,26 @@
 import { useEffect, useLayoutEffect, useRef } from 'react';
 
-// Listeners React can't attach for us: non-passive touch listeners on the wrapper (so a drag or
-// stroke can block page scroll) and window listeners so a drag keeps going outside the canvas.
-// They are attached once and call the latest handlers through refs.
+// Something is being dragged, drawn, pinched or panned, so moves are followed.
+const isFollowing = (isDragging, isDrawingActive, isViewGesture) =>
+  isDragging.current || isDrawingActive.current || Boolean(isViewGesture?.current);
+
+// Listeners React can't attach for us: non-passive touch and wheel listeners on the wrapper (so a
+// drag, stroke or zoom can block page scroll and browser zoom) and window listeners so a drag keeps
+// going outside the canvas. They are attached once and call the latest handlers through refs.
 export function usePointerListeners({
-  wrapperRef, editableRef, isDragging, isDrawingActive,
-  handlePointerDown, handlePointerMove, handlePointerEnd
+  wrapperRef, editableRef, isDragging, isDrawingActive, isViewGesture,
+  handlePointerDown, handlePointerMove, handlePointerEnd, handleWheel
 }) {
   const handlePointerDownRef = useRef(null);
   const handlePointerMoveRef = useRef(null);
   const handlePointerEndRef = useRef(null);
+  const handleWheelRef = useRef(null);
 
   useLayoutEffect(() => {
     handlePointerDownRef.current = handlePointerDown;
     handlePointerMoveRef.current = handlePointerMove;
     handlePointerEndRef.current = handlePointerEnd;
+    handleWheelRef.current = handleWheel;
   });
 
   // Native non-passive touch listeners: handle drag & drawing AND block page scroll
@@ -34,9 +40,13 @@ export function usePointerListeners({
         e.preventDefault();
         e.stopPropagation();
       }
-      if ((isDragging.current || isDrawingActive.current) && handlePointerMoveRef.current) {
+      if (isFollowing(isDragging, isDrawingActive, isViewGesture) && handlePointerMoveRef.current) {
         handlePointerMoveRef.current(e);
       }
+    };
+
+    const onWheel = (e) => {
+      if (handleWheelRef.current) handleWheelRef.current(e);
     };
 
     const onTouchEnd = (e) => {
@@ -47,26 +57,28 @@ export function usePointerListeners({
     wrapper.addEventListener('touchmove', onTouchMove, { passive: false });
     wrapper.addEventListener('touchend', onTouchEnd, { passive: false });
     wrapper.addEventListener('touchcancel', onTouchEnd, { passive: false });
+    wrapper.addEventListener('wheel', onWheel, { passive: false });
 
     return () => {
       wrapper.removeEventListener('touchstart', onTouchStart);
       wrapper.removeEventListener('touchmove', onTouchMove);
       wrapper.removeEventListener('touchend', onTouchEnd);
       wrapper.removeEventListener('touchcancel', onTouchEnd);
+      wrapper.removeEventListener('wheel', onWheel);
     };
-  }, [wrapperRef, editableRef, isDragging, isDrawingActive]);
+  }, [wrapperRef, editableRef, isDragging, isDrawingActive, isViewGesture]);
 
   // Global window listeners for mouse & touch drag so continuous dragging outside canvas never freezes
   useEffect(() => {
     const onGlobalPointerMove = (e) => {
-      if ((isDragging.current || isDrawingActive.current) && handlePointerMoveRef.current) {
+      if (isFollowing(isDragging, isDrawingActive, isViewGesture) && handlePointerMoveRef.current) {
         if (!wrapperRef.current || !wrapperRef.current.contains(e.target)) {
           handlePointerMoveRef.current(e);
         }
       }
     };
     const onGlobalPointerEnd = (e) => {
-      if (isDragging.current || isDrawingActive.current) {
+      if (isFollowing(isDragging, isDrawingActive, isViewGesture)) {
         if (handlePointerEndRef.current) handlePointerEndRef.current(e);
       }
     };
@@ -84,5 +96,5 @@ export function usePointerListeners({
       window.removeEventListener('touchend', onGlobalPointerEnd);
       window.removeEventListener('touchcancel', onGlobalPointerEnd);
     };
-  }, [wrapperRef, isDragging, isDrawingActive]);
+  }, [wrapperRef, isDragging, isDrawingActive, isViewGesture]);
 }

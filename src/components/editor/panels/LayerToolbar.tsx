@@ -50,7 +50,9 @@ export default function LayerToolbar({ canvasRef, actions }: { canvasRef: RefObj
     window.addEventListener('pointerup', up);
     window.addEventListener('pointercancel', up);
     window.addEventListener('resize', resize);
+    canvas.addEventListener('canvasview', resize);
     return () => {
+      canvas.removeEventListener('canvasview', resize);
       canvas.removeEventListener('activelayerbox', onBox);
       canvas.removeEventListener('pointerdown', down);
       window.removeEventListener('pointerup', up);

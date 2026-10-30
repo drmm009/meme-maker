@@ -5,6 +5,8 @@ import { isSocialCardCaption } from './editor/memeEditorUtils';
 import { getBandHeight, getCanvasSize, makeLayerCenters } from './canvas/layout/canvasLayout';
 import { renderScene } from './canvas/render/renderScene';
 import { useCanvasInteraction } from './canvas/interaction/useCanvasInteraction';
+import { useCanvasView } from './canvas/interaction/useCanvasView';
+import { isZoomed } from './canvas/interaction/viewZoom';
 import CaptionTextOverlay from './canvas/CaptionTextOverlay';
 
 // The meme canvas: works out the layout, draws the scene with renderScene, and hands pointer
@@ -118,11 +120,25 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     }
   };
 
+  // Pinch-zoom and pan of the editor's view (CSS only: the meme and its export don't change).
+  const canvasView = useCanvasView(wrapperRef);
+  const { view } = canvasView;
+  const resetView = canvasView.reset;
+  // A different picture or canvas shape starts back at fit.
+  useEffect(() => {
+    resetView();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canvasW, totalCanvasH, imgSrc]);
+  // The floating layer toolbar places itself from the canvas's box on screen, which a zoom moves.
+  useEffect(() => {
+    canvasRef.current?.dispatchEvent?.(new Event('canvasview'));
+  }, [view, canvasRef]);
+
   const {
     handlePointerDown, handleTextOverlayPointerDown, handleTextOverlayPointerEnd,
-    handlePointerEnd, handlePointerMove, handleWheel
+    handlePointerEnd, handlePointerMove
   } = useCanvasInteraction({
-    activeIsNativeLayout, activeLayoutDef, canvasH, canvasRef, canvasW,
+    activeIsNativeLayout, activeLayoutDef, canvasH, canvasRef, canvasView, canvasW,
     dragTarget, editableRef, focusTextarea, getCaptionCenterY, getImageLayerCenterY,
     getStickerCenterY, headerExtH, imageCacheRef, isDragging, isDrawingMode,
     isFooterEnabled, isHeaderEnabled, onAddDrawing, onDeleteLayer, onSelectLayer,
@@ -160,7 +176,10 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     }
   }, [activeCaptionId, activeCaptionEditable, editingCaptionId]);
 
+  const zoomed = isZoomed(view);
+
   return (
+    <>
     <div
       ref={wrapperRef}
       className="canvas-interactive-wrapper"
@@ -176,13 +195,14 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         maxWidth: '100%',
         maxHeight: '100%',
         aspectRatio: `${canvasW} / ${totalCanvasH}`,
-        boxSizing: 'border-box'
+        boxSizing: 'border-box',
+        transform: zoomed ? `translate(${view.x}px, ${view.y}px) scale(${view.zoom})` : undefined,
+        willChange: zoomed ? 'transform' : undefined
       }}
       onMouseDown={handlePointerDown}
       onMouseMove={handlePointerMove}
       onMouseUp={handlePointerEnd}
       onDragStart={(e) => e.preventDefault()}
-      onWheel={handleWheel}
     >
       <canvas
         ref={canvasRef}
@@ -217,6 +237,12 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         />
       )}
     </div>
+    {zoomed && (
+      <button type="button" className="ie-zoom-pill" onClick={resetView} aria-label="Zoom back to fit">
+        {Math.round(view.zoom * 100)}% <span>Fit</span>
+      </button>
+    )}
+    </>
   );
 });
 

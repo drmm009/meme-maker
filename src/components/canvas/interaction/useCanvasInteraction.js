@@ -15,10 +15,11 @@ import { isSocialCardCaption } from '../../editor/memeEditorUtils';
 const DOUBLE_TAP_MS = 350;
 
 // Pointer input on the meme canvas: drawing, selecting, dragging, rotating and resizing layers,
-// and panning or pinch-zooming the photos in a multi-panel layout. The maths lives in the
-// modules imported above; this hook keeps the gesture state and calls the editor's handlers.
+// panning or pinch-zooming the photos in a multi-panel layout, and zooming the editor's view
+// (canvasView, from useCanvasView). The maths lives in the modules imported above; this hook keeps
+// the gesture state and calls the editor's handlers.
 export function useCanvasInteraction({
-  activeIsNativeLayout, activeLayoutDef, canvasH, canvasRef, canvasW,
+  activeIsNativeLayout, activeLayoutDef, canvasH, canvasRef, canvasView, canvasW,
   dragTarget, editableRef, focusTextarea, getCaptionCenterY, getImageLayerCenterY,
   getStickerCenterY, headerExtH, imageCacheRef, isDragging, isDrawingMode,
   isFooterEnabled, isHeaderEnabled, onAddDrawing, onDeleteLayer, onSelectLayer,
@@ -109,15 +110,46 @@ export function useCanvasInteraction({
   };
 
   // Empty space in a multi-panel layout grabs that panel's photo (drag to pan, two fingers to zoom).
+  // Returns whether there was a panel there.
   const beginSlotDrag = (e, coords) => {
     const idx = findSlotAt(coords, activeLayoutDef, { canvasW, canvasH, headerExtH });
-    if (idx === -1) return;
+    if (idx === -1) return false;
     isDragging.current = true;
     dragTarget.current = { type: slotImages[idx] ? 'slot' : 'empty-slot', idx };
     dragStartCoords.current = coords;
     if (e.touches && e.touches.length === 2) {
       initialPinchDist.current = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
       initialSlotScale.current = (slotTransforms[idx] || { scale: 1.5 }).scale || 1.0;
+    }
+    return true;
+  };
+
+  // A second finger turns whatever the first one started (a drag, a stroke, a shape) into a zoom
+  // of the view: the half-done stroke or shape is dropped and the canvas redrawn without it.
+  const cancelGesture = () => {
+    if (dragDrawing.current) {
+      const { snapshot } = dragDrawing.current;
+      dragDrawing.current = null;
+      const ctx = canvasRef.current?.getContext('2d');
+      if (ctx) {
+        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+        ctx.drawImage(snapshot, 0, 0);
+      }
+    }
+    if (isDrawingActive.current) {
+      isDrawingActive.current = false;
+      currentStroke.current = null;
+      lastDrawPoint.current = null;
+      requestRedraw();
+    }
+    if (isDragging.current) {
+      isDragging.current = false;
+      hasDragged.current = false;
+      dragTarget.current = null;
+      snappingLines.current = { horizontal: null, vertical: null };
+      document.body.style.userSelect = '';
+      document.body.style.webkitUserSelect = '';
+      requestRedraw();
     }
   };
 
@@ -128,6 +160,14 @@ export function useCanvasInteraction({
     const coords = getCanvasCoords(e);
     const canvas = canvasRef.current;
     if (!canvas) return;
+
+    // Two fingers zoom the view, except on a multi-panel layout's photo, which they zoom instead.
+    const onSlot = dragTarget.current?.type === 'slot' || dragTarget.current?.type === 'empty-slot';
+    if (e.touches && e.touches.length >= 2 && !onSlot) {
+      cancelGesture();
+      canvasView.startPinch(e);
+      return;
+    }
 
     if (isDrawingMode && (drawTool === 'shape' || drawTool === 'censor')) {
       const snapshot = document.createElement('canvas');
@@ -163,7 +203,9 @@ export function useCanvasInteraction({
       if (onSelectLayer) onSelectLayer(null);
       setEditingCaptionId(null);
       if (editableRef.current) editableRef.current.blur();
-      if (activeIsNativeLayout && activeLayoutDef) beginSlotDrag(e, coords);
+      // Zoomed in, dragging empty space pans the view.
+      const grabbedSlot = activeIsNativeLayout && activeLayoutDef && beginSlotDrag(e, coords);
+      if (!grabbedSlot && canvasView.isZoomed()) canvasView.startPan(e);
       return;
     }
 
@@ -188,6 +230,7 @@ export function useCanvasInteraction({
   };
 
   const handlePointerEnd = () => {
+    if (canvasView.endGesture()) return;
     if (canvasRef.current && !isDrawingMode) {
       canvasRef.current.style.cursor = 'default';
     }
@@ -275,9 +318,10 @@ export function useCanvasInteraction({
   };
 
   const handlePointerMove = (e) => {
-    if (e.cancelable && (isDrawingActive.current || dragDrawing.current || isDragging.current)) {
+    if (e.cancelable && (isDrawingActive.current || dragDrawing.current || isDragging.current || canvasView.gesture.current)) {
       e.preventDefault();
     }
+    if (canvasView.moveGesture(e)) return;
     if (dragDrawing.current) {
       // Repaint the canvas from before the drag with the shape at its new size.
       const { drawing, snapshot } = dragDrawing.current;
@@ -385,24 +429,34 @@ export function useCanvasInteraction({
     });
   };
 
-  // Mouse wheel over a multi-panel layout zooms that panel's photo.
+  // Ctrl + wheel (or a trackpad pinch) zooms the view; the wheel over a multi-panel layout's photo
+  // zooms that photo; otherwise, zoomed in, the wheel pans.
   const handleWheel = (e) => {
-    if (!activeIsNativeLayout || !activeLayoutDef || !onUpdateSlotTransform) return;
-    if (!canvasRef.current) return;
+    if (e.ctrlKey || e.metaKey) {
+      canvasView.zoomByWheel(e);
+      return;
+    }
+    if (!zoomSlotByWheel(e)) canvasView.panByWheel(e);
+  };
+
+  const zoomSlotByWheel = (e) => {
+    if (!activeIsNativeLayout || !activeLayoutDef || !onUpdateSlotTransform) return false;
+    if (!canvasRef.current) return false;
     const idx = findSlotAt(getCanvasCoords(e), activeLayoutDef, { canvasW, canvasH, headerExtH });
-    if (idx === -1 || !slotImages || !slotImages[idx]) return;
+    if (idx === -1 || !slotImages || !slotImages[idx]) return false;
     e.preventDefault();
     const zoomFactor = e.deltaY < 0 ? 1.08 : 0.92;
     onUpdateSlotTransform(idx, (prev) => ({
       ...prev,
       scale: Math.max(0.4, Math.min(6.0, Number(((prev?.scale || 1.5) * zoomFactor).toFixed(2))))
     }));
+    return true;
   };
 
   usePointerListeners({
-    wrapperRef, editableRef, isDragging, isDrawingActive,
-    handlePointerDown, handlePointerMove, handlePointerEnd
+    wrapperRef, editableRef, isDragging, isDrawingActive, isViewGesture: canvasView.gesture,
+    handlePointerDown, handlePointerMove, handlePointerEnd, handleWheel
   });
 
-  return { handlePointerDown, handleTextOverlayPointerDown, handleTextOverlayPointerEnd, handlePointerEnd, handlePointerMove, handleWheel };
+  return { handlePointerDown, handleTextOverlayPointerDown, handleTextOverlayPointerEnd, handlePointerEnd, handlePointerMove };
 }
