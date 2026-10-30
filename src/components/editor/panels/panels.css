@@ -405,3 +405,9 @@ div.ie-layer-pick { cursor: default; }
 .ie-size-row > :not(.ie-size-a) { flex: 1; min-width: 0; }
 .ie-size-a { flex: none; width: 18px; color: var(--ui-muted); font-size: 20px; font-weight: 600; line-height: 1; text-align: center; }
 .ie-size-a--small { font-size: 13px; }
+
+/* Text > Color: solid colours, then gradients, on one line that scrolls sideways. */
+.ie-swatch-line { display: flex; align-items: center; gap: 8px; min-width: 0; padding-right: 24px; overflow-x: auto; scrollbar-width: none; -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent); }
+.ie-swatch-line::-webkit-scrollbar { display: none; }
+.ie-swatch-line .ui-swatches { flex: none; flex-wrap: nowrap; }
+.ie-swatch-gap { flex: none; width: 1px; height: 22px; background: rgba(255, 255, 255, 0.12); }

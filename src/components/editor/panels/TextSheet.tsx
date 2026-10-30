@@ -39,7 +39,8 @@ const boxValue = (c: Caption) => (!hasBox(c) ? 'transparent' : c.bgColor === 'wh
 const OUTLINE_COLORS = ['#000000', '#ffffff', '#ff2a5f', '#ffe600', '#00f0ff', '#7c3aed'];
 const sameColour = (a: unknown, b: string) => String(a || '').toLowerCase() === b.toLowerCase();
 
-// The caption's sections, headed by these titles, and the sheet each belongs to: every sheet is a
+// The caption's sections, headed by these titles (colour, outline and shadow label their own rows),
+// and the sheet each belongs to: every sheet is a
 // button on the caption's floating bar (LayerToolbar), which opens this sheet with just its sections.
 // The words are edited in the whole sheet only (the Text strip's Edit).
 const SECTIONS = {
@@ -51,9 +52,9 @@ const SECTIONS = {
   effects: { title: 'Effects', part: 'style' },
   align: { title: 'Alignment', part: 'align' },
   spacing: { title: 'Spacing', part: 'align' },
-  color: { title: 'Color', part: 'color' },
-  outline: { title: 'Outline', part: 'color' },
-  shadow: { title: 'Shadow', part: 'color' },
+  color: { title: undefined, part: 'color' },
+  outline: { title: undefined, part: 'color' },
+  shadow: { title: undefined, part: 'color' },
   box: { title: 'Box', part: 'box' },
 } as const;
 type TextSection = keyof typeof SECTIONS;
@@ -257,25 +258,25 @@ export default function TextSheet({ actions, onClose }: { actions: EditorActions
 
           {shows('color') && (
             <Section title={heading('color')} id="color" rule={!part}>
-              <Row label="Text">
-                <SwatchRow ariaLabel="Text colour" colors={TEXT_COLORS} value={caption.color || '#ffffff'} onChange={(c) => set({ color: c, ...(strokeOn && sameColour(caption.stroke, c) ? { stroke: getContrastStroke(c) } : {}) })} />
-              </Row>
-              <Row label="Gradient">
-                <div className="ui-swatches" role="radiogroup" aria-label="Text gradient">
-                  <button type="button" role="radio" aria-checked={!caption.gradient} aria-label="No gradient" title="No gradient" className={`ui-swatch ui-swatch--none${!caption.gradient ? ' is-on' : ''}`} onClick={() => set({ gradient: null })} />
-                  {GRADIENTS.map((g) => (
-                    <button
-                      key={g.id}
-                      type="button"
-                      role="radio"
-                      aria-checked={sameGradient(caption.gradient, g.colors)}
-                      aria-label={`${g.label} gradient`}
-                      title={g.label}
-                      className={`ui-swatch${sameGradient(caption.gradient, g.colors) ? ' is-on' : ''}`}
-                      style={{ background: `linear-gradient(90deg, ${g.colors[0]}, ${g.colors[1]})`, '--swatch': g.colors[1] } as CSSProperties}
-                      onClick={() => set({ gradient: g.colors })}
-                    />
-                  ))}
+              <Row label="Color">
+                <div className="ie-swatch-line">
+                  <SwatchRow ariaLabel="Text colour" colors={TEXT_COLORS} value={caption.gradient ? '' : caption.color || '#ffffff'} onChange={(c) => set({ color: c, gradient: null, ...(strokeOn && sameColour(caption.stroke, c) ? { stroke: getContrastStroke(c) } : {}) })} />
+                  <span className="ie-swatch-gap" aria-hidden="true" />
+                  <div className="ui-swatches" role="radiogroup" aria-label="Text gradient">
+                    {GRADIENTS.map((g) => (
+                      <button
+                        key={g.id}
+                        type="button"
+                        role="radio"
+                        aria-checked={sameGradient(caption.gradient, g.colors)}
+                        aria-label={`${g.label} gradient`}
+                        title={g.label}
+                        className={`ui-swatch${sameGradient(caption.gradient, g.colors) ? ' is-on' : ''}`}
+                        style={{ background: `linear-gradient(90deg, ${g.colors[0]}, ${g.colors[1]})`, '--swatch': g.colors[1] } as CSSProperties}
+                        onClick={() => set({ gradient: g.colors })}
+                      />
+                    ))}
+                  </div>
                 </div>
               </Row>
             </Section>
@@ -283,29 +284,25 @@ export default function TextSheet({ actions, onClose }: { actions: EditorActions
 
           {shows('outline') && (
             <Section title={heading('outline')} id="outline">
-              <Row label="On" end>
+              <Row label="Outline">
                 <Switch label="Stroke" checked={strokeOn} onChange={(on) => set({ stroke: on ? getContrastStroke(caption.color || '#ffffff') : 'transparent' })} />
+                {strokeOn && <Slider label="Outline thickness" min={1} max={24} value={Number(caption.strokeWidth || Math.max(3, Math.round(fontSize / 7)))} onChange={(v) => live({ strokeWidth: v })} />}
               </Row>
               {strokeOn && (
-                <>
-                  <Row label="Thickness">
-                    <Slider label="Outline thickness" min={1} max={24} value={Number(caption.strokeWidth || Math.max(3, Math.round(fontSize / 7)))} onChange={(v) => live({ strokeWidth: v })} />
-                  </Row>
-                  <Row label="Color">
-                    <SwatchRow ariaLabel="Outline colour" colors={OUTLINE_COLORS} value={caption.stroke || '#000000'} onChange={(c) => set({ stroke: c })} />
-                  </Row>
-                </>
+                <Row label="">
+                  <SwatchRow ariaLabel="Outline colour" colors={OUTLINE_COLORS} value={caption.stroke || '#000000'} onChange={(c) => set({ stroke: c })} />
+                </Row>
               )}
             </Section>
           )}
 
           {shows('shadow') && (
             <Section title={heading('shadow')} id="shadow">
-              <Row label="Size">
+              <Row label="Shadow">
                 <Slider label="Shadow size" min={0} max={30} value={Number(caption.shadowSize || 0)} onChange={(v) => live({ shadowSize: v })} />
               </Row>
               {Number(caption.shadowSize) > 0 && (
-                <Row label="Color">
+                <Row label="">
                   <SwatchRow ariaLabel="Shadow colour" colors={SHADOW_COLORS} value={(caption.shadowColor as string) || '#000000'} onChange={(c) => live({ shadowColor: c })} />
                 </Row>
               )}
