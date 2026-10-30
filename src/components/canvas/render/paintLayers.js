@@ -1,6 +1,8 @@
 import { paintImageLayer } from './paintImageLayer';
 import { paintSticker } from './paintSticker';
 import { paintCaption } from './paintCaption';
+import { isCtxFilterSupported } from '../../../data/photoFilters';
+import { blurredCopy } from '../draw/photoEffects';
 
 // Keeps canvas.activeLayerBox current and fires 'activelayerbox' on the canvas when it changes.
 export function reportActiveLayerBox(canvas, box) {
@@ -54,10 +56,28 @@ export function paintLayers({
         loadingMediaRef, renderCanvas, reportActiveBox, reportBox: reportLayerBox, setActiveHandleDrawer, targetCtx
       });
     } else if (layer._type === 'caption') {
-      paintCaption({
+      const captionArgs = {
         activeLayerId, canvas, dragTarget, getCaptionCenterY, isDragging, isDrawingMode, layer,
-        reportActiveBox, reportBox: reportLayerBox, setActiveHandleDrawer, targetCtx
-      });
+        reportActiveBox, reportBox: reportLayerBox, setActiveHandleDrawer
+      };
+      // A blurred caption where the canvas ignores ctx.filter (Safari): drawn on its own, then
+      // softened by shrinking and enlarging it, and laid on the meme.
+      const blur = Number(layer.blur) || 0;
+      let off = null;
+      let offCtx = null;
+      if (blur > 0 && typeof document !== 'undefined' && !isCtxFilterSupported()) {
+        off = document.createElement('canvas');
+        off.width = targetCtx.canvas?.width || canvas.width;
+        off.height = targetCtx.canvas?.height || canvas.height;
+        offCtx = off.getContext('2d');
+      }
+      if (off && offCtx) {
+        paintCaption({ ...captionArgs, targetCtx: offCtx });
+        const soft = blurredCopy(off, off.width, off.height, blur);
+        targetCtx.drawImage(soft || off, 0, 0);
+      } else {
+        paintCaption({ ...captionArgs, targetCtx });
+      }
     }
   });
 
