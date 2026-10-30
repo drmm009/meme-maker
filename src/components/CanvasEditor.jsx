@@ -147,6 +147,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     dragTarget, editableRef, focusTextarea, getCaptionCenterY, getImageLayerCenterY,
     getStickerCenterY, headerExtH, imageCacheRef, isDragging, isDrawingMode,
     isFooterEnabled, isHeaderEnabled, onAddDrawing, onDeleteLayer, onSelectLayer,
+    onPreviewStroke: (stroke) => renderScene({ ...sceneRef.current, drawings: [...(sceneRef.current.drawings || []), stroke] }),
     onUpdateCaptionBounds, onUpdateDrawing, onUpdateImageLayerBounds, onUpdateSlotTransform,
     onUpdateStickerBounds, requestRedraw, setEditingCaptionId, snappingLines,
     totalCanvasH, wrapperRef

@@ -1,4 +1,4 @@
-import { Trash2, MoveUpRight, Circle, Square, Minus, Droplets, Grid3x3, RectangleHorizontal } from 'lucide-react';
+import { Trash2, MoveUpRight, Circle, Square, Minus, Droplets, Grid3x3, RectangleHorizontal, PenLine, Highlighter, MoveHorizontal } from 'lucide-react';
 import { Sheet, Section, Row, SwatchRow, Slider, Switch, TileGrid, Tile } from '../../ui';
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
 import { useEditorUiStore } from '../store/useEditorUiStore';
@@ -13,6 +13,9 @@ const SHAPES = [
   { id: 'ellipse', label: 'Circle', Icon: Circle },
   { id: 'rect', label: 'Box', Icon: Square },
   { id: 'line', label: 'Line', Icon: Minus },
+  { id: 'sketch', label: 'Sketch', Icon: PenLine },
+  { id: 'highlight', label: 'Highlight', Icon: Highlighter },
+  { id: 'double', label: 'Both ways', Icon: MoveHorizontal },
 ];
 const CENSORS = [
   { id: 'blur', label: 'Blur', Icon: Droplets },
@@ -33,6 +36,7 @@ export default function DrawSheet({ actions, onClose }: { actions: EditorActions
   const tool = DRAW_TOOLS.find((t) => t.id === drawTool) || DRAW_TOOLS[0];
   const isShape = drawTool === 'shape';
   const isCensor = drawTool === 'censor';
+  const isEraser = drawTool === 'eraser';
 
   const selected = drawings.find((d): d is DragDrawing => isDragDrawing(d) && d.id === activeLayerId && d.type === drawTool);
   const shape = selected?.type === 'shape' ? selected : null;
@@ -68,7 +72,7 @@ export default function DrawSheet({ actions, onClose }: { actions: EditorActions
       )}
 
       <Section>
-        {!isCensor && (
+        {!isCensor && !isEraser && (
           <Row label="Color">
             <SwatchRow ariaLabel="Brush colour" colors={DRAW_COLORS} value={color} onChange={both(ui.setBrushColor, (v) => ({ color: v }))} />
           </Row>

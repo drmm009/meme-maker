@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { paintBase } from './paintBase';
 import { getImageArea } from './imageArea';
 import { paintHeaderFooter } from './paintHeaderFooter';
@@ -100,6 +100,22 @@ describe('paintDrawings', () => {
     expect(callsNamed(ctx, 'arc')[0].args.slice(0, 3)).toEqual([5, 5, 5]);
     expect(callsNamed(ctx, 'lineTo').map((c) => c.args)).toEqual([[10, 0], [10, 10]]);
     expect(callsNamed(ctx, 'stroke')[0].state).toMatchObject({ strokeStyle: '#00ff00', lineWidth: 4, lineCap: 'round' });
+  });
+
+  it('rubs out only ink: strokes go on their own layer and the eraser cuts it', () => {
+    const ctx = createRecordingContext();
+    const layerCtx = createRecordingContext();
+    const layer = { width: 0, height: 0, getContext: () => layerCtx };
+    const realCreate = document.createElement.bind(document);
+    const spy = vi.spyOn(document, 'createElement').mockImplementation((tag) => (tag === 'canvas' ? layer : realCreate(tag)));
+    ctx.canvas = { width: 50, height: 40 };
+    const line = [{ x: 0, y: 0 }, { x: 10, y: 0 }];
+    paintDrawings({ drawings: [{ mode: 'pen', color: '#f00', size: 4, points: line }, { mode: 'eraser', size: 8, points: line }], targetCtx: ctx });
+    spy.mockRestore();
+    const strokes = callsNamed(layerCtx, 'stroke');
+    expect(strokes.map((c) => c.state.globalCompositeOperation)).toEqual(['source-over', 'destination-out']);
+    expect(callsNamed(ctx, 'stroke')).toHaveLength(0);
+    expect(callsNamed(ctx, 'drawImage')[0].args[0]).toBe(layer);
   });
 
   it('makes the marker see-through and the glow brush glow', () => {

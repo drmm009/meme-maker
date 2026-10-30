@@ -182,7 +182,7 @@ describe('MemeEditor', () => {
   it('every dock tab shows its tool strip; tapping the tab again closes it', () => {
     renderEditor();
     const strips = [
-      ['Draw on the meme', 'Draw tools', ['Brush', 'Glow', 'Marker', 'Shapes', 'Censor']],
+      ['Draw on the meme', 'Draw tools', ['Brush', 'Glow', 'Marker', 'Eraser', 'Shapes', 'Censor']],
       ['Photos, videos, stickers and emoji', 'Media tools', ['Photo', 'Templates', 'Stickers', 'Emoji']],
       ['Text', 'Text tools', ['Add Text', 'Edit', 'Bubble', 'Social Card']],
       ['AI tools and photo filters', 'AI and filter tools', ['Face Swap', 'Remove BG', 'AI Caption', 'Filters']],
@@ -283,7 +283,7 @@ describe('MemeEditor', () => {
     renderEditor();
     openSection('Draw on the meme');
     const strip = screen.getByRole('toolbar', { name: 'Draw tools' });
-    expect(within(strip).getAllByRole('button').map((b) => b.textContent)).toEqual(['Brush', 'Glow', 'Marker', 'Shapes', 'Censor']);
+    expect(within(strip).getAllByRole('button').map((b) => b.textContent)).toEqual(['Brush', 'Glow', 'Marker', 'Eraser', 'Shapes', 'Censor']);
     expect(canvas.props.isDrawingMode).toBe(false);
 
     fireEvent.click(within(strip).getByText('Marker'));

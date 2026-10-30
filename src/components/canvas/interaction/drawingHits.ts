@@ -7,7 +7,7 @@ import type { Point } from './geometry';
 export const isDragDrawing = (d: unknown): d is DragDrawing =>
   Boolean(d) && ((d as DragDrawing).type === 'shape' || (d as DragDrawing).type === 'censor');
 
-const isLine = (d: DragDrawing) => d.type === 'shape' && (d.shape === 'line' || d.shape === 'arrow');
+const isLine = (d: DragDrawing) => d.type === 'shape' && (d.shape === 'line' || d.shape === 'arrow' || d.shape === 'double');
 
 // A corner (or a line's end) to drag: it is made of points[xi].x and points[yi].y.
 export interface DrawingHandle {
@@ -52,12 +52,12 @@ export function isOnDrawing(d: DragDrawing, p: Point, pad: number): boolean {
   if (d.type === 'censor') return p.x >= r.x - pad && p.x <= r.x + r.w + pad && p.y >= r.y - pad && p.y <= r.y + r.h + pad;
   const half = d.size / 2 + pad;
   if (isLine(d)) return distToSegment(p, a, b) <= half;
-  if (d.shape === 'rect') {
+  if (d.shape === 'rect' || d.shape === 'highlight') {
     const inside = p.x >= r.x - half && p.x <= r.x + r.w + half && p.y >= r.y - half && p.y <= r.y + r.h + half;
-    if (!inside || d.fill) return inside;
+    if (!inside || d.fill || d.shape === 'highlight') return inside;
     return p.x <= r.x + half || p.x >= r.x + r.w - half || p.y <= r.y + half || p.y >= r.y + r.h - half;
   }
-  // Ellipse: how far out p is, 1 being on the line.
+  // Ellipse (or sketched ring): how far out p is, 1 being on the line.
   const rx = Math.max(1, r.w / 2);
   const ry = Math.max(1, r.h / 2);
   const k = Math.hypot((p.x - (r.x + rx)) / rx, (p.y - (r.y + ry)) / ry);

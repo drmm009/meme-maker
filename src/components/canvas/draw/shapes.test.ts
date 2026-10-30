@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { arrowHead, isTooSmall, paintCensor, paintShape, rectBetween, startDragDrawing } from './shapes';
+import { arrowHead, isTooSmall, paintCensor, paintShape, rectBetween, sketchPoints, startDragDrawing } from './shapes';
 import type { CensorDrawing, ShapeDrawing } from './shapes';
 import { createRecordingContext, callsNamed } from '../testing/recordingContext';
 
@@ -110,5 +110,32 @@ describe('paintCensor', () => {
     const empty = fakeCtx();
     paintCensor(empty.ctx as unknown as CanvasRenderingContext2D, censor('bar', [{ x: 250, y: 10 }, { x: 300, y: 50 }]));
     expect(empty.calls).toHaveLength(0);
+  });
+});
+
+describe('shape presets', () => {
+  it('draws a highlight as a see-through filled box', () => {
+    const ctx = createRecordingContext();
+    paintShape(ctx as unknown as CanvasRenderingContext2D, shape({ shape: 'highlight', points: [{ x: 0, y: 0 }, { x: 40, y: 20 }] }));
+    const [fill] = callsNamed(ctx, 'fillRect');
+    expect(fill.args).toEqual([0, 0, 40, 20]);
+    expect(fill.state.globalAlpha).toBe(0.38);
+  });
+
+  it('puts a head on both ends of a both-ways arrow', () => {
+    const ctx = createRecordingContext();
+    paintShape(ctx as unknown as CanvasRenderingContext2D, shape({ shape: 'double', points: [{ x: 0, y: 0 }, { x: 100, y: 0 }] }));
+    const ends = callsNamed(ctx, 'lineTo').map((c) => c.args[0]);
+    expect(ends.filter((x) => x === 100).length).toBeGreaterThanOrEqual(2);
+    expect(ends.filter((x) => x === 0).length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('sketches a wobbly ring that is the same every time for a shape', () => {
+    const r = { x: 0, y: 0, w: 200, h: 100 };
+    const a = sketchPoints(r, 'shape-1');
+    expect(a).toEqual(sketchPoints(r, 'shape-1'));
+    expect(a).not.toEqual(sketchPoints(r, 'shape-2'));
+    // Close to the ellipse: every point within 10% of its radii.
+    for (const p of a) expect(Math.hypot((p.x - 100) / 100, (p.y - 50) / 50)).toBeGreaterThan(0.9);
   });
 });

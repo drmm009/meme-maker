@@ -32,7 +32,7 @@ export function useCanvasInteraction({
   dragTarget, editableRef, focusTextarea, getCaptionCenterY, getImageLayerCenterY,
   getStickerCenterY, headerExtH, imageCacheRef, isDragging, isDrawingMode,
   isFooterEnabled, isHeaderEnabled, onAddDrawing, onDeleteLayer, onSelectLayer,
-  onUpdateCaptionBounds, onUpdateDrawing, onUpdateImageLayerBounds, onUpdateSlotTransform,
+  onPreviewStroke, onUpdateCaptionBounds, onUpdateDrawing, onUpdateImageLayerBounds, onUpdateSlotTransform,
   onUpdateStickerBounds, requestRedraw, setEditingCaptionId, snappingLines,
   totalCanvasH, wrapperRef
 }) {
@@ -216,6 +216,11 @@ export function useCanvasInteraction({
       isDrawingActive.current = true;
       currentStroke.current = startStroke({ drawTool, canvasBgColor, brushColor, brushSize, point: coords });
       lastDrawPoint.current = { x: coords.x, y: coords.y };
+      // The eraser can't be painted on top: the scene is redrawn with it instead.
+      if (currentStroke.current.mode === 'eraser') {
+        onPreviewStroke?.(currentStroke.current);
+        return;
+      }
       const ctx = canvas.getContext('2d');
       if (ctx) paintStrokeDot(ctx, currentStroke.current, coords);
       return;
@@ -340,6 +345,10 @@ export function useCanvasInteraction({
     if (Math.hypot(coords.x - lastPt.x, coords.y - lastPt.y) < 1.5) return;
     stroke.points.push({ x: coords.x, y: coords.y });
     lastDrawPoint.current = { x: coords.x, y: coords.y };
+    if (stroke.mode === 'eraser') {
+      onPreviewStroke?.(stroke);
+      return;
+    }
     const ctx = canvasRef.current?.getContext('2d');
     if (ctx) paintStrokeSegment(ctx, stroke, lastPt, coords);
   };

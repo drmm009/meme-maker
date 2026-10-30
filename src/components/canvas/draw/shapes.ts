@@ -4,7 +4,8 @@
 // the layers, so a censor region hides everything under it.
 import type { Point } from '../interaction/geometry';
 
-export type ShapeKind = 'arrow' | 'ellipse' | 'rect' | 'line';
+// sketch: a hand-drawn ring; highlight: a see-through marker box; double: an arrow both ways.
+export type ShapeKind = 'arrow' | 'ellipse' | 'rect' | 'line' | 'sketch' | 'highlight' | 'double';
 export type CensorMode = 'blur' | 'pixelate' | 'bar';
 
 export interface ShapeDrawing {
@@ -65,6 +66,25 @@ export function arrowHead(from: Point, to: Point, size: number): [Point, Point] 
   ];
 }
 
+// A hand-drawn looking ring around the box: a little more than one turn with a wobbly radius,
+// the same for a given id each time it is drawn.
+export function sketchPoints(r: Rect, id: string, steps = 48): Point[] {
+  let seed = 0;
+  for (let i = 0; i < id.length; i++) seed = (seed * 31 + id.charCodeAt(i)) >>> 0;
+  const wobble = (i: number) => Math.sin(i * 0.9 + (seed % 97)) * 0.035 + Math.sin(i * 0.37 + (seed % 13)) * 0.025;
+  const cx = r.x + r.w / 2;
+  const cy = r.y + r.h / 2;
+  const turn = Math.PI * 2 * 1.12;
+  const start = (seed % 360) * Math.PI / 180;
+  const pts: Point[] = [];
+  for (let i = 0; i <= steps; i++) {
+    const t = start + (turn * i) / steps;
+    const k = 1 + wobble(i);
+    pts.push({ x: cx + Math.cos(t) * (r.w / 2) * k, y: cy + Math.sin(t) * (r.h / 2) * k });
+  }
+  return pts;
+}
+
 export function paintShape(ctx: CanvasRenderingContext2D, d: ShapeDrawing): void {
   const [a, b] = d.points;
   ctx.save();
@@ -74,7 +94,18 @@ export function paintShape(ctx: CanvasRenderingContext2D, d: ShapeDrawing): void
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
   ctx.beginPath();
-  if (d.shape === 'rect') {
+  if (d.shape === 'highlight') {
+    const r = rectBetween(a, b);
+    ctx.globalAlpha = 0.38;
+    ctx.fillRect(r.x, r.y, r.w, r.h);
+    ctx.restore();
+    return;
+  }
+  if (d.shape === 'sketch') {
+    const pts = sketchPoints(rectBetween(a, b), d.id);
+    ctx.moveTo(pts[0].x, pts[0].y);
+    pts.slice(1).forEach((p) => ctx.lineTo(p.x, p.y));
+  } else if (d.shape === 'rect') {
     const r = rectBetween(a, b);
     ctx.rect(r.x, r.y, r.w, r.h);
   } else if (d.shape === 'ellipse') {
@@ -83,10 +114,16 @@ export function paintShape(ctx: CanvasRenderingContext2D, d: ShapeDrawing): void
   } else {
     ctx.moveTo(a.x, a.y);
     ctx.lineTo(b.x, b.y);
-    if (d.shape === 'arrow') {
+    if (d.shape === 'arrow' || d.shape === 'double') {
       const [l, r] = arrowHead(a, b, d.size);
       ctx.moveTo(l.x, l.y);
       ctx.lineTo(b.x, b.y);
+      ctx.lineTo(r.x, r.y);
+    }
+    if (d.shape === 'double') {
+      const [l, r] = arrowHead(b, a, d.size);
+      ctx.moveTo(l.x, l.y);
+      ctx.lineTo(a.x, a.y);
       ctx.lineTo(r.x, r.y);
     }
   }
