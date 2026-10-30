@@ -384,3 +384,19 @@ div.ie-layer-pick { cursor: default; }
 }
 .ie-fold svg { color: var(--ui-muted); transition: transform 0.2s ease; }
 .ie-fold[aria-expanded='true'] svg { transform: rotate(180deg); }
+
+/* Text > Style: bold, italic, underline and case as four equal boxes; size between a small and a big A. */
+.ie-format-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.ie-format-row .ui-toggle {
+  width: auto;
+  height: 40px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  background: var(--ui-surface-2);
+  color: var(--ui-text);
+}
+.ie-format-row .ui-toggle.is-on { border-color: var(--ui-accent); background: rgba(255, 90, 54, 0.15); color: var(--ui-accent); }
+.ie-size-row { display: flex; align-items: center; gap: 12px; min-height: 40px; }
+.ie-size-row > :not(.ie-size-a) { flex: 1; min-width: 0; }
+.ie-size-a { flex: none; width: 18px; color: var(--ui-muted); font-size: 20px; font-weight: 600; line-height: 1; text-align: center; }
+.ie-size-a--small { font-size: 13px; }

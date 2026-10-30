@@ -46,8 +46,8 @@ const SECTIONS = {
   edit: { title: undefined, part: null },
   font: { title: 'Font', part: 'font' },
   styles: { title: 'My styles', part: 'font' },
-  size: { title: 'Size', part: 'style' },
   format: { title: 'Format', part: 'style' },
+  size: { title: 'Size', part: 'style' },
   effects: { title: 'Effects', part: 'style' },
   align: { title: 'Alignment', part: 'align' },
   spacing: { title: 'Spacing', part: 'align' },
@@ -61,7 +61,7 @@ const TEXT_PARTS = { font: 'Font', style: 'Style', align: 'Align', color: 'Color
 type TextPart = keyof typeof TEXT_PARTS;
 
 // The Text sheet, under the Text strip (which adds text, bubbles and social cards): pick a caption,
-// edit its words, font, size, format, effects, alignment, spacing, colour, outline, shadow and box. Opened from
+// edit its words, font, format, size, effects, alignment, spacing, colour, outline, shadow and box. Opened from
 // a floating-bar button it shows only that button's sections.
 export default function TextSheet({ actions, onClose }: { actions: EditorActions; onClose: () => void }) {
   const captions: Caption[] = useMemeEditorStore((s: { captions: Caption[] }) => s.captions);
@@ -81,7 +81,8 @@ export default function TextSheet({ actions, onClose }: { actions: EditorActions
   const { id, kind, caption } = useSelection();
   const part = kind === 'caption' && sheetFocus && sheetFocus in TEXT_PARTS ? (sheetFocus as TextPart) : null;
   const shows = (section: TextSection) => !part || SECTIONS[section].part === part;
-  const heading = (section: TextSection) => SECTIONS[section].title;
+  // Style on its own is three plain rows (format, size, effects) with no headings.
+  const heading = (section: TextSection) => (part === 'style' ? undefined : SECTIONS[section].title);
 
   // Opening the sheet with no caption selected picks the first one.
   useEffect(() => {
@@ -192,25 +193,26 @@ export default function TextSheet({ actions, onClose }: { actions: EditorActions
             </Section>
           )}
 
-          {shows('size') && (
-            <Section title={heading('size')} id="size" rule={!part}>
-              <Row label="Text">
-                <Slider label="Text size" min={16} max={160} value={caption.fontSize || 50} onChange={(v) => live({ fontSize: v })} />
-              </Row>
+          {shows('format') && (
+            <Section title={heading('format')} id="format" rule={!part}>
+              <div className="ie-format-row" role="group" aria-label="Text format">
+                <Toggle label="Bold" active={caption.bold !== false} onClick={() => set({ bold: caption.bold === false })}><Bold size={19} strokeWidth={3} /></Toggle>
+                <Toggle label="Italic" active={Boolean(caption.italic)} onClick={() => set({ italic: !caption.italic })}><Italic size={19} /></Toggle>
+                <Toggle label="Underline" active={Boolean(caption.underline)} onClick={() => set({ underline: !caption.underline })}><Underline size={19} /></Toggle>
+                <button type="button" className="ui-toggle" aria-label="Change case" title="Change case" onClick={actions.handleToggleTextCase}>
+                  <CaseSensitive size={21} />
+                </button>
+              </div>
             </Section>
           )}
 
-          {shows('format') && (
-            <Section title={heading('format')} id="format">
-              <Row label="Style">
-                <Toggle label="Bold" active={caption.bold !== false} onClick={() => set({ bold: caption.bold === false })}><Bold size={20} strokeWidth={3} /></Toggle>
-                <Toggle label="Italic" active={Boolean(caption.italic)} onClick={() => set({ italic: !caption.italic })}><Italic size={19} /></Toggle>
-                <Toggle label="Underline" active={Boolean(caption.underline)} onClick={() => set({ underline: !caption.underline })}><Underline size={19} /></Toggle>
-                <span className="ie-row-spacer" />
-                <button type="button" className="ui-toggle" aria-label="Change case" title="Change case" onClick={actions.handleToggleTextCase}>
-                  <CaseSensitive size={22} />
-                </button>
-              </Row>
+          {shows('size') && (
+            <Section title={heading('size')} id="size">
+              <div className="ie-size-row">
+                <span className="ie-size-a ie-size-a--small" aria-hidden="true">A</span>
+                <Slider label="Text size" min={16} max={160} value={caption.fontSize || 50} onChange={(v) => live({ fontSize: v })} />
+                <span className="ie-size-a" aria-hidden="true">A</span>
+              </div>
             </Section>
           )}
 
