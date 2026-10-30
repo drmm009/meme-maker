@@ -20,6 +20,10 @@ import LayersSheet from './LayersSheet';
 import ExportSheet from '../export/ExportSheet';
 import LibrarySheet from '../library/LibrarySheet';
 import LinkSheet from './LinkSheet';
+import TemplatesSheet from './TemplatesSheet';
+import StickersSheet from './StickersSheet';
+import GifSheet from './GifSheet';
+import EmojiSheet from './EmojiSheet';
 import { DRAW_TOOLS } from './drawTools';
 import './panels.css';
 
@@ -32,7 +36,8 @@ const DOCK: DockItem[] = [
   { id: 'canvas', label: 'Canvas', Icon: LayoutGrid, title: 'Canvas colour, bands and watermark' },
 ];
 
-const SHEETS = { text: TextSheet, media: MediaSheet, draw: DrawSheet, canvasColor: CanvasColorSheet, watermark: WatermarkSheet, filters: FiltersSheet, layers: LayersSheet, export: ExportSheet, library: LibrarySheet, mediaLink: LinkSheet };
+const SHEETS = { text: TextSheet, media: MediaSheet, draw: DrawSheet, canvasColor: CanvasColorSheet, watermark: WatermarkSheet, filters: FiltersSheet, layers: LayersSheet, export: ExportSheet, library: LibrarySheet, mediaLink: LinkSheet,
+  templates: TemplatesSheet, stickers: StickersSheet, gifs: GifSheet, emoji: EmojiSheet };
 
 // The bottom of the editor: the dock with the open tab's tool strip above it, or, when one of that
 // tab's sheets is open, the strip above the sheet (so its tools stay one tap away).

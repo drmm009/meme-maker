@@ -1,31 +1,13 @@
 import React, { useState } from 'react';
 import BottomSheet from '../BottomSheet';
 import { Search, X } from 'lucide-react';
-import { STICKERS } from '../../data/stickers';
-
-const EMOJI_CATEGORIES = [
-  { id: 'faces', icon: '😀', label: 'Faces' },
-  { id: 'gestures', icon: '👋', label: 'Hands' },
-  { id: 'symbols', icon: '❤️', label: 'Symbols' },
-  { id: 'objects', icon: '💡', label: 'Objects' },
-  { id: 'flags', icon: '🏳️‍🌈', label: 'Flags' },
-];
+import { EMOJI_CATEGORIES, filterEmojis } from './panels/mediaPickers';
 
 export default function EmojiBottomSheet({ isOpen, onClose, onSelectEmoji }) {
   const [emojiSearchQuery, setEmojiSearchQuery] = useState('');
   const [activeStickerCategory, setActiveStickerCategory] = useState('faces');
 
-  const filteredEmojis = STICKERS.filter((s) => {
-    if (emojiSearchQuery.trim()) {
-      const q = emojiSearchQuery.toLowerCase();
-      return (
-        s.id.toLowerCase().includes(q) ||
-        (s.name && s.name.toLowerCase().includes(q)) ||
-        s.emoji.includes(q)
-      );
-    }
-    return s.category === activeStickerCategory;
-  });
+  const filteredEmojis = filterEmojis(emojiSearchQuery, activeStickerCategory);
 
   return (
     <BottomSheet

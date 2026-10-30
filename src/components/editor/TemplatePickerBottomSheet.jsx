@@ -3,17 +3,7 @@ import BottomSheet from '../BottomSheet';
 import { Image as ImageIcon, Search, X } from 'lucide-react';
 import { MEME_TEMPLATES } from '../../data/templates';
 import { safeGet } from '../../utils/storage';
-
-const TEMPLATE_TAGS = [
-  { id: 'all', label: 'All' },
-  { id: 'social', label: 'Social Media' },
-  { id: 'images', label: 'Images' },
-  { id: 'reaction', label: 'Reactions' },
-  { id: 'favorites', label: 'Favorites' },
-  { id: 'classics', label: 'Classics' },
-  { id: 'multi-panel', label: 'Multi-Panel' },
-];
-
+import { TEMPLATE_TAGS, filterTemplates } from './panels/mediaPickers';
 
 export default function TemplatePickerBottomSheet({
   isOpen,
@@ -32,44 +22,10 @@ export default function TemplatePickerBottomSheet({
 
   const templateList = templates && templates.length > 0 ? templates : MEME_TEMPLATES;
 
-  const filteredImageTemplates = useMemo(() => {
-    return templateList
-      .filter((template) => {
-        // Exclude video templates - this picker is strictly for images
-        if (template.type === 'video' || template.mediaType === 'video') {
-          return false;
-        }
-
-        // Search query filter
-        const q = imagePickerSearch.toLowerCase().trim();
-        const matchesSearch =
-          !q ||
-          (template.name && template.name.toLowerCase().includes(q)) ||
-          (template.category && template.category.toLowerCase().includes(q)) ||
-          (template.tags && template.tags.some((tag) => tag.toLowerCase().includes(q)));
-
-        // Category tag filter (matching TemplateDiscovery logic)
-        let matchesTag = true;
-        if (imagePickerCategory === 'social') {
-          matchesTag = template.category === 'social' || template.category === 'social media' || (template.tags && template.tags.includes('social'));
-        } else if (imagePickerCategory === 'all' || imagePickerCategory === 'images') {
-          matchesTag = true;
-        } else if (imagePickerCategory === 'reaction') {
-          matchesTag = template.category === 'reaction';
-        } else if (imagePickerCategory === 'favorites') {
-          matchesTag = favorites.includes(template.id);
-        } else if (imagePickerCategory === 'classics' || imagePickerCategory === 'classic') {
-          matchesTag = template.category === 'classic' || template.category === 'popular';
-        } else if (imagePickerCategory === 'multi-panel') {
-          matchesTag = template.category === 'multi-panel';
-        } else if (imagePickerCategory === 'desi') {
-          matchesTag = template.category === 'desi';
-        }
-
-        return matchesSearch && matchesTag;
-      })
-      .sort((a, b) => (b.trendingScore || 0) - (a.trendingScore || 0));
-  }, [templateList, imagePickerSearch, imagePickerCategory, favorites]);
+  const filteredImageTemplates = useMemo(
+    () => filterTemplates(templateList, imagePickerSearch, imagePickerCategory, favorites),
+    [templateList, imagePickerSearch, imagePickerCategory, favorites],
+  );
 
   const handleCardClick = (tmpl) => {
     if (pickingTemplateRef.current) return;

@@ -106,6 +106,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, o
     listProjects, handleSaveProject, handleOpenProject, handleDeleteProject, handleRenameProject,
     addMediaLink: media.addLink,
     handleClearDrawings, handleUndoDrawing,
+    handleAddImageLayer, handleAddSticker, handleAddGraphicSticker,
     handleFileUploadImageLayer, updateActiveImageLayer, moveLayer, handleDeleteLayer, handleDuplicateLayer, handleRotateLayer,
     handleFlipActiveLayer, handleToggleDieCutSticker, handleSetDieCutColor,
     handleRemoveBackground, setPortraitBlur, isRemovingBg, isNativeLayout, setShowFaceMorphModal, handleStartMorphFace,
@@ -164,10 +165,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, o
         currentEditingSocialCard={currentEditingSocialCard}
         extractedMemeFace={extractedMemeFace}
         faceTarget={faceTarget}
-        handleAddGraphicSticker={handleAddGraphicSticker}
-        handleAddImageLayer={handleAddImageLayer}
         handleAddInstagramCard={handleAddInstagramCard}
-        handleAddSticker={handleAddSticker}
         handleAddTweetCard={handleAddTweetCard}
         handleAddWhatsAppCard={handleAddWhatsAppCard}
         handleApplyAiCaption={handleApplyAiCaption}

@@ -210,6 +210,40 @@ describe('MemeEditor', () => {
     expect(within(strip('Media tools')).getByLabelText('Photo').getAttribute('type')).toBe('file');
   }, 30000);
 
+  it('the Media pickers dock under the strip like the Draw sheet, and close after a pick', () => {
+    renderEditor();
+    openSection('Photos, videos, stickers and emoji');
+    const tool = (name) => within(strip('Media tools')).getByText(name).closest('button');
+
+    // Stickers: category tiles, a search over all of them, then a pick adds it and closes.
+    fireEvent.click(tool('Stickers'));
+    expect(tool('Stickers').getAttribute('aria-pressed')).toBe('true');
+    const stickers = sheet('Stickers');
+    expect(document.querySelector('.bottom-sheet-panel')).toBeNull();
+    const tiles = within(stickers).getByRole('toolbar', { name: 'Stickers categories' });
+    expect(within(tiles).getByText('Memes').closest('button').getAttribute('aria-pressed')).toBe('true');
+    fireEvent.change(within(stickers).getByLabelText('Search stickers'), { target: { value: 'doge' } });
+    expect(within(tiles).getByText('Memes').closest('button').getAttribute('aria-pressed')).toBe('false');
+    fireEvent.click(within(stickers).getAllByRole('button', { name: /doge/i })[0]);
+    expect(canvas.props.stickers).toHaveLength(1);
+    expect(canvas.props.stickers[0].url).toBeTruthy();
+    expect(screen.queryByRole('dialog', { name: 'Stickers' })).toBeNull();
+    expect(strip('Media tools')).toBeTruthy();
+
+    // Tapping the open tool again closes its sheet.
+    fireEvent.click(tool('Emoji'));
+    expect(sheet('Emoji')).toBeTruthy();
+    fireEvent.click(tool('Emoji'));
+    expect(screen.queryByRole('dialog', { name: 'Emoji' })).toBeNull();
+
+    // Templates adds the template's picture as a photo layer.
+    fireEvent.click(tool('Templates'));
+    const templates = sheet('Templates');
+    fireEvent.click(within(templates).getAllByRole('button', { name: /drake/i })[0]);
+    expect(canvas.props.imageLayers).toHaveLength(1);
+    expect(screen.queryByRole('dialog', { name: 'Templates' })).toBeNull();
+  }, 30000);
+
   it('Text: Bubble adds a speech bubble and opens its styles', () => {
     renderEditor();
     fireEvent.click(within(textStrip()).getByText('Bubble'));
@@ -713,7 +747,6 @@ describe('MemeEditor', () => {
     openSection('Photos, videos, stickers and emoji');
     fireEvent.click(within(strip('Media tools')).getByText('Emoji'));
     fireEvent.click(screen.getByTitle('Laugh Cry'));
-    fireEvent.click(screen.getByLabelText('Close'));
     fireEvent.click(within(layerToolbar()).getByText('Size'));
     const media = sheet('Media');
     fireEvent.click(within(media).getByRole('switch', { name: 'Flip upside down' }));
@@ -726,11 +759,12 @@ describe('MemeEditor', () => {
     expect(within(sheet('Media')).queryByLabelText('Corner rounding')).toBeNull();
   }, 30000);
 
-  it('Media > GIFs opens the Giphy picker (asking for a key when there is none)', () => {
+  it('Media > GIFs opens the Giphy picker: animated stickers or GIFs', () => {
     renderEditor();
     openSection('Photos, videos, stickers and emoji');
     fireEvent.click(within(strip('Media tools')).getByText('GIFs'));
-    expect(screen.getByText('GIFs and stickers')).toBeTruthy();
+    const kinds = within(sheet('GIFs')).getByRole('toolbar', { name: 'GIFs categories' });
+    expect(within(kinds).getAllByRole('button').map((b) => b.textContent)).toEqual(['Stickers', 'GIFs']);
   }, 30000);
 
   it('Media > Link adds a picture from a web link, and says when a site blocks it', async () => {
@@ -764,7 +798,6 @@ describe('MemeEditor', () => {
     openSection('Photos, videos, stickers and emoji');
     fireEvent.click(within(strip('Media tools')).getByText('Emoji'));
     fireEvent.click(screen.getByTitle('Laugh Cry'));
-    fireEvent.click(screen.getByLabelText('Close'));
     // The new sticker's Size opens the Media sheet under the Media strip.
     fireEvent.click(within(layerToolbar()).getByText('Size'));
     expect(within(sheet('Media')).getByLabelText('Sticker size')).toBeTruthy();

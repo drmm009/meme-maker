@@ -24,8 +24,6 @@ export function useLayerActions({ activeCaption, activeImageLayer, activeSticker
   const pushHistoryDebounced = useMemeEditorStore((s) => s.pushHistoryDebounced);
   const slotTransforms = useMemeEditorStore((s) => s.slotTransforms);
   const setSlotTransforms = useMemeEditorStore((s) => s.setSlotTransforms);
-  const setShowEmojiModal = useEditorUiStore((s) => s.setShowEmojiModal);
-  const setShowMemeStickersModal = useEditorUiStore((s) => s.setShowMemeStickersModal);
   const drawings = useMemeEditorStore((s) => s.drawings);
   const setDrawings = useMemeEditorStore((s) => s.setDrawings);
 
@@ -327,7 +325,6 @@ export function useLayerActions({ activeCaption, activeImageLayer, activeSticker
     setStickers(nextStickers);
     setActiveLayerId(newSticker.id);
     setActiveTab('images');
-    setShowEmojiModal(false);
     pushHistory();
   };
 
@@ -348,7 +345,6 @@ export function useLayerActions({ activeCaption, activeImageLayer, activeSticker
     setStickers(nextStickers);
     setActiveLayerId(newSticker.id);
     setActiveTab('images');
-    setShowMemeStickersModal(false);
     pushHistory();
   };
 

@@ -166,3 +166,107 @@ div.ie-layer-pick { cursor: default; }
   text-align: center;
   font-size: 13px;
 }
+
+/* Media pickers (Templates, Stickers, GIFs, Emoji): the Draw sheet's look, with the category tiles
+   and search fixed at the top and only the grid scrolling, so the meme above stays in view. */
+.ie-picker-sheet .ui-sheet-body {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding-bottom: 0;
+}
+.ie-picker-tab-emoji { font-size: 20px; line-height: 20px; }
+.ie-picker-search { position: relative; display: flex; align-items: center; flex: none; margin: 2px 0 10px; }
+.ie-picker-search > svg { position: absolute; left: 12px; color: var(--ui-muted); pointer-events: none; }
+.ui-theme .ie-picker-search .ui-field { min-height: 38px; padding: 8px 36px !important; font-size: 14px; }
+.ie-picker-search .ui-field::-webkit-search-cancel-button { display: none; }
+.ie-picker-clear {
+  position: absolute;
+  right: 8px;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--ui-surface-3);
+  color: var(--ui-text);
+  cursor: pointer;
+}
+.ie-picker-grid {
+  flex: 1 1 240px;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  align-content: start;
+  gap: 8px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  margin: 0 -16px;
+  padding: 2px 16px calc(14px + env(safe-area-inset-bottom, 0px));
+  scrollbar-width: none;
+}
+.ie-picker-grid::-webkit-scrollbar { display: none; }
+.ie-picker-grid > .ie-empty { grid-column: 1 / -1; }
+.ie-picker-grid--emoji { grid-template-columns: repeat(auto-fill, minmax(44px, 1fr)); gap: 4px; }
+.ie-picker-grid--templates, .ie-picker-grid--gifs { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+.ie-picker-emoji {
+  aspect-ratio: 1;
+  padding: 0;
+  border: none;
+  border-radius: var(--ui-radius-sm);
+  background: transparent;
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+}
+.ie-picker-emoji:hover { background: var(--ui-surface-2); }
+.ie-picker-emoji:active { transform: scale(0.92); }
+
+.ie-picker-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--ui-muted);
+  cursor: pointer;
+}
+.ie-picker-thumb {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  background: var(--ui-surface-2);
+  overflow: hidden;
+  transition: border-color 0.15s ease;
+}
+.ie-picker-card:hover .ie-picker-thumb { border-color: var(--ui-accent); }
+.ie-picker-card:active .ie-picker-thumb { transform: scale(0.96); }
+.ie-picker-thumb img { width: 78%; height: 78%; object-fit: contain; }
+.ie-picker-thumb--photo img { width: 100%; height: 100%; object-fit: cover; }
+.ie-picker-name { overflow: hidden; font-size: 11px; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
+
+.ie-picker-gif {
+  aspect-ratio: 1;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  background: var(--ui-surface-2);
+  overflow: hidden;
+  cursor: pointer;
+}
+.ie-picker-gif img { display: block; width: 100%; height: 100%; object-fit: cover; }
+/* Transparent stickers sit on a checkerboard and keep their shape. */
+.ie-picker-grid.is-stickers .ie-picker-gif {
+  background-color: #2a2d38;
+  background-image: conic-gradient(#232631 25%, transparent 0 50%, #232631 0 75%, transparent 0);
+  background-size: 16px 16px;
+}
+.ie-picker-grid.is-stickers .ie-picker-gif img { box-sizing: border-box; padding: 6px; object-fit: contain; }
+.ie-picker-credit { flex: none; margin: 0; padding: 4px 0 calc(8px + env(safe-area-inset-bottom, 0px)); color: var(--ui-faint); font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-align: center; }

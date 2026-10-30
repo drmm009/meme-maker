@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import BottomSheet from '../BottomSheet';
 import { Search, X } from 'lucide-react';
-import { GRAPHIC_STICKERS, GRAPHIC_STICKER_CATEGORIES } from '../../data/memeStickers';
+import { GRAPHIC_STICKER_CATEGORIES } from '../../data/memeStickers';
+import { filterStickers } from './panels/mediaPickers';
 
 export default function MemeStickersBottomSheet({ isOpen, onClose, onSelectSticker }) {
   const [stickerSearchQuery, setStickerSearchQuery] = useState('');
@@ -9,17 +10,7 @@ export default function MemeStickersBottomSheet({ isOpen, onClose, onSelectStick
     GRAPHIC_STICKER_CATEGORIES[0]?.id || 'memes'
   );
 
-  const filteredStickers = GRAPHIC_STICKERS.filter((s) => {
-    if (stickerSearchQuery.trim()) {
-      const q = stickerSearchQuery.toLowerCase();
-      return (
-        s.name.toLowerCase().includes(q) ||
-        s.category.toLowerCase().includes(q) ||
-        (s.id && s.id.toLowerCase().includes(q))
-      );
-    }
-    return s.category === activeGraphicStickerCategory;
-  });
+  const filteredStickers = filterStickers(stickerSearchQuery, activeGraphicStickerCategory);
 
   return (
     <BottomSheet

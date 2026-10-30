@@ -5,14 +5,13 @@ import { useEditorUiStore } from '../store/useEditorUiStore';
 import type { EditorActions } from './selection';
 
 // The Media tab's strip: add a photo or video (file picker), an image from the templates, a meme
-// sticker, a GIF from Giphy (it plays on the meme), an emoji, or a picture from a web link. A selected image or sticker is adjusted from its floating toolbar (its More /
-// Size opens the Media sheet under this strip).
+// sticker, a GIF from Giphy (it plays on the meme), an emoji, or a picture from a web link. All but
+// Photo open a picker sheet under the strip, like the Draw tools. A selected image or sticker is
+// adjusted from its floating toolbar (its More / Size opens the Media sheet under this strip).
 export default function MediaStrip({ actions }: { actions: EditorActions }) {
-  const setImagePickerTarget = useEditorUiStore((s: { setImagePickerTarget: (v: unknown) => void }) => s.setImagePickerTarget);
-  const setShowMemeStickersModal = useEditorUiStore((s: { setShowMemeStickersModal: (v: boolean) => void }) => s.setShowMemeStickersModal);
-  const setShowEmojiModal = useEditorUiStore((s: { setShowEmojiModal: (v: boolean) => void }) => s.setShowEmojiModal);
-  const setShowGifSheet = useEditorUiStore((s: { setShowGifSheet: (v: boolean) => void }) => s.setShowGifSheet);
+  const sheet: string | null = useEditorUiStore((s: { sheet: string | null }) => s.sheet);
   const openSheet = useEditorUiStore((s: { openSheet: (sheet: string) => void }) => s.openSheet);
+  const closeSheet = useEditorUiStore((s: { closeSheet: () => void }) => s.closeSheet);
 
   const items: StripItem[] = [
     { id: 'photo', label: 'Photo', title: 'Upload Image or Video', Icon: ImagePlus, accept: 'image/*,video/*', onFile: actions.handleFileUploadImageLayer },
@@ -23,13 +22,13 @@ export default function MediaStrip({ actions }: { actions: EditorActions }) {
     { id: 'link', label: 'Link', title: 'Add a picture or video from a web link', Icon: Link2 },
   ];
 
+  // Each tool's sheet; tapping the open one again closes it.
+  const sheetFor = (id: string) => (id === 'link' ? 'mediaLink' : id);
   const onSelect = (id: string) => {
-    if (id === 'templates') setImagePickerTarget('layer');
-    else if (id === 'stickers') setShowMemeStickersModal(true);
-    else if (id === 'emoji') setShowEmojiModal(true);
-    else if (id === 'gifs') setShowGifSheet(true);
-    else if (id === 'link') openSheet('mediaLink');
+    if (sheet === sheetFor(id)) closeSheet();
+    else openSheet(sheetFor(id));
   };
+  const active = items.find((i) => sheetFor(i.id) === sheet)?.id ?? null;
 
-  return <ToolStrip ariaLabel="Media tools" layout="stacked" items={items} onSelect={onSelect} />;
+  return <ToolStrip ariaLabel="Media tools" layout="stacked" items={items} active={active} onSelect={onSelect} />;
 }
