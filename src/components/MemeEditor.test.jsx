@@ -189,7 +189,7 @@ describe('MemeEditor', () => {
       ['Photos, videos, stickers and emoji', 'Media tools', ['Photo', 'Templates', 'Stickers', 'GIFs', 'Emoji', 'Link']],
       ['Text', 'Text tools', ['Add Text', 'Edit', 'Bubble', 'Social Card']],
       ['AI tools and photo filters', 'AI and filter tools', ['Face Swap', 'Remove BG', 'AI Caption', 'Filters']],
-      ['Canvas colour, bands and watermark', 'Canvas tools', ['Color', 'Watermark', 'Mirror', 'Header', 'Footer', 'Crop']],
+      ['Canvas colour, bands and watermark', 'Canvas tools', ['Canvas Style', 'Watermark', 'Header', 'Footer']],
     ];
     for (const [tab, name, tools] of strips) {
       openSection(tab);
@@ -686,22 +686,23 @@ describe('MemeEditor', () => {
     expect(onSave.mock.calls[0][0].captions.map((c) => c.text)).toEqual(['TOP TEXT', 'BOTTOM TEXT']);
   }, 30000);
 
-  it('flips the canvas from the Canvas sheet', () => {
+  it('flips the canvas from Canvas Style', () => {
     renderEditor();
     expect(canvas.props.canvasFlipX).toBeFalsy();
     openSection('Canvas colour, bands and watermark');
-    fireEvent.click(within(canvasStrip()).getByText('Mirror'));
+    fireEvent.click(within(canvasStrip()).getByText('Canvas Style'));
+    fireEvent.click(within(sheet('Canvas Style')).getByText('Mirror'));
     expect(canvas.props.canvasFlipX).toBe(true);
-    expect(within(canvasStrip()).getByText('Mirror').closest('button').getAttribute('aria-pressed')).toBe('true');
+    expect(within(sheet('Canvas Style')).getByText('Mirror').closest('button').getAttribute('aria-pressed')).toBe('true');
   }, 30000);
 
-  it('Canvas shows Color, Watermark, Mirror, Header, Footer and Crop; Color and Watermark open sheets under the strip', () => {
+  it('Canvas shows Canvas Style, Watermark, Header and Footer; Canvas Style and Watermark open sheets under the strip', () => {
     renderEditor();
     openSection('Canvas colour, bands and watermark');
-    expect(within(canvasStrip()).getAllByRole('button').map((b) => b.textContent)).toEqual(['Color', 'Watermark', 'Mirror', 'Header', 'Footer', 'Crop']);
+    expect(within(canvasStrip()).getAllByRole('button').map((b) => b.textContent)).toEqual(['Canvas Style', 'Watermark', 'Header', 'Footer']);
 
-    fireEvent.click(within(canvasStrip()).getByText('Color'));
-    fireEvent.click(within(sheet('Background')).getByRole('radio', { name: '#000000' }));
+    fireEvent.click(within(canvasStrip()).getByText('Canvas Style'));
+    fireEvent.click(within(sheet('Canvas Style')).getByRole('radio', { name: '#000000' }));
     expect(canvas.props.canvasBgColor).toBe('#000000');
     expect(canvasStrip()).toBeTruthy();
 
@@ -725,18 +726,19 @@ describe('MemeEditor', () => {
   it('Canvas > Color sets a gradient background, and a solid colour replaces it', () => {
     renderEditor();
     openSection('Canvas colour, bands and watermark');
-    fireEvent.click(within(canvasStrip()).getByText('Color'));
-    fireEvent.click(within(sheet('Background')).getByRole('radio', { name: 'Ocean gradient' }));
+    fireEvent.click(within(canvasStrip()).getByText('Canvas Style'));
+    fireEvent.click(within(sheet('Canvas Style')).getByRole('radio', { name: 'Ocean gradient' }));
     expect(canvas.props.canvasBgGradient).toEqual(['#2193b0', '#6dd5ed']);
-    fireEvent.click(within(sheet('Background')).getByRole('radio', { name: '#000000' }));
+    fireEvent.click(within(sheet('Canvas Style')).getByRole('radio', { name: '#000000' }));
     expect(canvas.props.canvasBgGradient).toBeNull();
     expect(canvas.props.canvasBgColor).toBe('#000000');
   }, 30000);
 
-  it('Crop opens the cropper', () => {
+  it('Canvas Style > Crop opens the cropper', () => {
     renderEditor();
     openSection('Canvas colour, bands and watermark');
-    fireEvent.click(within(canvasStrip()).getByText('Crop'));
+    fireEvent.click(within(canvasStrip()).getByText('Canvas Style'));
+    fireEvent.click(within(sheet('Canvas Style')).getByText('Crop'));
     const cropper = screen.getByRole('dialog', { name: 'Crop photo' });
     for (const name of ['Free', '1:1', '4:5', '9:16', '16:9']) expect(within(cropper).getByText(name)).toBeTruthy();
     fireEvent.click(within(cropper).getByText('Cancel'));

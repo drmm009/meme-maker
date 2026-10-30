@@ -1,6 +1,8 @@
 import type { CSSProperties } from 'react';
-import { Sheet, Section, Row, SwatchRow } from '../../ui';
+import { FlipHorizontal, Crop } from 'lucide-react';
+import { Sheet, Section, Row, SwatchRow, TileGrid, Tile } from '../../ui';
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
+import { useEditorUiStore } from '../store/useEditorUiStore';
 import type { EditorActions } from './selection';
 
 const CANVAS_COLORS = [
@@ -19,13 +21,23 @@ const GRADIENTS: { id: string; label: string; colors: [string, string] }[] = [
 
 const same = (a: [string, string] | null, b: [string, string]) => Boolean(a && a[0] === b[0] && a[1] === b[1]);
 
-// The Canvas strip's Color: the background behind the meme, its bands and any empty space, as a
-// solid colour or (behind the meme) a gradient.
+// The Canvas strip's Canvas Style: Mirror flips the whole meme, Crop opens the main photo's cropper
+// (only when the meme has one photo), and the background behind the meme, its bands and any empty
+// space, as a solid colour or (behind the meme) a gradient.
 export default function CanvasColorSheet({ actions, onClose }: { actions: EditorActions; onClose: () => void }) {
   const canvasBgColor: string = useMemeEditorStore((s: { canvasBgColor: string }) => s.canvasBgColor);
   const gradient: [string, string] | null = useMemeEditorStore((s: { canvasBgGradient: [string, string] | null }) => s.canvasBgGradient);
+  const canvasFlipX: boolean = useMemeEditorStore((s: { canvasFlipX: boolean }) => s.canvasFlipX);
+  const hasPhoto = useMemeEditorStore((s: { activeTemplate: { canvasOnly?: boolean; imageUrl?: string; rawImageUrl?: string } | null }) => Boolean(s.activeTemplate && !s.activeTemplate.canvasOnly && (s.activeTemplate.rawImageUrl || s.activeTemplate.imageUrl))) && !actions.isNativeLayout;
+  const setShowPhotoCrop = useEditorUiStore((s: { setShowPhotoCrop: (v: boolean) => void }) => s.setShowPhotoCrop);
   return (
-    <Sheet title="Background" hideTitle onClose={onClose}>
+    <Sheet title="Canvas Style" hideTitle onClose={onClose}>
+      <Section>
+        <TileGrid columns={2}>
+          <Tile label="Mirror" title="Flip the meme left to right" Icon={FlipHorizontal} active={canvasFlipX} onClick={() => actions.handleToggleCanvasFlip()} />
+          {hasPhoto && <Tile label="Crop" title="Crop or turn the photo" Icon={Crop} onClick={() => setShowPhotoCrop(true)} />}
+        </TileGrid>
+      </Section>
       <Section>
         <Row label="Color">
           <SwatchRow ariaLabel="Canvas colour" colors={CANVAS_COLORS} value={gradient ? '' : canvasBgColor} onChange={actions.handleSetCanvasBgColor} />
