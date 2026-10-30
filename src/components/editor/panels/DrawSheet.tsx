@@ -66,11 +66,25 @@ export default function DrawSheet({ actions, onClose }: { actions: EditorActions
       }}
     >
       {isShape && (
-        <Section>
-          <TileGrid columns={4}>
-            {SHAPES.map((s) => <Tile key={s.id} label={s.label} Icon={s.Icon} active={shapeKind === s.id} onClick={() => both(ui.setShapeKind, (v) => ({ shape: v }))(s.id)} />)}
-          </TileGrid>
-        </Section>
+        <div className="ie-shapes-row" role="toolbar" aria-label="Shapes">
+          {SHAPES.map((s) => {
+            const active = shapeKind === s.id;
+            const Icon = s.Icon;
+            return (
+              <button
+                key={s.id}
+                type="button"
+                className={`ie-shape-btn${active ? ' is-on' : ''}`}
+                aria-pressed={active}
+                title={s.label}
+                onClick={() => both(ui.setShapeKind, (v) => ({ shape: v }))(s.id)}
+              >
+                <Icon size={20} strokeWidth={1.8} />
+                <span>{s.label}</span>
+              </button>
+            );
+          })}
+        </div>
       )}
       {isCensor && (
         <Section>
