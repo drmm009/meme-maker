@@ -5,21 +5,13 @@ import { fetchOpenSourceMemes } from '../services/memeService';
 import {
   Upload, Laugh, Code,
   Sparkles, Image as ImageIcon, Video,
-  Flame, Star, Drama, Clapperboard,
+  Flame, Star, Drama,
   Smile, Zap, ChevronRight, ChevronLeft, Eye, Wand2, Share2,
   Briefcase, Heart, ArrowUp, X, Scissors
 } from 'lucide-react';
-import { motion } from 'framer-motion';
 import { safeGet, safeSet } from '../utils/storage';
+import { templateNumericId } from '../utils/templateOrder';
 import './TemplateDiscovery.css';
-
-const QUICK_PROMPTS = [
-  '☕ Monday morning meeting',
-  '💻 Code works on first try',
-  '🐱 Cat judging my choices',
-  '🍕 2 AM weekend hunger',
-  '🚀 Pushing directly to prod'
-];
 
 const AI_VIBE_MODES = [
   { id: 'roast', icon: Flame, emoji: '🔥', label: 'Roast Mode', prompt: 'Roast my daily morning routine and procrastination' },
@@ -513,16 +505,7 @@ const STUDIO_HERO_SLIDES = [
   }
 ];
 
-export const STUDIO_FEATURES = STUDIO_HERO_SLIDES;
 
-// Stable numeric order for mixed string ids ("imgflip-123", "giphy-abc", "custom-...").
-// Trailing digits win; otherwise fall back to trendingScore so sort is deterministic (never NaN).
-export function templateNumericId(t) {
-  if (!t) return 0;
-  const m = String(t.id || '').match(/(\d+)$/);
-  if (m) return Number(m[1]);
-  return t.trendingScore || 0;
-}
 
 // Compute dynamic, contextual badges so templates show a variety of labels
 function getTemplateBadge(template, index = 0) {
@@ -563,13 +546,7 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom, on
     return Array.isArray(saved) ? saved : [];
   });
 
-  // Responsive mobile check and columns count
-  const [isMobile, setIsMobile] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return window.innerWidth <= 640;
-    }
-    return false;
-  });
+  // Responsive columns count
 
   const [columnsCount, setColumnsCount] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -583,7 +560,6 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom, on
   useEffect(() => {
     const updateDimensions = () => {
       const w = window.innerWidth;
-      setIsMobile(w <= 640);
       if (w >= 1200) setColumnsCount(4);
       else if (w >= 680) setColumnsCount(3);
       else setColumnsCount(2);

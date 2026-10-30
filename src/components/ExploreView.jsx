@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import {
   Search,
   Flame,
@@ -7,11 +7,9 @@ import {
   Briefcase,
   Heart,
   Drama,
-  LayoutGrid,
   Sparkles,
   Star,
   Clapperboard,
-  Layers,
   ChevronRight,
   Eye,
   SlidersHorizontal,
@@ -24,22 +22,11 @@ import { MEME_TEMPLATES } from '../data/templates';
 import { VIDEO_MEME_TEMPLATES } from '../data/videoTemplates';
 import { fetchOpenSourceMemes } from '../services/memeService';
 import { safeGet, safeSet } from '../utils/storage';
+import { templateNumericId } from '../utils/templateOrder';
+import { EXPLORE_CATEGORIES } from '../data/exploreCategories';
 import './ExploreView.css';
 
-export const EXPLORE_CATEGORIES = [
-  { id: 'all', label: 'All Templates', icon: Layers, color: '#ff5e36', description: 'Browse all templates categorically' },
-  { id: 'trending', label: 'Trending', icon: Flame, color: '#ff3b60', description: 'Most viral memes right now' },
-  { id: 'social', label: 'Social Cards', icon: Share2, color: '#38bdf8', description: 'Twitter, WhatsApp & Instagram cards' },
-  { id: 'videos', label: 'Video Memes', icon: Clapperboard, color: '#06b6d4', description: 'Motion clips & video templates' },
-  { id: 'reaction', label: 'Reactions', icon: Smile, color: '#a855f7', description: 'Expressive moods & face reactions' },
-  { id: 'work', label: 'Work & Office', icon: Briefcase, color: '#f59e0b', description: 'Corporate & 9-to-5 relatable humor' },
-  { id: 'relatable', label: 'Relationships', icon: Heart, color: '#ec4899', description: 'Everyday life, dating & friendship' },
-  { id: 'classic', label: 'Classics', icon: Drama, color: '#eab308', description: 'Timeless legendary meme formats' },
-  { id: 'comparison', label: 'Comparison & VS', icon: LayoutGrid, color: '#6366f1', description: 'Side-by-side comparisons & choices' },
-  { id: 'desi', label: 'Bollywood Culture', icon: Sparkles, color: '#10b981', description: 'Iconic cinema & pop culture memes' },
-  { id: 'popular', label: 'Popular', icon: Star, color: '#f97316', description: 'All-time favorite community templates' },
-  { id: 'favorites', label: 'My Favorites', icon: Star, color: '#fbbf24', description: 'Templates you have starred' }
-];
+
 
 const SORT_OPTIONS = [
   { id: 'trending', label: 'Trending', icon: Flame, color: '#ff5e36' },
@@ -48,12 +35,6 @@ const SORT_OPTIONS = [
   { id: 'name', label: 'A-Z Name', icon: ArrowDownAZ, color: '#a855f7' }
 ];
 
-export function templateNumericId(t) {
-  if (!t) return 0;
-  const m = String(t.id || '').match(/(\d+)$/);
-  if (m) return Number(m[1]);
-  return t.trendingScore || 0;
-}
 
 function getTemplateBadge(template, index = 0) {
   if (!template) return { label: 'Popular', icon: Flame, color: '#ff5e36' };
@@ -181,7 +162,7 @@ export default function ExploreView({ onSelectTemplate, onCreateCustom: _onCreat
   };
 
   // Helper keyword matchers
-  const matchesCategory = (t, catId) => {
+  const matchesCategory = useCallback((t, catId) => {
     if (!t) return false;
     const nameLower = (t.name || '').toLowerCase();
     const tags = t.tags || [];
@@ -224,7 +205,7 @@ export default function ExploreView({ onSelectTemplate, onCreateCustom: _onCreat
       default:
         return t.category === catId;
     }
-  };
+  }, [favorites]);
 
   // Counts for all categories
   const categoryCounts = useMemo(() => {
@@ -233,7 +214,7 @@ export default function ExploreView({ onSelectTemplate, onCreateCustom: _onCreat
       counts[cat.id] = templatesList.filter((t) => matchesCategory(t, cat.id)).length;
     });
     return counts;
-  }, [templatesList, favorites]);
+  }, [templatesList, matchesCategory]);
 
   // Filtered and sorted templates
   const filteredTemplates = useMemo(() => {
@@ -265,7 +246,7 @@ export default function ExploreView({ onSelectTemplate, onCreateCustom: _onCreat
     }
 
     return sorted;
-  }, [templatesList, selectedCategory, searchQuery, sortBy, favorites]);
+  }, [templatesList, selectedCategory, searchQuery, sortBy, matchesCategory]);
 
   // Curated shelf sections for "All Templates" view
   const categoricalSections = useMemo(() => {
@@ -285,7 +266,7 @@ export default function ExploreView({ onSelectTemplate, onCreateCustom: _onCreat
     ];
 
     return sections.filter((s) => s.templates.length > 0);
-  }, [templatesList, searchQuery, selectedCategory]);
+  }, [templatesList, searchQuery, selectedCategory, matchesCategory]);
 
   const currentSortMeta = useMemo(() => {
     return SORT_OPTIONS.find((s) => s.id === sortBy) || SORT_OPTIONS[0];
@@ -508,12 +489,12 @@ function ExploreShelfCard({ template, rank, isFavorite, onToggleFavorite, onSele
   return (
     <div
       className="explore-shelf-card"
-      onClick={() => onSelectTemplate && onSelectTemplate(template)}
+      onClick={() => onSelectTemplate?.(template)}
       role="button"
       tabIndex={0}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
-          onSelectTemplate && onSelectTemplate(template);
+          onSelectTemplate?.(template);
         }
       }}
     >
@@ -582,12 +563,12 @@ function ExploreGridCard({ template, index, isFavorite, onToggleFavorite, onSele
   return (
     <div
       className="explore-grid-card"
-      onClick={() => onSelectTemplate && onSelectTemplate(template)}
+      onClick={() => onSelectTemplate?.(template)}
       role="button"
       tabIndex={0}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
-          onSelectTemplate && onSelectTemplate(template);
+          onSelectTemplate?.(template);
         }
       }}
     >
