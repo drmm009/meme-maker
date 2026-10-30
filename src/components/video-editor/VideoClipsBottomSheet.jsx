@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Clapperboard, Play, Search, X } from 'lucide-react';
+import { Play, Search, X } from 'lucide-react';
 import BottomSheet from '../BottomSheet';
 import { VIDEO_MEME_TEMPLATES } from '../../data/videoTemplates';
 
@@ -19,7 +19,6 @@ export default function VideoClipsBottomSheet({ isOpen, onClose, onSelect }) {
       isOpen={isOpen}
       onClose={onClose}
       title="Meme clips"
-      icon={<Clapperboard size={17} strokeWidth={2.4} />}
       height="min(82vh, 700px)"
       maxHeight="min(82vh, 700px)"
       contentStyle={{ padding: '6px 16px 18px 16px', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
@@ -28,7 +27,7 @@ export default function VideoClipsBottomSheet({ isOpen, onClose, onSelect }) {
         <Search className="bs-search-icon" size={16} />
         <input
           type="text"
-          placeholder="Search clips"
+          placeholder="Search clips..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="bs-search-input"

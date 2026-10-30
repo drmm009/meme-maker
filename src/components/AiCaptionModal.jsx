@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Sparkles, RefreshCw, Check, Copy, Key, ArrowRight, Type, PanelTop } from 'lucide-react';
+import { RefreshCw, Check, Copy, Key, ArrowRight, Type, PanelTop } from 'lucide-react';
 import { AI_MEME_CATEGORIES, generateMemeCaptionsWithGemini } from '../data/aiMemeCaptions';
 import { safeGet, safeSet, safeRemove } from '../utils/storage';
 import BottomSheet from './BottomSheet';
@@ -84,7 +84,6 @@ export default function AiCaptionModal({ isOpen, onClose, onApplyCaption, templa
       isOpen={isOpen}
       onClose={onClose}
       title="AI Captions"
-      icon={<Sparkles size={16} style={{ color: 'var(--cyber-cyan)' }} />}
       badge={
         <div
           style={{

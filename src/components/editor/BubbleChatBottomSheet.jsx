@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import BottomSheet from '../BottomSheet';
-import { MessageSquare, Check, Ban, Sparkles } from 'lucide-react';
+import { Check, Ban, Sparkles } from 'lucide-react';
 
 const BUBBLE_PRESETS = [
   {
@@ -123,7 +123,6 @@ export default function BubbleChatBottomSheet({
       isOpen={isOpen}
       onClose={onClose}
       title="Chat & Speech Bubbles"
-      icon={<MessageSquare size={17} strokeWidth={2.4} />}
       maxHeight="78vh"
       contentStyle={{ padding: '6px 16px 20px 16px', overflowY: 'auto' }}
     >

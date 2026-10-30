@@ -87,7 +87,6 @@ export default function TemplatePickerBottomSheet({
       isOpen={isOpen}
       onClose={onClose}
       title="Add Template"
-      icon={<ImageIcon size={17} strokeWidth={2.4} />}
       height="min(82vh, 700px)"
       maxHeight="min(82vh, 700px)"
       contentStyle={{ padding: '6px 16px 18px 16px', overflow: 'hidden' }}

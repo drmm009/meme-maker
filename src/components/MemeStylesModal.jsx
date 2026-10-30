@@ -580,18 +580,14 @@ export default function MemeStylesModal({
     });
   };
 
-  // Header Title and Icon per platform
+  // Header Title per platform
   let modalTitle = 'Social Cards Studio';
-  let modalIcon = <Sparkles size={17} />;
   if (activePlatform === 'tweet') {
     modalTitle = cardData ? 'Edit Tweet Card' : 'Tweet Card';
-    modalIcon = <XLogo size={17} />;
   } else if (activePlatform === 'instagram') {
     modalTitle = cardData ? 'Edit Instagram Card' : 'Instagram Card';
-    modalIcon = <InstagramLogo size={17} color="#e1306c" />;
   } else if (activePlatform === 'whatsapp') {
     modalTitle = cardData ? 'Edit WhatsApp Card' : 'WhatsApp Card';
-    modalIcon = <WhatsAppLogo size={17} color="#25d366" />;
   }
 
   const handleAddCurrentCard = () => {
@@ -679,7 +675,6 @@ export default function MemeStylesModal({
       isOpen={isOpen}
       onClose={onClose}
       title={modalTitle}
-      icon={modalIcon}
       height="min(88vh, 800px)"
       maxHeight="min(88vh, 800px)"
       contentStyle={{ padding: '8px 18px 24px 18px', overflowY: 'auto' }}

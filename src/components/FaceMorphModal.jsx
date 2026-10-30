@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
-  Sparkles,
   Upload,
   Camera,
   RefreshCw,
@@ -279,7 +278,6 @@ export default function FaceMorphModal({
       isOpen={isOpen}
       onClose={onClose}
       title="AI Face Swap"
-      icon={<Sparkles size={16} style={{ color: 'var(--cyber-cyan)' }} />}
       badge={targetLabel ? (
         <span
           style={{
