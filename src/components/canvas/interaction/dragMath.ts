@@ -193,13 +193,16 @@ export function resizeImageLayer({ handleType, coords, start, layer, cached, can
   const fitMode = (!layer.fitMode || layer.fitMode === 'fit') ? 'stretch' : layer.fitMode;
   const local = rotatePoint(coords.x, coords.y, center.x, center.y, -(layer.rotation || 0));
 
+  // A side handle stretches one way; with `keepShape` it grows the other way too.
   if (handleType === 'resize_imageLayer_l' || handleType === 'resize_imageLayer_r') {
     const newWidth = Math.max(30, Math.round(Math.abs(local.x - center.x) * 2));
-    return { width: newWidth, boxWidth: newWidth, height: initH, boxHeight: initH, fitMode };
+    const newHeight = layer.keepShape ? Math.max(30, Math.round((initH * newWidth) / initW)) : initH;
+    return { width: newWidth, boxWidth: newWidth, height: newHeight, boxHeight: newHeight, fitMode };
   }
   if (handleType === 'resize_imageLayer_t' || handleType === 'resize_imageLayer_b') {
     const newHeight = Math.max(30, Math.round(Math.abs(local.y - center.y) * 2));
-    return { width: initW, boxWidth: initW, height: newHeight, boxHeight: newHeight, fitMode };
+    const newWidth = layer.keepShape ? Math.max(30, Math.round((initW * newHeight) / initH)) : initW;
+    return { width: newWidth, boxWidth: newWidth, height: newHeight, boxHeight: newHeight, fitMode };
   }
 
   const scaleFactor = Math.max(0.05, Math.hypot(coords.x - center.x, coords.y - center.y) / (start.initialDist || 50));

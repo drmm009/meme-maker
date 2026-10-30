@@ -83,6 +83,12 @@ describe('resizing', () => {
     expect(resizeImageLayer({ ...base, handleType: 'resize_imageLayer_br' })).toMatchObject({ width: 200, height: 160, scale: 2 });
   });
 
+  it('keeps the shape from an edge too when the photo asks', () => {
+    const base = { coords: { x: 500, y: 300 }, start: { centerX: 400, centerY: 300, boxWidth: 100, boxHeight: 80, scale: 1, initialDist: 50 }, layer: { keepShape: true }, canvasWidth: 800, headerExtH: 0, canvasH: 600 };
+    expect(resizeImageLayer({ ...base, handleType: 'resize_imageLayer_r' })).toMatchObject({ width: 200, height: 160 });
+    expect(resizeImageLayer({ ...base, coords: { x: 400, y: 380 }, handleType: 'resize_imageLayer_b' })).toMatchObject({ width: 200, height: 160 });
+  });
+
   it('crops from the left edge while the right edge stays put', () => {
     const start = { centerX: 400, centerY: 300, boxWidth: 200, boxHeight: 100, crop: { x: 0, y: 0, width: 0.5, height: 1 }, fitMode: 'crop' };
     // Full image is 400px wide; the pointer moves the left edge from 300 to 400.

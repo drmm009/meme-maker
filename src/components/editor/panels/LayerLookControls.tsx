@@ -6,7 +6,7 @@ import type { BlendMode, LayerLook } from '../../canvas/draw/layerLook';
 
 const SHADOW_COLORS = ['#000000', '#1e1b4b', '#7f1d1d', '#ffffff', '#ff2a5f', '#00f0ff'];
 
-type LookLayer = LayerLook & { flipY?: boolean; opacity?: number };
+type LookLayer = LayerLook & { flipY?: boolean; opacity?: number; keepShape?: boolean };
 
 // How the selected photo or sticker sits on the meme, in the Media sheet: upside down, opacity,
 // blend mode and shadow; photos also get rounded corners and a border (canvas/draw/layerLook).
@@ -38,6 +38,9 @@ export default function LayerLookControls({ id, layer, kind }: { id: string; lay
       )}
       {kind === 'image' && (
         <>
+          <Row label="Keep shape" end>
+            <Switch label="Keep shape when resizing" checked={Boolean(layer.keepShape)} onChange={(keepShape) => set({ keepShape })} />
+          </Row>
           <Row label="Corners">
             <Slider label="Corner rounding" min={0} max={1} step={0.05} value={layer.cornerRadius || 0} onChange={(cornerRadius) => set({ cornerRadius })} format={pct} />
           </Row>

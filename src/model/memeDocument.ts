@@ -99,6 +99,8 @@ export interface MemeImageLayer extends MemeLayerBase, LayerLook {
   isFaceMorph?: boolean;
   faceName?: string;
   filterId?: string;
+  // Side handles keep the proportions instead of stretching.
+  keepShape?: boolean;
 }
 
 // A loaded image's size, as hit testing needs it.
