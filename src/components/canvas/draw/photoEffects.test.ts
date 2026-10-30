@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { hasPhotoEffects, sharpenPixels, warmPixels } from './photoEffects';
+import { applyPhotoEffects, hasPhotoEffects, sharpenPixels, warmPixels } from './photoEffects';
+import { createRecordingContext, callsNamed } from '../testing/recordingContext';
 
 const px = (r: number, g: number, b: number) => new Uint8ClampedArray([r, g, b, 255]);
 
@@ -31,5 +32,13 @@ describe('photo effects', () => {
     expect(data[(1 * w + 1) * 4]).toBeGreaterThan(150);
     expect(data[(1 * w + 1) * 4 + 1]).toBe(100);
     expect(data[0]).toBe(100);
+  });
+
+  it('darkens the edges only over what is drawn, so a see-through background stays clear', () => {
+    const ctx = createRecordingContext();
+    applyPhotoEffects(ctx as unknown as CanvasRenderingContext2D, 0, 0, 100, 80, { vignette: 50 });
+    const [fill] = callsNamed(ctx, 'fillRect');
+    expect(fill.args).toEqual([0, 0, 100, 80]);
+    expect(fill.state.globalCompositeOperation).toBe('source-atop');
   });
 });

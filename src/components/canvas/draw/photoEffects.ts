@@ -70,6 +70,8 @@ export function applyPhotoEffects(ctx: CanvasRenderingContext2D, x: number, y: n
     g.addColorStop(0, 'rgba(0, 0, 0, 0)');
     g.addColorStop(1, `rgba(0, 0, 0, ${(v * 0.85).toFixed(3)})`);
     ctx.save();
+    // Only over what is drawn: a see-through background (transparent export) stays clear.
+    ctx.globalCompositeOperation = 'source-atop';
     ctx.fillStyle = g;
     ctx.fillRect(rx, ry, rw, rh);
     ctx.restore();
