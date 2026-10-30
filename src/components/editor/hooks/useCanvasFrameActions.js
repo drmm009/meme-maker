@@ -4,6 +4,7 @@ import { useEditorUiStore } from '../store/useEditorUiStore';
 
 export function useCanvasFrameActions() {
   const setCanvasBgColor = useMemeEditorStore((s) => s.setCanvasBgColor);
+  const setCanvasBgGradient = useMemeEditorStore((s) => s.setCanvasBgGradient);
   const setCanvasHeader = useMemeEditorStore((s) => s.setCanvasHeader);
   const setCanvasFooter = useMemeEditorStore((s) => s.setCanvasFooter);
   const setCaptions = useMemeEditorStore((s) => s.setCaptions);
@@ -22,6 +23,7 @@ export function useCanvasFrameActions() {
 
   const handleSetCanvasBgColor = (val) => {
     setCanvasBgColor(val);
+    setCanvasBgGradient(null);
     window.dispatchEvent(new CustomEvent('liveCanvasBgColor', { detail: val }));
     const isDark = isColorDark(val);
     const nextTextColor = isDark ? '#ffffff' : '#000000';
@@ -39,6 +41,9 @@ export function useCanvasFrameActions() {
       return c;
     }));
   };
+
+  // A gradient background (two colours, top-left to bottom-right); the bands keep the solid colour.
+  const handleSetCanvasBgGradient = (colors) => setCanvasBgGradient(colors);
 
   const handleWatermarkImageUpload = (e) => {
     const file = e.target.files?.[0];
@@ -254,5 +259,5 @@ export function useCanvasFrameActions() {
     }
   };
 
-  return { handleSetCanvasBgColor, handleToggleCanvasHeader, handleToggleCanvasFooter, handleToggleCanvasBoth, handleToggleCanvasFlip, handleWatermarkImageUpload };
+  return { handleSetCanvasBgColor, handleSetCanvasBgGradient, handleToggleCanvasHeader, handleToggleCanvasFooter, handleToggleCanvasBoth, handleToggleCanvasFlip, handleWatermarkImageUpload };
 }

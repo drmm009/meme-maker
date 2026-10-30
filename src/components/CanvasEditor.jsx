@@ -43,6 +43,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
   const slotImages = useMemeEditorStore((s) => s.slotImages);
   const slotTransforms = useMemeEditorStore((s) => s.slotTransforms);
   const canvasBgColor = useMemeEditorStore((s) => s.canvasBgColor);
+  const canvasBgGradient = useMemeEditorStore((s) => s.canvasBgGradient);
   const drawings = useMemeEditorStore((s) => s.drawings);
   const canvasHeader = useMemeEditorStore((s) => s.canvasHeader);
   const canvasFooter = useMemeEditorStore((s) => s.canvasFooter);
@@ -161,7 +162,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
   const sceneRef = useRef(null);
   sceneRef.current = {
     activeCaption, activeFilters, activeIsNativeLayout, activeLayerId, activeLayoutDef,
-    baseImgRef, canvasBgColor, canvasFlipX, canvasFooter, canvasH, canvasHeader, canvasRef,
+    baseImgRef, canvasBgColor, canvasBgGradient, canvasFlipX, canvasFooter, canvasH, canvasHeader, canvasRef,
     canvasW, captions, compCanvasRef, demotivational, dragTarget, drawings, footerExtH,
     getCaptionCenterY, getImageLayerCenterY, getStickerCenterY, headerExtH, imageCacheRef,
     imageFit, imageLayers, imgSrc, isDragging, isDrawingMode, isFooterEnabled, isHeaderEnabled,
@@ -178,7 +179,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
 
   useEffect(() => {
     renderScene(sceneRef.current);
-  }, [captions, stickers, activeLayerId, imageLayers, slotImages, slotTransforms, activeIsNativeLayout, editingCaptionId, aspectRatio, imageFit, watermark, drawings, isDrawingMode, imgSrc, filters, liveBgColor, canvasHeader, canvasFooter, demotivational, canvasFlipX, showDrawingHandles, showGrid, canvasW, totalCanvasH, redrawTick]);
+  }, [captions, stickers, activeLayerId, imageLayers, slotImages, slotTransforms, activeIsNativeLayout, editingCaptionId, aspectRatio, imageFit, watermark, drawings, isDrawingMode, imgSrc, filters, liveBgColor, canvasHeader, canvasFooter, demotivational, canvasFlipX, showDrawingHandles, showGrid, canvasBgGradient, canvasW, totalCanvasH, redrawTick]);
 
   // Keep focus on active caption whenever selected (not for social cards). Runs on a new
   // selection or edit only, not on every keystroke, so the cursor isn't moved while typing.

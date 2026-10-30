@@ -149,6 +149,8 @@ export function buildInitialDocument(template) {
     activeTemplate: template,
     aspectRatio: template?.aspectRatio || 'original',
     canvasBgColor: template?.canvasBgColor || '#ffffff',
+    // A two-colour diagonal background instead of canvasBgColor, or null.
+    canvasBgGradient: null,
     canvasFlipX: template?.canvasFlipX || false,
     canvasHeader: template?.canvasHeader || {
       enabled: false,
@@ -207,6 +209,7 @@ export function createMemeEditorStore(template, initialDocument = null) {
           setActiveTemplate: fieldSetter(set, 'activeTemplate'),
           setAspectRatio: fieldSetter(set, 'aspectRatio'),
           setCanvasBgColor: fieldSetter(set, 'canvasBgColor'),
+          setCanvasBgGradient: fieldSetter(set, 'canvasBgGradient'),
           setCanvasFlipX: fieldSetter(set, 'canvasFlipX'),
           setCanvasHeader: fieldSetter(set, 'canvasHeader'),
           setCanvasFooter: fieldSetter(set, 'canvasFooter'),

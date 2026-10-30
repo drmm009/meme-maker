@@ -26,6 +26,7 @@ vi.mock('./CanvasEditor', async () => {
       activeLayerId: doc.activeLayerId,
       canvasFlipX: doc.canvasFlipX,
       canvasBgColor: doc.canvasBgColor,
+      canvasBgGradient: doc.canvasBgGradient,
       imageFilters: doc.imageFilters,
       template: doc.activeTemplate,
       drawTool: ui.drawTool,
@@ -583,6 +584,17 @@ describe('MemeEditor', () => {
     closeSheet();
     openSection('Canvas colour, bands and watermark');
     expect(screen.queryByRole('toolbar', { name: 'Canvas tools' })).toBeNull();
+  }, 30000);
+
+  it('Canvas > Color sets a gradient background, and a solid colour replaces it', () => {
+    renderEditor();
+    openSection('Canvas colour, bands and watermark');
+    fireEvent.click(within(canvasStrip()).getByText('Color'));
+    fireEvent.click(within(sheet('Background')).getByRole('radio', { name: 'Ocean gradient' }));
+    expect(canvas.props.canvasBgGradient).toEqual(['#2193b0', '#6dd5ed']);
+    fireEvent.click(within(sheet('Background')).getByRole('radio', { name: '#000000' }));
+    expect(canvas.props.canvasBgGradient).toBeNull();
+    expect(canvas.props.canvasBgColor).toBe('#000000');
   }, 30000);
 
   it('Replace swaps the main photo and keeps the layers; Crop opens the cropper', async () => {

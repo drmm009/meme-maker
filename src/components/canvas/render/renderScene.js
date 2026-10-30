@@ -15,7 +15,7 @@ import { paintOverlays } from './paintOverlays';
 export function renderScene(scene) {
   const {
     activeCaption, activeFilters, activeIsNativeLayout, activeLayerId, activeLayoutDef,
-    baseImgRef, canvasBgColor, canvasFlipX, canvasFooter, canvasH, canvasHeader, canvasRef,
+    baseImgRef, canvasBgColor, canvasBgGradient, canvasFlipX, canvasFooter, canvasH, canvasHeader, canvasRef,
     canvasW, captions, compCanvasRef, demotivational, dragTarget, drawings, footerExtH,
     getCaptionCenterY, getImageLayerCenterY, getStickerCenterY, headerExtH, imageCacheRef,
     imageFit, imageLayers, imgSrc, isDragging, isDrawingMode, isFooterEnabled, isHeaderEnabled,
@@ -176,7 +176,16 @@ export function renderScene(scene) {
 
     targetCtx.clearRect(0, 0, canvas.width, canvas.height);
     if (!transparent || demotivational?.enabled) {
-      targetCtx.fillStyle = demotivational?.enabled ? '#000000' : bgColor;
+      let fill = demotivational?.enabled ? '#000000' : bgColor;
+      if (!demotivational?.enabled && canvasBgGradient?.length === 2) {
+        const gradient = targetCtx.createLinearGradient(0, 0, canvas.width, canvas.height);
+        if (gradient) {
+          gradient.addColorStop(0, canvasBgGradient[0]);
+          gradient.addColorStop(1, canvasBgGradient[1]);
+          fill = gradient;
+        }
+      }
+      targetCtx.fillStyle = fill;
       targetCtx.fillRect(0, 0, canvas.width, canvas.height);
     }
 

@@ -13,7 +13,7 @@ const DRAFT_ID = 'current';
 export const MEME_DRAFT_VERSION = 1;
 
 // The document fields a draft keeps: everything undo restores, plus the canvas settings.
-export const DRAFT_FIELDS: string[] = [...HISTORY_FIELDS, 'slotImages', 'slotTransforms', 'aspectRatio', 'canvasBgColor', 'imageFilters'];
+export const DRAFT_FIELDS: string[] = [...HISTORY_FIELDS, 'slotImages', 'slotTransforms', 'aspectRatio', 'canvasBgColor', 'canvasBgGradient', 'imageFilters'];
 
 export type MemeDraftDocument = Record<string, unknown>;
 
