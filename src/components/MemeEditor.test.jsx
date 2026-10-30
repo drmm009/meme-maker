@@ -185,7 +185,7 @@ describe('MemeEditor', () => {
     renderEditor();
     const strips = [
       ['Draw on the meme', 'Draw tools', ['Brush', 'Glow', 'Marker', 'Eraser', 'Shapes', 'Censor']],
-      ['Photos, videos, stickers and emoji', 'Media tools', ['Photo', 'Templates', 'Stickers', 'Emoji']],
+      ['Photos, videos, stickers and emoji', 'Media tools', ['Photo', 'Templates', 'Stickers', 'GIFs', 'Emoji']],
       ['Text', 'Text tools', ['Add Text', 'Edit', 'Bubble', 'Social Card']],
       ['AI tools and photo filters', 'AI and filter tools', ['Face Swap', 'Remove BG', 'AI Caption', 'Filters']],
       ['Canvas colour, bands and watermark', 'Canvas tools', ['Color', 'Watermark', 'Mirror', 'Header', 'Footer', 'Crop', 'Replace']],
@@ -627,6 +627,13 @@ describe('MemeEditor', () => {
     expect(within(sheet('Media')).getByRole('radiogroup', { name: 'Shadow colour' })).toBeTruthy();
     // Corners and border are for photos.
     expect(within(sheet('Media')).queryByLabelText('Corner rounding')).toBeNull();
+  }, 30000);
+
+  it('Media > GIFs opens the Giphy picker (asking for a key when there is none)', () => {
+    renderEditor();
+    openSection('Photos, videos, stickers and emoji');
+    fireEvent.click(within(strip('Media tools')).getByText('GIFs'));
+    expect(screen.getByText('GIFs and stickers')).toBeTruthy();
   }, 30000);
 
   it('the open sheet follows the selection: picking a caption switches Media to Text', () => {

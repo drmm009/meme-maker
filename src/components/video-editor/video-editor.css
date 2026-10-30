@@ -819,40 +819,10 @@
 .vt-chip { display: inline-flex; align-items: center; gap: 6px; position: relative; }
 .vt-swatch { width: 14px; height: 14px; border-radius: 50%; border: 1px solid rgba(255, 255, 255, 0.4); }
 
-/* ── GIF picker sheet (portal, outside .vt-editor) ──────────── */
-.gif-grid {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
-  grid-auto-rows: 104px;
-  gap: 8px;
-  padding: 4px 2px 8px;
-}
-.gif-cell {
-  padding: 0;
-  border: none;
-  border-radius: 12px;
-  overflow: hidden;
-  background: rgba(255, 255, 255, 0.05);
-  cursor: pointer;
-  transition: transform 0.15s;
-}
-.gif-cell:hover { transform: scale(1.03); }
-.gif-cell img { width: 100%; height: 100%; object-fit: cover; display: block; }
-/* Transparent stickers sit on a checkerboard and keep their shape. */
-.gif-grid.is-stickers .gif-cell {
-  background-color: #2a2d38;
-  background-image: conic-gradient(#232631 25%, transparent 0 50%, #232631 0 75%, transparent 0);
-  background-size: 16px 16px;
-}
-.gif-grid.is-stickers .gif-cell img { object-fit: contain; padding: 6px; box-sizing: border-box; }
-.gif-attribution { margin: 6px 0 0; text-align: center; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; opacity: 0.5; }
-.gif-grid, .vclip-grid { scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, 0.18) transparent; }
-.gif-grid::-webkit-scrollbar, .vclip-grid::-webkit-scrollbar { width: 6px; }
-.gif-grid::-webkit-scrollbar-thumb, .vclip-grid::-webkit-scrollbar-thumb { border-radius: 3px; background: rgba(255, 255, 255, 0.18); }
-.gif-grid::-webkit-scrollbar-track, .vclip-grid::-webkit-scrollbar-track { background: transparent; }
+.vclip-grid { scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, 0.18) transparent; }
+.vclip-grid::-webkit-scrollbar { width: 6px; }
+.vclip-grid::-webkit-scrollbar-thumb { border-radius: 3px; background: rgba(255, 255, 255, 0.18); }
+.vclip-grid::-webkit-scrollbar-track { background: transparent; }
 
 /* ── Background swatches ────────────────────────────────────── */
 .vt-swatch-row { display: flex; flex-wrap: wrap; gap: 10px; }

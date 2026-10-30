@@ -2,13 +2,15 @@ import React, { useEffect, useState } from 'react';
 import { ImagePlay, Search, X } from 'lucide-react';
 import BottomSheet from '../BottomSheet';
 import { hasGiphyKey, searchGiphy } from '../../services/giphy';
+import './GifBottomSheet.css';
 
 const KINDS = [
   { id: 'stickers', label: 'Stickers' },
   { id: 'gifs', label: 'GIFs' },
 ];
 
-// Giphy picker: transparent animated stickers or full GIFs, trending until you search.
+// Giphy picker: transparent animated stickers or full GIFs, trending until you search. Used by the
+// video editor and the image editor's Media strip.
 export default function GifBottomSheet({ isOpen, onClose, onSelect }) {
   const [kind, setKind] = useState('stickers');
   const [query, setQuery] = useState('');

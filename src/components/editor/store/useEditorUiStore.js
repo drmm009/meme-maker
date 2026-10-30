@@ -78,6 +78,7 @@ export function buildInitialUi(template) {
     openSourceTemplates: MEME_TEMPLATES,
     pendingVideoLayer: null,
     showPhotoCrop: false, // the main photo's cropper (editor/crop)
+    showGifSheet: false, // the Giphy picker
     pasteToast: false,
     drawTool: null, // 'brush' | 'highlighter' | 'glow' | 'shape' | 'censor' | null
     shapeKind: 'arrow', // 'arrow' | 'ellipse' | 'rect' | 'line'

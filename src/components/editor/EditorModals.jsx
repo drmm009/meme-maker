@@ -9,6 +9,7 @@ import EmojiBottomSheet from './EmojiBottomSheet';
 import TemplatePickerBottomSheet from './TemplatePickerBottomSheet';
 import BubbleChatBottomSheet from './BubbleChatBottomSheet';
 import PhotoCropSheet from './crop/PhotoCropSheet';
+import GifBottomSheet from '../video-editor/GifBottomSheet';
 import { useMemeEditorStore } from './store/useMemeEditorStore';
 import { useEditorUiStore } from './store/useEditorUiStore';
 
@@ -67,6 +68,8 @@ export default function EditorModals({
   const stickers = useMemeEditorStore((s) => s.stickers);
   const showPhotoCrop = useEditorUiStore((s) => s.showPhotoCrop);
   const setShowPhotoCrop = useEditorUiStore((s) => s.setShowPhotoCrop);
+  const showGifSheet = useEditorUiStore((s) => s.showGifSheet);
+  const setShowGifSheet = useEditorUiStore((s) => s.setShowGifSheet);
   const mainPhoto = activeTemplate?.rawImageUrl || activeTemplate?.imageUrl;
 
   return (
@@ -80,6 +83,13 @@ export default function EditorModals({
           onClose={() => setShowPhotoCrop(false)}
         />
       )}
+
+      {/* A Giphy GIF or animated sticker, added as a sticker (it plays: canvas/media). */}
+      <GifBottomSheet
+        isOpen={showGifSheet}
+        onClose={() => setShowGifSheet(false)}
+        onSelect={(gif) => handleAddGraphicSticker({ name: gif.title, url: gif.url })}
+      />
 
       <MemeStickersBottomSheet
         isOpen={showMemeStickersModal}
