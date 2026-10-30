@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import BottomSheet from '../BottomSheet';
-import { Smile, Search, X } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 import { STICKERS } from '../../data/stickers';
 
 const EMOJI_CATEGORIES = [
@@ -32,7 +32,6 @@ export default function EmojiBottomSheet({ isOpen, onClose, onSelectEmoji }) {
       isOpen={isOpen}
       onClose={onClose}
       title="Choose an Emoji"
-      icon={<Smile size={17} strokeWidth={2.4} />}
       height="min(78vh, 640px)"
       maxHeight="min(78vh, 640px)"
       contentStyle={{ padding: '6px 16px 18px 16px', overflow: 'hidden' }}

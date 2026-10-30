@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ImagePlay, Search, X } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 import BottomSheet from '../BottomSheet';
 import { hasGiphyKey, searchGiphy } from '../../services/giphy';
 import './GifBottomSheet.css';
@@ -34,7 +34,6 @@ export default function GifBottomSheet({ isOpen, onClose, onSelect }) {
       isOpen={isOpen}
       onClose={onClose}
       title="GIFs and stickers"
-      icon={<ImagePlay size={17} strokeWidth={2.4} />}
       height="min(82vh, 700px)"
       maxHeight="min(82vh, 700px)"
       contentStyle={{ padding: '6px 16px 12px 16px', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import BottomSheet from '../BottomSheet';
-import { Sticker, Search, X } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 import { GRAPHIC_STICKERS, GRAPHIC_STICKER_CATEGORIES } from '../../data/memeStickers';
 
 export default function MemeStickersBottomSheet({ isOpen, onClose, onSelectSticker }) {
@@ -26,7 +26,6 @@ export default function MemeStickersBottomSheet({ isOpen, onClose, onSelectStick
       isOpen={isOpen}
       onClose={onClose}
       title="Choose a Sticker"
-      icon={<Sticker size={17} strokeWidth={2.4} />}
       height="min(78vh, 640px)"
       maxHeight="min(78vh, 640px)"
       contentStyle={{ padding: '6px 16px 18px 16px', overflow: 'hidden' }}
@@ -36,7 +35,7 @@ export default function MemeStickersBottomSheet({ isOpen, onClose, onSelectStick
         <Search className="bs-search-icon" size={16} />
         <input
           type="text"
-          placeholder="Search meme stickers (glasses, hat, bubble, crown)..."
+          placeholder="Search meme stickers..."
           value={stickerSearchQuery}
           onChange={(e) => setStickerSearchQuery(e.target.value)}
           className="bs-search-input"
