@@ -58,6 +58,8 @@
 .ie-layer-row .ui-icon-btn { width: 34px; height: 34px; }
 .ie-layer-row .ui-icon-btn[aria-pressed='true'] { color: var(--ui-accent-text); }
 .ie-layer-pick { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; height: 40px; padding: 0 8px; border: none; background: none; color: var(--ui-text); font-size: 14px; font-weight: 500; text-align: left; cursor: pointer; }
+div.ie-layer-pick { cursor: default; }
+.ie-layer-rename { min-height: 30px; height: 30px; padding: 6px 8px; font-size: 13px; }
 .ie-layer-pick span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ie-layer-pick svg { flex-shrink: 0; }
 .ie-layer-actions + .ie-layer-actions { margin-top: 8px; }

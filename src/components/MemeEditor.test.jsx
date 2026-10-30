@@ -282,6 +282,31 @@ describe('MemeEditor', () => {
     expect(canvas.props.captions).toHaveLength(2);
   }, 30000);
 
+  it('renames a layer from the Layers sheet, and undo restores its automatic name', async () => {
+    renderEditor();
+    act(() => canvas.props.onSelectLayer(canvas.props.captions[0].id));
+    fireEvent.click(within(layerToolbar()).getByText('Layers'));
+    const panel = sheet('Layers');
+    const rows = () => within(screen.getByRole('list', { name: 'Layers' })).getAllByRole('listitem').map((li) => li.querySelector('.ie-layer-pick').textContent);
+    expect(rows()).toContain('TOP TEXT');
+
+    fireEvent.click(within(panel).getByLabelText('Rename TOP TEXT'));
+    const input = within(panel).getByLabelText('New name for TOP TEXT');
+    expect(input.value).toBe('TOP TEXT');
+
+    fireEvent.change(input, { target: { value: 'Punchline' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+
+    expect(rows()).toContain('Punchline');
+    expect(rows()).not.toContain('TOP TEXT');
+
+    await vi.waitFor(() => expect(undoButton().disabled).toBe(false), { timeout: 2000 });
+    fireEvent.click(undoButton());
+
+    expect(rows()).toContain('TOP TEXT');
+    expect(rows()).not.toContain('Punchline');
+  }, 30000);
+
   it('Text: shrink to fit with a line limit, and saved styles put on another caption', () => {
     renderEditor();
     openTextSheet();

@@ -18,6 +18,7 @@ export interface ShapeDrawing {
   // Circle and box only: filled instead of outlined.
   fill?: boolean;
   points: [Point, Point];
+  layerName?: string;
 }
 
 export interface CensorDrawing {
@@ -27,6 +28,7 @@ export interface CensorDrawing {
   // Blur radius / pixel block size, in canvas pixels.
   strength: number;
   points: [Point, Point];
+  layerName?: string;
 }
 
 export type DragDrawing = ShapeDrawing | CensorDrawing;

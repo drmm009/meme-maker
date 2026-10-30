@@ -28,8 +28,8 @@ export default function MediaSheet({ actions, onClose }: { actions: EditorAction
       {imageLayers.length + stickers.length > 0 && (
         <Section title="On the meme">
           <ChipRow ariaLabel="Images and stickers">
-            {imageLayers.map((l, i) => <Chip key={l.id} label={`Image ${i + 1}`} active={l.id === id} onClick={() => setActiveLayerId(l.id)} />)}
-            {stickers.map((s) => <Chip key={s.id} label={s.emoji || s.name || 'Sticker'} active={s.id === id} onClick={() => setActiveLayerId(s.id)} />)}
+            {imageLayers.map((l, i) => <Chip key={l.id} label={l.layerName?.trim() || `Image ${i + 1}`} active={l.id === id} onClick={() => setActiveLayerId(l.id)} />)}
+            {stickers.map((s) => <Chip key={s.id} label={s.layerName?.trim() || s.emoji || s.name || 'Sticker'} active={s.id === id} onClick={() => setActiveLayerId(s.id)} />)}
           </ChipRow>
         </Section>
       )}

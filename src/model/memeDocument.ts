@@ -19,6 +19,7 @@ interface MemeLayerBase {
   opacity?: number;
   // Layers sharing a groupId move together.
   groupId?: string | null;
+  layerName?: string;
 }
 
 export interface MemeCaption extends MemeLayerBase {

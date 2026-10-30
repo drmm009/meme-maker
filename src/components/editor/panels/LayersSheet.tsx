@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import {
   ArrowUp, ArrowDown, Eye, EyeOff, Lock, LockOpen, ListChecks, Check, Square, SquareCheck, Link2,
   AlignStartVertical, AlignCenterVertical, AlignEndVertical, AlignStartHorizontal, AlignCenterHorizontal, AlignEndHorizontal,
-  AlignHorizontalSpaceAround, AlignVerticalSpaceAround, Group, Ungroup, Trash2,
+  AlignHorizontalSpaceAround, AlignVerticalSpaceAround, Group, Ungroup, Trash2, Pencil,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Sheet, Section } from '../../ui';
@@ -21,11 +21,14 @@ const ALIGN: { mode: string; label: string; Icon: LucideIcon }[] = [
   { mode: 'bottom', label: 'Align bottom', Icon: AlignEndHorizontal },
 ];
 
-function RowTools({ row, first, last, onUp, onDown, onToggle }: {
-  row: LayerRow; first: boolean; last: boolean; onUp: () => void; onDown: () => void; onToggle: (patch: object) => void;
+function RowTools({ row, first, last, onUp, onDown, onToggle, onRename }: {
+  row: LayerRow; first: boolean; last: boolean; onUp: () => void; onDown: () => void; onToggle: (patch: object) => void; onRename: () => void;
 }) {
   return (
     <>
+      <button type="button" className="ui-icon-btn ui-icon-btn--ghost" title="Rename" aria-label={`Rename ${row.label}`} onClick={onRename}>
+        <Pencil size={17} />
+      </button>
       <button type="button" className="ui-icon-btn ui-icon-btn--ghost" title="Bring forward" aria-label={`Bring ${row.label} forward`} disabled={first} onClick={onUp}>
         <ArrowUp size={17} />
       </button>
@@ -60,7 +63,28 @@ export default function LayersSheet({ actions, onClose }: { actions: EditorActio
   const shapes = drawingRows(drawings);
   const [selecting, setSelecting] = useState(false);
   const [picked, setPicked] = useState<string[]>([]);
+  const [renaming, setRenaming] = useState<{ id: string; name: string } | null>(null);
+  const cancellingRef = useRef(false);
   const chosen = picked.filter((id) => rows.some((r) => r.id === id));
+
+  const finishRename = () => {
+    if (cancellingRef.current) {
+      cancellingRef.current = false;
+      return;
+    }
+    const r = renaming;
+    if (!r) return;
+    setRenaming(null);
+    const targetRow = [...shapes, ...rows].find((item) => item.id === r.id);
+    if (!targetRow) return;
+    const trimmed = r.name.trim();
+    patchLayer(targetRow.key, targetRow.id, { layerName: trimmed || undefined });
+  };
+
+  const startRename = (row: LayerRow) => {
+    finishRename();
+    setRenaming({ id: row.id, name: row.label });
+  };
 
   const toggle = (id: string) => setPicked((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]));
   const stopSelecting = () => {
@@ -83,7 +107,7 @@ export default function LayersSheet({ actions, onClose }: { actions: EditorActio
     <Sheet
       title="Layers"
       badge={rows.length + shapes.length ? String(rows.length + shapes.length) : undefined}
-      action={rows.length > 1 || selecting ? (selecting ? { label: 'Done', Icon: Check, onClick: stopSelecting } : { label: 'Select', Icon: ListChecks, onClick: () => setSelecting(true) }) : undefined}
+      action={rows.length > 1 || selecting ? (selecting ? { label: 'Done', Icon: Check, onClick: stopSelecting } : { label: 'Select', Icon: ListChecks, onClick: () => { setRenaming(null); setSelecting(true); } }) : undefined}
       onClose={onClose}
     >
       {!rows.length && !shapes.length && <p className="ie-empty">No layers yet. Add text, a sticker or a photo.</p>}
@@ -119,11 +143,43 @@ export default function LayersSheet({ actions, onClose }: { actions: EditorActio
           <ul className="ie-layers" aria-label="Shapes">
             {shapes.map((row, i) => (
               <li key={row.id} className={`ie-layer-row${row.id === activeLayerId ? ' is-on' : ''}${row.hidden ? ' is-hidden' : ''}`}>
-                <button type="button" className="ie-layer-pick" onClick={() => setActiveLayerId(row.id)} aria-pressed={row.id === activeLayerId}>
-                  <row.Icon size={17} />
-                  <span>{row.label}</span>
-                </button>
-                <RowTools row={row} first={i === 0} last={i === shapes.length - 1} onUp={() => moveShape(row.id, 1)} onDown={() => moveShape(row.id, -1)} onToggle={(patch) => patchLayer('drawings', row.id, patch)} />
+                {renaming?.id === row.id ? (
+                  <div className="ie-layer-pick">
+                    <row.Icon size={17} />
+                    <input
+                      ref={(el) => {
+                        if (el) el.select();
+                      }}
+                      className="ui-field ie-layer-rename"
+                      aria-label={`New name for ${row.label}`}
+                      value={renaming.name}
+                      autoFocus
+                      onChange={(e) => setRenaming({ id: row.id, name: e.target.value })}
+                      onBlur={finishRename}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') finishRename();
+                        if (e.key === 'Escape') {
+                          cancellingRef.current = true;
+                          setRenaming(null);
+                        }
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <button type="button" className="ie-layer-pick" onClick={() => setActiveLayerId(row.id)} aria-pressed={row.id === activeLayerId}>
+                    <row.Icon size={17} />
+                    <span>{row.label}</span>
+                  </button>
+                )}
+                <RowTools
+                  row={row}
+                  first={i === 0}
+                  last={i === shapes.length - 1}
+                  onUp={() => moveShape(row.id, 1)}
+                  onDown={() => moveShape(row.id, -1)}
+                  onToggle={(patch) => patchLayer('drawings', row.id, patch)}
+                  onRename={() => startRename(row)}
+                />
               </li>
             ))}
           </ul>
@@ -136,13 +192,45 @@ export default function LayersSheet({ actions, onClose }: { actions: EditorActio
             const on = selecting ? chosen.includes(row.id) : row.id === activeLayerId;
             return (
               <li key={row.id} className={`ie-layer-row${on ? ' is-on' : ''}${row.hidden ? ' is-hidden' : ''}`}>
-                <button type="button" className="ie-layer-pick" onClick={() => (selecting ? toggle(row.id) : setActiveLayerId(row.id))} aria-pressed={on}>
-                  {selecting ? (on ? <SquareCheck size={17} /> : <Square size={17} />) : <row.Icon size={17} />}
-                  <span>{row.label}</span>
-                  {row.groupId && <Link2 size={14} aria-label="In a group" />}
-                </button>
+                {renaming?.id === row.id ? (
+                  <div className="ie-layer-pick">
+                    <row.Icon size={17} />
+                    <input
+                      ref={(el) => {
+                        if (el) el.select();
+                      }}
+                      className="ui-field ie-layer-rename"
+                      aria-label={`New name for ${row.label}`}
+                      value={renaming.name}
+                      autoFocus
+                      onChange={(e) => setRenaming({ id: row.id, name: e.target.value })}
+                      onBlur={finishRename}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') finishRename();
+                        if (e.key === 'Escape') {
+                          cancellingRef.current = true;
+                          setRenaming(null);
+                        }
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <button type="button" className="ie-layer-pick" onClick={() => (selecting ? toggle(row.id) : setActiveLayerId(row.id))} aria-pressed={on}>
+                    {selecting ? (on ? <SquareCheck size={17} /> : <Square size={17} />) : <row.Icon size={17} />}
+                    <span>{row.label}</span>
+                    {row.groupId && <Link2 size={14} aria-label="In a group" />}
+                  </button>
+                )}
                 {!selecting && (
-                  <RowTools row={row} first={i === 0} last={i === rows.length - 1} onUp={() => actions.moveLayer(row.id, 'forward')} onDown={() => actions.moveLayer(row.id, 'backward')} onToggle={(patch) => patchLayer(row.key, row.id, patch)} />
+                  <RowTools
+                    row={row}
+                    first={i === 0}
+                    last={i === rows.length - 1}
+                    onUp={() => actions.moveLayer(row.id, 'forward')}
+                    onDown={() => actions.moveLayer(row.id, 'backward')}
+                    onToggle={(patch) => patchLayer(row.key, row.id, patch)}
+                    onRename={() => startRename(row)}
+                  />
                 )}
               </li>
             );

@@ -18,15 +18,18 @@ export interface LayerRow {
   groupId?: string | null;
 }
 
+// A layer's custom name wins when set (trimmed and non-empty), else its automatic label.
+const rowLabel = (layer: { layerName?: string }, fallback: string) => layer.layerName?.trim() || fallback;
+
 // Every layer, top of the stack first (as they cover each other on the canvas).
 export function layerRows(captions: MemeCaption[], stickers: MemeSticker[], images: MemeImageLayer[]): LayerRow[] {
   const rows: LayerRow[] = [
-    ...images.map((l, i) => ({ id: l.id, key: 'imageLayers' as const, label: `Image ${i + 1}`, Icon: ImageIcon, zIndex: l.zIndex ?? 0, hidden: !!l.hidden, locked: !!l.locked, groupId: l.groupId })),
-    ...stickers.map((s) => ({ id: s.id, key: 'stickers' as const, label: s.emoji || s.name || 'Sticker', Icon: Smile, zIndex: s.zIndex ?? 0, hidden: !!s.hidden, locked: !!s.locked, groupId: s.groupId })),
+    ...images.map((l, i) => ({ id: l.id, key: 'imageLayers' as const, label: rowLabel(l, `Image ${i + 1}`), Icon: ImageIcon, zIndex: l.zIndex ?? 0, hidden: !!l.hidden, locked: !!l.locked, groupId: l.groupId })),
+    ...stickers.map((s) => ({ id: s.id, key: 'stickers' as const, label: rowLabel(s, s.emoji || s.name || 'Sticker'), Icon: Smile, zIndex: s.zIndex ?? 0, hidden: !!s.hidden, locked: !!s.locked, groupId: s.groupId })),
     ...captions.map((c) => ({
       id: c.id,
       key: 'captions' as const,
-      label: captionLabel(c as MemeCaption & Record<string, unknown>),
+      label: rowLabel(c, captionLabel(c as MemeCaption & Record<string, unknown>)),
       Icon: isSocialCardCaption(c) ? MessageSquare : Type,
       zIndex: c.zIndex ?? 0,
       hidden: !!c.hidden,
@@ -51,8 +54,8 @@ const CENSOR_LABEL: Record<string, string> = { blur: 'Blur', pixelate: 'Pixelate
 // Shapes and censor regions (drawn over every layer, in list order), top first.
 export function drawingRows(drawings: unknown[]): LayerRow[] {
   return drawings.filter(isDragDrawing).map((d, i) => {
-    const flags = d as { hidden?: boolean; locked?: boolean };
+    const flags = d as { hidden?: boolean; locked?: boolean; layerName?: string };
     const kind = d.type === 'shape' ? SHAPE_ROW[d.shape] || SHAPE_ROW.line : { label: `Censor: ${CENSOR_LABEL[d.censor] || 'Blur'}`, Icon: EyeOff };
-    return { id: d.id, key: 'drawings' as const, label: kind.label, Icon: kind.Icon, zIndex: i, hidden: !!flags.hidden, locked: !!flags.locked };
+    return { id: d.id, key: 'drawings' as const, label: rowLabel(flags, kind.label), Icon: kind.Icon, zIndex: i, hidden: !!flags.hidden, locked: !!flags.locked };
   }).reverse();
 }
