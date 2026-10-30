@@ -1,0 +1,1 @@
+import{W as e}from"./index-DhcYKu6h.js";var t=e(),n=({children:e})=>typeof document>`u`?null:(0,t.createPortal)(e,document.body);export{n as t};
