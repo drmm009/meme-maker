@@ -13,7 +13,7 @@ const LAYER_SHEETS = ['text', 'media'];
 // around the canvas deselects.
 export default function CanvasStage({
   canvasRef, imageFit, isNativeLayout, layoutDef, isDrawingMode, isRemovingBg,
-  onAddDrawing, onDeleteLayer, onUpdateSlotTransform, faceMorph, children
+  onAddDrawing, onDeleteLayer, onUpdateSlotTransform, faceMorph, onDropMedia, children
 }) {
   const captions = useMemeEditorStore((s) => s.captions);
   const stickers = useMemeEditorStore((s) => s.stickers);
@@ -62,7 +62,19 @@ export default function CanvasStage({
   };
 
   return (
-    <div className="canvas-wrapper" onPointerDown={handleWrapperPointerDown}>
+    <div
+      className="canvas-wrapper"
+      onPointerDown={handleWrapperPointerDown}
+      // A picture, video or link dropped on the canvas area is added to the meme.
+      onDragOver={(e) => {
+        if (onDropMedia && [...(e.dataTransfer?.types || [])].some((t) => t === 'Files' || t === 'text/uri-list' || t === 'text/plain')) e.preventDefault();
+      }}
+      onDrop={(e) => {
+        if (!onDropMedia) return;
+        e.preventDefault();
+        onDropMedia(e.dataTransfer);
+      }}
+    >
       <div className="canvas-viewport">
         <AnimatePresence>
           {pasteToast && (
@@ -71,13 +83,15 @@ export default function CanvasStage({
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -16, scale: 0.95 }}
               transition={{ duration: 0.2 }}
+              role="status"
               style={{
                 position: 'absolute',
                 top: '14px',
                 left: '50%',
                 transform: 'translateX(-50%)',
                 zIndex: 9999,
-                background: 'rgba(16, 185, 129, 0.95)',
+                maxWidth: 'calc(100% - 32px)',
+                background: pasteToast.error ? 'rgba(220, 38, 38, 0.95)' : 'rgba(16, 185, 129, 0.95)',
                 color: '#ffffff',
                 padding: '8px 18px',
                 borderRadius: '24px',
@@ -90,7 +104,7 @@ export default function CanvasStage({
                 pointerEvents: 'none'
               }}
             >
-              <Check size={16} /> Image pasted from clipboard!
+              {!pasteToast.error && <Check size={16} />} {pasteToast.text || 'Image pasted from clipboard!'}
             </motion.div>
           )}
         </AnimatePresence>

@@ -186,7 +186,7 @@ describe('MemeEditor', () => {
     renderEditor();
     const strips = [
       ['Draw on the meme', 'Draw tools', ['Brush', 'Glow', 'Marker', 'Eraser', 'Shapes', 'Censor']],
-      ['Photos, videos, stickers and emoji', 'Media tools', ['Photo', 'Templates', 'Stickers', 'GIFs', 'Emoji']],
+      ['Photos, videos, stickers and emoji', 'Media tools', ['Photo', 'Templates', 'Stickers', 'GIFs', 'Emoji', 'Link']],
       ['Text', 'Text tools', ['Add Text', 'Edit', 'Bubble', 'Social Card']],
       ['AI tools and photo filters', 'AI and filter tools', ['Face Swap', 'Remove BG', 'AI Caption', 'Filters']],
       ['Canvas colour, bands and watermark', 'Canvas tools', ['Color', 'Watermark', 'Mirror', 'Header', 'Footer', 'Grid', 'Crop', 'Replace']],
@@ -698,6 +698,32 @@ describe('MemeEditor', () => {
     openSection('Photos, videos, stickers and emoji');
     fireEvent.click(within(strip('Media tools')).getByText('GIFs'));
     expect(screen.getByText('GIFs and stickers')).toBeTruthy();
+  }, 30000);
+
+  it('Media > Link adds a picture from a web link, and says when a site blocks it', async () => {
+    renderEditor();
+    openSection('Photos, videos, stickers and emoji');
+    fireEvent.click(within(strip('Media tools')).getByText('Link'));
+    const field = () => within(sheet('Add from a link')).getByLabelText('Picture link');
+    fireEvent.change(field(), { target: { value: 'https://blocked.test/a.png' } });
+    // fetch is stubbed to fail, as a site that doesn't share its pictures does.
+    await act(async () => { fireEvent.click(within(sheet('Add from a link')).getByText('Add')); });
+    expect(await within(sheet('Add from a link')).findByRole('alert')).toBeTruthy();
+
+    global.fetch = vi.fn().mockResolvedValue({ ok: true, status: 200, blob: async () => new Blob(['png'], { type: 'image/png' }) });
+    fireEvent.change(field(), { target: { value: 'https://ok.test/a.png' } });
+    await act(async () => { fireEvent.click(within(sheet('Add from a link')).getByText('Add')); });
+    await vi.waitFor(() => expect(canvas.props.imageLayers).toHaveLength(1));
+    expect(canvas.props.imageLayers[0].url.startsWith('data:image/png')).toBe(true);
+  }, 30000);
+
+  it('a picture dropped on the canvas area is added', async () => {
+    const { container } = renderEditor();
+    const file = new File([new Uint8Array([1, 2, 3])], 'cat.png', { type: 'image/png' });
+    await act(async () => {
+      fireEvent.drop(container.querySelector('.canvas-wrapper'), { dataTransfer: { files: [file], types: ['Files'], getData: () => '' } });
+    });
+    await vi.waitFor(() => expect(canvas.props.imageLayers).toHaveLength(1));
   }, 30000);
 
   it('the open sheet follows the selection: picking a caption switches Media to Text', () => {

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { linkIn } from '../../../utils/imageFromLink';
 
 const isTypingInField = () => {
   const el = document.activeElement;
@@ -74,8 +75,14 @@ export function useEditorShortcuts(handlers) {
           e.preventDefault();
           const file = item.getAsFile();
           if (file) handlersRef.current.onPasteImage(file);
-          break;
+          return;
         }
+      }
+      // No picture: a pasted web link to one is added too.
+      const link = linkIn(e.clipboardData.getData('text/plain'));
+      if (link && handlersRef.current.onPasteLink) {
+        e.preventDefault();
+        handlersRef.current.onPasteLink(link);
       }
     };
 

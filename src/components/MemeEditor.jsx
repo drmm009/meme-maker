@@ -1,5 +1,4 @@
 import { useState, useRef, useEffect } from 'react';
-import { blobToDataURL } from '../utils/galleryStore';
 import { createMemeEditorStore, MemeEditorStoreContext, useMemeEditorStore } from './editor/store/useMemeEditorStore';
 import { createEditorUiStore, EditorUiStoreContext, useEditorUiStore } from './editor/store/useEditorUiStore';
 import { useEditorSetup } from './editor/hooks/useEditorSetup';
@@ -13,6 +12,7 @@ import { useCanvasFrameActions } from './editor/hooks/useCanvasFrameActions';
 import { usePhotoActions } from './editor/hooks/usePhotoActions';
 import { useArrangeActions } from './editor/hooks/useArrangeActions';
 import { useProjects } from './editor/hooks/useProjects';
+import { useMediaInput } from './editor/hooks/useMediaInput';
 import { useSocialCardActions } from './editor/hooks/useSocialCardActions';
 import { useBubbleActions } from './editor/hooks/useBubbleActions';
 import { useCaptionActions } from './editor/hooks/useCaptionActions';
@@ -59,7 +59,6 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, o
   const handleUndo = useMemeEditorStore((s) => s.undo);
   const handleRedo = useMemeEditorStore((s) => s.redo);
   const nudgeLayer = useMemeEditorStore((s) => s.nudgeLayer);
-  const setPasteToast = useEditorUiStore((s) => s.setPasteToast);
   const dockTab = useEditorUiStore((s) => s.dockTab);
   const drawTool = useEditorUiStore((s) => s.drawTool);
 
@@ -96,6 +95,8 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, o
   const { handleAddBubble, handleApplyBubbleStyle } = useBubbleActions({ activeCaption, updateActiveCaptionProps });
 
   // Everything the panels can do, in one object (see editor/panels/selection.ts).
+  const media = useMediaInput({ handleAddImageLayer });
+
   const actions = {
     handleAddCaption, handleToggleTextCase, updateActiveCaptionProps, handleSetCaptionBg, handleAddBubble,
     handleOpenSocialModalForActiveCard,
@@ -103,6 +104,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, o
     handleReplaceMainPhoto, handleApplyMainPhotoCrop, handleRestoreMainPhoto, handleReplaceImageLayer,
     handleAlignLayers, handleDistributeLayers, handleGroupLayers, handleUngroupLayers, handleDeleteLayers,
     listProjects, handleSaveProject, handleOpenProject, handleDeleteProject, handleRenameProject,
+    addMediaLink: media.addLink,
     handleClearDrawings, handleUndoDrawing,
     handleFileUploadImageLayer, updateActiveImageLayer, moveLayer, handleDeleteLayer, handleDuplicateLayer, handleRotateLayer,
     handleFlipActiveLayer, handleToggleDieCutSticker, handleSetDieCutColor,
@@ -120,15 +122,8 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, o
     onNudge: (dx, dy) => nudgeLayer(activeLayerId, dx, dy),
     onMoveLayer: (action) => moveLayer(activeLayerId, action),
     onDeselect: () => setActiveLayerId(null),
-    onPasteImage: (file) => {
-      blobToDataURL(file).then((url) => {
-        commitAddImageLayer(url);
-        setPasteToast(true);
-        setTimeout(() => setPasteToast(false), 2600);
-      }).catch((err) => {
-        console.error('Failed to convert pasted image to data URL:', err);
-      });
-    },
+    onPasteImage: (file) => media.addFile(file, 'Image pasted from clipboard!'),
+    onPasteLink: (link) => media.addLink(link).catch(() => {}),
   });
 
   return (
@@ -152,6 +147,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, o
             onDeleteLayer={handleDeleteLayer}
             onUpdateSlotTransform={updateSlotTransform}
             faceMorph={faceMorph}
+            onDropMedia={media.handleDropMedia}
           >
             <LayerToolbar canvasRef={canvasRef} actions={actions} />
           </CanvasStage>

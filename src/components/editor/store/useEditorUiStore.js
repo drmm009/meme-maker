@@ -80,7 +80,7 @@ export function buildInitialUi(template) {
     showPhotoCrop: false, // the main photo's cropper (editor/crop)
     showGifSheet: false, // the Giphy picker
     showGrid: false, // line-up guides over the canvas (Canvas > Grid), not exported
-    pasteToast: false,
+    pasteToast: false, // false, or { text, error } shown over the canvas for a moment
     drawTool: null, // 'brush' | 'highlighter' | 'glow' | 'shape' | 'censor' | null
     shapeKind: 'arrow', // 'arrow' | 'ellipse' | 'rect' | 'line'
     shapeFill: false,
@@ -98,7 +98,7 @@ const UI_FIELDS = Object.keys(buildInitialUi(null));
 
 // The dock tab each sheet belongs to: its strip shows above the sheet.
 // null: no strip (Export). Sheets not listed (Layers) keep the strip that shows.
-const SHEET_TAB = { text: 'text', media: 'media', draw: 'draw', canvasColor: 'canvas', watermark: 'canvas', filters: 'fx', export: null, library: null };
+const SHEET_TAB = { text: 'text', media: 'media', draw: 'draw', canvasColor: 'canvas', watermark: 'canvas', filters: 'fx', export: null, library: null, mediaLink: 'media' };
 
 // useState-style setter: accepts a value or an updater function.
 const fieldSetter = (set, key) => (valueOrUpdater) =>
