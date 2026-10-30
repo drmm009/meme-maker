@@ -23,6 +23,7 @@ import DraftOffer from './editor/DraftOffer';
 import EditorPanels from './editor/panels/EditorPanels';
 import LayerToolbar from './editor/panels/LayerToolbar';
 import AspectBar from './editor/panels/AspectBar';
+import FirstRunTour from './editor/panels/FirstRunTour';
 import './ui';
 import './MemeEditor.css';
 
@@ -126,6 +127,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, o
       <EditorTopBar onBack={onBack} />
 
       {draft.offer && <DraftOffer offer={draft.offer} onRestore={draft.restore} onDismiss={draft.dismiss} />}
+      <FirstRunTour />
 
       <div className="editor-main">
         <AspectBar />

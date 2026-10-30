@@ -104,6 +104,8 @@ describe('MemeEditor', () => {
   beforeEach(() => {
     stubBrowserAPIs();
     localStorage.clear();
+    // The first-run tour has its own test; keep it out of the others' way.
+    localStorage.setItem('meme-maker-editor-tour-v1', JSON.stringify('done'));
     canvas.props = null;
   });
 
