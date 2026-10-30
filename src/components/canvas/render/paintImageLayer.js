@@ -5,7 +5,7 @@ import { applyPhotoEffects, hasPhotoEffects } from '../draw/photoEffects';
 
 export function paintImageLayer({
   activeLayerId, baseImgRef, canvas, getImageLayerCenterY, imageCacheRef, isDrawingMode,
-  layer, renderCanvas, reportActiveBox, setActiveHandleDrawer, targetCtx
+  layer, renderCanvas, reportActiveBox, reportBox, setActiveHandleDrawer, targetCtx
 }) {
   const imgLayer = layer;
 const cx = imgLayer.x * canvas.width;
@@ -144,6 +144,7 @@ if (cached) {
     paintBody(targetCtx);
   }
 
+  reportBox?.(imgLayer.id, { x: cx, y: cy, w, h });
   if (imgLayer.id === activeLayerId && !isDrawingMode) {
     const hw = w / 2 + 6;
     const hh = h / 2 + 6;

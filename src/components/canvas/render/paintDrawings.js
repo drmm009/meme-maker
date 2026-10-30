@@ -78,6 +78,7 @@ export function paintDrawings({
   const ctx = ink || targetCtx;
 
   list.forEach((d) => {
+    if (d?.hidden) return;
     if (d?.type === 'censor') {
       flush();
       paintDragDrawing(targetCtx, d);

@@ -4,7 +4,7 @@ import { applyShadow, compositeFor } from '../draw/layerLook';
 
 export function paintSticker({
   activeLayerId, baseImgRef, canvas, getStickerCenterY, imageCacheRef, isDrawingMode, layer,
-  loadingMediaRef, renderCanvas, reportActiveBox, setActiveHandleDrawer, targetCtx
+  loadingMediaRef, renderCanvas, reportActiveBox, reportBox, setActiveHandleDrawer, targetCtx
 }) {
   const stk = layer;
 
@@ -20,6 +20,7 @@ targetCtx.font = `${stkSize}px "Segoe UI Emoji", "Apple Color Emoji", "Noto Colo
 targetCtx.textAlign = 'center';
 targetCtx.textBaseline = 'middle';
 
+reportBox?.(stk.id, { x: sx, y: sy, w: stkSize, h: stkSize });
 if (stk.id === activeLayerId && !isDrawingMode) {
   const rot = stk.rotation || 0;
   reportActiveBox?.({ x: sx, y: sy, w: stkSize + 12, h: stkSize + 12, rotation: rot });

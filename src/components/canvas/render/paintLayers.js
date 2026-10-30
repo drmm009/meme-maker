@@ -25,6 +25,9 @@ export function paintLayers({
   // floats over it (see reportActiveLayerBox).
   let activeBox = null;
   const reportActiveBox = (box) => { activeBox = box; };
+  // Every layer's box ({ x, y } centre, w, h, unrotated), for lining layers up (panels/arrange).
+  const boxes = {};
+  const reportLayerBox = (id, box) => { boxes[id] = box; };
 
   // Reset filter for text/stickers/image-layers overlay (safe on all browsers)
   try { targetCtx.filter = 'none'; } catch { /* unsupported */ }
@@ -43,20 +46,22 @@ export function paintLayers({
     if (layer._type === 'imageLayer') {
       paintImageLayer({
         activeLayerId, baseImgRef, canvas, getImageLayerCenterY, imageCacheRef, isDrawingMode,
-        layer, renderCanvas, reportActiveBox, setActiveHandleDrawer, targetCtx
+        layer, renderCanvas, reportActiveBox, reportBox: reportLayerBox, setActiveHandleDrawer, targetCtx
       });
     } else if (layer._type === 'sticker') {
       paintSticker({
         activeLayerId, baseImgRef, canvas, getStickerCenterY, imageCacheRef, isDrawingMode, layer,
-        loadingMediaRef, renderCanvas, reportActiveBox, setActiveHandleDrawer, targetCtx
+        loadingMediaRef, renderCanvas, reportActiveBox, reportBox: reportLayerBox, setActiveHandleDrawer, targetCtx
       });
     } else if (layer._type === 'caption') {
       paintCaption({
         activeLayerId, canvas, dragTarget, getCaptionCenterY, isDragging, isDrawingMode, layer,
-        reportActiveBox, setActiveHandleDrawer, targetCtx
+        reportActiveBox, reportBox: reportLayerBox, setActiveHandleDrawer, targetCtx
       });
     }
   });
+
+  if (canvas) canvas.layerBoxes = boxes;
 
   if (reportBox) reportActiveLayerBox(canvas, activeBox);
   return activeHandleDrawer;

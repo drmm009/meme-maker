@@ -8,6 +8,7 @@ import { getDragCenter, getDragStart, getRotation, moveLayer, resizeCaption, res
 import { paintStrokeDot, paintStrokeSegment, startStroke } from './freehand';
 import { isTooSmall, paintDragDrawing, paintDragGuide, startDragDrawing } from '../draw/shapes';
 import { dragDrawingHandle, hitDrawingAt, hitDrawingHandle, isDragDrawing, moveDrawingPoints } from './drawingHits';
+import { groupMates } from '../../editor/panels/arrange';
 import { useMemeEditorStore } from '../../editor/store/useMemeEditorStore';
 import { useEditorUiStore } from '../../editor/store/useEditorUiStore';
 import { isSocialCardCaption } from '../../editor/memeEditorUtils';
@@ -32,7 +33,7 @@ export function useCanvasInteraction({
   dragTarget, editableRef, focusTextarea, getCaptionCenterY, getImageLayerCenterY,
   getStickerCenterY, headerExtH, imageCacheRef, isDragging, isDrawingMode,
   isFooterEnabled, isHeaderEnabled, onAddDrawing, onDeleteLayer, onSelectLayer,
-  onPreviewStroke, onUpdateCaptionBounds, onUpdateDrawing, onUpdateImageLayerBounds, onUpdateSlotTransform,
+  onMoveLayers, onPreviewStroke, onUpdateCaptionBounds, onUpdateDrawing, onUpdateImageLayerBounds, onUpdateSlotTransform,
   onUpdateStickerBounds, requestRedraw, setEditingCaptionId, snappingLines,
   totalCanvasH, wrapperRef
 }) {
@@ -49,6 +50,7 @@ export function useCanvasInteraction({
   const lastDrawPoint = useRef(null);
   const lastTapRef = useRef({ id: null, time: 0 });
   const pendingDragRef = useRef(null);
+  const groupStart = useRef([]);
   const drawTool = useEditorUiStore((s) => s.drawTool);
   const canvasBgColor = useMemeEditorStore((s) => s.canvasBgColor);
   const brushColor = useEditorUiStore((s) => s.brushColor);
@@ -102,6 +104,10 @@ export function useCanvasInteraction({
   };
 
   const beginDrag = (hit, coords, canvas) => {
+    // Moving a grouped layer moves its group: where each mate started.
+    const all = [...captions, ...stickers, ...imageLayers];
+    const isBody = hit.type === 'caption' || hit.type === 'sticker' || hit.type === 'imageLayer';
+    groupStart.current = isBody ? groupMates(all, hit.id).filter((l) => !l.locked).map((l) => ({ id: l.id, x: l.x, y: l.y })) : [];
     isDragging.current = true;
     dragTarget.current = hit;
     dragStartCoords.current = coords;
@@ -144,6 +150,8 @@ export function useCanvasInteraction({
     if (!target) return false;
     if (onSelectLayer) onSelectLayer(target.id);
     setEditingCaptionId(null);
+    // A locked one is picked, not moved.
+    if (target.locked) return true;
     isDragging.current = true;
     hasDragged.current = false;
     dragTarget.current = { type: handle ? 'drawing_handle' : 'drawing', id: target.id, handle, points: target.points };
@@ -482,6 +490,9 @@ export function useCanvasInteraction({
         onUpdateStickerBounds(current.id, { x, y });
       } else if (current.type === 'imageLayer' && onUpdateImageLayerBounds) {
         onUpdateImageLayerBounds(current.id, { x, y });
+      }
+      if (groupStart.current.length && onMoveLayers) {
+        onMoveLayers(groupStart.current.map((m) => ({ id: m.id, x: m.x + (x - start.x), y: m.y + (y - start.y) })));
       }
     });
   };

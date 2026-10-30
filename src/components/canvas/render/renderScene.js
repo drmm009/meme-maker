@@ -126,6 +126,9 @@ export function renderScene(scene) {
 
   // A copy of the meme as exported (no selection handles), for scaling or encoding. `transparent`
   // leaves out the background colour (the header/footer bands keep theirs).
+  // The image area as a box ({ x, y } centre, w, h), what one layer aligns to (panels/arrange).
+  canvas.imageArea = { x: canvasW / 2, y: headerExtH + canvasH / 2, w: canvasW, h: canvasH };
+
   canvas.exportCleanCanvas = ({ transparent = false } = {}) => {
     renderCanvas(baseImgRef.current, true, transparent);
     const copy = document.createElement('canvas');

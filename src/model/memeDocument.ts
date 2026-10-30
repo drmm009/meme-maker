@@ -17,6 +17,8 @@ interface MemeLayerBase {
   flipY?: boolean;
   // 0..1
   opacity?: number;
+  // Layers sharing a groupId move together.
+  groupId?: string | null;
 }
 
 export interface MemeCaption extends MemeLayerBase {

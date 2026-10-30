@@ -42,6 +42,10 @@
 .ie-font-row { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; margin: 0 -16px; padding: 2px 16px; }
 .ie-font-row::-webkit-scrollbar { display: none; }
 .ie-layer-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+/* The Layers sheet's Select mode: line the chosen layers up, group or delete them. */
+.ie-arrange { display: flex; flex-direction: column; gap: 10px; margin: 0 0 12px; padding: 12px; border-radius: var(--ui-radius-md); background: rgba(255, 255, 255, 0.04); }
+.ie-arrange .ie-inline-label { margin: 0; }
+.ie-arrange-row { display: flex; flex-wrap: wrap; gap: 6px; }
 .ie-layers { display: flex; flex-direction: column; gap: 6px; margin: 4px 0 8px; padding: 0; list-style: none; }
 .ie-layer-row { display: flex; align-items: center; gap: 2px; padding: 4px 6px 4px 4px; border: 1.5px solid transparent; border-radius: 12px; background: var(--ui-surface-2); }
 .ie-layer-row.is-on { border-color: var(--ui-accent-edge); background: var(--ui-accent-tint); }

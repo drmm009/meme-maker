@@ -10,7 +10,7 @@ import { applyCaptionFont, captionGradient, captionLineHeight, underlineMetrics 
 
 export function paintCaption({
   activeLayerId, canvas, dragTarget, getCaptionCenterY, isDragging, isDrawingMode, layer,
-  reportActiveBox, setActiveHandleDrawer, targetCtx
+  reportActiveBox, reportBox, setActiveHandleDrawer, targetCtx
 }) {
   const cap = layer;
 let cx = (cap.x ?? 0.5) * canvas.width;
@@ -213,6 +213,7 @@ if (cap.isBreakingNews) {
   targetCtx.restore();
 }
 
+reportBox?.(cap.id, { x: cx, y: cy, w: boxWidth, h: boxHeight });
 if (cap.id === activeLayerId && !isDrawingMode) {
   const rot = cap.rotation || 0;
   reportActiveBox?.({ x: cx, y: cy, w: boxWidth, h: boxHeight, rotation: rot });

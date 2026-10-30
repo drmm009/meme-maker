@@ -25,6 +25,7 @@ export default function CanvasStage({
   const templateFaceMorph = useMemeEditorStore((s) => s.templateFaceMorph);
   const patchLayer = useMemeEditorStore((s) => s.patchLayer);
   const updateCaptionText = useMemeEditorStore((s) => s.updateCaptionText);
+  const placeLayers = useMemeEditorStore((s) => s.placeLayers);
   const pasteToast = useEditorUiStore((s) => s.pasteToast);
   const sheet = useEditorUiStore((s) => s.sheet);
   const openSheet = useEditorUiStore((s) => s.openSheet);
@@ -108,6 +109,7 @@ export default function CanvasStage({
           onUpdateImageLayerBounds={(id, props) => patchLayer('imageLayers', id, props)}
           onUpdateCaptionText={updateCaptionText}
           onUpdateDrawing={(id, props) => patchLayer('drawings', id, props)}
+          onMoveLayers={placeLayers}
           onAddDrawing={onAddDrawing}
           isDrawingMode={isDrawingMode}
         />

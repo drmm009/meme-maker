@@ -221,6 +221,24 @@ export function createMemeEditorStore(template, initialDocument = null) {
             get().pushHistoryDebounced();
           },
 
+          // Put several layers (any kind) at { id, x, y } at once: a group being dragged, layers lined up.
+          // `history`: 'now' records an undo step straight away, 'later' once edits stop.
+          placeLayers: (positions, history = 'later') => {
+            const at = new Map(positions.map((p) => [p.id, p]));
+            const place = (list) => list.map((l) => (at.has(l.id) ? { ...l, x: at.get(l.id).x, y: at.get(l.id).y } : l));
+            set((state) => ({ captions: place(state.captions), stickers: place(state.stickers), imageLayers: place(state.imageLayers || []) }));
+            if (history === 'now') get().pushHistory();
+            else get().pushHistoryDebounced();
+          },
+
+          // Give layers (any kind) the same props, e.g. a groupId, as one undo step.
+          patchLayers: (ids, patch) => {
+            const set_ = new Set(ids);
+            const apply = (list) => list.map((l) => (set_.has(l.id) ? { ...l, ...patch } : l));
+            set((state) => ({ captions: apply(state.captions), stickers: apply(state.stickers), imageLayers: apply(state.imageLayers || []) }));
+            get().pushHistory();
+          },
+
           // Inline text edit on the canvas: a string, or an object of caption props.
           updateCaptionText: (id, text) => {
             set((state) => ({

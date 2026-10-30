@@ -251,6 +251,36 @@ describe('MemeEditor', () => {
     expect(canvas.props.activeLayerId).toBe(canvas.props.captions.find((c) => c.text === 'TOP TEXT').id);
   }, 30000);
 
+  it('Layers: Select picks several to group, ungroup or delete; shapes have their own list', () => {
+    renderEditor();
+    act(() => canvas.props.onAddDrawing({ id: 'shape-a', type: 'shape', shape: 'arrow', color: '#fff', size: 4, points: [{ x: 0, y: 0 }, { x: 40, y: 0 }] }));
+    act(() => canvas.props.onSelectLayer(canvas.props.captions[0].id));
+    fireEvent.click(within(layerToolbar()).getByText('Layers'));
+    const shapes = screen.getByRole('list', { name: 'Shapes' });
+    expect(within(shapes).getByText('Arrow')).toBeTruthy();
+    fireEvent.click(within(shapes).getByLabelText('Hide Arrow'));
+    expect(canvas.props.drawings[0].hidden).toBe(true);
+
+    fireEvent.click(within(sheet('Layers')).getByRole('button', { name: 'Select' }));
+    const list = screen.getByRole('list', { name: 'Layers' });
+    fireEvent.click(within(list).getByText('TOP TEXT'));
+    fireEvent.click(within(list).getByText('BOTTOM TEXT'));
+    const bar = screen.getByRole('group', { name: 'Arrange chosen layers' });
+    expect(within(bar).getByText('2 chosen')).toBeTruthy();
+    // Spreading out needs three.
+    expect(within(bar).getByLabelText('Spread out across').disabled).toBe(true);
+    fireEvent.click(within(bar).getByText('Group'));
+    const [top, bottom] = canvas.props.captions;
+    expect(top.groupId).toBeTruthy();
+    expect(bottom.groupId).toBe(top.groupId);
+    fireEvent.click(within(bar).getByText('Ungroup'));
+    expect(canvas.props.captions.every((c) => !c.groupId)).toBe(true);
+    fireEvent.click(within(bar).getByText('Delete'));
+    expect(canvas.props.captions).toHaveLength(0);
+    fireEvent.click(undoButton());
+    expect(canvas.props.captions).toHaveLength(2);
+  }, 30000);
+
   it('edits the selected caption from the Text sheet', () => {
     renderEditor();
     openTextSheet();

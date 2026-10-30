@@ -11,6 +11,7 @@ import { useFaceMorph } from './editor/hooks/useFaceMorph';
 import { useDrawingActions } from './editor/hooks/useDrawingActions';
 import { useCanvasFrameActions } from './editor/hooks/useCanvasFrameActions';
 import { usePhotoActions } from './editor/hooks/usePhotoActions';
+import { useArrangeActions } from './editor/hooks/useArrangeActions';
 import { useSocialCardActions } from './editor/hooks/useSocialCardActions';
 import { useBubbleActions } from './editor/hooks/useBubbleActions';
 import { useCaptionActions } from './editor/hooks/useCaptionActions';
@@ -86,6 +87,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, o
   const { handleOpenSocialModalForActiveCard, handleUpdateSocialCard, handleAddTweetCard, handleAddInstagramCard, handleAddWhatsAppCard } = useSocialCardActions();
   const { handleSetCanvasBgColor, handleToggleCanvasHeader, handleToggleCanvasFooter, handleToggleCanvasFlip, handleWatermarkImageUpload } = useCanvasFrameActions();
   const { handleReplaceMainPhoto, handleApplyMainPhotoCrop, handleRestoreMainPhoto, handleReplaceImageLayer } = usePhotoActions();
+  const { handleAlignLayers, handleDistributeLayers, handleGroupLayers, handleUngroupLayers, handleDeleteLayers } = useArrangeActions({ canvasRef });
   const { handleAddDrawing, handleClearDrawings, handleUndoDrawing } = useDrawingActions();
   const { handleApplyAiCaption, handleAddCaption, handleToggleTextCase, updateActiveCaptionProps, handleSetCaptionBg } = useCaptionActions({ activeCaption, handleToggleCanvasHeader });
   const { commitAddImageLayer, handleAddImageLayer, handleFileUploadImageLayer, updateActiveImageLayer, moveLayer, handleDeleteLayer, handleDuplicateLayer, handleRotateLayer, handleFlipActiveLayer, handleToggleDieCutSticker, handleSetDieCutColor, updateSlotTransform, handleAddSticker, handleAddGraphicSticker } = useLayerActions({ activeCaption, activeImageLayer, activeSticker, updateActiveCaptionProps });
@@ -97,6 +99,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, o
     handleOpenSocialModalForActiveCard,
     handleSetCanvasBgColor, handleToggleCanvasHeader, handleToggleCanvasFooter, handleToggleCanvasFlip, handleWatermarkImageUpload,
     handleReplaceMainPhoto, handleApplyMainPhotoCrop, handleRestoreMainPhoto, handleReplaceImageLayer,
+    handleAlignLayers, handleDistributeLayers, handleGroupLayers, handleUngroupLayers, handleDeleteLayers,
     handleClearDrawings, handleUndoDrawing,
     handleFileUploadImageLayer, updateActiveImageLayer, moveLayer, handleDeleteLayer, handleDuplicateLayer, handleRotateLayer,
     handleFlipActiveLayer, handleToggleDieCutSticker, handleSetDieCutColor,

@@ -70,7 +70,7 @@ export function hitDrawingAt(drawings: unknown[] | undefined, p: Point, pad: num
   const list = drawings || [];
   for (let i = list.length - 1; i >= 0; i--) {
     const d = list[i];
-    if (isDragDrawing(d) && (!type || d.type === type) && isOnDrawing(d, p, pad)) return d;
+    if (isDragDrawing(d) && !(d as { hidden?: boolean }).hidden && (!type || d.type === type) && isOnDrawing(d, p, pad)) return d;
   }
   return null;
 }
