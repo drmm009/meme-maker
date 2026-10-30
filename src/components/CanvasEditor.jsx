@@ -7,6 +7,7 @@ import { renderScene } from './canvas/render/renderScene';
 import { useCanvasInteraction } from './canvas/interaction/useCanvasInteraction';
 import { useCanvasView } from './canvas/interaction/useCanvasView';
 import { isZoomed } from './canvas/interaction/viewZoom';
+import { useAnimatedLayers } from './canvas/media/useAnimatedLayers';
 import CaptionTextOverlay from './canvas/CaptionTextOverlay';
 
 // The meme canvas: works out the layout, draws the scene with renderScene, and hands pointer
@@ -163,6 +164,13 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     isNativeLayout, liveBgColor, loadingMediaRef, naturalSize, setNaturalSize, showDrawingHandles,
     slotImages, slotTransforms, snappingLines, stickers, totalCanvasH, watermark
   };
+
+  // GIF and video layers play: their frames are redrawn straight from the scene, without a render.
+  useAnimatedLayers({
+    canvasRef, imageCacheRef, imageLayers, stickers,
+    redraw: () => renderScene(sceneRef.current),
+    frozen: isDrawingMode
+  });
 
   useEffect(() => {
     renderScene(sceneRef.current);

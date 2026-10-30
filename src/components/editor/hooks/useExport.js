@@ -2,6 +2,7 @@ import confetti from 'canvas-confetti';
 import { cleanTemplateName } from '../memeEditorUtils';
 import { useMemeEditorStoreApi } from '../store/useMemeEditorStore';
 import { renderExport, wantsTransparency } from '../export/exportImage';
+import { renderMotion } from '../export/motionExport';
 
 export const triggerConfetti = () => {
   try {
@@ -41,6 +42,16 @@ export function useExport({ canvasRef, template, onSaveToGallery, imageFit, isNa
     return renderExport(canvas.exportCleanCanvas ? canvas.exportCleanCanvas({ transparent: wantsTransparency(prefs) }) : canvas, prefs);
   };
 
+  // How long each moving layer (GIF, video) loops, or null when nothing on the meme moves.
+  const motionLoops = () => canvasRef.current?.animation?.loopsMs || null;
+
+  // The meme as an animated GIF or MP4 (see export/motionExport).
+  const exportMotion = (prefs, onProgress, isCancelled) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return Promise.reject(new Error('No canvas'));
+    return renderMotion(canvas, { format: prefs.format, width: prefs.width, onProgress, isCancelled });
+  };
+
   const saveToGallery = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -59,5 +70,5 @@ export function useExport({ canvasRef, template, onSaveToGallery, imageFit, isNa
     triggerConfetti();
   };
 
-  return { memeName, canvasSize, exportBlob, saveToGallery };
+  return { memeName, canvasSize, exportBlob, exportMotion, motionLoops, saveToGallery };
 }

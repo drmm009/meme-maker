@@ -71,7 +71,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, o
   const { activeCaption, activeSticker, activeImageLayer, currentEditingSocialCard } = useActiveLayer();
 
   const canvasRef = useRef(null);
-  const { memeName, canvasSize, exportBlob, saveToGallery } = useExport({ canvasRef, template, onSaveToGallery, imageFit, isNativeLayout, layoutDef });
+  const { memeName, canvasSize, exportBlob, exportMotion, motionLoops, saveToGallery } = useExport({ canvasRef, template, onSaveToGallery, imageFit, isNativeLayout, layoutDef });
   const { isRemovingBg, handleRemoveBackground } = useBackgroundRemoval();
   const faceMorph = useFaceMorph({ canvasRef });
   const {
@@ -99,7 +99,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, o
     handleFlipActiveLayer, handleToggleDieCutSticker, handleSetDieCutColor,
     handleRemoveBackground, isRemovingBg, setShowFaceMorphModal, handleStartMorphFace,
     handleUpdateTemplateMorphProgress, handleChangeFace, handleRevertTemplateFace, handleFinalizeTemplateFace, setIsHoldingCanvasCompare,
-    memeName, canvasSize, exportBlob, saveToGallery,
+    memeName, canvasSize, exportBlob, exportMotion, motionLoops, saveToGallery,
   };
 
   useEditorShortcuts({

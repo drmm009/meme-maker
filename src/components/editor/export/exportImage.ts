@@ -7,7 +7,8 @@ export type ExportFormat = 'png' | 'jpeg' | 'webp';
 export type ExportWidth = 'full' | 720 | 480;
 
 export interface ExportPrefs {
-  format: ExportFormat;
+  // GIF and MP4 are for memes with moving layers (see motionExport).
+  format: ExportFormat | 'gif' | 'mp4';
   // 0.5..1, for JPG and WebP.
   quality: number;
   width: ExportWidth;
@@ -21,7 +22,7 @@ export const DEFAULT_EXPORT_PREFS: ExportPrefs = { format: 'png', quality: 0.9, 
 export const wantsTransparency = (p: ExportPrefs) => Boolean(p.transparent) && p.format !== 'jpeg';
 
 export const MIME: Record<ExportFormat, string> = { png: 'image/png', jpeg: 'image/jpeg', webp: 'image/webp' };
-const EXTENSION: Record<string, string> = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp' };
+const EXTENSION: Record<string, string> = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp', 'image/gif': 'gif', 'video/mp4': 'mp4' };
 
 // The output size for a canvas of w x h at the chosen width (aspect kept, never upscaled).
 export function outputSize(w: number, h: number, width: ExportWidth): { w: number; h: number } {
@@ -42,7 +43,7 @@ interface CanvasLike {
 
 // The meme as a file. JPG has no transparency, so it is painted over white. A browser that can't
 // write the format (WebP on older Safari) hands back a PNG; the blob's type says which it is.
-export async function renderExport(source: CanvasLike, prefs: ExportPrefs): Promise<Blob> {
+export async function renderExport(source: CanvasLike, prefs: ExportPrefs & { format: ExportFormat }): Promise<Blob> {
   const { w, h } = outputSize(source.width, source.height, prefs.width);
   let out: CanvasLike = source;
   if (w !== source.width || prefs.format === 'jpeg') {

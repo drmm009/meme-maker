@@ -6,7 +6,8 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import React from 'react';
 import { render, screen, fireEvent, cleanup, act, within } from '@testing-library/react';
 
-const canvas = { props: null };
+// `animation` stands in for the moving layers' controls the real canvas carries (canvas/media).
+const canvas = { props: null, animation: undefined };
 
 vi.mock('./CanvasEditor', async () => {
   const React = await import('react');
@@ -29,7 +30,7 @@ vi.mock('./CanvasEditor', async () => {
       ...ownProps,
     };
     canvas.props = props;
-    React.useImperativeHandle(ref, () => ({ toDataURL: () => 'data:image/png;base64,STUB' }));
+    React.useImperativeHandle(ref, () => ({ toDataURL: () => 'data:image/png;base64,STUB', get animation() { return canvas.animation; } }));
     return (
       <div data-testid="canvas-stub">
         {props.captions.map((c) => (
@@ -112,6 +113,7 @@ describe('MemeEditor', () => {
   afterEach(() => {
     cleanup();
     vi.clearAllMocks();
+    canvas.animation = undefined;
   });
 
   it('renders with default top/bottom captions for a plain template', () => {
@@ -390,6 +392,35 @@ describe('MemeEditor', () => {
     renderEditor();
     fireEvent.click(screen.getByLabelText('Export'));
     expect(within(sheet('Export')).getByRole('radio', { name: 'JPG' }).getAttribute('aria-checked')).toBe('true');
+  }, 30000);
+
+  it('Export offers GIF and MP4 only when something on the meme moves', () => {
+    const { unmount } = renderEditor();
+    fireEvent.click(screen.getByLabelText('Export'));
+    expect(within(sheet('Export')).queryByRole('radio', { name: 'GIF' })).toBeNull();
+    unmount();
+
+    canvas.animation = { loopsMs: [1200], pause: () => {}, resume: () => {}, seek: async () => {} };
+    const moving = renderEditor();
+    fireEvent.click(screen.getByLabelText('Export'));
+    expect(within(sheet('Export')).getByText('Your meme moves: GIF and MP4 keep it moving.')).toBeTruthy();
+    fireEvent.click(within(sheet('Export')).getByRole('radio', { name: 'MP4' }));
+    const panel = sheet('Export');
+    // An MP4 runs whole loops for at least three seconds, has no sound, and can't be copied.
+    expect(within(panel).getByText(/MP4 · \d+ × \d+ · 3\.6 s · no sound/)).toBeTruthy();
+    expect(within(panel).queryByText('Copy')).toBeNull();
+    expect(within(panel).queryByText('Save to Gallery')).toBeNull();
+    expect(within(panel).queryByRole('switch', { name: 'Transparent background' })).toBeNull();
+    fireEvent.click(within(panel).getByRole('radio', { name: 'GIF' }));
+    // GIFs have their own size.
+    expect(within(sheet('Export')).queryByRole('radiogroup', { name: 'Image width' })).toBeNull();
+
+    // The GIF choice is remembered, but a meme that doesn't move exports a PNG.
+    moving.unmount();
+    canvas.animation = undefined;
+    renderEditor();
+    fireEvent.click(screen.getByLabelText('Export'));
+    expect(within(sheet('Export')).getByRole('radio', { name: 'PNG' }).getAttribute('aria-checked')).toBe('true');
   }, 30000);
 
   it('Save to Gallery names the meme after the template on the first save', () => {
