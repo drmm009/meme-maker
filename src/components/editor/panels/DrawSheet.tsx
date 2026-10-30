@@ -1,5 +1,5 @@
 import { MoveUpRight, Circle, Square, Minus, Droplets, Grid3x3, RectangleHorizontal, PenLine, Highlighter, MoveHorizontal } from 'lucide-react';
-import { Sheet, Section, Row, SwatchRow, Slider, Switch, TileGrid, Tile } from '../../ui';
+import { Sheet, Section, Row, SwatchRow, Slider, Switch } from '../../ui';
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
 import { useEditorUiStore } from '../store/useEditorUiStore';
 import { DRAW_COLORS } from '../../../utils/captionLayout';
@@ -87,36 +87,55 @@ export default function DrawSheet({ actions, onClose }: { actions: EditorActions
         </div>
       )}
       {isCensor && (
+        <div className="ie-shapes-row ie-shapes-row--fill" role="toolbar" aria-label="Censor styles">
+          {CENSORS.map((c) => {
+            const active = censorMode === c.id;
+            const Icon = c.Icon;
+            return (
+              <button
+                key={c.id}
+                type="button"
+                className={`ie-shape-btn${active ? ' is-on' : ''}`}
+                aria-pressed={active}
+                title={c.label}
+                onClick={() => both(ui.setCensorMode, (v) => ({ censor: v }))(c.id)}
+              >
+                <Icon size={20} strokeWidth={1.8} />
+                <span>{c.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {(!isCensor || censorMode !== 'bar') && (
         <Section>
-          <TileGrid>
-            {CENSORS.map((c) => <Tile key={c.id} label={c.label} Icon={c.Icon} active={censorMode === c.id} onClick={() => both(ui.setCensorMode, (v) => ({ censor: v }))(c.id)} />)}
-          </TileGrid>
-          {!censor && <p className="ie-empty">Drag over the part you want to hide.</p>}
+          {!isCensor && !isEraser && (
+            <Row label="Color">
+              <SwatchRow ariaLabel="Brush colour" colors={DRAW_COLORS} value={color} onChange={both(ui.setBrushColor, (v) => ({ color: v }))} />
+            </Row>
+          )}
+          {!isCensor && (
+            <Row label={isShape ? 'Width' : 'Size'}>
+              <Slider label="Brush size" min={2} max={isShape ? 30 : 50} value={size} onChange={both(ui.setBrushSize, (v) => ({ size: v }))} />
+            </Row>
+          )}
+          {isShape && (shapeKind === 'ellipse' || shapeKind === 'rect') && (
+            <Row label="Fill" end>
+              <Switch label="Fill shape" checked={fill} onChange={both(ui.setShapeFill, (v) => ({ fill: v }))} />
+            </Row>
+          )}
+          {isCensor && censorMode !== 'bar' && (
+            <Row label="Strength">
+              <Slider label="Censor strength" min={4} max={40} value={strength} onChange={both(ui.setCensorStrength, (v) => ({ strength: v }))} />
+            </Row>
+          )}
         </Section>
       )}
 
-      <Section>
-        {!isCensor && !isEraser && (
-          <Row label="Color">
-            <SwatchRow ariaLabel="Brush colour" colors={DRAW_COLORS} value={color} onChange={both(ui.setBrushColor, (v) => ({ color: v }))} />
-          </Row>
-        )}
-        {!isCensor && (
-          <Row label={isShape ? 'Width' : 'Size'}>
-            <Slider label="Brush size" min={2} max={isShape ? 30 : 50} value={size} onChange={both(ui.setBrushSize, (v) => ({ size: v }))} />
-          </Row>
-        )}
-        {isShape && (shapeKind === 'ellipse' || shapeKind === 'rect') && (
-          <Row label="Fill" end>
-            <Switch label="Fill shape" checked={fill} onChange={both(ui.setShapeFill, (v) => ({ fill: v }))} />
-          </Row>
-        )}
-        {isCensor && censorMode !== 'bar' && (
-          <Row label="Strength">
-            <Slider label="Censor strength" min={4} max={40} value={strength} onChange={both(ui.setCensorStrength, (v) => ({ strength: v }))} />
-          </Row>
-        )}
-      </Section>
+      {isCensor && !censor && (
+        <p className="ie-empty">Drag over the part you want to hide.</p>
+      )}
     </Sheet>
   );
 }

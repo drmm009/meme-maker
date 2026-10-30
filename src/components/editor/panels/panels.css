@@ -153,3 +153,16 @@ div.ie-layer-pick { cursor: default; }
 .ie-shape-btn.is-on svg {
   color: var(--ui-accent);
 }
+
+.ie-shapes-row--fill {
+  overflow-x: visible;
+}
+.ie-shapes-row--fill .ie-shape-btn {
+  flex: 1 1 0;
+  min-width: 0;
+}
+.ie-draw-sheet .ie-empty {
+  margin: 10px 0 2px;
+  text-align: center;
+  font-size: 13px;
+}
