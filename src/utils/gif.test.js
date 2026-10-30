@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { isGifUrl, gifPaletteFilter, frameIndexAt } from './gif';
+import { isGifUrl, gifPaletteFilter, frameIndexAt, gifFramesRGBA } from './gif';
 
 describe('gif helpers', () => {
   it('spots GIF URLs, with or without a query', () => {
@@ -27,5 +27,24 @@ describe('gif helpers', () => {
     expect(frameIndexAt(d, 420)).toBe(1);
     expect(frameIndexAt(d, -10)).toBe(2);
     expect(frameIndexAt([], 50)).toBe(0);
+  });
+});
+
+describe('GIFs without ImageDecoder (Safari)', () => {
+  // 4x4, two frames: all red for 50ms, then the left half green (the right half see-through, so the
+  // red stays) for 120ms.
+  const GIF = 'R0lGODlhBAAEAIEAAP8AAAD/AAAAAP///yH/C05FVFNDQVBFMi4wAwEAAAAh+QQFBQACACwAAAAABAAEAAAICQABCBxIsCCAgAAh+QQFDAACACwAAAAABAAEAIH/AAAA/wAAAAD///8IDgADBBAgQCBBgwUHCggIADs=';
+  const bytes = Uint8Array.from(atob(GIF), (c) => c.charCodeAt(0));
+  const pixel = (rgba, x, y) => Array.from(rgba.slice((y * 4 + x) * 4, (y * 4 + x) * 4 + 4));
+
+  it('decodes every frame as the whole picture at that moment, with its timing', async () => {
+    const { GifReader } = await import('omggif');
+    const gif = gifFramesRGBA(bytes, GifReader);
+    expect([gif.width, gif.height]).toEqual([4, 4]);
+    expect(gif.durations).toEqual([50, 120]);
+    expect(pixel(gif.frames[0], 3, 0)).toEqual([255, 0, 0, 255]);
+    expect(pixel(gif.frames[1], 0, 0)).toEqual([0, 255, 0, 255]);
+    // Drawn over the first frame: its see-through half keeps the red.
+    expect(pixel(gif.frames[1], 3, 3)).toEqual([255, 0, 0, 255]);
   });
 });
