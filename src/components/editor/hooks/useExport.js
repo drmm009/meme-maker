@@ -1,7 +1,7 @@
 import confetti from 'canvas-confetti';
 import { cleanTemplateName } from '../memeEditorUtils';
 import { useMemeEditorStoreApi } from '../store/useMemeEditorStore';
-import { renderExport } from '../export/exportImage';
+import { renderExport, wantsTransparency } from '../export/exportImage';
 
 export const triggerConfetti = () => {
   try {
@@ -38,7 +38,7 @@ export function useExport({ canvasRef, template, onSaveToGallery, imageFit, isNa
   const exportBlob = (prefs) => {
     const canvas = canvasRef.current;
     if (!canvas) return Promise.reject(new Error('No canvas'));
-    return renderExport(canvas.exportCleanCanvas ? canvas.exportCleanCanvas() : canvas, prefs);
+    return renderExport(canvas.exportCleanCanvas ? canvas.exportCleanCanvas({ transparent: wantsTransparency(prefs) }) : canvas, prefs);
   };
 
   const saveToGallery = () => {

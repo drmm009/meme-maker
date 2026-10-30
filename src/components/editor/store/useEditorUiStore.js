@@ -10,7 +10,7 @@ import { isSocialCardCaption } from '../memeEditorUtils';
 
 const WATERMARK_KEY = 'meme-maker-watermark';
 const EXPORT_PREFS_KEY = 'meme-maker-export-prefs';
-const DEFAULT_EXPORT_PREFS = { format: 'png', quality: 0.9, width: 'full' };
+const DEFAULT_EXPORT_PREFS = { format: 'png', quality: 0.9, width: 'full', transparent: false };
 
 const DEFAULT_WATERMARK = {
   enabled: false,

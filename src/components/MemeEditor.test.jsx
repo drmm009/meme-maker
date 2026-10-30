@@ -353,8 +353,11 @@ describe('MemeEditor', () => {
     const panel = sheet('Export');
     for (const name of ['Download', 'Share', 'Copy', 'Save to Gallery']) expect(within(panel).getByText(name)).toBeTruthy();
     expect(within(panel).queryByLabelText('Quality')).toBeNull();
+    expect(within(panel).getByRole('switch', { name: 'Transparent background' })).toBeTruthy();
     fireEvent.click(within(panel).getByRole('radio', { name: 'JPG' }));
     expect(within(sheet('Export')).getByLabelText('Quality')).toBeTruthy();
+    // JPG can't be see-through.
+    expect(within(sheet('Export')).queryByRole('switch', { name: 'Transparent background' })).toBeNull();
     unmount();
     renderEditor();
     fireEvent.click(screen.getByLabelText('Export'));

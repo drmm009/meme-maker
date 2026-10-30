@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Download, Share2, Copy, Save } from 'lucide-react';
-import { Sheet, Section, Row, Slider, SegmentedControl, TileGrid, Tile } from '../../ui';
+import { Sheet, Section, Row, Slider, SegmentedControl, Switch, TileGrid, Tile } from '../../ui';
 import { useEditorUiStore } from '../store/useEditorUiStore';
 import { downloadImageHelper } from '../../../utils/downloadHelper';
 import { triggerConfetti } from '../hooks/useExport';
@@ -39,7 +39,7 @@ export default function ExportSheet({ actions, onClose }: { actions: EditorActio
     };
     // Re-measure when the choices change.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [prefs.format, prefs.quality, prefs.width]);
+  }, [prefs.format, prefs.quality, prefs.width, prefs.transparent]);
 
   const widths: { value: string; label: string }[] = [
     { value: 'full', label: `Full ${w}` },
@@ -80,6 +80,11 @@ export default function ExportSheet({ actions, onClose }: { actions: EditorActio
         {prefs.format !== 'png' && (
           <Row label="Quality">
             <Slider label="Quality" min={0.5} max={1} step={0.05} value={prefs.quality} onChange={(quality) => set({ quality })} format={(v) => `${Math.round(v * 100)}%`} />
+          </Row>
+        )}
+        {prefs.format !== 'jpeg' && (
+          <Row label="See-through" end>
+            <Switch label="Transparent background" checked={Boolean(prefs.transparent)} onChange={(transparent) => set({ transparent })} />
           </Row>
         )}
         <Row label="Size">

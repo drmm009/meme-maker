@@ -11,9 +11,14 @@ export interface ExportPrefs {
   // 0.5..1, for JPG and WebP.
   quality: number;
   width: ExportWidth;
+  // PNG and WebP: leave out the background colour.
+  transparent?: boolean;
 }
 
-export const DEFAULT_EXPORT_PREFS: ExportPrefs = { format: 'png', quality: 0.9, width: 'full' };
+export const DEFAULT_EXPORT_PREFS: ExportPrefs = { format: 'png', quality: 0.9, width: 'full', transparent: false };
+
+// Whether these choices make a see-through background (JPG can't).
+export const wantsTransparency = (p: ExportPrefs) => Boolean(p.transparent) && p.format !== 'jpeg';
 
 export const MIME: Record<ExportFormat, string> = { png: 'image/png', jpeg: 'image/jpeg', webp: 'image/webp' };
 const EXTENSION: Record<string, string> = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp' };

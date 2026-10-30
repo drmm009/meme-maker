@@ -122,9 +122,10 @@ export function renderScene(scene) {
     return offCanvas.toDataURL('image/png');
   };
 
-  // A copy of the meme as exported (no selection handles), for scaling or encoding.
-  canvas.exportCleanCanvas = () => {
-    renderCanvas(baseImgRef.current, true);
+  // A copy of the meme as exported (no selection handles), for scaling or encoding. `transparent`
+  // leaves out the background colour (the header/footer bands keep theirs).
+  canvas.exportCleanCanvas = ({ transparent = false } = {}) => {
+    renderCanvas(baseImgRef.current, true, transparent);
     const copy = document.createElement('canvas');
     copy.width = canvas.width;
     copy.height = canvas.height;
@@ -140,7 +141,8 @@ export function renderScene(scene) {
     return res;
   };
 
-  const renderCanvas = (img, skipHandles = false) => {
+  const renderCanvas = (img, skipHandles = false, transparent = false) => {
+    const bgColor = transparent ? 'transparent' : liveBgColor;
     if (typeof window !== 'undefined') {
       window.__memeCanvasForceRender = () => {
         renderCanvas(baseImgRef.current, false);
@@ -168,8 +170,10 @@ export function renderScene(scene) {
     }
 
     targetCtx.clearRect(0, 0, canvas.width, canvas.height);
-    targetCtx.fillStyle = demotivational?.enabled ? '#000000' : liveBgColor;
-    targetCtx.fillRect(0, 0, canvas.width, canvas.height);
+    if (!transparent || demotivational?.enabled) {
+      targetCtx.fillStyle = demotivational?.enabled ? '#000000' : bgColor;
+      targetCtx.fillRect(0, 0, canvas.width, canvas.height);
+    }
 
     const { imageAreaX, imageAreaY, imageAreaW, imageAreaH } = getImageArea({
       canvasH, canvasW, demotivational, headerExtH
@@ -178,7 +182,7 @@ export function renderScene(scene) {
     paintBase({
       activeIsNativeLayout, activeLayoutDef, baseImgRef, bgFilterCss, canvasFlipX,
       demotivational, imageAreaH, imageAreaW, imageAreaX, imageAreaY, imageCacheRef, imageFit,
-      img, isNativeLayout, liveBgColor, renderCanvas, slotImages, slotTransforms, targetCtx
+      img, isNativeLayout, liveBgColor: bgColor, renderCanvas, slotImages, slotTransforms, targetCtx
     });
 
     paintHeaderFooter({
