@@ -1,9 +1,9 @@
+import { isColorDark } from '../../utils/captionLayout';
+
 export const isSocialCardCaption = (c) => Boolean(c && (c.isTweetCard || c.isInstagramCard || c.isWhatsAppCard));
 
-export const getContrastStroke = (hex) => {
-  if (!hex) return '#000000';
-  return hex.toLowerCase() === '#ffffff' ? '#000000' : 'transparent';
-};
+// The outline that stands out against a text colour: black around light text, white around dark.
+export const getContrastStroke = (color) => (isColorDark(color) ? '#ffffff' : '#000000');
 
 export const isVideoUrl = (url) => {
   if (!url || typeof url !== 'string') return false;

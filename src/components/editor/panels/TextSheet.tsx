@@ -35,6 +35,10 @@ type Caption = MemeCaption & Record<string, unknown>;
 const hasBox = (c: Caption) => Boolean(c.bgColor && c.bgColor !== 'none' && c.bgColor !== 'transparent');
 const boxValue = (c: Caption) => (!hasBox(c) ? 'transparent' : c.bgColor === 'white' ? '#ffffff' : c.bgColor === 'black' ? '#000000' : c.bgColor);
 
+// Outline colours: black and white first, then the loud meme ones.
+const OUTLINE_COLORS = ['#000000', '#ffffff', '#ff2a5f', '#ffe600', '#00f0ff', '#7c3aed'];
+const sameColour = (a: unknown, b: string) => String(a || '').toLowerCase() === b.toLowerCase();
+
 // The Text sheet, under the Text strip (which adds text, bubbles and social cards): pick a caption,
 // edit its words, font, colour, size, style, box and effects.
 export default function TextSheet({ actions, onClose }: { actions: EditorActions; onClose: () => void }) {
@@ -166,7 +170,7 @@ export default function TextSheet({ actions, onClose }: { actions: EditorActions
 
             <Section id="color">
               <Row label="Color">
-                <SwatchRow ariaLabel="Text colour" colors={TEXT_COLORS} value={caption.color || '#ffffff'} onChange={(c) => set({ color: c, stroke: strokeOn ? getContrastStroke(c) : 'transparent' })} />
+                <SwatchRow ariaLabel="Text colour" colors={TEXT_COLORS} value={caption.color || '#ffffff'} onChange={(c) => set({ color: c, ...(strokeOn && sameColour(caption.stroke, c) ? { stroke: getContrastStroke(c) } : {}) })} />
               </Row>
               <Row label="Gradient">
                 <div className="ui-swatches" role="radiogroup" aria-label="Text gradient">
@@ -210,9 +214,14 @@ export default function TextSheet({ actions, onClose }: { actions: EditorActions
                 <Switch label="Stroke" checked={strokeOn} onChange={(on) => set({ stroke: on ? getContrastStroke(caption.color || '#ffffff') : 'transparent' })} />
               </Row>
               {strokeOn && (
-                <Row label="Outline">
-                  <Slider label="Outline thickness" min={1} max={24} value={Number(caption.strokeWidth || Math.max(3, Math.round(fontSize / 7)))} onChange={(v) => live({ strokeWidth: v })} />
-                </Row>
+                <>
+                  <Row label="Outline">
+                    <Slider label="Outline thickness" min={1} max={24} value={Number(caption.strokeWidth || Math.max(3, Math.round(fontSize / 7)))} onChange={(v) => live({ strokeWidth: v })} />
+                  </Row>
+                  <Row label="Outline colour">
+                    <SwatchRow ariaLabel="Outline colour" colors={OUTLINE_COLORS} value={caption.stroke || '#000000'} onChange={(c) => set({ stroke: c })} />
+                  </Row>
+                </>
               )}
               <Row label="Align">
                 <SegmentedControl

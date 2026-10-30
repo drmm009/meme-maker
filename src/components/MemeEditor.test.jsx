@@ -317,6 +317,20 @@ describe('MemeEditor', () => {
     expect(within(sheet('History & saved')).getByText('Save project')).toBeTruthy();
   }, 30000);
 
+  it('the outline stays on whatever the text colour, and its colour can be picked', () => {
+    renderEditor();
+    openTextSheet();
+    const panel = () => sheet('Text');
+    act(() => canvas.props.onUpdateCaptionBounds(canvas.props.captions[0].id, { stroke: 'transparent' }));
+    fireEvent.click(within(panel()).getByRole('switch', { name: 'Stroke' }));
+    expect(canvas.props.captions[0].stroke).toBe('#000000');
+    fireEvent.click(within(within(panel()).getByRole('radiogroup', { name: 'Text colour' })).getAllByRole('radio')[1]);
+    // A coloured caption keeps its outline (it used to switch off).
+    expect(canvas.props.captions[0].stroke).not.toBe('transparent');
+    fireEvent.click(within(panel()).getByRole('radio', { name: '#ff2a5f' }));
+    expect(canvas.props.captions[0].stroke).toBe('#ff2a5f');
+  }, 30000);
+
   it('edits the selected caption from the Text sheet', () => {
     renderEditor();
     openTextSheet();
