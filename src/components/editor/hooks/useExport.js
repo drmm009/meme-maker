@@ -1,19 +1,19 @@
-import confetti from 'canvas-confetti';
 import { cleanTemplateName } from '../memeEditorUtils';
 import { useMemeEditorStoreApi } from '../store/useMemeEditorStore';
 import { renderExport, wantsTransparency } from '../export/exportImage';
 import { renderMotion } from '../export/motionExport';
 
+// Loaded the first time there is something to celebrate.
 export const triggerConfetti = () => {
-  try {
+  import('canvas-confetti').then(({ default: confetti }) => {
     confetti({
       particleCount: 60,
       spread: 70,
       origin: { y: 0.6 }
     });
-  } catch {
-    // Confetti fallback
-  }
+  }).catch(() => {
+    // No confetti: nothing else depends on it.
+  });
 };
 
 // The meme as a full-size PNG data URL, without selection handles.

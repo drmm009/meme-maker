@@ -1,5 +1,4 @@
 import { useRef, useState } from 'react';
-import { removeBackground } from '@imgly/background-removal';
 import { blobToDataURL, dataURLToBlob } from '../../../utils/galleryStore';
 import { useMemeEditorStoreApi } from '../store/useMemeEditorStore';
 
@@ -11,6 +10,8 @@ const removeImageBackground = async (url) => {
     const res = await fetch(url);
     blob = await res.blob();
   }
+  // The background-removal library is big: it loads on first use.
+  const { removeBackground } = await import('@imgly/background-removal');
   return blobToDataURL(await removeBackground(blob));
 };
 

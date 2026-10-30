@@ -18,7 +18,9 @@ import { INITIAL_NOTIFICATIONS } from './data/notifications';
 import { idbPutMeme, idbGetAllMemes, idbGetMeme, idbDeleteMeme, dataURLToBlob, createThumbnail, toMetadata } from './utils/galleryStore';
 import { galleryRecord } from './model/galleryRecord';
 import { LayoutGrid, FolderHeart, User, Sun, Moon, Bell, Plus, Users, Compass, Home } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+// The slim motion build: `m` components with only the DOM animation features loaded (the full
+// `motion` used by pages that load later still works inside LazyMotion).
+import { LazyMotion, domAnimation, m as motion, AnimatePresence } from 'framer-motion';
 import './App.css';
 
 function App() {
@@ -499,6 +501,7 @@ function App() {
   };
 
   return (
+    <LazyMotion features={domAnimation}>
     <div
       className={`app-root theme-${theme}`}
       data-theme={theme}
@@ -865,6 +868,7 @@ function App() {
         </Suspense>
       )}
     </div>
+    </LazyMotion>
   );
 }
 

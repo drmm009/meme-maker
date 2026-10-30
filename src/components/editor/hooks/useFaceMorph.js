@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
-import { fuseFaceIntoTemplate } from '../../../utils/faceGraftEngine';
+// The face engine (and its mesh libraries) loads on the first face swap.
+const loadFaceGraft = () => import('../../../utils/faceGraftEngine');
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
 
 // Face swap / morph: on an image layer or sticker, or on the template's face.
@@ -194,6 +195,7 @@ export function useFaceMorph({ canvasRef }) {
 
     const baseImg = cleanOriginalUrl;
 
+    const { fuseFaceIntoTemplate } = await loadFaceGraft();
     const fusedDataUrl = await fuseFaceIntoTemplate({
       baseImg,
       faceTarget,
@@ -244,6 +246,7 @@ export function useFaceMorph({ canvasRef }) {
     setTemplateFaceMorph(prev => ({ ...prev, morphProgress: progress }));
 
     const cleanUrl = templateFaceMorph.cleanOriginalUrl || activeTemplate?.originalUrl;
+    const { fuseFaceIntoTemplate } = await loadFaceGraft();
     const fusedDataUrl = await fuseFaceIntoTemplate({
       baseImg: cleanUrl,
       faceTarget: templateFaceMorph.faceTarget,

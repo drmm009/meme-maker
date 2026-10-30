@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { createPortal } from 'react-dom';
 import VideoTrimmer from '../VideoTrimmer';
 import AiCaptionModal from '../AiCaptionModal';
-import MemeStylesModal from '../MemeStylesModal';
-import FaceMorphModal from '../FaceMorphModal';
+// The social card studio and the face swap studio load when first opened.
+const MemeStylesModal = lazy(() => import('../MemeStylesModal'));
+const FaceMorphModal = lazy(() => import('../FaceMorphModal'));
 import MemeStickersBottomSheet from './MemeStickersBottomSheet';
 import EmojiBottomSheet from './EmojiBottomSheet';
 import TemplatePickerBottomSheet from './TemplatePickerBottomSheet';
@@ -144,6 +145,8 @@ export default function EditorModals({
       />
 
       {/* Meme Style Modal (Unified Social Cards Studio) */}
+      {showStylesModal && (
+      <Suspense fallback={null}>
       <MemeStylesModal
         isOpen={showStylesModal}
         onClose={() => setShowStylesModal(false)}
@@ -154,9 +157,12 @@ export default function EditorModals({
         onAddInstagramCard={handleAddInstagramCard}
         onAddWhatsAppCard={handleAddWhatsAppCard}
       />
+      </Suspense>
+      )}
 
       {/* Face Morph & Swap Studio Modal */}
       {showFaceMorphModal && (
+        <Suspense fallback={null}>
         <FaceMorphModal
           isOpen={showFaceMorphModal}
           onClose={() => {
@@ -177,6 +183,7 @@ export default function EditorModals({
           faceTarget={morphTargetLayerId ? null : faceTarget}
           targetLabel={morphTargetLayerId ? "Selected Image Layer" : null}
         />
+        </Suspense>
       )}
 
       {/* Video trimmer: a portal so it escapes the canvas stacking context */}
