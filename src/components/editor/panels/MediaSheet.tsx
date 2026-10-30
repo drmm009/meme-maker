@@ -1,4 +1,4 @@
-import { Wand2, ScanFace, Crop, FlipHorizontal, SlidersHorizontal, Undo2 } from 'lucide-react';
+import { Wand2, ScanFace, Crop, FlipHorizontal, SlidersHorizontal, Undo2, ImageUp } from 'lucide-react';
 import { Sheet, Section, ChipRow, Chip, TileGrid, Tile } from '../../ui';
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
 import { useEditorUiStore } from '../store/useEditorUiStore';
@@ -45,6 +45,7 @@ export default function MediaSheet({ actions, onClose }: { actions: EditorAction
               <Tile label="Filters" Icon={SlidersHorizontal} onClick={() => openSheet('filters')} />
               <Tile label={image.originalUrl ? 'Undo cutout' : 'Cut out'} Icon={image.originalUrl ? Undo2 : Wand2} title="Magic Eraser (Remove Background)" disabled={busy} active={Boolean(image.originalUrl)} onClick={() => actions.handleRemoveBackground()} />
               <Tile label="Face Swap" Icon={ScanFace} onClick={() => actions.handleStartMorphFace(image)} />
+              <Tile label="Replace" Icon={ImageUp} title="Use another picture here" accept="image/*" onFile={actions.handleReplaceImageLayer} />
             </TileGrid>
           </Section>
           <LayerLookControls id={id} layer={image} kind="image" />

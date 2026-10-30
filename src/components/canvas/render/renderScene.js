@@ -185,7 +185,8 @@ export function renderScene(scene) {
       activeIsNativeLayout, activeLayoutDef, baseImgRef, bgFilterCss, canvasFlipX,
       demotivational, imageAreaH, imageAreaW, imageAreaX, imageAreaY, imageCacheRef, imageFit,
       img, isNativeLayout, liveBgColor: bgColor, renderCanvas, slotImages, slotTransforms, targetCtx,
-      portrait: { blur: activeFilters?.bgBlur || 0, subjectUrl: activeFilters?.subjectUrl }
+      // The cut-out subject only fits the photo it was cut from (not after a crop or replace).
+      portrait: { blur: activeFilters?.bgBlur || 0, subjectUrl: activeFilters?.subjectOf === imgSrc ? activeFilters?.subjectUrl : null }
     });
     // Warmth, sharpen and vignette on the photo only.
     const effects = hasPhotoEffects(activeFilters) ? activeFilters : null;

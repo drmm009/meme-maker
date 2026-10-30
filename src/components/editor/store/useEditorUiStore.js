@@ -77,6 +77,7 @@ export function buildInitialUi(template) {
     imagePickerTarget: null, // 'layer' | 'replaceTemplate' | { slot: idx }
     openSourceTemplates: MEME_TEMPLATES,
     pendingVideoLayer: null,
+    showPhotoCrop: false, // the main photo's cropper (editor/crop)
     pasteToast: false,
     drawTool: null, // 'brush' | 'highlighter' | 'glow' | 'shape' | 'censor' | null
     shapeKind: 'arrow', // 'arrow' | 'ellipse' | 'rect' | 'line'

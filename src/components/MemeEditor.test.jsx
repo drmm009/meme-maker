@@ -27,6 +27,7 @@ vi.mock('./CanvasEditor', async () => {
       canvasFlipX: doc.canvasFlipX,
       canvasBgColor: doc.canvasBgColor,
       imageFilters: doc.imageFilters,
+      template: doc.activeTemplate,
       drawTool: ui.drawTool,
       ...ownProps,
     };
@@ -187,7 +188,7 @@ describe('MemeEditor', () => {
       ['Photos, videos, stickers and emoji', 'Media tools', ['Photo', 'Templates', 'Stickers', 'Emoji']],
       ['Text', 'Text tools', ['Add Text', 'Edit', 'Bubble', 'Social Card']],
       ['AI tools and photo filters', 'AI and filter tools', ['Face Swap', 'Remove BG', 'AI Caption', 'Filters']],
-      ['Canvas colour, bands and watermark', 'Canvas tools', ['Color', 'Watermark', 'Mirror', 'Header', 'Footer']],
+      ['Canvas colour, bands and watermark', 'Canvas tools', ['Color', 'Watermark', 'Mirror', 'Header', 'Footer', 'Crop', 'Replace']],
     ];
     for (const [tab, name, tools] of strips) {
       openSection(tab);
@@ -458,10 +459,12 @@ describe('MemeEditor', () => {
     expect(within(canvasStrip()).getByText('Mirror').closest('button').getAttribute('aria-pressed')).toBe('true');
   }, 30000);
 
-  it('Canvas shows Color, Watermark, Mirror, Header and Footer; Color and Watermark open sheets under the strip', () => {
+  it('Canvas shows Color, Watermark, Mirror, Header, Footer, Crop and Replace; Color and Watermark open sheets under the strip', () => {
     renderEditor();
     openSection('Canvas colour, bands and watermark');
-    expect(within(canvasStrip()).getAllByRole('button').map((b) => b.textContent)).toEqual(['Color', 'Watermark', 'Mirror', 'Header', 'Footer']);
+    expect(within(canvasStrip()).getAllByRole('button').map((b) => b.textContent)).toEqual(['Color', 'Watermark', 'Mirror', 'Header', 'Footer', 'Crop']);
+    // Replace is a file picker.
+    expect(within(canvasStrip()).getByText('Replace').closest('label').querySelector('input[accept="image/*"]')).toBeTruthy();
 
     fireEvent.click(within(canvasStrip()).getByText('Color'));
     fireEvent.click(within(sheet('Background')).getByRole('radio', { name: '#000000' }));
@@ -480,6 +483,28 @@ describe('MemeEditor', () => {
     closeSheet();
     openSection('Canvas colour, bands and watermark');
     expect(screen.queryByRole('toolbar', { name: 'Canvas tools' })).toBeNull();
+  }, 30000);
+
+  it('Replace swaps the main photo and keeps the layers; Crop opens the cropper', async () => {
+    renderEditor();
+    openSection('Canvas colour, bands and watermark');
+    const before = canvas.props.captions.map((c) => c.text);
+    const input = within(canvasStrip()).getByText('Replace').closest('label').querySelector('input[type=file]');
+    const file = new File([new Uint8Array([137, 80, 78, 71])], 'new.png', { type: 'image/png' });
+    await act(async () => {
+      fireEvent.change(input, { target: { files: [file] } });
+      await new Promise((r) => setTimeout(r, 50));
+    });
+    expect(canvas.props.template.imageUrl.startsWith('data:image/png')).toBe(true);
+    expect(canvas.props.captions.map((c) => c.text)).toEqual(before);
+    fireEvent.click(undoButton());
+    expect(canvas.props.template.imageUrl).toBe('/images/drake-pointing.jpg');
+
+    fireEvent.click(within(canvasStrip()).getByText('Crop'));
+    const cropper = screen.getByRole('dialog', { name: 'Crop photo' });
+    for (const name of ['Free', '1:1', '4:5', '9:16', '16:9']) expect(within(cropper).getByText(name)).toBeTruthy();
+    fireEvent.click(within(cropper).getByText('Cancel'));
+    expect(screen.queryByRole('dialog', { name: 'Crop photo' })).toBeNull();
   }, 30000);
 
   it('AI/Filters shows Face Swap, Remove BG, AI Caption and Filters; AI Caption opens its studio', () => {

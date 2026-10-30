@@ -10,6 +10,7 @@ import { useBackgroundRemoval } from './editor/hooks/useBackgroundRemoval';
 import { useFaceMorph } from './editor/hooks/useFaceMorph';
 import { useDrawingActions } from './editor/hooks/useDrawingActions';
 import { useCanvasFrameActions } from './editor/hooks/useCanvasFrameActions';
+import { usePhotoActions } from './editor/hooks/usePhotoActions';
 import { useSocialCardActions } from './editor/hooks/useSocialCardActions';
 import { useBubbleActions } from './editor/hooks/useBubbleActions';
 import { useCaptionActions } from './editor/hooks/useCaptionActions';
@@ -84,6 +85,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, o
 
   const { handleOpenSocialModalForActiveCard, handleUpdateSocialCard, handleAddTweetCard, handleAddInstagramCard, handleAddWhatsAppCard } = useSocialCardActions();
   const { handleSetCanvasBgColor, handleToggleCanvasHeader, handleToggleCanvasFooter, handleToggleCanvasFlip, handleWatermarkImageUpload } = useCanvasFrameActions();
+  const { handleReplaceMainPhoto, handleApplyMainPhotoCrop, handleRestoreMainPhoto, handleReplaceImageLayer } = usePhotoActions();
   const { handleAddDrawing, handleClearDrawings, handleUndoDrawing } = useDrawingActions();
   const { handleApplyAiCaption, handleAddCaption, handleToggleTextCase, updateActiveCaptionProps, handleSetCaptionBg } = useCaptionActions({ activeCaption, handleToggleCanvasHeader });
   const { commitAddImageLayer, handleAddImageLayer, handleFileUploadImageLayer, updateActiveImageLayer, moveLayer, handleDeleteLayer, handleDuplicateLayer, handleRotateLayer, handleFlipActiveLayer, handleToggleDieCutSticker, handleSetDieCutColor, updateSlotTransform, handleAddSticker, handleAddGraphicSticker } = useLayerActions({ activeCaption, activeImageLayer, activeSticker, updateActiveCaptionProps });
@@ -94,6 +96,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, o
     handleAddCaption, handleToggleTextCase, updateActiveCaptionProps, handleSetCaptionBg, handleAddBubble,
     handleOpenSocialModalForActiveCard,
     handleSetCanvasBgColor, handleToggleCanvasHeader, handleToggleCanvasFooter, handleToggleCanvasFlip, handleWatermarkImageUpload,
+    handleReplaceMainPhoto, handleApplyMainPhotoCrop, handleRestoreMainPhoto, handleReplaceImageLayer,
     handleClearDrawings, handleUndoDrawing,
     handleFileUploadImageLayer, updateActiveImageLayer, moveLayer, handleDeleteLayer, handleDuplicateLayer, handleRotateLayer,
     handleFlipActiveLayer, handleToggleDieCutSticker, handleSetDieCutColor,
@@ -153,6 +156,8 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, o
 
       <EditorModals
         commitAddImageLayer={commitAddImageLayer}
+        handleApplyMainPhotoCrop={handleApplyMainPhotoCrop}
+        handleRestoreMainPhoto={handleRestoreMainPhoto}
         activeCaption={activeCaption}
         currentEditingSocialCard={currentEditingSocialCard}
         extractedMemeFace={extractedMemeFace}

@@ -8,6 +8,7 @@ import MemeStickersBottomSheet from './MemeStickersBottomSheet';
 import EmojiBottomSheet from './EmojiBottomSheet';
 import TemplatePickerBottomSheet from './TemplatePickerBottomSheet';
 import BubbleChatBottomSheet from './BubbleChatBottomSheet';
+import PhotoCropSheet from './crop/PhotoCropSheet';
 import { useMemeEditorStore } from './store/useMemeEditorStore';
 import { useEditorUiStore } from './store/useEditorUiStore';
 
@@ -38,6 +39,8 @@ export default function EditorModals({
   template,
   updateActiveCaptionProps,
   commitAddImageLayer,
+  handleApplyMainPhotoCrop,
+  handleRestoreMainPhoto,
 }) {
   const pendingVideoLayer = useEditorUiStore((s) => s.pendingVideoLayer);
   const setPendingVideoLayer = useEditorUiStore((s) => s.setPendingVideoLayer);
@@ -62,9 +65,22 @@ export default function EditorModals({
   const imageLayers = useMemeEditorStore((s) => s.imageLayers);
   const activeTemplate = useMemeEditorStore((s) => s.activeTemplate);
   const stickers = useMemeEditorStore((s) => s.stickers);
+  const showPhotoCrop = useEditorUiStore((s) => s.showPhotoCrop);
+  const setShowPhotoCrop = useEditorUiStore((s) => s.setShowPhotoCrop);
+  const mainPhoto = activeTemplate?.rawImageUrl || activeTemplate?.imageUrl;
 
   return (
     <>
+      {showPhotoCrop && mainPhoto && (
+        <PhotoCropSheet
+          url={mainPhoto}
+          uncroppedUrl={activeTemplate?.uncroppedUrl}
+          onApply={(url) => { handleApplyMainPhotoCrop(url); setShowPhotoCrop(false); }}
+          onRestore={(url) => { handleRestoreMainPhoto(url); setShowPhotoCrop(false); }}
+          onClose={() => setShowPhotoCrop(false)}
+        />
+      )}
+
       <MemeStickersBottomSheet
         isOpen={showMemeStickersModal}
         onClose={() => setShowMemeStickersModal(false)}

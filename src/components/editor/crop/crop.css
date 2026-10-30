@@ -1,0 +1,23 @@
+/* The main photo's cropper: full screen, dark, the photo in the middle with the crop box over it. */
+.ie-crop { position: fixed; inset: 0; z-index: 1500; display: flex; flex-direction: column; background: var(--ui-bg); }
+.ie-crop-bar { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px; }
+.ie-crop-title { margin: 0; font-size: 17px; font-weight: 700; }
+.ie-crop-text-btn { padding: 8px 4px; border: none; background: none; color: var(--ui-muted); font-size: 15px; cursor: pointer; }
+.ie-crop-stage { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; padding: 16px; overflow: hidden; touch-action: none; }
+.ie-crop-frame { position: relative; display: inline-block; max-width: 100%; max-height: 100%; line-height: 0; }
+.ie-crop-photo { display: block; max-width: 100%; max-height: calc(100vh - 260px); }
+.ie-crop-box {
+  position: absolute;
+  box-sizing: border-box;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.55);
+  cursor: move;
+  touch-action: none;
+}
+.ie-crop-handle { position: absolute; width: 22px; height: 22px; border-radius: 50%; background: #ffffff; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4); touch-action: none; }
+.ie-crop-handle--nw { left: -11px; top: -11px; cursor: nwse-resize; }
+.ie-crop-handle--ne { right: -11px; top: -11px; cursor: nesw-resize; }
+.ie-crop-handle--sw { left: -11px; bottom: -11px; cursor: nesw-resize; }
+.ie-crop-handle--se { right: -11px; bottom: -11px; cursor: nwse-resize; }
+.ie-crop-tools { flex: none; display: flex; flex-direction: column; gap: 12px; padding: 12px 16px calc(16px + env(safe-area-inset-bottom)); }
+.ie-crop-actions { display: flex; flex-wrap: wrap; gap: 8px; }
