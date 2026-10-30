@@ -18,6 +18,14 @@ body {
   line-height: 1.5;
 }
 
+/* Browsers give form controls their own system font; they use the app's like everything else. */
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
 h1, h2, h3, h4, h5, h6, .display-font {
   font-family: 'Plus Jakarta Sans', Inter, system-ui, -apple-system, sans-serif;
   text-transform: none;
