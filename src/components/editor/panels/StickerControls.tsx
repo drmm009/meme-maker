@@ -38,7 +38,7 @@ export default function StickerControls({ actions }: { actions: EditorActions })
           </Row>
         )}
       </Section>
-      <LayerLookControls id={id} layer={sticker} kind="sticker" />
+      <LayerLookControls id={id} layer={sticker} />
       <LayerActions id={id} actions={actions} />
     </div>
   );

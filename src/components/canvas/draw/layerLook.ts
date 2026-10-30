@@ -3,6 +3,9 @@
 
 export type BlendMode = 'normal' | 'multiply' | 'screen' | 'overlay' | 'darken' | 'lighten' | 'difference';
 
+// The shadow colours offered for a photo or sticker.
+export const SHADOW_COLORS = ['#000000', '#1e1b4b', '#7f1d1d', '#ffffff', '#ff2a5f', '#00f0ff'];
+
 export const BLEND_MODES: { value: BlendMode; label: string }[] = [
   { value: 'normal', label: 'Normal' },
   { value: 'multiply', label: 'Multiply' },

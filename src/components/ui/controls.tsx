@@ -154,7 +154,7 @@ export function Switch({ label, checked, onChange }: { label: string; checked: b
   return <button type="button" role="switch" aria-checked={checked} aria-label={label} title={label} className="ui-switch" onClick={() => onChange(!checked)} />;
 }
 
-export function TileGrid({ columns = 3, children }: { columns?: 2 | 3 | 4; children: ReactNode }) {
+export function TileGrid({ columns = 3, children }: { columns?: 2 | 3 | 4 | 5; children: ReactNode }) {
   return <div className={`ui-tiles${columns === 3 ? '' : ` ui-tiles--${columns}`}`}>{children}</div>;
 }
 

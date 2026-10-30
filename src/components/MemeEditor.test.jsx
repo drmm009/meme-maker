@@ -790,6 +790,30 @@ describe('MemeEditor', () => {
     expect(canvas.props.activeLayerId).toBe(null);
   }, 30000);
 
+  it("an image layer's More is compact: a row of tiles and the look sliders, nothing the bar already has", () => {
+    renderEditor();
+    openSection('Photos, videos, stickers and emoji');
+    fireEvent.click(within(strip('Media tools')).getByText('Templates'));
+    fireEvent.click(within(sheet('Templates')).getAllByRole('button', { name: /drake/i })[0]);
+    act(() => canvas.props.onSelectLayer(canvas.props.imageLayers[0].id));
+    fireEvent.click(within(layerToolbar()).getByText('More'));
+    const more = sheet('More');
+    expect(within(more).getAllByRole('button').map((b) => b.textContent).filter(Boolean)).toEqual(['Mirror', 'Flip', 'Copy', 'Face Swap']);
+    expect(within(more).getByText('Replace')).toBeTruthy();
+    for (const gone of ['Crop', 'Filters', 'Cut out', 'Duplicate']) expect(within(more).queryByText(gone)).toBeNull();
+    expect(within(more).queryByRole('group', { name: 'Blend mode' })).toBeNull();
+    expect(within(more).queryByRole('switch', { name: 'Keep shape when resizing' })).toBeNull();
+    expect(within(more).queryByRole('group', { name: 'Images and stickers' })).toBeNull();
+
+    fireEvent.click(within(more).getByText('Flip'));
+    fireEvent.change(within(more).getByLabelText('Corner rounding'), { target: { value: '0.3' } });
+    fireEvent.change(within(more).getByLabelText('Border width'), { target: { value: '6' } });
+    expect(canvas.props.imageLayers[0]).toMatchObject({ flipY: true, cornerRadius: 0.3, borderWidth: 6 });
+    expect(within(sheet('More')).getByRole('radiogroup', { name: 'Border colour' })).toBeTruthy();
+    fireEvent.click(within(sheet('More')).getByText('Copy'));
+    expect(canvas.props.imageLayers).toHaveLength(2);
+  }, 30000);
+
   it('the Media sheet sets how a sticker sits: upside down, opacity, blend and shadow', () => {
     renderEditor();
     openSection('Photos, videos, stickers and emoji');

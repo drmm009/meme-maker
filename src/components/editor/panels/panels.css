@@ -345,7 +345,10 @@ div.ie-layer-pick { cursor: default; }
 .ie-panels--sheet .ui-tile-icon svg { width: 20px; height: 20px; }
 .ie-panels--sheet .ui-tile:hover:not(:disabled) { background: var(--ui-surface-3); }
 .ie-panels--sheet .ui-tiles--2 .ui-tile,
-.ie-panels--sheet .ui-tiles--4 .ui-tile { flex: 1 1 0; min-width: 0; }
+.ie-panels--sheet .ui-tiles--4 .ui-tile,
+.ie-panels--sheet .ui-tiles--5 .ui-tile { flex: 1 1 0; min-width: 0; }
+.ie-panels--sheet .ui-tiles--5 { gap: 6px; }
+.ie-panels--sheet .ui-tiles--5 .ui-tile { padding-inline: 4px; }
 .ie-panels--sheet .ui-tile.is-on { border-color: var(--ui-accent); background: rgba(255, 90, 54, 0.15); color: var(--ui-accent); }
 .ie-panels--sheet .ui-tile.is-on .ui-tile-icon,
 .ie-panels--sheet .ui-tile.is-on .ui-tile-sub { color: var(--ui-accent); }
