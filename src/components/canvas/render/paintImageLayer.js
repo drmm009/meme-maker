@@ -2,10 +2,11 @@ import { THEME_BADGE_BG, THEME_CORAL, drawDeleteHandle, drawResizeHandle, drawRo
 import { getFilterCss, drawImageFiltered } from '../../../data/photoFilters';
 import { applyShadow, compositeFor, cornerPx, isFramed, roundRectPath } from '../draw/layerLook';
 import { applyPhotoEffects, hasPhotoEffects } from '../draw/photoEffects';
+import { isVideoUrl } from '../../editor/memeEditorUtils';
 
 export function paintImageLayer({
   activeLayerId, baseImgRef, canvas, getImageLayerCenterY, imageCacheRef, isDrawingMode,
-  layer, renderCanvas, reportActiveBox, reportBox, setActiveHandleDrawer, targetCtx
+  layer, loadingMediaRef, renderCanvas, reportActiveBox, reportBox, setActiveHandleDrawer, targetCtx
 }) {
   const imgLayer = layer;
 const cx = imgLayer.x * canvas.width;
@@ -255,7 +256,10 @@ if (cached) {
   }
 
   targetCtx.restore();
-} else {
+} else if (!isVideoUrl(imgLayer.url) && !loadingMediaRef?.current[imgLayer.url]) {
+  // Requested once: later redraws while it loads don't start it again. Video photos are played
+  // by canvas/media, which puts their frames in the cache.
+  if (loadingMediaRef) loadingMediaRef.current[imgLayer.url] = true;
   const newImg = new Image();
   if (imgLayer.url && !imgLayer.url.startsWith('blob:') && !imgLayer.url.startsWith('data:')) newImg.crossOrigin = 'anonymous';
   newImg.onload = () => {

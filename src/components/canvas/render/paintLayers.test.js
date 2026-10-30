@@ -36,8 +36,9 @@ const paintStk = (layer, opts = {}) => {
 
 const paintImg = (layer, opts = {}) => {
   const s = setup(opts.imageCache);
-  paintImageLayer({ ...s.common, activeLayerId: opts.activeLayerId ?? null, getImageLayerCenterY: (l) => l.y * 600, layer });
-  return s;
+  const loadingMediaRef = opts.loadingMediaRef || { current: {} };
+  paintImageLayer({ ...s.common, activeLayerId: opts.activeLayerId ?? null, getImageLayerCenterY: (l) => l.y * 600, layer, loadingMediaRef });
+  return { ...s, loadingMediaRef };
 };
 
 describe('paintSticker', () => {
@@ -71,6 +72,25 @@ describe('paintSticker', () => {
     const [box] = callsNamed(handles(), 'roundRect');
     expect(box.args).toEqual([-45, -45, 90, 90, 10]); // 78px sticker + 12
     expect(box.at).toEqual({ x: 355, y: 255 });
+  });
+});
+
+describe('loading a photo layer', () => {
+  it('asks for the picture once however often the meme is redrawn, and leaves videos to the player', () => {
+    const made = [];
+    const RealImage = globalThis.Image;
+    globalThis.Image = class { constructor() { made.push(this); } };
+    try {
+      const loadingMediaRef = { current: {} };
+      paintImg({ id: 'i', url: 'p.png', x: 0.5, y: 0.5 }, { loadingMediaRef });
+      paintImg({ id: 'i', url: 'p.png', x: 0.5, y: 0.5 }, { loadingMediaRef });
+      expect(made).toHaveLength(1);
+      expect(loadingMediaRef.current['p.png']).toBe(true);
+      paintImg({ id: 'v', url: 'clip.mp4', x: 0.5, y: 0.5 }, { loadingMediaRef });
+      expect(made).toHaveLength(1);
+    } finally {
+      globalThis.Image = RealImage;
+    }
   });
 });
 

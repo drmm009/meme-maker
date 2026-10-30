@@ -46,7 +46,7 @@ export function paintLayers({
     if (layer._type === 'imageLayer') {
       paintImageLayer({
         activeLayerId, baseImgRef, canvas, getImageLayerCenterY, imageCacheRef, isDrawingMode,
-        layer, renderCanvas, reportActiveBox, reportBox: reportLayerBox, setActiveHandleDrawer, targetCtx
+        layer, loadingMediaRef, renderCanvas, reportActiveBox, reportBox: reportLayerBox, setActiveHandleDrawer, targetCtx
       });
     } else if (layer._type === 'sticker') {
       paintSticker({
