@@ -257,6 +257,15 @@ describe('MemeEditor', () => {
     expect(canvas.props.captions.some((c) => c.bubbleStyle)).toBe(false);
   }, 30000);
 
+  it('hides the aspect ratio pill while a sheet is open', () => {
+    renderEditor();
+    expect(screen.getByRole('radiogroup', { name: 'Aspect ratio' })).toBeTruthy();
+    addTextFromMenu();
+    expect(screen.queryByRole('radiogroup', { name: 'Aspect ratio' })).toBeNull();
+    closeSheet();
+    expect(screen.getByRole('radiogroup', { name: 'Aspect ratio' })).toBeTruthy();
+  });
+
   it('shows the floating tools for the selected caption once its sheet closes', () => {
     renderEditor();
     addTextFromMenu();
