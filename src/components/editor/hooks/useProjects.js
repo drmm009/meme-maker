@@ -1,10 +1,10 @@
 import { useMemeEditorStoreApi } from '../store/useMemeEditorStore';
-import { deleteMemeProject, listMemeProjects, loadMemeProject, restoreDocument, saveMemeProject } from '../../../utils/memeDraftStore';
+import { deleteMemeProject, listMemeProjects, loadMemeProject, renameMemeProject, restoreDocument, saveMemeProject } from '../../../utils/memeDraftStore';
 
 const THUMB_W = 240;
 
 // Memes saved on purpose (utils/memeDraftStore's projects): save the current one as a project or a
-// template, open one (a fresh editor session on it, like restoring the draft), delete one.
+// template, open one (a fresh editor session on it, like restoring the draft), rename or delete one.
 export function useProjects({ canvasRef, onOpen }) {
   const store = useMemeEditorStoreApi();
 
@@ -32,5 +32,5 @@ export function useProjects({ canvasRef, onOpen }) {
     if (project) onOpen(restoreDocument(project, (blob) => URL.createObjectURL(blob)));
   };
 
-  return { listProjects: listMemeProjects, handleSaveProject, handleOpenProject, handleDeleteProject: deleteMemeProject };
+  return { listProjects: listMemeProjects, handleSaveProject, handleOpenProject, handleDeleteProject: deleteMemeProject, handleRenameProject: renameMemeProject };
 }

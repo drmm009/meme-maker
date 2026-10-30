@@ -191,3 +191,10 @@ export async function loadMemeProject(id: string): Promise<MemeProject | null> {
 }
 
 export const deleteMemeProject = (id: string): Promise<undefined> => run('readwrite', (s) => s.delete(id), PROJECTS);
+
+// A new name for a saved meme (its contents are left as they are).
+export async function renameMemeProject(id: string, name: string): Promise<void> {
+  const saved = await run<MemeProject | undefined>('readonly', (s) => s.get(id), PROJECTS);
+  if (!saved) return;
+  await run('readwrite', (s) => s.put({ ...saved, name }), PROJECTS);
+}
