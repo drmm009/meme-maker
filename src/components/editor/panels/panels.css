@@ -175,6 +175,10 @@ div.ie-layer-pick { cursor: default; }
   overflow: hidden;
   padding-bottom: 0;
 }
+/* The highlighted strip button already says which picker is open, so no heading; the title stays
+   as the sheet's accessible name. */
+.ie-picker-sheet .ui-sheet-head { display: none; }
+.ie-picker-sheet .ui-sheet-handle { margin-bottom: 6px; }
 .ie-picker-tab-emoji { font-size: 20px; line-height: 20px; }
 .ie-picker-search { position: relative; display: flex; align-items: center; flex: none; margin: 2px 0 10px; }
 .ie-picker-search > svg { position: absolute; left: 12px; color: var(--ui-muted); pointer-events: none; }
