@@ -21,6 +21,9 @@ export function usePhotoActions() {
       rawImageUrl: url,
       imageUrl: url,
       originalUrl: null,
+      // The template's stored size was the old photo's: the new one's own size decides the shape.
+      width: undefined,
+      height: undefined,
       uncroppedUrl: keepUncropped ? (t.uncroppedUrl || t.rawImageUrl || t.imageUrl) : null,
     }));
     s.pushHistory();

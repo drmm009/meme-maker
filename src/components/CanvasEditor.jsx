@@ -175,7 +175,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
 
   useEffect(() => {
     renderScene(sceneRef.current);
-  }, [captions, stickers, activeLayerId, imageLayers, slotImages, slotTransforms, activeIsNativeLayout, editingCaptionId, aspectRatio, imageFit, watermark, drawings, isDrawingMode, imgSrc, filters, liveBgColor, canvasHeader, canvasFooter, demotivational, canvasFlipX, showDrawingHandles, redrawTick]);
+  }, [captions, stickers, activeLayerId, imageLayers, slotImages, slotTransforms, activeIsNativeLayout, editingCaptionId, aspectRatio, imageFit, watermark, drawings, isDrawingMode, imgSrc, filters, liveBgColor, canvasHeader, canvasFooter, demotivational, canvasFlipX, showDrawingHandles, canvasW, totalCanvasH, redrawTick]);
 
   // Keep focus on active caption whenever selected (not for social cards). Runs on a new
   // selection or edit only, not on every keystroke, so the cursor isn't moved while typing.
