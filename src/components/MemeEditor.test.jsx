@@ -263,7 +263,7 @@ describe('MemeEditor', () => {
     closeSheet();
     const tools = layerToolbar();
     // Five Text sheets, each with its related controls, then the layer tools.
-    expect([...tools.querySelectorAll('button > span:last-child')].map((s) => s.textContent)).toEqual(['Edit', 'Font', 'Style', 'Color', 'Effects', 'Layers', 'Delete']);
+    expect([...tools.querySelectorAll('button > span:last-child')].map((s) => s.textContent)).toEqual(['Edit', 'Font', 'Style', 'Align', 'Color', 'Effects', 'Layers', 'Delete']);
 
     // Font: the fonts and saved styles, nothing else.
     fireEvent.click(within(tools).getByText('Font'));
@@ -279,14 +279,25 @@ describe('MemeEditor', () => {
     expect(within(sheet('Edit text')).getByLabelText('Caption text').value).toBe('NEW TEXT');
     closeSheet();
 
-    // Style: size, bold and the rest, spacing.
+    // Style: size, bold and the rest.
     fireEvent.click(within(layerToolbar()).getByText('Style'));
     const style = sheet('Style');
     fireEvent.click(within(style).getByLabelText('Bold'));
     expect(canvas.props.captions[2].bold).toBe(false);
     expect(within(style).getByLabelText('Text size')).toBeTruthy();
-    expect(within(style).getByLabelText('Letter spacing')).toBeTruthy();
+    expect(within(style).queryByLabelText('Letter spacing')).toBeNull();
+    expect(within(style).queryByRole('switch', { name: 'Shrink to fit' })).toBeNull();
     expect(within(style).queryByLabelText('Text colour')).toBeNull();
+    closeSheet();
+
+    // Align: alignment and spacing.
+    fireEvent.click(within(layerToolbar()).getByText('Align'));
+    const align = sheet('Align');
+    fireEvent.click(within(align).getByRole('radio', { name: 'Left' }));
+    expect(canvas.props.captions[2].align).toBe('left');
+    expect(within(align).getByLabelText('Letter spacing')).toBeTruthy();
+    expect(within(align).getByLabelText('Line height')).toBeTruthy();
+    expect(within(align).queryByLabelText('Text size')).toBeNull();
     closeSheet();
 
     // Color: colour, outline and shadow.
@@ -310,7 +321,7 @@ describe('MemeEditor', () => {
     renderEditor();
     addTextFromMenu();
     closeSheet();
-    for (const name of ['Edit', 'Font', 'Style', 'Color', 'Effects', 'Layers', 'Delete']) expect(within(layerToolbar()).getByText(name)).toBeTruthy();
+    for (const name of ['Edit', 'Font', 'Style', 'Align', 'Color', 'Effects', 'Layers', 'Delete']) expect(within(layerToolbar()).getByText(name)).toBeTruthy();
     fireEvent.click(within(layerToolbar()).getByText('Layers'));
     const panel = sheet('Layers');
     const rows = () => within(screen.getByRole('list', { name: 'Layers' })).getAllByRole('listitem').map((li) => li.querySelector('.ie-layer-pick').textContent);
@@ -391,20 +402,17 @@ describe('MemeEditor', () => {
     expect(within(panel).getByText('Duplicate the selected layer')).toBeTruthy();
   });
 
-  it('Text: shrink to fit with a line limit, and saved styles put on another caption', () => {
+  it('Text: saved styles put on another caption', () => {
     renderEditor();
     openTextSheet();
     const panel = () => sheet('Text');
-    fireEvent.click(within(panel()).getByRole('switch', { name: 'Shrink to fit' }));
-    fireEvent.click(within(within(panel()).getByRole('group', { name: 'Most lines' })).getByText('1'));
-    expect(canvas.props.captions[0]).toMatchObject({ autoFit: true, maxLines: 1 });
-
+    expect(within(panel()).queryByRole('switch', { name: 'Shrink to fit' })).toBeNull();
     fireEvent.click(within(panel()).getByRole('button', { name: 'Italic' }));
     fireEvent.click(within(panel()).getByText('Save this style'));
     expect(within(panel()).getByLabelText('Use saved style 1')).toBeTruthy();
     fireEvent.click(within(within(panel()).getByRole('group', { name: 'Captions' })).getByText('BOTTOM TEXT'));
     fireEvent.click(within(panel()).getByLabelText('Use saved style 1'));
-    expect(canvas.props.captions[1]).toMatchObject({ italic: true, autoFit: true, maxLines: 1, text: 'BOTTOM TEXT' });
+    expect(canvas.props.captions[1]).toMatchObject({ italic: true, text: 'BOTTOM TEXT' });
     fireEvent.click(within(panel()).getByLabelText('Remove saved style 1'));
     expect(within(panel()).queryByLabelText('Use saved style 1')).toBeNull();
   }, 30000);

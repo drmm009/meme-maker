@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { RefObject } from 'react';
-import { Trash2, Settings, SlidersHorizontal, Copy, Scaling, FlipHorizontal, Scissors, Crop, Wand2, Ellipsis, Layers, Palette, PencilLine, Sparkles, MessageSquareQuote } from 'lucide-react';
+import { Trash2, Settings, SlidersHorizontal, Copy, Scaling, FlipHorizontal, Scissors, Crop, Wand2, Ellipsis, Layers, Palette, PencilLine, Sparkles, MessageSquareQuote, AlignLeft, AlignCenter, AlignRight } from 'lucide-react';
 import { FloatingToolbar } from '../../ui';
 import type { ToolbarItem } from '../../ui';
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
@@ -11,9 +11,12 @@ import type { LayerBox } from './placeToolbar';
 import type { EditorActions } from './selection';
 
 // The selected layer's quick tools, floating just above it on the canvas. Hidden while a sheet
-// is open and while the layer is being dragged. A caption's Edit, Font, Style, Color and Effects
+// is open and while the layer is being dragged. A caption's Edit, Font, Style, Align, Color and Effects
 // each open the Text sheet with just their sections; the bar scrolls sideways if tools don't fit.
 type LayerCanvas = HTMLCanvasElement & { activeLayerBox?: LayerBox | null };
+
+// The Align button shows the caption's alignment.
+const alignIcon = (align: unknown) => (align === 'left' ? AlignLeft : align === 'right' ? AlignRight : AlignCenter);
 
 export default function LayerToolbar({ canvasRef, actions }: { canvasRef: RefObject<LayerCanvas | null>; actions: EditorActions }) {
   const { id, kind, caption, sticker, image, drawing } = useSelection();
@@ -75,7 +78,8 @@ export default function LayerToolbar({ canvasRef, actions }: { canvasRef: RefObj
     items = [
       { id: 'edit', label: 'Edit', title: 'Edit the words', Icon: PencilLine, onClick: () => openSheet('text', 'edit') },
       { id: 'font', label: 'Font', title: 'Font and my saved styles', icon: <span className="ie-glyph">Ar</span>, onClick: () => openSheet('text', 'font') },
-      { id: 'style', label: 'Style', title: 'Size, bold, italic, case, alignment and spacing', icon: <span className="ie-glyph ie-glyph--bold">B</span>, onClick: () => openSheet('text', 'style') },
+      { id: 'style', label: 'Style', title: 'Size, bold, italic, underline and case', icon: <span className="ie-glyph ie-glyph--bold">B</span>, onClick: () => openSheet('text', 'style') },
+      { id: 'align', label: 'Align', title: 'Alignment and spacing', Icon: alignIcon(caption.align), onClick: () => openSheet('text', 'align') },
       { id: 'color', label: 'Color', title: 'Colour, outline and shadow', icon: <span className="ie-color-dot" style={{ background: caption.color || '#ffffff' }} />, onClick: () => openSheet('text', 'color') },
       { id: 'effects', label: 'Effects', title: 'Effects and the box behind the text', Icon: Sparkles, onClick: () => openSheet('text', 'effects') },
       ...(caption.bubbleStyle ? [{ id: 'bubble', label: 'Bubble', title: 'Bubble style', Icon: MessageSquareQuote, onClick: () => openSheet('bubble') }] : []),

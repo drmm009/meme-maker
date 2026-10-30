@@ -8,6 +8,7 @@
 .ie-aspect-bar { flex: none; display: flex; justify-content: center; padding: 4px 12px 8px; }
 
 .ie-layer-toolbar { position: absolute; z-index: 60; max-width: calc(100% - 16px); padding-inline: 6px; }
+.ie-layer-toolbar .ui-float-item { min-width: 36px; }
 /* Shown while the canvas is zoomed in: the zoom, and a tap back to fit. */
 .ie-zoom-pill {
   position: absolute;

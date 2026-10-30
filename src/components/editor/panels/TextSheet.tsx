@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
-import { Bold, Italic, Underline, MessageSquareQuote, CaseSensitive, Plus, X, BookmarkPlus } from 'lucide-react';
+import { Bold, Italic, Underline, MessageSquareQuote, CaseSensitive, Plus, X, BookmarkPlus, AlignLeft, AlignCenter, AlignRight } from 'lucide-react';
 import { Sheet, Section, Row, ChipRow, Chip, Toggle, SwatchRow, Slider, Switch, TileGrid, Tile, SegmentedControl } from '../../ui';
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
 import { useEditorUiStore } from '../store/useEditorUiStore';
@@ -47,7 +47,8 @@ const SECTIONS = {
   styles: { title: 'My styles', part: 'font' },
   size: { title: 'Size', part: 'style' },
   format: { title: 'Format', part: 'style' },
-  spacing: { title: 'Spacing', part: 'style' },
+  align: { title: 'Alignment', part: 'align' },
+  spacing: { title: 'Spacing', part: 'align' },
   color: { title: 'Color', part: 'color' },
   outline: { title: 'Outline', part: 'color' },
   shadow: { title: 'Shadow', part: 'color' },
@@ -55,11 +56,11 @@ const SECTIONS = {
   box: { title: 'Box', part: 'effects' },
 } as const;
 type TextSection = keyof typeof SECTIONS;
-const TEXT_PARTS = { edit: 'Edit text', font: 'Font', style: 'Style', color: 'Color', effects: 'Effects' } as const;
+const TEXT_PARTS = { edit: 'Edit text', font: 'Font', style: 'Style', align: 'Align', color: 'Color', effects: 'Effects' } as const;
 type TextPart = keyof typeof TEXT_PARTS;
 
 // The Text sheet, under the Text strip (which adds text, bubbles and social cards): pick a caption,
-// edit its words, font, size, format, spacing, colour, outline, shadow, effects and box. Opened from
+// edit its words, font, size, format, alignment, spacing, colour, outline, shadow, effects and box. Opened from
 // a floating-bar button it shows only that button's sections.
 export default function TextSheet({ actions, onClose }: { actions: EditorActions; onClose: () => void }) {
   const captions: Caption[] = useMemeEditorStore((s: { captions: Caption[] }) => s.captions);
@@ -195,16 +196,6 @@ export default function TextSheet({ actions, onClose }: { actions: EditorActions
               <Row label="Text">
                 <Slider label="Text size" min={16} max={160} value={caption.fontSize || 50} onChange={(v) => live({ fontSize: v })} />
               </Row>
-              <Row label="Shrink to fit" end>
-                <Switch label="Shrink to fit" checked={Boolean(caption.autoFit)} onChange={(autoFit) => set({ autoFit })} />
-              </Row>
-              {caption.autoFit && (
-                <Row label="Lines">
-                  <ChipRow ariaLabel="Most lines">
-                    {[1, 2, 3, 4].map((n) => <Chip key={n} label={String(n)} active={(caption.maxLines || 2) === n} onClick={() => set({ maxLines: n })} />)}
-                  </ChipRow>
-                </Row>
-              )}
             </Section>
           )}
 
@@ -219,15 +210,18 @@ export default function TextSheet({ actions, onClose }: { actions: EditorActions
                   <CaseSensitive size={22} />
                 </button>
               </Row>
-              <Row label="Align">
-                <SegmentedControl
-                  ariaLabel="Alignment"
-                  variant="fill"
-                  value={(caption.align || 'center') as 'left' | 'center' | 'right'}
-                  options={[{ value: 'left', label: 'Left' }, { value: 'center', label: 'Center' }, { value: 'right', label: 'Right' }]}
-                  onChange={(align) => set({ align })}
-                />
-              </Row>
+            </Section>
+          )}
+
+          {shows('align') && (
+            <Section title={heading('align')} id="align" rule={!part}>
+              <SegmentedControl
+                ariaLabel="Alignment"
+                variant="fill"
+                value={(caption.align || 'center') as 'left' | 'center' | 'right'}
+                options={[{ value: 'left', label: 'Left', Icon: AlignLeft }, { value: 'center', label: 'Center', Icon: AlignCenter }, { value: 'right', label: 'Right', Icon: AlignRight }]}
+                onChange={(align) => set({ align })}
+              />
             </Section>
           )}
 
