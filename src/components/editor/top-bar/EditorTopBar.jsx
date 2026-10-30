@@ -1,10 +1,11 @@
-import { Undo2, Redo2 } from 'lucide-react';
+import { Undo2, Redo2, History } from 'lucide-react';
 import { TopBar } from '../../ui';
 import { useMemeEditorStore, useMemeEditorHistory } from '../store/useMemeEditorStore';
 import { useEditorUiStore } from '../store/useEditorUiStore';
 
-// Back, title, undo/redo and Export (which opens the Export sheet: format, size, download, share,
-// copy, save to gallery).
+// Back, title, undo/redo, History & saved (the list of steps, and memes saved as projects or
+// templates) and Export (which opens the Export sheet: format, size, download, share, copy, save
+// to gallery).
 export default function EditorTopBar({ onBack }) {
   const handleUndo = useMemeEditorStore((s) => s.undo);
   const canUndo = useMemeEditorHistory((s) => s.pastStates.length > 0);
@@ -22,6 +23,16 @@ export default function EditorTopBar({ onBack }) {
         </button>
         <button type="button" className="ui-icon-btn ui-icon-btn--ghost" onClick={handleRedo} disabled={!canRedo} title="Redo" aria-label="Redo">
           <Redo2 size={19} />
+        </button>
+        <button
+          type="button"
+          className="ui-icon-btn ui-icon-btn--ghost"
+          onClick={() => (sheet === 'library' ? closeSheet() : openSheet('library'))}
+          title="History & saved memes"
+          aria-label="History and saved memes"
+          aria-expanded={sheet === 'library'}
+        >
+          <History size={19} />
         </button>
       </div>
       <button

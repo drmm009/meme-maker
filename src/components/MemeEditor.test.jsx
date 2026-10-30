@@ -299,6 +299,24 @@ describe('MemeEditor', () => {
     expect(within(panel()).queryByLabelText('Use saved style 1')).toBeNull();
   }, 30000);
 
+  it('History lists the steps and jumps back and forward to any of them', () => {
+    renderEditor();
+    act(() => canvas.props.onAddDrawing({ points: [0, 0, 10, 10], color: '#fff', size: 4, tool: 'brush' }));
+    addTextFromMenu();
+    closeSheet();
+    fireEvent.click(screen.getByLabelText('History and saved memes'));
+    const steps = () => within(screen.getByRole('list', { name: 'History' })).getAllByRole('button').map((b) => b.textContent);
+    expect(steps()).toEqual(['Added textNow', 'Added drawing', 'Start']);
+    fireEvent.click(within(screen.getByRole('list', { name: 'History' })).getByText('Start'));
+    expect(canvas.props.drawings).toHaveLength(0);
+    expect(canvas.props.captions).toHaveLength(2);
+    fireEvent.click(within(screen.getByRole('list', { name: 'History' })).getByText('Added text'));
+    expect(canvas.props.captions).toHaveLength(3);
+    expect(canvas.props.drawings).toHaveLength(1);
+    fireEvent.click(within(sheet('History & saved')).getByRole('radio', { name: 'My memes' }));
+    expect(within(sheet('History & saved')).getByText('Save project')).toBeTruthy();
+  }, 30000);
+
   it('edits the selected caption from the Text sheet', () => {
     renderEditor();
     openTextSheet();

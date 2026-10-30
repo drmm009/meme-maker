@@ -1,11 +1,13 @@
 // Auto-saved image editor draft in IndexedDB, in its own database so the gallery's is untouched.
 // DB: meme-creator-image / store: drafts (one record, id 'current'). Pictures that only exist as
-// blob: URLs die with the page, so their Blobs are saved in the record too.
+// blob: URLs die with the page, so their Blobs are saved in the record too. The same database keeps
+// the memes saved on purpose (store: projects): projects to come back to and templates to reuse.
 import { HISTORY_FIELDS } from '../components/editor/store/useMemeEditorStore';
 
 const DB_NAME = 'meme-creator-image';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const DRAFTS = 'drafts';
+const PROJECTS = 'projects';
 const DRAFT_ID = 'current';
 
 export const MEME_DRAFT_VERSION = 1;
@@ -87,6 +89,7 @@ const openDB = (): Promise<IDBDatabase> => {
       const req = indexedDB.open(DB_NAME, DB_VERSION);
       req.onupgradeneeded = () => {
         if (!req.result.objectStoreNames.contains(DRAFTS)) req.result.createObjectStore(DRAFTS, { keyPath: 'id' });
+        if (!req.result.objectStoreNames.contains(PROJECTS)) req.result.createObjectStore(PROJECTS, { keyPath: 'id' });
       };
       req.onsuccess = () => resolve(req.result);
       req.onerror = () => reject(req.error);
@@ -96,10 +99,10 @@ const openDB = (): Promise<IDBDatabase> => {
   return dbPromise;
 };
 
-const run = <T>(mode: IDBTransactionMode, fn: (store: IDBObjectStore) => IDBRequest<T>): Promise<T> =>
+const run = <T>(mode: IDBTransactionMode, fn: (store: IDBObjectStore) => IDBRequest<T>, storeName = DRAFTS): Promise<T> =>
   openDB().then((db) => new Promise<T>((resolve, reject) => {
-    const t = db.transaction(DRAFTS, mode);
-    const req = fn(t.objectStore(DRAFTS));
+    const t = db.transaction(storeName, mode);
+    const req = fn(t.objectStore(storeName));
     t.oncomplete = () => resolve(req.result);
     t.onerror = () => reject(t.error);
     t.onabort = () => reject(t.error);
@@ -108,8 +111,8 @@ const run = <T>(mode: IDBTransactionMode, fn: (store: IDBObjectStore) => IDBRequ
 // Blobs already read this session, so a picture isn't fetched again on every save.
 const blobCache = new Map<string, Blob>();
 
-export async function saveMemeDraft(state: Record<string, unknown>): Promise<void> {
-  const document = documentFromState(state);
+// The Blobs behind a document's blob: URLs (ones already revoked are left out).
+async function collectMedia(document: MemeDraftDocument): Promise<Record<string, Blob>> {
   const media: Record<string, Blob> = {};
   for (const url of collectBlobUrls(document)) {
     let blob = blobCache.get(url);
@@ -123,6 +126,12 @@ export async function saveMemeDraft(state: Record<string, unknown>): Promise<voi
     }
     media[url] = blob;
   }
+  return media;
+}
+
+export async function saveMemeDraft(state: Record<string, unknown>): Promise<void> {
+  const document = documentFromState(state);
+  const media = await collectMedia(document);
   const draft: MemeDraft = { id: DRAFT_ID, version: MEME_DRAFT_VERSION, savedAt: Date.now(), document, media };
   await run('readwrite', (s) => s.put(draft));
 }
@@ -134,3 +143,51 @@ export async function loadMemeDraft(): Promise<MemeDraft | null> {
   if (!saved?.document || (saved.version ?? 0) > MEME_DRAFT_VERSION) return null;
   return saved;
 }
+
+// A meme saved on purpose: a project to come back to, or a template to start new memes from.
+export type MemeProjectKind = 'project' | 'template';
+
+export interface MemeProject {
+  id: string;
+  kind: MemeProjectKind;
+  name: string;
+  version: number;
+  savedAt: number;
+  // A small JPEG data URL of the meme.
+  thumb: string;
+  document: MemeDraftDocument;
+  media: Record<string, Blob>;
+}
+
+export type MemeProjectSummary = Omit<MemeProject, 'document' | 'media'>;
+
+// Saves the editor's meme. One of the same kind and name is replaced (saving again updates it).
+export async function saveMemeProject(state: Record<string, unknown>, { kind, name, thumb }: { kind: MemeProjectKind; name: string; thumb: string }): Promise<MemeProjectSummary> {
+  const document = documentFromState(state);
+  const media = await collectMedia(document);
+  const existing = (await listMemeProjects()).find((p) => p.kind === kind && p.name === name);
+  const project: MemeProject = {
+    id: existing?.id || `${kind}-${Date.now()}`,
+    kind, name, version: MEME_DRAFT_VERSION, savedAt: Date.now(), thumb, document, media,
+  };
+  await run('readwrite', (s) => s.put(project), PROJECTS);
+  const { document: _d, media: _m, ...summary } = project;
+  return summary;
+}
+
+// Every saved meme (newest first), without their documents.
+export async function listMemeProjects(): Promise<MemeProjectSummary[]> {
+  const all = await run<MemeProject[]>('readonly', (s) => s.getAll() as IDBRequest<MemeProject[]>, PROJECTS);
+  return (all || [])
+    .filter((p) => p && (p.version ?? 0) <= MEME_DRAFT_VERSION)
+    .map(({ document: _d, media: _m, ...summary }) => summary)
+    .sort((a, b) => b.savedAt - a.savedAt);
+}
+
+export async function loadMemeProject(id: string): Promise<MemeProject | null> {
+  const saved = await run<MemeProject | undefined>('readonly', (s) => s.get(id), PROJECTS);
+  if (!saved?.document || (saved.version ?? 0) > MEME_DRAFT_VERSION) return null;
+  return saved;
+}
+
+export const deleteMemeProject = (id: string): Promise<undefined> => run('readwrite', (s) => s.delete(id), PROJECTS);

@@ -12,6 +12,7 @@ import { useDrawingActions } from './editor/hooks/useDrawingActions';
 import { useCanvasFrameActions } from './editor/hooks/useCanvasFrameActions';
 import { usePhotoActions } from './editor/hooks/usePhotoActions';
 import { useArrangeActions } from './editor/hooks/useArrangeActions';
+import { useProjects } from './editor/hooks/useProjects';
 import { useSocialCardActions } from './editor/hooks/useSocialCardActions';
 import { useBubbleActions } from './editor/hooks/useBubbleActions';
 import { useCaptionActions } from './editor/hooks/useCaptionActions';
@@ -88,6 +89,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, o
   const { handleSetCanvasBgColor, handleToggleCanvasHeader, handleToggleCanvasFooter, handleToggleCanvasFlip, handleWatermarkImageUpload } = useCanvasFrameActions();
   const { handleReplaceMainPhoto, handleApplyMainPhotoCrop, handleRestoreMainPhoto, handleReplaceImageLayer } = usePhotoActions();
   const { handleAlignLayers, handleDistributeLayers, handleGroupLayers, handleUngroupLayers, handleDeleteLayers } = useArrangeActions({ canvasRef });
+  const { listProjects, handleSaveProject, handleOpenProject, handleDeleteProject } = useProjects({ canvasRef, onOpen: onRestoreDraft });
   const { handleAddDrawing, handleClearDrawings, handleUndoDrawing } = useDrawingActions();
   const { handleApplyAiCaption, handleAddCaption, handleToggleTextCase, updateActiveCaptionProps, handleSetCaptionBg } = useCaptionActions({ activeCaption, handleToggleCanvasHeader });
   const { commitAddImageLayer, handleAddImageLayer, handleFileUploadImageLayer, updateActiveImageLayer, moveLayer, handleDeleteLayer, handleDuplicateLayer, handleRotateLayer, handleFlipActiveLayer, handleToggleDieCutSticker, handleSetDieCutColor, updateSlotTransform, handleAddSticker, handleAddGraphicSticker } = useLayerActions({ activeCaption, activeImageLayer, activeSticker, updateActiveCaptionProps });
@@ -100,6 +102,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, o
     handleSetCanvasBgColor, handleToggleCanvasHeader, handleToggleCanvasFooter, handleToggleCanvasFlip, handleWatermarkImageUpload,
     handleReplaceMainPhoto, handleApplyMainPhotoCrop, handleRestoreMainPhoto, handleReplaceImageLayer,
     handleAlignLayers, handleDistributeLayers, handleGroupLayers, handleUngroupLayers, handleDeleteLayers,
+    listProjects, handleSaveProject, handleOpenProject, handleDeleteProject,
     handleClearDrawings, handleUndoDrawing,
     handleFileUploadImageLayer, updateActiveImageLayer, moveLayer, handleDeleteLayer, handleDuplicateLayer, handleRotateLayer,
     handleFlipActiveLayer, handleToggleDieCutSticker, handleSetDieCutColor,

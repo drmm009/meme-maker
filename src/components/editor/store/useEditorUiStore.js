@@ -97,7 +97,7 @@ const UI_FIELDS = Object.keys(buildInitialUi(null));
 
 // The dock tab each sheet belongs to: its strip shows above the sheet.
 // null: no strip (Export). Sheets not listed (Layers) keep the strip that shows.
-const SHEET_TAB = { text: 'text', media: 'media', draw: 'draw', canvasColor: 'canvas', watermark: 'canvas', filters: 'fx', export: null };
+const SHEET_TAB = { text: 'text', media: 'media', draw: 'draw', canvasColor: 'canvas', watermark: 'canvas', filters: 'fx', export: null, library: null };
 
 // useState-style setter: accepts a value or an updater function.
 const fieldSetter = (set, key) => (valueOrUpdater) =>
