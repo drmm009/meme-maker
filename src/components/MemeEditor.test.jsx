@@ -474,6 +474,26 @@ describe('MemeEditor', () => {
     expect(within(sheet('Export')).getByRole('radio', { name: 'JPG' }).getAttribute('aria-checked')).toBe('true');
   }, 30000);
 
+  it('Copy starts the clipboard write inside the tap, with the picture to come (Safari needs that)', () => {
+    const items = [];
+    const write = vi.fn(() => Promise.resolve());
+    const hadItem = 'ClipboardItem' in window;
+    window.ClipboardItem = class { constructor(data) { items.push(data); } };
+    Object.defineProperty(navigator, 'clipboard', { value: { write }, configurable: true });
+    try {
+      renderEditor();
+      fireEvent.click(screen.getByLabelText('Export'));
+      fireEvent.click(within(sheet('Export')).getByText('Copy'));
+      // Called during the click itself, not after the picture is made.
+      expect(write).toHaveBeenCalledTimes(1);
+      expect(items[0]['image/png']).toBeInstanceOf(Promise);
+      items[0]['image/png'].catch(() => {});
+    } finally {
+      if (!hadItem) delete window.ClipboardItem;
+      delete navigator.clipboard;
+    }
+  }, 30000);
+
   it('Export offers GIF and MP4 only when something on the meme moves', () => {
     const { unmount } = renderEditor();
     fireEvent.click(screen.getByLabelText('Export'));
