@@ -263,7 +263,7 @@ describe('MemeEditor', () => {
     closeSheet();
     const tools = layerToolbar();
     // Five Text sheets, each with its related controls, then the layer tools.
-    expect([...tools.querySelectorAll('button > span:last-child')].map((s) => s.textContent)).toEqual(['Font', 'Style', 'Align', 'Color', 'Effects', 'Layers', 'Delete']);
+    expect([...tools.querySelectorAll('button > span:last-child')].map((s) => s.textContent)).toEqual(['Font', 'Style', 'Align', 'Color', 'Box', 'Layers', 'Delete']);
 
     // Font: the fonts and saved styles, nothing else.
     fireEvent.click(within(tools).getByText('Font'));
@@ -275,12 +275,13 @@ describe('MemeEditor', () => {
     expect(within(font).queryByRole('group', { name: 'Captions' })).toBeNull();
     closeSheet();
 
-    // Style: size, bold and the rest.
+    // Style: size, bold and the rest, effects.
     fireEvent.click(within(layerToolbar()).getByText('Style'));
     const style = sheet('Style');
     fireEvent.click(within(style).getByLabelText('Bold'));
     expect(canvas.props.captions[2].bold).toBe(false);
     expect(within(style).getByLabelText('Text size')).toBeTruthy();
+    expect(within(style).getByRole('group', { name: 'Text effects' })).toBeTruthy();
     expect(within(style).queryByLabelText('Letter spacing')).toBeNull();
     expect(within(style).queryByRole('switch', { name: 'Shrink to fit' })).toBeNull();
     expect(within(style).queryByLabelText('Text colour')).toBeNull();
@@ -305,11 +306,12 @@ describe('MemeEditor', () => {
     expect(canvas.props.captions[2].shadowSize).toBe(12);
     closeSheet();
 
-    // Effects: the effects and the box.
-    fireEvent.click(within(layerToolbar()).getByText('Effects'));
-    const effects = sheet('Effects');
-    expect(within(effects).getByRole('group', { name: 'Text effects' })).toBeTruthy();
-    expect(within(effects).getByLabelText('Text opacity')).toBeTruthy();
+    // Box: the box behind the text and opacity, no effects.
+    fireEvent.click(within(layerToolbar()).getByText('Box'));
+    const box = sheet('Box');
+    expect(within(box).getByLabelText('Text box colour')).toBeTruthy();
+    expect(within(box).getByLabelText('Text opacity')).toBeTruthy();
+    expect(within(box).queryByRole('group', { name: 'Text effects' })).toBeNull();
     closeSheet();
   }, 30000);
 
@@ -317,7 +319,7 @@ describe('MemeEditor', () => {
     renderEditor();
     addTextFromMenu();
     closeSheet();
-    for (const name of ['Font', 'Style', 'Align', 'Color', 'Effects', 'Layers', 'Delete']) expect(within(layerToolbar()).getByText(name)).toBeTruthy();
+    for (const name of ['Font', 'Style', 'Align', 'Color', 'Box', 'Layers', 'Delete']) expect(within(layerToolbar()).getByText(name)).toBeTruthy();
     fireEvent.click(within(layerToolbar()).getByText('Layers'));
     const panel = sheet('Layers');
     const rows = () => within(screen.getByRole('list', { name: 'Layers' })).getAllByRole('listitem').map((li) => li.querySelector('.ie-layer-pick').textContent);

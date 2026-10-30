@@ -48,20 +48,20 @@ const SECTIONS = {
   styles: { title: 'My styles', part: 'font' },
   size: { title: 'Size', part: 'style' },
   format: { title: 'Format', part: 'style' },
+  effects: { title: 'Effects', part: 'style' },
   align: { title: 'Alignment', part: 'align' },
   spacing: { title: 'Spacing', part: 'align' },
   color: { title: 'Color', part: 'color' },
   outline: { title: 'Outline', part: 'color' },
   shadow: { title: 'Shadow', part: 'color' },
-  effects: { title: 'Effects', part: 'effects' },
-  box: { title: 'Box', part: 'effects' },
+  box: { title: 'Box', part: 'box' },
 } as const;
 type TextSection = keyof typeof SECTIONS;
-const TEXT_PARTS = { font: 'Font', style: 'Style', align: 'Align', color: 'Color', effects: 'Effects' } as const;
+const TEXT_PARTS = { font: 'Font', style: 'Style', align: 'Align', color: 'Color', box: 'Box' } as const;
 type TextPart = keyof typeof TEXT_PARTS;
 
 // The Text sheet, under the Text strip (which adds text, bubbles and social cards): pick a caption,
-// edit its words, font, size, format, alignment, spacing, colour, outline, shadow, effects and box. Opened from
+// edit its words, font, size, format, effects, alignment, spacing, colour, outline, shadow and box. Opened from
 // a floating-bar button it shows only that button's sections.
 export default function TextSheet({ actions, onClose }: { actions: EditorActions; onClose: () => void }) {
   const captions: Caption[] = useMemeEditorStore((s: { captions: Caption[] }) => s.captions);
@@ -214,6 +214,22 @@ export default function TextSheet({ actions, onClose }: { actions: EditorActions
             </Section>
           )}
 
+          {shows('effects') && (
+            <Section title={heading('effects')} id="effects">
+              <ChipRow ariaLabel="Text effects">
+                {TEXT_EFFECTS.map((e: { id: string; title: string; curve?: number; renderLabel: () => ReactNode }) => (
+                  <Chip
+                    key={e.id}
+                    title={e.title}
+                    label={e.renderLabel()}
+                    active={caption.effect ? caption.effect === e.id : e.id === 'flat' && !caption.curve}
+                    onClick={() => set({ effect: e.id, curve: e.curve || 0 })}
+                  />
+                ))}
+              </ChipRow>
+            </Section>
+          )}
+
           {shows('align') && (
             <Section title={heading('align')} id="align" rule={!part}>
               <SegmentedControl
@@ -294,24 +310,8 @@ export default function TextSheet({ actions, onClose }: { actions: EditorActions
             </Section>
           )}
 
-          {shows('effects') && (
-            <Section title={heading('effects')} id="effects" rule={!part}>
-              <ChipRow ariaLabel="Text effects">
-                {TEXT_EFFECTS.map((e: { id: string; title: string; curve?: number; renderLabel: () => ReactNode }) => (
-                  <Chip
-                    key={e.id}
-                    title={e.title}
-                    label={e.renderLabel()}
-                    active={caption.effect ? caption.effect === e.id : e.id === 'flat' && !caption.curve}
-                    onClick={() => set({ effect: e.id, curve: e.curve || 0 })}
-                  />
-                ))}
-              </ChipRow>
-            </Section>
-          )}
-
           {shows('box') && (
-            <Section title={heading('box')} id="box">
+            <Section title={heading('box')} id="box" rule={!part}>
               <Row label="Fill">
                 <SwatchRow
                   ariaLabel="Text box colour"
