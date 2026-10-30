@@ -95,3 +95,15 @@ div.ie-layer-pick { cursor: default; }
 .ie-tour-body { margin: 0; color: var(--ui-muted); font-size: 14px; line-height: 1.45; }
 .ie-tour-actions { display: flex; justify-content: flex-end; align-items: center; gap: 12px; margin-top: 14px; }
 .ie-tour-skip { padding: 6px 8px; border: none; background: none; color: var(--ui-muted); font-size: 14px; cursor: pointer; }
+
+
+/* Draw sheet: simple and compact layout for brush, glow, marker and draw tools */
+.ie-draw-sheet .ui-sheet-body {
+  padding-bottom: 8px;
+}
+.ie-draw-sheet .ui-section {
+  padding: 2px 0 6px;
+}
+.ie-draw-sheet .ui-row + .ui-row {
+  margin-top: 10px;
+}

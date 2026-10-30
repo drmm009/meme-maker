@@ -1,4 +1,4 @@
-import { Trash2, MoveUpRight, Circle, Square, Minus, Droplets, Grid3x3, RectangleHorizontal, PenLine, Highlighter, MoveHorizontal } from 'lucide-react';
+import { MoveUpRight, Circle, Square, Minus, Droplets, Grid3x3, RectangleHorizontal, PenLine, Highlighter, MoveHorizontal } from 'lucide-react';
 import { Sheet, Section, Row, SwatchRow, Slider, Switch, TileGrid, Tile } from '../../ui';
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
 import { useEditorUiStore } from '../store/useEditorUiStore';
@@ -25,7 +25,7 @@ const CENSORS = [
 
 // The picked draw tool's settings, under the Draw strip: brushes get colour and size; Shapes the
 // shape, colour, line width and fill; Censor the style and strength. With a shape (or censor
-// region) selected, they show and change that one too. Clearing removes every drawing.
+// region) selected, they show and change that one too. Clear drawing sits in the sheet header.
 // Drawing stays on after the sheet closes (see the UI store's pickDrawTool).
 export default function DrawSheet({ actions, onClose }: { actions: EditorActions; onClose: () => void }) {
   const drawings: unknown[] = useMemeEditorStore((s: { drawings: unknown[] }) => s.drawings);
@@ -54,7 +54,17 @@ export default function DrawSheet({ actions, onClose }: { actions: EditorActions
   const strength: number = censor?.strength ?? ui.censorStrength;
 
   return (
-    <Sheet title={tool.label} onClose={onClose}>
+    <Sheet
+      className="ie-draw-sheet"
+      title={tool.label}
+      onClose={onClose}
+      action={{
+        label: 'Clear drawing',
+        variant: 'plain',
+        disabled: !drawings.length,
+        onClick: actions.handleClearDrawings,
+      }}
+    >
       {isShape && (
         <Section>
           <TileGrid columns={4}>
@@ -92,12 +102,6 @@ export default function DrawSheet({ actions, onClose }: { actions: EditorActions
             <Slider label="Censor strength" min={4} max={40} value={strength} onChange={both(ui.setCensorStrength, (v) => ({ strength: v }))} />
           </Row>
         )}
-      </Section>
-
-      <Section rule>
-        <button type="button" className="ui-btn ui-btn--danger ie-wide-btn" disabled={!drawings.length} onClick={actions.handleClearDrawings}>
-          <Trash2 size={16} />Clear drawing
-        </button>
       </Section>
     </Sheet>
   );

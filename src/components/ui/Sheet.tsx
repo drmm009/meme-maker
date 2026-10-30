@@ -6,7 +6,9 @@ import type { LucideIcon } from 'lucide-react';
 export interface SheetAction {
   label: string;
   onClick: () => void;
-  Icon?: LucideIcon;
+  Icon?: LucideIcon | null;
+  disabled?: boolean;
+  variant?: 'primary' | 'plain';
 }
 
 interface SheetProps {
@@ -25,6 +27,7 @@ const CLOSE_DRAG_PX = 70;
 export default function Sheet({ title, onClose, badge, action, className = '', children }: SheetProps) {
   const sheetRef = useRef<HTMLElement>(null);
   const drag = useRef<{ y: number; dy: number } | null>(null);
+  const hasIcon = Boolean(action && action.Icon !== null && action.variant !== 'plain');
   const ActionIcon = action?.Icon || Plus;
 
   const onPointerDown = (e: PointerEvent) => {
@@ -53,9 +56,16 @@ export default function Sheet({ title, onClose, badge, action, className = '', c
         {badge && <span className="ui-badge">{badge}</span>}
         <div className="ui-sheet-head-end">
           {action && (
-            <button type="button" className="ui-sheet-action" onClick={action.onClick}>
+            <button
+              type="button"
+              className={`ui-sheet-action${action.variant ? ` ui-sheet-action--${action.variant}` : ''}`}
+              disabled={action.disabled}
+              onClick={action.onClick}
+            >
               {action.label}
-              <span className="ui-sheet-action-icon"><ActionIcon size={18} strokeWidth={2.2} /></span>
+              {hasIcon && (
+                <span className="ui-sheet-action-icon"><ActionIcon size={18} strokeWidth={2.2} /></span>
+              )}
             </button>
           )}
         </div>

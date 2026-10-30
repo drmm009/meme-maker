@@ -340,6 +340,19 @@
   font-weight: 500;
   cursor: pointer;
 }
+.ui-sheet-action:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+.ui-sheet-action--plain {
+  color: var(--ui-muted);
+  font-size: 14px;
+  font-weight: 500;
+  transition: color 0.15s ease;
+}
+.ui-sheet-action--plain:hover:not(:disabled) {
+  color: var(--ui-text);
+}
 .ui-sheet-action-icon {
   display: grid;
   place-items: center;

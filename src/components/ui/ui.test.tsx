@@ -61,6 +61,21 @@ describe('UI kit', () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
+  it('Sheet: plain header action without icon and disabled state', () => {
+    const onClear = vi.fn();
+    const { rerender } = render(<Sheet title="Brush" onClose={vi.fn()} action={{ label: 'Clear drawing', variant: 'plain', disabled: true, onClick: onClear }}><p>body</p></Sheet>);
+    const btn = screen.getByText('Clear drawing').closest('button')!;
+    expect(btn.disabled).toBe(true);
+    expect(btn.querySelector('.ui-sheet-action-icon')).toBeNull();
+    fireEvent.click(btn);
+    expect(onClear).not.toHaveBeenCalled();
+
+    rerender(<Sheet title="Brush" onClose={vi.fn()} action={{ label: 'Clear drawing', variant: 'plain', disabled: false, onClick: onClear }}><p>body</p></Sheet>);
+    expect(btn.disabled).toBe(false);
+    fireEvent.click(btn);
+    expect(onClear).toHaveBeenCalledTimes(1);
+  });
+
   it('SwatchRow: picks a swatch or a custom colour', () => {
     const onChange = vi.fn();
     render(<SwatchRow ariaLabel="Colour" colors={['#ffffff', '#000000']} value="#FFFFFF" onChange={onChange} />);
