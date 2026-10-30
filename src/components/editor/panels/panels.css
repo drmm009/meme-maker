@@ -407,7 +407,7 @@ div.ie-layer-pick { cursor: default; }
 .ie-size-a--small { font-size: 13px; }
 
 /* Text > Color: solid colours, then gradients, on one line that scrolls sideways. */
-.ie-swatch-line { display: flex; align-items: center; gap: 8px; min-width: 0; padding-right: 24px; overflow-x: auto; scrollbar-width: none; -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent); }
+.ie-swatch-line { display: flex; align-items: center; gap: 8px; min-width: 0; margin: -6px; padding: 6px 24px 6px 6px; overflow-x: auto; scrollbar-width: none; -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent); }
 .ie-swatch-line::-webkit-scrollbar { display: none; }
-.ie-swatch-line .ui-swatches { flex: none; flex-wrap: nowrap; }
+.ie-swatch-line .ui-swatches { flex: none; flex-wrap: nowrap; margin: 0; padding: 0; overflow: visible; }
 .ie-swatch-gap { flex: none; width: 1px; height: 22px; background: rgba(255, 255, 255, 0.12); }

@@ -488,7 +488,8 @@
 .ui-toggle--tile.is-on { border: 1.5px solid var(--ui-accent-edge); background: var(--ui-accent-tint); }
 
 /* ── Swatches ────────────────────────────────────────────── */
-.ui-swatches { display: flex; align-items: center; gap: 12px; overflow-x: auto; scrollbar-width: none; padding: 3px; }
+/* Room on every side for the active ring (3px gap + 2px ring), without moving the swatches. */
+.ui-swatches { display: flex; align-items: center; gap: 12px; overflow-x: auto; scrollbar-width: none; margin: -3px; padding: 6px; }
 .ui-swatches::-webkit-scrollbar { display: none; }
 .ui-swatches--wrap { flex-wrap: wrap; overflow: visible; gap: 14px; }
 .ui-swatch {
