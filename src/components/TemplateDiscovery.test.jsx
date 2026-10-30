@@ -34,18 +34,26 @@ describe('TemplateDiscovery', () => {
     stubBrowserAPIs();
   });
 
-  it('renders hero actions and search', () => {
+  it('renders hero actions and curated shelves without search bar', () => {
     render(<TemplateDiscovery onSelectTemplate={() => {}} onCreateCustom={() => {}} />);
     expect(screen.getAllByText(/unleash your/i).length).toBeGreaterThan(0);
-    expect(screen.getByPlaceholderText(/search templates/i)).toBeTruthy();
+    expect(screen.getByText(/trending memes/i)).toBeTruthy();
+    expect(screen.queryByPlaceholderText(/search templates/i)).toBeNull();
   }, 60000);
 
-  it('filters to empty state on unknown query', async () => {
-    render(<TemplateDiscovery onSelectTemplate={() => {}} onCreateCustom={() => {}} />);
-    fireEvent.change(screen.getByPlaceholderText(/search templates/i), {
-      target: { value: 'zzz-no-such-meme-zzz' },
-    });
-    expect(await screen.findByText(/no meme templates found/i)).toBeTruthy();
+  it('navigates to explore when See all is clicked', () => {
+    const onNavigateExplore = vi.fn();
+    render(
+      <TemplateDiscovery
+        onSelectTemplate={() => {}}
+        onCreateCustom={() => {}}
+        onNavigateExplore={onNavigateExplore}
+      />
+    );
+    const seeAllButtons = screen.getAllByRole('button', { name: /see all/i });
+    expect(seeAllButtons.length).toBeGreaterThan(0);
+    fireEvent.click(seeAllButtons[0]);
+    expect(onNavigateExplore).toHaveBeenCalled();
   }, 30000);
 
   it('templateNumericId never returns NaN', () => {

@@ -4,26 +4,14 @@ import { VIDEO_MEME_TEMPLATES } from '../data/videoTemplates';
 import { fetchOpenSourceMemes } from '../services/memeService';
 import {
   Upload, Laugh, Code,
-  Search, Sparkles, Image as ImageIcon, Video,
-  Flame, Star, Drama, Clapperboard, LayoutGrid, Layers, Check,
-  Smile, ArrowDownAZ, Zap, ChevronRight, ChevronLeft, Eye, Wand2, Share2,
-  Briefcase, Heart, ArrowUp, X, SlidersHorizontal, Scissors
+  Sparkles, Image as ImageIcon, Video,
+  Flame, Star, Drama, Clapperboard,
+  Smile, Zap, ChevronRight, ChevronLeft, Eye, Wand2, Share2,
+  Briefcase, Heart, ArrowUp, X, Scissors
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { safeGet, safeSet } from '../utils/storage';
 import './TemplateDiscovery.css';
-
-const TAGS = [
-  { id: 'featured', label: 'Featured', icon: Flame },
-  { id: 'all', label: 'All Memes', icon: Layers },
-  { id: 'social', label: 'Social Cards', icon: Share2 },
-  { id: 'images', label: 'Images', icon: ImageIcon },
-  { id: 'videos', label: 'Videos', icon: Clapperboard },
-  { id: 'reaction', label: 'Reactions', icon: Smile },
-  { id: 'favorites', label: 'Favorites', icon: Star },
-  { id: 'classics', label: 'Classics', icon: Drama },
-  { id: 'multi-panel', label: 'Multi-Panel', icon: LayoutGrid },
-];
 
 const QUICK_PROMPTS = [
   '☕ Monday morning meeting',
@@ -38,13 +26,6 @@ const AI_VIBE_MODES = [
   { id: 'sarcastic', icon: Laugh, emoji: '😂', label: 'Sarcastic', prompt: 'When the code works on the first try and you suspect a trap' },
   { id: 'wholesome', icon: Heart, emoji: '🐱', label: 'Wholesome', prompt: 'My cat looking at me with unconditional love and judgment' },
   { id: 'tech', icon: Code, emoji: '🧠', label: 'Tech Humor', prompt: 'Pushing directly to production on a Friday afternoon' },
-];
-
-const SORT_OPTIONS = [
-  { id: 'trending', label: 'Trending', icon: Flame, color: '#ff5e36' },
-  { id: 'popular', label: 'Most Popular', icon: Star, color: '#eab308' },
-  { id: 'newest', label: 'Newest', icon: Sparkles, color: '#06b6d4' },
-  { id: 'name', label: 'A-Z Name', icon: ArrowDownAZ, color: '#a855f7' }
 ];
 
 /* --- Bespoke 3D Volumetric SVG Graphics for Hero Carousel (From Primary Version) --- */
@@ -571,14 +552,10 @@ function getTemplateBadge(template, index = 0) {
 }
 
 export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom, onOpenAiGenerator, onNavigateExplore }) {
-  const [searchQuery, setSearchQuery] = useState('');
   const [selectedTag, setSelectedTag] = useState('featured');
   const [sortBy, setSortBy] = useState('trending');
-  const [isSortOpen, setIsSortOpen] = useState(false);
   const [aiPromptText, setAiPromptText] = useState('');
   const [selectedVibe, setSelectedVibe] = useState(null);
-  const searchInputRef = useRef(null);
-  const sortRef = useRef(null);
 
   // Favorites persistence
   const [favorites, setFavorites] = useState(() => {
@@ -627,22 +604,7 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom, on
     });
   };
 
-  // Close sort menu on click outside
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (sortRef.current && !sortRef.current.contains(e.target)) {
-        setIsSortOpen(false);
-      }
-    };
-    if (isSortOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isSortOpen]);
-
-  // Template List with dynamic fetch
+    // Template List with dynamic fetch
   const [templatesList, setTemplatesList] = useState(() => [...MEME_TEMPLATES, ...VIDEO_MEME_TEMPLATES]);
 
   useEffect(() => {
@@ -657,18 +619,9 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom, on
     };
   }, []);
 
-  // Filtered Templates for Search & Masonry Grid View
+  // Filtered Templates for Masonry Grid View
   const filteredTemplates = useMemo(() => {
     return templatesList.filter((template) => {
-      const q = searchQuery.toLowerCase().trim();
-      const matchSearch =
-        !q ||
-        template.name.toLowerCase().includes(q) ||
-        (template.tags && template.tags.some((tag) => tag.toLowerCase().includes(q))) ||
-        (template.category && template.category.toLowerCase().includes(q));
-
-      if (!matchSearch) return false;
-
       if (selectedTag === 'featured' || selectedTag === 'all') return true;
       if (selectedTag === 'favorites') return favorites.includes(template.id);
       if (selectedTag === 'social') {
@@ -693,7 +646,7 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom, on
       if (sortBy === 'name') return a.name.localeCompare(b.name);
       return (b.trendingScore || 0) - (a.trendingScore || 0);
     });
-  }, [templatesList, searchQuery, selectedTag, sortBy, favorites]);
+  }, [templatesList, selectedTag, sortBy, favorites]);
 
   // Curated Shelves Data
   const trendingShelfTemplates = useMemo(() => {
@@ -742,7 +695,7 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom, on
   }, [templatesList]);
 
   // Determine active view mode: Shelves vs Grid
-  const isGridView = searchQuery.trim().length > 0 || selectedTag !== 'featured';
+  const isGridView = selectedTag !== 'featured';
 
   // Pagination for grid
   const PAGE_SIZE = 24;
@@ -751,7 +704,7 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom, on
 
   useEffect(() => {
     setVisibleCount(PAGE_SIZE);
-  }, [searchQuery, selectedTag, sortBy]);
+  }, [selectedTag, sortBy]);
 
   const displayedTemplates = useMemo(() => {
     return filteredTemplates.slice(0, visibleCount);
@@ -783,8 +736,6 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom, on
     });
     return cols;
   }, [displayedTemplates, columnsCount]);
-
-  const currentSortOption = SORT_OPTIONS.find(opt => opt.id === sortBy) || SORT_OPTIONS[0];
 
   const handleSelectVibe = (vibe) => {
     setSelectedVibe(vibe.id);
@@ -934,7 +885,6 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom, on
 
   const handleResetToFeatured = () => {
     setSelectedTag('featured');
-    setSearchQuery('');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -1083,107 +1033,6 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom, on
           </div>
         </section>
       )}
-
-      {/* 2. Top Search & Filter Bar (Side-by-side matching Primary Glass UI) */}
-      <div className="search-filter-row discovery-top-bar">
-        <div className="search-pill-container">
-          <Search className="search-pill-icon" size={19} />
-          <input
-            ref={searchInputRef}
-            type="text"
-            placeholder={isMobile ? "Search templates (Drake, Cat)..." : "Search templates (Drake, Wojak, Cat, Work)..."}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="search-pill-input"
-          />
-          {searchQuery && (
-            <button 
-              type="button" 
-              className="search-pill-clear" 
-              onClick={() => setSearchQuery('')}
-              aria-label="Clear search"
-            >
-              ✕
-            </button>
-          )}
-        </div>
-
-        {/* Sort Popover Button */}
-        <div className="sort-pill-wrapper" ref={sortRef}>
-          <button
-            type="button"
-            className="search-filter-toggle-btn"
-            onClick={() => setIsSortOpen(!isSortOpen)}
-            aria-expanded={isSortOpen}
-            title={`Sorted by: ${currentSortOption.label}`}
-            aria-label="Filter and sort templates"
-          >
-            <SlidersHorizontal size={18} />
-          </button>
-
-          {/* Floating Sort Dropdown */}
-          <AnimatePresence>
-            {isSortOpen && (
-              <motion.div
-                className="sort-dropdown-popover"
-                initial={{ opacity: 0, y: -6, scale: 0.96 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -6, scale: 0.96 }}
-                transition={{ duration: 0.15 }}
-              >
-                <div className="sort-dropdown-header">Sort By</div>
-                {SORT_OPTIONS.map((opt) => {
-                  const OptIcon = opt.icon;
-                  return (
-                    <button
-                      key={opt.id}
-                      type="button"
-                      className={`sort-dropdown-item ${sortBy === opt.id ? 'active' : ''}`}
-                      onClick={() => {
-                        setSortBy(opt.id);
-                        setIsSortOpen(false);
-                      }}
-                    >
-                      <span className="sort-item-icon" style={{ display: 'flex', alignItems: 'center' }}>
-                        <OptIcon size={16} color={opt.color || '#ff5e36'} />
-                      </span>
-                      <span className="sort-item-label">{opt.label}</span>
-                      {sortBy === opt.id && <Check size={14} className="sort-check" />}
-                    </button>
-                  );
-                })}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </div>
-
-      {/* 3. Category Tags Row matching Primary Acrylic Glass UI */}
-      <div className="discovery-tags-scroll quick-actions-strip" role="tablist">
-        {TAGS.map((tag) => {
-          const isActive = selectedTag === tag.id;
-          return (
-            <button
-              key={tag.id}
-              type="button"
-              className={`discovery-tag-pill quick-pill-btn ${isActive ? 'active' : ''}`}
-              onClick={() => {
-                setSelectedTag(tag.id);
-                if (tag.id === 'featured') {
-                  setSearchQuery('');
-                }
-              }}
-              role="tab"
-              aria-selected={isActive}
-            >
-              <span className="tag-label">{tag.label}</span>
-              {tag.id === 'favorites' && favorites.length > 0 && (
-                <span className="tag-count-badge quick-pill-count">{favorites.length}</span>
-              )}
-            </button>
-          );
-        })}
-      </div>
 
       {/* VIEW MODE 1: FEATURED SHELVES (Default Homescreen) */}
       {!isGridView ? (
