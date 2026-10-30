@@ -52,12 +52,18 @@ const discardFFmpeg = (ff) => {
   try { ff.terminate(); } catch { /* already gone */ }
 };
 
+// FFmpeg's core also prints "Aborted()" as each command exits normally, and that command then
+// returns at once; a real crash prints it and never returns. So it counts as a crash only when the
+// command hasn't returned this long after.
+const ABORT_GRACE_MS = 1500;
+
 // ff.exec with crash and hang detection. Once FFmpeg's engine aborts, every later command would
 // wait forever; instead this FFmpeg is terminated (which ends the waiting command) and the
 // command throws FFmpegCrashedError. Cancelling still ends a command with its usual error.
 export const runFFmpeg = async (ff, args) => {
   let lastActivity = Date.now();
   let failure = null;
+  let abortTimer = null;
   const fail = (reason) => {
     if (failure) return;
     failure = reason;
@@ -65,7 +71,7 @@ export const runFFmpeg = async (ff, args) => {
   };
   const onLog = ({ message }) => {
     lastActivity = Date.now();
-    if (/Aborted\(\)/.test(message || '')) fail('crashed');
+    if (/Aborted\(\)/.test(message || '') && !abortTimer) abortTimer = setTimeout(() => fail('crashed'), ABORT_GRACE_MS);
   };
   ff.on('log', onLog);
   const watchdog = setInterval(() => {
@@ -80,6 +86,7 @@ export const runFFmpeg = async (ff, args) => {
     throw e;
   } finally {
     clearInterval(watchdog);
+    clearTimeout(abortTimer);
     try { ff.off('log', onLog); } catch { /* terminated */ }
   }
 };

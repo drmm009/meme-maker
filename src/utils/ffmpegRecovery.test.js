@@ -12,12 +12,17 @@ vi.mock('@ffmpeg/ffmpeg', () => ({
     on(_, fn) { this.listeners.push(fn); }
     off(_, fn) { this.listeners = this.listeners.filter((l) => l !== fn); }
     async writeFile() {}
-    // Each command takes the next behaviour: 'ok', 'abort' (the engine dies and the command never
-    // returns) or 'hang' (silent, never returns).
+    // Each command takes the next behaviour: 'ok', 'ok-aborted' (prints "Aborted()" as it exits,
+    // as the real core does), 'abort' (the engine dies and the command never returns) or 'hang'
+    // (silent, never returns).
     exec(args) {
       ff.execs.push(args);
       const how = ff.behaviour.shift() || 'ok';
       if (how === 'ok') return Promise.resolve(0);
+      if (how === 'ok-aborted') {
+        this.listeners.forEach((l) => l({ type: 'stderr', message: 'Aborted()' }));
+        return Promise.resolve(0);
+      }
       return new Promise((resolve, reject) => {
         this.pending.push(reject);
         if (how === 'abort') this.listeners.forEach((l) => l({ type: 'stderr', message: 'Aborted()' }));
@@ -56,7 +61,18 @@ describe('runFFmpeg', () => {
     expect(await loadFFmpeg()).toBe(first);
   });
 
-  it('fails fast when the engine aborts, and the next load is a fresh FFmpeg', async () => {
+  it('takes "Aborted()" printed by a command that then returns as a normal exit', async () => {
+    vi.useFakeTimers();
+    const first = await loadFFmpeg();
+    const terminated = ff.terminated;
+    ff.behaviour = ['ok-aborted'];
+    expect(await runFFmpeg(first, ['-i', 'x', 'out.gif'])).toBe(0);
+    await vi.advanceTimersByTimeAsync(5000);
+    expect(ff.terminated).toBe(terminated);
+    expect(await loadFFmpeg()).toBe(first);
+  });
+
+  it('fails when the engine aborts, and the next load is a fresh FFmpeg', async () => {
     const first = await loadFFmpeg();
     const terminated = ff.terminated;
     ff.behaviour = ['abort'];
