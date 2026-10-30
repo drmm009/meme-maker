@@ -47,7 +47,7 @@ export default function TextSheet({ actions, onClose }: { actions: EditorActions
   const patchLayer = useMemeEditorStore((s: { patchLayer: (key: string, id: string, patch: object) => void }) => s.patchLayer);
   const updateCaptionText = useMemeEditorStore((s: { updateCaptionText: (id: string, text: string) => void }) => s.updateCaptionText);
   const sheetFocus: string | null = useEditorUiStore((s: { sheetFocus: string | null }) => s.sheetFocus);
-  const setShowBubbleBottomSheet = useEditorUiStore((s: { setShowBubbleBottomSheet: (v: boolean) => void }) => s.setShowBubbleBottomSheet);
+  const openSheet = useEditorUiStore((s: { openSheet: (sheet: string) => void }) => s.openSheet);
   const customFonts: CustomFont[] = useEditorUiStore((s: { customFonts: CustomFont[] }) => s.customFonts);
   const setCustomFonts = useEditorUiStore((s: { setCustomFonts: (fonts: CustomFont[]) => void }) => s.setCustomFonts);
   const [fontError, setFontError] = useState('');
@@ -94,7 +94,7 @@ export default function TextSheet({ actions, onClose }: { actions: EditorActions
   };
 
   return (
-    <Sheet title="Text" onClose={onClose} action={{ label: 'Add Text', onClick: actions.handleAddCaption }}>
+    <Sheet title="Text" hideTitle onClose={onClose}>
       <div ref={bodyRef}>
         <ChipRow ariaLabel="Captions">
           {captions.map((c) => (
@@ -102,7 +102,7 @@ export default function TextSheet({ actions, onClose }: { actions: EditorActions
           ))}
         </ChipRow>
 
-        {!caption && <p className="ie-empty">{captions.length ? 'Pick a caption to edit it.' : 'No text yet. Tap Add Text to write one.'}</p>}
+        {!caption && <p className="ie-empty">{captions.length ? 'Pick a caption to edit it.' : 'No text yet. Tap Add Text above to write one.'}</p>}
 
         {caption && kind === 'card' && <CardControls caption={caption} actions={actions} />}
 
@@ -218,7 +218,7 @@ export default function TextSheet({ actions, onClose }: { actions: EditorActions
                   <Row label="Outline">
                     <Slider label="Outline thickness" min={1} max={24} value={Number(caption.strokeWidth || Math.max(3, Math.round(fontSize / 7)))} onChange={(v) => live({ strokeWidth: v })} />
                   </Row>
-                  <Row label="Outline colour">
+                  <Row label="Color">
                     <SwatchRow ariaLabel="Outline colour" colors={OUTLINE_COLORS} value={caption.stroke || '#000000'} onChange={(c) => set({ stroke: c })} />
                   </Row>
                 </>
@@ -245,7 +245,7 @@ export default function TextSheet({ actions, onClose }: { actions: EditorActions
                 <Slider label="Shadow size" min={0} max={30} value={Number(caption.shadowSize || 0)} onChange={(v) => live({ shadowSize: v })} />
               </Row>
               {Number(caption.shadowSize) > 0 && (
-                <Row label="Shadow color">
+                <Row label="Color">
                   <SwatchRow ariaLabel="Shadow colour" colors={SHADOW_COLORS} value={(caption.shadowColor as string) || '#000000'} onChange={(c) => live({ shadowColor: c })} />
                 </Row>
               )}
@@ -301,7 +301,7 @@ export default function TextSheet({ actions, onClose }: { actions: EditorActions
         {caption?.bubbleStyle ? (
           <Section title="Bubble" rule>
             <TileGrid columns={2}>
-              <Tile label="Bubble Style" Icon={MessageSquareQuote} onClick={() => setShowBubbleBottomSheet(true)} />
+              <Tile label="Bubble Style" Icon={MessageSquareQuote} onClick={() => openSheet('bubble')} />
             </TileGrid>
           </Section>
         ) : null}

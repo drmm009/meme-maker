@@ -30,7 +30,6 @@ export default function CanvasStage({
   const sheet = useEditorUiStore((s) => s.sheet);
   const openSheet = useEditorUiStore((s) => s.openSheet);
   const closeSheet = useEditorUiStore((s) => s.closeSheet);
-  const setShowBubbleBottomSheet = useEditorUiStore((s) => s.setShowBubbleBottomSheet);
 
   const {
     isHoldingCanvasCompare, isPinpointingFace, setIsPinpointingFace, faceTarget, setFaceTarget,
@@ -49,7 +48,8 @@ export default function CanvasStage({
   // background, watermark) work whatever is selected, so they stay.
   const handleSelectLayer = (id) => {
     setActiveLayerId(id || null);
-    setShowBubbleBottomSheet(false);
+    // Bubble styles are for the caption they opened on.
+    if (sheet === 'bubble') closeSheet();
     if (!id || !sheet || !LAYER_SHEETS.includes(sheet)) return;
     // A shape or censor region has no layer sheet: its quick tools float over it.
     if ((drawings || []).some((d) => d.id === id)) {

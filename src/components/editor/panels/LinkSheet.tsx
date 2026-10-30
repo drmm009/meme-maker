@@ -21,7 +21,7 @@ export default function LinkSheet({ actions, onClose }: { actions: EditorActions
   };
 
   return (
-    <Sheet title="Add from a link" onClose={onClose}>
+    <Sheet title="Add from a link" hideTitle onClose={onClose}>
       <Section>
         <input
           className="ui-field"

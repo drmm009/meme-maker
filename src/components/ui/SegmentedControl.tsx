@@ -1,7 +1,11 @@
+import type { LucideIcon } from 'lucide-react';
+
 export interface SegmentOption<T extends string> {
   value: T;
   label: string;
   title?: string;
+  // Shown instead of the label, which stays as the option's name.
+  Icon?: LucideIcon;
 }
 
 interface SegmentedControlProps<T extends string> {
@@ -24,11 +28,12 @@ export default function SegmentedControl<T extends string>({ options, value, onC
           type="button"
           role="radio"
           aria-checked={o.value === value}
-          title={o.title}
+          title={o.title ?? (o.Icon ? o.label : undefined)}
+          aria-label={o.Icon ? o.label : undefined}
           className={`ui-seg-btn${o.value === value ? ' is-on' : ''}`}
           onClick={() => onChange(o.value)}
         >
-          {o.label}
+          {o.Icon ? <o.Icon size={17} strokeWidth={2} /> : o.label}
         </button>
       ))}
     </div>

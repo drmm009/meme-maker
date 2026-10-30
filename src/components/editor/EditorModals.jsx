@@ -5,13 +5,11 @@ import AiCaptionModal from '../AiCaptionModal';
 // The social card studio and the face swap studio load when first opened.
 const MemeStylesModal = lazy(() => import('../MemeStylesModal'));
 const FaceMorphModal = lazy(() => import('../FaceMorphModal'));
-import BubbleChatBottomSheet from './BubbleChatBottomSheet';
 import PhotoCropSheet from './crop/PhotoCropSheet';
 import { useMemeEditorStore } from './store/useMemeEditorStore';
 import { useEditorUiStore } from './store/useEditorUiStore';
 
 export default function EditorModals({
-  activeCaption,
   currentEditingSocialCard,
   extractedMemeFace,
   faceTarget,
@@ -19,7 +17,6 @@ export default function EditorModals({
   handleAddTweetCard,
   handleAddWhatsAppCard,
   handleApplyAiCaption,
-  handleApplyBubbleStyle,
   handleApplyFaceMorph,
   handleUpdateSocialCard,
   morphTargetLayerId,
@@ -32,7 +29,6 @@ export default function EditorModals({
   setShowFaceMorphModal,
   showFaceMorphModal,
   template,
-  updateActiveCaptionProps,
   commitAddImageLayer,
   handleApplyMainPhotoCrop,
   handleRestoreMainPhoto,
@@ -40,10 +36,8 @@ export default function EditorModals({
   const pendingVideoLayer = useEditorUiStore((s) => s.pendingVideoLayer);
   const setPendingVideoLayer = useEditorUiStore((s) => s.setPendingVideoLayer);
   const setShowAiModal = useEditorUiStore((s) => s.setShowAiModal);
-  const setShowBubbleBottomSheet = useEditorUiStore((s) => s.setShowBubbleBottomSheet);
   const setShowStylesModal = useEditorUiStore((s) => s.setShowStylesModal);
   const showAiModal = useEditorUiStore((s) => s.showAiModal);
-  const showBubbleBottomSheet = useEditorUiStore((s) => s.showBubbleBottomSheet);
   const showStylesModal = useEditorUiStore((s) => s.showStylesModal);
   const socialModalPlatform = useEditorUiStore((s) => s.socialModalPlatform);
   const imageLayers = useMemeEditorStore((s) => s.imageLayers);
@@ -64,16 +58,6 @@ export default function EditorModals({
           onClose={() => setShowPhotoCrop(false)}
         />
       )}
-
-      {/* Bubble Chat & Speech Layouts Bottom Sheet */}
-      <BubbleChatBottomSheet
-        isOpen={showBubbleBottomSheet}
-        onClose={() => setShowBubbleBottomSheet(false)}
-        activeCaption={activeCaption}
-        onApplyBubbleStyle={handleApplyBubbleStyle}
-        onRemoveBubbleStyle={() => updateActiveCaptionProps({ bubbleStyle: null })}
-      />
-
 
       {/* AI Meme Caption Generator Modal */}
       <AiCaptionModal

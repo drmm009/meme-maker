@@ -57,6 +57,7 @@ export default function DrawSheet({ actions, onClose }: { actions: EditorActions
     <Sheet
       className="ie-draw-sheet"
       title={tool.label}
+      hideTitle
       onClose={onClose}
       action={{
         label: 'Clear drawing',

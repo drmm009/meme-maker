@@ -10,7 +10,7 @@ export function useBubbleActions({ activeCaption, updateActiveCaptionProps }) {
   const setCaptions = useMemeEditorStore((s) => s.setCaptions);
   const setActiveLayerId = useMemeEditorStore((s) => s.setActiveLayerId);
   const setActiveTab = useEditorUiStore((s) => s.setActiveTab);
-  const setShowBubbleBottomSheet = useEditorUiStore((s) => s.setShowBubbleBottomSheet);
+  const openSheet = useEditorUiStore((s) => s.openSheet);
   const pushHistory = useMemeEditorStore((s) => s.pushHistory);
 
     // Chat & Speech Bubble Generator (iPhone, WhatsApp, Comic)
@@ -105,7 +105,7 @@ export function useBubbleActions({ activeCaption, updateActiveCaptionProps }) {
     setActiveLayerId(newCap.id);
     setActiveTab('text');
     setShowBubbleLayouts(true);
-    setShowBubbleBottomSheet(true);
+    openSheet('bubble');
     pushHistory();
   };
 

@@ -175,10 +175,6 @@ div.ie-layer-pick { cursor: default; }
   overflow: hidden;
   padding-bottom: 0;
 }
-/* The highlighted strip button already says which picker is open, so no heading; the title stays
-   as the sheet's accessible name. */
-.ie-picker-sheet .ui-sheet-head { display: none; }
-.ie-picker-sheet .ui-sheet-handle { margin-bottom: 6px; }
 .ie-picker-tab-emoji { font-size: 20px; line-height: 20px; }
 .ie-picker-search { position: relative; display: flex; align-items: center; flex: none; margin: 2px 0 10px; }
 .ie-picker-search > svg { position: absolute; left: 12px; color: var(--ui-muted); pointer-events: none; }
@@ -274,3 +270,96 @@ div.ie-layer-pick { cursor: default; }
 }
 .ie-picker-grid.is-stickers .ie-picker-gif img { box-sizing: border-box; padding: 6px; object-fit: contain; }
 .ie-picker-credit { flex: none; margin: 0; padding: 4px 0 calc(8px + env(safe-area-inset-bottom, 0px)); color: var(--ui-faint); font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-align: center; }
+.ie-picker-grid--bubbles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.ie-picker-bubble {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--ui-muted);
+  cursor: pointer;
+}
+.ie-picker-bubble-stage {
+  display: grid;
+  place-items: center;
+  min-height: 72px;
+  padding: 10px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  background: var(--ui-surface-2);
+}
+.ie-picker-bubble.is-on .ie-picker-bubble-stage { border-color: var(--ui-accent); background: rgba(255, 90, 54, 0.15); }
+.ie-picker-bubble.is-on .ie-picker-name { color: var(--ui-accent); }
+.ie-picker-bubble-sample { max-width: 100%; padding: 6px 12px; font-size: 12px; font-weight: 700; line-height: 1.25; text-align: center; word-break: break-word; }
+.ie-picker-check {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--ui-accent);
+  color: #fff;
+}
+
+/* Every sheet docked under the strips shares the Draw sheet's look: compact spacing, small muted
+   section labels instead of headings, choices as Draw tiles (one scrolling line, or sharing the
+   width when there are few) with an orange outline when on, and two-way choices as tile boxes. */
+.ie-panels--sheet .ui-sheet-head--bare { justify-content: flex-end; padding-bottom: 6px; }
+.ie-panels--sheet .ui-section { padding: 4px 0 6px; }
+.ie-panels--sheet .ui-section--rule { margin-top: 4px; padding-top: 10px; border-top-color: rgba(255, 255, 255, 0.05); }
+.ie-panels--sheet .ui-section-head { margin-bottom: 6px; }
+/* App.css sets every h3 on a phone to 1.15rem !important. */
+.ie-panels--sheet .ui-section-title { color: var(--ui-muted); font-size: 13px !important; font-weight: 500; }
+.ie-panels--sheet .ui-row + .ui-row { margin-top: 8px; }
+.ie-panels--sheet .ui-row-label { width: 84px; font-size: 14px; }
+
+.ie-panels--sheet .ui-tiles {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  margin: 0 -16px;
+  padding: 2px 16px;
+}
+.ie-panels--sheet .ui-tiles::-webkit-scrollbar { display: none; }
+.ie-panels--sheet .ui-tile {
+  flex: 0 0 auto;
+  gap: 4px;
+  min-width: 62px;
+  min-height: 0;
+  padding: 8px 6px;
+  border-color: rgba(255, 255, 255, 0.08);
+  background: var(--ui-surface-2);
+  font-size: 11.5px;
+  white-space: nowrap;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.ie-panels--sheet .ui-tile-icon svg { width: 20px; height: 20px; }
+.ie-panels--sheet .ui-tile:hover:not(:disabled) { background: var(--ui-surface-3); }
+.ie-panels--sheet .ui-tiles--2 .ui-tile,
+.ie-panels--sheet .ui-tiles--4 .ui-tile { flex: 1 1 0; min-width: 0; }
+.ie-panels--sheet .ui-tile.is-on { border-color: var(--ui-accent); background: rgba(255, 90, 54, 0.15); color: var(--ui-accent); }
+.ie-panels--sheet .ui-tile.is-on .ui-tile-icon,
+.ie-panels--sheet .ui-tile.is-on .ui-tile-sub { color: var(--ui-accent); }
+
+.ie-panels--sheet .ui-seg--fill { gap: 8px; padding: 0; background: none; }
+.ie-panels--sheet .ui-seg--fill .ui-seg-btn {
+  height: 36px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  background: var(--ui-surface-2);
+  color: var(--ui-text);
+  font-size: 12.5px;
+}
+.ie-panels--sheet .ui-seg--fill .ui-seg-btn::before { content: none; }
+.ie-panels--sheet .ui-seg--fill .ui-seg-btn.is-on { border-color: var(--ui-accent); background: rgba(255, 90, 54, 0.15); color: var(--ui-accent); font-weight: 600; }
+
+.ie-panels--sheet .ui-chip { height: 34px; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; background: var(--ui-surface-2); }
+.ie-panels--sheet .ui-chip.is-on { border-color: var(--ui-accent); background: rgba(255, 90, 54, 0.15); color: var(--ui-accent); }

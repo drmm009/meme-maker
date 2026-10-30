@@ -70,7 +70,6 @@ export function buildInitialUi(template) {
     ),
     socialModalPlatform: initialSocialModalPlatform(template),
     showFiltersModal: false,
-    showBubbleBottomSheet: false,
     showAiModal: false,
     openSourceTemplates: MEME_TEMPLATES,
     pendingVideoLayer: null,
@@ -95,7 +94,7 @@ const UI_FIELDS = Object.keys(buildInitialUi(null));
 
 // The dock tab each sheet belongs to: its strip shows above the sheet.
 // null: no strip (Export). Sheets not listed (Layers) keep the strip that shows.
-const SHEET_TAB = { text: 'text', media: 'media', draw: 'draw', canvasColor: 'canvas', watermark: 'canvas', filters: 'fx', export: null, library: null, mediaLink: 'media', templates: 'media', stickers: 'media', gifs: 'media', emoji: 'media' };
+const SHEET_TAB = { text: 'text', media: 'media', draw: 'draw', canvasColor: 'canvas', watermark: 'canvas', filters: 'fx', export: null, library: null, mediaLink: 'media', templates: 'media', stickers: 'media', gifs: 'media', emoji: 'media', bubble: 'text' };
 
 // useState-style setter: accepts a value or an updater function.
 const fieldSetter = (set, key) => (valueOrUpdater) =>

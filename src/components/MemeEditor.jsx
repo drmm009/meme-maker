@@ -98,7 +98,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, o
   const media = useMediaInput({ handleAddImageLayer });
 
   const actions = {
-    handleAddCaption, handleToggleTextCase, updateActiveCaptionProps, handleSetCaptionBg, handleAddBubble,
+    handleAddCaption, handleToggleTextCase, updateActiveCaptionProps, handleSetCaptionBg, handleAddBubble, handleApplyBubbleStyle,
     handleOpenSocialModalForActiveCard,
     handleSetCanvasBgColor, handleSetCanvasBgGradient, handleToggleCanvasHeader, handleToggleCanvasFooter, handleToggleCanvasFlip, handleWatermarkImageUpload,
     handleReplaceMainPhoto, handleApplyMainPhotoCrop, handleRestoreMainPhoto, handleReplaceImageLayer,
@@ -161,7 +161,6 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, o
         commitAddImageLayer={commitAddImageLayer}
         handleApplyMainPhotoCrop={handleApplyMainPhotoCrop}
         handleRestoreMainPhoto={handleRestoreMainPhoto}
-        activeCaption={activeCaption}
         currentEditingSocialCard={currentEditingSocialCard}
         extractedMemeFace={extractedMemeFace}
         faceTarget={faceTarget}
@@ -169,7 +168,6 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, o
         handleAddTweetCard={handleAddTweetCard}
         handleAddWhatsAppCard={handleAddWhatsAppCard}
         handleApplyAiCaption={handleApplyAiCaption}
-        handleApplyBubbleStyle={handleApplyBubbleStyle}
         handleApplyFaceMorph={handleApplyFaceMorph}
         handleUpdateSocialCard={handleUpdateSocialCard}
         morphTargetLayerId={morphTargetLayerId}
@@ -182,7 +180,6 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, o
         setShowFaceMorphModal={setShowFaceMorphModal}
         showFaceMorphModal={showFaceMorphModal}
         template={template}
-        updateActiveCaptionProps={updateActiveCaptionProps}
       />
     </div>
   );

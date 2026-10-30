@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import { Sheet, Section, SwatchRow } from '../../ui';
+import { Sheet, Section, Row, SwatchRow } from '../../ui';
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
 import type { EditorActions } from './selection';
 
@@ -25,26 +25,28 @@ export default function CanvasColorSheet({ actions, onClose }: { actions: Editor
   const canvasBgColor: string = useMemeEditorStore((s: { canvasBgColor: string }) => s.canvasBgColor);
   const gradient: [string, string] | null = useMemeEditorStore((s: { canvasBgGradient: [string, string] | null }) => s.canvasBgGradient);
   return (
-    <Sheet title="Background" onClose={onClose}>
+    <Sheet title="Background" hideTitle onClose={onClose}>
       <Section>
-        <SwatchRow wrap ariaLabel="Canvas colour" colors={CANVAS_COLORS} value={gradient ? '' : canvasBgColor} onChange={actions.handleSetCanvasBgColor} />
-      </Section>
-      <Section title="Gradient" rule>
-        <div className="ui-swatches ui-swatches--wrap" role="radiogroup" aria-label="Background gradient">
-          {GRADIENTS.map((g) => (
-            <button
-              key={g.id}
-              type="button"
-              role="radio"
-              aria-checked={same(gradient, g.colors)}
-              aria-label={`${g.label} gradient`}
-              title={g.label}
-              className={`ui-swatch${same(gradient, g.colors) ? ' is-on' : ''}`}
-              style={{ background: `linear-gradient(135deg, ${g.colors[0]}, ${g.colors[1]})`, '--swatch': g.colors[1] } as CSSProperties}
-              onClick={() => actions.handleSetCanvasBgGradient(g.colors)}
-            />
-          ))}
-        </div>
+        <Row label="Color">
+          <SwatchRow ariaLabel="Canvas colour" colors={CANVAS_COLORS} value={gradient ? '' : canvasBgColor} onChange={actions.handleSetCanvasBgColor} />
+        </Row>
+        <Row label="Gradient">
+          <div className="ui-swatches" role="radiogroup" aria-label="Background gradient">
+            {GRADIENTS.map((g) => (
+              <button
+                key={g.id}
+                type="button"
+                role="radio"
+                aria-checked={same(gradient, g.colors)}
+                aria-label={`${g.label} gradient`}
+                title={g.label}
+                className={`ui-swatch${same(gradient, g.colors) ? ' is-on' : ''}`}
+                style={{ background: `linear-gradient(135deg, ${g.colors[0]}, ${g.colors[1]})`, '--swatch': g.colors[1] } as CSSProperties}
+                onClick={() => actions.handleSetCanvasBgGradient(g.colors)}
+              />
+            ))}
+          </div>
+        </Row>
       </Section>
     </Sheet>
   );

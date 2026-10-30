@@ -248,7 +248,13 @@ describe('MemeEditor', () => {
     renderEditor();
     fireEvent.click(within(textStrip()).getByText('Bubble'));
     expect(canvas.props.captions.some((c) => c.bubbleStyle)).toBe(true);
-    expect(document.querySelector('.bottom-sheet-panel')).toBeTruthy();
+    // The styles dock under the Text strip; picking one restyles the new bubble.
+    const bubbles = sheet('Bubbles');
+    expect(document.querySelector('.bottom-sheet-panel')).toBeNull();
+    fireEvent.click(within(bubbles).getByText('WhatsApp Sent').closest('button'));
+    expect(canvas.props.captions.some((c) => c.bubbleStyle === 'whatsapp-send')).toBe(true);
+    fireEvent.click(within(bubbles).getByText('Remove bubble'));
+    expect(canvas.props.captions.some((c) => c.bubbleStyle)).toBe(false);
   }, 30000);
 
   it('shows the floating tools for the selected caption once its sheet closes', () => {
@@ -434,7 +440,7 @@ describe('MemeEditor', () => {
     expect(deepFry.getAttribute('aria-pressed')).toBe('false');
     fireEvent.click(deepFry);
     expect(within(sheet('Filters')).getByText('Deep Fried 🔥').closest('button').getAttribute('aria-pressed')).toBe('true');
-    expect(within(sheet('Filters')).getByText('Deep Fried')).toBeTruthy();
+    expect(within(sheet('Filters')).getByText('Preset: Deep Fried')).toBeTruthy();
     closeSheet();
     openSection('Canvas colour, bands and watermark');
     fireEvent.click(within(canvasStrip()).getByText('Header'));

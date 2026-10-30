@@ -73,13 +73,18 @@ export default function FiltersSheet({ actions, onClose }: { actions: EditorActi
 
   const targets = [
     ...(image ? [{ value: 'layer' as const, label: 'Image' }] : []),
-    { value: 'photo' as const, label: 'Canvas Photo' },
-    { value: 'meme' as const, label: 'Whole Meme' },
+    { value: 'photo' as const, label: 'Photo' },
+    { value: 'meme' as const, label: 'Whole meme' },
   ];
 
   return (
-    <Sheet title="Filters" badge={preset !== 'original' ? presetLabel(preset) : undefined} onClose={onClose}>
-      <Section title="Target" aside={<SegmentedControl ariaLabel="Apply to" variant="divided" value={target} options={targets} onChange={pickTarget} />}>
+    <Sheet title="Filters" hideTitle onClose={onClose}>
+      <Section>
+        <Row label="Apply to">
+          <SegmentedControl ariaLabel="Apply to" variant="fill" value={target} options={targets} onChange={pickTarget} />
+        </Row>
+      </Section>
+      <Section title={preset !== 'original' ? `Preset: ${presetLabel(preset)}` : 'Preset'}>
         <TileGrid>
           {PRESETS.map((p) => (
             <Tile key={p.id} label={p.name} Icon={ICONS[p.id] || Sparkles} active={preset === p.id} onClick={() => applyPreset(p)} />

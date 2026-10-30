@@ -32,7 +32,7 @@ export default function LayerLookControls({ id, layer, kind }: { id: string; lay
         <Slider label="Shadow size" min={0} max={40} value={layer.shadowSize || 0} onChange={(shadowSize) => set({ shadowSize })} />
       </Row>
       {(layer.shadowSize || 0) > 0 && (
-        <Row label="Shadow colour">
+        <Row label="Color">
           <SwatchRow ariaLabel="Shadow colour" colors={SHADOW_COLORS} value={layer.shadowColor || '#000000'} onChange={(shadowColor) => set({ shadowColor })} />
         </Row>
       )}
@@ -48,7 +48,7 @@ export default function LayerLookControls({ id, layer, kind }: { id: string; lay
             <Slider label="Border width" min={0} max={30} value={layer.borderWidth || 0} onChange={(borderWidth) => set({ borderWidth })} />
           </Row>
           {(layer.borderWidth || 0) > 0 && (
-            <Row label="Border colour">
+            <Row label="Color">
               <SwatchRow ariaLabel="Border colour" colors={COLOR_SWATCHES} value={layer.borderColor || '#ffffff'} onChange={(borderColor) => set({ borderColor })} />
             </Row>
           )}

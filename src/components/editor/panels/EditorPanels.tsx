@@ -24,6 +24,7 @@ import TemplatesSheet from './TemplatesSheet';
 import StickersSheet from './StickersSheet';
 import GifSheet from './GifSheet';
 import EmojiSheet from './EmojiSheet';
+import BubbleSheet from './BubbleSheet';
 import { DRAW_TOOLS } from './drawTools';
 import './panels.css';
 
@@ -37,7 +38,7 @@ const DOCK: DockItem[] = [
 ];
 
 const SHEETS = { text: TextSheet, media: MediaSheet, draw: DrawSheet, canvasColor: CanvasColorSheet, watermark: WatermarkSheet, filters: FiltersSheet, layers: LayersSheet, export: ExportSheet, library: LibrarySheet, mediaLink: LinkSheet,
-  templates: TemplatesSheet, stickers: StickersSheet, gifs: GifSheet, emoji: EmojiSheet };
+  templates: TemplatesSheet, stickers: StickersSheet, gifs: GifSheet, emoji: EmojiSheet, bubble: BubbleSheet };
 
 // The bottom of the editor: the dock with the open tab's tool strip above it, or, when one of that
 // tab's sheets is open, the strip above the sheet (so its tools stay one tap away).

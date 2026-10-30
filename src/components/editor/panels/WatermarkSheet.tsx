@@ -1,13 +1,13 @@
-import { ImagePlus, X } from 'lucide-react';
+import { ImagePlus, X, ArrowUpLeft, ArrowUpRight, ArrowDownLeft, ArrowDownRight } from 'lucide-react';
 import { Sheet, Section, Row, SwatchRow, Slider, Switch, TileGrid, Tile, SegmentedControl } from '../../ui';
 import { useEditorUiStore } from '../store/useEditorUiStore';
 import type { EditorActions } from './selection';
 
 const SPOTS = [
-  { value: 'top-left', label: 'Top L' },
-  { value: 'top-right', label: 'Top R' },
-  { value: 'bottom-left', label: 'Bottom L' },
-  { value: 'bottom-right', label: 'Bottom R' },
+  { value: 'top-left', label: 'Top left', Icon: ArrowUpLeft },
+  { value: 'top-right', label: 'Top right', Icon: ArrowUpRight },
+  { value: 'bottom-left', label: 'Bottom left', Icon: ArrowDownLeft },
+  { value: 'bottom-right', label: 'Bottom right', Icon: ArrowDownRight },
 ];
 
 // The Canvas strip's Watermark: your @name or a logo, its corner, size, opacity and colour.
@@ -17,7 +17,7 @@ export default function WatermarkSheet({ actions, onClose }: { actions: EditorAc
   const updateWatermark = useEditorUiStore((s: { updateWatermark: (key: string, value: unknown) => void }) => s.updateWatermark);
 
   return (
-    <Sheet title="Watermark" onClose={onClose}>
+    <Sheet title="Watermark" hideTitle onClose={onClose}>
       <Section>
         <Row label="Show" end>
           <Switch label="Watermark" checked={Boolean(watermark?.enabled)} onChange={(on) => updateWatermark('enabled', on)} />

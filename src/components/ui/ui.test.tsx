@@ -16,6 +16,14 @@ describe('UI kit', () => {
     expect(screen.getByText('Export')).toBeTruthy();
   });
 
+  it('SegmentedControl: an option with an icon keeps its label as its name', () => {
+    const onChange = vi.fn();
+    render(<SegmentedControl ariaLabel="Corner" value="tl" onChange={onChange} options={[{ value: 'tl', label: 'Top left', Icon: Type }, { value: 'tr', label: 'Top right', Icon: Sticker }]} />);
+    fireEvent.click(screen.getByRole('radio', { name: 'Top right' }));
+    expect(onChange).toHaveBeenCalledWith('tr');
+    expect(screen.queryByText('Top left')).toBeNull();
+  });
+
   it('SegmentedControl: one checked option, picks another', () => {
     const onChange = vi.fn();
     render(<SegmentedControl ariaLabel="Aspect" value="1:1" onChange={onChange} options={[{ value: '1:1', label: '1:1' }, { value: '9:16', label: '9:16' }]} />);
@@ -59,6 +67,17 @@ describe('UI kit', () => {
     expect(onAdd).toHaveBeenCalled();
     fireEvent.click(screen.getByLabelText('Close Text'));
     expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('Sheet: hideTitle drops the heading but keeps the name and the action', () => {
+    const onAdd = vi.fn();
+    const { rerender } = render(<Sheet title="Text" hideTitle onClose={vi.fn()} action={{ label: 'Add Text', onClick: onAdd }}><p>body</p></Sheet>);
+    expect(screen.getByRole('dialog', { name: 'Text' })).toBeTruthy();
+    expect(screen.queryByRole('heading', { name: 'Text' })).toBeNull();
+    fireEvent.click(screen.getByText('Add Text'));
+    expect(onAdd).toHaveBeenCalled();
+    rerender(<Sheet title="Text" hideTitle onClose={vi.fn()}><p>body</p></Sheet>);
+    expect(document.querySelector('.ui-sheet-head')).toBeNull();
   });
 
   it('Sheet: plain header action without icon and disabled state', () => {

@@ -22,7 +22,7 @@ export default function MediaSheet({ actions, onClose }: { actions: EditorAction
   const busy = Boolean(actions.isRemovingBg);
 
   return (
-    <Sheet title="Media" onClose={onClose}>
+    <Sheet title="Media" hideTitle onClose={onClose}>
       {imageLayers.length + stickers.length === 0 && <p className="ie-empty">No photos or stickers yet. Add one from the strip above.</p>}
 
       {imageLayers.length + stickers.length > 0 && (

@@ -17,6 +17,9 @@ interface SheetProps {
   badge?: string;
   action?: SheetAction;
   className?: string;
+  // For a sheet opened from a strip button, which already says what's open: no heading (the title
+  // stays as the sheet's accessible name), only the action if there is one.
+  hideTitle?: boolean;
   children: ReactNode;
 }
 
@@ -24,7 +27,7 @@ const CLOSE_DRAG_PX = 70;
 
 // A panel docked at the bottom of the editor (not a modal: the canvas above stays usable).
 // Close it with a tap on the handle, or by dragging the handle or header down.
-export default function Sheet({ title, onClose, badge, action, className = '', children }: SheetProps) {
+export default function Sheet({ title, onClose, badge, action, className = '', hideTitle = false, children }: SheetProps) {
   const sheetRef = useRef<HTMLElement>(null);
   const drag = useRef<{ y: number; dy: number } | null>(null);
   const hasIcon = Boolean(action && action.Icon !== null && action.variant !== 'plain');
@@ -51,25 +54,27 @@ export default function Sheet({ title, onClose, badge, action, className = '', c
   return (
     <section ref={sheetRef} className={`ui-sheet ${className}`} role="dialog" aria-label={title}>
       <button type="button" className="ui-sheet-handle" aria-label={`Close ${title}`} onClick={onClose} {...dragProps} />
-      <header className="ui-sheet-head" {...dragProps}>
-        <h2 className="ui-sheet-title">{title}</h2>
-        {badge && <span className="ui-badge">{badge}</span>}
-        <div className="ui-sheet-head-end">
-          {action && (
-            <button
-              type="button"
-              className={`ui-sheet-action${action.variant ? ` ui-sheet-action--${action.variant}` : ''}`}
-              disabled={action.disabled}
-              onClick={action.onClick}
-            >
-              {action.label}
-              {hasIcon && (
-                <span className="ui-sheet-action-icon"><ActionIcon size={18} strokeWidth={2.2} /></span>
-              )}
-            </button>
-          )}
-        </div>
-      </header>
+      {(!hideTitle || action) && (
+        <header className={`ui-sheet-head${hideTitle ? ' ui-sheet-head--bare' : ''}`} {...dragProps}>
+          {!hideTitle && <h2 className="ui-sheet-title">{title}</h2>}
+          {!hideTitle && badge && <span className="ui-badge">{badge}</span>}
+          <div className="ui-sheet-head-end">
+            {action && (
+              <button
+                type="button"
+                className={`ui-sheet-action${action.variant ? ` ui-sheet-action--${action.variant}` : ''}`}
+                disabled={action.disabled}
+                onClick={action.onClick}
+              >
+                {action.label}
+                {hasIcon && (
+                  <span className="ui-sheet-action-icon"><ActionIcon size={18} strokeWidth={2.2} /></span>
+                )}
+              </button>
+            )}
+          </div>
+        </header>
+      )}
       <div className="ui-sheet-body">{children}</div>
     </section>
   );
