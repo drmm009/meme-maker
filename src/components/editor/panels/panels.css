@@ -8,8 +8,9 @@
 .ie-aspect-bar { flex: none; display: flex; justify-content: center; padding: 4px 12px 8px; }
 
 .ie-layer-dock { display: flex; justify-content: center; padding: 0 8px 8px; }
-.ie-layer-toolbar { max-width: 100%; padding-inline: 6px; }
-.ie-layer-toolbar .ui-float-item { min-width: 36px; }
+.ie-layer-toolbar { max-width: 100%; }
+.ie-layer-toolbar .ie-glyph { font-size: 17px; line-height: 19px; }
+.ie-layer-toolbar .ie-color-dot { width: 18px; height: 18px; }
 /* Shown while the canvas is zoomed in: the zoom, and a tap back to fit. */
 .ie-zoom-pill {
   position: absolute;

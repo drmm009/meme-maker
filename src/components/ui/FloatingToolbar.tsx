@@ -38,7 +38,7 @@ export default function FloatingToolbar({ items, ariaLabel, className = '', styl
             aria-pressed={active === undefined ? undefined : active}
             onClick={onClick}
           >
-            {icon ?? (Icon ? <Icon size={22} strokeWidth={1.8} /> : null)}
+            {icon ?? (Icon ? <Icon size={19} strokeWidth={1.9} /> : null)}
             <span>{label}</span>
           </button>
         ))}

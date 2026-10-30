@@ -51,6 +51,7 @@ export function buildInitialUi(template) {
     activeTab: 'text', // 'text' | 'images' | 'draw' | 'canvas' | 'watermark' | 'filters'
     sheet: null, // the open bottom sheet: 'text' | 'media' | 'draw' | 'canvasColor' | 'watermark' | 'filters' | null
     dockTab: null, // the dock tab whose tool strip shows: 'draw' | 'media' | 'text' | 'fx' | 'canvas' | null
+    sheetFromPill: false, // the open sheet came from the layer tools pill, which then stays above it
     sheetFocus: null, // what part of the sheet to show: one Text part's sections (TEXT_PARTS), 'size' to scroll the Media sheet to, or null
     activeSubmenu: null, // 'font' | 'color' | 'align' | 'effects' | 'bg' | 'blur' | 'bubble' | 'tweetTheme' | 'tweetTrend' | 'drawSettings' | 'watermark' | 'canvasBg' | 'banner' | 'filters'
     lastUsedSettingButton: null,
@@ -116,12 +117,14 @@ export function createEditorUiStore(template) {
     updateWatermark: (key, value) => set((state) => ({ watermark: { ...state.watermark, [key]: value } })),
 
     // Every sheet belongs to a dock tab, and opens under that tab's tool strip (scrolled to
-    // `focus`). Opening a sheet of another tab stops drawing.
-    openSheet: (sheet, focus = null) => set((state) => {
+    // `focus`), or under the layer tools pill when it came from there. Opening a sheet of another
+    // tab stops drawing.
+    openSheet: (sheet, focus = null, fromPill = false) => set((state) => {
       const tab = sheet in SHEET_TAB ? SHEET_TAB[sheet] : state.dockTab;
       return {
         sheet,
         sheetFocus: focus,
+        sheetFromPill: fromPill,
         activeSubmenu: null,
         dockTab: tab,
         drawTool: tab === 'draw' ? state.drawTool : null,
@@ -129,7 +132,7 @@ export function createEditorUiStore(template) {
       };
     }),
     // Closing a sheet keeps its strip (and drawing, after the brush settings).
-    closeSheet: () => set({ sheet: null, sheetFocus: null }),
+    closeSheet: () => set({ sheet: null, sheetFocus: null, sheetFromPill: false }),
 
     // A dock tab shows its strip above the dock; tapping it again (leaveDock) closes the strip and
     // its sheet and stops drawing.
@@ -137,17 +140,19 @@ export function createEditorUiStore(template) {
       dockTab: tab,
       sheet: null,
       sheetFocus: null,
+      sheetFromPill: false,
       drawTool: null,
       activeTab: tab === 'draw' ? 'draw' : state.activeTab === 'draw' ? 'text' : state.activeTab,
     })),
     // Drawing: picking a brush turns drawing on and opens its settings (colour, size, clear);
     // closing them keeps drawing; leaving the Draw tab stops it.
-    pickDrawTool: (tool) => set({ dockTab: 'draw', drawTool: tool, sheet: 'draw', sheetFocus: null, activeSubmenu: null, activeTab: 'draw' }),
+    pickDrawTool: (tool) => set({ dockTab: 'draw', drawTool: tool, sheet: 'draw', sheetFocus: null, sheetFromPill: false, activeSubmenu: null, activeTab: 'draw' }),
     leaveDock: () => set((state) => ({
       dockTab: null,
       drawTool: null,
       sheet: null,
       sheetFocus: null,
+      sheetFromPill: false,
       activeTab: state.activeTab === 'draw' ? 'text' : state.activeTab,
     })),
   }));

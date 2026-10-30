@@ -871,17 +871,25 @@ describe('MemeEditor', () => {
     await vi.waitFor(() => expect(canvas.props.imageLayers).toHaveLength(1));
   }, 30000);
 
-  it('the open sheet follows the selection: picking a caption switches Media to Text', () => {
+  it('a sheet from the layer pill keeps the pill above it; picking another layer closes it', () => {
     renderEditor();
     openSection('Photos, videos, stickers and emoji');
     fireEvent.click(within(strip('Media tools')).getByText('Emoji'));
     fireEvent.click(screen.getByTitle('Laugh Cry'));
-    // The new sticker's Size opens the Media sheet under the Media strip.
+    // No dock tab is lit while a layer's pill shows.
+    expect(screen.getByRole('navigation', { name: 'Editor tools' }).querySelector('[aria-pressed="true"]')).toBeNull();
+    // The new sticker's Size opens the Media sheet under the pill, Size lit.
     fireEvent.click(within(layerToolbar()).getByText('Size'));
     expect(within(sheet('Media')).getByLabelText('Sticker size')).toBeTruthy();
-    expect(strip('Media tools')).toBeTruthy();
+    expect(screen.queryByRole('toolbar', { name: 'Media tools' })).toBeNull();
+    expect(within(layerToolbar()).getByText('Size').closest('button').getAttribute('aria-pressed')).toBe('true');
+    // Tapping Size again closes it.
+    fireEvent.click(within(layerToolbar()).getByText('Size'));
+    expect(screen.queryByRole('dialog', { name: 'Media' })).toBeNull();
+    fireEvent.click(within(layerToolbar()).getByText('Size'));
     act(() => canvas.props.onSelectLayer(canvas.props.captions[1].id));
-    expect(within(sheet('Text')).getByLabelText('Caption text').value).toBe('BOTTOM TEXT');
-    expect(strip('Text tools')).toBeTruthy();
+    expect(screen.queryByRole('dialog', { name: 'Media' })).toBeNull();
+    expect(within(layerToolbar()).getByText('Font')).toBeTruthy();
   }, 30000);
+
 });

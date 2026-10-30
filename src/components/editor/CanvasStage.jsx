@@ -29,6 +29,7 @@ export default function CanvasStage({
   const sheet = useEditorUiStore((s) => s.sheet);
   const openSheet = useEditorUiStore((s) => s.openSheet);
   const closeSheet = useEditorUiStore((s) => s.closeSheet);
+  const sheetFromPill = useEditorUiStore((s) => s.sheetFromPill);
 
   const {
     isHoldingCanvasCompare, isPinpointingFace, setIsPinpointingFace, faceTarget, setFaceTarget,
@@ -43,15 +44,16 @@ export default function CanvasStage({
   };
 
   // Selecting on the canvas: with a layer's sheet open, the sheet follows the selection (picking a
-  // sticker while editing text switches to the Media sheet). Other sheets (AI & Filters, brushes,
-  // background, watermark) work whatever is selected, so they stay.
+  // sticker while editing text switches to the Media sheet); one opened from the layer tools pill
+  // closes, leaving the new layer's pill. Other sheets (AI & Filters, brushes, background,
+  // watermark) work whatever is selected, so they stay.
   const handleSelectLayer = (id) => {
     setActiveLayerId(id || null);
     // Bubble styles are for the caption they opened on.
     if (sheet === 'bubble') closeSheet();
     if (!id || !sheet || !LAYER_SHEETS.includes(sheet)) return;
-    // A shape or censor region has no layer sheet: its quick tools float over it.
-    if ((drawings || []).some((d) => d.id === id)) {
+    // A shape or censor region has no layer sheet: its quick tools are in the pill.
+    if (sheetFromPill || (drawings || []).some((d) => d.id === id)) {
       closeSheet();
       return;
     }

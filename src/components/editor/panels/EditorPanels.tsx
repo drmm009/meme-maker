@@ -3,7 +3,7 @@ import { ToolDock, ToolStrip } from '../../ui';
 import type { DockItem } from '../../ui';
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
 import { useEditorUiStore } from '../store/useEditorUiStore';
-import { useSelection, SHEET_FOR_KIND } from './selection';
+import { useSelection } from './selection';
 import type { EditorActions } from './selection';
 import TextSheet from './TextSheet';
 import CanvasColorSheet from './CanvasColorSheet';
@@ -43,12 +43,14 @@ const SHEETS = { text: TextSheet, media: MediaSheet, draw: DrawSheet, canvasColo
 
 // The bottom of the editor: the dock with the open tab's tool strip above it, or, when one of that
 // tab's sheets is open, the strip above the sheet (so its tools stay one tap away). While a layer is
-// selected (and not drawing), its tools pill (LayerToolbar) takes the strip's place above the dock.
+// selected (and not drawing), its tools pill (LayerToolbar) takes the strip's place above the dock,
+// and above the sheets it opens, and no dock tab is lit.
 export default function EditorPanels({ actions }: { actions: EditorActions }) {
   const sheet: keyof typeof SHEETS | null = useEditorUiStore((s: { sheet: keyof typeof SHEETS | null }) => s.sheet);
   const closeSheet = useEditorUiStore((s: { closeSheet: () => void }) => s.closeSheet);
   const dockTab: string | null = useEditorUiStore((s: { dockTab: string | null }) => s.dockTab);
   const drawTool: string | null = useEditorUiStore((s: { drawTool: string | null }) => s.drawTool);
+  const sheetFromPill: boolean = useEditorUiStore((s: { sheetFromPill: boolean }) => s.sheetFromPill);
   const showDockTab = useEditorUiStore((s: { showDockTab: (tab: string) => void }) => s.showDockTab);
   const pickDrawTool = useEditorUiStore((s: { pickDrawTool: (tool: string) => void }) => s.pickDrawTool);
   const leaveDock = useEditorUiStore((s: { leaveDock: () => void }) => s.leaveDock);
@@ -71,24 +73,24 @@ export default function EditorPanels({ actions }: { actions: EditorActions }) {
     : dockTab === 'fx' ? <AiFiltersStrip actions={actions} />
     : dockTab === 'canvas' ? <CanvasStrip actions={actions} /> : null;
 
+  const layerTools = Boolean(kind) && dockTab !== 'draw' && !faceMorph;
   const SheetComponent = sheet ? SHEETS[sheet] : null;
   if (SheetComponent) {
     return (
       <div className="ie-panels ie-panels--sheet">
-        {strip}
+        {layerTools && sheetFromPill ? <LayerToolbar actions={actions} /> : strip}
         <SheetComponent actions={actions} onClose={closeSheet} />
       </div>
     );
   }
 
-  const layerTools = Boolean(kind) && dockTab !== 'draw' && !faceMorph;
   return (
     <div className="ie-panels">
       {layerTools ? <LayerToolbar actions={actions} /> : strip}
       <ToolDock
         ariaLabel="Editor tools"
         items={DOCK}
-        active={dockTab || (kind ? SHEET_FOR_KIND[kind] : null)}
+        active={layerTools ? null : dockTab}
         onSelect={(id) => {
           // Every tab shows its strip; tapping it again closes it (and stops drawing).
           if (dockTab === id) leaveDock();

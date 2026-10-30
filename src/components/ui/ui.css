@@ -239,13 +239,13 @@
 .ui-float {
   display: flex;
   align-items: stretch;
-  padding: 6px 12px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 999px;
-  background: linear-gradient(180deg, rgba(74, 75, 81, 0.94), rgba(52, 53, 59, 0.94));
+  background: rgba(40, 41, 46, 0.92);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  box-shadow: 0 16px 36px -12px rgba(0, 0, 0, 0.8);
+  box-shadow: 0 10px 24px -12px rgba(0, 0, 0, 0.7);
 }
 .ui-float-items {
   display: flex;
@@ -262,19 +262,21 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  min-width: 46px;
-  height: 54px;
-  padding: 0 3px;
+  gap: 2px;
+  min-width: 42px;
+  height: 44px;
+  padding: 0 6px;
   border: none;
-  border-radius: 14px;
+  border-radius: 999px;
   background: transparent;
-  color: #ececf0;
-  font-size: 12px;
+  color: #d9d9df;
+  font-size: 10.5px;
   font-weight: 500;
+  line-height: 1;
   cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
 }
-.ui-float-item.is-on { color: var(--ui-accent-text); }
+.ui-float-item.is-on { background: rgba(255, 90, 54, 0.15); color: var(--ui-accent-text); }
 /* The pointer at the layer: under the bar, or above it when the bar sits below the layer. */
 .ui-float-tail {
   position: absolute;
