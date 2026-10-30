@@ -41,8 +41,9 @@ const sameColour = (a: unknown, b: string) => String(a || '').toLowerCase() === 
 
 // The caption's sections, headed by these titles, and the sheet each belongs to: every sheet is a
 // button on the caption's floating bar (LayerToolbar), which opens this sheet with just its sections.
+// The words are edited in the whole sheet only (the Text strip's Edit).
 const SECTIONS = {
-  edit: { title: undefined, part: 'edit' },
+  edit: { title: undefined, part: null },
   font: { title: 'Font', part: 'font' },
   styles: { title: 'My styles', part: 'font' },
   size: { title: 'Size', part: 'style' },
@@ -56,7 +57,7 @@ const SECTIONS = {
   box: { title: 'Box', part: 'effects' },
 } as const;
 type TextSection = keyof typeof SECTIONS;
-const TEXT_PARTS = { edit: 'Edit text', font: 'Font', style: 'Style', align: 'Align', color: 'Color', effects: 'Effects' } as const;
+const TEXT_PARTS = { font: 'Font', style: 'Style', align: 'Align', color: 'Color', effects: 'Effects' } as const;
 type TextPart = keyof typeof TEXT_PARTS;
 
 // The Text sheet, under the Text strip (which adds text, bubbles and social cards): pick a caption,

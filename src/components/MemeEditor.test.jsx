@@ -263,7 +263,7 @@ describe('MemeEditor', () => {
     closeSheet();
     const tools = layerToolbar();
     // Five Text sheets, each with its related controls, then the layer tools.
-    expect([...tools.querySelectorAll('button > span:last-child')].map((s) => s.textContent)).toEqual(['Edit', 'Font', 'Style', 'Align', 'Color', 'Effects', 'Layers', 'Delete']);
+    expect([...tools.querySelectorAll('button > span:last-child')].map((s) => s.textContent)).toEqual(['Font', 'Style', 'Align', 'Color', 'Effects', 'Layers', 'Delete']);
 
     // Font: the fonts and saved styles, nothing else.
     fireEvent.click(within(tools).getByText('Font'));
@@ -273,10 +273,6 @@ describe('MemeEditor', () => {
     expect(within(font).queryByLabelText('Caption text')).toBeNull();
     expect(within(font).queryByLabelText('Text size')).toBeNull();
     expect(within(font).queryByRole('group', { name: 'Captions' })).toBeNull();
-    closeSheet();
-
-    fireEvent.click(within(layerToolbar()).getByText('Edit'));
-    expect(within(sheet('Edit text')).getByLabelText('Caption text').value).toBe('NEW TEXT');
     closeSheet();
 
     // Style: size, bold and the rest.
@@ -321,7 +317,7 @@ describe('MemeEditor', () => {
     renderEditor();
     addTextFromMenu();
     closeSheet();
-    for (const name of ['Edit', 'Font', 'Style', 'Align', 'Color', 'Effects', 'Layers', 'Delete']) expect(within(layerToolbar()).getByText(name)).toBeTruthy();
+    for (const name of ['Font', 'Style', 'Align', 'Color', 'Effects', 'Layers', 'Delete']) expect(within(layerToolbar()).getByText(name)).toBeTruthy();
     fireEvent.click(within(layerToolbar()).getByText('Layers'));
     const panel = sheet('Layers');
     const rows = () => within(screen.getByRole('list', { name: 'Layers' })).getAllByRole('listitem').map((li) => li.querySelector('.ie-layer-pick').textContent);
