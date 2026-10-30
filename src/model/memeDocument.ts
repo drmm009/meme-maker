@@ -36,6 +36,15 @@ export interface MemeCaption extends MemeLayerBase {
   bold?: boolean;
   italic?: boolean;
   underline?: boolean;
+  // Extra space between letters, as a fraction of the font size (may be negative).
+  letterSpacing?: number;
+  // Distance between lines, as a multiple of the font size (1.2 when unset).
+  lineHeight?: number;
+  // A drop shadow: blur in canvas pixels (0 = none), and its colour.
+  shadowSize?: number;
+  shadowColor?: string;
+  // A left-to-right two-colour fill instead of `color`.
+  gradient?: [string, string] | null;
   blur?: number;
   // Header/footer captions sit in their band until dragged out (hasCustomPos; y then spans the whole canvas).
   isHeaderCaption?: boolean;

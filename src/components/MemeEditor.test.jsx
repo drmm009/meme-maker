@@ -433,6 +433,28 @@ describe('MemeEditor', () => {
     expect(screen.queryByRole('toolbar', { name: 'AI and filter tools' })).toBeNull();
   }, 30000);
 
+  it('Text sheet: outline thickness, gradient, letter spacing, line height and shadow', () => {
+    renderEditor();
+    openTextSheet();
+    const panel = sheet('Text');
+    fireEvent.change(within(panel).getByLabelText('Outline thickness'), { target: { value: '12' } });
+    expect(canvas.props.captions[0].strokeWidth).toBe(12);
+    fireEvent.click(within(panel).getByRole('radio', { name: 'Gold gradient' }));
+    expect(canvas.props.captions[0].gradient).toEqual(['#f7971e', '#ffd200']);
+    fireEvent.change(within(sheet('Text')).getByLabelText('Letter spacing'), { target: { value: '0.2' } });
+    fireEvent.change(within(sheet('Text')).getByLabelText('Line height'), { target: { value: '1.5' } });
+    expect(canvas.props.captions[0]).toMatchObject({ letterSpacing: 0.2, lineHeight: 1.5 });
+    expect(within(sheet('Text')).queryByLabelText('Shadow colour')).toBeNull();
+    fireEvent.change(within(sheet('Text')).getByLabelText('Shadow size'), { target: { value: '8' } });
+    fireEvent.click(within(within(sheet('Text')).getByRole('radiogroup', { name: 'Shadow colour' })).getByRole('radio', { name: '#ff5a36' }));
+    expect(canvas.props.captions[0].shadowColor).toBe('#ff5a36');
+    expect(canvas.props.captions[0].shadowSize).toBe(8);
+    expect(within(sheet('Text')).getByLabelText('Upload your own font')).toBeTruthy();
+    // Turning the outline off hides its thickness.
+    fireEvent.click(within(sheet('Text')).getByRole('switch', { name: 'Stroke' }));
+    expect(within(sheet('Text')).queryByLabelText('Outline thickness')).toBeNull();
+  }, 30000);
+
   it('a tap around the canvas closes the open sheet, and then deselects', () => {
     const { container } = renderEditor();
     openTextSheet();

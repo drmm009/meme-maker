@@ -152,5 +152,14 @@ export const FONTS = [
   { id: 'Montserrat', name: 'Montserrat (Modern)', family: 'Montserrat, sans-serif' },
   { id: 'Comic Sans', name: 'Comic Sans (Fun)', family: '"Comic Sans MS", "Comic Neue", "Chalkboard SE", sans-serif' },
   { id: 'Oswald', name: 'Oswald (Bold Condensed)', family: 'Oswald, sans-serif' },
-  { id: 'Courier New', name: 'Courier New (Code/Retro)', family: '"Courier New", monospace' }
+  { id: 'Courier New', name: 'Courier New (Code/Retro)', family: '"Courier New", monospace' },
+  { id: 'Anton', name: 'Anton (Tall Bold)', family: 'Anton, Impact, sans-serif' },
+  { id: 'Bebas Neue', name: 'Bebas Neue (Headline)', family: '"Bebas Neue", Impact, sans-serif' },
+  { id: 'Bangers', name: 'Bangers (Comic Book)', family: 'Bangers, Impact, sans-serif' },
+  { id: 'Roboto', name: 'Roboto Black (Modern)', family: 'Roboto, Arial, sans-serif' },
+  { id: 'Permanent Marker', name: 'Permanent Marker (Handwritten)', family: '"Permanent Marker", "Comic Sans MS", cursive' },
+  { id: 'Pacifico', name: 'Pacifico (Script)', family: 'Pacifico, cursive' },
+  { id: 'Lobster', name: 'Lobster (Retro Script)', family: 'Lobster, cursive' },
+  { id: 'Playfair Display', name: 'Playfair Display (Serif)', family: '"Playfair Display", Georgia, serif' },
+  { id: 'Press Start 2P', name: 'Press Start 2P (Pixel)', family: '"Press Start 2P", monospace' }
 ];

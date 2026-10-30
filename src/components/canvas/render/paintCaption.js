@@ -6,7 +6,7 @@ import { drawBreakingNewsChyron, getBreakingNewsHeight } from '../draw/chyron';
 import { drawTweetCard, getTweetCardHeight } from '../draw/socialCards/tweet';
 import { drawInstagramCard, getInstagramCardHeight } from '../draw/socialCards/instagram';
 import { drawSpeechBubble } from '../draw/speechBubble';
-import { captionFont, underlineMetrics } from '../draw/captionFont';
+import { applyCaptionFont, captionGradient, captionLineHeight, underlineMetrics } from '../draw/captionFont';
 
 export function paintCaption({
   activeLayerId, canvas, dragTarget, getCaptionCenterY, isDragging, isDrawingMode, layer,
@@ -48,7 +48,7 @@ if (cap.blur && Number(cap.blur) > 0) {
 
 const fontSize = cap.fontSize || 50;
 const fontFamily = cap.fontFamily || 'Impact, sans-serif';
-targetCtx.font = captionFont({ ...cap, fontFamily }, fontSize);
+applyCaptionFont(targetCtx, { ...cap, fontFamily }, fontSize);
 const align = cap.align || 'center';
 targetCtx.textAlign = align;
 targetCtx.textBaseline = 'middle';
@@ -75,7 +75,7 @@ let boxWidth = (cap.hasCustomWidth && cap.width)
   ? Math.max(maxLineWidth + padX * 2, cap.width * canvas.width)
   : (maxLineWidth + padX * 2);
 boxWidth = Math.min(canvas.width - 16, boxWidth);
-const lineHeight = fontSize * 1.2;
+const lineHeight = captionLineHeight(cap, fontSize);
 const totalHeight = lines.length * lineHeight;
 let boxHeight = totalHeight + padY * 2;
 if (cap.curve && Math.abs(cap.curve) > 0) {
@@ -149,10 +149,21 @@ if (cap.isBreakingNews) {
   } else if (cap.bgColor === 'black' && (textColor.toLowerCase() === '#000000' || textColor.toLowerCase() === '#000' || textColor === 'black')) {
     textColor = '#ffffff';
   }
+  // A gradient fill replaces the colour (not on bubbles, whose text colour follows the bubble).
+  const gradientFill = isBubble ? null : captionGradient(targetCtx, cap, maxLineWidth);
+  if (gradientFill) textColor = gradientFill;
 
   const shouldStroke = cap.stroke && cap.stroke !== 'transparent' && (!hasBg || (cap.stroke !== cap.bgColor && cap.stroke !== bgFillColor));
   const textAnchorX = align === 'left' ? (-boxWidth / 2 + padX) : (align === 'right' ? (boxWidth / 2 - padX) : 0);
 
+  // The caption's own drop shadow, under every line (the text effects may add their own).
+  targetCtx.save();
+  if (cap.shadowSize > 0) {
+    targetCtx.shadowColor = cap.shadowColor || 'rgba(0, 0, 0, 0.8)';
+    targetCtx.shadowBlur = cap.shadowSize;
+    targetCtx.shadowOffsetX = Math.round(cap.shadowSize * 0.35);
+    targetCtx.shadowOffsetY = Math.round(cap.shadowSize * 0.35);
+  }
   lines.forEach((line, index) => {
     const ly = startY + index * lineHeight;
 
@@ -199,6 +210,7 @@ if (cap.isBreakingNews) {
       }
     }
   });
+  targetCtx.restore();
 }
 
 if (cap.id === activeLayerId && !isDrawingMode) {

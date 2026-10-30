@@ -1,6 +1,6 @@
-import { useEffect, useRef } from 'react';
-import type { ReactNode } from 'react';
-import { Bold, Italic, Underline, MessageSquareQuote, CaseSensitive } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
+import { Bold, Italic, Underline, MessageSquareQuote, CaseSensitive, Plus } from 'lucide-react';
 import { Sheet, Section, Row, ChipRow, Chip, Toggle, SwatchRow, Slider, Switch, TileGrid, Tile, SegmentedControl } from '../../ui';
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
 import { useEditorUiStore } from '../store/useEditorUiStore';
@@ -11,10 +11,23 @@ import { useSelection, captionLabel } from './selection';
 import type { EditorActions } from './selection';
 import type { MemeCaption } from '../../../model/memeDocument';
 import LayerActions from './LayerActions';
+import { addFontFile, FONT_ACCEPT } from '../../../utils/customFonts';
+import type { CustomFont } from '../../../utils/customFonts';
+import { ensureFontLoaded, redrawCanvas } from '../hooks/useCustomFonts';
 import CardControls from './CardControls';
 
 const TEXT_COLORS = ['#ffffff', '#000000', '#ff5a36', '#ffd60a', '#34c759', '#0a84ff', '#bf5af2', '#ff375f'];
 const BOX_COLORS = ['transparent', '#ffffff', '#000000', '#ff5a36', '#ffd60a', '#0a84ff'];
+const SHADOW_COLORS = ['#000000', '#ffffff', '#ff5a36', '#0a84ff', '#bf5af2'];
+const GRADIENTS: { id: string; label: string; colors: [string, string] }[] = [
+  { id: 'sunset', label: 'Sunset', colors: ['#ff5a36', '#ec4899'] },
+  { id: 'gold', label: 'Gold', colors: ['#f7971e', '#ffd200'] },
+  { id: 'ocean', label: 'Ocean', colors: ['#00c6ff', '#0072ff'] },
+  { id: 'neon', label: 'Neon', colors: ['#39ff14', '#00f0ff'] },
+  { id: 'fire', label: 'Fire', colors: ['#ff0000', '#ffcc00'] },
+  { id: 'grape', label: 'Grape', colors: ['#8e2de2', '#ff6ec4'] },
+];
+const sameGradient = (a: unknown, b: [string, string]) => Array.isArray(a) && a[0] === b[0] && a[1] === b[1];
 
 type Caption = MemeCaption & Record<string, unknown>;
 const hasBox = (c: Caption) => Boolean(c.bgColor && c.bgColor !== 'none' && c.bgColor !== 'transparent');
@@ -29,6 +42,9 @@ export default function TextSheet({ actions, onClose }: { actions: EditorActions
   const updateCaptionText = useMemeEditorStore((s: { updateCaptionText: (id: string, text: string) => void }) => s.updateCaptionText);
   const sheetFocus: string | null = useEditorUiStore((s: { sheetFocus: string | null }) => s.sheetFocus);
   const setShowBubbleBottomSheet = useEditorUiStore((s: { setShowBubbleBottomSheet: (v: boolean) => void }) => s.setShowBubbleBottomSheet);
+  const customFonts: CustomFont[] = useEditorUiStore((s: { customFonts: CustomFont[] }) => s.customFonts);
+  const setCustomFonts = useEditorUiStore((s: { setCustomFonts: (fonts: CustomFont[]) => void }) => s.setCustomFonts);
+  const [fontError, setFontError] = useState('');
   const { id, kind, caption } = useSelection();
   const bodyRef = useRef<HTMLDivElement>(null);
 
@@ -49,6 +65,22 @@ export default function TextSheet({ actions, onClose }: { actions: EditorActions
   const set = (patch: Partial<Caption>) => actions.updateActiveCaptionProps(patch);
   const live = (patch: Partial<Caption>) => id && patchLayer('captions', id, patch);
   const strokeOn = Boolean(caption?.stroke && caption.stroke !== 'transparent');
+  const fontSize = caption?.fontSize || 50;
+  const pickFont = (css: string) => {
+    set({ fontFamily: css });
+    ensureFontLoaded(css);
+  };
+  const uploadFont = (file: File | undefined) => {
+    if (!file) return;
+    setFontError('');
+    addFontFile(file)
+      .then((font) => {
+        setCustomFonts([...customFonts.filter((f) => f.family !== font.family), font]);
+        set({ fontFamily: font.css });
+        redrawCanvas();
+      })
+      .catch(() => setFontError("That file isn't a font this browser can read (use .ttf, .otf, .woff or .woff2)."));
+  };
 
   return (
     <Sheet title="Text" onClose={onClose} action={{ label: 'Add Text', onClick: actions.handleAddCaption }}>
@@ -78,16 +110,44 @@ export default function TextSheet({ actions, onClose }: { actions: EditorActions
             <Section title="Font" id="font">
               <div className="ie-font-row">
                 {FONTS.map((f: { id: string; name: string; family: string }) => (
-                  <Toggle key={f.id} variant="tile" label={f.name} active={(caption.fontFamily || 'Impact, sans-serif') === f.family} onClick={() => set({ fontFamily: f.family })} style={{ fontFamily: f.family }}>
+                  <Toggle key={f.id} variant="tile" label={f.name} active={(caption.fontFamily || 'Impact, sans-serif') === f.family} onClick={() => pickFont(f.family)} style={{ fontFamily: f.family }}>
                     Aa
                   </Toggle>
                 ))}
+                {customFonts.map((f) => (
+                  <Toggle key={f.family} variant="tile" label={f.family} active={caption.fontFamily === f.css} onClick={() => pickFont(f.css)} style={{ fontFamily: f.css }}>
+                    Aa
+                  </Toggle>
+                ))}
+                <label className="ui-toggle ui-toggle--tile ie-font-upload" title="Upload your own font">
+                  <Plus size={18} />
+                  <input type="file" accept={FONT_ACCEPT} aria-label="Upload your own font" hidden onChange={(e) => { uploadFont(e.target.files?.[0]); e.target.value = ''; }} />
+                </label>
               </div>
+              {fontError && <p className="ie-empty" role="alert">{fontError}</p>}
             </Section>
 
             <Section id="color">
               <Row label="Color">
                 <SwatchRow ariaLabel="Text colour" colors={TEXT_COLORS} value={caption.color || '#ffffff'} onChange={(c) => set({ color: c, stroke: strokeOn ? getContrastStroke(c) : 'transparent' })} />
+              </Row>
+              <Row label="Gradient">
+                <div className="ui-swatches" role="radiogroup" aria-label="Text gradient">
+                  <button type="button" role="radio" aria-checked={!caption.gradient} aria-label="No gradient" title="No gradient" className={`ui-swatch ui-swatch--none${!caption.gradient ? ' is-on' : ''}`} onClick={() => set({ gradient: null })} />
+                  {GRADIENTS.map((g) => (
+                    <button
+                      key={g.id}
+                      type="button"
+                      role="radio"
+                      aria-checked={sameGradient(caption.gradient, g.colors)}
+                      aria-label={`${g.label} gradient`}
+                      title={g.label}
+                      className={`ui-swatch${sameGradient(caption.gradient, g.colors) ? ' is-on' : ''}`}
+                      style={{ background: `linear-gradient(90deg, ${g.colors[0]}, ${g.colors[1]})`, '--swatch': g.colors[1] } as CSSProperties}
+                      onClick={() => set({ gradient: g.colors })}
+                    />
+                  ))}
+                </div>
               </Row>
               <div data-section="size">
                 <Row label="Size">
@@ -102,6 +162,11 @@ export default function TextSheet({ actions, onClose }: { actions: EditorActions
                 <span className="ie-inline-label">Stroke</span>
                 <Switch label="Stroke" checked={strokeOn} onChange={(on) => set({ stroke: on ? getContrastStroke(caption.color || '#ffffff') : 'transparent' })} />
               </Row>
+              {strokeOn && (
+                <Row label="Outline">
+                  <Slider label="Outline thickness" min={1} max={24} value={Number(caption.strokeWidth || Math.max(3, Math.round(fontSize / 7)))} onChange={(v) => live({ strokeWidth: v })} />
+                </Row>
+              )}
               <Row label="Align">
                 <SegmentedControl
                   ariaLabel="Alignment"
@@ -111,6 +176,23 @@ export default function TextSheet({ actions, onClose }: { actions: EditorActions
                   onChange={(align) => set({ align })}
                 />
               </Row>
+            </Section>
+
+            <Section title="Spacing & shadow" rule>
+              <Row label="Letters">
+                <Slider label="Letter spacing" min={-0.05} max={0.5} step={0.01} value={Number(caption.letterSpacing || 0)} onChange={(v) => live({ letterSpacing: v })} />
+              </Row>
+              <Row label="Lines">
+                <Slider label="Line height" min={0.8} max={2} step={0.05} value={Number(caption.lineHeight || 1.2)} onChange={(v) => live({ lineHeight: v })} />
+              </Row>
+              <Row label="Shadow">
+                <Slider label="Shadow size" min={0} max={30} value={Number(caption.shadowSize || 0)} onChange={(v) => live({ shadowSize: v })} />
+              </Row>
+              {Number(caption.shadowSize) > 0 && (
+                <Row label="Shadow color">
+                  <SwatchRow ariaLabel="Shadow colour" colors={SHADOW_COLORS} value={(caption.shadowColor as string) || '#000000'} onChange={(c) => live({ shadowColor: c })} />
+                </Row>
+              )}
             </Section>
 
             <Section title="Box" rule>

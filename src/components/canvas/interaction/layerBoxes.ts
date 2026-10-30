@@ -7,7 +7,7 @@ import { getBreakingNewsHeight } from '../draw/chyron';
 import { getTweetCardHeight } from '../draw/socialCards/tweet';
 import { getInstagramCardHeight } from '../draw/socialCards/instagram';
 import { getStickerBoxSize } from './geometry';
-import { captionFont } from '../draw/captionFont';
+import { applyCaptionFont, captionLineHeight } from '../draw/captionFont';
 import type { Point } from './geometry';
 
 // Image layers fit inside a square this many pixels wide at scale 1.
@@ -64,7 +64,7 @@ export const getCaptionBox = (
   let lines: string[] = [cap.text || ''];
   let maxLineWidth = 0;
   if (ctx) {
-    ctx.font = captionFont(cap, fontSize);
+    applyCaptionFont(ctx, cap, fontSize);
     lines = wrapText(ctx, cap.text || '', (cap.width || 0.9) * canvasWidth);
     for (const line of lines) maxLineWidth = Math.max(maxLineWidth, ctx.measureText(line).width);
   }
@@ -81,7 +81,7 @@ export const getCaptionBox = (
     ? Math.max(maxLineWidth + padX * 2, cap.width * canvasWidth)
     : (maxLineWidth + padX * 2);
   boxWidth = Math.min(canvasWidth - 16, boxWidth);
-  const lineHeight = fontSize * 1.2;
+  const lineHeight = captionLineHeight(cap, fontSize);
   let boxHeight = lines.length * lineHeight + padY * 2;
   if (cap.curve && Math.abs(cap.curve) > 0) {
     boxHeight += Math.round(getCurveSagitta(maxLineWidth, cap.curve));

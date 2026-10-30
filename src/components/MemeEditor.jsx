@@ -15,6 +15,7 @@ import { useBubbleActions } from './editor/hooks/useBubbleActions';
 import { useCaptionActions } from './editor/hooks/useCaptionActions';
 import { useLayerActions } from './editor/hooks/useLayerActions';
 import { useMemeDraft } from './editor/hooks/useMemeDraft';
+import { useCustomFonts } from './editor/hooks/useCustomFonts';
 import EditorTopBar from './editor/top-bar/EditorTopBar';
 import CanvasStage from './editor/CanvasStage';
 import EditorModals from './editor/EditorModals';
@@ -65,6 +66,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, o
 
   useEditorSetup(template);
   const draft = useMemeDraft({ restored: restoredDraft, onRestore: onRestoreDraft });
+  useCustomFonts();
   const { activeCaption, activeSticker, activeImageLayer, currentEditingSocialCard } = useActiveLayer();
 
   const canvasRef = useRef(null);

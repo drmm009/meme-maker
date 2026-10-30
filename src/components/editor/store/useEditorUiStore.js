@@ -86,6 +86,7 @@ export function buildInitialUi(template) {
     brushColor: '#ff2a5f',
     brushSize: 10,
     watermark: loadWatermark(),
+    customFonts: [], // fonts the person uploaded: [{ family, css }] (utils/customFonts)
     exportPrefs: loadExportPrefs(), // { format: 'png' | 'jpeg' | 'webp', quality: 0.5..1, width: 'full' | 720 | 480 }
   };
 }

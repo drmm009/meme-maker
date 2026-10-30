@@ -86,6 +86,19 @@ describe('paintCaption: bold, italic, underline', () => {
     expect(callsNamed(paint({ ...base, text: 'HI' }).ctx, 'fillRect')).toHaveLength(0);
   });
 
+  it('draws its own drop shadow when asked', () => {
+    const { ctx } = paint({ ...base, text: 'HI', shadowSize: 10, shadowColor: '#ff0000' });
+    const [t] = callsNamed(ctx, 'fillText');
+    expect(t.state).toMatchObject({ shadowBlur: 10, shadowColor: '#ff0000' });
+    const plain = callsNamed(paint({ ...base, text: 'HI' }).ctx, 'fillText')[0];
+    expect(plain.state.shadowBlur).toBe(0);
+  });
+
+  it('spaces lines by its line height', () => {
+    const texts = textsDrawn(paint({ ...base, text: 'WHEN YOU FINALLY', width: 0.3, lineHeight: 2 }).ctx);
+    expect(texts[1].at.y - texts[0].at.y).toBe(100);
+  });
+
   it('measures its box with the same font it draws with', () => {
     const ctx = createRecordingContext();
     getCaptionBox(ctx, { ...base, text: 'A', italic: true, bold: false }, 800);
