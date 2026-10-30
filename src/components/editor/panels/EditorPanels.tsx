@@ -92,10 +92,11 @@ export default function EditorPanels({ actions }: { actions: EditorActions }) {
         items={DOCK}
         active={layerTools ? null : dockTab}
         onSelect={(id) => {
-          // Every tab shows its strip; tapping it again closes it (and stops drawing).
-          if (dockTab === id) leaveDock();
+          // Every tab deselects the layer and shows its strip; tapping the lit tab again closes it
+          // (and stops drawing). With a layer selected no tab is lit, so any tab opens its strip.
+          if (dockTab === id && !layerTools) leaveDock();
           else {
-            if (id === 'draw') setActiveLayerId(null);
+            setActiveLayerId(null);
             showDockTab(id);
           }
         }}

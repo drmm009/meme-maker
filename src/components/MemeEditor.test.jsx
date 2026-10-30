@@ -711,10 +711,13 @@ describe('MemeEditor', () => {
     fireEvent.change(within(wm).getByLabelText('Watermark name'), { target: { value: 'memelord' } });
     expect(within(wm).getByLabelText('Watermark name').value).toBe('memelord');
 
-    // Footer switches straight away; tapping Canvas again closes the strip and its sheet.
+    // Footer switches straight away; tapping Canvas again closes the strip and its sheet (the first
+    // tap deselects whatever layer is selected and shows the strip).
     fireEvent.click(within(canvasStrip()).getByText('Footer'));
     expect(within(canvasStrip()).getByText('Footer').closest('button').getAttribute('aria-pressed')).toBe('true');
     closeSheet();
+    if (canvas.props.activeLayerId) openSection('Canvas colour, bands and watermark');
+    expect(canvas.props.activeLayerId).toBe(null);
     openSection('Canvas colour, bands and watermark');
     expect(screen.queryByRole('toolbar', { name: 'Canvas tools' })).toBeNull();
   }, 30000);
@@ -870,6 +873,17 @@ describe('MemeEditor', () => {
     });
     await vi.waitFor(() => expect(canvas.props.imageLayers).toHaveLength(1));
   }, 30000);
+
+  it("tapping a dock tab deselects the layer and shows that tab's strip", () => {
+    renderEditor();
+    act(() => canvas.props.onSelectLayer(canvas.props.captions[0].id));
+    expect(layerToolbar()).toBeTruthy();
+    const dock = screen.getByRole('navigation', { name: 'Editor tools' });
+    fireEvent.click(within(dock).getByText('Canvas'));
+    expect(canvas.props.activeLayerId).toBe(null);
+    expect(screen.queryByRole('toolbar', { name: 'Layer tools' })).toBeNull();
+    expect(strip('Canvas tools')).toBeTruthy();
+  });
 
   it('a sheet from the layer pill keeps the pill above it; picking another layer closes it', () => {
     renderEditor();
