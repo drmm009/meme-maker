@@ -8,7 +8,8 @@ import type { EditorActions } from './selection';
 
 const RECENT_KEY = 'meme_recent_emoji';
 const RECENT_MAX = 16;
-const SHELF_SIZE = 14;
+// Two rows of the shelf grid.
+const SHELF_SIZE = 12;
 const CATEGORIES = EMOJI_CATEGORIES.map((c) => ({ ...c, items: filterEmojis('', c.id) }));
 const BY_ID = new Map(CATEGORIES.flatMap((c) => c.items).map((e) => [e.id, e]));
 
@@ -21,9 +22,9 @@ function EmojiCard({ emoji, onPick }: { emoji: EmojiItem; onPick: (e: EmojiItem)
   return <button type="button" className="ie-browse-item ie-emoji-card" title={emoji.name} onClick={() => onPick(emoji)}>{emoji.emoji}</button>;
 }
 
-// Media > Emoji, laid out like the Explore page: the ones used lately, then a shelf per category
-// with See all; a category or a search shows a grid. A pick adds the emoji as a sticker (it's then
-// selected, with its floating tools).
+// Media > Emoji: the ones used lately, then each category as two rows of small tiles with See all;
+// a category or a search shows a grid. A pick adds the emoji as a sticker (it's then selected,
+// with its floating tools).
 export default function EmojiSheet({ actions, onClose }: { actions: EditorActions; onClose: () => void }) {
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('all');
@@ -53,9 +54,9 @@ export default function EmojiSheet({ actions, onClose }: { actions: EditorAction
       onChip={choose}
     >
       {browsing && shelves.map((s) => (
-        <Shelf key={s.id} label={s.label} Icon={s.Icon} icon={s.icon} color={s.Icon ? 'var(--ui-accent)' : undefined} onSeeAll={s.items.length > SHELF_SIZE ? () => choose(s.id) : undefined}>
+        <Shelf key={s.id} grid label={s.label} Icon={s.Icon} icon={s.icon} color={s.Icon ? 'var(--ui-accent)' : undefined} onSeeAll={s.items.length > SHELF_SIZE ? () => choose(s.id) : undefined}>
           {s.items.slice(0, SHELF_SIZE).map((e) => (
-            <div key={e.id} className="ie-shelf-card ie-shelf-card--emoji"><EmojiCard emoji={e} onPick={pick} /></div>
+            <EmojiCard key={e.id} emoji={e} onPick={pick} />
           ))}
         </Shelf>
       ))}

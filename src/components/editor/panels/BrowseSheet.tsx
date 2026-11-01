@@ -35,6 +35,8 @@ interface BrowseSheetProps {
 // top, and only the content below them scrolling.
 export default function BrowseSheet({ title, total, onClose, search, chips, active, onChip, fillChips, busy, children }: BrowseSheetProps) {
   const chipsRef = useRef<HTMLDivElement>(null);
+  // The line under the chips only shows once the content has scrolled under it.
+  const [scrolled, setScrolled] = useState(false);
   // Keep the lit chip in sight as the list scrolls past sections whose chips sit off the edge.
   useEffect(() => {
     const row = chipsRef.current;
@@ -67,7 +69,7 @@ export default function BrowseSheet({ title, total, onClose, search, chips, acti
         </div>
       )}
 
-      <div ref={chipsRef} className={`ie-browse-chips${fillChips ? ' ie-browse-chips--fill' : ''}`} role="toolbar" aria-label={`${title} categories`}>
+      <div ref={chipsRef} className={`ie-browse-chips${fillChips ? ' ie-browse-chips--fill' : ''}${scrolled ? ' is-scrolled' : ''}`} role="toolbar" aria-label={`${title} categories`}>
         {chips.map(({ id, label, Icon, icon, count, color }) => {
           const on = active === id;
           return (
@@ -80,7 +82,7 @@ export default function BrowseSheet({ title, total, onClose, search, chips, acti
         })}
       </div>
 
-      <div className="ie-browse-scroll" aria-busy={busy || undefined}>
+      <div className="ie-browse-scroll" aria-busy={busy || undefined} onScroll={(e) => setScrolled(e.currentTarget.scrollTop > 2)}>
         {children}
       </div>
     </Sheet>
@@ -109,13 +111,14 @@ export function BrowseEmpty({ Icon, title, text, action }: { Icon: LucideIcon; t
   );
 }
 
-// A category shelf, as on the Explore page: an icon badge, the title and See all over a rail of cards.
-export function Shelf({ label, Icon, icon, color, onSeeAll, children }: { label: string; Icon?: LucideIcon; icon?: string; color?: string; onSeeAll?: () => void; children: ReactNode }) {
+// A category shelf, as on the Explore page: an icon, the title and See all over a rail of cards
+// (or, with grid, a few rows of small ones, as for emoji).
+export function Shelf({ label, Icon, icon, color, grid, onSeeAll, children }: { label: string; Icon?: LucideIcon; icon?: string; color?: string; grid?: boolean; onSeeAll?: () => void; children: ReactNode }) {
   return (
     <section className="ie-browse-section ie-shelf" aria-label={label}>
       <div className="ie-shelf-head">
         <span className="ie-shelf-icon" aria-hidden="true">
-          {Icon ? <Icon size={18} style={color ? { color } : undefined} /> : <span className="ie-browse-chip-emoji">{icon}</span>}
+          {Icon ? <Icon size={17} strokeWidth={2.2} style={color ? { color } : undefined} /> : <span className="ie-browse-chip-emoji">{icon}</span>}
         </span>
         <h3 className="ie-shelf-title">{label}</h3>
         {onSeeAll && (
@@ -124,7 +127,7 @@ export function Shelf({ label, Icon, icon, color, onSeeAll, children }: { label:
           </button>
         )}
       </div>
-      <div className="ie-shelf-rail">{children}</div>
+      <div className={grid ? 'ie-shelf-grid' : 'ie-shelf-rail'}>{children}</div>
     </section>
   );
 }

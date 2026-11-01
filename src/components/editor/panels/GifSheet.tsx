@@ -67,7 +67,7 @@ export default function GifSheet({ actions, onClose }: { actions: EditorActions;
       <section className="ie-browse-section" aria-label={searching ? 'Results' : stickers ? 'Trending stickers' : 'Trending GIFs'}>
         {!searching && (
           <div className="ie-shelf-head">
-            <span className="ie-shelf-icon" aria-hidden="true"><Flame size={18} style={{ color: '#ff3b60' }} /></span>
+            <span className="ie-shelf-icon" aria-hidden="true"><Flame size={17} strokeWidth={2.2} style={{ color: '#ff3b60' }} /></span>
             <h3 className="ie-shelf-title">{stickers ? 'Trending stickers' : 'Trending GIFs'}</h3>
           </div>
         )}
