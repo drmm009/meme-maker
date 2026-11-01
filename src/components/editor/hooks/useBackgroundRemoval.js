@@ -26,6 +26,7 @@ const reportFailure = (err) => {
 export function useBackgroundRemoval() {
   const store = useMemeEditorStoreApi();
   const [isRemovingBg, setIsRemovingBg] = useState(false);
+  const [isBlurringBg, setIsBlurringBg] = useState(false);
   const cuttingSubject = useRef(false);
 
   const run = async (work) => {
@@ -89,8 +90,99 @@ export function useBackgroundRemoval() {
 
   // Background blur (0..30) on the photo: the first time, the photo's subject is cut out (the same
   // model as Cut out) and kept with the filters, so it is drawn sharp over the blurred photo.
+  const handleApplyBackgroundBlur = async () => {
+    const { activeLayerId, imageLayers, activeTemplate, imageFilters, setImageFilters, pushHistory } = store.getState();
+    const imageLayer = (imageLayers || []).find((l) => l.id === activeLayerId);
+
+    if (imageLayer) {
+      const base = imageLayer.originalUrl || imageLayer.url;
+      if (!base) return;
+
+      const updateLayer = (patch) => {
+        const s = store.getState();
+        s.setImageLayers(s.imageLayers.map((l) => (l.id === imageLayer.id ? { ...l, ...patch } : l)));
+        s.pushHistory();
+      };
+
+      if (imageLayer.subjectOf === base && imageLayer.subjectUrl) {
+        updateLayer({ bgBlur: 30 });
+        return;
+      }
+
+      if (cuttingSubject.current) return;
+      cuttingSubject.current = true;
+      try {
+        setIsBlurringBg(true);
+        const subjectUrl = await removeImageBackground(base);
+        updateLayer({ subjectUrl, subjectOf: base, bgBlur: 30 });
+      } catch (err) {
+        reportFailure(err);
+      } finally {
+        setIsBlurringBg(false);
+        cuttingSubject.current = false;
+      }
+      return;
+    }
+
+    const base = activeTemplate?.rawImageUrl || activeTemplate?.imageUrl;
+    if (!base) return;
+
+    if (imageFilters?.subjectOf === base && imageFilters?.subjectUrl) {
+      setImageFilters((prev) => ({ ...prev, bgBlur: 30 }));
+      pushHistory();
+      return;
+    }
+
+    if (cuttingSubject.current) return;
+    cuttingSubject.current = true;
+    try {
+      setIsBlurringBg(true);
+      const subjectUrl = await removeImageBackground(base);
+      const s = store.getState();
+      s.setImageFilters((prev) => ({ ...prev, subjectUrl, subjectOf: base, bgBlur: 30 }));
+      s.pushHistory();
+    } catch (err) {
+      reportFailure(err);
+    } finally {
+      setIsBlurringBg(false);
+      cuttingSubject.current = false;
+    }
+  };
+
   const setPortraitBlur = async (amount) => {
-    const { activeTemplate, imageFilters, setImageFilters, pushHistoryDebounced } = store.getState();
+    const { activeLayerId, imageLayers, activeTemplate, imageFilters, setImageFilters, pushHistoryDebounced } = store.getState();
+    const imageLayer = (imageLayers || []).find((l) => l.id === activeLayerId);
+
+    if (imageLayer) {
+      const base = imageLayer.originalUrl || imageLayer.url;
+      if (!base) return;
+
+      const updateLayer = (patch, debounce = false) => {
+        const s = store.getState();
+        s.setImageLayers(s.imageLayers.map((l) => (l.id === imageLayer.id ? { ...l, ...patch } : l)));
+        if (debounce) s.pushHistoryDebounced();
+        else s.pushHistory();
+      };
+
+      updateLayer({ bgBlur: amount }, true);
+      if (amount <= 0 || imageLayer.subjectOf === base) {
+        return;
+      }
+      if (cuttingSubject.current) return;
+      cuttingSubject.current = true;
+      try {
+        setIsBlurringBg(true);
+        const subjectUrl = await removeImageBackground(base);
+        updateLayer({ subjectUrl, subjectOf: base, bgBlur: amount });
+      } catch (err) {
+        reportFailure(err);
+      } finally {
+        setIsBlurringBg(false);
+        cuttingSubject.current = false;
+      }
+      return;
+    }
+
     const base = activeTemplate?.rawImageUrl || activeTemplate?.imageUrl;
     if (!base) return;
     setImageFilters((prev) => ({ ...prev, bgBlur: amount }));
@@ -100,14 +192,19 @@ export function useBackgroundRemoval() {
     }
     if (cuttingSubject.current) return;
     cuttingSubject.current = true;
-    await run(async () => {
+    try {
+      setIsBlurringBg(true);
       const subjectUrl = await removeImageBackground(base);
       const s = store.getState();
-      s.setImageFilters((prev) => ({ ...prev, subjectUrl, subjectOf: base }));
+      s.setImageFilters((prev) => ({ ...prev, subjectUrl, subjectOf: base, bgBlur: amount }));
       s.pushHistory();
-    });
-    cuttingSubject.current = false;
+    } catch (err) {
+      reportFailure(err);
+    } finally {
+      setIsBlurringBg(false);
+      cuttingSubject.current = false;
+    }
   };
 
-  return { isRemovingBg, handleRemoveBackground, setPortraitBlur };
+  return { isRemovingBg, isBlurringBg, handleRemoveBackground, handleApplyBackgroundBlur, setPortraitBlur };
 }

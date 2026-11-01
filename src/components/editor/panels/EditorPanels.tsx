@@ -8,6 +8,8 @@ import type { EditorActions } from './selection';
 import TextSheet from './TextSheet';
 import CanvasColorSheet from './CanvasColorSheet';
 import WatermarkSheet from './WatermarkSheet';
+import HeaderSheet from './HeaderSheet';
+import FooterSheet from './FooterSheet';
 import CanvasStrip from './CanvasStrip';
 import MediaSheet from './MediaSheet';
 import DrawSheet from './DrawSheet';
@@ -25,6 +27,8 @@ import StickersSheet from './StickersSheet';
 import GifSheet from './GifSheet';
 import EmojiSheet from './EmojiSheet';
 import BubbleSheet from './BubbleSheet';
+import BackgroundSheet from './BackgroundSheet';
+import DieCutSheet from './DieCutSheet';
 import LayerToolbar from './LayerToolbar';
 import { DRAW_TOOLS } from './drawTools';
 import './panels.css';
@@ -38,8 +42,8 @@ const DOCK: DockItem[] = [
   { id: 'canvas', label: 'Canvas', Icon: LayoutGrid, title: 'Canvas colour, bands and watermark' },
 ];
 
-const SHEETS = { text: TextSheet, media: MediaSheet, draw: DrawSheet, canvasColor: CanvasColorSheet, watermark: WatermarkSheet, filters: FiltersSheet, layers: LayersSheet, export: ExportSheet, library: LibrarySheet, mediaLink: LinkSheet,
-  templates: TemplatesSheet, stickers: StickersSheet, gifs: GifSheet, emoji: EmojiSheet, bubble: BubbleSheet };
+const SHEETS = { text: TextSheet, media: MediaSheet, draw: DrawSheet, canvasColor: CanvasColorSheet, watermark: WatermarkSheet, header: HeaderSheet, footer: FooterSheet, filters: FiltersSheet, background: BackgroundSheet, layers: LayersSheet, export: ExportSheet, library: LibrarySheet, mediaLink: LinkSheet,
+  templates: TemplatesSheet, stickers: StickersSheet, gifs: GifSheet, emoji: EmojiSheet, bubble: BubbleSheet, diecut: DieCutSheet };
 
 // The bottom of the editor: the dock with the open tab's tool strip above it, or, when one of that
 // tab's sheets is open, the strip above the sheet (so its tools stay one tap away). While a layer is
@@ -67,7 +71,7 @@ export default function EditorPanels({ actions }: { actions: EditorActions }) {
   }
 
   const strip = dockTab === 'draw'
-    ? <ToolStrip ariaLabel="Draw tools" layout="stacked" items={DRAW_TOOLS} active={drawTool} onSelect={pickDrawTool} />
+    ? <ToolStrip ariaLabel="Draw tools" layout="stacked" items={DRAW_TOOLS} active={sheet === 'draw' ? drawTool : null} onSelect={pickDrawTool} />
     : dockTab === 'media' ? <MediaStrip actions={actions} />
     : dockTab === 'text' ? <TextStrip actions={actions} />
     : dockTab === 'fx' ? <AiFiltersStrip actions={actions} />

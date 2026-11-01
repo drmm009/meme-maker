@@ -1,4 +1,4 @@
-import { Trash2, Settings, SlidersHorizontal, Copy, Scaling, FlipHorizontal, Scissors, Crop, Wand2, Ellipsis, Layers, Palette, Square, MessageSquareQuote, AlignLeft, AlignCenter, AlignRight } from 'lucide-react';
+import { Trash2, Settings, SlidersHorizontal, Copy, Scissors, Eraser, ScanFace, Ellipsis, Layers, Palette, Square, MessageSquareQuote, AlignLeft, AlignCenter, AlignRight } from 'lucide-react';
 import { FloatingToolbar } from '../../ui';
 import type { ToolbarItem } from '../../ui';
 import { useEditorUiStore } from '../store/useEditorUiStore';
@@ -36,13 +36,17 @@ export default function LayerToolbar({ actions }: { actions: EditorActions }) {
   const dup: ToolbarItem = { id: 'duplicate', label: 'Copy', title: 'Duplicate', Icon: Copy, onClick: () => actions.handleDuplicateLayer(id) };
   let items: ToolbarItem[] = [];
   if (kind === 'caption' && caption) {
+    const isBubble = Boolean(caption.bubbleStyle);
     items = [
       { id: 'font', label: 'Font', title: 'Font and my saved styles', icon: <span className="ie-glyph">Ar</span>, ...opens('text', 'font') },
-      { id: 'style', label: 'Style', title: 'Size, bold, italic, underline, case and effects', icon: <span className="ie-glyph ie-glyph--bold">B</span>, ...opens('text', 'style') },
-      { id: 'align', label: 'Align', title: 'Alignment and spacing', Icon: alignIcon(caption.align), ...opens('text', 'align') },
-      { id: 'color', label: 'Color', title: 'Colour, outline and shadow', icon: <span className="ie-color-dot" style={{ background: caption.color || '#ffffff' }} />, ...opens('text', 'color') },
+      ...(isBubble ? [] : [
+        { id: 'style', label: 'Style', title: 'Size, bold, italic, underline, case and effects', icon: <span className="ie-glyph ie-glyph--bold">B</span>, ...opens('text', 'style') },
+        { id: 'align', label: 'Align', title: 'Alignment and spacing', Icon: alignIcon(caption.align), ...opens('text', 'align') },
+      ]),
+      { id: 'color', label: 'Color', title: 'Colour and outline', icon: <span className="ie-color-dot" style={{ background: caption.color || '#ffffff' }} />, ...opens('text', 'color') },
       { id: 'box', label: 'Box', title: 'Box behind the text and opacity', Icon: Square, ...opens('text', 'box') },
-      ...(caption.bubbleStyle ? [{ id: 'bubble', label: 'Bubble', title: 'Bubble style', Icon: MessageSquareQuote, ...opens('bubble') }] : []),
+      ...(isBubble ? [{ id: 'bubble', label: 'Bubble', title: 'Bubble style', Icon: MessageSquareQuote, ...opens('bubble') }] : []),
+      dup,
       layers,
       del,
     ];
@@ -50,25 +54,37 @@ export default function LayerToolbar({ actions }: { actions: EditorActions }) {
     const platform = caption.isTweetCard ? 'tweet' : caption.isInstagramCard ? 'instagram' : 'whatsapp';
     items = [
       { id: 'edit', label: 'Edit', title: 'Edit card details', Icon: Settings, onClick: () => actions.handleOpenSocialModalForActiveCard(platform) },
-      { id: 'style', label: 'Style', Icon: SlidersHorizontal, ...opens('text') },
       dup,
       layers,
       del,
     ];
   } else if (kind === 'sticker' && sticker) {
     items = [
-      { id: 'size', label: 'Size', Icon: Scaling, ...opens('media', 'size') },
-      { id: 'flip', label: 'Flip', Icon: FlipHorizontal, active: Boolean(sticker.flipX), onClick: () => actions.handleFlipActiveLayer() },
-      { id: 'diecut', label: 'Die-cut', Icon: Scissors, active: Boolean(sticker.dieCut), onClick: () => actions.handleToggleDieCutSticker() },
+      { id: 'edit', label: 'Edit', title: 'Edit sticker', Icon: SlidersHorizontal, ...opens('media', 'edit') },
+      {
+        id: 'diecut',
+        label: 'Die-cut',
+        title: sticker.dieCut ? 'Die-cut border (on)' : 'Add die-cut border',
+        Icon: Scissors,
+        active: sheet === 'diecut',
+        onClick: () => {
+          if (sheet === 'diecut') {
+            closeSheet();
+          } else {
+            if (!sticker.dieCut) actions.handleToggleDieCutSticker();
+            openSheet('diecut', null, true);
+          }
+        },
+      },
       dup,
       layers,
       del,
     ];
   } else if (kind === 'image' && image) {
     items = [
-      { id: 'crop', label: 'Crop', Icon: Crop, active: image.fitMode === 'crop', onClick: () => actions.updateActiveImageLayer('fitMode', image.fitMode === 'crop' ? 'fit' : 'crop') },
       { id: 'filters', label: 'Filters', Icon: SlidersHorizontal, ...opens('filters') },
-      { id: 'cutout', label: image.originalUrl ? 'Undo' : 'Cut out', title: 'Remove the background', Icon: Wand2, onClick: () => actions.handleRemoveBackground() },
+      { id: 'background', label: 'Background', title: 'Background blur and background removal', Icon: Eraser, ...opens('background') },
+      { id: 'faceswap', label: 'Face Swap', title: 'Face swap with AI', Icon: ScanFace, onClick: () => actions.handleStartMorphFace(image) },
       { id: 'more', label: 'More', Icon: Ellipsis, ...opens('media') },
       layers,
       del,

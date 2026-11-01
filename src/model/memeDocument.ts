@@ -88,6 +88,7 @@ export interface CropRect {
 
 export interface MemeImageLayer extends MemeLayerBase, LayerLook {
   url: string;
+  originalUrl?: string | null;
   scale?: number;
   // Drawn size in canvas pixels (otherwise the image fitted into 320px, times scale).
   width?: number;
@@ -100,6 +101,9 @@ export interface MemeImageLayer extends MemeLayerBase, LayerLook {
   isFaceMorph?: boolean;
   faceName?: string;
   filterId?: string;
+  bgBlur?: number;
+  subjectUrl?: string;
+  subjectOf?: string;
   // Side handles keep the proportions instead of stretching.
   keepShape?: boolean;
 }

@@ -11,7 +11,7 @@ const LAYER_SHEETS = ['text', 'media'];
 // The canvas area: the meme canvas with its overlays (paste toast, background-removal spinner,
 // face pinpointing). Tapping the empty space around the canvas deselects.
 export default function CanvasStage({
-  canvasRef, imageFit, isNativeLayout, layoutDef, isDrawingMode, isRemovingBg,
+  canvasRef, imageFit, isNativeLayout, layoutDef, isDrawingMode, isRemovingBg, isBlurringBg,
   onAddDrawing, onDeleteLayer, onUpdateSlotTransform, faceMorph, onDropMedia
 }) {
   const captions = useMemeEditorStore((s) => s.captions);
@@ -129,17 +129,58 @@ export default function CanvasStage({
           isDrawingMode={isDrawingMode}
         />
 
-        {isRemovingBg && (
-          <div style={{
-            position: 'absolute',
-            top: 0, left: 0, right: 0, bottom: 0,
-            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-            background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)',
-            color: '#fff', zIndex: 50, borderRadius: '12px'
-          }}>
-            <RefreshCw className="spin" style={{ width: 40, height: 40, color: 'var(--primary-accent)', marginBottom: '12px' }} />
-            <span style={{ fontSize: '1rem', fontWeight: 600 }}>Removing Background...</span>
-            <span style={{ fontSize: '0.8rem', opacity: 0.8, marginTop: '4px' }}>This may take a moment</span>
+        {(isRemovingBg || isBlurringBg) && (
+          <div
+            className="canvas-loading-overlay"
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: 'rgba(10, 12, 18, 0.75)',
+              backdropFilter: 'blur(8px)',
+              WebkitBackdropFilter: 'blur(8px)',
+              color: '#ffffff',
+              zIndex: 50,
+              borderRadius: '12px',
+              padding: '20px',
+              textAlign: 'center'
+            }}
+          >
+            <div
+              style={{
+                width: 52,
+                height: 52,
+                borderRadius: '50%',
+                background: 'rgba(255, 90, 54, 0.12)',
+                border: '1.5px solid rgba(255, 90, 54, 0.35)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: '12px',
+                boxShadow: '0 0 20px rgba(255, 90, 54, 0.25)'
+              }}
+            >
+              <RefreshCw
+                className="spin"
+                style={{
+                  width: 24,
+                  height: 24,
+                  color: 'var(--ui-accent, #ff5a36)'
+                }}
+              />
+            </div>
+            <span style={{ fontSize: '15px', fontWeight: 700, letterSpacing: '-0.01em', color: '#ffffff' }}>
+              {isBlurringBg ? 'Blur loading...' : 'Removing Background...'}
+            </span>
+            <span style={{ fontSize: '12.5px', color: 'rgba(255, 255, 255, 0.65)', marginTop: '4px' }}>
+              {isBlurringBg ? 'Detecting subject & applying blur' : 'This may take a moment'}
+            </span>
           </div>
         )}
 

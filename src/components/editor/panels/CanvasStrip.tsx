@@ -15,6 +15,7 @@ export default function CanvasStrip({ actions }: { actions: EditorActions }) {
   const watermarkOn = useEditorUiStore((s: { watermark: { enabled?: boolean } }) => Boolean(s.watermark?.enabled));
   const updateWatermark = useEditorUiStore((s: { updateWatermark: (key: string, value: unknown) => void }) => s.updateWatermark);
   const openSheet = useEditorUiStore((s: { openSheet: (sheet: string, focus?: string | null) => void }) => s.openSheet);
+  const closeSheet = useEditorUiStore((s: { closeSheet: () => void }) => s.closeSheet);
 
   const swatch = (
     <span
@@ -24,18 +25,34 @@ export default function CanvasStrip({ actions }: { actions: EditorActions }) {
   );
   const items: StripItem[] = [
     { id: 'style', label: 'Canvas Style', title: 'Background colour, mirror and crop', icon: swatch, active: sheet === 'canvasColor' },
-    { id: 'watermark', label: 'Watermark', title: 'Watermark Settings', Icon: Stamp, active: sheet === 'watermark' || watermarkOn },
-    { id: 'header', label: 'Header', title: 'White band above the meme', Icon: PanelTop, active: headerOn },
-    { id: 'footer', label: 'Footer', title: 'White band below the meme', Icon: PanelBottom, active: footerOn },
+    { id: 'watermark', label: 'Watermark', title: 'Watermark Settings', Icon: Stamp, active: sheet === 'watermark' },
+    { id: 'header', label: 'Header', title: 'White band above the meme', Icon: PanelTop, active: sheet === 'header' },
+    { id: 'footer', label: 'Footer', title: 'White band below the meme', Icon: PanelBottom, active: sheet === 'footer' },
   ];
 
   const onSelect = (id: string) => {
-    if (id === 'style') openSheet('canvasColor');
-    else if (id === 'watermark') {
-      if (!watermarkOn) updateWatermark('enabled', true);
-      openSheet('watermark');
-    } else if (id === 'header') actions.handleToggleCanvasHeader();
-    else if (id === 'footer') actions.handleToggleCanvasFooter();
+    if (id === 'style') {
+      if (sheet === 'canvasColor') closeSheet();
+      else openSheet('canvasColor');
+    } else if (id === 'watermark') {
+      if (sheet === 'watermark') closeSheet();
+      else {
+        if (!watermarkOn) updateWatermark('enabled', true);
+        openSheet('watermark');
+      }
+    } else if (id === 'header') {
+      if (sheet === 'header') closeSheet();
+      else {
+        if (!headerOn) actions.handleToggleCanvasHeader();
+        openSheet('header');
+      }
+    } else if (id === 'footer') {
+      if (sheet === 'footer') closeSheet();
+      else {
+        if (!footerOn) actions.handleToggleCanvasFooter();
+        openSheet('footer');
+      }
+    }
   };
 
   return <ToolStrip ariaLabel="Canvas tools" layout="stacked" items={items} onSelect={onSelect} />;

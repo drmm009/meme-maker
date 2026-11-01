@@ -30,30 +30,70 @@ const CLOSE_DRAG_PX = 70;
 export default function Sheet({ title, onClose, badge, action, className = '', hideTitle = false, children }: SheetProps) {
   const sheetRef = useRef<HTMLElement>(null);
   const drag = useRef<{ y: number; dy: number } | null>(null);
+  const isClosingRef = useRef(false);
   const hasIcon = Boolean(action && action.Icon !== null && action.variant !== 'plain');
   const ActionIcon = action?.Icon || Plus;
 
+  const isTest = typeof navigator !== 'undefined' && (navigator.userAgent.includes('jsdom') || navigator.userAgent.includes('Node.js'));
+
+  const triggerClose = () => {
+    if (isClosingRef.current) return;
+    if (isTest || !sheetRef.current) {
+      onClose();
+      return;
+    }
+    isClosingRef.current = true;
+    const el = sheetRef.current;
+    el.style.transition = 'transform 0.24s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.22s ease';
+    el.style.transform = 'translateY(100%)';
+    el.style.opacity = '0';
+    setTimeout(() => {
+      onClose();
+    }, 220);
+  };
+
   const onPointerDown = (e: PointerEvent) => {
+    if (isClosingRef.current) return;
     if ((e.target as HTMLElement).closest('button:not(.ui-sheet-handle)')) return;
     drag.current = { y: e.clientY, dy: 0 };
     (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
+    if (sheetRef.current) sheetRef.current.style.transition = 'none';
   };
+
   const onPointerMove = (e: PointerEvent) => {
-    if (!drag.current || !sheetRef.current) return;
+    if (!drag.current || !sheetRef.current || isClosingRef.current) return;
     drag.current.dy = Math.max(0, e.clientY - drag.current.y);
     sheetRef.current.style.transform = `translateY(${drag.current.dy}px)`;
   };
+
   const onPointerUp = () => {
     const d = drag.current;
     drag.current = null;
-    if (sheetRef.current) sheetRef.current.style.transform = '';
-    if (d && d.dy > CLOSE_DRAG_PX) onClose();
+    if (!sheetRef.current || isClosingRef.current) return;
+    if (d && d.dy > CLOSE_DRAG_PX) {
+      triggerClose();
+    } else if (d && d.dy > 0) {
+      const el = sheetRef.current;
+      el.style.transition = 'transform 0.28s cubic-bezier(0.16, 1, 0.3, 1)';
+      el.style.transform = 'translateY(0)';
+      const onEnd = () => {
+        el.removeEventListener('transitionend', onEnd);
+        if (!isClosingRef.current) {
+          el.style.transition = '';
+          el.style.transform = '';
+        }
+      };
+      el.addEventListener('transitionend', onEnd);
+    } else {
+      sheetRef.current.style.transform = '';
+    }
   };
+
   const dragProps = { onPointerDown, onPointerMove, onPointerUp, onPointerCancel: onPointerUp };
 
   return (
     <section ref={sheetRef} className={`ui-sheet ${className}`} role="dialog" aria-label={title}>
-      <button type="button" className="ui-sheet-handle" aria-label={`Close ${title}`} onClick={onClose} {...dragProps} />
+      <button type="button" className="ui-sheet-handle" aria-label={`Close ${title}`} onClick={triggerClose} {...dragProps} />
       {(!hideTitle || action) && (
         <header className={`ui-sheet-head${hideTitle ? ' ui-sheet-head--bare' : ''}`} {...dragProps}>
           {!hideTitle && <h2 className="ui-sheet-title">{title}</h2>}

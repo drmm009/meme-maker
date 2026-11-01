@@ -1,7 +1,7 @@
 import { THEME_BADGE_BG, THEME_CORAL, drawDeleteHandle, drawResizeHandle, drawRotateHandle, drawSelectionBox, drawSideHandle } from './handles';
 import { getFilterCss, drawImageFiltered } from '../../../data/photoFilters';
 import { applyShadow, compositeFor, cornerPx, isFramed, roundRectPath } from '../draw/layerLook';
-import { applyPhotoEffects, hasPhotoEffects } from '../draw/photoEffects';
+import { applyPhotoEffects, hasPhotoEffects, blurredCopy } from '../draw/photoEffects';
 import { isVideoUrl } from '../../editor/memeEditorUtils';
 
 export function paintImageLayer({
@@ -32,6 +32,30 @@ if (cached) {
       drawImageFiltered(tempCtx, cached, filterCss, 0, 0, baseW, baseH);
       if (hasPhotoEffects(effects)) applyPhotoEffects(tempCtx, 0, 0, baseW, baseH, effects);
       drawSource = tempCanvas;
+    }
+  }
+
+  if (imgLayer.bgBlur > 0 && imgLayer.subjectUrl) {
+    const subject = imageCacheRef.current[imgLayer.subjectUrl];
+    if (subject) {
+      const blurred = blurredCopy(drawSource, baseW, baseH, imgLayer.bgBlur * (baseW / 600));
+      if (blurred) {
+        const comp = document.createElement('canvas');
+        comp.width = baseW;
+        comp.height = baseH;
+        const compCtx = comp.getContext('2d');
+        compCtx.drawImage(blurred, 0, 0, baseW, baseH);
+        compCtx.drawImage(subject, 0, 0, baseW, baseH);
+        drawSource = comp;
+      }
+    } else if (!imageCacheRef.current[`${imgLayer.subjectUrl}#loading`]) {
+      imageCacheRef.current[`${imgLayer.subjectUrl}#loading`] = true;
+      const cut = new Image();
+      cut.onload = () => {
+        imageCacheRef.current[imgLayer.subjectUrl] = cut;
+        renderCanvas?.(baseImgRef?.current);
+      };
+      cut.src = imgLayer.subjectUrl;
     }
   }
 

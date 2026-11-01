@@ -1,23 +1,388 @@
-/* The main photo's cropper: full screen, dark, the photo in the middle with the crop box over it. */
-.ie-crop { position: fixed; inset: 0; z-index: 1500; display: flex; flex-direction: column; background: var(--ui-bg); }
-.ie-crop-bar { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px; }
-.ie-crop-title { margin: 0; font-size: 17px; font-weight: 700; }
-.ie-crop-text-btn { padding: 8px 4px; border: none; background: none; color: var(--ui-muted); font-size: 15px; cursor: pointer; }
-.ie-crop-stage { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; padding: 16px; overflow: hidden; touch-action: none; }
-.ie-crop-frame { position: relative; display: inline-block; max-width: 100%; max-height: 100%; line-height: 0; }
-.ie-crop-photo { display: block; max-width: 100%; max-height: calc(100vh - 260px); }
+/* ══════════════════════════════════════════════════════════════════════════
+   Photo Crop Studio — Impeccable & Watermelon UI Revamp
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.ie-crop {
+  position: fixed;
+  inset: 0;
+  z-index: 1500;
+  display: flex;
+  flex-direction: column;
+  background: #090a0d;
+  user-select: none;
+  animation: ie-crop-fade-in 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes ie-crop-fade-in {
+  from { opacity: 0; transform: scale(0.99); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* ── Top Bar ────────────────────────────────────────────────────────── */
+.ie-crop-bar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  height: 56px;
+  padding: 0 18px;
+  background: rgba(18, 20, 25, 0.94);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  z-index: 20;
+}
+
+.ie-crop-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #ffffff;
+  letter-spacing: -0.01em;
+  text-align: center;
+}
+
+.ie-crop-cancel-btn,
+.ie-crop-text-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 34px;
+  padding: 0 16px;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: transparent;
+  color: #f1f5f9;
+  font-size: 13.5px;
+  font-weight: 500;
+  cursor: pointer;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: all 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ie-crop-cancel-btn:hover,
+.ie-crop-text-btn:hover {
+  background: transparent;
+  border-color: rgba(255, 255, 255, 0.45);
+  color: #ffffff;
+}
+
+.ie-crop-done-btn,
+.ie-crop-bar .ui-btn-accent {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 34px;
+  padding: 0 20px;
+  border-radius: 9999px;
+  border: none;
+  background: var(--ui-accent, #ff5a36);
+  color: #ffffff;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 1px 8px rgba(255, 90, 54, 0.35);
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: all 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ie-crop-done-btn:hover,
+.ie-crop-bar .ui-btn-accent:hover {
+  background: #ff6e4a;
+  box-shadow: 0 2px 12px rgba(255, 90, 54, 0.5);
+  transform: translateY(-0.5px);
+}
+
+.ie-crop-done-btn:disabled,
+.ie-crop-bar .ui-btn-accent:disabled {
+  opacity: 0.45;
+  transform: none;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+/* ── Stage & Canvas ─────────────────────────────────────────────────── */
+.ie-crop-stage {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 20px;
+  overflow: hidden;
+  touch-action: none;
+  background: #090a0d;
+}
+
+.ie-crop-frame {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+  max-height: 100%;
+  line-height: 0;
+}
+
+.ie-crop-photo {
+  display: block;
+  max-width: 100%;
+  max-height: calc(100vh - 250px);
+  border-radius: 2px;
+}
+
 .ie-crop-box {
   position: absolute;
   box-sizing: border-box;
-  border: 2px solid #ffffff;
-  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.72);
   cursor: move;
   touch-action: none;
 }
-.ie-crop-handle { position: absolute; width: 22px; height: 22px; border-radius: 50%; background: #ffffff; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4); touch-action: none; }
-.ie-crop-handle--nw { left: -11px; top: -11px; cursor: nwse-resize; }
-.ie-crop-handle--ne { right: -11px; top: -11px; cursor: nesw-resize; }
-.ie-crop-handle--sw { left: -11px; bottom: -11px; cursor: nesw-resize; }
-.ie-crop-handle--se { right: -11px; bottom: -11px; cursor: nwse-resize; }
-.ie-crop-tools { flex: none; display: flex; flex-direction: column; gap: 12px; padding: 12px 16px calc(16px + env(safe-area-inset-bottom)); }
-.ie-crop-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* Rule-of-thirds grid inside crop box */
+.ie-crop-box::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.22) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.22) 1px, transparent 1px);
+  background-size: 33.333% 33.333%;
+}
+
+/* ── Pro L-Bracket Corner Framing Handles ───────────────────────────── */
+.ie-crop-handle {
+  position: absolute;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: none;
+  z-index: 10;
+  cursor: pointer;
+  background: transparent;
+  outline: none;
+}
+
+.ie-crop-handle::after {
+  content: '';
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  box-sizing: border-box;
+  border: 0 solid #ffffff;
+  pointer-events: none;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.85));
+  transition: border-color 0.16s ease, transform 0.16s ease, filter 0.16s ease;
+}
+
+/* Northwest Corner */
+.ie-crop-handle--nw {
+  top: -22px;
+  left: -22px;
+  cursor: nwse-resize;
+}
+.ie-crop-handle--nw::after {
+  top: 21px;
+  left: 21px;
+  border-top-width: 3.5px;
+  border-left-width: 3.5px;
+  border-top-left-radius: 3px;
+}
+
+/* Northeast Corner */
+.ie-crop-handle--ne {
+  top: -22px;
+  right: -22px;
+  cursor: nesw-resize;
+}
+.ie-crop-handle--ne::after {
+  top: 21px;
+  right: 21px;
+  border-top-width: 3.5px;
+  border-right-width: 3.5px;
+  border-top-right-radius: 3px;
+}
+
+/* Southwest Corner */
+.ie-crop-handle--sw {
+  bottom: -22px;
+  left: -22px;
+  cursor: nesw-resize;
+}
+.ie-crop-handle--sw::after {
+  bottom: 21px;
+  left: 21px;
+  border-bottom-width: 3.5px;
+  border-left-width: 3.5px;
+  border-bottom-left-radius: 3px;
+}
+
+/* Southeast Corner */
+.ie-crop-handle--se {
+  bottom: -22px;
+  right: -22px;
+  cursor: nwse-resize;
+}
+.ie-crop-handle--se::after {
+  bottom: 21px;
+  right: 21px;
+  border-bottom-width: 3.5px;
+  border-right-width: 3.5px;
+  border-bottom-right-radius: 3px;
+}
+
+.ie-crop-handle:hover::after,
+.ie-crop-handle:active::after {
+  border-color: var(--ui-accent, #ff5a36);
+  filter: drop-shadow(0 0 7px rgba(255, 90, 54, 0.75));
+  transform: scale(1.14);
+}
+
+/* ── Bottom Controls Sheet (Watermelon UI Aesthetic) ─────────────────── */
+.ie-crop-tools {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px calc(18px + env(safe-area-inset-bottom));
+  background: #15171c;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+  box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.55);
+  z-index: 20;
+}
+
+.ie-crop-sheet-handle {
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.22);
+  margin-bottom: 2px;
+}
+
+/* Aspect Ratio Chips */
+.ie-crop-tools .ui-chips {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+  gap: 8px;
+  width: 100%;
+  max-width: 480px;
+  padding: 2px 4px;
+}
+
+.ie-crop-tools .ui-chips::-webkit-scrollbar {
+  display: none;
+}
+
+.ie-crop-tools .ui-chip {
+  flex: 0 0 auto;
+  height: 34px;
+  padding: 0 16px;
+  border-radius: 9999px !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  color: #94a3b8 !important;
+  cursor: pointer;
+  outline: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+  transition: all 0.16s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.ie-crop-tools .ui-chip:hover:not(.is-on) {
+  background: transparent !important;
+  background-color: transparent !important;
+  border-color: rgba(255, 255, 255, 0.45) !important;
+  color: #ffffff !important;
+}
+
+.ie-crop-tools .ui-chip.is-on {
+  background: var(--ui-accent, #ff5a36) !important;
+  background-color: var(--ui-accent, #ff5a36) !important;
+  border-color: var(--ui-accent, #ff5a36) !important;
+  color: #ffffff !important;
+  font-weight: 600 !important;
+  box-shadow: 0 1px 6px rgba(255, 90, 54, 0.35) !important;
+}
+
+/* ── Bottom Action Toolbar (Rotate & Reset in Single Balanced Row) ───── */
+.ie-crop-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 480px;
+}
+
+.ie-crop-action-btn,
+.ie-crop-actions .ui-btn {
+  flex: 1 1 0;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  height: 40px;
+  padding: 0 14px;
+  border-radius: 9999px !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  color: #f1f5f9 !important;
+  cursor: pointer;
+  outline: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+  box-shadow: none !important;
+  transition: all 0.16s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.ie-crop-action-btn:hover:not(:disabled),
+.ie-crop-actions .ui-btn:hover:not(:disabled) {
+  background: transparent !important;
+  background-color: transparent !important;
+  border-color: rgba(255, 255, 255, 0.45) !important;
+  color: #ffffff !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.ie-crop-action-btn:active,
+.ie-crop-actions .ui-btn:active {
+  border-color: var(--ui-accent, #ff5a36) !important;
+}
+
+.ie-crop-btn-icon {
+  color: var(--ui-accent, #ff5a36);
+  flex-shrink: 0;
+  transition: transform 0.16s ease;
+}
+
+.ie-crop-action-btn:hover .ie-crop-btn-icon {
+  transform: scale(1.08);
+}
+
+.ie-crop-restore-btn {
+  white-space: nowrap;
+}
+
+.ie-crop-restore-btn span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

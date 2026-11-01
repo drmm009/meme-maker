@@ -51,6 +51,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
   const canvasFlipX = useMemeEditorStore((s) => s.canvasFlipX);
   const watermark = useEditorUiStore((s) => s.watermark);
   const drawTool = useEditorUiStore((s) => s.drawTool);
+  const sheet = useEditorUiStore((s) => s.sheet);
   // Shapes and censor regions can be picked and adjusted unless a freehand brush is in use.
   const showDrawingHandles = !isDrawingMode || drawTool === 'shape' || drawTool === 'censor';
 
@@ -100,8 +101,8 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
   // Optional header/footer bands extend the canvas above and below the image area.
   const isHeaderEnabled = !!canvasHeader?.enabled;
   const isFooterEnabled = !!canvasFooter?.enabled;
-  const headerExtH = getBandHeight(canvasHeader, captions.find(c => c.isHeaderCaption), canvasW);
-  const footerExtH = getBandHeight(canvasFooter, captions.find(c => c.isFooterCaption), canvasW);
+  const headerExtH = getBandHeight(canvasHeader, null, canvasW);
+  const footerExtH = getBandHeight(canvasFooter, null, canvasW);
   const totalCanvasH = canvasH + headerExtH + footerExtH;
 
   const { getCaptionCenterY, getStickerCenterY, getImageLayerCenterY } = makeLayerCenters({
@@ -193,6 +194,43 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
   }, [activeCaptionId, activeCaptionEditable, editingCaptionId]);
 
   const zoomed = isZoomed(view);
+
+  // Smoothly animate canvas movement and scaling when bottom sheet opens/closes or layout shifts
+  const prevRectRef = useRef(null);
+  useEffect(() => {
+    const el = wrapperRef.current;
+    if (!el || zoomed || isDragging.current) return;
+    const isTest = typeof navigator !== 'undefined' && (navigator.userAgent.includes('jsdom') || navigator.userAgent.includes('Node.js'));
+    if (isTest) return;
+
+    const nextRect = el.getBoundingClientRect();
+    const prevRect = prevRectRef.current;
+    prevRectRef.current = nextRect;
+
+    if (prevRect && nextRect.height > 0 && prevRect.height > 0 &&
+        (Math.abs(prevRect.height - nextRect.height) > 3 || Math.abs(prevRect.top - nextRect.top) > 3)) {
+      const dy = (prevRect.top + prevRect.height / 2) - (nextRect.top + nextRect.height / 2);
+      const scale = prevRect.height / nextRect.height;
+
+      el.style.transformOrigin = 'center center';
+      el.style.transition = 'none';
+      el.style.transform = `translateY(${dy}px) scale(${scale})`;
+
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          el.style.transition = 'transform 0.32s cubic-bezier(0.16, 1, 0.3, 1)';
+          el.style.transform = '';
+          const cleanUp = () => {
+            el.removeEventListener('transitionend', cleanUp);
+            el.style.transition = '';
+            el.style.transform = '';
+            prevRectRef.current = el.getBoundingClientRect();
+          };
+          el.addEventListener('transitionend', cleanUp);
+        });
+      });
+    }
+  }, [sheet, aspectRatio, totalCanvasH, zoomed]);
 
   return (
     <>

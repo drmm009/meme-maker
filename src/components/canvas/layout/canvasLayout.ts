@@ -48,6 +48,14 @@ export interface Band {
   enabled?: boolean;
   height?: number;
   bgColor?: string;
+  // bgColor was picked in the Header/Footer sheet; otherwise the band follows the canvas colour.
+  ownColor?: boolean;
+}
+
+// The colour a band is filled with.
+export function bandColor(band: Band | null | undefined, canvasColor: string | null | undefined): string {
+  if (band?.ownColor && band.bgColor) return band.bgColor;
+  return canvasColor || band?.bgColor || '#ffffff';
 }
 
 // Height of the header or footer band added above/below the image: tall enough for its

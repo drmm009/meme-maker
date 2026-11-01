@@ -1,4 +1,4 @@
-import { ScanFace, FlipHorizontal, FlipVertical, ImageUp, Copy } from 'lucide-react';
+import { Crop, FlipHorizontal, FlipVertical, ImageUp, Copy } from 'lucide-react';
 import { Sheet, Section, Row, ChipRow, Chip, TileGrid, Tile, Slider, SwatchRow } from '../../ui';
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
 import { useSelection } from './selection';
@@ -24,10 +24,10 @@ export default function MediaSheet({ actions, onClose }: { actions: EditorAction
   const setImage = (patch: Partial<MemeImageLayer>) => id && patchLayer('imageLayers', id, patch);
 
   return (
-    <Sheet title={image ? 'More' : 'Media'} hideTitle onClose={onClose}>
+    <Sheet className={`ie-media-sheet${sticker ? ' ie-sticker-sheet' : ''}`} title={image ? 'More' : 'Media'} hideTitle onClose={onClose}>
       {imageLayers.length + stickers.length === 0 && <p className="ie-empty">No photos or stickers yet. Add one from the strip above.</p>}
 
-      {!image && imageLayers.length + stickers.length > 0 && (
+      {!image && !sticker && imageLayers.length + stickers.length > 0 && (
         <Section title="On the meme">
           <ChipRow ariaLabel="Images and stickers">
             {imageLayers.map((l, i) => <Chip key={l.id} label={l.layerName?.trim() || `Image ${i + 1}`} active={l.id === id} onClick={() => setActiveLayerId(l.id)} />)}
@@ -46,7 +46,7 @@ export default function MediaSheet({ actions, onClose }: { actions: EditorAction
               <Tile label="Flip" title="Flip upside down" Icon={FlipVertical} active={Boolean(image.flipY)} onClick={() => setImage({ flipY: !image.flipY })} />
               <Tile label="Copy" Icon={Copy} title="Duplicate" onClick={() => actions.handleDuplicateLayer(id)} />
               <Tile label="Replace" Icon={ImageUp} title="Use another picture here" accept="image/*" onFile={actions.handleReplaceImageLayer} />
-              <Tile label="Face Swap" Icon={ScanFace} onClick={() => actions.handleStartMorphFace(image)} />
+              <Tile label="Crop" title="Crop or fill" Icon={Crop} active={image.fitMode === 'crop'} onClick={() => actions.updateActiveImageLayer('fitMode', image.fitMode === 'crop' ? 'fit' : 'crop')} />
             </TileGrid>
           </Section>
           <Section>

@@ -35,7 +35,25 @@ interface MediaPickerSheetProps {
 // tiles, a search field, then a grid that scrolls on its own so the meme above stays in view.
 export default function MediaPickerSheet({ title, onClose, tabs, tab, onTab, fillTabs, search, grid, busy, action, footer, children }: MediaPickerSheetProps) {
   return (
-    <Sheet className="ie-draw-sheet ie-picker-sheet" title={title} hideTitle action={action} onClose={onClose}>
+    <Sheet className={`ie-draw-sheet ie-picker-sheet ie-picker-sheet--${grid}`} title={title} hideTitle action={action} onClose={onClose}>
+      {search && (
+        <div className="ie-picker-search">
+          <Search size={16} aria-hidden="true" />
+          <input
+            className="ui-field"
+            type="search"
+            aria-label={search.placeholder}
+            placeholder={search.placeholder}
+            value={search.value}
+            onChange={(e) => search.onChange(e.target.value)}
+          />
+          {search.value && (
+            <button type="button" className="ie-picker-clear" aria-label="Clear search" onClick={() => search.onChange('')}>
+              <X size={14} strokeWidth={2.4} />
+            </button>
+          )}
+        </div>
+      )}
       <div className={`ie-shapes-row${fillTabs ? ' ie-shapes-row--fill' : ''}`} role="toolbar" aria-label={`${title} categories`}>
         {tabs.map((t) => {
           const active = tab === t.id;
@@ -55,24 +73,6 @@ export default function MediaPickerSheet({ title, onClose, tabs, tab, onTab, fil
           );
         })}
       </div>
-      {search && (
-        <div className="ie-picker-search">
-          <Search size={16} aria-hidden="true" />
-          <input
-            className="ui-field"
-            type="search"
-            aria-label={search.placeholder}
-            placeholder={search.placeholder}
-            value={search.value}
-            onChange={(e) => search.onChange(e.target.value)}
-          />
-          {search.value && (
-            <button type="button" className="ie-picker-clear" aria-label="Clear search" onClick={() => search.onChange('')}>
-              <X size={14} strokeWidth={2.4} />
-            </button>
-          )}
-        </div>
-      )}
       <div className={`ie-picker-grid ie-picker-grid--${grid}`} aria-busy={busy || undefined}>
         {children}
       </div>

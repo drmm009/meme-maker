@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { LayoutGrid, Smartphone, MessageCircle, MessageSquareQuote, Zap, Check } from 'lucide-react';
+import { LayoutGrid, Smartphone, MessageCircle, MessageSquareQuote, Zap } from 'lucide-react';
 import MediaPickerSheet from './MediaPickerSheet';
 import { BUBBLE_PRESETS, BUBBLE_CATEGORIES } from './bubblePresets';
 import { useSelection } from './selection';
@@ -17,6 +17,14 @@ export default function BubbleSheet({ actions, onClose }: { actions: EditorActio
   const words = typeof caption?.text === 'string' && caption.text.length <= 26 ? caption.text : '';
   const list = BUBBLE_PRESETS.filter((p) => category === 'All' || p.category === category);
 
+  const handleBubbleClick = (presetId: string) => {
+    if (current === presetId) {
+      actions.updateActiveCaptionProps({ bubbleStyle: null });
+    } else {
+      actions.handleApplyBubbleStyle(presetId);
+    }
+  };
+
   return (
     <MediaPickerSheet
       title="Bubbles"
@@ -25,7 +33,6 @@ export default function BubbleSheet({ actions, onClose }: { actions: EditorActio
       tab={category}
       onTab={setCategory}
       grid="bubbles"
-      action={current ? { label: 'Remove bubble', variant: 'plain', onClick: () => actions.updateActiveCaptionProps({ bubbleStyle: null }) } : undefined}
     >
       {list.map((p) => (
         <button
@@ -34,7 +41,7 @@ export default function BubbleSheet({ actions, onClose }: { actions: EditorActio
           className={`ie-picker-bubble${current === p.id ? ' is-on' : ''}`}
           aria-pressed={current === p.id}
           title={p.description}
-          onClick={() => actions.handleApplyBubbleStyle(p.id)}
+          onClick={() => handleBubbleClick(p.id)}
         >
           <span className="ie-picker-bubble-stage">
             <span
@@ -50,7 +57,6 @@ export default function BubbleSheet({ actions, onClose }: { actions: EditorActio
             </span>
           </span>
           <span className="ie-picker-name">{p.name}</span>
-          {current === p.id && <span className="ie-picker-check" aria-hidden="true"><Check size={12} strokeWidth={3} /></span>}
         </button>
       ))}
     </MediaPickerSheet>

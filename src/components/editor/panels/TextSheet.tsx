@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
-import { Bold, Italic, Underline, MessageSquareQuote, CaseSensitive, Plus, X, BookmarkPlus, AlignLeft, AlignCenter, AlignRight } from 'lucide-react';
+import { MessageSquareQuote, Plus, X, BookmarkPlus, AlignLeft, AlignCenter, AlignRight } from 'lucide-react';
 import { Sheet, Section, Row, ChipRow, Chip, Toggle, SwatchRow, Slider, Switch, TileGrid, Tile, SegmentedControl } from '../../ui';
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
 import { useEditorUiStore } from '../store/useEditorUiStore';
@@ -46,7 +46,7 @@ const sameColour = (a: unknown, b: string) => String(a || '').toLowerCase() === 
 const SECTIONS = {
   edit: { title: undefined, part: null },
   font: { title: 'Font', part: 'font' },
-  styles: { title: 'My styles', part: 'font' },
+  styles: { title: 'Saved styles', part: 'font' },
   format: { title: 'Format', part: 'style' },
   size: { title: 'Size', part: 'style' },
   effects: { title: 'Effects', part: 'style' },
@@ -54,8 +54,8 @@ const SECTIONS = {
   spacing: { title: 'Spacing', part: 'align' },
   color: { title: undefined, part: 'color' },
   outline: { title: undefined, part: 'color' },
-  shadow: { title: undefined, part: 'color' },
-  box: { title: 'Box', part: 'box' },
+  shadow: { title: undefined, part: null },
+  box: { title: undefined, part: 'box' },
 } as const;
 type TextSection = keyof typeof SECTIONS;
 const TEXT_PARTS = { font: 'Font', style: 'Style', align: 'Align', color: 'Color', box: 'Box' } as const;
@@ -82,8 +82,8 @@ export default function TextSheet({ actions, onClose }: { actions: EditorActions
   const { id, kind, caption } = useSelection();
   const part = kind === 'caption' && sheetFocus && sheetFocus in TEXT_PARTS ? (sheetFocus as TextPart) : null;
   const shows = (section: TextSection) => !part || SECTIONS[section].part === part;
-  // Style on its own is three plain rows (format, size, effects) with no headings.
-  const heading = (section: TextSection) => (part === 'style' ? undefined : SECTIONS[section].title);
+  // Style, Align and Box on their own are minimalist rows with no redundant section headings
+  const heading = (section: TextSection) => (part === 'style' || part === 'align' || part === 'box' ? undefined : SECTIONS[section].title);
 
   // Opening the sheet with no caption selected picks the first one.
   useEffect(() => {
@@ -133,6 +133,7 @@ export default function TextSheet({ actions, onClose }: { actions: EditorActions
               <textarea
                 className="ui-field ui-field--accent"
                 aria-label="Caption text"
+                placeholder="Type caption text here..."
                 rows={part ? 3 : 1}
                 value={caption.text || ''}
                 onChange={(e) => updateCaptionText(caption.id, e.target.value)}
@@ -145,12 +146,12 @@ export default function TextSheet({ actions, onClose }: { actions: EditorActions
               <div className="ie-font-row">
                 {FONTS.map((f: { id: string; name: string; family: string; sample?: string }) => (
                   <Toggle key={f.id} variant="tile" label={f.name} active={(caption.fontFamily || 'Impact, sans-serif') === f.family} onClick={() => pickFont(f.family)} style={{ fontFamily: f.family }}>
-                    {f.sample || 'Aa'}
+                    {f.id}
                   </Toggle>
                 ))}
                 {customFonts.map((f) => (
                   <Toggle key={f.family} variant="tile" label={f.family} active={caption.fontFamily === f.css} onClick={() => pickFont(f.css)} style={{ fontFamily: f.css }}>
-                    Aa
+                    {f.family}
                   </Toggle>
                 ))}
                 <label className="ui-toggle ui-toggle--tile ie-font-upload" title="Upload your own font">
@@ -197,11 +198,17 @@ export default function TextSheet({ actions, onClose }: { actions: EditorActions
           {shows('format') && (
             <Section title={heading('format')} id="format" rule={!part}>
               <div className="ie-format-row" role="group" aria-label="Text format">
-                <Toggle label="Bold" active={caption.bold !== false} onClick={() => set({ bold: caption.bold === false })}><Bold size={19} strokeWidth={3} /></Toggle>
-                <Toggle label="Italic" active={Boolean(caption.italic)} onClick={() => set({ italic: !caption.italic })}><Italic size={19} /></Toggle>
-                <Toggle label="Underline" active={Boolean(caption.underline)} onClick={() => set({ underline: !caption.underline })}><Underline size={19} /></Toggle>
+                <Toggle label="Bold" active={caption.bold !== false} onClick={() => set({ bold: caption.bold === false })}>
+                  <span className="ie-format-glyph ie-format-glyph--bold" aria-hidden="true">B</span>
+                </Toggle>
+                <Toggle label="Italic" active={Boolean(caption.italic)} onClick={() => set({ italic: !caption.italic })}>
+                  <span className="ie-format-glyph ie-format-glyph--italic" aria-hidden="true">I</span>
+                </Toggle>
+                <Toggle label="Underline" active={Boolean(caption.underline)} onClick={() => set({ underline: !caption.underline })}>
+                  <span className="ie-format-glyph ie-format-glyph--underline" aria-hidden="true">U</span>
+                </Toggle>
                 <button type="button" className="ui-toggle" aria-label="Change case" title="Change case" onClick={actions.handleToggleTextCase}>
-                  <CaseSensitive size={21} />
+                  <span className="ie-format-glyph ie-format-glyph--case" aria-hidden="true">Aa</span>
                 </button>
               </div>
             </Section>
@@ -210,8 +217,9 @@ export default function TextSheet({ actions, onClose }: { actions: EditorActions
           {shows('size') && (
             <Section title={heading('size')} id="size">
               <div className="ie-size-row">
+                <span className="ie-size-label">Size</span>
                 <span className="ie-size-a ie-size-a--small" aria-hidden="true">A</span>
-                <Slider label="Text size" min={16} max={160} value={caption.fontSize || 50} onChange={(v) => live({ fontSize: v })} />
+                <Slider label="Text size" min={16} max={160} value={caption.fontSize || 50} onChange={(v) => live({ fontSize: v })} format={(v) => `${Math.round(v)}px`} />
                 <span className="ie-size-a" aria-hidden="true">A</span>
               </div>
             </Section>
@@ -248,10 +256,10 @@ export default function TextSheet({ actions, onClose }: { actions: EditorActions
           {shows('spacing') && (
             <Section title={heading('spacing')} id="spacing">
               <Row label="Letters">
-                <Slider label="Letter spacing" min={-0.05} max={0.5} step={0.01} value={Number(caption.letterSpacing || 0)} onChange={(v) => live({ letterSpacing: v })} />
+                <Slider label="Letter spacing" min={-0.05} max={0.5} step={0.01} value={Number(caption.letterSpacing || 0)} onChange={(v) => live({ letterSpacing: v })} format={(v) => `${(v * 100).toFixed(0)}%`} />
               </Row>
               <Row label="Lines">
-                <Slider label="Line height" min={0.8} max={2} step={0.05} value={Number(caption.lineHeight || 1.2)} onChange={(v) => live({ lineHeight: v })} />
+                <Slider label="Line height" min={0.8} max={2} step={0.05} value={Number(caption.lineHeight || 1.2)} onChange={(v) => live({ lineHeight: v })} format={(v) => `${Number(v).toFixed(2)}×`} />
               </Row>
             </Section>
           )}
@@ -286,7 +294,7 @@ export default function TextSheet({ actions, onClose }: { actions: EditorActions
             <Section title={heading('outline')} id="outline">
               <Row label="Outline">
                 <Switch label="Stroke" checked={strokeOn} onChange={(on) => set({ stroke: on ? getContrastStroke(caption.color || '#ffffff') : 'transparent' })} />
-                {strokeOn && <Slider label="Outline thickness" min={1} max={24} value={Number(caption.strokeWidth || Math.max(3, Math.round(fontSize / 7)))} onChange={(v) => live({ strokeWidth: v })} />}
+                {strokeOn && <Slider label="Outline thickness" min={1} max={24} value={Number(caption.strokeWidth || Math.max(3, Math.round(fontSize / 7)))} onChange={(v) => live({ strokeWidth: v })} format={(v) => `${Math.round(v)}px`} />}
               </Row>
               {strokeOn && (
                 <Row label="">
@@ -299,7 +307,7 @@ export default function TextSheet({ actions, onClose }: { actions: EditorActions
           {shows('shadow') && (
             <Section title={heading('shadow')} id="shadow">
               <Row label="Shadow">
-                <Slider label="Shadow size" min={0} max={30} value={Number(caption.shadowSize || 0)} onChange={(v) => live({ shadowSize: v })} />
+                <Slider label="Shadow size" min={0} max={30} value={Number(caption.shadowSize || 0)} onChange={(v) => live({ shadowSize: v })} format={(v) => `${Math.round(v)}px`} />
               </Row>
               {Number(caption.shadowSize) > 0 && (
                 <Row label="">
@@ -311,7 +319,7 @@ export default function TextSheet({ actions, onClose }: { actions: EditorActions
 
           {shows('box') && (
             <Section title={heading('box')} id="box" rule={!part}>
-              <Row label="Fill">
+              <Row label="Box">
                 <SwatchRow
                   ariaLabel="Text box colour"
                   colors={BOX_COLORS}
@@ -336,7 +344,7 @@ export default function TextSheet({ actions, onClose }: { actions: EditorActions
                 </Row>
               )}
               <Row label="Opacity">
-                <Slider label="Text opacity" min={0.1} max={1} step={0.05} value={Number(caption.opacity ?? 1)} onChange={(v) => live({ opacity: v })} />
+                <Slider label="Text opacity" min={0.1} max={1} step={0.05} value={Number(caption.opacity ?? 1)} onChange={(v) => live({ opacity: v })} format={(v) => `${Math.round(v * 100)}%`} />
               </Row>
             </Section>
           )}

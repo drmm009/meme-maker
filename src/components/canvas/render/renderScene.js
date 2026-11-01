@@ -232,7 +232,7 @@ export function renderScene(scene) {
     }
 
     paintWatermark({
-      canvas, imageCacheRef, targetCtx, watermark
+      baseImgRef, canvas, imageCacheRef, renderCanvas, targetCtx, watermark
     });
 
     // ...or on the whole meme.

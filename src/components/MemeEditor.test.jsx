@@ -7,7 +7,7 @@ import React from 'react';
 import { render, screen, fireEvent, cleanup, act, within } from '@testing-library/react';
 
 // `animation` stands in for the moving layers' controls the real canvas carries (canvas/media).
-const canvas = { props: null, animation: undefined };
+const canvas = { props: null, ui: null, animation: undefined };
 
 vi.mock('./CanvasEditor', async () => {
   const React = await import('react');
@@ -33,6 +33,7 @@ vi.mock('./CanvasEditor', async () => {
       ...ownProps,
     };
     canvas.props = props;
+    canvas.ui = ui;
     React.useImperativeHandle(ref, () => ({ toDataURL: () => 'data:image/png;base64,STUB', get animation() { return canvas.animation; } }));
     return (
       <div data-testid="canvas-stub">
@@ -95,7 +96,7 @@ const textStrip = () => {
   return strip('Text tools');
 };
 const addTextFromMenu = () => fireEvent.click(within(textStrip()).getByText('Add Text'));
-const openTextSheet = () => fireEvent.click(within(textStrip()).getByText('Edit'));
+const openTextSheet = () => act(() => canvas.ui.openSheet('text'));
 // Hidden (no accessible name) until the real canvas reports where the layer is, so find it by label.
 const canvasStrip = () => screen.getByRole('toolbar', { name: 'Canvas tools' });
 const layerToolbar = () => screen.getByLabelText('Layer tools');
@@ -111,6 +112,7 @@ describe('MemeEditor', () => {
     // The first-run tour has its own test; keep it out of the others' way.
     localStorage.setItem('meme-maker-editor-tour-v1', JSON.stringify('done'));
     canvas.props = null;
+    canvas.ui = null;
   });
 
   afterEach(() => {
@@ -186,9 +188,9 @@ describe('MemeEditor', () => {
     renderEditor();
     const strips = [
       ['Draw on the meme', 'Draw tools', ['Brush', 'Glow', 'Marker', 'Eraser', 'Shapes', 'Censor']],
-      ['Photos, videos, stickers and emoji', 'Media tools', ['Photo', 'Templates', 'Stickers', 'GIFs', 'Emoji', 'Link']],
-      ['Text', 'Text tools', ['Add Text', 'Edit', 'Bubble', 'Social Card']],
-      ['AI tools and photo filters', 'AI and filter tools', ['Face Swap', 'Remove BG', 'AI Caption', 'Filters']],
+      ['Photos, videos, stickers and emoji', 'Media tools', ['Photo', 'Templates', 'Stickers', 'GIFs', 'Emoji']],
+      ['Text', 'Text tools', ['Add Text', 'Bubble', 'Social Card']],
+      ['AI tools and photo filters', 'AI and filter tools', ['Face Swap', 'Background', 'AI Caption', 'Filters']],
       ['Canvas colour, bands and watermark', 'Canvas tools', ['Canvas Style', 'Watermark', 'Header', 'Footer']],
     ];
     for (const [tab, name, tools] of strips) {
@@ -259,14 +261,15 @@ describe('MemeEditor', () => {
     expect(document.querySelector('.bottom-sheet-panel')).toBeNull();
     fireEvent.click(within(bubbles).getByText('WhatsApp Sent').closest('button'));
     expect(canvas.props.captions.some((c) => c.bubbleStyle === 'whatsapp-send')).toBe(true);
-    fireEvent.click(within(bubbles).getByText('Remove bubble'));
-    expect(canvas.props.captions.some((c) => c.bubbleStyle)).toBe(false);
+    closeSheet();
+    const tools = layerToolbar();
+    expect([...tools.querySelectorAll('button > span:last-child')].map((s) => s.textContent)).toEqual(['Font', 'Color', 'Box', 'Bubble', 'Copy', 'Layers', 'Delete']);
   }, 30000);
 
   it('hides the aspect ratio pill while a sheet is open', () => {
     renderEditor();
     expect(screen.getByRole('radiogroup', { name: 'Aspect ratio' })).toBeTruthy();
-    addTextFromMenu();
+    openTextSheet();
     expect(screen.queryByRole('radiogroup', { name: 'Aspect ratio' })).toBeNull();
     closeSheet();
     expect(screen.getByRole('radiogroup', { name: 'Aspect ratio' })).toBeTruthy();
@@ -275,10 +278,9 @@ describe('MemeEditor', () => {
   it('shows the floating tools for the selected caption once its sheet closes', () => {
     renderEditor();
     addTextFromMenu();
-    closeSheet();
     const tools = layerToolbar();
     // Five Text sheets, each with its related controls, then the layer tools.
-    expect([...tools.querySelectorAll('button > span:last-child')].map((s) => s.textContent)).toEqual(['Font', 'Style', 'Align', 'Color', 'Box', 'Layers', 'Delete']);
+    expect([...tools.querySelectorAll('button > span:last-child')].map((s) => s.textContent)).toEqual(['Font', 'Style', 'Align', 'Color', 'Box', 'Copy', 'Layers', 'Delete']);
 
     // Font: the fonts and saved styles, nothing else.
     fireEvent.click(within(tools).getByText('Font'));
@@ -312,13 +314,12 @@ describe('MemeEditor', () => {
     expect(within(align).queryByLabelText('Text size')).toBeNull();
     closeSheet();
 
-    // Color: colour, outline and shadow.
+    // Color: colour and outline (no shadow in color sheet).
     fireEvent.click(within(layerToolbar()).getByText('Color'));
     const color = sheet('Color');
     expect(within(color).getByLabelText('Text colour')).toBeTruthy();
     expect(within(color).getByLabelText('Stroke')).toBeTruthy();
-    fireEvent.change(within(color).getByLabelText('Shadow size'), { target: { value: '12' } });
-    expect(canvas.props.captions[2].shadowSize).toBe(12);
+    expect(within(color).queryByLabelText('Shadow size')).toBeNull();
     closeSheet();
 
     // Box: the box behind the text and opacity, no effects.
@@ -333,8 +334,7 @@ describe('MemeEditor', () => {
   it('Layers on the floating toolbar lists every layer, top first; select, reorder, hide and lock', () => {
     renderEditor();
     addTextFromMenu();
-    closeSheet();
-    for (const name of ['Font', 'Style', 'Align', 'Color', 'Box', 'Layers', 'Delete']) expect(within(layerToolbar()).getByText(name)).toBeTruthy();
+    for (const name of ['Font', 'Style', 'Align', 'Color', 'Box', 'Copy', 'Layers', 'Delete']) expect(within(layerToolbar()).getByText(name)).toBeTruthy();
     fireEvent.click(within(layerToolbar()).getByText('Layers'));
     const panel = sheet('Layers');
     const rows = () => within(screen.getByRole('list', { name: 'Layers' })).getAllByRole('listitem').map((li) => li.querySelector('.ie-layer-pick').textContent);
@@ -434,7 +434,6 @@ describe('MemeEditor', () => {
     renderEditor();
     act(() => canvas.props.onAddDrawing({ points: [0, 0, 10, 10], color: '#fff', size: 4, tool: 'brush' }));
     addTextFromMenu();
-    closeSheet();
     fireEvent.click(screen.getByLabelText('History and saved memes'));
     const steps = () => within(screen.getByRole('list', { name: 'History' })).getAllByRole('button').map((b) => b.textContent);
     expect(steps()).toEqual(['Added textNow', 'Added drawing', 'Start']);
@@ -477,7 +476,7 @@ describe('MemeEditor', () => {
     expect(canvas.props.activeLayerId).toBe(canvas.props.captions[1].id);
   }, 30000);
 
-  it('Filters adds warmth, sharpen and vignette, and a background blur for the photo', () => {
+  it('Filters adds warmth, sharpen and vignette for the photo', () => {
     renderEditor();
     openSection('AI tools and photo filters');
     fireEvent.click(within(screen.getByRole('toolbar', { name: 'AI and filter tools' })).getByText('Filters'));
@@ -491,7 +490,7 @@ describe('MemeEditor', () => {
     fireEvent.change(within(panel).getByLabelText('Warmth'), { target: { value: '40' } });
     fireEvent.change(within(panel).getByLabelText('Vignette'), { target: { value: '60' } });
     expect(canvas.props.imageFilters).toMatchObject({ warmth: 40, vignette: 60 });
-    expect(within(sheet('Filters')).getByLabelText('Background blur')).toBeTruthy();
+    expect(within(sheet('Filters')).queryByLabelText('Background blur')).toBeNull();
   }, 30000);
 
   it('applies a filter preset from AI/Filters and adds the top band from Canvas', () => {
@@ -745,11 +744,11 @@ describe('MemeEditor', () => {
     expect(screen.queryByRole('dialog', { name: 'Crop photo' })).toBeNull();
   }, 30000);
 
-  it('AI/Filters shows Face Swap, Remove BG, AI Caption and Filters; AI Caption opens its studio', () => {
+  it('AI/Filters shows Face Swap, Background, AI Caption and Filters; Background opens its sheet', () => {
     renderEditor();
     openSection('AI tools and photo filters');
     const strip = screen.getByRole('toolbar', { name: 'AI and filter tools' });
-    expect(within(strip).getAllByRole('button').map((b) => b.textContent)).toEqual(['Face Swap', 'Remove BG', 'AI Caption', 'Filters']);
+    expect(within(strip).getAllByRole('button').map((b) => b.textContent)).toEqual(['Face Swap', 'Background', 'AI Caption', 'Filters']);
     expect(screen.queryByRole('dialog')).toBeNull();
     fireEvent.click(within(strip).getByText('AI Caption'));
     expect(document.querySelector('.bottom-sheet-panel')?.textContent).toContain('AI Captions');
@@ -809,9 +808,9 @@ describe('MemeEditor', () => {
     act(() => canvas.props.onSelectLayer(canvas.props.imageLayers[0].id));
     fireEvent.click(within(layerToolbar()).getByText('More'));
     const more = sheet('More');
-    expect(within(more).getAllByRole('button').map((b) => b.textContent).filter(Boolean)).toEqual(['Mirror', 'Flip', 'Copy', 'Face Swap']);
+    expect(within(more).getAllByRole('button').map((b) => b.textContent).filter(Boolean)).toEqual(['Mirror', 'Flip', 'Copy', 'Crop']);
     expect(within(more).getByText('Replace')).toBeTruthy();
-    for (const gone of ['Crop', 'Filters', 'Cut out', 'Duplicate']) expect(within(more).queryByText(gone)).toBeNull();
+    for (const gone of ['Face Swap', 'Filters', 'Background', 'Duplicate']) expect(within(more).queryByText(gone)).toBeNull();
     expect(within(more).queryByRole('group', { name: 'Blend mode' })).toBeNull();
     expect(within(more).queryByRole('switch', { name: 'Keep shape when resizing' })).toBeNull();
     expect(within(more).queryByRole('group', { name: 'Images and stickers' })).toBeNull();
@@ -825,21 +824,87 @@ describe('MemeEditor', () => {
     expect(canvas.props.imageLayers).toHaveLength(2);
   }, 30000);
 
-  it('the Media sheet sets how a sticker sits: upside down, opacity, blend and shadow', () => {
+  it("image layer toolbar has Background (opens Background sheet) and Face Swap buttons", () => {
+    renderEditor();
+    openSection('Photos, videos, stickers and emoji');
+    fireEvent.click(within(strip('Media tools')).getByText('Templates'));
+    fireEvent.click(within(sheet('Templates')).getAllByRole('button', { name: /drake/i })[0]);
+    act(() => canvas.props.onSelectLayer(canvas.props.imageLayers[0].id));
+
+    // Verify toolbar pill buttons for image layer
+    const tb = layerToolbar();
+    expect(within(tb).getByText('Background')).toBeTruthy();
+    expect(within(tb).getByText('Face Swap')).toBeTruthy();
+    expect(within(tb).getByText('Filters')).toBeTruthy();
+    expect(within(tb).getByText('More')).toBeTruthy();
+    expect(within(tb).queryByText('Crop')).toBeNull();
+
+    // Tapping Background opens Background sheet
+    fireEvent.click(within(tb).getByText('Background'));
+    const bgSheet = sheet('Background');
+    expect(bgSheet).toBeTruthy();
+    expect(within(bgSheet).getByRole('button', { name: 'Remove Background' })).toBeTruthy();
+    expect(within(bgSheet).getByRole('button', { name: 'Blur Background' })).toBeTruthy();
+
+    // Tapping Background again closes the sheet
+    fireEvent.click(within(tb).getByText('Background'));
+    expect(screen.queryByRole('dialog', { name: 'Background' })).toBeNull();
+  }, 30000);
+
+  it('the Media sheet for stickers has only size bar, flip button, opacity and shadow', () => {
     renderEditor();
     openSection('Photos, videos, stickers and emoji');
     fireEvent.click(within(strip('Media tools')).getByText('Emoji'));
     fireEvent.click(screen.getByTitle('Laugh Cry'));
-    fireEvent.click(within(layerToolbar()).getByText('Size'));
+
+    // Flip button removed from toolbar pill; Edit button is present
+    expect(within(layerToolbar()).queryByText('Flip')).toBeNull();
+    expect(within(layerToolbar()).getByText('Edit')).toBeTruthy();
+
+    fireEvent.click(within(layerToolbar()).getByText('Edit'));
     const media = sheet('Media');
-    fireEvent.click(within(media).getByRole('switch', { name: 'Flip upside down' }));
-    fireEvent.click(within(within(media).getByRole('group', { name: 'Blend mode' })).getByText('Screen'));
+    expect(within(media).getByLabelText('Sticker size')).toBeTruthy();
+
+    fireEvent.click(within(media).getByRole('switch', { name: 'Flip sticker' }));
     fireEvent.change(within(media).getByLabelText('Opacity'), { target: { value: '0.5' } });
     fireEvent.change(within(media).getByLabelText('Shadow size'), { target: { value: '12' } });
-    expect(canvas.props.stickers[0]).toMatchObject({ flipY: true, blend: 'screen', opacity: 0.5, shadowSize: 12 });
+    expect(canvas.props.stickers[0]).toMatchObject({ flipX: true, opacity: 0.5, shadowSize: 12 });
     expect(within(sheet('Media')).getByRole('radiogroup', { name: 'Shadow colour' })).toBeTruthy();
-    // Corners and border are for photos.
+
+    // Upside down, blend mode, die-cut and corners are omitted
+    expect(within(sheet('Media')).queryByRole('switch', { name: 'Flip upside down' })).toBeNull();
+    expect(within(sheet('Media')).queryByRole('group', { name: 'Blend mode' })).toBeNull();
+    expect(within(sheet('Media')).queryByRole('switch', { name: 'Die-cut border' })).toBeNull();
     expect(within(sheet('Media')).queryByLabelText('Corner rounding')).toBeNull();
+  }, 30000);
+
+  it('Die-cut button opens bottom sheet to customize border color and width, and toggling closes it', () => {
+    renderEditor();
+    openSection('Photos, videos, stickers and emoji');
+    fireEvent.click(within(strip('Media tools')).getByText('Emoji'));
+    fireEvent.click(screen.getByTitle('Laugh Cry'));
+
+    // Tapping Die-cut in toolbar opens Die-cut sheet and enables dieCut
+    fireEvent.click(within(layerToolbar()).getByText('Die-cut'));
+    const diecut = sheet('Die-cut');
+    expect(diecut).toBeTruthy();
+    expect(canvas.props.stickers[0].dieCut).toBe(true);
+
+    // Color swatches work
+    const swatches = within(diecut).getByRole('radiogroup', { name: 'Die-cut border colour' });
+    expect(swatches).toBeTruthy();
+    const yellow = within(swatches).getByLabelText('#ffd60a');
+    fireEvent.click(yellow);
+    expect(canvas.props.stickers[0].dieCutColor).toBe('#ffd60a');
+
+    // Border width slider works
+    const slider = within(diecut).getByLabelText('Border width');
+    fireEvent.change(slider, { target: { value: '10' } });
+    expect(canvas.props.stickers[0].dieCutWidth).toBe(10);
+
+    // Tapping Die-cut again closes the sheet
+    fireEvent.click(within(layerToolbar()).getByText('Die-cut'));
+    expect(screen.queryByRole('dialog', { name: 'Die-cut' })).toBeNull();
   }, 30000);
 
   it('Media > GIFs opens the Giphy picker: animated stickers or GIFs', () => {
@@ -848,23 +913,6 @@ describe('MemeEditor', () => {
     fireEvent.click(within(strip('Media tools')).getByText('GIFs'));
     const kinds = within(sheet('GIFs')).getByRole('toolbar', { name: 'GIFs categories' });
     expect(within(kinds).getAllByRole('button').map((b) => b.textContent)).toEqual(['Stickers', 'GIFs']);
-  }, 30000);
-
-  it('Media > Link adds a picture from a web link, and says when a site blocks it', async () => {
-    renderEditor();
-    openSection('Photos, videos, stickers and emoji');
-    fireEvent.click(within(strip('Media tools')).getByText('Link'));
-    const field = () => within(sheet('Add from a link')).getByLabelText('Picture link');
-    fireEvent.change(field(), { target: { value: 'https://blocked.test/a.png' } });
-    // fetch is stubbed to fail, as a site that doesn't share its pictures does.
-    await act(async () => { fireEvent.click(within(sheet('Add from a link')).getByText('Add')); });
-    expect(await within(sheet('Add from a link')).findByRole('alert')).toBeTruthy();
-
-    global.fetch = vi.fn().mockResolvedValue({ ok: true, status: 200, blob: async () => new Blob(['png'], { type: 'image/png' }) });
-    fireEvent.change(field(), { target: { value: 'https://ok.test/a.png' } });
-    await act(async () => { fireEvent.click(within(sheet('Add from a link')).getByText('Add')); });
-    await vi.waitFor(() => expect(canvas.props.imageLayers).toHaveLength(1));
-    expect(canvas.props.imageLayers[0].url.startsWith('data:image/png')).toBe(true);
   }, 30000);
 
   it('a picture dropped on the canvas area is added', async () => {
@@ -894,15 +942,15 @@ describe('MemeEditor', () => {
     fireEvent.click(screen.getByTitle('Laugh Cry'));
     // No dock tab is lit while a layer's pill shows.
     expect(screen.getByRole('navigation', { name: 'Editor tools' }).querySelector('[aria-pressed="true"]')).toBeNull();
-    // The new sticker's Size opens the Media sheet under the pill, Size lit.
-    fireEvent.click(within(layerToolbar()).getByText('Size'));
+    // The new sticker's Edit opens the Media sheet under the pill, Edit lit.
+    fireEvent.click(within(layerToolbar()).getByText('Edit'));
     expect(within(sheet('Media')).getByLabelText('Sticker size')).toBeTruthy();
     expect(screen.queryByRole('toolbar', { name: 'Media tools' })).toBeNull();
-    expect(within(layerToolbar()).getByText('Size').closest('button').getAttribute('aria-pressed')).toBe('true');
-    // Tapping Size again closes it.
-    fireEvent.click(within(layerToolbar()).getByText('Size'));
+    expect(within(layerToolbar()).getByText('Edit').closest('button').getAttribute('aria-pressed')).toBe('true');
+    // Tapping Edit again closes it.
+    fireEvent.click(within(layerToolbar()).getByText('Edit'));
     expect(screen.queryByRole('dialog', { name: 'Media' })).toBeNull();
-    fireEvent.click(within(layerToolbar()).getByText('Size'));
+    fireEvent.click(within(layerToolbar()).getByText('Edit'));
     act(() => canvas.props.onSelectLayer(canvas.props.captions[1].id));
     expect(screen.queryByRole('dialog', { name: 'Media' })).toBeNull();
     expect(within(layerToolbar()).getByText('Font')).toBeTruthy();

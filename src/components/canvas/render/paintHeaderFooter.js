@@ -1,4 +1,5 @@
 import { isColorDark } from '../../../utils/captionLayout';
+import { bandColor } from '../layout/canvasLayout';
 
 export function paintHeaderFooter({
   canvasBgColor, canvasFooter, canvasH, canvasHeader, canvasW, footerExtH, headerExtH,
@@ -7,8 +8,8 @@ export function paintHeaderFooter({
   // Draw Header Extension (Banner extending above canvas)
   if (isHeaderEnabled && headerExtH > 0) {
     targetCtx.save();
-    // 1. Solid background for header extension (matches canvas background color)
-    const extBg = liveBgColor || canvasBgColor || canvasHeader?.bgColor || '#ffffff';
+    // 1. Solid background for header extension (the band's own colour, else the canvas colour)
+    const extBg = bandColor(canvasHeader, liveBgColor || canvasBgColor);
     targetCtx.fillStyle = extBg;
     targetCtx.fillRect(0, 0, canvasW, headerExtH);
 
@@ -27,8 +28,8 @@ export function paintHeaderFooter({
   if (isFooterEnabled && footerExtH > 0) {
     targetCtx.save();
     const footerY = headerExtH + canvasH;
-    // 1. Solid background for footer extension (matches canvas background color)
-    const extBg = liveBgColor || canvasBgColor || canvasFooter?.bgColor || '#ffffff';
+    // 1. Solid background for footer extension (the band's own colour, else the canvas colour)
+    const extBg = bandColor(canvasFooter, liveBgColor || canvasBgColor);
     targetCtx.fillStyle = extBg;
     targetCtx.fillRect(0, footerY, canvasW, footerExtH);
 

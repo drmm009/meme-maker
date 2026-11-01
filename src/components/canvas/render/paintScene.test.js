@@ -74,6 +74,12 @@ describe('paintHeaderFooter', () => {
     expect(callsNamed(ctx, 'stroke')[0].state.strokeStyle).toBe('rgba(0, 0, 0, 0.08)');
   });
 
+  it('uses a colour picked for the band over the canvas colour', () => {
+    const ctx = paint({ isHeaderEnabled: true, isFooterEnabled: true, liveBgColor: '#000000',
+      canvasHeader: { bgColor: '#ff5a36', ownColor: true }, canvasFooter: { bgColor: '#ff5a36' } });
+    expect(callsNamed(ctx, 'fillRect').map((c) => c.state.fillStyle)).toEqual(['#ff5a36', '#000000']);
+  });
+
   it('uses a light divider on a dark canvas, and the live colour while picking', () => {
     const ctx = paint({ isHeaderEnabled: true, liveBgColor: '#000000' });
     expect(callsNamed(ctx, 'fillRect')[0].state.fillStyle).toBe('#000000');
@@ -143,6 +149,27 @@ describe('paintWatermark', () => {
 
   it('outlines black text in white', () => {
     expect(callsNamed(paint({ enabled: true, text: 'X', color: '#000000' }), 'strokeText')[0].state.strokeStyle).toBe('#ffffff');
+  });
+
+  it('loads a logo that is not cached yet once, then paints again', () => {
+    const OrigImage = globalThis.Image;
+    const made = [];
+    globalThis.Image = class { constructor() { made.push(this); } };
+    try {
+      const canvas = createRecordingCanvas(800, 600);
+      const imageCacheRef = { current: {} };
+      const renderCanvas = vi.fn();
+      const baseImgRef = { current: 'base' };
+      const args = { baseImgRef, canvas, imageCacheRef, renderCanvas, targetCtx: canvas.ctx, watermark: { enabled: true, imageUrl: 'new.svg' } };
+      paintWatermark(args);
+      paintWatermark(args);
+      expect(made).toHaveLength(1);
+      made[0].onload();
+      expect(imageCacheRef.current['new.svg']).toBe(made[0]);
+      expect(renderCanvas).toHaveBeenCalledWith('base');
+    } finally {
+      globalThis.Image = OrigImage;
+    }
   });
 
   it('draws an image watermark scaled to 3x its size setting', () => {

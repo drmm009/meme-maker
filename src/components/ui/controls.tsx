@@ -154,8 +154,8 @@ export function Switch({ label, checked, onChange }: { label: string; checked: b
   return <button type="button" role="switch" aria-checked={checked} aria-label={label} title={label} className="ui-switch" onClick={() => onChange(!checked)} />;
 }
 
-export function TileGrid({ columns = 3, children }: { columns?: 2 | 3 | 4 | 5; children: ReactNode }) {
-  return <div className={`ui-tiles${columns === 3 ? '' : ` ui-tiles--${columns}`}`}>{children}</div>;
+export function TileGrid({ columns = 3, className, children }: { columns?: 2 | 3 | 4 | 5; className?: string; children: ReactNode }) {
+  return <div className={`ui-tiles${columns === 3 ? '' : ` ui-tiles--${columns}`}${className ? ` ${className}` : ''}`}>{children}</div>;
 }
 
 interface TileProps {
@@ -167,12 +167,13 @@ interface TileProps {
   active?: boolean;
   disabled?: boolean;
   onClick?: () => void;
+  className?: string;
   // Makes the tile a file picker.
   accept?: string;
   onFile?: (e: ChangeEvent<HTMLInputElement>) => void;
 }
 
-export function Tile({ label, Icon, icon, sub, title, active, disabled, onClick, accept, onFile }: TileProps) {
+export function Tile({ label, Icon, icon, sub, title, active, disabled, onClick, accept, onFile, className }: TileProps) {
   const body = (
     <>
       <span className="ui-tile-icon">{icon ?? (Icon ? <Icon size={22} strokeWidth={1.8} /> : null)}</span>
@@ -182,7 +183,7 @@ export function Tile({ label, Icon, icon, sub, title, active, disabled, onClick,
   );
   if (onFile) {
     return (
-      <label className={`ui-tile${active ? ' is-on' : ''}`} title={title}>
+      <label className={`ui-tile${active ? ' is-on' : ''}${className ? ` ${className}` : ''}`} title={title}>
         {body}
         <input
           type="file"
@@ -196,7 +197,14 @@ export function Tile({ label, Icon, icon, sub, title, active, disabled, onClick,
     );
   }
   return (
-    <button type="button" className={`ui-tile${active ? ' is-on' : ''}`} title={title} aria-pressed={active ?? undefined} disabled={disabled} onClick={onClick}>
+    <button
+      type="button"
+      className={`ui-tile${active ? ' is-on' : ''}${className ? ` ${className}` : ''}`}
+      title={title}
+      aria-pressed={active ?? undefined}
+      disabled={disabled}
+      onClick={onClick}
+    >
       {body}
     </button>
   );

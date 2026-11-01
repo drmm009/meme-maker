@@ -12,6 +12,7 @@ export interface StripItem {
   // Makes the button a file picker (onSelect isn't called).
   accept?: string;
   onFile?: (e: ChangeEvent<HTMLInputElement>) => void;
+  className?: string;
 }
 
 interface ToolStripProps {
@@ -28,7 +29,7 @@ interface ToolStripProps {
 export default function ToolStrip({ items, active = null, onSelect, ariaLabel, layout = 'row' }: ToolStripProps) {
   return (
     <div className={`ui-strip${layout === 'stacked' ? ' ui-strip--stacked' : ''}`} role="toolbar" aria-label={ariaLabel}>
-      {items.map(({ id, label, Icon, icon, title, active: on, accept, onFile }) => {
+      {items.map(({ id, label, Icon, icon, title, active: on, accept, onFile, className }) => {
         const pressed = on ?? active === id;
         const body = (
           <>
@@ -38,7 +39,7 @@ export default function ToolStrip({ items, active = null, onSelect, ariaLabel, l
         );
         if (onFile) {
           return (
-            <label key={id} className="ui-strip-btn" title={title || label}>
+            <label key={id} className={`ui-strip-btn${className ? ` ${className}` : ''}`} title={title || label}>
               {body}
               <input
                 type="file"
@@ -57,7 +58,7 @@ export default function ToolStrip({ items, active = null, onSelect, ariaLabel, l
           <button
             key={id}
             type="button"
-            className={`ui-strip-btn${pressed ? ' is-on' : ''}`}
+            className={`ui-strip-btn${pressed ? ' is-on' : ''}${className ? ` ${className}` : ''}`}
             aria-pressed={pressed}
             title={title || label}
             onClick={() => onSelect(id)}

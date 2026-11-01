@@ -10,6 +10,22 @@ import {
 import { MEME_FACE_PRESETS, getMemeFaceDataUrl } from '../data/memeFaces';
 import BottomSheet from './BottomSheet';
 
+
+const getShortFaceName = (preset) => {
+  if (!preset) return '';
+  if (preset.id === 'user_face') return 'You';
+  if (preset.id === 'gigachad') return 'Gigachad';
+  if (preset.id === 'wojak') return 'Wojak';
+  if (preset.id === 'trollface') return 'Trollface';
+  if (preset.id === 'therock') return 'The Rock';
+  if (preset.id === 'harold') return 'Harold';
+  if (preset.id === 'nic_cage') return 'Nic Cage';
+  if (preset.id === 'doge') return 'Doge';
+  if (preset.id === 'crying_jordan') return 'Jordan';
+  if (preset.id === 'pepe') return 'Pepe';
+  return (preset.name || '').split('(')[0].trim();
+};
+
 // Helper to convert any image URL/blob to a base64 data URL
 async function ensureDataUrl(src) {
   if (!src) return '';
@@ -284,10 +300,10 @@ export default function FaceMorphModal({
             fontSize: '0.68rem',
             fontWeight: 700,
             padding: '3px 10px',
-            borderRadius: '999px',
-            background: 'rgba(6, 182, 212, 0.15)',
-            color: 'var(--cyber-cyan)',
-            border: '1px solid rgba(6, 182, 212, 0.3)'
+            borderRadius: '9999px',
+            background: 'rgba(255, 90, 54, 0.12)',
+            color: 'var(--ui-accent, #ff5a36)',
+            border: '1px solid rgba(255, 90, 54, 0.3)'
           }}
         >
           {targetLabel}
@@ -305,14 +321,19 @@ export default function FaceMorphModal({
         >
           <button
             type="button"
-            className="btn btn-ghost btn-sm"
+            className="ui-btn"
             onClick={onClose}
             style={{
-              fontSize: '0.82rem',
+              height: '42px',
+              fontSize: '14px',
               fontWeight: 600,
-              padding: '8px 16px',
-              borderRadius: '12px',
-              color: 'rgba(255, 255, 255, 0.65)'
+              padding: '0 20px',
+              borderRadius: '9999px',
+              background: 'transparent',
+              border: '1px solid rgba(255, 255, 255, 0.18)',
+              color: 'rgba(255, 255, 255, 0.85)',
+              cursor: 'pointer',
+              transition: 'all 0.16s ease'
             }}
           >
             Cancel
@@ -320,25 +341,30 @@ export default function FaceMorphModal({
 
           <button
             type="button"
-            className="btn btn-primary"
+            className="ui-btn"
             onClick={handleApply}
             disabled={isNeuralProcessing || (!neuralFullImage && !neuralCropPreview)}
             style={{
               flex: 1,
               height: '42px',
-              fontSize: '0.84rem',
+              fontSize: '14px',
               fontWeight: 700,
               padding: '0 18px',
-              borderRadius: '12px',
+              borderRadius: '9999px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               gap: '6px',
               cursor: isNeuralProcessing || (!neuralFullImage && !neuralCropPreview) ? 'not-allowed' : 'pointer',
-              boxShadow: '0 4px 14px rgba(249, 115, 22, 0.28)'
+              background: 'var(--ui-accent, #ff5a36)',
+              color: '#ffffff',
+              border: 'none',
+              boxShadow: '0 2px 8px rgba(255, 90, 54, 0.35)',
+              opacity: isNeuralProcessing || (!neuralFullImage && !neuralCropPreview) ? 0.5 : 1,
+              transition: 'all 0.16s ease'
             }}
           >
-            <Check size={15} />
+            <Check size={16} />
             <span>Apply to Meme</span>
           </button>
         </div>
@@ -361,7 +387,7 @@ export default function FaceMorphModal({
       >
         {isNeuralProcessing ? (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-            <RefreshCw className="spin" size={24} style={{ color: 'var(--cyber-cyan)' }} />
+            <RefreshCw className="spin" size={24} style={{ color: 'var(--ui-accent, #ff5a36)' }} />
             <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'rgba(255, 255, 255, 0.9)' }}>
               Swapping face...
             </span>
@@ -409,26 +435,26 @@ export default function FaceMorphModal({
                       position: 'absolute',
                       top: '10px',
                       left: '10px',
-                      padding: '5px 12px',
-                      borderRadius: '999px',
-                      fontSize: '0.72rem',
-                      fontWeight: 700,
+                      padding: '6px 14px',
+                      borderRadius: '9999px',
+                      fontSize: '12px',
+                      fontWeight: 600,
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '5px',
+                      gap: '6px',
                       cursor: 'pointer',
-                      border: isComparing ? '1px solid #ef4444' : '1px solid rgba(255, 255, 255, 0.18)',
-                      background: isComparing ? '#ef4444' : 'rgba(12, 14, 20, 0.88)',
+                      border: isComparing ? '1px solid var(--ui-accent, #ff5a36)' : '1px solid rgba(255, 255, 255, 0.18)',
+                      background: isComparing ? 'var(--ui-accent, #ff5a36)' : 'rgba(12, 14, 20, 0.88)',
                       backdropFilter: 'blur(8px)',
                       color: '#ffffff',
                       userSelect: 'none',
                       touchAction: 'manipulation',
-                      boxShadow: isComparing ? '0 0 12px rgba(239, 68, 68, 0.5)' : '0 2px 8px rgba(0,0,0,0.3)',
+                      boxShadow: isComparing ? '0 0 12px rgba(255, 90, 54, 0.5)' : '0 2px 8px rgba(0,0,0,0.3)',
                       transition: 'all 0.15s ease'
                     }}
                   >
-                    <Eye size={12} />
-                    <span>{isComparing ? 'Original Face' : 'Hold to Compare'}</span>
+                    <Eye size={13} />
+                    <span>{isComparing ? 'Original Face' : 'Hold to compare'}</span>
                   </button>
 
                   {/* Subtle Face / Full Zoom Toggle */}
@@ -440,7 +466,7 @@ export default function FaceMorphModal({
                       display: 'inline-flex',
                       background: 'rgba(12, 14, 20, 0.88)',
                       backdropFilter: 'blur(8px)',
-                      borderRadius: '999px',
+                      borderRadius: '9999px',
                       padding: '3px',
                       border: '1px solid rgba(255, 255, 255, 0.15)',
                       gap: '2px'
@@ -450,13 +476,13 @@ export default function FaceMorphModal({
                       type="button"
                       onClick={() => setPreviewType('crop')}
                       style={{
-                        padding: '3px 9px',
-                        borderRadius: '999px',
-                        fontSize: '0.68rem',
+                        padding: '4px 10px',
+                        borderRadius: '9999px',
+                        fontSize: '12px',
                         fontWeight: previewType === 'crop' ? 700 : 500,
                         border: 'none',
-                        background: previewType === 'crop' ? 'var(--cyber-cyan)' : 'transparent',
-                        color: previewType === 'crop' ? '#000000' : 'rgba(255, 255, 255, 0.75)',
+                        background: previewType === 'crop' ? 'var(--ui-accent, #ff5a36)' : 'transparent',
+                        color: previewType === 'crop' ? '#ffffff' : 'rgba(255, 255, 255, 0.75)',
                         cursor: 'pointer',
                         transition: 'all 0.15s ease'
                       }}
@@ -467,13 +493,13 @@ export default function FaceMorphModal({
                       type="button"
                       onClick={() => setPreviewType('full')}
                       style={{
-                        padding: '3px 9px',
-                        borderRadius: '999px',
-                        fontSize: '0.68rem',
+                        padding: '4px 10px',
+                        borderRadius: '9999px',
+                        fontSize: '12px',
                         fontWeight: previewType === 'full' ? 700 : 500,
                         border: 'none',
-                        background: previewType === 'full' ? 'var(--cyber-cyan)' : 'transparent',
-                        color: previewType === 'full' ? '#000000' : 'rgba(255, 255, 255, 0.75)',
+                        background: previewType === 'full' ? 'var(--ui-accent, #ff5a36)' : 'transparent',
+                        color: previewType === 'full' ? '#ffffff' : 'rgba(255, 255, 255, 0.75)',
                         cursor: 'pointer',
                         transition: 'all 0.15s ease'
                       }}
@@ -510,62 +536,97 @@ export default function FaceMorphModal({
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="btn btn-secondary"
+                className="ui-btn"
                 style={{
                   flex: 1,
-                  height: '40px',
+                  height: '42px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: '7px',
-                  fontSize: '0.82rem',
+                  gap: '8px',
+                  fontSize: '13px',
                   fontWeight: 600,
-                  borderRadius: '12px',
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  borderRadius: '9999px',
+                  background: 'transparent',
+                  border: '1px solid rgba(255, 255, 255, 0.18)',
+                  color: '#ffffff',
                   cursor: 'pointer',
-                  transition: 'all 0.15s ease'
+                  transition: 'all 0.16s ease'
                 }}
               >
-                <Upload size={15} style={{ color: 'var(--cyber-cyan)' }} />
+                <Upload size={16} style={{ color: 'var(--ui-accent, #ff5a36)' }} />
                 <span>Upload Photo</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => cameraInputRef.current?.click()}
-                className="btn btn-secondary"
+                className="ui-btn"
                 style={{
-                  height: '40px',
+                  height: '42px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: '7px',
-                  fontSize: '0.82rem',
+                  gap: '8px',
+                  fontSize: '13px',
                   fontWeight: 600,
-                  padding: '0 18px',
-                  borderRadius: '12px',
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  padding: '0 20px',
+                  borderRadius: '9999px',
+                  background: 'transparent',
+                  border: '1px solid rgba(255, 255, 255, 0.18)',
+                  color: '#ffffff',
                   cursor: 'pointer',
-                  transition: 'all 0.15s ease'
+                  transition: 'all 0.16s ease'
                 }}
               >
-                <Camera size={15} />
+                <Camera size={16} style={{ color: 'var(--ui-accent, #ff5a36)' }} />
                 <span>Selfie</span>
               </button>
             </div>
 
             {/* Quick Face Presets Strip */}
             <div
-              className="horizontal-scroll-only"
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '10px',
+                justifyContent: 'space-between',
+                padding: '2px 4px 0',
+                marginTop: '4px'
+              }}
+            >
+              <span
+                style={{
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.06em',
+                  color: 'rgba(255, 255, 255, 0.5)'
+                }}
+              >
+                Choose Face
+              </span>
+              <span
+                style={{
+                  fontSize: '12px',
+                  fontWeight: 700,
+                  color: 'var(--ui-accent, #ff5a36)'
+                }}
+              >
+                {selectedPresetId === customFace?.id
+                  ? 'Your Photo'
+                  : getShortFaceName(MEME_FACE_PRESETS.find((p) => p.id === selectedPresetId) || { name: faceName })}
+              </span>
+            </div>
+
+            <div
+              className="horizontal-scroll-only"
+              style={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: '12px',
                 overflowX: 'auto',
                 overflowY: 'hidden',
-                padding: '4px 2px',
+                padding: '6px 4px 10px',
                 scrollbarWidth: 'none',
                 WebkitOverflowScrolling: 'touch'
               }}
@@ -580,26 +641,74 @@ export default function FaceMorphModal({
                   }}
                   style={{
                     flexShrink: 0,
-                    width: '48px',
-                    height: '48px',
-                    borderRadius: '50%',
+                    background: 'transparent',
+                    border: 'none',
                     padding: 0,
-                    overflow: 'hidden',
-                    background: '#0d1017',
-                    border: selectedPresetId === customFace.id ? '2px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.15)',
-                    boxShadow: selectedPresetId === customFace.id ? '0 0 12px rgba(6, 182, 212, 0.55)' : 'none',
-                    transform: selectedPresetId === customFace.id ? 'scale(1.06)' : 'scale(1)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '6px',
                     cursor: 'pointer',
-                    transition: 'all 0.18s cubic-bezier(0.4, 0, 0.2, 1)'
+                    outline: 'none',
+                    WebkitTapHighlightColor: 'transparent',
+                    transition: 'transform 0.16s ease'
                   }}
                   title="Your Uploaded Photo"
                 >
-                  <img src={customFace.dataUrl} alt="Your Photo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <span
+                    style={{
+                      width: '52px',
+                      height: '52px',
+                      borderRadius: '50%',
+                      padding: 0,
+                      overflow: 'hidden',
+                      background: '#0d1017',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      border: selectedPresetId === customFace.id
+                        ? '2.5px solid var(--ui-accent, #ff5a36)'
+                        : '1.5px solid rgba(255, 255, 255, 0.16)',
+                      boxShadow: selectedPresetId === customFace.id
+                        ? '0 0 0 2px rgba(255, 90, 54, 0.35), 0 3px 12px rgba(255, 90, 54, 0.45)'
+                        : 'none',
+                      transform: selectedPresetId === customFace.id ? 'scale(1.05)' : 'scale(1)',
+                      transition: 'all 0.18s cubic-bezier(0.4, 0, 0.2, 1)'
+                    }}
+                  >
+                    <img
+                      src={customFace.dataUrl}
+                      alt="Your Photo"
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        display: 'block',
+                        pointerEvents: 'none'
+                      }}
+                    />
+                  </span>
+                  <span
+                    style={{
+                      fontSize: '11.5px',
+                      fontWeight: selectedPresetId === customFace.id ? 700 : 500,
+                      color: selectedPresetId === customFace.id ? 'var(--ui-accent, #ff5a36)' : '#e2e8f0',
+                      maxWidth: '64px',
+                      textAlign: 'center',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                      transition: 'color 0.16s ease'
+                    }}
+                  >
+                    Uploaded
+                  </span>
                 </button>
               )}
 
               {MEME_FACE_PRESETS.map((preset) => {
                 const isSelected = selectedPresetId === preset.id;
+                const shortName = getShortFaceName(preset);
                 return (
                   <button
                     key={preset.id}
@@ -607,25 +716,68 @@ export default function FaceMorphModal({
                     onClick={() => handleSelectPreset(preset)}
                     style={{
                       flexShrink: 0,
-                      width: '48px',
-                      height: '48px',
-                      borderRadius: '50%',
+                      background: 'transparent',
+                      border: 'none',
                       padding: 0,
-                      overflow: 'hidden',
-                      background: '#0d1017',
-                      border: isSelected ? '2px solid var(--cyber-cyan)' : '1px solid rgba(255, 255, 255, 0.15)',
-                      boxShadow: isSelected ? '0 0 12px rgba(6, 182, 212, 0.55)' : 'none',
-                      transform: isSelected ? 'scale(1.06)' : 'scale(1)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: '6px',
                       cursor: 'pointer',
-                      transition: 'all 0.18s cubic-bezier(0.4, 0, 0.2, 1)'
+                      outline: 'none',
+                      WebkitTapHighlightColor: 'transparent',
+                      transition: 'transform 0.16s ease'
                     }}
                     title={preset.name}
                   >
-                    <img
-                      src={getMemeFaceDataUrl(preset)}
-                      alt={preset.name}
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                    />
+                    <span
+                      style={{
+                        width: '52px',
+                        height: '52px',
+                        borderRadius: '50%',
+                        padding: 0,
+                        overflow: 'hidden',
+                        background: '#0d1017',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        border: isSelected
+                          ? '2.5px solid var(--ui-accent, #ff5a36)'
+                          : '1.5px solid rgba(255, 255, 255, 0.16)',
+                        boxShadow: isSelected
+                          ? '0 0 0 2px rgba(255, 90, 54, 0.35), 0 3px 12px rgba(255, 90, 54, 0.45)'
+                          : 'none',
+                        transform: isSelected ? 'scale(1.05)' : 'scale(1)',
+                        transition: 'all 0.18s cubic-bezier(0.4, 0, 0.2, 1)'
+                      }}
+                    >
+                      <img
+                        src={getMemeFaceDataUrl(preset)}
+                        alt={preset.name}
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover',
+                          display: 'block',
+                          pointerEvents: 'none'
+                        }}
+                      />
+                    </span>
+                    <span
+                      style={{
+                        fontSize: '11.5px',
+                        fontWeight: isSelected ? 700 : 500,
+                        color: isSelected ? 'var(--ui-accent, #ff5a36)' : '#e2e8f0',
+                        maxWidth: '64px',
+                        textAlign: 'center',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        transition: 'color 0.16s ease'
+                      }}
+                    >
+                      {shortName}
+                    </span>
                   </button>
                 );
               })}
@@ -639,12 +791,12 @@ export default function FaceMorphModal({
                   alignItems: 'center',
                   justifyContent: 'space-between',
                   padding: '8px 12px',
-                  borderRadius: '10px',
+                  borderRadius: '9999px',
                   background: 'rgba(255, 255, 255, 0.04)',
-                  border: '1px solid rgba(255, 255, 255, 0.07)'
+                  border: '1px solid rgba(255, 255, 255, 0.1)'
                 }}
               >
-                <span style={{ fontSize: '0.72rem', color: 'rgba(255, 255, 255, 0.7)', fontWeight: 600 }}>
+                <span style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.75)', fontWeight: 600, paddingLeft: '4px' }}>
                   Target:
                 </span>
 
@@ -652,10 +804,10 @@ export default function FaceMorphModal({
                   style={{
                     display: 'inline-flex',
                     background: 'rgba(255, 255, 255, 0.06)',
-                    borderRadius: '8px',
-                    padding: '2px',
-                    border: '1px solid rgba(255, 255, 255, 0.08)',
-                    gap: '2px'
+                    borderRadius: '9999px',
+                    padding: '3px',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    gap: '3px'
                   }}
                 >
                   <button
@@ -665,14 +817,15 @@ export default function FaceMorphModal({
                       setSelectedTargetIndex(null);
                     }}
                     style={{
-                      padding: '3px 8px',
-                      borderRadius: '6px',
-                      fontSize: '0.68rem',
+                      padding: '4px 10px',
+                      borderRadius: '9999px',
+                      fontSize: '12px',
                       fontWeight: swapAllFaces ? 700 : 500,
                       border: 'none',
                       cursor: 'pointer',
-                      background: swapAllFaces ? 'var(--primary-gradient)' : 'transparent',
-                      color: swapAllFaces ? '#ffffff' : 'rgba(255, 255, 255, 0.65)'
+                      background: swapAllFaces ? 'var(--ui-accent, #ff5a36)' : 'transparent',
+                      color: swapAllFaces ? '#ffffff' : 'rgba(255, 255, 255, 0.65)',
+                      transition: 'all 0.15s ease'
                     }}
                   >
                     All Faces ({detectedFaces.length})
@@ -689,14 +842,15 @@ export default function FaceMorphModal({
                           setSelectedTargetIndex(f.index);
                         }}
                         style={{
-                          padding: '3px 8px',
-                          borderRadius: '6px',
-                          fontSize: '0.68rem',
+                          padding: '4px 10px',
+                          borderRadius: '9999px',
+                          fontSize: '12px',
                           fontWeight: isSelected ? 700 : 500,
                           border: 'none',
                           cursor: 'pointer',
-                          background: isSelected ? 'var(--primary-gradient)' : 'transparent',
-                          color: isSelected ? '#ffffff' : 'rgba(255, 255, 255, 0.65)'
+                          background: isSelected ? 'var(--ui-accent, #ff5a36)' : 'transparent',
+                          color: isSelected ? '#ffffff' : 'rgba(255, 255, 255, 0.65)',
+                          transition: 'all 0.15s ease'
                         }}
                       >
                         Face {i + 1}

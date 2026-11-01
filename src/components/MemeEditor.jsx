@@ -73,7 +73,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, o
 
   const canvasRef = useRef(null);
   const { memeName, canvasSize, exportBlob, exportMotion, motionLoops, saveToGallery } = useExport({ canvasRef, template, onSaveToGallery, imageFit, isNativeLayout, layoutDef });
-  const { isRemovingBg, handleRemoveBackground, setPortraitBlur } = useBackgroundRemoval();
+  const { isRemovingBg, isBlurringBg, handleRemoveBackground, handleApplyBackgroundBlur, setPortraitBlur } = useBackgroundRemoval();
   const faceMorph = useFaceMorph({ canvasRef });
   const {
     showFaceMorphModal, setShowFaceMorphModal, morphTargetLayerId, setMorphTargetLayerId,
@@ -108,7 +108,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, o
     handleAddImageLayer, handleAddSticker, handleAddGraphicSticker,
     handleFileUploadImageLayer, updateActiveImageLayer, moveLayer, handleDeleteLayer, handleDuplicateLayer, handleRotateLayer,
     handleFlipActiveLayer, handleToggleDieCutSticker, handleSetDieCutColor,
-    handleRemoveBackground, setPortraitBlur, isRemovingBg, isNativeLayout, setShowFaceMorphModal, handleStartMorphFace,
+    handleRemoveBackground, handleApplyBackgroundBlur, setPortraitBlur, isRemovingBg, isBlurringBg, isNativeLayout, setShowFaceMorphModal, handleStartMorphFace,
     handleUpdateTemplateMorphProgress, handleChangeFace, handleRevertTemplateFace, handleFinalizeTemplateFace, setIsHoldingCanvasCompare,
     memeName, canvasSize, exportBlob, exportMotion, motionLoops, saveToGallery,
   };
@@ -143,6 +143,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, o
             layoutDef={layoutDef}
             isDrawingMode={dockTab === 'draw' && Boolean(drawTool)}
             isRemovingBg={isRemovingBg}
+            isBlurringBg={isBlurringBg}
             onAddDrawing={handleAddDrawing}
             onDeleteLayer={handleDeleteLayer}
             onUpdateSlotTransform={updateSlotTransform}

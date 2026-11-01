@@ -9,7 +9,6 @@ export function useCanvasFrameActions() {
   const setCanvasFooter = useMemeEditorStore((s) => s.setCanvasFooter);
   const setCaptions = useMemeEditorStore((s) => s.setCaptions);
   const updateWatermark = useEditorUiStore((s) => s.updateWatermark);
-  const canvasFlipX = useMemeEditorStore((s) => s.canvasFlipX);
   const setCanvasFlipX = useMemeEditorStore((s) => s.setCanvasFlipX);
   const pushHistory = useMemeEditorStore((s) => s.pushHistory);
   const canvasHeader = useMemeEditorStore((s) => s.canvasHeader);
@@ -58,8 +57,7 @@ export function useCanvasFrameActions() {
 
   // Keyboard shortcuts: Ctrl+Z (undo), Ctrl+Y / Ctrl+Shift+Z (redo), Delete (delete layer), Escape (deselect)
   const handleToggleCanvasFlip = () => {
-    const nextFlip = !canvasFlipX;
-    setCanvasFlipX(nextFlip);
+    setCanvasFlipX((prev) => !prev);
     pushHistory();
   };
 
@@ -78,9 +76,6 @@ export function useCanvasFrameActions() {
     if (nextState) {
       const existingHeaderCap = captions.find(c => c.isHeaderCaption);
       if (existingHeaderCap) {
-        setActiveLayerId(existingHeaderCap.id);
-        setActiveTab('text');
-        setActiveSubmenu(null);
         pushHistory();
       } else {
         const newHeaderCap = {
@@ -99,9 +94,6 @@ export function useCanvasFrameActions() {
         };
         const nextCaps = [newHeaderCap, ...captions];
         setCaptions(nextCaps);
-        setActiveLayerId(newHeaderCap.id);
-        setActiveTab('text');
-        setActiveSubmenu(null);
         pushHistory();
       }
     } else {
@@ -130,9 +122,6 @@ export function useCanvasFrameActions() {
     if (nextState) {
       const existingFooterCap = captions.find(c => c.isFooterCaption);
       if (existingFooterCap) {
-        setActiveLayerId(existingFooterCap.id);
-        setActiveTab('text');
-        setActiveSubmenu(null);
         pushHistory();
       } else {
         const newFooterCap = {
@@ -151,9 +140,6 @@ export function useCanvasFrameActions() {
         };
         const nextCaps = [...captions, newFooterCap];
         setCaptions(nextCaps);
-        setActiveLayerId(newFooterCap.id);
-        setActiveTab('text');
-        setActiveSubmenu(null);
         pushHistory();
       }
     } else {

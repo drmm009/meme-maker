@@ -111,9 +111,13 @@ export default function PhotoCropSheet({ url, uncroppedUrl, onApply, onRestore, 
   return createPortal(
     <div className="ie-crop ui-theme" role="dialog" aria-label="Crop photo" aria-modal="true">
       <div className="ie-crop-bar">
-        <button type="button" className="ie-crop-text-btn" onClick={onClose}>Cancel</button>
+        <button type="button" className="ie-crop-text-btn ie-crop-cancel-btn" onClick={onClose}>
+          Cancel
+        </button>
         <h2 className="ie-crop-title">Crop photo</h2>
-        <button type="button" className="ui-btn-accent" disabled={!img} onClick={apply}>Done</button>
+        <button type="button" className="ui-btn-accent ie-crop-done-btn" disabled={!img} onClick={apply}>
+          Done
+        </button>
       </div>
       <div className="ie-crop-stage" ref={stage} onPointerMove={onMove} onPointerUp={endDrag} onPointerCancel={endDrag}>
         {failed && <p className="ie-empty">{failed}</p>}
@@ -134,14 +138,24 @@ export default function PhotoCropSheet({ url, uncroppedUrl, onApply, onRestore, 
         </div>
       </div>
       <div className="ie-crop-tools">
+        <div className="ie-crop-sheet-handle" aria-hidden="true" />
         <ChipRow ariaLabel="Crop shape">
           {ASPECTS.map((a) => <Chip key={a.id} label={a.label} active={aspect === a.id} onClick={() => pickAspect(a.id)} />)}
         </ChipRow>
         <div className="ie-crop-actions">
-          <button type="button" className="ui-btn" onClick={() => rotate(-90)} aria-label="Turn left"><RotateCcw size={16} />Left</button>
-          <button type="button" className="ui-btn" onClick={() => rotate(90)} aria-label="Turn right"><RotateCw size={16} />Right</button>
+          <button type="button" className="ui-btn ie-crop-action-btn" onClick={() => rotate(-90)} aria-label="Turn left">
+            <RotateCcw size={15} className="ie-crop-btn-icon" />
+            <span>Left</span>
+          </button>
+          <button type="button" className="ui-btn ie-crop-action-btn" onClick={() => rotate(90)} aria-label="Turn right">
+            <RotateCw size={15} className="ie-crop-btn-icon" />
+            <span>Right</span>
+          </button>
           {uncroppedUrl && onRestore && (
-            <button type="button" className="ui-btn" onClick={() => onRestore(uncroppedUrl)}><Undo2 size={16} />Original photo</button>
+            <button type="button" className="ui-btn ie-crop-action-btn ie-crop-restore-btn" onClick={() => onRestore(uncroppedUrl)} aria-label="Restore original photo">
+              <Undo2 size={15} className="ie-crop-btn-icon" />
+              <span>Original photo</span>
+            </button>
           )}
         </div>
       </div>

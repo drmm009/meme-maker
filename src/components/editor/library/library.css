@@ -1,34 +1,88 @@
 /* History & saved sheet: the undo steps as a list, and saved memes as a grid of thumbnails. */
 .ie-library-body { margin-top: 12px; }
-.ie-history { display: flex; flex-direction: column; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.ie-history { display: flex; flex-direction: column; gap: 6px; margin: 0; padding: 0; list-style: none; }
 .ie-history-step {
   display: flex;
   align-items: center;
   justify-content: space-between;
   width: 100%;
   min-height: 42px;
-  padding: 0 12px;
-  border: 1.5px solid transparent;
-  border-radius: 12px;
-  background: var(--ui-surface-2);
-  color: var(--ui-text);
-  font-size: 14px;
+  padding: 0 14px;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-radius: 9999px !important;
+  background: transparent !important;
+  color: #ffffff !important;
+  font-size: 13.5px;
+  font-weight: 500;
   text-align: left;
   cursor: pointer;
+  transition: all 0.16s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.ie-history-step.is-now { border-color: var(--ui-accent-edge); background: var(--ui-accent-tint); }
-.ie-history-step.is-undone { opacity: 0.5; }
-.ie-history-now { color: var(--ui-accent-text); font-size: 12px; font-weight: 700; }
-.ie-saved-actions { margin-top: 10px; }
+.ie-history-step:hover:not(.is-now) {
+  border-color: rgba(255, 255, 255, 0.4) !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+.ie-history-step.is-now {
+  border-color: var(--ui-accent, #ff5a36) !important;
+  background: rgba(255, 90, 54, 0.12) !important;
+  color: #ffffff !important;
+}
+.ie-history-step.is-undone { opacity: 0.45; }
+.ie-history-now {
+  background: var(--ui-accent, #ff5a36) !important;
+  color: #ffffff !important;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  letter-spacing: 0.02em;
+  box-shadow: 0 1px 4px rgba(255, 90, 54, 0.4);
+}
+.ie-saved-actions { margin-top: 12px; }
 .ie-saved-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 10px; margin: 0; padding: 0; list-style: none; }
 .ie-saved-item { position: relative; }
-.ie-saved-open { display: flex; flex-direction: column; gap: 4px; width: 100%; padding: 0; border: none; background: none; color: var(--ui-text); text-align: left; cursor: pointer; }
-.ie-saved-open img, .ie-saved-blank { display: block; width: 100%; aspect-ratio: 1; border-radius: 10px; object-fit: cover; background: var(--ui-surface-2); }
-.ie-saved-name { overflow: hidden; font-size: 13px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.ie-saved-open { display: flex; flex-direction: column; gap: 6px; width: 100%; padding: 0; border: none; background: none; color: #ffffff; text-align: left; cursor: pointer; }
+.ie-saved-open img, .ie-saved-blank {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 16px !important;
+  object-fit: cover;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.ie-saved-open:hover img, .ie-saved-open:hover .ie-saved-blank {
+  border-color: var(--ui-accent, #ff5a36);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+}
+.ie-saved-name { overflow: hidden; font-size: 13px; font-weight: 600; color: #ffffff !important; text-overflow: ellipsis; white-space: nowrap; }
 .ie-saved-date { color: var(--ui-muted); font-size: 11px; }
-.ie-saved-edit { position: absolute; top: -6px; left: -6px; display: grid; place-items: center; width: 22px; height: 22px; padding: 0; border: none; border-radius: 50%; background: var(--ui-line-strong); color: var(--ui-text); cursor: pointer; }
-.ie-saved-rename { padding: 6px 8px; font-size: 13px; }
-.ie-saved-clash { margin-top: 10px; padding: 10px 12px; border-radius: var(--ui-radius-md); background: rgba(255, 255, 255, 0.05); }
+.ie-saved-edit {
+  position: absolute;
+  top: -6px;
+  left: -6px;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  background: var(--ui-surface, #1f2025);
+  color: #ffffff;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  transition: all 0.16s ease;
+}
+.ie-saved-edit:hover {
+  background: var(--ui-accent, #ff5a36);
+  border-color: var(--ui-accent, #ff5a36);
+  color: #ffffff;
+}
+.ie-saved-rename { padding: 6px 10px; font-size: 13px; }
+.ie-saved-clash { margin-top: 10px; padding: 10px 12px; border-radius: var(--ui-radius-md); background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); }
 .ie-saved-clash .ie-empty { margin: 0 0 8px; }
 
 /* Shortcuts tab: small <kbd> boxes and their descriptions */
@@ -40,10 +94,11 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  min-height: 38px;
-  padding: 6px 10px;
-  border-radius: var(--ui-radius-sm);
-  background: var(--ui-surface-2);
+  min-height: 40px;
+  padding: 6px 12px;
+  border-radius: 16px !important;
+  background: transparent !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
 }
 .ie-shortcut-keys { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 .ie-kbd {
@@ -52,13 +107,13 @@
   justify-content: center;
   min-height: 24px;
   padding: 2px 7px;
-  border: 1px solid var(--ui-line-strong);
-  border-radius: var(--ui-radius-sm);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 6px;
   background: rgba(255, 255, 255, 0.08);
-  color: var(--ui-text);
+  color: #ffffff !important;
   font-family: inherit;
   font-size: 12px;
   font-weight: 600;
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.2);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
 }
-.ie-shortcut-label { color: var(--ui-text); font-size: 13px; text-align: right; }
+.ie-shortcut-label { color: #ffffff !important; font-size: 13px; font-weight: 500; text-align: right; }
