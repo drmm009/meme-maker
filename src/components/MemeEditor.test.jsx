@@ -536,11 +536,11 @@ describe('MemeEditor', () => {
     openSection('AI tools and photo filters');
     fireEvent.click(within(screen.getByRole('toolbar', { name: 'AI and filter tools' })).getByText('Filters'));
     const panel = sheet('Filters');
-    // The adjustments stay folded away until asked for.
+    // The adjustments are on the Adjust tab; Presets shows first.
     expect(within(panel).queryByLabelText('Warmth')).toBeNull();
     expect(within(panel).queryByRole('radiogroup', { name: 'Apply to' })).toBeNull();
-    fireEvent.click(within(panel).getByRole('button', { name: 'Adjustments' }));
-    expect(within(panel).getByRole('button', { name: 'Adjustments' }).getAttribute('aria-expanded')).toBe('true');
+    fireEvent.click(within(panel).getByRole('tab', { name: 'Adjust' }));
+    expect(within(panel).getByRole('tab', { name: 'Adjust' }).getAttribute('aria-selected')).toBe('true');
     expect(Number(within(panel).getByLabelText('Warmth').value)).toBe(0);
     fireEvent.change(within(panel).getByLabelText('Warmth'), { target: { value: '40' } });
     fireEvent.change(within(panel).getByLabelText('Vignette'), { target: { value: '60' } });
@@ -548,7 +548,7 @@ describe('MemeEditor', () => {
     expect(within(sheet('Filters')).queryByLabelText('Background blur')).toBeNull();
   }, 30000);
 
-  it('applies a filter preset from AI/Filters and adds the top band from Canvas', () => {
+  it('applies a filter preset from AI/Filters, resets it, and adds the top band from Canvas', () => {
     renderEditor();
     openSection('AI tools and photo filters');
     fireEvent.click(within(screen.getByRole('toolbar', { name: 'AI and filter tools' })).getByText('Filters'));
@@ -556,7 +556,10 @@ describe('MemeEditor', () => {
     expect(deepFry.getAttribute('aria-pressed')).toBe('false');
     fireEvent.click(deepFry);
     expect(within(sheet('Filters')).getByText('Deep Fried 🔥').closest('button').getAttribute('aria-pressed')).toBe('true');
-    expect(within(sheet('Filters')).getByText('Preset: Deep Fried')).toBeTruthy();
+    // Reset goes back to the untouched photo.
+    fireEvent.click(within(sheet('Filters')).getByRole('button', { name: 'Reset' }));
+    expect(within(sheet('Filters')).getByText('Original').closest('button').getAttribute('aria-pressed')).toBe('true');
+    expect(within(sheet('Filters')).getByRole('button', { name: 'Reset' }).disabled).toBe(true);
     closeSheet();
     openSection('Canvas colour, bands and watermark');
     fireEvent.click(within(canvasStrip()).getByText('Header'));

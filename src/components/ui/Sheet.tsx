@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useLayoutEffect, useRef } from 'react';
 import type { PointerEvent, ReactNode } from 'react';
 import { Plus } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
@@ -20,17 +20,53 @@ interface SheetProps {
   // For a sheet opened from a strip button, which already says what's open: no heading (the title
   // stays as the sheet's accessible name), only the action if there is one.
   hideTitle?: boolean;
+  // Something small at the end of the header, before the action: the sheet's on/off switch.
+  aside?: ReactNode;
   children: ReactNode;
 }
 
 const CLOSE_DRAG_PX = 70;
+const GHOST_MS = 300;
+
+// A sheet leaves a copy of itself as it goes, so it never just vanishes. In a host marked
+// data-sheet-ghosts (the editor's bottom panel, which glides to its new height) the copy stays where
+// the sheet was, behind what replaces it, fading, and sinks with the panel. Anywhere else (the
+// full-height library sheets) it is laid over the same spot and slides down out of view.
+function leaveGhost(el: HTMLElement) {
+  const host = el.parentElement;
+  const glide = Boolean(host?.hasAttribute('data-sheet-ghosts'));
+  const parent = glide ? host : (host?.offsetParent as HTMLElement | null);
+  if (!parent) return null;
+  const ghost = el.cloneNode(true) as HTMLElement;
+  ghost.className = `${el.className} ui-sheet-ghost${glide ? '' : ' ui-sheet-ghost--drop'}`;
+  ghost.removeAttribute('role');
+  ghost.setAttribute('aria-hidden', 'true');
+  ghost.inert = true;
+  if (glide) {
+    Object.assign(ghost.style, { top: `${el.offsetTop}px`, height: `${el.offsetHeight}px` });
+  } else {
+    const at = el.getBoundingClientRect();
+    const base = parent.getBoundingClientRect();
+    Object.assign(ghost.style, { top: `${at.top - base.top}px`, left: `${at.left - base.left}px`, width: `${at.width}px`, height: `${at.height}px` });
+  }
+  parent.appendChild(ghost);
+  // A copy starts at the top of anything scrolled; put it back where the sheet was scrolled to.
+  const from = el.querySelectorAll('*');
+  const to = ghost.querySelectorAll('*');
+  from.forEach((node, i) => {
+    if (node.scrollTop || node.scrollLeft) to[i]?.scrollTo(node.scrollLeft, node.scrollTop);
+  });
+  setTimeout(() => ghost.remove(), GHOST_MS + 50);
+  return ghost;
+}
 
 // A panel docked at the bottom of the editor (not a modal: the canvas above stays usable).
 // Close it with a tap on the handle, or by dragging the handle or header down.
-export default function Sheet({ title, onClose, badge, action, className = '', hideTitle = false, children }: SheetProps) {
+export default function Sheet({ title, onClose, badge, action, className = '', hideTitle = false, aside, children }: SheetProps) {
   const sheetRef = useRef<HTMLElement>(null);
   const drag = useRef<{ y: number; dy: number } | null>(null);
   const isClosingRef = useRef(false);
+  const ghostRef = useRef<HTMLElement | null>(null);
   const hasIcon = Boolean(action && action.Icon !== null && action.variant !== 'plain');
   // A plain action shows its icon only when given one, small and before the label.
   const PlainIcon = action?.variant === 'plain' ? action.Icon : null;
@@ -38,20 +74,21 @@ export default function Sheet({ title, onClose, badge, action, className = '', h
 
   const isTest = typeof navigator !== 'undefined' && (navigator.userAgent.includes('jsdom') || navigator.userAgent.includes('Node.js'));
 
+  // Runs while the sheet is still in the page, just before React removes it. (StrictMode's practice
+  // unmount leaves a ghost too; the remount takes it away.)
+  useLayoutEffect(() => {
+    ghostRef.current?.remove();
+    const el = sheetRef.current;
+    return () => {
+      if (!isTest && el?.isConnected) ghostRef.current = leaveGhost(el);
+    };
+  }, [isTest]);
+
+  // The copy left on unmount does the going (see leaveGhost).
   const triggerClose = () => {
     if (isClosingRef.current) return;
-    if (isTest || !sheetRef.current) {
-      onClose();
-      return;
-    }
     isClosingRef.current = true;
-    const el = sheetRef.current;
-    el.style.transition = 'transform 0.24s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.22s ease';
-    el.style.transform = 'translateY(100%)';
-    el.style.opacity = '0';
-    setTimeout(() => {
-      onClose();
-    }, 220);
+    onClose();
   };
 
   const onPointerDown = (e: PointerEvent) => {
@@ -96,11 +133,12 @@ export default function Sheet({ title, onClose, badge, action, className = '', h
   return (
     <section ref={sheetRef} className={`ui-sheet ${className}`} role="dialog" aria-label={title}>
       <button type="button" className="ui-sheet-handle" aria-label={`Close ${title}`} onClick={triggerClose} {...dragProps} />
-      {(!hideTitle || action) && (
+      {(!hideTitle || action || aside) && (
         <header className={`ui-sheet-head${hideTitle ? ' ui-sheet-head--bare' : ''}`} {...dragProps}>
           {!hideTitle && <h2 className="ui-sheet-title">{title}</h2>}
           {!hideTitle && badge && <span className="ui-badge">{badge}</span>}
           <div className="ui-sheet-head-end">
+            {aside}
             {action && (
               <button
                 type="button"

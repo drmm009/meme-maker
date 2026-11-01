@@ -1,8 +1,7 @@
 import { useState } from 'react';
-import { ChevronDown, Circle, Flame, Contrast, Film, SunMoon, Coffee, Blend, Skull, Droplets, Sun, SunDim, SunMedium, Thermometer, Focus, Aperture } from 'lucide-react';
+import { RotateCcw, Circle, Flame, Contrast, Film, SunMoon, Coffee, Blend, Skull, Droplets } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Sheet, Section, Row, Slider, TileGrid, Tile } from '../../ui';
+import { Sheet, Slider, TileGrid, Tile } from '../../ui';
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
 import { PHOTO_FILTERS } from '../../../data/photoFilters';
 import { useSelection } from './selection';
@@ -92,18 +91,22 @@ function FilterThumbnail({ preset, src }: { preset: FilterPreset; src: string })
 
 // `base` is the untouched value. Warmth, sharpen and vignette are canvas/draw/photoEffects.
 const ADJUSTMENTS = [
-  { key: 'brightness', label: 'Brightness', min: 40, max: 200, base: 100, StartIcon: SunDim, EndIcon: Sun },
-  { key: 'contrast', label: 'Contrast', min: 40, max: 250, base: 100, StartIcon: Contrast, EndIcon: Contrast },
-  { key: 'saturation', label: 'Saturation', min: 0, max: 300, base: 100, StartIcon: SunMedium, EndIcon: SunMedium },
-  { key: 'warmth', label: 'Warmth', min: -100, max: 100, base: 0, StartIcon: Thermometer, EndIcon: Thermometer },
-  { key: 'sharpen', label: 'Sharpen', min: 0, max: 100, base: 0, StartIcon: Focus, EndIcon: Focus },
-  { key: 'vignette', label: 'Vignette', min: 0, max: 100, base: 0, StartIcon: Aperture, EndIcon: Aperture },
+  { key: 'brightness', label: 'Brightness', min: 40, max: 200, base: 100 },
+  { key: 'contrast', label: 'Contrast', min: 40, max: 250, base: 100 },
+  { key: 'saturation', label: 'Saturation', min: 0, max: 300, base: 100 },
+  { key: 'warmth', label: 'Warmth', min: -100, max: 100, base: 0 },
+  { key: 'sharpen', label: 'Sharpen', min: 0, max: 100, base: 0 },
+  { key: 'vignette', label: 'Vignette', min: 0, max: 100, base: 0 },
 ];
 
-const presetLabel = (id: string) => (PRESETS.find((p) => p.id === id)?.name || '').replace(/[^\p{L}\p{N}&' ]/gu, '').trim();
+const TABS = [
+  { id: 'presets', label: 'Presets' },
+  { id: 'adjust', label: 'Adjust' },
+] as const;
 
-// The AI/Filters strip's Filters: presets for the selected image, or else the meme; the
-// adjustments (brightness, contrast..., background blur) fold away until opened.
+// The AI/Filters strip's Filters, for the selected image or else the meme: Presets (a photo of
+// each look) or Adjust (brightness, contrast..., two to a line), and Reset in the header to go back
+// to the untouched photo.
 export default function FiltersSheet({ actions, onClose }: { actions: EditorActions; onClose: () => void }) {
   const imageFilters: FilterValues = useMemeEditorStore((s: { imageFilters: FilterValues }) => s.imageFilters) || {};
   const setImageFilters = useMemeEditorStore((s: { setImageFilters: (fn: (prev: FilterValues) => FilterValues) => void }) => s.setImageFilters);
@@ -112,18 +115,7 @@ export default function FiltersSheet({ actions, onClose }: { actions: EditorActi
   const activeTemplate = useMemeEditorStore((s: { activeTemplate?: { imageUrl?: string; url?: string; rawImageUrl?: string; mediaType?: string; type?: string } | null }) => s.activeTemplate);
   const { id, image } = useSelection();
   const onLayer = Boolean(image && id);
-  const [showAdjust, setShowAdjust] = useState(false);
-
-  const toggleAdjust = () => {
-    setShowAdjust((prev) => {
-      const next = !prev;
-      if (!next) {
-        const body = document.querySelector('.ie-filters-sheet .ui-sheet-body');
-        if (body) body.scrollTo({ top: 0, behavior: 'smooth' });
-      }
-      return next;
-    });
-  };
+  const [tab, setTab] = useState<'presets' | 'adjust'>('presets');
 
   // Use the active photo or template image if available; otherwise use the colorful sample image
   const templatePhoto = activeTemplate?.type !== 'video' && activeTemplate?.mediaType !== 'video'
@@ -152,9 +144,40 @@ export default function FiltersSheet({ actions, onClose }: { actions: EditorActi
     }
   };
 
+  // Back to the untouched photo: the Original preset and every adjustment at its base.
+  const bases = Object.fromEntries(ADJUSTMENTS.map((a) => [a.key, a.base]));
+  const reset = () => {
+    const original = PRESETS[0];
+    if (onLayer) actions.updateActiveImageLayer({ filterId: original.id, filter: original.filterString, filters: original.values });
+    else {
+      setImageFilters((prev: FilterValues) => ({ ...prev, ...bases, preset: original.id, filterString: original.filterString, ...original.values }));
+      pushHistoryDebounced();
+    }
+  };
+  const changed = preset !== 'original' || ADJUSTMENTS.some((a) => value(a.key) !== a.base);
+
   return (
-    <Sheet className="ie-filters-sheet" title="Filters" hideTitle onClose={onClose}>
-      <Section title={preset !== 'original' ? `Preset: ${presetLabel(preset)}` : 'Preset'}>
+    <Sheet
+      className="ie-filters-sheet ie-tool-sheet"
+      title="Filters"
+      onClose={onClose}
+      action={{ label: 'Reset', Icon: RotateCcw, variant: 'plain', disabled: !changed, onClick: reset }}
+    >
+      <div className="ie-filter-tabs" role="tablist" aria-label="Filters">
+        {TABS.map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            role="tab"
+            aria-selected={tab === t.id}
+            className={`ie-filter-tab${tab === t.id ? ' is-on' : ''}`}
+            onClick={() => setTab(t.id)}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+      {tab === 'presets' ? (
         <div className="ie-filter-grid">
           <TileGrid>
             {PRESETS.map((p) => (
@@ -169,33 +192,16 @@ export default function FiltersSheet({ actions, onClose }: { actions: EditorActi
             ))}
           </TileGrid>
         </div>
-      </Section>
-      <Section rule>
-        <button type="button" className="ie-fold" aria-expanded={showAdjust} onClick={toggleAdjust}>
-          Adjustments
-          <ChevronDown size={18} aria-hidden="true" />
-        </button>
-        <AnimatePresence initial={false}>
-          {showAdjust && (
-            <motion.div
-              key="filters-adjustments"
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
-              style={{ overflow: 'hidden' }}
-            >
-              <div className="ie-adjustments-content">
-                {ADJUSTMENTS.map((a) => (
-                  <Row key={a.key} label={a.label}>
-                    <Slider label={a.label} min={a.min} max={a.max} value={value(a.key)} onChange={(v) => adjust(a.key, v)} StartIcon={a.StartIcon} EndIcon={a.EndIcon} />
-                  </Row>
-                ))}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </Section>
+      ) : (
+        <div className="ie-adjust-grid">
+          {ADJUSTMENTS.map((a) => (
+            <div key={a.key} className="ie-adjust-item">
+              <span className="ui-row-label">{a.label}</span>
+              <Slider label={a.label} min={a.min} max={a.max} value={value(a.key)} onChange={(v) => adjust(a.key, v)} format={(v) => String(Math.round(v - a.base))} />
+            </div>
+          ))}
+        </div>
+      )}
     </Sheet>
   );
 }

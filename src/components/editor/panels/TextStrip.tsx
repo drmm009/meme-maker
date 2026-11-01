@@ -13,7 +13,7 @@ export default function TextStrip({ actions }: { actions: EditorActions }) {
   const setSocialModalPlatform = useEditorUiStore((s: { setSocialModalPlatform: (v: string) => void }) => s.setSocialModalPlatform);
 
   const items: StripItem[] = [
-    { id: 'add', label: 'Add Text', title: 'Add Text Caption', Icon: Plus, className: 'ie-add-text-highlight' },
+    { id: 'add', label: 'Add Text', title: 'Add Text Caption', Icon: Plus },
     { id: 'bubble', label: 'Bubble', title: 'Add Chat & Speech Bubble', Icon: MessageSquareQuote, active: sheet === 'bubble' },
     { id: 'social', label: 'Social Card', title: 'Fake Tweet, Instagram or WhatsApp card', Icon: Share2 },
   ];

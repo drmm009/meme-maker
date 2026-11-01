@@ -55,7 +55,7 @@ export default function DrawSheet({ actions, onClose }: { actions: EditorActions
 
   return (
     <Sheet
-      className="ie-draw-sheet"
+      className="ie-draw-sheet ie-tool-sheet"
       title={tool.label}
       onClose={onClose}
       action={{

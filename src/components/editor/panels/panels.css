@@ -203,10 +203,10 @@ div.ie-layer-pick { cursor: default; }
   font-size: 13px;
 }
 
-/* Draw sheet polish: a quiet Clear pill, softer labels, filled tiles instead of outlines, and
+/* Tool sheet polish (Draw and the Canvas tab's sheets, `ie-tool-sheet`): a quiet Clear pill, softer labels, filled tiles instead of outlines, and
    each slider's number at its end. (Under .ie-panels--sheet to beat the sheet-wide rules below.) */
-.ie-panels--sheet .ie-draw-sheet .ui-sheet-head { padding-bottom: 6px; }
-.ie-panels--sheet .ie-draw-sheet .ui-sheet-action--plain {
+.ie-panels--sheet .ie-tool-sheet .ui-sheet-head { padding-bottom: 6px; }
+.ie-panels--sheet .ie-tool-sheet .ui-sheet-action--plain {
   gap: 6px;
   height: 30px;
   padding: 0 12px;
@@ -215,24 +215,31 @@ div.ie-layer-pick { cursor: default; }
   font-size: 12.5px !important;
   font-weight: 600 !important;
 }
-.ie-panels--sheet .ie-draw-sheet .ui-sheet-action--plain:hover:not(:disabled) { background: rgba(255, 255, 255, 0.1) !important; }
-.ie-panels--sheet .ie-draw-sheet .ui-row-label { width: 64px; color: var(--ui-muted) !important; font-size: 13.5px !important; font-weight: 600 !important; }
-.ie-panels--sheet .ie-draw-sheet .ie-shape-btn {
+.ie-panels--sheet .ie-tool-sheet .ui-sheet-action--plain:hover:not(:disabled) { background: rgba(255, 255, 255, 0.1) !important; }
+.ie-panels--sheet .ie-tool-sheet .ui-row-label { width: 64px; color: var(--ui-muted) !important; font-size: 13.5px !important; font-weight: 600 !important; }
+.ie-panels--sheet .ie-tool-sheet .ie-shape-btn {
   border-color: transparent !important;
   border-radius: 16px !important;
   background: rgba(255, 255, 255, 0.05) !important;
   color: var(--ui-muted);
 }
-.ie-panels--sheet .ie-draw-sheet .ie-shape-btn:hover {
+.ie-panels--sheet .ie-tool-sheet .ie-shape-btn:hover {
   border-color: transparent !important;
   background: rgba(255, 255, 255, 0.09) !important;
 }
-.ie-panels--sheet .ie-draw-sheet .ie-shape-btn.is-on {
+.ie-panels--sheet .ie-tool-sheet .ie-shape-btn.is-on {
   border-color: transparent !important;
   background: var(--ui-accent, #ff5a36) !important;
   box-shadow: 0 6px 16px -8px rgba(255, 90, 54, 0.7);
 }
-.ie-panels--sheet .ie-draw-sheet .ui-slider-value { min-width: 24px; color: var(--ui-text); font-weight: 600; }
+.ie-panels--sheet .ie-tool-sheet .ui-slider-value { min-width: 24px; color: var(--ui-text); font-weight: 600; }
+/* The canvas and band colour rows are longer than the sheet and scroll sideways; their right edge
+   fades so that shows. */
+.ie-panels--sheet .ie-tool-sheet .ui-swatches:is([aria-label="Canvas colour"], [aria-label="Header colour"], [aria-label="Footer colour"]) {
+  -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent);
+  mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent);
+  padding-right: 28px !important;
+}
 
 /* Media pickers (Templates, Stickers, GIFs, Emoji): the Draw sheet's look, with the category tiles
    and search fixed at the top and only the grid scrolling, so the meme above stays in view. */
@@ -947,66 +954,51 @@ div.ie-layer-pick { cursor: default; }
   z-index: 2 !important;
 }
 
-/* Minimalist Switch */
+/* Switches: a phone-style toggle, big enough to hit. Off is a clear grey track with a dimmed knob;
+   on fills with the app's orange-to-pink gradient (the dock's open tab) and the knob glides across
+   with a slight overshoot. */
 .ie-panels--sheet .ui-switch {
-  width: 38px !important;
-  height: 22px !important;
-  background: rgba(255, 255, 255, 0.14) !important;
+  width: 50px !important;
+  height: 30px !important;
+  background: rgba(120, 120, 128, 0.36) !important;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+  transition: background 0.25s ease, box-shadow 0.25s ease !important;
 }
 
 .ie-panels--sheet .ui-switch::after {
-  top: 2.5px !important;
-  left: 2.5px !important;
-  width: 17px !important;
-  height: 17px !important;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4) !important;
+  top: 2px !important;
+  left: 2px !important;
+  width: 26px !important;
+  height: 26px !important;
+  background: #e9e9ee;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35), 0 0 0 0.5px rgba(0, 0, 0, 0.08) !important;
+  transition: transform 0.32s cubic-bezier(0.34, 1.4, 0.64, 1), background 0.2s ease !important;
 }
 
+/* The gradient is a layer of its own so it can fade in (a gradient can't transition). */
+.ie-panels--sheet .ui-switch::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(100deg, #ec6a43, #d9549a);
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+.ie-panels--sheet .ui-switch[aria-checked='true']::before { opacity: 1; }
 .ie-panels--sheet .ui-switch[aria-checked='true'] {
-  background: var(--ui-accent, #ff5a36) !important;
+  box-shadow: 0 4px 14px -6px rgba(236, 106, 67, 0.75);
 }
 
 .ie-panels--sheet .ui-switch[aria-checked='true']::after {
-  transform: translateX(16px) !important;
+  background: #fff;
+  transform: translateX(20px) !important;
 }
 
-/* Clean Fold Row (Filters > Adjustments) */
-.ie-fold {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  min-height: 36px;
-  margin-bottom: 6px;
-  padding: 6px 0 !important;
-  border: none !important;
-  border-radius: 0 !important;
-  background: transparent !important;
-  background-color: transparent !important;
-  color: #ffffff !important;
-  font-size: 13.5px;
-  font-weight: 600;
-  cursor: pointer;
-  box-shadow: none !important;
-  transition: all 0.16s ease;
+.ie-panels--sheet .ui-switch:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.6); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) {
+  .ie-panels--sheet .ui-switch::after { transition: none !important; }
 }
-
-.ie-fold:hover {
-  border: none !important;
-  background: transparent !important;
-  color: var(--ui-accent, #ff5a36) !important;
-}
-
-.ie-fold svg { color: var(--ui-muted, #94a3b8); transition: transform 0.2s ease; }
-.ie-fold[aria-expanded='true'] svg { transform: rotate(180deg); }
-
-.ie-adjustments-content {
-  padding-top: 6px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
 
 /* Font tiles in Text > Font */
 .ie-font-row .ui-toggle--tile {
@@ -1100,149 +1092,9 @@ div.ie-layer-pick { cursor: default; }
 .ie-swatch-line .ui-swatches { flex: none; flex-wrap: nowrap; margin: 0; padding: 0; overflow: visible; }
 .ie-swatch-gap { flex: none; width: 1px; height: 22px; background: rgba(255, 255, 255, 0.12); }
 
-/* Animated call-to-action highlight on Add Text */
-.ie-add-text-highlight {
-  position: relative;
-  background: linear-gradient(135deg, rgba(255, 94, 54, 0.22), rgba(236, 72, 153, 0.22)) !important;
-  border: 1.5px solid rgba(255, 94, 54, 0.75) !important;
-  color: #ffffff !important;
-  font-weight: 700 !important;
-  animation: ie-pulse-glow 2.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-}
-
-.ie-add-text-highlight svg {
-  color: #ff5e36;
-  filter: drop-shadow(0 0 6px rgba(255, 94, 54, 0.7));
-  animation: ie-icon-bounce 2.2s ease-in-out infinite;
-}
-
-@keyframes ie-pulse-glow {
-  0%, 100% {
-    box-shadow: 0 0 0 0 rgba(255, 94, 54, 0.5), 0 2px 8px rgba(0, 0, 0, 0.4);
-    border-color: rgba(255, 94, 54, 0.75);
-  }
-  50% {
-    box-shadow: 0 0 14px 2px rgba(255, 94, 54, 0.55), 0 4px 16px rgba(236, 72, 153, 0.35);
-    border-color: #ff8b6a;
-    transform: translateY(-1px);
-  }
-}
-
-@keyframes ie-icon-bounce {
-  0%, 100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.15);
-  }
-}
-
 /* ══════════════════════════════════════════════════════════════════════════
    Minimalistic & Premium Watermark Sheet (Watermelon UI & Impeccable)
    ══════════════════════════════════════════════════════════════════════════ */
-.ie-watermark-sheet {
-  background: var(--ui-surface, #1c1c1e) !important;
-  border-top: 1px solid rgba(255, 255, 255, 0.09) !important;
-  box-shadow: 0 -18px 40px -16px rgba(0, 0, 0, 0.8) !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-}
-
-.ie-watermark-sheet .ui-sheet-handle {
-  height: 18px;
-  margin-top: 4px;
-  margin-bottom: 2px;
-}
-
-.ie-watermark-sheet .ui-sheet-handle::before {
-  width: 34px;
-  height: 4px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.2);
-  transition: background 0.15s ease;
-}
-
-.ie-watermark-sheet .ui-sheet-handle:hover::before {
-  background: rgba(255, 255, 255, 0.35);
-}
-
-.ie-watermark-sheet .ui-sheet-body {
-  padding: 0 20px 18px !important;
-}
-
-.ie-wm-root {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
-
-/* Header */
-.ie-wm-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 32px;
-}
-
-.ie-wm-title-group {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.ie-wm-heading {
-  font-size: 15px;
-  font-weight: 600;
-  color: #f8f9fa;
-  letter-spacing: -0.015em;
-}
-
-.ie-wm-live-pill {
-  font-size: 11px;
-  font-weight: 700;
-  color: #ffffff;
-  background: var(--ui-accent, #ff5a36);
-  border: none;
-  padding: 2px 9px;
-  border-radius: 999px;
-  max-width: 140px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  box-shadow: 0 1px 4px rgba(255, 90, 54, 0.35);
-}
-
-/* Minimalist Switch in Watermark */
-.ie-watermark-sheet .ui-switch {
-  width: 38px;
-  height: 22px;
-  background: rgba(255, 255, 255, 0.14);
-}
-
-.ie-watermark-sheet .ui-switch::after {
-  top: 2.5px;
-  left: 2.5px;
-  width: 17px;
-  height: 17px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
-}
-
-.ie-watermark-sheet .ui-switch[aria-checked="true"] {
-  background: var(--ui-accent, #ff5a36);
-}
-
-.ie-watermark-sheet .ui-switch[aria-checked="true"]::after {
-  transform: translateX(16px);
-}
-
-/* Animated Content Container with Generous Spacing */
-.ie-wm-content {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  overflow: hidden;
-}
-
 /* ── ROW 1: Logo Button (round, outside on left) + Text Box (round edges) ── */
 .ie-wm-row-identity {
   display: flex;
@@ -1352,9 +1204,9 @@ div.ie-layer-pick { cursor: default; }
   height: 34px;
   padding: 0 13px;
   border-radius: 9999px;
-  background: transparent !important;
-  background-color: transparent !important;
-  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  background-color: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid transparent !important;
   color: #ffffff !important;
   font-size: 12px;
   font-weight: 500;
@@ -1380,7 +1232,7 @@ div.ie-layer-pick { cursor: default; }
 }
 
 .ie-wm-tray-btn:hover {
-  border-color: rgba(255, 255, 255, 0.55) !important;
+  border-color: transparent !important;
   color: #ffffff !important;
   background: rgba(255, 255, 255, 0.08) !important;
   transform: translateY(-1px);
@@ -1424,13 +1276,13 @@ div.ie-layer-pick { cursor: default; }
   height: 40px;
   padding: 0 16px;
   border-radius: 9999px;
-  background: transparent !important;
-  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid transparent !important;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .ie-wm-input-pill:focus-within {
-  background: transparent !important;
+  background: rgba(255, 255, 255, 0.05) !important;
   border-color: var(--ui-accent, #ff5a36) !important;
   box-shadow: 0 0 0 2px rgba(255, 90, 54, 0.2);
 }
@@ -1462,17 +1314,22 @@ div.ie-layer-pick { cursor: default; }
   color: rgba(255, 255, 255, 0.3);
 }
 
-/* ── ROW 2: Align & Color (Grid with matching headers) ── */
+/* Size and opacity side by side, each label above its slider. */
+.ie-wm-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 8px; }
+.ie-wm-pair-item { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ie-panels--sheet .ie-tool-sheet .ie-wm-pair-item .ui-row-label { width: auto; }
+
+/* The four corners as one filled segmented control, like the tool sheets' tiles. */
 .ie-wm-corners {
   display: inline-flex;
   align-items: center;
   justify-content: space-between;
-  background: transparent !important;
-  border: 1px solid rgba(255, 255, 255, 0.18) !important;
-  border-radius: 9999px !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: none !important;
+  border-radius: 14px !important;
   padding: 3px;
   gap: 2px;
-  height: 36px;
+  height: 40px;
   box-sizing: border-box;
   width: 100%;
 }
@@ -1482,11 +1339,11 @@ div.ie-layer-pick { cursor: default; }
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  height: 28px;
+  height: 34px;
   border: none;
   background: transparent;
   color: var(--ui-muted, #94a3b8);
-  border-radius: 9999px !important;
+  border-radius: 11px !important;
   cursor: pointer;
   transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -1499,148 +1356,29 @@ div.ie-layer-pick { cursor: default; }
 .ie-wm-corner-btn.is-on {
   background: var(--ui-accent, #ff5a36);
   color: #ffffff;
-  border-radius: 9999px !important;
-  box-shadow: 0 1px 6px rgba(255, 90, 54, 0.35);
+  border-radius: 11px !important;
+  box-shadow: 0 6px 16px -8px rgba(255, 90, 54, 0.7);
 }
 
-/* Tactile Color Discs (No container) */
-.ie-wm-colors {
-  display: inline-flex;
-  align-items: center;
-  gap: 14px;
-  height: 36px;
-  padding: 6px 10px;
-  margin: -6px -10px;
-  background: transparent;
-  border: none;
-  box-sizing: border-box;
-  overflow: visible;
-}
-
-.ie-wm-dot {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  border: 1.5px solid rgba(255, 255, 255, 0.2);
+/* Filters: Presets / Adjust as one filled two-way switch under the heading. */
+.ie-filter-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; margin-bottom: 12px; padding: 3px; border-radius: 14px; background: rgba(255, 255, 255, 0.05); }
+.ie-panels--sheet .ie-filter-tab {
+  height: 34px;
+  border: none !important;
+  border-radius: 11px !important;
+  background: transparent !important;
+  color: var(--ui-muted, #a5a6ad) !important;
+  font: inherit;
+  font-size: 13px !important;
+  font-weight: 600 !important;
   cursor: pointer;
-  padding: 0;
-  outline: none;
-  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.18s ease;
+  transition: background 0.18s ease, color 0.18s ease;
 }
-
-.ie-wm-dot:hover {
-  transform: scale(1.10);
-  border-color: rgba(255, 255, 255, 0.5);
-}
-
-.ie-wm-dot.is-on {
-  transform: scale(1.10);
-  border-color: transparent;
-  box-shadow: 0 0 0 2px var(--ui-surface, #1c1c1e), 0 0 0 4px #ffffff, 0 2px 6px rgba(0, 0, 0, 0.4);
-  position: relative;
-  z-index: 2;
-}
-
-/* ── ROW 3: Sliders Grid ── */
-.ie-wm-sliders-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-  align-items: center;
-}
-
-.ie-wm-slider-item {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  min-width: 0;
-}
-
-.ie-wm-slider-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  line-height: 1;
-}
-
-.ie-wm-slider-tag {
-  font-size: 11.5px;
-  font-weight: 600;
-  color: #ffffff;
-  letter-spacing: -0.01em;
-}
-
-.ie-wm-slider-val {
-  font-size: 11.5px;
-  font-weight: 600;
-  color: #f1f5f9;
-  font-variant-numeric: tabular-nums;
-  background: rgba(255, 255, 255, 0.06);
-  padding: 1.5px 6px;
-  border-radius: 9999px !important;
-}
-
-/* Custom Refined Range Slider */
-.ie-wm-slider {
-  --pct: 50%;
-  -webkit-appearance: none;
-  appearance: none;
-  width: 100%;
-  height: 20px;
-  margin: 0;
-  padding: 0;
-  background: transparent;
-  cursor: pointer;
-  outline: none;
-}
-
-.ie-wm-slider::-webkit-slider-runnable-track {
-  height: 4px;
-  border-radius: 999px;
-  background: linear-gradient(to right, var(--ui-accent, #ff5a36) var(--pct), rgba(255, 255, 255, 0.1) var(--pct));
-  border: none;
-}
-
-.ie-wm-slider::-moz-range-track {
-  height: 4px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.1);
-  border: none;
-}
-
-.ie-wm-slider::-moz-range-progress {
-  height: 4px;
-  border-radius: 999px;
-  background: var(--ui-accent, #ff5a36);
-}
-
-.ie-wm-slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 16px;
-  height: 16px;
-  margin-top: -6px;
-  border-radius: 50%;
-  background: #ffffff;
-  border: 1.5px solid rgba(0, 0, 0, 0.15);
-  box-shadow: 0 1.5px 5px rgba(0, 0, 0, 0.4);
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-}
-
-.ie-wm-slider::-webkit-slider-thumb:hover {
-  transform: scale(1.15);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
-}
-
-.ie-wm-slider::-moz-range-thumb {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: #ffffff;
-  border: 1.5px solid rgba(0, 0, 0, 0.15);
-  box-shadow: 0 1.5px 5px rgba(0, 0, 0, 0.4);
-}
-
+.ie-panels--sheet .ie-filter-tab.is-on { background: rgba(255, 255, 255, 0.12) !important; color: var(--ui-text, #f4f4f6) !important; }
+/* Adjust: two sliders to a line, each label above its slider. */
+.ie-adjust-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 18px; padding-bottom: 4px; }
+.ie-adjust-item { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ie-panels--sheet .ie-tool-sheet .ie-adjust-item .ui-row-label { width: auto; }
 
 /* ── Filter Visual Thumbnails (Minimalist & Borderless Tiles) ────────── */
 .ie-filter-grid .ui-tiles {
@@ -1662,7 +1400,7 @@ div.ie-layer-pick { cursor: default; }
   flex-direction: column !important;
   align-items: center !important;
   justify-content: flex-start !important;
-  min-width: 58px !important;
+  min-width: 68px !important;
   max-width: 68px !important;
   height: auto !important;
   min-height: unset !important;
@@ -1698,20 +1436,20 @@ div.ie-layer-pick { cursor: default; }
 .ie-filter-thumb {
   position: relative;
   display: block;
-  width: 52px;
-  height: 52px;
+  width: 62px;
+  height: 62px;
   border-radius: 16px !important;
   overflow: hidden;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
   background: #12141a;
-  border: 2px solid rgba(255, 255, 255, 0.15);
+  border: none;
   box-sizing: border-box;
   transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.18s ease, box-shadow 0.18s ease;
 }
 
 .ie-panels--sheet .ie-filter-tile:hover:not(:disabled) .ie-filter-thumb,
 .ie-filter-tile:hover:not(:disabled) .ie-filter-thumb {
-  border-color: rgba(255, 255, 255, 0.45);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.25);
 }
 
 .ie-filter-thumb-img {
@@ -1745,12 +1483,15 @@ div.ie-layer-pick { cursor: default; }
 .ie-panels--sheet .ie-filter-tile span:not(.ui-tile-icon):not(.ie-filter-thumb):not(.ie-filter-thumb-badge),
 .ie-filter-tile span:not(.ui-tile-icon):not(.ie-filter-thumb):not(.ie-filter-thumb-badge) {
   font-size: 11.5px;
-  font-weight: 500;
-  color: #e2e8f0;
-  max-width: 66px;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--ui-muted, #a5a6ad);
+  max-width: 68px;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: normal;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   letter-spacing: -0.01em;
   text-align: center;
   transition: color 0.15s ease;
@@ -1767,14 +1508,13 @@ div.ie-layer-pick { cursor: default; }
 
 .ie-panels--sheet .ie-filter-tile.is-on .ie-filter-thumb,
 .ie-filter-tile.is-on .ie-filter-thumb {
-  border: 2.5px solid var(--ui-accent, #ff5a36) !important;
-  box-shadow: 0 0 0 2px rgba(255, 90, 54, 0.35), 0 3px 10px rgba(255, 90, 54, 0.45) !important;
-  transform: scale(1.05);
+  border: none !important;
+  box-shadow: 0 0 0 2px var(--ui-surface, #1c1c1e), 0 0 0 4px var(--ui-accent, #ff5a36), 0 6px 16px -6px rgba(255, 90, 54, 0.6) !important;
 }
 
 .ie-panels--sheet .ie-filter-tile.is-on span:not(.ui-tile-icon):not(.ie-filter-thumb):not(.ie-filter-thumb-badge),
 .ie-filter-tile.is-on span:not(.ui-tile-icon):not(.ie-filter-thumb):not(.ie-filter-thumb-badge) {
-  color: var(--ui-accent, #ff5a36) !important;
+  color: var(--ui-text, #f4f4f6) !important;
   font-weight: 700 !important;
 }
 
@@ -1811,7 +1551,7 @@ div.ie-layer-pick { cursor: default; }
   color: #ffffff !important;
 }
 
-/* ── Canvas Style Sheet (Mirror & Crop Buttons: Rounded edges + Solid Orange Active, NO white tint) ── */
+/* Canvas Style: Mirror and Crop as soft filled tiles, solid orange when on (like the Draw sheet's). */
 .ie-canvas-color-sheet .ui-tiles--2 {
   display: grid !important;
   grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
@@ -1824,16 +1564,16 @@ div.ie-layer-pick { cursor: default; }
   align-items: center !important;
   justify-content: center !important;
   gap: 8px !important;
-  height: 44px !important;
-  min-height: 44px !important;
+  height: 46px !important;
+  min-height: 46px !important;
   padding: 0 18px !important;
-  border-radius: 9999px !important;
-  background: transparent !important;
-  background-color: transparent !important;
-  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  border-radius: 16px !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  background-color: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid transparent !important;
   color: #ffffff !important;
   font-size: 13.5px !important;
-  font-weight: 500 !important;
+  font-weight: 600 !important;
   cursor: pointer;
   box-shadow: none !important;
   outline: none !important;
@@ -1845,9 +1585,9 @@ div.ie-layer-pick { cursor: default; }
 .ie-canvas-color-sheet .ui-tile:hover:not(:disabled),
 .ie-canvas-color-sheet .ui-tile:focus,
 .ie-canvas-color-sheet .ui-tile:active {
-  border-color: rgba(255, 255, 255, 0.45) !important;
-  background: transparent !important;
-  background-color: transparent !important;
+  border-color: transparent !important;
+  background: rgba(255, 255, 255, 0.09) !important;
+  background-color: rgba(255, 255, 255, 0.09) !important;
   color: #ffffff !important;
   box-shadow: none !important;
   transform: none !important;
@@ -1859,9 +1599,9 @@ div.ie-layer-pick { cursor: default; }
 .ie-canvas-color-sheet .ui-tile.is-on:active {
   background: var(--ui-accent, #ff5a36) !important;
   background-color: var(--ui-accent, #ff5a36) !important;
-  border-color: var(--ui-accent, #ff5a36) !important;
+  border-color: transparent !important;
   color: #ffffff !important;
-  box-shadow: 0 1px 6px rgba(255, 90, 54, 0.35) !important;
+  box-shadow: 0 6px 16px -8px rgba(255, 90, 54, 0.7) !important;
 }
 
 .ie-canvas-color-sheet .ui-tile.is-on .ui-tile-icon,
@@ -1871,195 +1611,80 @@ div.ie-layer-pick { cursor: default; }
 }
 
 
-/* ══════════════════════════════════════════════════════════════════════════
-   Background Sheet (Background Blur & Background Removal)
-   ══════════════════════════════════════════════════════════════════════════ */
-.ie-background-sheet .ie-bg-action-wrap {
-  padding-top: 6px;
-  width: 100%;
-}
-
-.ie-remove-bg-action-btn {
-  width: 100% !important;
-  height: 44px !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  gap: 8px !important;
-  border-radius: 9999px !important;
-  background: transparent !important;
-  background-color: transparent !important;
-  border: 1px solid rgba(255, 255, 255, 0.18) !important;
-  color: #ffffff !important;
-  font-size: 14px !important;
-  font-weight: 600 !important;
-  cursor: pointer;
-  outline: none !important;
-  -webkit-tap-highlight-color: transparent !important;
-  box-shadow: none !important;
-  transition: all 0.16s cubic-bezier(0.16, 1, 0.3, 1) !important;
-}
-
-.ie-remove-bg-action-btn:hover:not(:disabled) {
-  border-color: rgba(255, 255, 255, 0.5) !important;
-  background: transparent !important;
-  background-color: transparent !important;
-  color: #ffffff !important;
-  transform: none !important;
-}
-
-.ie-remove-bg-action-btn:active:not(:disabled) {
-  transform: scale(0.99) !important;
-}
-
-.ie-remove-bg-action-btn:disabled {
-  opacity: 0.6 !important;
-  cursor: not-allowed !important;
-}
-
-.ie-remove-bg-action-btn .ie-remove-bg-icon {
-  color: var(--ui-accent, #ff5a36);
-  flex-shrink: 0;
-}
-
-.ie-remove-bg-action-btn.is-on {
-  background: var(--ui-accent, #ff5a36) !important;
-  background-color: var(--ui-accent, #ff5a36) !important;
-  border-color: var(--ui-accent, #ff5a36) !important;
-  color: #ffffff !important;
-  box-shadow: 0 1px 6px rgba(255, 90, 54, 0.35) !important;
-}
-
-.ie-remove-bg-action-btn.is-on .ie-remove-bg-icon {
-  color: #ffffff !important;
-}
-
-/* Face swap bottom sheet (tuned docked panel) */
-.ie-face-swap-sheet {
+/* Background sheet: Blur and Remove as two tiles side by side, an icon in a tinted circle beside a
+   name and a few words; solid orange while applied. The blur strength row shows under them. */
+.ie-bg-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px; }
+.ie-panels--sheet .ie-bg-card {
   display: flex;
-  flex-direction: column;
-}
-
-.ie-face-swap-actions {
-  display: flex;
-  flex-direction: column;
+  align-items: center;
   gap: 10px;
-  width: 100%;
-}
-
-.ie-face-swap-row {
-  display: flex;
-  gap: 8px;
-  width: 100%;
-}
-
-.ie-face-swap-btn {
-  flex: 1 1 0;
-  height: 44px !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  gap: 8px !important;
-  border-radius: 9999px !important;
-  background: transparent !important;
-  background-color: transparent !important;
-  border: 1px solid rgba(255, 255, 255, 0.18) !important;
-  color: #ffffff !important;
-  font-size: 14px !important;
-  font-weight: 600 !important;
+  min-width: 0;
+  height: 64px;
+  padding: 0 12px;
+  border: none !important;
+  border-radius: 18px !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  color: var(--ui-text, #f4f4f6) !important;
+  font: inherit;
+  text-align: left;
   cursor: pointer;
-  outline: none !important;
-  -webkit-tap-highlight-color: transparent !important;
-  box-shadow: none !important;
-  transition: all 0.16s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
 }
-
-.ie-face-swap-btn:hover:not(:disabled) {
-  border-color: rgba(255, 255, 255, 0.5) !important;
-  background: transparent !important;
-  background-color: transparent !important;
-  color: #ffffff !important;
-  transform: none !important;
+.ie-panels--sheet .ie-bg-card:hover:not(:disabled):not(.is-on) { background: rgba(255, 255, 255, 0.09) !important; }
+.ie-panels--sheet .ie-bg-card:disabled { opacity: 0.5; cursor: default; }
+.ie-panels--sheet .ie-bg-card.is-on {
+  background: var(--ui-accent, #ff5a36) !important;
+  box-shadow: 0 6px 16px -8px rgba(255, 90, 54, 0.7);
 }
-
-.ie-face-swap-btn:active:not(:disabled) {
-  transform: scale(0.99) !important;
-}
-
-.ie-face-swap-btn .ie-face-swap-icon {
-  color: var(--ui-accent, #ff5a36);
+.ie-bg-card-icon {
   flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 90, 54, 0.14);
+  color: var(--ui-accent, #ff5a36);
 }
+.ie-bg-card.is-on .ie-bg-card-icon { background: rgba(255, 255, 255, 0.22); color: #fff; }
+.ie-bg-card-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.ie-bg-card-label, .ie-bg-card-sub { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ie-bg-card-label { font-size: 14px; font-weight: 700; letter-spacing: -0.01em; }
+.ie-bg-card-sub { color: var(--ui-muted, #a5a6ad); font-size: 11.5px; font-weight: 500; }
+.ie-bg-card.is-on .ie-bg-card-sub { color: rgba(255, 255, 255, 0.85); }
 
-.ie-face-swap-btn.is-on {
-  background: var(--ui-accent, #ff5a36) !important;
-  background-color: var(--ui-accent, #ff5a36) !important;
-  border-color: var(--ui-accent, #ff5a36) !important;
-  color: #ffffff !important;
-  box-shadow: 0 1px 6px rgba(255, 90, 54, 0.35) !important;
+/* Face swap, while it's being tuned: Compare (hold), Cancel and Done in one row. */
+.ie-fs-foot { display: flex; gap: 8px; padding-top: 6px; }
+.ie-panels--sheet .ie-fs-btn {
+  flex: 1 1 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  height: 46px;
+  min-width: 0;
+  padding: 0 12px;
+  border: none !important;
+  border-radius: 999px !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: var(--ui-text, #f4f4f6) !important;
+  font: inherit;
+  font-size: 14.5px !important;
+  font-weight: 600 !important;
+  box-shadow: none !important;
+  cursor: pointer;
+  user-select: none;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s ease, transform 0.15s ease;
 }
-
-.ie-face-swap-btn.is-on .ie-face-swap-icon {
-  color: #ffffff !important;
-}
-
-.ie-face-swap-btn--danger {
-  border-color: rgba(255, 255, 255, 0.18) !important;
-  color: rgba(255, 255, 255, 0.85) !important;
-}
-
-.ie-face-swap-btn--danger:hover:not(:disabled) {
-  border-color: rgba(255, 100, 100, 0.5) !important;
-  color: #ff6b6b !important;
-}
-
-.ie-face-swap-btn--done {
-  background: var(--ui-accent, #ff5a36) !important;
-  background-color: var(--ui-accent, #ff5a36) !important;
-  border-color: var(--ui-accent, #ff5a36) !important;
-  color: #ffffff !important;
-  box-shadow: 0 1px 6px rgba(255, 90, 54, 0.35) !important;
-}
-
-.ie-face-swap-btn--done:hover:not(:disabled) {
-  background: var(--ui-accent-hover, #ff6e4d) !important;
-  background-color: var(--ui-accent-hover, #ff6e4d) !important;
-  border-color: var(--ui-accent-hover, #ff6e4d) !important;
-  color: #ffffff !important;
-}
-
-/* Background Sheet compact controls */
-.ie-background-sheet .ui-section,
-.ie-face-swap-sheet .ui-section {
-  padding: 6px 0 !important;
-}
-
-.ie-background-sheet .ui-section--rule,
-.ie-face-swap-sheet .ui-section--rule {
-  margin-top: 4px !important;
-  padding-top: 10px !important;
-}
-
-.ie-background-sheet .ui-section-head {
-  margin-bottom: 6px !important;
-}
-
-.ie-background-sheet .ie-bg-action-wrap {
-  padding-top: 2px !important;
-  width: 100%;
-}
-
-.ie-background-sheet .ie-bg-blur-slider-wrap,
-.ie-face-swap-sheet .ie-bg-blur-slider-wrap {
-  width: 100%;
-  padding: 4px 0 2px;
-}
-
-.ie-background-sheet .ie-bg-blur-slider-wrap .ui-slider-wrap,
-.ie-face-swap-sheet .ie-bg-blur-slider-wrap .ui-slider-wrap {
-  width: 100%;
-  margin: 0;
-}
+.ie-panels--sheet .ie-fs-btn:hover { background: rgba(255, 255, 255, 0.1) !important; }
+.ie-panels--sheet .ie-fs-btn:active { transform: scale(0.97); }
+.ie-panels--sheet .ie-fs-btn--compare svg { color: var(--ui-accent, #ff5a36); }
+.ie-panels--sheet .ie-fs-btn--compare.is-on { background: rgba(255, 90, 54, 0.18) !important; }
+.ie-panels--sheet .ie-fs-btn--done,
+.ie-panels--sheet .ie-fs-btn--done:hover { background: var(--ui-accent, #ff5a36) !important; color: #fff !important; font-weight: 700 !important; }
 
 
 
@@ -2500,7 +2125,7 @@ div.ie-layer-pick { cursor: default; }
 /* ══════════════════════════════════════════════════════════════════════════
    BOTTOM SHEET ROUNDED EDGES: Universal Pill Buttons & Rounded Containers
    ══════════════════════════════════════════════════════════════════════════ */
-.ie-panels--sheet button:not(.ui-tile):not(.ie-shape-btn):not(.ie-filter-tile):not(.ui-icon-btn):not(.ui-swatch):not(.ie-font-upload):not(.ie-wm-dot):not(.ie-style-remove):not(.ie-browse-item),
+.ie-panels--sheet button:not(.ui-tile):not(.ie-shape-btn):not(.ie-filter-tile):not(.ui-icon-btn):not(.ui-swatch):not(.ie-font-upload):not(.ie-wm-dot):not(.ie-style-remove):not(.ie-browse-item):not(.ie-bg-card):not(.ie-filter-tab),
 .ie-panels--sheet .ui-btn,
 .ie-panels--sheet .ui-btn-accent,
 .ie-panels--sheet .ui-btn--accent,
@@ -2512,7 +2137,6 @@ div.ie-layer-pick { cursor: default; }
 .ie-panels--sheet .ui-seg-btn,
 .ie-panels--sheet .ui-seg button,
 .ie-panels--sheet .ie-wide-btn,
-.ie-panels--sheet .ie-face-swap-btn,
 .ie-panels--sheet .ie-remove-bg-action-btn,
 .ie-panels--sheet .ie-style-apply,
 .ie-panels--sheet .ie-history-step,
@@ -2571,7 +2195,6 @@ div.ie-layer-pick { cursor: default; }
 /* Numeric value tags & pills */
 .ie-panels--sheet .ui-slider-value,
 .ui-sheet .ui-slider-value,
-.ie-panels--sheet .ie-wm-slider-val,
 .ie-panels--sheet .ie-filter-thumb-badge,
 .ie-panels--sheet .ie-history-now,
 .ie-panels--sheet .ie-kbd {
@@ -2586,8 +2209,6 @@ div.ie-layer-pick { cursor: default; }
 .ie-panels--sheet .ie-subpanel,
 .ui-sheet .ie-subpanel,
 .ie-panels--sheet .ie-export-info,
-.ie-panels--sheet .ie-bg-action-wrap,
-.ie-panels--sheet .ie-bg-blur-slider-wrap,
 .ie-panels--sheet .ie-saved-clash,
 .ie-panels--sheet .ie-shortcut-row {
   border-radius: 18px !important;

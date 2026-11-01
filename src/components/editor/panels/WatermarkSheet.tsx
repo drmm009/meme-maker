@@ -1,8 +1,6 @@
 import { useState } from 'react';
-import type React from 'react';
 import { ImagePlus, ArrowUpLeft, ArrowUpRight, ArrowDownLeft, ArrowDownRight } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Sheet, Switch } from '../../ui';
+import { Sheet, Section, Row, Slider, Switch, SwatchRow } from '../../ui';
 import { useEditorUiStore } from '../store/useEditorUiStore';
 import type { EditorActions } from './selection';
 
@@ -52,8 +50,9 @@ function getSocialSvg(type: 'instagram' | 'facebook' | 'x', color = '#ffffff') {
   return `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="64" height="64" fill="${enc}"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>`;
 }
 
-// Minimalistic & Premium Watermark Studio (Watermelon UI & Impeccable craft):
-// Transparent bordered containers, inbuilt social logos (Instagram, Facebook, X, Upload).
+// Canvas > Watermark: the name and an optional logo (Instagram, Facebook or X drawn in the watermark
+// colour, or an uploaded picture), then its corner, colour, size and opacity. The switch sits in the
+// header beside the title; the settings show while it's on.
 export default function WatermarkSheet({ actions, onClose }: { actions: EditorActions; onClose: () => void }) {
   const watermark = useEditorUiStore((s: { watermark: Record<string, any> }) => s.watermark);
   const updateWatermark = useEditorUiStore((s: { updateWatermark: (key: string, value: unknown) => void }) => s.updateWatermark);
@@ -73,56 +72,24 @@ export default function WatermarkSheet({ actions, onClose }: { actions: EditorAc
   };
 
   return (
-    <Sheet className="ie-watermark-sheet" title="Watermark" hideTitle onClose={onClose}>
-      <div className="ie-wm-root">
-        {/* Minimalist Studio Header */}
-        <div className="ie-wm-head">
-          <div className="ie-wm-title-group">
-            <span className="ie-wm-heading">Watermark</span>
-            <AnimatePresence>
-              {isEnabled && (
-                <motion.span
-                  className="ie-wm-live-pill"
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  transition={{ duration: 0.16 }}
-                >
-                  {watermark.logoType === 'instagram'
-                    ? 'Instagram'
-                    : watermark.logoType === 'facebook'
-                      ? 'Facebook'
-                      : watermark.logoType === 'x'
-                        ? 'X'
-                        : watermark.imageUrl
-                          ? 'Logo'
-                          : watermark.text || 'Enabled'}
-                </motion.span>
-              )}
-            </AnimatePresence>
-          </div>
-          <Switch
-            label="Watermark"
-            checked={isEnabled}
-            onChange={(on) => {
-              updateWatermark('enabled', on);
-              if (!on) setLogoMenuOpen(false);
-            }}
-          />
-        </div>
-
-        {/* Content with Watermelon UI Physics & Generous Breathing Room */}
-        <AnimatePresence initial={false}>
-          {isEnabled && (
-            <motion.div
-              key="wm-controls"
-              initial={{ opacity: 0, height: 0, marginTop: 0 }}
-              animate={{ opacity: 1, height: 'auto', marginTop: 14 }}
-              exit={{ opacity: 0, height: 0, marginTop: 0 }}
-              transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
-              className="ie-wm-content"
-              style={{ overflow: 'hidden' }}
-            >
+    <Sheet
+      className="ie-watermark-sheet ie-tool-sheet"
+      title="Watermark"
+      onClose={onClose}
+      aside={(
+        <Switch
+          label="Watermark"
+          checked={isEnabled}
+          onChange={(on) => {
+            updateWatermark('enabled', on);
+            if (!on) setLogoMenuOpen(false);
+          }}
+        />
+      )}
+    >
+      {!isEnabled && <p className="ie-empty">Switch it on to sign your meme with a name or logo.</p>}
+      {isEnabled && (
+        <>
               {/* Row 1: Identity Block (Logo Button + Text Box + Inbuilt Logos Tray) */}
               <div className="ie-wm-identity-block">
                 <div className="ie-wm-row-identity">
@@ -252,104 +219,45 @@ export default function WatermarkSheet({ actions, onClose }: { actions: EditorAc
                 </div>
               </div>
 
-              {/* Row 2: Align & Color with Matching Labels */}
-              <div className="ie-wm-sliders-grid">
-                {/* Align Group */}
-                <div className="ie-wm-slider-item">
-                  <div className="ie-wm-slider-header">
-                    <span className="ie-wm-slider-tag">Align</span>
-                  </div>
-                  <div className="ie-wm-corners" role="radiogroup" aria-label="Watermark position">
-                    {SPOTS.map((s) => {
-                      const on = currentPos === s.value;
-                      return (
-                        <button
-                          key={s.value}
-                          type="button"
-                          role="radio"
-                          aria-checked={on}
-                          aria-label={s.label}
-                          title={s.label}
-                          className={`ie-wm-corner-btn${on ? ' is-on' : ''}`}
-                          onClick={() => updateWatermark('position', s.value)}
-                        >
-                          <s.Icon size={15} strokeWidth={2.2} />
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Color Group */}
-                <div className="ie-wm-slider-item">
-                  <div className="ie-wm-slider-header">
-                    <span className="ie-wm-slider-tag">Color</span>
-                  </div>
-                  <div className="ie-wm-colors" role="radiogroup" aria-label="Watermark colour">
-                    {COLORS.map((c) => {
-                      const on = currentColor === c.toLowerCase();
-                      return (
-                        <button
-                          key={c}
-                          type="button"
-                          role="radio"
-                          aria-checked={on}
-                          aria-label={c}
-                          title={c}
-                          className={`ie-wm-dot${on ? ' is-on' : ''}`}
-                          style={{ background: c }}
-                          onClick={() => onSelectColor(c)}
-                        />
-                      );
-                    })}
-                  </div>
-                </div>
+          <Section>
+            <Row label="Corner">
+              <div className="ie-wm-corners" role="radiogroup" aria-label="Watermark position">
+                {SPOTS.map((s) => {
+                  const on = currentPos === s.value;
+                  return (
+                    <button
+                      key={s.value}
+                      type="button"
+                      role="radio"
+                      aria-checked={on}
+                      aria-label={s.label}
+                      title={s.label}
+                      className={`ie-wm-corner-btn${on ? ' is-on' : ''}`}
+                      onClick={() => updateWatermark('position', s.value)}
+                    >
+                      <s.Icon size={16} strokeWidth={2.2} />
+                    </button>
+                  );
+                })}
               </div>
-
-              {/* Row 3: Sliders for Size & Opacity with Comfortable Touch Targets */}
-              <div className="ie-wm-sliders-grid">
-                {/* Size Scrubber */}
-                <div className="ie-wm-slider-item">
-                  <div className="ie-wm-slider-header">
-                    <span className="ie-wm-slider-tag">Size</span>
-                    <span className="ie-wm-slider-val">{currentSize}px</span>
-                  </div>
-                  <input
-                    type="range"
-                    className="ie-wm-slider"
-                    aria-label="Watermark size"
-                    min={12}
-                    max={48}
-                    step={1}
-                    value={currentSize}
-                    style={{ '--pct': `${((currentSize - 12) / (48 - 12)) * 100}%` } as React.CSSProperties}
-                    onChange={(e) => updateWatermark('size', Number(e.target.value))}
-                  />
-                </div>
-
-                {/* Opacity Scrubber */}
-                <div className="ie-wm-slider-item">
-                  <div className="ie-wm-slider-header">
-                    <span className="ie-wm-slider-tag">Opacity</span>
-                    <span className="ie-wm-slider-val">{Math.round(currentOpacity * 100)}%</span>
-                  </div>
-                  <input
-                    type="range"
-                    className="ie-wm-slider"
-                    aria-label="Watermark opacity"
-                    min={0.1}
-                    max={1}
-                    step={0.05}
-                    value={currentOpacity}
-                    style={{ '--pct': `${((currentOpacity - 0.1) / (1 - 0.1)) * 100}%` } as React.CSSProperties}
-                    onChange={(e) => updateWatermark('opacity', Number(e.target.value))}
-                  />
-                </div>
+            </Row>
+            <Row label="Color">
+              <SwatchRow ariaLabel="Watermark colour" colors={COLORS} value={currentColor} onChange={onSelectColor} />
+            </Row>
+            {/* Size and opacity share one line, each labelled above its slider. */}
+            <div className="ie-wm-pair">
+              <div className="ie-wm-pair-item">
+                <span className="ui-row-label">Size</span>
+                <Slider label="Watermark size" min={12} max={48} value={currentSize} onChange={(v) => updateWatermark('size', v)} format={String} />
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+              <div className="ie-wm-pair-item">
+                <span className="ui-row-label">Opacity</span>
+                <Slider label="Watermark opacity" min={0.1} max={1} step={0.05} value={currentOpacity} onChange={(v) => updateWatermark('opacity', v)} format={(v) => `${Math.round(v * 100)}%`} />
+              </div>
+            </div>
+          </Section>
+        </>
+      )}
     </Sheet>
   );
 }

@@ -1,19 +1,29 @@
 import { useEffect, useRef, useState } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import { createPortal } from 'react-dom';
-import { RotateCcw, RotateCw, Undo2 } from 'lucide-react';
-import { ChipRow, Chip } from '../../ui';
+import { RotateCcw, RotateCw, Undo2, ImageIcon } from 'lucide-react';
 import { FULL_CROP, aspectCrop, bakeCrop, fractionRatio, resizeCrop, rotatedSize, turn } from './cropMath';
 import type { CropBox, CropHandle, Rotation } from './cropMath';
 import './crop.css';
 
-const ASPECTS: { id: string; label: string; value: number | null }[] = [
+// 'photo' keeps the photo's own shape (as turned).
+const ASPECTS: { id: string; label: string; value: number | 'photo' | null }[] = [
   { id: 'free', label: 'Free', value: null },
+  { id: 'original', label: 'Original', value: 'photo' },
   { id: '1:1', label: '1:1', value: 1 },
   { id: '4:5', label: '4:5', value: 4 / 5 },
   { id: '9:16', label: '9:16', value: 9 / 16 },
   { id: '16:9', label: '16:9', value: 16 / 9 },
 ];
+
+// A small outline of each shape on its tile; Free is dashed, Original is a photo icon.
+function ShapeIcon({ value }: { value: number | 'photo' | null }) {
+  if (value === 'photo') return <ImageIcon size={18} strokeWidth={2} aria-hidden="true" />;
+  const r = value ?? 1;
+  const w = r >= 1 ? 20 : Math.round(20 * r);
+  const h = r >= 1 ? Math.round(20 / r) : 20;
+  return <span className={`ie-crop-shape${value === null ? ' ie-crop-shape--free' : ''}`} style={{ width: w, height: h }} aria-hidden="true" />;
+}
 
 interface Props {
   url: string;
@@ -46,7 +56,12 @@ export default function PhotoCropSheet({ url, uncroppedUrl, onApply, onRestore, 
 
   const size = img ? rotatedSize(img.naturalWidth, img.naturalHeight, rotation) : { w: 1, h: 1 };
   const photoAspect = size.w / size.h;
-  const aspectValue = ASPECTS.find((a) => a.id === aspect)?.value ?? null;
+  const ratioOf = (id: string, photo: number) => {
+    const v = ASPECTS.find((a) => a.id === id)?.value ?? null;
+    return v === 'photo' ? photo : v;
+  };
+  const aspectValue = ratioOf(aspect, photoAspect);
+  const changed = rotation !== 0 || aspect !== 'free' || box.x !== 0 || box.y !== 0 || box.w !== 1 || box.h !== 1;
 
   // The turned photo, drawn small for the preview.
   useEffect(() => {
@@ -68,14 +83,19 @@ export default function PhotoCropSheet({ url, uncroppedUrl, onApply, onRestore, 
 
   const pickAspect = (id: string) => {
     setAspect(id);
-    setBox(aspectCrop(ASPECTS.find((a) => a.id === id)?.value ?? null, photoAspect));
+    setBox(aspectCrop(ratioOf(id, photoAspect), photoAspect));
+  };
+  const reset = () => {
+    setRotation(0);
+    setAspect('free');
+    setBox(FULL_CROP);
   };
   const rotate = (by: 90 | -90) => {
     const next = turn(rotation, by);
     setRotation(next);
     if (img) {
       const s = rotatedSize(img.naturalWidth, img.naturalHeight, next);
-      setBox(aspectCrop(aspectValue, s.w / s.h));
+      setBox(aspectCrop(ratioOf(aspect, s.w / s.h), s.w / s.h));
     }
   };
 
@@ -138,26 +158,39 @@ export default function PhotoCropSheet({ url, uncroppedUrl, onApply, onRestore, 
         </div>
       </div>
       <div className="ie-crop-tools">
-        <div className="ie-crop-sheet-handle" aria-hidden="true" />
-        <ChipRow ariaLabel="Crop shape">
-          {ASPECTS.map((a) => <Chip key={a.id} label={a.label} active={aspect === a.id} onClick={() => pickAspect(a.id)} />)}
-        </ChipRow>
-        <div className="ie-crop-actions">
-          <button type="button" className="ui-btn ie-crop-action-btn" onClick={() => rotate(-90)} aria-label="Turn left">
-            <RotateCcw size={15} className="ie-crop-btn-icon" />
-            <span>Left</span>
-          </button>
-          <button type="button" className="ui-btn ie-crop-action-btn" onClick={() => rotate(90)} aria-label="Turn right">
-            <RotateCw size={15} className="ie-crop-btn-icon" />
-            <span>Right</span>
-          </button>
-          {uncroppedUrl && onRestore && (
-            <button type="button" className="ui-btn ie-crop-action-btn ie-crop-restore-btn" onClick={() => onRestore(uncroppedUrl)} aria-label="Restore original photo">
-              <Undo2 size={15} className="ie-crop-btn-icon" />
-              <span>Original photo</span>
+        <div className="ie-crop-tools-head">
+          <span className="ie-crop-size">{img ? `${Math.round(box.w * size.w)} × ${Math.round(box.h * size.h)}` : ''}</span>
+          <div className="ie-crop-turns">
+            <button type="button" className="ie-crop-icon-btn" onClick={() => rotate(-90)} aria-label="Turn left" title="Turn left">
+              <RotateCcw size={18} strokeWidth={2.2} />
             </button>
-          )}
+            <button type="button" className="ie-crop-icon-btn" onClick={() => rotate(90)} aria-label="Turn right" title="Turn right">
+              <RotateCw size={18} strokeWidth={2.2} />
+            </button>
+            <button type="button" className="ie-crop-reset" onClick={reset} disabled={!changed}>Reset</button>
+          </div>
         </div>
+        <div className="ie-crop-shapes" role="radiogroup" aria-label="Crop shape">
+          {ASPECTS.map((a) => (
+            <button
+              key={a.id}
+              type="button"
+              role="radio"
+              aria-checked={aspect === a.id}
+              className={`ie-crop-shape-btn${aspect === a.id ? ' is-on' : ''}`}
+              onClick={() => pickAspect(a.id)}
+            >
+              <span className="ie-crop-shape-box"><ShapeIcon value={a.value} /></span>
+              <span>{a.label}</span>
+            </button>
+          ))}
+        </div>
+        {uncroppedUrl && onRestore && (
+          <button type="button" className="ie-crop-restore-btn" onClick={() => onRestore(uncroppedUrl)} aria-label="Restore original photo">
+            <Undo2 size={15} />
+            <span>Back to the original photo</span>
+          </button>
+        )}
       </div>
     </div>,
     document.body

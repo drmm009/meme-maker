@@ -5,7 +5,7 @@ import { bandColor } from '../../canvas/layout/canvasLayout';
 import type { EditorActions } from './selection';
 
 const BAND_COLORS = [
-  '#ffffff', '#000000', '#f8fafc', '#1e293b', '#ff5a36', '#ffd60a',
+  '#ffffff', '#000000', '#6b7280', '#1e293b', '#ff5a36', '#ffd60a',
   '#34c759', '#0a84ff', '#bf5af2', '#ff375f'
 ];
 
@@ -76,31 +76,36 @@ export default function HeaderSheet({ actions: _actions, onClose }: { actions?: 
   };
 
   return (
-    <Sheet className="ie-header-sheet" title="Header" hideTitle onClose={onClose}>
-      <Section>
-        <Row label="Header" end>
-          <Switch label="Header" checked={Boolean(canvasHeader.enabled)} onChange={toggleHeader} />
-        </Row>
-        <Row label="Height">
-          <Slider
-            label="Header height"
-            min={60}
-            max={400}
-            step={5}
-            value={canvasHeader.height || 140}
-            onChange={setHeight}
-            format={(v) => `${Math.round(v)}px`}
-          />
-        </Row>
-        <Row label="Color">
-          <SwatchRow
-            ariaLabel="Header colour"
-            colors={BAND_COLORS}
-            value={bandColor(canvasHeader, canvasBgColor)}
-            onChange={setBgColor}
-          />
-        </Row>
-      </Section>
+    <Sheet
+      className="ie-header-sheet ie-tool-sheet"
+      title="Header"
+      onClose={onClose}
+      aside={<Switch label="Header" checked={Boolean(canvasHeader.enabled)} onChange={toggleHeader} />}
+    >
+      {!canvasHeader.enabled && <p className="ie-empty">Switch it on for a band above the meme to write in.</p>}
+      {canvasHeader.enabled && (
+        <Section>
+          <Row label="Height">
+            <Slider
+              label="Header height"
+              min={60}
+              max={400}
+              step={5}
+              value={canvasHeader.height || 140}
+              onChange={setHeight}
+              format={(v) => `${Math.round(v)}`}
+            />
+          </Row>
+          <Row label="Color">
+            <SwatchRow
+              ariaLabel="Header colour"
+              colors={BAND_COLORS}
+              value={bandColor(canvasHeader, canvasBgColor)}
+              onChange={setBgColor}
+            />
+          </Row>
+        </Section>
+      )}
     </Sheet>
   );
 }

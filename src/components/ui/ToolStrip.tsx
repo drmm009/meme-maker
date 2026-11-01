@@ -68,7 +68,6 @@ export default function ToolStrip({ items, active = null, live = null, onSelect,
             onClick={() => onSelect(id)}
           >
             {body}
-            {isLive && <span className="ui-strip-live" aria-hidden="true" />}
           </button>
         );
       })}

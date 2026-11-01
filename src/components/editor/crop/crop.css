@@ -27,17 +27,14 @@
   gap: 12px;
   height: 56px;
   padding: 0 18px;
-  background: rgba(18, 20, 25, 0.94);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: #090a0d;
   z-index: 20;
 }
 
 .ie-crop-title {
   margin: 0;
-  font-size: 16px;
-  font-weight: 600;
+  font-size: 17px;
+  font-weight: 800;
   color: #ffffff;
   letter-spacing: -0.01em;
   text-align: center;
@@ -51,11 +48,11 @@
   height: 34px;
   padding: 0 16px;
   border-radius: 9999px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  background: transparent;
+  border: none;
+  background: rgba(255, 255, 255, 0.08);
   color: #f1f5f9;
   font-size: 13.5px;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
   outline: none;
   -webkit-tap-highlight-color: transparent;
@@ -64,8 +61,7 @@
 
 .ie-crop-cancel-btn:hover,
 .ie-crop-text-btn:hover {
-  background: transparent;
-  border-color: rgba(255, 255, 255, 0.45);
+  background: rgba(255, 255, 255, 0.12);
   color: #ffffff;
 }
 
@@ -243,146 +239,114 @@
   transform: scale(1.14);
 }
 
-/* ── Bottom Controls Sheet (Watermelon UI Aesthetic) ─────────────────── */
+/* ── Controls: the crop size and turn/reset, then a tile per shape ─── */
 .ie-crop-tools {
   flex: none;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  padding: 14px 20px calc(18px + env(safe-area-inset-bottom));
-  background: #15171c;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  border-top-left-radius: 20px;
-  border-top-right-radius: 20px;
+  gap: 14px;
+  padding: 14px 16px calc(18px + env(safe-area-inset-bottom));
+  background: var(--ui-surface, #1c1c1e);
+  border-top: 1px solid rgba(255, 255, 255, 0.09);
+  border-top-left-radius: 24px;
+  border-top-right-radius: 24px;
   box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.55);
   z-index: 20;
 }
+.ie-crop-tools > * { width: 100%; max-width: 480px; margin: 0 auto; }
 
-.ie-crop-sheet-handle {
-  width: 36px;
-  height: 4px;
-  border-radius: 2px;
-  background: rgba(255, 255, 255, 0.22);
-  margin-bottom: 2px;
+.ie-crop-tools-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+/* The crop's size in pixels, so you know what you'll get. */
+.ie-crop-size {
+  color: var(--ui-muted, #a5a6ad);
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
-
-/* Aspect Ratio Chips */
-.ie-crop-tools .ui-chips {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  scrollbar-width: none;
-  gap: 8px;
-  width: 100%;
-  max-width: 480px;
-  padding: 2px 4px;
-}
-
-.ie-crop-tools .ui-chips::-webkit-scrollbar {
-  display: none;
-}
-
-.ie-crop-tools .ui-chip {
-  flex: 0 0 auto;
-  height: 34px;
-  padding: 0 16px;
-  border-radius: 9999px !important;
-  font-size: 13px !important;
-  font-weight: 500 !important;
-  background: transparent !important;
-  background-color: transparent !important;
-  border: 1px solid rgba(255, 255, 255, 0.18) !important;
-  color: #94a3b8 !important;
+.ie-crop-turns { display: flex; align-items: center; gap: 8px; }
+.ie-crop-icon-btn {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--ui-text, #f4f4f6);
   cursor: pointer;
-  outline: none !important;
-  -webkit-tap-highlight-color: transparent !important;
-  transition: all 0.16s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s ease, transform 0.15s ease;
 }
-
-.ie-crop-tools .ui-chip:hover:not(.is-on) {
-  background: transparent !important;
-  background-color: transparent !important;
-  border-color: rgba(255, 255, 255, 0.45) !important;
-  color: #ffffff !important;
+.ie-crop-icon-btn:hover { background: rgba(255, 255, 255, 0.1); }
+.ie-crop-icon-btn:active { transform: scale(0.94); }
+.ie-crop-reset {
+  height: 38px;
+  padding: 0 16px;
+  border: none;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--ui-text, #f4f4f6);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s ease, opacity 0.15s ease;
 }
+.ie-crop-reset:hover:not(:disabled) { background: rgba(255, 255, 255, 0.1); }
+.ie-crop-reset:disabled { opacity: 0.4; cursor: default; }
 
-.ie-crop-tools .ui-chip.is-on {
-  background: var(--ui-accent, #ff5a36) !important;
-  background-color: var(--ui-accent, #ff5a36) !important;
-  border-color: var(--ui-accent, #ff5a36) !important;
-  color: #ffffff !important;
-  font-weight: 600 !important;
-  box-shadow: 0 1px 6px rgba(255, 90, 54, 0.35) !important;
+/* One tile per shape, its outline drawn to scale above the name. */
+.ie-crop-shapes {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 8px;
 }
-
-/* ── Bottom Action Toolbar (Rotate & Reset in Single Balanced Row) ───── */
-.ie-crop-actions {
+.ie-crop-shape-btn {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  width: 100%;
-  max-width: 480px;
-}
-
-.ie-crop-action-btn,
-.ie-crop-actions .ui-btn {
-  flex: 1 1 0;
+  gap: 6px;
   min-width: 0;
+  height: 64px;
+  padding: 0;
+  border: none;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--ui-muted, #a5a6ad);
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.ie-crop-shape-btn:hover:not(.is-on) { background: rgba(255, 255, 255, 0.09); color: var(--ui-text, #f4f4f6); }
+.ie-crop-shape-btn.is-on {
+  background: var(--ui-accent, #ff5a36);
+  color: #fff;
+  box-shadow: 0 6px 16px -8px rgba(255, 90, 54, 0.7);
+}
+.ie-crop-shape-box { display: grid; place-items: center; width: 22px; height: 22px; }
+.ie-crop-shape { display: block; box-sizing: border-box; border: 2px solid currentColor; border-radius: 3px; }
+.ie-crop-shape--free { border-style: dashed; }
+
+.ie-crop-restore-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 7px;
   height: 40px;
-  padding: 0 14px;
-  border-radius: 9999px !important;
-  font-size: 13px !important;
-  font-weight: 500 !important;
-  background: transparent !important;
-  background-color: transparent !important;
-  border: 1px solid rgba(255, 255, 255, 0.18) !important;
-  color: #f1f5f9 !important;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ui-muted, #a5a6ad);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
   cursor: pointer;
-  outline: none !important;
-  -webkit-tap-highlight-color: transparent !important;
-  box-shadow: none !important;
-  transition: all 0.16s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
-
-.ie-crop-action-btn:hover:not(:disabled),
-.ie-crop-actions .ui-btn:hover:not(:disabled) {
-  background: transparent !important;
-  background-color: transparent !important;
-  border-color: rgba(255, 255, 255, 0.45) !important;
-  color: #ffffff !important;
-  transform: none !important;
-  box-shadow: none !important;
-}
-
-.ie-crop-action-btn:active,
-.ie-crop-actions .ui-btn:active {
-  border-color: var(--ui-accent, #ff5a36) !important;
-}
-
-.ie-crop-btn-icon {
-  color: var(--ui-accent, #ff5a36);
-  flex-shrink: 0;
-  transition: transform 0.16s ease;
-}
-
-.ie-crop-action-btn:hover .ie-crop-btn-icon {
-  transform: scale(1.08);
-}
-
-.ie-crop-restore-btn {
-  white-space: nowrap;
-}
-
-.ie-crop-restore-btn span {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
+.ie-crop-restore-btn:hover { color: var(--ui-text, #f4f4f6); }

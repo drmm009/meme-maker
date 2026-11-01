@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Check, Eye, RefreshCw, X } from 'lucide-react';
-import { Sheet, Section, Slider } from '../../ui';
+import { Check, Eye, RefreshCw } from 'lucide-react';
+import { Sheet, Row, Slider } from '../../ui';
 import type { EditorActions } from './selection';
 
 interface FaceSwapSheetProps {
@@ -8,88 +8,58 @@ interface FaceSwapSheetProps {
   actions: EditorActions;
 }
 
-// Shown while a face swap on the template is being tuned: strength, compare, change face, done.
+// Shown while a face swap on the template is being tuned: how strong it is, hold to see the
+// original, then undo it or keep it. Change face (in the header) goes back to the face picker.
 export default function FaceSwapSheet({ morphProgress, actions }: FaceSwapSheetProps) {
   const [isHolding, setIsHolding] = useState(false);
 
-  const startHold = () => {
-    setIsHolding(true);
-    actions.setIsHoldingCanvasCompare(true);
+  const hold = (on: boolean) => () => {
+    setIsHolding(on);
+    actions.setIsHoldingCanvasCompare(on);
   };
-
-  const endHold = () => {
-    setIsHolding(false);
-    actions.setIsHoldingCanvasCompare(false);
-  };
-
-  const morphVal = morphProgress ?? 0.85;
 
   return (
-    <Sheet className="ie-face-swap-sheet" title="Face Swap" hideTitle onClose={actions.handleFinalizeTemplateFace}>
-      <Section title="Swap Intensity">
-        <div className="ie-bg-blur-slider-wrap">
-          <Slider
-            label="Morph intensity"
-            min={0}
-            max={1}
-            step={0.01}
-            value={morphVal}
-            format={(v) => `${Math.round(v * 100)}%`}
-            onChange={(v) => actions.handleUpdateTemplateMorphProgress(v)}
-          />
-        </div>
-      </Section>
+    <Sheet
+      className="ie-face-swap-sheet ie-tool-sheet"
+      title="Face Swap"
+      onClose={actions.handleFinalizeTemplateFace}
+      action={{ label: 'Change face', Icon: RefreshCw, variant: 'plain', onClick: actions.handleChangeFace }}
+    >
+      <Row label="Strength">
+        <Slider
+          label="Swap strength"
+          min={0}
+          max={1}
+          step={0.01}
+          value={morphProgress ?? 0.85}
+          format={(v) => `${Math.round(v * 100)}%`}
+          onChange={(v) => actions.handleUpdateTemplateMorphProgress(v)}
+        />
+      </Row>
 
-      <Section rule>
-        <div className="ie-face-swap-actions">
-          <div className="ie-face-swap-row">
-            <button
-              type="button"
-              className={`ui-btn ie-face-swap-btn${isHolding ? ' is-on' : ''}`}
-              title="Hold to see original without face swap"
-              onPointerDown={startHold}
-              onPointerUp={endHold}
-              onPointerLeave={endHold}
-              onPointerCancel={endHold}
-            >
-              <Eye size={17} className="ie-face-swap-icon" />
-              <span>{isHolding ? 'Viewing Original' : 'Hold to compare'}</span>
-            </button>
-
-            <button
-              type="button"
-              className="ui-btn ie-face-swap-btn"
-              title="Pick a different face or photo"
-              onClick={actions.handleChangeFace}
-            >
-              <RefreshCw size={17} className="ie-face-swap-icon" />
-              <span>Change face</span>
-            </button>
-          </div>
-
-          <div className="ie-face-swap-row">
-            <button
-              type="button"
-              className="ui-btn ie-face-swap-btn ie-face-swap-btn--danger"
-              title="Cancel face swap and revert"
-              onClick={actions.handleRevertTemplateFace}
-            >
-              <X size={17} />
-              <span>Cancel</span>
-            </button>
-
-            <button
-              type="button"
-              className="ui-btn ie-face-swap-btn ie-face-swap-btn--done"
-              title="Accept face swap"
-              onClick={actions.handleFinalizeTemplateFace}
-            >
-              <Check size={17} />
-              <span>Done</span>
-            </button>
-          </div>
-        </div>
-      </Section>
+      <div className="ie-fs-foot">
+        <button
+          type="button"
+          className={`ie-fs-btn ie-fs-btn--compare${isHolding ? ' is-on' : ''}`}
+          aria-pressed={isHolding}
+          title="Hold to see the original"
+          onPointerDown={hold(true)}
+          onPointerUp={hold(false)}
+          onPointerLeave={hold(false)}
+          onPointerCancel={hold(false)}
+          onContextMenu={(e) => e.preventDefault()}
+        >
+          <Eye size={17} strokeWidth={2.2} aria-hidden="true" />
+          {isHolding ? 'Original' : 'Compare'}
+        </button>
+        <button type="button" className="ie-fs-btn" title="Undo the face swap" onClick={actions.handleRevertTemplateFace}>
+          Cancel
+        </button>
+        <button type="button" className="ie-fs-btn ie-fs-btn--done" title="Keep the face swap" onClick={actions.handleFinalizeTemplateFace}>
+          <Check size={17} strokeWidth={2.4} aria-hidden="true" />
+          Done
+        </button>
+      </div>
     </Sheet>
   );
 }

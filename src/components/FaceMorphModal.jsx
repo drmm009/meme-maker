@@ -5,10 +5,14 @@ import {
   RefreshCw,
   Check,
   Eye,
-  AlertCircle
+  AlertCircle,
+  CloudOff,
+  LoaderCircle,
+  Sparkles
 } from 'lucide-react';
 import { MEME_FACE_PRESETS, getMemeFaceDataUrl } from '../data/memeFaces';
 import BottomSheet from './BottomSheet';
+import './FaceMorphModal.css';
 
 
 const getShortFaceName = (preset) => {
@@ -69,6 +73,8 @@ export default function FaceMorphModal({
   const [isNeuralAvailable, setIsNeuralAvailable] = useState(false);
   const [isNeuralProcessing, setIsNeuralProcessing] = useState(false);
   const [neuralError, setNeuralError] = useState(null);
+  // Bumped by Try again while the server is offline, to ask it again.
+  const [serverCheck, setServerCheck] = useState(0);
 
   // Generated Results
   const [neuralFullImage, setNeuralFullImage] = useState(null);
@@ -114,9 +120,7 @@ export default function FaceMorphModal({
 
       if (isMounted) {
         setIsNeuralAvailable(isOnline);
-        if (!isOnline) {
-          setNeuralError('AI Face Swap server is offline. Please launch face_swap_server.py.');
-        }
+        setNeuralError(isOnline ? null : 'Start face_swap_server.py on this computer, then try again.');
       }
 
       // Auto-detect faces in the meme template
@@ -158,7 +162,7 @@ export default function FaceMorphModal({
       initServer();
     }
     return () => { isMounted = false; };
-  }, [isOpen, memeTemplateUrl, memeFacePatch, faceTarget]);
+  }, [isOpen, memeTemplateUrl, memeFacePatch, faceTarget, serverCheck]);
 
   // 2. Execute Neural Face Swap
   const runNeuralFaceSwap = useCallback(async (sourceImgUrl, faceIdx = selectedTargetIndex, allFaces = swapAllFaces) => {
@@ -232,13 +236,6 @@ export default function FaceMorphModal({
     }
   }, [isNeuralAvailable, selectedImageSrc, selectedTargetIndex, swapAllFaces, isOpen]);
 
-  // Handle Preset Selection
-  const handleSelectPreset = (preset) => {
-    setSelectedPresetId(preset.id);
-    setSelectedImageSrc(getMemeFaceDataUrl(preset));
-    setFaceName(preset.name);
-  };
-
   // Handle File Upload
   const handleFileUpload = (e) => {
     const file = e.target.files?.[0];
@@ -288,579 +285,182 @@ export default function FaceMorphModal({
   const currentPreview = isComparing
     ? (originalCropPreview || memeFacePatch?.dataUrl || memeTemplateUrl)
     : (previewType === 'crop' ? (neuralCropPreview || neuralFullImage) : neuralFullImage);
+  const canApply = !isNeuralProcessing && Boolean(neuralFullImage || neuralCropPreview);
+
+  // Your uploaded photo first, then the meme faces.
+  const faces = [
+    ...(customFace ? [{ id: customFace.id, name: customFace.name, label: 'Yours', src: customFace.dataUrl }] : []),
+    ...MEME_FACE_PRESETS.map((p) => ({ id: p.id, name: p.name, label: getShortFaceName(p), src: getMemeFaceDataUrl(p) })),
+  ];
+  const picked = faces.find((f) => f.id === selectedPresetId);
+  const pickedName = picked ? (picked.id === customFace?.id ? 'Your photo' : picked.label) : faceName;
+
+  const pickFace = (face) => {
+    setSelectedPresetId(face.id);
+    setSelectedImageSrc(face.src);
+    setFaceName(face.name);
+  };
+
+  const retry = () => {
+    if (isNeuralAvailable) runNeuralFaceSwap(selectedImageSrc);
+    else setServerCheck((n) => n + 1);
+  };
+
+  const holdProps = {
+    onPointerDown: handleStartComparing,
+    onPointerUp: handleStopComparing,
+    onPointerLeave: handleStopComparing,
+    onPointerCancel: handleStopComparing,
+    onTouchStart: handleStartComparing,
+    onTouchEnd: handleStopComparing,
+    onTouchCancel: handleStopComparing,
+    onContextMenu: (e) => e.preventDefault(),
+  };
 
   return (
     <BottomSheet
       isOpen={isOpen}
       onClose={onClose}
-      title="AI Face Swap"
-      badge={targetLabel ? (
-        <span
-          style={{
-            fontSize: '0.68rem',
-            fontWeight: 700,
-            padding: '3px 10px',
-            borderRadius: '9999px',
-            background: 'rgba(255, 90, 54, 0.12)',
-            color: 'var(--ui-accent, #ff5a36)',
-            border: '1px solid rgba(255, 90, 54, 0.3)'
-          }}
-        >
-          {targetLabel}
-        </span>
-      ) : null}
-      maxHeight="84vh"
+      title="Face Swap"
+      className="fmm-sheet"
+      badge={targetLabel ? <span className="fmm-badge">{targetLabel}</span> : null}
+      maxHeight="88vh"
+      contentStyle={{ padding: '2px 16px 14px', gap: '18px' }}
       footer={
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: '10px'
-          }}
-        >
-          <button
-            type="button"
-            className="ui-btn"
-            onClick={onClose}
-            style={{
-              height: '42px',
-              fontSize: '14px',
-              fontWeight: 600,
-              padding: '0 20px',
-              borderRadius: '9999px',
-              background: 'transparent',
-              border: '1px solid rgba(255, 255, 255, 0.18)',
-              color: 'rgba(255, 255, 255, 0.85)',
-              cursor: 'pointer',
-              transition: 'all 0.16s ease'
-            }}
-          >
-            Cancel
-          </button>
-
-          <button
-            type="button"
-            className="ui-btn"
-            onClick={handleApply}
-            disabled={isNeuralProcessing || (!neuralFullImage && !neuralCropPreview)}
-            style={{
-              flex: 1,
-              height: '42px',
-              fontSize: '14px',
-              fontWeight: 700,
-              padding: '0 18px',
-              borderRadius: '9999px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '6px',
-              cursor: isNeuralProcessing || (!neuralFullImage && !neuralCropPreview) ? 'not-allowed' : 'pointer',
-              background: 'var(--ui-accent, #ff5a36)',
-              color: '#ffffff',
-              border: 'none',
-              boxShadow: '0 2px 8px rgba(255, 90, 54, 0.35)',
-              opacity: isNeuralProcessing || (!neuralFullImage && !neuralCropPreview) ? 0.5 : 1,
-              transition: 'all 0.16s ease'
-            }}
-          >
-            <Check size={16} />
-            <span>Apply to Meme</span>
+        <div className="fmm-foot">
+          <button type="button" className="fmm-btn" onClick={onClose}>Cancel</button>
+          <button type="button" className="fmm-btn fmm-btn--accent" onClick={handleApply} disabled={!canApply}>
+            <Check size={17} strokeWidth={2.4} aria-hidden="true" />
+            Apply to meme
           </button>
         </div>
       }
     >
-      {/* Visual Preview Box */}
-      <div
-        style={{
-          position: 'relative',
-          width: '100%',
-          height: '215px',
-          borderRadius: '14px',
-          background: '#07080d',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-          overflow: 'hidden',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center'
-        }}
-      >
+      {/* What the swap looks like: a spinner while it runs, what went wrong, or the result */}
+      <div className="fmm-stage">
         {isNeuralProcessing ? (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-            <RefreshCw className="spin" size={24} style={{ color: 'var(--ui-accent, #ff5a36)' }} />
-            <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'rgba(255, 255, 255, 0.9)' }}>
-              Swapping face...
-            </span>
+          <div className="fmm-stage-msg" role="status">
+            <LoaderCircle size={26} className="animate-spin fmm-spin" aria-hidden="true" />
+            <span className="fmm-stage-title">Swapping in {pickedName}…</span>
           </div>
-              ) : neuralError ? (
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', padding: '12px', textAlign: 'center', color: '#f87171' }}>
-                  <AlertCircle size={22} />
-                  <span style={{ fontSize: '0.74rem' }}>{neuralError}</span>
-                  <button
-                    type="button"
-                    className="btn btn-xs btn-primary"
-                    onClick={() => runNeuralFaceSwap(selectedImageSrc)}
-                    style={{ fontSize: '0.7rem', padding: '3px 10px', marginTop: '4px' }}
-                  >
-                    Retry
-                  </button>
-                </div>
-              ) : currentPreview ? (
-                <>
-                  <img
-                    src={currentPreview}
-                    alt="Swapped Face"
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'contain',
-                      display: 'block',
-                      userSelect: 'none',
-                      pointerEvents: 'none'
-                    }}
-                  />
-
-                  {/* Sleek "Hold to Compare" Button */}
-                  <button
-                    type="button"
-                    onPointerDown={handleStartComparing}
-                    onPointerUp={handleStopComparing}
-                    onPointerLeave={handleStopComparing}
-                    onPointerCancel={handleStopComparing}
-                    onTouchStart={handleStartComparing}
-                    onTouchEnd={handleStopComparing}
-                    onTouchCancel={handleStopComparing}
-                    onContextMenu={(e) => e.preventDefault()}
-                    style={{
-                      position: 'absolute',
-                      top: '10px',
-                      left: '10px',
-                      padding: '6px 14px',
-                      borderRadius: '9999px',
-                      fontSize: '12px',
-                      fontWeight: 600,
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                      cursor: 'pointer',
-                      border: isComparing ? '1px solid var(--ui-accent, #ff5a36)' : '1px solid rgba(255, 255, 255, 0.18)',
-                      background: isComparing ? 'var(--ui-accent, #ff5a36)' : 'rgba(12, 14, 20, 0.88)',
-                      backdropFilter: 'blur(8px)',
-                      color: '#ffffff',
-                      userSelect: 'none',
-                      touchAction: 'manipulation',
-                      boxShadow: isComparing ? '0 0 12px rgba(255, 90, 54, 0.5)' : '0 2px 8px rgba(0,0,0,0.3)',
-                      transition: 'all 0.15s ease'
-                    }}
-                  >
-                    <Eye size={13} />
-                    <span>{isComparing ? 'Original Face' : 'Hold to compare'}</span>
-                  </button>
-
-                  {/* Subtle Face / Full Zoom Toggle */}
-                  <div
-                    style={{
-                      position: 'absolute',
-                      bottom: '10px',
-                      right: '10px',
-                      display: 'inline-flex',
-                      background: 'rgba(12, 14, 20, 0.88)',
-                      backdropFilter: 'blur(8px)',
-                      borderRadius: '9999px',
-                      padding: '3px',
-                      border: '1px solid rgba(255, 255, 255, 0.15)',
-                      gap: '2px'
-                    }}
-                  >
-                    <button
-                      type="button"
-                      onClick={() => setPreviewType('crop')}
-                      style={{
-                        padding: '4px 10px',
-                        borderRadius: '9999px',
-                        fontSize: '12px',
-                        fontWeight: previewType === 'crop' ? 700 : 500,
-                        border: 'none',
-                        background: previewType === 'crop' ? 'var(--ui-accent, #ff5a36)' : 'transparent',
-                        color: previewType === 'crop' ? '#ffffff' : 'rgba(255, 255, 255, 0.75)',
-                        cursor: 'pointer',
-                        transition: 'all 0.15s ease'
-                      }}
-                    >
-                      Face
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setPreviewType('full')}
-                      style={{
-                        padding: '4px 10px',
-                        borderRadius: '9999px',
-                        fontSize: '12px',
-                        fontWeight: previewType === 'full' ? 700 : 500,
-                        border: 'none',
-                        background: previewType === 'full' ? 'var(--ui-accent, #ff5a36)' : 'transparent',
-                        color: previewType === 'full' ? '#ffffff' : 'rgba(255, 255, 255, 0.75)',
-                        cursor: 'pointer',
-                        transition: 'all 0.15s ease'
-                      }}
-                    >
-                      Full
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <span style={{ fontSize: '0.76rem', color: 'rgba(255, 255, 255, 0.4)' }}>
-                  Select a face to preview
-                </span>
-              )}
-            </div>
-
-            {/* Upload Buttons */}
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleFileUpload}
-              style={{ display: 'none' }}
-            />
-            <input
-              ref={cameraInputRef}
-              type="file"
-              accept="image/*"
-              capture="user"
-              onChange={handleFileUpload}
-              style={{ display: 'none' }}
-            />
-
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="ui-btn"
-                style={{
-                  flex: 1,
-                  height: '42px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px',
-                  fontSize: '13px',
-                  fontWeight: 600,
-                  borderRadius: '9999px',
-                  background: 'transparent',
-                  border: '1px solid rgba(255, 255, 255, 0.18)',
-                  color: '#ffffff',
-                  cursor: 'pointer',
-                  transition: 'all 0.16s ease'
-                }}
-              >
-                <Upload size={16} style={{ color: 'var(--ui-accent, #ff5a36)' }} />
-                <span>Upload Photo</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => cameraInputRef.current?.click()}
-                className="ui-btn"
-                style={{
-                  height: '42px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px',
-                  fontSize: '13px',
-                  fontWeight: 600,
-                  padding: '0 20px',
-                  borderRadius: '9999px',
-                  background: 'transparent',
-                  border: '1px solid rgba(255, 255, 255, 0.18)',
-                  color: '#ffffff',
-                  cursor: 'pointer',
-                  transition: 'all 0.16s ease'
-                }}
-              >
-                <Camera size={16} style={{ color: 'var(--ui-accent, #ff5a36)' }} />
-                <span>Selfie</span>
-              </button>
-            </div>
-
-            {/* Quick Face Presets Strip */}
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                padding: '2px 4px 0',
-                marginTop: '4px'
-              }}
-            >
-              <span
-                style={{
-                  fontSize: '11px',
-                  fontWeight: 700,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.06em',
-                  color: 'rgba(255, 255, 255, 0.5)'
-                }}
-              >
-                Choose Face
-              </span>
-              <span
-                style={{
-                  fontSize: '12px',
-                  fontWeight: 700,
-                  color: 'var(--ui-accent, #ff5a36)'
-                }}
-              >
-                {selectedPresetId === customFace?.id
-                  ? 'Your Photo'
-                  : getShortFaceName(MEME_FACE_PRESETS.find((p) => p.id === selectedPresetId) || { name: faceName })}
-              </span>
-            </div>
-
-            <div
-              className="horizontal-scroll-only"
-              style={{
-                display: 'flex',
-                alignItems: 'flex-start',
-                gap: '12px',
-                overflowX: 'auto',
-                overflowY: 'hidden',
-                padding: '6px 4px 10px',
-                scrollbarWidth: 'none',
-                WebkitOverflowScrolling: 'touch'
-              }}
-            >
-              {customFace && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSelectedPresetId(customFace.id);
-                    setSelectedImageSrc(customFace.dataUrl);
-                    setFaceName(customFace.name);
-                  }}
-                  style={{
-                    flexShrink: 0,
-                    background: 'transparent',
-                    border: 'none',
-                    padding: 0,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    gap: '6px',
-                    cursor: 'pointer',
-                    outline: 'none',
-                    WebkitTapHighlightColor: 'transparent',
-                    transition: 'transform 0.16s ease'
-                  }}
-                  title="Your Uploaded Photo"
-                >
-                  <span
-                    style={{
-                      width: '52px',
-                      height: '52px',
-                      borderRadius: '50%',
-                      padding: 0,
-                      overflow: 'hidden',
-                      background: '#0d1017',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      border: selectedPresetId === customFace.id
-                        ? '2.5px solid var(--ui-accent, #ff5a36)'
-                        : '1.5px solid rgba(255, 255, 255, 0.16)',
-                      boxShadow: selectedPresetId === customFace.id
-                        ? '0 0 0 2px rgba(255, 90, 54, 0.35), 0 3px 12px rgba(255, 90, 54, 0.45)'
-                        : 'none',
-                      transform: selectedPresetId === customFace.id ? 'scale(1.05)' : 'scale(1)',
-                      transition: 'all 0.18s cubic-bezier(0.4, 0, 0.2, 1)'
-                    }}
-                  >
-                    <img
-                      src={customFace.dataUrl}
-                      alt="Your Photo"
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover',
-                        display: 'block',
-                        pointerEvents: 'none'
-                      }}
-                    />
-                  </span>
-                  <span
-                    style={{
-                      fontSize: '11.5px',
-                      fontWeight: selectedPresetId === customFace.id ? 700 : 500,
-                      color: selectedPresetId === customFace.id ? 'var(--ui-accent, #ff5a36)' : '#e2e8f0',
-                      maxWidth: '64px',
-                      textAlign: 'center',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                      transition: 'color 0.16s ease'
-                    }}
-                  >
-                    Uploaded
-                  </span>
+        ) : neuralError ? (
+          <div className="fmm-stage-msg" role="alert">
+            <span className="fmm-stage-icon" aria-hidden="true">
+              {isNeuralAvailable ? <AlertCircle size={20} /> : <CloudOff size={20} />}
+            </span>
+            <span className="fmm-stage-title">{isNeuralAvailable ? 'That face didn’t swap' : 'Face swap is offline'}</span>
+            <span className="fmm-stage-sub">{neuralError}</span>
+            <button type="button" className="fmm-retry" onClick={retry}>
+              <RefreshCw size={14} strokeWidth={2.3} aria-hidden="true" />
+              Try again
+            </button>
+          </div>
+        ) : currentPreview ? (
+          <>
+            <img className="fmm-stage-img" src={currentPreview} alt={isComparing ? 'Original face' : 'Swapped face'} />
+            <button type="button" className={`fmm-compare${isComparing ? ' is-on' : ''}`} {...holdProps}>
+              <Eye size={14} strokeWidth={2.3} aria-hidden="true" />
+              {isComparing ? 'Original' : 'Hold to compare'}
+            </button>
+            <div className="fmm-zoom" role="radiogroup" aria-label="Preview">
+              {[['crop', 'Face'], ['full', 'Full']].map(([id, label]) => (
+                <button key={id} type="button" role="radio" aria-checked={previewType === id} className={previewType === id ? 'is-on' : ''} onClick={() => setPreviewType(id)}>
+                  {label}
                 </button>
-              )}
-
-              {MEME_FACE_PRESETS.map((preset) => {
-                const isSelected = selectedPresetId === preset.id;
-                const shortName = getShortFaceName(preset);
-                return (
-                  <button
-                    key={preset.id}
-                    type="button"
-                    onClick={() => handleSelectPreset(preset)}
-                    style={{
-                      flexShrink: 0,
-                      background: 'transparent',
-                      border: 'none',
-                      padding: 0,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      gap: '6px',
-                      cursor: 'pointer',
-                      outline: 'none',
-                      WebkitTapHighlightColor: 'transparent',
-                      transition: 'transform 0.16s ease'
-                    }}
-                    title={preset.name}
-                  >
-                    <span
-                      style={{
-                        width: '52px',
-                        height: '52px',
-                        borderRadius: '50%',
-                        padding: 0,
-                        overflow: 'hidden',
-                        background: '#0d1017',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        border: isSelected
-                          ? '2.5px solid var(--ui-accent, #ff5a36)'
-                          : '1.5px solid rgba(255, 255, 255, 0.16)',
-                        boxShadow: isSelected
-                          ? '0 0 0 2px rgba(255, 90, 54, 0.35), 0 3px 12px rgba(255, 90, 54, 0.45)'
-                          : 'none',
-                        transform: isSelected ? 'scale(1.05)' : 'scale(1)',
-                        transition: 'all 0.18s cubic-bezier(0.4, 0, 0.2, 1)'
-                      }}
-                    >
-                      <img
-                        src={getMemeFaceDataUrl(preset)}
-                        alt={preset.name}
-                        style={{
-                          width: '100%',
-                          height: '100%',
-                          objectFit: 'cover',
-                          display: 'block',
-                          pointerEvents: 'none'
-                        }}
-                      />
-                    </span>
-                    <span
-                      style={{
-                        fontSize: '11.5px',
-                        fontWeight: isSelected ? 700 : 500,
-                        color: isSelected ? 'var(--ui-accent, #ff5a36)' : '#e2e8f0',
-                        maxWidth: '64px',
-                        textAlign: 'center',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                        transition: 'color 0.16s ease'
-                      }}
-                    >
-                      {shortName}
-                    </span>
-                  </button>
-                );
-              })}
+              ))}
             </div>
+          </>
+        ) : (
+          // Still asking the face swap server whether it's there.
+          <div className="fmm-stage-msg" role="status">
+            <span className="fmm-stage-icon" aria-hidden="true"><Sparkles size={20} /></span>
+            <span className="fmm-stage-title">Getting face swap ready…</span>
+            <span className="fmm-stage-sub">The swap shows up here.</span>
+          </div>
+        )}
+      </div>
 
-            {/* If multiple faces detected: Segmented selector matching AiCaptionModal */}
-            {detectedFaces.length > 1 && (
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '8px 12px',
-                  borderRadius: '9999px',
-                  background: 'rgba(255, 255, 255, 0.04)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)'
-                }}
-              >
-                <span style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.75)', fontWeight: 600, paddingLeft: '4px' }}>
-                  Target:
-                </span>
+      <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileUpload} hidden />
+      <input ref={cameraInputRef} type="file" accept="image/*" capture="user" onChange={handleFileUpload} hidden />
 
-                <div
-                  style={{
-                    display: 'inline-flex',
-                    background: 'rgba(255, 255, 255, 0.06)',
-                    borderRadius: '9999px',
-                    padding: '3px',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    gap: '3px'
+      {/* Faces: bring your own (upload or selfie), or a meme face */}
+      <section className="fmm-section">
+        <div className="fmm-section-head">
+          <span className="fmm-label">Face</span>
+          <span className="fmm-picked">{pickedName}</span>
+        </div>
+        <div className="fmm-faces">
+          <button type="button" className="fmm-face fmm-face--add" onClick={() => fileInputRef.current?.click()}>
+            <span className="fmm-face-img"><Upload size={20} strokeWidth={2.1} aria-hidden="true" /></span>
+            <span className="fmm-face-name">Upload</span>
+          </button>
+          <button type="button" className="fmm-face fmm-face--add" onClick={() => cameraInputRef.current?.click()}>
+            <span className="fmm-face-img"><Camera size={20} strokeWidth={2.1} aria-hidden="true" /></span>
+            <span className="fmm-face-name">Selfie</span>
+          </button>
+          <div className="fmm-faces-list" role="radiogroup" aria-label="Faces">
+            {faces.map((face) => {
+              const on = selectedPresetId === face.id;
+              return (
+                <button
+                  key={face.id}
+                  type="button"
+                  role="radio"
+                  aria-checked={on}
+                  aria-label={face.name}
+                  title={face.name}
+                  className={`fmm-face${on ? ' is-on' : ''}`}
+                  onClick={() => pickFace(face)}
+                >
+                  <span className="fmm-face-img"><img src={face.src} alt="" draggable={false} /></span>
+                  <span className="fmm-face-name">{face.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* More than one face in the meme: swap them all, or just one */}
+      {detectedFaces.length > 1 && (
+        <section className="fmm-section">
+          <div className="fmm-section-head">
+            <span className="fmm-label">Swap on</span>
+          </div>
+          <div className="fmm-chips" role="radiogroup" aria-label="Faces in the meme">
+            <button
+              type="button"
+              role="radio"
+              aria-checked={swapAllFaces}
+              className={`fmm-chip${swapAllFaces ? ' is-on' : ''}`}
+              onClick={() => {
+                setSwapAllFaces(true);
+                setSelectedTargetIndex(null);
+              }}
+            >
+              All faces
+            </button>
+            {detectedFaces.map((f, i) => {
+              const on = !swapAllFaces && selectedTargetIndex === f.index;
+              return (
+                <button
+                  key={f.index}
+                  type="button"
+                  role="radio"
+                  aria-checked={on}
+                  className={`fmm-chip${on ? ' is-on' : ''}`}
+                  onClick={() => {
+                    setSwapAllFaces(false);
+                    setSelectedTargetIndex(f.index);
                   }}
                 >
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSwapAllFaces(true);
-                      setSelectedTargetIndex(null);
-                    }}
-                    style={{
-                      padding: '4px 10px',
-                      borderRadius: '9999px',
-                      fontSize: '12px',
-                      fontWeight: swapAllFaces ? 700 : 500,
-                      border: 'none',
-                      cursor: 'pointer',
-                      background: swapAllFaces ? 'var(--ui-accent, #ff5a36)' : 'transparent',
-                      color: swapAllFaces ? '#ffffff' : 'rgba(255, 255, 255, 0.65)',
-                      transition: 'all 0.15s ease'
-                    }}
-                  >
-                    All Faces ({detectedFaces.length})
-                  </button>
-
-                  {detectedFaces.map((f, i) => {
-                    const isSelected = !swapAllFaces && selectedTargetIndex === f.index;
-                    return (
-                      <button
-                        key={f.index}
-                        type="button"
-                        onClick={() => {
-                          setSwapAllFaces(false);
-                          setSelectedTargetIndex(f.index);
-                        }}
-                        style={{
-                          padding: '4px 10px',
-                          borderRadius: '9999px',
-                          fontSize: '12px',
-                          fontWeight: isSelected ? 700 : 500,
-                          border: 'none',
-                          cursor: 'pointer',
-                          background: isSelected ? 'var(--ui-accent, #ff5a36)' : 'transparent',
-                          color: isSelected ? '#ffffff' : 'rgba(255, 255, 255, 0.65)',
-                          transition: 'all 0.15s ease'
-                        }}
-                      >
-                        Face {i + 1}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
+                  Face {i + 1}
+                </button>
+              );
+            })}
+          </div>
+        </section>
+      )}
     </BottomSheet>
   );
 }

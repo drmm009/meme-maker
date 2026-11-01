@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { Type, Copy, PenLine, Sparkles, LayoutGrid } from 'lucide-react';
 import { ToolDock, ToolStrip } from '../../ui';
 import type { DockItem } from '../../ui';
@@ -31,6 +32,7 @@ import BackgroundSheet from './BackgroundSheet';
 import DieCutSheet from './DieCutSheet';
 import LayerToolbar from './LayerToolbar';
 import { DRAW_TOOLS } from './drawTools';
+import { useSmoothHeight } from './useSmoothHeight';
 import './panels.css';
 
 // Text sits in the middle; the open section is the wide gradient pill.
@@ -63,10 +65,14 @@ export default function EditorPanels({ actions }: { actions: EditorActions }) {
   const setActiveLayerId = useMemeEditorStore((s: { setActiveLayerId: (id: string | null) => void }) => s.setActiveLayerId);
   const faceMorph = useMemeEditorStore((s: { templateFaceMorph: { morphProgress?: number } | null }) => s.templateFaceMorph);
   const { kind } = useSelection();
+  // One element in every branch below, so its height can glide between them.
+  const panelRef = useRef<HTMLDivElement>(null);
+  const full = Boolean(sheet && FULL_SHEETS.has(sheet));
+  useSmoothHeight(panelRef, full);
 
   if (faceMorph && !kind) {
     return (
-      <div className="ie-panels ie-panels--sheet">
+      <div ref={panelRef} className="ie-panels ie-panels--sheet" data-sheet-ghosts="">
         <FaceSwapSheet morphProgress={faceMorph.morphProgress} actions={actions} />
       </div>
     );
@@ -81,17 +87,17 @@ export default function EditorPanels({ actions }: { actions: EditorActions }) {
 
   const layerTools = Boolean(kind) && dockTab !== 'draw' && !faceMorph;
   const SheetComponent = sheet ? SHEETS[sheet] : null;
-  if (SheetComponent && sheet && FULL_SHEETS.has(sheet)) {
+  if (SheetComponent && full) {
     // A browsing sheet takes the editor's whole height, over the meme, with its own close button.
     return (
-      <div className="ie-panels ie-panels--sheet ie-panels--full">
+      <div ref={panelRef} className="ie-panels ie-panels--sheet ie-panels--full">
         <SheetComponent actions={actions} onClose={closeSheet} />
       </div>
     );
   }
   if (SheetComponent) {
     return (
-      <div className="ie-panels ie-panels--sheet">
+      <div ref={panelRef} className="ie-panels ie-panels--sheet" data-sheet-ghosts="">
         {layerTools && sheetFromPill ? <LayerToolbar actions={actions} /> : strip}
         <SheetComponent actions={actions} onClose={closeSheet} />
       </div>
@@ -99,7 +105,7 @@ export default function EditorPanels({ actions }: { actions: EditorActions }) {
   }
 
   return (
-    <div className="ie-panels">
+    <div ref={panelRef} className="ie-panels" data-sheet-ghosts="">
       {layerTools ? <LayerToolbar actions={actions} /> : strip}
       <ToolDock
         ariaLabel="Editor tools"

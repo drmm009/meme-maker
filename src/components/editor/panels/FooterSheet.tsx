@@ -5,7 +5,7 @@ import { bandColor } from '../../canvas/layout/canvasLayout';
 import type { EditorActions } from './selection';
 
 const BAND_COLORS = [
-  '#ffffff', '#000000', '#f8fafc', '#1e293b', '#ff5a36', '#ffd60a',
+  '#ffffff', '#000000', '#6b7280', '#1e293b', '#ff5a36', '#ffd60a',
   '#34c759', '#0a84ff', '#bf5af2', '#ff375f'
 ];
 
@@ -76,31 +76,36 @@ export default function FooterSheet({ actions: _actions, onClose }: { actions?: 
   };
 
   return (
-    <Sheet className="ie-footer-sheet" title="Footer" hideTitle onClose={onClose}>
-      <Section>
-        <Row label="Footer" end>
-          <Switch label="Footer" checked={Boolean(canvasFooter.enabled)} onChange={toggleFooter} />
-        </Row>
-        <Row label="Height">
-          <Slider
-            label="Footer height"
-            min={60}
-            max={400}
-            step={5}
-            value={canvasFooter.height || 140}
-            onChange={setHeight}
-            format={(v) => `${Math.round(v)}px`}
-          />
-        </Row>
-        <Row label="Color">
-          <SwatchRow
-            ariaLabel="Footer colour"
-            colors={BAND_COLORS}
-            value={bandColor(canvasFooter, canvasBgColor)}
-            onChange={setBgColor}
-          />
-        </Row>
-      </Section>
+    <Sheet
+      className="ie-footer-sheet ie-tool-sheet"
+      title="Footer"
+      onClose={onClose}
+      aside={<Switch label="Footer" checked={Boolean(canvasFooter.enabled)} onChange={toggleFooter} />}
+    >
+      {!canvasFooter.enabled && <p className="ie-empty">Switch it on for a band below the meme to write in.</p>}
+      {canvasFooter.enabled && (
+        <Section>
+          <Row label="Height">
+            <Slider
+              label="Footer height"
+              min={60}
+              max={400}
+              step={5}
+              value={canvasFooter.height || 140}
+              onChange={setHeight}
+              format={(v) => `${Math.round(v)}`}
+            />
+          </Row>
+          <Row label="Color">
+            <SwatchRow
+              ariaLabel="Footer colour"
+              colors={BAND_COLORS}
+              value={bandColor(canvasFooter, canvasBgColor)}
+              onChange={setBgColor}
+            />
+          </Row>
+        </Section>
+      )}
     </Sheet>
   );
 }

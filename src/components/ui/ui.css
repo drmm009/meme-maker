@@ -236,28 +236,8 @@
 .ui-strip-btn .lucide-loader-circle { animation: ui-spin 0.9s linear infinite; }
 @keyframes ui-spin { to { transform: rotate(360deg); } }
 .ui-strip-btn.is-on { border-color: transparent; background: linear-gradient(100deg, #ec6a43, #d9549a); color: #fff; }
-/* In use with its settings closed (a brush still drawing): an orange icon and a pulsing dot. */
-.ui-strip-btn { position: relative; }
-.ui-strip-btn.is-live {
-  background: rgba(255, 90, 54, 0.12);
-  color: #fff;
-}
+/* In use with its settings closed (a brush still drawing): a normal button with an orange icon. */
 .ui-strip-btn.is-live svg { color: var(--ui-accent, #ff5a36); }
-.ui-strip-live {
-  position: absolute;
-  top: 6px;
-  right: 8px;
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--ui-accent, #ff5a36);
-  animation: ui-live 1.6s ease-out infinite;
-}
-@keyframes ui-live {
-  0% { box-shadow: 0 0 0 0 rgba(255, 90, 54, 0.7); }
-  70%, 100% { box-shadow: 0 0 0 7px rgba(255, 90, 54, 0); }
-}
-@media (prefers-reduced-motion: reduce) { .ui-strip-live { animation: none; } }
 .ui-strip--stacked { gap: 8px; }
 .ui-strip--stacked .ui-strip-btn {
   flex: 1 1 0;
@@ -355,6 +335,32 @@
     transform: translateY(0);
     opacity: 1;
   }
+}
+/* In a host that glides to its new height (the editor's bottom panel), a sheet grows out of the
+   panel rather than sliding up, its content fading in; a leaving sheet's ghost (see Sheet.tsx) stays
+   behind the panel's content where the sheet was, fading. */
+[data-sheet-ghosts] > .ui-sheet { animation: none; }
+[data-sheet-ghosts] > .ui-sheet:not(.ui-sheet-ghost) > .ui-sheet-body { animation: ui-sheet-fade-in 0.22s ease-out; }
+.ui-sheet.ui-sheet-ghost {
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: -1;
+  pointer-events: none;
+  animation: ui-sheet-ghost-out 0.3s ease-in forwards;
+}
+@keyframes ui-sheet-fade-in { from { opacity: 0; } }
+@keyframes ui-sheet-ghost-out { to { opacity: 0; } }
+/* A full-height sheet's copy, laid over where it was, slides down out of view. */
+.ui-sheet.ui-sheet-ghost--drop {
+  right: auto;
+  z-index: 60;
+  animation: ui-sheet-ghost-drop 0.3s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+}
+@keyframes ui-sheet-ghost-drop { to { transform: translateY(100%); opacity: 0.6; } }
+@media (prefers-reduced-motion: reduce) {
+  [data-sheet-ghosts] > .ui-sheet:not(.ui-sheet-ghost) > .ui-sheet-body { animation: none; }
+  .ui-sheet.ui-sheet-ghost { display: none; }
 }
 .ui-sheet-handle {
   align-self: center;
