@@ -875,7 +875,7 @@ describe('MemeEditor', () => {
     fireEvent.click(within(sheet('Templates')).getAllByRole('button', { name: /drake/i })[0]);
     act(() => canvas.props.onSelectLayer(canvas.props.imageLayers[0].id));
     fireEvent.click(within(layerToolbar()).getByText('More'));
-    const more = sheet('More');
+    const more = sheet('Photo');
     expect(within(more).getAllByRole('button').map((b) => b.textContent).filter(Boolean)).toEqual(['Mirror', 'Flip', 'Copy', 'Crop']);
     expect(within(more).getByText('Replace')).toBeTruthy();
     for (const gone of ['Face Swap', 'Filters', 'Background', 'Duplicate']) expect(within(more).queryByText(gone)).toBeNull();
@@ -887,9 +887,16 @@ describe('MemeEditor', () => {
     fireEvent.change(within(more).getByLabelText('Corner rounding'), { target: { value: '0.3' } });
     fireEvent.change(within(more).getByLabelText('Border width'), { target: { value: '6' } });
     expect(canvas.props.imageLayers[0]).toMatchObject({ flipY: true, cornerRadius: 0.3, borderWidth: 6 });
-    expect(within(sheet('More')).getByRole('radiogroup', { name: 'Border colour' })).toBeTruthy();
-    fireEvent.click(within(sheet('More')).getByText('Copy'));
+    expect(within(sheet('Photo')).getByRole('radiogroup', { name: 'Border colour' })).toBeTruthy();
+    fireEvent.click(within(sheet('Photo')).getByText('Copy'));
     expect(canvas.props.imageLayers).toHaveLength(2);
+
+    // Crop opens the same cropper as the main photo's, for this layer.
+    fireEvent.click(within(sheet('Photo')).getByText('Crop'));
+    const cropper = screen.getByRole('dialog', { name: 'Crop photo' });
+    expect(within(cropper).getByRole('radiogroup', { name: 'Crop shape' })).toBeTruthy();
+    fireEvent.click(within(cropper).getByText('Cancel'));
+    expect(screen.queryByRole('dialog', { name: 'Crop photo' })).toBeNull();
   }, 30000);
 
   it("image layer toolbar has Background (opens Background sheet) and Face Swap buttons", () => {
@@ -919,7 +926,7 @@ describe('MemeEditor', () => {
     expect(screen.queryByRole('dialog', { name: 'Background' })).toBeNull();
   }, 30000);
 
-  it('the Media sheet for stickers has only size bar, flip button, opacity and shadow', () => {
+  it('the Sticker sheet has flip, size, opacity and shadow', () => {
     renderEditor();
     openSection('Photos, videos, stickers and emoji');
     fireEvent.click(within(strip('Media tools')).getByText('Emoji'));
@@ -930,20 +937,20 @@ describe('MemeEditor', () => {
     expect(within(layerToolbar()).getByText('Edit')).toBeTruthy();
 
     fireEvent.click(within(layerToolbar()).getByText('Edit'));
-    const media = sheet('Media');
+    const media = sheet('Sticker');
     expect(within(media).getByLabelText('Sticker size')).toBeTruthy();
 
     fireEvent.click(within(media).getByRole('switch', { name: 'Flip sticker' }));
     fireEvent.change(within(media).getByLabelText('Opacity'), { target: { value: '0.5' } });
     fireEvent.change(within(media).getByLabelText('Shadow size'), { target: { value: '12' } });
     expect(canvas.props.stickers[0]).toMatchObject({ flipX: true, opacity: 0.5, shadowSize: 12 });
-    expect(within(sheet('Media')).getByRole('radiogroup', { name: 'Shadow colour' })).toBeTruthy();
+    expect(within(sheet('Sticker')).getByRole('radiogroup', { name: 'Shadow colour' })).toBeTruthy();
 
     // Upside down, blend mode, die-cut and corners are omitted
-    expect(within(sheet('Media')).queryByRole('switch', { name: 'Flip upside down' })).toBeNull();
-    expect(within(sheet('Media')).queryByRole('group', { name: 'Blend mode' })).toBeNull();
-    expect(within(sheet('Media')).queryByRole('switch', { name: 'Die-cut border' })).toBeNull();
-    expect(within(sheet('Media')).queryByLabelText('Corner rounding')).toBeNull();
+    expect(within(sheet('Sticker')).queryByRole('switch', { name: 'Flip upside down' })).toBeNull();
+    expect(within(sheet('Sticker')).queryByRole('group', { name: 'Blend mode' })).toBeNull();
+    expect(within(sheet('Sticker')).queryByRole('switch', { name: 'Die-cut border' })).toBeNull();
+    expect(within(sheet('Sticker')).queryByLabelText('Corner rounding')).toBeNull();
   }, 30000);
 
   it('Die-cut button opens bottom sheet to customize border color and width, and toggling closes it', () => {
@@ -1009,9 +1016,9 @@ describe('MemeEditor', () => {
     fireEvent.click(screen.getByTitle('Laugh Cry'));
     // No dock tab is lit while a layer's pill shows.
     expect(screen.getByRole('navigation', { name: 'Editor tools' }).querySelector('[aria-pressed="true"]')).toBeNull();
-    // The new sticker's Edit opens the Media sheet under the pill, Edit lit.
+    // The new sticker's Edit opens the Sticker sheet under the pill, Edit lit.
     fireEvent.click(within(layerToolbar()).getByText('Edit'));
-    expect(within(sheet('Media')).getByLabelText('Sticker size')).toBeTruthy();
+    expect(within(sheet('Sticker')).getByLabelText('Sticker size')).toBeTruthy();
     expect(screen.queryByRole('toolbar', { name: 'Media tools' })).toBeNull();
     expect(within(layerToolbar()).getByText('Edit').closest('button').getAttribute('aria-pressed')).toBe('true');
     // Tapping Edit again closes it.

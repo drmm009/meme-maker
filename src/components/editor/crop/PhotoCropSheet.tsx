@@ -34,7 +34,7 @@ interface Props {
   onClose: () => void;
 }
 
-// Crop and turn the main photo: drag the box or its corners, pick a shape, turn it a quarter at
+// Crop and turn the main photo, or a photo layer's picture: drag the box or its corners, pick a shape, turn it a quarter at
 // a time. Done bakes it into a new photo (cropMath.bakeCrop).
 export default function PhotoCropSheet({ url, uncroppedUrl, onApply, onRestore, onClose }: Props) {
   const [img, setImg] = useState<HTMLImageElement | null>(null);

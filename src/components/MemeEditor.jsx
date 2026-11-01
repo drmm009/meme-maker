@@ -85,7 +85,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, o
 
   const { handleOpenSocialModalForActiveCard, handleUpdateSocialCard, handleAddTweetCard, handleAddInstagramCard, handleAddWhatsAppCard } = useSocialCardActions();
   const { handleSetCanvasBgColor, handleSetCanvasBgGradient, handleToggleCanvasHeader, handleToggleCanvasFooter, handleToggleCanvasFlip, handleWatermarkImageUpload } = useCanvasFrameActions();
-  const { handleApplyMainPhotoCrop, handleRestoreMainPhoto, handleReplaceImageLayer } = usePhotoActions();
+  const { handleApplyMainPhotoCrop, handleRestoreMainPhoto, handleReplaceImageLayer, handleApplyLayerCrop, handleRestoreLayerPhoto } = usePhotoActions();
   const { handleAlignLayers, handleDistributeLayers, handleGroupLayers, handleUngroupLayers, handleDeleteLayers } = useArrangeActions({ canvasRef });
   const { listProjects, handleSaveProject, handleOpenProject, handleDeleteProject, handleRenameProject } = useProjects({ canvasRef, onOpen: onRestoreDraft });
   const { handleAddDrawing, handleClearDrawings, handleUndoDrawing } = useDrawingActions();
@@ -159,6 +159,8 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, o
         commitAddImageLayer={commitAddImageLayer}
         handleApplyMainPhotoCrop={handleApplyMainPhotoCrop}
         handleRestoreMainPhoto={handleRestoreMainPhoto}
+        handleApplyLayerCrop={handleApplyLayerCrop}
+        handleRestoreLayerPhoto={handleRestoreLayerPhoto}
         currentEditingSocialCard={currentEditingSocialCard}
         extractedMemeFace={extractedMemeFace}
         faceTarget={faceTarget}

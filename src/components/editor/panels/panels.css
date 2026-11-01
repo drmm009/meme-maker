@@ -1470,70 +1470,33 @@ div.ie-layer-pick { cursor: default; }
   border-radius: 16px !important;
 }
 
-/* ── Minimalist Sticker Edit Sheet ───────────────────────── */
-.ui-sheet.ie-sticker-sheet .ui-sheet-body {
-  padding: 0 16px 14px;
-}
-.ui-sheet.ie-sticker-sheet .ui-section {
-  padding: 4px 0 6px;
-}
-.ui-sheet.ie-sticker-sheet .ui-row {
-  min-height: 38px;
-  gap: 12px;
-}
-.ui-sheet.ie-sticker-sheet .ui-row + .ui-row {
-  margin-top: 4px;
-}
-.ui-sheet.ie-sticker-sheet .ui-row-label {
-  width: 58px;
-  font-size: 12.5px !important;
-  font-weight: 500 !important;
-  color: rgba(255, 255, 255, 0.72) !important;
-  letter-spacing: 0.1px;
-}
-.ie-flip-btn {
+/* Sticker (a sticker's Edit) and Die-cut, on the tool-sheet look. Flip is a small pill beside
+   the Sticker heading, orange while the sticker is mirrored. */
+.ie-panels--sheet :is(.ie-sticker-sheet, .ie-diecut-sheet) .ui-sheet-body { padding-bottom: 14px; }
+.ie-panels--sheet :is(.ie-sticker-sheet, .ie-diecut-sheet) .ui-row { min-height: 38px; }
+.ie-panels--sheet :is(.ie-sticker-sheet, .ie-diecut-sheet) .ui-row + .ui-row { margin-top: 6px !important; }
+.ie-panels--sheet .ie-sticker-sheet .ui-row + .ie-adjust-grid { margin-top: 8px; }
+.ie-panels--sheet .ie-sticker-sheet .ie-adjust-grid + .ui-row { margin-top: 10px; }
+.ie-panels--sheet .ie-flip-pill {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  height: 32px;
+  height: 30px;
   padding: 0 12px;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.06);
-  color: rgba(255, 255, 255, 0.85);
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.16s ease;
-  flex-shrink: 0;
-  user-select: none;
-}
-.ie-flip-btn:hover {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.22);
-  color: #ffffff;
-}
-.ie-flip-btn.is-active {
-  background: rgba(255, 90, 54, 0.18);
-  border-color: rgba(255, 90, 54, 0.6);
-  color: #ff5a36;
-}
-.ie-flip-btn.is-active svg {
-  color: #ff5a36;
-}
-
-/* ── Die-Cut Sheet Single-Line Heading ───────────────────── */
-.ui-sheet.ie-diecut-sheet .ui-section-head {
-  margin-bottom: 12px;
-  padding-bottom: 4px;
-}
-.ui-sheet.ie-diecut-sheet .ui-section-title {
-  font-size: 14px !important;
+  border: none !important;
+  border-radius: 999px !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: var(--ui-text, #f4f4f6) !important;
+  font: inherit;
+  font-size: 12.5px !important;
   font-weight: 600 !important;
-  color: #ffffff !important;
-  letter-spacing: -0.01em;
-  white-space: nowrap;
+  box-shadow: none !important;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s ease, color 0.15s ease;
 }
+.ie-panels--sheet .ie-flip-pill:hover:not(.is-on) { background: rgba(255, 255, 255, 0.1) !important; }
+.ie-panels--sheet .ie-flip-pill.is-on { background: rgba(255, 90, 54, 0.16) !important; color: var(--ui-accent, #ff5a36) !important; }
 
 /* The text layer's sheets (TextSheet: Font, Style, Align, Color, Box, and all of them from the
    Text strip's Edit), on the tool-sheet look: a heading, filled tiles that turn orange when on,
@@ -1826,3 +1789,26 @@ div.ie-layer-pick { cursor: default; }
 .ie-panels--sheet .ie-text-sheet .ui-chips[aria-label="Text effects"],
 .ie-panels--sheet .ie-text-sheet .ui-seg { gap: 6px !important; }
 .ie-panels--sheet .ie-text-sheet .ie-style-apply { width: 46px; font-size: 17px; }
+
+/* A photo's More (MediaSheet as the Photo sheet): five filled tiles, orange when on, then the look
+   sliders two to a line. */
+.ie-panels--sheet .ie-photo-sheet .ui-section { padding: 2px 0 10px !important; }
+.ie-panels--sheet .ie-photo-sheet .ui-tile {
+  gap: 5px;
+  height: 60px;
+  border: none !important;
+  border-radius: 14px !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: var(--ui-text, #f4f4f6) !important;
+  font-size: 11.5px;
+  font-weight: 600;
+}
+.ie-panels--sheet .ie-photo-sheet .ui-tile:hover:not(:disabled):not(.is-on) { background: rgba(255, 255, 255, 0.1) !important; transform: none; }
+.ie-panels--sheet .ie-photo-sheet .ui-tile:active { transform: scale(0.96); }
+.ie-panels--sheet .ie-photo-sheet .ui-tile.is-on {
+  background: var(--ui-accent, #ff5a36) !important;
+  box-shadow: 0 6px 16px -8px rgba(255, 90, 54, 0.7) !important;
+}
+.ie-panels--sheet .ie-photo-sheet .ie-adjust-grid { gap: 10px 16px; padding-bottom: 2px; }
+.ie-panels--sheet .ie-photo-sheet .ie-adjust-grid + .ui-row { margin-top: 10px; }
+.ie-panels--sheet .ie-photo-sheet .ui-row + .ui-row { margin-top: 6px !important; }

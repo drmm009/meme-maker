@@ -75,6 +75,7 @@ export function buildInitialUi(template) {
     openSourceTemplates: MEME_TEMPLATES,
     pendingVideoLayer: null,
     showPhotoCrop: false, // the main photo's cropper (editor/crop)
+    cropLayerId: null, // a photo layer open in the same cropper
     pasteToast: false, // false, or { text, error } shown over the canvas for a moment
     drawTool: null, // 'brush' | 'highlighter' | 'glow' | 'shape' | 'censor' | null
     shapeKind: 'arrow', // 'arrow' | 'ellipse' | 'rect' | 'line'

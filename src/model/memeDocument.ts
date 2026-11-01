@@ -97,6 +97,8 @@ export interface MemeImageLayer extends MemeLayerBase, LayerLook {
   boxHeight?: number;
   // Fractions of the source image shown in crop mode.
   crop?: CropRect;
+  // The picture before the cropper first cut it, to go back to.
+  uncroppedUrl?: string | null;
   fitMode?: 'fit' | 'stretch' | 'crop';
   isFaceMorph?: boolean;
   faceName?: string;

@@ -43,10 +43,43 @@ export function usePhotoActions() {
     const id = s.activeLayerId;
     if (!s.imageLayers.some((l) => l.id === id)) return;
     s.setImageLayers(s.imageLayers.map((l) => (l.id === id
-      ? { ...l, url, originalUrl: null, crop: undefined, width: undefined, height: undefined, boxWidth: undefined, boxHeight: undefined, trimStart: undefined, trimEnd: undefined }
+      ? { ...l, url, originalUrl: null, uncroppedUrl: null, crop: undefined, width: undefined, height: undefined, boxWidth: undefined, boxHeight: undefined, trimStart: undefined, trimEnd: undefined }
       : l)));
     s.pushHistory();
   };
 
-  return { handleApplyMainPhotoCrop, handleRestoreMainPhoto, handleReplaceImageLayer };
+  // A photo layer through the cropper: the new picture keeps the layer's place and width (its
+  // height follows the new shape), its look and its first uncropped picture to go back to.
+  const setLayerPhoto = async (id, url, { keepUncropped = false } = {}) => {
+    const size = await new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => resolve({ w: img.naturalWidth, h: img.naturalHeight });
+      img.onerror = () => resolve(null);
+      img.src = url;
+    });
+    const s = store.getState();
+    s.setImageLayers(s.imageLayers.map((l) => {
+      if (l.id !== id) return l;
+      const width = l.width ?? l.boxWidth;
+      return {
+        ...l,
+        url,
+        originalUrl: null,
+        subjectUrl: undefined,
+        subjectOf: undefined,
+        crop: undefined,
+        fitMode: l.fitMode === 'crop' ? 'fit' : l.fitMode,
+        boxWidth: undefined,
+        boxHeight: undefined,
+        width: width && size ? width : undefined,
+        height: width && size ? (width * size.h) / size.w : undefined,
+        uncroppedUrl: keepUncropped ? (l.uncroppedUrl || l.url) : null,
+      };
+    }));
+    s.pushHistory();
+  };
+  const handleApplyLayerCrop = (id, url) => setLayerPhoto(id, url, { keepUncropped: true });
+  const handleRestoreLayerPhoto = (id, url) => setLayerPhoto(id, url);
+
+  return { handleApplyMainPhotoCrop, handleRestoreMainPhoto, handleReplaceImageLayer, handleApplyLayerCrop, handleRestoreLayerPhoto };
 }

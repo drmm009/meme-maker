@@ -32,6 +32,8 @@ export default function EditorModals({
   commitAddImageLayer,
   handleApplyMainPhotoCrop,
   handleRestoreMainPhoto,
+  handleApplyLayerCrop,
+  handleRestoreLayerPhoto,
 }) {
   const pendingVideoLayer = useEditorUiStore((s) => s.pendingVideoLayer);
   const setPendingVideoLayer = useEditorUiStore((s) => s.setPendingVideoLayer);
@@ -46,6 +48,9 @@ export default function EditorModals({
   const showPhotoCrop = useEditorUiStore((s) => s.showPhotoCrop);
   const setShowPhotoCrop = useEditorUiStore((s) => s.setShowPhotoCrop);
   const mainPhoto = activeTemplate?.rawImageUrl || activeTemplate?.imageUrl;
+  const cropLayerId = useEditorUiStore((s) => s.cropLayerId);
+  const setCropLayerId = useEditorUiStore((s) => s.setCropLayerId);
+  const cropLayer = cropLayerId ? imageLayers.find((l) => l.id === cropLayerId) : null;
 
   return (
     <>
@@ -56,6 +61,17 @@ export default function EditorModals({
           onApply={(url) => { handleApplyMainPhotoCrop(url); setShowPhotoCrop(false); }}
           onRestore={(url) => { handleRestoreMainPhoto(url); setShowPhotoCrop(false); }}
           onClose={() => setShowPhotoCrop(false)}
+        />
+      )}
+
+      {/* A photo layer's More > Crop: the same cropper, for that layer's picture. */}
+      {cropLayer && (
+        <PhotoCropSheet
+          url={cropLayer.url}
+          uncroppedUrl={cropLayer.uncroppedUrl}
+          onApply={(url) => { handleApplyLayerCrop(cropLayer.id, url); setCropLayerId(null); }}
+          onRestore={(url) => { handleRestoreLayerPhoto(cropLayer.id, url); setCropLayerId(null); }}
+          onClose={() => setCropLayerId(null)}
         />
       )}
 
