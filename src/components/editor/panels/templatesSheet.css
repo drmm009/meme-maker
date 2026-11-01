@@ -1,0 +1,64 @@
+/* Media > Templates: what its cards add to the shared shelves and grid (browseSheet.css). */
+
+/* The top three trending: a gradient rank tag hanging off the corner. */
+.ie-tpl-rank {
+  position: absolute;
+  top: -7px;
+  left: -5px;
+  z-index: 2;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #f59e0b, #ff5e36);
+  color: #fff;
+  font-size: 11.5px;
+  font-weight: 800;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.45);
+  pointer-events: none;
+}
+
+/* The kind badge (grid cards) and the star, over the picture's top corners. */
+.ie-tpl-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  background: rgba(18, 20, 26, 0.85);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  pointer-events: none;
+}
+.ie-tpl-star {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 50%;
+  background: rgba(18, 20, 26, 0.75);
+  color: rgba(255, 255, 255, 0.85);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background 0.2s ease;
+}
+.ie-tpl-star:active { transform: scale(0.88); }
+.ie-tpl-star.is-on {
+  border-color: rgba(250, 204, 21, 0.5);
+  background: rgba(250, 204, 21, 0.15);
+  color: #facc15;
+}

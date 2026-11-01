@@ -1,0 +1,425 @@
+/* The full-height library sheets (Media: Templates, Stickers, GIFs, Emoji): over the editor, below
+   the top bar. The head, search and chips stay put; only the content scrolls. */
+.ie-panels.ie-panels--full {
+  position: absolute;
+  inset: 6px 0 0;
+  z-index: 60;
+  max-height: none;
+}
+.meme-editor-container .editor-main { position: relative; }
+/* The restore-draft offer floats over the editor; it would cover the sheet's title and close. */
+.meme-editor-container:has(.ie-panels--full) .meme-draft-offer { display: none; }
+
+.ie-browse-sheet { height: 100%; }
+.ie-browse-sheet .ui-sheet-body {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0;
+}
+
+.ie-browse-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 2px 16px 12px 20px;
+}
+.ie-browse-title {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0;
+  color: var(--ui-accent);
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+.ie-browse-total {
+  color: var(--ui-faint);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0;
+  font-variant-numeric: tabular-nums;
+}
+.ie-browse-close {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  flex: none;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--ui-surface-2);
+  color: var(--ui-text);
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+.ie-browse-close:hover { background: var(--ui-surface-3); }
+.ie-browse-close:active { transform: scale(0.92); }
+
+/* Search: one roomy field, the accent only when typing. */
+.ie-browse-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin: 0 16px 12px;
+}
+.ie-browse-search > svg {
+  position: absolute;
+  left: 15px;
+  color: var(--ui-muted);
+  pointer-events: none;
+}
+.ie-browse-search input {
+  width: 100%;
+  height: 46px;
+  padding: 0 44px;
+  border: 1px solid transparent;
+  border-radius: 14px;
+  background: var(--ui-surface-2);
+  color: var(--ui-text);
+  font: inherit;
+  font-size: 15px;
+  caret-color: var(--ui-accent);
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.ie-browse-search input::placeholder { color: var(--ui-muted); }
+.ie-browse-search input::-webkit-search-cancel-button { display: none; }
+.ie-browse-search input:focus {
+  border-color: var(--ui-accent-edge);
+  background: #2c2d33;
+  box-shadow: 0 0 0 3px var(--ui-accent-soft);
+}
+.ie-browse-clear {
+  position: absolute;
+  right: 10px;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--ui-surface-3);
+  color: var(--ui-text);
+  cursor: pointer;
+}
+
+/* Categories: pills, one scrolling line; the lit one is solid orange. */
+.ie-browse-chips {
+  display: flex;
+  gap: 8px;
+  padding: 0 16px 14px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  border-bottom: 1px solid var(--ui-line);
+}
+.ie-browse-chips::-webkit-scrollbar { display: none; }
+.ie-browse-chips--fill .ie-browse-chip { flex: 1; justify-content: center; }
+.ie-browse-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  flex: none;
+  height: 36px;
+  padding: 0 13px;
+  border: 1px solid var(--ui-line-strong);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ui-muted);
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+}
+.ie-browse-chip:hover:not(.is-on) { color: var(--ui-text); border-color: rgba(255, 255, 255, 0.24); }
+.ie-browse-chip-emoji { font-size: 16px; line-height: 1; }
+.ie-browse-chip-count {
+  min-width: 20px;
+  margin-right: -3px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--ui-faint);
+  font-size: 11.5px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+.ie-browse-chip.is-on {
+  border-color: var(--ui-accent);
+  background: var(--ui-accent);
+  color: #fff;
+  box-shadow: 0 6px 16px -8px rgba(255, 90, 54, 0.7);
+}
+.ie-browse-chip.is-on .ie-browse-chip-count { background: rgba(255, 255, 255, 0.22); color: #fff; }
+
+/* The scrolling part. */
+.ie-browse-scroll {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 18px 0 calc(24px + env(safe-area-inset-bottom, 0px));
+  scrollbar-width: thin;
+  scrollbar-color: var(--ui-surface-3) transparent;
+}
+.ie-browse-scroll::-webkit-scrollbar { width: 4px; }
+.ie-browse-scroll::-webkit-scrollbar-thumb { border-radius: 4px; background: var(--ui-surface-3); }
+.ie-browse-section + .ie-browse-section { margin-top: 26px; }
+.ie-browse-heading {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 20px 12px;
+  color: var(--ui-text);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.ie-browse-heading svg { color: var(--ui-accent); }
+.ie-browse-heading-count { color: var(--ui-faint); font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+/* A picture that shimmers until it arrives, then fades in. */
+.ie-browse-thumb {
+  position: relative;
+  display: block;
+  width: 100%;
+  overflow: hidden;
+}
+.ie-browse-thumb img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transform: scale(1.04);
+  transition: opacity 0.35s ease, transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.ie-browse-thumb.is-ready img { opacity: 1; transform: none; }
+.ie-browse-thumb.is-loading {
+  background: linear-gradient(100deg, var(--ui-surface-2) 30%, #3d3f46 50%, var(--ui-surface-2) 70%) 0 0 / 300% 100%;
+  animation: ie-browse-sheen 1.3s ease-in-out infinite;
+}
+@keyframes ie-browse-sheen { from { background-position: 100% 0; } to { background-position: 0 0; } }
+.ie-browse-thumb.is-failed { background: var(--ui-surface-2); }
+
+/* Every pickable item: pressed, it gives a little. */
+.ie-browse-item {
+  position: relative;
+  padding: 0;
+  border: none;
+  font: inherit;
+  cursor: pointer;
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), background 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.ie-browse-item:active { transform: scale(0.94); }
+.ie-browse-item:focus-visible { outline: 2px solid var(--ui-accent); outline-offset: 2px; }
+
+/* Explore-style shelves and grids, shared by every library sheet. */
+.ie-shelf + .ie-shelf { margin-top: 22px; }
+.ie-shelf-head {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin: 0 10px 10px 16px;
+}
+.ie-shelf-icon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  flex: none;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+}
+.ie-shelf-title {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  color: var(--ui-text);
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+.ie-shelf-see-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 6px 8px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ui-accent);
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.18s ease;
+}
+.ie-shelf-see-all:hover { background: var(--ui-accent-soft); }
+
+/* A shelf: cards on a rail that snaps, room above for the rank badge. */
+.ie-shelf-rail {
+  display: flex;
+  gap: 12px;
+  padding: 8px 16px 6px;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  scroll-padding: 0 16px;
+  scrollbar-width: none;
+}
+.ie-shelf-rail::-webkit-scrollbar { display: none; }
+
+.ie-shelf-card,
+.ie-grid-card { position: relative; }
+/* A fixed width: a long name is cut short rather than widening its card. */
+.ie-shelf-card { flex: 0 0 142px; width: 142px; min-width: 0; scroll-snap-align: start; }
+.ie-grid-card { min-width: 0; }
+
+.ie-card {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  background: #18191e;
+  color: var(--ui-text);
+  text-align: left;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+.ie-card:active { transform: scale(0.965); }
+@media (hover: hover) {
+  .ie-card:hover { border-color: rgba(255, 94, 54, 0.4); }
+  .ie-card:hover .ie-browse-thumb.is-ready img { transform: scale(1.05); }
+}
+.ie-card-media { aspect-ratio: 1; background-color: #0d0e12; }
+.ie-card .ie-browse-thumb.is-failed { min-height: 100px; }
+.ie-card-name {
+  display: block;
+  padding: 10px 12px 11px;
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* One category or a search: a way back, the count, then the grid. */
+.ie-results-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0 16px 14px;
+}
+.ie-results-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 13px 0 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--ui-text);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.ie-results-count {
+  overflow: hidden;
+  color: var(--ui-muted);
+  font-size: 13px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ie-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+  padding: 0 16px;
+}
+
+/* Stickers and animated stickers: drawn on light paper, so black artwork (thug shades) shows. */
+.ie-card-media--paper { padding: 14%; background-color: #efedea; }
+.ie-card-media--paper img { position: static; display: block; width: 100%; height: 100%; object-fit: contain; }
+.ie-card-media--paper.is-loading { background: #efedea; animation: none; }
+.ie-card-grid--small { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; }
+.ie-shelf-card--small { flex-basis: 112px; width: 112px; }
+
+/* Emoji: a big glyph on its own small card, no name. */
+.ie-emoji-card {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  aspect-ratio: 1;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  background: #18191e;
+  font-size: 36px;
+  line-height: 1;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+}
+@media (hover: hover) { .ie-emoji-card:hover { border-color: rgba(255, 94, 54, 0.4); } }
+.ie-shelf-card--emoji { flex-basis: 72px; width: 72px; }
+.ie-card-grid--emoji { grid-template-columns: repeat(auto-fill, minmax(62px, 1fr)); gap: 8px; }
+
+/* GIFs: square cards, filled. */
+.ie-gif-skeleton { border-radius: 18px; aspect-ratio: 1; }
+.ie-giphy-credit {
+  margin: 22px 0 0;
+  color: var(--ui-faint);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.ie-browse-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 48px 32px;
+  color: var(--ui-muted);
+  text-align: center;
+}
+.ie-browse-empty svg { color: var(--ui-faint); }
+.ie-browse-empty-title { margin: 14px 0 6px; color: var(--ui-text); font-size: 16px; font-weight: 700; }
+.ie-browse-empty-text { max-width: 32ch; margin: 0; font-size: 14px; line-height: 1.45; }
+.ie-browse-empty-text code { color: var(--ui-text); font-size: 12.5px; }
+.ie-browse-empty-btn {
+  margin-top: 18px;
+  height: 40px;
+  padding: 0 18px;
+  border: 1px solid var(--ui-line-strong);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ui-text);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ie-browse-thumb.is-loading { animation: none; }
+  .ie-browse-thumb img, .ie-browse-item { transition: none; }
+}

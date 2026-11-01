@@ -227,20 +227,27 @@ describe('MemeEditor', () => {
     expect(within(strip('Media tools')).getByLabelText('Photo').getAttribute('type')).toBe('file');
   }, 30000);
 
-  it('the Media pickers dock under the strip like the Draw sheet, and close after a pick', () => {
+  it('the Media pickers open full height over the meme, and close after a pick', () => {
     renderEditor();
     openSection('Photos, videos, stickers and emoji');
     const tool = (name) => within(strip('Media tools')).getByText(name).closest('button');
 
-    // Stickers: category tiles, a search over all of them, then a pick adds it and closes.
+    // Stickers: a shelf per category; See all shows one as a grid, with a way back; a search
+    // looks through all of them, then a pick adds it and closes.
     fireEvent.click(tool('Stickers'));
-    expect(tool('Stickers').getAttribute('aria-pressed')).toBe('true');
     const stickers = sheet('Stickers');
+    expect(screen.queryByRole('toolbar', { name: 'Media tools' })).toBeNull();
     expect(document.querySelector('.bottom-sheet-panel')).toBeNull();
+    expect(within(stickers).getByRole('region', { name: 'Bubbles' })).toBeTruthy();
     const tiles = within(stickers).getByRole('toolbar', { name: 'Stickers categories' });
-    expect(within(tiles).getByText('Memes').closest('button').getAttribute('aria-pressed')).toBe('true');
+    expect(within(tiles).getByText('All').closest('button').getAttribute('aria-pressed')).toBe('true');
+    fireEvent.click(within(stickers).getByRole('button', { name: 'See all bubbles' }));
+    expect(within(tiles).getByText('Bubbles').closest('button').getAttribute('aria-pressed')).toBe('true');
+    expect(within(stickers).queryByRole('region', { name: 'Memes' })).toBeNull();
+    fireEvent.click(within(stickers).getByText('All stickers'));
+    expect(within(stickers).getByRole('region', { name: 'Memes' })).toBeTruthy();
     fireEvent.change(within(stickers).getByLabelText('Search stickers'), { target: { value: 'doge' } });
-    expect(within(tiles).getByText('Memes').closest('button').getAttribute('aria-pressed')).toBe('false');
+    expect(within(tiles).getByText('All').closest('button').getAttribute('aria-pressed')).toBe('false');
     fireEvent.click(within(stickers).getAllByRole('button', { name: /doge/i })[0]);
     expect(canvas.props.stickers).toHaveLength(1);
     expect(canvas.props.stickers[0].url).toBeTruthy();
@@ -248,11 +255,12 @@ describe('MemeEditor', () => {
     act(() => canvas.props.onSelectLayer(null));
     expect(strip('Media tools')).toBeTruthy();
 
-    // Tapping the open tool again closes its sheet.
+    // Each closes from its own button, back to the strip.
     fireEvent.click(tool('Emoji'));
     expect(sheet('Emoji')).toBeTruthy();
-    fireEvent.click(tool('Emoji'));
+    fireEvent.click(within(sheet('Emoji')).getByLabelText('Close emoji'));
     expect(screen.queryByRole('dialog', { name: 'Emoji' })).toBeNull();
+    expect(strip('Media tools')).toBeTruthy();
 
     // Templates adds the template's picture as a photo layer.
     fireEvent.click(tool('Templates'));
@@ -260,6 +268,43 @@ describe('MemeEditor', () => {
     fireEvent.click(within(templates).getAllByRole('button', { name: /drake/i })[0]);
     expect(canvas.props.imageLayers).toHaveLength(1);
     expect(screen.queryByRole('dialog', { name: 'Templates' })).toBeNull();
+  }, 30000);
+
+  it('Templates opens full height with Explore-style shelves, search and its own close', () => {
+    renderEditor();
+    openSection('Photos, videos, stickers and emoji');
+    fireEvent.click(within(strip('Media tools')).getByText('Templates').closest('button'));
+    const templates = sheet('Templates');
+    // Over the meme, without the strip; trending leads with memes, not social post cards.
+    expect(screen.queryByRole('toolbar', { name: 'Media tools' })).toBeNull();
+    const trending = within(templates).getByRole('region', { name: 'Trending now' });
+    expect(within(trending).getAllByRole('button', { name: /^Star / })).toHaveLength(10);
+    expect(within(trending).queryByRole('button', { name: /Post Card/ })).toBeNull();
+
+    // A shelf's See all shows that category as a grid, with a way back.
+    fireEvent.click(within(templates).getByRole('button', { name: 'See all reactions' }));
+    const chips = within(templates).getByRole('toolbar', { name: 'Templates categories' });
+    expect(within(chips).getByRole('button', { name: /^Reactions/ }).getAttribute('aria-pressed')).toBe('true');
+    expect(within(templates).queryByRole('region', { name: 'Trending now' })).toBeNull();
+    fireEvent.click(within(templates).getByText('All templates'));
+    expect(within(templates).getByRole('region', { name: 'Trending now' })).toBeTruthy();
+
+    // A star is remembered, for the home screen and Explore too.
+    const starBtn = within(within(templates).getByRole('region', { name: 'Trending now' })).getAllByRole('button', { name: /^Star / })[0];
+    fireEvent.click(starBtn);
+    expect(starBtn.getAttribute('aria-pressed')).toBe('true');
+    expect(JSON.parse(localStorage.getItem('meme_favorite_templates'))).toHaveLength(1);
+    fireEvent.click(starBtn);
+    expect(JSON.parse(localStorage.getItem('meme_favorite_templates'))).toHaveLength(0);
+
+    fireEvent.change(within(templates).getByLabelText('Search templates'), { target: { value: 'zzqx' } });
+    expect(within(templates).getByText('Nothing matches “zzqx”')).toBeTruthy();
+    fireEvent.click(within(templates).getByText('Clear search'));
+    expect(within(templates).getByRole('region', { name: 'Trending now' })).toBeTruthy();
+
+    fireEvent.click(within(templates).getByLabelText('Close templates'));
+    expect(screen.queryByRole('dialog', { name: 'Templates' })).toBeNull();
+    expect(strip('Media tools')).toBeTruthy();
   }, 30000);
 
   it('Text: Bubble adds a speech bubble and opens its styles', () => {

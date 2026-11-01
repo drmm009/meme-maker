@@ -44,6 +44,8 @@ const DOCK: DockItem[] = [
 
 const SHEETS = { text: TextSheet, media: MediaSheet, draw: DrawSheet, canvasColor: CanvasColorSheet, watermark: WatermarkSheet, header: HeaderSheet, footer: FooterSheet, filters: FiltersSheet, background: BackgroundSheet, layers: LayersSheet, export: ExportSheet, library: LibrarySheet, mediaLink: LinkSheet,
   templates: TemplatesSheet, stickers: StickersSheet, gifs: GifSheet, emoji: EmojiSheet, bubble: BubbleSheet, diecut: DieCutSheet };
+// Sheets for browsing a big library, shown full height (the meme needn't stay in view).
+const FULL_SHEETS = new Set<string>(['templates', 'stickers', 'gifs', 'emoji']);
 
 // The bottom of the editor: the dock with the open tab's tool strip above it, or, when one of that
 // tab's sheets is open, the strip above the sheet (so its tools stay one tap away). While a layer is
@@ -79,6 +81,14 @@ export default function EditorPanels({ actions }: { actions: EditorActions }) {
 
   const layerTools = Boolean(kind) && dockTab !== 'draw' && !faceMorph;
   const SheetComponent = sheet ? SHEETS[sheet] : null;
+  if (SheetComponent && sheet && FULL_SHEETS.has(sheet)) {
+    // A browsing sheet takes the editor's whole height, over the meme, with its own close button.
+    return (
+      <div className="ie-panels ie-panels--sheet ie-panels--full">
+        <SheetComponent actions={actions} onClose={closeSheet} />
+      </div>
+    );
+  }
   if (SheetComponent) {
     return (
       <div className="ie-panels ie-panels--sheet">
