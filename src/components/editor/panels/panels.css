@@ -53,38 +53,35 @@
 .ie-panels--sheet { max-height: min(65%, 520px); min-height: 0; padding-top: 0; }
 .ie-panels--sheet .ui-sheet { flex: 1; }
 
-.ie-font-row { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; margin: 0 -16px; padding: 2px 16px; }
-.ie-font-row::-webkit-scrollbar { display: none; }
-.ie-font-row .ui-toggle--tile { min-width: max-content; padding: 0 14px; height: 44px; font-size: 15px; font-weight: 600; white-space: nowrap; letter-spacing: normal; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.ie-font-row .ie-font-upload { width: 44px; min-width: 44px; padding: 0; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
-/* Saved text styles: an "Aa" sample of each, with a small remove button. */
-.ie-style-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-.ie-style-chip { position: relative; display: inline-flex; }
-.ie-style-apply { width: 52px; height: 44px; border: 1px solid var(--ui-line); border-radius: 9999px !important; background: var(--ui-surface-2); font-size: 20px; cursor: pointer; }
-.ie-style-remove { position: absolute; top: -6px; right: -6px; display: grid; place-items: center; width: 18px; height: 18px; padding: 0; border: none; border-radius: 50%; background: var(--ui-line-strong); color: var(--ui-text); cursor: pointer; }
 .ie-layer-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 /* The Layers sheet's Select mode: line the chosen layers up, group or delete them. */
 .ie-arrange { display: flex; flex-direction: column; gap: 10px; margin: 0 0 12px; padding: 12px; border-radius: 18px !important; background: rgba(255, 255, 255, 0.04); }
 .ie-arrange .ie-inline-label { margin: 0; }
 .ie-arrange-row { display: flex; flex-wrap: wrap; gap: 6px; }
 .ie-layers { display: flex; flex-direction: column; gap: 6px; margin: 4px 0 8px; padding: 0; list-style: none; }
+/* A filled row per layer; the selected one tinted orange. */
 .ie-layer-row {
   display: flex;
   align-items: center;
   gap: 2px;
   padding: 4px 6px 4px 4px;
-  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border: none !important;
   border-radius: 16px !important;
-  background: transparent !important;
-  transition: all 0.16s ease;
+  background: rgba(255, 255, 255, 0.05) !important;
+  transition: background 0.15s ease;
 }
-.ie-layer-row:hover:not(.is-on) {
-  border-color: rgba(255, 255, 255, 0.4) !important;
-  background: rgba(255, 255, 255, 0.04) !important;
-}
-.ie-layer-row.is-on {
-  border-color: var(--ui-accent, #ff5a36) !important;
-  background: rgba(255, 90, 54, 0.12) !important;
+.ie-layer-row:hover:not(.is-on) { background: rgba(255, 255, 255, 0.08) !important; }
+.ie-layer-row.is-on { background: rgba(255, 90, 54, 0.16) !important; }
+.ie-layer-row.is-on .ie-layer-pick { color: #fff; font-weight: 600; }
+.ie-layer-row.is-on .ie-layer-pick svg { color: var(--ui-accent, #ff5a36); }
+/* The layer count beside the heading: quiet, not a tag. */
+.ie-layers-sheet .ui-sheet-head .ui-badge {
+  padding: 3px 9px;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--ui-muted, #a5a6ad);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: normal;
 }
 .ie-layer-row.is-hidden .ie-layer-pick { opacity: 0.45; }
 .ie-layer-row .ui-icon-btn { width: 34px; height: 34px; }
@@ -239,437 +236,6 @@ div.ie-layer-pick { cursor: default; }
   -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent);
   mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent);
   padding-right: 28px !important;
-}
-
-/* Media pickers (Templates, Stickers, GIFs, Emoji): the Draw sheet's look, with the category tiles
-   and search fixed at the top and only the grid scrolling, so the meme above stays in view. */
-.ie-picker-sheet .ui-sheet-body {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  padding-bottom: 0;
-}
-.ie-picker-tab-emoji { font-size: 20px; line-height: 20px; }
-.ie-picker-search {
-  position: relative;
-  display: flex;
-  align-items: center;
-  flex: none;
-  margin: 4px 0 10px;
-  width: 100%;
-}
-.ie-picker-search > svg {
-  position: absolute;
-  left: 14px;
-  color: rgba(255, 255, 255, 0.5);
-  pointer-events: none;
-  z-index: 2;
-}
-.ie-picker-search .ui-field,
-.ie-panels--sheet .ie-picker-search .ui-field,
-.ui-theme .ie-panels--sheet .ie-picker-search .ui-field,
-.ui-theme .ie-picker-search .ui-field {
-  min-height: 40px !important;
-  height: 40px !important;
-  padding: 0 38px 0 38px !important;
-  font-size: 13.5px !important;
-  border-radius: 9999px !important;
-  background: rgba(255, 255, 255, 0.06) !important;
-  border: 1px solid rgba(255, 255, 255, 0.16) !important;
-  color: #ffffff !important;
-  box-sizing: border-box !important;
-  outline: none !important;
-  transition: all 0.16s ease !important;
-}
-.ie-picker-search .ui-field:focus,
-.ie-panels--sheet .ie-picker-search .ui-field:focus,
-.ui-theme .ie-panels--sheet .ie-picker-search .ui-field:focus,
-.ui-theme .ie-picker-search .ui-field:focus {
-  border-color: var(--ui-accent, #ff5a36) !important;
-  background: rgba(255, 255, 255, 0.08) !important;
-  box-shadow: 0 0 0 2px rgba(255, 90, 54, 0.25) !important;
-}
-.ie-picker-search .ui-field::-webkit-search-cancel-button {
-  display: none;
-}
-.ie-picker-clear {
-  position: absolute;
-  right: 10px;
-  display: grid;
-  place-items: center;
-  width: 22px;
-  height: 22px;
-  padding: 0;
-  border: none;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.12);
-  color: #ffffff;
-  cursor: pointer;
-  z-index: 2;
-  transition: background 0.15s ease;
-}
-.ie-picker-clear:hover {
-  background: rgba(255, 255, 255, 0.22);
-}
-.ie-picker-grid {
-  flex: 1 1 240px;
-  min-height: 0;
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  align-content: start;
-  gap: 8px;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  margin: 0 -16px;
-  padding: 2px 16px calc(14px + env(safe-area-inset-bottom, 0px));
-  scrollbar-width: none;
-}
-.ie-picker-grid::-webkit-scrollbar { display: none; }
-.ie-picker-grid > .ie-empty { grid-column: 1 / -1; }
-/* All Media Picker Sheets (Templates, Stickers, GIFs, Emoji, Bubbles) Category Tags */
-.ie-picker-sheet .ie-shapes-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 4px 0 12px;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.ie-picker-sheet .ie-shape-btn {
-  flex: 0 0 auto;
-  display: inline-flex !important;
-  flex-direction: row !important;
-  align-items: center !important;
-  justify-content: center !important;
-  gap: 6px !important;
-  height: 34px !important;
-  padding: 0 14px !important;
-  min-width: unset !important;
-  border: none !important;
-  border-radius: 9999px !important;
-  background: transparent !important;
-  background-color: transparent !important;
-  color: rgba(255, 255, 255, 0.65) !important;
-  font-size: 13px !important;
-  font-weight: 500 !important;
-  cursor: pointer;
-  outline: none !important;
-  box-shadow: none !important;
-  transition: all 0.16s cubic-bezier(0.16, 1, 0.3, 1) !important;
-  -webkit-tap-highlight-color: transparent !important;
-}
-
-.ie-picker-sheet .ie-shape-btn svg {
-  width: 16px !important;
-  height: 16px !important;
-  color: inherit !important;
-  flex-shrink: 0;
-}
-
-.ie-picker-sheet .ie-picker-tab-emoji {
-  font-size: 16px;
-  line-height: 1;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.ie-picker-sheet .ie-shape-btn:hover:not(.is-on) {
-  background: transparent !important;
-  background-color: transparent !important;
-  border: none !important;
-  color: #ffffff !important;
-}
-
-.ie-picker-sheet .ie-shape-btn.is-on {
-  border: none !important;
-  border-radius: 9999px !important;
-  background: var(--ui-accent, #ff5a36) !important;
-  background-color: var(--ui-accent, #ff5a36) !important;
-  color: #ffffff !important;
-  font-weight: 600 !important;
-  box-shadow: 0 2px 8px rgba(255, 90, 54, 0.35) !important;
-}
-
-.ie-picker-sheet .ie-shape-btn.is-on svg {
-  color: #ffffff !important;
-  stroke: #ffffff !important;
-}
-
-/* Emoji Grid */
-.ie-picker-grid--emoji {
-  grid-template-columns: repeat(auto-fill, minmax(46px, 1fr));
-  gap: 6px;
-  padding: 4px 0 16px;
-}
-
-.ie-picker-emoji {
-  aspect-ratio: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  border: none !important;
-  border-radius: 50%;
-  background: transparent !important;
-  background-color: transparent !important;
-  font-size: 28px;
-  line-height: 1;
-  cursor: pointer;
-  outline: none !important;
-  transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.15s ease;
-}
-
-.ie-picker-emoji:hover {
-  background: transparent !important;
-  box-shadow: 0 0 0 2px var(--ui-accent, #ff5a36), 0 0 12px rgba(255, 90, 54, 0.4) !important;
-  transform: scale(1.18);
-}
-
-.ie-picker-emoji:active {
-  transform: scale(0.95);
-}
-
-/* Templates & GIFs Grid */
-.ie-picker-grid--templates,
-.ie-picker-grid--gifs {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-  padding: 4px 0 16px;
-}
-
-.ie-picker-grid--stickers {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px 8px;
-  padding: 4px 0 16px;
-}
-
-.ie-picker-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  min-width: 0;
-  padding: 0;
-  border: none !important;
-  background: transparent !important;
-  background-color: transparent !important;
-  color: var(--ui-muted);
-  cursor: pointer;
-  outline: none !important;
-  -webkit-tap-highlight-color: transparent !important;
-}
-
-/* Sticker items: no container box, transparent background, round orange outline on hover */
-.ie-picker-thumb {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  aspect-ratio: 1;
-  width: 100%;
-  border: none !important;
-  border-radius: 14px;
-  background: transparent !important;
-  background-color: transparent !important;
-  box-shadow: none !important;
-  transition: transform 0.16s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.16s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.ie-picker-thumb img {
-  width: 82%;
-  height: 82%;
-  object-fit: contain;
-  transition: transform 0.16s ease;
-}
-
-.ie-picker-card:hover .ie-picker-thumb {
-  box-shadow: 0 0 0 2px var(--ui-accent, #ff5a36), 0 0 12px rgba(255, 90, 54, 0.4) !important;
-  transform: scale(1.05);
-}
-
-.ie-picker-card:active .ie-picker-thumb {
-  transform: scale(0.98);
-}
-
-/* Photo templates: rounded corners with subtle line and orange border on hover */
-.ie-picker-thumb--photo {
-  border: 1px solid rgba(255, 255, 255, 0.12) !important;
-  border-radius: 14px !important;
-  overflow: hidden;
-  background: transparent !important;
-  transition: transform 0.16s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.16s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.16s ease;
-}
-
-.ie-picker-thumb--photo img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.ie-picker-card:hover .ie-picker-thumb--photo {
-  border-color: var(--ui-accent, #ff5a36) !important;
-  box-shadow: 0 0 0 2.5px var(--ui-accent, #ff5a36), 0 0 14px rgba(255, 90, 54, 0.35) !important;
-  transform: scale(1.02);
-}
-
-.ie-picker-name {
-  overflow: hidden;
-  font-size: 11px;
-  font-weight: 500;
-  text-align: center;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: rgba(255, 255, 255, 0.7);
-  transition: color 0.15s ease;
-  width: 100%;
-}
-
-.ie-picker-card:hover .ie-picker-name {
-  color: var(--ui-accent, #ff5a36);
-  font-weight: 600;
-}
-
-/* GIF items */
-.ie-picker-gif {
-  aspect-ratio: 1;
-  padding: 0;
-  border: 1px solid rgba(255, 255, 255, 0.12) !important;
-  border-radius: 14px;
-  background: transparent !important;
-  overflow: hidden;
-  cursor: pointer;
-  outline: none !important;
-  transition: transform 0.16s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.16s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.16s ease;
-}
-
-.ie-picker-gif img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.ie-picker-gif:hover {
-  border-color: var(--ui-accent, #ff5a36) !important;
-  box-shadow: 0 0 0 2.5px var(--ui-accent, #ff5a36), 0 0 14px rgba(255, 90, 54, 0.35) !important;
-  transform: scale(1.02);
-}
-
-/* Transparent animated stickers remove container box and checkerboard */
-.ie-picker-grid.is-stickers .ie-picker-gif {
-  background: transparent !important;
-  background-color: transparent !important;
-  background-image: none !important;
-  border: none !important;
-  box-shadow: none !important;
-}
-
-.ie-picker-grid.is-stickers .ie-picker-gif img {
-  box-sizing: border-box;
-  padding: 4px;
-  object-fit: contain;
-}
-
-.ie-picker-grid.is-stickers .ie-picker-gif:hover {
-  box-shadow: 0 0 0 2px var(--ui-accent, #ff5a36), 0 0 12px rgba(255, 90, 54, 0.4) !important;
-  transform: scale(1.05);
-}
-
-.ie-picker-credit {
-  flex: none;
-  margin: 0;
-  padding: 4px 0 calc(8px + env(safe-area-inset-bottom, 0px));
-  color: var(--ui-faint);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-align: center;
-}
-
-/* Bubble Sheet chat bubbles */
-.ie-picker-grid--bubbles {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px 12px;
-  padding: 6px 0 16px;
-}
-
-.ie-picker-bubble {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 8px;
-  min-width: 0;
-  padding: 0;
-  border: none !important;
-  background: transparent !important;
-  background-color: transparent !important;
-  color: var(--ui-muted);
-  cursor: pointer;
-  outline: none !important;
-  -webkit-tap-highlight-color: transparent !important;
-}
-
-.ie-picker-bubble-stage {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  min-height: 64px;
-  padding: 4px;
-  border: none !important;
-  border-radius: 0 !important;
-  background: transparent !important;
-  background-color: transparent !important;
-  box-shadow: none !important;
-}
-
-.ie-picker-bubble-sample {
-  display: inline-block;
-  max-width: 100%;
-  padding: 8px 14px;
-  font-size: 12px;
-  font-weight: 700;
-  line-height: 1.3;
-  text-align: center;
-  word-break: break-word;
-  transition: transform 0.16s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.16s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.ie-picker-bubble:hover .ie-picker-bubble-sample {
-  transform: scale(1.03);
-}
-
-.ie-picker-bubble.is-on .ie-picker-bubble-stage {
-  border: none !important;
-  background: transparent !important;
-  background-color: transparent !important;
-  box-shadow: none !important;
-}
-
-.ie-picker-bubble.is-on .ie-picker-bubble-sample {
-  box-shadow: 0 0 0 2.5px var(--ui-accent, #ff5a36), 0 0 12px rgba(255, 90, 54, 0.45) !important;
-  transform: scale(1.02);
-}
-
-.ie-picker-bubble .ie-picker-name {
-  font-size: 12px;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.7);
-  transition: color 0.16s ease;
-  text-align: center;
-}
-
-.ie-picker-bubble.is-on .ie-picker-name {
-  color: var(--ui-accent, #ff5a36) !important;
-  font-weight: 600;
-}
-
-.ie-picker-check {
-  display: none !important;
 }
 
 /* Every sheet docked under the strips shares the Draw sheet's look: compact spacing, small muted
@@ -1000,27 +566,6 @@ div.ie-layer-pick { cursor: default; }
   .ie-panels--sheet .ui-switch::after { transition: none !important; }
 }
 
-/* Font tiles in Text > Font */
-.ie-font-row .ui-toggle--tile {
-  background: transparent !important;
-  border: 1px solid rgba(255, 255, 255, 0.18) !important;
-  border-radius: 12px !important;
-  color: #ffffff !important;
-  transition: all 0.16s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.ie-font-row .ui-toggle--tile:hover:not(.is-on) {
-  border-color: rgba(255, 255, 255, 0.5) !important;
-  background: rgba(255, 255, 255, 0.08) !important;
-}
-
-.ie-font-row .ui-toggle--tile.is-on {
-  border-color: var(--ui-accent, #ff5a36) !important;
-  background: var(--ui-accent, #ff5a36) !important;
-  color: #ffffff !important;
-  box-shadow: 0 1px 6px rgba(255, 90, 54, 0.35);
-}
-
 /* Standard sheet action buttons */
 .ie-panels--sheet .ui-btn {
   background: transparent !important;
@@ -1080,11 +625,6 @@ div.ie-layer-pick { cursor: default; }
   background: transparent !important;
   box-shadow: 0 0 0 2px rgba(255, 90, 54, 0.2) !important;
 }
-.ie-size-row { display: flex; align-items: center; gap: 12px; min-height: 40px; }
-.ie-size-row > .ui-slider-wrap { flex: 1; min-width: 0; }
-.ie-size-label { flex: none; font-size: 13px; font-weight: 600; color: rgba(255, 255, 255, 0.75); letter-spacing: 0.2px; user-select: none; }
-.ie-size-a { flex: none; width: 18px; color: var(--ui-muted); font-size: 20px; font-weight: 600; line-height: 1; text-align: center; }
-.ie-size-a--small { font-size: 13px; }
 
 /* Text > Color: solid colours, then gradients, on one line that scrolls sideways. */
 .ie-swatch-line { display: flex; align-items: center; gap: 8px; min-width: 0; margin: -6px; padding: 6px 24px 6px 6px; overflow-x: auto; scrollbar-width: none; -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent); }
@@ -1711,295 +1251,6 @@ div.ie-layer-pick { cursor: default; }
   margin-bottom: 8px !important;
 }
 
-/* 1. FONT SHEET: Studio Typeface Picker */
-.ie-font-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  overflow-x: auto;
-  scrollbar-width: none;
-  margin: 0 -16px;
-  padding: 4px 16px 8px;
-  -webkit-overflow-scrolling: touch;
-}
-.ie-font-row::-webkit-scrollbar { display: none; }
-
-.ie-font-row .ui-toggle--tile {
-  flex-shrink: 0;
-  height: 40px;
-  min-width: max-content;
-  padding: 0 18px;
-  font-size: 14.5px;
-  font-weight: 600;
-  white-space: nowrap;
-  letter-spacing: normal;
-  border-radius: 9999px !important;
-  background: rgba(255, 255, 255, 0.04) !important;
-  border: 1px solid rgba(255, 255, 255, 0.12) !important;
-  color: #f1f5f9 !important;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1) !important;
-}
-.ie-font-row .ui-toggle--tile:hover:not(.is-on) {
-  border-color: rgba(255, 255, 255, 0.4) !important;
-  background: rgba(255, 255, 255, 0.08) !important;
-  color: #ffffff !important;
-  transform: translateY(-1px);
-}
-.ie-font-row .ui-toggle--tile.is-on {
-  background: var(--ui-accent, #ff5a36) !important;
-  border-color: var(--ui-accent, #ff5a36) !important;
-  color: #ffffff !important;
-  box-shadow: 0 2px 10px rgba(255, 90, 54, 0.38) !important;
-}
-.ie-font-row .ie-font-upload {
-  flex-shrink: 0;
-  width: 40px;
-  min-width: 40px;
-  height: 40px;
-  padding: 0;
-  border-radius: 50% !important;
-  background: rgba(255, 255, 255, 0.05) !important;
-  border: 1.5px dashed rgba(255, 255, 255, 0.28) !important;
-  color: rgba(255, 255, 255, 0.8) !important;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1) !important;
-}
-.ie-font-row .ie-font-upload:hover {
-  border-color: var(--ui-accent, #ff5a36) !important;
-  color: var(--ui-accent, #ff5a36) !important;
-  background: rgba(255, 90, 54, 0.08) !important;
-  transform: scale(1.08);
-}
-
-/* Saved Text Styles */
-.ie-style-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px;
-  padding: 2px 0 6px;
-}
-.ie-style-chip {
-  position: relative;
-  display: inline-flex;
-}
-.ie-style-apply {
-  width: 48px;
-  height: 38px;
-  border-radius: 9999px !important;
-  background: rgba(255, 255, 255, 0.05) !important;
-  border: 1px solid rgba(255, 255, 255, 0.14) !important;
-  font-size: 17px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
-}
-.ie-style-apply:hover {
-  border-color: var(--ui-accent, #ff5a36) !important;
-  background: rgba(255, 255, 255, 0.09) !important;
-  transform: translateY(-1px);
-}
-.ie-style-remove {
-  position: absolute;
-  top: -4px;
-  right: -4px;
-  display: grid;
-  place-items: center;
-  width: 17px;
-  height: 17px;
-  padding: 0;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 50% !important;
-  background: #1a1b20;
-  color: rgba(255, 255, 255, 0.7);
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-.ie-style-remove:hover {
-  background: #ff4d4f;
-  border-color: #ff4d4f;
-  color: #ffffff;
-}
-
-/* 2. STYLE SHEET: Revamped Format Pill Toolbar & Segmented Buttons */
-.ie-format-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  max-width: 290px;
-  margin: 2px auto 8px;
-  height: 38px;
-  background: rgba(255, 255, 255, 0.055);
-  border: 1px solid rgba(255, 255, 255, 0.11);
-  border-radius: 9999px;
-  padding: 3px;
-  gap: 3px;
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3);
-  box-sizing: border-box;
-}
-.ie-format-row .ui-toggle {
-  flex: 1;
-  height: 32px;
-  position: relative;
-  border: none !important;
-  border-radius: 9999px !important;
-  background: transparent !important;
-  color: rgba(255, 255, 255, 0.72);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  user-select: none;
-  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1) !important;
-}
-.ie-format-row .ui-toggle:hover:not(.is-on) {
-  background: rgba(255, 255, 255, 0.09) !important;
-  color: #ffffff !important;
-}
-.ie-format-row .ui-toggle:active {
-  transform: scale(0.94);
-}
-.ie-format-row .ui-toggle.is-on {
-  background: var(--ui-accent, #ff5a36) !important;
-  color: #ffffff !important;
-  box-shadow: 0 2px 10px rgba(255, 90, 54, 0.45) !important;
-}
-.ie-format-row .ui-toggle.is-on svg {
-  color: #ffffff !important;
-  stroke: #ffffff;
-}
-
-/* Subtle hairline divider between adjacent inactive segmented buttons */
-.ie-format-row .ui-toggle:not(.is-on) + .ui-toggle:not(.is-on)::before {
-  content: "";
-  position: absolute;
-  left: -2px;
-  top: 24%;
-  bottom: 24%;
-  width: 1px;
-  background: rgba(255, 255, 255, 0.12);
-  pointer-events: none;
-}
-
-.ie-format-glyph {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 1;
-  user-select: none;
-}
-.ie-format-glyph--bold {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
-  font-weight: 850;
-  font-size: 14.5px;
-  letter-spacing: -0.2px;
-}
-.ie-format-glyph--italic {
-  font-family: "Georgia", "Cambria", "Times New Roman", serif;
-  font-style: italic;
-  font-weight: 700;
-  font-size: 15.5px;
-  transform: translateY(-0.5px);
-}
-.ie-format-glyph--underline {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
-  font-weight: 700;
-  font-size: 13.5px;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  text-decoration-thickness: 1.8px;
-}
-.ie-format-glyph--case {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
-  font-weight: 700;
-  font-size: 13px;
-  letter-spacing: -0.4px;
-}
-
-/* Minimalist Size Slider */
-.ie-size-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-height: 38px;
-  padding: 4px 0;
-}
-.ie-size-label {
-  flex: none;
-  font-size: 13px;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.75);
-  letter-spacing: 0.2px;
-  user-select: none;
-}
-.ie-size-a {
-  flex: none;
-  width: 16px;
-  color: rgba(255, 255, 255, 0.85);
-  font-size: 18px;
-  font-weight: 700;
-  line-height: 1;
-  text-align: center;
-}
-.ie-size-a--small {
-  font-size: 12px;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.45);
-}
-
-/* Minimalist Effects Chips (Prominent & Easy to Slide) */
-.ie-panels--sheet .ui-chips[aria-label="Text effects"] {
-  display: flex;
-  gap: 9px;
-  overflow-x: auto;
-  scrollbar-width: none;
-  margin: 0 -16px;
-  padding: 4px 16px 8px;
-}
-.ie-panels--sheet .ui-chips[aria-label="Text effects"] .ui-chip {
-  height: 42px !important;
-  padding: 0 18px !important;
-  font-size: 14px !important;
-  font-weight: 600 !important;
-  border-radius: 9999px !important;
-}
-.ie-panels--sheet .ui-chips[aria-label="Text effects"] .ui-chip span {
-  font-size: 14px !important;
-}
-
-/* 3. ALIGN SHEET: Sleek Segmented Pill & Compact Spacing Sliders */
-.ie-panels--sheet .ui-section#align {
-  padding-top: 2px !important;
-  padding-bottom: 4px !important;
-  margin-bottom: 2px !important;
-}
-.ie-panels--sheet .ui-section#spacing {
-  padding-top: 2px !important;
-  margin-top: 0 !important;
-}
-.ie-panels--sheet .ui-section#spacing .ui-row {
-  min-height: 32px !important;
-  gap: 10px !important;
-}
-.ie-panels--sheet .ui-section#spacing .ui-row + .ui-row {
-  margin-top: 3px !important;
-}
-.ie-panels--sheet .ui-section#spacing .ui-row-label {
-  width: 56px !important;
-  font-size: 12px !important;
-}
 .ie-panels--sheet .ui-seg,
 .ie-panels--sheet .ui-seg--fill,
 .ie-panels--sheet .ui-seg--divided {
@@ -2125,7 +1376,7 @@ div.ie-layer-pick { cursor: default; }
 /* ══════════════════════════════════════════════════════════════════════════
    BOTTOM SHEET ROUNDED EDGES: Universal Pill Buttons & Rounded Containers
    ══════════════════════════════════════════════════════════════════════════ */
-.ie-panels--sheet button:not(.ui-tile):not(.ie-shape-btn):not(.ie-filter-tile):not(.ui-icon-btn):not(.ui-swatch):not(.ie-font-upload):not(.ie-wm-dot):not(.ie-style-remove):not(.ie-browse-item):not(.ie-bg-card):not(.ie-filter-tab),
+.ie-panels--sheet button:not(.ui-tile):not(.ie-shape-btn):not(.ie-filter-tile):not(.ui-icon-btn):not(.ui-swatch):not(.ie-font-upload):not(.ie-wm-dot):not(.ie-style-remove):not(.ie-browse-item):not(.ie-bg-card):not(.ie-filter-tab):not(.ie-style-apply):not(.ie-style-save):not(.ui-toggle):not(.ui-chip):not(.ui-seg-btn):not(.ie-bubble-card),
 .ie-panels--sheet .ui-btn,
 .ie-panels--sheet .ui-btn-accent,
 .ie-panels--sheet .ui-btn--accent,
@@ -2179,7 +1430,6 @@ div.ie-layer-pick { cursor: default; }
 .ie-panels--sheet .ui-field:not(textarea),
 .ui-theme .ie-panels--sheet input.ui-field,
 .ui-theme .ie-panels--sheet .ui-field:not(textarea),
-.ie-panels--sheet .ie-picker-search .ui-field,
 .ie-panels--sheet .ie-layer-rename,
 .ie-panels--sheet .ie-saved-rename,
 .ie-panels--sheet .ie-wm-input-pill,
@@ -2215,10 +1465,6 @@ div.ie-layer-pick { cursor: default; }
 }
 
 .ie-panels--sheet .ie-filter-thumb,
-.ie-panels--sheet .ie-picker-thumb,
-.ie-panels--sheet .ie-picker-thumb--photo,
-.ie-panels--sheet .ie-picker-gif,
-.ie-panels--sheet .ie-picker-bubble-stage,
 .ie-panels--sheet .ie-saved-open img,
 .ie-panels--sheet .ie-saved-blank {
   border-radius: 16px !important;
@@ -2288,3 +1534,276 @@ div.ie-layer-pick { cursor: default; }
   letter-spacing: -0.01em;
   white-space: nowrap;
 }
+
+/* The text layer's sheets (TextSheet: Font, Style, Align, Color, Box, and all of them from the
+   Text strip's Edit), on the tool-sheet look: a heading, filled tiles that turn orange when on,
+   soft labels and no outlines. */
+.ie-panels--sheet .ie-text-sheet .ui-section-title {
+  margin-bottom: 8px !important;
+  color: var(--ui-muted, #a5a6ad) !important;
+  font-size: 13.5px !important;
+  font-weight: 600 !important;
+  letter-spacing: normal !important;
+  text-transform: none !important;
+}
+.ie-panels--sheet .ie-text-sheet :is(.ui-toggle, .ui-chip, .ui-seg-btn, .ie-font-upload, .ie-style-apply, .ie-style-save) {
+  border: none !important;
+  border-radius: 14px !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: var(--ui-text, #f4f4f6) !important;
+  box-shadow: none !important;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease !important;
+}
+.ie-panels--sheet .ie-text-sheet :is(.ui-toggle, .ui-chip, .ui-seg-btn, .ie-font-upload, .ie-style-apply, .ie-style-save):hover:not(.is-on) {
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+.ie-panels--sheet .ie-text-sheet :is(.ui-toggle, .ui-chip, .ui-seg-btn, .ie-style-apply, .ie-style-save):active { transform: scale(0.96); }
+.ie-panels--sheet .ie-text-sheet :is(.ui-toggle, .ui-chip, .ui-seg-btn).is-on {
+  background: var(--ui-accent, #ff5a36) !important;
+  color: #fff !important;
+  font-weight: 600 !important;
+  box-shadow: 0 6px 16px -8px rgba(255, 90, 54, 0.7) !important;
+}
+.ie-panels--sheet .ie-text-sheet :is(.ui-toggle, .ui-chip, .ui-seg-btn).is-on svg { color: #fff !important; }
+
+/* Rows that run past the sheet scroll sideways, their right edge fading. */
+.ie-panels--sheet .ie-text-sheet :is(.ie-font-row, .ui-chips[aria-label="Text effects"]) {
+  margin: 0 -16px;
+  padding: 2px 44px 2px 16px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 32px), transparent);
+  mask-image: linear-gradient(90deg, #000 calc(100% - 32px), transparent);
+}
+.ie-panels--sheet .ie-text-sheet :is(.ie-font-row, .ui-chips[aria-label="Text effects"])::-webkit-scrollbar { display: none; }
+
+/* Font: two rows of tiles, each name in its own face, then your own font. */
+.ie-panels--sheet .ie-text-sheet .ie-font-row {
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-rows: repeat(2, 48px);
+  grid-auto-columns: max-content;
+  gap: 8px;
+}
+.ie-panels--sheet .ie-text-sheet .ie-font-row .ui-toggle--tile {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 88px;
+  height: 48px;
+  padding: 0 16px;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: normal;
+  white-space: nowrap;
+}
+.ie-panels--sheet .ie-text-sheet .ie-font-row .ie-font-upload {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: auto;
+  min-width: 88px;
+  height: 48px;
+  padding: 0 16px;
+  background: rgba(255, 90, 54, 0.12) !important;
+  color: var(--ui-accent, #ff5a36) !important;
+  font-family: var(--ui-font, inherit) !important;
+  font-size: 13.5px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.ie-panels--sheet .ie-text-sheet .ie-font-row .ie-font-upload:hover { background: rgba(255, 90, 54, 0.2) !important; }
+
+/* My styles: an "Aa" sample of each saved look, a small x to forget it, and Save. */
+.ie-panels--sheet .ie-text-sheet .ie-style-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.ie-panels--sheet .ie-text-sheet .ie-style-chip { position: relative; display: inline-flex; }
+.ie-panels--sheet .ie-text-sheet .ie-style-apply { width: 52px; height: 44px; padding: 0; font-size: 19px; }
+.ie-panels--sheet .ie-text-sheet .ie-style-remove {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: 2px solid var(--ui-surface, #1c1c1e);
+  border-radius: 50% !important;
+  background: #4a4b52;
+  color: #fff;
+  cursor: pointer;
+}
+.ie-panels--sheet .ie-text-sheet .ie-style-remove:hover { background: #ff453a; }
+.ie-panels--sheet .ie-text-sheet .ie-style-save {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 44px;
+  padding: 0 16px;
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+}
+.ie-panels--sheet .ie-text-sheet .ie-style-save svg { color: var(--ui-accent, #ff5a36); }
+
+/* Style: bold, italic, underline and case as four tiles sharing the width. */
+.ie-panels--sheet .ie-text-sheet .ie-format-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.ie-panels--sheet .ie-text-sheet .ie-format-row .ui-toggle { display: grid; place-items: center; height: 44px; padding: 0; }
+.ie-format-glyph { display: inline-flex; align-items: center; justify-content: center; line-height: 1; user-select: none; }
+.ie-format-glyph--bold { font-weight: 850; font-size: 17px; }
+.ie-format-glyph--italic { font-family: Georgia, Cambria, "Times New Roman", serif; font-style: italic; font-weight: 700; font-size: 18px; }
+.ie-format-glyph--underline { font-weight: 700; font-size: 16px; text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 2px; }
+.ie-format-glyph--case { font-weight: 700; font-size: 15px; letter-spacing: -0.02em; }
+
+/* Effects: a sideways row of tiles, each showing its curve. */
+.ie-panels--sheet .ie-text-sheet .ui-chips[aria-label="Text effects"] { display: flex; flex-wrap: nowrap; gap: 8px; }
+.ie-panels--sheet .ie-text-sheet .ui-chips[aria-label="Text effects"] .ui-chip {
+  flex: none;
+  height: 44px !important;
+  padding: 0 18px !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+}
+
+/* Align, and the box's shape: segmented choices as tiles sharing the width. */
+.ie-panels--sheet .ie-text-sheet .ui-seg {
+  display: grid !important;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
+  gap: 8px !important;
+  padding: 0 !important;
+  border: none !important;
+  background: none !important;
+}
+.ie-panels--sheet .ie-text-sheet .ui-seg-btn { height: 44px !important; font-size: 13.5px !important; font-weight: 600 !important; }
+.ie-panels--sheet .ie-text-sheet .ui-seg-btn::before { content: none !important; }
+.ie-panels--sheet .ie-text-sheet .ui-row .ui-seg-btn { height: 40px !important; }
+
+/* "None" is a grey slash, so only the picked swatch shows orange. */
+.ie-panels--sheet .ui-swatch--none {
+  background: linear-gradient(135deg, transparent 44%, rgba(255, 255, 255, 0.6) 44%, rgba(255, 255, 255, 0.6) 56%, transparent 56%), rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Bubbles (BubbleSheet): the kinds as a row of tabs fixed under the heading, then a card per style,
+   two to a line, scrolling on its own so the meme above stays in view. */
+.ie-panels--sheet .ie-bubble-sheet .ui-sheet-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow: hidden;
+  padding-bottom: 0;
+}
+.ie-bubble-tabs {
+  flex: none;
+  display: flex;
+  gap: 8px;
+  margin: 0 -16px;
+  padding: 2px 44px 2px 16px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 32px), transparent);
+  mask-image: linear-gradient(90deg, #000 calc(100% - 32px), transparent);
+}
+.ie-bubble-tabs::-webkit-scrollbar { display: none; }
+.ie-panels--sheet .ie-bubble-tab {
+  flex: none;
+  height: 36px;
+  padding: 0 16px;
+  border: none !important;
+  border-radius: 999px !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: var(--ui-text, #f4f4f6) !important;
+  font: inherit;
+  font-size: 13.5px !important;
+  font-weight: 600 !important;
+  box-shadow: none !important;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s ease;
+}
+.ie-panels--sheet .ie-bubble-tab:hover:not(.is-on) { background: rgba(255, 255, 255, 0.1) !important; }
+.ie-panels--sheet .ie-bubble-tab.is-on { background: var(--ui-accent, #ff5a36) !important; color: #fff !important; }
+
+.ie-bubble-grid {
+  flex: 1 1 220px;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-content: start;
+  gap: 10px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  margin: 0 -16px;
+  padding: 2px 16px calc(14px + env(safe-area-inset-bottom, 0px));
+  scrollbar-width: none;
+}
+.ie-bubble-grid::-webkit-scrollbar { display: none; }
+.ie-panels--sheet .ie-bubble-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  min-width: 0;
+  padding: 10px 10px 9px;
+  border: none !important;
+  border-radius: 18px !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  color: var(--ui-muted, #a5a6ad) !important;
+  font: inherit;
+  box-shadow: none !important;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+.ie-panels--sheet .ie-bubble-card:hover:not(.is-on) { background: rgba(255, 255, 255, 0.08) !important; }
+.ie-panels--sheet .ie-bubble-card:active { transform: scale(0.98); }
+.ie-panels--sheet .ie-bubble-card.is-on { background: rgba(255, 255, 255, 0.11) !important; }
+.ie-bubble-stage {
+  display: grid;
+  place-items: center;
+  min-height: 62px;
+  padding: 0 2px;
+}
+.ie-bubble-sample {
+  max-width: 100%;
+  padding: 7px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.3;
+  text-align: center;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.ie-bubble-name {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-width: 0;
+  font-size: 12px;
+  font-weight: 600;
+}
+.ie-bubble-name > span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ie-bubble-card.is-on .ie-bubble-name { color: #fff; }
+/* The picked style: a small orange tick before its name. */
+.ie-bubble-tick {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: var(--ui-accent, #ff5a36);
+  color: #fff;
+  animation: ie-bubble-tick-in 0.18s ease-out;
+}
+@keyframes ie-bubble-tick-in { from { opacity: 0; transform: scale(0.6); } }
+@media (prefers-reduced-motion: reduce) { .ie-bubble-tick { animation: none; } }

@@ -46,7 +46,7 @@ const sameColour = (a: unknown, b: string) => String(a || '').toLowerCase() === 
 const SECTIONS = {
   edit: { title: undefined, part: null },
   font: { title: 'Font', part: 'font' },
-  styles: { title: 'Saved styles', part: 'font' },
+  styles: { title: 'My styles', part: 'font' },
   format: { title: 'Format', part: 'style' },
   size: { title: 'Size', part: 'style' },
   effects: { title: 'Effects', part: 'style' },
@@ -82,8 +82,9 @@ export default function TextSheet({ actions, onClose }: { actions: EditorActions
   const { id, kind, caption } = useSelection();
   const part = kind === 'caption' && sheetFocus && sheetFocus in TEXT_PARTS ? (sheetFocus as TextPart) : null;
   const shows = (section: TextSection) => !part || SECTIONS[section].part === part;
-  // Style, Align and Box on their own are minimalist rows with no redundant section headings
-  const heading = (section: TextSection) => (part === 'style' || part === 'align' || part === 'box' ? undefined : SECTIONS[section].title);
+  // On its own a part's sheet is headed by its name, so its sections go without titles; only My
+  // styles, under the fonts, keeps one.
+  const heading = (section: TextSection) => (part && section !== 'styles' ? undefined : SECTIONS[section].title);
 
   // Opening the sheet with no caption selected picks the first one.
   useEffect(() => {
@@ -113,7 +114,7 @@ export default function TextSheet({ actions, onClose }: { actions: EditorActions
   };
 
   return (
-    <Sheet title={part ? TEXT_PARTS[part] : 'Text'} hideTitle onClose={onClose}>
+    <Sheet className="ie-text-sheet ie-tool-sheet" title={part ? TEXT_PARTS[part] : 'Text'} onClose={onClose}>
       {!part && (
         <ChipRow ariaLabel="Captions">
           {captions.map((c) => (
@@ -155,7 +156,8 @@ export default function TextSheet({ actions, onClose }: { actions: EditorActions
                   </Toggle>
                 ))}
                 <label className="ui-toggle ui-toggle--tile ie-font-upload" title="Upload your own font">
-                  <Plus size={18} />
+                  <Plus size={16} strokeWidth={2.4} aria-hidden="true" />
+                  <span>Your font</span>
                   <input type="file" accept={FONT_ACCEPT} aria-label="Upload your own font" hidden onChange={(e) => { uploadFont(e.target.files?.[0]); e.target.value = ''; }} />
                 </label>
               </div>
@@ -188,8 +190,8 @@ export default function TextSheet({ actions, onClose }: { actions: EditorActions
                     </button>
                   </span>
                 ))}
-                <button type="button" className="ui-btn" onClick={() => keepStyles(withStyle(styles, styleOf(caption as Record<string, unknown>), `style-${Date.now()}`))}>
-                  <BookmarkPlus size={16} />Save this style
+                <button type="button" className="ie-style-save" onClick={() => keepStyles(withStyle(styles, styleOf(caption as Record<string, unknown>), `style-${Date.now()}`))}>
+                  <BookmarkPlus size={16} aria-hidden="true" />Save this style
                 </button>
               </div>
             </Section>
@@ -216,12 +218,9 @@ export default function TextSheet({ actions, onClose }: { actions: EditorActions
 
           {shows('size') && (
             <Section title={heading('size')} id="size">
-              <div className="ie-size-row">
-                <span className="ie-size-label">Size</span>
-                <span className="ie-size-a ie-size-a--small" aria-hidden="true">A</span>
-                <Slider label="Text size" min={16} max={160} value={caption.fontSize || 50} onChange={(v) => live({ fontSize: v })} format={(v) => `${Math.round(v)}px`} />
-                <span className="ie-size-a" aria-hidden="true">A</span>
-              </div>
+              <Row label="Size">
+                <Slider label="Text size" min={16} max={160} value={caption.fontSize || 50} onChange={(v) => live({ fontSize: v })} format={(v) => String(Math.round(v))} />
+              </Row>
             </Section>
           )}
 
@@ -266,7 +265,7 @@ export default function TextSheet({ actions, onClose }: { actions: EditorActions
 
           {shows('color') && (
             <Section title={heading('color')} id="color" rule={!part}>
-              <Row label="Color">
+              <Row label={part ? 'Text' : 'Color'}>
                 <div className="ie-swatch-line">
                   <SwatchRow ariaLabel="Text colour" colors={TEXT_COLORS} value={caption.gradient ? '' : caption.color || '#ffffff'} onChange={(c) => set({ color: c, gradient: null, ...(strokeOn && sameColour(caption.stroke, c) ? { stroke: getContrastStroke(c) } : {}) })} />
                   <span className="ie-swatch-gap" aria-hidden="true" />
@@ -319,7 +318,7 @@ export default function TextSheet({ actions, onClose }: { actions: EditorActions
 
           {shows('box') && (
             <Section title={heading('box')} id="box" rule={!part}>
-              <Row label="Box">
+              <Row label={part ? 'Color' : 'Box'}>
                 <SwatchRow
                   ariaLabel="Text box colour"
                   colors={BOX_COLORS}

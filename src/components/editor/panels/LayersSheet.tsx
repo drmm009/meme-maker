@@ -105,9 +105,10 @@ export default function LayersSheet({ actions, onClose }: { actions: EditorActio
 
   return (
     <Sheet
+      className="ie-layers-sheet ie-tool-sheet"
       title="Layers"
       badge={rows.length + shapes.length ? String(rows.length + shapes.length) : undefined}
-      action={rows.length > 1 || selecting ? (selecting ? { label: 'Done', Icon: Check, onClick: stopSelecting } : { label: 'Select', Icon: ListChecks, onClick: () => { setRenaming(null); setSelecting(true); } }) : undefined}
+      action={rows.length > 1 || selecting ? (selecting ? { label: 'Done', Icon: Check, variant: 'plain', onClick: stopSelecting } : { label: 'Select', Icon: ListChecks, variant: 'plain', onClick: () => { setRenaming(null); setSelecting(true); } }) : undefined}
       onClose={onClose}
     >
       {!rows.length && !shapes.length && <p className="ie-empty">No layers yet. Add text, a sticker or a photo.</p>}
