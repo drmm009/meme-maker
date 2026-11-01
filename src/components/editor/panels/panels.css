@@ -1807,3 +1807,22 @@ div.ie-layer-pick { cursor: default; }
 }
 @keyframes ie-bubble-tick-in { from { opacity: 0; transform: scale(0.6); } }
 @media (prefers-reduced-motion: reduce) { .ie-bubble-tick { animation: none; } }
+
+/* The text sheets, compact: tighter sections and rows, and tiles a size smaller. */
+.ie-panels--sheet .ie-text-sheet .ui-sheet-head { padding-bottom: 2px !important; }
+.ie-panels--sheet .ie-text-sheet .ui-sheet-body { padding-bottom: 12px !important; }
+.ie-panels--sheet .ie-text-sheet .ui-section { padding: 3px 0 !important; }
+.ie-panels--sheet .ie-text-sheet .ui-section-title { margin-bottom: 6px !important; }
+.ie-panels--sheet .ie-text-sheet .ui-row { min-height: 36px !important; padding-top: 0 !important; padding-bottom: 0 !important; }
+.ie-panels--sheet .ie-text-sheet .ui-row + .ui-row { margin-top: 6px !important; }
+.ie-panels--sheet .ie-text-sheet .ie-font-row { grid-template-rows: repeat(2, 40px); gap: 6px; }
+.ie-panels--sheet .ie-text-sheet .ie-font-row :is(.ui-toggle--tile, .ie-font-upload) { height: 40px; min-width: 80px; padding: 0 14px; border-radius: 12px !important; }
+.ie-panels--sheet .ie-text-sheet .ie-font-row .ui-toggle--tile { font-size: 15px; }
+.ie-panels--sheet .ie-text-sheet :is(.ie-format-row .ui-toggle, .ui-chips[aria-label="Text effects"] .ui-chip, .ui-seg-btn, .ie-style-apply, .ie-style-save) {
+  height: 38px !important;
+  border-radius: 12px !important;
+}
+.ie-panels--sheet .ie-text-sheet .ie-format-row,
+.ie-panels--sheet .ie-text-sheet .ui-chips[aria-label="Text effects"],
+.ie-panels--sheet .ie-text-sheet .ui-seg { gap: 6px !important; }
+.ie-panels--sheet .ie-text-sheet .ie-style-apply { width: 46px; font-size: 17px; }
