@@ -584,6 +584,16 @@ describe('MemeEditor', () => {
     closeSheet();
     expect(canvas.props.isDrawingMode).toBe(true);
     expect(within(bar()).getByTitle('Draw on the meme').getAttribute('aria-pressed')).toBe('true');
+    // With its settings closed the brush still draws, so its button stays on, marked live.
+    const drawTools = () => screen.getByRole('toolbar', { name: 'Draw tools' });
+    const glow = within(drawTools()).getByText('Glow').closest('button');
+    expect(glow.getAttribute('aria-pressed')).toBe('true');
+    expect(glow.classList.contains('is-live')).toBe(true);
+    expect(within(drawTools()).getByText('Brush').closest('button').getAttribute('aria-pressed')).toBe('false');
+    // Tapping it opens its settings again.
+    fireEvent.click(glow);
+    expect(sheet('Glow')).toBeTruthy();
+    closeSheet();
 
     openSection('Draw on the meme');
     expect(canvas.props.isDrawingMode).toBe(false);

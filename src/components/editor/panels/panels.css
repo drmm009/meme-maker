@@ -203,6 +203,37 @@ div.ie-layer-pick { cursor: default; }
   font-size: 13px;
 }
 
+/* Draw sheet polish: a quiet Clear pill, softer labels, filled tiles instead of outlines, and
+   each slider's number at its end. (Under .ie-panels--sheet to beat the sheet-wide rules below.) */
+.ie-panels--sheet .ie-draw-sheet .ui-sheet-head { padding-bottom: 6px; }
+.ie-panels--sheet .ie-draw-sheet .ui-sheet-action--plain {
+  gap: 6px;
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 999px !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.ie-panels--sheet .ie-draw-sheet .ui-sheet-action--plain:hover:not(:disabled) { background: rgba(255, 255, 255, 0.1) !important; }
+.ie-panels--sheet .ie-draw-sheet .ui-row-label { width: 64px; color: var(--ui-muted) !important; }
+.ie-panels--sheet .ie-draw-sheet .ie-shape-btn {
+  border-color: transparent !important;
+  border-radius: 16px !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  color: var(--ui-muted);
+}
+.ie-panels--sheet .ie-draw-sheet .ie-shape-btn:hover {
+  border-color: transparent !important;
+  background: rgba(255, 255, 255, 0.09) !important;
+}
+.ie-panels--sheet .ie-draw-sheet .ie-shape-btn.is-on {
+  border-color: transparent !important;
+  background: var(--ui-accent, #ff5a36) !important;
+  box-shadow: 0 6px 16px -8px rgba(255, 90, 54, 0.7);
+}
+.ie-panels--sheet .ie-draw-sheet .ui-slider-value { min-width: 24px; color: var(--ui-text); font-weight: 600; }
+
 /* Media pickers (Templates, Stickers, GIFs, Emoji): the Draw sheet's look, with the category tiles
    and search fixed at the top and only the grid scrolling, so the meme above stays in view. */
 .ie-picker-sheet .ui-sheet-body {

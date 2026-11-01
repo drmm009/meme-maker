@@ -1,4 +1,4 @@
-import { MoveUpRight, Circle, Square, Minus, Droplets, Grid3x3, RectangleHorizontal, PenLine, Highlighter, MoveHorizontal } from 'lucide-react';
+import { Trash2, MoveUpRight, Circle, Square, Minus, Droplets, Grid3x3, RectangleHorizontal, PenLine, Highlighter, MoveHorizontal } from 'lucide-react';
 import { Sheet, Section, Row, SwatchRow, Slider, Switch } from '../../ui';
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
 import { useEditorUiStore } from '../store/useEditorUiStore';
@@ -61,6 +61,7 @@ export default function DrawSheet({ actions, onClose }: { actions: EditorActions
       onClose={onClose}
       action={{
         label: 'Clear drawing',
+        Icon: Trash2,
         variant: 'plain',
         disabled: !drawings.length,
         onClick: actions.handleClearDrawings,
@@ -118,7 +119,7 @@ export default function DrawSheet({ actions, onClose }: { actions: EditorActions
           )}
           {!isCensor && (
             <Row label={isShape ? 'Width' : 'Size'}>
-              <Slider label="Brush size" min={2} max={isShape ? 30 : 50} value={size} onChange={both(ui.setBrushSize, (v) => ({ size: v }))} />
+              <Slider label="Brush size" min={2} max={isShape ? 30 : 50} value={size} onChange={both(ui.setBrushSize, (v) => ({ size: v }))} format={String} />
             </Row>
           )}
           {isShape && (shapeKind === 'ellipse' || shapeKind === 'rect') && (
@@ -128,7 +129,7 @@ export default function DrawSheet({ actions, onClose }: { actions: EditorActions
           )}
           {isCensor && censorMode !== 'bar' && (
             <Row label="Strength">
-              <Slider label="Censor strength" min={4} max={40} value={strength} onChange={both(ui.setCensorStrength, (v) => ({ strength: v }))} />
+              <Slider label="Censor strength" min={4} max={40} value={strength} onChange={both(ui.setCensorStrength, (v) => ({ strength: v }))} format={String} />
             </Row>
           )}
         </Section>

@@ -73,7 +73,7 @@ export default function EditorPanels({ actions }: { actions: EditorActions }) {
   }
 
   const strip = dockTab === 'draw'
-    ? <ToolStrip ariaLabel="Draw tools" layout="stacked" items={DRAW_TOOLS} active={sheet === 'draw' ? drawTool : null} onSelect={pickDrawTool} />
+    ? <ToolStrip ariaLabel="Draw tools" layout="stacked" items={DRAW_TOOLS} active={sheet === 'draw' ? drawTool : null} live={sheet === 'draw' ? null : drawTool} onSelect={pickDrawTool} />
     : dockTab === 'media' ? <MediaStrip actions={actions} />
     : dockTab === 'text' ? <TextStrip actions={actions} />
     : dockTab === 'fx' ? <AiFiltersStrip actions={actions} />

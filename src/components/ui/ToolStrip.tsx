@@ -18,6 +18,9 @@ export interface StripItem {
 interface ToolStripProps {
   items: StripItem[];
   active?: string | null;
+  // A tool that stays in use with its settings closed (Draw: the brush still draws on the meme),
+  // marked apart from `active`.
+  live?: string | null;
   onSelect: (id: string) => void;
   ariaLabel: string;
   // 'stacked' puts each label under its icon, so five tools fit across a phone.
@@ -26,11 +29,12 @@ interface ToolStripProps {
 
 // A row of tool buttons above the dock, for the open dock section (Draw: Brush, Glow, Marker;
 // Canvas: Color, Watermark, Mirror, Header, Footer).
-export default function ToolStrip({ items, active = null, onSelect, ariaLabel, layout = 'row' }: ToolStripProps) {
+export default function ToolStrip({ items, active = null, live = null, onSelect, ariaLabel, layout = 'row' }: ToolStripProps) {
   return (
     <div className={`ui-strip${layout === 'stacked' ? ' ui-strip--stacked' : ''}`} role="toolbar" aria-label={ariaLabel}>
       {items.map(({ id, label, Icon, icon, title, active: on, accept, onFile, className }) => {
-        const pressed = on ?? active === id;
+        const isLive = !(on ?? active === id) && live === id;
+        const pressed = (on ?? active === id) || isLive;
         const body = (
           <>
             {icon ?? (Icon ? <Icon size={layout === 'stacked' ? 19 : 17} strokeWidth={2.1} /> : null)}
@@ -58,12 +62,13 @@ export default function ToolStrip({ items, active = null, onSelect, ariaLabel, l
           <button
             key={id}
             type="button"
-            className={`ui-strip-btn${pressed ? ' is-on' : ''}${className ? ` ${className}` : ''}`}
+            className={`ui-strip-btn${pressed && !isLive ? ' is-on' : ''}${isLive ? ' is-live' : ''}${className ? ` ${className}` : ''}`}
             aria-pressed={pressed}
             title={title || label}
             onClick={() => onSelect(id)}
           >
             {body}
+            {isLive && <span className="ui-strip-live" aria-hidden="true" />}
           </button>
         );
       })}

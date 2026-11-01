@@ -32,6 +32,8 @@ export default function Sheet({ title, onClose, badge, action, className = '', h
   const drag = useRef<{ y: number; dy: number } | null>(null);
   const isClosingRef = useRef(false);
   const hasIcon = Boolean(action && action.Icon !== null && action.variant !== 'plain');
+  // A plain action shows its icon only when given one, small and before the label.
+  const PlainIcon = action?.variant === 'plain' ? action.Icon : null;
   const ActionIcon = action?.Icon || Plus;
 
   const isTest = typeof navigator !== 'undefined' && (navigator.userAgent.includes('jsdom') || navigator.userAgent.includes('Node.js'));
@@ -106,6 +108,7 @@ export default function Sheet({ title, onClose, badge, action, className = '', h
                 disabled={action.disabled}
                 onClick={action.onClick}
               >
+                {PlainIcon && <PlainIcon size={14} strokeWidth={2.2} aria-hidden="true" />}
                 {action.label}
                 {hasIcon && (
                   <span className="ui-sheet-action-icon"><ActionIcon size={18} strokeWidth={2.2} /></span>
