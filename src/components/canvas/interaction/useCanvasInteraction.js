@@ -9,6 +9,7 @@ import { paintStrokeDot, paintStrokeSegment, startStroke } from './freehand';
 import { isTooSmall, paintDragDrawing, paintDragGuide, startDragDrawing } from '../draw/shapes';
 import { dragDrawingHandle, hitDrawingAt, hitDrawingHandle, isDragDrawing, moveDrawingPoints } from './drawingHits';
 import { groupMates } from '../../editor/panels/arrange';
+import { fitCaptionsToBands } from '../layout/canvasLayout';
 import { pinchChange, pinchPatch } from './layerPinch';
 import { useMemeEditorStore } from '../../editor/store/useMemeEditorStore';
 import { useEditorUiStore } from '../../editor/store/useEditorUiStore';
@@ -34,7 +35,7 @@ const screenScale = (canvas) => canvas.width / Math.max(1, canvas.getBoundingCli
 export function useCanvasInteraction({
   activeIsNativeLayout, activeLayoutDef, canvasH, canvasRef, canvasView, canvasW,
   dragTarget, editableRef, focusTextarea, getCaptionCenterY, getImageLayerCenterY,
-  getStickerCenterY, headerExtH, imageCacheRef, isDragging, isDrawingMode,
+  footerExtH, getStickerCenterY, headerExtH, imageCacheRef, isDragging, isDrawingMode,
   isFooterEnabled, isHeaderEnabled, onAddDrawing, onDeleteLayer, onSelectLayer,
   onMoveLayers, onPreviewStroke, onUpdateCaptionBounds, onUpdateDrawing, onUpdateImageLayerBounds, onUpdateSlotTransform,
   onUpdateStickerBounds, requestRedraw, setEditingCaptionId, snappingLines,
@@ -66,7 +67,8 @@ export function useCanvasInteraction({
   const censorStrength = useEditorUiStore((s) => s.censorStrength);
   const activeLayerId = useMemeEditorStore((s) => s.activeLayerId);
   const stickers = useMemeEditorStore((s) => s.stickers);
-  const captions = useMemeEditorStore((s) => s.captions);
+  // Band captions as they are drawn (shrunk to fit their band), so hits match what is on screen.
+  const captions = fitCaptionsToBands(useMemeEditorStore((s) => s.captions), headerExtH, footerExtH);
   const imageLayers = useMemeEditorStore((s) => s.imageLayers);
   const slotImages = useMemeEditorStore((s) => s.slotImages);
   const slotTransforms = useMemeEditorStore((s) => s.slotTransforms);
@@ -519,7 +521,7 @@ export function useCanvasInteraction({
       return;
     }
 
-    const { x, y, guides } = moveLayer({ target, start, dx, dy, canvas, canvasH, captions, stickers, imageLayers });
+    const { x, y, guides } = moveLayer({ target, start, dx, dy, canvas, canvasH, headerExtH, captions, stickers, imageLayers });
     snappingLines.current = guides;
     scheduleDragBatch(() => {
       const current = dragTarget.current;

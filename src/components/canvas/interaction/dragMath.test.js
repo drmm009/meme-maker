@@ -56,6 +56,15 @@ describe('moveLayer', () => {
     const r = moveLayer({ target: { id: 'c', type: 'caption' }, start: { x: 0.5, y: 0.5, boxWidth: 200, boxHeight: 60 }, dx: -1, dy: 0, canvas, canvasH: 600, ...lists });
     expect(r.x).toBeCloseTo(108 / 800);
   });
+
+  it('lets a caption into the header and footer bands, which are part of the canvas', () => {
+    // A 100px header and 100px footer around a 600px image area: the canvas is 800px tall.
+    const banded = { ...canvas, height: 800 };
+    const up = moveLayer({ target: { id: 'c', type: 'caption' }, start: { x: 0.5, y: 0.5, boxWidth: 200, boxHeight: 60 }, dx: 0, dy: -1, canvas: banded, canvasH: 600, headerExtH: 100, ...lists });
+    expect(up.y).toBeCloseTo((30 + 8 - 100) / 600);
+    const down = moveLayer({ target: { id: 'c', type: 'caption' }, start: { x: 0.5, y: 0.5, boxWidth: 200, boxHeight: 60 }, dx: 0, dy: 1, canvas: banded, canvasH: 600, headerExtH: 100, ...lists });
+    expect(down.y).toBeCloseTo((800 - 100 - 30 - 8) / 600);
+  });
 });
 
 describe('resizing', () => {

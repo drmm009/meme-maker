@@ -273,15 +273,16 @@ export function resizeCaption({ handleType, coords, start, caption, canvas, head
 const SNAP_DIST = 0.015;
 
 // Moving a layer by (dx, dy), as fractions of the canvas / image area. Captions stay inside the
-// canvas; the position snaps to the centre lines and to other layers' centres, which are
+// whole canvas, header and footer bands included (they are part of the canvas); the position snaps to the centre lines and to other layers' centres, which are
 // returned as guides ({ horizontal, vertical }) for the renderer.
-export function moveLayer({ target, start, dx, dy, canvas, canvasH, captions, stickers, imageLayers }: {
+export function moveLayer({ target, start, dx, dy, canvas, canvasH, headerExtH = 0, captions, stickers, imageLayers }: {
   target: Pick<LayerHit, 'id' | 'type' | 'isHeaderCaption' | 'isFooterCaption'>;
   start: Pick<DragStart, 'x' | 'y'> & Partial<Pick<DragStart, 'rotation' | 'boxWidth' | 'boxHeight' | 'width'>>;
   dx: number;
   dy: number;
   canvas: SceneCanvas;
   canvasH: number;
+  headerExtH?: number;
   captions: { id: string; x: number; y: number }[];
   stickers: { id: string; x: number; y: number }[];
   imageLayers?: { id: string; x: number; y: number }[];
@@ -296,11 +297,15 @@ export function moveLayer({ target, start, dx, dy, canvas, canvasH, captions, st
     const halfExtX = (bW / 2) * Math.abs(Math.cos(rad)) + (bH / 2) * Math.abs(Math.sin(rad));
     const halfExtY = (bW / 2) * Math.abs(Math.sin(rad)) + (bH / 2) * Math.abs(Math.cos(rad));
     const edgePad = 8;
-    const areaH = target.isHeaderCaption || target.isFooterCaption ? canvas.height : canvasH;
+    // Band captions' y spans the whole canvas; other captions' y is 0..1 of the image area, which
+    // starts headerExtH down, so the header is below 0 and the footer above 1.
+    const inBandCoords = target.isHeaderCaption || target.isFooterCaption;
+    const areaH = inBandCoords ? canvas.height : canvasH;
+    const top = inBandCoords ? 0 : headerExtH;
     const minX = Math.min(0.5, (halfExtX + edgePad) / canvas.width);
     const maxX = Math.max(0.5, (canvas.width - halfExtX - edgePad) / canvas.width);
-    const minY = Math.min(0.5, (halfExtY + edgePad) / areaH);
-    const maxY = Math.max(0.5, (areaH - halfExtY - edgePad) / areaH);
+    const minY = Math.min(0.5, (halfExtY + edgePad - top) / areaH);
+    const maxY = Math.max(0.5, (canvas.height - top - halfExtY - edgePad) / areaH);
     x = Math.max(minX, Math.min(maxX, x));
     y = Math.max(minY, Math.min(maxY, y));
   }

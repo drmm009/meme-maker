@@ -26,26 +26,26 @@ export const drawSelectionBox = (uiCtx, bx, by, bw, bh, radius = 10) => {
 // 2. Delete Handle (Top-Left corner handle: crisp white circular badge, coral border & coral ✕ icon, increased size)
 export const drawDeleteHandle = (uiCtx, hx, hy) => {
   uiCtx.save();
-  uiCtx.shadowColor = 'rgba(0, 0, 0, 0.35)';
+  uiCtx.shadowColor = 'rgba(0, 0, 0, 0.28)';
   uiCtx.shadowBlur = 6;
   uiCtx.shadowOffsetY = 1.5;
 
-  // Button background circle: crisp red badge (radius 18)
+  // Button background circle (increased to radius 18)
   uiCtx.beginPath();
   uiCtx.arc(hx, hy, 18, 0, Math.PI * 2);
-  uiCtx.fillStyle = '#ef4444';
+  uiCtx.fillStyle = THEME_BADGE_BG;
   uiCtx.fill();
 
-  // Subtle border ring
-  uiCtx.strokeStyle = '#dc2626';
-  uiCtx.lineWidth = 2;
+  // Coral border
+  uiCtx.strokeStyle = THEME_CORAL;
+  uiCtx.lineWidth = 2.4;
   uiCtx.stroke();
 
-  // White ✕ inside
+  // Coral ✕ inside (scaled up to match radius 18)
   uiCtx.shadowColor = 'transparent';
   uiCtx.beginPath();
-  uiCtx.strokeStyle = '#ffffff';
-  uiCtx.lineWidth = 2.6;
+  uiCtx.strokeStyle = THEME_CORAL;
+  uiCtx.lineWidth = 2.4;
   uiCtx.lineCap = 'round';
   const cr = 5.5;
   uiCtx.moveTo(hx - cr, hy - cr);

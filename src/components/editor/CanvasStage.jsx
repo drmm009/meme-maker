@@ -176,10 +176,10 @@ export default function CanvasStage({
               />
             </div>
             <span style={{ fontSize: '15px', fontWeight: 700, letterSpacing: '-0.01em', color: '#ffffff' }}>
-              {isBlurringBg ? 'Blur loading...' : 'Removing Background...'}
+              {isBlurringBg ? 'Blurring the background…' : 'Removing Background...'}
             </span>
             <span style={{ fontSize: '12.5px', color: 'rgba(255, 255, 255, 0.65)', marginTop: '4px' }}>
-              {isBlurringBg ? 'Detecting subject & applying blur' : 'This may take a moment'}
+              {isBlurringBg ? 'Finding the subject first' : 'This may take a moment'}
             </span>
           </div>
         )}

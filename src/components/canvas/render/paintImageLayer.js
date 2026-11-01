@@ -38,15 +38,27 @@ if (cached) {
   if (imgLayer.bgBlur > 0 && imgLayer.subjectUrl) {
     const subject = imageCacheRef.current[imgLayer.subjectUrl];
     if (subject) {
-      const blurred = blurredCopy(drawSource, baseW, baseH, imgLayer.bgBlur * (baseW / 600));
-      if (blurred) {
-        const comp = document.createElement('canvas');
-        comp.width = baseW;
-        comp.height = baseH;
-        const compCtx = comp.getContext('2d');
-        compCtx.drawImage(blurred, 0, 0, baseW, baseH);
-        compCtx.drawImage(subject, 0, 0, baseW, baseH);
-        drawSource = comp;
+      // Blurring is the slow part, so a still photo's blurred copy is kept and reused (dragging the
+      // layer repaints every frame) until the photo, its filters, the subject or the amount change.
+      // GIF and video frames draw into a reused canvas, so they are blurred afresh.
+      const still = typeof HTMLCanvasElement === 'undefined' || !(cached instanceof HTMLCanvasElement);
+      const portraitKey = `${imgLayer.url}#portrait`;
+      const memo = imageCacheRef.current[portraitKey];
+      const filterKey = JSON.stringify(imgLayer.filters || imgLayer.filter || null);
+      if (still && memo && memo.cached === cached && memo.subject === subject && memo.bgBlur === imgLayer.bgBlur && memo.filterKey === filterKey) {
+        drawSource = memo.canvas;
+      } else {
+        const blurred = blurredCopy(drawSource, baseW, baseH, imgLayer.bgBlur * (baseW / 600));
+        if (blurred) {
+          const comp = document.createElement('canvas');
+          comp.width = baseW;
+          comp.height = baseH;
+          const compCtx = comp.getContext('2d');
+          compCtx.drawImage(blurred, 0, 0, baseW, baseH);
+          compCtx.drawImage(subject, 0, 0, baseW, baseH);
+          drawSource = comp;
+          if (still) imageCacheRef.current[portraitKey] = { cached, subject, bgBlur: imgLayer.bgBlur, filterKey, canvas: comp };
+        }
       }
     } else if (!imageCacheRef.current[`${imgLayer.subjectUrl}#loading`]) {
       imageCacheRef.current[`${imgLayer.subjectUrl}#loading`] = true;

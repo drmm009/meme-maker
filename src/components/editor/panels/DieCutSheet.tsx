@@ -47,10 +47,8 @@ export default function DieCutSheet({ actions, onClose }: { actions: EditorActio
             ariaLabel="Die-cut border colour"
             colors={DIECUT_COLORS}
             value={color}
-            onChange={(c) => {
-              if (!isDieCut) actions.handleToggleDieCutSticker(c);
-              else actions.handleSetDieCutColor(c);
-            }}
+            // A colour or width also switches the border on.
+            onChange={(c) => patchLayer(storeKey, id, { dieCut: true, dieCutColor: c })}
           />
         </Row>
         <Row label="Border width">
@@ -60,10 +58,7 @@ export default function DieCutSheet({ actions, onClose }: { actions: EditorActio
             max={20}
             step={1}
             value={width}
-            onChange={(w) => {
-              if (!isDieCut) actions.handleToggleDieCutSticker();
-              patchLayer(storeKey, id, { dieCutWidth: w });
-            }}
+            onChange={(w) => patchLayer(storeKey, id, { dieCut: true, dieCutWidth: w })}
             format={(v) => `${Math.round(v)}px`}
           />
         </Row>

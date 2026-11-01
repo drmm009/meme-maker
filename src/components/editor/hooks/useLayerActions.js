@@ -17,10 +17,6 @@ export function useLayerActions({ activeCaption, activeImageLayer, activeSticker
   const setActiveTab = useEditorUiStore((s) => s.setActiveTab);
   const setPendingVideoLayer = useEditorUiStore((s) => s.setPendingVideoLayer);
   const setCaptions = useMemeEditorStore((s) => s.setCaptions);
-  const canvasHeader = useMemeEditorStore((s) => s.canvasHeader);
-  const setCanvasHeader = useMemeEditorStore((s) => s.setCanvasHeader);
-  const canvasFooter = useMemeEditorStore((s) => s.canvasFooter);
-  const setCanvasFooter = useMemeEditorStore((s) => s.setCanvasFooter);
   const pushHistoryDebounced = useMemeEditorStore((s) => s.pushHistoryDebounced);
   const slotTransforms = useMemeEditorStore((s) => s.slotTransforms);
   const setSlotTransforms = useMemeEditorStore((s) => s.setSlotTransforms);
@@ -168,21 +164,9 @@ export function useLayerActions({ activeCaption, activeImageLayer, activeSticker
       pushHistory();
       return;
     }
-    const capToDelete = captions.find(c => c.id === idToDelete);
-    const isHeader = capToDelete?.isHeaderCaption || idToDelete === 'header' || (activeCaption?.isHeaderCaption && idToDelete === activeCaption?.id);
-    const isFooter = capToDelete?.isFooterCaption || idToDelete === 'footer' || (activeCaption?.isFooterCaption && idToDelete === activeCaption?.id);
-
-    let nextHeader = canvasHeader;
-    if (isHeader) {
-      nextHeader = { ...canvasHeader, enabled: false };
-      setCanvasHeader(nextHeader);
-    }
-    let nextFooter = canvasFooter;
-    if (isFooter) {
-      nextFooter = { ...canvasFooter, enabled: false };
-      setCanvasFooter(nextFooter);
-    }
-    if (activeLayerId === idToDelete || (isHeader && activeCaption?.isHeaderCaption) || (isFooter && activeCaption?.isFooterCaption)) {
+    // Header and footer bands are part of the canvas: deleting the text in one leaves the band
+    // (it is switched off from Canvas > Header / Footer).
+    if (activeLayerId === idToDelete) {
       const prevSticker = stickers.find((s) => s.id === idToDelete);
       const prevCaption = captions.find((c) => c.id === idToDelete);
       const prevImg = imageLayers.find((img) => img.id === idToDelete);
@@ -191,12 +175,7 @@ export function useLayerActions({ activeCaption, activeImageLayer, activeSticker
       }
       setActiveLayerId(null);
     }
-    const list = getOrderedLayers().filter(i => {
-      if (i.id === idToDelete) return false;
-      if (isHeader && (i.isHeaderCaption || i.id === capToDelete?.id)) return false;
-      if (isFooter && (i.isFooterCaption || i.id === capToDelete?.id)) return false;
-      return true;
-    });
+    const list = getOrderedLayers().filter(i => i.id !== idToDelete);
     commitLayerStack(list);
   };
 

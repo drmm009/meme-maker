@@ -52,6 +52,20 @@ export interface Band {
   ownColor?: boolean;
 }
 
+// A band keeps the height it was given, so its caption (while it sits in the band) shrinks to fit:
+// as many lines as fit the band at the caption's own size, then smaller type if the text needs more.
+export function fitCaptionsToBands<T extends Pick<MemeCaption, 'isHeaderCaption' | 'isFooterCaption' | 'hasCustomPos' | 'fontSize' | 'lineHeight' | 'autoFit' | 'maxLines'>>(
+  captions: T[], headerH: number, footerH: number
+): T[] {
+  return captions.map((cap) => {
+    const bandH = cap.hasCustomPos ? 0 : cap.isHeaderCaption ? headerH : cap.isFooterCaption ? footerH : 0;
+    if (!bandH) return cap;
+    const lineH = (cap.fontSize || 50) * (cap.lineHeight || 1.2);
+    const fits = Math.max(1, Math.floor((bandH * 0.9) / lineH));
+    return { ...cap, autoFit: true, maxLines: cap.autoFit && cap.maxLines ? Math.min(cap.maxLines, fits) : fits };
+  });
+}
+
 // The colour a band is filled with.
 export function bandColor(band: Band | null | undefined, canvasColor: string | null | undefined): string {
   if (band?.ownColor && band.bgColor) return band.bgColor;

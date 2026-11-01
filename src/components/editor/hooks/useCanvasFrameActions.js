@@ -80,7 +80,7 @@ export function useCanvasFrameActions() {
       } else {
         const newHeaderCap = {
           id: `caption-header-${Date.now()}`,
-          text: 'When you finally solve the bug after 4 hours:',
+          text: 'Add header text',
           x: 0.5,
           y: 0.05,
           fontSize: 50,
@@ -126,7 +126,7 @@ export function useCanvasFrameActions() {
       } else {
         const newFooterCap = {
           id: `caption-footer-${Date.now()}`,
-          text: '...and then realize you were in the wrong branch',
+          text: 'Add footer text',
           x: 0.5,
           y: 0.95,
           fontSize: 50,
@@ -201,7 +201,7 @@ export function useCanvasFrameActions() {
       if (!existingHeaderCap) {
         existingHeaderCap = {
           id: `caption-header-${Date.now()}`,
-          text: 'When you finally solve the bug after 4 hours:',
+          text: 'Add header text',
           x: 0.5,
           y: 0.05,
           fontSize: 50,
@@ -222,7 +222,7 @@ export function useCanvasFrameActions() {
       if (!existingFooterCap) {
         existingFooterCap = {
           id: `caption-footer-${Date.now() + 1}`,
-          text: '...and then realize you were in the wrong branch',
+          text: 'Add footer text',
           x: 0.5,
           y: 0.95,
           fontSize: 50,

@@ -1,8 +1,8 @@
-import React, { useEffect, useReducer, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { useMemeEditorStore } from './editor/store/useMemeEditorStore';
 import { useEditorUiStore } from './editor/store/useEditorUiStore';
 import { isSocialCardCaption } from './editor/memeEditorUtils';
-import { getBandHeight, getCanvasSize, makeLayerCenters } from './canvas/layout/canvasLayout';
+import { fitCaptionsToBands, getBandHeight, getCanvasSize, makeLayerCenters } from './canvas/layout/canvasLayout';
 import { renderScene } from './canvas/render/renderScene';
 import { useCanvasInteraction } from './canvas/interaction/useCanvasInteraction';
 import { useCanvasView } from './canvas/interaction/useCanvasView';
@@ -34,7 +34,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
 ) {
   // Meme document and shared UI state come from the editor stores.
   const template = useMemeEditorStore((s) => s.activeTemplate);
-  const captions = useMemeEditorStore((s) => s.captions);
+  const storeCaptions = useMemeEditorStore((s) => s.captions);
   const stickers = useMemeEditorStore((s) => s.stickers);
   const imageLayers = useMemeEditorStore((s) => s.imageLayers);
   const aspectRatio = useMemeEditorStore((s) => s.aspectRatio);
@@ -104,6 +104,8 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
   const headerExtH = getBandHeight(canvasHeader, null, canvasW);
   const footerExtH = getBandHeight(canvasFooter, null, canvasW);
   const totalCanvasH = canvasH + headerExtH + footerExtH;
+  // Band captions shrink to fit their band, which keeps the height it was given.
+  const captions = useMemo(() => fitCaptionsToBands(storeCaptions, headerExtH, footerExtH), [storeCaptions, headerExtH, footerExtH]);
 
   const { getCaptionCenterY, getStickerCenterY, getImageLayerCenterY } = makeLayerCenters({
     canvasRef, canvasW, canvasH, headerExtH, footerExtH, totalCanvasH
@@ -148,7 +150,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
   } = useCanvasInteraction({
     activeIsNativeLayout, activeLayoutDef, canvasH, canvasRef, canvasView, canvasW,
     dragTarget, editableRef, focusTextarea, getCaptionCenterY, getImageLayerCenterY,
-    getStickerCenterY, headerExtH, imageCacheRef, isDragging, isDrawingMode,
+    footerExtH, getStickerCenterY, headerExtH, imageCacheRef, isDragging, isDrawingMode,
     isFooterEnabled, isHeaderEnabled, onAddDrawing, onDeleteLayer, onSelectLayer,
     onMoveLayers,
     onPreviewStroke: (stroke) => renderScene({ ...sceneRef.current, drawings: [...(sceneRef.current.drawings || []), stroke] }),

@@ -174,6 +174,16 @@ describe('MemeEditor', () => {
     expect(captionTexts()).toEqual(['TOP TEXT', 'BOTTOM TEXT']);
   }, 30000);
 
+  it('deleting the text in the header leaves the header band on', () => {
+    renderEditor();
+    openSection('Canvas colour, bands and watermark');
+    fireEvent.click(within(canvasStrip()).getByText('Header'));
+    const header = canvas.props.captions.find((c) => c.isHeaderCaption);
+    act(() => canvas.props.onDeleteLayer(header.id));
+    expect(captionTexts()).toEqual(['TOP TEXT', 'BOTTOM TEXT']);
+    expect(within(sheet('Header')).getByRole('switch', { name: 'Header' }).getAttribute('aria-checked')).toBe('true');
+  }, 30000);
+
   it('keeps independent captions after several adds', () => {
     renderEditor();
     addTextFromMenu();
@@ -505,7 +515,7 @@ describe('MemeEditor', () => {
     closeSheet();
     openSection('Canvas colour, bands and watermark');
     fireEvent.click(within(canvasStrip()).getByText('Header'));
-    expect(captionTexts().some((t) => /solve the bug/.test(t))).toBe(true);
+    expect(captionTexts().some((t) => /Add header text/.test(t))).toBe(true);
   }, 30000);
 
   it('Draw shows Brush, Glow and Marker; a brush opens its settings and drawing stays on until Draw is tapped again', () => {
@@ -884,17 +894,16 @@ describe('MemeEditor', () => {
     fireEvent.click(within(strip('Media tools')).getByText('Emoji'));
     fireEvent.click(screen.getByTitle('Laugh Cry'));
 
-    // Tapping Die-cut in toolbar opens Die-cut sheet and enables dieCut
+    // Tapping Die-cut opens its sheet without adding a border yet
     fireEvent.click(within(layerToolbar()).getByText('Die-cut'));
     const diecut = sheet('Die-cut');
     expect(diecut).toBeTruthy();
-    expect(canvas.props.stickers[0].dieCut).toBe(true);
+    expect(canvas.props.stickers[0].dieCut).toBeFalsy();
 
-    // Color swatches work
+    // Picking a colour adds the border in that colour
     const swatches = within(diecut).getByRole('radiogroup', { name: 'Die-cut border colour' });
-    expect(swatches).toBeTruthy();
-    const yellow = within(swatches).getByLabelText('#ffd60a');
-    fireEvent.click(yellow);
+    fireEvent.click(within(swatches).getByLabelText('#ffd60a'));
+    expect(canvas.props.stickers[0].dieCut).toBe(true);
     expect(canvas.props.stickers[0].dieCutColor).toBe('#ffd60a');
 
     // Border width slider works

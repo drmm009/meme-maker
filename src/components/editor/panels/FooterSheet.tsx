@@ -41,7 +41,7 @@ export default function FooterSheet({ actions: _actions, onClose }: { actions?: 
       const isDark = isColorDark(bandColor(canvasFooter, canvasBgColor));
       const newCap: CaptionItem = {
         id: `caption-footer-${Date.now()}`,
-        text: '...and then realize you were in the wrong branch',
+        text: 'Add footer text',
         x: 0.5,
         y: 0.95,
         fontSize: 50,
@@ -67,7 +67,9 @@ export default function FooterSheet({ actions: _actions, onClose }: { actions?: 
     setCanvasFooter((prev: CanvasBand) => ({ ...prev, bgColor: color, ownColor: true }));
     const isDark = isColorDark(color);
     const nextTextColor = isDark ? '#ffffff' : '#000000';
-    if (footerCap) {
+    // Plain black or white text follows the band so it stays readable; a colour the user chose stays.
+    const plain = !footerCap?.color || ['#ffffff', '#000000'].includes(String(footerCap.color).toLowerCase());
+    if (footerCap && plain) {
       setCaptions(captions.map((c: CaptionItem) => (c.id === footerCap.id ? { ...c, color: nextTextColor } : c)));
     }
     pushHistory();

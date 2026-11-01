@@ -71,7 +71,7 @@ export default function LayerToolbar({ actions }: { actions: EditorActions }) {
           if (sheet === 'diecut') {
             closeSheet();
           } else {
-            if (!sticker.dieCut) actions.handleToggleDieCutSticker();
+            // Just looking doesn't add a border: the sheet's switch, a colour or a width does.
             openSheet('diecut', null, true);
           }
         },

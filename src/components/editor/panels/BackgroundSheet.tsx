@@ -63,7 +63,7 @@ export default function BackgroundSheet({ actions, onClose }: { actions: EditorA
                 {isBlurringBg ? (
                   <>
                     <LoaderCircle size={17} className="animate-spin ie-remove-bg-icon" />
-                    <span>Blur loading…</span>
+                    <span>Finding the subject…</span>
                   </>
                 ) : (
                   <>

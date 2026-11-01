@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getCanvasSize, getBandHeight, makeLayerCenters } from './canvasLayout';
+import { bandColor, fitCaptionsToBands, getCanvasSize, getBandHeight, makeLayerCenters } from './canvasLayout';
 
 // 10px per character, like the wrapText tests.
 const ctx = { font: '', measureText: (s) => ({ width: s.length * 10 }) };
@@ -36,6 +36,31 @@ describe('getBandHeight', () => {
 
   it('never drops below 110px', () => {
     expect(getBandHeight({ enabled: true }, { text: 'x', fontSize: 10 }, 1080, ctx)).toBe(110);
+  });
+});
+
+describe('bandColor', () => {
+  it('follows the canvas unless a colour was picked for the band', () => {
+    expect(bandColor({ bgColor: '#123456' }, '#000000')).toBe('#000000');
+    expect(bandColor({ bgColor: '#123456', ownColor: true }, '#000000')).toBe('#123456');
+    expect(bandColor(null, null)).toBe('#ffffff');
+  });
+});
+
+describe('fitCaptionsToBands', () => {
+  it('limits a band caption to the lines its band holds, leaving others alone', () => {
+    const caps = [
+      { id: 'h', isHeaderCaption: true, fontSize: 50 },
+      { id: 'f', isFooterCaption: true, fontSize: 50, autoFit: true, maxLines: 1 },
+      { id: 'moved', isHeaderCaption: true, hasCustomPos: true, fontSize: 50 },
+      { id: 'body', fontSize: 50 },
+    ];
+    // 140 x 0.9 = 126px of 60px lines: 2. A 50px band still gets one line (the type shrinks).
+    const [h, f, moved, body] = fitCaptionsToBands(caps, 140, 50);
+    expect(h).toMatchObject({ autoFit: true, maxLines: 2 });
+    expect(f).toMatchObject({ autoFit: true, maxLines: 1 });
+    expect(moved).toBe(caps[2]);
+    expect(body).toBe(caps[3]);
   });
 });
 

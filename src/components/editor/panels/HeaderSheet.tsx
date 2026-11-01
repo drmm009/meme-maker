@@ -41,7 +41,7 @@ export default function HeaderSheet({ actions: _actions, onClose }: { actions?: 
       const isDark = isColorDark(bandColor(canvasHeader, canvasBgColor));
       const newCap: CaptionItem = {
         id: `caption-header-${Date.now()}`,
-        text: 'When you finally solve the bug after 4 hours:',
+        text: 'Add header text',
         x: 0.5,
         y: 0.05,
         fontSize: 50,
@@ -67,7 +67,9 @@ export default function HeaderSheet({ actions: _actions, onClose }: { actions?: 
     setCanvasHeader((prev: CanvasBand) => ({ ...prev, bgColor: color, ownColor: true }));
     const isDark = isColorDark(color);
     const nextTextColor = isDark ? '#ffffff' : '#000000';
-    if (headerCap) {
+    // Plain black or white text follows the band so it stays readable; a colour the user chose stays.
+    const plain = !headerCap?.color || ['#ffffff', '#000000'].includes(String(headerCap.color).toLowerCase());
+    if (headerCap && plain) {
       setCaptions(captions.map((c: CaptionItem) => (c.id === headerCap.id ? { ...c, color: nextTextColor } : c)));
     }
     pushHistory();
