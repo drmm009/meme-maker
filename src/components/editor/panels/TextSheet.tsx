@@ -50,16 +50,19 @@ const SECTIONS = {
   format: { title: 'Format', part: 'style' },
   size: { title: 'Size', part: 'style' },
   effects: { title: 'Effects', part: 'style' },
-  align: { title: 'Alignment', part: 'align' },
-  spacing: { title: 'Spacing', part: 'align' },
+  spacing: { title: 'Spacing', part: 'style' },
   color: { title: undefined, part: 'color' },
   outline: { title: undefined, part: 'color' },
   shadow: { title: undefined, part: null },
-  box: { title: undefined, part: 'box' },
+  box: { title: undefined, part: 'color' },
 } as const;
 type TextSection = keyof typeof SECTIONS;
-const TEXT_PARTS = { font: 'Font', style: 'Style', align: 'Align', color: 'Color', box: 'Box' } as const;
+const TEXT_PARTS = { font: 'Font', style: 'Style', color: 'Color' } as const;
 type TextPart = keyof typeof TEXT_PARTS;
+// The Color sheet shows one of these at a time, picked in its header.
+const COLOR_TABS = { color: 'Text', outline: 'Outline', box: 'Box' } as const;
+type ColorTab = keyof typeof COLOR_TABS;
+const ALIGNS = [{ value: 'left', label: 'Left', Icon: AlignLeft }, { value: 'center', label: 'Center', Icon: AlignCenter }, { value: 'right', label: 'Right', Icon: AlignRight }] as const;
 
 // The Text sheet, under the Text strip (which adds text, bubbles and social cards): pick a caption,
 // edit its words, font, format, size, effects, alignment, spacing, colour, outline, shadow and box. Opened from
@@ -81,7 +84,9 @@ export default function TextSheet({ actions, onClose }: { actions: EditorActions
   };
   const { id, kind, caption } = useSelection();
   const part = kind === 'caption' && sheetFocus && sheetFocus in TEXT_PARTS ? (sheetFocus as TextPart) : null;
-  const shows = (section: TextSection) => !part || SECTIONS[section].part === part;
+  const [colorTab, setColorTab] = useState<ColorTab>('color');
+  const shows = (section: TextSection) =>
+    (!part || SECTIONS[section].part === part) && (part !== 'color' || !(section in COLOR_TABS) || section === colorTab);
   // On its own a part's sheet is headed by its name, so its sections go without titles; only My
   // styles, under the fonts, keeps one.
   const heading = (section: TextSection) => (part && section !== 'styles' ? undefined : SECTIONS[section].title);
@@ -114,7 +119,20 @@ export default function TextSheet({ actions, onClose }: { actions: EditorActions
   };
 
   return (
-    <Sheet className="ie-text-sheet ie-tool-sheet" title={part ? TEXT_PARTS[part] : 'Text'} onClose={onClose}>
+    <Sheet
+      className="ie-text-sheet ie-tool-sheet"
+      title={part ? TEXT_PARTS[part] : 'Text'}
+      onClose={onClose}
+      aside={part === 'color' && kind === 'caption' ? (
+        <div className="ie-color-tabs" role="tablist" aria-label="Colour of">
+          {(Object.keys(COLOR_TABS) as ColorTab[]).map((t) => (
+            <button key={t} type="button" role="tab" aria-selected={colorTab === t} className={`ie-color-tab${colorTab === t ? ' is-on' : ''}`} onClick={() => setColorTab(t)}>
+              {COLOR_TABS[t]}
+            </button>
+          ))}
+        </div>
+      ) : undefined}
+    >
       {!part && (
         <ChipRow ariaLabel="Captions">
           {captions.map((c) => (
@@ -212,6 +230,17 @@ export default function TextSheet({ actions, onClose }: { actions: EditorActions
                 <button type="button" className="ui-toggle" aria-label="Change case" title="Change case" onClick={actions.handleToggleTextCase}>
                   <span className="ie-format-glyph ie-format-glyph--case" aria-hidden="true">Aa</span>
                 </button>
+                <span className="ie-format-gap" aria-hidden="true" />
+                <div className="ie-format-align" role="radiogroup" aria-label="Alignment">
+                  {ALIGNS.map(({ value, label, Icon }) => {
+                    const on = (caption.align || 'center') === value;
+                    return (
+                      <button key={value} type="button" role="radio" aria-checked={on} aria-label={label} title={label} className={`ui-toggle${on ? ' is-on' : ''}`} onClick={() => set({ align: value })}>
+                        <Icon size={17} strokeWidth={2.2} aria-hidden="true" />
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             </Section>
           )}
@@ -240,32 +269,24 @@ export default function TextSheet({ actions, onClose }: { actions: EditorActions
             </Section>
           )}
 
-          {shows('align') && (
-            <Section title={heading('align')} id="align" rule={!part}>
-              <SegmentedControl
-                ariaLabel="Alignment"
-                variant="fill"
-                value={(caption.align || 'center') as 'left' | 'center' | 'right'}
-                options={[{ value: 'left', label: 'Left', Icon: AlignLeft }, { value: 'center', label: 'Center', Icon: AlignCenter }, { value: 'right', label: 'Right', Icon: AlignRight }]}
-                onChange={(align) => set({ align })}
-              />
-            </Section>
-          )}
-
           {shows('spacing') && (
             <Section title={heading('spacing')} id="spacing">
-              <Row label="Letters">
-                <Slider label="Letter spacing" min={-0.05} max={0.5} step={0.01} value={Number(caption.letterSpacing || 0)} onChange={(v) => live({ letterSpacing: v })} format={(v) => `${(v * 100).toFixed(0)}%`} />
-              </Row>
-              <Row label="Lines">
-                <Slider label="Line height" min={0.8} max={2} step={0.05} value={Number(caption.lineHeight || 1.2)} onChange={(v) => live({ lineHeight: v })} format={(v) => `${Number(v).toFixed(2)}×`} />
-              </Row>
+              <div className="ie-adjust-grid">
+                <div className="ie-adjust-item">
+                  <span className="ui-row-label">Letters</span>
+                  <Slider label="Letter spacing" min={-0.05} max={0.5} step={0.01} value={Number(caption.letterSpacing || 0)} onChange={(v) => live({ letterSpacing: v })} format={(v) => `${(v * 100).toFixed(0)}%`} />
+                </div>
+                <div className="ie-adjust-item">
+                  <span className="ui-row-label">Lines</span>
+                  <Slider label="Line height" min={0.8} max={2} step={0.05} value={Number(caption.lineHeight || 1.2)} onChange={(v) => live({ lineHeight: v })} format={(v) => `${Number(v).toFixed(2)}×`} />
+                </div>
+              </div>
             </Section>
           )}
 
           {shows('color') && (
             <Section title={heading('color')} id="color" rule={!part}>
-              <Row label={part ? 'Text' : 'Color'}>
+              <Row label="Color">
                 <div className="ie-swatch-line">
                   <SwatchRow ariaLabel="Text colour" colors={TEXT_COLORS} value={caption.gradient ? '' : caption.color || '#ffffff'} onChange={(c) => set({ color: c, gradient: null, ...(strokeOn && sameColour(caption.stroke, c) ? { stroke: getContrastStroke(c) } : {}) })} />
                   <span className="ie-swatch-gap" aria-hidden="true" />
@@ -285,6 +306,9 @@ export default function TextSheet({ actions, onClose }: { actions: EditorActions
                     ))}
                   </div>
                 </div>
+              </Row>
+              <Row label="Opacity">
+                <Slider label="Text opacity" min={0.1} max={1} step={0.05} value={Number(caption.opacity ?? 1)} onChange={(v) => live({ opacity: v })} format={(v) => `${Math.round(v * 100)}%`} />
               </Row>
             </Section>
           )}
@@ -342,9 +366,6 @@ export default function TextSheet({ actions, onClose }: { actions: EditorActions
                   />
                 </Row>
               )}
-              <Row label="Opacity">
-                <Slider label="Text opacity" min={0.1} max={1} step={0.05} value={Number(caption.opacity ?? 1)} onChange={(v) => live({ opacity: v })} format={(v) => `${Math.round(v * 100)}%`} />
-              </Row>
             </Section>
           )}
         </>

@@ -1,4 +1,4 @@
-import { Trash2, Settings, SlidersHorizontal, Copy, Scissors, Eraser, ScanFace, Ellipsis, Layers, Palette, Square, MessageSquareQuote, AlignLeft, AlignCenter, AlignRight } from 'lucide-react';
+import { Trash2, Settings, SlidersHorizontal, Copy, Scissors, Eraser, ScanFace, Ellipsis, Layers, Palette, MessageSquareQuote } from 'lucide-react';
 import { FloatingToolbar } from '../../ui';
 import type { ToolbarItem } from '../../ui';
 import { useEditorUiStore } from '../store/useEditorUiStore';
@@ -6,12 +6,9 @@ import { useSelection } from './selection';
 import type { EditorActions } from './selection';
 
 // The selected layer's quick tools, a pill sitting just above the dock in place of the tab's tool
-// strip (EditorPanels). A caption's Font, Style, Align, Color and Box each open the Text sheet with
-// just their sections; the pill scrolls sideways if tools don't fit. A sheet opened here keeps the
-// pill above it, its button lit; tapping that button again closes the sheet.
-
-// The Align button shows the caption's alignment.
-const alignIcon = (align: unknown) => (align === 'left' ? AlignLeft : align === 'right' ? AlignRight : AlignCenter);
+// strip (EditorPanels). A caption's Font, Style and Color each open the Text sheet with just their
+// sections; the pill scrolls sideways if tools don't fit. A sheet opened here keeps the pill above
+// it, its button lit; tapping that button again closes the sheet.
 
 type OpenSheet = (sheet: string, focus?: string | null, fromPill?: boolean) => void;
 
@@ -40,11 +37,9 @@ export default function LayerToolbar({ actions }: { actions: EditorActions }) {
     items = [
       { id: 'font', label: 'Font', title: 'Font and my saved styles', icon: <span className="ie-glyph">Ar</span>, ...opens('text', 'font') },
       ...(isBubble ? [] : [
-        { id: 'style', label: 'Style', title: 'Size, bold, italic, underline, case and effects', icon: <span className="ie-glyph ie-glyph--bold">B</span>, ...opens('text', 'style') },
-        { id: 'align', label: 'Align', title: 'Alignment and spacing', Icon: alignIcon(caption.align), ...opens('text', 'align') },
+        { id: 'style', label: 'Style', title: 'Size, bold, italic, underline, case, effects, alignment and spacing', icon: <span className="ie-glyph ie-glyph--bold">B</span>, ...opens('text', 'style') },
       ]),
-      { id: 'color', label: 'Color', title: 'Colour and outline', icon: <span className="ie-color-dot" style={{ background: caption.color || '#ffffff' }} />, ...opens('text', 'color') },
-      { id: 'box', label: 'Box', title: 'Box behind the text and opacity', Icon: Square, ...opens('text', 'box') },
+      { id: 'color', label: 'Color', title: 'Colour, outline, the box behind the text and opacity', icon: <span className="ie-color-dot" style={{ background: caption.color || '#ffffff' }} />, ...opens('text', 'color') },
       ...(isBubble ? [{ id: 'bubble', label: 'Bubble', title: 'Bubble style', Icon: MessageSquareQuote, ...opens('bubble') }] : []),
       dup,
       layers,

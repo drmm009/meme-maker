@@ -1613,8 +1613,8 @@ div.ie-layer-pick { cursor: default; }
 }
 .ie-panels--sheet .ie-text-sheet .ie-style-save svg { color: var(--ui-accent, #ff5a36); }
 
-/* Style: bold, italic, underline and case as four tiles sharing the width. */
-.ie-panels--sheet .ie-text-sheet .ie-format-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+/* Style: bold, italic, underline and case, then alignment, as small tiles sharing one line. */
+.ie-panels--sheet .ie-text-sheet .ie-format-row { display: flex; align-items: center; gap: 6px; }
 .ie-panels--sheet .ie-text-sheet .ie-format-row .ui-toggle { display: grid; place-items: center; height: 44px; padding: 0; }
 .ie-format-glyph { display: inline-flex; align-items: center; justify-content: center; line-height: 1; user-select: none; }
 .ie-format-glyph--bold { font-weight: 850; font-size: 17px; }
@@ -1812,3 +1812,36 @@ div.ie-layer-pick { cursor: default; }
 .ie-panels--sheet .ie-photo-sheet .ie-adjust-grid { gap: 10px 16px; padding-bottom: 2px; }
 .ie-panels--sheet .ie-photo-sheet .ie-adjust-grid + .ui-row { margin-top: 10px; }
 .ie-panels--sheet .ie-photo-sheet .ui-row + .ui-row { margin-top: 6px !important; }
+
+.ie-panels--sheet .ie-text-sheet .ie-format-row > .ui-toggle,
+.ie-panels--sheet .ie-text-sheet .ie-format-align .ui-toggle { flex: 1 1 0; min-width: 0; }
+.ie-panels--sheet .ie-text-sheet .ie-format-align { display: flex; flex: 3 1 0; gap: 6px; min-width: 0; }
+.ie-panels--sheet .ie-text-sheet .ie-format-align .ui-toggle { display: grid; place-items: center; height: 38px; padding: 0; }
+.ie-format-gap { flex: none; width: 1px; height: 22px; background: rgba(255, 255, 255, 0.12); }
+.ie-panels--sheet .ie-text-sheet .ui-section + .ui-section .ie-adjust-grid { padding-top: 2px; }
+
+/* Color: Text / Outline / Box in the header, one shown at a time. */
+.ie-panels--sheet .ie-color-tabs {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+}
+.ie-panels--sheet .ie-color-tab {
+  height: 28px;
+  padding: 0 12px;
+  border: none !important;
+  border-radius: 999px !important;
+  background: transparent !important;
+  color: var(--ui-muted, #a5a6ad) !important;
+  font: inherit;
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+  box-shadow: none !important;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.ie-panels--sheet .ie-color-tab:hover:not(.is-on) { color: var(--ui-text, #f4f4f6) !important; }
+.ie-panels--sheet .ie-color-tab.is-on { background: var(--ui-surface-3, #3e4046) !important; color: var(--ui-text, #f4f4f6) !important; }

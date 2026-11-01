@@ -318,7 +318,7 @@ describe('MemeEditor', () => {
     expect(canvas.props.captions.some((c) => c.bubbleStyle === 'whatsapp-send')).toBe(true);
     closeSheet();
     const tools = layerToolbar();
-    expect([...tools.querySelectorAll('button > span:last-child')].map((s) => s.textContent)).toEqual(['Font', 'Color', 'Box', 'Bubble', 'Copy', 'Layers', 'Delete']);
+    expect([...tools.querySelectorAll('button > span:last-child')].map((s) => s.textContent)).toEqual(['Font', 'Color', 'Bubble', 'Copy', 'Layers', 'Delete']);
   }, 30000);
 
   it('hides the aspect ratio pill while a sheet is open', () => {
@@ -334,8 +334,8 @@ describe('MemeEditor', () => {
     renderEditor();
     addTextFromMenu();
     const tools = layerToolbar();
-    // Five Text sheets, each with its related controls, then the layer tools.
-    expect([...tools.querySelectorAll('button > span:last-child')].map((s) => s.textContent)).toEqual(['Font', 'Style', 'Align', 'Color', 'Box', 'Copy', 'Layers', 'Delete']);
+    // Three Text sheets, each with its related controls, then the layer tools.
+    expect([...tools.querySelectorAll('button > span:last-child')].map((s) => s.textContent)).toEqual(['Font', 'Style', 'Color', 'Copy', 'Layers', 'Delete']);
 
     // Font: the fonts and saved styles, nothing else.
     fireEvent.click(within(tools).getByText('Font'));
@@ -347,49 +347,41 @@ describe('MemeEditor', () => {
     expect(within(font).queryByRole('group', { name: 'Captions' })).toBeNull();
     closeSheet();
 
-    // Style: size, bold and the rest, effects.
+    // Style: size, bold and the rest, effects, alignment and spacing.
     fireEvent.click(within(layerToolbar()).getByText('Style'));
     const style = sheet('Style');
     fireEvent.click(within(style).getByLabelText('Bold'));
     expect(canvas.props.captions[2].bold).toBe(false);
     expect(within(style).getByLabelText('Text size')).toBeTruthy();
     expect(within(style).getByRole('group', { name: 'Text effects' })).toBeTruthy();
-    expect(within(style).queryByLabelText('Letter spacing')).toBeNull();
+    fireEvent.click(within(style).getByRole('radio', { name: 'Left' }));
+    expect(canvas.props.captions[2].align).toBe('left');
+    expect(within(style).getByLabelText('Letter spacing')).toBeTruthy();
+    expect(within(style).getByLabelText('Line height')).toBeTruthy();
     expect(within(style).queryByRole('switch', { name: 'Shrink to fit' })).toBeNull();
     expect(within(style).queryByLabelText('Text colour')).toBeNull();
     closeSheet();
 
-    // Align: alignment and spacing.
-    fireEvent.click(within(layerToolbar()).getByText('Align'));
-    const align = sheet('Align');
-    fireEvent.click(within(align).getByRole('radio', { name: 'Left' }));
-    expect(canvas.props.captions[2].align).toBe('left');
-    expect(within(align).getByLabelText('Letter spacing')).toBeTruthy();
-    expect(within(align).getByLabelText('Line height')).toBeTruthy();
-    expect(within(align).queryByLabelText('Text size')).toBeNull();
-    closeSheet();
-
-    // Color: colour and outline (no shadow in color sheet).
+    // Color: Text / Outline / Box tabs in the header, one shown at a time (no shadow, no effects).
     fireEvent.click(within(layerToolbar()).getByText('Color'));
     const color = sheet('Color');
     expect(within(color).getByLabelText('Text colour')).toBeTruthy();
+    expect(within(color).getByLabelText('Text opacity')).toBeTruthy();
+    expect(within(color).queryByLabelText('Stroke')).toBeNull();
+    fireEvent.click(within(color).getByRole('tab', { name: 'Outline' }));
     expect(within(color).getByLabelText('Stroke')).toBeTruthy();
+    expect(within(color).queryByLabelText('Text colour')).toBeNull();
+    fireEvent.click(within(color).getByRole('tab', { name: 'Box' }));
+    expect(within(color).getByLabelText('Text box colour')).toBeTruthy();
     expect(within(color).queryByLabelText('Shadow size')).toBeNull();
-    closeSheet();
-
-    // Box: the box behind the text and opacity, no effects.
-    fireEvent.click(within(layerToolbar()).getByText('Box'));
-    const box = sheet('Box');
-    expect(within(box).getByLabelText('Text box colour')).toBeTruthy();
-    expect(within(box).getByLabelText('Text opacity')).toBeTruthy();
-    expect(within(box).queryByRole('group', { name: 'Text effects' })).toBeNull();
+    expect(within(color).queryByRole('group', { name: 'Text effects' })).toBeNull();
     closeSheet();
   }, 30000);
 
   it('Layers on the floating toolbar lists every layer, top first; select, reorder, hide and lock', () => {
     renderEditor();
     addTextFromMenu();
-    for (const name of ['Font', 'Style', 'Align', 'Color', 'Box', 'Copy', 'Layers', 'Delete']) expect(within(layerToolbar()).getByText(name)).toBeTruthy();
+    for (const name of ['Font', 'Style', 'Color', 'Copy', 'Layers', 'Delete']) expect(within(layerToolbar()).getByText(name)).toBeTruthy();
     fireEvent.click(within(layerToolbar()).getByText('Layers'));
     const panel = sheet('Layers');
     const rows = () => within(screen.getByRole('list', { name: 'Layers' })).getAllByRole('listitem').map((li) => li.querySelector('.ie-layer-pick').textContent);
