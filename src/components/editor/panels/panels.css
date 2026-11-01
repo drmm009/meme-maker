@@ -212,11 +212,11 @@ div.ie-layer-pick { cursor: default; }
   padding: 0 12px;
   border-radius: 999px !important;
   background: rgba(255, 255, 255, 0.06) !important;
-  font-size: 12.5px;
-  font-weight: 600;
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
 }
 .ie-panels--sheet .ie-draw-sheet .ui-sheet-action--plain:hover:not(:disabled) { background: rgba(255, 255, 255, 0.1) !important; }
-.ie-panels--sheet .ie-draw-sheet .ui-row-label { width: 64px; color: var(--ui-muted) !important; }
+.ie-panels--sheet .ie-draw-sheet .ui-row-label { width: 64px; color: var(--ui-muted) !important; font-size: 13.5px !important; font-weight: 600 !important; }
 .ie-panels--sheet .ie-draw-sheet .ie-shape-btn {
   border-color: transparent !important;
   border-radius: 16px !important;
@@ -701,7 +701,7 @@ div.ie-layer-pick { cursor: default; }
 .ie-panels--sheet .ui-tile-icon svg { width: 20px; height: 20px; }
 /* ── Unified Watermelon UI & Impeccable Bottom Sheet Design System ── */
 .ie-panels--sheet .ui-sheet {
-  background: var(--ui-surface, #1f2025) !important;
+  background: var(--ui-surface, #1c1c1e) !important;
   border-top: 1px solid rgba(255, 255, 255, 0.09) !important;
   box-shadow: 0 -18px 40px -16px rgba(0, 0, 0, 0.85);
 }
@@ -713,11 +713,12 @@ div.ie-layer-pick { cursor: default; }
   background: rgba(255, 255, 255, 0.28) !important;
 }
 
+/* Headings in the app's heavy weight, like Explore and the library sheets. */
 .ie-panels--sheet .ui-sheet-title {
   color: #ffffff !important;
-  font-size: 15.5px !important;
-  font-weight: 600 !important;
-  letter-spacing: -0.015em;
+  font-size: 19px !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.03em;
 }
 
 .ie-panels--sheet .ui-sheet-action {
@@ -941,7 +942,7 @@ div.ie-layer-pick { cursor: default; }
 .ie-panels--sheet .ui-swatch.is-on {
   transform: scale(1.10) !important;
   border-color: transparent !important;
-  box-shadow: 0 0 0 2px var(--ui-surface, #1f2025), 0 0 0 4px #ffffff, 0 2px 6px rgba(0, 0, 0, 0.4) !important;
+  box-shadow: 0 0 0 2px var(--ui-surface, #1c1c1e), 0 0 0 4px #ffffff, 0 2px 6px rgba(0, 0, 0, 0.4) !important;
   position: relative !important;
   z-index: 2 !important;
 }
@@ -1140,7 +1141,7 @@ div.ie-layer-pick { cursor: default; }
    Minimalistic & Premium Watermark Sheet (Watermelon UI & Impeccable)
    ══════════════════════════════════════════════════════════════════════════ */
 .ie-watermark-sheet {
-  background: var(--ui-surface, #1f2025) !important;
+  background: var(--ui-surface, #1c1c1e) !important;
   border-top: 1px solid rgba(255, 255, 255, 0.09) !important;
   box-shadow: 0 -18px 40px -16px rgba(0, 0, 0, 0.8) !important;
   backdrop-filter: none !important;
@@ -1535,7 +1536,7 @@ div.ie-layer-pick { cursor: default; }
 .ie-wm-dot.is-on {
   transform: scale(1.10);
   border-color: transparent;
-  box-shadow: 0 0 0 2px var(--ui-surface, #1f2025), 0 0 0 4px #ffffff, 0 2px 6px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 0 2px var(--ui-surface, #1c1c1e), 0 0 0 4px #ffffff, 0 2px 6px rgba(0, 0, 0, 0.4);
   position: relative;
   z-index: 2;
 }
