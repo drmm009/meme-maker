@@ -21,6 +21,7 @@ describe('createEditorUiStore', () => {
     sticker.getState().setExportPrefs((p) => ({ ...p, format: 'webp' }));
     expect(JSON.parse(localStorage.getItem('meme-maker-export-prefs')).format).toBe('jpeg');
     expect(createEditorUiStore({ id: 't', editorMode: 'faceswap' }).getState()).toMatchObject({ mode: 'faceswap', dockTab: 'swap' });
+    expect(createEditorUiStore({ id: 't', editorMode: 'social' }).getState()).toMatchObject({ mode: 'social', dockTab: 'card' });
     const full = createEditorUiStore({ id: 't' });
     expect(full.getState()).toMatchObject({ mode: 'full', dockTab: 'text' });
     full.getState().setExportPrefs((p) => ({ ...p, format: 'webp' }));
@@ -31,6 +32,9 @@ describe('createEditorUiStore', () => {
     const s = createEditorUiStore({ defaultCaptions: [{ id: 'w', isWhatsAppCard: true }] }).getState();
     expect(s.showStylesModal).toBe(true);
     expect(s.socialModalPlatform).toBe('whatsapp');
+    // The Social Card maker opens on its Details form instead.
+    const maker = createEditorUiStore({ editorMode: 'social', defaultCaptions: [{ id: 'w', isWhatsAppCard: true }] }).getState();
+    expect(maker).toMatchObject({ showStylesModal: false, sheet: 'card', dockTab: 'card' });
   });
 
   it('toggleSubmenu opens, closes and remembers the last button', () => {

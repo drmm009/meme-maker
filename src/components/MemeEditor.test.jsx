@@ -1071,6 +1071,35 @@ describe('MemeEditor', () => {
     expect(await screen.findByText('Apply to meme', {}, { timeout: 10000 })).toBeTruthy();
   }, 30000);
 
+  it('the Social Card maker opens on its Details form, edits the card live and swaps the kind of card', async () => {
+    const { MEME_TEMPLATES } = await import('../data/templates');
+    renderEditor({ ...MEME_TEMPLATES.find((t) => t.id === 'social-tweet-card'), editorMode: 'social' });
+    // The form, under the Card tab's strip, not the studio.
+    sheet('Card details');
+    expect(within(strip('Card tools')).getAllByRole('button').map((b) => b.textContent)).toEqual(['Details', 'Look', 'Studio']);
+    expect(canvas.ui.showStylesModal).toBe(false);
+    fireEvent.click(within(strip('Card tools')).getByText('Details'));
+    expect(within(bar()).getAllByRole('button').map((b) => b.textContent.trim())).toEqual(['Card', 'Text', 'Media', 'Canvas']);
+    fireEvent.click(within(strip('Card tools')).getByText('Details'));
+    const form = sheet('Card details');
+    const card = () => canvas.props.captions.find((c) => c.isTweetCard || c.isWhatsAppCard);
+
+    fireEvent.change(within(form).getByLabelText('Name'), { target: { value: 'Dhruv' } });
+    fireEvent.change(within(form).getByLabelText('Post'), { target: { value: 'shipping on a friday' } });
+    expect(card()).toMatchObject({ tweetName: 'Dhruv', text: 'shipping on a friday' });
+
+    fireEvent.click(within(form).getByRole('radio', { name: 'WhatsApp' }));
+    expect(card().isWhatsAppCard).toBe(true);
+    expect(screen.getByText('Social Card', { selector: '.ui-topbar-title' })).toBeTruthy();
+    const chat = sheet('Card details');
+    const count = card().waMessages.length;
+    fireEvent.click(within(chat).getByText('Add message'));
+    expect(card().waMessages).toHaveLength(count + 1);
+    fireEvent.change(within(chat).getByLabelText('Message 1'), { target: { value: 'hi' } });
+    expect(card()).toMatchObject({ text: 'hi' });
+    expect(card().waMessages[0].text).toBe('hi');
+  }, 30000);
+
   it('the full editor has no Full editor button, and an unknown mode is the full editor', () => {
     renderEditor({ ...TEMPLATE, editorMode: 'nope' });
     expect(screen.getByText('Meme Editor')).toBeTruthy();

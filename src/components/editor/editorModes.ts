@@ -3,8 +3,8 @@
 // for one with `editorMode`; "Full editor" in the top bar switches to 'full' on the same meme.
 
 export type EditorMode = 'full' | 'sticker' | 'ai' | 'faceswap' | 'social';
-// 'swap' is the Face Swap maker's own tab (FaceSwapStrip).
-export type DockTab = 'draw' | 'media' | 'text' | 'fx' | 'canvas' | 'swap';
+// 'swap' is the Face Swap maker's own tab (FaceSwapStrip), 'card' the Social Card maker's (CardStrip).
+export type DockTab = 'draw' | 'media' | 'text' | 'fx' | 'canvas' | 'swap' | 'card';
 
 export interface EditorModeConfig {
   // The top bar's title.
@@ -20,7 +20,7 @@ export const EDITOR_MODES: Record<EditorMode, EditorModeConfig> = {
   sticker: { title: 'Stickers', dock: ['media', 'text', 'fx'], startTab: 'media' },
   ai: { title: 'AI Meme', dock: ['text', 'media', 'fx'], startTab: 'text' },
   faceswap: { title: 'Face Swap', dock: ['swap', 'text', 'media'], startTab: 'swap' },
-  social: { title: 'Social Card', dock: ['text', 'media', 'canvas'], startTab: 'text' },
+  social: { title: 'Social Card', dock: ['card', 'text', 'media', 'canvas'], startTab: 'card' },
 };
 
 const isEditorMode = (value: unknown): value is EditorMode => typeof value === 'string' && Object.hasOwn(EDITOR_MODES, value);

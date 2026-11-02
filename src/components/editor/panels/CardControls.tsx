@@ -19,9 +19,11 @@ const TICKS = [
   { value: 'single', label: 'Sent' },
 ];
 
-// A selected social card's settings in the Text sheet (the full editor is the social card studio).
-export default function CardControls({ caption, actions }: { caption: Caption; actions: EditorActions }) {
-  const set = (patch: Partial<Caption>) => actions.updateActiveCaptionProps(patch);
+// A selected social card's settings in the Text sheet (the full editor is the social card studio),
+// and the Social Card maker's Look, which passes `onChange` for a card that needn't be selected
+// (and has its own Studio button, so no Edit card details).
+export default function CardControls({ caption, actions, onChange }: { caption: Caption; actions: EditorActions; onChange?: (patch: Partial<Caption>) => void }) {
+  const set = onChange ?? ((patch: Partial<Caption>) => actions.updateActiveCaptionProps(patch));
   const platform = caption.isTweetCard ? 'tweet' : caption.isInstagramCard ? 'instagram' : 'whatsapp';
 
   const addMessage = () => {
@@ -42,11 +44,13 @@ export default function CardControls({ caption, actions }: { caption: Caption; a
 
   return (
     <>
-      <Section rule>
-        <button type="button" className="ui-btn ie-wide-btn" onClick={() => actions.handleOpenSocialModalForActiveCard(platform)}>
-          <Settings size={16} />Edit card details
-        </button>
-      </Section>
+      {!onChange && (
+        <Section rule>
+          <button type="button" className="ui-btn ie-wide-btn" onClick={() => actions.handleOpenSocialModalForActiveCard(platform)}>
+            <Settings size={16} />Edit card details
+          </button>
+        </Section>
+      )}
 
       <Section title="Look" rule>
         {caption.isTweetCard && (

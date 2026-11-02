@@ -50,10 +50,18 @@ function initialSocialModalPlatform(template) {
 
 export function buildInitialUi(template) {
   const mode = editorModeOf(template);
+  const social = Boolean(
+    template && (
+      template.category === 'social' ||
+      template.isSocialTemplate ||
+      (template.defaultCaptions && template.defaultCaptions.some((c) => isSocialCardCaption(c)))
+    )
+  );
   return {
     mode, // the full editor or one focused maker (editor/editorModes.ts): its title and dock tabs
     activeTab: 'text', // 'text' | 'images' | 'draw' | 'canvas' | 'watermark' | 'filters'
-    sheet: null, // the open bottom sheet: 'text' | 'media' | 'draw' | 'canvasColor' | 'watermark' | 'filters' | null
+    // A social card opens its studio, or in the Social Card maker its Details form.
+    sheet: social && mode === 'social' ? 'card' : null, // the open bottom sheet: 'text' | 'media' | 'draw' | 'canvasColor' | 'watermark' | 'filters' | null
     dockTab: EDITOR_MODES[mode].startTab, // the dock tab whose tool strip shows: 'draw' | 'media' | 'text' | 'fx' | 'canvas' | null
     sheetFromPill: false, // the open sheet came from the layer tools pill, which then stays above it
     sheetFocus: null, // what part of the sheet to show: one Text part's sections (TEXT_PARTS), 'size' to scroll the Media sheet to, or null
@@ -66,13 +74,7 @@ export function buildInitialUi(template) {
     showFilterPresets: false,
     showLayerMenu: false,
     showBubbleLayouts: false,
-    showStylesModal: Boolean(
-      template && (
-        template.category === 'social' ||
-        template.isSocialTemplate ||
-        (template.defaultCaptions && template.defaultCaptions.some((c) => isSocialCardCaption(c)))
-      )
-    ),
+    showStylesModal: social && mode !== 'social',
     socialModalPlatform: initialSocialModalPlatform(template),
     showFiltersModal: false,
     showAiModal: false,
@@ -100,7 +102,7 @@ const UI_FIELDS = Object.keys(buildInitialUi(null));
 
 // The dock tab each sheet belongs to: its strip shows above the sheet.
 // null: no strip (Export). Sheets not listed (Layers) keep the strip that shows.
-const SHEET_TAB = { text: 'text', media: 'media', draw: 'draw', canvasColor: 'canvas', watermark: 'canvas', header: 'canvas', footer: 'canvas', filters: 'fx', background: 'fx', export: null, library: null, mediaLink: 'media', templates: 'media', memes: 'swap', stickers: 'media', gifs: 'media', emoji: 'media', bubble: 'text' };
+const SHEET_TAB = { text: 'text', media: 'media', draw: 'draw', canvasColor: 'canvas', watermark: 'canvas', header: 'canvas', footer: 'canvas', filters: 'fx', background: 'fx', export: null, library: null, mediaLink: 'media', templates: 'media', memes: 'swap', card: 'card', cardLook: 'card', stickers: 'media', gifs: 'media', emoji: 'media', bubble: 'text' };
 
 // useState-style setter: accepts a value or an updater function.
 const fieldSetter = (set, key) => (valueOrUpdater) =>

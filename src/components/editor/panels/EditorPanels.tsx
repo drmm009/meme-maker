@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { Type, Copy, PenLine, Sparkles, LayoutGrid, ScanFace } from 'lucide-react';
+import { Type, Copy, PenLine, Sparkles, LayoutGrid, ScanFace, Share2 } from 'lucide-react';
 import { ToolDock, ToolStrip } from '../../ui';
 import type { DockItem } from '../../ui';
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
@@ -25,6 +25,8 @@ import LibrarySheet from '../library/LibrarySheet';
 import LinkSheet from './LinkSheet';
 import TemplatesSheet, { MemePickerSheet } from './TemplatesSheet';
 import FaceSwapStrip from './FaceSwapStrip';
+import CardFormSheet, { CardLookSheet } from './CardFormSheet';
+import CardStrip from './CardStrip';
 import StickersSheet from './StickersSheet';
 import EmojiSheet from './EmojiSheet';
 import BubbleSheet from './BubbleSheet';
@@ -46,10 +48,12 @@ const DOCK: DockItem[] = [
   { id: 'fx', label: 'AI/Filters', Icon: Sparkles, title: 'AI tools and photo filters' },
   { id: 'canvas', label: 'Canvas', Icon: LayoutGrid, title: 'Canvas colour, bands and watermark' },
   { id: 'swap', label: 'Face Swap', Icon: ScanFace, title: 'Your face and the meme' },
+  { id: 'card', label: 'Card', Icon: Share2, title: 'The social card' },
 ];
 
 const SHEETS = { text: TextSheet, media: MediaSheet, draw: DrawSheet, canvasColor: CanvasColorSheet, watermark: WatermarkSheet, header: HeaderSheet, footer: FooterSheet, filters: FiltersSheet, background: BackgroundSheet, layers: LayersSheet, export: ExportSheet, library: LibrarySheet, mediaLink: LinkSheet,
-  templates: TemplatesSheet, memes: MemePickerSheet, stickers: StickersSheet, emoji: EmojiSheet, bubble: BubbleSheet, diecut: DieCutSheet };
+  templates: TemplatesSheet, memes: MemePickerSheet, stickers: StickersSheet, emoji: EmojiSheet, bubble: BubbleSheet, diecut: DieCutSheet,
+  card: CardFormSheet, cardLook: CardLookSheet };
 // Sheets for browsing a big library, shown full height (the meme needn't stay in view).
 const FULL_SHEETS = new Set<string>(['templates', 'memes', 'stickers', 'emoji']);
 
@@ -96,7 +100,8 @@ export default function EditorPanels({ actions }: { actions: EditorActions }) {
     : dockTab === 'text' ? <TextStrip actions={actions} />
     : dockTab === 'fx' ? <AiFiltersStrip actions={actions} />
     : dockTab === 'canvas' ? <CanvasStrip actions={actions} />
-    : dockTab === 'swap' ? <FaceSwapStrip actions={actions} /> : null;
+    : dockTab === 'swap' ? <FaceSwapStrip actions={actions} />
+    : dockTab === 'card' ? <CardStrip actions={actions} /> : null;
 
   // A selected layer's pill replaces the strip, the Draw strip too unless a draw tool is live (taps
   // then draw rather than select).

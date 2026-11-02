@@ -1,0 +1,76 @@
+/* The Social Card maker's Details form: labelled fields two to a line, a wide one alone. */
+.ie-card-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.ie-card-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.ie-card-field--wide { grid-column: 1 / -1; }
+
+.ie-card-field > span {
+  font-size: 12px;
+  color: var(--ui-muted, rgba(255, 255, 255, 0.6));
+  font-weight: 600;
+}
+
+.ie-card-field .ui-field,
+.ie-card-message .ui-field {
+  width: 100%;
+  min-width: 0;
+  padding: 9px 11px;
+  resize: none;
+}
+
+/* WhatsApp's messages: who sent it, its time and remove on one line, the words under them. */
+.ie-card-messages {
+  list-style: none;
+  margin: 12px 0 10px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ie-card-message {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-left: 10px;
+  border-left: 3px solid rgba(255, 255, 255, 0.18);
+}
+
+.ie-card-message--sent { border-left-color: #25d366; }
+
+.ie-card-message-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ie-card-message-head .ui-seg { flex: 0 0 auto; }
+
+.ie-card-message .ie-card-message-time {
+  flex: 1 1 auto;
+  width: auto;
+  padding: 6px 10px;
+}
+
+.ie-card-message-remove {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  color: inherit;
+  cursor: pointer;
+}

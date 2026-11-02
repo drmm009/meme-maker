@@ -35,19 +35,20 @@ export default function MemeEditor(props) {
   // draft's mode (a saved project opens in the full editor).
   const [session, setSession] = useState({ id: 0, template: props.template, document: null });
   const restoreDraft = (document, mode = 'full') => setSession((s) => ({ id: s.id + 1, template: { ...(document.activeTemplate || s.template), editorMode: mode }, document }));
-  // A focused maker's other meme (Face Swap's Meme) starts it afresh on that template, same mode.
-  const changeMeme = (template, mode) => setSession((s) => ({ id: s.id + 1, template: { ...template, editorMode: mode }, document: null }));
-  return <MemeEditorSession key={session.id} {...props} template={session.template} initialDocument={session.document} onRestoreDraft={restoreDraft} onChangeMeme={changeMeme} />;
+  // A focused maker's other meme (Face Swap's Meme, Social Card's card type) starts it afresh on
+  // that template, same mode, without offering back the meme just left.
+  const changeMeme = (template, mode) => setSession((s) => ({ id: s.id + 1, template: { ...template, editorMode: mode }, document: null, changed: true }));
+  return <MemeEditorSession key={session.id} {...props} template={session.template} initialDocument={session.document} changedMeme={Boolean(session.changed)} onRestoreDraft={restoreDraft} onChangeMeme={changeMeme} />;
 }
 
-function MemeEditorSession({ initialDocument, onRestoreDraft, ...props }) {
+function MemeEditorSession({ initialDocument, changedMeme, onRestoreDraft, ...props }) {
   const [store] = useState(() => createMemeEditorStore(props.template, initialDocument));
   const [uiStore] = useState(() => createEditorUiStore(props.template));
   useEffect(() => () => store.getState().cancelPendingHistory(), [store]);
   return (
     <MemeEditorStoreContext.Provider value={store}>
       <EditorUiStoreContext.Provider value={uiStore}>
-        <MemeEditorContent {...props} restoredDraft={Boolean(initialDocument)} onRestoreDraft={onRestoreDraft} />
+        <MemeEditorContent {...props} restoredDraft={Boolean(initialDocument)} changedMeme={changedMeme} onRestoreDraft={onRestoreDraft} />
       </EditorUiStoreContext.Provider>
     </MemeEditorStoreContext.Provider>
   );
@@ -56,7 +57,7 @@ function MemeEditorSession({ initialDocument, onRestoreDraft, ...props }) {
 // Wires the editor's pieces together. Document state lives in editor/store/useMemeEditorStore.js,
 // shared UI state in editor/store/useEditorUiStore.js, edit handlers in editor/hooks/, and the
 // panels (dock, sheets, layer toolbar) in editor/panels/ on the shared UI kit (components/ui).
-function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, onRestoreDraft, onChangeMeme }) {
+function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, changedMeme, onRestoreDraft, onChangeMeme }) {
   const activeLayerId = useMemeEditorStore((s) => s.activeLayerId);
   const setActiveLayerId = useMemeEditorStore((s) => s.setActiveLayerId);
   const handleUndo = useMemeEditorStore((s) => s.undo);
@@ -72,7 +73,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, o
 
   useEditorSetup(template);
   const uiStore = useEditorUiStoreApi();
-  const draft = useMemeDraft({ restored: restoredDraft, onRestore: onRestoreDraft, getMode: () => uiStore.getState().mode });
+  const draft = useMemeDraft({ restored: restoredDraft || changedMeme, onRestore: onRestoreDraft, getMode: () => uiStore.getState().mode });
   useCustomFonts();
   const { activeCaption, activeSticker, activeImageLayer, currentEditingSocialCard } = useActiveLayer();
 
