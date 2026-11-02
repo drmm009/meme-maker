@@ -45,7 +45,14 @@ export default defineConfig({
             type: 'image/svg+xml',
             purpose: 'any maskable'
           }
-        ]
+        ],
+        // Long-press the home-screen icon: each focused maker, by its link (src/components/editor/makers.ts).
+        shortcuts: [
+          { name: 'Make a sticker', short_name: 'Sticker', url: './#/stickers' },
+          { name: 'AI meme', short_name: 'AI Meme', url: './#/ai-meme' },
+          { name: 'Face swap', short_name: 'Face Swap', url: './#/face-swap' },
+          { name: 'Social card', short_name: 'Social Card', url: './#/social-card' }
+        ].map((s) => ({ ...s, icons: [{ src: './favicon.svg', sizes: 'any', type: 'image/svg+xml' }] }))
       }
     })
   ],

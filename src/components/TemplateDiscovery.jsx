@@ -12,8 +12,7 @@ import {
 import { safeGet, safeSet } from '../utils/storage';
 import { templateNumericId } from '../utils/templateOrder';
 import './TemplateDiscovery.css';
-import { makeStickerTemplate } from './editor/stickerMaker';
-import { aiMemeTemplate, suitsAiCaption } from './editor/aiMeme';
+import { makerTemplate } from './editor/makers';
 
 const AI_VIBE_MODES = [
   { id: 'roast', icon: Flame, emoji: '🔥', label: 'Roast Mode', prompt: 'Roast my daily morning routine and procrastination' },
@@ -718,8 +717,8 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom, on
   // The AI Meme maker, on the first image meme, its prompt screen starting from `prompt` (or the
   // AI caption generator when there's no editor to open).
   const openAiMeme = (prompt = '') => {
-    const base = templatesList.find(suitsAiCaption);
-    if (onSelectTemplate && base) onSelectTemplate(aiMemeTemplate(base, prompt));
+    const template = makerTemplate('ai', templatesList, prompt);
+    if (onSelectTemplate && template) onSelectTemplate(template);
     else if (onOpenAiGenerator) onOpenAiGenerator(prompt);
   };
 
@@ -773,26 +772,18 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom, on
 
   const handleFeatureClick = (feature) => {
     const actionKey = typeof feature === 'string' ? feature : (feature?.action || feature?.id);
-    if (actionKey === 'stickers') {
-      // The Stickers maker: a blank see-through square.
-      if (onSelectTemplate) onSelectTemplate(makeStickerTemplate());
-    } else if (actionKey === 'faceswap') {
-      const targetTemplate = templatesList.find(t => t.id === 'drake' || t.name.toLowerCase().includes('drake')) || templatesList[0];
-      if (onSelectTemplate && targetTemplate) {
-        onSelectTemplate({
-          ...targetTemplate,
-          initialFaceSwap: true,
-          editorMode: 'faceswap'
-        });
-      }
+    if (actionKey === 'stickers' || actionKey === 'faceswap') {
+      // The Stickers maker (a blank see-through square) or the Face Swap maker (editor/makers.ts).
+      const template = makerTemplate(actionKey === 'stickers' ? 'sticker' : 'faceswap', templatesList);
+      if (onSelectTemplate && template) onSelectTemplate(template);
     } else if (actionKey === 'video') {
       if (onCreateCustom) onCreateCustom('video');
     } else if (actionKey === 'custom') {
       if (onCreateCustom) onCreateCustom('image');
     } else if (actionKey === 'social') {
-      const waTemplate = templatesList.find(t => t.id?.includes('whatsapp') || t.id?.includes('tweet')) || socialShelfTemplates[0];
-      if (onSelectTemplate && waTemplate) {
-        onSelectTemplate({ ...waTemplate, editorMode: 'social' });
+      const cardTemplate = makerTemplate('social', templatesList);
+      if (onSelectTemplate && cardTemplate) {
+        onSelectTemplate(cardTemplate);
       } else {
         setSelectedTag('social');
       }

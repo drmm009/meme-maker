@@ -14,6 +14,7 @@ const SocialFeed = lazy(() => import('./components/SocialFeed'));
 const AiCaptionModal = lazy(() => import('./components/AiCaptionModal'));
 const ExploreView = lazy(() => import('./components/ExploreView'));
 import { MEME_TEMPLATES } from './data/templates';
+import { makerOfLink, makerTemplate, linkOfTemplate } from './components/editor/makers';
 import { INITIAL_NOTIFICATIONS } from './data/notifications';
 import { idbPutMeme, idbGetAllMemes, idbGetMeme, idbDeleteMeme, dataURLToBlob, createThumbnail, toMetadata } from './utils/galleryStore';
 import { galleryRecord } from './model/galleryRecord';
@@ -24,10 +25,16 @@ import { LazyMotion, domAnimation, m as motion, AnimatePresence } from 'framer-m
 import './App.css';
 
 function App() {
-  const [currentView, setCurrentView] = useState('templates'); // 'templates' | 'custom-builder' | 'editor' | 'video-editor' | 'gallery'
+  // Opened on a maker's link (#/stickers…, a shared link or a home-screen shortcut): start in that
+  // maker, with Home a step back.
+  const [linkedTemplate] = useState(() => {
+    const maker = makerOfLink(window.location.hash);
+    return maker ? makerTemplate(maker, MEME_TEMPLATES) : null;
+  });
+  const [currentView, setCurrentView] = useState(linkedTemplate ? 'editor' : 'templates'); // 'templates' | 'custom-builder' | 'editor' | 'video-editor' | 'gallery'
   const [builderMode, setBuilderMode] = useState('image');
   const [exploreCategory, setExploreCategory] = useState('all'); // 'image' | 'video'
-  const [selectedTemplate, setSelectedTemplate] = useState(MEME_TEMPLATES[0]);
+  const [selectedTemplate, setSelectedTemplate] = useState(linkedTemplate || MEME_TEMPLATES[0]);
 
   // Dynamic world-class theme system (Dark default with sunset-orange palette)
   const [theme, setTheme] = useState(() => {
@@ -115,11 +122,16 @@ function App() {
     return () => window.removeEventListener('popstate', handlePopState);
   }, [accountModalOpen, notificationsModalOpen, aiGeneratorModalOpen]);
 
+  // Each view is a history entry, so Back returns to the one before. A focused maker's entry carries
+  // its link (#/stickers…, editor/makers.ts), which opens it again when reloaded or shared.
   useEffect(() => {
+    const url = window.location.pathname + window.location.search + (currentView === 'editor' ? linkOfTemplate(selectedTemplate) : '');
     if (window.history.state?.view !== currentView) {
-      window.history.pushState({ view: currentView }, '', window.location.pathname);
+      window.history.pushState({ view: currentView }, '', url);
+    } else if (window.location.pathname + window.location.search + window.location.hash !== url) {
+      window.history.replaceState(window.history.state, '', url);
     }
-  }, [currentView]);
+  }, [currentView, selectedTemplate]);
 
   useEffect(() => {
     if (accountModalOpen && window.history.state?.modal !== 'account') {
@@ -248,7 +260,7 @@ function App() {
   }, []);
 
   // Persistent session states for builders so layers & edits are never lost
-  const [hasOpenedEditor, setHasOpenedEditor] = useState(false);
+  const [hasOpenedEditor, setHasOpenedEditor] = useState(Boolean(linkedTemplate));
   const [hasOpenedVideoEditor, setHasOpenedVideoEditor] = useState(false);
   const [hasOpenedCustomBuilder, setHasOpenedCustomBuilder] = useState(false);
   const [editorSessionKey, setEditorSessionKey] = useState(0);
