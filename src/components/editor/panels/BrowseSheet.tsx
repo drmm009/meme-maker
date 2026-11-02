@@ -21,19 +21,19 @@ interface BrowseSheetProps {
   total?: number;
   onClose: () => void;
   search?: { value: string; onChange: (v: string) => void; placeholder: string; label: string };
+  // A few kinds of thing (Stickers: Stickers / Animated / GIFs), a segmented track above the chips.
+  tabs?: { items: BrowseChip[]; active: string; onPick: (id: string) => void };
   chips: BrowseChip[];
   active: string | null;
   onChip: (id: string) => void;
-  // Few chips share the width (GIFs: Stickers / GIFs) instead of scrolling.
-  fillChips?: boolean;
   busy?: boolean;
   children: ReactNode;
 }
 
-// The full-height library sheets (Media: Templates, Stickers, GIFs, Emoji): over the meme, which
+// The full-height library sheets (Media: Templates, Stickers, Emoji): over the meme, which
 // needn't show while choosing, with a title and close, a search and category chips pinned at the
 // top, and only the content below them scrolling.
-export default function BrowseSheet({ title, total, onClose, search, chips, active, onChip, fillChips, busy, children }: BrowseSheetProps) {
+export default function BrowseSheet({ title, total, onClose, search, tabs, chips, active, onChip, busy, children }: BrowseSheetProps) {
   const chipsRef = useRef<HTMLDivElement>(null);
   // The line under the chips only shows once the content has scrolled under it.
   const [scrolled, setScrolled] = useState(false);
@@ -69,18 +69,34 @@ export default function BrowseSheet({ title, total, onClose, search, chips, acti
         </div>
       )}
 
-      <div ref={chipsRef} className={`ie-browse-chips${fillChips ? ' ie-browse-chips--fill' : ''}${scrolled ? ' is-scrolled' : ''}`} role="toolbar" aria-label={`${title} categories`}>
-        {chips.map(({ id, label, Icon, icon, count, color }) => {
-          const on = active === id;
-          return (
-            <button key={id} type="button" className={`ie-browse-chip${on ? ' is-on' : ''}`} aria-pressed={on} onClick={() => onChip(id)}>
-              {Icon ? <Icon size={15} strokeWidth={2} aria-hidden="true" style={color && !on ? { color } : undefined} /> : icon ? <span className="ie-browse-chip-emoji" aria-hidden="true">{icon}</span> : null}
-              <span>{label}</span>
-              {count != null && <span className="ie-browse-chip-count">{count}</span>}
-            </button>
-          );
-        })}
-      </div>
+      {tabs && (
+        <div className={`ie-browse-chips ie-browse-chips--fill${scrolled && !chips.length ? ' is-scrolled' : ''}`} role="tablist" aria-label={`${title} kinds`}>
+          {tabs.items.map(({ id, label, Icon }) => {
+            const on = tabs.active === id;
+            return (
+              <button key={id} type="button" role="tab" aria-selected={on} className={`ie-browse-chip${on ? ' is-on' : ''}`} onClick={() => tabs.onPick(id)}>
+                {Icon && <Icon size={15} strokeWidth={2} aria-hidden="true" />}
+                <span>{label}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {chips.length > 0 && (
+        <div ref={chipsRef} className={`ie-browse-chips${scrolled ? ' is-scrolled' : ''}`} role="toolbar" aria-label={`${title} categories`}>
+          {chips.map(({ id, label, Icon, icon, count, color }) => {
+            const on = active === id;
+            return (
+              <button key={id} type="button" className={`ie-browse-chip${on ? ' is-on' : ''}`} aria-pressed={on} onClick={() => onChip(id)}>
+                {Icon ? <Icon size={15} strokeWidth={2} aria-hidden="true" style={color && !on ? { color } : undefined} /> : icon ? <span className="ie-browse-chip-emoji" aria-hidden="true">{icon}</span> : null}
+                <span>{label}</span>
+                {count != null && <span className="ie-browse-chip-count">{count}</span>}
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       <div className="ie-browse-scroll" aria-busy={busy || undefined} onScroll={(e) => setScrolled(e.currentTarget.scrollTop > 2)}>
         {children}

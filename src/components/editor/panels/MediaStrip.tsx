@@ -1,11 +1,11 @@
-import { ImagePlus, LayoutTemplate, Sticker, Smile, ImagePlay } from 'lucide-react';
+import { ImagePlus, LayoutTemplate, Sticker, Smile } from 'lucide-react';
 import { ToolStrip } from '../../ui';
 import type { StripItem } from '../../ui';
 import { useEditorUiStore } from '../store/useEditorUiStore';
 import type { EditorActions } from './selection';
 
 // The Media tab's strip: add a photo or video (file picker), an image from the templates, a meme
-// sticker, a GIF from Giphy (it plays on the meme), or an emoji. All but Photo open a picker sheet
+// sticker, an animated sticker or GIF from Giphy (it plays on the meme), or an emoji. All but Photo open a picker sheet
 // under the strip, like the Draw tools. A selected image or sticker is adjusted from its floating
 // toolbar (its More / Size opens the Media sheet under this strip).
 export default function MediaStrip({ actions }: { actions: EditorActions }) {
@@ -16,8 +16,7 @@ export default function MediaStrip({ actions }: { actions: EditorActions }) {
   const items: StripItem[] = [
     { id: 'photo', label: 'Photo', title: 'Upload Image or Video', Icon: ImagePlus, accept: 'image/*,video/*', onFile: actions.handleFileUploadImageLayer },
     { id: 'templates', label: 'Templates', title: 'Add Image from Templates', Icon: LayoutTemplate },
-    { id: 'stickers', label: 'Stickers', title: 'Add Meme Stickers', Icon: Sticker },
-    { id: 'gifs', label: 'GIFs', title: 'Add a GIF or animated sticker', Icon: ImagePlay },
+    { id: 'stickers', label: 'Stickers', title: 'Add stickers, animated stickers or GIFs', Icon: Sticker },
     { id: 'emoji', label: 'Emoji', title: 'Add Emojis', Icon: Smile },
   ];
 

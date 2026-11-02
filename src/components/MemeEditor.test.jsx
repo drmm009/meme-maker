@@ -198,7 +198,7 @@ describe('MemeEditor', () => {
     renderEditor();
     const strips = [
       ['Draw on the meme', 'Draw tools', ['Brush', 'Glow', 'Marker', 'Eraser', 'Shapes', 'Censor']],
-      ['Photos, videos, stickers and emoji', 'Media tools', ['Photo', 'Templates', 'Stickers', 'GIFs', 'Emoji']],
+      ['Photos, videos, stickers and emoji', 'Media tools', ['Photo', 'Templates', 'Stickers', 'Emoji']],
       ['Text', 'Text tools', ['Add Text', 'Bubble', 'Social Card']],
       ['AI tools and photo filters', 'AI and filter tools', ['Face Swap', 'Background', 'AI Caption', 'Filters']],
       ['Canvas colour, bands and watermark', 'Canvas tools', ['Canvas Style', 'Watermark', 'Header', 'Footer']],
@@ -376,6 +376,18 @@ describe('MemeEditor', () => {
     expect(within(color).queryByLabelText('Shadow size')).toBeNull();
     expect(within(color).queryByRole('group', { name: 'Text effects' })).toBeNull();
     closeSheet();
+  }, 30000);
+
+  it('deleting a caption from its pill with its sheet open closes the sheet, back to the dock', () => {
+    renderEditor();
+    addTextFromMenu();
+    fireEvent.click(within(layerToolbar()).getByText('Style'));
+    expect(sheet('Style')).toBeTruthy();
+    fireEvent.click(within(layerToolbar()).getByText('Delete'));
+    expect(canvas.props.captions).toHaveLength(2);
+    expect(screen.queryByRole('dialog', { name: 'Style' })).toBeNull();
+    expect(screen.queryByRole('dialog', { name: 'Text' })).toBeNull();
+    expect(bar()).toBeTruthy();
   }, 30000);
 
   it('Layers on the floating toolbar lists every layer, top first; select, reorder, hide and lock', () => {
@@ -593,6 +605,22 @@ describe('MemeEditor', () => {
     openSection('Draw on the meme');
     expect(canvas.props.isDrawingMode).toBe(false);
     expect(screen.queryByRole('toolbar', { name: 'Draw tools' })).toBeNull();
+  }, 30000);
+
+  it('with the Draw tab open and no tool live, tapping a layer shows its pill; with a brush live it does not', () => {
+    renderEditor();
+    openSection('Draw on the meme');
+    expect(canvas.props.isDrawingMode).toBe(false);
+    act(() => canvas.props.onSelectLayer(canvas.props.captions[0].id));
+    expect(within(layerToolbar()).getByText('Font')).toBeTruthy();
+    act(() => canvas.props.onSelectLayer(null));
+    expect(strip('Draw tools')).toBeTruthy();
+
+    fireEvent.click(within(strip('Draw tools')).getByText('Brush'));
+    closeSheet();
+    act(() => canvas.props.onSelectLayer(canvas.props.captions[0].id));
+    expect(screen.queryByLabelText('Layer tools')).toBeNull();
+    expect(strip('Draw tools')).toBeTruthy();
   }, 30000);
 
   it('Shapes and Censor: their sheets pick the shape or the censor style, and drawing stays on', () => {
@@ -973,12 +1001,18 @@ describe('MemeEditor', () => {
     expect(screen.queryByRole('dialog', { name: 'Die-cut' })).toBeNull();
   }, 30000);
 
-  it('Media > GIFs opens the Giphy picker: animated stickers or GIFs', () => {
+  it('Media > Stickers has Stickers / Animated / GIFs; the Giphy kinds have no category chips', () => {
     renderEditor();
     openSection('Photos, videos, stickers and emoji');
-    fireEvent.click(within(strip('Media tools')).getByText('GIFs'));
-    const kinds = within(sheet('GIFs')).getByRole('toolbar', { name: 'GIFs categories' });
-    expect(within(kinds).getAllByRole('button').map((b) => b.textContent)).toEqual(['Stickers', 'GIFs']);
+    fireEvent.click(within(strip('Media tools')).getByText('Stickers'));
+    const panel = sheet('Stickers');
+    const kinds = within(panel).getByRole('tablist', { name: 'Stickers kinds' });
+    expect(within(kinds).getAllByRole('tab').map((b) => b.textContent)).toEqual(['Stickers', 'Animated', 'GIFs']);
+    expect(within(panel).getByRole('toolbar', { name: 'Stickers categories' })).toBeTruthy();
+    fireEvent.click(within(kinds).getByRole('tab', { name: 'GIFs' }));
+    expect(within(kinds).getByRole('tab', { name: 'GIFs' }).getAttribute('aria-selected')).toBe('true');
+    expect(within(panel).queryByRole('toolbar', { name: 'Stickers categories' })).toBeNull();
+    expect(within(panel).queryByRole('region', { name: 'Memes' })).toBeNull();
   }, 30000);
 
   it('a picture dropped on the canvas area is added', async () => {

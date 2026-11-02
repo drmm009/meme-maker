@@ -1059,21 +1059,6 @@ div.ie-layer-pick { cursor: default; }
 }
 
 
-/* ── Layer Delete Buttons (Red Accent) ───────────────────────────────── */
-.ie-layer-toolbar .ui-float-item--danger {
-  color: #ff4d4f !important;
-}
-.ie-layer-toolbar .ui-float-item--danger svg {
-  color: #ff4d4f !important;
-}
-.ie-layer-toolbar .ui-float-item--danger:hover {
-  color: #ffffff !important;
-  background: rgba(255, 77, 79, 0.25) !important;
-}
-.ie-layer-toolbar .ui-float-item--danger:hover svg {
-  color: #ffffff !important;
-}
-
 .ie-arrange-row .ui-btn--danger {
   color: #ff4d4f !important;
   border-color: rgba(255, 77, 79, 0.4) !important;
@@ -1620,7 +1605,6 @@ div.ie-layer-pick { cursor: default; }
 .ie-format-glyph--bold { font-weight: 850; font-size: 17px; }
 .ie-format-glyph--italic { font-family: Georgia, Cambria, "Times New Roman", serif; font-style: italic; font-weight: 700; font-size: 18px; }
 .ie-format-glyph--underline { font-weight: 700; font-size: 16px; text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 2px; }
-.ie-format-glyph--case { font-weight: 700; font-size: 15px; letter-spacing: -0.02em; }
 
 /* Effects: a sideways row of tiles, each showing its curve. */
 .ie-panels--sheet .ie-text-sheet .ui-chips[aria-label="Text effects"] { display: flex; flex-wrap: nowrap; gap: 8px; }

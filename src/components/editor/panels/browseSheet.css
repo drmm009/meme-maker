@@ -1,4 +1,4 @@
-/* The full-height library sheets (Media: Templates, Stickers, GIFs, Emoji): over the editor, below
+/* The full-height library sheets (Media: Templates, Stickers, Emoji): over the editor, below
    the top bar. The head, search and chips stay put; only the content scrolls. */
 .ie-panels.ie-panels--full {
   position: absolute;
@@ -124,7 +124,7 @@
 }
 .ie-browse-chips.is-scrolled { border-bottom-color: var(--ui-line); }
 .ie-browse-chips::-webkit-scrollbar { display: none; }
-/* Few kinds (GIFs: Stickers / GIFs): a segmented track sharing the width. */
+/* A few kinds (Stickers: Stickers / Animated / GIFs): a segmented track sharing the width. */
 .ie-browse-chips--fill {
   gap: 2px;
   margin: 0 16px 12px;

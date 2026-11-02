@@ -253,19 +253,22 @@
 }
 
 /* ── Floating toolbar ────────────────────────────────────── */
+/* A lighter grey than the dock under it, no outline: the selected layer's tools, then its shared
+   actions as icons after a thin divider. The open tool is a soft orange tile. */
 .ui-float {
   display: flex;
   align-items: stretch;
   padding: 4px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: none;
   border-radius: 999px;
-  background: rgba(40, 41, 46, 0.92);
+  background: rgba(44, 44, 48, 0.94);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  box-shadow: 0 10px 24px -12px rgba(0, 0, 0, 0.7);
+  box-shadow: 0 12px 28px -14px rgba(0, 0, 0, 0.8);
 }
 .ui-float-items {
   display: flex;
+  align-items: center;
   gap: 2px;
   min-width: 0;
   overflow-x: auto;
@@ -279,21 +282,36 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
-  min-width: 42px;
-  height: 44px;
-  padding: 0 6px;
+  gap: 3px;
+  min-width: 50px;
+  height: 46px;
+  padding: 0 8px;
   border: none;
   border-radius: 999px;
   background: transparent;
-  color: #d9d9df;
+  color: #f2f2f5;
   font-size: 10.5px;
-  font-weight: 500;
+  font-weight: 600;
   line-height: 1;
   cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease;
 }
-.ui-float-item.is-on { background: rgba(255, 90, 54, 0.15); color: var(--ui-accent-text); }
+.ui-float-label { color: #a5a6ad; transition: color 0.15s ease; }
+.ui-float-item:hover:not(.is-on) { background: rgba(255, 255, 255, 0.07); }
+.ui-float-item:active { transform: scale(0.94); }
+.ui-float-item.is-on { background: rgba(255, 90, 54, 0.16); color: var(--ui-accent-text); }
+.ui-float-item.is-on .ui-float-label { color: var(--ui-accent-text); }
+.ui-float-item--icon { min-width: 40px; width: 40px; padding: 0; }
+.ui-float-divider { flex: none; width: 1px; height: 26px; margin: 0 4px; background: rgba(255, 255, 255, 0.12); }
+.ui-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
 /* The pointer at the layer: under the bar, or above it when the bar sits below the layer. */
 .ui-float-tail {
   position: absolute;
@@ -307,7 +325,8 @@
 }
 .ui-float-tail--bottom { bottom: -6px; border-top: none; border-left: none; }
 .ui-float-tail--top { top: -6px; border-bottom: none; border-right: none; }
-.ui-float-item--danger { color: #ff4d4f; }
+.ui-float-item--danger { color: #ff6961; }
+.ui-float-item--danger:hover:not(.is-on) { background: rgba(255, 105, 97, 0.16); }
 .ui-float-item--danger svg { color: #ff4d4f; }
 .ui-float-item--danger:hover { color: #ffffff; background: rgba(255, 77, 79, 0.22); }
 .ui-float-item--danger:hover svg { color: #ffffff; }

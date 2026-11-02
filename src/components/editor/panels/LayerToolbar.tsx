@@ -1,4 +1,4 @@
-import { Trash2, Settings, SlidersHorizontal, Copy, Scissors, Eraser, ScanFace, Ellipsis, Layers, Palette, MessageSquareQuote } from 'lucide-react';
+import { Trash2, Settings, SlidersHorizontal, Copy, Scissors, Aperture, Blend, ScanFace, Ellipsis, Layers, Palette, MessageSquareQuote } from 'lucide-react';
 import { FloatingToolbar } from '../../ui';
 import type { ToolbarItem } from '../../ui';
 import { useEditorUiStore } from '../store/useEditorUiStore';
@@ -28,9 +28,10 @@ export default function LayerToolbar({ actions }: { actions: EditorActions }) {
     return { active: on, onClick: () => (on ? closeSheet() : openSheet(target, focus, true)) };
   };
 
-  const layers: ToolbarItem = { id: 'layers', label: 'Layers', title: 'All layers: order, hide, lock', Icon: Layers, ...opens('layers') };
-  const del: ToolbarItem = { id: 'delete', label: 'Delete', Icon: Trash2, danger: true, onClick: () => actions.handleDeleteLayer(id) };
-  const dup: ToolbarItem = { id: 'duplicate', label: 'Copy', title: 'Duplicate', Icon: Copy, onClick: () => actions.handleDuplicateLayer(id) };
+  // Every layer's own actions: icons only, after a divider.
+  const layers: ToolbarItem = { id: 'layers', label: 'Layers', title: 'All layers: order, hide, lock', Icon: Layers, iconOnly: true, ...opens('layers') };
+  const del: ToolbarItem = { id: 'delete', label: 'Delete', Icon: Trash2, danger: true, iconOnly: true, onClick: () => actions.handleDeleteLayer(id) };
+  const dup: ToolbarItem = { id: 'duplicate', label: 'Copy', title: 'Duplicate', Icon: Copy, iconOnly: true, onClick: () => actions.handleDuplicateLayer(id) };
   let items: ToolbarItem[] = [];
   if (kind === 'caption' && caption) {
     const isBubble = Boolean(caption.bubbleStyle);
@@ -77,9 +78,9 @@ export default function LayerToolbar({ actions }: { actions: EditorActions }) {
     ];
   } else if (kind === 'image' && image) {
     items = [
-      { id: 'filters', label: 'Filters', Icon: SlidersHorizontal, ...opens('filters') },
-      { id: 'background', label: 'Background', title: 'Background blur and background removal', Icon: Eraser, ...opens('background') },
       { id: 'faceswap', label: 'Face Swap', title: 'Face swap with AI', Icon: ScanFace, onClick: () => actions.handleStartMorphFace(image) },
+      { id: 'background', label: 'Background', title: 'Background blur and background removal', Icon: Aperture, ...opens('background') },
+      { id: 'filters', label: 'Filters', Icon: Blend, ...opens('filters') },
       { id: 'more', label: 'More', Icon: Ellipsis, ...opens('media') },
       layers,
       del,

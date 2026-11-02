@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { Type, Copy, PenLine, Sparkles, LayoutGrid } from 'lucide-react';
 import { ToolDock, ToolStrip } from '../../ui';
 import type { DockItem } from '../../ui';
@@ -25,7 +25,6 @@ import LibrarySheet from '../library/LibrarySheet';
 import LinkSheet from './LinkSheet';
 import TemplatesSheet from './TemplatesSheet';
 import StickersSheet from './StickersSheet';
-import GifSheet from './GifSheet';
 import EmojiSheet from './EmojiSheet';
 import BubbleSheet from './BubbleSheet';
 import BackgroundSheet from './BackgroundSheet';
@@ -45,9 +44,9 @@ const DOCK: DockItem[] = [
 ];
 
 const SHEETS = { text: TextSheet, media: MediaSheet, draw: DrawSheet, canvasColor: CanvasColorSheet, watermark: WatermarkSheet, header: HeaderSheet, footer: FooterSheet, filters: FiltersSheet, background: BackgroundSheet, layers: LayersSheet, export: ExportSheet, library: LibrarySheet, mediaLink: LinkSheet,
-  templates: TemplatesSheet, stickers: StickersSheet, gifs: GifSheet, emoji: EmojiSheet, bubble: BubbleSheet, diecut: DieCutSheet };
+  templates: TemplatesSheet, stickers: StickersSheet, emoji: EmojiSheet, bubble: BubbleSheet, diecut: DieCutSheet };
 // Sheets for browsing a big library, shown full height (the meme needn't stay in view).
-const FULL_SHEETS = new Set<string>(['templates', 'stickers', 'gifs', 'emoji']);
+const FULL_SHEETS = new Set<string>(['templates', 'stickers', 'emoji']);
 
 // The bottom of the editor: the dock with the open tab's tool strip above it, or, when one of that
 // tab's sheets is open, the strip above the sheet (so its tools stay one tap away). While a layer is
@@ -69,6 +68,12 @@ export default function EditorPanels({ actions }: { actions: EditorActions }) {
   const panelRef = useRef<HTMLDivElement>(null);
   const full = Boolean(sheet && FULL_SHEETS.has(sheet));
   useSmoothHeight(panelRef, full);
+  // A sheet opened from the pill belongs to its layer: once that layer is gone (deleted, or
+  // deselected) the sheet closes, back to the dock, rather than staying with nothing under it.
+  const orphaned = sheetFromPill && !kind;
+  useEffect(() => {
+    if (orphaned) closeSheet();
+  }, [orphaned, closeSheet]);
 
   if (faceMorph && !kind) {
     return (
@@ -85,8 +90,10 @@ export default function EditorPanels({ actions }: { actions: EditorActions }) {
     : dockTab === 'fx' ? <AiFiltersStrip actions={actions} />
     : dockTab === 'canvas' ? <CanvasStrip actions={actions} /> : null;
 
-  const layerTools = Boolean(kind) && dockTab !== 'draw' && !faceMorph;
-  const SheetComponent = sheet ? SHEETS[sheet] : null;
+  // A selected layer's pill replaces the strip, the Draw strip too unless a draw tool is live (taps
+  // then draw rather than select).
+  const layerTools = Boolean(kind) && !(dockTab === 'draw' && drawTool) && !faceMorph;
+  const SheetComponent = sheet && !orphaned ? SHEETS[sheet] : null;
   if (SheetComponent && full) {
     // A browsing sheet takes the editor's whole height, over the meme, with its own close button.
     return (

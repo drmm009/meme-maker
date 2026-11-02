@@ -1,4 +1,4 @@
-import { ScanFace, Eraser, Captions, SlidersHorizontal } from 'lucide-react';
+import { ScanFace, Aperture, Captions, Blend } from 'lucide-react';
 import { ToolStrip } from '../../ui';
 import type { StripItem } from '../../ui';
 import { useEditorUiStore } from '../store/useEditorUiStore';
@@ -19,11 +19,11 @@ export default function AiFiltersStrip({ actions }: { actions: EditorActions }) 
       id: 'background',
       label: 'Background',
       title: 'Background blur and background removal',
-      Icon: Eraser,
+      Icon: Aperture,
       active: sheet === 'background',
     },
     { id: 'caption', label: 'AI Caption', title: 'AI meme captions', Icon: Captions },
-    { id: 'filters', label: 'Filters', title: 'Photo filters and adjustments', Icon: SlidersHorizontal, active: sheet === 'filters' },
+    { id: 'filters', label: 'Filters', title: 'Photo filters and adjustments', Icon: Blend, active: sheet === 'filters' },
   ];
 
   const onSelect = (id: string) => {

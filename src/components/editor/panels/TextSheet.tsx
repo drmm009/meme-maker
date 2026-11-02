@@ -227,9 +227,6 @@ export default function TextSheet({ actions, onClose }: { actions: EditorActions
                 <Toggle label="Underline" active={Boolean(caption.underline)} onClick={() => set({ underline: !caption.underline })}>
                   <span className="ie-format-glyph ie-format-glyph--underline" aria-hidden="true">U</span>
                 </Toggle>
-                <button type="button" className="ui-toggle" aria-label="Change case" title="Change case" onClick={actions.handleToggleTextCase}>
-                  <span className="ie-format-glyph ie-format-glyph--case" aria-hidden="true">Aa</span>
-                </button>
                 <span className="ie-format-gap" aria-hidden="true" />
                 <div className="ie-format-align" role="radiogroup" aria-label="Alignment">
                   {ALIGNS.map(({ value, label, Icon }) => {
@@ -315,9 +312,9 @@ export default function TextSheet({ actions, onClose }: { actions: EditorActions
 
           {shows('outline') && (
             <Section title={heading('outline')} id="outline">
-              <Row label="Outline">
-                <Switch label="Stroke" checked={strokeOn} onChange={(on) => set({ stroke: on ? getContrastStroke(caption.color || '#ffffff') : 'transparent' })} />
+              <Row label="Outline" end>
                 {strokeOn && <Slider label="Outline thickness" min={1} max={24} value={Number(caption.strokeWidth || Math.max(3, Math.round(fontSize / 7)))} onChange={(v) => live({ strokeWidth: v })} format={(v) => `${Math.round(v)}px`} />}
+                <Switch label="Stroke" checked={strokeOn} onChange={(on) => set({ stroke: on ? getContrastStroke(caption.color || '#ffffff') : 'transparent' })} />
               </Row>
               {strokeOn && (
                 <Row label="">
