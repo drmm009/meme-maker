@@ -253,24 +253,23 @@
 }
 
 /* ── Floating toolbar ────────────────────────────────────── */
-/* A lighter grey than the dock under it, no outline: the selected layer's tools, then its shared
-   actions as icons after a thin divider. The open tool is a soft orange tile. */
+/* The selected layer's tools in the tool strip's look (it takes the strip's place): each tool a
+   tile of its own, icon over a white label, the open one in the strip's gradient; then the shared
+   actions as small round tiles after a thin divider. */
 .ui-float {
   display: flex;
   align-items: stretch;
-  padding: 4px;
+  padding: 0;
   border: none;
-  border-radius: 999px;
-  background: rgba(44, 44, 48, 0.94);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  box-shadow: 0 12px 28px -14px rgba(0, 0, 0, 0.8);
+  background: transparent;
+  animation: ui-strip-in 0.2s ease-out;
 }
 .ui-float-items {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 5px;
   min-width: 0;
+  padding: 2px 0 6px;
   overflow-x: auto;
   overscroll-behavior-x: contain;
   scrollbar-width: none;
@@ -282,28 +281,29 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 3px;
-  min-width: 50px;
-  height: 46px;
-  padding: 0 8px;
-  border: none;
-  border-radius: 999px;
-  background: transparent;
-  color: #f2f2f5;
-  font-size: 10.5px;
+  gap: 4px;
+  min-width: 54px;
+  height: 54px;
+  padding: 0 6px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  background: var(--ui-surface);
+  color: #fff;
+  font-size: 11px;
   font-weight: 600;
   line-height: 1;
   cursor: pointer;
+  box-shadow: 0 10px 24px -12px rgba(0, 0, 0, 0.8);
   -webkit-tap-highlight-color: transparent;
   transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease;
 }
-.ui-float-label { color: #a5a6ad; transition: color 0.15s ease; }
-.ui-float-item:hover:not(.is-on) { background: rgba(255, 255, 255, 0.07); }
+.ui-float-label { color: #d4d5db; transition: color 0.15s ease; }
+.ui-float-item:hover:not(.is-on) { background: #26272b; }
 .ui-float-item:active { transform: scale(0.94); }
-.ui-float-item.is-on { background: rgba(255, 90, 54, 0.16); color: var(--ui-accent-text); }
-.ui-float-item.is-on .ui-float-label { color: var(--ui-accent-text); }
-.ui-float-item--icon { min-width: 40px; width: 40px; padding: 0; }
-.ui-float-divider { flex: none; width: 1px; height: 26px; margin: 0 4px; background: rgba(255, 255, 255, 0.12); }
+.ui-float-item.is-on { border-color: transparent; background: linear-gradient(100deg, #ec6a43, #d9549a); color: #fff; }
+.ui-float-item.is-on .ui-float-label { color: #fff; }
+.ui-float-item--icon { min-width: 40px; width: 40px; height: 40px; padding: 0; border-radius: 50%; }
+.ui-float-divider { flex: none; width: 1px; height: 28px; margin: 0 2px; background: rgba(255, 255, 255, 0.14); }
 .ui-visually-hidden {
   position: absolute;
   width: 1px;

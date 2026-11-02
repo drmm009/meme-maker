@@ -81,7 +81,7 @@ export default function LayerToolbar({ actions }: { actions: EditorActions }) {
       { id: 'faceswap', label: 'Face Swap', title: 'Face swap with AI', Icon: ScanFace, onClick: () => actions.handleStartMorphFace(image) },
       { id: 'background', label: 'Background', title: 'Background blur and background removal', Icon: Aperture, ...opens('background') },
       { id: 'filters', label: 'Filters', Icon: Blend, ...opens('filters') },
-      { id: 'more', label: 'More', Icon: Ellipsis, ...opens('media') },
+      { id: 'more', label: 'More', title: 'More: mirror, crop, replace, look', Icon: Ellipsis, iconOnly: true, ...opens('media') },
       layers,
       del,
     ];
