@@ -20,7 +20,7 @@ describe('createEditorUiStore', () => {
     expect(sticker.getState().exportPrefs).toEqual({ format: 'png', quality: 0.8, width: 720, transparent: true });
     sticker.getState().setExportPrefs((p) => ({ ...p, format: 'webp' }));
     expect(JSON.parse(localStorage.getItem('meme-maker-export-prefs')).format).toBe('jpeg');
-    expect(createEditorUiStore({ id: 't', editorMode: 'faceswap' }).getState()).toMatchObject({ mode: 'faceswap', dockTab: 'fx' });
+    expect(createEditorUiStore({ id: 't', editorMode: 'faceswap' }).getState()).toMatchObject({ mode: 'faceswap', dockTab: 'swap' });
     const full = createEditorUiStore({ id: 't' });
     expect(full.getState()).toMatchObject({ mode: 'full', dockTab: 'text' });
     full.getState().setExportPrefs((p) => ({ ...p, format: 'webp' }));

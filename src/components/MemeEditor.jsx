@@ -35,7 +35,9 @@ export default function MemeEditor(props) {
   // draft's mode (a saved project opens in the full editor).
   const [session, setSession] = useState({ id: 0, template: props.template, document: null });
   const restoreDraft = (document, mode = 'full') => setSession((s) => ({ id: s.id + 1, template: { ...(document.activeTemplate || s.template), editorMode: mode }, document }));
-  return <MemeEditorSession key={session.id} {...props} template={session.template} initialDocument={session.document} onRestoreDraft={restoreDraft} />;
+  // A focused maker's other meme (Face Swap's Meme) starts it afresh on that template, same mode.
+  const changeMeme = (template, mode) => setSession((s) => ({ id: s.id + 1, template: { ...template, editorMode: mode }, document: null }));
+  return <MemeEditorSession key={session.id} {...props} template={session.template} initialDocument={session.document} onRestoreDraft={restoreDraft} onChangeMeme={changeMeme} />;
 }
 
 function MemeEditorSession({ initialDocument, onRestoreDraft, ...props }) {
@@ -54,7 +56,7 @@ function MemeEditorSession({ initialDocument, onRestoreDraft, ...props }) {
 // Wires the editor's pieces together. Document state lives in editor/store/useMemeEditorStore.js,
 // shared UI state in editor/store/useEditorUiStore.js, edit handlers in editor/hooks/, and the
 // panels (dock, sheets, layer toolbar) in editor/panels/ on the shared UI kit (components/ui).
-function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, onRestoreDraft }) {
+function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, onRestoreDraft, onChangeMeme }) {
   const activeLayerId = useMemeEditorStore((s) => s.activeLayerId);
   const setActiveLayerId = useMemeEditorStore((s) => s.setActiveLayerId);
   const handleUndo = useMemeEditorStore((s) => s.undo);
@@ -97,6 +99,13 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, o
   const { commitAddImageLayer, handleAddImageLayer, handleFileUploadImageLayer, updateActiveImageLayer, moveLayer, handleDeleteLayer, handleDuplicateLayer, handleRotateLayer, handleFlipActiveLayer, handleToggleDieCutSticker, handleSetDieCutColor, updateSlotTransform, handleAddSticker, handleAddGraphicSticker } = useLayerActions({ activeCaption, activeImageLayer, activeSticker, updateActiveCaptionProps });
   const { handleAddBubble, handleApplyBubbleStyle } = useBubbleActions({ activeCaption, updateActiveCaptionProps });
 
+  // The Face Swap maker starts at its first step, the face picker (not on a restored draft).
+  useEffect(() => {
+    if (!restoredDraft && uiStore.getState().mode === 'faceswap') setShowFaceMorphModal(true);
+    // Once, when the session opens.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Everything the panels can do, in one object (see editor/panels/selection.ts).
   const media = useMediaInput({ handleAddImageLayer });
 
@@ -114,6 +123,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, o
     handleFlipActiveLayer, handleToggleDieCutSticker, handleSetDieCutColor,
     handleRemoveBackground, handleApplyBackgroundBlur, setPortraitBlur, isRemovingBg, isBlurringBg, isNativeLayout, setShowFaceMorphModal, handleStartMorphFace,
     handleUpdateTemplateMorphProgress, handleChangeFace, handleRevertTemplateFace, handleFinalizeTemplateFace, setIsHoldingCanvasCompare,
+    handleChangeMeme: (t) => onChangeMeme(t, uiStore.getState().mode),
     memeName, canvasSize, exportBlob, exportMotion, motionLoops, saveToGallery,
   };
 

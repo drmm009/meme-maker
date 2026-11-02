@@ -1053,6 +1053,24 @@ describe('MemeEditor', () => {
     expect(canvas.props.captions).toBe(captions);
   });
 
+  it('the Face Swap maker opens on the face picker; its Meme starts afresh on another meme, still in Face Swap', async () => {
+    renderEditor({ ...TEMPLATE, editorMode: 'faceswap' });
+    const tabs = () => within(screen.getByRole('navigation', { name: 'Editor tools' })).getAllByRole('button').map((b) => b.textContent.trim());
+    expect(tabs()).toEqual(['Face Swap', 'Text', 'Media']);
+    expect(within(strip('Face swap tools')).getAllByRole('button').map((b) => b.textContent)).toEqual(['Your face', 'Meme']);
+    expect(await screen.findByText('Apply to meme', {}, { timeout: 10000 })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+
+    fireEvent.click(within(strip('Face swap tools')).getByText('Meme'));
+    const picker = sheet('Pick a meme');
+    fireEvent.click(within(picker).getAllByRole('button', { name: /distracted/i })[0]);
+    expect(canvas.props.imageLayers).toHaveLength(0);
+    expect(screen.queryByRole('dialog', { name: 'Pick a meme' })).toBeNull();
+    expect(canvas.props.imageUrl).not.toBe(TEMPLATE.imageUrl);
+    expect(screen.getByText('Face Swap', { selector: '.ui-topbar-title' })).toBeTruthy();
+    expect(await screen.findByText('Apply to meme', {}, { timeout: 10000 })).toBeTruthy();
+  }, 30000);
+
   it('the full editor has no Full editor button, and an unknown mode is the full editor', () => {
     renderEditor({ ...TEMPLATE, editorMode: 'nope' });
     expect(screen.getByText('Meme Editor')).toBeTruthy();

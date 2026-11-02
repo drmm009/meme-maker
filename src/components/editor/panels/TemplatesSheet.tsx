@@ -89,8 +89,14 @@ function GridCard({ template, ...rest }: CardProps) {
 
 // Media > Templates, laid out like the Explore page: shelves by category, trending first, each with
 // See all; a category or a search shows a grid. A pick adds the template's picture as a photo layer;
-// the star is shared with the home screen and Explore.
-export default function TemplatesSheet({ actions, onClose }: { actions: EditorActions; onClose: () => void }) {
+// the star is shared with the home screen and Explore. `onPick` and `title` reuse it for another
+// job (the Face Swap maker's meme picker).
+export default function TemplatesSheet({ actions, onClose, onPick, title = 'Templates' }: {
+  actions: EditorActions;
+  onClose: () => void;
+  onPick?: (t: SizedTemplate) => void;
+  title?: string;
+}) {
   const templates: SizedTemplate[] = useEditorUiStore((s: { openSourceTemplates: SizedTemplate[] }) => s.openSourceTemplates);
   const [query, setQuery] = useState('');
   const [tag, setTag] = useState('all');
@@ -114,7 +120,8 @@ export default function TemplatesSheet({ actions, onClose }: { actions: EditorAc
 
   const pick = (t: SizedTemplate) => {
     if (!t.imageUrl) return;
-    actions.handleAddImageLayer(t.imageUrl);
+    if (onPick) onPick(t);
+    else actions.handleAddImageLayer(t.imageUrl);
     onClose();
   };
   const star = (id: string) => {
@@ -130,7 +137,7 @@ export default function TemplatesSheet({ actions, onClose }: { actions: EditorAc
 
   return (
     <BrowseSheet
-      title="Templates"
+      title={title}
       total={counts.all}
       onClose={onClose}
       search={{ value: query, onChange: setQuery, placeholder: 'Search Drake, Doge, Chad…', label: 'Search templates' }}
@@ -161,4 +168,9 @@ export default function TemplatesSheet({ actions, onClose }: { actions: EditorAc
         : <BrowseEmpty Icon={Search} title={`Nothing matches “${query.trim()}”`} text="Try a shorter word, or a meme’s nickname." action={{ label: 'Clear search', onClick: () => setQuery('') }} />)}
     </BrowseSheet>
   );
+}
+
+// The Face Swap maker's Meme: the same browser, a pick starting the maker afresh on that meme.
+export function MemePickerSheet({ actions, onClose }: { actions: EditorActions; onClose: () => void }) {
+  return <TemplatesSheet actions={actions} onClose={onClose} title="Pick a meme" onPick={(t) => actions.handleChangeMeme(t)} />;
 }

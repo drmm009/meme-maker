@@ -3,7 +3,8 @@
 // for one with `editorMode`; "Full editor" in the top bar switches to 'full' on the same meme.
 
 export type EditorMode = 'full' | 'sticker' | 'ai' | 'faceswap' | 'social';
-export type DockTab = 'draw' | 'media' | 'text' | 'fx' | 'canvas';
+// 'swap' is the Face Swap maker's own tab (FaceSwapStrip).
+export type DockTab = 'draw' | 'media' | 'text' | 'fx' | 'canvas' | 'swap';
 
 export interface EditorModeConfig {
   // The top bar's title.
@@ -18,7 +19,7 @@ export const EDITOR_MODES: Record<EditorMode, EditorModeConfig> = {
   full: { title: 'Meme Editor', dock: ['draw', 'media', 'text', 'fx', 'canvas'], startTab: 'text' },
   sticker: { title: 'Stickers', dock: ['media', 'text', 'fx'], startTab: 'media' },
   ai: { title: 'AI Meme', dock: ['text', 'media', 'fx'], startTab: 'text' },
-  faceswap: { title: 'Face Swap', dock: ['fx', 'text', 'media'], startTab: 'fx' },
+  faceswap: { title: 'Face Swap', dock: ['swap', 'text', 'media'], startTab: 'swap' },
   social: { title: 'Social Card', dock: ['text', 'media', 'canvas'], startTab: 'text' },
 };
 
