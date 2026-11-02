@@ -169,7 +169,8 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     getCaptionCenterY, getImageLayerCenterY, getStickerCenterY, headerExtH, imageCacheRef,
     imageFit, imageLayers, imgSrc, isDragging, isDrawingMode, isFooterEnabled, isHeaderEnabled,
     isNativeLayout, liveBgColor, loadingMediaRef, naturalSize, setNaturalSize, showDrawingHandles,
-    slotImages, slotTransforms, snappingLines, stickers, totalCanvasH, watermark
+    slotImages, slotTransforms, snappingLines, stickers, totalCanvasH, watermark,
+    latest: () => sceneRef.current
   };
 
   // GIF and video layers play: their frames are redrawn straight from the scene, without a render.

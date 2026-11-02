@@ -80,7 +80,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, c
   const canvasRef = useRef(null);
   const { memeName, canvasSize, exportBlob, exportMotion, motionLoops, saveToGallery } = useExport({ canvasRef, template, onSaveToGallery, imageFit, isNativeLayout, layoutDef });
   const { isRemovingBg, isBlurringBg, handleRemoveBackground, handleApplyBackgroundBlur, setPortraitBlur } = useBackgroundRemoval();
-  useStickerMaker({ removeBackground: handleRemoveBackground });
+  const { generate: handleGenerateSticker, setDieCut: handleStickerDieCut } = useStickerMaker({ removeBackground: handleRemoveBackground });
   const faceMorph = useFaceMorph({ canvasRef });
   const {
     showFaceMorphModal, setShowFaceMorphModal, morphTargetLayerId, setMorphTargetLayerId,
@@ -125,6 +125,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, c
     handleRemoveBackground, handleApplyBackgroundBlur, setPortraitBlur, isRemovingBg, isBlurringBg, isNativeLayout, setShowFaceMorphModal, handleStartMorphFace,
     handleUpdateTemplateMorphProgress, handleChangeFace, handleRevertTemplateFace, handleFinalizeTemplateFace, setIsHoldingCanvasCompare,
     handleChangeMeme: (t) => onChangeMeme(t, uiStore.getState().mode),
+    handleGenerateSticker, handleStickerDieCut,
     memeName, canvasSize, exportBlob, exportMotion, motionLoops, saveToGallery,
   };
 

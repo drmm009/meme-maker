@@ -20,7 +20,7 @@ export function renderScene(scene) {
     getCaptionCenterY, getImageLayerCenterY, getStickerCenterY, headerExtH, imageCacheRef,
     imageFit, imageLayers, imgSrc, isDragging, isDrawingMode, isFooterEnabled, isHeaderEnabled,
     isNativeLayout, liveBgColor, loadingMediaRef, naturalSize, setNaturalSize, showDrawingHandles,
-    slotImages, slotTransforms, snappingLines, stickers, totalCanvasH, watermark
+    slotImages, slotTransforms, snappingLines, stickers, totalCanvasH, watermark, latest
   } = scene;
 
   const canvas = canvasRef.current;
@@ -214,10 +214,18 @@ export function renderScene(scene) {
       ? (drawings || []).find((d) => d.id === activeLayerId && isDragDrawing(d))
       : null;
 
+    // A photo or sticker that finishes loading redraws the scene as it is by then (`latest`, the
+    // editor's current scene), not as it was when the load started: a layer moved or deselected
+    // meanwhile (the Stickers maker centring a new photo) would otherwise be drawn stale.
+    const redrawLoaded = (baseImg) => {
+      const now = latest?.();
+      if (now && now !== scene) renderScene(now);
+      else renderCanvas(baseImg);
+    };
     let activeHandleDrawer = paintLayers({
       activeLayerId, baseImgRef, canvas, captions, dragTarget,
       getCaptionCenterY, getImageLayerCenterY, getStickerCenterY, imageCacheRef, imageLayers,
-      isDragging, isDrawingMode, loadingMediaRef, renderCanvas, stickers, targetCtx,
+      isDragging, isDrawingMode, loadingMediaRef, renderCanvas: redrawLoaded, stickers, targetCtx,
       reportBox: !activeDrawing
     });
 

@@ -94,6 +94,7 @@ export function buildInitialUi(template) {
     brushSize: 10,
     watermark: loadWatermark(),
     customFonts: [], // fonts the person uploaded: [{ family, css }] (utils/customFonts)
+    stickerDieCut: true, // the Stickers maker's Die-cut: a white outline on cut-out photos
     // A sticker exports see-through (stickerMaker.ts); only the full editor's choices are remembered.
     exportPrefs: mode === 'sticker' ? stickerExportPrefs(loadExportPrefs()) : loadExportPrefs(), // { format: 'png' | 'jpeg' | 'webp', quality: 0.5..1, width: 'full' | 720 | 480 }
     libraryTab: 'history', // 'history' | 'saved' | 'shortcuts'
@@ -131,9 +132,11 @@ export function createEditorUiStore(template) {
 
     // Every sheet belongs to a dock tab, and opens under that tab's tool strip (scrolled to
     // `focus`), or under the layer tools pill when it came from there. Opening a sheet of another
-    // tab stops drawing.
+    // tab stops drawing. A focused maker without that tab (Stickers' Gallery, the Templates sheet)
+    // keeps its own.
     openSheet: (sheet, focus = null, fromPill = false) => set((state) => {
-      const tab = sheet in SHEET_TAB ? SHEET_TAB[sheet] : state.dockTab;
+      const owner = sheet in SHEET_TAB ? SHEET_TAB[sheet] : state.dockTab;
+      const tab = owner && !EDITOR_MODES[state.mode].dock.includes(owner) ? state.dockTab : owner;
       return {
         sheet,
         sheetFocus: focus,

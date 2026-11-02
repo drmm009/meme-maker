@@ -1041,16 +1041,35 @@ describe('MemeEditor', () => {
   it('a focused maker shows only its tabs and title; Full editor brings every tab back on the same meme', () => {
     renderEditor({ ...TEMPLATE, editorMode: 'sticker' });
     const tabs = () => within(screen.getByRole('navigation', { name: 'Editor tools' })).getAllByRole('button').map((b) => b.textContent.trim());
-    expect(tabs()).toEqual(['Media', 'Text', 'AI/Filters']);
+    expect(tabs()).toEqual(['Generate Sticker']);
     expect(screen.getByText('Stickers', { selector: '.ui-topbar-title' })).toBeTruthy();
-    // It starts on its own tab's strip.
-    expect(strip('Media tools')).toBeTruthy();
+    // It starts on its own strip: the picture comes first.
+    expect([...strip('Sticker tools').children].map((b) => b.textContent)).toEqual(['Upload image', 'Gallery']);
+    // Gallery is the Templates sheet; closing it comes back to the Sticker tab.
+    fireEvent.click(within(strip('Sticker tools')).getByText('Gallery'));
+    fireEvent.click(within(sheet('Templates')).getByLabelText('Close templates'));
+    expect(strip('Sticker tools')).toBeTruthy();
     const captions = canvas.props.captions;
     fireEvent.click(screen.getByRole('button', { name: 'Full editor' }));
     expect(tabs()).toEqual(['Draw', 'Media', 'Text', 'AI/Filters', 'Canvas']);
     expect(screen.getByText('Meme Editor')).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Full editor' })).toBeNull();
     expect(canvas.props.captions).toBe(captions);
+  });
+
+  it('once the Stickers maker has cut its picture out, its strip has Die-cut and Generate more, which starts a blank sticker', () => {
+    renderEditor({ ...TEMPLATE, editorMode: 'sticker', imageLayers: [{ id: 'p', url: 'cut.png', originalUrl: 'photo.png', x: 0.5, y: 0.5 }] });
+    expect([...strip('Sticker tools').children].map((b) => b.textContent)).toEqual(['Die-cut', 'Generate more']);
+    const dieCut = within(strip('Sticker tools')).getByRole('button', { name: /Die-cut/ });
+    expect(dieCut.getAttribute('aria-pressed')).toBe('true');
+    fireEvent.click(dieCut);
+    expect(canvas.props.imageLayers[0].dieCut).toBe(false);
+    expect(dieCut.getAttribute('aria-pressed')).toBe('false');
+
+    fireEvent.click(within(strip('Sticker tools')).getByText('Generate more'));
+    expect(canvas.props.imageLayers).toHaveLength(0);
+    expect(screen.getByText('Stickers', { selector: '.ui-topbar-title' })).toBeTruthy();
+    expect([...strip('Sticker tools').children].map((b) => b.textContent)).toEqual(['Upload image', 'Gallery']);
   });
 
   it('the Face Swap maker opens on the face picker; its Meme starts afresh on another meme, still in Face Swap', async () => {

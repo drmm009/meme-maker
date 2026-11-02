@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { Type, Copy, PenLine, Sparkles, LayoutGrid, ScanFace, Share2, Wand2 } from 'lucide-react';
+import { Type, Copy, PenLine, Sparkles, LayoutGrid, ScanFace, Share2, Wand2, Sticker } from 'lucide-react';
 import { ToolDock, ToolStrip } from '../../ui';
 import type { DockItem } from '../../ui';
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
@@ -29,6 +29,7 @@ import CardFormSheet, { CardLookSheet } from './CardFormSheet';
 import CardStrip from './CardStrip';
 import AiMemeSheet from './AiMemeSheet';
 import AiStrip from './AiStrip';
+import StickerStrip from './StickerStrip';
 import StickersSheet from './StickersSheet';
 import EmojiSheet from './EmojiSheet';
 import BubbleSheet from './BubbleSheet';
@@ -52,6 +53,8 @@ const DOCK: DockItem[] = [
   { id: 'swap', label: 'Face Swap', Icon: ScanFace, title: 'Your face and the meme' },
   { id: 'card', label: 'Card', Icon: Share2, title: 'The social card' },
   { id: 'ai', label: 'AI', Icon: Wand2, title: 'AI meme ideas' },
+  // The Stickers maker's one dock button, which makes the sticker rather than opening a tab.
+  { id: 'sticker', label: 'Generate Sticker', Icon: Sticker, title: 'Cut out the picture' },
 ];
 
 const SHEETS = { text: TextSheet, media: MediaSheet, draw: DrawSheet, canvasColor: CanvasColorSheet, watermark: WatermarkSheet, header: HeaderSheet, footer: FooterSheet, filters: FiltersSheet, background: BackgroundSheet, layers: LayersSheet, export: ExportSheet, library: LibrarySheet, mediaLink: LinkSheet,
@@ -74,7 +77,9 @@ export default function EditorPanels({ actions }: { actions: EditorActions }) {
   const pickDrawTool = useEditorUiStore((s: { pickDrawTool: (tool: string) => void }) => s.pickDrawTool);
   const leaveDock = useEditorUiStore((s: { leaveDock: () => void }) => s.leaveDock);
   const mode: EditorMode = useEditorUiStore((s: { mode: EditorMode }) => s.mode);
-  const dock = EDITOR_MODES[mode].dock.map((id) => DOCK.find((d) => d.id === id)).filter((d): d is DockItem => Boolean(d));
+  const busy = Boolean(actions.isRemovingBg);
+  const dock = EDITOR_MODES[mode].dock.map((id) => DOCK.find((d) => d.id === id)).filter((d): d is DockItem => Boolean(d))
+    .map((d) => (d.id === 'sticker' && busy ? { ...d, label: 'Generating…' } : d));
   const setActiveLayerId = useMemeEditorStore((s: { setActiveLayerId: (id: string | null) => void }) => s.setActiveLayerId);
   const faceMorph = useMemeEditorStore((s: { templateFaceMorph: { morphProgress?: number } | null }) => s.templateFaceMorph);
   const { kind } = useSelection();
@@ -105,11 +110,13 @@ export default function EditorPanels({ actions }: { actions: EditorActions }) {
     : dockTab === 'canvas' ? <CanvasStrip actions={actions} />
     : dockTab === 'swap' ? <FaceSwapStrip actions={actions} />
     : dockTab === 'card' ? <CardStrip actions={actions} />
-    : dockTab === 'ai' ? <AiStrip /> : null;
+    : dockTab === 'ai' ? <AiStrip />
+    : dockTab === 'sticker' ? <StickerStrip actions={actions} /> : null;
 
   // A selected layer's pill replaces the strip, the Draw strip too unless a draw tool is live (taps
-  // then draw rather than select).
-  const layerTools = Boolean(kind) && !(dockTab === 'draw' && drawTool) && !faceMorph;
+  // then draw rather than select). In the Stickers maker a photo keeps the Sticker strip: its few
+  // buttons are the whole job there.
+  const layerTools = Boolean(kind) && !(dockTab === 'draw' && drawTool) && !faceMorph && !(mode === 'sticker' && kind === 'image');
   const SheetComponent = sheet && !orphaned ? SHEETS[sheet] : null;
   if (SheetComponent && full) {
     // A browsing sheet takes the editor's whole height, over the meme, with its own close button.
@@ -136,6 +143,10 @@ export default function EditorPanels({ actions }: { actions: EditorActions }) {
         items={dock}
         active={layerTools ? null : dockTab}
         onSelect={(id) => {
+          if (id === 'sticker') {
+            if (!busy) void actions.handleGenerateSticker();
+            return;
+          }
           // Every tab deselects the layer and shows its strip; tapping the lit tab again closes it
           // (and stops drawing). With a layer selected no tab is lit, so any tab opens its strip.
           if (dockTab === id && !layerTools) leaveDock();

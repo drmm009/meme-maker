@@ -16,7 +16,11 @@ describe('createEditorUiStore', () => {
   it("starts a focused maker on its own tab; the Stickers maker exports see-through without changing what is remembered", () => {
     localStorage.setItem('meme-maker-export-prefs', JSON.stringify({ format: 'jpeg', quality: 0.8, width: 720, transparent: false }));
     const sticker = createEditorUiStore({ id: 't', editorMode: 'sticker' });
-    expect(sticker.getState()).toMatchObject({ mode: 'sticker', dockTab: 'media' });
+    expect(sticker.getState()).toMatchObject({ mode: 'sticker', dockTab: 'sticker', stickerDieCut: true });
+    // Its Gallery is the Templates sheet, which keeps the Sticker tab (Media isn't in its dock).
+    sticker.getState().openSheet('templates');
+    expect(sticker.getState()).toMatchObject({ sheet: 'templates', dockTab: 'sticker' });
+    sticker.getState().closeSheet();
     expect(sticker.getState().exportPrefs).toEqual({ format: 'png', quality: 0.8, width: 720, transparent: true });
     sticker.getState().setExportPrefs((p) => ({ ...p, format: 'webp' }));
     expect(JSON.parse(localStorage.getItem('meme-maker-export-prefs')).format).toBe('jpeg');

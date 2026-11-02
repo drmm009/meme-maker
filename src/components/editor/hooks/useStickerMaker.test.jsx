@@ -23,7 +23,7 @@ const setup = (mode, { fail = false } = {}) => {
       <EditorUiStoreContext.Provider value={ui}>{children}</EditorUiStoreContext.Provider>
     </MemeEditorStoreContext.Provider>
   );
-  renderHook(() => useStickerMaker({ removeBackground }), { wrapper });
+  const { result } = renderHook(() => useStickerMaker({ removeBackground }), { wrapper });
   const addPhoto = async () => {
     act(() => {
       const s = store.getState();
@@ -31,43 +31,69 @@ const setup = (mode, { fail = false } = {}) => {
       s.setActiveLayerId('new');
     });
     await act(async () => { vi.runAllTimers(); });
-    await act(async () => {});
   };
+  const generate = () => act(async () => { await result.current.generate(); });
   const layer = (id) => store.getState().imageLayers.find((l) => l.id === id);
-  return { store, ui, removeBackground, addPhoto, layer };
+  return { store, ui, removeBackground, addPhoto, generate, setDieCut: (on) => act(() => result.current.setDieCut(on)), layer };
 };
 
 afterEach(() => vi.useRealTimers());
 
 describe('useStickerMaker', () => {
-  it('turns a photo added in the Stickers maker into a centred, cut-out, outlined sticker', async () => {
+  it('centres a photo added in the Stickers maker and deselects it, leaving the cut-out to Generate', async () => {
     vi.useFakeTimers();
-    const { removeBackground, addPhoto, layer } = setup('sticker');
+    const { store, removeBackground, addPhoto, layer } = setup('sticker');
     await addPhoto();
-    expect(removeBackground).toHaveBeenCalledTimes(1);
-    expect(layer('new')).toMatchObject({ ...STICKER_PHOTO, ...STICKER_OUTLINE, url: 'cut.png' });
+    expect(layer('new')).toMatchObject(STICKER_PHOTO);
+    expect(store.getState().activeLayerId).toBeNull();
+    expect(removeBackground).not.toHaveBeenCalled();
     // A photo already there is left alone.
-    expect(layer('old')).toMatchObject({ url: 'old.png', x: 0.2, y: 0.2 });
-    expect(layer('old').dieCut).toBeUndefined();
+    expect(layer('old')).toMatchObject({ x: 0.2, y: 0.2 });
   });
 
-  it('gives no outline when the cut-out fails', async () => {
+  it('Generate cuts out every photo not cut out yet and outlines it; Die-cut turns the outline off and on', async () => {
     vi.useFakeTimers();
-    const { addPhoto, layer } = setup('sticker', { fail: true });
+    const { store, ui, removeBackground, addPhoto, generate, setDieCut, layer } = setup('sticker');
     await addPhoto();
-    expect(layer('new').dieCut).toBeUndefined();
+    await generate();
+    expect(removeBackground).toHaveBeenCalledTimes(2);
+    expect(layer('new')).toMatchObject({ ...STICKER_OUTLINE, url: 'cut.png' });
+    expect(layer('old')).toMatchObject({ ...STICKER_OUTLINE, url: 'cut.png' });
+    expect(store.getState().activeLayerId).toBeNull();
+    // Already cut out: Generate again does nothing more.
+    await generate();
+    expect(removeBackground).toHaveBeenCalledTimes(2);
+
+    setDieCut(false);
+    expect(ui.getState().stickerDieCut).toBe(false);
+    expect(layer('new').dieCut).toBe(false);
+    setDieCut(true);
+    expect(layer('new')).toMatchObject(STICKER_OUTLINE);
+  });
+
+  it('gives no outline when the cut-out fails, or with Die-cut off', async () => {
+    vi.useFakeTimers();
+    const failed = setup('sticker', { fail: true });
+    await failed.addPhoto();
+    await failed.generate();
+    expect(failed.layer('new').dieCut).toBeUndefined();
+
+    const plain = setup('sticker');
+    plain.setDieCut(false);
+    await plain.addPhoto();
+    await plain.generate();
+    expect(plain.layer('new')).toMatchObject({ url: 'cut.png', dieCut: false });
   });
 
   it('leaves photos alone in the other modes, and after Full editor', async () => {
     vi.useFakeTimers();
     const full = setup('full');
     await full.addPhoto();
-    expect(full.removeBackground).not.toHaveBeenCalled();
     expect(full.layer('new')).toMatchObject({ x: 0.3, y: 0.7, scale: 1.5 });
 
     const switched = setup('sticker');
     act(() => switched.ui.getState().openFullEditor());
     await switched.addPhoto();
-    expect(switched.removeBackground).not.toHaveBeenCalled();
+    expect(switched.layer('new')).toMatchObject({ x: 0.3, y: 0.7, scale: 1.5 });
   });
 });
