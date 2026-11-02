@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
 import { MessageSquareQuote, Plus, X, BookmarkPlus, AlignLeft, AlignCenter, AlignRight } from 'lucide-react';
-import { Sheet, Section, Row, ChipRow, Chip, Toggle, SwatchRow, Slider, Switch, TileGrid, Tile, SegmentedControl } from '../../ui';
+import { Sheet, Section, Row, ChipRow, Chip, Toggle, SwatchRow, Slider, TileGrid, Tile, SegmentedControl } from '../../ui';
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
 import { useEditorUiStore } from '../store/useEditorUiStore';
 import { getContrastStroke } from '../memeEditorUtils';
@@ -312,13 +312,13 @@ export default function TextSheet({ actions, onClose }: { actions: EditorActions
 
           {shows('outline') && (
             <Section title={heading('outline')} id="outline">
-              <Row label="Outline" end>
-                {strokeOn && <Slider label="Outline thickness" min={1} max={24} value={Number(caption.strokeWidth || Math.max(3, Math.round(fontSize / 7)))} onChange={(v) => live({ strokeWidth: v })} format={(v) => `${Math.round(v)}px`} />}
-                <Switch label="Stroke" checked={strokeOn} onChange={(on) => set({ stroke: on ? getContrastStroke(caption.color || '#ffffff') : 'transparent' })} />
+              {/* None (the first swatch) turns the outline off; a colour turns it on. */}
+              <Row label="Outline">
+                <SwatchRow ariaLabel="Outline colour" colors={['transparent', ...OUTLINE_COLORS]} value={strokeOn ? String(caption.stroke) : 'transparent'} onChange={(c) => set({ stroke: c })} />
               </Row>
               {strokeOn && (
-                <Row label="">
-                  <SwatchRow ariaLabel="Outline colour" colors={OUTLINE_COLORS} value={caption.stroke || '#000000'} onChange={(c) => set({ stroke: c })} />
+                <Row label="Width">
+                  <Slider label="Outline thickness" min={1} max={24} value={Number(caption.strokeWidth || Math.max(3, Math.round(fontSize / 7)))} onChange={(v) => live({ strokeWidth: v })} format={(v) => `${Math.round(v)}px`} />
                 </Row>
               )}
             </Section>

@@ -1,4 +1,4 @@
-import { Trash2, Settings, SlidersHorizontal, Copy, Scissors, Aperture, Blend, ScanFace, Ellipsis, Layers, Palette, MessageSquareQuote } from 'lucide-react';
+import { Trash2, Settings, SlidersHorizontal, Copy, Scissors, Aperture, Blend, ScanFace, Ellipsis, Layers, Palette, MessageSquareQuote, CaseSensitive, Baseline } from 'lucide-react';
 import { FloatingToolbar } from '../../ui';
 import type { ToolbarItem } from '../../ui';
 import { useEditorUiStore } from '../store/useEditorUiStore';
@@ -36,9 +36,9 @@ export default function LayerToolbar({ actions }: { actions: EditorActions }) {
   if (kind === 'caption' && caption) {
     const isBubble = Boolean(caption.bubbleStyle);
     items = [
-      { id: 'font', label: 'Font', title: 'Font and my saved styles', icon: <span className="ie-glyph">Ar</span>, ...opens('text', 'font') },
+      { id: 'font', label: 'Font', title: 'Font and my saved styles', Icon: CaseSensitive, ...opens('text', 'font') },
       ...(isBubble ? [] : [
-        { id: 'style', label: 'Style', title: 'Size, bold, italic, underline, case, effects, alignment and spacing', icon: <span className="ie-glyph ie-glyph--bold">B</span>, ...opens('text', 'style') },
+        { id: 'style', label: 'Style', title: 'Size, bold, italic, underline, case, effects, alignment and spacing', Icon: Baseline, ...opens('text', 'style') },
       ]),
       { id: 'color', label: 'Color', title: 'Colour, outline, the box behind the text and opacity', icon: <span className="ie-color-dot" style={{ background: caption.color || '#ffffff' }} />, ...opens('text', 'color') },
       ...(isBubble ? [{ id: 'bubble', label: 'Bubble', title: 'Bubble style', Icon: MessageSquareQuote, ...opens('bubble') }] : []),

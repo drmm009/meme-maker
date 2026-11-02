@@ -367,9 +367,12 @@ describe('MemeEditor', () => {
     const color = sheet('Color');
     expect(within(color).getByLabelText('Text colour')).toBeTruthy();
     expect(within(color).getByLabelText('Text opacity')).toBeTruthy();
-    expect(within(color).queryByLabelText('Stroke')).toBeNull();
+    expect(within(color).queryByLabelText('Outline colour')).toBeNull();
     fireEvent.click(within(color).getByRole('tab', { name: 'Outline' }));
-    expect(within(color).getByLabelText('Stroke')).toBeTruthy();
+    expect(within(color).getByLabelText('Outline colour')).toBeTruthy();
+    // None, the first outline swatch, turns it off and hides its width.
+    fireEvent.click(within(within(color).getByRole('radiogroup', { name: 'Outline colour' })).getByRole('radio', { name: 'None' }));
+    expect(within(color).queryByLabelText('Outline thickness')).toBeNull();
     expect(within(color).queryByLabelText('Text colour')).toBeNull();
     fireEvent.click(within(color).getByRole('tab', { name: 'Box' }));
     expect(within(color).getByLabelText('Text box colour')).toBeTruthy();
@@ -511,7 +514,7 @@ describe('MemeEditor', () => {
     openTextSheet();
     const panel = () => sheet('Text');
     act(() => canvas.props.onUpdateCaptionBounds(canvas.props.captions[0].id, { stroke: 'transparent' }));
-    fireEvent.click(within(panel()).getByRole('switch', { name: 'Stroke' }));
+    fireEvent.click(within(within(panel()).getByRole('radiogroup', { name: 'Outline colour' })).getByRole('radio', { name: '#000000' }));
     expect(canvas.props.captions[0].stroke).toBe('#000000');
     fireEvent.click(within(within(panel()).getByRole('radiogroup', { name: 'Text colour' })).getAllByRole('radio')[1]);
     // A coloured caption keeps its outline (it used to switch off).
@@ -529,7 +532,7 @@ describe('MemeEditor', () => {
     expect(captionTexts()[0]).toBe('ME AT 3AM');
     fireEvent.click(within(panel).getByRole('button', { name: 'Italic' }));
     expect(canvas.props.captions[0].italic).toBe(true);
-    fireEvent.click(within(panel).getByRole('switch', { name: 'Stroke' }));
+    fireEvent.click(within(within(panel).getByRole('radiogroup', { name: 'Outline colour' })).getByRole('radio', { name: 'None' }));
     expect(canvas.props.captions[0].stroke).toBe('transparent');
     fireEvent.click(within(panel).getByText('BOTTOM TEXT'));
     expect(canvas.props.activeLayerId).toBe(canvas.props.captions[1].id);
@@ -873,7 +876,7 @@ describe('MemeEditor', () => {
     expect(canvas.props.captions[0].shadowSize).toBe(8);
     expect(within(sheet('Text')).getByLabelText('Upload your own font')).toBeTruthy();
     // Turning the outline off hides its thickness.
-    fireEvent.click(within(sheet('Text')).getByRole('switch', { name: 'Stroke' }));
+    fireEvent.click(within(within(sheet('Text')).getByRole('radiogroup', { name: 'Outline colour' })).getByRole('radio', { name: 'None' }));
     expect(within(sheet('Text')).queryByLabelText('Outline thickness')).toBeNull();
   }, 30000);
 
