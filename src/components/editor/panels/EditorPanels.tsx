@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { Type, Copy, PenLine, Sparkles, LayoutGrid, ScanFace, Share2 } from 'lucide-react';
+import { Type, Copy, PenLine, Sparkles, LayoutGrid, ScanFace, Share2, Wand2 } from 'lucide-react';
 import { ToolDock, ToolStrip } from '../../ui';
 import type { DockItem } from '../../ui';
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
@@ -27,6 +27,8 @@ import TemplatesSheet, { MemePickerSheet } from './TemplatesSheet';
 import FaceSwapStrip from './FaceSwapStrip';
 import CardFormSheet, { CardLookSheet } from './CardFormSheet';
 import CardStrip from './CardStrip';
+import AiMemeSheet from './AiMemeSheet';
+import AiStrip from './AiStrip';
 import StickersSheet from './StickersSheet';
 import EmojiSheet from './EmojiSheet';
 import BubbleSheet from './BubbleSheet';
@@ -49,13 +51,14 @@ const DOCK: DockItem[] = [
   { id: 'canvas', label: 'Canvas', Icon: LayoutGrid, title: 'Canvas colour, bands and watermark' },
   { id: 'swap', label: 'Face Swap', Icon: ScanFace, title: 'Your face and the meme' },
   { id: 'card', label: 'Card', Icon: Share2, title: 'The social card' },
+  { id: 'ai', label: 'AI', Icon: Wand2, title: 'AI meme ideas' },
 ];
 
 const SHEETS = { text: TextSheet, media: MediaSheet, draw: DrawSheet, canvasColor: CanvasColorSheet, watermark: WatermarkSheet, header: HeaderSheet, footer: FooterSheet, filters: FiltersSheet, background: BackgroundSheet, layers: LayersSheet, export: ExportSheet, library: LibrarySheet, mediaLink: LinkSheet,
   templates: TemplatesSheet, memes: MemePickerSheet, stickers: StickersSheet, emoji: EmojiSheet, bubble: BubbleSheet, diecut: DieCutSheet,
-  card: CardFormSheet, cardLook: CardLookSheet };
+  card: CardFormSheet, cardLook: CardLookSheet, aiMeme: AiMemeSheet };
 // Sheets for browsing a big library, shown full height (the meme needn't stay in view).
-const FULL_SHEETS = new Set<string>(['templates', 'memes', 'stickers', 'emoji']);
+const FULL_SHEETS = new Set<string>(['templates', 'memes', 'stickers', 'emoji', 'aiMeme']);
 
 // The bottom of the editor: the dock with the open tab's tool strip above it, or, when one of that
 // tab's sheets is open, the strip above the sheet (so its tools stay one tap away). While a layer is
@@ -101,7 +104,8 @@ export default function EditorPanels({ actions }: { actions: EditorActions }) {
     : dockTab === 'fx' ? <AiFiltersStrip actions={actions} />
     : dockTab === 'canvas' ? <CanvasStrip actions={actions} />
     : dockTab === 'swap' ? <FaceSwapStrip actions={actions} />
-    : dockTab === 'card' ? <CardStrip actions={actions} /> : null;
+    : dockTab === 'card' ? <CardStrip actions={actions} />
+    : dockTab === 'ai' ? <AiStrip /> : null;
 
   // A selected layer's pill replaces the strip, the Draw strip too unless a draw tool is live (taps
   // then draw rather than select).

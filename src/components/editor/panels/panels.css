@@ -1358,7 +1358,7 @@ div.ie-layer-pick { cursor: default; }
 /* ══════════════════════════════════════════════════════════════════════════
    BOTTOM SHEET ROUNDED EDGES: Universal Pill Buttons & Rounded Containers
    ══════════════════════════════════════════════════════════════════════════ */
-.ie-panels--sheet button:not(.ui-tile):not(.ie-shape-btn):not(.ie-filter-tile):not(.ui-icon-btn):not(.ui-swatch):not(.ie-font-upload):not(.ie-wm-dot):not(.ie-style-remove):not(.ie-browse-item):not(.ie-bg-card):not(.ie-filter-tab):not(.ie-style-apply):not(.ie-style-save):not(.ui-toggle):not(.ui-chip):not(.ui-seg-btn):not(.ie-bubble-card),
+.ie-panels--sheet button:not(.ui-tile):not(.ie-shape-btn):not(.ie-filter-tile):not(.ui-icon-btn):not(.ui-swatch):not(.ie-font-upload):not(.ie-wm-dot):not(.ie-style-remove):not(.ie-browse-item):not(.ie-bg-card):not(.ie-filter-tab):not(.ie-style-apply):not(.ie-style-save):not(.ui-toggle):not(.ui-chip):not(.ui-seg-btn):not(.ie-bubble-card):not(.ie-ai-template):not(.ie-ai-idea),
 .ie-panels--sheet .ui-btn,
 .ie-panels--sheet .ui-btn-accent,
 .ie-panels--sheet .ui-btn--accent,

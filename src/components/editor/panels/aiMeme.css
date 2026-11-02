@@ -1,0 +1,183 @@
+/* The AI Meme maker's prompt screen: full height over the meme, its body scrolling under the title. */
+.ie-ai-sheet { height: 100%; }
+.ie-ai-sheet .ui-sheet-body {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0;
+}
+
+.ie-ai-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 0 16px 24px;
+}
+
+.ie-ai-label {
+  display: block;
+  margin: 0 0 8px;
+  color: var(--ui-muted);
+  /* App.css sets every h3 on a phone to 1.15rem !important. */
+  font-size: 12px !important;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* The template rail: square thumbnails in a sideways line, the picked one ringed in orange. */
+.ie-ai-rail {
+  display: flex;
+  gap: 8px;
+  margin: 0 -16px;
+  padding: 3px 16px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.ie-ai-rail::-webkit-scrollbar { display: none; }
+
+.ie-ai-template {
+  flex: none;
+  width: 72px;
+  height: 72px;
+  padding: 0;
+  overflow: hidden;
+  border: none;
+  border-radius: 14px;
+  background: var(--ui-surface-2);
+  cursor: pointer;
+  box-shadow: 0 0 0 2px transparent;
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+.ie-ai-template:active { transform: scale(0.95); }
+.ie-ai-template.is-on { box-shadow: 0 0 0 3px var(--ui-accent); }
+.ie-ai-template .ie-browse-thumb,
+.ie-ai-idea .ie-browse-thumb { height: 100%; }
+
+.ie-ai-template-name {
+  margin: 8px 0 0;
+  overflow: hidden;
+  color: var(--ui-text);
+  font-size: 14px;
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ie-ai-prompt {
+  width: 100%;
+  resize: none;
+  font-size: 15px;
+}
+
+.ie-ai-themes {
+  display: flex;
+  gap: 6px;
+  margin: 10px -16px 0;
+  padding: 0 16px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.ie-ai-themes::-webkit-scrollbar { display: none; }
+
+.ie-ai-generate {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 50px;
+  border: none;
+  border-radius: 999px;
+  background: var(--primary-gradient, var(--ui-accent));
+  color: #fff;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+.ie-ai-generate:active { transform: scale(0.98); }
+.ie-ai-generate:disabled { opacity: 0.7; cursor: default; }
+
+/* Four captions, each on the picked template, two to a line. */
+.ie-ai-ideas {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  align-items: start;
+}
+
+.ie-ai-idea {
+  position: relative;
+  display: block;
+  width: 100%;
+  max-height: 260px;
+  padding: 0;
+  overflow: hidden;
+  border: none;
+  border-radius: 14px;
+  background: var(--ui-surface-2);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.ie-ai-idea:active { transform: scale(0.97); }
+@media (hover: hover) {
+  .ie-ai-idea:hover { box-shadow: 0 0 0 2px var(--ui-accent); }
+}
+.ie-ai-idea.is-loading {
+  background: linear-gradient(100deg, var(--ui-surface-2) 30%, #3d3f46 50%, var(--ui-surface-2) 70%) 0 0 / 300% 100%;
+  animation: ie-browse-sheen 1.3s ease-in-out infinite;
+}
+
+/* The caption across the top, as the editor draws it: white Impact with a black outline. */
+.ie-ai-idea-text {
+  position: absolute;
+  inset: 6px 6px auto;
+  color: #fff;
+  font-family: Impact, 'Anton', sans-serif;
+  font-size: 13px;
+  line-height: 1.12;
+  text-align: center;
+  -webkit-text-stroke: 0.6px #000;
+  paint-order: stroke fill;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+  overflow-wrap: anywhere;
+}
+
+/* The Gemini key line, with its field under it once opened. */
+.ie-ai-key {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ui-faint);
+  font-size: 12.5px;
+}
+.ie-ai-key span { flex: 1; min-width: 0; }
+
+.ie-ai-key-btn {
+  flex: none;
+  height: 32px;
+  padding: 0 12px;
+  border: none;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--ui-text);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.ie-ai-key-form {
+  display: flex;
+  gap: 8px;
+  margin-top: -10px;
+}
+.ie-ai-key-form .ui-field { flex: 1; min-width: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ie-ai-idea.is-loading { animation: none; }
+}

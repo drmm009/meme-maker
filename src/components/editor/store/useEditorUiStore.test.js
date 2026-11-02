@@ -22,6 +22,9 @@ describe('createEditorUiStore', () => {
     expect(JSON.parse(localStorage.getItem('meme-maker-export-prefs')).format).toBe('jpeg');
     expect(createEditorUiStore({ id: 't', editorMode: 'faceswap' }).getState()).toMatchObject({ mode: 'faceswap', dockTab: 'swap' });
     expect(createEditorUiStore({ id: 't', editorMode: 'social' }).getState()).toMatchObject({ mode: 'social', dockTab: 'card' });
+    // The AI Meme maker opens on its prompt screen, until a caption has been picked.
+    expect(createEditorUiStore({ id: 't', editorMode: 'ai' }).getState()).toMatchObject({ mode: 'ai', dockTab: 'ai', sheet: 'aiMeme' });
+    expect(createEditorUiStore({ id: 't', editorMode: 'ai', aiPicked: true }).getState().sheet).toBeNull();
     const full = createEditorUiStore({ id: 't' });
     expect(full.getState()).toMatchObject({ mode: 'full', dockTab: 'text' });
     full.getState().setExportPrefs((p) => ({ ...p, format: 'webp' }));

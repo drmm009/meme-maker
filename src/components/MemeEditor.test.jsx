@@ -1100,6 +1100,34 @@ describe('MemeEditor', () => {
     expect(card().waMessages[0].text).toBe('hi');
   }, 30000);
 
+  it('the AI Meme maker opens on its prompt screen; a picked caption makes the meme on the picked template', async () => {
+    localStorage.removeItem('gemini_api_key');
+    renderEditor({ ...TEMPLATE, editorMode: 'ai', aiPrompt: 'mondays' });
+    const screenSheet = sheet('AI Meme');
+    expect(within(screenSheet).getByLabelText("What's it about?").value).toBe('mondays');
+    // The meme it opened on is picked first; pick another.
+    const rail = within(screenSheet).getByRole('radiogroup', { name: 'Template' });
+    const choices = within(rail).getAllByRole('radio');
+    expect(choices[0].getAttribute('aria-checked')).toBe('true');
+    fireEvent.click(choices[1]);
+    const pickedName = choices[1].getAttribute('aria-label');
+    expect(within(screenSheet).getByText(/built-in library/)).toBeTruthy();
+
+    fireEvent.click(within(screenSheet).getByRole('button', { name: 'Generate captions' }));
+    const ideas = await within(screenSheet).findAllByRole('button', { name: /^Use: / });
+    expect(ideas).toHaveLength(4);
+    const text = ideas[0].getAttribute('aria-label').slice('Use: '.length);
+    fireEvent.click(ideas[0]);
+
+    expect(screen.queryByRole('dialog', { name: 'AI Meme' })).toBeNull();
+    expect(captionTexts()).toEqual([text]);
+    expect(canvas.props.template.name).toBe(pickedName);
+    expect(screen.getByText('AI Meme', { selector: '.ui-topbar-title' })).toBeTruthy();
+    expect(within(bar()).getAllByRole('button').map((b) => b.textContent.trim())).toEqual(['AI', 'Text', 'Media', 'AI/Filters']);
+    fireEvent.click(within(strip('AI meme tools')).getByText('New meme'));
+    expect(sheet('AI Meme')).toBeTruthy();
+  }, 30000);
+
   it('the full editor has no Full editor button, and an unknown mode is the full editor', () => {
     renderEditor({ ...TEMPLATE, editorMode: 'nope' });
     expect(screen.getByText('Meme Editor')).toBeTruthy();

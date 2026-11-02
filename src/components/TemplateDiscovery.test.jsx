@@ -106,8 +106,10 @@ describe('TemplateDiscovery', () => {
     fireEvent.click(screen.getByRole('button', { name: /start creating/i }));
     expect(onCreateCustom).toHaveBeenCalledWith('image');
 
-    // Click AI Punchlines
+    // Click AI Punchlines: the AI Meme maker, on an image meme (not a social card)
     fireEvent.click(screen.getByRole('button', { name: 'AI Punchlines' }));
-    expect(onOpenAiGenerator).toHaveBeenCalled();
+    expect(onSelectTemplate).toHaveBeenLastCalledWith(expect.objectContaining({ editorMode: 'ai', aiPrompt: '' }));
+    expect(onSelectTemplate.mock.lastCall[0].category).not.toBe('social');
+    expect(onOpenAiGenerator).not.toHaveBeenCalled();
   });
 });

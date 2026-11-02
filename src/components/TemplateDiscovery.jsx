@@ -13,6 +13,7 @@ import { safeGet, safeSet } from '../utils/storage';
 import { templateNumericId } from '../utils/templateOrder';
 import './TemplateDiscovery.css';
 import { makeStickerTemplate } from './editor/stickerMaker';
+import { aiMemeTemplate, suitsAiCaption } from './editor/aiMeme';
 
 const AI_VIBE_MODES = [
   { id: 'roast', icon: Flame, emoji: '🔥', label: 'Roast Mode', prompt: 'Roast my daily morning routine and procrastination' },
@@ -714,19 +715,23 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom, on
     return cols;
   }, [displayedTemplates, columnsCount]);
 
+  // The AI Meme maker, on the first image meme, its prompt screen starting from `prompt` (or the
+  // AI caption generator when there's no editor to open).
+  const openAiMeme = (prompt = '') => {
+    const base = templatesList.find(suitsAiCaption);
+    if (onSelectTemplate && base) onSelectTemplate(aiMemeTemplate(base, prompt));
+    else if (onOpenAiGenerator) onOpenAiGenerator(prompt);
+  };
+
   const handleSelectVibe = (vibe) => {
     setSelectedVibe(vibe.id);
     setAiPromptText(vibe.prompt);
-    if (onOpenAiGenerator) {
-      onOpenAiGenerator(vibe.prompt);
-    }
+    openAiMeme(vibe.prompt);
   };
 
   const handleOpenAiPrompt = (e) => {
     e?.preventDefault?.();
-    if (onOpenAiGenerator) {
-      onOpenAiGenerator(aiPromptText.trim() || 'Make a hilarious meme about my Monday routine');
-    }
+    openAiMeme(aiPromptText.trim());
   };
 
   const handleShelfSeeAll = (tagId, sortOption = 'trending') => {
@@ -792,9 +797,7 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom, on
         setSelectedTag('social');
       }
     } else if (actionKey === 'ai') {
-      if (onOpenAiGenerator) {
-        onOpenAiGenerator();
-      }
+      openAiMeme();
     } else if (actionKey === 'upload') {
       cutoutFileInputRef.current?.click();
     }
