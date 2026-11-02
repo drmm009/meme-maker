@@ -3,6 +3,8 @@ import { createStore, useStore } from 'zustand';
 import { MEME_TEMPLATES } from '../../../data/templates';
 import { safeGet, safeSet } from '../../../utils/storage';
 import { isSocialCardCaption } from '../memeEditorUtils';
+import { EDITOR_MODES, editorModeOf } from '../editorModes';
+import { stickerExportPrefs } from '../stickerMaker';
 
 // UI state shared across the editor's panels: which tab, submenu, menu or
 // modal is open, drawing tool settings, the watermark. One store per editor.
@@ -47,10 +49,12 @@ function initialSocialModalPlatform(template) {
 }
 
 export function buildInitialUi(template) {
+  const mode = editorModeOf(template);
   return {
+    mode, // the full editor or one focused maker (editor/editorModes.ts): its title and dock tabs
     activeTab: 'text', // 'text' | 'images' | 'draw' | 'canvas' | 'watermark' | 'filters'
     sheet: null, // the open bottom sheet: 'text' | 'media' | 'draw' | 'canvasColor' | 'watermark' | 'filters' | null
-    dockTab: 'text', // the dock tab whose tool strip shows: 'draw' | 'media' | 'text' | 'fx' | 'canvas' | null
+    dockTab: EDITOR_MODES[mode].startTab, // the dock tab whose tool strip shows: 'draw' | 'media' | 'text' | 'fx' | 'canvas' | null
     sheetFromPill: false, // the open sheet came from the layer tools pill, which then stays above it
     sheetFocus: null, // what part of the sheet to show: one Text part's sections (TEXT_PARTS), 'size' to scroll the Media sheet to, or null
     activeSubmenu: null, // 'font' | 'color' | 'align' | 'effects' | 'bg' | 'blur' | 'bubble' | 'tweetTheme' | 'tweetTrend' | 'drawSettings' | 'watermark' | 'canvasBg' | 'banner' | 'filters'
@@ -86,7 +90,8 @@ export function buildInitialUi(template) {
     brushSize: 10,
     watermark: loadWatermark(),
     customFonts: [], // fonts the person uploaded: [{ family, css }] (utils/customFonts)
-    exportPrefs: loadExportPrefs(), // { format: 'png' | 'jpeg' | 'webp', quality: 0.5..1, width: 'full' | 720 | 480 }
+    // A sticker exports see-through (stickerMaker.ts); only the full editor's choices are remembered.
+    exportPrefs: mode === 'sticker' ? stickerExportPrefs(loadExportPrefs()) : loadExportPrefs(), // { format: 'png' | 'jpeg' | 'webp', quality: 0.5..1, width: 'full' | 720 | 480 }
     libraryTab: 'history', // 'history' | 'saved' | 'shortcuts'
   };
 }
@@ -114,6 +119,9 @@ export function createEditorUiStore(template) {
       activeSubmenu: state.activeSubmenu === menuName ? null : menuName,
       lastUsedSettingButton: menuName,
     })),
+
+    // A focused maker's Full editor: every dock tab, on the same meme (the document store is untouched).
+    openFullEditor: () => set({ mode: 'full' }),
 
     updateWatermark: (key, value) => set((state) => ({ watermark: { ...state.watermark, [key]: value } })),
 
@@ -165,7 +173,7 @@ export function createEditorUiStore(template) {
   // Keep the watermark settings across sessions.
   store.subscribe((state, prev) => {
     if (state.watermark !== prev.watermark) safeSet(WATERMARK_KEY, state.watermark);
-    if (state.exportPrefs !== prev.exportPrefs) safeSet(EXPORT_PREFS_KEY, state.exportPrefs);
+    if (state.exportPrefs !== prev.exportPrefs && state.mode === 'full') safeSet(EXPORT_PREFS_KEY, state.exportPrefs);
   });
 
   return store;
@@ -177,4 +185,11 @@ export function useEditorUiStore(selector) {
   const store = useContext(EditorUiStoreContext);
   if (!store) throw new Error('useEditorUiStore must be used inside EditorUiStoreContext');
   return useStore(store, selector);
+}
+
+// The store itself, for reading the UI state at a moment rather than subscribing to it.
+export function useEditorUiStoreApi() {
+  const store = useContext(EditorUiStoreContext);
+  if (!store) throw new Error('useEditorUiStoreApi must be used inside EditorUiStoreContext');
+  return store;
 }

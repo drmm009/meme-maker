@@ -2,11 +2,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { act, renderHook } from '@testing-library/react';
 
-const io = vi.hoisted(() => ({ saved: null, saves: [] }));
+const io = vi.hoisted(() => ({ saved: null, saves: [], loaded: [], saveModes: [] }));
 vi.mock('../../../utils/memeDraftStore', async (importOriginal) => ({
   ...(await importOriginal()),
-  loadMemeDraft: async () => io.saved,
-  saveMemeDraft: async (state) => { io.saves.push(state); },
+  loadMemeDraft: async (mode) => { io.loaded.push(mode); return io.saved; },
+  saveMemeDraft: async (state, mode) => { io.saves.push(state); io.saveModes.push(mode); },
 }));
 
 // Tests share a module cache (isolate: false): load the hook fresh, so it uses this file's mock.
@@ -32,6 +32,8 @@ const setup = (opts = {}) => {
 beforeEach(() => {
   io.saved = null;
   io.saves = [];
+  io.loaded = [];
+  io.saveModes = [];
 });
 afterEach(() => vi.useRealTimers());
 
@@ -42,7 +44,7 @@ describe('useMemeDraft', () => {
     await act(async () => {});
     expect(result.current.offer).toEqual({ savedAt: savedDraft.savedAt, name: 'Old one', layers: 1 });
     act(() => result.current.restore());
-    expect(onRestore).toHaveBeenCalledWith(savedDraft.document);
+    expect(onRestore).toHaveBeenCalledWith(savedDraft.document, 'full');
   });
 
   it('makes no offer in a restored session', async () => {
@@ -71,6 +73,25 @@ describe('useMemeDraft', () => {
     await act(async () => { vi.advanceTimersByTime(1200); });
     expect(io.saves).toHaveLength(1);
     expect(io.saves[0].captions.at(-1).text).toBe('NEW');
+  });
+
+  it("offers the mode's own draft, restores into that mode, and saves under the mode it is in now", async () => {
+    io.saved = savedDraft;
+    vi.useFakeTimers();
+    let mode = 'sticker';
+    const { result, store, onRestore } = setup({ getMode: () => mode });
+    await act(async () => {});
+    expect(io.loaded).toEqual(['sticker']);
+    act(() => result.current.restore());
+    expect(onRestore).toHaveBeenCalledWith(savedDraft.document, 'sticker');
+    // After Full editor, edits are the full editor's draft.
+    mode = 'full';
+    act(() => {
+      store.getState().setCaptions([]);
+      store.getState().pushHistory();
+    });
+    await act(async () => { vi.advanceTimersByTime(1200); });
+    expect(io.saveModes).toEqual(['full']);
   });
 
   it('saves a pending edit on unmount', async () => {

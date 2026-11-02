@@ -32,9 +32,12 @@ import DieCutSheet from './DieCutSheet';
 import LayerToolbar from './LayerToolbar';
 import { DRAW_TOOLS } from './drawTools';
 import { useSmoothHeight } from './useSmoothHeight';
+import { EDITOR_MODES } from '../editorModes';
+import type { EditorMode } from '../editorModes';
 import './panels.css';
 
-// Text sits in the middle; the open section is the wide gradient pill.
+// Text sits in the middle; the open section is the wide gradient pill. A focused maker's dock has
+// only its mode's tabs (editorModes.ts), in its order.
 const DOCK: DockItem[] = [
   { id: 'draw', label: 'Draw', Icon: PenLine, title: 'Draw on the meme' },
   { id: 'media', label: 'Media', Icon: Copy, title: 'Photos, videos, stickers and emoji' },
@@ -61,6 +64,8 @@ export default function EditorPanels({ actions }: { actions: EditorActions }) {
   const showDockTab = useEditorUiStore((s: { showDockTab: (tab: string) => void }) => s.showDockTab);
   const pickDrawTool = useEditorUiStore((s: { pickDrawTool: (tool: string) => void }) => s.pickDrawTool);
   const leaveDock = useEditorUiStore((s: { leaveDock: () => void }) => s.leaveDock);
+  const mode: EditorMode = useEditorUiStore((s: { mode: EditorMode }) => s.mode);
+  const dock = EDITOR_MODES[mode].dock.map((id) => DOCK.find((d) => d.id === id)).filter((d): d is DockItem => Boolean(d));
   const setActiveLayerId = useMemeEditorStore((s: { setActiveLayerId: (id: string | null) => void }) => s.setActiveLayerId);
   const faceMorph = useMemeEditorStore((s: { templateFaceMorph: { morphProgress?: number } | null }) => s.templateFaceMorph);
   const { kind } = useSelection();
@@ -116,7 +121,7 @@ export default function EditorPanels({ actions }: { actions: EditorActions }) {
       {layerTools ? <LayerToolbar actions={actions} /> : strip}
       <ToolDock
         ariaLabel="Editor tools"
-        items={DOCK}
+        items={dock}
         active={layerTools ? null : dockTab}
         onSelect={(id) => {
           // Every tab deselects the layer and shows its strip; tapping the lit tab again closes it

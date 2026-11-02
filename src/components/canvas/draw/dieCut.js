@@ -1,11 +1,13 @@
 const dieCutSilhouetteCache = new Map();
 
+// The picture's shape filled with the border colour. Pictures with a URL are cached by it; one
+// without (a canvas painted for this frame, such as a die-cut photo layer) is made fresh each time.
 export function getOrCreateDieCutSilhouette(imgSource, color, width, height) {
   const w = Math.max(1, Math.round(width));
   const h = Math.max(1, Math.round(height));
-  const srcKey = imgSource.src || imgSource.currentSrc || (imgSource.toDataURL ? 'canvas' : 'img');
-  const key = `${srcKey}_${color}_${w}_${h}`;
-  if (dieCutSilhouetteCache.has(key)) {
+  const srcKey = imgSource.src || imgSource.currentSrc || null;
+  const key = srcKey && `${srcKey}_${color}_${w}_${h}`;
+  if (key && dieCutSilhouetteCache.has(key)) {
     return dieCutSilhouetteCache.get(key);
   }
   const silCanvas = document.createElement('canvas');
@@ -16,6 +18,7 @@ export function getOrCreateDieCutSilhouette(imgSource, color, width, height) {
   sCtx.globalCompositeOperation = 'source-in';
   sCtx.fillStyle = color;
   sCtx.fillRect(0, 0, w, h);
+  if (!key) return silCanvas;
 
   if (dieCutSilhouetteCache.size > 80) {
     const firstKey = dieCutSilhouetteCache.keys().next().value;

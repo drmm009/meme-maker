@@ -13,6 +13,20 @@ describe('createEditorUiStore', () => {
     expect(s.socialModalPlatform).toBe('tweet');
   });
 
+  it("starts a focused maker on its own tab; the Stickers maker exports see-through without changing what is remembered", () => {
+    localStorage.setItem('meme-maker-export-prefs', JSON.stringify({ format: 'jpeg', quality: 0.8, width: 720, transparent: false }));
+    const sticker = createEditorUiStore({ id: 't', editorMode: 'sticker' });
+    expect(sticker.getState()).toMatchObject({ mode: 'sticker', dockTab: 'media' });
+    expect(sticker.getState().exportPrefs).toEqual({ format: 'png', quality: 0.8, width: 720, transparent: true });
+    sticker.getState().setExportPrefs((p) => ({ ...p, format: 'webp' }));
+    expect(JSON.parse(localStorage.getItem('meme-maker-export-prefs')).format).toBe('jpeg');
+    expect(createEditorUiStore({ id: 't', editorMode: 'faceswap' }).getState()).toMatchObject({ mode: 'faceswap', dockTab: 'fx' });
+    const full = createEditorUiStore({ id: 't' });
+    expect(full.getState()).toMatchObject({ mode: 'full', dockTab: 'text' });
+    full.getState().setExportPrefs((p) => ({ ...p, format: 'webp' }));
+    expect(JSON.parse(localStorage.getItem('meme-maker-export-prefs')).format).toBe('webp');
+  });
+
   it('opens the social card studio for social templates', () => {
     const s = createEditorUiStore({ defaultCaptions: [{ id: 'w', isWhatsAppCard: true }] }).getState();
     expect(s.showStylesModal).toBe(true);

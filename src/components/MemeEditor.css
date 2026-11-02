@@ -206,3 +206,7 @@
 /* Inspector card: kind Studio badge, the layer's tools, Done. */
 @keyframes ie-card-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 
+/* The Stickers maker: the see-through canvas on a soft checkerboard, so what will be transparent shows. */
+.canvas-wrapper--sticker .meme-canvas {
+  background: repeating-conic-gradient(#2e3036 0% 25%, #24262b 0% 50%) 0 0 / 20px 20px;
+}

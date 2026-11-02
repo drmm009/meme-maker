@@ -2,6 +2,7 @@ import { THEME_BADGE_BG, THEME_CORAL, drawDeleteHandle, drawResizeHandle, drawRo
 import { getFilterCss, drawImageFiltered } from '../../../data/photoFilters';
 import { applyShadow, compositeFor, cornerPx, isFramed, roundRectPath } from '../draw/layerLook';
 import { applyPhotoEffects, hasPhotoEffects, blurredCopy } from '../draw/photoEffects';
+import { renderDieCutImage } from '../draw/dieCut';
 import { isVideoUrl } from '../../editor/memeEditorUtils';
 
 export function paintImageLayer({
@@ -152,16 +153,30 @@ if (cached) {
     }
   };
 
+  // A die-cut photo (a cut-out, as the Stickers maker makes) is drawn on its own first, then
+  // outlined along its shape like a die-cut sticker (no corners or border frame).
+  const cut = imgLayer.dieCut && !imgLayer.isFaceMorph && typeof document !== 'undefined' ? document.createElement('canvas') : null;
+  if (cut) {
+    cut.width = Math.max(1, Math.ceil(w));
+    cut.height = Math.max(1, Math.ceil(h));
+  }
+  const cutCtx = cut?.getContext('2d');
+
   // Rounded, bordered or shadowed photos are drawn on their own first: the shadow then follows the
   // picture (cut-outs included) and isn't clipped away with the corners.
   const bw = imgLayer.borderWidth || 0;
-  const off = isFramed(imgLayer) && typeof document !== 'undefined' ? document.createElement('canvas') : null;
+  const off = !cutCtx && isFramed(imgLayer) && typeof document !== 'undefined' ? document.createElement('canvas') : null;
   if (off) {
     off.width = Math.max(1, Math.ceil(w + bw * 2));
     off.height = Math.max(1, Math.ceil(h + bw * 2));
   }
   const frameCtx = off?.getContext('2d');
-  if (off && frameCtx) {
+  if (cut && cutCtx) {
+    cutCtx.translate(cut.width / 2, cut.height / 2);
+    paintBody(cutCtx);
+    applyShadow(targetCtx, imgLayer);
+    renderDieCutImage(targetCtx, cut, cut.width, cut.height, imgLayer.dieCutColor || '#ffffff', imgLayer.dieCutWidth || 6);
+  } else if (off && frameCtx) {
     const r = cornerPx(imgLayer, w, h);
     frameCtx.translate(off.width / 2, off.height / 2);
     frameCtx.save();

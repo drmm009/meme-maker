@@ -1038,6 +1038,27 @@ describe('MemeEditor', () => {
     expect(strip('Canvas tools')).toBeTruthy();
   });
 
+  it('a focused maker shows only its tabs and title; Full editor brings every tab back on the same meme', () => {
+    renderEditor({ ...TEMPLATE, editorMode: 'sticker' });
+    const tabs = () => within(screen.getByRole('navigation', { name: 'Editor tools' })).getAllByRole('button').map((b) => b.textContent.trim());
+    expect(tabs()).toEqual(['Media', 'Text', 'AI/Filters']);
+    expect(screen.getByText('Stickers', { selector: '.ui-topbar-title' })).toBeTruthy();
+    // It starts on its own tab's strip.
+    expect(strip('Media tools')).toBeTruthy();
+    const captions = canvas.props.captions;
+    fireEvent.click(screen.getByRole('button', { name: 'Full editor' }));
+    expect(tabs()).toEqual(['Draw', 'Media', 'Text', 'AI/Filters', 'Canvas']);
+    expect(screen.getByText('Meme Editor')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Full editor' })).toBeNull();
+    expect(canvas.props.captions).toBe(captions);
+  });
+
+  it('the full editor has no Full editor button, and an unknown mode is the full editor', () => {
+    renderEditor({ ...TEMPLATE, editorMode: 'nope' });
+    expect(screen.getByText('Meme Editor')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Full editor' })).toBeNull();
+  });
+
   it('a sheet from the layer pill keeps the pill above it; picking another layer closes it', () => {
     renderEditor();
     openSection('Photos, videos, stickers and emoji');

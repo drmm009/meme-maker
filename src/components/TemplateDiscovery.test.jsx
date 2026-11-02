@@ -89,13 +89,13 @@ describe('TemplateDiscovery', () => {
     // Click Face Swap
     fireEvent.click(screen.getByRole('button', { name: 'Face Swap' }));
     expect(onSelectTemplate).toHaveBeenCalledWith(
-      expect.objectContaining({ initialFaceSwap: true })
+      expect.objectContaining({ initialFaceSwap: true, editorMode: 'faceswap' })
     );
 
     // Click Generate Stickers
     fireEvent.click(screen.getByRole('button', { name: 'Generate Stickers' }));
     expect(onSelectTemplate).toHaveBeenCalledWith(
-      expect.objectContaining({ initialStickersModal: true })
+      expect.objectContaining({ editorMode: 'sticker', canvasBgColor: 'transparent', defaultCaptions: [] })
     );
 
     // Click Video Trimming

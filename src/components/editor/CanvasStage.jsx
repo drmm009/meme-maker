@@ -30,6 +30,7 @@ export default function CanvasStage({
   const openSheet = useEditorUiStore((s) => s.openSheet);
   const closeSheet = useEditorUiStore((s) => s.closeSheet);
   const sheetFromPill = useEditorUiStore((s) => s.sheetFromPill);
+  const mode = useEditorUiStore((s) => s.mode);
 
   const {
     isHoldingCanvasCompare, isPinpointingFace, setIsPinpointingFace, faceTarget, setFaceTarget,
@@ -64,7 +65,8 @@ export default function CanvasStage({
 
   return (
     <div
-      className="canvas-wrapper"
+      // A sticker's see-through canvas sits on a checkerboard.
+      className={`canvas-wrapper${mode === 'sticker' ? ' canvas-wrapper--sticker' : ''}`}
       onPointerDown={handleWrapperPointerDown}
       // A picture, video or link dropped on the canvas area is added to the meme.
       onDragOver={(e) => {

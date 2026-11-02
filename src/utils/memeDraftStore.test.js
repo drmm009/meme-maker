@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { DRAFT_FIELDS, collectBlobUrls, documentFromState, layerCount, plainCopy, restoreDocument } from './memeDraftStore';
+import { DRAFT_FIELDS, collectBlobUrls, documentFromState, draftId, layerCount, plainCopy, restoreDocument } from './memeDraftStore';
 
 describe('meme drafts', () => {
   it('keeps the document fields and drops what IndexedDB can\'t store', () => {
@@ -37,6 +37,12 @@ describe('meme drafts', () => {
     expect(doc.activeTemplate.url).toBe('blob:new');
     expect(doc.imageLayers[0].url).toBeNull();
     expect(doc.captions[0].text).toBe('blob: is text');
+  });
+
+  it('keeps one draft per editor mode, the full editor\'s where it always was', () => {
+    expect(draftId()).toBe('current');
+    expect(draftId('full')).toBe('current');
+    expect(draftId('sticker')).toBe('current-sticker');
   });
 
   it('counts layers', () => {

@@ -1,14 +1,19 @@
 // Auto-saved image editor draft in IndexedDB, in its own database so the gallery's is untouched.
-// DB: meme-creator-image / store: drafts (one record, id 'current'). Pictures that only exist as
+// DB: meme-creator-image / store: drafts (one record per editor mode: 'current' for the full editor,
+// 'current-<mode>' for a focused maker such as 'current-sticker'). Pictures that only exist as
 // blob: URLs die with the page, so their Blobs are saved in the record too. The same database keeps
 // the memes saved on purpose (store: projects): projects to come back to and templates to reuse.
 import { HISTORY_FIELDS } from '../components/editor/store/useMemeEditorStore';
+import type { EditorMode } from '../components/editor/editorModes';
 
 const DB_NAME = 'meme-creator-image';
 const DB_VERSION = 2;
 const DRAFTS = 'drafts';
 const PROJECTS = 'projects';
 const DRAFT_ID = 'current';
+
+// Each mode keeps its own draft, so a sticker in progress never offers itself in the full editor.
+export const draftId = (mode: EditorMode = 'full'): string => (mode === 'full' ? DRAFT_ID : `${DRAFT_ID}-${mode}`);
 
 export const MEME_DRAFT_VERSION = 1;
 
@@ -18,7 +23,7 @@ export const DRAFT_FIELDS: string[] = [...HISTORY_FIELDS, 'slotImages', 'slotTra
 export type MemeDraftDocument = Record<string, unknown>;
 
 export interface MemeDraft {
-  id: typeof DRAFT_ID;
+  id: string;
   version: number;
   savedAt: number;
   document: MemeDraftDocument;
@@ -129,17 +134,17 @@ async function collectMedia(document: MemeDraftDocument): Promise<Record<string,
   return media;
 }
 
-export async function saveMemeDraft(state: Record<string, unknown>): Promise<void> {
+export async function saveMemeDraft(state: Record<string, unknown>, mode: EditorMode = 'full'): Promise<void> {
   const document = documentFromState(state);
   const media = await collectMedia(document);
-  const draft: MemeDraft = { id: DRAFT_ID, version: MEME_DRAFT_VERSION, savedAt: Date.now(), document, media };
+  const draft: MemeDraft = { id: draftId(mode), version: MEME_DRAFT_VERSION, savedAt: Date.now(), document, media };
   await run('readwrite', (s) => s.put(draft));
 }
 
-// The saved draft, or null when there is none, it's from a newer version of the app, or it can't
-// be read.
-export async function loadMemeDraft(): Promise<MemeDraft | null> {
-  const saved = await run<MemeDraft | undefined>('readonly', (s) => s.get(DRAFT_ID));
+// The mode's saved draft, or null when there is none, it's from a newer version of the app, or it
+// can't be read.
+export async function loadMemeDraft(mode: EditorMode = 'full'): Promise<MemeDraft | null> {
+  const saved = await run<MemeDraft | undefined>('readonly', (s) => s.get(draftId(mode)));
   if (!saved?.document || (saved.version ?? 0) > MEME_DRAFT_VERSION) return null;
   return saved;
 }

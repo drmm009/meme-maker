@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { createMemeEditorStore, MemeEditorStoreContext, useMemeEditorStore } from './editor/store/useMemeEditorStore';
-import { createEditorUiStore, EditorUiStoreContext, useEditorUiStore } from './editor/store/useEditorUiStore';
+import { createEditorUiStore, EditorUiStoreContext, useEditorUiStore, useEditorUiStoreApi } from './editor/store/useEditorUiStore';
 import { useEditorSetup } from './editor/hooks/useEditorSetup';
 import { useActiveLayer } from './editor/hooks/useActiveLayer';
 import { useEditorShortcuts } from './editor/hooks/useEditorShortcuts';
@@ -18,6 +18,7 @@ import { useBubbleActions } from './editor/hooks/useBubbleActions';
 import { useCaptionActions } from './editor/hooks/useCaptionActions';
 import { useLayerActions } from './editor/hooks/useLayerActions';
 import { useMemeDraft } from './editor/hooks/useMemeDraft';
+import { useStickerMaker } from './editor/hooks/useStickerMaker';
 import { useCustomFonts } from './editor/hooks/useCustomFonts';
 import EditorTopBar from './editor/top-bar/EditorTopBar';
 import CanvasStage from './editor/CanvasStage';
@@ -30,9 +31,10 @@ import './ui';
 import './MemeEditor.css';
 
 export default function MemeEditor(props) {
-  // Restoring a draft starts a fresh editing session on the draft's template and document.
+  // Restoring a draft starts a fresh editing session on the draft's template and document, in the
+  // draft's mode (a saved project opens in the full editor).
   const [session, setSession] = useState({ id: 0, template: props.template, document: null });
-  const restoreDraft = (document) => setSession((s) => ({ id: s.id + 1, template: document.activeTemplate || s.template, document }));
+  const restoreDraft = (document, mode = 'full') => setSession((s) => ({ id: s.id + 1, template: { ...(document.activeTemplate || s.template), editorMode: mode }, document }));
   return <MemeEditorSession key={session.id} {...props} template={session.template} initialDocument={session.document} onRestoreDraft={restoreDraft} />;
 }
 
@@ -67,13 +69,15 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, o
   const imageFit = template?.imageFit || 'contain';
 
   useEditorSetup(template);
-  const draft = useMemeDraft({ restored: restoredDraft, onRestore: onRestoreDraft });
+  const uiStore = useEditorUiStoreApi();
+  const draft = useMemeDraft({ restored: restoredDraft, onRestore: onRestoreDraft, getMode: () => uiStore.getState().mode });
   useCustomFonts();
   const { activeCaption, activeSticker, activeImageLayer, currentEditingSocialCard } = useActiveLayer();
 
   const canvasRef = useRef(null);
   const { memeName, canvasSize, exportBlob, exportMotion, motionLoops, saveToGallery } = useExport({ canvasRef, template, onSaveToGallery, imageFit, isNativeLayout, layoutDef });
   const { isRemovingBg, isBlurringBg, handleRemoveBackground, handleApplyBackgroundBlur, setPortraitBlur } = useBackgroundRemoval();
+  useStickerMaker({ removeBackground: handleRemoveBackground });
   const faceMorph = useFaceMorph({ canvasRef });
   const {
     showFaceMorphModal, setShowFaceMorphModal, morphTargetLayerId, setMorphTargetLayerId,

@@ -12,6 +12,7 @@ import {
 import { safeGet, safeSet } from '../utils/storage';
 import { templateNumericId } from '../utils/templateOrder';
 import './TemplateDiscovery.css';
+import { makeStickerTemplate } from './editor/stickerMaker';
 
 const AI_VIBE_MODES = [
   { id: 'roast', icon: Flame, emoji: '🔥', label: 'Roast Mode', prompt: 'Roast my daily morning routine and procrastination' },
@@ -768,20 +769,15 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom, on
   const handleFeatureClick = (feature) => {
     const actionKey = typeof feature === 'string' ? feature : (feature?.action || feature?.id);
     if (actionKey === 'stickers') {
-      const targetTemplate = templatesList.find(t => t.id === 'drake' || t.name.toLowerCase().includes('drake')) || templatesList[0];
-      if (onSelectTemplate && targetTemplate) {
-        onSelectTemplate({
-          ...targetTemplate,
-          initialTab: 'stickers',
-          initialStickersModal: true
-        });
-      }
+      // The Stickers maker: a blank see-through square.
+      if (onSelectTemplate) onSelectTemplate(makeStickerTemplate());
     } else if (actionKey === 'faceswap') {
       const targetTemplate = templatesList.find(t => t.id === 'drake' || t.name.toLowerCase().includes('drake')) || templatesList[0];
       if (onSelectTemplate && targetTemplate) {
         onSelectTemplate({
           ...targetTemplate,
-          initialFaceSwap: true
+          initialFaceSwap: true,
+          editorMode: 'faceswap'
         });
       }
     } else if (actionKey === 'video') {
@@ -791,7 +787,7 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom, on
     } else if (actionKey === 'social') {
       const waTemplate = templatesList.find(t => t.id?.includes('whatsapp') || t.id?.includes('tweet')) || socialShelfTemplates[0];
       if (onSelectTemplate && waTemplate) {
-        onSelectTemplate(waTemplate);
+        onSelectTemplate({ ...waTemplate, editorMode: 'social' });
       } else {
         setSelectedTag('social');
       }

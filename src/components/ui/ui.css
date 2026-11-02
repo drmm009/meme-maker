@@ -111,6 +111,10 @@
   font-weight: 600;
   letter-spacing: -0.01em;
   white-space: nowrap;
+  /* A long title gives way (with an ellipsis) rather than pushing the actions off a narrow screen. */
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .ui-topbar-actions { display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
 

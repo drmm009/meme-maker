@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useMemeEditorStoreApi } from '../store/useMemeEditorStore';
 import { DRAFT_FIELDS, layerCount, loadMemeDraft, restoreDocument, saveMemeDraft } from '../../../utils/memeDraftStore';
 import type { MemeDraft, MemeDraftDocument } from '../../../utils/memeDraftStore';
+import type { EditorMode } from '../editorModes';
 
 const SAVE_DELAY_MS = 1000;
 
@@ -29,23 +30,34 @@ interface EditorStoreApi {
 // Auto-saves the meme after each edit and offers to bring back the previous draft. Only edits
 // count (opening the template and the setup on mount don't): saving starts once there is an undo
 // step. `restored` skips the offer in a session that is itself a restored draft; `onRestore`
-// receives the restored document.
-export function useMemeDraft({ restored, onRestore }: { restored: boolean; onRestore: (doc: MemeDraftDocument) => void }) {
+// receives the restored document and its mode. Each editor mode has its own draft: `getMode` is
+// the mode now (read on load, and again on every save, as Full editor can change it).
+export function useMemeDraft({ restored, onRestore, getMode = () => 'full' }: {
+  restored: boolean;
+  onRestore: (doc: MemeDraftDocument, mode: EditorMode) => void;
+  getMode?: () => EditorMode;
+}) {
   const store = useMemeEditorStoreApi() as EditorStoreApi;
   const [offer, setOffer] = useState<DraftOfferInfo | null>(null);
   const savedRef = useRef<MemeDraft | null>(null);
   const editedRef = useRef(false);
+  const modeRef = useRef(getMode);
+  modeRef.current = getMode;
+  // The mode whose draft is on offer.
+  const offerModeRef = useRef<EditorMode>('full');
 
   useEffect(() => {
     let alive = true;
     let timer: ReturnType<typeof setTimeout> | null = null;
     const save = () => {
       timer = null;
-      saveMemeDraft(store.getState()).catch((e) => console.warn('[meme draft] save failed', e));
+      saveMemeDraft(store.getState(), modeRef.current()).catch((e) => console.warn('[meme draft] save failed', e));
     };
 
     if (!restored) {
-      loadMemeDraft()
+      const mode = modeRef.current();
+      offerModeRef.current = mode;
+      loadMemeDraft(mode)
         .then((saved) => {
           if (!alive || !saved || editedRef.current) return;
           savedRef.current = saved;
@@ -88,7 +100,7 @@ export function useMemeDraft({ restored, onRestore }: { restored: boolean; onRes
   const restore = () => {
     const saved = savedRef.current;
     if (!saved) return;
-    onRestore(restoreDocument(saved, (blob) => URL.createObjectURL(blob)));
+    onRestore(restoreDocument(saved, (blob) => URL.createObjectURL(blob)), offerModeRef.current);
   };
 
   const dismiss = () => {
