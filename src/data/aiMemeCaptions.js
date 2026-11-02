@@ -88,6 +88,9 @@ export const CURATED_CAPTIONS = [
  * Generate captions using Google Gemini API (if user provides key)
  * or fallback seamlessly to curated witty captions.
  */
+// Google's recommended Flash model (ai.google.dev/gemini-api/docs/models, checked November 2026).
+export const GEMINI_MODEL = 'gemini-3.8-flash';
+
 export async function generateMemeCaptionsWithGemini({ apiKey, prompt, templateName, category = 'all', count = 4 }) {
   if (apiKey && apiKey.trim()) {
     try {
@@ -103,10 +106,11 @@ User's Idea / Context: ${prompt || 'Make a hilarious, relatable, viral meme'}`;
 
       const ctl = new AbortController();
       const t = setTimeout(() => ctl.abort(), 12000);
-      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey.trim()}`, {
+      // The key goes in a header, not the URL, so it stays out of logs and history.
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`, {
         method: 'POST',
         signal: ctl.signal,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey.trim() },
         body: JSON.stringify({
           contents: [
             {
