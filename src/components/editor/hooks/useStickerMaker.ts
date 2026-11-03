@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useMemeEditorStoreApi } from '../store/useMemeEditorStore';
 import { useEditorUiStoreApi } from '../store/useEditorUiStore';
-import { STICKER_OUTLINE, STICKER_PHOTO } from '../stickerMaker';
+import { STICKER_OUTLINE, STICKER_PHOTO, stickerStyleLook } from '../stickerMaker';
 
 interface ImageLayer {
   id: string;
@@ -17,6 +17,7 @@ interface EditorState {
 interface UiState {
   mode: string;
   stickerDieCut: boolean;
+  stickerStyle: string;
   setStickerDieCut: (on: boolean) => void;
 }
 interface StoreApi<S> {
@@ -26,7 +27,7 @@ interface StoreApi<S> {
 
 // The Stickers maker: a photo added in the 'sticker' mode (Upload image or Gallery) is centred and
 // sized to fill the square, and left selected-free so the sticker shows clean. Generate cuts out
-// every photo not cut out yet and, with Die-cut on, gives it a white die-cut outline; Die-cut
+// every photo not cut out yet and gives it the look of the sticker style picked (stickerStyle); Die-cut
 // turns that outline on or off for the cut-out photos (and later ones). Photos already there when
 // the editor opens (a restored draft) aren't moved; nothing happens in the other modes.
 export function useStickerMaker({ removeBackground }: { removeBackground: () => Promise<void> }) {
@@ -62,7 +63,10 @@ export function useStickerMaker({ removeBackground }: { removeBackground: () => 
       store.getState().setActiveLayerId(id);
       await removeRef.current();
       const layer = store.getState().imageLayers.find((l) => l.id === id);
-      if (layer?.originalUrl) store.getState().patchLayer('imageLayers', id, outline(ui.getState().stickerDieCut));
+      if (layer?.originalUrl) {
+        const { stickerStyle, stickerDieCut } = ui.getState();
+        store.getState().patchLayer('imageLayers', id, { ...stickerStyleLook(stickerStyle), ...(stickerDieCut ? {} : { dieCut: false }) });
+      }
     }
     store.getState().setActiveLayerId(null);
   };

@@ -1041,25 +1041,16 @@ describe('MemeEditor', () => {
   it('a focused maker shows only its tabs and title; Full editor brings every tab back on the same meme', () => {
     renderEditor({ ...TEMPLATE, editorMode: 'sticker' });
     const tabs = () => within(screen.getByRole('navigation', { name: 'Editor tools' })).getAllByRole('button').map((b) => b.textContent.trim());
-    expect(tabs()).toEqual(['Generate Sticker']);
-    // Nothing to cut out yet.
-    expect(screen.getByRole('button', { name: 'Generate Sticker' }).disabled).toBe(true);
+    // The Stickers maker opens on its page, over the canvas and dock.
+    expect(screen.getByRole('region', { name: 'Make a sticker' })).toBeTruthy();
+    expect(screen.queryByRole('navigation', { name: 'Editor tools' })).toBeNull();
     expect(screen.getByText('Stickers', { selector: '.ui-topbar-title *' })).toBeTruthy();
-    expect(screen.queryByText('Stickers', { selector: '.ie-sticker-title' })).toBeNull();
-    // Undo and redo sit in the top bar, in Full editor's place (Full editor is in its dock once the sticker is made).
+    // Undo and redo sit in the top bar, in Full editor's place (Editor Pro is in its dock once the sticker is made).
     expect(screen.getByRole('button', { name: 'Undo' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Redo' })).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Full editor' })).toBeNull();
-    // It starts on its own strip: the picture comes first.
-    expect(screen.queryByRole('group', { name: 'Aspect ratio' })).toBeNull();
-    expect([...strip('Sticker tools').children].map((b) => b.textContent)).toEqual(['Upload', 'Gallery', 'Text']);
     // Its tour is the full editor's, so it waits for that.
     expect(screen.queryByRole('dialog', { name: 'Editor tour' })).toBeNull();
-
-    // Gallery is the Templates sheet; closing it comes back to the Sticker tab.
-    fireEvent.click(within(strip('Sticker tools')).getByText('Gallery'));
-    fireEvent.click(within(sheet('Templates')).getByLabelText('Close templates'));
-    expect(strip('Sticker tools')).toBeTruthy();
     cleanup();
 
     // Another maker's top bar has Full editor.
@@ -1072,32 +1063,48 @@ describe('MemeEditor', () => {
     expect(canvas.props.captions).toBe(captions);
   });
 
-  it('an empty sticker says how to start, with Upload photo and Gallery', () => {
+  it('the Stickers page: Choose your photo opens Upload, Take a photo and Gallery; a style is picked; Generate sticker waits for a photo', () => {
     renderEditor({ ...TEMPLATE, defaultCaptions: [], editorMode: 'sticker' });
-    // Under its title, where the sticker stands.
     expect(screen.getByText('Add a photo', { selector: '.ui-topbar-subtitle' })).toBeTruthy();
-    const start = screen.getByRole('group', { name: 'Start a sticker' });
-    expect(within(start).getByText('Make a sticker')).toBeTruthy();
-    expect(within(start).getByLabelText('Upload photo')).toBeTruthy();
-    fireEvent.click(within(start).getByRole('button', { name: 'Gallery' }));
-    expect(sheet('Templates')).toBeTruthy();
-    // Out of the way while a sheet is open.
-    expect(screen.queryByText('Make a sticker')).toBeNull();
+    const page = screen.getByRole('region', { name: 'Make a sticker' });
+    // Only the photo and one button.
+    expect(within(page).getByRole('button', { name: 'Choose your photo' })).toBeTruthy();
+    // The styles to cut it in, Classic first and picked.
+    const styles = within(page).getByRole('radiogroup', { name: 'Sticker style' });
+    expect(within(styles).getAllByRole('radio').map((b) => b.lastChild.textContent)).toEqual(['Classic', 'Bold', 'Comic', 'Pop', 'Clean', 'Retro']);
+    expect(within(styles).getByRole('radio', { name: 'Classic' }).getAttribute('aria-checked')).toBe('true');
+    fireEvent.click(within(styles).getByRole('radio', { name: 'Pop' }));
+    expect(within(styles).getByRole('radio', { name: 'Pop' }).getAttribute('aria-checked')).toBe('true');
+    expect(within(page).getByRole('button', { name: 'Generate sticker' }).disabled).toBe(true);
+
+    fireEvent.click(within(page).getByRole('button', { name: 'Choose your photo' }));
+    const picker = screen.getByRole('dialog', { name: 'Your photo' });
+    expect(within(picker).getByLabelText('Upload a photo')).toBeTruthy();
+    expect(within(picker).getByLabelText('Take a photo')).toBeTruthy();
+    // Gallery is the Templates browser; its pick becomes the photo.
+    fireEvent.click(within(picker).getByRole('button', { name: 'Gallery' }));
+    expect(screen.queryByRole('dialog', { name: 'Your photo' })).toBeNull();
+    expect(sheet('Pick a picture')).toBeTruthy();
   });
 
-  it('with a photo the Stickers maker offers Crop and Effects, and Generate Sticker is ready', () => {
+  it('with a photo the Stickers page is ready to generate, and the photo can be removed', () => {
     renderEditor({ ...TEMPLATE, editorMode: 'sticker', imageLayers: [{ id: 'p', url: 'photo.png', x: 0.5, y: 0.5 }] });
-    expect([...strip('Sticker tools').children].map((b) => b.textContent)).toEqual(['Upload', 'Gallery', 'Crop', 'Text', 'Effects']);
-    expect(screen.getByRole('button', { name: 'Generate Sticker' }).disabled).toBe(false);
+    const page = screen.getByRole('region', { name: 'Make a sticker' });
+    expect(within(page).getByRole('button', { name: 'Generate sticker' }).disabled).toBe(false);
+    expect(within(page).getByRole('button', { name: 'Change the photo' })).toBeTruthy();
     expect(screen.getByText('Ready to generate', { selector: '.ui-topbar-subtitle' })).toBeTruthy();
+    fireEvent.click(within(page).getByRole('button', { name: 'Remove the photo' }));
+    expect(canvas.props.imageLayers).toHaveLength(0);
+    expect(within(page).getByRole('button', { name: 'Generate sticker' }).disabled).toBe(true);
   });
 
-  it('once the Stickers maker has cut its picture out, its strip has Die-cut, Crop, Text, Effects and New, and the dock has Full editor and Export', () => {
+  it('once the Stickers maker has cut its picture out, its strip has Die-cut, Crop, Text and Effects, and the dock New, Editor Pro and Export', () => {
     renderEditor({ ...TEMPLATE, editorMode: 'sticker', imageLayers: [{ id: 'p', url: 'cut.png', originalUrl: 'photo.png', x: 0.5, y: 0.5 }] });
     const tabs = () => within(screen.getByRole('navigation', { name: 'Editor tools' })).getAllByRole('button').map((b) => b.textContent.trim());
-    expect(tabs()).toEqual(['Full editor', 'Export']);
+    expect(screen.queryByRole('region', { name: 'Make a sticker' })).toBeNull();
+    expect(tabs()).toEqual(['New', 'Editor Pro', 'Export']);
     expect(screen.getByText('Ready to export', { selector: '.ui-topbar-subtitle' })).toBeTruthy();
-    expect([...strip('Sticker tools').children].map((b) => b.textContent)).toEqual(['Die-cut', 'Crop', 'Text', 'Effects', 'New']);
+    expect([...strip('Sticker tools').children].map((b) => b.textContent)).toEqual(['Die-cut', 'Crop', 'Text', 'Effects']);
     // Die-cut opens the DieCutSheet bottom sheet
     const dieCut = within(strip('Sticker tools')).getByRole('button', { name: /Die-cut/ });
     expect(dieCut.getAttribute('aria-pressed')).toBe('false');
@@ -1138,23 +1145,24 @@ describe('MemeEditor', () => {
     fireEvent.click(within(sheet('Export')).getByLabelText('Close Export'));
     expect(screen.queryByRole('dialog', { name: 'Export' })).toBeNull();
 
-    // New starts a blank sticker.
-    fireEvent.click(within(strip('Sticker tools')).getByText('New'));
-    expect(canvas.props.imageLayers).toHaveLength(0);
-    expect(screen.getByText('Stickers', { selector: '.ui-topbar-title *' })).toBeTruthy();
-
     // Text adds a caption to the sticker.
     const initialCount = canvas.props.captions.length;
     fireEvent.click(within(strip('Sticker tools')).getByText('Text'));
     expect(canvas.props.captions).toHaveLength(initialCount + 1);
+
+    // New starts a blank sticker, back on the page.
+    fireEvent.click(within(screen.getByRole('navigation', { name: 'Editor tools' })).getByText('New'));
+    expect(canvas.props.imageLayers).toHaveLength(0);
+    expect(screen.getByRole('region', { name: 'Make a sticker' })).toBeTruthy();
   });
 
-  it('Full editor in the Stickers dock carries the sticker into the full editor', () => {
+  it('Editor Pro in the Stickers dock carries the sticker into the full editor', () => {
     renderEditor({ ...TEMPLATE, editorMode: 'sticker', imageLayers: [{ id: 'p', url: 'cut.png', originalUrl: 'photo.png', x: 0.5, y: 0.5 }] });
     const tabs = () => within(screen.getByRole('navigation', { name: 'Editor tools' })).getAllByRole('button').map((b) => b.textContent.trim());
-    fireEvent.click(within(screen.getByRole('navigation', { name: 'Editor tools' })).getByText('Full editor'));
+    fireEvent.click(within(screen.getByRole('navigation', { name: 'Editor tools' })).getByText('Editor Pro'));
     expect(tabs()).toEqual(['Draw', 'Media', 'Text', 'AI/Filters', 'Canvas']);
     expect(screen.getByText('Meme Editor')).toBeTruthy();
+    expect(canvas.props.imageLayers).toHaveLength(1);
   });
 
   it('the Face Swap maker opens on its page (your face and a picture); Memes starts afresh on another meme, still in Face Swap', async () => {

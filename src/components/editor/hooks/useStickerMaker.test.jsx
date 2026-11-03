@@ -4,7 +4,7 @@ import { act, renderHook } from '@testing-library/react';
 import { useStickerMaker } from './useStickerMaker';
 import { createMemeEditorStore, MemeEditorStoreContext } from '../store/useMemeEditorStore';
 import { createEditorUiStore, EditorUiStoreContext } from '../store/useEditorUiStore';
-import { STICKER_OUTLINE, STICKER_PHOTO } from '../stickerMaker';
+import { STICKER_OUTLINE, STICKER_PHOTO, stickerStyleLook } from '../stickerMaker';
 
 const template = { id: 't', name: 'Sticker', url: 'https://example.test/clear.png', defaultCaptions: [] };
 
@@ -69,6 +69,22 @@ describe('useStickerMaker', () => {
     expect(layer('new').dieCut).toBe(false);
     setDieCut(true);
     expect(layer('new')).toMatchObject(STICKER_OUTLINE);
+  });
+
+  it('Generate cuts out in the sticker style picked', async () => {
+    vi.useFakeTimers();
+    const { ui, addPhoto, generate, layer } = setup('sticker');
+    act(() => ui.getState().setStickerStyle('pop'));
+    await addPhoto();
+    await generate();
+    expect(layer('new')).toMatchObject({ dieCut: true, dieCutColor: '#ffd60a', url: 'cut.png' });
+
+    const clean = setup('sticker');
+    act(() => clean.ui.getState().setStickerStyle('clean'));
+    await clean.addPhoto();
+    await clean.generate();
+    expect(clean.layer('new')).toMatchObject({ dieCut: false, shadowSize: 28 });
+    expect(stickerStyleLook('unknown')).toEqual(STICKER_OUTLINE);
   });
 
   it('gives no outline when the cut-out fails, or with Die-cut off', async () => {

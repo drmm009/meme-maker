@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import type { ChangeEvent, ReactNode } from 'react';
+import type { ChangeEvent } from 'react';
 import { ArrowRight, Camera, Check, CloudOff, ImagePlus, LayoutTemplate, Pencil, RefreshCw, ScanFace, SlidersHorizontal, UserRound, X } from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
 import { Slider } from '../../ui';
 import { useEditorUiStore } from '../store/useEditorUiStore';
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
@@ -10,6 +9,7 @@ import {
 } from '../faceSwap';
 import type { FaceSwapInputs, Picture, TargetFace } from '../faceSwap';
 import type { EditorActions } from './selection';
+import { EmptyTile, PickerSheet } from './MakerPage';
 import './faceSwap.css';
 
 interface Template {
@@ -23,42 +23,6 @@ interface Template {
 
 type Server = 'checking' | 'online' | 'offline';
 type Picker = 'face' | 'target';
-
-// An empty input card: its step, what goes in it and a Choose pill (the whole card is the button).
-function EmptyTile({ step, Icon, title, hint }: { step: number; Icon: LucideIcon; title: string; hint: string }) {
-  return (
-    <span className="ie-swap-empty">
-      <span className="ie-swap-step" aria-hidden="true">{step}</span>
-      <span className="ie-swap-empty-icon" aria-hidden="true"><Icon size={26} strokeWidth={1.9} /></span>
-      <span className="ie-swap-empty-title">{title}</span>
-      <span className="ie-swap-empty-hint">{hint}</span>
-      <span className="ie-swap-empty-cta" aria-hidden="true">Choose</span>
-    </span>
-  );
-}
-
-// A small sheet over the page, rising from the bottom: where a picture comes from.
-function PickerSheet({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [onClose]);
-  return (
-    <div className="ie-swap-sheet-backdrop" onClick={onClose}>
-      <div className="ie-swap-sheet" role="dialog" aria-modal="true" aria-label={title} onClick={(e) => e.stopPropagation()}>
-        <span className="ie-swap-sheet-grip" aria-hidden="true" />
-        <div className="ie-swap-sheet-head">
-          <h2 className="ie-swap-sheet-title">{title}</h2>
-          <button type="button" className="ie-swap-sheet-close" aria-label="Close" onClick={onClose}><X size={18} aria-hidden="true" /></button>
-        </div>
-        {children}
-      </div>
-    </div>
-  );
-}
 
 // The meme the maker opened on, as the picture to swap into.
 const targetOf = (t: Template | null): Picture | null => (t?.faceSwap?.target

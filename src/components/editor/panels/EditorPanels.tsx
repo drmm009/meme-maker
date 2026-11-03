@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { Type, Copy, PenLine, Sparkles, LayoutGrid, ScanFace, Share2, Wand2, Sticker, Download, Palette } from 'lucide-react';
+import { Type, Copy, PenLine, Sparkles, LayoutGrid, ScanFace, Share2, Wand2, Download, Palette, Plus } from 'lucide-react';
 import { ToolDock, ToolStrip } from '../../ui';
 import type { DockItem } from '../../ui';
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
@@ -31,6 +31,8 @@ import AiMemeSheet from './AiMemeSheet';
 import AiStrip from './AiStrip';
 import StickerStrip from './StickerStrip';
 import FaceSwapStudio from './FaceSwapStudio';
+import StickerStudio, { StickerGallerySheet } from './StickerStudio';
+import { makeStickerTemplate } from '../stickerMaker';
 import StickersSheet from './StickersSheet';
 import EmojiSheet from './EmojiSheet';
 import BubbleSheet from './BubbleSheet';
@@ -54,18 +56,18 @@ const DOCK: DockItem[] = [
   { id: 'swap', label: 'Face Swap', Icon: ScanFace, title: 'Your face and the meme' },
   { id: 'card', label: 'Card', Icon: Share2, title: 'The social card' },
   { id: 'ai', label: 'AI', Icon: Wand2, title: 'AI meme ideas' },
-  // The Stickers maker's dock buttons: Generate Sticker (Full editor once it's made) and Export.
-  { id: 'sticker', label: 'Generate Sticker', Icon: Sticker, title: 'Cut out the picture', variant: 'primary' },
-  // The Face Swap maker's: Editor Pro takes the swapped meme into the full editor.
+  // The Stickers maker's New: a blank sticker (its page again).
+  { id: 'new', label: 'New', Icon: Plus, title: 'Start a new sticker', variant: 'secondary' },
+  // The Face Swap and Stickers makers': Editor Pro takes the meme into the full editor.
   { id: 'pro', label: 'Editor Pro', Icon: Palette, title: 'Keep editing in the full editor', variant: 'secondary' },
   { id: 'export', label: 'Export', Icon: Download, title: 'Save or share the sticker', variant: 'primary' },
 ];
 
 const SHEETS = { text: TextSheet, media: MediaSheet, draw: DrawSheet, canvasColor: CanvasColorSheet, watermark: WatermarkSheet, header: HeaderSheet, footer: FooterSheet, filters: FiltersSheet, background: BackgroundSheet, layers: LayersSheet, export: ExportSheet, library: LibrarySheet, mediaLink: LinkSheet,
   templates: TemplatesSheet, memes: MemePickerSheet, stickers: StickersSheet, emoji: EmojiSheet, bubble: BubbleSheet, diecut: DieCutSheet,
-  card: CardFormSheet, cardLook: CardLookSheet, aiMeme: AiMemeSheet, faceSwap: FaceSwapStudio };
+  card: CardFormSheet, cardLook: CardLookSheet, aiMeme: AiMemeSheet, faceSwap: FaceSwapStudio, stickerGallery: StickerGallerySheet };
 // Sheets for browsing a big library, shown full height (the meme needn't stay in view).
-const FULL_SHEETS = new Set<string>(['templates', 'memes', 'stickers', 'emoji', 'aiMeme', 'faceSwap']);
+const FULL_SHEETS = new Set<string>(['templates', 'memes', 'stickers', 'emoji', 'aiMeme', 'faceSwap', 'stickerGallery']);
 
 // The bottom of the editor: the dock with the open tab's tool strip above it, or, when one of that
 // tab's sheets is open, the strip above the sheet (so its tools stay one tap away). While a layer is
@@ -86,11 +88,9 @@ export default function EditorPanels({ actions }: { actions: EditorActions }) {
   const busy = Boolean(actions.isRemovingBg);
   const photos: { originalUrl?: string | null }[] = useMemeEditorStore((s: { imageLayers: { originalUrl?: string | null }[] }) => s.imageLayers);
   const generated = photos.length > 0 && photos.every((l) => Boolean(l.originalUrl));
-  // The Stickers maker's dock: Generate Sticker (waiting for a photo until there is one); once the
-  // sticker is made, Export leads and Full editor sits beside it.
-  const stickerDock: Partial<DockItem> = busy ? { label: 'Generating…', disabled: true }
-    : generated ? { label: 'Full editor', title: 'Keep editing in the full editor', Icon: Palette, variant: 'secondary' }
-    : { title: photos.length ? 'Cut out the picture' : 'Add a photo first', disabled: !photos.length };
+  // The Stickers maker shows its page (StickerStudio) until the sticker is made, unless its Gallery
+  // is open over it; then its dock is New, Editor Pro and Export.
+  const stickerPage = mode === 'sticker' && (!generated || busy);
   // The Face Swap maker's dock: Swap face (its page); once a swap is the meme, Swap again, Editor Pro
   // and Export.
   const swapped = useMemeEditorStore((s: { activeTemplate: { faceSwap?: unknown } | null }) => Boolean(s.activeTemplate?.faceSwap));
@@ -99,9 +99,9 @@ export default function EditorPanels({ actions }: { actions: EditorActions }) {
     : { label: 'Swap face', title: 'Pick your face and a picture', variant: 'primary' };
   // The makers with action buttons for a dock (ui.css DockItem variant).
   const actionDock = mode === 'sticker' || mode === 'faceswap';
-  const modeDock = (mode === 'sticker' && !generated) || (mode === 'faceswap' && !swapped) ? EDITOR_MODES[mode].dock.slice(0, 1) : EDITOR_MODES[mode].dock;
+  const modeDock = mode === 'faceswap' && !swapped ? EDITOR_MODES[mode].dock.slice(0, 1) : EDITOR_MODES[mode].dock;
   const dock = modeDock.map((id) => DOCK.find((d) => d.id === id)).filter((d): d is DockItem => Boolean(d))
-    .map((d) => (d.id === 'sticker' ? { ...d, ...stickerDock } : d.id === 'swap' && mode === 'faceswap' ? { ...d, ...swapDock } : d));
+    .map((d) => (d.id === 'swap' && mode === 'faceswap' ? { ...d, ...swapDock } : d));
   const setActiveLayerId = useMemeEditorStore((s: { setActiveLayerId: (id: string | null) => void }) => s.setActiveLayerId);
   const faceMorph = useMemeEditorStore((s: { templateFaceMorph: { morphProgress?: number } | null }) => s.templateFaceMorph);
   const { kind } = useSelection();
@@ -115,6 +115,14 @@ export default function EditorPanels({ actions }: { actions: EditorActions }) {
   useEffect(() => {
     if (orphaned) closeSheet();
   }, [orphaned, closeSheet]);
+
+  if (stickerPage && sheet !== 'stickerGallery') {
+    return (
+      <div ref={panelRef} className="ie-panels ie-panels--sheet ie-panels--full">
+        <StickerStudio actions={actions} />
+      </div>
+    );
+  }
 
   if (faceMorph && !kind) {
     return (
@@ -150,7 +158,7 @@ export default function EditorPanels({ actions }: { actions: EditorActions }) {
   }
   if (SheetComponent) {
     return (
-      <div ref={panelRef} className={`ie-panels ie-panels--sheet${mode === 'faceswap' ? ' ie-panels--faceswap' : ''}`} data-sheet-ghosts="">
+      <div ref={panelRef} className={`ie-panels ie-panels--sheet${actionDock ? ' ie-panels--actions' : ''}`} data-sheet-ghosts="">
         {layerTools && sheetFromPill ? <LayerToolbar actions={actions} /> : strip}
         <SheetComponent actions={actions} onClose={closeSheet} />
       </div>
@@ -158,19 +166,15 @@ export default function EditorPanels({ actions }: { actions: EditorActions }) {
   }
 
   return (
-    <div ref={panelRef} className={`ie-panels${actionDock ? ' ie-panels--maker' : ''}${mode === 'faceswap' ? ' ie-panels--faceswap' : ''}`} data-sheet-ghosts="">
+    <div ref={panelRef} className={`ie-panels${actionDock ? ' ie-panels--maker' : ''}${actionDock ? ' ie-panels--actions' : ''}`} data-sheet-ghosts="">
       {layerTools ? <LayerToolbar actions={actions} /> : strip}
       <ToolDock
         ariaLabel="Editor tools"
         items={dock}
         active={layerTools || actionDock ? null : dockTab}
         onSelect={(id) => {
-          if (id === 'sticker') {
-            if (generated) {
-              openFullEditor();
-              return;
-            }
-            if (!busy && photos.length) void actions.handleGenerateSticker();
+          if (id === 'new') {
+            actions.handleChangeMeme(makeStickerTemplate());
             return;
           }
           if (id === 'pro') {

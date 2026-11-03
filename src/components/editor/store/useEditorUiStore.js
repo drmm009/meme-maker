@@ -96,6 +96,7 @@ export function buildInitialUi(template) {
     watermark: loadWatermark(),
     customFonts: [], // fonts the person uploaded: [{ family, css }] (utils/customFonts)
     stickerDieCut: true, // the Stickers maker's Die-cut: a white outline on cut-out photos
+    stickerStyle: 'classic', // the Stickers maker's style for the next cut-out (STICKER_STYLES)
     // A sticker exports see-through (stickerMaker.ts); only the full editor's choices are remembered.
     exportPrefs: mode === 'sticker' ? stickerExportPrefs(loadExportPrefs()) : loadExportPrefs(), // { format: 'png' | 'jpeg' | 'webp', quality: 0.5..1, width: 'full' | 720 | 480 }
     libraryTab: 'history', // 'history' | 'saved' | 'shortcuts'

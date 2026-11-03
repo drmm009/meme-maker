@@ -1,6 +1,7 @@
 import { Sheet, Row, SwatchRow, Slider, Switch } from '../../ui';
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
 import { useSelection } from './selection';
+import { DIECUT_COLORS } from '../stickerMaker';
 import type { EditorActions } from './selection';
 
 interface DieCutItem {
@@ -10,17 +11,6 @@ interface DieCutItem {
   dieCutWidth?: number;
   originalUrl?: string | null;
 }
-
-const DIECUT_COLORS = [
-  '#ffffff',
-  '#000000',
-  '#ffd60a',
-  '#ff5a36',
-  '#34c759',
-  '#0a84ff',
-  '#bf5af2',
-  '#ff375f',
-];
 
 // A sticker's die-cut border: the switch beside the heading, then its colour and width (picking
 // either also switches it on, so the sheet can be opened just to look).

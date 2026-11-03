@@ -160,7 +160,6 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, c
             onUpdateSlotTransform={updateSlotTransform}
             faceMorph={faceMorph}
             onDropMedia={media.handleDropMedia}
-            onUploadPhoto={handleFileUploadImageLayer}
           />
         </div>
 

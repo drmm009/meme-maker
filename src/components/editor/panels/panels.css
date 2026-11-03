@@ -91,9 +91,9 @@
   font-size: 14px;
 }
 
-/* The Face Swap maker's editing page: its three actions (Swap again, Editor Pro, Export) in a bar
-   pinned to the bottom, each its icon over its name. */
-.ie-panels--maker.ie-panels--faceswap .ui-dock {
+/* The Face Swap and Stickers makers' editing pages: their three actions (Swap again or New, Editor
+   Pro, Export) in a bar pinned to the bottom, each its icon over its name. */
+.ie-panels--maker.ie-panels--actions .ui-dock {
   gap: 8px;
   margin: 0;
   padding: 10px 16px calc(14px + env(safe-area-inset-bottom, 0px));
@@ -103,7 +103,7 @@
   background: var(--ui-bg);
   box-shadow: none;
 }
-.ie-panels--maker.ie-panels--faceswap .ui-dock .ui-dock-item {
+.ie-panels--maker.ie-panels--actions .ui-dock .ui-dock-item {
   flex: 1 1 0;
   flex-direction: column;
   justify-content: center;
