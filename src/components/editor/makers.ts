@@ -39,8 +39,10 @@ export function makerTemplate(maker: Maker, templates: Template[], prompt = '') 
     return base ? aiMemeTemplate(base, prompt) : null;
   }
   if (maker === 'faceswap') {
-    const drake = templates.find((t) => t.id === 'drake' || String(t.name || '').toLowerCase().includes('drake')) || templates[0];
-    return drake ? { ...drake, initialFaceSwap: true, editorMode: 'faceswap' as const } : null;
+    // The classic two-panel Drake: both faces face the camera, so the swap finds them (Drake
+    // Approving's side profile has none it can find).
+    const drake = templates.find((t) => t.id === 'drake') || templates.find((t) => String(t.name || '').toLowerCase().includes('drake')) || templates[0];
+    return drake ? { ...drake, editorMode: 'faceswap' as const } : null;
   }
   const card = templates.find((t) => String(t.id || '').includes('whatsapp') || String(t.id || '').includes('tweet'));
   return card ? { ...card, editorMode: 'social' as const } : null;

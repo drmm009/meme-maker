@@ -101,13 +101,6 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, c
   const { commitAddImageLayer, handleAddImageLayer, handleFileUploadImageLayer, updateActiveImageLayer, moveLayer, handleDeleteLayer, handleDuplicateLayer, handleRotateLayer, handleFlipActiveLayer, handleToggleDieCutSticker, handleSetDieCutColor, updateSlotTransform, handleAddSticker, handleAddGraphicSticker } = useLayerActions({ activeCaption, activeImageLayer, activeSticker, updateActiveCaptionProps });
   const { handleAddBubble, handleApplyBubbleStyle } = useBubbleActions({ activeCaption, updateActiveCaptionProps });
 
-  // The Face Swap maker starts at its first step, the face picker (not on a restored draft).
-  useEffect(() => {
-    if (!restoredDraft && uiStore.getState().mode === 'faceswap') setShowFaceMorphModal(true);
-    // Once, when the session opens.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   // Everything the panels can do, in one object (see editor/panels/selection.ts).
   const media = useMediaInput({ handleAddImageLayer });
 

@@ -1,4 +1,4 @@
-import { Undo2, Redo2, History, Maximize2, Sticker } from 'lucide-react';
+import { Undo2, Redo2, History, Maximize2, Sticker, ScanFace } from 'lucide-react';
 import { TopBar } from '../../ui';
 import { useMemeEditorStore, useMemeEditorHistory } from '../store/useMemeEditorStore';
 import { useEditorUiStore } from '../store/useEditorUiStore';
@@ -7,9 +7,11 @@ import { EDITOR_MODES } from '../editorModes';
 // Back, title, undo/redo, History & saved (the list of steps, and memes saved as projects or
 // templates) and Export (which opens the Export sheet: format, size, download, share, copy, save
 // to gallery). A focused maker shows its own title, and Full editor in History's place (the bar
-// stays as wide), which switches to the full editor on the same meme. The Stickers maker has its
-// title with icon, a line under it saying where the sticker stands, and only undo/redo (Export and
-// Full editor are in its dock).
+// stays as wide), which switches to the full editor on the same meme. The Stickers and Face Swap
+// makers have their title with an icon, a line under it saying where the work stands, and only
+// undo/redo (Export is in their dock).
+const MAKER_ICONS = { sticker: Sticker, faceswap: ScanFace };
+
 export default function EditorTopBar({ onBack }) {
   const handleUndo = useMemeEditorStore((s) => s.undo);
   const canUndo = useMemeEditorHistory((s) => s.pastStates.length > 0);
@@ -23,19 +25,22 @@ export default function EditorTopBar({ onBack }) {
   // The Stickers maker says under its title where the sticker stands.
   const stickerStage = useMemeEditorStore((s) => (!s.imageLayers.length ? 'Add a photo'
     : s.imageLayers.every((l) => l.originalUrl) ? 'Ready to export' : 'Ready to generate'));
+  // And the Face Swap maker whether the swap is made.
+  const swapStage = useMemeEditorStore((s) => (s.activeTemplate?.faceSwap ? 'Ready to export' : 'Pick a face and a picture'));
+  const MakerIcon = MAKER_ICONS[mode];
 
-  const title = mode === 'sticker' ? (
+  const title = MakerIcon ? (
     <span className="ie-topbar-sticker-title">
-      <Sticker size={18} strokeWidth={2.4} className="ie-topbar-sticker-icon" aria-hidden="true" />
-      Stickers
+      <MakerIcon size={18} strokeWidth={2.4} className="ie-topbar-sticker-icon" aria-hidden="true" />
+      {EDITOR_MODES[mode].title}
     </span>
   ) : (
     EDITOR_MODES[mode].title
   );
 
   return (
-    <TopBar title={title} subtitle={mode === 'sticker' ? stickerStage : null} onBack={onBack}>
-      {mode === 'sticker' ? (
+    <TopBar title={title} subtitle={mode === 'sticker' ? stickerStage : mode === 'faceswap' ? swapStage : null} onBack={onBack}>
+      {MakerIcon ? (
         <div className="ie-topbar-history ie-topbar-history--capsule">
           <button type="button" className="ui-icon-btn ui-icon-btn--ghost" onClick={handleUndo} disabled={!canUndo} title="Undo" aria-label="Undo">
             <Undo2 size={19} />

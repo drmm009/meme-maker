@@ -1157,23 +1157,60 @@ describe('MemeEditor', () => {
     expect(screen.getByText('Meme Editor')).toBeTruthy();
   });
 
-  it('the Face Swap maker opens on the face picker; its Meme starts afresh on another meme, still in Face Swap', async () => {
-    renderEditor({ ...TEMPLATE, editorMode: 'faceswap' });
-    const tabs = () => within(screen.getByRole('navigation', { name: 'Editor tools' })).getAllByRole('button').map((b) => b.textContent.trim());
-    expect(tabs()).toEqual(['Face Swap', 'Text', 'Media']);
-    expect(within(strip('Face swap tools')).getAllByRole('button').map((b) => b.textContent)).toEqual(['Your face', 'Meme']);
-    expect(await screen.findByText('Apply to meme', {}, { timeout: 10000 })).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+  it('the Face Swap maker opens on its page (your face and a picture); Memes starts afresh on another meme, still in Face Swap', async () => {
+    // No face swap server here: the page says so and offers Retry.
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('offline')));
+    try {
+      renderEditor({ ...TEMPLATE, editorMode: 'faceswap' });
+      const page = screen.getByRole('region', { name: 'Face swap' });
+      // Each box is one button, opening a sheet of where to get the picture.
+      fireEvent.click(within(page).getByRole('button', { name: 'Add your face' }));
+      const faceSheet = screen.getByRole('dialog', { name: 'Your face' });
+      expect(within(faceSheet).getByLabelText('Upload your face')).toBeTruthy();
+      expect(within(faceSheet).getByLabelText('Take a selfie')).toBeTruthy();
+      fireEvent.click(within(within(faceSheet).getByRole('radiogroup', { name: 'Sample faces' })).getByRole('radio', { name: 'Drake' }));
+      expect(screen.queryByRole('dialog', { name: 'Your face' })).toBeNull();
+      expect(within(page).getByRole('button', { name: 'Change your face' })).toBeTruthy();
+      // The picture has a remove button on its corner.
+      fireEvent.click(within(page).getByRole('button', { name: 'Remove the picture' }));
+      expect(within(page).queryByRole('button', { name: 'Remove the picture' })).toBeNull();
+      fireEvent.click(within(page).getByRole('button', { name: 'Add a picture to swap into' }));
+      const pictureSheet = screen.getByRole('dialog', { name: 'Swap into' });
+      expect(within(pictureSheet).getByLabelText('Upload a picture to swap into')).toBeTruthy();
+      expect(await within(page).findByText('Face swap is offline')).toBeTruthy();
+      expect(within(page).getByRole('button', { name: 'Swap faces' }).disabled).toBe(true);
+      expect(screen.getByText('Face Swap', { selector: '.ui-topbar-title *' })).toBeTruthy();
+      expect(screen.getByText('Pick a face and a picture', { selector: '.ui-topbar-subtitle' })).toBeTruthy();
 
-    fireEvent.click(within(strip('Face swap tools')).getByText('Meme'));
-    const picker = sheet('Pick a meme');
-    fireEvent.click(within(picker).getAllByRole('button', { name: /distracted/i })[0]);
-    expect(canvas.props.imageLayers).toHaveLength(0);
-    expect(screen.queryByRole('dialog', { name: 'Pick a meme' })).toBeNull();
-    expect(canvas.props.imageUrl).not.toBe(TEMPLATE.imageUrl);
-    expect(screen.getByText('Face Swap', { selector: '.ui-topbar-title' })).toBeTruthy();
-    expect(await screen.findByText('Apply to meme', {}, { timeout: 10000 })).toBeTruthy();
+      fireEvent.click(within(pictureSheet).getByRole('button', { name: 'Pick a meme' }));
+      const picker = sheet('Pick a meme');
+      fireEvent.click(within(picker).getAllByRole('button', { name: /distracted/i })[0]);
+      expect(canvas.props.imageUrl).not.toBe(TEMPLATE.imageUrl);
+      expect(screen.queryByRole('dialog', { name: 'Pick a meme' })).toBeNull();
+      expect(screen.getByRole('region', { name: 'Face swap' })).toBeTruthy();
+      expect(screen.getByText('Face Swap', { selector: '.ui-topbar-title *' })).toBeTruthy();
+    } finally {
+      vi.unstubAllGlobals();
+    }
   }, 30000);
+
+  it('a swapped meme in the Face Swap maker has Swap again and Export, and Swap again reopens the page', () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('offline')));
+    try {
+      const pic = { src: 'face.png', name: 'Face' };
+      renderEditor({ ...TEMPLATE, editorMode: 'faceswap', faceSwap: { face: pic, target: { src: TEMPLATE.imageUrl, name: 'Meme' } } });
+      expect(screen.queryByRole('region', { name: 'Face swap' })).toBeNull();
+      const dock = screen.getByRole('navigation', { name: 'Editor tools' });
+      expect(within(dock).getAllByRole('button').map((b) => b.textContent.trim())).toEqual(['Swap again', 'Export']);
+      expect(within(strip('Face swap tools')).getAllByRole('button').map((b) => b.textContent)).toEqual(['Text', 'Effects']);
+      fireEvent.click(within(dock).getByText('Swap again'));
+      const page = screen.getByRole('region', { name: 'Face swap' });
+      fireEvent.click(within(page).getByRole('button', { name: 'Cancel' }));
+      expect(screen.queryByRole('region', { name: 'Face swap' })).toBeNull();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
 
   it('the Social Card maker opens on its Details form, edits the card live and swaps the kind of card', async () => {
     const { MEME_TEMPLATES } = await import('../data/templates');

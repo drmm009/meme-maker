@@ -89,7 +89,7 @@ describe('TemplateDiscovery', () => {
     // Click Face Swap
     fireEvent.click(screen.getByRole('button', { name: 'Face Swap' }));
     expect(onSelectTemplate).toHaveBeenCalledWith(
-      expect.objectContaining({ initialFaceSwap: true, editorMode: 'faceswap' })
+      expect.objectContaining({ editorMode: 'faceswap' })
     );
 
     // Click Generate Stickers
