@@ -1149,6 +1149,11 @@ describe('MemeEditor', () => {
     const initialCount = canvas.props.captions.length;
     fireEvent.click(within(strip('Sticker tools')).getByText('Text'));
     expect(canvas.props.captions).toHaveLength(initialCount + 1);
+    // A selected caption's tools have no Copy or Layers here.
+    act(() => canvas.props.onSelectLayer(canvas.props.captions.at(-1).id));
+    expect(within(layerToolbar()).queryByRole('button', { name: /Layers|Copy|Duplicate/ })).toBeNull();
+    expect(within(layerToolbar()).getByRole('button', { name: /Delete/ })).toBeTruthy();
+    act(() => canvas.props.onSelectLayer(null));
 
     // New starts a blank sticker, back on the page.
     fireEvent.click(within(screen.getByRole('navigation', { name: 'Editor tools' })).getByText('New'));

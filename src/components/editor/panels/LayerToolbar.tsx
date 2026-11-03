@@ -14,6 +14,7 @@ type OpenSheet = (sheet: string, focus?: string | null, fromPill?: boolean) => v
 
 export default function LayerToolbar({ actions }: { actions: EditorActions }) {
   const { id, kind, caption, sticker, image, drawing } = useSelection();
+  const mode: string = useEditorUiStore((s: { mode: string }) => s.mode);
   const sheet: string | null = useEditorUiStore((s: { sheet: string | null }) => s.sheet);
   const sheetFocus: string | null = useEditorUiStore((s: { sheetFocus: string | null }) => s.sheetFocus);
   const openSheet: OpenSheet = useEditorUiStore((s: { openSheet: OpenSheet }) => s.openSheet);
@@ -93,6 +94,8 @@ export default function LayerToolbar({ actions }: { actions: EditorActions }) {
       del,
     ];
   }
+  // The Stickers maker keeps one sticker simple: no copies, no layer list.
+  if (mode === 'sticker') items = items.filter((item) => item.id !== 'duplicate' && item.id !== 'layers');
 
   return (
     <div className="ie-layer-dock">
