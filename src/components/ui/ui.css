@@ -105,18 +105,51 @@
   gap: 8px;
   padding: calc(8px + env(safe-area-inset-top, 0px)) 14px 8px;
 }
+.ui-topbar-heading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 0;
+}
 .ui-topbar-title {
   margin: 0;
   font-size: 17px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.2;
   white-space: nowrap;
   /* A long title gives way (with an ellipsis) rather than pushing the actions off a narrow screen. */
+  max-width: 100%;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.ui-topbar-subtitle {
+  margin: 1px 0 0;
+  color: var(--ui-muted);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.25;
+  white-space: nowrap;
+}
 .ui-topbar-actions { display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
+/* Back: a soft filled circle, the same weight as the bar's other round controls. */
+.ui-topbar-back {
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--ui-text);
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+.ui-topbar-back:hover { background: rgba(255, 255, 255, 0.12); }
+.ui-topbar-back:active { transform: scale(0.92); background: rgba(255, 255, 255, 0.16); }
+.ui-topbar-back:focus-visible { outline: 2px solid var(--ui-accent); outline-offset: 2px; }
+.ui-topbar-back svg { margin-left: -2px; }
+.ui-topbar-spacer {
+  min-width: 0;
+}
 
 /* ── Segmented control ───────────────────────────────────── */
 .ui-seg {
@@ -208,6 +241,40 @@
   font-size: 13px;
   font-weight: 700;
 }
+/* A maker's action buttons (DockItem variant): icon beside the label, the primary filled with the
+   accent, the secondary a quiet outline. Disabled while it has nothing to act on. */
+.ui-dock-item--primary,
+.ui-dock-item--secondary {
+  flex-direction: row;
+  gap: 8px;
+  height: 48px;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.005em;
+  transition: background 0.15s ease, color 0.15s ease, opacity 0.2s ease, transform 0.1s ease;
+}
+.ui-dock-item--primary {
+  background: var(--ui-accent);
+  color: #fff;
+  box-shadow: 0 6px 18px -6px rgba(255, 90, 54, 0.55);
+}
+.ui-dock-item--primary:hover:not(:disabled) { background: var(--ui-accent-hover); }
+.ui-dock-item--secondary {
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+  color: #f5f5f7;
+}
+.ui-dock-item--secondary:hover:not(:disabled) { background: rgba(255, 255, 255, 0.11); }
+.ui-dock-item--primary:active:not(:disabled),
+.ui-dock-item--secondary:active:not(:disabled) { transform: scale(0.98); }
+.ui-dock-item:disabled { cursor: default; }
+.ui-dock-item--primary:disabled {
+  background: var(--ui-accent-tint);
+  color: rgba(255, 255, 255, 0.55);
+  box-shadow: none;
+}
+.ui-dock-item--primary svg,
+.ui-dock-item--secondary svg { flex-shrink: 0; }
 
 /* ── Tool strip (above the dock) ─────────────────────────── */
 .ui-strip {
@@ -254,6 +321,13 @@
   padding: 0 4px;
   border-radius: 22px;
   font-size: 11.5px;
+}
+.ui-strip--stacked .ui-strip-btn span {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* ── Floating toolbar ────────────────────────────────────── */

@@ -64,7 +64,7 @@ export function usePhotoActions() {
       return {
         ...l,
         url,
-        originalUrl: null,
+        originalUrl: l.originalUrl ?? null,
         subjectUrl: undefined,
         subjectOf: undefined,
         crop: undefined,

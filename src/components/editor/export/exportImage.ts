@@ -4,7 +4,8 @@ import { dataURLToBlob } from '../../../utils/galleryStore';
 
 export type ExportFormat = 'png' | 'jpeg' | 'webp';
 // 'full' keeps the canvas size; a number is the width in pixels (never larger than the canvas).
-export type ExportWidth = 'full' | 720 | 480;
+// 512: the Stickers maker's WhatsApp-sized square.
+export type ExportWidth = 'full' | 720 | 512 | 480;
 
 export interface ExportPrefs {
   // GIF and MP4 are for memes with moving layers (see motionExport).

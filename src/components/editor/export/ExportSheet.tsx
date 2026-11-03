@@ -39,6 +39,7 @@ export default function ExportSheet({ actions, onClose }: { actions: EditorActio
   const motion = isMotionFormat(format) ? format : null;
   const size = motion ? motionSize(w, h, motion, prefs.width) : outputSize(w, h, prefs.width);
   const set = (patch: Partial<ExportPrefs>) => setExportPrefs({ ...prefs, ...patch });
+  const sticker = useEditorUiStore((s: { mode: string }) => s.mode) === 'sticker';
 
   // What the file will be like with these choices (GIFs and MP4s only once they are made).
   useEffect(() => {
@@ -88,7 +89,7 @@ export default function ExportSheet({ actions, onClose }: { actions: EditorActio
       } else {
         blob = await actions.exportBlob({ ...prefs, format });
       }
-      const fileName = fileNameFor(`meme-${actions.memeName().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'custom'}`, blob.type);
+      const fileName = fileNameFor(`${sticker ? 'sticker' : 'meme'}-${actions.memeName().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'custom'}`, blob.type);
       if (what === 'share') {
         const file = new File([blob], fileName, { type: blob.type });
         if (navigator.canShare && navigator.canShare({ files: [file] })) await navigator.share({ title: actions.memeName(), text: 'Check out this meme! 😂', files: [file] });
@@ -108,6 +109,37 @@ export default function ExportSheet({ actions, onClose }: { actions: EditorActio
   const typeLabel = info ? TYPE_LABEL[info.type] || 'PNG' : TYPE_LABEL[`image/${format}`];
   const fellBack = info && info.type !== `image/${format}`;
   const seconds = motion && loops ? (motionDuration(loops, motion) / 1000).toFixed(1).replace(/\.0$/, '') : '';
+
+  // A sticker: just its file, see-through PNG or WebP at WhatsApp's 512px or full size, and the
+  // ways to save it, Download first.
+  if (sticker) {
+    return (
+      <Sheet title="Export" onClose={onClose} className="ie-sticker-export">
+        <div className="ie-sticker-export-opts">
+          <SegmentedControl ariaLabel="File format" variant="fill" value={format} options={FORMATS.filter((f) => f.value !== 'jpeg')} onChange={(f) => set({ format: f })} />
+          <SegmentedControl ariaLabel="Image width" variant="fill" value={prefs.width === 512 ? '512' : 'full'} options={[{ value: '512', label: '512 px' }, { value: 'full', label: `${w} px` }]} onChange={(v) => set({ width: v === 'full' ? 'full' : 512 })} />
+        </div>
+        <p className="ie-sticker-export-info" aria-live="polite">
+          {`${typeLabel} · ${size.w} × ${size.h} · ${info ? `≈ ${formatBytes(info.bytes)}` : 'measuring…'}`}
+        </p>
+        <div className="ie-sticker-export-actions">
+          <button type="button" className="ie-sticker-export-download" disabled={busy} onClick={() => run('download')}>
+            <Download size={18} strokeWidth={2.2} aria-hidden="true" />
+            Download
+          </button>
+          <button type="button" className="ui-icon-btn ie-sticker-export-icon" disabled={busy} onClick={() => run('share')} title="Share" aria-label="Share">
+            <Share2 size={19} />
+          </button>
+          <button type="button" className="ui-icon-btn ie-sticker-export-icon" disabled={busy} onClick={copy} title="Copy as PNG" aria-label="Copy">
+            <Copy size={19} />
+          </button>
+          <button type="button" className="ui-icon-btn ie-sticker-export-icon" disabled={busy} onClick={actions.saveToGallery} title="Save to Gallery" aria-label="Save to Gallery">
+            <Save size={19} />
+          </button>
+        </div>
+      </Sheet>
+    );
+  }
 
   return (
     <Sheet title="Export" onClose={onClose}>

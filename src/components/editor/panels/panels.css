@@ -17,6 +17,71 @@
 }
 
 .ie-aspect-bar { flex: none; display: flex; justify-content: center; padding: 4px 12px 8px; }
+/* The Stickers maker's top bar: its title with the sticker icon, and undo/redo joined in one soft
+   capsule that matches the round Back button. */
+.ie-topbar-sticker-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.ie-topbar-sticker-icon { color: var(--ui-accent, #ff5a36); flex-shrink: 0; }
+.ie-topbar-history--capsule {
+  margin-right: 0;
+  padding: 0 2px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+}
+.ie-topbar-history--capsule .ui-icon-btn { width: 36px; height: 40px; border-radius: 999px; }
+.ie-topbar-history--capsule .ui-icon-btn:hover:not(:disabled) { background: rgba(255, 255, 255, 0.08); }
+
+/* The Stickers maker's Export sheet (ExportSheet): two choices, the file it makes, and a Download
+   button with Share, Copy and Save beside it. */
+.ie-sticker-export-opts { display: flex; gap: 8px; }
+.ie-sticker-export-opts .ui-seg { flex: 1 1 0; min-width: 0; }
+.ie-sticker-export-info {
+  margin: 10px 0 14px;
+  color: var(--ui-muted, #a5a6ad);
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+.ie-sticker-export-actions { display: flex; align-items: center; gap: 8px; }
+.ie-sticker-export-download {
+  flex: 1 1 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 48px;
+  border: none;
+  background: var(--ui-accent);
+  box-shadow: 0 6px 18px -6px rgba(255, 90, 54, 0.55);
+  color: #fff;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+.ie-sticker-export-download:hover:not(:disabled) { background: var(--ui-accent-hover); }
+.ie-sticker-export-download:active:not(:disabled) { transform: scale(0.98); }
+.ie-sticker-export-download:disabled { opacity: 0.6; cursor: default; }
+.ie-sticker-export .ie-sticker-export-icon {
+  flex: none;
+  width: 48px;
+  height: 48px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  color: #f5f5f7;
+}
+.ie-sticker-export .ie-sticker-export-icon:hover:not(:disabled) { background: rgba(255, 255, 255, 0.12); }
+
+/* The Stickers maker's dock: one or two wide action buttons (ui.css, DockItem variant). */
+.ie-panels--sticker .ui-dock {
+  gap: 8px;
+  padding: 6px;
+}
+.ie-panels--sticker .ui-dock-item--primary { flex: 1.4 1 0; }
 
 .ie-layer-dock { display: flex; justify-content: center; padding: 0 8px 8px; }
 .ie-layer-toolbar { max-width: 100%; }

@@ -3,6 +3,14 @@ import { useMemeEditorStore } from '../store/useMemeEditorStore';
 import { useSelection } from './selection';
 import type { EditorActions } from './selection';
 
+interface DieCutItem {
+  id?: string;
+  dieCut?: boolean;
+  dieCutColor?: string;
+  dieCutWidth?: number;
+  originalUrl?: string | null;
+}
+
 const DIECUT_COLORS = [
   '#ffffff',
   '#000000',
@@ -19,13 +27,16 @@ const DIECUT_COLORS = [
 export default function DieCutSheet({ actions, onClose }: { actions: EditorActions; onClose: () => void }) {
   const { id, kind, sticker, image } = useSelection();
   const patchLayer = useMemeEditorStore((s: { patchLayer: (key: string, id: string, patch: object) => void }) => s.patchLayer);
+  const imageLayers: DieCutItem[] = useMemeEditorStore((s: { imageLayers: DieCutItem[] }) => s.imageLayers);
 
   const isSticker = kind === 'sticker' && Boolean(sticker);
   const isImage = kind === 'image' && Boolean(image);
-  const activeItem = isSticker ? sticker : isImage ? image : null;
+  const fallbackImage = !id && imageLayers.length > 0 ? (imageLayers.find((l) => Boolean(l.originalUrl)) || imageLayers[0]) : null;
+  const activeItem = isSticker ? sticker : isImage ? image : fallbackImage;
+  const activeId = id || fallbackImage?.id;
   const storeKey = isSticker ? 'stickers' : 'imageLayers';
 
-  if (!id || !activeItem) return null;
+  if (!activeId || !activeItem) return null;
 
   const isDieCut = Boolean(activeItem.dieCut);
   const color = typeof activeItem.dieCutColor === 'string' ? activeItem.dieCutColor : '#ffffff';
@@ -35,7 +46,16 @@ export default function DieCutSheet({ actions, onClose }: { actions: EditorActio
     <Sheet
       className="ie-diecut-sheet ie-tool-sheet"
       title="Die-cut"
-      aside={<Switch label="Die-cut border" checked={isDieCut} onChange={() => actions.handleToggleDieCutSticker()} />}
+      aside={
+        <Switch
+          label="Die-cut border"
+          checked={isDieCut}
+          onChange={() => {
+            if (id) actions.handleToggleDieCutSticker();
+            else patchLayer(storeKey, activeId, { dieCut: !isDieCut });
+          }}
+        />
+      }
       onClose={onClose}
     >
       <Row label="Color">
@@ -44,7 +64,7 @@ export default function DieCutSheet({ actions, onClose }: { actions: EditorActio
           colors={DIECUT_COLORS}
           value={color}
           // A colour or width also switches the border on.
-          onChange={(c) => patchLayer(storeKey, id, { dieCut: true, dieCutColor: c })}
+          onChange={(c) => patchLayer(storeKey, activeId, { dieCut: true, dieCutColor: c })}
         />
       </Row>
       <Row label="Width">
@@ -54,7 +74,7 @@ export default function DieCutSheet({ actions, onClose }: { actions: EditorActio
           max={20}
           step={1}
           value={width}
-          onChange={(w) => patchLayer(storeKey, id, { dieCut: true, dieCutWidth: w })}
+          onChange={(w) => patchLayer(storeKey, activeId, { dieCut: true, dieCutWidth: w })}
           format={(v) => String(Math.round(v))}
         />
       </Row>

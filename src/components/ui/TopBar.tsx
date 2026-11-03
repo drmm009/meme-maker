@@ -2,23 +2,30 @@ import type { ReactNode } from 'react';
 import { ChevronLeft } from 'lucide-react';
 
 interface TopBarProps {
-  title: string;
+  title: ReactNode;
+  // A short line under the title (where the work stands).
+  subtitle?: ReactNode;
   onBack: () => void;
   backLabel?: string;
   // The right-hand actions (history, export…).
   children?: ReactNode;
 }
 
-// Back button, centred title, actions on the right.
-export default function TopBar({ title, onBack, backLabel = 'Back', children }: TopBarProps) {
+// Back button, centred title (with an optional line under it), actions on the right.
+export default function TopBar({ title, subtitle, onBack, backLabel = 'Back', children }: TopBarProps) {
   return (
     <header className="ui-topbar">
       <div>
-        <button type="button" className="ui-icon-btn" onClick={onBack} aria-label={backLabel} title={backLabel}>
-          <ChevronLeft size={20} strokeWidth={2.2} />
+        <button type="button" className="ui-icon-btn ui-topbar-back" onClick={onBack} aria-label={backLabel} title={backLabel}>
+          <ChevronLeft size={22} strokeWidth={2.3} />
         </button>
       </div>
-      <h1 className="ui-topbar-title">{title}</h1>
+      {title ? (
+        <div className="ui-topbar-heading">
+          <h1 className="ui-topbar-title">{title}</h1>
+          {subtitle && <p className="ui-topbar-subtitle" aria-live="polite">{subtitle}</p>}
+        </div>
+      ) : <div className="ui-topbar-spacer" />}
       <div className="ui-topbar-actions">{children}</div>
     </header>
   );

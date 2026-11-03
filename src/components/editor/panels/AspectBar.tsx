@@ -19,7 +19,8 @@ export default function AspectBar() {
   const setAspectRatio = useMemeEditorStore((s: { setAspectRatio: (v: Aspect) => void }) => s.setAspectRatio);
   const pushHistoryDebounced = useMemeEditorStore((s: { pushHistoryDebounced: () => void }) => s.pushHistoryDebounced);
   const sheet: string | null = useEditorUiStore((s: { sheet: string | null }) => s.sheet);
-  if (sheet) return null;
+  const mode: string = useEditorUiStore((s: { mode: string }) => s.mode);
+  if (sheet || mode === 'sticker') return null;
   return (
     <div className="ie-aspect-bar">
       <SegmentedControl

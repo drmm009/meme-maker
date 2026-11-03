@@ -2,6 +2,7 @@ import { Check, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import CanvasEditor from '../CanvasEditor';
 import FacePinpointOverlay from '../FacePinpointOverlay';
+import StickerStart from './StickerStart';
 import { useMemeEditorStore } from './store/useMemeEditorStore';
 import { useEditorUiStore } from './store/useEditorUiStore';
 
@@ -12,7 +13,7 @@ const LAYER_SHEETS = ['text', 'media'];
 // face pinpointing). Tapping the empty space around the canvas deselects.
 export default function CanvasStage({
   canvasRef, imageFit, isNativeLayout, layoutDef, isDrawingMode, isRemovingBg, isBlurringBg,
-  onAddDrawing, onDeleteLayer, onUpdateSlotTransform, faceMorph, onDropMedia
+  onAddDrawing, onDeleteLayer, onUpdateSlotTransform, faceMorph, onDropMedia, onUploadPhoto
 }) {
   const captions = useMemeEditorStore((s) => s.captions);
   const stickers = useMemeEditorStore((s) => s.stickers);
@@ -131,6 +132,11 @@ export default function CanvasStage({
           isDrawingMode={isDrawingMode}
         />
 
+        {/* An empty sticker says how to start. */}
+        {mode === 'sticker' && !sheet && !imageLayers.length && !captions.length && !stickers.length && onUploadPhoto && (
+          <StickerStart onUpload={onUploadPhoto} />
+        )}
+
         {(isRemovingBg || isBlurringBg) && (
           <div
             className="canvas-loading-overlay"
@@ -178,7 +184,7 @@ export default function CanvasStage({
               />
             </div>
             <span style={{ fontSize: '15px', fontWeight: 700, letterSpacing: '-0.01em', color: '#ffffff' }}>
-              {isBlurringBg ? 'Blurring the background…' : 'Removing Background...'}
+              {isBlurringBg ? 'Blurring the background…' : mode === 'sticker' ? 'Cutting out your sticker…' : 'Removing Background...'}
             </span>
             <span style={{ fontSize: '12.5px', color: 'rgba(255, 255, 255, 0.65)', marginTop: '4px' }}>
               {isBlurringBg ? 'Finding the subject first' : 'This may take a moment'}

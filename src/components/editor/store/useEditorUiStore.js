@@ -105,7 +105,7 @@ const UI_FIELDS = Object.keys(buildInitialUi(null));
 
 // The dock tab each sheet belongs to: its strip shows above the sheet.
 // null: no strip (Export). Sheets not listed (Layers) keep the strip that shows.
-const SHEET_TAB = { text: 'text', media: 'media', draw: 'draw', canvasColor: 'canvas', watermark: 'canvas', header: 'canvas', footer: 'canvas', filters: 'fx', background: 'fx', export: null, library: null, mediaLink: 'media', templates: 'media', memes: 'swap', card: 'card', cardLook: 'card', aiMeme: 'ai', stickers: 'media', gifs: 'media', emoji: 'media', bubble: 'text' };
+const SHEET_TAB = { text: 'text', media: 'media', draw: 'draw', canvasColor: 'canvas', watermark: 'canvas', header: 'canvas', footer: 'canvas', filters: 'fx', background: 'fx', export: null, library: null, mediaLink: 'media', templates: 'media', memes: 'swap', card: 'card', cardLook: 'card', aiMeme: 'ai', stickers: 'media', gifs: 'media', emoji: 'media', bubble: 'text', diecut: 'media' };
 
 // useState-style setter: accepts a value or an updater function.
 const fieldSetter = (set, key) => (valueOrUpdater) =>
@@ -136,7 +136,7 @@ export function createEditorUiStore(template) {
     // keeps its own.
     openSheet: (sheet, focus = null, fromPill = false) => set((state) => {
       const owner = sheet in SHEET_TAB ? SHEET_TAB[sheet] : state.dockTab;
-      const tab = owner && !EDITOR_MODES[state.mode].dock.includes(owner) ? state.dockTab : owner;
+      const tab = state.mode === 'sticker' ? 'sticker' : (owner && !EDITOR_MODES[state.mode].dock.includes(owner) ? state.dockTab : owner);
       return {
         sheet,
         sheetFocus: focus,
@@ -148,7 +148,12 @@ export function createEditorUiStore(template) {
       };
     }),
     // Closing a sheet keeps its strip (and drawing, after the brush settings).
-    closeSheet: () => set({ sheet: null, sheetFocus: null, sheetFromPill: false }),
+    closeSheet: () => set((state) => ({
+      sheet: null,
+      sheetFocus: null,
+      sheetFromPill: false,
+      dockTab: state.dockTab || (state.mode === 'sticker' ? 'sticker' : null),
+    })),
 
     // A dock tab shows its strip above the dock; tapping it again (leaveDock) closes the strip and
     // its sheet and stops drawing.

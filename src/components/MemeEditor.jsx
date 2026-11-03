@@ -64,6 +64,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, c
   const handleRedo = useMemeEditorStore((s) => s.redo);
   const nudgeLayer = useMemeEditorStore((s) => s.nudgeLayer);
   const dockTab = useEditorUiStore((s) => s.dockTab);
+  const mode = useEditorUiStore((s) => s.mode);
   const drawTool = useEditorUiStore((s) => s.drawTool);
 
   // Native Multi-Panel Layout Support
@@ -147,7 +148,8 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, c
       <EditorTopBar onBack={onBack} />
 
       {draft.offer && <DraftOffer offer={draft.offer} onRestore={draft.restore} onDismiss={draft.dismiss} />}
-      <FirstRunTour />
+      {/* The tour explains the full editor's tabs; the makers explain themselves. */}
+      {mode === 'full' && <FirstRunTour />}
 
       <div className="editor-main">
         <AspectBar />
@@ -165,6 +167,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, c
             onUpdateSlotTransform={updateSlotTransform}
             faceMorph={faceMorph}
             onDropMedia={media.handleDropMedia}
+            onUploadPhoto={handleFileUploadImageLayer}
           />
         </div>
 

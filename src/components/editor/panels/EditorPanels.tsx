@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { Type, Copy, PenLine, Sparkles, LayoutGrid, ScanFace, Share2, Wand2, Sticker } from 'lucide-react';
+import { Type, Copy, PenLine, Sparkles, LayoutGrid, ScanFace, Share2, Wand2, Sticker, Download, Palette } from 'lucide-react';
 import { ToolDock, ToolStrip } from '../../ui';
 import type { DockItem } from '../../ui';
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
@@ -53,8 +53,9 @@ const DOCK: DockItem[] = [
   { id: 'swap', label: 'Face Swap', Icon: ScanFace, title: 'Your face and the meme' },
   { id: 'card', label: 'Card', Icon: Share2, title: 'The social card' },
   { id: 'ai', label: 'AI', Icon: Wand2, title: 'AI meme ideas' },
-  // The Stickers maker's one dock button, which makes the sticker rather than opening a tab.
-  { id: 'sticker', label: 'Generate Sticker', Icon: Sticker, title: 'Cut out the picture' },
+  // The Stickers maker's dock buttons: Generate Sticker (Full editor once it's made) and Export.
+  { id: 'sticker', label: 'Generate Sticker', Icon: Sticker, title: 'Cut out the picture', variant: 'primary' },
+  { id: 'export', label: 'Export', Icon: Download, title: 'Save or share the sticker', variant: 'primary' },
 ];
 
 const SHEETS = { text: TextSheet, media: MediaSheet, draw: DrawSheet, canvasColor: CanvasColorSheet, watermark: WatermarkSheet, header: HeaderSheet, footer: FooterSheet, filters: FiltersSheet, background: BackgroundSheet, layers: LayersSheet, export: ExportSheet, library: LibrarySheet, mediaLink: LinkSheet,
@@ -69,7 +70,9 @@ const FULL_SHEETS = new Set<string>(['templates', 'memes', 'stickers', 'emoji', 
 // and above the sheets it opens, and no dock tab is lit.
 export default function EditorPanels({ actions }: { actions: EditorActions }) {
   const sheet: keyof typeof SHEETS | null = useEditorUiStore((s: { sheet: keyof typeof SHEETS | null }) => s.sheet);
+  const openSheet = useEditorUiStore((s: { openSheet: (sheet: string) => void }) => s.openSheet);
   const closeSheet = useEditorUiStore((s: { closeSheet: () => void }) => s.closeSheet);
+  const openFullEditor = useEditorUiStore((s: { openFullEditor: () => void }) => s.openFullEditor);
   const dockTab: string | null = useEditorUiStore((s: { dockTab: string | null }) => s.dockTab);
   const drawTool: string | null = useEditorUiStore((s: { drawTool: string | null }) => s.drawTool);
   const sheetFromPill: boolean = useEditorUiStore((s: { sheetFromPill: boolean }) => s.sheetFromPill);
@@ -78,8 +81,16 @@ export default function EditorPanels({ actions }: { actions: EditorActions }) {
   const leaveDock = useEditorUiStore((s: { leaveDock: () => void }) => s.leaveDock);
   const mode: EditorMode = useEditorUiStore((s: { mode: EditorMode }) => s.mode);
   const busy = Boolean(actions.isRemovingBg);
-  const dock = EDITOR_MODES[mode].dock.map((id) => DOCK.find((d) => d.id === id)).filter((d): d is DockItem => Boolean(d))
-    .map((d) => (d.id === 'sticker' && busy ? { ...d, label: 'Generating…' } : d));
+  const photos: { originalUrl?: string | null }[] = useMemeEditorStore((s: { imageLayers: { originalUrl?: string | null }[] }) => s.imageLayers);
+  const generated = photos.length > 0 && photos.every((l) => Boolean(l.originalUrl));
+  // The Stickers maker's dock: Generate Sticker (waiting for a photo until there is one); once the
+  // sticker is made, Export leads and Full editor sits beside it.
+  const stickerDock: Partial<DockItem> = busy ? { label: 'Generating…', disabled: true }
+    : generated ? { label: 'Full editor', title: 'Keep editing in the full editor', Icon: Palette, variant: 'secondary' }
+    : { title: photos.length ? 'Cut out the picture' : 'Add a photo first', disabled: !photos.length };
+  const modeDock = mode === 'sticker' && !generated ? ['sticker'] : EDITOR_MODES[mode].dock;
+  const dock = modeDock.map((id) => DOCK.find((d) => d.id === id)).filter((d): d is DockItem => Boolean(d))
+    .map((d) => (d.id === 'sticker' ? { ...d, ...stickerDock } : d));
   const setActiveLayerId = useMemeEditorStore((s: { setActiveLayerId: (id: string | null) => void }) => s.setActiveLayerId);
   const faceMorph = useMemeEditorStore((s: { templateFaceMorph: { morphProgress?: number } | null }) => s.templateFaceMorph);
   const { kind } = useSelection();
@@ -136,15 +147,24 @@ export default function EditorPanels({ actions }: { actions: EditorActions }) {
   }
 
   return (
-    <div ref={panelRef} className="ie-panels" data-sheet-ghosts="">
+    <div ref={panelRef} className={`ie-panels${mode === 'sticker' ? ' ie-panels--sticker' : ''}`} data-sheet-ghosts="">
       {layerTools ? <LayerToolbar actions={actions} /> : strip}
       <ToolDock
         ariaLabel="Editor tools"
         items={dock}
-        active={layerTools ? null : dockTab}
+        active={layerTools ? null : mode === 'sticker' ? null : dockTab}
         onSelect={(id) => {
           if (id === 'sticker') {
-            if (!busy) void actions.handleGenerateSticker();
+            if (generated) {
+              openFullEditor();
+              return;
+            }
+            if (!busy && photos.length) void actions.handleGenerateSticker();
+            return;
+          }
+          if (id === 'export') {
+            if (sheet === 'export') closeSheet();
+            else openSheet('export');
             return;
           }
           // Every tab deselects the layer and shows its strip; tapping the lit tab again closes it

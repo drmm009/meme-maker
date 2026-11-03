@@ -6,6 +6,9 @@ export interface DockItem {
   // A lucide icon, or any icon taking the same size/strokeWidth props.
   Icon: ComponentType<{ size?: number; strokeWidth?: number }>;
   title?: string;
+  // A maker's action buttons: 'primary' is filled with the accent, 'secondary' is quieter.
+  variant?: 'primary' | 'secondary';
+  disabled?: boolean;
 }
 
 interface ToolDockProps {
@@ -19,12 +22,13 @@ interface ToolDockProps {
 export default function ToolDock({ items, active, onSelect, ariaLabel }: ToolDockProps) {
   return (
     <nav className="ui-dock" aria-label={ariaLabel}>
-      {items.map(({ id, label, Icon, title }) => (
+      {items.map(({ id, label, Icon, title, variant, disabled }) => (
         <button
           key={id}
           type="button"
-          className={`ui-dock-item${active === id ? ' is-on' : ''}`}
-          aria-pressed={active === id}
+          className={`ui-dock-item${active === id ? ' is-on' : ''}${variant ? ` ui-dock-item--${variant}` : ''}`}
+          aria-pressed={variant ? undefined : active === id}
+          disabled={disabled}
           title={title || label}
           onClick={() => onSelect(id)}
         >

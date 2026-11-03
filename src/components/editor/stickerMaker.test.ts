@@ -9,8 +9,8 @@ describe('the Stickers maker', () => {
     expect(editorModeOf(t)).toBe('sticker');
   });
 
-  it('exports see-through, as PNG unless WebP was picked', () => {
-    expect(stickerExportPrefs({ format: 'jpeg', quality: 0.9, width: 'full', transparent: false })).toEqual({ format: 'png', quality: 0.9, width: 'full', transparent: true });
+  it('exports see-through at 512px, as PNG unless WebP was picked', () => {
+    expect(stickerExportPrefs({ format: 'jpeg', quality: 0.9, width: 'full', transparent: false })).toEqual({ format: 'png', quality: 0.9, width: 512, transparent: true });
     expect(stickerExportPrefs({ format: 'webp', quality: 0.8, width: 480 }).format).toBe('webp');
     expect(stickerExportPrefs({ format: 'gif', quality: 0.9, width: 'full' }).format).toBe('png');
   });

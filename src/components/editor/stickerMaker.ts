@@ -42,10 +42,11 @@ export function makeStickerTemplate() {
   };
 }
 
-// A sticker exports see-through: PNG unless WebP was picked (JPG, GIF and MP4 have no transparency
-// or don't suit a still sticker).
+// A sticker exports see-through at WhatsApp's 512px: PNG unless WebP was picked (JPG, GIF and MP4
+// have no transparency or don't suit a still sticker).
 export const stickerExportPrefs = (prefs: ExportPrefs): ExportPrefs => ({
   ...prefs,
   format: prefs.format === 'webp' ? 'webp' : 'png',
   transparent: true,
+  width: STICKER_SIZE,
 });
