@@ -10,6 +10,18 @@ export const AI_MEME_CATEGORIES = [
   { id: 'students', label: 'School & College', icon: '📚' }
 ];
 
+// Ideas the AI Meme page offers to start from, each sent as the prompt with its vibe.
+export const AI_MEME_IDEAS = [
+  { text: 'Mondays', icon: '😩', category: 'work' },
+  { text: 'Exams tomorrow', icon: '📚', category: 'students' },
+  { text: 'My code finally works', icon: '💻', category: 'tech' },
+  { text: 'Gym day one', icon: '🏋️', category: 'life' },
+  { text: 'Group projects', icon: '🤝', category: 'students' },
+  { text: 'One more game', icon: '🎮', category: 'gaming' },
+  { text: 'Meetings that could be emails', icon: '📅', category: 'work' },
+  { text: 'My sleep schedule', icon: '😴', category: 'life' },
+];
+
 export const TEMPLATE_SPECIFIC_CAPTIONS = {
   'drake': [
     { top: 'Writing documentation', bottom: 'Writing code that only God and I understand' },

@@ -26,9 +26,9 @@ describe('createEditorUiStore', () => {
     expect(JSON.parse(localStorage.getItem('meme-maker-export-prefs')).format).toBe('jpeg');
     expect(createEditorUiStore({ id: 't', editorMode: 'faceswap' }).getState()).toMatchObject({ mode: 'faceswap', dockTab: 'swap' });
     expect(createEditorUiStore({ id: 't', editorMode: 'social' }).getState()).toMatchObject({ mode: 'social', dockTab: 'card' });
-    // The AI Meme maker opens on its prompt screen, until a caption has been picked.
-    expect(createEditorUiStore({ id: 't', editorMode: 'ai' }).getState()).toMatchObject({ mode: 'ai', dockTab: 'ai', sheet: 'aiMeme' });
-    expect(createEditorUiStore({ id: 't', editorMode: 'ai', aiPicked: true }).getState().sheet).toBeNull();
+    // The AI Meme maker (its page is EditorPanels', not a sheet) starts from its template's idea and vibe.
+    expect(createEditorUiStore({ id: 't', editorMode: 'ai', aiPrompt: 'mondays', aiCategory: 'work' }).getState()).toMatchObject({ mode: 'ai', dockTab: 'ai', sheet: null, aiIdea: 'mondays', aiVibe: 'work' });
+    expect(createEditorUiStore({ id: 't', editorMode: 'ai' }).getState()).toMatchObject({ aiIdea: '', aiVibe: 'all' });
     const full = createEditorUiStore({ id: 't' });
     expect(full.getState()).toMatchObject({ mode: 'full', dockTab: 'text' });
     full.getState().setExportPrefs((p) => ({ ...p, format: 'webp' }));

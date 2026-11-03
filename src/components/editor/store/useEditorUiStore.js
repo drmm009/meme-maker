@@ -5,7 +5,6 @@ import { safeGet, safeSet } from '../../../utils/storage';
 import { isSocialCardCaption } from '../memeEditorUtils';
 import { EDITOR_MODES, editorModeOf } from '../editorModes';
 import { stickerExportPrefs } from '../stickerMaker';
-import { opensOnPrompt } from '../aiMeme';
 
 // UI state shared across the editor's panels: which tab, submenu, menu or
 // modal is open, drawing tool settings, the watermark. One store per editor.
@@ -62,9 +61,8 @@ export function buildInitialUi(template) {
     mode, // the full editor or one focused maker (editor/editorModes.ts): its title and dock tabs
     activeTab: 'text', // 'text' | 'images' | 'draw' | 'canvas' | 'watermark' | 'filters'
     // A social card opens its studio, or in the Social Card maker its Details form.
-    // The AI Meme maker opens on its prompt screen until a caption is picked.
-    // A maker opens on its first step: the card form, the AI prompt, or the face swap page until a swap is made.
-    sheet: social && mode === 'social' ? 'card' : opensOnPrompt(template) ? 'aiMeme' : mode === 'faceswap' && !template?.faceSwap ? 'faceSwap' : null, // the open bottom sheet: 'text' | 'media' | 'draw' | 'canvasColor' | 'watermark' | 'filters' | null
+    // A maker opens on its first step: the card form, or the face swap page until a swap is made.
+    sheet: social && mode === 'social' ? 'card' : mode === 'faceswap' && !template?.faceSwap ? 'faceSwap' : null, // the open bottom sheet: 'text' | 'media' | 'draw' | 'canvasColor' | 'watermark' | 'filters' | null
     dockTab: EDITOR_MODES[mode].startTab, // the dock tab whose tool strip shows: 'draw' | 'media' | 'text' | 'fx' | 'canvas' | null
     sheetFromPill: false, // the open sheet came from the layer tools pill, which then stays above it
     sheetFocus: null, // what part of the sheet to show: one Text part's sections (TEXT_PARTS), 'size' to scroll the Media sheet to, or null
@@ -97,6 +95,8 @@ export function buildInitialUi(template) {
     customFonts: [], // fonts the person uploaded: [{ family, css }] (utils/customFonts)
     stickerDieCut: true, // the Stickers maker's Die-cut: a white outline on cut-out photos
     stickerStyle: 'classic', // the Stickers maker's style for the next cut-out (STICKER_STYLES)
+    aiIdea: String(template?.aiPrompt || ''), // the AI Meme page's idea and vibe (AI_MEME_CATEGORIES), kept from its template
+    aiVibe: String(template?.aiCategory || 'all'),
     // A sticker exports see-through (stickerMaker.ts); only the full editor's choices are remembered.
     exportPrefs: mode === 'sticker' ? stickerExportPrefs(loadExportPrefs()) : loadExportPrefs(), // { format: 'png' | 'jpeg' | 'webp', quality: 0.5..1, width: 'full' | 720 | 480 }
     libraryTab: 'history', // 'history' | 'saved' | 'shortcuts'
@@ -107,7 +107,7 @@ const UI_FIELDS = Object.keys(buildInitialUi(null));
 
 // The dock tab each sheet belongs to: its strip shows above the sheet.
 // null: no strip (Export). Sheets not listed (Layers) keep the strip that shows.
-const SHEET_TAB = { text: 'text', media: 'media', draw: 'draw', canvasColor: 'canvas', watermark: 'canvas', header: 'canvas', footer: 'canvas', filters: 'fx', background: 'fx', export: null, library: null, mediaLink: 'media', templates: 'media', memes: 'swap', card: 'card', cardLook: 'card', aiMeme: 'ai', faceSwap: 'swap', stickers: 'media', gifs: 'media', emoji: 'media', bubble: 'text', diecut: 'media' };
+const SHEET_TAB = { text: 'text', media: 'media', draw: 'draw', canvasColor: 'canvas', watermark: 'canvas', header: 'canvas', footer: 'canvas', filters: 'fx', background: 'fx', export: null, library: null, mediaLink: 'media', templates: 'media', memes: 'swap', card: 'card', cardLook: 'card', faceSwap: 'swap', stickers: 'media', gifs: 'media', emoji: 'media', bubble: 'text', diecut: 'media' };
 
 // useState-style setter: accepts a value or an updater function.
 const fieldSetter = (set, key) => (valueOrUpdater) =>

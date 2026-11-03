@@ -4,7 +4,7 @@
 // passes it, so these tests assert on editor state rather than pixels.
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import React from 'react';
-import { render, screen, fireEvent, cleanup, act, within } from '@testing-library/react';
+import { render, screen, fireEvent, cleanup, act, within, waitFor } from '@testing-library/react';
 
 // `animation` stands in for the moving layers' controls the real canvas carries (canvas/media).
 const canvas = { props: null, ui: null, animation: undefined };
@@ -1266,32 +1266,88 @@ describe('MemeEditor', () => {
     expect(card().waMessages[0].text).toBe('hi');
   }, 30000);
 
-  it('the AI Meme maker opens on its prompt screen; a picked caption makes the meme on the picked template', async () => {
+  it('the AI Meme maker opens on its chat page (ideas, the meme, vibe and key pills, the message box); sending makes the meme, whose Shuffle switches between the AI captions', async () => {
     localStorage.removeItem('gemini_api_key');
     renderEditor({ ...TEMPLATE, editorMode: 'ai', aiPrompt: 'mondays' });
-    const screenSheet = sheet('AI Meme');
-    expect(within(screenSheet).getByLabelText("What's it about?").value).toBe('mondays');
-    // The meme it opened on is picked first; pick another.
-    const rail = within(screenSheet).getByRole('radiogroup', { name: 'Template' });
-    const choices = within(rail).getAllByRole('radio');
-    expect(choices[0].getAttribute('aria-checked')).toBe('true');
-    fireEvent.click(choices[1]);
-    const pickedName = choices[1].getAttribute('aria-label');
-    expect(within(screenSheet).getByText(/built-in library/)).toBeTruthy();
+    const page = () => screen.getByRole('region', { name: 'Make an AI meme' });
+    expect(within(page()).getByLabelText("What's it about?").value).toBe('mondays');
+    expect(within(page()).getByRole('button', { name: 'Built-in captions: add a Gemini key' })).toBeTruthy();
+    expect(within(within(page()).getByRole('group', { name: 'Ideas' })).getAllByRole('button').length).toBeGreaterThan(3);
+    expect(screen.getByText('Pick a meme and an idea', { selector: '.ui-topbar-subtitle' })).toBeTruthy();
+    expect(screen.queryByRole('navigation', { name: 'Editor tools' })).toBeNull();
 
-    fireEvent.click(within(screenSheet).getByRole('button', { name: 'Generate captions' }));
-    const ideas = await within(screenSheet).findAllByRole('button', { name: /^Use: / });
-    expect(ideas).toHaveLength(4);
-    const text = ideas[0].getAttribute('aria-label').slice('Use: '.length);
-    fireEvent.click(ideas[0]);
+    // The meme pill opens popular memes (and upload, and the whole gallery); a pick keeps the idea.
+    fireEvent.click(within(page()).getByRole('button', { name: /^Meme: / }));
+    const picker = screen.getByRole('dialog', { name: 'Your meme' });
+    expect(within(picker).getByLabelText('Upload a photo')).toBeTruthy();
+    expect(within(picker).getByRole('button', { name: 'All memes' })).toBeTruthy();
+    const popular = within(within(picker).getByRole('group', { name: 'Popular memes' })).getAllByRole('button');
+    const pickedName = popular[0].getAttribute('aria-label');
+    fireEvent.click(popular[0]);
+    expect(screen.queryByRole('dialog', { name: 'Your meme' })).toBeNull();
+    expect(within(page()).getByRole('button', { name: `Meme: ${pickedName}` })).toBeTruthy();
+    expect(within(page()).getByLabelText("What's it about?").value).toBe('mondays');
+    // The vibe pill opens the vibes; a pick closes the sheet.
+    fireEvent.click(within(page()).getByRole('button', { name: 'Vibe: Anything' }));
+    const vibes = screen.getByRole('radiogroup', { name: 'Choose a vibe' });
+    expect(within(vibes).getByRole('radio', { name: /Anything/ }).getAttribute('aria-checked')).toBe('true');
+    fireEvent.click(within(vibes).getByRole('radio', { name: /Tech & Code/ }));
+    expect(screen.queryByRole('dialog', { name: 'Choose a vibe' })).toBeNull();
+    expect(within(page()).getByRole('button', { name: 'Vibe: Tech & Code' })).toBeTruthy();
 
-    expect(screen.queryByRole('dialog', { name: 'AI Meme' })).toBeNull();
-    expect(captionTexts()).toEqual([text]);
+    // Send: the first caption on the meme and the editing page; Shuffle puts the next one on it.
+    fireEvent.click(within(page()).getByRole('button', { name: 'Generate captions' }));
+    const tools = await screen.findByRole('toolbar', { name: 'AI meme tools' });
+    expect(screen.queryByRole('region', { name: 'Make an AI meme' })).toBeNull();
     expect(canvas.props.template.name).toBe(pickedName);
-    expect(screen.getByText('AI Meme', { selector: '.ui-topbar-title' })).toBeTruthy();
-    expect(within(bar()).getAllByRole('button').map((b) => b.textContent.trim())).toEqual(['AI', 'Text', 'Media', 'AI/Filters']);
-    fireEvent.click(within(strip('AI meme tools')).getByText('New meme'));
-    expect(sheet('AI Meme')).toBeTruthy();
+    const ideas = canvas.props.template.aiIdeas;
+    expect(ideas).toHaveLength(4);
+    expect(captionTexts()).toEqual([ideas[0]]);
+    expect([...tools.children].map((b) => b.textContent)).toEqual(['Shuffle', 'Text', 'Style', 'Header', 'Footer', 'Effects']);
+    for (const text of ideas.slice(1)) {
+      fireEvent.click(within(tools).getByText('Shuffle'));
+      await waitFor(() => expect(captionTexts()).toEqual([text]));
+    }
+    // Past the last, four new ones are written.
+    fireEvent.click(within(tools).getByText('Shuffle'));
+    expect(within(tools).getByText('Writing…')).toBeTruthy();
+    await within(tools).findByText('Shuffle');
+    expect(captionTexts()).toHaveLength(1);
+    expect(screen.getByRole('radiogroup', { name: 'Aspect ratio' })).toBeTruthy();
+    expect(screen.getByText('Ready to export', { selector: '.ui-topbar-subtitle' })).toBeTruthy();
+    expect(within(bar()).getAllByRole('button').map((b) => b.textContent.trim())).toEqual(['New', 'Editor Pro', 'Export']);
+    // Style opens its looks over the tools; a pick restyles the caption.
+    const aiCap = () => canvas.props.captions.find((c) => c.id.startsWith('cap-ai-'));
+    fireEvent.click(within(tools).getByText('Style'));
+    const looks = screen.getByRole('radiogroup', { name: 'Caption style' });
+    expect(within(looks).getByRole('radio', { name: /Classic/ }).getAttribute('aria-checked')).toBe('true');
+    fireEvent.click(within(looks).getByRole('radio', { name: /Label/ }));
+    expect(aiCap()).toMatchObject({ color: '#000000', bgColor: '#ffffff', bgStyle: 'box' });
+    fireEvent.click(within(tools).getByText('Style'));
+    expect(screen.queryByRole('radiogroup', { name: 'Caption style' })).toBeNull();
+    // Header turns the band on and opens its sheet; again closes it.
+    fireEvent.click(within(tools).getByText('Header'));
+    expect(screen.getByRole('dialog', { name: 'Header' })).toBeTruthy();
+    expect(canvas.props.captions.some((c) => c.isHeaderCaption)).toBe(true);
+    fireEvent.click(within(tools).getByText('Header'));
+    expect(screen.queryByRole('dialog', { name: 'Header' })).toBeNull();
+    // Edit text selects the AI caption: its tools.
+    fireEvent.click(within(strip('AI meme tools')).getByText('Text'));
+    expect(within(layerToolbar()).getByText('Font')).toBeTruthy();
+    act(() => canvas.props.onSelectLayer(null));
+
+    // New: the same meme, idea and vibe, back on the page.
+    fireEvent.click(within(bar()).getByText('New'));
+    expect(within(page()).getByRole('button', { name: `Meme: ${pickedName}` })).toBeTruthy();
+    expect(within(page()).getByLabelText("What's it about?").value).toBe('mondays');
+    expect(within(page()).getByRole('button', { name: 'Vibe: Tech & Code' })).toBeTruthy();
+    expect(captionTexts()).toEqual([]);
+
+    // An idea sends itself, with its vibe.
+    fireEvent.click(within(within(page()).getByRole('group', { name: 'Ideas' })).getByRole('button', { name: /Mondays/ }));
+    await screen.findByRole('toolbar', { name: 'AI meme tools' });
+    expect(canvas.props.template.aiIdeas).toHaveLength(4);
+    expect(canvas.props.template).toMatchObject({ aiPrompt: 'Mondays', aiCategory: 'work' });
   }, 30000);
 
   it('the full editor has no Full editor button, and an unknown mode is the full editor', () => {

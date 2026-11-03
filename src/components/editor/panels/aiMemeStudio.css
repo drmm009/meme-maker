@@ -1,0 +1,288 @@
+/* The AI Meme maker's page (AiMemeStudio), laid out like a chat: a greeting with ideas to start
+   from, the composer pinned to the bottom. In the Face Swap page's frame (faceSwap.css). */
+.ie-ai-chat {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 16px 20px;
+  overflow-y: auto;
+}
+
+.ie-ai-hello { display: flex; flex-direction: column; align-items: center; text-align: center; }
+.ie-ai-hello-icon {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  margin-bottom: 16px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, var(--ui-accent), #ff2a8a);
+  box-shadow: 0 10px 30px -8px rgba(255, 90, 54, 0.6);
+  color: #fff;
+}
+.ie-ai-hello-title {
+  max-width: 14em;
+  margin: 0;
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+.ie-ai-hello-hint { margin: 8px 0 22px; color: var(--ui-muted); font-size: 14px; }
+.ie-ai-suggestions { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.ie-ai-suggestion {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 38px;
+  padding: 0 14px;
+  border: 1px solid var(--ui-line);
+  border-radius: 999px;
+  background: var(--ui-surface);
+  color: var(--ui-text);
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.ie-ai-suggestion:hover { border-color: var(--ui-line-strong); }
+.ie-ai-suggestion:active { transform: scale(0.97); }
+.ie-ai-suggestion:focus-visible { outline: 2px solid var(--ui-accent); outline-offset: 2px; }
+
+/* While the captions are written: what was sent, and the AI writing back. */
+.ie-ai-thread { display: flex; flex-direction: column; gap: 12px; }
+.ie-ai-bubble {
+  max-width: 82%;
+  margin: 0;
+  padding: 11px 15px;
+  font-size: 15px;
+  line-height: 1.4;
+  animation: ie-ai-pop 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.ie-ai-bubble--me {
+  align-self: flex-end;
+  border-radius: 20px 20px 6px 20px;
+  background: var(--ui-accent);
+  color: #fff;
+  font-weight: 600;
+}
+.ie-ai-bubble--ai {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  align-self: flex-start;
+  border-radius: 20px 20px 20px 6px;
+  background: var(--ui-surface);
+  color: var(--ui-muted);
+  font-size: 14px;
+}
+.ie-ai-bubble--ai img { flex-shrink: 0; width: 44px; height: 44px; border-radius: 10px; object-fit: cover; }
+.ie-ai-dots { display: inline-flex; gap: 3px; margin-left: 6px; vertical-align: middle; }
+.ie-ai-dots i { width: 5px; height: 5px; border-radius: 999px; background: currentColor; animation: ie-ai-dot 1s infinite ease-in-out; }
+.ie-ai-dots i:nth-child(2) { animation-delay: 0.15s; }
+.ie-ai-dots i:nth-child(3) { animation-delay: 0.3s; }
+@keyframes ie-ai-dot { 0%, 80%, 100% { opacity: 0.3; transform: none; } 40% { opacity: 1; transform: translateY(-3px); } }
+@keyframes ie-ai-pop { from { opacity: 0; transform: translateY(8px); } }
+@media (prefers-reduced-motion: reduce) {
+  .ie-ai-bubble, .ie-ai-dots i { animation: none; }
+}
+
+/* The composer: the meme, vibe and caption source as pills over the message box. */
+.ie-ai-composer {
+  flex-shrink: 0;
+  padding: 10px 12px calc(12px + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--ui-line);
+  background: var(--ui-bg);
+}
+.ie-ai-options { display: flex; gap: 6px; margin-bottom: 10px; overflow-x: auto; scrollbar-width: none; }
+.ie-ai-options::-webkit-scrollbar { display: none; }
+.ie-ai-option {
+  display: inline-flex;
+  /* The meme and vibe pills shrink, their names cut short, so all three fit a phone. */
+  min-width: 0;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 10px 0 5px;
+  border: none;
+  border-radius: 999px;
+  background: var(--ui-surface);
+  color: var(--ui-text);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.ie-ai-option > span[aria-hidden], .ie-ai-option > svg:first-child { margin-left: 5px; }
+.ie-ai-option img, .ie-ai-option svg, .ie-ai-option > span[aria-hidden] { flex-shrink: 0; }
+.ie-ai-option img { width: 24px; height: 24px; border-radius: 999px; object-fit: cover; }
+.ie-ai-option svg { color: var(--ui-muted); }
+.ie-ai-option.is-on svg { color: var(--ui-accent-text); }
+.ie-ai-option-text { max-width: 104px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ie-ai-option--icon { flex-shrink: 0; justify-content: center; width: 34px; margin-left: auto; padding: 0; }
+.ie-ai-option--icon > svg:first-child { margin: 0; }
+.ie-ai-option--icon.is-on { background: var(--ui-accent-soft); }
+.ie-ai-option:disabled { opacity: 0.5; cursor: default; }
+.ie-ai-option:focus-visible { outline: 2px solid var(--ui-accent); outline-offset: 2px; }
+
+.ie-ai-input {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 5px 5px 16px;
+  border: 1px solid var(--ui-line-strong);
+  border-radius: 999px;
+  background: var(--ui-surface);
+}
+.ie-ai-input:focus-within { border-color: var(--ui-accent); }
+.ie-ai-input input {
+  flex: 1;
+  min-width: 0;
+  height: 40px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--ui-text);
+  font: inherit;
+  /* 16px or more, or phones zoom the page in on focus. */
+  font-size: 16px;
+  outline: none;
+}
+.ie-ai-input input::placeholder { color: var(--ui-muted); }
+.ie-ai-send {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: var(--ui-accent);
+  color: #fff;
+  cursor: pointer;
+}
+.ie-ai-send:hover:not(:disabled) { background: var(--ui-accent-hover); }
+.ie-ai-send:disabled { background: var(--ui-accent-tint); color: rgba(255, 255, 255, 0.55); cursor: default; }
+.ie-ai-send:focus-visible { outline: 2px solid var(--ui-accent); outline-offset: 2px; }
+
+/* The vibe sheet: every vibe as a card, two across. */
+.ie-ai-vibes { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.ie-ai-vibe {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 52px;
+  padding: 0 14px;
+  border: none;
+  border-radius: 16px;
+  background: var(--ui-surface);
+  color: var(--ui-text);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+.ie-ai-vibe-icon { font-size: 20px; }
+/* The picked vibe's ring, laid over it (global button rules strip outlines). */
+.ie-ai-vibe::after { content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; }
+.ie-ai-vibe.is-on { background: var(--ui-accent-soft); }
+.ie-ai-vibe.is-on::after { box-shadow: inset 0 0 0 2px var(--ui-accent); }
+.ie-ai-vibe:focus-visible { outline: 2px solid var(--ui-accent); outline-offset: 2px; }
+
+/* The key sheet. */
+.ie-ai-key-note { margin: 0 0 14px; color: var(--ui-muted); font-size: 13.5px; line-height: 1.45; }
+.ie-ai-key-form { display: flex; gap: 8px; }
+.ie-ai-key-field {
+  flex: 1;
+  min-width: 0;
+  height: 46px;
+  padding: 0 14px;
+  border: 1px solid var(--ui-line);
+  border-radius: 14px;
+  background: var(--ui-surface);
+  color: var(--ui-text);
+  font: inherit;
+  font-size: 16px;
+}
+.ie-ai-key-field:focus { border-color: var(--ui-accent); outline: none; }
+.ie-ai-key-form .ie-swap-btn { flex: 0 0 auto; padding: 0 20px; }
+
+/* The meme picker: popular memes, then upload or the whole gallery. */
+.ie-ai-popular {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.ie-ai-popular-item {
+  aspect-ratio: 1;
+  padding: 0;
+  overflow: hidden;
+  border: none;
+  border-radius: 14px;
+  background: var(--ui-surface);
+  cursor: pointer;
+}
+.ie-ai-popular-item img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.ie-ai-popular-item:focus-visible { outline: 2px solid var(--ui-accent); outline-offset: 2px; }
+
+/* The editing page's strip (AiStrip): its tools, with Style's choices above when open.
+   Shuffle's icon spins while four new captions are written. */
+.ie-ai-strip { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.ie-ai-strip .ie-ai-choices { margin: 0 16px; }
+/* Six tools across a phone. */
+.ie-ai-strip .ui-strip--stacked { gap: 5px; padding-inline: 12px; }
+/* Shuffle, the strip's main tool, in the accent. */
+.ui-strip-btn.ie-ai-shuffle { border-color: var(--ui-accent-edge, rgba(255, 90, 54, 0.5)); background: var(--ui-accent-soft); color: var(--ui-accent-text); }
+.ui-strip-btn.ie-ai-shuffle svg { color: var(--ui-accent); }
+.ui-strip .is-busy svg { animation: ie-ai-spin 0.9s linear infinite; }
+@keyframes ie-ai-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .ui-strip .is-busy svg { animation: none; } }
+.ie-ai-choice:focus-visible { outline: 2px solid var(--ui-accent); outline-offset: 2px; }
+
+/* Style's choices: a card each, a small picture over its name. */
+.ie-ai-choices { display: grid; grid-auto-columns: 1fr; grid-auto-flow: column; gap: 8px; min-height: 112px; }
+.ie-ai-choice {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 4px;
+  border: none;
+  border-radius: 18px;
+  background: var(--ui-surface);
+  color: var(--ui-text);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+/* The picked one's ring, laid over it (global button rules strip outlines). */
+.ie-ai-choice::after { content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; }
+.ie-ai-choice.is-on { background: var(--ui-accent-soft); }
+.ie-ai-choice.is-on::after { box-shadow: inset 0 0 0 2px var(--ui-accent); }
+.ie-ai-choice:disabled { opacity: 0.5; cursor: default; }
+/* Aa in each look. */
+.ie-ai-look {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 46px;
+  border-radius: 8px;
+  background: linear-gradient(160deg, #5b6474, #2c313c);
+  font-size: 22px;
+  line-height: 1;
+}
+.ie-ai-look--classic { color: #fff; font-family: Impact, sans-serif; -webkit-text-stroke: 1px #000; }
+.ie-ai-look--modern { color: #fff; font-family: Montserrat, sans-serif; font-weight: 900; text-shadow: 0 2px 6px rgba(0, 0, 0, 0.9); }
+/* Aa on a white box, over the little meme. */
+.ie-ai-look--label { color: #000; font-family: Arial, sans-serif; font-size: 16px; font-weight: 700; background: linear-gradient(#fff, #fff) center / 36px 26px no-repeat, linear-gradient(160deg, #5b6474, #2c313c); }
+.ie-ai-look--comic { color: #ffd400; font-family: Bangers, Impact, sans-serif; -webkit-text-stroke: 1px #000; }
