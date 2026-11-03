@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { PanelBottom, PanelTop, Palette, Pencil, Shuffle, Sparkles } from 'lucide-react';
+import { PanelsTopBottom, Palette, Pencil, Shuffle, Sparkles } from 'lucide-react';
 import { ToolStrip } from '../../ui';
 import type { StripItem } from '../../ui';
 import { useEditorUiStore } from '../store/useEditorUiStore';
@@ -23,8 +23,8 @@ interface CaptionStore {
 // The AI Meme maker's strip on its editing page, once its meme is made (before that its page,
 // AiMemeStudio, shows): Shuffle, set apart in the accent, puts the next of the AI captions on the
 // meme (after the last, it asks for four more); Style opens a row of looks for the caption above the
-// tools; Text selects it (its layer pill); Header and Footer turn their band on and open its
-// sheet (as on the Canvas strip); Effects opens the photo filters. New, Editor Pro and Export are the
+// tools; Text selects it (its layer pill); Header & Footer opens the bands' sheet (as on the Canvas
+// strip); Effects opens the photo filters. New, Editor Pro and Export are the
 // dock under it (EditorPanels).
 export default function AiStrip({ actions }: { actions: EditorActions }) {
   const sheet: string | null = useEditorUiStore((s: { sheet: string | null }) => s.sheet);
@@ -84,13 +84,12 @@ export default function AiStrip({ actions }: { actions: EditorActions }) {
     { id: 'next', label: busy ? 'Writing…' : 'Shuffle', title: 'Another AI caption on the meme', Icon: Shuffle, className: `ie-ai-shuffle${busy ? ' is-busy' : ''}` },
     { id: 'edit', label: 'Text', title: 'Edit the caption: its words, font and colour', Icon: Pencil },
     { id: 'style', label: 'Style', title: 'How the caption looks', Icon: Palette, active: styling },
-    { id: 'header', label: 'Header', title: 'A band above the meme', Icon: PanelTop, active: sheet === 'header' },
-    { id: 'footer', label: 'Footer', title: 'A band below the meme', Icon: PanelBottom, active: sheet === 'footer' },
+    { id: 'bands', label: 'Header & Footer', title: 'Bands above and below the meme', Icon: PanelsTopBottom, active: sheet === 'bands', className: 'ie-strip-btn--two-line' },
     { id: 'effects', label: 'Effects', title: 'Photo effects and filters', Icon: Sparkles, active: sheet === 'filters' },
   ];
 
   // The sheet each button opens; tapping it again closes it.
-  const SHEET: Record<string, string> = { effects: 'filters', header: 'header', footer: 'footer' };
+  const SHEET: Record<string, string> = { effects: 'filters', bands: 'bands' };
   const onSelect = (id: string) => {
     if (id === 'style') {
       setStyling(!styling);
@@ -110,8 +109,7 @@ export default function AiStrip({ actions }: { actions: EditorActions }) {
       return;
     }
     store.getState().setActiveLayerId(null);
-    if (id === 'header' && !headerOn) actions.handleToggleCanvasHeader();
-    if (id === 'footer' && !footerOn) actions.handleToggleCanvasFooter();
+    if (id === 'bands' && !headerOn && !footerOn) actions.handleToggleCanvasHeader();
     openSheet(SHEET[id]);
   };
 

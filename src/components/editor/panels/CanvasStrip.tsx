@@ -1,4 +1,4 @@
-import { Stamp, PanelTop, PanelBottom } from 'lucide-react';
+import { Stamp, PanelsTopBottom } from 'lucide-react';
 import { ToolStrip } from '../../ui';
 import type { StripItem } from '../../ui';
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
@@ -6,7 +6,7 @@ import { useEditorUiStore } from '../store/useEditorUiStore';
 import type { EditorActions } from './selection';
 
 // The Canvas tab's strip: Canvas Style (background colour, mirror, crop) and Watermark open their
-// sheets; Header and Footer switch straight away and light up while on.
+// sheets; Header & Footer opens the bands' sheet (switching the header on if neither band is).
 export default function CanvasStrip({ actions }: { actions: EditorActions }) {
   const canvasBgColor: string = useMemeEditorStore((s: { canvasBgColor: string }) => s.canvasBgColor);
   const headerOn = useMemeEditorStore((s: { canvasHeader: { enabled: boolean } }) => Boolean(s.canvasHeader?.enabled));
@@ -26,8 +26,7 @@ export default function CanvasStrip({ actions }: { actions: EditorActions }) {
   const items: StripItem[] = [
     { id: 'style', label: 'Canvas Style', title: 'Background colour, mirror and crop', icon: swatch, active: sheet === 'canvasColor' },
     { id: 'watermark', label: 'Watermark', title: 'Watermark Settings', Icon: Stamp, active: sheet === 'watermark' },
-    { id: 'header', label: 'Header', title: 'White band above the meme', Icon: PanelTop, active: sheet === 'header' },
-    { id: 'footer', label: 'Footer', title: 'White band below the meme', Icon: PanelBottom, active: sheet === 'footer' },
+    { id: 'bands', label: 'Header & Footer', title: 'Bands above and below the meme', Icon: PanelsTopBottom, active: sheet === 'bands', className: 'ie-strip-btn--two-line' },
   ];
 
   const onSelect = (id: string) => {
@@ -40,17 +39,11 @@ export default function CanvasStrip({ actions }: { actions: EditorActions }) {
         if (!watermarkOn) updateWatermark('enabled', true);
         openSheet('watermark');
       }
-    } else if (id === 'header') {
-      if (sheet === 'header') closeSheet();
+    } else if (id === 'bands') {
+      if (sheet === 'bands') closeSheet();
       else {
-        if (!headerOn) actions.handleToggleCanvasHeader();
-        openSheet('header');
-      }
-    } else if (id === 'footer') {
-      if (sheet === 'footer') closeSheet();
-      else {
-        if (!footerOn) actions.handleToggleCanvasFooter();
-        openSheet('footer');
+        if (!headerOn && !footerOn) actions.handleToggleCanvasHeader();
+        openSheet('bands');
       }
     }
   };

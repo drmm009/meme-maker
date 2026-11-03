@@ -26,6 +26,8 @@ vi.mock('./CanvasEditor', async () => {
       activeLayerId: doc.activeLayerId,
       canvasFlipX: doc.canvasFlipX,
       canvasBgColor: doc.canvasBgColor,
+      canvasHeader: doc.canvasHeader,
+      canvasFooter: doc.canvasFooter,
       canvasBgGradient: doc.canvasBgGradient,
       imageFilters: doc.imageFilters,
       template: doc.activeTemplate,
@@ -177,11 +179,11 @@ describe('MemeEditor', () => {
   it('deleting the text in the header leaves the header band on', () => {
     renderEditor();
     openSection('Canvas colour, bands and watermark');
-    fireEvent.click(within(canvasStrip()).getByText('Header'));
+    fireEvent.click(within(canvasStrip()).getByText('Header & Footer'));
     const header = canvas.props.captions.find((c) => c.isHeaderCaption);
     act(() => canvas.props.onDeleteLayer(header.id));
     expect(captionTexts()).toEqual(['TOP TEXT', 'BOTTOM TEXT']);
-    expect(within(sheet('Header')).getByRole('switch', { name: 'Header' }).getAttribute('aria-checked')).toBe('true');
+    expect(within(sheet('Header & footer')).getByRole('switch', { name: 'Header' }).getAttribute('aria-checked')).toBe('true');
   }, 30000);
 
   it('keeps independent captions after several adds', () => {
@@ -201,7 +203,7 @@ describe('MemeEditor', () => {
       ['Photos, videos, stickers and emoji', 'Media tools', ['Photo', 'Templates', 'Stickers', 'Emoji']],
       ['Text', 'Text tools', ['Add Text', 'Bubble', 'Social Card']],
       ['AI tools and photo filters', 'AI and filter tools', ['Face Swap', 'Background', 'AI Caption', 'Filters']],
-      ['Canvas colour, bands and watermark', 'Canvas tools', ['Canvas Style', 'Watermark', 'Header', 'Footer']],
+      ['Canvas colour, bands and watermark', 'Canvas tools', ['Canvas Style', 'Watermark', 'Header & Footer']],
     ];
     for (const [tab, name, tools] of strips) {
       openSection(tab);
@@ -569,7 +571,7 @@ describe('MemeEditor', () => {
     expect(within(sheet('Filters')).getByRole('button', { name: 'Reset' }).disabled).toBe(true);
     closeSheet();
     openSection('Canvas colour, bands and watermark');
-    fireEvent.click(within(canvasStrip()).getByText('Header'));
+    fireEvent.click(within(canvasStrip()).getByText('Header & Footer'));
     expect(captionTexts().some((t) => /Add header text/.test(t))).toBe(true);
   }, 30000);
 
@@ -786,10 +788,10 @@ describe('MemeEditor', () => {
     expect(within(sheet('Canvas Style')).getByText('Mirror').closest('button').getAttribute('aria-pressed')).toBe('true');
   }, 30000);
 
-  it('Canvas shows Canvas Style, Watermark, Header and Footer; Canvas Style and Watermark open sheets under the strip', () => {
+  it('Canvas shows Canvas Style, Watermark and Header & Footer; each opens its sheet under the strip', () => {
     renderEditor();
     openSection('Canvas colour, bands and watermark');
-    expect(within(canvasStrip()).getAllByRole('button').map((b) => b.textContent)).toEqual(['Canvas Style', 'Watermark', 'Header', 'Footer']);
+    expect(within(canvasStrip()).getAllByRole('button').map((b) => b.textContent)).toEqual(['Canvas Style', 'Watermark', 'Header & Footer']);
 
     fireEvent.click(within(canvasStrip()).getByText('Canvas Style'));
     fireEvent.click(within(sheet('Canvas Style')).getByRole('radio', { name: '#000000' }));
@@ -802,10 +804,17 @@ describe('MemeEditor', () => {
     fireEvent.change(within(wm).getByLabelText('Watermark name'), { target: { value: 'memelord' } });
     expect(within(wm).getByLabelText('Watermark name').value).toBe('memelord');
 
-    // Footer switches straight away; tapping Canvas again closes the strip and its sheet (the first
-    // tap deselects whatever layer is selected and shows the strip).
-    fireEvent.click(within(canvasStrip()).getByText('Footer'));
-    expect(within(canvasStrip()).getByText('Footer').closest('button').getAttribute('aria-pressed')).toBe('true');
+    // Header & Footer: the header comes on with the sheet; the footer switches on there, and one
+    // colour colours both bands. Tapping Canvas again closes the strip and its sheet (the first tap
+    // deselects whatever layer is selected and shows the strip).
+    fireEvent.click(within(canvasStrip()).getByText('Header & Footer'));
+    expect(within(canvasStrip()).getByText('Header & Footer').closest('button').getAttribute('aria-pressed')).toBe('true');
+    const bands = sheet('Header & footer');
+    expect(within(bands).getByRole('switch', { name: 'Header' }).getAttribute('aria-checked')).toBe('true');
+    fireEvent.click(within(bands).getByRole('switch', { name: 'Footer' }));
+    expect(canvas.props.captions.some((c) => c.isFooterCaption)).toBe(true);
+    fireEvent.click(within(within(bands).getByRole('radiogroup', { name: 'Band colour' })).getByRole('radio', { name: '#ff5a36' }));
+    expect([canvas.props.canvasHeader.bgColor, canvas.props.canvasFooter.bgColor]).toEqual(['#ff5a36', '#ff5a36']);
     closeSheet();
     if (canvas.props.activeLayerId) openSection('Canvas colour, bands and watermark');
     expect(canvas.props.activeLayerId).toBe(null);
@@ -1207,7 +1216,7 @@ describe('MemeEditor', () => {
     }
   }, 30000);
 
-  it('a swapped meme in the Face Swap maker has Swap again, Editor Pro and Export, and Header, Footer and Canvas on its strip', () => {
+  it('a swapped meme in the Face Swap maker has Swap again, Editor Pro and Export, and Header & Footer and Canvas on its strip', () => {
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('offline')));
     try {
       const pic = { src: 'face.png', name: 'Face' };
@@ -1216,12 +1225,12 @@ describe('MemeEditor', () => {
       const dock = screen.getByRole('navigation', { name: 'Editor tools' });
       expect(within(dock).getAllByRole('button').map((b) => b.textContent.trim())).toEqual(['Swap again', 'Editor Pro', 'Export']);
       expect(screen.getByRole('radiogroup', { name: 'Aspect ratio' })).toBeTruthy();
-      expect(within(strip('Face swap tools')).getAllByRole('button').map((b) => b.textContent)).toEqual(['Text', 'Effects', 'Header', 'Footer', 'Canvas']);
-      // Header turns the band on and opens its sheet, under the strip; tapping it again closes it.
-      fireEvent.click(within(strip('Face swap tools')).getByText('Header'));
-      expect(within(sheet('Header')).getByRole('switch', { name: 'Header' }).getAttribute('aria-checked')).toBe('true');
+      expect(within(strip('Face swap tools')).getAllByRole('button').map((b) => b.textContent)).toEqual(['Text', 'Effects', 'Header & Footer', 'Canvas']);
+      // Header & Footer turns the header on and opens the bands' sheet, under the strip; tapping it again closes it.
+      fireEvent.click(within(strip('Face swap tools')).getByText('Header & Footer'));
+      expect(within(sheet('Header & footer')).getByRole('switch', { name: 'Header' }).getAttribute('aria-checked')).toBe('true');
       expect(within(strip('Face swap tools')).getAllByRole('button').map((b) => b.textContent)).toContain('Canvas');
-      fireEvent.click(within(strip('Face swap tools')).getByText('Header'));
+      fireEvent.click(within(strip('Face swap tools')).getByText('Header & Footer'));
       fireEvent.click(within(screen.getByRole('navigation', { name: 'Editor tools' })).getByText('Swap again'));
       const page = screen.getByRole('region', { name: 'Face swap' });
       fireEvent.click(within(page).getByRole('button', { name: 'Cancel' }));
@@ -1303,7 +1312,7 @@ describe('MemeEditor', () => {
     const ideas = canvas.props.template.aiIdeas;
     expect(ideas).toHaveLength(4);
     expect(captionTexts()).toEqual([ideas[0]]);
-    expect([...tools.children].map((b) => b.textContent)).toEqual(['Shuffle', 'Text', 'Style', 'Header', 'Footer', 'Effects']);
+    expect([...tools.children].map((b) => b.textContent)).toEqual(['Shuffle', 'Text', 'Style', 'Header & Footer', 'Effects']);
     for (const text of ideas.slice(1)) {
       fireEvent.click(within(tools).getByText('Shuffle'));
       await waitFor(() => expect(captionTexts()).toEqual([text]));
@@ -1325,12 +1334,12 @@ describe('MemeEditor', () => {
     expect(aiCap()).toMatchObject({ color: '#000000', bgColor: '#ffffff', bgStyle: 'box' });
     fireEvent.click(within(tools).getByText('Style'));
     expect(screen.queryByRole('radiogroup', { name: 'Caption style' })).toBeNull();
-    // Header turns the band on and opens its sheet; again closes it.
-    fireEvent.click(within(tools).getByText('Header'));
-    expect(screen.getByRole('dialog', { name: 'Header' })).toBeTruthy();
+    // Header & Footer turns the header on and opens the bands' sheet; again closes it.
+    fireEvent.click(within(tools).getByText('Header & Footer'));
+    expect(screen.getByRole('dialog', { name: 'Header & footer' })).toBeTruthy();
     expect(canvas.props.captions.some((c) => c.isHeaderCaption)).toBe(true);
-    fireEvent.click(within(tools).getByText('Header'));
-    expect(screen.queryByRole('dialog', { name: 'Header' })).toBeNull();
+    fireEvent.click(within(tools).getByText('Header & Footer'));
+    expect(screen.queryByRole('dialog', { name: 'Header & footer' })).toBeNull();
     // Edit text selects the AI caption: its tools.
     fireEvent.click(within(strip('AI meme tools')).getByText('Text'));
     expect(within(layerToolbar()).getByText('Font')).toBeTruthy();

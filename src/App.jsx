@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Suspense, lazy } from 'react';
+import React, { useState, useEffect, useRef, Suspense, lazy } from 'react';
 import TemplateDiscovery from './components/TemplateDiscovery';
 import ErrorBoundary from './components/ErrorBoundary';
 
@@ -94,6 +94,15 @@ function App() {
   const handleMarkAllNotificationsRead = () => {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
   };
+
+  // The view the editor was opened from, for its Back button.
+  const editorFrom = useRef(null);
+  const lastView = useRef(currentView);
+  useEffect(() => {
+    if (currentView === lastView.current) return;
+    if (currentView === 'editor') editorFrom.current = lastView.current;
+    lastView.current = currentView;
+  }, [currentView]);
 
   // Mobile & Android gesture / hardware back-button history navigation
   useEffect(() => {
@@ -503,13 +512,11 @@ function App() {
     return meme.thumbnailUrl || meme.imageUrl || '';
   };
 
+  // The editor's Back returns to the view it was opened from (Home, Explore, the layout builder…),
+  // or Home when the app opened straight into it from a maker's link.
   const handleEditorBack = () => {
     setLastBuilderView('custom-builder');
-    if (selectedTemplate?.category === 'custom' || selectedTemplate?.id?.startsWith('custom-')) {
-      setCurrentView('custom-builder');
-    } else {
-      setCurrentView('templates');
-    }
+    setCurrentView(editorFrom.current || 'templates');
   };
 
   return (

@@ -141,6 +141,9 @@
 }
 .ie-zoom-pill span { color: var(--ui-accent-text); }
 .ie-strip-swatch { display: block; width: 19px; height: 19px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.35); }
+/* A two-word tool name (Header & Footer) on two lines rather than cut short. */
+.ui-strip--stacked .ui-strip-btn.ie-strip-btn--two-line { gap: 2px; }
+.ui-strip--stacked .ui-strip-btn.ie-strip-btn--two-line span { line-height: 1.1; text-align: center; white-space: normal; }
 .ie-color-dot { display: block; width: 22px; height: 22px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2); }
 
 .ie-panels { position: relative; z-index: 40; flex: none; display: flex; flex-direction: column; padding-top: 6px; }
