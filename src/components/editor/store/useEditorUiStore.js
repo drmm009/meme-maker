@@ -127,7 +127,11 @@ export function createEditorUiStore(template) {
     })),
 
     // A focused maker's Full editor: every dock tab, on the same meme (the document store is untouched).
-    openFullEditor: () => set({ mode: 'full' }),
+    // A maker's own tab (Sticker, Face Swap) isn't in the full editor's dock: start on its first tab.
+    openFullEditor: () => set((state) => ({
+      mode: 'full',
+      dockTab: EDITOR_MODES.full.dock.includes(state.dockTab) ? state.dockTab : EDITOR_MODES.full.startTab,
+    })),
 
     updateWatermark: (key, value) => set((state) => ({ watermark: { ...state.watermark, [key]: value } })),
 

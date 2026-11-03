@@ -1194,19 +1194,31 @@ describe('MemeEditor', () => {
     }
   }, 30000);
 
-  it('a swapped meme in the Face Swap maker has Swap again and Export, and Swap again reopens the page', () => {
+  it('a swapped meme in the Face Swap maker has Swap again, Editor Pro and Export, and Header, Footer and Canvas on its strip', () => {
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('offline')));
     try {
       const pic = { src: 'face.png', name: 'Face' };
-      renderEditor({ ...TEMPLATE, editorMode: 'faceswap', faceSwap: { face: pic, target: { src: TEMPLATE.imageUrl, name: 'Meme' } } });
+      renderEditor({ ...TEMPLATE, editorMode: 'faceswap', faceSwap: { face: pic, target: { src: 'original.png', name: 'Meme' } } });
       expect(screen.queryByRole('region', { name: 'Face swap' })).toBeNull();
       const dock = screen.getByRole('navigation', { name: 'Editor tools' });
-      expect(within(dock).getAllByRole('button').map((b) => b.textContent.trim())).toEqual(['Swap again', 'Export']);
-      expect(within(strip('Face swap tools')).getAllByRole('button').map((b) => b.textContent)).toEqual(['Text', 'Effects']);
-      fireEvent.click(within(dock).getByText('Swap again'));
+      expect(within(dock).getAllByRole('button').map((b) => b.textContent.trim())).toEqual(['Swap again', 'Editor Pro', 'Export']);
+      expect(screen.getByRole('radiogroup', { name: 'Aspect ratio' })).toBeTruthy();
+      expect(within(strip('Face swap tools')).getAllByRole('button').map((b) => b.textContent)).toEqual(['Text', 'Effects', 'Header', 'Footer', 'Canvas']);
+      // Header turns the band on and opens its sheet, under the strip; tapping it again closes it.
+      fireEvent.click(within(strip('Face swap tools')).getByText('Header'));
+      expect(within(sheet('Header')).getByRole('switch', { name: 'Header' }).getAttribute('aria-checked')).toBe('true');
+      expect(within(strip('Face swap tools')).getAllByRole('button').map((b) => b.textContent)).toContain('Canvas');
+      fireEvent.click(within(strip('Face swap tools')).getByText('Header'));
+      fireEvent.click(within(screen.getByRole('navigation', { name: 'Editor tools' })).getByText('Swap again'));
       const page = screen.getByRole('region', { name: 'Face swap' });
       fireEvent.click(within(page).getByRole('button', { name: 'Cancel' }));
       expect(screen.queryByRole('region', { name: 'Face swap' })).toBeNull();
+      // Editor Pro carries the swapped meme into the full editor.
+      fireEvent.click(within(screen.getByRole('navigation', { name: 'Editor tools' })).getByText('Editor Pro'));
+      expect(within(screen.getByRole('navigation', { name: 'Editor tools' })).getAllByRole('button').map((b) => b.textContent.trim())).toEqual(['Draw', 'Media', 'Text', 'AI/Filters', 'Canvas']);
+      // On the full editor's Text tab, not the maker's strip.
+      expect(screen.queryByRole('toolbar', { name: 'Face swap tools' })).toBeNull();
+      expect(strip('Text tools')).toBeTruthy();
     } finally {
       vi.unstubAllGlobals();
     }

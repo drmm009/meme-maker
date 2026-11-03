@@ -82,6 +82,38 @@
   padding: 6px;
 }
 .ie-panels--maker .ui-dock-item--primary { flex: 1.4 1 0; }
+/* Three buttons (Face Swap's Swap again, Editor Pro, Export): each as wide as its words, the spare
+   room shared, a little tighter so they fit a phone. */
+.ie-panels--maker .ui-dock:has(> :nth-child(3)) .ui-dock-item {
+  flex: 1 1 auto;
+  gap: 6px;
+  padding: 0 10px;
+  font-size: 14px;
+}
+
+/* The Face Swap maker's editing page: its three actions (Swap again, Editor Pro, Export) in a bar
+   pinned to the bottom, each its icon over its name. */
+.ie-panels--maker.ie-panels--faceswap .ui-dock {
+  gap: 8px;
+  margin: 0;
+  padding: 10px 16px calc(14px + env(safe-area-inset-bottom, 0px));
+  border: none;
+  border-top: 1px solid var(--ui-line);
+  border-radius: 0;
+  background: var(--ui-bg);
+  box-shadow: none;
+}
+.ie-panels--maker.ie-panels--faceswap .ui-dock .ui-dock-item {
+  flex: 1 1 0;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3px;
+  height: 58px;
+  padding: 0 6px;
+  border-radius: 18px;
+  font-size: 12.5px;
+  line-height: 1.1;
+}
 
 .ie-layer-dock { display: flex; justify-content: center; padding: 0 8px 8px; }
 .ie-layer-toolbar { max-width: 100%; }

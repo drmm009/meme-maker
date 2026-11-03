@@ -5,8 +5,8 @@
 export type EditorMode = 'full' | 'sticker' | 'ai' | 'faceswap' | 'social';
 // 'swap' is the Face Swap maker's own tab (FaceSwapStrip), 'card' the Social Card maker's (CardStrip),
 // 'ai' the AI Meme maker's (AiStrip), 'sticker' the Stickers maker's (StickerStrip), 'export' the Stickers and
-// Face Swap docks' Export.
-export type DockTab = 'draw' | 'media' | 'text' | 'fx' | 'canvas' | 'swap' | 'card' | 'ai' | 'sticker' | 'export';
+// Face Swap docks' Export, 'pro' Face Swap's Editor Pro (the full editor).
+export type DockTab = 'draw' | 'media' | 'text' | 'fx' | 'canvas' | 'swap' | 'card' | 'ai' | 'sticker' | 'pro' | 'export';
 
 export interface EditorModeConfig {
   // The top bar's title.
@@ -21,7 +21,7 @@ export const EDITOR_MODES: Record<EditorMode, EditorModeConfig> = {
   full: { title: 'Meme Editor', dock: ['draw', 'media', 'text', 'fx', 'canvas'], startTab: 'text' },
   sticker: { title: 'Stickers', dock: ['sticker', 'export'], startTab: 'sticker' },
   ai: { title: 'AI Meme', dock: ['ai', 'text', 'media', 'fx'], startTab: 'ai' },
-  faceswap: { title: 'Face Swap', dock: ['swap', 'export'], startTab: 'swap' },
+  faceswap: { title: 'Face Swap', dock: ['swap', 'pro', 'export'], startTab: 'swap' },
   social: { title: 'Social Card', dock: ['card', 'text', 'media', 'canvas'], startTab: 'card' },
 };
 

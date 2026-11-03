@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { ChangeEvent, ReactNode } from 'react';
-import { ArrowRight, Camera, Check, CloudOff, Eye, ImagePlus, LayoutTemplate, Pencil, RefreshCw, UserRound, X } from 'lucide-react';
+import { ArrowRight, Camera, Check, CloudOff, ImagePlus, LayoutTemplate, Pencil, RefreshCw, ScanFace, SlidersHorizontal, UserRound, X } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { Slider } from '../../ui';
 import { useEditorUiStore } from '../store/useEditorUiStore';
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
@@ -22,6 +23,19 @@ interface Template {
 
 type Server = 'checking' | 'online' | 'offline';
 type Picker = 'face' | 'target';
+
+// An empty input card: its step, what goes in it and a Choose pill (the whole card is the button).
+function EmptyTile({ step, Icon, title, hint }: { step: number; Icon: LucideIcon; title: string; hint: string }) {
+  return (
+    <span className="ie-swap-empty">
+      <span className="ie-swap-step" aria-hidden="true">{step}</span>
+      <span className="ie-swap-empty-icon" aria-hidden="true"><Icon size={26} strokeWidth={1.9} /></span>
+      <span className="ie-swap-empty-title">{title}</span>
+      <span className="ie-swap-empty-hint">{hint}</span>
+      <span className="ie-swap-empty-cta" aria-hidden="true">Choose</span>
+    </span>
+  );
+}
 
 // A small sheet over the page, rising from the bottom: where a picture comes from.
 function PickerSheet({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
@@ -52,8 +66,8 @@ const targetOf = (t: Template | null): Picture | null => (t?.faceSwap?.target
 
 // The Face Swap maker's page, over the meme: your face and the picture to swap it into side by side
 // (each a button opening a sheet of where to get one; the picture has a remove button), which faces
-// to swap and how strongly, then Swap faces. The result shows large (hold to compare);
-// Use this makes it the meme, ready for captions and export. Needs face_swap_server.py running.
+// to swap and how strongly, then Swap faces, whose result becomes the meme straight away (the
+// editing page, with Hold to compare in CanvasStage). Needs face_swap_server.py running.
 export default function FaceSwapStudio({ actions, onClose }: { actions: EditorActions; onClose: () => void }) {
   const activeTemplate: Template | null = useMemeEditorStore((s: { activeTemplate: Template | null }) => s.activeTemplate);
   const openSheet = useEditorUiStore((s: { openSheet: (sheet: string) => void }) => s.openSheet);
@@ -67,17 +81,12 @@ export default function FaceSwapStudio({ actions, onClose }: { actions: EditorAc
   const [strength, setStrength] = useState(1);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<string | null>(null);
-  const [comparing, setComparing] = useState(false);
   const [picker, setPicker] = useState<Picker | null>(null);
   // The target as sent to the server (scaled data URL), with its size.
   const sent = useRef<{ src: string; width?: number; height?: number } | null>(null);
 
-  // Any change to the inputs or settings undoes the result shown.
-  const changed = () => {
-    setResult(null);
-    setError(null);
-  };
+  // Any change to the inputs or settings clears the last error.
+  const changed = () => setError(null);
   const setFace = (next: Picture) => {
     rememberFace(next);
     setFaceState(next);
@@ -135,23 +144,18 @@ export default function FaceSwapStudio({ actions, onClose }: { actions: EditorAc
     setError(null);
     try {
       const [faceData, targetData] = await Promise.all([loadPicture(face.src), sent.current ? Promise.resolve(sent.current) : loadPicture(target.src)]);
-      setResult(await swapFace({ face: faceData.src, target: targetData.src, faces, strength }));
+      const result = await swapFace({ face: faceData.src, target: targetData.src, faces, strength });
+      // The meme takes the swapped picture's own size (the target's may not be known).
+      const size = await pictureSize(result);
+      actions.handleChangeMeme(faceSwapTemplate(result, { face, target: { ...target, width: size.width ?? target.width, height: size.height ?? target.height } }));
     } catch (e) {
       setError((e as Error).message === 'offline' ? 'Lost the face swap server. Is it still running?' : (e as Error).message);
-    } finally {
       setBusy(false);
     }
   };
 
-  // The meme takes the swapped picture's own size (the target's may not be known).
-  const use = async () => {
-    if (!result || !face || !target) return;
-    const size = await pictureSize(result);
-    actions.handleChangeMeme(faceSwapTemplate(result, { face, target: { ...target, width: size.width ?? target.width, height: size.height ?? target.height } }));
-  };
-
-  // (While swapping, the overlay on the pictures says so.)
-  const status = busy ? null
+  // (While swapping, the overlay on the pictures says so; this says how long.)
+  const status = busy ? 'This can take up to a minute'
     : server === 'checking' ? 'Connecting to the face swap server…'
     : !face ? 'Add your face to start'
     : !target ? 'Pick a picture to swap into'
@@ -176,43 +180,38 @@ export default function FaceSwapStudio({ actions, onClose }: { actions: EditorAc
         )}
 
         <div className="ie-swap-stage">
-          {result ? (
-            <figure className="ie-swap-result">
-              <img src={comparing ? target?.src : result} alt={comparing ? 'Before the swap' : 'The face swap'} />
-              <button
-                type="button"
-                className="ie-swap-compare"
-                onPointerDown={() => setComparing(true)}
-                onPointerUp={() => setComparing(false)}
-                onPointerLeave={() => setComparing(false)}
-                onKeyDown={(e) => e.key === ' ' && setComparing(true)}
-                onKeyUp={() => setComparing(false)}
-              >
-                <Eye size={15} aria-hidden="true" /> {comparing ? 'Before' : 'Hold to compare'}
-              </button>
-            </figure>
-          ) : (
-            <div className="ie-swap-inputs">
-              <div className="ie-swap-slot">
-                <button type="button" className={`ie-swap-tile${face ? '' : ' is-empty'}`} aria-label={face ? 'Change your face' : 'Add your face'} onClick={() => setPicker('face')}>
-                  {face ? <img src={face.src} alt="" /> : <UserRound size={30} strokeWidth={1.8} aria-hidden="true" />}
-                  <span className="ie-swap-tile-label">{face && <Pencil size={11} strokeWidth={2.6} aria-hidden="true" />}{face ? 'Your face' : 'Add your face'}</span>
-                </button>
-              </div>
-              <span className="ie-swap-arrow" aria-hidden="true"><ArrowRight size={16} strokeWidth={2.4} /></span>
-              <div className="ie-swap-slot">
-                <button type="button" className={`ie-swap-tile${target ? '' : ' is-empty'}`} aria-label={target ? 'Change the picture' : 'Add a picture to swap into'} onClick={() => setPicker('target')}>
-                  {target ? <img src={target.src} alt="" /> : <ImagePlus size={30} strokeWidth={1.8} aria-hidden="true" />}
-                  <span className="ie-swap-tile-label">{target && <Pencil size={11} strokeWidth={2.6} aria-hidden="true" />}{target ? 'Swap into' : 'Add a picture'}</span>
-                </button>
-                {target && (
-                  <button type="button" className="ie-swap-remove" aria-label="Remove the picture" onClick={() => setTarget(null)}>
-                    <X size={14} strokeWidth={2.6} aria-hidden="true" />
-                  </button>
+          <div className="ie-swap-inputs">
+            <div className="ie-swap-slot">
+              <button type="button" className={`ie-swap-tile${face ? '' : ' is-empty'}`} aria-label={face ? 'Change your face' : 'Add your face'} onClick={() => setPicker('face')}>
+                {face ? (
+                  <>
+                    <img src={face.src} alt="" />
+                    <span className="ie-swap-tile-label"><Pencil size={11} strokeWidth={2.6} aria-hidden="true" />Your face</span>
+                  </>
+                ) : (
+                  <EmptyTile step={1} Icon={UserRound} title="Your face" hint="A clear, front-facing photo" />
                 )}
-              </div>
+              </button>
             </div>
-          )}
+            <div className="ie-swap-slot">
+              <button type="button" className={`ie-swap-tile${target ? '' : ' is-empty'}`} aria-label={target ? 'Change the picture' : 'Add a picture to swap into'} onClick={() => setPicker('target')}>
+                {target ? (
+                  <>
+                    <img src={target.src} alt="" />
+                    <span className="ie-swap-tile-label"><Pencil size={11} strokeWidth={2.6} aria-hidden="true" />Swap into</span>
+                  </>
+                ) : (
+                  <EmptyTile step={2} Icon={ImagePlus} title="Swap into" hint="A meme or any photo with faces" />
+                )}
+              </button>
+              {target && (
+                <button type="button" className="ie-swap-remove" aria-label="Remove the picture" onClick={() => setTarget(null)}>
+                  <X size={14} strokeWidth={2.6} aria-hidden="true" />
+                </button>
+              )}
+            </div>
+            <span className="ie-swap-arrow" aria-hidden="true"><ArrowRight size={18} strokeWidth={2.6} /></span>
+          </div>
           {busy && (
             <div className="ie-swap-busy" role="status">
               <span className="ie-swap-spinner" aria-hidden="true" />
@@ -221,47 +220,46 @@ export default function FaceSwapStudio({ actions, onClose }: { actions: EditorAc
           )}
         </div>
 
-        {error ? <p className="ie-swap-note is-error" role="alert">{error}</p> : status && <p className="ie-swap-note" aria-live="polite">{status}</p>}
+        <p className={`ie-swap-note${error ? ' is-error' : ''}`} role={error ? 'alert' : undefined} aria-live={error ? undefined : 'polite'}>
+          {error || status || 'Ready to swap'}
+        </p>
 
-        {targetFaces && targetFaces.length > 1 && (
-          <div className="ie-swap-group">
-            <p className="ie-swap-label">Faces to swap</p>
-            <div className="ie-swap-row" role="radiogroup" aria-label="Faces to swap">
-              <button type="button" role="radio" aria-checked={faces === 'all'} className={`ie-swap-chip${faces === 'all' ? ' is-on' : ''}`} onClick={() => { setFaces('all'); changed(); }}>
-                All {targetFaces.length}
-              </button>
-              {targetFaces.map((f) => (
-                <button key={f.index} type="button" role="radio" aria-checked={faces === f.index} aria-label={`Face ${f.index + 1}`} className={`ie-swap-face${faces === f.index ? ' is-on' : ''}`} onClick={() => { setFaces(f.index); changed(); }}>
-                  <img src={f.thumb} alt="" />
+        {/* The choices, together in one card above the button. */}
+        <div className="ie-swap-panel">
+          <div className="ie-swap-panel-row">
+            <span className="ie-swap-panel-label"><ScanFace size={16} aria-hidden="true" /> Faces</span>
+            {targetFaces && targetFaces.length > 1 ? (
+              <div className="ie-swap-row" role="radiogroup" aria-label="Faces to swap">
+                <button type="button" role="radio" aria-checked={faces === 'all'} className={`ie-swap-chip${faces === 'all' ? ' is-on' : ''}`} onClick={() => { setFaces('all'); changed(); }}>
+                  All {targetFaces.length}
                 </button>
-              ))}
-            </div>
+                {targetFaces.map((f) => (
+                  <button key={f.index} type="button" role="radio" aria-checked={faces === f.index} aria-label={`Face ${f.index + 1}`} className={`ie-swap-face${faces === f.index ? ' is-on' : ''}`} onClick={() => { setFaces(f.index); changed(); }}>
+                    <img src={f.thumb} alt="" />
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <span className="ie-swap-panel-value">
+                {!target ? 'Add a picture first' : targetFaces === null ? (server === 'online' ? 'Finding…' : '—') : noFaces ? 'None found' : '1 face'}
+              </span>
+            )}
           </div>
-        )}
-
-        <div className="ie-swap-group">
-          <div className="ie-swap-label-row">
-            <p className="ie-swap-label">Strength</p>
+          <div className="ie-swap-panel-row ie-swap-panel-row--slider">
+            <span className="ie-swap-panel-label"><SlidersHorizontal size={16} aria-hidden="true" /> Strength</span>
+            <div className="ie-swap-strength">
+              <Slider label="Swap strength" min={0.5} max={1} step={0.05} value={strength} onChange={(v) => { setStrength(v); changed(); }} />
+            </div>
             <span className="ie-swap-value">{Math.round(strength * 100)}%</span>
           </div>
-          <Slider label="Swap strength" min={0.5} max={1} step={0.05} value={strength} onChange={(v) => { setStrength(v); changed(); }} />
         </div>
       </div>
 
       <div className="ie-swap-actions">
-        {result ? (
-          <>
-            <button type="button" className="ie-swap-btn" onClick={changed}>Edit</button>
-            <button type="button" className="ie-swap-btn ie-swap-btn--primary" onClick={() => void use()}>Use this</button>
-          </>
-        ) : (
-          <>
-            {swapped && <button type="button" className="ie-swap-btn" onClick={onClose}>Cancel</button>}
-            <button type="button" className="ie-swap-btn ie-swap-btn--primary" disabled={!ready} onClick={swap}>
-              {busy ? 'Swapping…' : 'Swap faces'}
-            </button>
-          </>
-        )}
+        {swapped && <button type="button" className="ie-swap-btn" onClick={onClose}>Cancel</button>}
+        <button type="button" className="ie-swap-btn ie-swap-btn--primary" disabled={!ready} onClick={swap}>
+          {busy ? 'Swapping…' : 'Swap faces'}
+        </button>
       </div>
 
       {picker === 'face' && (

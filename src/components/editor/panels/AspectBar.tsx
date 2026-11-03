@@ -13,7 +13,7 @@ const ASPECTS: { value: Aspect; label: string; title: string }[] = [
 ];
 
 // The canvas shape, as a floating pill above the canvas. Gone while a sheet is open, so the canvas
-// gets the room.
+// gets the room, and in the Stickers maker.
 export default function AspectBar() {
   const aspectRatio: Aspect = useMemeEditorStore((s: { aspectRatio: Aspect }) => s.aspectRatio) || 'original';
   const setAspectRatio = useMemeEditorStore((s: { setAspectRatio: (v: Aspect) => void }) => s.setAspectRatio);
