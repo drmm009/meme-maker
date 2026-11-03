@@ -10,6 +10,7 @@ import TextSheet from './TextSheet';
 import CanvasColorSheet from './CanvasColorSheet';
 import WatermarkSheet from './WatermarkSheet';
 import BandsSheet from './BandsSheet';
+import AiCaptionSheet from './AiCaptionSheet';
 import CanvasStrip from './CanvasStrip';
 import MediaSheet from './MediaSheet';
 import DrawSheet from './DrawSheet';
@@ -63,7 +64,7 @@ const DOCK: DockItem[] = [
   { id: 'export', label: 'Export', Icon: Download, title: 'Save or share it', variant: 'primary' },
 ];
 
-const SHEETS = { text: TextSheet, media: MediaSheet, draw: DrawSheet, canvasColor: CanvasColorSheet, watermark: WatermarkSheet, bands: BandsSheet, filters: FiltersSheet, background: BackgroundSheet, layers: LayersSheet, export: ExportSheet, library: LibrarySheet, mediaLink: LinkSheet,
+const SHEETS = { text: TextSheet, media: MediaSheet, draw: DrawSheet, canvasColor: CanvasColorSheet, watermark: WatermarkSheet, bands: BandsSheet, aiCaption: AiCaptionSheet, filters: FiltersSheet, background: BackgroundSheet, layers: LayersSheet, export: ExportSheet, library: LibrarySheet, mediaLink: LinkSheet,
   templates: TemplatesSheet, memes: MemePickerSheet, stickers: StickersSheet, emoji: EmojiSheet, bubble: BubbleSheet, diecut: DieCutSheet,
   card: CardFormSheet, cardLook: CardLookSheet, aiGallery: AiMemeGallerySheet, faceSwap: FaceSwapStudio, stickerGallery: StickerGallerySheet };
 // Sheets for browsing a big library, shown full height (the meme needn't stay in view).

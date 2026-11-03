@@ -1,7 +1,6 @@
 import React, { Suspense, lazy } from 'react';
 import { createPortal } from 'react-dom';
 import VideoTrimmer from '../VideoTrimmer';
-import AiCaptionModal from '../AiCaptionModal';
 // The social card studio and the face swap studio load when first opened.
 const MemeStylesModal = lazy(() => import('../MemeStylesModal'));
 const FaceMorphModal = lazy(() => import('../FaceMorphModal'));
@@ -16,7 +15,6 @@ export default function EditorModals({
   handleAddInstagramCard,
   handleAddTweetCard,
   handleAddWhatsAppCard,
-  handleApplyAiCaption,
   handleApplyFaceMorph,
   handleUpdateSocialCard,
   morphTargetLayerId,
@@ -28,7 +26,6 @@ export default function EditorModals({
   setMorphTargetUrl,
   setShowFaceMorphModal,
   showFaceMorphModal,
-  template,
   commitAddImageLayer,
   handleApplyMainPhotoCrop,
   handleRestoreMainPhoto,
@@ -37,9 +34,7 @@ export default function EditorModals({
 }) {
   const pendingVideoLayer = useEditorUiStore((s) => s.pendingVideoLayer);
   const setPendingVideoLayer = useEditorUiStore((s) => s.setPendingVideoLayer);
-  const setShowAiModal = useEditorUiStore((s) => s.setShowAiModal);
   const setShowStylesModal = useEditorUiStore((s) => s.setShowStylesModal);
-  const showAiModal = useEditorUiStore((s) => s.showAiModal);
   const showStylesModal = useEditorUiStore((s) => s.showStylesModal);
   const socialModalPlatform = useEditorUiStore((s) => s.socialModalPlatform);
   const imageLayers = useMemeEditorStore((s) => s.imageLayers);
@@ -74,14 +69,6 @@ export default function EditorModals({
           onClose={() => setCropLayerId(null)}
         />
       )}
-
-      {/* AI Meme Caption Generator Modal */}
-      <AiCaptionModal
-        isOpen={showAiModal}
-        onClose={() => setShowAiModal(false)}
-        onApplyCaption={handleApplyAiCaption}
-        templateName={template?.name}
-      />
 
       {/* Meme Style Modal (Unified Social Cards Studio) */}
       {showStylesModal && (

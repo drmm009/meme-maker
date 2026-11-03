@@ -286,3 +286,16 @@
 /* Aa on a white box, over the little meme. */
 .ie-ai-look--label { color: #000; font-family: Arial, sans-serif; font-size: 16px; font-weight: 700; background: linear-gradient(#fff, #fff) center / 36px 26px no-repeat, linear-gradient(160deg, #5b6474, #2c313c); }
 .ie-ai-look--comic { color: #ffd400; font-family: Bangers, Impact, sans-serif; -webkit-text-stroke: 1px #000; }
+
+/* The editor's AI Caption sheet (AiCaptionSheet), the AI Meme page's composer in a sheet: the vibes as
+   pills (the picked one lit) scrolling sideways over the idea box, whose round button shuffles. */
+.ie-ai-options--vibes { margin: 0 -16px 12px; padding: 2px 16px; }
+.ie-ai-options--vibes .ie-ai-option { flex-shrink: 0; }
+.ie-ai-options--vibes .ie-ai-option-text { max-width: none; }
+.ie-ai-options--vibes .ie-ai-option.is-on { background: var(--ui-accent-soft); box-shadow: inset 0 0 0 1.5px var(--ui-accent); color: var(--ui-accent-text); }
+/* The sheet is the composer's grey: the pills and the box a step lighter so they stand off it. */
+.ie-ai-options--vibes .ie-ai-option:not(.is-on) { background: rgba(255, 255, 255, 0.07); }
+.ie-ai-caption-sheet .ie-ai-input { margin-bottom: 4px; background: rgba(255, 255, 255, 0.05); }
+.ie-ai-send.is-busy:disabled { background: var(--ui-accent); color: #fff; }
+.ie-ai-send.is-busy svg { animation: ie-ai-spin 0.9s linear infinite; }
+@media (prefers-reduced-motion: reduce) { .ie-ai-send.is-busy svg { animation: none; } }

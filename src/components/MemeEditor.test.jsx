@@ -883,14 +883,39 @@ describe('MemeEditor', () => {
     expect(screen.queryByRole('dialog', { name: 'Crop photo' })).toBeNull();
   }, 30000);
 
-  it('AI/Filters shows Face Swap, Background, AI Caption and Filters; Background opens its sheet', () => {
+  it('AI/Filters shows Face Swap, Background, AI Caption and Filters', () => {
     renderEditor();
     openSection('AI tools and photo filters');
     const strip = screen.getByRole('toolbar', { name: 'AI and filter tools' });
     expect(within(strip).getAllByRole('button').map((b) => b.textContent)).toEqual(['Face Swap', 'Background', 'AI Caption', 'Filters']);
     expect(screen.queryByRole('dialog')).toBeNull();
+  }, 30000);
+
+  it('AI Caption writes captions on the meme: an idea, a vibe and Shuffle', async () => {
+    renderEditor();
+    openSection('AI tools and photo filters');
+    const strip = screen.getByRole('toolbar', { name: 'AI and filter tools' });
     fireEvent.click(within(strip).getByText('AI Caption'));
-    expect(document.querySelector('.bottom-sheet-panel')?.textContent).toContain('AI Captions');
+    const ai = () => sheet('AI Caption');
+    expect(within(strip).getByText('AI Caption').closest('button').getAttribute('aria-pressed')).toBe('true');
+
+    fireEvent.change(within(ai()).getByRole('textbox', { name: "What's the meme about?" }), { target: { value: 'Mondays' } });
+    const vibes = within(ai()).getByRole('radiogroup', { name: 'Vibe' });
+    expect(within(vibes).getAllByRole('radio')).toHaveLength(7);
+    fireEvent.click(within(vibes).getByRole('radio', { name: /Work & Boss/ }));
+    expect(within(vibes).getByRole('radio', { name: /Work & Boss/ }).getAttribute('aria-checked')).toBe('true');
+
+    // Shuffle writes on the meme's first caption, then the next of the four.
+    fireEvent.click(within(ai()).getByRole('button', { name: 'Shuffle captions' }));
+    await waitFor(() => expect(captionTexts()[0]).not.toBe('TOP TEXT'));
+    const first = captionTexts()[0];
+    expect(captionTexts()).toHaveLength(2);
+    fireEvent.click(within(ai()).getByRole('button', { name: 'Shuffle captions' }));
+    await waitFor(() => expect(captionTexts()[0]).not.toBe(first));
+    expect(captionTexts()[1]).toBe('BOTTOM TEXT');
+
+    fireEvent.click(within(strip).getByText('AI Caption'));
+    expect(screen.queryByRole('dialog', { name: 'AI Caption' })).toBeNull();
   }, 30000);
 
   it('Filters opens under the AI/Filters strip; tapping AI/Filters again closes both', () => {

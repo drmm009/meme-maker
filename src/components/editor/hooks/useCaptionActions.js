@@ -1,81 +1,16 @@
-import { getNonOverlappingPosition, isColorDark } from '../../../utils/captionLayout';
+import { getNonOverlappingPosition } from '../../../utils/captionLayout';
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
 import { useEditorUiStore } from '../store/useEditorUiStore';
 
-export function useCaptionActions({ activeCaption, handleToggleCanvasHeader }) {
-  const canvasHeader = useMemeEditorStore((s) => s.canvasHeader);
+export function useCaptionActions({ activeCaption }) {
   const captions = useMemeEditorStore((s) => s.captions);
   const setCaptions = useMemeEditorStore((s) => s.setCaptions);
   const setActiveLayerId = useMemeEditorStore((s) => s.setActiveLayerId);
   const pushHistory = useMemeEditorStore((s) => s.pushHistory);
-  const canvasBgColor = useMemeEditorStore((s) => s.canvasBgColor);
   const stickers = useMemeEditorStore((s) => s.stickers);
   const imageLayers = useMemeEditorStore((s) => s.imageLayers);
   const activeLayerId = useMemeEditorStore((s) => s.activeLayerId);
   const setActiveTab = useEditorUiStore((s) => s.setActiveTab);
-
-  // AI Meme Caption Application
-  const handleApplyAiCaption = (captionText, target = 'caption') => {
-    if (target === 'header') {
-      if (!canvasHeader.enabled) {
-        handleToggleCanvasHeader();
-      }
-      const existing = captions.find(c => c.isHeaderCaption);
-      if (existing) {
-        const nextCaps = captions.map(c => c.id === existing.id ? { ...c, text: captionText } : c);
-        setCaptions(nextCaps);
-        setActiveLayerId(existing.id);
-        pushHistory();
-      } else {
-        const newHCap = {
-          id: `caption-header-${Date.now()}`,
-          text: captionText,
-          x: 0.5,
-          y: 0.05,
-          fontSize: 50,
-          fontFamily: 'Montserrat, sans-serif',
-          color: isColorDark(canvasBgColor || '#ffffff') ? '#ffffff' : '#000000',
-          stroke: 'transparent',
-          strokeWidth: 0,
-          align: 'center',
-          width: 0.92,
-          isHeaderCaption: true
-        };
-        const nextCaps = [newHCap, ...captions];
-        setCaptions(nextCaps);
-        setActiveLayerId(newHCap.id);
-        pushHistory();
-      }
-    } else {
-      // Standard caption
-      if (activeCaption) {
-        const nextCaps = captions.map(c => c.id === activeCaption.id ? { ...c, text: captionText } : c);
-        setCaptions(nextCaps);
-        pushHistory();
-      } else {
-        const pos = getNonOverlappingPosition('caption', captions, stickers, imageLayers);
-        const maxZ = Math.max(-1, ...captions.map(c => c.zIndex ?? -1), ...stickers.map(s => s.zIndex ?? -1), ...(imageLayers || []).map(i => i.zIndex ?? -1));
-        const newCap = {
-          id: `cap-${Date.now()}`,
-          text: captionText,
-          x: pos.x,
-          y: pos.y,
-          fontSize: 36,
-          fontFamily: 'Montserrat, sans-serif',
-          color: '#ffffff',
-          stroke: '#000000',
-          strokeWidth: 4,
-          align: 'center',
-          width: 0.85,
-          zIndex: maxZ + 1
-        };
-        const nextCaps = [...captions, newCap];
-        setCaptions(nextCaps);
-        setActiveLayerId(newCap.id);
-        pushHistory();
-      }
-    }
-  };
 
   // Caption Handlers
   const handleAddCaption = () => {
@@ -257,5 +192,5 @@ export function useCaptionActions({ activeCaption, handleToggleCanvasHeader }) {
     }
   };
 
-  return { handleApplyAiCaption, handleAddCaption, handleAddCurvedText, handleAddPresetPhrase, handleToggleTextCase, handleCycleTextAlignment, updateActiveCaptionProps, handleSetCaptionBg };
+  return { handleAddCaption, handleAddCurvedText, handleAddPresetPhrase, handleToggleTextCase, handleCycleTextAlignment, updateActiveCaptionProps, handleSetCaptionBg };
 }

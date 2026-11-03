@@ -5,12 +5,11 @@ import { useEditorUiStore } from '../store/useEditorUiStore';
 import { useSelection } from './selection';
 import type { EditorActions } from './selection';
 
-// The AI/Filters tab's strip: Face Swap, Background (blur & removal), AI Caption, Filters.
+// The AI/Filters tab's strip: Face Swap, Background (blur & removal), AI Caption (AiCaptionSheet), Filters.
 export default function AiFiltersStrip({ actions }: { actions: EditorActions }) {
   const sheet: string | null = useEditorUiStore((s: { sheet: string | null }) => s.sheet);
   const openSheet = useEditorUiStore((s: { openSheet: (sheet: string, focus?: string | null) => void }) => s.openSheet);
   const closeSheet = useEditorUiStore((s: { closeSheet: () => void }) => s.closeSheet);
-  const setShowAiModal = useEditorUiStore((s: { setShowAiModal: (v: boolean) => void }) => s.setShowAiModal);
   const { image } = useSelection();
 
   const items: StripItem[] = [
@@ -22,7 +21,7 @@ export default function AiFiltersStrip({ actions }: { actions: EditorActions }) 
       Icon: Aperture,
       active: sheet === 'background',
     },
-    { id: 'caption', label: 'AI Caption', title: 'AI meme captions', Icon: Captions },
+    { id: 'caption', label: 'AI Caption', title: 'Write or shuffle the caption, and its look', Icon: Captions, active: sheet === 'aiCaption' },
     { id: 'filters', label: 'Filters', title: 'Photo filters and adjustments', Icon: Blend, active: sheet === 'filters' },
   ];
 
@@ -33,7 +32,10 @@ export default function AiFiltersStrip({ actions }: { actions: EditorActions }) 
     } else if (id === 'background') {
       if (sheet === 'background') closeSheet();
       else openSheet('background');
-    } else if (id === 'caption') setShowAiModal(true);
+    } else if (id === 'caption') {
+      if (sheet === 'aiCaption') closeSheet();
+      else openSheet('aiCaption');
+    }
     else if (id === 'filters') {
       if (sheet === 'filters') closeSheet();
       else openSheet('filters');

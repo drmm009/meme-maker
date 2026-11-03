@@ -79,7 +79,6 @@ export function buildInitialUi(template) {
     showStylesModal: social && mode !== 'social',
     socialModalPlatform: initialSocialModalPlatform(template),
     showFiltersModal: false,
-    showAiModal: false,
     openSourceTemplates: MEME_TEMPLATES,
     pendingVideoLayer: null,
     showPhotoCrop: false, // the main photo's cropper (editor/crop)
@@ -108,7 +107,7 @@ const UI_FIELDS = Object.keys(buildInitialUi(null));
 
 // The dock tab each sheet belongs to: its strip shows above the sheet.
 // null: no strip (Export). Sheets not listed (Layers) keep the strip that shows.
-const SHEET_TAB = { text: 'text', media: 'media', draw: 'draw', canvasColor: 'canvas', watermark: 'canvas', bands: 'canvas', filters: 'fx', background: 'fx', export: null, library: null, mediaLink: 'media', templates: 'media', memes: 'swap', card: 'card', cardLook: 'card', faceSwap: 'swap', stickers: 'media', gifs: 'media', emoji: 'media', bubble: 'text', diecut: 'media' };
+const SHEET_TAB = { text: 'text', media: 'media', draw: 'draw', canvasColor: 'canvas', watermark: 'canvas', bands: 'canvas', aiCaption: 'fx', filters: 'fx', background: 'fx', export: null, library: null, mediaLink: 'media', templates: 'media', memes: 'swap', card: 'card', cardLook: 'card', faceSwap: 'swap', stickers: 'media', gifs: 'media', emoji: 'media', bubble: 'text', diecut: 'media' };
 
 // useState-style setter: accepts a value or an updater function.
 const fieldSetter = (set, key) => (valueOrUpdater) =>

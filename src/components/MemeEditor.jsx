@@ -98,7 +98,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, c
   const { handleAlignLayers, handleDistributeLayers, handleGroupLayers, handleUngroupLayers, handleDeleteLayers } = useArrangeActions({ canvasRef });
   const { listProjects, handleSaveProject, handleOpenProject, handleDeleteProject, handleRenameProject } = useProjects({ canvasRef, onOpen: onRestoreDraft });
   const { handleAddDrawing, handleClearDrawings, handleUndoDrawing } = useDrawingActions();
-  const { handleApplyAiCaption, handleAddCaption, handleToggleTextCase, updateActiveCaptionProps, handleSetCaptionBg } = useCaptionActions({ activeCaption, handleToggleCanvasHeader });
+  const { handleAddCaption, handleToggleTextCase, updateActiveCaptionProps, handleSetCaptionBg } = useCaptionActions({ activeCaption });
   const { commitAddImageLayer, handleAddImageLayer, handleFileUploadImageLayer, updateActiveImageLayer, moveLayer, handleDeleteLayer, handleDuplicateLayer, handleRotateLayer, handleFlipActiveLayer, handleToggleDieCutSticker, handleSetDieCutColor, updateSlotTransform, handleAddSticker, handleAddGraphicSticker } = useLayerActions({ activeCaption, activeImageLayer, activeSticker, updateActiveCaptionProps });
   const { handleAddBubble, handleApplyBubbleStyle } = useBubbleActions({ activeCaption, updateActiveCaptionProps });
 
@@ -179,7 +179,6 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, c
         handleAddInstagramCard={handleAddInstagramCard}
         handleAddTweetCard={handleAddTweetCard}
         handleAddWhatsAppCard={handleAddWhatsAppCard}
-        handleApplyAiCaption={handleApplyAiCaption}
         handleApplyFaceMorph={handleApplyFaceMorph}
         handleUpdateSocialCard={handleUpdateSocialCard}
         morphTargetLayerId={morphTargetLayerId}
@@ -191,7 +190,6 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, c
         setMorphTargetUrl={setMorphTargetUrl}
         setShowFaceMorphModal={setShowFaceMorphModal}
         showFaceMorphModal={showFaceMorphModal}
-        template={template}
       />
     </div>
   );
