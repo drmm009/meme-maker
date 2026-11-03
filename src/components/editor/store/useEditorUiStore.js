@@ -5,6 +5,7 @@ import { safeGet, safeSet } from '../../../utils/storage';
 import { isSocialCardCaption } from '../memeEditorUtils';
 import { EDITOR_MODES, editorModeOf } from '../editorModes';
 import { stickerExportPrefs } from '../stickerMaker';
+import { drawTabOf } from '../panels/drawTools';
 
 // UI state shared across the editor's panels: which tab, submenu, menu or
 // modal is open, drawing tool settings, the watermark. One store per editor.
@@ -176,7 +177,7 @@ export function createEditorUiStore(template) {
     pickDrawTool: (tool) => set((state) => (
       state.drawTool === tool && state.sheet === 'draw'
         ? { sheet: null, sheetFocus: null }
-        : { dockTab: 'draw', drawTool: tool, sheet: 'draw', sheetFocus: null, sheetFromPill: false, activeSubmenu: null, activeTab: 'draw' }
+        : { dockTab: drawTabOf(tool), drawTool: tool, sheet: 'draw', sheetFocus: null, sheetFromPill: false, activeSubmenu: null, activeTab: 'draw' }
     )),
     leaveDock: () => set((state) => ({
       dockTab: null,

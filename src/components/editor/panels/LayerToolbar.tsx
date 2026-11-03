@@ -1,4 +1,4 @@
-import { Trash2, Settings, SlidersHorizontal, Copy, Scissors, Aperture, Blend, ScanFace, Ellipsis, Layers, Palette, MessageSquareQuote, CaseSensitive, Baseline } from 'lucide-react';
+import { Trash2, FileText, SlidersHorizontal, Copy, Scissors, Aperture, Blend, ScanFace, Ellipsis, Layers, Palette, MessageSquareQuote, CaseSensitive, Baseline } from 'lucide-react';
 import { FloatingToolbar } from '../../ui';
 import type { ToolbarItem } from '../../ui';
 import { useEditorUiStore } from '../store/useEditorUiStore';
@@ -48,9 +48,9 @@ export default function LayerToolbar({ actions }: { actions: EditorActions }) {
       del,
     ];
   } else if (kind === 'card' && caption) {
-    const platform = caption.isTweetCard ? 'tweet' : caption.isInstagramCard ? 'instagram' : 'whatsapp';
     items = [
-      { id: 'edit', label: 'Edit', title: 'Edit card details', Icon: Settings, onClick: () => actions.handleOpenSocialModalForActiveCard(platform) },
+      { id: 'details', label: 'Details', title: 'Names, words and time', Icon: FileText, ...opens('card') },
+      { id: 'look', label: 'Look', title: 'Theme and badges', Icon: Palette, ...opens('cardLook') },
       dup,
       layers,
       del,

@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { MessageSquarePlus, X } from 'lucide-react';
 import { Sheet, Section, SegmentedControl, TileGrid, Tile } from '../../ui';
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
+import { useEditorUiStore } from '../store/useEditorUiStore';
 import { MEME_TEMPLATES } from '../../../data/templates';
 import CardControls from './CardControls';
 import { useCard, platformOf } from './socialCard';
@@ -92,8 +93,16 @@ export default function CardFormSheet({ actions, onClose }: { actions: EditorAct
   const set = usePatchCard(card);
   const platform = card ? platformOf(card) : null;
 
+  const mode: string = useEditorUiStore((s: { mode: string }) => s.mode);
+
+  // In the maker another kind starts afresh on its template; in the full editor it takes this card's place.
   const pickPlatform = (value: string) => {
     if (value === platform) return;
+    if (mode !== 'social') {
+      const add = value === 'tweet' ? actions.handleAddTweetCard : value === 'instagram' ? actions.handleAddInstagramCard : actions.handleAddWhatsAppCard;
+      add?.({ replaceId: card?.id });
+      return;
+    }
     const template = MEME_TEMPLATES.find((t: { id: string }) => t.id === PLATFORMS.find((p) => p.value === value)?.template);
     if (template) actions.handleChangeMeme(template);
   };

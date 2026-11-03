@@ -3,7 +3,7 @@ import { Sheet, Section, Row, SwatchRow, Slider, Switch } from '../../ui';
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
 import { useEditorUiStore } from '../store/useEditorUiStore';
 import { DRAW_COLORS } from '../../../utils/captionLayout';
-import { DRAW_TOOLS } from './drawTools';
+import { CENSOR_TOOL, DRAW_TOOLS } from './drawTools';
 import { isDragDrawing } from '../../canvas/interaction/drawingHits';
 import type { DragDrawing } from '../../canvas/draw/shapes';
 import type { EditorActions } from './selection';
@@ -23,7 +23,7 @@ const CENSORS = [
   { id: 'bar', label: 'Black bar', Icon: RectangleHorizontal },
 ];
 
-// The picked draw tool's settings, under the Draw strip: brushes get colour and size; Shapes the
+// The picked draw tool's settings, under the Draw strip (Censor's under the Canvas strip): brushes get colour and size; Shapes the
 // shape, colour, line width and fill; Censor the style and strength. With a shape (or censor
 // region) selected, they show and change that one too. Clear drawing sits in the sheet header.
 // Drawing stays on after the sheet closes (see the UI store's pickDrawTool).
@@ -33,7 +33,7 @@ export default function DrawSheet({ actions, onClose }: { actions: EditorActions
   const patchLayer = useMemeEditorStore((s: { patchLayer: (key: string, id: string, patch: object) => void }) => s.patchLayer);
   const ui = useEditorUiStore((s: Record<string, any>) => s);
   const drawTool: string | null = ui.drawTool;
-  const tool = DRAW_TOOLS.find((t) => t.id === drawTool) || DRAW_TOOLS[0];
+  const tool = [...DRAW_TOOLS, CENSOR_TOOL].find((t) => t.id === drawTool) || DRAW_TOOLS[0];
   const isShape = drawTool === 'shape';
   const isCensor = drawTool === 'censor';
   const isEraser = drawTool === 'eraser';

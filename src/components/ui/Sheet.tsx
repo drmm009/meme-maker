@@ -32,6 +32,8 @@ const GHOST_MS = 300;
 // data-sheet-ghosts (the editor's bottom panel, which glides to its new height) the copy stays where
 // the sheet was, behind what replaces it, fading, and sinks with the panel. Anywhere else (the
 // full-height library sheets) it is laid over the same spot and slides down out of view.
+// The host may change its classes as the sheet goes (the editor's panel stops being a sheet panel),
+// so the copy sits in a box-less wrapper with the host's classes as they were, keeping its styles.
 function leaveGhost(el: HTMLElement) {
   const host = el.parentElement;
   const glide = Boolean(host?.hasAttribute('data-sheet-ghosts'));
@@ -49,15 +51,23 @@ function leaveGhost(el: HTMLElement) {
     const base = parent.getBoundingClientRect();
     Object.assign(ghost.style, { top: `${at.top - base.top}px`, left: `${at.left - base.left}px`, width: `${at.width}px`, height: `${at.height}px` });
   }
-  parent.appendChild(ghost);
+  let holder: HTMLElement = ghost;
+  if (glide && parent.className) {
+    holder = document.createElement('div');
+    holder.className = parent.className;
+    holder.style.display = 'contents';
+    holder.setAttribute('aria-hidden', 'true');
+    holder.appendChild(ghost);
+  }
+  parent.appendChild(holder);
   // A copy starts at the top of anything scrolled; put it back where the sheet was scrolled to.
   const from = el.querySelectorAll('*');
   const to = ghost.querySelectorAll('*');
   from.forEach((node, i) => {
     if (node.scrollTop || node.scrollLeft) to[i]?.scrollTo(node.scrollLeft, node.scrollTop);
   });
-  setTimeout(() => ghost.remove(), GHOST_MS + 50);
-  return ghost;
+  setTimeout(() => holder.remove(), GHOST_MS + 50);
+  return holder;
 }
 
 // A panel docked at the bottom of the editor (not a modal: the canvas above stays usable).

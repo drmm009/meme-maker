@@ -27,6 +27,7 @@ import DraftOffer from './editor/DraftOffer';
 import EditorPanels from './editor/panels/EditorPanels';
 import AspectBar from './editor/panels/AspectBar';
 import FirstRunTour from './editor/panels/FirstRunTour';
+import { isDrawingOn } from './editor/panels/drawTools';
 import './ui';
 import './MemeEditor.css';
 
@@ -106,7 +107,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, c
 
   const actions = {
     handleAddCaption, handleToggleTextCase, updateActiveCaptionProps, handleSetCaptionBg, handleAddBubble, handleApplyBubbleStyle,
-    handleOpenSocialModalForActiveCard,
+    handleOpenSocialModalForActiveCard, handleAddTweetCard, handleAddInstagramCard, handleAddWhatsAppCard,
     handleSetCanvasBgColor, handleSetCanvasBgGradient, handleToggleCanvasHeader, handleToggleCanvasFooter, handleToggleCanvasFlip, handleWatermarkImageUpload,
     handleApplyMainPhotoCrop, handleRestoreMainPhoto, handleReplaceImageLayer,
     handleAlignLayers, handleDistributeLayers, handleGroupLayers, handleUngroupLayers, handleDeleteLayers,
@@ -152,7 +153,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, c
             imageFit={imageFit}
             isNativeLayout={isNativeLayout}
             layoutDef={layoutDef}
-            isDrawingMode={dockTab === 'draw' && Boolean(drawTool)}
+            isDrawingMode={isDrawingOn(dockTab, drawTool)}
             isRemovingBg={isRemovingBg}
             isBlurringBg={isBlurringBg}
             onAddDrawing={handleAddDrawing}

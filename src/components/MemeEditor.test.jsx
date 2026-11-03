@@ -201,11 +201,11 @@ describe('MemeEditor', () => {
   it('every dock tab shows its tool strip; tapping the tab again closes it', () => {
     renderEditor();
     const strips = [
-      ['Draw on the meme', 'Draw tools', ['Brush', 'Glow', 'Marker', 'Eraser', 'Shapes', 'Censor']],
+      ['Draw on the meme', 'Draw tools', ['Brush', 'Glow', 'Marker', 'Eraser', 'Shapes']],
       ['Photos, videos, stickers and emoji', 'Media tools', ['Photo', 'Templates', 'Stickers', 'Emoji']],
       ['Text', 'Text tools', ['Add Text', 'Bubble', 'Social Card']],
       ['AI tools and photo filters', 'AI and filter tools', ['Face Swap', 'Background', 'AI Caption', 'Filters']],
-      ['Canvas colour, bands and watermark', 'Canvas tools', ['Canvas Style', 'Watermark', 'Header & Footer']],
+      ['Canvas colour, bands and watermark', 'Canvas tools', ['Canvas Style', 'Watermark', 'Header & Footer', 'Censor']],
     ];
     for (const [tab, name, tools] of strips) {
       openSection(tab);
@@ -215,6 +215,33 @@ describe('MemeEditor', () => {
     }
     openSection('Canvas colour, bands and watermark');
     expect(screen.queryByRole('toolbar', { name: 'Canvas tools' })).toBeNull();
+  }, 30000);
+
+  it('Social Card adds a post and opens its Details under the pill, which also has Look', () => {
+    renderEditor();
+    fireEvent.click(within(strip('Text tools')).getByText('Social Card'));
+    const card = canvas.props.captions.find((c) => c.isTweetCard);
+    expect(card).toBeTruthy();
+    expect(canvas.props.activeLayerId).toBe(card.id);
+    expect(canvas.ui.showStylesModal).toBe(false);
+    expect(within(layerToolbar()).getByText('Details').closest('button').getAttribute('aria-pressed')).toBe('true');
+    fireEvent.change(within(sheet('Card details')).getByLabelText('Name'), { target: { value: 'Dhruv' } });
+    expect(canvas.props.captions.find((c) => c.id === card.id).tweetName).toBe('Dhruv');
+
+    fireEvent.click(within(layerToolbar()).getByText('Look'));
+    expect(sheet('Card look')).toBeTruthy();
+
+    // Another kind of card takes this one's place, keeping the rest of the meme.
+    fireEvent.click(within(layerToolbar()).getByText('Details'));
+    fireEvent.click(within(sheet('Card details')).getByText('WhatsApp'));
+    expect(canvas.props.captions.filter((c) => c.isTweetCard)).toHaveLength(0);
+    expect(canvas.props.captions.filter((c) => c.isWhatsAppCard)).toHaveLength(1);
+    expect(captionTexts()).toEqual(expect.arrayContaining(['TOP TEXT', 'BOTTOM TEXT']));
+
+    // Tapping it again with a card on the meme selects that card rather than adding another.
+    act(() => canvas.props.onSelectLayer(null));
+    fireEvent.click(within(strip('Text tools')).getByText('Social Card'));
+    expect(canvas.props.captions.filter((c) => c.isWhatsAppCard)).toHaveLength(1);
   }, 30000);
 
   it('Media adds stickers and emoji from its strip; Templates opens the picker', () => {
@@ -581,7 +608,7 @@ describe('MemeEditor', () => {
     renderEditor();
     openSection('Draw on the meme');
     const strip = screen.getByRole('toolbar', { name: 'Draw tools' });
-    expect(within(strip).getAllByRole('button').map((b) => b.textContent)).toEqual(['Brush', 'Glow', 'Marker', 'Eraser', 'Shapes', 'Censor']);
+    expect(within(strip).getAllByRole('button').map((b) => b.textContent)).toEqual(['Brush', 'Glow', 'Marker', 'Eraser', 'Shapes']);
     expect(canvas.props.isDrawingMode).toBe(false);
 
     fireEvent.click(within(strip).getByText('Marker'));
@@ -630,7 +657,7 @@ describe('MemeEditor', () => {
     expect(strip('Draw tools')).toBeTruthy();
   }, 30000);
 
-  it('Shapes and Censor: their sheets pick the shape or the censor style, and drawing stays on', () => {
+  it('Shapes (Draw) and Censor (Canvas): their sheets pick the shape or the censor style, and drawing stays on', () => {
     renderEditor();
     openSection('Draw on the meme');
     fireEvent.click(within(strip('Draw tools')).getByText('Shapes'));
@@ -643,12 +670,22 @@ describe('MemeEditor', () => {
     expect(within(sheet('Shapes')).getByText('Box').closest('button').getAttribute('aria-pressed')).toBe('true');
     expect(within(sheet('Shapes')).getByRole('switch', { name: 'Fill shape' })).toBeTruthy();
 
-    fireEvent.click(within(strip('Draw tools')).getByText('Censor'));
+    // Censor is on the Canvas tab, and draws while that tab shows; another Canvas sheet stops it.
+    fireEvent.click(within(sheet('Shapes')).getByRole('button', { name: 'Close Shapes' }));
+    openSection('Canvas colour, bands and watermark');
+    expect(canvas.props.isDrawingMode).toBe(false);
+    fireEvent.click(within(strip('Canvas tools')).getByText('Censor'));
+    expect(canvas.props.drawTool).toBe('censor');
+    expect(canvas.props.isDrawingMode).toBe(true);
     const censor = sheet('Censor');
     for (const name of ['Blur', 'Pixelate', 'Black bar']) expect(within(censor).getByText(name)).toBeTruthy();
     expect(within(censor).getByLabelText('Censor strength')).toBeTruthy();
     fireEvent.click(within(censor).getByText('Black bar'));
     expect(within(sheet('Censor')).queryByLabelText('Censor strength')).toBeNull();
+    fireEvent.click(within(sheet('Censor')).getByRole('button', { name: 'Close Censor' }));
+    expect(canvas.props.isDrawingMode).toBe(true);
+    fireEvent.click(within(strip('Canvas tools')).getByText('Watermark'));
+    expect(canvas.props.isDrawingMode).toBe(false);
 
     // A dragged-out shape is saved like a stroke, and undo removes it.
     act(() => canvas.props.onAddDrawing({ id: 's', type: 'shape', shape: 'rect', color: '#fff', size: 4, points: [{ x: 0, y: 0 }, { x: 40, y: 40 }] }));
@@ -790,10 +827,10 @@ describe('MemeEditor', () => {
     expect(within(sheet('Canvas Style')).getByText('Mirror').closest('button').getAttribute('aria-pressed')).toBe('true');
   }, 30000);
 
-  it('Canvas shows Canvas Style, Watermark and Header & Footer; each opens its sheet under the strip', () => {
+  it('Canvas shows Canvas Style, Watermark, Header & Footer and Censor; each opens its sheet under the strip', () => {
     renderEditor();
     openSection('Canvas colour, bands and watermark');
-    expect(within(canvasStrip()).getAllByRole('button').map((b) => b.textContent)).toEqual(['Canvas Style', 'Watermark', 'Header & Footer']);
+    expect(within(canvasStrip()).getAllByRole('button').map((b) => b.textContent)).toEqual(['Canvas Style', 'Watermark', 'Header & Footer', 'Censor']);
 
     fireEvent.click(within(canvasStrip()).getByText('Canvas Style'));
     fireEvent.click(within(sheet('Canvas Style')).getByRole('radio', { name: '#000000' }));

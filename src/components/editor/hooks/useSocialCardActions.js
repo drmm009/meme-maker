@@ -119,6 +119,13 @@ export function useSocialCardActions() {
     setShowStylesModal(false);
   };
 
+  // A new card on top, or (with `replaceId`) in an old card's place, at its spot and depth.
+  const withCard = (newCap, replaceId) => {
+    const old = replaceId && captions.find((c) => c.id === replaceId);
+    if (!old) return [...captions, newCap];
+    return captions.map((c) => (c.id === replaceId ? { ...newCap, x: old.x, y: old.y, zIndex: old.zIndex } : c));
+  };
+
   // Meme Culture Staples & Social Formats Handlers
       const handleAddTweetCard = (data = {}) => {
     const name = data.name || 'Elon Musk';
@@ -151,8 +158,7 @@ export function useSocialCardActions() {
       zIndex: maxZ + 1
     };
 
-    const nextCaps = [...captions, newCap];
-    setCaptions(nextCaps);
+    setCaptions(withCard(newCap, data.replaceId));
     setActiveLayerId(newCap.id);
     setActiveSubmenu(null);
     setActiveTab('text');
@@ -209,8 +215,7 @@ export function useSocialCardActions() {
       zIndex: maxZ + 1
     };
 
-    const nextCaps = [...captions, newCap];
-    setCaptions(nextCaps);
+    setCaptions(withCard(newCap, data.replaceId));
     setActiveLayerId(newCap.id);
     setActiveSubmenu(null);
     setActiveTab('text');
@@ -265,8 +270,7 @@ export function useSocialCardActions() {
       zIndex: maxZ + 1
     };
 
-    const nextCaps = [...captions, newCap];
-    setCaptions(nextCaps);
+    setCaptions(withCard(newCap, data.replaceId));
     setActiveLayerId(newCap.id);
     setActiveSubmenu(null);
     setActiveTab('text');

@@ -39,7 +39,7 @@ import BubbleSheet from './BubbleSheet';
 import BackgroundSheet from './BackgroundSheet';
 import DieCutSheet from './DieCutSheet';
 import LayerToolbar from './LayerToolbar';
-import { DRAW_TOOLS } from './drawTools';
+import { DRAW_TOOLS, isDrawingOn } from './drawTools';
 import { useSmoothHeight } from './useSmoothHeight';
 import { EDITOR_MODES } from '../editorModes';
 import type { EditorMode } from '../editorModes';
@@ -158,7 +158,7 @@ export default function EditorPanels({ actions }: { actions: EditorActions }) {
   // A selected layer's pill replaces the strip, the Draw strip too unless a draw tool is live (taps
   // then draw rather than select). In the Stickers maker a photo keeps the Sticker strip: its few
   // buttons are the whole job there.
-  const layerTools = Boolean(kind) && !(dockTab === 'draw' && drawTool) && !faceMorph && !(mode === 'sticker' && kind === 'image');
+  const layerTools = Boolean(kind) && !isDrawingOn(dockTab, drawTool) && !faceMorph && !(mode === 'sticker' && kind === 'image');
   const SheetComponent = sheet && !orphaned ? SHEETS[sheet] : null;
   if (SheetComponent && full) {
     // A browsing sheet takes the editor's whole height, over the meme, with its own close button.

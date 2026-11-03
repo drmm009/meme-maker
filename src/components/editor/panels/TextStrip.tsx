@@ -2,15 +2,19 @@ import { Plus, MessageSquareQuote, Share2 } from 'lucide-react';
 import { ToolStrip } from '../../ui';
 import type { StripItem } from '../../ui';
 import { useEditorUiStore } from '../store/useEditorUiStore';
+import { useMemeEditorStore } from '../store/useMemeEditorStore';
+import { useCard } from './socialCard';
 import type { EditorActions } from './selection';
 
 // The Text tab's strip: Add Text adds a caption; Bubble adds a speech
-// bubble and opens the bubble styles sheet (BubbleSheet); Social Card opens the card studio.
+// bubble and opens the bubble styles sheet (BubbleSheet); Social Card selects the meme's card (adding
+// a post if there is none) and opens its Details under the layer pill, which also has its Look.
 export default function TextStrip({ actions }: { actions: EditorActions }) {
   const sheet: string | null = useEditorUiStore((s: { sheet: string | null }) => s.sheet);
   const closeSheet = useEditorUiStore((s: { closeSheet: () => void }) => s.closeSheet);
-  const setShowStylesModal = useEditorUiStore((s: { setShowStylesModal: (v: boolean) => void }) => s.setShowStylesModal);
-  const setSocialModalPlatform = useEditorUiStore((s: { setSocialModalPlatform: (v: string) => void }) => s.setSocialModalPlatform);
+  const openSheet = useEditorUiStore((s: { openSheet: (sheet: string, focus?: string | null, fromPill?: boolean) => void }) => s.openSheet);
+  const setActiveLayerId = useMemeEditorStore((s: { setActiveLayerId: (id: string) => void }) => s.setActiveLayerId);
+  const card = useCard();
 
   const items: StripItem[] = [
     { id: 'add', label: 'Add Text', title: 'Add Text Caption', Icon: Plus },
@@ -27,8 +31,9 @@ export default function TextStrip({ actions }: { actions: EditorActions }) {
       if (sheet === 'bubble') closeSheet();
       else actions.handleAddBubble();
     } else if (id === 'social') {
-      setSocialModalPlatform('tweet');
-      setShowStylesModal(true);
+      if (card) setActiveLayerId(card.id);
+      else actions.handleAddTweetCard();
+      openSheet('card', null, true);
     }
   };
 
