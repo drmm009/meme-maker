@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { useMemeEditorStore } from './editor/store/useMemeEditorStore';
 import { useEditorUiStore } from './editor/store/useEditorUiStore';
 import { isSocialCardCaption } from './editor/memeEditorUtils';
-import { fitCaptionsToBands, getBandHeight, getCanvasSize, makeLayerCenters } from './canvas/layout/canvasLayout';
+import { fitBandsToFrame, fitCaptionsToBands, getBandHeight, getCanvasSize, makeLayerCenters } from './canvas/layout/canvasLayout';
 import { renderScene } from './canvas/render/renderScene';
 import { useCanvasInteraction } from './canvas/interaction/useCanvasInteraction';
 import { useCanvasView } from './canvas/interaction/useCanvasView';
@@ -96,14 +96,16 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
   const activeIsNativeLayout = isNativeLayout;
   const activeLayoutDef = layoutDef;
   const imgSrc = template?.canvasOnly ? null : (template?.rawImageUrl || imageUrl || template?.imageUrl);
-  const { canvasW, canvasH } = getCanvasSize(aspectRatio, template, naturalSize);
+  const frame = getCanvasSize(aspectRatio, template, naturalSize);
+  const { canvasW } = frame;
 
-  // Optional header/footer bands extend the canvas above and below the image area.
+  // Optional header/footer bands above and below the image area: inside a set aspect ratio (the
+  // image area giving them room), or extending the canvas for 'original'.
   const isHeaderEnabled = !!canvasHeader?.enabled;
   const isFooterEnabled = !!canvasFooter?.enabled;
-  const headerExtH = getBandHeight(canvasHeader, null, canvasW);
-  const footerExtH = getBandHeight(canvasFooter, null, canvasW);
-  const totalCanvasH = canvasH + headerExtH + footerExtH;
+  const { imageH: canvasH, headerH: headerExtH, footerH: footerExtH, totalH: totalCanvasH } = fitBandsToFrame(
+    aspectRatio, frame.canvasH, getBandHeight(canvasHeader, null, canvasW), getBandHeight(canvasFooter, null, canvasW)
+  );
   // Band captions shrink to fit their band, which keeps the height it was given.
   const captions = useMemo(() => fitCaptionsToBands(storeCaptions, headerExtH, footerExtH), [storeCaptions, headerExtH, footerExtH]);
 

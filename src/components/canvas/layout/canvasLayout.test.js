@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { bandColor, fitCaptionsToBands, getCanvasSize, getBandHeight, makeLayerCenters } from './canvasLayout';
+import { bandColor, fitBandsToFrame, fitCaptionsToBands, getCanvasSize, getBandHeight, makeLayerCenters } from './canvasLayout';
 
 // 10px per character, like the wrapText tests.
 const ctx = { font: '', measureText: (s) => ({ width: s.length * 10 }) };
@@ -15,6 +15,24 @@ describe('getCanvasSize', () => {
   it('follows the template, then the loaded image, for "original"', () => {
     expect(getCanvasSize('original', { width: 500, height: 250 }, { w: 1, h: 1 })).toEqual({ canvasW: 1080, canvasH: 540 });
     expect(getCanvasSize('original', null, { w: 300, h: 600 })).toEqual({ canvasW: 540, canvasH: 1080 });
+  });
+});
+
+describe('fitBandsToFrame', () => {
+  it('original: the bands add to the image', () => {
+    expect(fitBandsToFrame('original', 800, 140, 100)).toEqual({ imageH: 800, headerH: 140, footerH: 100, totalH: 1040 });
+  });
+
+  it('a set aspect ratio: the whole canvas keeps its height, the image area giving the bands room', () => {
+    expect(fitBandsToFrame('1:1', 1080, 140, 100)).toEqual({ imageH: 840, headerH: 140, footerH: 100, totalH: 1080 });
+    expect(fitBandsToFrame('9:16', 1080, 0, 0)).toEqual({ imageH: 1080, headerH: 0, footerH: 0, totalH: 1080 });
+  });
+
+  it('bands too tall for the frame shrink together, leaving the image 40%', () => {
+    const fit = fitBandsToFrame('16:9', 608, 400, 400);
+    expect(fit.totalH).toBe(608);
+    expect(fit.headerH).toBe(fit.footerH);
+    expect(fit.imageH).toBeGreaterThanOrEqual(Math.round(608 * 0.4));
   });
 });
 

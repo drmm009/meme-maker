@@ -176,14 +176,16 @@ describe('MemeEditor', () => {
     expect(captionTexts()).toEqual(['TOP TEXT', 'BOTTOM TEXT']);
   }, 30000);
 
-  it('deleting the text in the header leaves the header band on', () => {
+  it('a band comes on alone, with no text layer', () => {
     renderEditor();
     openSection('Canvas colour, bands and watermark');
     fireEvent.click(within(canvasStrip()).getByText('Header & Footer'));
-    const header = canvas.props.captions.find((c) => c.isHeaderCaption);
-    act(() => canvas.props.onDeleteLayer(header.id));
+    expect(canvas.props.canvasHeader.enabled).toBe(true);
     expect(captionTexts()).toEqual(['TOP TEXT', 'BOTTOM TEXT']);
     expect(within(sheet('Header & footer')).getByRole('switch', { name: 'Header' }).getAttribute('aria-checked')).toBe('true');
+    fireEvent.click(within(sheet('Header & footer')).getByRole('switch', { name: 'Footer' }));
+    expect(canvas.props.canvasFooter.enabled).toBe(true);
+    expect(captionTexts()).toEqual(['TOP TEXT', 'BOTTOM TEXT']);
   }, 30000);
 
   it('keeps independent captions after several adds', () => {
@@ -572,7 +574,7 @@ describe('MemeEditor', () => {
     closeSheet();
     openSection('Canvas colour, bands and watermark');
     fireEvent.click(within(canvasStrip()).getByText('Header & Footer'));
-    expect(captionTexts().some((t) => /Add header text/.test(t))).toBe(true);
+    expect(canvas.props.canvasHeader.enabled).toBe(true);
   }, 30000);
 
   it('Draw shows Brush, Glow and Marker; a brush opens its settings and drawing stays on until Draw is tapped again', () => {
@@ -812,7 +814,7 @@ describe('MemeEditor', () => {
     const bands = sheet('Header & footer');
     expect(within(bands).getByRole('switch', { name: 'Header' }).getAttribute('aria-checked')).toBe('true');
     fireEvent.click(within(bands).getByRole('switch', { name: 'Footer' }));
-    expect(canvas.props.captions.some((c) => c.isFooterCaption)).toBe(true);
+    expect(canvas.props.canvasFooter.enabled).toBe(true);
     fireEvent.click(within(within(bands).getByRole('radiogroup', { name: 'Band colour' })).getByRole('radio', { name: '#ff5a36' }));
     expect([canvas.props.canvasHeader.bgColor, canvas.props.canvasFooter.bgColor]).toEqual(['#ff5a36', '#ff5a36']);
     closeSheet();
@@ -1337,7 +1339,8 @@ describe('MemeEditor', () => {
     // Header & Footer turns the header on and opens the bands' sheet; again closes it.
     fireEvent.click(within(tools).getByText('Header & Footer'));
     expect(screen.getByRole('dialog', { name: 'Header & footer' })).toBeTruthy();
-    expect(canvas.props.captions.some((c) => c.isHeaderCaption)).toBe(true);
+    expect(canvas.props.canvasHeader.enabled).toBe(true);
+    expect(canvas.props.captions.some((c) => c.isHeaderCaption)).toBe(false);
     fireEvent.click(within(tools).getByText('Header & Footer'));
     expect(screen.queryByRole('dialog', { name: 'Header & footer' })).toBeNull();
     // Edit text selects the AI caption: its tools.

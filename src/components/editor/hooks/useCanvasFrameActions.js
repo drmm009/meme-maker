@@ -13,11 +13,6 @@ export function useCanvasFrameActions() {
   const pushHistory = useMemeEditorStore((s) => s.pushHistory);
   const canvasHeader = useMemeEditorStore((s) => s.canvasHeader);
   const canvasBgColor = useMemeEditorStore((s) => s.canvasBgColor);
-  const captions = useMemeEditorStore((s) => s.captions);
-  const setActiveLayerId = useMemeEditorStore((s) => s.setActiveLayerId);
-  const setActiveTab = useEditorUiStore((s) => s.setActiveTab);
-  const setActiveSubmenu = useEditorUiStore((s) => s.setActiveSubmenu);
-  const activeLayerId = useMemeEditorStore((s) => s.activeLayerId);
   const canvasFooter = useMemeEditorStore((s) => s.canvasFooter);
 
   const handleSetCanvasBgColor = (val) => {
@@ -61,188 +56,21 @@ export function useCanvasFrameActions() {
     pushHistory();
   };
 
-  // 1-Tap Modern Meme Header Extension (Canvas extension above meme image with normal caption layer)
-  const handleToggleCanvasHeader = () => {
-    const nextState = !canvasHeader.enabled;
-    const currentBg = canvasBgColor || '#ffffff';
-    const isDark = isColorDark(currentBg);
-    const nextHeader = {
-      ...canvasHeader,
-      enabled: nextState,
-      bgColor: currentBg
-    };
-    setCanvasHeader(nextHeader);
-
-    if (nextState) {
-      const existingHeaderCap = captions.find(c => c.isHeaderCaption);
-      if (existingHeaderCap) {
-        pushHistory();
-      } else {
-        const newHeaderCap = {
-          id: `caption-header-${Date.now()}`,
-          text: 'Add header text',
-          x: 0.5,
-          y: 0.05,
-          fontSize: 50,
-          fontFamily: 'Montserrat, sans-serif',
-          color: isDark ? '#ffffff' : '#000000',
-          stroke: 'transparent',
-          strokeWidth: 0,
-          align: 'center',
-          width: 0.92,
-          isHeaderCaption: true
-        };
-        const nextCaps = [newHeaderCap, ...captions];
-        setCaptions(nextCaps);
-        pushHistory();
-      }
-    } else {
-      const headerCap = captions.find(c => c.isHeaderCaption);
-      const nextCaps = captions.filter(c => !c.isHeaderCaption);
-      setCaptions(nextCaps);
-      if (activeLayerId === headerCap?.id) {
-        setActiveLayerId(null);
-      }
-      pushHistory();
-    }
+  // The header and footer bands: switching one on adds the band alone (in the canvas colour), no
+  // text layer with it; switching it off leaves the layers as they are.
+  const setBand = (setter, band, on) => {
+    setter({ ...band, enabled: on, ...(on && { bgColor: canvasBgColor || '#ffffff' }) });
+    pushHistory();
   };
-
-  // 1-Tap Modern Meme Footer Extension (Canvas extension below meme image with normal caption layer)
-  const handleToggleCanvasFooter = () => {
-    const nextState = !canvasFooter.enabled;
-    const currentBg = canvasBgColor || '#ffffff';
-    const isDark = isColorDark(currentBg);
-    const nextFooter = {
-      ...canvasFooter,
-      enabled: nextState,
-      bgColor: currentBg
-    };
-    setCanvasFooter(nextFooter);
-
-    if (nextState) {
-      const existingFooterCap = captions.find(c => c.isFooterCaption);
-      if (existingFooterCap) {
-        pushHistory();
-      } else {
-        const newFooterCap = {
-          id: `caption-footer-${Date.now()}`,
-          text: 'Add footer text',
-          x: 0.5,
-          y: 0.95,
-          fontSize: 50,
-          fontFamily: 'Montserrat, sans-serif',
-          color: isDark ? '#ffffff' : '#000000',
-          stroke: 'transparent',
-          strokeWidth: 0,
-          align: 'center',
-          width: 0.92,
-          isFooterCaption: true
-        };
-        const nextCaps = [...captions, newFooterCap];
-        setCaptions(nextCaps);
-        pushHistory();
-      }
-    } else {
-      const footerCap = captions.find(c => c.isFooterCaption);
-      const nextCaps = captions.filter(c => !c.isFooterCaption);
-      setCaptions(nextCaps);
-      if (activeLayerId === footerCap?.id) {
-        setActiveLayerId(null);
-      }
-      pushHistory();
-    }
-  };
-
-  // 1-Tap Toggle Both Modern Header & Footer Extensions
+  const handleToggleCanvasHeader = () => setBand(setCanvasHeader, canvasHeader, !canvasHeader.enabled);
+  const handleToggleCanvasFooter = () => setBand(setCanvasFooter, canvasFooter, !canvasFooter.enabled);
+  // Both on, or both off when both already are.
   const handleToggleCanvasBoth = () => {
-    const bothAlreadyEnabled = canvasHeader.enabled && canvasFooter.enabled;
-    const currentBg = canvasBgColor || '#ffffff';
-    const isDark = isColorDark(currentBg);
-
-    if (bothAlreadyEnabled) {
-      const nextHeader = {
-        ...canvasHeader,
-        enabled: false
-      };
-      const nextFooter = {
-        ...canvasFooter,
-        enabled: false
-      };
-      setCanvasHeader(nextHeader);
-      setCanvasFooter(nextFooter);
-
-      const headerCap = captions.find(c => c.isHeaderCaption);
-      const footerCap = captions.find(c => c.isFooterCaption);
-      const nextCaps = captions.filter(c => !c.isHeaderCaption && !c.isFooterCaption);
-      setCaptions(nextCaps);
-      if (activeLayerId === headerCap?.id || activeLayerId === footerCap?.id) {
-        setActiveLayerId(null);
-      }
-      pushHistory();
-    } else {
-      const nextHeader = {
-        ...canvasHeader,
-        enabled: true,
-        bgColor: currentBg
-      };
-      const nextFooter = {
-        ...canvasFooter,
-        enabled: true,
-        bgColor: currentBg
-      };
-      setCanvasHeader(nextHeader);
-      setCanvasFooter(nextFooter);
-
-      let nextCaps = [...captions];
-      let targetActiveId = null;
-
-      // Header caption
-      let existingHeaderCap = nextCaps.find(c => c.isHeaderCaption);
-      if (!existingHeaderCap) {
-        existingHeaderCap = {
-          id: `caption-header-${Date.now()}`,
-          text: 'Add header text',
-          x: 0.5,
-          y: 0.05,
-          fontSize: 50,
-          fontFamily: 'Montserrat, sans-serif',
-          color: isDark ? '#ffffff' : '#000000',
-          stroke: 'transparent',
-          strokeWidth: 0,
-          align: 'center',
-          width: 0.92,
-          isHeaderCaption: true
-        };
-        nextCaps = [existingHeaderCap, ...nextCaps];
-      }
-      targetActiveId = existingHeaderCap.id;
-
-      // Footer caption
-      let existingFooterCap = nextCaps.find(c => c.isFooterCaption);
-      if (!existingFooterCap) {
-        existingFooterCap = {
-          id: `caption-footer-${Date.now() + 1}`,
-          text: 'Add footer text',
-          x: 0.5,
-          y: 0.95,
-          fontSize: 50,
-          fontFamily: 'Montserrat, sans-serif',
-          color: isDark ? '#ffffff' : '#000000',
-          stroke: 'transparent',
-          strokeWidth: 0,
-          align: 'center',
-          width: 0.92,
-          isFooterCaption: true
-        };
-        nextCaps = [...nextCaps, existingFooterCap];
-      }
-
-      setCaptions(nextCaps);
-      setActiveLayerId(targetActiveId);
-      setActiveTab('text');
-      setActiveSubmenu(null);
-      pushHistory();
-    }
+    const on = !(canvasHeader.enabled && canvasFooter.enabled);
+    const bgColor = canvasBgColor || '#ffffff';
+    setCanvasHeader({ ...canvasHeader, enabled: on, ...(on && { bgColor }) });
+    setCanvasFooter({ ...canvasFooter, enabled: on, ...(on && { bgColor }) });
+    pushHistory();
   };
 
   return { handleSetCanvasBgColor, handleSetCanvasBgGradient, handleToggleCanvasHeader, handleToggleCanvasFooter, handleToggleCanvasBoth, handleToggleCanvasFlip, handleWatermarkImageUpload };

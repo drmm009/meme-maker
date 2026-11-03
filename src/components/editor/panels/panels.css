@@ -141,6 +141,13 @@
 }
 .ie-zoom-pill span { color: var(--ui-accent-text); }
 .ie-strip-swatch { display: block; width: 19px; height: 19px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.35); }
+/* The Header & footer sheet (BandsSheet): the Header and Footer switches side by side in one row. */
+.ie-bands-switches { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 6px 0; }
+/* A thin line between the two. */
+.ie-bands-switch + .ie-bands-switch { padding-left: 16px; border-left: 1px solid var(--ui-line, rgba(255, 255, 255, 0.1)); }
+.ie-bands-switch { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.ie-bands-switch .ui-row-label { width: auto; }
+
 /* A two-word tool name (Header & Footer) on two lines rather than cut short. */
 .ui-strip--stacked .ui-strip-btn.ie-strip-btn--two-line { gap: 2px; }
 .ui-strip--stacked .ui-strip-btn.ie-strip-btn--two-line span { line-height: 1.1; text-align: center; white-space: normal; }

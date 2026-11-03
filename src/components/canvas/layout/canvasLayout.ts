@@ -35,6 +35,24 @@ export function getCanvasSize(
   };
 }
 
+// The image area never gets less of a framed canvas than this, the bands shrinking together instead.
+const MIN_IMAGE_SHARE = 0.4;
+
+// The header and footer bands and the image area in the canvas. With a set aspect ratio the whole
+// canvas, bands included, keeps that shape (`frameH` is its height) and the image area gives the bands
+// their room; with 'original' the bands are added above and below the image.
+export function fitBandsToFrame(
+  aspectRatio: string, frameH: number, headerH: number, footerH: number
+): { imageH: number; headerH: number; footerH: number; totalH: number } {
+  if (aspectRatio === 'original') return { imageH: frameH, headerH, footerH, totalH: frameH + headerH + footerH };
+  const room = Math.round(frameH * (1 - MIN_IMAGE_SHARE));
+  const bands = headerH + footerH;
+  const scale = bands > room ? room / bands : 1;
+  const h = Math.floor(headerH * scale);
+  const f = Math.floor(footerH * scale);
+  return { imageH: frameH - h - f, headerH: h, footerH: f, totalH: frameH };
+}
+
 let measureCtx: CanvasRenderingContext2D | null = null;
 const getMeasureCtx = () => {
   if (!measureCtx && typeof document !== 'undefined') {

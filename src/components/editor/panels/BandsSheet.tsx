@@ -39,8 +39,8 @@ interface BandStore {
 }
 
 // The header and footer bands in one sheet (the Header & Footer button on the Canvas, Face Swap and
-// AI Meme strips): a switch for each, then one colour and one height for both. A band switched on
-// gets its own caption to write in; switched off, its caption stays for when it comes back.
+// AI Meme strips): the Header and Footer switches in one row, then while either is on one colour and
+// one height for both. A band comes on empty, no text layer with it.
 export default function BandsSheet({ onClose }: { actions?: EditorActions; onClose: () => void }) {
   const header: CanvasBand = useMemeEditorStore((s: BandStore) => s.canvasHeader);
   const footer: CanvasBand = useMemeEditorStore((s: BandStore) => s.canvasFooter);
@@ -58,27 +58,7 @@ export default function BandsSheet({ onClose }: { actions?: EditorActions; onClo
   const shown = header.enabled || !footer.enabled ? header : footer;
 
   const toggle = (which: 'header' | 'footer', on: boolean) => {
-    const band = which === 'header' ? header : footer;
     (which === 'header' ? setCanvasHeader : setCanvasFooter)((prev) => ({ ...prev, enabled: on }));
-    const flag = which === 'header' ? 'isHeaderCaption' : 'isFooterCaption';
-    if (on && !captions.some((c) => c[flag])) {
-      const isDark = isColorDark(bandColor(band, canvasBgColor));
-      const cap: CaptionItem = {
-        id: `caption-${which}-${Date.now()}`,
-        text: `Add ${which} text`,
-        x: 0.5,
-        y: which === 'header' ? 0.05 : 0.95,
-        fontSize: 50,
-        fontFamily: 'Montserrat, sans-serif',
-        color: isDark ? '#ffffff' : '#000000',
-        stroke: 'transparent',
-        strokeWidth: 0,
-        align: 'center',
-        width: 0.92,
-        [flag]: true,
-      };
-      setCaptions(which === 'header' ? [cap, ...captions] : [...captions, cap]);
-    }
     pushHistory();
   };
 
@@ -101,12 +81,16 @@ export default function BandsSheet({ onClose }: { actions?: EditorActions; onClo
   return (
     <Sheet className="ie-bands-sheet ie-tool-sheet" title="Header & footer" onClose={onClose}>
       <Section>
-        <Row label="Header" end>
-          <Switch label="Header" checked={Boolean(header.enabled)} onChange={(on) => toggle('header', on)} />
-        </Row>
-        <Row label="Footer" end>
-          <Switch label="Footer" checked={Boolean(footer.enabled)} onChange={(on) => toggle('footer', on)} />
-        </Row>
+        <div className="ie-bands-switches">
+          <div className="ie-bands-switch">
+            <span className="ui-row-label">Header</span>
+            <Switch label="Header" checked={Boolean(header.enabled)} onChange={(on) => toggle('header', on)} />
+          </div>
+          <div className="ie-bands-switch">
+            <span className="ui-row-label">Footer</span>
+            <Switch label="Footer" checked={Boolean(footer.enabled)} onChange={(on) => toggle('footer', on)} />
+          </div>
+        </div>
         {!anyOn && <p className="ie-empty">Switch one on for a band above or below the meme to write in.</p>}
         {anyOn && (
           <>
