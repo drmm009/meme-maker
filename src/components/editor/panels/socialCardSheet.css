@@ -1,128 +1,71 @@
-/* ─── Social Cards Picker Bottom Sheet ─── */
-.ie-social-sheet {
-  padding-bottom: 8px;
-}
+/* Text > Social Card: the three apps as their icons, each on its own brand tile, name under it. */
+.ie-social-sheet { padding-bottom: 8px; }
 
 .ie-social-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-  padding: 4px 16px 14px;
+  gap: 8px;
+  padding: 6px 16px 16px;
 }
 
-.ie-social-card-item {
+.ie-social-app {
   display: flex;
   flex-direction: column;
-  align-items: stretch;
-  background: #2a2b30;
-  border: 1.5px solid rgba(255, 255, 255, 0.08);
-  border-radius: 16px;
-  padding: 8px;
-  cursor: pointer;
-  text-align: left;
-  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
-  position: relative;
-  overflow: hidden;
-  font: inherit;
-  color: var(--ui-text, #ffffff);
-  -webkit-tap-highlight-color: transparent;
-}
-
-.ie-social-card-item:hover {
-  background: #323339;
-  border-color: rgba(255, 255, 255, 0.2);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
-}
-
-.ie-social-card-item:active {
-  transform: scale(0.96);
-}
-
-.ie-social-card-item:focus-visible {
-  outline: 2px solid var(--ui-accent, #ff5e36);
-  outline-offset: 2px;
-}
-
-.ie-social-card-stage {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 1;
-  border-radius: 10px;
-  overflow: hidden;
-  background: #18191c;
-  display: flex;
   align-items: center;
-  justify-content: center;
-}
-
-.ie-social-card-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.24s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.ie-social-card-item:hover .ie-social-card-img {
-  transform: scale(1.05);
-}
-
-.ie-social-card-badge {
-  position: absolute;
-  top: 6px;
-  left: 6px;
-  font-size: 9.5px;
-  font-weight: 800;
-  padding: 2px 6px;
-  border-radius: 5px;
-  letter-spacing: 0.03em;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
-  pointer-events: none;
-  white-space: nowrap;
-  line-height: 1.2;
-}
-
-.ie-social-card-label-row {
-  margin-top: 8px;
-  padding: 0 2px;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+  gap: 4px;
   min-width: 0;
+  padding: 10px 4px 8px;
+  border: none;
+  border-radius: 18px;
+  background: transparent;
+  color: var(--ui-text, #ffffff);
+  font: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s ease;
 }
+@media (hover: hover) { .ie-social-app:hover { background: rgba(255, 255, 255, 0.05); } }
+.ie-social-app:focus-visible { outline: 2px solid var(--ui-accent, #ff5e36); outline-offset: 2px; }
 
-.ie-social-card-name {
-  font-size: 13.5px;
-  font-weight: 750;
+/* The app icon: a rounded square in the app's colours, its mark in white. */
+.ie-social-app-icon {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  margin-bottom: 6px;
+  border-radius: 16px;
   color: #ffffff;
-  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.ie-social-app-icon svg { width: 34px; height: 34px; }
+.ie-social-app:active .ie-social-app-icon { transform: scale(0.92); }
+.ie-social-app--instagram .ie-social-app-icon {
+  background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285aeb 90%);
+}
+.ie-social-app--tweet .ie-social-app-icon {
+  background: #000000;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.16), 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+.ie-social-app--tweet .ie-social-app-icon svg { width: 28px; height: 28px; }
+.ie-social-app--whatsapp .ie-social-app-icon { background: #25d366; }
+
+.ie-social-app-name {
+  max-width: 100%;
   overflow: hidden;
-  text-overflow: ellipsis;
+  font-size: 13.5px;
+  font-weight: 700;
   letter-spacing: -0.01em;
-}
-
-.ie-social-card-desc {
-  font-size: 11px;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.6);
-  white-space: nowrap;
-  overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ie-social-app-desc {
+  color: var(--ui-muted, rgba(255, 255, 255, 0.6));
+  font-size: 11.5px;
+  font-weight: 500;
 }
 
-@media (max-width: 420px) {
-  .ie-social-grid {
-    gap: 8px;
-    padding: 2px 12px 12px;
-  }
-  .ie-social-card-item {
-    padding: 6px;
-    border-radius: 14px;
-  }
-  .ie-social-card-name {
-    font-size: 12.5px;
-  }
-  .ie-social-card-desc {
-    font-size: 10px;
-  }
+@media (prefers-reduced-motion: reduce) {
+  .ie-social-app-icon { transition: none; }
 }

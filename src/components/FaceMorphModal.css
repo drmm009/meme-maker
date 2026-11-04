@@ -38,18 +38,20 @@
   white-space: nowrap;
 }
 
-/* ── Preview ── */
+/* ── Preview: the meme itself, then the swap on it ── */
 .fmm-stage {
   position: relative;
   flex: none;
   display: grid;
   place-items: center;
-  height: 210px;
+  height: 236px;
   border-radius: 20px;
   background: #0e0e10;
   overflow: hidden;
 }
 .fmm-stage-img {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: contain;
@@ -57,6 +59,7 @@
   pointer-events: none;
 }
 .fmm-stage-msg {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -65,6 +68,8 @@
   padding: 16px;
   text-align: center;
 }
+/* Over the meme: a dark scrim fills the stage so the words read. */
+.fmm-stage-msg--over { max-width: none; width: 100%; height: 100%; justify-content: center; background: rgba(14, 14, 16, 0.78); }
 .fmm-stage-icon {
   display: grid;
   place-items: center;
@@ -76,7 +81,7 @@
   color: var(--ui-accent, #ff5a36);
 }
 .fmm-stage-title { font-size: 15px; font-weight: 700; color: #f4f4f6; }
-.fmm-stage-sub { font-size: 12.5px; font-weight: 500; line-height: 1.4; color: #a5a6ad; }
+.fmm-stage-sub { max-width: 260px; font-size: 12.5px; font-weight: 500; line-height: 1.4; color: #a5a6ad; }
 .fmm-spin { color: var(--ui-accent, #ff5a36); animation: fmm-spin 0.9s linear infinite; }
 @keyframes fmm-spin { to { transform: rotate(360deg); } }
 
@@ -99,13 +104,36 @@
 }
 .fmm-retry:hover { background: rgba(255, 255, 255, 0.16); }
 
-/* Floating over the result: hold to see the original, and how close to look. */
+/* Before the swap: the picked face, heading for the meme, on a solid pill at the bottom. */
+.fmm-going-in {
+  position: absolute;
+  left: 50%;
+  bottom: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  max-width: calc(100% - 24px);
+  height: 36px;
+  padding: 0 14px 0 4px;
+  border-radius: 999px;
+  background: #1c1c1e;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+  color: #f4f4f6;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  transform: translateX(-50%);
+}
+.fmm-going-in img { width: 28px; height: 28px; flex: none; border-radius: 50%; object-fit: cover; }
+.fmm-going-in svg { flex: none; color: var(--ui-accent, #ff5a36); }
+.fmm-going-in-dim { color: #a5a6ad; font-weight: 600; }
+
+/* Over the result: hold to see the original, and how close to look. Solid, no blur. */
 .fmm-compare,
 .fmm-zoom {
   position: absolute;
-  background: rgba(28, 28, 30, 0.82);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background: #1c1c1e;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
 }
 .fmm-compare {
   top: 10px;
@@ -170,6 +198,7 @@
   mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
 }
 .fmm-faces::-webkit-scrollbar { display: none; }
+.fmm-faces-rule { flex: none; align-self: flex-start; width: 1px; height: 40px; margin-top: 8px; background: rgba(255, 255, 255, 0.1); }
 .fmm-face {
   flex: none;
   display: flex;
@@ -215,23 +244,34 @@
 }
 .fmm-face.is-on .fmm-face-name { color: #fff; }
 
-/* Which face in the meme gets swapped, when there's more than one. */
-.fmm-chips { display: flex; flex-wrap: wrap; gap: 8px; }
-.fmm-chip {
-  height: 36px;
-  padding: 0 16px;
-  border: none;
+/* Which face in the meme gets swapped, when there's more than one: a segmented track. */
+.fmm-seg {
+  display: flex;
+  gap: 2px;
+  padding: 3px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.06);
-  color: #f4f4f6;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.fmm-seg::-webkit-scrollbar { display: none; }
+.fmm-seg button {
+  flex: 1 0 auto;
+  height: 34px;
+  padding: 0 14px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: #a5a6ad;
   font: inherit;
   font-size: 13px;
   font-weight: 600;
+  white-space: nowrap;
   cursor: pointer;
-  transition: background 0.15s ease;
+  transition: background 0.15s ease, color 0.15s ease;
 }
-.fmm-chip:hover:not(.is-on) { background: rgba(255, 255, 255, 0.1); }
-.fmm-chip.is-on { background: var(--ui-accent, #ff5a36); color: #fff; }
+.fmm-seg button:hover:not(.is-on) { color: #f4f4f6; }
+.fmm-seg button.is-on { background: var(--ui-accent, #ff5a36); color: #fff; }
 
 /* ── Footer ── */
 .fmm-foot { display: flex; gap: 10px; }
@@ -263,6 +303,8 @@
 }
 .fmm-btn--accent:hover:not(:disabled) { background: #ff6e4a; }
 .fmm-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.fmm-btn--accent.is-busy:disabled { opacity: 0.75; cursor: progress; }
+.fmm-btn--accent.is-busy svg { animation: fmm-spin 0.9s linear infinite; }
 
 @media (prefers-reduced-motion: reduce) {
   .fmm-spin { animation-duration: 2.4s; }

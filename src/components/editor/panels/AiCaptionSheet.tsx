@@ -1,14 +1,13 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { FormEvent, MouseEvent } from 'react';
-import { Check, Copy, ExternalLink, KeyRound, Plus, RefreshCw, Shuffle, Sparkles, Type, X } from 'lucide-react';
+import { ArrowLeft, Check, Copy, Plus, RefreshCw, Shuffle, Sparkles, Type, X } from 'lucide-react';
 import { Sheet } from '../../ui';
 import { useMemeEditorStoreApi } from '../store/useMemeEditorStore';
-import { AI_MEME_CATEGORIES, AI_MEME_IDEAS, generateMemeCaptionsWithGemini } from '../../../data/aiMemeCaptions';
-import { safeGet, safeRemove, safeSet } from '../../../utils/storage';
+import { AI_MEME_CATEGORIES, CURATED_CAPTIONS } from '../../../data/aiMemeCaptions';
 import { isSocialCardCaption } from '../memeEditorUtils';
 import { AI_CAPTION_PREFIX, AI_CAPTION_STYLES } from '../aiMeme';
 import type { EditorActions } from './selection';
-import './aiMemeStudio.css';
+import './aiCaptionSheet.css';
 
 interface Caption { id: string; text: string; zIndex?: number; [key: string]: unknown }
 interface Layer { zIndex?: number }
@@ -18,27 +17,47 @@ interface CaptionStore {
   stickers: Layer[];
   imageLayers?: Layer[];
   activeLayerId: string | null;
-  activeTemplate: { name?: string } | null;
+  activeTemplate: { id?: string; name?: string } | null;
   setCaptions: (captions: Caption[]) => void;
   patchLayer: (key: string, id: string, patch: Record<string, unknown>) => void;
   pushHistory: () => void;
 }
 
-const KEY = 'gemini_api_key';
+const COUNT = 4;
 
-// AI/Filters > AI Caption, the revamped AI meme caption generator: vibes and quick inspiration
-// chips, custom topic input with Gemini Pro or curated library, and an interactive list of generated
-// punchlines to preview, copy or tap to apply to the canvas.
+// What the sheet showed when it was closed (the idea, vibe and captions), so opening it again on the
+// same meme comes back to them rather than asking to generate again. Another meme starts afresh.
+interface Kept { meme: string; idea: string; vibe: string; ideas: { ask: string; list: string[] }; showing: boolean }
+let kept: Kept | null = null;
+const memeOf = (t: CaptionStore['activeTemplate']) => String(t?.id ?? t?.name ?? '');
+
+// Four captions for the vibe from the built-in library, trying not to repeat the last four.
+function pickCaptions(vibe: string, last: string[]): string[] {
+  const pool: string[] = (CURATED_CAPTIONS as { text: string; category: string }[])
+    .filter((c) => vibe === 'all' || c.category === vibe)
+    .map((c) => c.text);
+  const fresh = pool.filter((t) => !last.includes(t));
+  const from = fresh.length >= COUNT ? fresh : pool;
+  return [...from].sort(() => Math.random() - 0.5).slice(0, COUNT);
+}
+
+// AI/Filters > AI Caption, the caption generator. First the composer (the idea, Shuffle and
+// Generate) and a row of vibes; once captions are written they take the sheet's place: one list to
+// tap onto the meme, copy or add as a new caption, with More under it, and Change idea back and
+// Shuffle over it.
 export default function AiCaptionSheet({ onClose }: { actions: EditorActions; onClose: () => void }) {
   const store = useMemeEditorStoreApi() as unknown as { getState(): CaptionStore };
-  const [idea, setIdea] = useState('');
-  const [vibe, setVibe] = useState('all');
-  const [ideas, setIdeas] = useState<{ ask: string; list: string[] }>({ ask: '', list: [] });
-  const [busy, setBusy] = useState(false);
+  const [meme] = useState(() => memeOf(store.getState().activeTemplate));
+  const [last] = useState(() => (kept?.meme === meme ? kept : null));
+  const [idea, setIdea] = useState(last?.idea ?? '');
+  const [vibe, setVibe] = useState(last?.vibe ?? 'all');
+  const [ideas, setIdeas] = useState<{ ask: string; list: string[] }>(last?.ideas ?? { ask: '', list: [] });
+  // The captions list instead of the composer, from Generate (or Shuffle) until Change idea.
+  const [showing, setShowing] = useState(last?.showing ?? false);
+  useEffect(() => {
+    kept = { meme, idea, vibe, ideas, showing };
+  }, [meme, idea, vibe, ideas, showing]);
   const [copiedText, setCopiedText] = useState<string | null>(null);
-  const [apiKey, setApiKey] = useState<string>(() => String(safeGet(KEY) || ''));
-  const [showKeyModal, setShowKeyModal] = useState(false);
-  const [keyInput, setKeyInput] = useState('');
 
   // The caption to write on, looked up at the time (the selection may have changed).
   const target = () => {
@@ -74,33 +93,23 @@ export default function AiCaptionSheet({ onClose }: { actions: EditorActions; on
     s.pushHistory();
   };
 
-  const generate = async (promptText = idea, vibeCategory = vibe) => {
-    if (busy) return;
-    setBusy(true);
-    const ask = `${vibeCategory}\n${promptText.trim()}`;
-    const fresh: string[] = await generateMemeCaptionsWithGemini({
-      apiKey,
-      prompt: promptText.trim(),
-      templateName: store.getState().activeTemplate?.name,
-      category: vibeCategory,
-      count: 4,
-    }).catch(() => []);
-    setBusy(false);
-    if (fresh.length) {
-      setIdeas({ ask, list: fresh });
-      write(fresh[0]);
-    }
+  // Four new captions, the first straight onto the meme.
+  const generate = () => {
+    const list = pickCaptions(vibe, ideas.list);
+    setIdeas({ ask: `${vibe}\n${idea.trim()}`, list });
+    setShowing(true);
+    if (list.length) write(list[0]);
   };
 
-  const shuffle = async () => {
-    if (busy) return;
-    const ask = `${vibe}\n${idea.trim()}`;
-    const at = ideas.ask === ask ? ideas.list.indexOf(target()?.text ?? '') : -1;
+  // The next of the four on the meme; after the last, or once the idea or vibe changed, four more.
+  const shuffle = () => {
+    const at = ideas.ask === `${vibe}\n${idea.trim()}` ? ideas.list.indexOf(target()?.text ?? '') : -1;
     if (at >= 0 && at < ideas.list.length - 1) {
       write(ideas.list[at + 1]);
+      setShowing(true);
       return;
     }
-    await generate(idea, vibe);
+    generate();
   };
 
   const handleCopy = (e: MouseEvent, text: string) => {
@@ -112,262 +121,114 @@ export default function AiCaptionSheet({ onClose }: { actions: EditorActions; on
     setTimeout(() => setCopiedText(null), 1600);
   };
 
-  const handleSaveKey = () => {
-    const trimmed = keyInput.trim();
-    if (trimmed) safeSet(KEY, trimmed);
-    else safeRemove(KEY);
-    setApiKey(trimmed);
-    setShowKeyModal(false);
-  };
-
-  const handleClearKey = () => {
-    safeRemove(KEY);
-    setApiKey('');
-    setKeyInput('');
-    setShowKeyModal(false);
-  };
-
-  const pickVibe = (id: string) => {
-    setVibe(id);
-    if (ideas.list.length > 0) {
-      void generate(idea, id);
-    }
-  };
-
-  const pickIdea = (text: string, category?: string) => {
-    setIdea(text);
-    const cat = category || vibe;
-    if (category) setVibe(category);
-    void generate(text, cat);
-  };
-
   const activeTarget = target();
 
   return (
-    <Sheet
-      className="ie-ai-caption-sheet ie-tool-sheet"
-      title="AI Caption"
-      aside={
-        <button
-          type="button"
-          className={`ie-ai-key-pill${apiKey ? ' is-set' : ''}`}
-          title={apiKey ? 'Using your Gemini key (tap to manage)' : 'Using built-in captions (tap to add Gemini key)'}
-          onClick={() => {
-            setKeyInput(apiKey);
-            setShowKeyModal(!showKeyModal);
-          }}
-        >
-          <KeyRound size={13} strokeWidth={2.4} aria-hidden="true" />
-          <span>{apiKey ? 'Gemini Pro' : 'Built-in'}</span>
-        </button>
-      }
-      onClose={onClose}
-    >
-      {showKeyModal && (
-        <div className="ie-ai-key-drawer" role="region" aria-label="Gemini API Key Settings">
-          <div className="ie-ai-key-head">
-            <span className="ie-ai-key-title">Gemini API Key</span>
-            <button
-              type="button"
-              className="ie-ai-key-close"
-              aria-label="Close API key settings"
-              onClick={() => setShowKeyModal(false)}
-            >
-              <X size={14} />
-            </button>
-          </div>
-          <p className="ie-ai-key-desc">
-            Use your free Gemini API key from Google AI Studio for custom real-time captions.
-          </p>
-          <div className="ie-ai-key-input-row">
-            <input
-              type="password"
-              className="ie-ai-key-input"
-              aria-label="Gemini API Key"
-              placeholder="Paste API key (AIza...)"
-              value={keyInput}
-              onChange={(e) => setKeyInput(e.target.value)}
-            />
-            <button type="button" className="ie-ai-key-save" onClick={handleSaveKey}>Save</button>
-            {apiKey && (
-              <button type="button" className="ie-ai-key-clear" onClick={handleClearKey}>Clear</button>
-            )}
-          </div>
-          <a
-            href="https://aistudio.google.com/app/apikey"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="ie-ai-key-link"
+    <Sheet className="ie-ai-caption-sheet ie-tool-sheet" title="AI Caption" onClose={onClose}>
+      {!showing ? (
+        <>
+          {/* The composer, as on the AI Meme page: the idea on top, Shuffle and Generate under it. */}
+          <form
+            className="ie-aic-composer"
+            onSubmit={(e: FormEvent) => {
+              e.preventDefault();
+              generate();
+            }}
           >
-            Get a free Gemini API key <ExternalLink size={12} />
-          </a>
-        </div>
-      )}
-
-      {/* Vibe categories */}
-      <div className="ie-ai-options ie-ai-options--vibes" role="radiogroup" aria-label="Vibe">
-        {AI_MEME_CATEGORIES.map((c: Vibe) => (
-          <button
-            key={c.id}
-            type="button"
-            role="radio"
-            aria-checked={vibe === c.id}
-            className={`ie-ai-option${vibe === c.id ? ' is-on' : ''}`}
-            onClick={() => pickVibe(c.id)}
-          >
-            <span aria-hidden="true">{c.icon}</span>
-            <span className="ie-ai-option-text">{c.id === 'all' ? 'Anything' : c.label}</span>
-          </button>
-        ))}
-      </div>
-
-      {/* Quick inspiration chips */}
-      <div className="ie-ai-ideas-strip" role="group" aria-label="Quick ideas">
-        {AI_MEME_IDEAS.slice(0, 6).map((item) => (
-          <button
-            key={item.text}
-            type="button"
-            className={`ie-ai-idea-chip${idea === item.text ? ' is-active' : ''}`}
-            onClick={() => pickIdea(item.text, item.category)}
-          >
-            <span aria-hidden="true">{item.icon}</span>
-            <span>{item.text}</span>
-          </button>
-        ))}
-      </div>
-
-      {/* Input Composer */}
-      <form
-        className="ie-ai-caption-form"
-        onSubmit={(e: FormEvent) => {
-          e.preventDefault();
-          void generate(idea, vibe);
-        }}
-      >
-        <div className="ie-ai-input-wrap">
-          <Sparkles size={16} className="ie-ai-input-icon" aria-hidden="true" />
-          <input
-            className="ie-ai-input-field"
-            type="text"
-            aria-label="What's the meme about?"
-            enterKeyHint="go"
-            placeholder="Type a topic, or tap Generate..."
-            value={idea}
-            onChange={(e) => setIdea(e.target.value)}
-          />
-          {idea && (
-            <button
-              type="button"
-              className="ie-ai-input-clear"
-              aria-label="Clear input"
-              onClick={() => setIdea('')}
-            >
-              <X size={14} />
-            </button>
-          )}
-        </div>
-        <div className="ie-ai-form-actions">
-          <button
-            type="submit"
-            className={`ie-ai-btn-gen${busy ? ' is-busy' : ''}`}
-            disabled={busy}
-            title="Generate AI captions"
-          >
-            <Sparkles size={15} strokeWidth={2.4} aria-hidden="true" />
-            <span>{busy ? 'Writing…' : 'Generate'}</span>
-          </button>
-          <button
-            type="button"
-            className={`ie-ai-send ie-ai-btn-shuffle${busy ? ' is-busy' : ''}`}
-            aria-label={busy ? 'Writing captions' : 'Shuffle captions'}
-            title="Shuffle: the next caption on the meme"
-            disabled={busy}
-            onClick={() => void shuffle()}
-          >
-            <Shuffle size={16} strokeWidth={2.4} aria-hidden="true" />
-          </button>
-        </div>
-      </form>
-
-      {/* Target status */}
-      <div className="ie-ai-target-info">
-        <span className="ie-ai-target-label">
-          <Type size={12} strokeWidth={2.4} aria-hidden="true" />
-          {activeTarget ? (
-            <>Writing on: <strong className="ie-ai-target-name">"{activeTarget.text.slice(0, 24)}{activeTarget.text.length > 24 ? '…' : ''}"</strong></>
-          ) : (
-            <>Writing on: <strong>Top Caption</strong></>
-          )}
-        </span>
-      </div>
-
-      {/* Generated Captions Cards */}
-      <div className="ie-ai-results">
-        {busy ? (
-          <div className="ie-ai-skeletons" aria-label="Generating captions..." role="status">
-            <div className="ie-ai-card-skeleton" />
-            <div className="ie-ai-card-skeleton" />
-            <div className="ie-ai-card-skeleton" />
-          </div>
-        ) : ideas.list.length > 0 ? (
-          <>
-            <div className="ie-ai-results-head">
-              <span className="ie-ai-results-title">Pick a punchline:</span>
-              <button
-                type="button"
-                className="ie-ai-regen-link"
-                onClick={() => void generate(idea, vibe)}
-              >
-                <RefreshCw size={12} strokeWidth={2.4} />
-                <span>More</span>
+            <div className="ie-aic-field">
+              <Sparkles size={17} className="ie-aic-field-icon" aria-hidden="true" />
+              <input
+                className="ie-ai-input-field"
+                type="text"
+                aria-label="What's the meme about?"
+                enterKeyHint="go"
+                placeholder="What's the meme about?"
+                value={idea}
+                onChange={(e) => setIdea(e.target.value)}
+              />
+              {idea && (
+                <button type="button" className="ie-aic-btn ie-aic-clear" aria-label="Clear the idea" onClick={() => setIdea('')}>
+                  <X size={13} strokeWidth={2.6} />
+                </button>
+              )}
+            </div>
+            <div className="ie-aic-bar">
+              <button type="button" className="ie-aic-btn ie-aic-shuffle" aria-label="Shuffle captions" title="Shuffle: the next caption on the meme" onClick={shuffle}>
+                <Shuffle size={15} strokeWidth={2.4} aria-hidden="true" />
+                Shuffle
+              </button>
+              <button type="submit" className="ie-aic-btn ie-aic-generate">
+                <Sparkles size={15} strokeWidth={2.4} aria-hidden="true" />
+                Generate
               </button>
             </div>
-            <div className="ie-ai-cards" role="list">
+          </form>
+
+          {/* Vibes: one row of pills, the picked one lit. */}
+          <div className="ie-aic-label">Vibe</div>
+          <div className="ie-aic-vibes" role="radiogroup" aria-label="Vibe">
+            {AI_MEME_CATEGORIES.map((c: Vibe) => (
+              <button
+                key={c.id}
+                type="button"
+                role="radio"
+                aria-checked={vibe === c.id}
+                className={`ie-aic-btn ie-aic-vibe${vibe === c.id ? ' is-on' : ''}`}
+                onClick={() => setVibe(c.id)}
+              >
+                <span aria-hidden="true">{c.icon}</span>
+                {c.id === 'all' ? 'Anything' : c.label}
+              </button>
+            ))}
+          </div>
+        </>
+      ) : (
+        <>
+          {/* The captions alone: back to the composer and Shuffle, the list, then More. */}
+          <div className="ie-aic-head">
+            <button type="button" className="ie-aic-btn ie-aic-back" onClick={() => setShowing(false)}>
+              <ArrowLeft size={15} strokeWidth={2.4} aria-hidden="true" />
+              Change idea
+            </button>
+            <button type="button" className="ie-aic-btn ie-aic-shuffle ie-aic-shuffle--head" aria-label="Shuffle captions" title="Shuffle: the next caption on the meme" onClick={shuffle}>
+              <Shuffle size={14} strokeWidth={2.4} aria-hidden="true" />
+              Shuffle
+            </button>
+          </div>
+          <div className="ie-aic-results">
+            <div className="ie-aic-list" role="list">
               {ideas.list.map((text, i) => {
                 const applied = currentText === text;
                 return (
-                  <div key={`${text}-${i}`} role="listitem" className={`ie-ai-card${applied ? ' is-applied' : ''}`}>
-                    <button type="button" className="ie-ai-card-content" aria-pressed={applied} onClick={() => write(text)}>
-                      <span className="ie-ai-card-text">{text}</span>
-                      {applied && (
-                        <span className="ie-ai-applied-badge">
-                          <Check size={11} strokeWidth={3} aria-hidden="true" /> On canvas
-                        </span>
-                      )}
+                  <div key={`${text}-${i}`} role="listitem" className={`ie-aic-row${applied ? ' is-on' : ''}`}>
+                    <button type="button" className="ie-aic-btn ie-aic-pick" aria-pressed={applied} onClick={() => write(text)}>
+                      <span className="ie-aic-mark" aria-hidden="true">{applied ? <Check size={13} strokeWidth={3} /> : i + 1}</span>
+                      <span className="ie-aic-text">{text}</span>
                     </button>
-                    <div className="ie-ai-card-tools">
-                      <button
-                        type="button"
-                        className="ie-ai-card-btn"
-                        title="Copy caption"
-                        aria-label="Copy caption"
-                        onClick={(e) => handleCopy(e, text)}
-                      >
-                        {copiedText === text ? <Check size={13} className="ie-ai-copied" /> : <Copy size={13} />}
-                      </button>
-                      <button
-                        type="button"
-                        className="ie-ai-card-btn"
-                        title="Add as new layer"
-                        aria-label="Add as new layer"
-                        onClick={() => write(text, true)}
-                      >
-                        <Plus size={13} strokeWidth={2.4} />
-                      </button>
-                    </div>
+                    <button type="button" className="ie-aic-btn ie-aic-tool" title="Copy caption" aria-label="Copy caption" onClick={(e) => handleCopy(e, text)}>
+                      {copiedText === text ? <Check size={15} strokeWidth={2.6} className="ie-aic-copied" /> : <Copy size={15} />}
+                    </button>
+                    <button type="button" className="ie-aic-btn ie-aic-tool" title="Add as a new caption" aria-label="Add as new layer" onClick={() => write(text, true)}>
+                      <Plus size={16} strokeWidth={2.4} />
+                    </button>
                   </div>
                 );
               })}
             </div>
-          </>
-        ) : (
-          <div className="ie-ai-empty-prompt">
-            <p className="ie-ai-empty-hint">
-              Tap <strong>Generate</strong> or pick any idea above to write AI punchlines!
-            </p>
+            <div className="ie-aic-bar">
+              <button type="button" className="ie-aic-btn ie-aic-generate ie-aic-more" title="Four new captions" onClick={generate}>
+                <RefreshCw size={15} strokeWidth={2.4} aria-hidden="true" />
+                More
+              </button>
+            </div>
           </div>
-        )}
-      </div>
+        </>
+      )}
+
+      <p className="ie-aic-target">
+        <Type size={12} strokeWidth={2.4} aria-hidden="true" />
+        Writes on <strong>{activeTarget ? `“${activeTarget.text.slice(0, 28)}${activeTarget.text.length > 28 ? '…' : ''}”` : 'a new caption'}</strong>
+      </p>
     </Sheet>
   );
 }

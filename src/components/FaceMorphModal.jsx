@@ -8,27 +8,12 @@ import {
   AlertCircle,
   CloudOff,
   LoaderCircle,
-  Sparkles
+  Sparkles,
+  ArrowRight
 } from 'lucide-react';
-import { MEME_FACE_PRESETS, getMemeFaceDataUrl } from '../data/memeFaces';
+import { TEMPLATE_FACES } from './editor/faceSwap';
 import BottomSheet from './BottomSheet';
 import './FaceMorphModal.css';
-
-
-const getShortFaceName = (preset) => {
-  if (!preset) return '';
-  if (preset.id === 'user_face') return 'You';
-  if (preset.id === 'gigachad') return 'Gigachad';
-  if (preset.id === 'wojak') return 'Wojak';
-  if (preset.id === 'trollface') return 'Trollface';
-  if (preset.id === 'therock') return 'The Rock';
-  if (preset.id === 'harold') return 'Harold';
-  if (preset.id === 'nic_cage') return 'Nic Cage';
-  if (preset.id === 'doge') return 'Doge';
-  if (preset.id === 'crying_jordan') return 'Jordan';
-  if (preset.id === 'pepe') return 'Pepe';
-  return (preset.name || '').split('(')[0].trim();
-};
 
 // Helper to convert any image URL/blob to a base64 data URL
 async function ensureDataUrl(src) {
@@ -65,9 +50,10 @@ export default function FaceMorphModal({
   targetLabel
 }) {
   // Preset or custom uploaded face
-  const [selectedPresetId, setSelectedPresetId] = useState(MEME_FACE_PRESETS[0].id);
-  const [selectedImageSrc, setSelectedImageSrc] = useState(getMemeFaceDataUrl(MEME_FACE_PRESETS[0]));
-  const [faceName, setFaceName] = useState(MEME_FACE_PRESETS[0].name);
+  // A face from our meme templates (picked by its picture), or the person's own upload.
+  const [selectedPresetId, setSelectedPresetId] = useState(TEMPLATE_FACES[0].src);
+  const [selectedImageSrc, setSelectedImageSrc] = useState(TEMPLATE_FACES[0].src);
+  const [faceName, setFaceName] = useState(TEMPLATE_FACES[0].name);
 
   // Neural Swap Engine State
   const [isNeuralAvailable, setIsNeuralAvailable] = useState(false);
@@ -226,15 +212,14 @@ export default function FaceMorphModal({
     }
   }, [memeTemplateUrl, memeFacePatch, faceTarget, selectedTargetIndex, swapAllFaces]);
 
-  // Trigger Neural Face Swap when selection changes. The latest runNeuralFaceSwap is read through a
-  // ref so a new template or face patch alone doesn't start another (slow) swap.
-  const runNeuralFaceSwapRef = useRef(runNeuralFaceSwap);
-  runNeuralFaceSwapRef.current = runNeuralFaceSwap;
-  useEffect(() => {
-    if (isNeuralAvailable && selectedImageSrc && isOpen) {
-      runNeuralFaceSwapRef.current(selectedImageSrc, selectedTargetIndex, swapAllFaces);
-    }
-  }, [isNeuralAvailable, selectedImageSrc, selectedTargetIndex, swapAllFaces, isOpen]);
+  // A new face or a different face in the meme makes the last swap stale: back to Swap face.
+  const clearResult = () => {
+    setNeuralFullImage(null);
+    setNeuralCropPreview(null);
+    setOriginalCropPreview(null);
+    setNeuralError(null);
+    setIsComparing(false);
+  };
 
   // Handle File Upload
   const handleFileUpload = (e) => {
@@ -243,6 +228,7 @@ export default function FaceMorphModal({
     const reader = new FileReader();
     reader.onload = (event) => {
       const dataUrl = event.target.result;
+      clearResult();
       setSelectedImageSrc(dataUrl);
       setSelectedPresetId('custom_upload');
       setFaceName('Your Photo');
@@ -282,29 +268,46 @@ export default function FaceMorphModal({
 
   if (!isOpen) return null;
 
-  const currentPreview = isComparing
-    ? (originalCropPreview || memeFacePatch?.dataUrl || memeTemplateUrl)
-    : (previewType === 'crop' ? (neuralCropPreview || neuralFullImage) : neuralFullImage);
-  const canApply = !isNeuralProcessing && Boolean(neuralFullImage || neuralCropPreview);
+  const swappedPreview = previewType === 'crop' ? (neuralCropPreview || neuralFullImage) : neuralFullImage;
+  const hasResult = Boolean(neuralFullImage);
+  const original = originalCropPreview || memeFacePatch?.dataUrl || memeTemplateUrl;
+  const currentPreview = hasResult ? (isComparing ? original : swappedPreview) : memeTemplateUrl;
 
-  // Your uploaded photo first, then the meme faces.
+  // Your uploaded photo first, then the faces from our meme templates.
   const faces = [
     ...(customFace ? [{ id: customFace.id, name: customFace.name, label: 'Yours', src: customFace.dataUrl }] : []),
-    ...MEME_FACE_PRESETS.map((p) => ({ id: p.id, name: p.name, label: getShortFaceName(p), src: getMemeFaceDataUrl(p) })),
+    ...TEMPLATE_FACES.map((f) => ({ id: f.src, name: f.name, label: f.label, src: f.src })),
   ];
   const picked = faces.find((f) => f.id === selectedPresetId);
   const pickedName = picked ? (picked.id === customFace?.id ? 'Your photo' : picked.label) : faceName;
 
   const pickFace = (face) => {
+    if (face.id === selectedPresetId) return;
+    clearResult();
     setSelectedPresetId(face.id);
     setSelectedImageSrc(face.src);
     setFaceName(face.name);
+  };
+  const pickTarget = (all, index) => {
+    clearResult();
+    setSwapAllFaces(all);
+    setSelectedTargetIndex(index);
   };
 
   const retry = () => {
     if (isNeuralAvailable) runNeuralFaceSwap(selectedImageSrc);
     else setServerCheck((n) => n + 1);
   };
+
+  // The one main button: Swap face runs the swap (nothing runs before), then Apply to meme keeps it.
+  const main = hasResult
+    ? { label: 'Apply to meme', Icon: Check, onClick: handleApply, disabled: isNeuralProcessing }
+    : {
+      label: isNeuralProcessing ? 'Swapping…' : 'Swap face',
+      Icon: isNeuralProcessing ? LoaderCircle : Sparkles,
+      onClick: () => runNeuralFaceSwap(selectedImageSrc),
+      disabled: isNeuralProcessing || !isNeuralAvailable || !selectedImageSrc,
+    };
 
   const holdProps = {
     onPointerDown: handleStartComparing,
@@ -325,26 +328,29 @@ export default function FaceMorphModal({
       className="fmm-sheet"
       badge={targetLabel ? <span className="fmm-badge">{targetLabel}</span> : null}
       maxHeight="88vh"
-      contentStyle={{ padding: '2px 16px 14px', gap: '18px' }}
+      contentStyle={{ padding: '2px 16px 14px', gap: '20px' }}
       footer={
         <div className="fmm-foot">
           <button type="button" className="fmm-btn" onClick={onClose}>Cancel</button>
-          <button type="button" className="fmm-btn fmm-btn--accent" onClick={handleApply} disabled={!canApply}>
-            <Check size={17} strokeWidth={2.4} aria-hidden="true" />
-            Apply to meme
+          <button type="button" className={`fmm-btn fmm-btn--accent${isNeuralProcessing ? ' is-busy' : ''}`} onClick={main.onClick} disabled={main.disabled}>
+            <main.Icon size={17} strokeWidth={2.4} aria-hidden="true" />
+            {main.label}
           </button>
         </div>
       }
     >
-      {/* What the swap looks like: a spinner while it runs, what went wrong, or the result */}
-      <div className="fmm-stage">
+      {/* The meme, then the swap on it: a scrim and spinner while it runs, or what went wrong. */}
+      <div className={`fmm-stage${hasResult ? ' has-result' : ''}`}>
+        {currentPreview && <img className="fmm-stage-img" src={currentPreview} alt={hasResult && !isComparing ? 'Swapped face' : 'The meme'} />}
+
         {isNeuralProcessing ? (
-          <div className="fmm-stage-msg" role="status">
-            <LoaderCircle size={26} className="animate-spin fmm-spin" aria-hidden="true" />
+          <div className="fmm-stage-msg fmm-stage-msg--over" role="status">
+            <LoaderCircle size={26} className="fmm-spin" aria-hidden="true" />
             <span className="fmm-stage-title">Swapping in {pickedName}…</span>
+            <span className="fmm-stage-sub">This can take a few seconds.</span>
           </div>
         ) : neuralError ? (
-          <div className="fmm-stage-msg" role="alert">
+          <div className="fmm-stage-msg fmm-stage-msg--over" role="alert">
             <span className="fmm-stage-icon" aria-hidden="true">
               {isNeuralAvailable ? <AlertCircle size={20} /> : <CloudOff size={20} />}
             </span>
@@ -355,9 +361,8 @@ export default function FaceMorphModal({
               Try again
             </button>
           </div>
-        ) : currentPreview ? (
+        ) : hasResult ? (
           <>
-            <img className="fmm-stage-img" src={currentPreview} alt={isComparing ? 'Original face' : 'Swapped face'} />
             <button type="button" className={`fmm-compare${isComparing ? ' is-on' : ''}`} {...holdProps}>
               <Eye size={14} strokeWidth={2.3} aria-hidden="true" />
               {isComparing ? 'Original' : 'Hold to compare'}
@@ -370,14 +375,15 @@ export default function FaceMorphModal({
               ))}
             </div>
           </>
-        ) : (
-          // Still asking the face swap server whether it's there.
-          <div className="fmm-stage-msg" role="status">
-            <span className="fmm-stage-icon" aria-hidden="true"><Sparkles size={20} /></span>
-            <span className="fmm-stage-title">Getting face swap ready…</span>
-            <span className="fmm-stage-sub">The swap shows up here.</span>
-          </div>
-        )}
+        ) : picked ? (
+          // Before the swap: who goes onto the meme.
+          <span className="fmm-going-in">
+            <img src={picked.src} alt="" draggable={false} />
+            <span>{pickedName}</span>
+            <ArrowRight size={14} strokeWidth={2.4} aria-hidden="true" />
+            <span className="fmm-going-in-dim">this meme</span>
+          </span>
+        ) : null}
       </div>
 
       <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileUpload} hidden />
@@ -398,6 +404,7 @@ export default function FaceMorphModal({
             <span className="fmm-face-img"><Camera size={20} strokeWidth={2.1} aria-hidden="true" /></span>
             <span className="fmm-face-name">Selfie</span>
           </button>
+          <span className="fmm-faces-rule" aria-hidden="true" />
           <div className="fmm-faces-list" role="radiogroup" aria-label="Faces">
             {faces.map((face) => {
               const on = selectedPresetId === face.id;
@@ -427,33 +434,14 @@ export default function FaceMorphModal({
           <div className="fmm-section-head">
             <span className="fmm-label">Swap on</span>
           </div>
-          <div className="fmm-chips" role="radiogroup" aria-label="Faces in the meme">
-            <button
-              type="button"
-              role="radio"
-              aria-checked={swapAllFaces}
-              className={`fmm-chip${swapAllFaces ? ' is-on' : ''}`}
-              onClick={() => {
-                setSwapAllFaces(true);
-                setSelectedTargetIndex(null);
-              }}
-            >
+          <div className="fmm-seg" role="radiogroup" aria-label="Faces in the meme">
+            <button type="button" role="radio" aria-checked={swapAllFaces} className={swapAllFaces ? 'is-on' : ''} onClick={() => pickTarget(true, null)}>
               All faces
             </button>
             {detectedFaces.map((f, i) => {
               const on = !swapAllFaces && selectedTargetIndex === f.index;
               return (
-                <button
-                  key={f.index}
-                  type="button"
-                  role="radio"
-                  aria-checked={on}
-                  className={`fmm-chip${on ? ' is-on' : ''}`}
-                  onClick={() => {
-                    setSwapAllFaces(false);
-                    setSelectedTargetIndex(f.index);
-                  }}
-                >
+                <button key={f.index} type="button" role="radio" aria-checked={on} className={on ? 'is-on' : ''} onClick={() => pickTarget(false, f.index)}>
                   Face {i + 1}
                 </button>
               );

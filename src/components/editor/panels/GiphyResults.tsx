@@ -65,7 +65,7 @@ export default function GiphyResults({ kind, query, keyed, onClearQuery, onPick 
             ? SKELETONS.map((id) => <span key={id} className="ie-gif-skeleton ie-browse-thumb is-loading" />)
             : results.map((r) => (
               <div key={r.id} className="ie-grid-card">
-                <button type="button" className="ie-browse-item ie-card" title={r.title} aria-label={r.title} onClick={() => onPick(r)}>
+                <button type="button" className={`ie-browse-item ie-card${stickers ? ' ie-card--sticker' : ''}`} title={r.title} aria-label={r.title} onClick={() => onPick(r)}>
                   <Thumb src={r.preview} className={`ie-card-media${stickers ? ' ie-card-media--paper' : ''}`} />
                 </button>
               </div>

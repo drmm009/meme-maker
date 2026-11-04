@@ -449,7 +449,9 @@
 .ie-card-media--paper.is-loading { background: #2a2b30; animation: none; }
 .ie-card-grid--small { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; }
 .ie-shelf-card--small { flex-basis: 112px; width: 112px; }
-.ie-card--sticker { aspect-ratio: 1; }
+/* Stickers sit in circles; the extra padding keeps wide ones (shades) clear of the curve. */
+.ie-card--sticker { aspect-ratio: 1; border-radius: 50%; }
+.ie-card--sticker .ie-card-media--paper { padding: 18%; }
 
 /* Emoji: a glyph on a soft small tile, no name; a shelf is two rows of them. */
 .ie-emoji-card {

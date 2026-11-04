@@ -42,6 +42,19 @@ export const SAMPLE_FACES: Picture[] = [
   { src: './faces/wifi.jpg', name: 'Wi-Fi hair' },
 ];
 
+// The editor's Face Swap sheet (FaceMorphModal): the faces from our meme templates only, each a
+// square portrait cut from its picture in public/images, with a short label under it.
+export const TEMPLATE_FACES: (Picture & { label: string })[] = [
+  { src: './faces/drake.jpg', name: 'Drake', label: 'Drake' },
+  { src: './faces/doakes.jpg', name: 'James Doakes', label: 'Doakes' },
+  { src: './faces/srk.jpg', name: 'Shah Rukh Khan (Kaash)', label: 'SRK' },
+  { src: './faces/akshay.jpg', name: 'Akshay Kumar', label: 'Akshay' },
+  { src: './faces/amitabh.jpg', name: 'Amitabh Bachchan', label: 'Amitabh' },
+  { src: './faces/arjun.jpg', name: 'Arjun Kapoor', label: 'Arjun' },
+  { src: './faces/darr.jpg', name: 'Shah Rukh Khan (Darr)', label: 'Darr' },
+  { src: './faces/wifi.jpg', name: 'Wi-Fi hairstyle', label: 'Wi-Fi hair' },
+];
+
 async function call(path: string, body?: unknown): Promise<Record<string, unknown>> {
   const init: RequestInit | undefined = body === undefined ? undefined : {
     method: 'POST',
