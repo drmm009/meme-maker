@@ -22,7 +22,7 @@ export function HeaderFooterIcon({ size = 19, strokeWidth = 2.1 }: { size?: numb
   );
 }
 
-// Social Card: heart icon (social media like / heart icon matching Image 2)
+// Social Card: a rounded "like" heart
 export function SocialCardIcon({ size = 19, strokeWidth = 2.1 }: { size?: number; strokeWidth?: number }) {
   return (
     <svg
@@ -36,7 +36,7 @@ export function SocialCardIcon({ size = 19, strokeWidth = 2.1 }: { size?: number
       strokeLinejoin="round"
       aria-hidden="true"
     >
-      <path d="M 12 6 C 10.8 3.8 8.8 2.5 6.2 2.5 C 3.2 2.5 1.5 5 1.5 8.5 C 1.5 14.5 10 20 12 21.5 C 14 20 22.5 14.5 22.5 8.5 C 22.5 5 20.8 2.5 17.8 2.5 C 15.2 2.5 13.2 3.8 12 6 Z" />
+      <path d="M12 20.5C8.6 18 3 14.1 3 9a4.6 4.6 0 0 1 4.6-4.6c1.9 0 3.4.9 4.4 2.5 1-1.6 2.5-2.5 4.4-2.5A4.6 4.6 0 0 1 21 9c0 5.1-5.6 9-9 11.5Z" />
     </svg>
   );
 }
@@ -103,7 +103,7 @@ export function BackgroundIcon({ size = 19, strokeWidth = 2.1 }: { size?: number
   );
 }
 
-// Bubbles: chat / speech bubble icon (classic clean speech bubble)
+// Bubbles: a rounded chat bubble with a tail and three typing dots
 export function BubbleIcon({ size = 19, strokeWidth = 2.1 }: { size?: number; strokeWidth?: number }) {
   return (
     <svg
@@ -117,7 +117,10 @@ export function BubbleIcon({ size = 19, strokeWidth = 2.1 }: { size?: number; st
       strokeLinejoin="round"
       aria-hidden="true"
     >
-      <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" />
+      <path d="M12 17h5a4 4 0 0 0 4-4V8a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v5a4 4 0 0 0 4 4h1v3.5Z" />
+      <circle cx="8" cy="10.5" r="1.15" fill="currentColor" stroke="none" />
+      <circle cx="12" cy="10.5" r="1.15" fill="currentColor" stroke="none" />
+      <circle cx="16" cy="10.5" r="1.15" fill="currentColor" stroke="none" />
     </svg>
   );
 }
