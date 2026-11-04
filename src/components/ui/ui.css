@@ -225,21 +225,18 @@
   border: none;
   border-radius: 999px;
   background: transparent;
-  color: #9b9da5;
+  color: #8e8e93;
   font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.02em;
   white-space: nowrap;
   cursor: pointer;
-  transition: flex-grow 0.22s ease, background 0.2s, color 0.2s;
+  transition: background 0.2s, color 0.2s;
 }
-/* The open section: a wider gradient pill. */
+/* The open section: a solid orange capsule with a white icon and label. */
 .ui-dock-item.is-on {
-  flex-grow: 1.3;
-  background: linear-gradient(100deg, #ec6a43, #d9549a);
+  background: var(--ui-accent, #ff5a36);
   color: #fff;
-  font-size: 13px;
-  font-weight: 700;
 }
 /* A maker's action buttons (DockItem variant): icon beside the label, the primary filled with the
    accent, the secondary a quiet outline. Disabled while it has nothing to act on. */
@@ -306,7 +303,8 @@
 }
 .ui-strip-btn .lucide-loader-circle { animation: ui-spin 0.9s linear infinite; }
 @keyframes ui-spin { to { transform: rotate(360deg); } }
-.ui-strip-btn.is-on { border-color: transparent; background: linear-gradient(100deg, #ec6a43, #d9549a); color: #fff; }
+/* The open tool: an iOS tinted button, orange on a soft orange fill. */
+.ui-strip-btn.is-on { border-color: transparent; background: rgba(255, 90, 54, 0.18); color: var(--ui-accent, #ff5a36); }
 /* In use with its settings closed (a brush still drawing): a normal button with an orange icon. */
 .ui-strip-btn.is-live svg { color: var(--ui-accent, #ff5a36); }
 .ui-strip--stacked { gap: 8px; }
@@ -332,7 +330,7 @@
 
 /* ── Floating toolbar ────────────────────────────────────── */
 /* The selected layer's tools in the tool strip's look (it takes the strip's place): each tool a
-   tile of its own, icon over a white label, the open one in the strip's gradient; then the shared
+   tile of its own, icon over a white label, the open one tinted orange like the strip's; then the shared
    actions as small round tiles after a thin divider. */
 .ui-float {
   display: flex;
@@ -378,8 +376,8 @@
 .ui-float-label { color: #d4d5db; transition: color 0.15s ease; }
 .ui-float-item:hover:not(.is-on) { background: #26272b; }
 .ui-float-item:active { transform: scale(0.94); }
-.ui-float-item.is-on { border-color: transparent; background: linear-gradient(100deg, #ec6a43, #d9549a); color: #fff; }
-.ui-float-item.is-on .ui-float-label { color: #fff; }
+.ui-float-item.is-on { border-color: transparent; background: rgba(255, 90, 54, 0.18); color: var(--ui-accent, #ff5a36); }
+.ui-float-item.is-on .ui-float-label { color: var(--ui-accent, #ff5a36); }
 .ui-float-item--icon { min-width: 40px; width: 40px; height: 40px; padding: 0; border-radius: 50%; }
 .ui-float-divider { flex: none; width: 1px; height: 28px; margin: 0 2px; background: rgba(255, 255, 255, 0.14); }
 .ui-visually-hidden {
