@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
-import { MessageSquareQuote, Plus, X, BookmarkPlus, AlignLeft, AlignCenter, AlignRight } from 'lucide-react';
+import { Plus, X, BookmarkPlus, AlignLeft, AlignCenter, AlignRight } from 'lucide-react';
+import { BubbleIcon } from './editorIcons';
 import { Sheet, Section, Row, ChipRow, Chip, Toggle, SwatchRow, Slider, TileGrid, Tile, SegmentedControl } from '../../ui';
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
 import { useEditorUiStore } from '../store/useEditorUiStore';
@@ -371,7 +372,7 @@ export default function TextSheet({ actions, onClose }: { actions: EditorActions
       {!part && caption?.bubbleStyle ? (
         <Section title="Bubble" rule>
           <TileGrid columns={2}>
-            <Tile label="Bubble Style" Icon={MessageSquareQuote} onClick={() => openSheet('bubble')} />
+            <Tile label="Bubble Style" Icon={BubbleIcon} onClick={() => openSheet('bubble')} />
           </TileGrid>
         </Section>
       ) : null}

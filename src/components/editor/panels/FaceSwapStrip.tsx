@@ -1,11 +1,12 @@
-import { Type, Sparkles, PanelsTopBottom } from 'lucide-react';
+import { Type, Sparkles } from 'lucide-react';
+import { HeaderFooterIcon } from './editorIcons';
 import { ToolStrip } from '../../ui';
 import type { StripItem } from '../../ui';
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
 import { useEditorUiStore } from '../store/useEditorUiStore';
 import type { EditorActions } from './selection';
 
-// The Face Swap maker's strip, above its dock (Swap face, then Swap again, Editor Pro and Export, in
+// The Face Swap maker's strip, above its dock (Swap face, then Swap again, Move to editor and Export, in
 // EditorPanels; the swap itself is on its page, FaceSwapStudio): Text adds a caption, Effects opens
 // the photo filters, Header & Footer opens the bands' sheet (as on the Canvas strip), Canvas opens
 // the canvas colour.
@@ -26,7 +27,7 @@ export default function FaceSwapStrip({ actions }: { actions: EditorActions }) {
   const items: StripItem[] = [
     { id: 'text', label: 'Text', title: 'Add a caption', Icon: Type },
     { id: 'effects', label: 'Effects', title: 'Photo effects and filters', Icon: Sparkles, active: sheet === 'filters' },
-    { id: 'bands', label: 'Header & Footer', title: 'Bands above and below the meme', Icon: PanelsTopBottom, active: sheet === 'bands', className: 'ie-strip-btn--two-line' },
+    { id: 'bands', label: 'Header & Footer', title: 'Bands above and below the meme', Icon: HeaderFooterIcon, active: sheet === 'bands', className: 'ie-strip-btn--two-line' },
     { id: 'canvas', label: 'Canvas', title: 'Canvas colour', icon: swatch, active: sheet === 'canvasColor' },
   ];
 

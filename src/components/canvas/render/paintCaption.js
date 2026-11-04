@@ -135,9 +135,13 @@ if (cap.isBreakingNews) {
   // Determine text color with smart contrast for White / Black BG and Bubbles
   let textColor = cap.color || '#ffffff';
   if (isBubble) {
-    if (cap.bubbleStyle === 'imessage-send' || cap.bubbleStyle === 'whatsapp-send') {
+    if (cap.bubbleStyle === 'imessage-send' || cap.bubbleStyle === 'imessage-sms' || cap.bubbleStyle === 'whatsapp-send' || cap.bubbleStyle === 'action-red') {
       textColor = '#ffffff';
-    } else if (cap.bubbleStyle === 'imessage-receive') {
+    } else if (cap.bubbleStyle === 'whatsapp-light-send' || cap.bubbleStyle === 'whatsapp-light-receive') {
+      textColor = '#111b21';
+    } else if (cap.bubbleStyle === 'action-neon') {
+      textColor = '#38bdf8';
+    } else if (cap.bubbleStyle === 'imessage-receive' || cap.bubbleStyle === 'imessage-dark') {
       textColor = isColorDark(cap.bgColor) ? '#ffffff' : '#000000';
     } else if (cap.bubbleStyle === 'whatsapp-receive') {
       textColor = isColorDark(cap.bgColor) ? '#ffffff' : '#111b21';

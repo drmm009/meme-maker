@@ -2,8 +2,9 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
   Type, Sticker, Smile, LayoutGrid, Image as ImageIcon, Film, Clapperboard, Music,
   Check, Gauge, Volume2, VolumeX, Palette, Square, RotateCw, Minimize, Crop, Maximize, Copy, Trash2,
-  Scissors, PencilLine, ALargeSmall, TextAlignStart, TextAlignCenter, TextAlignEnd, SlidersHorizontal, WandSparkles, Pipette, Sparkles, ImagePlay, PaintBucket, Zap, Snowflake, Rewind, Repeat, ZoomIn, BringToFront, SendToBack, Blend, Mic, ArrowRightLeft, Frame, Plus, Upload, Library, Laugh, SquarePlay, Captions, ChevronLeft
+  Scissors, PencilLine, ALargeSmall, TextAlignStart, TextAlignCenter, TextAlignEnd, SlidersHorizontal, WandSparkles, Pipette, Sparkles, ImagePlay, PaintBucket, Zap, Snowflake, Rewind, Repeat, ZoomIn, BringToFront, SendToBack, Mic, ArrowRightLeft, Frame, Plus, Upload, Library, Laugh, SquarePlay, Captions, ChevronLeft
 } from 'lucide-react';
+import { FiltersIcon } from '../editor/panels/editorIcons';
 import { useEditorStore, clipEffectBase, sourceTimeMs } from '../../store/useVideoEditorStore';
 import { captureFrame, renderClipEffect } from '../../utils/clipEffects';
 import { clipPunchTimes } from '../../utils/zoomPunch';
@@ -632,7 +633,7 @@ function ClipTools({ item, panel, setPanel }) {
     const preset = FILTER_PRESETS.find((p) => p.id === (item.filter?.preset ?? null));
     const filtered = Boolean(item.filter && (item.filter.preset || item.filter.brightness || item.filter.contrast || item.filter.saturation));
     tools.push(
-      <RailButton key="filter" label={filtered && preset?.id ? preset.label : 'Filters'} Icon={Blend} active={panel === 'filter' || filtered} onClick={() => togglePanel('filter')} />,
+      <RailButton key="filter" label={filtered && preset?.id ? preset.label : 'Filters'} Icon={FiltersIcon} active={panel === 'filter' || filtered} onClick={() => togglePanel('filter')} />,
       <RailButton key="fit" label="Fit" Icon={Minimize} onClick={() => update(item.id, placeMedia(item, aspectRatio, 'fit'))} />,
       <RailButton key="cover" label="Fill" Icon={Crop} onClick={() => update(item.id, placeMedia(item, aspectRatio, 'cover'))} />,
       <RailButton key="stretch" label="Stretch" Icon={Maximize} onClick={() => update(item.id, placeMedia(item, aspectRatio, 'stretch'))} />

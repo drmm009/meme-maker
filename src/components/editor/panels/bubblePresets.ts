@@ -7,12 +7,14 @@ export interface BubblePreset {
   textColor: string;
   borderColor: string;
   borderWidth: number;
-  borderRadius: string;
+  borderRadius?: string;
+  fontFamily?: string;
   sampleText: string;
   description: string;
 }
 
 export const BUBBLE_PRESETS: BubblePreset[] = [
+  // --- iMessage ---
   {
     id: 'imessage-send',
     name: 'iPhone Sent',
@@ -22,8 +24,22 @@ export const BUBBLE_PRESETS: BubblePreset[] = [
     borderColor: 'transparent',
     borderWidth: 0,
     borderRadius: '18px 18px 4px 18px',
+    fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif',
     sampleText: 'Hello from iPhone! 📤',
-    description: 'Classic iOS blue sent bubble'
+    description: 'Classic iOS blue sent bubble',
+  },
+  {
+    id: 'imessage-sms',
+    name: 'iPhone SMS (Green)',
+    category: 'iMessage',
+    bubbleBg: '#34c759',
+    textColor: '#ffffff',
+    borderColor: 'transparent',
+    borderWidth: 0,
+    borderRadius: '18px 18px 4px 18px',
+    fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif',
+    sampleText: 'Text Message · SMS 💬',
+    description: 'Classic iOS green SMS sent bubble',
   },
   {
     id: 'imessage-receive',
@@ -34,9 +50,25 @@ export const BUBBLE_PRESETS: BubblePreset[] = [
     borderColor: 'transparent',
     borderWidth: 0,
     borderRadius: '18px 18px 18px 4px',
+    fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif',
     sampleText: 'Hey there! What’s up? 📥',
-    description: 'iOS recipient light gray bubble'
+    description: 'iOS recipient light gray bubble',
   },
+  {
+    id: 'imessage-dark',
+    name: 'iPhone Dark Received',
+    category: 'iMessage',
+    bubbleBg: '#262628',
+    textColor: '#ffffff',
+    borderColor: 'transparent',
+    borderWidth: 0,
+    borderRadius: '18px 18px 18px 4px',
+    fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif',
+    sampleText: 'Dark mode reply 🌙',
+    description: 'iOS dark mode received bubble',
+  },
+
+  // --- WhatsApp ---
   {
     id: 'whatsapp-send',
     name: 'WhatsApp Sent',
@@ -46,8 +78,9 @@ export const BUBBLE_PRESETS: BubblePreset[] = [
     borderColor: 'transparent',
     borderWidth: 0,
     borderRadius: '14px 4px 14px 14px',
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
     sampleText: 'Sent via WhatsApp 💬',
-    description: 'WhatsApp emerald green bubble'
+    description: 'WhatsApp emerald green dark bubble',
   },
   {
     id: 'whatsapp-receive',
@@ -58,9 +91,38 @@ export const BUBBLE_PRESETS: BubblePreset[] = [
     borderColor: 'transparent',
     borderWidth: 0,
     borderRadius: '4px 14px 14px 14px',
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
     sampleText: 'Got it, let’s do it! 💬',
-    description: 'WhatsApp dark mode bubble'
+    description: 'WhatsApp dark mode bubble',
   },
+  {
+    id: 'whatsapp-light-send',
+    name: 'WhatsApp Light (Sent)',
+    category: 'WhatsApp',
+    bubbleBg: '#d9fdd3',
+    textColor: '#111b21',
+    borderColor: 'transparent',
+    borderWidth: 0,
+    borderRadius: '14px 4px 14px 14px',
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    sampleText: 'Delivered ✔✔',
+    description: 'WhatsApp light theme sent bubble',
+  },
+  {
+    id: 'whatsapp-light-receive',
+    name: 'WhatsApp Light (Recv)',
+    category: 'WhatsApp',
+    bubbleBg: '#ffffff',
+    textColor: '#111b21',
+    borderColor: 'rgba(0, 0, 0, 0.1)',
+    borderWidth: 1,
+    borderRadius: '4px 14px 14px 14px',
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    sampleText: 'Hey! Let me know! 💬',
+    description: 'WhatsApp light theme received bubble',
+  },
+
+  // --- Comic ---
   {
     id: 'speech-left',
     name: 'Comic Speech (Left)',
@@ -70,8 +132,9 @@ export const BUBBLE_PRESETS: BubblePreset[] = [
     borderColor: '#000000',
     borderWidth: 2,
     borderRadius: '16px',
+    fontFamily: 'Montserrat, sans-serif',
     sampleText: 'Wait, what?! ◂',
-    description: 'Comic speech pointer left'
+    description: 'Comic speech pointer left',
   },
   {
     id: 'speech-right',
@@ -82,8 +145,22 @@ export const BUBBLE_PRESETS: BubblePreset[] = [
     borderColor: '#000000',
     borderWidth: 2,
     borderRadius: '16px',
+    fontFamily: 'Montserrat, sans-serif',
     sampleText: 'Let’s go! ▸',
-    description: 'Comic speech pointer right'
+    description: 'Comic speech pointer right',
+  },
+  {
+    id: 'whisper',
+    name: 'Comic Whisper',
+    category: 'Comic',
+    bubbleBg: '#ffffff',
+    textColor: '#222222',
+    borderColor: '#666666',
+    borderWidth: 2,
+    borderRadius: '16px',
+    fontFamily: 'Montserrat, sans-serif',
+    sampleText: '(psst... secret) 🤫',
+    description: 'Dashed comic whisper bubble',
   },
   {
     id: 'thought',
@@ -94,21 +171,51 @@ export const BUBBLE_PRESETS: BubblePreset[] = [
     borderColor: '#000000',
     borderWidth: 2,
     borderRadius: '24px',
+    fontFamily: 'Montserrat, sans-serif',
     sampleText: 'Thinking... 💭',
-    description: 'Cloud thought bubble'
+    description: 'Cloud thought bubble',
   },
+
+  // --- Action ---
   {
     id: 'shout',
-    name: 'Shout / Action',
+    name: 'Shout / Action (Yellow)',
     category: 'Action',
     bubbleBg: '#ffe600',
     textColor: '#000000',
     borderColor: '#000000',
     borderWidth: 2,
     borderRadius: '12px',
+    fontFamily: 'Impact, sans-serif',
     sampleText: 'OMG NOOO! 💥',
-    description: 'High-energy comic action shout'
-  }
+    description: 'High-energy comic action shout',
+  },
+  {
+    id: 'action-red',
+    name: 'Rage / Alert (Red)',
+    category: 'Action',
+    bubbleBg: '#ef4444',
+    textColor: '#ffffff',
+    borderColor: '#000000',
+    borderWidth: 2,
+    borderRadius: '12px',
+    fontFamily: 'Impact, sans-serif',
+    sampleText: 'ARE YOU CRAZY?! 💥',
+    description: 'Fiery red action explosion burst',
+  },
+  {
+    id: 'action-neon',
+    name: 'Cyber / Neon',
+    category: 'Action',
+    bubbleBg: '#0b0f19',
+    textColor: '#38bdf8',
+    borderColor: '#38bdf8',
+    borderWidth: 2,
+    borderRadius: '8px',
+    fontFamily: 'monospace, sans-serif',
+    sampleText: 'SYSTEM OVERRIDE ⚡',
+    description: 'Neon cyberpunk dialogue HUD',
+  },
 ];
 
 export const BUBBLE_CATEGORIES = ['All', 'iMessage', 'WhatsApp', 'Comic', 'Action'];

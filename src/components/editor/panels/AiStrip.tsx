@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { PanelsTopBottom, Palette, Pencil, Shuffle, Sparkles } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { Palette, Pencil, Shuffle, Sparkles } from 'lucide-react';
+import { HeaderFooterIcon } from './editorIcons';
 import { ToolStrip } from '../../ui';
 import type { StripItem } from '../../ui';
 import { useEditorUiStore } from '../store/useEditorUiStore';
@@ -24,7 +25,7 @@ interface CaptionStore {
 // AiMemeStudio, shows): Shuffle, set apart in the accent, puts the next of the AI captions on the
 // meme (after the last, it asks for four more); Style opens a row of looks for the caption above the
 // tools; Text selects it (its layer pill); Header & Footer opens the bands' sheet (as on the Canvas
-// strip); Effects opens the photo filters. New, Editor Pro and Export are the
+// strip); Effects opens the photo filters. New, Move to editor and Export are the
 // dock under it (EditorPanels).
 export default function AiStrip({ actions }: { actions: EditorActions }) {
   const sheet: string | null = useEditorUiStore((s: { sheet: string | null }) => s.sheet);
@@ -37,6 +38,21 @@ export default function AiStrip({ actions }: { actions: EditorActions }) {
   const footerOn = useMemeEditorStore((s: { canvasFooter: { enabled: boolean } }) => Boolean(s.canvasFooter?.enabled));
   const [ideas, setIdeas] = useState<string[]>(() => template?.aiIdeas ?? []);
   const [busy, setBusy] = useState(false);
+  const [shuffling, setShuffling] = useState(false);
+  const shuffleTimerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (shuffleTimerRef.current) window.clearTimeout(shuffleTimerRef.current);
+    };
+  }, []);
+
+  const triggerShuffleEffect = () => {
+    setShuffling(true);
+    if (shuffleTimerRef.current) window.clearTimeout(shuffleTimerRef.current);
+    shuffleTimerRef.current = window.setTimeout(() => setShuffling(false), 450);
+  };
+
   // Style's looks, open over the tools.
   const [styling, setStyling] = useState(false);
   const aiCaption = captions.find((c) => c.id.startsWith(AI_CAPTION_PREFIX));
@@ -63,6 +79,7 @@ export default function AiStrip({ actions }: { actions: EditorActions }) {
   // The next caption; past the last (or from one edited by hand), four new ones.
   const next = async () => {
     if (busy) return;
+    triggerShuffleEffect();
     if (index >= 0 && index < ideas.length - 1) {
       apply(ideas[index + 1]);
       return;
@@ -81,10 +98,10 @@ export default function AiStrip({ actions }: { actions: EditorActions }) {
   const look = aiCaption ? aiCaptionStyleOf(aiCaption) : null;
 
   const items: StripItem[] = [
-    { id: 'next', label: busy ? 'Writing…' : 'Shuffle', title: 'Another AI caption on the meme', Icon: Shuffle, className: `ie-ai-shuffle${busy ? ' is-busy' : ''}` },
+    { id: 'next', label: busy ? 'Writing…' : 'Shuffle', title: 'Another AI caption on the meme', Icon: Shuffle, className: `ie-ai-shuffle${busy ? ' is-busy' : ''}${shuffling ? ' is-shuffling' : ''}` },
     { id: 'edit', label: 'Text', title: 'Edit the caption: its words, font and colour', Icon: Pencil },
     { id: 'style', label: 'Style', title: 'How the caption looks', Icon: Palette, active: styling },
-    { id: 'bands', label: 'Header & Footer', title: 'Bands above and below the meme', Icon: PanelsTopBottom, active: sheet === 'bands', className: 'ie-strip-btn--two-line' },
+    { id: 'bands', label: 'Header & Footer', title: 'Bands above and below the meme', Icon: HeaderFooterIcon, active: sheet === 'bands', className: 'ie-strip-btn--two-line' },
     { id: 'effects', label: 'Effects', title: 'Photo effects and filters', Icon: Sparkles, active: sheet === 'filters' },
   ];
 

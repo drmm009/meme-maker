@@ -1,0 +1,128 @@
+/* ─── Social Cards Picker Bottom Sheet ─── */
+.ie-social-sheet {
+  padding-bottom: 8px;
+}
+
+.ie-social-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  padding: 4px 16px 14px;
+}
+
+.ie-social-card-item {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  background: #2a2b30;
+  border: 1.5px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 8px;
+  cursor: pointer;
+  text-align: left;
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+  position: relative;
+  overflow: hidden;
+  font: inherit;
+  color: var(--ui-text, #ffffff);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ie-social-card-item:hover {
+  background: #323339;
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+}
+
+.ie-social-card-item:active {
+  transform: scale(0.96);
+}
+
+.ie-social-card-item:focus-visible {
+  outline: 2px solid var(--ui-accent, #ff5e36);
+  outline-offset: 2px;
+}
+
+.ie-social-card-stage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #18191c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ie-social-card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ie-social-card-item:hover .ie-social-card-img {
+  transform: scale(1.05);
+}
+
+.ie-social-card-badge {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  font-size: 9.5px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 5px;
+  letter-spacing: 0.03em;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+  white-space: nowrap;
+  line-height: 1.2;
+}
+
+.ie-social-card-label-row {
+  margin-top: 8px;
+  padding: 0 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.ie-social-card-name {
+  font-size: 13.5px;
+  font-weight: 750;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: -0.01em;
+}
+
+.ie-social-card-desc {
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.6);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 420px) {
+  .ie-social-grid {
+    gap: 8px;
+    padding: 2px 12px 12px;
+  }
+  .ie-social-card-item {
+    padding: 6px;
+    border-radius: 14px;
+  }
+  .ie-social-card-name {
+    font-size: 12.5px;
+  }
+  .ie-social-card-desc {
+    font-size: 10px;
+  }
+}

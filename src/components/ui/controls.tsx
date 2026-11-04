@@ -1,6 +1,6 @@
 // Small form controls for sheets: sections, label rows, chips, toggles, swatches, sliders,
 // switches and tiles.
-import type { ChangeEvent, CSSProperties, ReactNode } from 'react';
+import type { ChangeEvent, ComponentType, CSSProperties, ReactNode } from 'react';
 import { Pipette } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -36,7 +36,7 @@ interface ChipProps {
   label: ReactNode;
   onClick: () => void;
   active?: boolean;
-  Icon?: LucideIcon;
+  Icon?: ComponentType<{ size?: number; strokeWidth?: number; className?: string }> | LucideIcon;
   title?: string;
 }
 
@@ -160,7 +160,7 @@ export function TileGrid({ columns = 3, className, children }: { columns?: 2 | 3
 
 interface TileProps {
   label: ReactNode;
-  Icon?: LucideIcon;
+  Icon?: ComponentType<{ size?: number; strokeWidth?: number; className?: string }> | LucideIcon;
   icon?: ReactNode;
   sub?: ReactNode;
   title?: string;

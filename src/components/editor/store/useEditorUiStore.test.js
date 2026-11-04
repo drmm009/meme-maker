@@ -78,6 +78,13 @@ describe('createEditorUiStore', () => {
     expect(store.getState()).toMatchObject({ dockTab: 'draw', drawTool: 'glow', sheet: 'draw', activeTab: 'draw' });
     store.getState().closeSheet();
     expect(store.getState()).toMatchObject({ dockTab: 'draw', drawTool: 'glow', sheet: null });
+    // Clicking the same active tool while sheet is closed turns it off without opening sheet
+    store.getState().pickDrawTool('glow');
+    expect(store.getState()).toMatchObject({ dockTab: 'draw', drawTool: null, sheet: null });
+    // Clicking from inactive re-opens tool with sheet
+    store.getState().pickDrawTool('glow');
+    expect(store.getState()).toMatchObject({ dockTab: 'draw', drawTool: 'glow', sheet: 'draw' });
+    store.getState().closeSheet();
     store.getState().leaveDock();
     expect(store.getState()).toMatchObject({ dockTab: null, drawTool: null, activeTab: 'text' });
     // Opening another tab's sheet switches to that tab's strip and stops drawing.

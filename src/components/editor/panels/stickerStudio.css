@@ -69,6 +69,17 @@
   font-size: 26px;
   line-height: 1;
 }
+.ie-sticker-style-art svg {
+  display: block;
+  flex-shrink: 0;
+  transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.ie-sticker-style:hover:not(:disabled) .ie-sticker-style-art svg {
+  transform: scale(1.1);
+}
+.ie-sticker-style:active:not(:disabled) .ie-sticker-style-art svg {
+  transform: scale(0.92);
+}
 /* The picked style's ring, laid over it (global button rules strip outlines). */
 .ie-sticker-style-art::after {
   content: '';

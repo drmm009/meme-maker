@@ -172,12 +172,16 @@ export function createEditorUiStore(template) {
       activeTab: tab === 'draw' ? 'draw' : state.activeTab === 'draw' ? 'text' : state.activeTab,
     })),
     // Drawing: picking a brush turns drawing on and opens its settings (colour, size, clear);
-    // closing them keeps drawing; leaving the Draw tab stops it.
-    pickDrawTool: (tool) => set((state) => (
-      state.drawTool === tool && state.sheet === 'draw'
-        ? { sheet: null, sheetFocus: null }
-        : { dockTab: drawTabOf(tool), drawTool: tool, sheet: 'draw', sheetFocus: null, sheetFromPill: false, activeSubmenu: null, activeTab: 'draw' }
-    )),
+    // closing them keeps drawing; clicking an active tool while its settings are closed turns it off.
+    pickDrawTool: (tool) => set((state) => {
+      if (state.drawTool === tool && state.sheet === 'draw') {
+        return { sheet: null, sheetFocus: null };
+      }
+      if (state.drawTool === tool && state.sheet !== 'draw') {
+        return { drawTool: null, sheet: null, sheetFocus: null };
+      }
+      return { dockTab: drawTabOf(tool), drawTool: tool, sheet: 'draw', sheetFocus: null, sheetFromPill: false, activeSubmenu: null, activeTab: 'draw' };
+    }),
     leaveDock: () => set((state) => ({
       dockTab: null,
       drawTool: null,

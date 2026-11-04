@@ -1,4 +1,5 @@
-import { Copyright, PanelsTopBottom } from 'lucide-react';
+import { AtSign } from 'lucide-react';
+import { HeaderFooterIcon } from './editorIcons';
 import { CENSOR_TOOL } from './drawTools';
 import { ToolStrip } from '../../ui';
 import type { StripItem } from '../../ui';
@@ -30,9 +31,9 @@ export default function CanvasStrip({ actions }: { actions: EditorActions }) {
   );
   const items: StripItem[] = [
     { id: 'style', label: 'Canvas Style', title: 'Background colour, mirror and crop', icon: swatch, active: sheet === 'canvasColor', className: 'ie-strip-btn--two-line' },
-    { id: 'watermark', label: 'Watermark', title: 'Watermark Settings', Icon: Copyright, active: sheet === 'watermark' },
-    { id: 'bands', label: 'Header & Footer', title: 'Bands above and below the meme', Icon: PanelsTopBottom, active: sheet === 'bands', className: 'ie-strip-btn--two-line' },
+    { id: 'bands', label: 'Header & Footer', title: 'Bands above and below the meme', Icon: HeaderFooterIcon, active: sheet === 'bands', className: 'ie-strip-btn--two-line' },
     { ...CENSOR_TOOL, active: censoring && sheet === 'draw' },
+    { id: 'watermark', label: 'Watermark', title: 'Watermark Settings', Icon: AtSign, active: sheet === 'watermark' },
   ];
 
   const onSelect = (id: string) => {

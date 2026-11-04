@@ -205,7 +205,7 @@ describe('MemeEditor', () => {
       ['Photos, videos, stickers and emoji', 'Media tools', ['Photo', 'Templates', 'Stickers', 'Emoji']],
       ['Text', 'Text tools', ['Add Text', 'Bubble', 'Social Card']],
       ['AI tools and photo filters', 'AI and filter tools', ['Face Swap', 'Background', 'AI Caption', 'Filters']],
-      ['Canvas colour, bands and watermark', 'Canvas tools', ['Canvas Style', 'Watermark', 'Header & Footer', 'Censor']],
+      ['Canvas colour, bands and watermark', 'Canvas tools', ['Canvas Style', 'Header & Footer', 'Censor', 'Watermark']],
     ];
     for (const [tab, name, tools] of strips) {
       openSection(tab);
@@ -220,10 +220,15 @@ describe('MemeEditor', () => {
   it('Social Card adds a post and opens its Details under the pill, which also has Look', () => {
     renderEditor();
     fireEvent.click(within(strip('Text tools')).getByText('Social Card'));
+    expect(sheet('Social Cards')).toBeTruthy();
+    fireEvent.click(within(sheet('Social Cards')).getByRole('button', { name: /X card/i }));
+
     const card = canvas.props.captions.find((c) => c.isTweetCard);
     expect(card).toBeTruthy();
     expect(canvas.props.activeLayerId).toBe(card.id);
     expect(canvas.ui.showStylesModal).toBe(false);
+
+    fireEvent.click(within(layerToolbar()).getByText('Details'));
     expect(within(layerToolbar()).getByText('Details').closest('button').getAttribute('aria-pressed')).toBe('true');
     fireEvent.change(within(sheet('Card details')).getByLabelText('Name'), { target: { value: 'Dhruv' } });
     expect(canvas.props.captions.find((c) => c.id === card.id).tweetName).toBe('Dhruv');
@@ -238,10 +243,10 @@ describe('MemeEditor', () => {
     expect(canvas.props.captions.filter((c) => c.isWhatsAppCard)).toHaveLength(1);
     expect(captionTexts()).toEqual(expect.arrayContaining(['TOP TEXT', 'BOTTOM TEXT']));
 
-    // Tapping it again with a card on the meme selects that card rather than adding another.
+    // Tapping it again opens the social card picker sheet.
     act(() => canvas.props.onSelectLayer(null));
     fireEvent.click(within(strip('Text tools')).getByText('Social Card'));
-    expect(canvas.props.captions.filter((c) => c.isWhatsAppCard)).toHaveLength(1);
+    expect(sheet('Social Cards')).toBeTruthy();
   }, 30000);
 
   it('Media adds stickers and emoji from its strip; Templates opens the picker', () => {
@@ -270,15 +275,12 @@ describe('MemeEditor', () => {
     expect(screen.queryByRole('toolbar', { name: 'Media tools' })).toBeNull();
     expect(document.querySelector('.bottom-sheet-panel')).toBeNull();
     expect(within(stickers).getByRole('region', { name: 'Bubbles' })).toBeTruthy();
-    const tiles = within(stickers).getByRole('toolbar', { name: 'Stickers categories' });
-    expect(within(tiles).getByText('All').closest('button').getAttribute('aria-pressed')).toBe('true');
+    expect(within(stickers).queryByRole('toolbar', { name: 'Stickers categories' })).toBeNull();
     fireEvent.click(within(stickers).getByRole('button', { name: 'See all bubbles' }));
-    expect(within(tiles).getByText('Bubbles').closest('button').getAttribute('aria-pressed')).toBe('true');
     expect(within(stickers).queryByRole('region', { name: 'Memes' })).toBeNull();
     fireEvent.click(within(stickers).getByText('All stickers'));
     expect(within(stickers).getByRole('region', { name: 'Memes' })).toBeTruthy();
     fireEvent.change(within(stickers).getByLabelText('Search stickers'), { target: { value: 'doge' } });
-    expect(within(tiles).getByText('All').closest('button').getAttribute('aria-pressed')).toBe('false');
     fireEvent.click(within(stickers).getAllByRole('button', { name: /doge/i })[0]);
     expect(canvas.props.stickers).toHaveLength(1);
     expect(canvas.props.stickers[0].url).toBeTruthy();
@@ -338,11 +340,11 @@ describe('MemeEditor', () => {
     expect(strip('Media tools')).toBeTruthy();
   }, 30000);
 
-  it('Text: Bubble adds a speech bubble and opens its styles', () => {
+  it('Text: Bubble opens styles, and picking one adds a speech bubble', () => {
     renderEditor();
     fireEvent.click(within(textStrip()).getByText('Bubble'));
-    expect(canvas.props.captions.some((c) => c.bubbleStyle)).toBe(true);
-    // The styles dock under the Text strip; picking one restyles the new bubble.
+    expect(canvas.props.captions.some((c) => c.bubbleStyle)).toBe(false);
+    // The styles dock under the Text strip; picking one adds the new bubble with that style.
     const bubbles = sheet('Bubbles');
     expect(document.querySelector('.bottom-sheet-panel')).toBeNull();
     fireEvent.click(within(bubbles).getByText('WhatsApp Sent').closest('button'));
@@ -631,7 +633,12 @@ describe('MemeEditor', () => {
     expect(glow.getAttribute('aria-pressed')).toBe('true');
     expect(glow.classList.contains('is-live')).toBe(true);
     expect(within(drawTools()).getByText('Brush').closest('button').getAttribute('aria-pressed')).toBe('false');
-    // Tapping it opens its settings again.
+    // Clicking the active button while its settings are closed makes it inactive without opening the sheet.
+    fireEvent.click(glow);
+    expect(glow.getAttribute('aria-pressed')).toBe('false');
+    expect(canvas.props.isDrawingMode).toBe(false);
+    expect(screen.queryByRole('dialog', { name: 'Glow' })).toBeNull();
+    // Clicking it again from inactive state turns it on and opens its settings.
     fireEvent.click(glow);
     expect(sheet('Glow')).toBeTruthy();
     closeSheet();
@@ -684,6 +691,16 @@ describe('MemeEditor', () => {
     expect(within(sheet('Censor')).queryByLabelText('Censor strength')).toBeNull();
     fireEvent.click(within(sheet('Censor')).getByRole('button', { name: 'Close Censor' }));
     expect(canvas.props.isDrawingMode).toBe(true);
+    // Clicking active Censor button when sheet is closed turns it inactive without opening sheet
+    fireEvent.click(within(strip('Canvas tools')).getByText('Censor'));
+    expect(canvas.props.drawTool).toBeNull();
+    expect(canvas.props.isDrawingMode).toBe(false);
+    expect(screen.queryByRole('dialog', { name: 'Censor' })).toBeNull();
+    // Clicking it again turns it back on and opens Censor sheet
+    fireEvent.click(within(strip('Canvas tools')).getByText('Censor'));
+    expect(canvas.props.drawTool).toBe('censor');
+    expect(canvas.props.isDrawingMode).toBe(true);
+    expect(sheet('Censor')).toBeTruthy();
     fireEvent.click(within(strip('Canvas tools')).getByText('Watermark'));
     expect(canvas.props.isDrawingMode).toBe(false);
 
@@ -830,7 +847,7 @@ describe('MemeEditor', () => {
   it('Canvas shows Canvas Style, Watermark, Header & Footer and Censor; each opens its sheet under the strip', () => {
     renderEditor();
     openSection('Canvas colour, bands and watermark');
-    expect(within(canvasStrip()).getAllByRole('button').map((b) => b.textContent)).toEqual(['Canvas Style', 'Watermark', 'Header & Footer', 'Censor']);
+    expect(within(canvasStrip()).getAllByRole('button').map((b) => b.textContent)).toEqual(['Canvas Style', 'Header & Footer', 'Censor', 'Watermark']);
 
     fireEvent.click(within(canvasStrip()).getByText('Canvas Style'));
     fireEvent.click(within(sheet('Canvas Style')).getByRole('radio', { name: '#000000' }));
@@ -1084,7 +1101,7 @@ describe('MemeEditor', () => {
     const panel = sheet('Stickers');
     const kinds = within(panel).getByRole('tablist', { name: 'Stickers kinds' });
     expect(within(kinds).getAllByRole('tab').map((b) => b.textContent)).toEqual(['Stickers', 'Animated', 'GIFs']);
-    expect(within(panel).getByRole('toolbar', { name: 'Stickers categories' })).toBeTruthy();
+    expect(within(panel).queryByRole('toolbar', { name: 'Stickers categories' })).toBeNull();
     fireEvent.click(within(kinds).getByRole('tab', { name: 'GIFs' }));
     expect(within(kinds).getByRole('tab', { name: 'GIFs' }).getAttribute('aria-selected')).toBe('true');
     expect(within(panel).queryByRole('toolbar', { name: 'Stickers categories' })).toBeNull();
@@ -1175,7 +1192,7 @@ describe('MemeEditor', () => {
     renderEditor({ ...TEMPLATE, editorMode: 'sticker', imageLayers: [{ id: 'p', url: 'cut.png', originalUrl: 'photo.png', x: 0.5, y: 0.5 }] });
     const tabs = () => within(screen.getByRole('navigation', { name: 'Editor tools' })).getAllByRole('button').map((b) => b.textContent.trim());
     expect(screen.queryByRole('region', { name: 'Make a sticker' })).toBeNull();
-    expect(tabs()).toEqual(['New', 'Editor Pro', 'Export']);
+    expect(tabs()).toEqual(['New', 'Move to editor', 'Export']);
     expect(screen.getByText('Ready to export', { selector: '.ui-topbar-subtitle' })).toBeTruthy();
     expect([...strip('Sticker tools').children].map((b) => b.textContent)).toEqual(['Die-cut', 'Crop', 'Text', 'Effects']);
     // Die-cut opens the DieCutSheet bottom sheet
@@ -1234,10 +1251,10 @@ describe('MemeEditor', () => {
     expect(screen.getByRole('region', { name: 'Make a sticker' })).toBeTruthy();
   });
 
-  it('Editor Pro in the Stickers dock carries the sticker into the full editor', () => {
+  it('Move to editor in the Stickers dock carries the sticker into the full editor', () => {
     renderEditor({ ...TEMPLATE, editorMode: 'sticker', imageLayers: [{ id: 'p', url: 'cut.png', originalUrl: 'photo.png', x: 0.5, y: 0.5 }] });
     const tabs = () => within(screen.getByRole('navigation', { name: 'Editor tools' })).getAllByRole('button').map((b) => b.textContent.trim());
-    fireEvent.click(within(screen.getByRole('navigation', { name: 'Editor tools' })).getByText('Editor Pro'));
+    fireEvent.click(within(screen.getByRole('navigation', { name: 'Editor tools' })).getByText('Move to editor'));
     expect(tabs()).toEqual(['Draw', 'Media', 'Text', 'AI/Filters', 'Canvas']);
     expect(screen.getByText('Meme Editor')).toBeTruthy();
     expect(canvas.props.imageLayers).toHaveLength(1);
@@ -1287,7 +1304,7 @@ describe('MemeEditor', () => {
       renderEditor({ ...TEMPLATE, editorMode: 'faceswap', faceSwap: { face: pic, target: { src: 'original.png', name: 'Meme' } } });
       expect(screen.queryByRole('region', { name: 'Face swap' })).toBeNull();
       const dock = screen.getByRole('navigation', { name: 'Editor tools' });
-      expect(within(dock).getAllByRole('button').map((b) => b.textContent.trim())).toEqual(['Swap again', 'Editor Pro', 'Export']);
+      expect(within(dock).getAllByRole('button').map((b) => b.textContent.trim())).toEqual(['Swap again', 'Move to editor', 'Export']);
       expect(screen.getByRole('radiogroup', { name: 'Aspect ratio' })).toBeTruthy();
       expect(within(strip('Face swap tools')).getAllByRole('button').map((b) => b.textContent)).toEqual(['Text', 'Effects', 'Header & Footer', 'Canvas']);
       // Header & Footer turns the header on and opens the bands' sheet, under the strip; tapping it again closes it.
@@ -1299,8 +1316,8 @@ describe('MemeEditor', () => {
       const page = screen.getByRole('region', { name: 'Face swap' });
       fireEvent.click(within(page).getByRole('button', { name: 'Cancel' }));
       expect(screen.queryByRole('region', { name: 'Face swap' })).toBeNull();
-      // Editor Pro carries the swapped meme into the full editor.
-      fireEvent.click(within(screen.getByRole('navigation', { name: 'Editor tools' })).getByText('Editor Pro'));
+      // Move to editor carries the swapped meme into the full editor.
+      fireEvent.click(within(screen.getByRole('navigation', { name: 'Editor tools' })).getByText('Move to editor'));
       expect(within(screen.getByRole('navigation', { name: 'Editor tools' })).getAllByRole('button').map((b) => b.textContent.trim())).toEqual(['Draw', 'Media', 'Text', 'AI/Filters', 'Canvas']);
       // On the full editor's Text tab, not the maker's strip.
       expect(screen.queryByRole('toolbar', { name: 'Face swap tools' })).toBeNull();
@@ -1388,7 +1405,7 @@ describe('MemeEditor', () => {
     expect(captionTexts()).toHaveLength(1);
     expect(screen.getByRole('radiogroup', { name: 'Aspect ratio' })).toBeTruthy();
     expect(screen.getByText('Ready to export', { selector: '.ui-topbar-subtitle' })).toBeTruthy();
-    expect(within(bar()).getAllByRole('button').map((b) => b.textContent.trim())).toEqual(['New', 'Editor Pro', 'Export']);
+    expect(within(bar()).getAllByRole('button').map((b) => b.textContent.trim())).toEqual(['New', 'Move to editor', 'Export']);
     // Style opens its looks over the tools; a pick restyles the caption.
     const aiCap = () => canvas.props.captions.find((c) => c.id.startsWith('cap-ai-'));
     fireEvent.click(within(tools).getByText('Style'));

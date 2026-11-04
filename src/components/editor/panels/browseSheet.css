@@ -69,7 +69,7 @@
 }
 .ie-browse-search > svg {
   position: absolute;
-  left: 15px;
+  left: 16px;
   color: var(--ui-muted);
   pointer-events: none;
 }
@@ -78,8 +78,8 @@
   height: 46px;
   padding: 0 44px;
   border: 1px solid transparent;
-  border-radius: 14px;
-  background: var(--ui-surface-2);
+  border-radius: 9999px;
+  background: #2c2c2e;
   color: var(--ui-text);
   font: inherit;
   font-size: 15px;
@@ -93,20 +93,20 @@
 .ie-browse-search input::-webkit-search-cancel-button { display: none; }
 .ie-browse-search input:focus {
   border-color: var(--ui-accent-edge);
-  background: #2c2d33;
+  background: #242426;
   box-shadow: 0 0 0 3px var(--ui-accent-soft);
 }
 .ie-browse-clear {
   position: absolute;
-  right: 10px;
+  right: 12px;
   display: grid;
   place-items: center;
-  width: 26px;
-  height: 26px;
+  width: 24px;
+  height: 24px;
   padding: 0;
   border: none;
   border-radius: 50%;
-  background: var(--ui-surface-3);
+  background: var(--ui-accent, #ff5e36);
   color: var(--ui-text);
   cursor: pointer;
 }
@@ -124,18 +124,81 @@
 }
 .ie-browse-chips.is-scrolled { border-bottom-color: var(--ui-line); }
 .ie-browse-chips::-webkit-scrollbar { display: none; }
+/* Tabs row containing the switch container and standalone button */
+.ie-browse-tabs-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 16px 12px;
+}
+.ie-browse-tabs-row.is-scrolled { border-bottom-color: var(--ui-line); }
+.ie-browse-tabs-row .ie-browse-chips--fill {
+  flex: 1;
+  margin: 0;
+}
+.ie-browse-chip--standalone {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 40px;
+  padding: 0 18px;
+  border: none;
+  border-radius: 9999px;
+  background: #2c2c2e;
+  color: rgba(255, 255, 255, 0.75);
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.16s ease, color 0.16s ease, box-shadow 0.16s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+.ie-browse-chip--standalone:hover:not(.is-on) {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+}
+.ie-browse-chip--standalone.is-on {
+  background: #3a3a3c;
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+.ie-browse-chip--standalone.is-on svg {
+  color: #ffffff;
+}
+
 /* A few kinds (Stickers: Stickers / Animated / GIFs): a segmented track sharing the width. */
 .ie-browse-chips--fill {
-  gap: 2px;
+  gap: 3px;
   margin: 0 16px 12px;
   padding: 3px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.07);
+  border-radius: 9999px;
+  background: #2c2c2e;
 }
 .ie-browse-chips--fill.is-scrolled { border-bottom-color: transparent; }
-.ie-browse-chips--fill .ie-browse-chip { flex: 1; justify-content: center; height: 34px; border-radius: 9px; background: transparent; }
-.ie-browse-chips--fill .ie-browse-chip.is-on { background: var(--ui-surface-3); color: var(--ui-text); }
-.ie-browse-chips--fill .ie-browse-chip.is-on svg { color: var(--ui-accent); }
+.ie-browse-chips--fill .ie-browse-chip {
+  flex: 1;
+  justify-content: center;
+  height: 34px;
+  padding: 0 10px;
+  border-radius: 9999px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.75);
+  font-weight: 600;
+  transition: background 0.16s ease, color 0.16s ease, box-shadow 0.16s ease;
+}
+.ie-browse-chips--fill .ie-browse-chip:hover:not(.is-on) {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.05);
+}
+.ie-browse-chips--fill .ie-browse-chip.is-on {
+  background: var(--ui-accent, #ff5e36);
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+.ie-browse-chips--fill .ie-browse-chip.is-on svg { color: #ffffff; }
 .ie-browse-chip {
   display: inline-flex;
   align-items: center;
@@ -145,8 +208,8 @@
   padding: 0 13px;
   border: none;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.07);
-  color: var(--ui-muted);
+  background: #2c2c2e;
+  color: #ffffff;
   font: inherit;
   font-size: 13.5px;
   font-weight: 600;
@@ -154,25 +217,35 @@
   cursor: pointer;
   transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
 }
-.ie-browse-chip:hover:not(.is-on) { color: var(--ui-text); background: rgba(255, 255, 255, 0.11); }
+.ie-browse-chip:hover:not(.is-on) { color: #ffffff; background: #3a3a3c; }
+.ie-browse-chip svg { flex-shrink: 0; }
 .ie-browse-chip-emoji { font-size: 16px; line-height: 1; }
 .ie-browse-chip-count {
   min-width: 20px;
+  height: 19px;
+  margin-left: 2px;
   margin-right: -3px;
-  padding: 1px 6px;
+  padding: 0 6px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
-  color: var(--ui-faint);
+  background: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
   font-size: 11.5px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  text-align: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  transition: background 0.16s ease;
+}
+.ie-browse-chip:hover:not(.is-on) .ie-browse-chip-count {
+  background: rgba(255, 255, 255, 0.24);
 }
 .ie-browse-chip.is-on {
   background: var(--ui-accent);
   color: #fff;
 }
-.ie-browse-chip.is-on .ie-browse-chip-count { background: rgba(255, 255, 255, 0.22); color: #fff; }
+.ie-browse-chip.is-on .ie-browse-chip-count { background: rgba(255, 255, 255, 0.28); color: #fff; }
 
 /* The scrolling part. */
 .ie-browse-scroll {
@@ -371,11 +444,12 @@
 }
 
 /* Stickers and animated stickers: drawn on light paper, so black artwork (thug shades) shows. */
-.ie-card-media--paper { padding: 14%; background-color: #efedea; }
-.ie-card-media--paper img { position: static; display: block; width: 100%; height: 100%; object-fit: contain; }
-.ie-card-media--paper.is-loading { background: #efedea; animation: none; }
+.ie-card-media--paper { padding: 14%; background-color: #2a2b30; }
+.ie-card-media--paper img { position: static; display: block; width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.35)); }
+.ie-card-media--paper.is-loading { background: #2a2b30; animation: none; }
 .ie-card-grid--small { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; }
 .ie-shelf-card--small { flex-basis: 112px; width: 112px; }
+.ie-card--sticker { aspect-ratio: 1; }
 
 /* Emoji: a glyph on a soft small tile, no name; a shelf is two rows of them. */
 .ie-emoji-card {

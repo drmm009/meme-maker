@@ -1,4 +1,5 @@
-import { Trash2, FileText, SlidersHorizontal, Copy, Scissors, Aperture, Blend, ScanFace, Ellipsis, Layers, Palette, MessageSquareQuote, CaseSensitive, Baseline } from 'lucide-react';
+import { Trash2, FileText, SlidersHorizontal, Copy, Scissors, ScanFace, Ellipsis, Layers, Palette, CaseSensitive, Baseline } from 'lucide-react';
+import { BackgroundIcon, BubbleIcon, FiltersIcon } from './editorIcons';
 import { FloatingToolbar } from '../../ui';
 import type { ToolbarItem } from '../../ui';
 import { useEditorUiStore } from '../store/useEditorUiStore';
@@ -42,7 +43,7 @@ export default function LayerToolbar({ actions }: { actions: EditorActions }) {
         { id: 'style', label: 'Style', title: 'Size, bold, italic, underline, case, effects, alignment and spacing', Icon: Baseline, ...opens('text', 'style') },
       ]),
       { id: 'color', label: 'Color', title: 'Colour, outline, the box behind the text and opacity', icon: <span className="ie-color-dot" style={{ background: caption.color || '#ffffff' }} />, ...opens('text', 'color') },
-      ...(isBubble ? [{ id: 'bubble', label: 'Bubble', title: 'Bubble style', Icon: MessageSquareQuote, ...opens('bubble') }] : []),
+      ...(isBubble ? [{ id: 'bubble', label: 'Bubble', title: 'Bubble style', Icon: BubbleIcon, ...opens('bubble') }] : []),
       dup,
       layers,
       del,
@@ -80,8 +81,8 @@ export default function LayerToolbar({ actions }: { actions: EditorActions }) {
   } else if (kind === 'image' && image) {
     items = [
       { id: 'faceswap', label: 'Face Swap', title: 'Face swap with AI', Icon: ScanFace, onClick: () => actions.handleStartMorphFace(image) },
-      { id: 'background', label: 'Background', title: 'Background blur and background removal', Icon: Aperture, ...opens('background') },
-      { id: 'filters', label: 'Filters', Icon: Blend, ...opens('filters') },
+      { id: 'background', label: 'Background', title: 'Background blur and background removal', Icon: BackgroundIcon, ...opens('background') },
+      { id: 'filters', label: 'Filters', Icon: FiltersIcon, ...opens('filters') },
       { id: 'more', label: 'More', title: 'More: mirror, crop, replace, look', Icon: Ellipsis, iconOnly: true, ...opens('media') },
       layers,
       del,

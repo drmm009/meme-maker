@@ -1,9 +1,10 @@
-import { ScanFace, Aperture, Captions, Blend } from 'lucide-react';
+import { ScanFace } from 'lucide-react';
 import { ToolStrip } from '../../ui';
 import type { StripItem } from '../../ui';
 import { useEditorUiStore } from '../store/useEditorUiStore';
 import { useSelection } from './selection';
 import type { EditorActions } from './selection';
+import { AiCaptionIcon, BackgroundIcon, FiltersIcon } from './editorIcons';
 
 // The AI/Filters tab's strip: Face Swap, Background (blur & removal), AI Caption (AiCaptionSheet), Filters.
 export default function AiFiltersStrip({ actions }: { actions: EditorActions }) {
@@ -18,11 +19,11 @@ export default function AiFiltersStrip({ actions }: { actions: EditorActions }) 
       id: 'background',
       label: 'Background',
       title: 'Background blur and background removal',
-      Icon: Aperture,
+      Icon: BackgroundIcon,
       active: sheet === 'background',
     },
-    { id: 'caption', label: 'AI Caption', title: 'Write or shuffle the caption, and its look', Icon: Captions, active: sheet === 'aiCaption' },
-    { id: 'filters', label: 'Filters', title: 'Photo filters and adjustments', Icon: Blend, active: sheet === 'filters' },
+    { id: 'caption', label: 'AI Caption', title: 'Write or shuffle the caption, and its look', Icon: AiCaptionIcon, active: sheet === 'aiCaption' },
+    { id: 'filters', label: 'Filters', title: 'Photo filters and adjustments', Icon: FiltersIcon, active: sheet === 'filters' },
   ];
 
   const onSelect = (id: string) => {

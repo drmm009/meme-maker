@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
-import { Type, Copy, PenLine, Sparkles, LayoutGrid, ScanFace, Share2, Wand2, Download, Palette, Plus } from 'lucide-react';
+import { Type, Copy, PenLine, Sparkles, LayoutGrid, ScanFace, Wand2, Download, Palette, Plus } from 'lucide-react';
+import { SocialCardIcon } from './editorIcons';
 import { ToolDock, ToolStrip } from '../../ui';
 import type { DockItem } from '../../ui';
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
@@ -39,6 +40,7 @@ import EmojiSheet from './EmojiSheet';
 import BubbleSheet from './BubbleSheet';
 import BackgroundSheet from './BackgroundSheet';
 import DieCutSheet from './DieCutSheet';
+import SocialCardSheet from './SocialCardSheet';
 import LayerToolbar from './LayerToolbar';
 import { DRAW_TOOLS, isDrawingOn } from './drawTools';
 import { useSmoothHeight } from './useSmoothHeight';
@@ -55,17 +57,17 @@ const DOCK: DockItem[] = [
   { id: 'fx', label: 'AI/Filters', Icon: Sparkles, title: 'AI tools and photo filters' },
   { id: 'canvas', label: 'Canvas', Icon: LayoutGrid, title: 'Canvas colour, bands and watermark' },
   { id: 'swap', label: 'Face Swap', Icon: ScanFace, title: 'Your face and the meme' },
-  { id: 'card', label: 'Card', Icon: Share2, title: 'The social card' },
+  { id: 'card', label: 'Card', Icon: SocialCardIcon, title: 'The social card' },
   { id: 'ai', label: 'AI', Icon: Wand2, title: 'AI meme ideas' },
   // The Stickers and AI Meme makers' New: their page again (a blank sticker; the same meme and idea).
   { id: 'new', label: 'New', Icon: Plus, title: 'Start again', variant: 'secondary' },
-  // The Face Swap, Stickers and AI Meme makers': Editor Pro takes the meme into the full editor.
-  { id: 'pro', label: 'Editor Pro', Icon: Palette, title: 'Keep editing in the full editor', variant: 'secondary' },
+  // The Face Swap, Stickers and AI Meme makers': Move to editor takes the meme into the full editor.
+  { id: 'pro', label: 'Move to editor', Icon: Palette, title: 'Keep editing in the full editor', variant: 'secondary' },
   { id: 'export', label: 'Export', Icon: Download, title: 'Save or share it', variant: 'primary' },
 ];
 
 const SHEETS = { text: TextSheet, media: MediaSheet, draw: DrawSheet, canvasColor: CanvasColorSheet, watermark: WatermarkSheet, bands: BandsSheet, aiCaption: AiCaptionSheet, filters: FiltersSheet, background: BackgroundSheet, layers: LayersSheet, export: ExportSheet, library: LibrarySheet, mediaLink: LinkSheet,
-  templates: TemplatesSheet, memes: MemePickerSheet, stickers: StickersSheet, emoji: EmojiSheet, bubble: BubbleSheet, diecut: DieCutSheet,
+  templates: TemplatesSheet, memes: MemePickerSheet, stickers: StickersSheet, emoji: EmojiSheet, bubble: BubbleSheet, diecut: DieCutSheet, socialCard: SocialCardSheet,
   card: CardFormSheet, cardLook: CardLookSheet, aiGallery: AiMemeGallerySheet, faceSwap: FaceSwapStudio, stickerGallery: StickerGallerySheet };
 // Sheets for browsing a big library, shown full height (the meme needn't stay in view).
 const FULL_SHEETS = new Set<string>(['templates', 'memes', 'stickers', 'emoji', 'aiGallery', 'faceSwap', 'stickerGallery']);
@@ -90,13 +92,13 @@ export default function EditorPanels({ actions }: { actions: EditorActions }) {
   const photos: { originalUrl?: string | null }[] = useMemeEditorStore((s: { imageLayers: { originalUrl?: string | null }[] }) => s.imageLayers);
   const generated = photos.length > 0 && photos.every((l) => Boolean(l.originalUrl));
   // The Stickers maker shows its page (StickerStudio) until the sticker is made, unless its Gallery
-  // is open over it; then its dock is New, Editor Pro and Export.
+  // is open over it; then its dock is New, Move to editor and Export.
   const stickerPage = mode === 'sticker' && (!generated || busy);
   // The AI Meme maker shows its page (AiMemeStudio) until Generate makes the meme, unless its Gallery
-  // is open over it; then its dock is New, Editor Pro and Export too.
+  // is open over it; then its dock is New, Move to editor and Export too.
   const activeTemplate = useMemeEditorStore((s: { activeTemplate: { editorMode?: string; aiPicked?: boolean } | null }) => s.activeTemplate);
   const aiPage = mode === 'ai' && opensOnPrompt(activeTemplate);
-  // The Face Swap maker's dock: Swap face (its page); once a swap is the meme, Swap again, Editor Pro
+  // The Face Swap maker's dock: Swap face (its page); once a swap is the meme, Swap again, Move to editor
   // and Export.
   const swapped = useMemeEditorStore((s: { activeTemplate: { faceSwap?: unknown } | null }) => Boolean(s.activeTemplate?.faceSwap));
   const swapDock: Partial<DockItem> = swapped

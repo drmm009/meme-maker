@@ -12,7 +12,7 @@ interface LayerItem {
 
 // The Stickers maker's strip on its editing page, once the sticker is made (before that its page,
 // StickerStudio, shows): Die-cut (border settings), Crop, Text and Effects (photo filters), above
-// New, Editor Pro and Export (EditorPanels).
+// New, Move to editor and Export (EditorPanels).
 export default function StickerStrip({ actions }: { actions: EditorActions }) {
   const sheet: string | null = useEditorUiStore((s: { sheet: string | null }) => s.sheet);
   const openSheet = useEditorUiStore((s: { openSheet: (sheet: string) => void }) => s.openSheet);

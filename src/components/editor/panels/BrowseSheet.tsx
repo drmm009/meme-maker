@@ -16,16 +16,23 @@ export interface BrowseChip {
   color?: string;
 }
 
+export interface BrowseTabs {
+  items: BrowseChip[];
+  active: string;
+  onPick: (id: string) => void;
+  extra?: BrowseChip;
+}
+
 interface BrowseSheetProps {
   title: string;
   total?: number;
   onClose: () => void;
   search?: { value: string; onChange: (v: string) => void; placeholder: string; label: string };
   // A few kinds of thing (Stickers: Stickers / Animated / GIFs), a segmented track above the chips.
-  tabs?: { items: BrowseChip[]; active: string; onPick: (id: string) => void };
-  chips: BrowseChip[];
-  active: string | null;
-  onChip: (id: string) => void;
+  tabs?: BrowseTabs;
+  chips?: BrowseChip[];
+  active?: string | null;
+  onChip?: (id: string) => void;
   busy?: boolean;
   children: ReactNode;
 }
@@ -33,7 +40,7 @@ interface BrowseSheetProps {
 // The full-height library sheets (Media: Templates, Stickers, Emoji): over the meme, which
 // needn't show while choosing, with a title and close, a search and category chips pinned at the
 // top, and only the content below them scrolling.
-export default function BrowseSheet({ title, total, onClose, search, tabs, chips, active, onChip, busy, children }: BrowseSheetProps) {
+export default function BrowseSheet({ title, total, onClose, search, tabs, chips = [], active = null, onChip = () => {}, busy, children }: BrowseSheetProps) {
   const chipsRef = useRef<HTMLDivElement>(null);
   // The line under the chips only shows once the content has scrolled under it.
   const [scrolled, setScrolled] = useState(false);
@@ -70,16 +77,42 @@ export default function BrowseSheet({ title, total, onClose, search, tabs, chips
       )}
 
       {tabs && (
-        <div className={`ie-browse-chips ie-browse-chips--fill${scrolled && !chips.length ? ' is-scrolled' : ''}`} role="tablist" aria-label={`${title} kinds`}>
-          {tabs.items.map(({ id, label, Icon }) => {
-            const on = tabs.active === id;
+        <div className={`ie-browse-tabs-row${scrolled && !chips.length ? ' is-scrolled' : ''}`} role="tablist" aria-label={`${title} kinds`}>
+          <div className="ie-browse-chips ie-browse-chips--fill">
+            {tabs.items.map(({ id, label, Icon }) => {
+              const on = tabs.active === id;
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  role="tab"
+                  aria-selected={on}
+                  className={`ie-browse-chip${on ? ' is-on' : ''}`}
+                  onClick={() => tabs.onPick(id)}
+                >
+                  {Icon && <Icon size={15} strokeWidth={2} aria-hidden="true" />}
+                  <span>{label}</span>
+                </button>
+              );
+            })}
+          </div>
+          {tabs.extra && (() => {
+            const on = tabs.active === tabs.extra.id;
+            const { id, label, Icon } = tabs.extra;
             return (
-              <button key={id} type="button" role="tab" aria-selected={on} className={`ie-browse-chip${on ? ' is-on' : ''}`} onClick={() => tabs.onPick(id)}>
+              <button
+                key={id}
+                type="button"
+                role="tab"
+                aria-selected={on}
+                className={`ie-browse-chip ie-browse-chip--standalone${on ? ' is-on' : ''}`}
+                onClick={() => tabs.onPick(id)}
+              >
                 {Icon && <Icon size={15} strokeWidth={2} aria-hidden="true" />}
                 <span>{label}</span>
               </button>
             );
-          })}
+          })()}
         </div>
       )}
 

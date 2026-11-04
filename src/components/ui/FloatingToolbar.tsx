@@ -1,12 +1,12 @@
 import { Fragment } from 'react';
-import type { CSSProperties, ReactNode, Ref } from 'react';
+import type { ComponentType, CSSProperties, ReactNode, Ref } from 'react';
 import type { LucideIcon } from 'lucide-react';
 
 export interface ToolbarItem {
   id: string;
   label: string;
   onClick: () => void;
-  Icon?: LucideIcon;
+  Icon?: ComponentType<{ size?: number; strokeWidth?: number; className?: string; 'aria-hidden'?: boolean | 'true' | 'false' }> | LucideIcon;
   // Drawn instead of Icon (a colour dot, a font sample…).
   icon?: ReactNode;
   title?: string;

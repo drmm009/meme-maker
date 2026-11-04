@@ -1,5 +1,17 @@
 import { useState } from 'react';
-import { ImagePlay, LayoutGrid, Search, Sparkles, Sticker } from 'lucide-react';
+import {
+  BadgeCheck,
+  Crown,
+  Flame,
+  Glasses,
+  ImagePlay,
+  Laugh,
+  MessageSquare,
+  Search,
+  Sparkles,
+  Sticker,
+} from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import BrowseSheet, { BrowseEmpty, ResultsHead, Shelf, Thumb } from './BrowseSheet';
 import GiphyResults from './GiphyResults';
 import type { GifResult } from './GiphyResults';
@@ -9,30 +21,46 @@ import type { GraphicSticker } from './mediaPickers';
 import { GRAPHIC_STICKER_CATEGORIES } from '../../../data/memeStickers';
 import type { EditorActions } from './selection';
 
-const CATEGORIES = GRAPHIC_STICKER_CATEGORIES.map((c) => ({ ...c, items: filterStickers('', c.id) }));
+// High-utility Lucide icons and vibrant colors for category shelves
+const STICKER_CATEGORY_META: Record<string, { label: string; Icon: LucideIcon; color: string }> = {
+  memes: { label: 'Memes', Icon: Glasses, color: '#a855f7' },
+  faces: { label: 'Faces', Icon: Laugh, color: '#fbbf24' },
+  props: { label: 'Props', Icon: Crown, color: '#fb923c' },
+  bubbles: { label: 'Bubbles', Icon: MessageSquare, color: '#38bdf8' },
+  badges: { label: 'Badges', Icon: BadgeCheck, color: '#34d399' },
+  reactions: { label: 'Reactions', Icon: Flame, color: '#f43f5e' },
+};
+
+const CATEGORIES = GRAPHIC_STICKER_CATEGORIES.map((c) => ({
+  ...c,
+  Icon: STICKER_CATEGORY_META[c.id]?.Icon,
+  color: STICKER_CATEGORY_META[c.id]?.color,
+  items: filterStickers('', c.id),
+}));
 const TOTAL = CATEGORIES.reduce((n, c) => n + c.items.length, 0);
 const SHELF_SIZE = 10;
-const KINDS = [
+const SWITCH_KINDS = [
   { id: 'stickers', label: 'Stickers', Icon: Sticker },
   { id: 'animated', label: 'Animated', Icon: Sparkles },
-  { id: 'gifs', label: 'GIFs', Icon: ImagePlay },
 ];
+const GIF_KIND = { id: 'gifs', label: 'GIFs', Icon: ImagePlay };
 const SEARCH = {
   stickers: { placeholder: 'Search doge, shades, wow…', label: 'Search stickers' },
   animated: { placeholder: 'Search animated stickers', label: 'Search animated stickers' },
   gifs: { placeholder: 'Search GIFs', label: 'Search GIFs' },
 } as const;
 type Kind = keyof typeof SEARCH;
-const CHIPS = [
-  { id: 'all', label: 'All', Icon: LayoutGrid },
-  ...CATEGORIES.map(({ id, label, icon, items }) => ({ id, label, icon, count: items.length })),
-];
 
 function StickerCard({ sticker, onPick }: { sticker: GraphicSticker; onPick: (s: GraphicSticker) => void }) {
   return (
-    <button type="button" className="ie-browse-item ie-card" title={sticker.name} aria-label={sticker.name} onClick={() => onPick(sticker)}>
+    <button
+      type="button"
+      className="ie-browse-item ie-card ie-card--sticker"
+      title={sticker.name}
+      aria-label={sticker.name}
+      onClick={() => onPick(sticker)}
+    >
       <Thumb src={sticker.url} className="ie-card-media ie-card-media--paper" />
-      <span className="ie-card-name">{sticker.name}</span>
     </button>
   );
 }
@@ -67,15 +95,12 @@ export default function StickersSheet({ actions, onClose }: { actions: EditorAct
       total={local ? TOTAL : undefined}
       onClose={onClose}
       search={local || keyed ? { value: query, onChange: setQuery, ...SEARCH[kind] } : undefined}
-      tabs={{ items: KINDS, active: kind, onPick: switchKind }}
-      chips={local ? CHIPS : []}
-      active={query ? null : category}
-      onChip={choose}
+      tabs={{ items: SWITCH_KINDS, extra: GIF_KIND, active: kind, onPick: switchKind }}
     >
       {!local && <GiphyResults key={kind} kind={kind === 'gifs' ? 'gifs' : 'stickers'} query={query} keyed={keyed} onClearQuery={() => setQuery('')} onPick={pickGif} />}
 
       {local && browsing && CATEGORIES.map((c) => (
-        <Shelf key={c.id} label={c.label} icon={c.icon} onSeeAll={() => choose(c.id)}>
+        <Shelf key={c.id} label={c.label} Icon={c.Icon} color={c.color} icon={c.icon} onSeeAll={() => choose(c.id)}>
           {c.items.slice(0, SHELF_SIZE).map((s) => (
             <div key={s.id} className="ie-shelf-card ie-shelf-card--small"><StickerCard sticker={s} onPick={pick} /></div>
           ))}
