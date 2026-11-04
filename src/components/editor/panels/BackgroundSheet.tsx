@@ -18,7 +18,7 @@ interface CardProps {
   onClick: () => void;
 }
 
-// One of the sheet's two actions: a plain white icon, a short name (`label` is the full one, for
+// One of the sheet's two actions: a plain orange icon, a short name (`label` is the full one, for
 // screen readers) and a few words under it; ringed while applied, a spinner while the subject is
 // being found.
 function BgCard({ label, name, sub, Icon, on = false, busy = false, disabled = false, onClick }: CardProps) {

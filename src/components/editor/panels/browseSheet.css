@@ -10,7 +10,13 @@
 /* The restore-draft offer floats over the editor; it would cover the sheet's title and close. */
 .meme-editor-container:has(.ie-panels--full) .meme-draft-offer { display: none; }
 
-.ie-browse-sheet { height: 100%; }
+/* Pitch black: these full-height sheets read as a page of their own
+   and the thumbnails stand out. Anything drawn in the sheet's colour follows (--ui-surface). */
+.ie-browse-sheet {
+  --ui-surface: #000000;
+  height: 100%;
+}
+.ui-sheet.ie-browse-sheet { background: var(--ui-surface) !important; }
 .ie-browse-sheet .ui-sheet-body {
   display: flex;
   flex-direction: column;
