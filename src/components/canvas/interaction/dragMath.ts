@@ -223,28 +223,17 @@ export function resizeSticker({ coords, start, sticker, canvasWidth, headerExtH,
 }
 
 // Caption handles: the sides change the wrap width, the corner scales font size and width.
-// Either way the (rotated) box stays 8px inside the canvas.
+// The box may grow past the canvas edge.
 export function resizeCaption({ handleType, coords, start, caption, canvas, headerExtH, canvasH }: {
   handleType: string; coords: Point; start: DragStart; caption: MemeCaption; canvas: SceneCanvas; headerExtH: number; canvasH: number;
 }): { width: number; hasCustomWidth: true } | { fontSize: number; width: number } {
   const center = getDragCenter(start, canvas.width, headerExtH, canvasH);
   const rot = start.rotation || 0;
   const local = rotatePoint(coords.x, coords.y, center.x, center.y, -rot);
-  const edgePad = 8;
-  const rad = Math.abs((rot * Math.PI) / 180);
-  const cosR = Math.abs(Math.cos(rad));
-  const sinR = Math.abs(Math.sin(rad));
-  const maxAvailX = Math.max(20, Math.min(center.x - edgePad, canvas.width - center.x - edgePad));
-  const maxAvailY = Math.max(20, Math.min(center.y - edgePad, canvas.height - center.y - edgePad));
 
   if (handleType === 'resize_caption_l' || handleType === 'resize_caption_r') {
     const localDx = local.x - center.x;
-    const rawHalfWidth = Math.max(30, handleType === 'resize_caption_r' ? localDx : -localDx);
-    const currentH = start.initialBoxHeight || start.boxHeight || 60;
-    let maxHalfW = canvas.width / 2 - edgePad;
-    if (cosR > 0.08) maxHalfW = Math.min(maxHalfW, Math.max(30, (maxAvailX - (currentH / 2) * sinR) / cosR));
-    if (sinR > 0.08) maxHalfW = Math.min(maxHalfW, Math.max(30, (maxAvailY - (currentH / 2) * cosR) / sinR));
-    const halfWidth = Math.max(30, Math.min(maxHalfW, rawHalfWidth));
+    const halfWidth = Math.max(30, handleType === 'resize_caption_r' ? localDx : -localDx);
     return { width: Math.max(0.15, Math.min(0.98, Number((halfWidth * 2 / canvas.width).toFixed(3)))), hasCustomWidth: true };
   }
 
@@ -254,12 +243,7 @@ export function resizeCaption({ handleType, coords, start, caption, canvas, head
   const initRelY = start.handleRelY || (handleType.includes('b') ? 50 : -50);
   const proj = ((local.x - center.x) * initRelX + (local.y - center.y) * initRelY) / (initDist * initDist);
 
-  const initW = start.initialBoxWidth || start.boxWidth || 100;
-  const initH = start.initialBoxHeight || start.boxHeight || 60;
-  const halfExtentX = Math.max(20, (initW / 2) * cosR + (initH / 2) * sinR);
-  const halfExtentY = Math.max(20, (initW / 2) * sinR + (initH / 2) * cosR);
-  const maxScale = Math.max(0.35, Math.min(maxAvailX / halfExtentX, maxAvailY / halfExtentY));
-  const scaleFactor = Math.max(0.1, Math.min(maxScale, proj));
+  const scaleFactor = Math.max(0.1, proj);
 
   const isSocial = isSocialCardCaption(caption);
   const initFontSize = start.initialFontSize || caption.fontSize || (isSocial ? 16 : 50);
@@ -272,16 +256,17 @@ export function resizeCaption({ handleType, coords, start, caption, canvas, head
 
 const SNAP_DIST = 0.015;
 
-// Moving a layer by (dx, dy), as fractions of the canvas / image area. Captions stay inside the
-// whole canvas, header and footer bands included (they are part of the canvas); the position snaps to the centre lines and to other layers' centres, which are
+// Moving a layer by (dx, dy), as fractions of the canvas / image area. Any layer may go past the
+// canvas edge; the position snaps to the centre lines and to other layers' centres, which are
 // returned as guides ({ horizontal, vertical }) for the renderer.
-export function moveLayer({ target, start, dx, dy, canvas, canvasH, headerExtH = 0, captions, stickers, imageLayers }: {
+export function moveLayer({ target, start, dx, dy, captions, stickers, imageLayers }: {
   target: Pick<LayerHit, 'id' | 'type' | 'isHeaderCaption' | 'isFooterCaption'>;
   start: Pick<DragStart, 'x' | 'y'> & Partial<Pick<DragStart, 'rotation' | 'boxWidth' | 'boxHeight' | 'width'>>;
   dx: number;
   dy: number;
-  canvas: SceneCanvas;
-  canvasH: number;
+  // Callers still pass the canvas size; the move no longer needs it.
+  canvas?: SceneCanvas;
+  canvasH?: number;
   headerExtH?: number;
   captions: { id: string; x: number; y: number }[];
   stickers: { id: string; x: number; y: number }[];
@@ -289,26 +274,6 @@ export function moveLayer({ target, start, dx, dy, canvas, canvasH, headerExtH =
 }): { x: number; y: number; guides: { horizontal: number | null; vertical: number | null } } {
   let x = start.x + dx;
   let y = start.y + dy;
-
-  if (target.type === 'caption') {
-    const rad = Math.abs(((start.rotation || 0) * Math.PI) / 180);
-    const bW = start.boxWidth || ((start.width || 0.5) * canvas.width) || 100;
-    const bH = start.boxHeight || 60;
-    const halfExtX = (bW / 2) * Math.abs(Math.cos(rad)) + (bH / 2) * Math.abs(Math.sin(rad));
-    const halfExtY = (bW / 2) * Math.abs(Math.sin(rad)) + (bH / 2) * Math.abs(Math.cos(rad));
-    const edgePad = 8;
-    // Band captions' y spans the whole canvas; other captions' y is 0..1 of the image area, which
-    // starts headerExtH down, so the header is below 0 and the footer above 1.
-    const inBandCoords = target.isHeaderCaption || target.isFooterCaption;
-    const areaH = inBandCoords ? canvas.height : canvasH;
-    const top = inBandCoords ? 0 : headerExtH;
-    const minX = Math.min(0.5, (halfExtX + edgePad) / canvas.width);
-    const maxX = Math.max(0.5, (canvas.width - halfExtX - edgePad) / canvas.width);
-    const minY = Math.min(0.5, (halfExtY + edgePad - top) / areaH);
-    const maxY = Math.max(0.5, (canvas.height - top - halfExtY - edgePad) / areaH);
-    x = Math.max(minX, Math.min(maxX, x));
-    y = Math.max(minY, Math.min(maxY, y));
-  }
 
   let horizontal: number | null = null;
   let vertical: number | null = null;

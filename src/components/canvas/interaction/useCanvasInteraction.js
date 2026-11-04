@@ -53,6 +53,8 @@ export function useCanvasInteraction({
   const initialSlotScale = useRef(null);
   const lastDrawPoint = useRef(null);
   const lastTapRef = useRef({ id: null, time: 0 });
+  // Whether the caption under this tap was already the selected one (then the tap edits it).
+  const tapWasActive = useRef(false);
   const pendingDragRef = useRef(null);
   const groupStart = useRef([]);
   // Two fingers on a layer: the layer and the fingers as they came down.
@@ -291,16 +293,7 @@ export function useCanvasInteraction({
       return;
     }
 
-    // Double tap on a text caption starts editing it in place.
-    if (hit.type === 'caption') {
-      const now = Date.now();
-      const isSocial = isSocialCardCaption(captions.find((c) => c.id === hit.id));
-      if (!isSocial && lastTapRef.current.id === hit.id && (now - lastTapRef.current.time) < DOUBLE_TAP_MS) {
-        setEditingCaptionId(hit.id);
-        focusTextarea();
-      }
-      lastTapRef.current = { id: hit.id, time: now };
-    }
+    tapWasActive.current = hit.type === 'caption' && hit.id === activeLayerId;
 
     if (onSelectLayer) onSelectLayer(hit.id);
     if (!hit.locked) beginDrag(hit, coords, canvas);
@@ -357,11 +350,12 @@ export function useCanvasInteraction({
     if (tappedType) requestRedraw();
     document.body.style.webkitUserSelect = '';
 
-    // Clean tap on caption: select layer, activate editing mode and open keyboard immediately (only for regular text captions, not tweet cards)
+    // A clean tap on a caption selects it; a tap on the caption already selected edits it in place
+    // and opens the keyboard (regular text only, not social cards).
     if (wasCleanTap && tappedType === 'caption' && tappedId) {
       if (onSelectLayer) onSelectLayer(tappedId);
       const isSocial = isSocialCardCaption(captions.find((c) => c.id === tappedId));
-      if (!isSocial) {
+      if (!isSocial && tapWasActive.current) {
         setEditingCaptionId(tappedId);
         focusTextarea();
       } else {
