@@ -492,7 +492,7 @@ div.ie-layer-pick { cursor: default; }
   box-shadow: none !important;
 }
 
-.ie-panels--sheet .ui-tile:hover:not(:disabled) {
+.ie-panels--sheet .ui-tile:hover:not(:disabled):not(.is-on) {
   border-color: rgba(255, 255, 255, 0.5) !important;
   background: rgba(255, 255, 255, 0.08) !important;
   transform: translateY(-1px);
@@ -647,19 +647,20 @@ div.ie-layer-pick { cursor: default; }
   transition: transform 0.32s cubic-bezier(0.34, 1.4, 0.64, 1), background 0.2s ease !important;
 }
 
-/* The gradient is a layer of its own so it can fade in (a gradient can't transition). */
+/* Solid orange when on, like every other pick inside a sheet (the gradient is for the bars: dock,
+   strip, toolbar). A layer of its own so it fades in. */
 .ie-panels--sheet .ui-switch::before {
   content: '';
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: linear-gradient(100deg, #ec6a43, #d9549a);
+  background: var(--ui-accent, #ff5a36);
   opacity: 0;
   transition: opacity 0.25s ease;
 }
 .ie-panels--sheet .ui-switch[aria-checked='true']::before { opacity: 1; }
 .ie-panels--sheet .ui-switch[aria-checked='true'] {
-  box-shadow: 0 4px 14px -6px rgba(236, 106, 67, 0.75);
+  box-shadow: none;
 }
 
 .ie-panels--sheet .ui-switch[aria-checked='true']::after {
@@ -1243,7 +1244,7 @@ div.ie-layer-pick { cursor: default; }
 
 
 /* Background sheet: Blur and Remove as two quiet tiles side by side, a plain orange icon beside a
-   name and a few words. Applied shows as a lighter fill with a thin white ring, no colour or glow.
+   name and a few words. Applied shows as a faint orange fill with a thin orange ring, no glow.
    The blur strength row shows under them. */
 .ie-bg-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px; }
 .ie-panels--sheet .ie-bg-card {
@@ -1267,14 +1268,17 @@ div.ie-layer-pick { cursor: default; }
 .ie-panels--sheet .ie-bg-card:hover:not(:disabled):not(.is-on) { background: rgba(255, 255, 255, 0.08) !important; }
 .ie-panels--sheet .ie-bg-card:disabled { opacity: 0.45; cursor: default; }
 .ie-panels--sheet .ie-bg-card.is-on {
-  background: rgba(255, 255, 255, 0.12) !important;
-  box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.85) !important;
+  background: var(--ui-accent-soft, rgba(255, 90, 54, 0.14)) !important;
+  box-shadow: inset 0 0 0 1.5px var(--ui-accent, #ff5a36) !important;
 }
 .ie-bg-card-icon { flex-shrink: 0; display: grid; place-items: center; color: var(--ui-accent, #ff5a36); }
 .ie-bg-card-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
 .ie-bg-card-label, .ie-bg-card-sub { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ie-bg-card-label { font-size: 14px; font-weight: 600; letter-spacing: -0.01em; }
 .ie-bg-card-sub { color: var(--ui-muted, #a5a6ad); font-size: 11.5px; font-weight: 500; }
+
+/* Canvas > Size: each shape's outline in its tile, in the tile's text colour. */
+.ie-size-shape { display: block; box-sizing: border-box; border: 2px solid currentColor; border-radius: 3px; }
 
 /* Face swap, while it's being tuned: Compare (hold), Cancel and Done in one row. */
 .ie-fs-foot { display: flex; gap: 8px; padding-top: 6px; }

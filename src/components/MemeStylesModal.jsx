@@ -4,7 +4,7 @@ import {
   MessageCircle, Repeat, Heart, Bookmark, Share2,
   Phone, Send,
   Upload, Image as ImageIcon, Trash2, ChevronLeft, ChevronRight, ChevronDown,
-  Newspaper, Rocket, Trophy, Smile, Briefcase, Paperclip, Camera, Mic
+  Moon, Rocket, Trophy, Smile, Briefcase, Paperclip, Camera, Mic
 } from 'lucide-react';
 import BottomSheet from './BottomSheet';
 import { IG_PRESET_IMAGES } from '../data/igPresetImages';
@@ -121,23 +121,23 @@ const RANDOM_TWEETS = [
 /* ─── Instagram Presets & Data (Latest UI Reference Anatomy) ─── */
 const INSTAGRAM_PERSONAS = [
   {
-    id: 'inc42',
-    label: 'Tech Media (inc42)',
-    icon: Newspaper,
-    username: 'inc42.media',
+    id: 'nightowl',
+    label: 'Night Owl',
+    icon: Moon,
+    username: '3am.thoughts',
     subtitle: 'Suggested for you',
-    verified: true,
+    verified: false,
     hasStoryRing: true,
-    avatarBg: 'linear-gradient(135deg, #b91c1c, #ef4444)',
-    likesCount: '1,583',
-    commentsCount: '15',
-    repostsCount: '15',
-    sharesCount: '295',
+    avatarBg: 'linear-gradient(135deg, #312e81, #6366f1)',
+    likesCount: '48,213',
+    commentsCount: '1,204',
+    repostsCount: '3,317',
+    sharesCount: '9,862',
     followText: 'Follow',
-    likesText: '1,583',
-    text: 'Remember Tanmay Bhat from the AIB... more',
-    time: '28 September',
-    postImage: IG_PRESET_IMAGES.inc42
+    likesText: '48,213',
+    text: 'told myself i\'d sleep early tonight. it\'s 3:07 AM and i now know exactly how bricks are made 🧱 no regrets. some regrets.',
+    time: '2 hours ago',
+    postImage: IG_PRESET_IMAGES.nightOwl
   },
   {
     id: 'zuck',
@@ -443,25 +443,25 @@ export default function MemeStylesModal({
   const [tweetAvatarBg, setTweetAvatarBg] = useState('linear-gradient(135deg, #0ea5e9, #38bdf8)');
 
   // 2. Instagram State
-  const [activeIgPersona, setActiveIgPersona] = useState('inc42');
-  const [igUsername, setIgUsername] = useState('inc42.media');
+  const [activeIgPersona, setActiveIgPersona] = useState('nightowl');
+  const [igUsername, setIgUsername] = useState('3am.thoughts');
   const [igSubtitle, setIgSubtitle] = useState('Suggested for you');
-  const [igText, setIgText] = useState('Remember Tanmay Bhat from the AIB... more');
-  const [igVerified, setIgVerified] = useState(true);
+  const [igText, setIgText] = useState('told myself i\'d sleep early tonight. it\'s 3:07 AM and i now know exactly how bricks are made 🧱 no regrets. some regrets.');
+  const [igVerified, setIgVerified] = useState(false);
   const [igHasStoryRing, setIgHasStoryRing] = useState(true);
-  const [igLikesText, setIgLikesText] = useState('1,583');
-  const [igLikesCount, setIgLikesCount] = useState('1,583');
-  const [igCommentsCount, setIgCommentsCount] = useState('15');
-  const [igRepostsCount, setIgRepostsCount] = useState('15');
-  const [igSharesCount, setIgSharesCount] = useState('295');
+  const [igLikesText, setIgLikesText] = useState('48,213');
+  const [igLikesCount, setIgLikesCount] = useState('48,213');
+  const [igCommentsCount, setIgCommentsCount] = useState('1,204');
+  const [igRepostsCount, setIgRepostsCount] = useState('3,317');
+  const [igSharesCount, setIgSharesCount] = useState('9,862');
   const [igFollowText, setIgFollowText] = useState('Follow');
   const [igTopCommentUser, setIgTopCommentUser] = useState('');
   const [igTopCommentText, setIgTopCommentText] = useState('');
-  const [igTime, setIgTime] = useState('28 September');
+  const [igTime, setIgTime] = useState('2 hours ago');
   const [igShowTranslation, setIgShowTranslation] = useState(false);
   const [igTheme, setIgTheme] = useState('light');
-  const [igAvatarBg, setIgAvatarBg] = useState('linear-gradient(135deg, #b91c1c, #ef4444)');
-  const [igPostImage, setIgPostImage] = useState(IG_PRESET_IMAGES.inc42);
+  const [igAvatarBg, setIgAvatarBg] = useState('linear-gradient(135deg, #312e81, #6366f1)');
+  const [igPostImage, setIgPostImage] = useState(IG_PRESET_IMAGES.nightOwl);
   const [showIgMoreOptions, setShowIgMoreOptions] = useState(false);
 
 
@@ -1459,7 +1459,7 @@ export default function MemeStylesModal({
                       setIgUsername(e.target.value);
                       setActiveIgPersona('custom');
                     }}
-                    placeholder="e.g. inc42.media"
+                    placeholder="e.g. 3am.thoughts"
                     style={{ ...inputStyle, paddingRight: '40px' }}
                     onFocus={inputFocusHandler}
                     onBlur={inputBlurHandler}

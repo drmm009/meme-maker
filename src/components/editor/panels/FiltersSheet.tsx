@@ -104,7 +104,7 @@ const TABS = [
   { id: 'adjust', label: 'Adjust' },
 ] as const;
 
-// The AI/Filters strip's Filters, for the selected image or else the meme: Presets (a photo of
+// The AI strip's Filters, for the selected image or else the meme: Presets (a photo of
 // each look) or Adjust (brightness, contrast..., two to a line), and Reset in the header to go back
 // to the untouched photo.
 export default function FiltersSheet({ actions, onClose }: { actions: EditorActions; onClose: () => void }) {

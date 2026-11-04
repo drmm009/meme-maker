@@ -166,19 +166,19 @@ export function useSocialCardActions() {
   };
 
   const handleAddInstagramCard = (data = {}) => {
-    const username = data.username || 'inc42.media';
+    const username = data.username || '3am.thoughts';
     const subtitle = data.subtitle || 'Suggested for you';
-    const text = data.text || 'Remember Tanmay Bhat from the AIB... more';
-    const verified = data.verified !== false;
+    const text = data.text || 'told myself i\'d sleep early tonight. it\'s 3:07 AM and i now know exactly how bricks are made 🧱 no regrets. some regrets.';
+    const verified = data.verified === true;
     const hasStoryRing = data.hasStoryRing !== false;
     const likesText = data.likesText || '';
-    const likesCount = data.likesCount || '1,583';
-    const commentsCount = data.commentsCount || '15';
-    const repostsCount = data.repostsCount || '15';
-    const sharesCount = data.sharesCount || '295';
+    const likesCount = data.likesCount || '48,213';
+    const commentsCount = data.commentsCount || '1,204';
+    const repostsCount = data.repostsCount || '3,317';
+    const sharesCount = data.sharesCount || '9,862';
     const followText = data.followText || 'Follow';
-    const postImage = data.postImage || IG_PRESET_IMAGES?.inc42 || null;
-    const time = data.time || '28 September';
+    const postImage = data.postImage || IG_PRESET_IMAGES?.nightOwl || null;
+    const time = data.time || '2 hours ago';
     const theme = data.theme || 'light';
     const topCommentUser = data.topCommentUser || '';
     const topCommentText = data.topCommentText || '';

@@ -17,7 +17,7 @@ const STEPS: TourStep[] = [
   {
     target: '.ui-dock',
     title: 'Your tools live here',
-    body: 'Draw, Media, Text, AI/Filters and Canvas. Tap one and its tools appear just above; some open settings below.',
+    body: 'Text, Media, AI, Draw and Canvas. Tap one and its tools appear just above; some open settings below.',
   },
   {
     target: '.meme-canvas',
@@ -25,9 +25,9 @@ const STEPS: TourStep[] = [
     body: 'Select text, a sticker or a photo to get its quick tools floating above it. Drag to move; use the corner handles to resize or rotate.',
   },
   {
-    target: '.ie-aspect-bar > :first-child',
+    target: '.ui-dock-item:last-child',
     title: 'Pick the shape',
-    body: 'Square for posts, 9:16 for stories, or keep the original picture.',
+    body: 'Canvas > Size: square for posts, 9:16 for stories, or keep the original picture.',
   },
   {
     target: '.ui-topbar .ui-btn-accent',

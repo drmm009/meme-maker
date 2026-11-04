@@ -15,7 +15,7 @@ export const getInstagramCardHeight = (ctx, cap, cardW) => {
 
   ctx.save();
   ctx.font = `normal ${bodyFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
-  const wrappedLines = wrapText(ctx, `${cap.igUsername || 'inc42.media'} ${cap.text || ''}`, cardW - pad * 2);
+  const wrappedLines = wrapText(ctx, `${cap.igUsername || '3am.thoughts'} ${cap.text || ''}`, cardW - pad * 2);
   ctx.restore();
 
   const actionsH = iconSize + Math.round(12 * scale);
@@ -52,9 +52,9 @@ export const drawInstagramCard = (ctx, cardW, cap) => {
   const mutedColor = isDark ? '#a8a8a8' : '#737373';
   const borderColor = isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.1)';
 
-  const username = cap.igUsername || 'inc42.media';
+  const username = cap.igUsername || '3am.thoughts';
   const subtitle = cap.igSubtitle !== undefined ? cap.igSubtitle : 'Suggested for you';
-  const text = cap.text || 'Remember Tanmay Bhat from the AIB...';
+  const text = cap.text || 'told myself i\'d sleep early tonight. it\'s 3:07 AM and i now know exactly how bricks are made 🧱 no regrets. some regrets.';
   const isVerified = cap.igVerified !== false;
   const hasStoryRing = cap.igHasStoryRing !== false;
   const showFollow = cap.igShowFollow !== false;

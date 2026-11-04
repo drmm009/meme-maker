@@ -19,8 +19,8 @@ interface CardProps {
 }
 
 // One of the sheet's two actions: a plain orange icon, a short name (`label` is the full one, for
-// screen readers) and a few words under it; ringed while applied, a spinner while the subject is
-// being found.
+// screen readers) and a few words under it; ringed in orange while applied, a spinner while the
+// subject is being found.
 function BgCard({ label, name, sub, Icon, on = false, busy = false, disabled = false, onClick }: CardProps) {
   return (
     <button type="button" className={`ie-bg-card${on ? ' is-on' : ''}`} aria-label={label} aria-pressed={on} disabled={disabled} onClick={onClick}>
@@ -35,7 +35,7 @@ function BgCard({ label, name, sub, Icon, on = false, busy = false, disabled = f
   );
 }
 
-// AI/Filters > Background, for the selected photo or else the main one: Blur keeps the subject
+// AI > Background, for the selected photo or else the main one: Blur keeps the subject
 // sharp over a blurred background (its strength shows while on; tap again to turn it off), Remove
 // cuts the subject out (tap again to bring the background back).
 export default function BackgroundSheet({ actions, onClose }: { actions: EditorActions; onClose: () => void }) {

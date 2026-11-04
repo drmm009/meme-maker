@@ -41,7 +41,7 @@ function pickCaptions(vibe: string, last: string[]): string[] {
   return [...from].sort(() => Math.random() - 0.5).slice(0, COUNT);
 }
 
-// AI/Filters > AI Caption, the caption generator. First the composer (the idea, Shuffle and
+// AI > AI Caption, the caption generator. First the composer (the idea, Shuffle and
 // Generate) and a row of vibes; once captions are written they take the sheet's place: one list to
 // tap onto the meme, copy or add as a new caption, with More under it, and Change idea back and
 // Shuffle over it.

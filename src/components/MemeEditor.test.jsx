@@ -29,6 +29,7 @@ vi.mock('./CanvasEditor', async () => {
       canvasHeader: doc.canvasHeader,
       canvasFooter: doc.canvasFooter,
       canvasBgGradient: doc.canvasBgGradient,
+      aspectRatio: doc.aspectRatio,
       imageFilters: doc.imageFilters,
       template: doc.activeTemplate,
       drawTool: ui.drawTool,
@@ -201,11 +202,12 @@ describe('MemeEditor', () => {
   it('every dock tab shows its tool strip; tapping the tab again closes it', () => {
     renderEditor();
     const strips = [
-      ['Draw on the meme', 'Draw tools', ['Brush', 'Glow', 'Marker', 'Eraser', 'Shapes']],
+      // Text is open from the start, so it's checked last (tapping it first would close it).
       ['Photos, videos, stickers and emoji', 'Media tools', ['Photo', 'Templates', 'Stickers', 'Emoji']],
-      ['Text', 'Text tools', ['Add Text', 'Bubble', 'Social Card']],
       ['AI tools and photo filters', 'AI and filter tools', ['Face Swap', 'Background', 'AI Caption', 'Filters']],
-      ['Canvas colour, bands and watermark', 'Canvas tools', ['Canvas Style', 'Header & Footer', 'Censor', 'Watermark']],
+      ['Draw on the meme', 'Draw tools', ['Brush', 'Glow', 'Marker', 'Eraser', 'Shapes']],
+      ['Canvas colour, bands and watermark', 'Canvas tools', ['Size', 'Canvas Style', 'Header & Footer', 'Censor', 'Watermark']],
+      ['Text', 'Text tools', ['Add Text', 'Bubble', 'Social Card']],
     ];
     for (const [tab, name, tools] of strips) {
       openSection(tab);
@@ -213,8 +215,8 @@ describe('MemeEditor', () => {
       expect(within(bar()).getByTitle(tab).getAttribute('aria-pressed')).toBe('true');
       expect(screen.queryByRole('dialog')).toBeNull();
     }
-    openSection('Canvas colour, bands and watermark');
-    expect(screen.queryByRole('toolbar', { name: 'Canvas tools' })).toBeNull();
+    openSection('Text');
+    expect(screen.queryByRole('toolbar', { name: 'Text tools' })).toBeNull();
   }, 30000);
 
   it('Social Card adds a post and opens its Details under the pill, which also has Look', () => {
@@ -356,13 +358,17 @@ describe('MemeEditor', () => {
     expect([...tools.querySelectorAll('button > span:last-child')].map((s) => s.textContent)).toEqual(['Font', 'Color', 'Bubble', 'Copy', 'Layers', 'Delete']);
   }, 30000);
 
-  it('hides the aspect ratio pill while a sheet is open', () => {
+  it('the full editor picks the canvas shape in Canvas > Size, not a pill above the canvas', () => {
     renderEditor();
-    expect(screen.getByRole('radiogroup', { name: 'Aspect ratio' })).toBeTruthy();
-    openTextSheet();
     expect(screen.queryByRole('radiogroup', { name: 'Aspect ratio' })).toBeNull();
-    closeSheet();
-    expect(screen.getByRole('radiogroup', { name: 'Aspect ratio' })).toBeTruthy();
+    openSection('Canvas colour, bands and watermark');
+    fireEvent.click(within(canvasStrip()).getByText('Size'));
+    const sizes = within(sheet('Size')).getByRole('radiogroup', { name: 'Aspect ratio' });
+    expect(within(sizes).getAllByRole('radio').map((r) => r.getAttribute('aria-label'))).toEqual(['Original', '1:1', '4:5', '9:16', '16:9']);
+    expect(within(sizes).getByRole('radio', { name: 'Original' }).getAttribute('aria-checked')).toBe('true');
+    fireEvent.click(within(sizes).getByRole('radio', { name: '9:16' }));
+    expect(canvas.props.aspectRatio).toBe('9:16');
+    expect(within(sizes).getByRole('radio', { name: '9:16' }).getAttribute('aria-checked')).toBe('true');
   });
 
   it('shows the floating tools for the selected caption once its sheet closes', () => {
@@ -849,7 +855,7 @@ describe('MemeEditor', () => {
   it('Canvas shows Canvas Style, Watermark, Header & Footer and Censor; each opens its sheet under the strip', () => {
     renderEditor();
     openSection('Canvas colour, bands and watermark');
-    expect(within(canvasStrip()).getAllByRole('button').map((b) => b.textContent)).toEqual(['Canvas Style', 'Header & Footer', 'Censor', 'Watermark']);
+    expect(within(canvasStrip()).getAllByRole('button').map((b) => b.textContent)).toEqual(['Size', 'Canvas Style', 'Header & Footer', 'Censor', 'Watermark']);
 
     fireEvent.click(within(canvasStrip()).getByText('Canvas Style'));
     fireEvent.click(within(sheet('Canvas Style')).getByRole('radio', { name: '#000000' }));
@@ -1149,8 +1155,8 @@ describe('MemeEditor', () => {
     renderEditor({ ...TEMPLATE, editorMode: 'social' });
     const captions = canvas.props.captions;
     fireEvent.click(screen.getByRole('button', { name: 'Full editor' }));
-    expect(tabs()).toEqual(['Draw', 'Media', 'Text', 'AI/Filters', 'Canvas']);
-    expect(screen.getByText('Meme Editor')).toBeTruthy();
+    expect(tabs()).toEqual(['Text', 'Media', 'AI', 'Draw', 'Canvas']);
+    expect(screen.queryByText('Meme Editor')).toBeNull();
     expect(screen.queryByRole('button', { name: 'Full editor' })).toBeNull();
     expect(canvas.props.captions).toBe(captions);
   });
@@ -1257,8 +1263,8 @@ describe('MemeEditor', () => {
     renderEditor({ ...TEMPLATE, editorMode: 'sticker', imageLayers: [{ id: 'p', url: 'cut.png', originalUrl: 'photo.png', x: 0.5, y: 0.5 }] });
     const tabs = () => within(screen.getByRole('navigation', { name: 'Editor tools' })).getAllByRole('button').map((b) => b.textContent.trim());
     fireEvent.click(within(screen.getByRole('navigation', { name: 'Editor tools' })).getByText('Move to editor'));
-    expect(tabs()).toEqual(['Draw', 'Media', 'Text', 'AI/Filters', 'Canvas']);
-    expect(screen.getByText('Meme Editor')).toBeTruthy();
+    expect(tabs()).toEqual(['Text', 'Media', 'AI', 'Draw', 'Canvas']);
+    expect(screen.queryByText('Meme Editor')).toBeNull();
     expect(canvas.props.imageLayers).toHaveLength(1);
   });
 
@@ -1320,7 +1326,7 @@ describe('MemeEditor', () => {
       expect(screen.queryByRole('region', { name: 'Face swap' })).toBeNull();
       // Move to editor carries the swapped meme into the full editor.
       fireEvent.click(within(screen.getByRole('navigation', { name: 'Editor tools' })).getByText('Move to editor'));
-      expect(within(screen.getByRole('navigation', { name: 'Editor tools' })).getAllByRole('button').map((b) => b.textContent.trim())).toEqual(['Draw', 'Media', 'Text', 'AI/Filters', 'Canvas']);
+      expect(within(screen.getByRole('navigation', { name: 'Editor tools' })).getAllByRole('button').map((b) => b.textContent.trim())).toEqual(['Text', 'Media', 'AI', 'Draw', 'Canvas']);
       // On the full editor's Text tab, not the maker's strip.
       expect(screen.queryByRole('toolbar', { name: 'Face swap tools' })).toBeNull();
       expect(strip('Text tools')).toBeTruthy();
@@ -1447,7 +1453,9 @@ describe('MemeEditor', () => {
 
   it('the full editor has no Full editor button, and an unknown mode is the full editor', () => {
     renderEditor({ ...TEMPLATE, editorMode: 'nope' });
-    expect(screen.getByText('Meme Editor')).toBeTruthy();
+    // The full editor's top bar has no title; its dock says which editor it is.
+    expect(screen.queryByText('Meme Editor')).toBeNull();
+    expect(within(screen.getByRole('navigation', { name: 'Editor tools' })).getAllByRole('button').map((b) => b.textContent.trim())).toEqual(['Text', 'Media', 'AI', 'Draw', 'Canvas']);
     expect(screen.queryByRole('button', { name: 'Full editor' })).toBeNull();
   });
 

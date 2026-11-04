@@ -4,9 +4,9 @@ import { useMemeEditorStore, useMemeEditorHistory } from '../store/useMemeEditor
 import { useEditorUiStore } from '../store/useEditorUiStore';
 import { EDITOR_MODES } from '../editorModes';
 
-// Back, title, undo/redo, History & saved (the list of steps, and memes saved as projects or
+// Back, undo/redo, History & saved (the list of steps, and memes saved as projects or
 // templates) and Export (which opens the Export sheet: format, size, download, share, copy, save
-// to gallery). A focused maker shows its own title, and Full editor in History's place (the bar
+// to gallery); the full editor has no title, so the meme gets the room. A focused maker shows its own title, and Full editor in History's place (the bar
 // stays as wide), which switches to the full editor on the same meme. The Stickers, AI Meme and Face Swap
 // makers have their title with an icon, a line under it saying where the work stands, and only
 // undo/redo (Export is in their dock).
@@ -41,7 +41,7 @@ export default function EditorTopBar({ onBack }) {
   );
 
   return (
-    <TopBar title={title} subtitle={mode === 'sticker' ? stickerStage : mode === 'faceswap' ? swapStage : mode === 'ai' ? aiStage : null} onBack={onBack}>
+    <TopBar title={mode === 'full' ? null : title} subtitle={mode === 'sticker' ? stickerStage : mode === 'faceswap' ? swapStage : mode === 'ai' ? aiStage : null} onBack={onBack}>
       {MakerIcon ? (
         <div className="ie-topbar-history ie-topbar-history--capsule">
           <button type="button" className="ui-icon-btn ui-icon-btn--ghost" onClick={handleUndo} disabled={!canUndo} title="Undo" aria-label="Undo">

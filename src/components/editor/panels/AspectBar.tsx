@@ -1,6 +1,8 @@
 import { SegmentedControl } from '../../ui';
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
 import { useEditorUiStore } from '../store/useEditorUiStore';
+import { EDITOR_MODES } from '../editorModes';
+import type { EditorMode } from '../editorModes';
 
 type Aspect = 'original' | '1:1' | '4:5' | '9:16' | '16:9';
 
@@ -12,15 +14,16 @@ const ASPECTS: { value: Aspect; label: string; title: string }[] = [
   { value: '16:9', label: '16:9', title: 'Video' },
 ];
 
-// The canvas shape, as a floating pill above the canvas. Gone while a sheet is open, so the canvas
-// gets the room, and in the Stickers maker.
+// The canvas shape, as a floating pill above the canvas, for the makers without a Canvas tab (AI Meme,
+// Face Swap); with one, it's Canvas > Size (SizeSheet). Gone while a sheet is open, so the canvas gets
+// the room, and in the Stickers maker.
 export default function AspectBar() {
   const aspectRatio: Aspect = useMemeEditorStore((s: { aspectRatio: Aspect }) => s.aspectRatio) || 'original';
   const setAspectRatio = useMemeEditorStore((s: { setAspectRatio: (v: Aspect) => void }) => s.setAspectRatio);
   const pushHistoryDebounced = useMemeEditorStore((s: { pushHistoryDebounced: () => void }) => s.pushHistoryDebounced);
   const sheet: string | null = useEditorUiStore((s: { sheet: string | null }) => s.sheet);
-  const mode: string = useEditorUiStore((s: { mode: string }) => s.mode);
-  if (sheet || mode === 'sticker') return null;
+  const mode: EditorMode = useEditorUiStore((s: { mode: EditorMode }) => s.mode);
+  if (sheet || mode === 'sticker' || EDITOR_MODES[mode].dock.includes('canvas')) return null;
   return (
     <div className="ie-aspect-bar">
       <SegmentedControl

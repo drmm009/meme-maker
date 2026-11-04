@@ -82,6 +82,9 @@ const createLayoutTemplate = (layout) => {
       height,
       aspectRatio: 1,
       category: 'custom',
+      // A real empty canvas: the white picture is only its thumbnail, so Canvas Style's colour shows.
+      canvasOnly: true,
+      canvasBgColor: '#ffffff',
       defaultCaptions: [
         {
           id: `cap-top-${Date.now()}`,
