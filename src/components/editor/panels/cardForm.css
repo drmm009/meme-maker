@@ -1,76 +1,388 @@
-/* The Social Card maker's Details form: labelled fields two to a line, a wide one alone. */
-.ie-card-fields {
+/* The Social Card maker's Details: each card's words laid out like the app itself, in the card's
+   theme (data-theme), with borderless fields that read as the card's own text. Colours follow
+   what the canvas draws (canvas/draw/socialCards). */
+.ie-card-sheet .ui-sheet-body {
+  padding: 4px 16px calc(14px + env(safe-area-inset-bottom, 0px));
+}
+
+.ie-cf-card {
+  --cf-bg: #000;
+  --cf-text: #e7e9ea;
+  --cf-muted: #71767b;
+  --cf-rule: rgba(255, 255, 255, 0.1);
+  --cf-hover: rgba(255, 255, 255, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 4px 0 6px;
+  padding: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  background: var(--cf-bg);
+  color: var(--cf-text);
+}
+.ie-cf-card--tweet[data-theme='dim'] { --cf-bg: #15202b; --cf-text: #f7f9f9; --cf-muted: #8b98a5; --cf-rule: rgba(255, 255, 255, 0.12); }
+.ie-cf-card--tweet[data-theme='light'] { --cf-bg: #fff; --cf-text: #0f1419; --cf-muted: #536471; }
+.ie-cf-card--instagram { --cf-text: #f5f5f5; --cf-muted: #a8a8a8; }
+.ie-cf-card--instagram[data-theme='light'] { --cf-bg: #fff; --cf-text: #262626; --cf-muted: #737373; }
+.ie-cf-card--whatsapp { --cf-bg: #0b141a; --cf-text: #e9edef; --cf-muted: #8696a0; --cf-head: #202c33; --cf-in: #202c33; --cf-out: #005c4b; }
+.ie-cf-card--whatsapp[data-theme='light'] { --cf-bg: #efeae2; --cf-text: #111b21; --cf-muted: #667781; --cf-head: #f0f2f5; --cf-in: #fff; --cf-out: #d9fdd3; }
+.ie-cf-card[data-theme='light'] { --cf-rule: rgba(0, 0, 0, 0.08); --cf-hover: rgba(0, 0, 0, 0.04); border-color: transparent; }
+
+/* Who it's from: avatar, then name over handle. */
+.ie-cf-who { display: flex; align-items: center; gap: 10px; }
+.ie-cf-who-text { display: flex; flex: 1; flex-direction: column; min-width: 0; }
+.ie-cf-avatar {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+  place-items: center;
+  flex: none;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--cf-rule);
+  color: var(--cf-muted);
+  font-size: 17px;
+  font-weight: 700;
 }
-
-.ie-card-field {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  min-width: 0;
+.ie-cf-avatar--ring {
+  box-sizing: border-box;
+  padding: 2px;
+  background: linear-gradient(45deg, #feda75, #fa7e1e, #d62976, #962fbf, #4f5bd5);
 }
-
-.ie-card-field--wide { grid-column: 1 / -1; }
-
-.ie-card-field > span {
-  font-size: 12px;
-  color: var(--ui-muted, rgba(255, 255, 255, 0.6));
-  font-weight: 600;
-}
-
-.ie-card-field .ui-field,
-.ie-card-message .ui-field {
+.ie-cf-avatar--ring > span {
+  display: grid;
+  place-items: center;
   width: 100%;
-  min-width: 0;
-  padding: 9px 11px;
+  height: 100%;
+  box-sizing: border-box;
+  border: 2px solid var(--cf-bg);
+  border-radius: 50%;
+  background: #3a3a3a;
+  color: #fff;
+}
+
+/* Borderless fields: a soft fill shows on hover and focus, the caret in the accent. 16px or more,
+   or phones zoom the page in on focus. */
+.ie-cf-input {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 3px 6px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--cf-text);
+  font: inherit;
+  font-size: 16px;
+  line-height: 1.35;
+  caret-color: var(--ui-accent, #ff5e36);
+  outline: none;
   resize: none;
+  transition: background-color 0.15s ease, box-shadow 0.15s ease;
 }
-
-/* WhatsApp's messages: who sent it, its time and remove on one line, the words under them. */
-.ie-card-messages {
-  list-style: none;
-  margin: 12px 0 10px;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+/* The app's global input and textarea look (App.css, !important) would make these pills. */
+.ie-cf-card .ie-cf-input {
+  height: auto !important;
+  min-height: 0;
+  padding: 3px 6px !important;
+  border: none !important;
+  border-radius: 8px !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: var(--cf-text) !important;
 }
+.ie-cf-input::placeholder { color: var(--cf-muted); opacity: 0.75; }
+.ie-cf-card .ie-cf-input:hover { background: var(--cf-hover) !important; }
+.ie-cf-card .ie-cf-input:focus { background: var(--cf-hover) !important; box-shadow: inset 0 0 0 1.5px var(--ui-accent, #ff5e36) !important; }
+.ie-cf-card .ie-cf-input--sub,
+.ie-cf-card .ie-cf-input--meta { color: var(--cf-muted) !important; }
+.ie-cf-input--name { font-weight: 700; }
+.ie-cf-input--sub, .ie-cf-input--meta { color: var(--cf-muted); }
+/* Text boxes grow with their words where the browser can, rather than scroll. */
+.ie-cf-card textarea.ie-cf-input { min-height: 72px; font-size: 17px; field-sizing: content; }
 
-.ie-card-message {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding-left: 10px;
-  border-left: 3px solid rgba(255, 255, 255, 0.18);
-}
-
-.ie-card-message--sent { border-left-color: #25d366; }
-
-.ie-card-message-head {
+/* The line under the post: time, likes, the post's length. */
+.ie-cf-foot {
   display: flex;
   align-items: center;
   gap: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--cf-rule);
 }
+.ie-cf-meta { display: flex; flex: 1; align-items: center; gap: 4px; min-width: 0; color: var(--cf-muted); }
+.ie-cf-meta svg { flex: none; margin-left: 4px; }
+.ie-cf-card--instagram .ie-cf-meta:first-child svg { color: #ff3040; }
+.ie-cf-count { flex: none; color: var(--cf-muted); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+.ie-cf-count.is-over { color: #f4212e; }
 
-.ie-card-message-head .ui-seg { flex: 0 0 auto; }
-
-.ie-card-message .ie-card-message-time {
-  flex: 1 1 auto;
-  width: auto;
-  padding: 6px 10px;
+/* WhatsApp: header bar, then bubbles on the wallpaper; yours on the right. */
+.ie-cf-card--whatsapp { padding: 0 0 12px; overflow: hidden; }
+.ie-cf-who--chat { padding: 10px 12px; background: var(--cf-head); }
+.ie-cf-who--chat .ie-cf-avatar { width: 38px; height: 38px; }
+.ie-cf-chat {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 2px 10px 0;
+  list-style: none;
 }
+.ie-cf-msg { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+.ie-cf-msg--sent { align-items: flex-end; }
+.ie-cf-bubble {
+  width: 82%;
+  box-sizing: border-box;
+  padding: 4px 4px 2px;
+  border-radius: 4px 14px 14px 14px;
+  background: var(--cf-in);
+  box-shadow: 0 1px 0.5px rgba(0, 0, 0, 0.13);
+}
+.ie-cf-msg--sent .ie-cf-bubble { border-radius: 14px 4px 14px 14px; background: var(--cf-out); }
+.ie-cf-card .ie-cf-bubble textarea.ie-cf-input { min-height: 46px; font-size: 16px; }
+.ie-cf-bubble-meta { display: flex; align-items: center; justify-content: flex-end; gap: 2px; }
+.ie-cf-card .ie-cf-bubble-meta .ie-cf-input { width: 92px; padding: 1px 4px !important; text-align: right; }
+.ie-cf-tick { flex: none; margin-right: 4px; color: var(--cf-muted); }
+.ie-cf-tick--blue { color: #53bdeb; }
+.ie-cf-msg-tools { display: flex; align-items: center; gap: 6px; }
+.ie-cf-msg--sent .ie-cf-msg-tools { flex-direction: row-reverse; }
+/* Who sent it: a quiet switch under each bubble, so the orange stays for what's picked elsewhere. */
+.ie-cf-card .ie-cf-msg-tools .ui-seg { padding: 2px; border: none !important; background: var(--cf-hover) !important; box-shadow: none !important; }
+.ie-cf-card .ie-cf-msg-tools .ui-seg-btn { min-height: 26px; padding: 0 12px; color: var(--cf-muted) !important; font-size: 12.5px; }
+.ie-cf-card .ie-cf-msg-tools .ui-seg-btn.is-on { background: var(--cf-head) !important; color: var(--cf-text) !important; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2) !important; }
 
 .ie-card-message-remove {
   flex: 0 0 auto;
   display: grid;
   place-items: center;
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
+  padding: 0;
   border: 0;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.08);
-  color: inherit;
+  border-radius: 50% !important;
+  background: var(--cf-hover);
+  color: var(--cf-muted);
   cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.ie-card-message-remove:hover { background: rgba(255, 69, 58, 0.18); color: #ff453a; }
+
+.ie-card-add-msg-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  align-self: center;
+  height: 36px;
+  margin-top: 2px;
+  padding: 0 16px;
+  border: none;
+  border-radius: 999px !important;
+  background: var(--cf-head);
+  color: var(--cf-text);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+.ie-card-add-msg-btn:hover { opacity: 0.85; }
+
+/* Card Look Sheet Revamp */
+.ie-card-look-sheet .ui-sheet-body {
+  padding: 4px 16px calc(14px + env(safe-area-inset-bottom, 0px));
+}
+
+.ie-card-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 6px 0;
+}
+
+.ie-card-controls-group {
+  display: flex;
+  flex-direction: column;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 4px 14px;
+}
+
+.ie-card-controls-group .ui-row {
+  min-height: 44px;
+  padding: 4px 0;
+}
+
+.ie-card-controls-group .ui-row + .ui-row {
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.ie-card-controls-group .ui-row-label {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ui-muted, rgba(255, 255, 255, 0.7));
+}
+
+/* Look: the card's theme as small previews of the card, the picked one ringed in orange. */
+.ie-card-themes { display: grid; grid-auto-columns: 1fr; grid-auto-flow: column; gap: 10px; }
+.ie-card-theme {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--ui-muted, #a5a6ad);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.ie-card-theme-swatch {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  height: 58px;
+  padding: 0 14px;
+  box-sizing: border-box;
+  border-radius: 14px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+.ie-card-theme-swatch i { display: block; height: 6px; border-radius: 3px; opacity: 0.9; }
+.ie-card-theme-swatch i:first-child { width: 70%; }
+.ie-card-theme-swatch i:last-child { width: 45%; }
+.ie-card-theme:active .ie-card-theme-swatch { transform: scale(0.96); }
+.ie-card-theme.is-on { color: var(--ui-text, #fff); }
+.ie-card-theme.is-on .ie-card-theme-swatch,
+.ie-card-theme:focus-visible .ie-card-theme-swatch { box-shadow: 0 0 0 2px var(--ui-bg, #111), 0 0 0 4px var(--ui-accent, #ff5e36); }
+.ie-card-theme:focus-visible { outline: none; }
+
+/* Post photo uploader in Instagram Look */
+.ie-card-photo-box {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.ie-card-photo-uploader {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 1px dashed rgba(255, 255, 255, 0.2);
+  border-radius: 12px !important;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--ui-text, #ffffff);
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  overflow: hidden;
+}
+
+.ie-card-photo-uploader:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+.ie-card-photo-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.ie-card-photo-preview {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.ie-card-photo-thumb {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  object-fit: cover;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.ie-card-photo-meta {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.ie-card-photo-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.ie-card-photo-desc {
+  font-size: 11.5px;
+  color: var(--ui-muted, rgba(255, 255, 255, 0.6));
+}
+
+.ie-card-photo-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ie-card-photo-replace {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 10px;
+  border-radius: 8px !important;
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  overflow: hidden;
+}
+
+.ie-card-photo-replace:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.ie-card-photo-remove {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px !important;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--ui-muted, rgba(255, 255, 255, 0.6));
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.ie-card-photo-remove:hover {
+  background: rgba(255, 69, 58, 0.2);
+  color: #ff453a;
 }

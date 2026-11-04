@@ -236,17 +236,19 @@ describe('MemeEditor', () => {
     fireEvent.click(within(layerToolbar()).getByText('Look'));
     expect(sheet('Card look')).toBeTruthy();
 
-    // Another kind of card takes this one's place, keeping the rest of the meme.
+    // Details sheet heading shows the respective card on the canvas.
     fireEvent.click(within(layerToolbar()).getByText('Details'));
-    fireEvent.click(within(sheet('Card details')).getByText('WhatsApp'));
-    expect(canvas.props.captions.filter((c) => c.isTweetCard)).toHaveLength(0);
-    expect(canvas.props.captions.filter((c) => c.isWhatsAppCard)).toHaveLength(1);
-    expect(captionTexts()).toEqual(expect.arrayContaining(['TOP TEXT', 'BOTTOM TEXT']));
+    expect(within(sheet('Card details')).getByRole('heading', { name: 'X post' })).toBeTruthy();
 
-    // Tapping it again opens the social card picker sheet.
+    // Adding another social card from Text > Social Card puts that card on the meme.
     act(() => canvas.props.onSelectLayer(null));
     fireEvent.click(within(strip('Text tools')).getByText('Social Card'));
     expect(sheet('Social Cards')).toBeTruthy();
+    fireEvent.click(within(sheet('Social Cards')).getByRole('button', { name: /WhatsApp card/i }));
+    const waCard = canvas.props.captions.find((c) => c.isWhatsAppCard);
+    expect(waCard).toBeTruthy();
+    fireEvent.click(within(layerToolbar()).getByText('Details'));
+    expect(within(sheet('Card details')).getByRole('heading', { name: 'WhatsApp' })).toBeTruthy();
   }, 30000);
 
   it('Media adds stickers and emoji from its strip; Templates opens the picker', () => {
@@ -1329,7 +1331,7 @@ describe('MemeEditor', () => {
 
   it('the Social Card maker opens on its Details form, edits the card live and swaps the kind of card', async () => {
     const { MEME_TEMPLATES } = await import('../data/templates');
-    renderEditor({ ...MEME_TEMPLATES.find((t) => t.id === 'social-tweet-card'), editorMode: 'social' });
+    const { unmount } = renderEditor({ ...MEME_TEMPLATES.find((t) => t.id === 'social-tweet-card'), editorMode: 'social' });
     // The form, under the Card tab's strip, not the studio.
     sheet('Card details');
     expect(within(strip('Card tools')).getAllByRole('button').map((b) => b.textContent)).toEqual(['Details', 'Look', 'Studio']);
@@ -1338,16 +1340,18 @@ describe('MemeEditor', () => {
     expect(within(bar()).getAllByRole('button').map((b) => b.textContent.trim())).toEqual(['Card', 'Text', 'Media', 'Canvas']);
     fireEvent.click(within(strip('Card tools')).getByText('Details'));
     const form = sheet('Card details');
+    expect(within(form).getByRole('heading', { name: 'X post' })).toBeTruthy();
     const card = () => canvas.props.captions.find((c) => c.isTweetCard || c.isWhatsAppCard);
 
     fireEvent.change(within(form).getByLabelText('Name'), { target: { value: 'Dhruv' } });
     fireEvent.change(within(form).getByLabelText('Post'), { target: { value: 'shipping on a friday' } });
     expect(card()).toMatchObject({ tweetName: 'Dhruv', text: 'shipping on a friday' });
 
-    fireEvent.click(within(form).getByRole('radio', { name: 'WhatsApp' }));
-    expect(card().isWhatsAppCard).toBe(true);
-    expect(screen.getByText('Social Card', { selector: '.ui-topbar-title' })).toBeTruthy();
+    unmount();
+    // Renders WhatsApp card with its own heading and message list
+    renderEditor({ ...MEME_TEMPLATES.find((t) => t.id === 'social-whatsapp-card'), editorMode: 'social' });
     const chat = sheet('Card details');
+    expect(within(chat).getByRole('heading', { name: 'WhatsApp' })).toBeTruthy();
     const count = card().waMessages.length;
     fireEvent.click(within(chat).getByText('Add message'));
     expect(card().waMessages).toHaveLength(count + 1);

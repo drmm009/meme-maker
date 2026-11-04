@@ -38,7 +38,8 @@ const CATEGORIES = GRAPHIC_STICKER_CATEGORIES.map((c) => ({
   items: filterStickers('', c.id),
 }));
 const TOTAL = CATEGORIES.reduce((n, c) => n + c.items.length, 0);
-const SHELF_SIZE = 10;
+// Two rows of compact stickers per shelf.
+const SHELF_SIZE = 12;
 const SWITCH_KINDS = [
   { id: 'stickers', label: 'Stickers', Icon: Sticker },
   { id: 'animated', label: 'Animated', Icon: Sparkles },
@@ -100,7 +101,7 @@ export default function StickersSheet({ actions, onClose }: { actions: EditorAct
       {!local && <GiphyResults key={kind} kind={kind === 'gifs' ? 'gifs' : 'stickers'} query={query} keyed={keyed} onClearQuery={() => setQuery('')} onPick={pickGif} />}
 
       {local && browsing && CATEGORIES.map((c) => (
-        <Shelf key={c.id} label={c.label} Icon={c.Icon} color={c.color} icon={c.icon} onSeeAll={() => choose(c.id)}>
+        <Shelf key={c.id} twoRow label={c.label} Icon={c.Icon} color={c.color} icon={c.icon} onSeeAll={() => choose(c.id)}>
           {c.items.slice(0, SHELF_SIZE).map((s) => (
             <div key={s.id} className="ie-shelf-card ie-shelf-card--small"><StickerCard sticker={s} onPick={pick} /></div>
           ))}

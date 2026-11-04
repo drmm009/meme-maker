@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import type { FormEvent, MouseEvent } from 'react';
-import { ArrowLeft, Check, Copy, Plus, RefreshCw, Shuffle, Sparkles, Type, X } from 'lucide-react';
+import { ArrowLeft, Check, Copy, Plus, RefreshCw, Shuffle, Sparkles, X } from 'lucide-react';
 import { Sheet } from '../../ui';
-import { useMemeEditorStoreApi } from '../store/useMemeEditorStore';
+import { useMemeEditorStore, useMemeEditorStoreApi } from '../store/useMemeEditorStore';
 import { AI_MEME_CATEGORIES, CURATED_CAPTIONS } from '../../../data/aiMemeCaptions';
 import { isSocialCardCaption } from '../memeEditorUtils';
 import { AI_CAPTION_PREFIX, AI_CAPTION_STYLES } from '../aiMeme';
@@ -47,6 +47,8 @@ function pickCaptions(vibe: string, last: string[]): string[] {
 // Shuffle over it.
 export default function AiCaptionSheet({ onClose }: { actions: EditorActions; onClose: () => void }) {
   const store = useMemeEditorStoreApi() as unknown as { getState(): CaptionStore };
+  // Subscribe to captions so applying a punchline updates the checkmark immediately.
+  useMemeEditorStore((s: { captions: Caption[] }) => s.captions);
   const [meme] = useState(() => memeOf(store.getState().activeTemplate));
   const [last] = useState(() => (kept?.meme === meme ? kept : null));
   const [idea, setIdea] = useState(last?.idea ?? '');
@@ -120,8 +122,6 @@ export default function AiCaptionSheet({ onClose }: { actions: EditorActions; on
     setCopiedText(text);
     setTimeout(() => setCopiedText(null), 1600);
   };
-
-  const activeTarget = target();
 
   return (
     <Sheet className="ie-ai-caption-sheet ie-tool-sheet" title="AI Caption" onClose={onClose}>
@@ -224,11 +224,6 @@ export default function AiCaptionSheet({ onClose }: { actions: EditorActions; on
           </div>
         </>
       )}
-
-      <p className="ie-aic-target">
-        <Type size={12} strokeWidth={2.4} aria-hidden="true" />
-        Writes on <strong>{activeTarget ? `“${activeTarget.text.slice(0, 28)}${activeTarget.text.length > 28 ? '…' : ''}”` : 'a new caption'}</strong>
-      </p>
     </Sheet>
   );
 }

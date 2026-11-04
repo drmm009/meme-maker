@@ -1242,48 +1242,39 @@ div.ie-layer-pick { cursor: default; }
 }
 
 
-/* Background sheet: Blur and Remove as two tiles side by side, an icon in a tinted circle beside a
-   name and a few words; solid orange while applied. The blur strength row shows under them. */
+/* Background sheet: Blur and Remove as two quiet tiles side by side, a plain white icon beside a
+   name and a few words. Applied shows as a lighter fill with a thin white ring, no colour or glow.
+   The blur strength row shows under them. */
 .ie-bg-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px; }
 .ie-panels--sheet .ie-bg-card {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   min-width: 0;
-  height: 64px;
-  padding: 0 12px;
+  height: 60px;
+  padding: 0 14px;
   border: none !important;
-  border-radius: 18px !important;
+  border-radius: 16px !important;
   background: rgba(255, 255, 255, 0.05) !important;
+  box-shadow: none !important;
   color: var(--ui-text, #f4f4f6) !important;
   font: inherit;
   text-align: left;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  transition: background 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
+  transition: background 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
 }
-.ie-panels--sheet .ie-bg-card:hover:not(:disabled):not(.is-on) { background: rgba(255, 255, 255, 0.09) !important; }
-.ie-panels--sheet .ie-bg-card:disabled { opacity: 0.5; cursor: default; }
+.ie-panels--sheet .ie-bg-card:hover:not(:disabled):not(.is-on) { background: rgba(255, 255, 255, 0.08) !important; }
+.ie-panels--sheet .ie-bg-card:disabled { opacity: 0.45; cursor: default; }
 .ie-panels--sheet .ie-bg-card.is-on {
-  background: var(--ui-accent, #ff5a36) !important;
-  box-shadow: 0 6px 16px -8px rgba(255, 90, 54, 0.7);
+  background: rgba(255, 255, 255, 0.12) !important;
+  box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.85) !important;
 }
-.ie-bg-card-icon {
-  flex-shrink: 0;
-  display: grid;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: rgba(255, 90, 54, 0.14);
-  color: var(--ui-accent, #ff5a36);
-}
-.ie-bg-card.is-on .ie-bg-card-icon { background: rgba(255, 255, 255, 0.22); color: #fff; }
+.ie-bg-card-icon { flex-shrink: 0; display: grid; place-items: center; color: #fff; }
 .ie-bg-card-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
 .ie-bg-card-label, .ie-bg-card-sub { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ie-bg-card-label { font-size: 14px; font-weight: 700; letter-spacing: -0.01em; }
+.ie-bg-card-label { font-size: 14px; font-weight: 600; letter-spacing: -0.01em; }
 .ie-bg-card-sub { color: var(--ui-muted, #a5a6ad); font-size: 11.5px; font-weight: 500; }
-.ie-bg-card.is-on .ie-bg-card-sub { color: rgba(255, 255, 255, 0.85); }
 
 /* Face swap, while it's being tuned: Compare (hold), Cancel and Done in one row. */
 .ie-fs-foot { display: flex; gap: 8px; padding-top: 6px; }
@@ -1467,7 +1458,7 @@ div.ie-layer-pick { cursor: default; }
 /* ══════════════════════════════════════════════════════════════════════════
    BOTTOM SHEET ROUNDED EDGES: Universal Pill Buttons & Rounded Containers
    ══════════════════════════════════════════════════════════════════════════ */
-.ie-panels--sheet button:not(.ui-tile):not(.ie-shape-btn):not(.ie-filter-tile):not(.ui-icon-btn):not(.ui-swatch):not(.ie-font-upload):not(.ie-wm-dot):not(.ie-style-remove):not(.ie-browse-item):not(.ie-bg-card):not(.ie-filter-tab):not(.ie-style-apply):not(.ie-style-save):not(.ui-toggle):not(.ui-chip):not(.ui-seg-btn):not(.ie-bubble-card):not(.ie-ai-choice):not(.ie-ai-popular-item):not(.ie-ai-suggestion):not(.ie-ai-option):not(.ie-ai-send):not(.ie-ai-vibe):not(.ie-aic-btn):not(.ie-social-app):not(.ie-swap-tile):not(.ie-swap-source),
+.ie-panels--sheet button:not(.ui-tile):not(.ie-shape-btn):not(.ie-filter-tile):not(.ui-icon-btn):not(.ui-swatch):not(.ie-font-upload):not(.ie-wm-dot):not(.ie-style-remove):not(.ie-browse-item):not(.ie-bg-card):not(.ie-filter-tab):not(.ie-style-apply):not(.ie-style-save):not(.ui-toggle):not(.ui-chip):not(.ui-seg-btn):not(.ie-bubble-card):not(.ie-ai-choice):not(.ie-ai-popular-item):not(.ie-ai-suggestion):not(.ie-ai-option):not(.ie-ai-send):not(.ie-ai-vibe):not(.ie-aic-btn):not(.ie-social-app):not(.ie-swap-tile):not(.ie-swap-source):not(.ie-card-add-msg-btn):not(.ie-card-theme):not(.ie-card-message-remove):not(.ie-card-photo-uploader):not(.ie-card-photo-replace):not(.ie-card-photo-remove),
 .ie-panels--sheet .ui-btn,
 .ie-panels--sheet .ui-btn-accent,
 .ie-panels--sheet .ui-btn--accent,

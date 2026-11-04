@@ -162,7 +162,16 @@ export function BrowseEmpty({ Icon, title, text, action }: { Icon: LucideIcon; t
 
 // A category shelf, as on the Explore page: an icon, the title and See all over a rail of cards
 // (or, with grid, a few rows of small ones, as for emoji).
-export function Shelf({ label, Icon, icon, color, grid, onSeeAll, children }: { label: string; Icon?: LucideIcon; icon?: string; color?: string; grid?: boolean; onSeeAll?: () => void; children: ReactNode }) {
+export function Shelf({ label, Icon, icon, color, grid, twoRow, onSeeAll, children }: {
+  label: string;
+  Icon?: LucideIcon;
+  icon?: string;
+  color?: string;
+  grid?: boolean;
+  twoRow?: boolean;
+  onSeeAll?: () => void;
+  children: ReactNode;
+}) {
   return (
     <section className="ie-browse-section ie-shelf" aria-label={label}>
       <div className="ie-shelf-head">
@@ -176,7 +185,7 @@ export function Shelf({ label, Icon, icon, color, grid, onSeeAll, children }: { 
           </button>
         )}
       </div>
-      <div className={grid ? 'ie-shelf-grid' : 'ie-shelf-rail'}>{children}</div>
+      <div className={grid ? 'ie-shelf-grid' : twoRow ? 'ie-shelf-rail ie-shelf-rail--two-row' : 'ie-shelf-rail'}>{children}</div>
     </section>
   );
 }

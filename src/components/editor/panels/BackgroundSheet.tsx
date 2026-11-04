@@ -18,14 +18,14 @@ interface CardProps {
   onClick: () => void;
 }
 
-// One of the sheet's two actions: an icon in a tinted circle, a short name (`label` is the full
-// one, for screen readers) and a few words under it; orange while applied, a spinner while the
-// subject is being found.
+// One of the sheet's two actions: a plain white icon, a short name (`label` is the full one, for
+// screen readers) and a few words under it; ringed while applied, a spinner while the subject is
+// being found.
 function BgCard({ label, name, sub, Icon, on = false, busy = false, disabled = false, onClick }: CardProps) {
   return (
     <button type="button" className={`ie-bg-card${on ? ' is-on' : ''}`} aria-label={label} aria-pressed={on} disabled={disabled} onClick={onClick}>
       <span className="ie-bg-card-icon" aria-hidden="true">
-        {busy ? <LoaderCircle size={18} className="animate-spin" /> : <Icon size={18} strokeWidth={2.1} />}
+        {busy ? <LoaderCircle size={20} strokeWidth={1.8} className="animate-spin" /> : <Icon size={20} strokeWidth={1.8} />}
       </span>
       <span className="ie-bg-card-text">
         <span className="ie-bg-card-label">{name}</span>

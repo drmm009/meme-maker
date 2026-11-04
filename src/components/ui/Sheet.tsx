@@ -22,6 +22,7 @@ interface SheetProps {
   hideTitle?: boolean;
   // Something small at the end of the header, before the action: the sheet's on/off switch.
   aside?: ReactNode;
+  ariaLabel?: string;
   children: ReactNode;
 }
 
@@ -72,7 +73,7 @@ function leaveGhost(el: HTMLElement) {
 
 // A panel docked at the bottom of the editor (not a modal: the canvas above stays usable).
 // Close it with a tap on the handle, or by dragging the handle or header down.
-export default function Sheet({ title, onClose, badge, action, className = '', hideTitle = false, aside, children }: SheetProps) {
+export default function Sheet({ title, onClose, badge, action, className = '', hideTitle = false, aside, ariaLabel, children }: SheetProps) {
   const sheetRef = useRef<HTMLElement>(null);
   const drag = useRef<{ y: number; dy: number } | null>(null);
   const isClosingRef = useRef(false);
@@ -141,7 +142,7 @@ export default function Sheet({ title, onClose, badge, action, className = '', h
   const dragProps = { onPointerDown, onPointerMove, onPointerUp, onPointerCancel: onPointerUp };
 
   return (
-    <section ref={sheetRef} className={`ui-sheet ${className}`} role="dialog" aria-label={title}>
+    <section ref={sheetRef} className={`ui-sheet ${className}`} role="dialog" aria-label={ariaLabel || title}>
       <button type="button" className="ui-sheet-handle" aria-label={`Close ${title}`} onClick={triggerClose} {...dragProps} />
       {(!hideTitle || action || aside) && (
         <header className={`ui-sheet-head${hideTitle ? ' ui-sheet-head--bare' : ''}`} {...dragProps}>
