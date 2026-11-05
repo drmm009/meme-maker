@@ -16,7 +16,7 @@
   background: var(--surface-card-elevated);
   color: var(--text-main);
   box-shadow: 0 18px 40px -12px rgba(0, 0, 0, 0.6);
-  font-size: 14px;
+  font-size: var(--ui-fs-body, 15px);
   font-weight: 700;
   animation: meme-draft-in 0.25s ease-out;
 }
@@ -24,7 +24,7 @@
 .meme-draft-text small {
   overflow: hidden;
   color: var(--text-muted);
-  font-size: 12px;
+  font-size: var(--ui-fs-label, 12px);
   font-weight: 600;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -33,7 +33,7 @@
   flex-shrink: 0;
   padding: 8px 14px;
   border: none;
-  border-radius: 11px;
+  border-radius: var(--ui-radius-sm, 12px);
   background: var(--primary-gradient);
   color: #fff;
   font-weight: 700;

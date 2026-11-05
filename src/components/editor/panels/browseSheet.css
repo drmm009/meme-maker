@@ -44,7 +44,7 @@
 }
 .ie-browse-total {
   color: var(--ui-faint);
-  font-size: 15px;
+  font-size: var(--ui-fs-body, 15px);
   font-weight: 600;
   letter-spacing: 0;
   font-variant-numeric: tabular-nums;
@@ -84,11 +84,11 @@
   height: 46px;
   padding: 0 44px;
   border: 1px solid transparent;
-  border-radius: 9999px;
+  border-radius: var(--ui-radius-full, 999px);
   background: #2c2c2e;
   color: var(--ui-text);
   font: inherit;
-  font-size: 15px;
+  font-size: var(--ui-fs-body, 15px);
   caret-color: var(--ui-accent);
   outline: none;
   transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
@@ -150,11 +150,11 @@
   height: 40px;
   padding: 0 18px;
   border: none;
-  border-radius: 9999px;
+  border-radius: var(--ui-radius-full, 999px);
   background: #2c2c2e;
   color: rgba(255, 255, 255, 0.75);
   font: inherit;
-  font-size: 13.5px;
+  font-size: var(--ui-fs-footnote, 13px);
   font-weight: 600;
   cursor: pointer;
   transition: background 0.16s ease, color 0.16s ease, box-shadow 0.16s ease;
@@ -180,7 +180,7 @@
   gap: 3px;
   margin: 0 16px 12px;
   padding: 3px;
-  border-radius: 9999px;
+  border-radius: var(--ui-radius-full, 999px);
   background: #2c2c2e;
 }
 .ie-browse-chips--fill.is-scrolled { border-bottom-color: transparent; }
@@ -189,7 +189,7 @@
   justify-content: center;
   height: 34px;
   padding: 0 10px;
-  border-radius: 9999px;
+  border-radius: var(--ui-radius-full, 999px);
   background: transparent;
   color: rgba(255, 255, 255, 0.75);
   font-weight: 600;
@@ -213,11 +213,11 @@
   height: 34px;
   padding: 0 13px;
   border: none;
-  border-radius: 999px;
+  border-radius: var(--ui-radius-full, 999px);
   background: #2c2c2e;
   color: #ffffff;
   font: inherit;
-  font-size: 13.5px;
+  font-size: var(--ui-fs-footnote, 13px);
   font-weight: 600;
   white-space: nowrap;
   cursor: pointer;
@@ -232,10 +232,10 @@
   margin-left: 2px;
   margin-right: -3px;
   padding: 0 6px;
-  border-radius: 999px;
+  border-radius: var(--ui-radius-full, 999px);
   background: rgba(255, 255, 255, 0.16);
   color: #ffffff;
-  font-size: 11.5px;
+  font-size: var(--ui-fs-label, 12px);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   display: inline-flex;
@@ -282,7 +282,7 @@
   letter-spacing: -0.01em;
 }
 .ie-browse-heading svg { color: var(--ui-accent); }
-.ie-browse-heading-count { color: var(--ui-faint); font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.ie-browse-heading-count { color: var(--ui-faint); font-size: var(--ui-fs-footnote, 13px); font-weight: 600; font-variant-numeric: tabular-nums; }
 
 /* A picture that shimmers until it arrives, then fades in. */
 .ie-browse-thumb {
@@ -343,7 +343,7 @@
   min-width: 0;
   margin: 0;
   color: var(--ui-text);
-  font-size: 1.15rem;
+  font-size: var(--ui-fs-headline, 17px);
   font-weight: 800;
   letter-spacing: -0.01em;
 }
@@ -357,8 +357,8 @@
   background: transparent;
   color: var(--ui-accent);
   font: inherit;
-  font-size: 13px;
-  font-weight: 650;
+  font-size: var(--ui-fs-footnote, 13px);
+  font-weight: 600;
   cursor: pointer;
   transition: background 0.18s ease;
 }
@@ -388,7 +388,7 @@
   width: 100%;
   overflow: hidden;
   border: none;
-  border-radius: 16px;
+  border-radius: var(--ui-radius-md, 16px);
   background: #2a2b30;
   color: var(--ui-text);
   text-align: left;
@@ -404,8 +404,8 @@
   display: block;
   padding: 8px 10px 9px;
   overflow: hidden;
-  font-size: 12.5px;
-  font-weight: 650;
+  font-size: var(--ui-fs-footnote, 13px);
+  font-weight: 600;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -425,18 +425,18 @@
   height: 32px;
   padding: 0 13px 0 10px;
   border: none;
-  border-radius: 999px;
+  border-radius: var(--ui-radius-full, 999px);
   background: rgba(255, 255, 255, 0.07);
   color: var(--ui-text);
   font: inherit;
-  font-size: 13px;
+  font-size: var(--ui-fs-footnote, 13px);
   font-weight: 700;
   cursor: pointer;
 }
 .ie-results-count {
   overflow: hidden;
   color: var(--ui-muted);
-  font-size: 13px;
+  font-size: var(--ui-fs-footnote, 13px);
   font-weight: 600;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -456,7 +456,7 @@
 .ie-card-grid--small { grid-template-columns: repeat(auto-fill, minmax(68px, 1fr)); gap: 8px; }
 .ie-shelf-card--small { flex: none; width: 68px; height: 68px; }
 /* Stickers sit in rounded squares; light paper background so dark artwork shows. */
-.ie-card--sticker { aspect-ratio: 1; border-radius: 16px; }
+.ie-card--sticker { aspect-ratio: 1; border-radius: var(--ui-radius-md, 16px); }
 .ie-card--sticker .ie-card-media--paper { padding: 12%; }
 
 /* Stickers shelf: two horizontal rows of compact rounded square stickers */
@@ -486,7 +486,7 @@
   width: 100%;
   aspect-ratio: 1;
   border: none;
-  border-radius: 14px;
+  border-radius: var(--ui-radius-md, 16px);
   background: rgba(255, 255, 255, 0.05);
   font-size: 30px;
   line-height: 1;
@@ -505,11 +505,11 @@
 }
 
 /* GIFs: square cards, filled. */
-.ie-gif-skeleton { border-radius: 16px; aspect-ratio: 1; }
+.ie-gif-skeleton { border-radius: var(--ui-radius-md, 16px); aspect-ratio: 1; }
 .ie-giphy-credit {
   margin: 22px 0 0;
   color: var(--ui-faint);
-  font-size: 11.5px;
+  font-size: var(--ui-fs-label, 12px);
   font-weight: 700;
   letter-spacing: 0.06em;
   text-align: center;
@@ -526,18 +526,18 @@
 }
 .ie-browse-empty svg { color: var(--ui-faint); }
 .ie-browse-empty-title { margin: 14px 0 6px; color: var(--ui-text); font-size: 16px; font-weight: 700; }
-.ie-browse-empty-text { max-width: 32ch; margin: 0; font-size: 14px; line-height: 1.45; }
-.ie-browse-empty-text code { color: var(--ui-text); font-size: 12.5px; }
+.ie-browse-empty-text { max-width: 32ch; margin: 0; font-size: var(--ui-fs-body, 15px); line-height: 1.45; }
+.ie-browse-empty-text code { color: var(--ui-text); font-size: var(--ui-fs-footnote, 13px); }
 .ie-browse-empty-btn {
   margin-top: 18px;
   height: 40px;
   padding: 0 18px;
   border: 1px solid var(--ui-line-strong);
-  border-radius: 999px;
+  border-radius: var(--ui-radius-full, 999px);
   background: transparent;
   color: var(--ui-text);
   font: inherit;
-  font-size: 14px;
+  font-size: var(--ui-fs-body, 15px);
   font-weight: 600;
   cursor: pointer;
 }

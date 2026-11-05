@@ -17,7 +17,7 @@
   margin: 4px 0 6px;
   padding: 14px;
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 20px;
+  border-radius: var(--ui-radius-lg, 20px);
   background: var(--cf-bg);
   color: var(--cf-text);
 }
@@ -41,7 +41,7 @@
   border-radius: 50%;
   background: var(--cf-rule);
   color: var(--cf-muted);
-  font-size: 17px;
+  font-size: var(--ui-fs-headline, 17px);
   font-weight: 700;
 }
 .ie-cf-avatar--ring {
@@ -100,7 +100,7 @@
 .ie-cf-input--name { font-weight: 700; }
 .ie-cf-input--sub, .ie-cf-input--meta { color: var(--cf-muted); }
 /* Text boxes grow with their words where the browser can, rather than scroll. */
-.ie-cf-card textarea.ie-cf-input { min-height: 72px; font-size: 17px; field-sizing: content; }
+.ie-cf-card textarea.ie-cf-input { min-height: 72px; font-size: var(--ui-fs-headline, 17px); field-sizing: content; }
 
 /* The line under the post: time, likes, the post's length. */
 .ie-cf-foot {
@@ -113,7 +113,7 @@
 .ie-cf-meta { display: flex; flex: 1; align-items: center; gap: 4px; min-width: 0; color: var(--cf-muted); }
 .ie-cf-meta svg { flex: none; margin-left: 4px; }
 .ie-cf-card--instagram .ie-cf-meta:first-child svg { color: #ff3040; }
-.ie-cf-count { flex: none; color: var(--cf-muted); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+.ie-cf-count { flex: none; color: var(--cf-muted); font-size: var(--ui-fs-footnote, 13px); font-variant-numeric: tabular-nums; }
 .ie-cf-count.is-over { color: #f4212e; }
 
 /* WhatsApp: header bar, then bubbles on the wallpaper; yours on the right. */
@@ -148,7 +148,7 @@
 .ie-cf-msg--sent .ie-cf-msg-tools { flex-direction: row-reverse; }
 /* Who sent it: a quiet switch under each bubble, so the orange stays for what's picked elsewhere. */
 .ie-cf-card .ie-cf-msg-tools .ui-seg { padding: 2px; border: none !important; background: var(--cf-hover) !important; box-shadow: none !important; }
-.ie-cf-card .ie-cf-msg-tools .ui-seg-btn { min-height: 26px; padding: 0 12px; color: var(--cf-muted) !important; font-size: 12.5px; }
+.ie-cf-card .ie-cf-msg-tools .ui-seg-btn { min-height: 26px; padding: 0 12px; color: var(--cf-muted) !important; font-size: var(--ui-fs-footnote, 13px); }
 .ie-cf-card .ie-cf-msg-tools .ui-seg-btn.is-on { background: var(--cf-head) !important; color: var(--cf-text) !important; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2) !important; }
 
 .ie-card-message-remove {
@@ -177,11 +177,11 @@
   margin-top: 2px;
   padding: 0 16px;
   border: none;
-  border-radius: 999px !important;
+  border-radius: var(--ui-radius-full, 999px) !important;
   background: var(--cf-head);
   color: var(--cf-text);
   font: inherit;
-  font-size: 14px;
+  font-size: var(--ui-fs-body, 15px);
   font-weight: 600;
   cursor: pointer;
   transition: opacity 0.15s ease;
@@ -205,7 +205,7 @@
   flex-direction: column;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 14px;
+  border-radius: var(--ui-radius-md, 16px);
   padding: 4px 14px;
 }
 
@@ -219,7 +219,7 @@
 }
 
 .ie-card-controls-group .ui-row-label {
-  font-size: 13.5px;
+  font-size: var(--ui-fs-footnote, 13px);
   font-weight: 600;
   color: var(--ui-muted, rgba(255, 255, 255, 0.7));
 }
@@ -236,7 +236,7 @@
   background: none;
   color: var(--ui-muted, #a5a6ad);
   font: inherit;
-  font-size: 13px;
+  font-size: var(--ui-fs-footnote, 13px);
   font-weight: 600;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
@@ -250,7 +250,7 @@
   height: 58px;
   padding: 0 14px;
   box-sizing: border-box;
-  border-radius: 14px;
+  border-radius: var(--ui-radius-md, 16px);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
   transition: box-shadow 0.15s ease, transform 0.15s ease;
 }
@@ -281,10 +281,10 @@
   min-height: 44px;
   padding: 10px 16px;
   border: 1px dashed rgba(255, 255, 255, 0.2);
-  border-radius: 12px !important;
+  border-radius: var(--ui-radius-sm, 12px) !important;
   background: rgba(255, 255, 255, 0.03);
   color: var(--ui-text, #ffffff);
-  font-size: 13.5px;
+  font-size: var(--ui-fs-footnote, 13px);
   font-weight: 600;
   cursor: pointer;
   transition: all 0.18s ease;
@@ -310,7 +310,7 @@
   align-items: center;
   gap: 12px;
   padding: 8px 12px;
-  border-radius: 12px;
+  border-radius: var(--ui-radius-sm, 12px);
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
@@ -332,13 +332,13 @@
 }
 
 .ie-card-photo-title {
-  font-size: 13px;
+  font-size: var(--ui-fs-footnote, 13px);
   font-weight: 600;
   color: #ffffff;
 }
 
 .ie-card-photo-desc {
-  font-size: 11.5px;
+  font-size: var(--ui-fs-label, 12px);
   color: var(--ui-muted, rgba(255, 255, 255, 0.6));
 }
 
@@ -357,7 +357,7 @@
   border-radius: 8px !important;
   background: rgba(255, 255, 255, 0.1);
   color: #ffffff;
-  font-size: 12px;
+  font-size: var(--ui-fs-label, 12px);
   font-weight: 600;
   cursor: pointer;
   transition: background-color 0.15s ease;

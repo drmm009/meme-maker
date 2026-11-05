@@ -9,10 +9,10 @@
   min-height: 42px;
   padding: 0 14px;
   border: 1px solid rgba(255, 255, 255, 0.15) !important;
-  border-radius: 9999px !important;
+  border-radius: var(--ui-radius-full, 999px) !important;
   background: transparent !important;
   color: #ffffff !important;
-  font-size: 13.5px;
+  font-size: var(--ui-fs-footnote, 13px);
   font-weight: 500;
   text-align: left;
   cursor: pointer;
@@ -31,10 +31,10 @@
 .ie-history-now {
   background: var(--ui-accent, #ff5a36) !important;
   color: #ffffff !important;
-  font-size: 11px;
+  font-size: var(--ui-fs-caption, 11px);
   font-weight: 700;
   padding: 2px 8px;
-  border-radius: 9999px;
+  border-radius: var(--ui-radius-full, 999px);
   letter-spacing: 0.02em;
   box-shadow: 0 1px 4px rgba(255, 90, 54, 0.4);
 }
@@ -46,7 +46,7 @@
   display: block;
   width: 100%;
   aspect-ratio: 1;
-  border-radius: 16px !important;
+  border-radius: var(--ui-radius-md, 16px) !important;
   object-fit: cover;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.14);
@@ -57,8 +57,8 @@
   transform: translateY(-2px);
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
 }
-.ie-saved-name { overflow: hidden; font-size: 13px; font-weight: 600; color: #ffffff !important; text-overflow: ellipsis; white-space: nowrap; }
-.ie-saved-date { color: var(--ui-muted); font-size: 11px; }
+.ie-saved-name { overflow: hidden; font-size: var(--ui-fs-footnote, 13px); font-weight: 600; color: #ffffff !important; text-overflow: ellipsis; white-space: nowrap; }
+.ie-saved-date { color: var(--ui-muted); font-size: var(--ui-fs-caption, 11px); }
 .ie-saved-edit {
   position: absolute;
   top: -6px;
@@ -81,13 +81,13 @@
   border-color: var(--ui-accent, #ff5a36);
   color: #ffffff;
 }
-.ie-saved-rename { padding: 6px 10px; font-size: 13px; }
+.ie-saved-rename { padding: 6px 10px; font-size: var(--ui-fs-footnote, 13px); }
 .ie-saved-clash { margin-top: 10px; padding: 10px 12px; border-radius: var(--ui-radius-md); background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); }
 .ie-saved-clash .ie-empty { margin: 0 0 8px; }
 
 /* Shortcuts tab: small <kbd> boxes and their descriptions */
 .ie-shortcuts { display: flex; flex-direction: column; gap: 8px; }
-.ie-shortcuts-note { margin: 0 0 4px; color: var(--ui-muted); font-size: 13px; }
+.ie-shortcuts-note { margin: 0 0 4px; color: var(--ui-muted); font-size: var(--ui-fs-footnote, 13px); }
 .ie-shortcuts-list { display: flex; flex-direction: column; gap: 6px; margin: 0; padding: 0; list-style: none; }
 .ie-shortcut-row {
   display: flex;
@@ -96,7 +96,7 @@
   gap: 12px;
   min-height: 40px;
   padding: 6px 12px;
-  border-radius: 16px !important;
+  border-radius: var(--ui-radius-md, 16px) !important;
   background: transparent !important;
   border: 1px solid rgba(255, 255, 255, 0.12) !important;
 }
@@ -112,8 +112,8 @@
   background: rgba(255, 255, 255, 0.08);
   color: #ffffff !important;
   font-family: inherit;
-  font-size: 12px;
+  font-size: var(--ui-fs-label, 12px);
   font-weight: 600;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
 }
-.ie-shortcut-label { color: #ffffff !important; font-size: 13px; font-weight: 500; text-align: right; }
+.ie-shortcut-label { color: #ffffff !important; font-size: var(--ui-fs-footnote, 13px); font-weight: 500; text-align: right; }

@@ -31,7 +31,7 @@
   margin: 0;
   padding: 0 16px 8px;
   color: var(--ui-text);
-  font-size: 13px;
+  font-size: var(--ui-fs-footnote, 13px);
   font-weight: 700;
 }
 .ie-sticker-styles {
@@ -52,7 +52,7 @@
   border: none;
   background: none;
   color: var(--ui-muted);
-  font-size: 12px;
+  font-size: var(--ui-fs-label, 12px);
   font-weight: 600;
   cursor: pointer;
 }
@@ -64,7 +64,7 @@
   place-items: center;
   width: 48px;
   height: 48px;
-  border-radius: 14px;
+  border-radius: var(--ui-radius-md, 16px);
   background: repeating-conic-gradient(#2a2b30 0% 25%, #222327 0% 50%) 0 0 / 12px 12px;
   font-size: 26px;
   line-height: 1;
@@ -100,4 +100,4 @@
 .ie-sticker-style--retro .ie-sticker-style-art span { filter: sepia(0.6) saturate(1.2) drop-shadow(1.5px 0 0 #fff1d6) drop-shadow(-1.5px 0 0 #fff1d6) drop-shadow(0 1.5px 0 #fff1d6) drop-shadow(0 -1.5px 0 #fff1d6); }
 
 .ie-sticker-sources { grid-template-columns: repeat(3, 1fr); }
-.ie-sticker-sources .ie-swap-source { font-size: 13px; }
+.ie-sticker-sources .ie-swap-source { font-size: var(--ui-fs-footnote, 13px); }

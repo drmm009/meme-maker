@@ -33,7 +33,7 @@
 
 .ie-crop-title {
   margin: 0;
-  font-size: 17px;
+  font-size: var(--ui-fs-headline, 17px);
   font-weight: 800;
   color: #ffffff;
   letter-spacing: -0.01em;
@@ -47,11 +47,11 @@
   justify-content: center;
   height: 34px;
   padding: 0 16px;
-  border-radius: 9999px;
+  border-radius: var(--ui-radius-full, 999px);
   border: none;
   background: rgba(255, 255, 255, 0.08);
   color: #f1f5f9;
-  font-size: 13.5px;
+  font-size: var(--ui-fs-footnote, 13px);
   font-weight: 600;
   cursor: pointer;
   outline: none;
@@ -72,11 +72,11 @@
   justify-content: center;
   height: 34px;
   padding: 0 20px;
-  border-radius: 9999px;
+  border-radius: var(--ui-radius-full, 999px);
   border: none;
   background: var(--ui-accent, #ff5a36);
   color: #ffffff;
-  font-size: 13.5px;
+  font-size: var(--ui-fs-footnote, 13px);
   font-weight: 600;
   cursor: pointer;
   box-shadow: 0 1px 8px rgba(255, 90, 54, 0.35);
@@ -259,7 +259,7 @@
 /* The crop's size in pixels, so you know what you'll get. */
 .ie-crop-size {
   color: var(--ui-muted, #a5a6ad);
-  font-size: 13px;
+  font-size: var(--ui-fs-footnote, 13px);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
@@ -284,11 +284,11 @@
   height: 38px;
   padding: 0 16px;
   border: none;
-  border-radius: 999px;
+  border-radius: var(--ui-radius-full, 999px);
   background: rgba(255, 255, 255, 0.06);
   color: var(--ui-text, #f4f4f6);
   font: inherit;
-  font-size: 13px;
+  font-size: var(--ui-fs-footnote, 13px);
   font-weight: 600;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
@@ -313,11 +313,11 @@
   height: 64px;
   padding: 0;
   border: none;
-  border-radius: 16px;
+  border-radius: var(--ui-radius-md, 16px);
   background: rgba(255, 255, 255, 0.05);
   color: var(--ui-muted, #a5a6ad);
   font: inherit;
-  font-size: 11.5px;
+  font-size: var(--ui-fs-label, 12px);
   font-weight: 600;
   white-space: nowrap;
   cursor: pointer;
@@ -341,11 +341,11 @@
   gap: 7px;
   height: 40px;
   border: none;
-  border-radius: 999px;
+  border-radius: var(--ui-radius-full, 999px);
   background: transparent;
   color: var(--ui-muted, #a5a6ad);
   font: inherit;
-  font-size: 13px;
+  font-size: var(--ui-fs-footnote, 13px);
   font-weight: 600;
   cursor: pointer;
 }

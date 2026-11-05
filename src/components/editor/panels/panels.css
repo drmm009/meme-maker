@@ -6,11 +6,11 @@
 .ie-export-info {
   margin: 12px 0 2px;
   padding: 8px 12px;
-  border-radius: 16px;
+  border-radius: var(--ui-radius-md, 16px);
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: #f1f5f9;
-  font-size: 12.5px;
+  font-size: var(--ui-fs-footnote, 13px);
   font-weight: 500;
   font-variant-numeric: tabular-nums;
   text-align: center;
@@ -28,10 +28,10 @@
 .ie-topbar-history--capsule {
   margin-right: 0;
   padding: 0 2px;
-  border-radius: 999px;
+  border-radius: var(--ui-radius-full, 999px);
   background: rgba(255, 255, 255, 0.07);
 }
-.ie-topbar-history--capsule .ui-icon-btn { width: 36px; height: 40px; border-radius: 999px; }
+.ie-topbar-history--capsule .ui-icon-btn { width: 36px; height: 40px; border-radius: var(--ui-radius-full, 999px); }
 .ie-topbar-history--capsule .ui-icon-btn:hover:not(:disabled) { background: rgba(255, 255, 255, 0.08); }
 
 /* The Stickers maker's Export sheet (ExportSheet): two choices, the file it makes, and a Download
@@ -41,7 +41,7 @@
 .ie-sticker-export-info {
   margin: 10px 0 14px;
   color: var(--ui-muted, #a5a6ad);
-  font-size: 12.5px;
+  font-size: var(--ui-fs-footnote, 13px);
   font-variant-numeric: tabular-nums;
   text-align: center;
 }
@@ -58,7 +58,7 @@
   box-shadow: 0 6px 18px -6px rgba(255, 90, 54, 0.55);
   color: #fff;
   font: inherit;
-  font-size: 15px;
+  font-size: var(--ui-fs-body, 15px);
   font-weight: 700;
   cursor: pointer;
   transition: background 0.15s ease, transform 0.1s ease;
@@ -70,7 +70,7 @@
   flex: none;
   width: 48px;
   height: 48px;
-  border-radius: 999px;
+  border-radius: var(--ui-radius-full, 999px);
   background: rgba(255, 255, 255, 0.07);
   color: #f5f5f7;
 }
@@ -88,7 +88,7 @@
   flex: 1 1 auto;
   gap: 6px;
   padding: 0 10px;
-  font-size: 14px;
+  font-size: var(--ui-fs-body, 15px);
 }
 
 /* The Face Swap and Stickers makers' editing pages: their three actions (Swap again or New, Move to
@@ -110,8 +110,8 @@
   gap: 3px;
   height: 58px;
   padding: 0 6px;
-  border-radius: 18px;
-  font-size: 12px;
+  border-radius: var(--ui-radius-md, 16px);
+  font-size: var(--ui-fs-label, 12px);
   line-height: 1.15;
   text-align: center;
   white-space: normal;
@@ -132,10 +132,10 @@
   height: 30px;
   padding: 0 12px;
   border: 1px solid var(--ui-line-strong);
-  border-radius: 999px;
+  border-radius: var(--ui-radius-full, 999px);
   background: rgba(20, 21, 25, 0.86);
   color: var(--ui-text);
-  font-size: 13px;
+  font-size: var(--ui-fs-footnote, 13px);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   backdrop-filter: blur(8px);
@@ -161,7 +161,7 @@
 
 .ie-layer-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 /* The Layers sheet's Select mode: line the chosen layers up, group or delete them. */
-.ie-arrange { display: flex; flex-direction: column; gap: 10px; margin: 0 0 12px; padding: 12px; border-radius: 18px !important; background: rgba(255, 255, 255, 0.04); }
+.ie-arrange { display: flex; flex-direction: column; gap: 10px; margin: 0 0 12px; padding: 12px; border-radius: var(--ui-radius-md, 16px) !important; background: rgba(255, 255, 255, 0.04); }
 .ie-arrange .ie-inline-label { margin: 0; }
 .ie-arrange-row { display: flex; flex-wrap: wrap; gap: 6px; }
 .ie-layers { display: flex; flex-direction: column; gap: 6px; margin: 4px 0 8px; padding: 0; list-style: none; }
@@ -172,7 +172,7 @@
   gap: 2px;
   padding: 4px 6px 4px 4px;
   border: none;
-  border-radius: 16px;
+  border-radius: var(--ui-radius-md, 16px);
   background: rgba(255, 255, 255, 0.05);
   transition: background 0.15s ease;
 }
@@ -185,32 +185,32 @@
   padding: 3px 9px;
   background: rgba(255, 255, 255, 0.1);
   color: var(--ui-muted, #a5a6ad);
-  font-size: 12px;
+  font-size: var(--ui-fs-label, 12px);
   font-weight: 700;
   letter-spacing: normal;
 }
 .ie-layer-row.is-hidden .ie-layer-pick { opacity: 0.45; }
 .ie-layer-row .ui-icon-btn { width: 34px; height: 34px; }
 .ie-layer-row .ui-icon-btn[aria-pressed='true'] { color: var(--ui-accent-text); }
-.ie-layer-pick { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; height: 40px; padding: 0 8px; border: none; background: none; color: var(--ui-text); font-size: 14px; font-weight: 500; text-align: left; cursor: pointer; }
+.ie-layer-pick { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; height: 40px; padding: 0 8px; border: none; background: none; color: var(--ui-text); font-size: var(--ui-fs-body, 15px); font-weight: 500; text-align: left; cursor: pointer; }
 div.ie-layer-pick { cursor: default; }
-.ie-layer-rename { min-height: 30px; height: 30px; padding: 6px 8px; font-size: 13px; }
+.ie-layer-rename { min-height: 30px; height: 30px; padding: 6px 8px; font-size: var(--ui-fs-footnote, 13px); }
 .ie-layer-pick span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ie-layer-pick svg { flex-shrink: 0; }
 .ie-layer-actions + .ie-layer-actions { margin-top: 8px; }
 .ie-layer-actions > :first-child { flex: 1; }
 .ie-row-spacer { flex: 1; }
-.ie-inline-label { color: var(--ui-muted); font-size: 14px; }
-.ie-empty { margin: 14px 0 4px; color: var(--ui-muted); font-size: 14px; }
+.ie-inline-label { color: var(--ui-muted); font-size: var(--ui-fs-body, 15px); }
+.ie-empty { margin: 14px 0 4px; color: var(--ui-muted); font-size: var(--ui-fs-body, 15px); }
 .ie-wide-btn { width: 100%; }
-.ie-subpanel { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; padding: 12px; border-radius: 18px !important; background: rgba(255, 255, 255, 0.03); }
+.ie-subpanel { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; padding: 12px; border-radius: var(--ui-radius-md, 16px) !important; background: rgba(255, 255, 255, 0.03); }
 
 /* First-run tour: a cut-out spotlight on the part being explained, and a bubble beside it. */
 .ie-tour { position: fixed; inset: 0; z-index: 2000; }
 .ie-tour-dim { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.62); }
 .ie-tour-spot {
   position: absolute;
-  border-radius: 18px;
+  border-radius: var(--ui-radius-md, 16px);
   box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.62), 0 0 0 2px var(--ui-accent);
   pointer-events: none;
   transition: all 0.25s ease;
@@ -225,11 +225,11 @@ div.ie-layer-pick { cursor: default; }
   box-shadow: var(--ui-shadow);
   animation: ui-strip-in 0.2s ease-out;
 }
-.ie-tour-step { margin: 0 0 4px; color: var(--ui-accent-text); font-size: 12px; font-weight: 600; }
-.ie-tour-title { margin: 0 0 6px; font-size: 17px; font-weight: 700; }
-.ie-tour-body { margin: 0; color: var(--ui-muted); font-size: 14px; line-height: 1.45; }
+.ie-tour-step { margin: 0 0 4px; color: var(--ui-accent-text); font-size: var(--ui-fs-label, 12px); font-weight: 600; }
+.ie-tour-title { margin: 0 0 6px; font-size: var(--ui-fs-headline, 17px); font-weight: 700; }
+.ie-tour-body { margin: 0; color: var(--ui-muted); font-size: var(--ui-fs-body, 15px); line-height: 1.45; }
 .ie-tour-actions { display: flex; justify-content: flex-end; align-items: center; gap: 12px; margin-top: 14px; }
-.ie-tour-skip { padding: 6px 8px; border: none; background: none; color: var(--ui-muted); font-size: 14px; cursor: pointer; }
+.ie-tour-skip { padding: 6px 8px; border: none; background: none; color: var(--ui-muted); font-size: var(--ui-fs-body, 15px); cursor: pointer; }
 
 
 /* Draw sheet: simple and compact layout for brush, glow, marker and draw tools */
@@ -269,10 +269,10 @@ div.ie-layer-pick { cursor: default; }
   min-width: 62px;
   padding: 8px 6px;
   border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 18px;
+  border-radius: var(--ui-radius-md, 16px);
   background: transparent;
   color: var(--ui-text);
-  font-size: 11.5px;
+  font-size: var(--ui-fs-label, 12px);
   font-weight: 500;
   cursor: pointer;
   transition: all 0.16s cubic-bezier(0.16, 1, 0.3, 1);
@@ -303,7 +303,7 @@ div.ie-layer-pick { cursor: default; }
 .ie-draw-sheet .ie-empty {
   margin: 10px 0 2px;
   text-align: center;
-  font-size: 13px;
+  font-size: var(--ui-fs-footnote, 13px);
 }
 
 /* Tool sheet polish (Draw and the Canvas tab's sheets, `ie-tool-sheet`): a quiet Clear pill, softer labels, filled tiles instead of outlines, and
@@ -312,16 +312,16 @@ div.ie-layer-pick { cursor: default; }
 .ie-panels--sheet .ie-tool-sheet .ui-sheet-action--plain {
   gap: 6px;
   height: 30px;
-  border-radius: 999px;
+  border-radius: var(--ui-radius-full, 999px);
   background: rgba(255, 255, 255, 0.06);
-  font-size: 12.5px;
+  font-size: var(--ui-fs-footnote, 13px);
   font-weight: 600;
 }
 .ie-panels--sheet .ie-tool-sheet .ui-sheet-action--plain:hover:not(:disabled) { background: rgba(255, 255, 255, 0.1); }
-.ie-panels--sheet .ie-tool-sheet .ui-row-label { width: 64px; color: var(--ui-muted); font-size: 13.5px; font-weight: 600; }
+.ie-panels--sheet .ie-tool-sheet .ui-row-label { width: 64px; color: var(--ui-muted); font-size: var(--ui-fs-footnote, 13px); font-weight: 600; }
 .ie-panels--sheet .ie-tool-sheet .ie-shape-btn {
   border-color: transparent;
-  border-radius: 16px;
+  border-radius: var(--ui-radius-md, 16px);
   background: rgba(255, 255, 255, 0.05);
   color: var(--ui-muted);
 }
@@ -381,25 +381,25 @@ div.ie-layer-pick { cursor: default; }
 .ie-panels--sheet .ui-sheet-handle::before {
   width: 36px;
   height: 4px;
-  border-radius: 999px;
+  border-radius: var(--ui-radius-full, 999px);
   background: rgba(255, 255, 255, 0.28);
 }
 
 /* Headings in the app's heavy weight, like Explore and the library sheets. */
 .ie-panels--sheet .ui-sheet-title {
   color: #ffffff;
-  font-size: 19px;
+  font-size: var(--ui-fs-title, 20px);
   font-weight: 800;
   letter-spacing: -0.01em;
 }
 
 .ie-panels--sheet .ui-sheet-action {
   border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 9999px;
+  border-radius: var(--ui-radius-full, 999px);
   background: transparent;
   color: #ffffff;
   padding: 4px 12px;
-  font-size: 12.5px;
+  font-size: var(--ui-fs-footnote, 13px);
   font-weight: 500;
   transition: all 0.16s ease;
 }
@@ -413,7 +413,7 @@ div.ie-layer-pick { cursor: default; }
   border: none;
   background: transparent;
   color: var(--ui-muted, #94a3b8);
-  font-size: 13px;
+  font-size: var(--ui-fs-footnote, 13px);
 }
 
 .ie-panels--sheet .ui-sheet-action--plain:hover:not(:disabled) {
@@ -432,16 +432,16 @@ div.ie-layer-pick { cursor: default; }
   background: rgba(255, 255, 255, 0.06);
   color: #f1f5f9;
   font-weight: 600;
-  font-size: 11.5px;
+  font-size: var(--ui-fs-label, 12px);
   font-variant-numeric: tabular-nums;
   padding: 1.5px 7px;
-  border-radius: 9999px;
+  border-radius: var(--ui-radius-full, 999px);
 }
 
 /* Custom Refined Sliders */
 .ie-panels--sheet .ui-slider::-webkit-slider-runnable-track {
   height: 4px;
-  border-radius: 999px;
+  border-radius: var(--ui-radius-full, 999px);
   background: linear-gradient(to right, var(--ui-accent, #ff5a36) var(--pct), rgba(255, 255, 255, 0.1) var(--pct));
   border: none;
 }
@@ -468,10 +468,10 @@ div.ie-layer-pick { cursor: default; }
   min-height: 0;
   padding: 8px 6px;
   border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 12px;
+  border-radius: var(--ui-radius-sm, 12px);
   background: transparent;
   color: #ffffff;
-  font-size: 11.5px;
+  font-size: var(--ui-fs-label, 12px);
   white-space: nowrap;
   transition: all 0.16s cubic-bezier(0.16, 1, 0.3, 1);
   box-shadow: none;
@@ -510,7 +510,7 @@ div.ie-layer-pick { cursor: default; }
 .ie-panels--sheet .ui-seg--fill {
   background: transparent;
   border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 9999px;
+  border-radius: var(--ui-radius-full, 999px);
   padding: 3px;
   gap: 3px;
 }
@@ -533,10 +533,10 @@ div.ie-layer-pick { cursor: default; }
 .ie-panels--sheet .ui-chip {
   height: 34px;
   border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 9999px;
+  border-radius: var(--ui-radius-full, 999px);
   background: transparent;
   color: #ffffff;
-  font-size: 12.5px;
+  font-size: var(--ui-fs-footnote, 13px);
   font-weight: 500;
   transition: all 0.16s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -625,8 +625,8 @@ div.ie-layer-pick { cursor: default; }
   background: transparent;
   border: 1px solid rgba(255, 255, 255, 0.2);
   color: #ffffff;
-  border-radius: 9999px;
-  font-size: 13px;
+  border-radius: var(--ui-radius-full, 999px);
+  font-size: var(--ui-fs-footnote, 13px);
   font-weight: 500;
   box-shadow: none;
   transition: all 0.16s ease;
@@ -665,8 +665,8 @@ div.ie-layer-pick { cursor: default; }
   background: transparent;
   border: 1px solid rgba(255, 255, 255, 0.2);
   color: #ffffff;
-  border-radius: 12px;
-  font-size: 13.5px;
+  border-radius: var(--ui-radius-sm, 12px);
+  font-size: var(--ui-fs-footnote, 13px);
   box-shadow: none;
   transition: border-color 0.18s ease, box-shadow 0.18s ease;
 }
@@ -797,12 +797,12 @@ div.ie-layer-pick { cursor: default; }
   gap: 7px;
   height: 34px;
   padding: 0 13px;
-  border-radius: 9999px;
+  border-radius: var(--ui-radius-full, 999px);
   background: rgba(255, 255, 255, 0.05);
   background-color: rgba(255, 255, 255, 0.05);
   border: 1px solid transparent;
   color: #ffffff;
-  font-size: 12px;
+  font-size: var(--ui-fs-label, 12px);
   font-weight: 500;
   letter-spacing: -0.01em;
   cursor: pointer;
@@ -869,7 +869,7 @@ div.ie-layer-pick { cursor: default; }
   align-items: center;
   height: 40px;
   padding: 0 16px;
-  border-radius: 9999px;
+  border-radius: var(--ui-radius-full, 999px);
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid transparent;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
@@ -882,7 +882,7 @@ div.ie-layer-pick { cursor: default; }
 }
 
 .ie-wm-at {
-  font-size: 14px;
+  font-size: var(--ui-fs-body, 15px);
   font-weight: 600;
   color: var(--ui-accent, #ff5a36);
   margin-right: 8px;
@@ -896,7 +896,7 @@ div.ie-layer-pick { cursor: default; }
   border: none;
   background: transparent;
   color: #ffffff;
-  font-size: 13.5px;
+  font-size: var(--ui-fs-footnote, 13px);
   font-weight: 500;
   letter-spacing: -0.01em;
   padding: 0;
@@ -920,7 +920,7 @@ div.ie-layer-pick { cursor: default; }
   justify-content: space-between;
   background: rgba(255, 255, 255, 0.05);
   border: none;
-  border-radius: 14px;
+  border-radius: var(--ui-radius-md, 16px);
   padding: 3px;
   gap: 2px;
   height: 40px;
@@ -937,7 +937,7 @@ div.ie-layer-pick { cursor: default; }
   border: none;
   background: transparent;
   color: var(--ui-muted, #94a3b8);
-  border-radius: 11px;
+  border-radius: var(--ui-radius-sm, 12px);
   cursor: pointer;
   transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -950,20 +950,20 @@ div.ie-layer-pick { cursor: default; }
 .ie-wm-corner-btn.is-on {
   background: var(--ui-accent, #ff5a36);
   color: #ffffff;
-  border-radius: 11px;
+  border-radius: var(--ui-radius-sm, 12px);
   box-shadow: 0 6px 16px -8px rgba(255, 90, 54, 0.7);
 }
 
 /* Filters: Presets / Adjust as one filled two-way switch under the heading. */
-.ie-filter-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; margin-bottom: 12px; padding: 3px; border-radius: 14px; background: rgba(255, 255, 255, 0.05); }
+.ie-filter-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; margin-bottom: 12px; padding: 3px; border-radius: var(--ui-radius-md, 16px); background: rgba(255, 255, 255, 0.05); }
 .ie-panels--sheet .ie-filter-tab {
   height: 34px;
   border: none;
-  border-radius: 11px;
+  border-radius: var(--ui-radius-sm, 12px);
   background: transparent;
   color: var(--ui-muted, #a5a6ad);
   font: inherit;
-  font-size: 13px;
+  font-size: var(--ui-fs-footnote, 13px);
   font-weight: 600;
   cursor: pointer;
   transition: background 0.18s ease, color 0.18s ease;
@@ -1032,7 +1032,7 @@ div.ie-layer-pick { cursor: default; }
   display: block;
   width: 62px;
   height: 62px;
-  border-radius: 16px;
+  border-radius: var(--ui-radius-md, 16px);
   overflow: hidden;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
   background: #12141a;
@@ -1064,7 +1064,7 @@ div.ie-layer-pick { cursor: default; }
   justify-content: center;
   width: 15px;
   height: 15px;
-  border-radius: 9999px;
+  border-radius: var(--ui-radius-full, 999px);
   background: rgba(0, 0, 0, 0.72);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
@@ -1076,7 +1076,7 @@ div.ie-layer-pick { cursor: default; }
 /* Label below the filter photo */
 .ie-panels--sheet .ie-filter-tile span:not(.ui-tile-icon):not(.ie-filter-thumb):not(.ie-filter-thumb-badge),
 .ie-filter-tile span:not(.ui-tile-icon):not(.ie-filter-thumb):not(.ie-filter-thumb-badge) {
-  font-size: 11.5px;
+  font-size: var(--ui-fs-label, 12px);
   font-weight: 600;
   line-height: 1.25;
   color: var(--ui-muted, #a5a6ad);
@@ -1146,12 +1146,12 @@ div.ie-layer-pick { cursor: default; }
   height: 46px;
   min-height: 46px;
   padding: 0 18px;
-  border-radius: 16px;
+  border-radius: var(--ui-radius-md, 16px);
   background: rgba(255, 255, 255, 0.05);
   background-color: rgba(255, 255, 255, 0.05);
   border: 1px solid transparent;
   color: #ffffff;
-  font-size: 13.5px;
+  font-size: var(--ui-fs-footnote, 13px);
   font-weight: 600;
   cursor: pointer;
   box-shadow: none;
@@ -1202,7 +1202,7 @@ div.ie-layer-pick { cursor: default; }
   height: 60px;
   padding: 0 14px;
   border: none;
-  border-radius: 16px;
+  border-radius: var(--ui-radius-md, 16px);
   background: rgba(255, 255, 255, 0.05);
   box-shadow: none;
   color: var(--ui-text, #f4f4f6);
@@ -1221,8 +1221,8 @@ div.ie-layer-pick { cursor: default; }
 .ie-bg-card-icon { flex-shrink: 0; display: grid; place-items: center; color: var(--ui-accent, #ff5a36); }
 .ie-bg-card-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
 .ie-bg-card-label, .ie-bg-card-sub { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ie-bg-card-label { font-size: 14px; font-weight: 600; letter-spacing: -0.01em; }
-.ie-bg-card-sub { color: var(--ui-muted, #a5a6ad); font-size: 11.5px; font-weight: 500; }
+.ie-bg-card-label { font-size: var(--ui-fs-body, 15px); font-weight: 600; letter-spacing: -0.01em; }
+.ie-bg-card-sub { color: var(--ui-muted, #a5a6ad); font-size: var(--ui-fs-label, 12px); font-weight: 500; }
 
 /* Canvas > Size: each shape's outline in its tile, in the tile's text colour. */
 .ie-size-shape { display: block; box-sizing: border-box; border: 2px solid currentColor; border-radius: 3px; }
@@ -1239,11 +1239,11 @@ div.ie-layer-pick { cursor: default; }
   min-width: 0;
   padding: 0 12px;
   border: none !important;
-  border-radius: 999px !important;
+  border-radius: var(--ui-radius-full, 999px) !important;
   background: rgba(255, 255, 255, 0.06) !important;
   color: var(--ui-text, #f4f4f6) !important;
   font: inherit;
-  font-size: 14.5px !important;
+  font-size: var(--ui-fs-body, 15px) !important;
   font-weight: 600 !important;
   box-shadow: none !important;
   cursor: pointer;
@@ -1277,7 +1277,7 @@ div.ie-layer-pick { cursor: default; }
 }
 .ie-panels--sheet .ui-section-title {
   color: rgba(255, 255, 255, 0.45);
-  font-size: 11px;
+  font-size: var(--ui-fs-caption, 11px);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -1289,7 +1289,7 @@ div.ie-layer-pick { cursor: default; }
 .ie-panels--sheet .ui-seg--divided {
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 9999px;
+  border-radius: var(--ui-radius-full, 999px);
   padding: 2px;
   gap: 2px;
 }
@@ -1297,10 +1297,10 @@ div.ie-layer-pick { cursor: default; }
 .ie-panels--sheet .ui-seg--fill .ui-seg-btn {
   height: 34px;
   border: none;
-  border-radius: 9999px;
+  border-radius: var(--ui-radius-full, 999px);
   background: transparent;
   color: rgba(255, 255, 255, 0.65);
-  font-size: 13px;
+  font-size: var(--ui-fs-footnote, 13px);
   font-weight: 500;
   display: inline-flex;
   align-items: center;
@@ -1379,7 +1379,7 @@ div.ie-layer-pick { cursor: default; }
 }
 .ie-panels--sheet .ui-row-label {
   color: rgba(255, 255, 255, 0.85);
-  font-size: 13px;
+  font-size: var(--ui-fs-footnote, 13px);
   font-weight: 500;
   min-width: 76px;
 }
@@ -1392,7 +1392,7 @@ div.ie-layer-pick { cursor: default; }
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: rgba(255, 255, 255, 0.035);
   color: #ffffff;
-  font-size: 14.5px;
+  font-size: var(--ui-fs-body, 15px);
   line-height: 1.45;
   resize: none;
   box-shadow: none;
@@ -1428,7 +1428,7 @@ div.ie-layer-pick { cursor: default; }
 .ui-sheet .ui-chip,
 .ui-sheet .ui-toggle,
 .ui-sheet .ui-seg-btn {
-  border-radius: 9999px;
+  border-radius: var(--ui-radius-full, 999px);
 }
 
 .ie-panels--sheet .ui-icon-btn,
@@ -1443,7 +1443,7 @@ div.ie-layer-pick { cursor: default; }
 .ui-sheet .ui-tile,
 .ie-panels--sheet .ie-shape-btn,
 .ie-panels--sheet .ie-filter-tile {
-  border-radius: 18px;
+  border-radius: var(--ui-radius-md, 16px);
 }
 
 /* Container Tracks & Input Fields */
@@ -1455,7 +1455,7 @@ div.ie-layer-pick { cursor: default; }
 .ui-sheet .ui-seg--fill,
 .ui-sheet .ui-seg--divided,
 .ui-sheet .ui-seg--floating {
-  border-radius: 9999px;
+  border-radius: var(--ui-radius-full, 999px);
 }
 
 .ie-panels--sheet input.ui-field,
@@ -1466,12 +1466,12 @@ div.ie-layer-pick { cursor: default; }
 .ie-panels--sheet .ie-saved-rename,
 .ie-panels--sheet .ie-wm-input-pill,
 .ie-panels--sheet .ie-wm-input-field {
-  border-radius: 9999px;
+  border-radius: var(--ui-radius-full, 999px);
 }
 
 .ie-panels--sheet textarea.ui-field,
 .ui-theme .ie-panels--sheet textarea.ui-field {
-  border-radius: 18px;
+  border-radius: var(--ui-radius-md, 16px);
 }
 
 /* Numeric value tags & pills */
@@ -1480,7 +1480,7 @@ div.ie-layer-pick { cursor: default; }
 .ie-panels--sheet .ie-filter-thumb-badge,
 .ie-panels--sheet .ie-history-now,
 .ie-panels--sheet .ie-kbd {
-  border-radius: 9999px;
+  border-radius: var(--ui-radius-full, 999px);
 }
 
 /* Grouped Boxes, Subpanels, and Card Containers */
@@ -1493,13 +1493,13 @@ div.ie-layer-pick { cursor: default; }
 .ie-panels--sheet .ie-export-info,
 .ie-panels--sheet .ie-saved-clash,
 .ie-panels--sheet .ie-shortcut-row {
-  border-radius: 18px;
+  border-radius: var(--ui-radius-md, 16px);
 }
 
 .ie-panels--sheet .ie-filter-thumb,
 .ie-panels--sheet .ie-saved-open img,
 .ie-panels--sheet .ie-saved-blank {
-  border-radius: 16px;
+  border-radius: var(--ui-radius-md, 16px);
 }
 
 /* Sticker (a sticker's Edit) and Die-cut, on the tool-sheet look. Flip is a small pill beside
@@ -1516,11 +1516,11 @@ div.ie-layer-pick { cursor: default; }
   height: 30px;
   padding: 0 12px;
   border: none;
-  border-radius: 999px;
+  border-radius: var(--ui-radius-full, 999px);
   background: rgba(255, 255, 255, 0.06);
   color: var(--ui-text, #f4f4f6);
   font: inherit;
-  font-size: 12.5px;
+  font-size: var(--ui-fs-footnote, 13px);
   font-weight: 600;
   box-shadow: none;
   cursor: pointer;
@@ -1535,14 +1535,14 @@ div.ie-layer-pick { cursor: default; }
    soft labels and no outlines. */
 .ie-panels--sheet .ie-text-sheet .ui-section-title {
   color: var(--ui-muted, #a5a6ad);
-  font-size: 13.5px;
+  font-size: var(--ui-fs-footnote, 13px);
   font-weight: 600;
   letter-spacing: normal;
   text-transform: none;
 }
 .ie-panels--sheet .ie-text-sheet :is(.ui-toggle, .ui-chip, .ui-seg-btn, .ie-font-upload, .ie-style-apply, .ie-style-save) {
   border: none;
-  border-radius: 14px;
+  border-radius: var(--ui-radius-md, 16px);
   background: rgba(255, 255, 255, 0.06);
   color: var(--ui-text, #f4f4f6);
   box-shadow: none;
@@ -1603,7 +1603,7 @@ div.ie-layer-pick { cursor: default; }
   background: rgba(255, 90, 54, 0.12);
   color: var(--ui-accent, #ff5a36);
   font-family: var(--ui-font, inherit);
-  font-size: 13.5px;
+  font-size: var(--ui-fs-footnote, 13px);
   font-weight: 700;
   white-space: nowrap;
 }
@@ -1636,7 +1636,7 @@ div.ie-layer-pick { cursor: default; }
   height: 44px;
   padding: 0 16px;
   font: inherit;
-  font-size: 13.5px;
+  font-size: var(--ui-fs-footnote, 13px);
   font-weight: 600;
 }
 .ie-panels--sheet .ie-text-sheet .ie-style-save svg { color: var(--ui-accent, #ff5a36); }
@@ -1645,8 +1645,8 @@ div.ie-layer-pick { cursor: default; }
 .ie-panels--sheet .ie-text-sheet .ie-format-row { display: flex; align-items: center; gap: 6px; }
 .ie-panels--sheet .ie-text-sheet .ie-format-row .ui-toggle { display: grid; place-items: center; height: 44px; padding: 0; }
 .ie-format-glyph { display: inline-flex; align-items: center; justify-content: center; line-height: 1; user-select: none; }
-.ie-format-glyph--bold { font-weight: 850; font-size: 17px; }
-.ie-format-glyph--italic { font-family: Georgia, Cambria, "Times New Roman", serif; font-style: italic; font-weight: 700; font-size: 18px; }
+.ie-format-glyph--bold { font-weight: 800; font-size: var(--ui-fs-headline, 17px); }
+.ie-format-glyph--italic { font-family: Georgia, Cambria, "Times New Roman", serif; font-style: italic; font-weight: 700; font-size: var(--ui-fs-headline, 17px); }
 .ie-format-glyph--underline { font-weight: 700; font-size: 16px; text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 2px; }
 
 /* Effects: a sideways row of tiles, each showing its curve. */
@@ -1655,7 +1655,7 @@ div.ie-layer-pick { cursor: default; }
   flex: none;
   height: 44px;
   padding: 0 18px;
-  font-size: 14px;
+  font-size: var(--ui-fs-body, 15px);
   font-weight: 600;
 }
 
@@ -1669,7 +1669,7 @@ div.ie-layer-pick { cursor: default; }
   border: none !important;
   background: none !important;
 }
-.ie-panels--sheet .ie-text-sheet .ui-seg-btn { height: 44px !important; font-size: 13.5px !important; font-weight: 600 !important; }
+.ie-panels--sheet .ie-text-sheet .ui-seg-btn { height: 44px !important; font-size: var(--ui-fs-footnote, 13px) !important; font-weight: 600 !important; }
 .ie-panels--sheet .ie-text-sheet .ui-seg-btn::before { content: none !important; }
 .ie-panels--sheet .ie-text-sheet .ui-row .ui-seg-btn { height: 40px !important; }
 
@@ -1704,11 +1704,11 @@ div.ie-layer-pick { cursor: default; }
   height: 36px;
   padding: 0 16px;
   border: none;
-  border-radius: 999px;
+  border-radius: var(--ui-radius-full, 999px);
   background: rgba(255, 255, 255, 0.06);
   color: var(--ui-text, #f4f4f6);
   font: inherit;
-  font-size: 13.5px;
+  font-size: var(--ui-fs-footnote, 13px);
   font-weight: 600;
   box-shadow: none;
   cursor: pointer;
@@ -1741,7 +1741,7 @@ div.ie-layer-pick { cursor: default; }
   min-width: 0;
   padding: 10px 10px 9px;
   border: none;
-  border-radius: 18px;
+  border-radius: var(--ui-radius-md, 16px);
   background: rgba(255, 255, 255, 0.05);
   color: var(--ui-muted, #a5a6ad);
   font: inherit;
@@ -1781,7 +1781,7 @@ div.ie-layer-pick { cursor: default; }
   z-index: 1;
   max-width: 118px;
   padding: 2px 6px;
-  font-size: 11px;
+  font-size: var(--ui-fs-caption, 11px);
   font-weight: 700;
   line-height: 1.25;
   text-align: center;
@@ -1795,7 +1795,7 @@ div.ie-layer-pick { cursor: default; }
 .ie-bubble-sample {
   max-width: 100%;
   padding: 7px 12px;
-  font-size: 12px;
+  font-size: var(--ui-fs-label, 12px);
   font-weight: 700;
   line-height: 1.3;
   text-align: center;
@@ -1811,7 +1811,7 @@ div.ie-layer-pick { cursor: default; }
   justify-content: center;
   gap: 5px;
   min-width: 0;
-  font-size: 12px;
+  font-size: var(--ui-fs-label, 12px);
   font-weight: 600;
 }
 .ie-bubble-name > span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -1839,16 +1839,16 @@ div.ie-layer-pick { cursor: default; }
 .ie-panels--sheet .ie-text-sheet .ui-row { min-height: 36px; padding-top: 0; padding-bottom: 0; }
 .ie-panels--sheet .ie-text-sheet .ui-row + .ui-row { margin-top: 6px; }
 .ie-panels--sheet .ie-text-sheet .ie-font-row { grid-template-rows: repeat(2, 40px); gap: 6px; }
-.ie-panels--sheet .ie-text-sheet .ie-font-row :is(.ui-toggle--tile, .ie-font-upload) { height: 40px; min-width: 80px; padding: 0 14px; border-radius: 12px; }
-.ie-panels--sheet .ie-text-sheet .ie-font-row .ui-toggle--tile { font-size: 15px; }
+.ie-panels--sheet .ie-text-sheet .ie-font-row :is(.ui-toggle--tile, .ie-font-upload) { height: 40px; min-width: 80px; padding: 0 14px; border-radius: var(--ui-radius-sm, 12px); }
+.ie-panels--sheet .ie-text-sheet .ie-font-row .ui-toggle--tile { font-size: var(--ui-fs-body, 15px); }
 .ie-panels--sheet .ie-text-sheet :is(.ie-format-row .ui-toggle, .ui-chips[aria-label="Text effects"] .ui-chip, .ui-seg-btn, .ie-style-apply, .ie-style-save) {
   height: 38px;
-  border-radius: 12px;
+  border-radius: var(--ui-radius-sm, 12px);
 }
 .ie-panels--sheet .ie-text-sheet .ie-format-row,
 .ie-panels--sheet .ie-text-sheet .ui-chips[aria-label="Text effects"],
 .ie-panels--sheet .ie-text-sheet .ui-seg { gap: 6px; }
-.ie-panels--sheet .ie-text-sheet .ie-style-apply { width: 46px; font-size: 17px; }
+.ie-panels--sheet .ie-text-sheet .ie-style-apply { width: 46px; font-size: var(--ui-fs-headline, 17px); }
 
 /* A photo's More (MediaSheet as the Photo sheet): five filled tiles, orange when on, then the look
    sliders two to a line. */
@@ -1857,10 +1857,10 @@ div.ie-layer-pick { cursor: default; }
   gap: 5px;
   height: 60px;
   border: none;
-  border-radius: 14px;
+  border-radius: var(--ui-radius-md, 16px);
   background: rgba(255, 255, 255, 0.06);
   color: var(--ui-text, #f4f4f6);
-  font-size: 11.5px;
+  font-size: var(--ui-fs-label, 12px);
   font-weight: 600;
 }
 .ie-panels--sheet .ie-photo-sheet .ui-tile:hover:not(:disabled):not(.is-on) { background: rgba(255, 255, 255, 0.1); transform: none; }
@@ -1885,18 +1885,18 @@ div.ie-layer-pick { cursor: default; }
   display: inline-flex;
   gap: 2px;
   padding: 3px;
-  border-radius: 999px;
+  border-radius: var(--ui-radius-full, 999px);
   background: rgba(255, 255, 255, 0.06);
 }
 .ie-panels--sheet .ie-color-tab {
   height: 34px;
   padding: 0 16px;
   border: none;
-  border-radius: 999px;
+  border-radius: var(--ui-radius-full, 999px);
   background: transparent;
   color: var(--ui-muted, #a5a6ad);
   font: inherit;
-  font-size: 14px;
+  font-size: var(--ui-fs-body, 15px);
   font-weight: 600;
   box-shadow: none;
   cursor: pointer;

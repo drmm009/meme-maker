@@ -32,7 +32,7 @@ export default function ToolDock({ items, active, onSelect, ariaLabel }: ToolDoc
           title={title || label}
           onClick={() => onSelect(id)}
         >
-          <Icon size={21} strokeWidth={2.1} />
+          <Icon size={variant ? 21 : 24} strokeWidth={2.1} />
           <span>{label}</span>
         </button>
       ))}
