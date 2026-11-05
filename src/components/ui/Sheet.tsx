@@ -33,8 +33,9 @@ const GHOST_MS = 300;
 // data-sheet-ghosts (the editor's bottom panel, which glides to its new height) the copy stays where
 // the sheet was, behind what replaces it, fading, and sinks with the panel. Anywhere else (the
 // full-height library sheets) it is laid over the same spot and slides down out of view.
-// The host may change its classes as the sheet goes (the editor's panel stops being a sheet panel),
-// so the copy sits in a box-less wrapper with the host's classes as they were, keeping its styles.
+// The host may change its classes as the sheet goes (the editor's panel stops being a sheet panel), and
+// a full-height sheet's copy leaves the host altogether, so the copy sits in a box-less wrapper with the
+// host's classes as they were, keeping its styles (the library sheets' glass among them).
 function leaveGhost(el: HTMLElement) {
   const host = el.parentElement;
   const glide = Boolean(host?.hasAttribute('data-sheet-ghosts'));
@@ -50,15 +51,26 @@ function leaveGhost(el: HTMLElement) {
   } else {
     const at = el.getBoundingClientRect();
     const base = parent.getBoundingClientRect();
-    Object.assign(ghost.style, { top: `${at.top - base.top}px`, left: `${at.left - base.left}px`, width: `${at.width}px`, height: `${at.height}px` });
+    // Its place already counts a drag down in progress, so the copy drops the drag's offset.
+    Object.assign(ghost.style, { top: `${at.top - base.top}px`, left: `${at.left - base.left}px`, width: `${at.width}px`, height: `${at.height}px`, transform: '', transition: '' });
   }
   let holder: HTMLElement = ghost;
-  if (glide && parent.className) {
+  if (host?.className) {
     holder = document.createElement('div');
-    holder.className = parent.className;
+    holder.className = host.className;
     holder.style.display = 'contents';
     holder.setAttribute('aria-hidden', 'true');
     holder.appendChild(ghost);
+  }
+  // A dim the sheet sits on (a sibling marked data-sheet-dim) fades out behind the dropping copy.
+  const dim = glide ? null : host?.querySelector<HTMLElement>(':scope > [data-sheet-dim]');
+  if (dim && holder !== ghost) {
+    const at = dim.getBoundingClientRect();
+    const base = parent.getBoundingClientRect();
+    const copy = dim.cloneNode() as HTMLElement;
+    copy.className = `${dim.className} ui-sheet-dim-ghost`;
+    Object.assign(copy.style, { inset: 'auto', top: `${at.top - base.top}px`, left: `${at.left - base.left}px`, width: `${at.width}px`, height: `${at.height}px` });
+    holder.insertBefore(copy, ghost);
   }
   parent.appendChild(holder);
   // A copy starts at the top of anything scrolled; put it back where the sheet was scrolled to.
@@ -71,8 +83,13 @@ function leaveGhost(el: HTMLElement) {
   return holder;
 }
 
+// What a drag down can start on: the handle, the header, or a row the sheet marks data-sheet-drag
+// (a sheet drawing its own title row, like the library sheets). Never a control in them.
+const DRAG_FROM = '.ui-sheet-handle, .ui-sheet-head, [data-sheet-drag]';
+const NOT_DRAG = 'button:not(.ui-sheet-handle), input, textarea, select, a';
+
 // A panel docked at the bottom of the editor (not a modal: the canvas above stays usable).
-// Close it with a tap on the handle, or by dragging the handle or header down.
+// Close it with a tap on the handle, or by dragging the handle, header or a data-sheet-drag row down.
 export default function Sheet({ title, onClose, badge, action, className = '', hideTitle = false, aside, ariaLabel, children }: SheetProps) {
   const sheetRef = useRef<HTMLElement>(null);
   const drag = useRef<{ y: number; dy: number } | null>(null);
@@ -104,7 +121,8 @@ export default function Sheet({ title, onClose, badge, action, className = '', h
 
   const onPointerDown = (e: PointerEvent) => {
     if (isClosingRef.current) return;
-    if ((e.target as HTMLElement).closest('button:not(.ui-sheet-handle)')) return;
+    const target = e.target as HTMLElement;
+    if (!target.closest(DRAG_FROM) || target.closest(NOT_DRAG)) return;
     drag.current = { y: e.clientY, dy: 0 };
     (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
     if (sheetRef.current) sheetRef.current.style.transition = 'none';
@@ -119,10 +137,10 @@ export default function Sheet({ title, onClose, badge, action, className = '', h
   const onPointerUp = () => {
     const d = drag.current;
     drag.current = null;
-    if (!sheetRef.current || isClosingRef.current) return;
-    if (d && d.dy > CLOSE_DRAG_PX) {
+    if (!d || !sheetRef.current || isClosingRef.current) return;
+    if (d.dy > CLOSE_DRAG_PX) {
       triggerClose();
-    } else if (d && d.dy > 0) {
+    } else if (d.dy > 0) {
       const el = sheetRef.current;
       el.style.transition = 'transform 0.28s cubic-bezier(0.16, 1, 0.3, 1)';
       el.style.transform = 'translateY(0)';
@@ -139,13 +157,20 @@ export default function Sheet({ title, onClose, badge, action, className = '', h
     }
   };
 
-  const dragProps = { onPointerDown, onPointerMove, onPointerUp, onPointerCancel: onPointerUp };
-
   return (
-    <section ref={sheetRef} className={`ui-sheet ${className}`} role="dialog" aria-label={ariaLabel || title}>
-      <button type="button" className="ui-sheet-handle" aria-label={`Close ${title}`} onClick={triggerClose} {...dragProps} />
+    <section
+      ref={sheetRef}
+      className={`ui-sheet ${className}`}
+      role="dialog"
+      aria-label={ariaLabel || title}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      onPointerCancel={onPointerUp}
+    >
+      <button type="button" className="ui-sheet-handle" aria-label={`Close ${title}`} onClick={triggerClose} />
       {(!hideTitle || action || aside) && (
-        <header className={`ui-sheet-head${hideTitle ? ' ui-sheet-head--bare' : ''}`} {...dragProps}>
+        <header className={`ui-sheet-head${hideTitle ? ' ui-sheet-head--bare' : ''}`}>
           {!hideTitle && <h2 className="ui-sheet-title">{title}</h2>}
           {!hideTitle && badge && <span className="ui-badge">{badge}</span>}
           <div className="ui-sheet-head-end">

@@ -71,6 +71,8 @@ const SHEETS = { text: TextSheet, media: MediaSheet, draw: DrawSheet, canvasColo
   card: CardFormSheet, cardLook: CardLookSheet, aiGallery: AiMemeGallerySheet, faceSwap: FaceSwapStudio, stickerGallery: StickerGallerySheet };
 // Sheets for browsing a big library, shown full height (the meme needn't stay in view).
 const FULL_SHEETS = new Set<string>(['templates', 'memes', 'stickers', 'emoji', 'aiGallery', 'faceSwap', 'stickerGallery']);
+// Sheets laid over the canvas from the bottom, as tall as they need, on a dim that closes them.
+const OVER_SHEETS = new Set<string>(['export']);
 
 // The bottom of the editor: the dock with the open tab's tool strip above it, or, when one of that
 // tab's sheets is open, the strip above the sheet (so its tools stay one tap away). While a layer is
@@ -86,7 +88,6 @@ export default function EditorPanels({ actions }: { actions: EditorActions }) {
   const sheetFromPill: boolean = useEditorUiStore((s: { sheetFromPill: boolean }) => s.sheetFromPill);
   const showDockTab = useEditorUiStore((s: { showDockTab: (tab: string) => void }) => s.showDockTab);
   const pickDrawTool = useEditorUiStore((s: { pickDrawTool: (tool: string) => void }) => s.pickDrawTool);
-  const leaveDock = useEditorUiStore((s: { leaveDock: () => void }) => s.leaveDock);
   const mode: EditorMode = useEditorUiStore((s: { mode: EditorMode }) => s.mode);
   const busy = Boolean(actions.isRemovingBg);
   const photos: { originalUrl?: string | null }[] = useMemeEditorStore((s: { imageLayers: { originalUrl?: string | null }[] }) => s.imageLayers);
@@ -115,7 +116,8 @@ export default function EditorPanels({ actions }: { actions: EditorActions }) {
   // One element in every branch below, so its height can glide between them.
   const panelRef = useRef<HTMLDivElement>(null);
   const full = Boolean(sheet && FULL_SHEETS.has(sheet));
-  useSmoothHeight(panelRef, full);
+  const over = Boolean(sheet && OVER_SHEETS.has(sheet));
+  useSmoothHeight(panelRef, full || over);
   // A sheet opened from the pill belongs to its layer: once that layer is gone (deleted, or
   // deselected) the sheet closes, back to the dock, rather than staying with nothing under it.
   const orphaned = sheetFromPill && !kind;
@@ -171,6 +173,15 @@ export default function EditorPanels({ actions }: { actions: EditorActions }) {
       </div>
     );
   }
+  if (SheetComponent && over) {
+    return (
+      <div ref={panelRef} className="ie-panels ie-panels--sheet ie-panels--over">
+        <SheetComponent actions={actions} onClose={closeSheet} />
+        {/* After the sheet, so it's still there when the closing sheet's copy takes a fading copy of it. */}
+        <div className="ie-panels-dim" aria-hidden="true" data-sheet-dim="" onClick={closeSheet} />
+      </div>
+    );
+  }
   if (SheetComponent) {
     return (
       <div ref={panelRef} className={`ie-panels ie-panels--sheet${actionDock ? ' ie-panels--actions' : ''}`} data-sheet-ghosts="">
@@ -205,13 +216,10 @@ export default function EditorPanels({ actions }: { actions: EditorActions }) {
             else openSheet('export');
             return;
           }
-          // Every tab deselects the layer and shows its strip; tapping the lit tab again closes it
-          // (and stops drawing). With a layer selected no tab is lit, so any tab opens its strip.
-          if (dockTab === id && !layerTools) leaveDock();
-          else {
-            setActiveLayerId(null);
-            showDockTab(id);
-          }
+          // Every tab deselects the layer and shows its strip; a strip always shows, so tapping the lit
+          // tab again keeps it (and stops drawing). With a layer selected no tab is lit.
+          setActiveLayerId(null);
+          showDockTab(id);
         }}
       />
     </div>

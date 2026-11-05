@@ -13,7 +13,7 @@ interface SegmentedControlProps<T extends string> {
   value: T;
   onChange: (value: T) => void;
   ariaLabel: string;
-  // 'floating' sits over content (glass); 'fill' stretches its segments across the row; 'divided'
+  // 'floating' stands alone (the dock's grey); 'fill' stretches its segments across the row; 'divided'
   // is a compact pill with a rule between the options.
   variant?: 'floating' | 'fill' | 'divided' | 'plain';
 }

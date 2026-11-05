@@ -203,10 +203,9 @@ describe('MemeEditor', () => {
     expect(captionTexts()).toHaveLength(4);
   }, 30000);
 
-  it('every dock tab shows its tool strip; tapping the tab again closes it', () => {
+  it('every dock tab shows its tool strip; tapping the tab again keeps it', () => {
     renderEditor();
     const strips = [
-      // Text is open from the start, so it's checked last (tapping it first would close it).
       ['Photos, videos, stickers and emoji', 'Media tools', ['Photo', 'Templates', 'Stickers', 'Emoji']],
       ['AI tools and photo filters', 'AI and filter tools', ['Face Swap', 'Background', 'AI Caption', 'Filters']],
       ['Draw on the meme', 'Draw tools', ['Brush', 'Glow', 'Marker', 'Eraser', 'Shapes']],
@@ -220,7 +219,7 @@ describe('MemeEditor', () => {
       expect(screen.queryByRole('dialog')).toBeNull();
     }
     openSection('Text');
-    expect(screen.queryByRole('toolbar', { name: 'Text tools' })).toBeNull();
+    expect(strip('Text tools')).toBeTruthy();
   }, 30000);
 
   it('Social Card adds a post and opens its Details under the pill, which also has Look', () => {
@@ -667,7 +666,7 @@ describe('MemeEditor', () => {
 
     openSection('Draw on the meme');
     expect(canvas.props.isDrawingMode).toBe(false);
-    expect(screen.queryByRole('toolbar', { name: 'Draw tools' })).toBeNull();
+    expect(screen.getByRole('toolbar', { name: 'Draw tools' })).toBeTruthy();
   }, 30000);
 
   it('with the Draw tab open and no tool live, tapping a layer shows its pill; with a brush live it does not', () => {
@@ -897,7 +896,7 @@ describe('MemeEditor', () => {
     if (canvas.props.activeLayerId) openSection('Canvas colour, bands and watermark');
     expect(canvas.props.activeLayerId).toBe(null);
     openSection('Canvas colour, bands and watermark');
-    expect(screen.queryByRole('toolbar', { name: 'Canvas tools' })).toBeNull();
+    expect(screen.getByRole('toolbar', { name: 'Canvas tools' })).toBeTruthy();
   }, 30000);
 
   it('Canvas > Color sets a gradient background, and a solid colour replaces it', () => {
@@ -957,7 +956,7 @@ describe('MemeEditor', () => {
     expect(screen.queryByRole('dialog', { name: 'AI Caption' })).toBeNull();
   }, 30000);
 
-  it('Filters opens under the AI/Filters strip; tapping AI/Filters again closes both', () => {
+  it('Filters opens under the AI/Filters strip; tapping AI/Filters again keeps the strip', () => {
     renderEditor();
     openSection('AI tools and photo filters');
     const strip = () => screen.getByRole('toolbar', { name: 'AI and filter tools' });
@@ -967,7 +966,7 @@ describe('MemeEditor', () => {
     closeSheet();
     expect(strip()).toBeTruthy();
     openSection('AI tools and photo filters');
-    expect(screen.queryByRole('toolbar', { name: 'AI and filter tools' })).toBeNull();
+    expect(strip()).toBeTruthy();
   }, 30000);
 
   it('Text sheet: outline thickness, gradient, letter spacing, line height and shadow', () => {
@@ -1169,7 +1168,7 @@ describe('MemeEditor', () => {
     renderEditor({ ...TEMPLATE, editorMode: 'social' });
     const captions = canvas.props.captions;
     fireEvent.click(screen.getByRole('button', { name: 'Full editor' }));
-    expect(tabs()).toEqual(['Text', 'Media', 'AI', 'Draw', 'Canvas']);
+    expect(tabs()).toEqual(['Draw', 'Media', 'Text', 'AI', 'Canvas']);
     expect(screen.queryByText('Meme Editor')).toBeNull();
     expect(screen.queryByRole('button', { name: 'Full editor' })).toBeNull();
     expect(canvas.props.captions).toBe(captions);
@@ -1277,7 +1276,7 @@ describe('MemeEditor', () => {
     renderEditor({ ...TEMPLATE, editorMode: 'sticker', imageLayers: [{ id: 'p', url: 'cut.png', originalUrl: 'photo.png', x: 0.5, y: 0.5 }] });
     const tabs = () => within(screen.getByRole('navigation', { name: 'Editor tools' })).getAllByRole('button').map((b) => b.textContent.trim());
     fireEvent.click(within(screen.getByRole('navigation', { name: 'Editor tools' })).getByText('Move to editor'));
-    expect(tabs()).toEqual(['Text', 'Media', 'AI', 'Draw', 'Canvas']);
+    expect(tabs()).toEqual(['Draw', 'Media', 'Text', 'AI', 'Canvas']);
     expect(screen.queryByText('Meme Editor')).toBeNull();
     expect(canvas.props.imageLayers).toHaveLength(1);
   });
@@ -1340,7 +1339,7 @@ describe('MemeEditor', () => {
       expect(screen.queryByRole('region', { name: 'Face swap' })).toBeNull();
       // Move to editor carries the swapped meme into the full editor.
       fireEvent.click(within(screen.getByRole('navigation', { name: 'Editor tools' })).getByText('Move to editor'));
-      expect(within(screen.getByRole('navigation', { name: 'Editor tools' })).getAllByRole('button').map((b) => b.textContent.trim())).toEqual(['Text', 'Media', 'AI', 'Draw', 'Canvas']);
+      expect(within(screen.getByRole('navigation', { name: 'Editor tools' })).getAllByRole('button').map((b) => b.textContent.trim())).toEqual(['Draw', 'Media', 'Text', 'AI', 'Canvas']);
       // On the full editor's Text tab, not the maker's strip.
       expect(screen.queryByRole('toolbar', { name: 'Face swap tools' })).toBeNull();
       expect(strip('Text tools')).toBeTruthy();
@@ -1469,7 +1468,7 @@ describe('MemeEditor', () => {
     renderEditor({ ...TEMPLATE, editorMode: 'nope' });
     // The full editor's top bar has no title; its dock says which editor it is.
     expect(screen.queryByText('Meme Editor')).toBeNull();
-    expect(within(screen.getByRole('navigation', { name: 'Editor tools' })).getAllByRole('button').map((b) => b.textContent.trim())).toEqual(['Text', 'Media', 'AI', 'Draw', 'Canvas']);
+    expect(within(screen.getByRole('navigation', { name: 'Editor tools' })).getAllByRole('button').map((b) => b.textContent.trim())).toEqual(['Draw', 'Media', 'Text', 'AI', 'Canvas']);
     expect(screen.queryByRole('button', { name: 'Full editor' })).toBeNull();
   });
 

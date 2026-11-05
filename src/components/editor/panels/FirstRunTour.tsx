@@ -17,7 +17,7 @@ const STEPS: TourStep[] = [
   {
     target: '.ui-dock',
     title: 'Your tools live here',
-    body: 'Text, Media, AI, Draw and Canvas. Tap one and its tools appear just above; some open settings below.',
+    body: 'Draw, Media, Text, AI and Canvas. Tap one and its tools appear just above; some open settings below.',
   },
   {
     target: '.meme-canvas',

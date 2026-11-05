@@ -143,7 +143,7 @@ export function createEditorUiStore(template) {
     // keeps its own.
     openSheet: (sheet, focus = null, fromPill = false) => set((state) => {
       const owner = sheet in SHEET_TAB ? SHEET_TAB[sheet] : state.dockTab;
-      const tab = state.mode === 'sticker' ? 'sticker' : (owner && !EDITOR_MODES[state.mode].dock.includes(owner) ? state.dockTab : owner);
+      const tab = state.mode === 'sticker' ? 'sticker' : (!owner || !EDITOR_MODES[state.mode].dock.includes(owner) ? state.dockTab : owner);
       return {
         sheet,
         sheetFocus: focus,
@@ -162,8 +162,8 @@ export function createEditorUiStore(template) {
       dockTab: state.dockTab || (state.mode === 'sticker' ? 'sticker' : null),
     })),
 
-    // A dock tab shows its strip above the dock; tapping it again (leaveDock) closes the strip and
-    // its sheet and stops drawing.
+    // A dock tab shows its strip above the dock (a strip always shows); tapping it again keeps the
+    // strip and stops drawing.
     showDockTab: (tab) => set((state) => ({
       dockTab: tab,
       sheet: null,
@@ -183,14 +183,6 @@ export function createEditorUiStore(template) {
       }
       return { dockTab: drawTabOf(tool), drawTool: tool, sheet: 'draw', sheetFocus: null, sheetFromPill: false, activeSubmenu: null, activeTab: 'draw' };
     }),
-    leaveDock: () => set((state) => ({
-      dockTab: null,
-      drawTool: null,
-      sheet: null,
-      sheetFocus: null,
-      sheetFromPill: false,
-      activeTab: state.activeTab === 'draw' ? 'text' : state.activeTab,
-    })),
   }));
 
   // Keep the watermark settings across sessions.

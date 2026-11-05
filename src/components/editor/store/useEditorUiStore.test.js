@@ -85,15 +85,15 @@ describe('createEditorUiStore', () => {
     store.getState().pickDrawTool('glow');
     expect(store.getState()).toMatchObject({ dockTab: 'draw', drawTool: 'glow', sheet: 'draw' });
     store.getState().closeSheet();
-    store.getState().leaveDock();
-    expect(store.getState()).toMatchObject({ dockTab: null, drawTool: null, activeTab: 'text' });
+    store.getState().showDockTab('draw');
+    expect(store.getState()).toMatchObject({ dockTab: 'draw', drawTool: null, activeTab: 'draw' });
     // Opening another tab's sheet switches to that tab's strip and stops drawing.
     store.getState().pickDrawTool('brush');
     store.getState().openSheet('text');
     expect(store.getState()).toMatchObject({ dockTab: 'text', drawTool: null, sheet: 'text' });
   });
 
-  it('every sheet opens under the strip of its tab; leaving the tab closes both', () => {
+  it('every sheet opens under the strip of its tab; the lit tab again closes the sheet, never the strip', () => {
     const store = createEditorUiStore(null);
     store.getState().openSheet('filters');
     expect(store.getState()).toMatchObject({ dockTab: 'fx', sheet: 'filters' });
@@ -103,8 +103,11 @@ describe('createEditorUiStore', () => {
     store.getState().closeSheet();
     expect(store.getState()).toMatchObject({ dockTab: 'canvas', sheet: null });
     store.getState().openSheet('canvasColor');
-    store.getState().leaveDock();
-    expect(store.getState()).toMatchObject({ dockTab: null, sheet: null });
+    store.getState().showDockTab('canvas');
+    expect(store.getState()).toMatchObject({ dockTab: 'canvas', sheet: null });
+    // A sheet of no tab (Export) keeps the strip.
+    store.getState().openSheet('export');
+    expect(store.getState()).toMatchObject({ dockTab: 'canvas', sheet: 'export' });
   });
 
   it('setters accept a value or an updater', () => {

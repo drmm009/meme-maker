@@ -18,7 +18,7 @@ export interface EditorModeConfig {
 }
 
 export const EDITOR_MODES: Record<EditorMode, EditorModeConfig> = {
-  full: { title: 'Meme Editor', dock: ['text', 'media', 'fx', 'draw', 'canvas'], startTab: 'text' },
+  full: { title: 'Meme Editor', dock: ['draw', 'media', 'text', 'fx', 'canvas'], startTab: 'text' },
   sticker: { title: 'Stickers', dock: ['new', 'pro', 'export'], startTab: 'sticker' },
   ai: { title: 'AI Meme', dock: ['new', 'pro', 'export'], startTab: 'ai' },
   faceswap: { title: 'Face Swap', dock: ['swap', 'pro', 'export'], startTab: 'swap' },

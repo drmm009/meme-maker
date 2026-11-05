@@ -168,13 +168,8 @@
   border-radius: var(--ui-radius-pill, 999px);
   background: var(--ui-surface-2);
 }
-.ui-seg--floating {
-  border: 1px solid var(--ui-line-strong);
-  background: rgba(38, 39, 46, 0.88);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  box-shadow: var(--ui-shadow);
-}
+/* The aspect bar on the black above the canvas: the dock's grey, no outline, like the dock. */
+.ui-seg--floating { background: var(--ui-surface, #1c1c1e); }
 .ui-seg--fill { display: flex; }
 .ui-seg--fill .ui-seg-btn { flex: 1; }
 .ui-seg--divided, .ui-seg--fill { background: #3d3d40; }
@@ -432,7 +427,8 @@
   border-radius: 24px 24px 0 0;
   background: var(--ui-surface, #1c1c1e) !important;
   box-shadow: 0 -18px 40px -16px rgba(0, 0, 0, 0.85);
-  animation: ui-sheet-in 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  /* No fill: once in, the sheet's transform is free for a drag down to move it. */
+  animation: ui-sheet-in 0.32s cubic-bezier(0.16, 1, 0.3, 1);
   will-change: transform, opacity;
   touch-action: pan-y;
 }
@@ -461,16 +457,24 @@
 }
 @keyframes ui-sheet-fade-in { from { opacity: 0; } }
 @keyframes ui-sheet-ghost-out { to { opacity: 0; } }
+/* The dim under a dropping sheet's copy fades as it goes. */
+[data-sheet-dim].ui-sheet-dim-ghost {
+  position: absolute;
+  z-index: 60;
+  pointer-events: none;
+  animation: ui-sheet-ghost-out 0.3s ease-out forwards;
+}
 /* A full-height sheet's copy, laid over where it was, slides down out of view. */
 .ui-sheet.ui-sheet-ghost--drop {
   right: auto;
   z-index: 60;
-  animation: ui-sheet-ghost-drop 0.3s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+  animation: ui-sheet-ghost-drop 0.32s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+  will-change: transform;
 }
 @keyframes ui-sheet-ghost-drop { to { transform: translateY(100%); opacity: 0.6; } }
 @media (prefers-reduced-motion: reduce) {
   [data-sheet-ghosts] > .ui-sheet:not(.ui-sheet-ghost) > .ui-sheet-body { animation: none; }
-  .ui-sheet.ui-sheet-ghost { display: none; }
+  .ui-sheet.ui-sheet-ghost, .ui-sheet-dim-ghost { display: none; }
 }
 .ui-sheet-handle {
   align-self: center;
@@ -483,6 +487,8 @@
   cursor: grab;
   touch-action: none;
 }
+/* A row a sheet marks as part of its drag area (Sheet's data-sheet-drag): a drag, not a scroll. */
+.ui-sheet [data-sheet-drag] { touch-action: none; cursor: grab; }
 .ui-sheet-handle::before {
   content: '';
   display: block;

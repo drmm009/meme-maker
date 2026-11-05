@@ -80,6 +80,26 @@ describe('UI kit', () => {
     expect(document.querySelector('.ui-sheet-head')).toBeNull();
   });
 
+  it('Sheet: dragging a data-sheet-drag row down closes it, but not from its controls or the body', () => {
+    const onClose = vi.fn();
+    render(
+      <Sheet title="Templates" hideTitle onClose={onClose}>
+        <header data-sheet-drag><h2>Templates</h2><button type="button">Close templates</button></header>
+        <p>body</p>
+      </Sheet>
+    );
+    const dragDown = (el: Element) => {
+      fireEvent.pointerDown(el, { clientY: 100, pointerId: 1 });
+      fireEvent.pointerMove(el, { clientY: 200, pointerId: 1 });
+      fireEvent.pointerUp(el, { clientY: 200, pointerId: 1 });
+    };
+    dragDown(screen.getByText('body'));
+    dragDown(screen.getByText('Close templates'));
+    expect(onClose).not.toHaveBeenCalled();
+    dragDown(screen.getByRole('heading', { name: 'Templates' }));
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
   it('Sheet: plain header action without icon and disabled state', () => {
     const onClear = vi.fn();
     const { rerender } = render(<Sheet title="Brush" onClose={vi.fn()} action={{ label: 'Clear drawing', variant: 'plain', disabled: true, onClick: onClear }}><p>body</p></Sheet>);

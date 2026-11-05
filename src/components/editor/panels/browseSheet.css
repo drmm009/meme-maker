@@ -569,3 +569,40 @@
   .ie-panels--full .ie-card:hover,
   .ie-panels--full .ie-emoji-card:hover { background: rgba(255, 255, 255, 0.18); }
 }
+
+/* A sheet laid over the canvas (Export): from the bottom, as tall as it needs, on a dim that closes
+   it; glass like the full-height sheets, the blur dimmed less since the dim already darkens it. */
+.ie-panels.ie-panels--over {
+  position: absolute;
+  inset: 0;
+  z-index: 60;
+  max-height: none;
+  justify-content: flex-end;
+}
+.ie-panels-dim {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  /* The meme above the sheet blurred too; it fades in and out with the dim. */
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  animation: ie-dim-in 0.3s ease-out;
+}
+.ie-panels.ie-panels--over > .ui-sheet:not(.ui-sheet-ghost) {
+  position: relative;
+  z-index: 1;
+  flex: none;
+  max-height: 88%;
+}
+.ie-panels.ie-panels--over > .ui-sheet {
+  background: rgba(28, 28, 30, 0.8) !important;
+  -webkit-backdrop-filter: blur(30px) brightness(0.8) saturate(1.4);
+  backdrop-filter: blur(30px) brightness(0.8) saturate(1.4);
+}
+/* Tracks and the summary line in the glass: the white wash, so they don't melt into it. */
+.ie-panels--over .ui-seg,
+.ie-panels--over .ie-export-info { background: rgba(255, 255, 255, 0.12); }
+@keyframes ie-dim-in { from { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .ie-panels-dim { animation: none; }
+}

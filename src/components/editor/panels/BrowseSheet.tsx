@@ -57,7 +57,7 @@ export default function BrowseSheet({ title, total, onClose, search, tabs, chips
 
   return (
     <Sheet className="ie-browse-sheet" title={title} hideTitle onClose={onClose}>
-      <header className="ie-browse-head">
+      <header className="ie-browse-head" data-sheet-drag>
         <h2 className="ie-browse-title">{title}{total != null && <span className="ie-browse-total">{total}</span>}</h2>
         <button type="button" className="ie-browse-close" aria-label={`Close ${title.toLowerCase()}`} onClick={onClose}>
           <X size={18} strokeWidth={2.2} />
