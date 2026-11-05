@@ -293,7 +293,15 @@ function VolumePanel({ item }) {
         <input type="range" min="0" max="100" step="1" value={volume} onChange={(e) => update(item.id, { volume: Number(e.target.value) / 100 })} />
         <output>{volume}%</output>
       </label>
-      <div className="vt-chip-row">{fade('fadeInMs')}{fade('fadeOutMs')}</div>
+      <div className="vt-chip-row">
+        {fade('fadeInMs')}{fade('fadeOutMs')}
+        {item.type === 'audio' && !item.isVoiceover && (
+          <button type="button" aria-pressed={Boolean(item.duck)} className={`vt-chip${item.duck ? ' is-on' : ''}`}
+            title="Quieter while a voiceover or a video's sound plays" onClick={() => update(item.id, { duck: !item.duck })}>
+            Lower under voice
+          </button>
+        )}
+      </div>
     </>
   );
 }

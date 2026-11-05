@@ -19,6 +19,8 @@ import { clipPunchTimes, punchFilter } from './zoomPunch';
 import { filterChain, resolveFilter } from './clipFilters';
 import { extensionForType } from './voiceRecorder';
 import { transitionFilters } from './clipTransitions';
+import { duckVolume } from './ducking';
+import type { Span } from './ducking';
 import type { SequenceCandidate } from './clipTransitions';
 import { animationSteps, shakeExpressions } from './textAnimation';
 import type { TextFrame } from './textAnimation';
@@ -89,7 +91,7 @@ export const textStills = (item: TextClip, durationMs: number, ratio: number): T
 const audioChain = (
   index: number,
   item: Media & { startMs?: number },
-  { trimSec, rate, atempo, fadeSec }: { trimSec: number; rate: number; atempo: 'before' | 'after' | null; fadeSec: number }
+  { trimSec, rate, atempo, fadeSec, duckUnder = [] }: { trimSec: number; rate: number; atempo: 'before' | 'after' | null; fadeSec: number; duckUnder?: Span[] }
 ): string => {
   const startMs = Math.max(0, Math.round(num(item.startMs, 0)));
   const delay = startMs > 0 ? `,adelay=${startMs}|${startMs}` : '';
@@ -98,7 +100,8 @@ const audioChain = (
   const format = ',aformat=channel_layouts=stereo:sample_rates=44100';
   // Video soundtracks change speed after resampling; standalone sounds before.
   const body = atempo === 'after' ? `${format}${speed}` : `${speed}${format}`;
-  return `${head}${body}${fadeFilter(item, fadeSec)}${delay},volume=${num(item.volume, 1.0)}[aud${index}]`;
+  // The volume comes last, on the output's clock, so ducking lines up with the timeline.
+  return `${head}${body}${fadeFilter(item, fadeSec)}${delay},${duckVolume(num(item.volume, 1.0), duckUnder)}[aud${index}]`;
 };
 
 export type VisualKind = 'video' | 'gif' | 'still';
@@ -108,7 +111,8 @@ export interface ExportGraph {
   addVisual(item: VideoClip | ImageClip | StickerClip, opts: { fileName: string; kind: VisualKind; hasAudio?: boolean; ratio: number; items: SequenceCandidate[] }): void;
   addStill(fileName: string, position?: string, enable?: string | null): void;
   addCaptionTrack(listFile: string): void;
-  addAudio(item: AudioClip, fileName: string): void;
+  // duckUnder: when it is lowered under voice (voiceSpans), for a clip set to duck.
+  addAudio(item: AudioClip, fileName: string, opts?: { duckUnder?: Span[] }): void;
   // A video clip's own sound only (with `encodedVideo`, where its picture is already drawn).
   addVideoSoundtrack(item: VideoClip, fileName: string): void;
   finish(opts?: { resolution?: number }): { command: string[]; outputFileName: string; durationSec: number };
@@ -232,7 +236,7 @@ export function createExportGraph({ width, height, durationMs, backgroundColor, 
     },
 
     // A sound clip (music, effect, voiceover). Muted sounds still take an input number.
-    addAudio(item, fileName) {
+    addAudio(item, fileName, { duckUnder = [] } = {}) {
       const trimStartSec = Math.max(0, num(item.trimStartMs, 0) / 1000);
       if (trimStartSec > 0) inputs.push('-ss', trimStartSec.toString());
       inputs.push('-i', fileName);
@@ -240,7 +244,7 @@ export function createExportGraph({ width, height, durationMs, backgroundColor, 
         const startMs = Math.max(0, Math.round(num(item.startMs, 0)));
         const clipSec = Math.max(0.05, (num(item.endMs, startMs + 3000) - startMs) / 1000);
         const rate = num(item.playbackRate, 1);
-        filters.push(audioChain(index, item, { trimSec: clipSec, rate, atempo: rate !== 1 && rate >= 0.5 && rate <= 2.0 ? 'before' : null, fadeSec: clipSec / rate }));
+        filters.push(audioChain(index, item, { trimSec: clipSec, rate, atempo: rate !== 1 && rate >= 0.5 && rate <= 2.0 ? 'before' : null, fadeSec: clipSec / rate, duckUnder: item.duck ? duckUnder : [] }));
         sounds.push(`[aud${index}]`);
       }
       index++;

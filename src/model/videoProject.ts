@@ -153,6 +153,8 @@ export interface TextClip extends ClipBase, Placed {
 export interface AudioClip extends ClipBase, Media {
   type: 'audio';
   isVoiceover?: boolean;
+  // Lower under voice: quieter while a voiceover or a video's sound plays.
+  duck?: boolean;
   icon?: string;
 }
 

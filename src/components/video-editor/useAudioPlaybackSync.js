@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useEditorStore } from '../../store/useVideoEditorStore';
 import { clipGain } from '../../utils/audioFades';
+import { duckGain, voiceSpans } from '../../utils/ducking';
 
 /**
  * Custom hook to synchronize audio tracks on the timeline with the video editor playhead.
@@ -102,7 +103,7 @@ export const useAudioPlaybackSync = (items) => {
         const audio = entry.audio;
 
         const isInside = playhead >= item.startMs && playhead < item.endMs;
-        const gain = clipGain(item, playhead);
+        const gain = clipGain(item, playhead) * (item.duck ? duckGain(voiceSpans(currentItems), playhead) : 1);
         if (Math.abs(audio.volume - gain) > 0.01) audio.volume = gain;
         const targetRate = item.playbackRate || 1;
         const trimStartSec = (item.trimStartMs || 0) / 1000;

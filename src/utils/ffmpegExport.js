@@ -10,6 +10,7 @@ import { captionFrames, concatList, splitCaptionTrack } from './captionTrack';
 import { REST_FRAME, applyTextFrame } from './textAnimation';
 import { clipOpacity } from '../model/videoProject';
 import { audioExtension, createExportGraph, outputSize, textStills, visualSize } from './exportGraph';
+import { voiceSpans } from './ducking';
 import { hasTextBox, textAttrs, textBoxAttrs } from './textLayer';
 
 let ffmpeg = null;
@@ -374,7 +375,7 @@ const exportWithFFmpeg = async (items = [], durationMs = 7000, canvasAspectRatio
       // Recordings and uploads are blob: URLs with no extension; their stored type names the file.
       const fileName = `audio_${graph.nextIndex}.${audioExtension(item)}`;
       await writeFile(fileName, fileData);
-      graph.addAudio(item, fileName);
+      graph.addAudio(item, fileName, { duckUnder: voiceSpans(items) });
     }
 
     const { command, outputFileName, durationSec } = graph.finish({ resolution });
@@ -478,7 +479,7 @@ const mixSound = async (picture, sounds, { width, height, durationMs, onProgress
         // Recordings and uploads are blob: URLs with no extension; their stored type names the file.
         const name = `audio_${graph.nextIndex}.${audioExtension(item)}`;
         await write(name, data);
-        graph.addAudio(item, name);
+        graph.addAudio(item, name, { duckUnder: voiceSpans(sounds) });
       }
     }
     const { command, outputFileName, durationSec } = graph.finish();
