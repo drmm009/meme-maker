@@ -1,7 +1,7 @@
 // How a video text clip is drawn, for both the preview (CanvasText, in stage units) and the
 // export (each text still is drawn with these at the output scale). One definition, so exported
 // text matches what you see while editing. `scale` converts stage units to the target's pixels.
-import type { TextAlign, TextClip } from '../model/videoProject';
+import type { TextAlign, TextClip, TextShadow } from '../model/videoProject';
 
 // The background box reaches this far past the text on each side (stage units).
 const BOX_PAD_X = 8;
@@ -9,7 +9,7 @@ const BOX_PAD_Y = 4;
 const BOX_RADIUS = 6;
 
 export type TextLayerItem = Pick<TextClip,
-  'text' | 'x' | 'y' | 'width' | 'fontSize' | 'fontFamily' | 'color' | 'stroke' | 'strokeWidth' | 'bgColor' | 'align' | 'rotation'>;
+  'text' | 'x' | 'y' | 'width' | 'fontSize' | 'fontFamily' | 'color' | 'stroke' | 'strokeWidth' | 'outline' | 'shadow' | 'bgColor' | 'align' | 'rotation'>;
 
 // Konva.Text attributes.
 export interface TextAttrs {
@@ -23,11 +23,19 @@ export interface TextAttrs {
   fill: string;
   stroke: string;
   strokeWidth: number;
+  // The fill is drawn over the outline, so a thick outline grows outwards, not into the letters.
+  fillAfterStrokeEnabled: true;
   letterSpacing: number;
   lineJoin: 'miter';
   miterLimit: number;
   align: TextAlign;
   rotation: number;
+  shadowEnabled: boolean;
+  shadowColor: string;
+  shadowBlur: number;
+  shadowOffsetX: number;
+  shadowOffsetY: number;
+  shadowOpacity: number;
 }
 
 // Konva.Rect attributes. The box turns about the text's own corner (x, y), so it stays around
@@ -47,11 +55,26 @@ export interface TextBoxAttrs {
 export const hasTextBox = (item: Pick<TextClip, 'bgColor'>): boolean =>
   Boolean(item.bgColor) && item.bgColor !== 'none' && item.bgColor !== 'transparent';
 
+// The default outline: 1/25 of the font size, at least 2 units.
+export const DEFAULT_OUTLINE = 0.04;
+
+// Each shadow's look, in shares of the font size.
+const SHADOWS: Record<TextShadow, { blur: number; dx: number; dy: number; opacity: number }> = {
+  soft: { blur: 0.16, dx: 0, dy: 0.06, opacity: 0.8 },
+  hard: { blur: 0, dx: 0.06, dy: 0.06, opacity: 1 },
+  glow: { blur: 0.3, dx: 0, dy: 0, opacity: 1 },
+};
+
 // The text itself. White Impact with a black outline by default; on a background box the outline
 // is off unless one was picked, and text on a white box defaults to black.
 export function textAttrs(item: TextLayerItem, scale = 1): TextAttrs {
   const fontSize = item.fontSize || 32;
   const boxed = hasTextBox(item);
+  const fill = item.color || (item.bgColor === 'white' ? '#000000' : '#ffffff');
+  const outline = typeof item.outline === 'number' && Number.isFinite(item.outline)
+    ? fontSize * Math.max(0, item.outline)
+    : item.strokeWidth || Math.max(2, fontSize / 25);
+  const shadow = item.shadow ? SHADOWS[item.shadow] : null;
   return {
     text: item.text !== undefined ? item.text : 'Sample Text',
     x: (item.x ?? 50) * scale,
@@ -60,14 +83,21 @@ export function textAttrs(item: TextLayerItem, scale = 1): TextAttrs {
     fontSize: fontSize * scale,
     fontFamily: item.fontFamily || 'Impact, sans-serif',
     fontStyle: 'bold',
-    fill: item.color || (item.bgColor === 'white' ? '#000000' : '#ffffff'),
+    fill,
     stroke: item.stroke || (boxed ? 'transparent' : '#000000'),
-    strokeWidth: (boxed && item.stroke === 'transparent' ? 0 : (item.strokeWidth || Math.max(2, fontSize / 25))) * scale,
+    strokeWidth: (boxed && item.stroke === 'transparent' ? 0 : outline) * scale,
+    fillAfterStrokeEnabled: true,
     letterSpacing: -fontSize * 0.05 * scale,
     lineJoin: 'miter',
     miterLimit: 2,
     align: item.align || 'center',
     rotation: item.rotation || 0,
+    shadowEnabled: Boolean(shadow),
+    shadowColor: item.shadow === 'glow' ? fill : '#000000',
+    shadowBlur: (shadow?.blur ?? 0) * fontSize * scale,
+    shadowOffsetX: (shadow?.dx ?? 0) * fontSize * scale,
+    shadowOffsetY: (shadow?.dy ?? 0) * fontSize * scale,
+    shadowOpacity: shadow?.opacity ?? 0,
   };
 }
 

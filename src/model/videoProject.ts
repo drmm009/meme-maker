@@ -121,6 +121,9 @@ export interface StickerClip extends ClipBase, Placed {
   originalUrl?: string | null;
 }
 
+// A text shadow: soft (blurred, below), hard (sharp, down-right) or glow (blurred, the text's colour).
+export type TextShadow = 'soft' | 'hard' | 'glow';
+
 export interface TextClip extends ClipBase, Placed {
   type: 'text';
   text?: string;
@@ -129,6 +132,9 @@ export interface TextClip extends ClipBase, Placed {
   color?: string;
   stroke?: string;
   strokeWidth?: number;
+  // Outline thickness as a share of the font size (follows resizing); wins over strokeWidth.
+  outline?: number;
+  shadow?: TextShadow | null;
   // 'none', 'white', 'black' or a colour.
   bgColor?: string;
   align?: TextAlign;

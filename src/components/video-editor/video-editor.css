@@ -1052,3 +1052,10 @@
 .vt-crop-shapes .vt-chip { flex: none; padding: 8px 11px; }
 .vt-crop-shapes .vt-chip:disabled { opacity: 0.45; cursor: default; }
 .vt-crop-reset { display: inline-flex; align-items: center; gap: 6px; }
+
+/* Text Outline & shadow: an outline colour row (none first), its thickness, then shadow chips. */
+.vt-style { display: flex; flex-direction: column; gap: 12px; }
+.vt-style-label { color: var(--vt-muted); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+.vt-style-label + .vt-swatch-row, .vt-style-label + .vt-chip-row { margin-top: -4px; }
+.vt-swatch-none { background: var(--vt-fill); color: var(--vt-muted); }
+.vt-slider-row.is-off { opacity: 0.45; }

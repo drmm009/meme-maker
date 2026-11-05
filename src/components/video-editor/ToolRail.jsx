@@ -2,7 +2,7 @@ import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
   Type, Sticker, Smile, LayoutGrid, Image as ImageIcon, Film, Clapperboard, Music,
   Gauge, Volume2, VolumeX, Palette, Square, RotateCw, Minimize, Crop, Maximize, Copy, Trash2,
-  Scissors, PencilLine, ALargeSmall, TextAlignStart, TextAlignCenter, TextAlignEnd, SlidersHorizontal, WandSparkles, Pipette, Sparkles, ImagePlay, PaintBucket, Zap, Snowflake, Rewind, Repeat, ZoomIn, BringToFront, SendToBack, Mic, ArrowRightLeft, Frame, Plus, Upload, Library, Laugh, SquarePlay, Captions, Expand, Blend, Scan, Eraser
+  Scissors, PencilLine, ALargeSmall, TextAlignStart, TextAlignCenter, TextAlignEnd, SlidersHorizontal, WandSparkles, Pipette, Sparkles, ImagePlay, PaintBucket, Zap, Snowflake, Rewind, Repeat, ZoomIn, BringToFront, SendToBack, Mic, ArrowRightLeft, Frame, Plus, Upload, Library, Laugh, SquarePlay, Captions, Expand, Blend, Scan, Eraser, TypeOutline, Ban
 } from 'lucide-react';
 import { FloatingToolbar, Sheet, ToolDock, ToolStrip } from '../ui';
 import { FiltersIcon } from '../editor/panels/editorIcons';
@@ -184,7 +184,9 @@ function FontPanel({ item }) {
 
 function ColorPanel({ item }) {
   const color = (item.color || '#ffffff').toLowerCase();
-  const set = (c) => update(item.id, { color: c, stroke: item.bgColor && item.bgColor !== 'none' ? 'transparent' : getContrastStroke(c) });
+  // The outline follows the colour (black on light, white on dark) unless one was picked in Style.
+  const auto = !item.stroke || item.stroke === '#000000' || item.stroke === '#ffffff';
+  const set = (c) => update(item.id, { color: c, stroke: item.bgColor && item.bgColor !== 'none' ? 'transparent' : auto ? getContrastStroke(c) : item.stroke });
   return (
     <div className="vt-swatch-row" role="radiogroup" aria-label="Text colour">
       {TEXT_COLORS.map((c) => (
@@ -207,6 +209,44 @@ function TextBgPanel({ item }) {
     else update(item.id, { bgColor: 'none', color: item.color === '#000000' ? '#ffffff' : item.color, stroke: '#000000' });
   };
   return <PickRow label="Text background" value={bg} onPick={pick} options={TEXT_BACKGROUNDS} />;
+}
+
+const SHADOW_OPTIONS = [
+  { value: null, label: 'None' },
+  { value: 'soft', label: 'Soft' },
+  { value: 'hard', label: 'Hard' },
+  { value: 'glow', label: 'Glow' },
+];
+
+// Outline (colour or none, and thickness) and shadow.
+function StylePanel({ item }) {
+  const boxed = Boolean(item.bgColor && item.bgColor !== 'none');
+  const stroke = (item.stroke || (boxed ? 'transparent' : '#000000')).toLowerCase();
+  const none = stroke === 'transparent';
+  const thickness = Math.round((typeof item.outline === 'number' ? item.outline : (item.strokeWidth || Math.max(2, (item.fontSize || 32) / 25)) / (item.fontSize || 32)) * 1000) / 10;
+  return (
+    <div className="vt-style">
+      <div className="vt-style-label">Outline</div>
+      <div className="vt-swatch-row" role="radiogroup" aria-label="Outline colour">
+        <button type="button" role="radio" aria-checked={none} aria-label="No outline" title="No outline"
+          className={`vt-swatch-btn vt-swatch-none${none ? ' is-on' : ''}`} onClick={() => update(item.id, { stroke: 'transparent' })}>
+          <Ban size={16} />
+        </button>
+        {TEXT_COLORS.map((c) => (
+          <button key={c} type="button" role="radio" aria-checked={stroke === c} aria-label={`Outline ${c}`}
+            className={`vt-swatch-btn${stroke === c ? ' is-on' : ''}`} style={{ background: c }} onClick={() => update(item.id, { stroke: c })} />
+        ))}
+      </div>
+      <label className={`vt-slider-row${none ? ' is-off' : ''}`}>
+        <span>Thickness</span>
+        <input type="range" min="1" max="12" step="0.5" value={Math.min(12, Math.max(1, thickness))} disabled={none}
+          onChange={(e) => update(item.id, { outline: Number(e.target.value) / 100 })} />
+        <output>{none ? '–' : thickness}</output>
+      </label>
+      <div className="vt-style-label">Shadow</div>
+      <PickRow label="Shadow" value={item.shadow || null} onPick={(v) => update(item.id, { shadow: v })} options={SHADOW_OPTIONS} />
+    </div>
+  );
 }
 
 function AlignPanel({ item }) {
@@ -662,6 +702,7 @@ const SHEETS = {
   font: { title: 'Font', Icon: Type, Panel: FontPanel },
   color: { title: 'Colour', Icon: Palette, Panel: ColorPanel },
   textbg: { title: 'Text background', Icon: Square, Panel: TextBgPanel },
+  style: { title: 'Outline & shadow', Icon: TypeOutline, Panel: StylePanel },
   align: { title: 'Align', Icon: TextAlignCenter, Panel: AlignPanel },
   size: { title: 'Text size', Icon: ALargeSmall, Panel: SizePanel },
   animation: { title: 'Animate', Icon: Sparkles, Panel: AnimationPanel },
@@ -694,6 +735,7 @@ function clipTools(item, { sheet, toggle, playhead, items }) {
       { id: 'edit', label: 'Edit', Icon: PencilLine, ...opens('text') },
       { id: 'font', label: 'Font', icon: <span className="vt-font-sample" style={{ fontFamily: font.family }}>Aa</span>, ...opens('font') },
       { id: 'color', label: 'Colour', icon: <span className="vt-color-dot" style={{ background: item.color || '#ffffff' }} />, ...opens('color') },
+      { id: 'style', label: 'Style', title: 'Outline and shadow', Icon: TypeOutline, ...opens('style', Boolean(item.shadow)) },
       { id: 'textbg', label: 'Background', Icon: Square, ...opens('textbg', Boolean(item.bgColor && item.bgColor !== 'none')) },
       { id: 'size', label: 'Size', Icon: ALargeSmall, ...opens('size') },
       { id: 'animate', label: 'Animate', Icon: Sparkles, ...opens('animation', Boolean(item.animation)) },

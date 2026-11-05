@@ -6,7 +6,7 @@ describe('textAttrs', () => {
   it('draws white bold Impact with a black outline by default', () => {
     expect(textAttrs({})).toMatchObject({
       text: 'Sample Text', x: 50, y: 50, width: undefined, fontSize: 32, fontFamily: 'Impact, sans-serif',
-      fontStyle: 'bold', fill: '#ffffff', stroke: '#000000', strokeWidth: 2, align: 'center', rotation: 0
+      fontStyle: 'bold', fill: '#ffffff', stroke: '#000000', strokeWidth: 2, fillAfterStrokeEnabled: true, align: 'center', rotation: 0
     });
   });
 
@@ -24,6 +24,22 @@ describe('textAttrs', () => {
 
   it('scales the outline and tightens the spacing with the font size', () => {
     expect(textAttrs({ fontSize: 100 })).toMatchObject({ strokeWidth: 4, letterSpacing: -5 });
+  });
+
+  it('sizes a picked outline by the font size, so it keeps its look when resized', () => {
+    expect(textAttrs({ fontSize: 100, outline: 0.08, strokeWidth: 3 }).strokeWidth).toBe(8);
+    expect(textAttrs({ fontSize: 200, outline: 0.08 }).strokeWidth).toBe(16);
+    expect(textAttrs({ fontSize: 100, outline: 0.08 }, 2).strokeWidth).toBe(16);
+  });
+
+  it('has no shadow by default, and soft, hard and glow shadows sized by the font', () => {
+    expect(textAttrs({})).toMatchObject({ shadowEnabled: false, shadowBlur: 0, shadowOpacity: 0 });
+    expect(textAttrs({ fontSize: 100, shadow: 'hard' })).toMatchObject({ shadowEnabled: true, shadowColor: '#000000', shadowBlur: 0, shadowOffsetX: 6, shadowOffsetY: 6 });
+    const soft = textAttrs({ fontSize: 100, shadow: 'soft' }, 2);
+    expect(soft.shadowBlur).toBeCloseTo(32);
+    expect(soft.shadowOffsetY).toBeCloseTo(12);
+    // A glow is the text's own colour, all round.
+    expect(textAttrs({ fontSize: 100, color: '#facc15', shadow: 'glow' })).toMatchObject({ shadowColor: '#facc15', shadowOffsetX: 0, shadowOffsetY: 0 });
   });
 
   it('gives the export exactly the preview, scaled to the output', () => {

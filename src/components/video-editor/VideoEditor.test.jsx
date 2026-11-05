@@ -149,7 +149,7 @@ describe('VideoEditor', () => {
     expect(clips(container)[0].className).toContain('is-selected');
     const pill = screen.getByRole('toolbar', { name: 'Clip tools' });
     expect([...pill.querySelectorAll('button')].map((b) => b.textContent)).toEqual(
-      ['Edit', 'AaFont', 'Colour', 'Background', 'Size', 'Animate', 'Align', 'Opacity', 'Split', 'Bring forward', 'Send back', 'Duplicate', 'Delete'],
+      ['Edit', 'AaFont', 'Colour', 'Style', 'Background', 'Size', 'Animate', 'Align', 'Opacity', 'Split', 'Bring forward', 'Send back', 'Duplicate', 'Delete'],
     );
     expect(screen.queryByText('Add text')).toBeNull();
     fireEvent.click(screen.getByText('Text'));
