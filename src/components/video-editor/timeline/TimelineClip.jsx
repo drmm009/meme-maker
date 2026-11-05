@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Music, VolumeX } from 'lucide-react';
 import { useEditorStore } from '../../../store/useVideoEditorStore';
 import { findSnap, pxToMs } from './timelineMath';
@@ -45,8 +45,16 @@ const clipLabel = (item) => {
   return item.name || item.type;
 };
 
+// How long a press picks a clip (to select several), and how far a finger may wander meanwhile.
+const PICK_PRESS_MS = 450;
+const PICK_SLOP_PX = 8;
+
 // One clip on a track. Tap selects; once selected it can be dragged and trimmed from either end.
-export default function TimelineClip({ item, left, width, selected, pxPerSec, onSnap }) {
+// A long press (or Shift/Ctrl-click) picks it to select several; while picking, taps add or remove
+// clips and dragging a picked clip moves them all.
+export default function TimelineClip({ item, left, width, selected, picked = false, picking = false, pxPerSec, onSnap }) {
+  const pressRef = useRef(null);
+  const skipClickRef = useRef(false);
   const strip = useFilmstrip(item.url, item.type === 'video');
   const peaks = useWaveform(item.url, item.type === 'audio');
   const waveWidth = Math.max(0, width - 2 * WAVE_INSET);
@@ -61,8 +69,57 @@ export default function TimelineClip({ item, left, width, selected, pxPerSec, on
     ? filmstripTiles({ width, tileWidth: VIDEO_TILE_H * strip.aspect, trimStartMs: item.trimStartMs || 0, rate: item.playbackRate || 1, pxPerSec, frameTimes: strip.times })
     : [];
 
+  // Long press: picks the clip unless the finger moves (scrolling the timeline) or lifts first.
+  const startPress = (e) => {
+    if (e.button > 0) return;
+    const x0 = e.clientX;
+    const y0 = e.clientY;
+    const cancel = () => {
+      clearTimeout(pressRef.current);
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', cancel);
+      window.removeEventListener('pointercancel', cancel);
+    };
+    const onMove = (ev) => { if (Math.hypot(ev.clientX - x0, ev.clientY - y0) > PICK_SLOP_PX) cancel(); };
+    pressRef.current = setTimeout(() => {
+      cancel();
+      skipClickRef.current = true;
+      navigator.vibrate?.(12);
+      useEditorStore.getState().togglePicked(item.id);
+    }, PICK_PRESS_MS);
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', cancel);
+    window.addEventListener('pointercancel', cancel);
+  };
+
+  // Dragging a picked clip moves every picked clip by the same amount.
+  const startGroupDrag = (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    const store = useEditorStore.getState();
+    const from = Object.fromEntries(store.items.filter((i) => store.selectedIds.includes(i.id)).map((i) => [i.id, { startMs: i.startMs, endMs: i.endMs }]));
+    const startX = e.clientX;
+    let moved = false;
+    const onMove = (ev) => {
+      if (!moved && Math.abs(ev.clientX - startX) < 3) return;
+      moved = true;
+      useEditorStore.getState().shiftItems(from, pxToMs(ev.clientX - startX, pxPerSec));
+    };
+    const onUp = () => {
+      if (moved) skipClickRef.current = true;
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+      window.removeEventListener('pointercancel', onUp);
+    };
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onUp);
+  };
+
   const startDrag = (e, action) => {
-    if (!selected || e.button > 0) return;
+    if (picked && action === 'move') { if (e.button === 0) startGroupDrag(e); return; }
+    if (!selected) { if (!picking) startPress(e); return; }
+    if (e.button > 0) return;
     e.stopPropagation();
     e.preventDefault();
     const store = useEditorStore.getState();
@@ -123,10 +180,16 @@ export default function TimelineClip({ item, left, width, selected, pxPerSec, on
 
   return (
     <div
-      className={`vt-clip vt-clip--${item.type}${selected ? ' is-selected' : ''}${item.hidden ? ' is-hidden' : ''}`}
+      className={`vt-clip vt-clip--${item.type}${selected ? ' is-selected' : ''}${picked ? ' is-picked' : ''}${item.hidden ? ' is-hidden' : ''}`}
       style={{ left, width, ...(thumb ? { backgroundImage: `url(${thumb})` } : {}) }}
       data-clip-id={item.id}
-      onClick={(e) => { e.stopPropagation(); useEditorStore.getState().setActiveItem(item.id); }}
+      onClick={(e) => {
+        e.stopPropagation();
+        if (skipClickRef.current) { skipClickRef.current = false; return; }
+        const store = useEditorStore.getState();
+        if (picking || e.shiftKey || e.ctrlKey || e.metaKey) store.togglePicked(item.id);
+        else store.setActiveItem(item.id);
+      }}
       onPointerDown={(e) => startDrag(e, 'move')}
     >
       {tiles.length > 0 && (

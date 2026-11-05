@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { temporal } from 'zundo';
+import { duplicateGroup, shiftGroup, togglePick } from '../utils/clipGroup';
 import { moveLayer as moveLayerInItems } from '../utils/layerOrder';
 
 const debounce = (func, wait) => {
@@ -59,6 +60,8 @@ export const useEditorStore = create(temporal((set, get) => ({
   items: [], // { id, type, startMs, endMs, source, x, y, scale, rotation }
   
   activeItemId: null,
+  // Clips picked together on the timeline (several at once); empty when not picking.
+  selectedIds: [],
   draggingTime: null, // Time to preview while dragging
   layoutSlots: [], // Geometric data for grid panels [{x,y,width,height}]
   layoutId: null, // Stores the active layout type (e.g. '2-vert')
@@ -77,7 +80,23 @@ export const useEditorStore = create(temporal((set, get) => ({
   setIsPlaying: (playing) => set({ isPlaying: playing }),
   setDuration: (duration) => set({ duration: Math.min(100000, duration) }),
   
-  setActiveItem: (id) => set({ activeItemId: id }),
+  setActiveItem: (id) => set({ activeItemId: id, selectedIds: [] }),
+  // Adds or removes a clip from the picked set (the selected clip comes along on the first tap).
+  togglePicked: (id) => set((state) => ({ selectedIds: togglePick(state.selectedIds, id, state.activeItemId), activeItemId: null })),
+  clearPicked: () => set({ selectedIds: [] }),
+  removeItems: (ids) => set((state) => {
+    const items = state.items.filter((i) => !ids.includes(i.id));
+    return { items, selectedIds: [], activeItemId: ids.includes(state.activeItemId) ? null : state.activeItemId, duration: calculateDuration(items) };
+  }),
+  duplicateItems: (ids) => set((state) => {
+    const { items, ids: copies } = duplicateGroup(state.items, ids, newItemId);
+    return { items, selectedIds: copies, duration: calculateDuration(items) };
+  }),
+  // Moves picked clips together: `from` holds where each was when the drag began.
+  shiftItems: (from, deltaMs) => set((state) => {
+    const items = shiftGroup(state.items, from, deltaMs);
+    return { items, duration: calculateDuration(items) };
+  }),
   setGridOverlayUrl: (url) => set({ gridOverlayUrl: url }),
   
   addItem: (item) => set((state) => {
@@ -287,6 +306,7 @@ export const useEditorStore = create(temporal((set, get) => ({
   clearItems: () => set({
     items: [],
     activeItemId: null,
+    selectedIds: [],
     playhead: 0,
     duration: 7000,
     isPlaying: false

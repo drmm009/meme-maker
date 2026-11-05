@@ -12,8 +12,8 @@ const USER_SCROLL_WINDOW_MS = 1500;
 // Scrolling timeline with a fixed centre playhead: the tracks move under it. Scrolling scrubs,
 // playback scrolls, pinch or Ctrl+wheel zooms around the playhead.
 export default function TimelinePanel({ onAddVideo }) {
-  const { items, duration, activeItemId } = useEditorStore(
-    useShallow((s) => ({ items: s.items, duration: s.duration, activeItemId: s.activeItemId }))
+  const { items, duration, activeItemId, selectedIds } = useEditorStore(
+    useShallow((s) => ({ items: s.items, duration: s.duration, activeItemId: s.activeItemId, selectedIds: s.selectedIds }))
   );
   const [pxPerSec, setPxPerSec] = useState(DEFAULT_PX_PER_SEC);
   const [viewW, setViewW] = useState(360);
@@ -158,6 +158,8 @@ export default function TimelinePanel({ onAddVideo }) {
                     left={x(clip.startMs)}
                     width={Math.max(24, msToPx(clip.endMs - clip.startMs, pxPerSec))}
                     selected={clip.id === activeItemId}
+                    picked={selectedIds.includes(clip.id)}
+                    picking={selectedIds.length > 0}
                     pxPerSec={pxPerSec}
                     onSnap={setSnapMs}
                   />

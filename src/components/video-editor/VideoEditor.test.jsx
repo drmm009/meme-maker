@@ -149,7 +149,7 @@ describe('VideoEditor', () => {
     expect(clips(container)[0].className).toContain('is-selected');
     const pill = screen.getByRole('toolbar', { name: 'Clip tools' });
     expect([...pill.querySelectorAll('button')].map((b) => b.textContent)).toEqual(
-      ['Edit', 'AaFont', 'Colour', 'Style', 'Background', 'Size', 'Animate', 'Align', 'Opacity', 'Split', 'Bring forward', 'Send back', 'Duplicate', 'Delete'],
+      ['Edit', 'AaFont', 'Colour', 'Style', 'Background', 'Size', 'Animate', 'Align', 'Opacity', 'Select', 'Split', 'Bring forward', 'Send back', 'Duplicate', 'Delete'],
     );
     expect(screen.queryByText('Add text')).toBeNull();
     fireEvent.click(screen.getByText('Text'));
@@ -167,6 +167,44 @@ describe('VideoEditor', () => {
     fireEvent.click(screen.getByText('Delete'));
     expect(store().items).toHaveLength(1);
     expect(store().activeItemId).toBe(null);
+  });
+
+  it('picks several clips to duplicate, move and delete together', () => {
+    const { container } = render(<VideoEditor onBack={() => {}} />);
+    addTextFromRail();
+    act(() => { store().addItem({ type: 'text', text: 'B', durationMs: 2000 }); });
+    const [a, b] = store().items;
+    act(() => { store().updateItem(b.id, { startMs: 4000, endMs: 6000 }); store().setActiveItem(null); });
+    // Select on the first clip's pill, then Shift-click the second.
+    fireEvent.click(clips(container)[0]);
+    fireEvent.click(screen.getByText('Select'));
+    fireEvent.click(clips(container)[1], { shiftKey: true });
+    expect(store().selectedIds).toEqual([a.id, b.id]);
+    expect(screen.getByText('2 selected')).toBeTruthy();
+    expect(clips(container).filter((c) => c.className.includes('is-picked'))).toHaveLength(2);
+
+    // Duplicating puts the copies right after the group and picks them.
+    fireEvent.click(screen.getByText('Duplicate'));
+    expect(store().items).toHaveLength(4);
+    const copies = store().items.filter((i) => store().selectedIds.includes(i.id));
+    const groupEnd = Math.max(...store().items.slice(0, 2).map((i) => i.endMs));
+    const starts = copies.map((c) => c.startMs).sort((x, y) => x - y);
+    expect(starts[0]).toBe(groupEnd);
+    expect(starts[1] - starts[0]).toBe(4000 - store().items[0].startMs);
+
+    // Dragging one picked clip moves both.
+    const copy = clips(container).find((c) => c.dataset.clipId === copies[0].id);
+    fireEvent.pointerDown(copy, { clientX: 100, button: 0 });
+    fireEvent.pointerMove(window, { clientX: 150 });
+    fireEvent.pointerUp(window, { clientX: 150 });
+    const moved = store().items.filter((i) => store().selectedIds.includes(i.id));
+    const delta = moved[0].startMs - copies[0].startMs;
+    expect(delta).toBeGreaterThan(0);
+    expect(moved[1].startMs - copies[1].startMs).toBe(delta);
+
+    fireEvent.click(screen.getByText('Delete'));
+    expect(store().items.map((i) => i.id)).toEqual([a.id, b.id]);
+    expect(screen.queryByText(/selected$/)).toBeNull();
   });
 
   it('hides a clip with its eye button and mutes video clips', () => {

@@ -2,7 +2,7 @@ import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
   Type, Sticker, Smile, LayoutGrid, Image as ImageIcon, Film, Clapperboard, Music,
   Gauge, Volume2, VolumeX, Palette, Square, RotateCw, Minimize, Crop, Maximize, Copy, Trash2,
-  Scissors, PencilLine, ALargeSmall, TextAlignStart, TextAlignCenter, TextAlignEnd, SlidersHorizontal, WandSparkles, Pipette, Sparkles, ImagePlay, PaintBucket, Zap, Snowflake, Rewind, Repeat, ZoomIn, BringToFront, SendToBack, Mic, ArrowRightLeft, Frame, Plus, Upload, Library, Laugh, SquarePlay, Captions, Expand, Blend, Scan, Eraser, TypeOutline, Ban, FlipHorizontal2, FlipVertical2, Move
+  Scissors, PencilLine, ALargeSmall, TextAlignStart, TextAlignCenter, TextAlignEnd, SlidersHorizontal, WandSparkles, Pipette, Sparkles, ImagePlay, PaintBucket, Zap, Snowflake, Rewind, Repeat, ZoomIn, BringToFront, SendToBack, Mic, ArrowRightLeft, Frame, Plus, Upload, Library, Laugh, SquarePlay, Captions, Expand, Blend, Scan, Eraser, TypeOutline, Ban, FlipHorizontal2, FlipVertical2, Move, ListChecks, X
 } from 'lucide-react';
 import { FloatingToolbar, Sheet, ToolDock, ToolStrip } from '../ui';
 import { FiltersIcon } from '../editor/panels/editorIcons';
@@ -825,6 +825,7 @@ function clipTools(item, { sheet, toggle, playhead, items }) {
     const opacity = clipOpacity(item);
     tools.push({ id: 'opacity', label: opacity < 1 ? `${Math.round(opacity * 100)}%` : 'Opacity', title: 'Opacity', Icon: Blend, ...opens('opacity', opacity < 1) });
   }
+  tools.push({ id: 'select', label: 'Select', title: 'Select several clips (or long-press them on the timeline)', Icon: ListChecks, onClick: () => store().togglePicked(item.id) });
   const canSplit = playhead > item.startMs + MIN_SPLIT_MS && playhead < item.endMs - MIN_SPLIT_MS;
   tools.push({ id: 'split', label: 'Split', Icon: Scissors, title: canSplit ? 'Split at the playhead' : 'Move the playhead inside the clip to split it',
     onClick: () => canSplit && store().splitItem(item.id, playhead) });
@@ -840,6 +841,16 @@ function clipTools(item, { sheet, toggle, playhead, items }) {
   );
   return tools;
 }
+
+// The bar while several clips are picked: how many (tap to stop picking), Duplicate, Delete.
+const pickedTools = (ids) => {
+  const store = useEditorStore.getState;
+  return [
+    { id: 'clear', label: `${ids.length} selected`, title: 'Stop selecting', Icon: X, onClick: () => store().clearPicked() },
+    { id: 'duplicate', label: 'Duplicate', Icon: Copy, onClick: () => store().duplicateItems(ids) },
+    { id: 'delete', label: 'Delete', Icon: Trash2, danger: true, onClick: () => store().removeItems(ids) },
+  ];
+};
 
 const DOCK = SECTIONS.map(({ id, label, Icon }) => ({ id, label, Icon }));
 
@@ -871,6 +882,9 @@ export default function ToolRail({ onAdd }) {
   const activeItem = useEditorStore((s) => s.items.find((i) => i.id === s.activeItemId));
   const items = useEditorStore((s) => s.items);
   const playhead = useEditorStore((s) => s.playhead);
+  const selectedIds = useEditorStore((s) => s.selectedIds);
+  // Picked clips still on the timeline (undo may have taken some away).
+  const picked = selectedIds.filter((id) => items.some((i) => i.id === id));
   const [tab, setTab] = useState(null);
   // A sheet belongs to the clip it was opened for (or to "nothing selected"); selecting another closes it.
   const [sheetState, setSheetState] = useState({ id: null, name: null });
@@ -883,7 +897,7 @@ export default function ToolRail({ onAdd }) {
   // The bottom's height without a sheet, kept while one is open (it then floats over the timeline,
   // never higher than the timeline's top, the element before it).
   const wrapRef = useRef(null);
-  const hasPill = Boolean(activeItem);
+  const hasPill = Boolean(activeItem) || picked.length > 0;
   const [rest, setRest] = useState(null); // { height, room }
   useLayoutEffect(() => {
     const el = wrapRef.current;
@@ -908,7 +922,7 @@ export default function ToolRail({ onAdd }) {
     }
   };
   const openSection = (id) => {
-    if (activeItem) useEditorStore.getState().setActiveItem(null);
+    if (activeItem || picked.length) useEditorStore.getState().setActiveItem(null);
     setSheetState({ id: null, name: null });
     setTab(!activeItem && tab === id ? null : id);
   };
@@ -917,7 +931,11 @@ export default function ToolRail({ onAdd }) {
     <div className="vt-rail-wrap" ref={wrapRef} style={spec && rest ? { height: rest.height } : undefined}>
       <div className={`vt-bottom${spec ? ' has-sheet' : ''}`} style={spec && rest ? { minHeight: rest.height, maxHeight: rest.room } : undefined}>
         {/* While a sheet is open nothing floats above it: the strip or pill comes back when it closes. */}
-        {spec ? null : activeItem ? (
+        {spec ? null : picked.length ? (
+          <div className="vt-pill">
+            <FloatingToolbar ariaLabel="Selected clips" items={pickedTools(picked)} />
+          </div>
+        ) : activeItem ? (
           <div className="vt-pill">
             <FloatingToolbar ariaLabel="Clip tools" items={clipTools(activeItem, { sheet, toggle, playhead, items })} />
           </div>
@@ -938,7 +956,7 @@ export default function ToolRail({ onAdd }) {
               : <spec.Panel item={activeItem} onMore={() => { setSheet(null); onAdd('sounds'); }} />}
           </Sheet>
         ) : (
-          <ToolDock ariaLabel="Sections" items={DOCK} active={activeItem ? null : tab} onSelect={openSection} />
+          <ToolDock ariaLabel="Sections" items={DOCK} active={activeItem || picked.length ? null : tab} onSelect={openSection} />
         )}
       </div>
     </div>
