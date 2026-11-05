@@ -519,6 +519,14 @@
   text-transform: uppercase;
 }
 
+/* A quiet line under the shelves while more are loading (or couldn’t). */
+.ie-browse-note {
+  margin: 8px 16px 24px;
+  color: var(--ui-muted);
+  font-size: var(--ui-fs-footnote, 13px);
+  text-align: center;
+}
+
 .ie-browse-empty {
   display: flex;
   flex-direction: column;

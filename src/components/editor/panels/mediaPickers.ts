@@ -17,13 +17,8 @@ export interface PickerTemplate {
   trendingScore?: number;
 }
 
-export const EMOJI_CATEGORIES = [
-  { id: 'faces', icon: '😀', label: 'Faces' },
-  { id: 'gestures', icon: '👋', label: 'Hands' },
-  { id: 'symbols', icon: '❤️', label: 'Symbols' },
-  { id: 'objects', icon: '💡', label: 'Objects' },
-  { id: 'flags', icon: '🏳️‍🌈', label: 'Flags' },
-];
+// The hand-picked meme emoji, in their list order (the Emoji sheet's Popular shelf).
+export const POPULAR_EMOJIS = STICKERS as EmojiItem[];
 
 export const TEMPLATE_TAGS = [
   { id: 'all', label: 'All' },

@@ -1,8 +1,10 @@
-import { useState } from 'react';
-import { Clock, LayoutGrid, Search } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { Clock, LayoutGrid, Search, Star } from 'lucide-react';
 import BrowseSheet, { BrowseEmpty, ResultsHead, Shelf } from './BrowseSheet';
-import { EMOJI_CATEGORIES, filterEmojis } from './mediaPickers';
+import { POPULAR_EMOJIS as POPULAR, filterEmojis } from './mediaPickers';
 import type { EmojiItem } from './mediaPickers';
+import { EMOJI_GROUPS, loadEmojiLibrary, searchLibrary } from '../../../utils/emojiLibrary';
+import type { LibraryEmoji } from '../../../utils/emojiLibrary';
 import { safeGet, safeSet } from '../../../utils/storage';
 import type { EditorActions } from './selection';
 
@@ -10,31 +12,50 @@ const RECENT_KEY = 'meme_recent_emoji';
 const RECENT_MAX = 16;
 // Two rows of the shelf grid.
 const SHELF_SIZE = 12;
-const CATEGORIES = EMOJI_CATEGORIES.map((c) => ({ ...c, items: filterEmojis('', c.id) }));
-const BY_ID = new Map(CATEGORIES.flatMap((c) => c.items).map((e) => [e.id, e]));
 
-function readRecent(): EmojiItem[] {
+function readRecent(byId: Map<string, EmojiItem>): EmojiItem[] {
   const saved: unknown = safeGet(RECENT_KEY);
-  return Array.isArray(saved) ? saved.map((id) => BY_ID.get(id)).filter((e): e is EmojiItem => Boolean(e)) : [];
+  return Array.isArray(saved) ? saved.map((id) => byId.get(id)).filter((e): e is EmojiItem => Boolean(e)) : [];
 }
 
 function EmojiCard({ emoji, onPick }: { emoji: EmojiItem; onPick: (e: EmojiItem) => void }) {
   return <button type="button" className="ie-browse-item ie-emoji-card" title={emoji.name} onClick={() => onPick(emoji)}>{emoji.emoji}</button>;
 }
 
-// Media > Emoji: the ones used lately, then each category as two rows of small tiles with See all;
-// a category or a search shows a grid. A pick adds the emoji as a sticker (it's then selected,
-// with its floating tools).
+// Media > Emoji: the ones used lately, the popular meme ones, then every emoji grouped like a phone
+// keyboard, each as two rows of small tiles with See all; a group or a search shows a grid. A pick
+// adds the emoji as a sticker (it's then selected, with its floating tools).
 export default function EmojiSheet({ actions, onClose }: { actions: EditorActions; onClose: () => void }) {
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('all');
-  const [recent] = useState(readRecent);
-  const shelves = [
-    ...(recent.length ? [{ id: 'recent', label: 'Recent', Icon: Clock, icon: undefined, items: recent }] : []),
-    ...CATEGORIES.map((c) => ({ ...c, Icon: undefined })),
-  ];
-  const browsing = !query.trim() && category === 'all';
-  const list = browsing ? [] : query.trim() ? filterEmojis(query, '') : shelves.find((s) => s.id === category)?.items ?? [];
+  const [library, setLibrary] = useState<LibraryEmoji[]>([]);
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+    loadEmojiLibrary().then((l) => { if (alive) setLibrary(l); }).catch(() => { if (alive) setFailed(true); });
+    return () => { alive = false; };
+  }, []);
+
+  const byId = useMemo(() => new Map<string, EmojiItem>([...library, ...POPULAR].map((e) => [e.id, e])), [library]);
+  const recent = useMemo(() => readRecent(byId), [byId]);
+  const shelves = useMemo(() => [
+    ...(recent.length ? [{ id: 'recent', label: 'Recent', Icon: Clock, icon: undefined as string | undefined, items: recent }] : []),
+    { id: 'popular', label: 'Popular', Icon: Star, icon: undefined as string | undefined, items: POPULAR },
+    ...EMOJI_GROUPS.map((g) => ({ id: g.id, label: g.label, Icon: undefined, icon: g.icon as string | undefined, items: library.filter((e) => e.category === g.id) as EmojiItem[] }))
+      .filter((g) => g.items.length),
+  ], [recent, library]);
+
+  const q = query.trim();
+  const browsing = !q && category === 'all';
+  const results = useMemo(() => {
+    if (!q) return [];
+    // The popular ones by their meme names first, then the rest by name and search words.
+    const popular = filterEmojis(q, '');
+    const seen = new Set(popular.map((e) => e.emoji.replace(/️/g, '')));
+    return [...popular, ...searchLibrary(library, q).filter((e) => !seen.has(e.emoji.replace(/️/g, '')))];
+  }, [q, library]);
+  const list: EmojiItem[] = browsing ? [] : q ? results : shelves.find((s) => s.id === category)?.items ?? [];
   const label = shelves.find((s) => s.id === category)?.label ?? 'Emoji';
 
   const pick = (e: EmojiItem) => {
@@ -60,9 +81,12 @@ export default function EmojiSheet({ actions, onClose }: { actions: EditorAction
           ))}
         </Shelf>
       ))}
+      {browsing && !library.length && (
+        <p className="ie-browse-note">{failed ? 'Couldn’t load the rest of the emoji. Check your connection and reopen.' : 'Loading every emoji…'}</p>
+      )}
 
       {!browsing && (
-        <ResultsHead backLabel="All emoji" summary={query.trim() ? `${list.length} for “${query.trim()}”` : `${label} · ${list.length}`} onBack={() => choose('all')} />
+        <ResultsHead backLabel="All emoji" summary={q ? `${list.length} for “${q}”` : `${label} · ${list.length}`} onBack={() => choose('all')} />
       )}
 
       {list.length > 0 && (
@@ -74,7 +98,7 @@ export default function EmojiSheet({ actions, onClose }: { actions: EditorAction
       )}
 
       {!browsing && !list.length && (
-        <BrowseEmpty Icon={Search} title={`No emoji match “${query.trim()}”`} text="Try a word like “happy” or “heart”." action={{ label: 'Clear search', onClick: () => setQuery('') }} />
+        <BrowseEmpty Icon={Search} title={`No emoji match “${q}”`} text="Try a word like “happy” or “heart”." action={{ label: 'Clear search', onClick: () => setQuery('') }} />
       )}
     </BrowseSheet>
   );
