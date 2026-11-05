@@ -2,7 +2,7 @@ import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
   Type, Sticker, Smile, LayoutGrid, Image as ImageIcon, Film, Clapperboard, Music,
   Gauge, Volume2, VolumeX, Palette, Square, RotateCw, Minimize, Crop, Maximize, Copy, Trash2,
-  Scissors, PencilLine, ALargeSmall, TextAlignStart, TextAlignCenter, TextAlignEnd, SlidersHorizontal, WandSparkles, Pipette, Sparkles, ImagePlay, PaintBucket, Zap, Snowflake, Rewind, Repeat, ZoomIn, BringToFront, SendToBack, Mic, ArrowRightLeft, Frame, Plus, Upload, Library, Laugh, SquarePlay, Captions, Expand, Blend, Scan, Eraser, TypeOutline, Ban, FlipHorizontal2, FlipVertical2, Move, ListChecks, X, Camera
+  Scissors, PencilLine, ALargeSmall, TextAlignStart, TextAlignCenter, TextAlignEnd, SlidersHorizontal, WandSparkles, Pipette, Sparkles, ImagePlay, PaintBucket, Zap, Snowflake, Rewind, Repeat, ZoomIn, BringToFront, SendToBack, Mic, ArrowRightLeft, Frame, Plus, Upload, Library, Laugh, SquarePlay, Captions, Expand, Blend, Scan, Eraser, TypeOutline, Ban, FlipHorizontal2, FlipVertical2, Move, ListChecks, X, Camera, AtSign, Flag
 } from 'lucide-react';
 import { FloatingToolbar, Sheet, ToolDock, ToolStrip } from '../ui';
 import { FiltersIcon } from '../editor/panels/editorIcons';
@@ -12,6 +12,7 @@ import { clipCrop, isCropped } from '../../utils/clipCrop';
 import CropPanel from './CropPanel';
 import { canCutOut, cutOutBackground } from '../../utils/cutOut';
 import { PHOTO_MOTIONS } from '../../utils/photoMotion';
+import { DEFAULT_END_CARD, WATERMARK_CORNERS, endCardClip, isEndCard, renderEndCard } from '../../utils/brandCard';
 import { captureFrame, renderClipEffect } from '../../utils/clipEffects';
 import { clipPunchTimes } from '../../utils/zoomPunch';
 import { FILTER_PRESETS } from '../../utils/clipFilters';
@@ -71,6 +72,8 @@ const SECTIONS = [
   ] },
   { id: 'canvas', label: 'Canvas', Icon: Frame, tools: [
     { kind: 'background', label: 'Background', Icon: PaintBucket, panel: true },
+    { kind: 'watermark', label: 'Watermark', Icon: AtSign, panel: true },
+    { kind: 'endcard', label: 'End card', Icon: Flag, panel: true },
   ] },
 ];
 
@@ -439,6 +442,78 @@ function BackgroundPanel() {
   );
 }
 
+// A handle shown small in a corner for the whole video (on top of everything, in the export too).
+function WatermarkPanel() {
+  const watermark = useEditorStore((s) => s.watermark);
+  const set = (patch) => useEditorStore.getState().setWatermark({ text: '', corner: 'br', ...watermark, ...patch });
+  const corner = watermark?.corner || 'br';
+  return (
+    <>
+      <input
+        className="vt-text-input"
+        value={watermark?.text || ''}
+        maxLength={40}
+        placeholder="@yourname"
+        aria-label="Watermark text"
+        onChange={(e) => set({ text: e.target.value })}
+      />
+      <div className="vt-chip-row" role="radiogroup" aria-label="Corner">
+        {WATERMARK_CORNERS.map((c) => (
+          <button key={c.id} type="button" role="radio" aria-checked={corner === c.id} className={`vt-chip${corner === c.id ? ' is-on' : ''}`} onClick={() => set({ corner: c.id })}>
+            {c.label}
+          </button>
+        ))}
+        {watermark?.text && <button type="button" className="vt-chip" onClick={() => useEditorStore.getState().setWatermark(null)}>Remove</button>}
+      </div>
+    </>
+  );
+}
+
+const END_CARD_SWATCHES = ['#111111', '#ffffff', '#ff5e36', '#ec4899', '#facc15', '#22c55e', '#3b82f6'];
+
+// A closing picture after everything else: a title, a line under it and a colour. Adding again
+// redraws it (and moves it back to the end).
+function EndCardPanel() {
+  const current = useEditorStore((s) => s.items.find(isEndCard));
+  const [card, setCard] = useState(() => current?.endCard || DEFAULT_END_CARD);
+  const set = (patch) => setCard((c) => ({ ...c, ...patch }));
+  const place = () => {
+    const { items, canvasAspectRatio, placeEndCard } = useEditorStore.getState();
+    const aspect = canvasAspectRatio || 16 / 9;
+    placeEndCard(endCardClip(card, renderEndCard(card, aspect), items, aspect));
+  };
+  return (
+    <>
+      <input className="vt-text-input" value={card.title} maxLength={60} placeholder="Title" aria-label="End card title" onChange={(e) => set({ title: e.target.value })} />
+      <input className="vt-text-input vt-text-input--small" value={card.subtitle} maxLength={80} placeholder="A line under it" aria-label="End card subtitle" onChange={(e) => set({ subtitle: e.target.value })} />
+      <div className="vt-swatch-row" role="radiogroup" aria-label="End card colour">
+        {END_CARD_SWATCHES.map((c) => (
+          <button
+            key={c}
+            type="button"
+            role="radio"
+            aria-checked={card.color === c}
+            aria-label={c}
+            className={`vt-swatch-btn${card.color === c ? ' is-on' : ''}`}
+            style={{ background: c }}
+            onClick={() => set({ color: c })}
+          />
+        ))}
+        <label className={`vt-swatch-btn vt-swatch-custom${END_CARD_SWATCHES.includes(card.color) ? '' : ' is-on'}`} title="Custom colour">
+          <Palette size={16} />
+          <input type="color" className="vt-hidden-input" value={card.color} onChange={(e) => set({ color: e.target.value })} />
+        </label>
+      </div>
+      <div className="vt-chip-row">
+        <button type="button" className="vt-chip is-on" onClick={place} disabled={!card.title.trim() && !card.subtitle.trim()}>
+          {current ? 'Update end card' : 'Add end card'}
+        </button>
+        {current && <button type="button" className="vt-chip" onClick={() => useEditorStore.getState().removeItems([current.id])}>Remove</button>}
+      </div>
+    </>
+  );
+}
+
 // The meme sounds people reach for most, one tap each.
 const QUICK_SFX_IDS = ['vine_boom', 'bruh', 'airhorn', 'emotional_damage', 'metal_pipe', 'bonk', 'huh', 'anime_wow', 'faah', 'minecraft_oof'];
 const QUICK_SFX = QUICK_SFX_IDS.map((id) => SOUND_EFFECTS.find((s) => s.id === id)).filter(Boolean);
@@ -746,6 +821,8 @@ const SHEETS = {
   filter: { title: 'Filters', Icon: FiltersIcon, Panel: FilterPanel },
   transition: { title: 'Transition', Icon: ArrowRightLeft, Panel: TransitionPanel },
   background: { title: 'Background', Icon: PaintBucket, Panel: BackgroundPanel },
+  watermark: { title: 'Watermark', Icon: AtSign, Panel: WatermarkPanel },
+  endcard: { title: 'End card', Icon: Flag, Panel: EndCardPanel },
   sfx: { title: 'Sound effects', Icon: Zap, Panel: SfxPanel },
   voice: { title: 'Voiceover', Icon: Mic, Panel: VoicePanel },
   captions: { title: 'Auto captions', Icon: Captions, Panel: CaptionsPanel },

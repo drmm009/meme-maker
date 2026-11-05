@@ -74,6 +74,17 @@ export const useEditorStore = create(temporal((set, get) => ({
   setExportProgress: (progress) => set({ exportProgress: progress }),
   setCanvasAspectRatio: (ratio) => set({ canvasAspectRatio: ratio }),
   setBackgroundColor: (color) => set({ backgroundColor: color }),
+  // A handle in a corner for the whole video ({ text, corner }), or null.
+  watermark: null,
+  setWatermark: (watermark) => set({ watermark }),
+  // Adds the end card after everything else, or redraws the one there (and moves it to the end).
+  placeEndCard: (clip) => set((state) => {
+    const current = state.items.find((i) => i.type === 'image' && i.endCard);
+    const items = current
+      ? state.items.map((i) => (i === current ? { ...i, ...clip } : i))
+      : [...state.items, { ...clip, id: newItemId(), rotation: 0, playbackRate: 1 }];
+    return { items, duration: calculateDuration(items) };
+  }),
   setBusy: (label) => set({ busy: label }),
   setCanvasDimensions: (dim) => set({ canvasDimensions: dim }),
   setPlayhead: (time) => set({ playhead: Math.max(0, Math.min(time, get().duration)) }),
@@ -319,6 +330,7 @@ export const useEditorStore = create(temporal((set, get) => ({
     layoutSlots: state.layoutSlots,
     canvasAspectRatio: state.canvasAspectRatio,
     backgroundColor: state.backgroundColor,
+    watermark: state.watermark,
     gridOverlayUrl: state.gridOverlayUrl
   }),
   limit: 20,

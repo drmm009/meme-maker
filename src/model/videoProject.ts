@@ -115,6 +115,22 @@ export interface ImageClip extends ClipBase, Placed {
   // The picture before Cut out (url is then its subject on a see-through background).
   originalUrl?: string | null;
   motion?: PhotoMotion | null;
+  // An end card made in the editor (kept so it can be redrawn and stays last).
+  endCard?: EndCardSettings | null;
+}
+
+export interface EndCardSettings {
+  title: string;
+  subtitle: string;
+  color: string;
+}
+
+export type WatermarkCorner = 'tl' | 'tr' | 'bl' | 'br';
+
+// A handle shown small in a corner for the whole video.
+export interface WatermarkSettings {
+  text: string;
+  corner: WatermarkCorner;
 }
 
 export interface StickerClip extends ClipBase, Placed {
@@ -176,6 +192,7 @@ export interface VideoProject {
   layoutId?: string | null;
   layoutSlots?: LayoutSlot[];
   gridOverlayUrl?: string | null;
+  watermark?: WatermarkSettings | null;
 }
 
 // Saved projects carry this. Bump it when the saved shape changes, and teach

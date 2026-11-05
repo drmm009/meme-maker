@@ -349,6 +349,46 @@ describe('VideoEditor', () => {
     act(() => store().setBackgroundColor('#ffffff'));
   });
 
+  it('adds a watermark to the export and an end card after the last clip', async () => {
+    URL.createObjectURL = vi.fn(() => 'blob:test');
+    const getContext = vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue({
+      fillRect: vi.fn(), fillText: vi.fn(), measureText: (s) => ({ width: s.length * 20 }),
+    });
+    const toDataURL = vi.spyOn(HTMLCanvasElement.prototype, 'toDataURL').mockReturnValue('data:image/png;base64,card');
+    try {
+      act(() => store().addItem({ type: 'video', url: 'a.mp4', durationMs: 4000 }));
+      render(<VideoEditor onBack={() => {}} />);
+      fireEvent.click(screen.getByText('Canvas'));
+      fireEvent.click(screen.getByText('Watermark'));
+      fireEvent.change(screen.getByLabelText('Watermark text'), { target: { value: '@memer' } });
+      fireEvent.click(screen.getByText('Top left'));
+      expect(store().watermark).toEqual({ text: '@memer', corner: 'tl' });
+      closeSheet();
+
+      fireEvent.click(screen.getByText('End card'));
+      fireEvent.change(screen.getByLabelText('End card title'), { target: { value: 'Bye' } });
+      fireEvent.click(screen.getByLabelText('#ff5e36'));
+      fireEvent.click(screen.getByText('Add end card'));
+      const card = store().items.find((i) => i.endCard);
+      expect(card).toMatchObject({ type: 'image', url: 'data:image/png;base64,card', startMs: 4000, endMs: 6500, endCard: { title: 'Bye', color: '#ff5e36' } });
+      // Adding again redraws the same card rather than adding another.
+      fireEvent.click(screen.getByText('Update end card'));
+      expect(store().items.filter((i) => i.endCard)).toHaveLength(1);
+      closeSheet();
+
+      fireEvent.click(screen.getByLabelText('Export'));
+      await act(async () => { fireEvent.click(screen.getByText('720p · faster')); });
+      const [items, endMs] = exportVideoFFmpeg.mock.calls.at(-1);
+      expect(endMs).toBe(6500);
+      expect(items.at(-1)).toMatchObject({ type: 'text', text: '@memer', startMs: 0, endMs: 6500, align: 'left' });
+      expect(store().items.some((i) => i.text === '@memer')).toBe(false);
+    } finally {
+      getContext.mockRestore();
+      toDataURL.mockRestore();
+      act(() => store().setWatermark(null));
+    }
+  });
+
   it('exports without auto-downloading and shows the ready card', async () => {
     URL.createObjectURL = vi.fn(() => 'blob:test');
     URL.revokeObjectURL = vi.fn();

@@ -1,8 +1,10 @@
 import React, { useRef, forwardRef, useImperativeHandle, useMemo } from 'react';
-import { Stage, Layer, Rect } from 'react-konva';
+import { Stage, Layer, Rect, Group } from 'react-konva';
 import { useEditorStore } from '../../store/useVideoEditorStore';
 import { useShallow } from 'zustand/react/shallow';
 import { drawOrder } from '../../utils/layerOrder';
+import { MAX_TIMELINE_MS } from '../../utils/clipGroup';
+import { watermarkClip } from '../../utils/brandCard';
 import CanvasMedia from './preview/CanvasMedia';
 import CanvasText from './preview/CanvasText';
 import GridOverlay from './preview/GridOverlay';
@@ -17,7 +19,7 @@ const INITIAL_SIZE = { width: 800, height: 450 };
 // the export, in 800-wide stage units scaled to fit its container. Clips keep themselves in step
 // with the playhead (see preview/).
 const CanvasPreview = forwardRef((props, ref) => {
-  const { items, activeItemId, setActiveItem, updateItem, canvasAspectRatio, backgroundColor, layoutId } = useEditorStore(
+  const { items, activeItemId, setActiveItem, updateItem, canvasAspectRatio, backgroundColor, layoutId, watermark } = useEditorStore(
     useShallow(state => ({
       items: state.items,
       activeItemId: state.activeItemId,
@@ -25,7 +27,8 @@ const CanvasPreview = forwardRef((props, ref) => {
       updateItem: state.updateItem,
       canvasAspectRatio: state.canvasAspectRatio,
       backgroundColor: state.backgroundColor,
-      layoutId: state.layoutId
+      layoutId: state.layoutId,
+      watermark: state.watermark
     }))
   );
   const containerRef = useRef(null);
@@ -33,6 +36,8 @@ const CanvasPreview = forwardRef((props, ref) => {
   const stageHeight = STAGE_WIDTH / canvasAspectRatio;
   const logicalDimensions = useMemo(() => ({ width: STAGE_WIDTH, height: STAGE_WIDTH / canvasAspectRatio }), [canvasAspectRatio]);
   const { editingId, startEditing, inputProps } = useTextEditing(updateItem);
+  // The watermark sits over everything for the whole video; it can't be picked or dragged.
+  const watermarkItem = useMemo(() => watermarkClip(watermark, MAX_TIMELINE_MS, canvasAspectRatio), [watermark, canvasAspectRatio]);
 
   useStageFit(containerRef, stageRef, canvasAspectRatio);
 
@@ -105,6 +110,11 @@ const CanvasPreview = forwardRef((props, ref) => {
               />
             )))}
             {layoutId && <GridOverlay layoutId={layoutId} width={STAGE_WIDTH} height={stageHeight} />}
+            {watermarkItem && (
+              <Group listening={false}>
+                <CanvasText item={watermarkItem} isSelected={false} onSelect={() => {}} onEditStart={() => {}} onChange={() => {}} />
+              </Group>
+            )}
           </Layer>
         </Stage>
 

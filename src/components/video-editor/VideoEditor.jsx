@@ -16,6 +16,7 @@ import { usePlaybackLoop, togglePlayback } from './usePlaybackLoop';
 import { useVideoDraft } from './useVideoDraft';
 import { loadSavedVideo, restoreProject, saveVideoToStudio } from '../../utils/videoDraftStore';
 import { formatClock, getContentEnd } from './timeline/timelineMath';
+import { withWatermark } from '../../utils/brandCard';
 import '../ui/ui.css';
 import './video-editor.css';
 
@@ -133,7 +134,7 @@ export default function VideoEditor({ template, onBack, onSaved }) {
       loadSavedVideo(template.savedVideoId).then((saved) => {
         if (!saved) return;
         const project = restoreProject(saved.video, saved.media, (blob) => URL.createObjectURL(blob));
-        useEditorStore.setState({ ...project, playhead: 0, isPlaying: false, activeItemId: null });
+        useEditorStore.setState({ watermark: null, ...project, playhead: 0, isPlaying: false, activeItemId: null });
         useEditorStore.temporal.getState().clear();
       }).catch((e) => console.warn('[video] could not open the saved video', e));
       return;
@@ -183,9 +184,10 @@ export default function VideoEditor({ template, onBack, onSaved }) {
     store.setIsExporting(true);
     store.setExportProgress(0);
     try {
+      const endMs = getContentEnd(store.items || [], store.duration || 7000);
       const result = await exportVideoFFmpeg(
-        store.items || [],
-        getContentEnd(store.items || [], store.duration || 7000),
+        withWatermark(store.items || [], store.watermark, endMs, store.canvasAspectRatio || 16 / 9),
+        endMs,
         store.canvasAspectRatio || 16 / 9,
         store.canvasDimensions || { width: 800, height: 600 },
         store.layoutId,

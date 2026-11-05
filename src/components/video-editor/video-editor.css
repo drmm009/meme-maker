@@ -766,6 +766,8 @@
   -webkit-user-select: text;
 }
 .vt-text-input:focus { box-shadow: inset 0 0 0 2px rgba(255, 90, 54, 0.7); }
+.vt-text-input--small { font-size: 15px; font-weight: 500; }
+.vt-chip:disabled { opacity: 0.45; cursor: default; }
 
 /* ── Restore-draft banner ───────────────────────────────────── */
 .vt-draft {

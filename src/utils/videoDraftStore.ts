@@ -12,7 +12,7 @@ const PROJECTS = 'projects';
 const MEDIA = 'media';
 const DRAFT_ID = 'current';
 
-export const PROJECT_KEYS = ['items', 'duration', 'canvasAspectRatio', 'backgroundColor', 'layoutId', 'layoutSlots', 'gridOverlayUrl'] as const;
+export const PROJECT_KEYS = ['items', 'duration', 'canvasAspectRatio', 'backgroundColor', 'layoutId', 'layoutSlots', 'gridOverlayUrl', 'watermark'] as const;
 
 // The saved record. `version` is the project format (absent on drafts saved before versioning).
 export interface VideoDraft {
