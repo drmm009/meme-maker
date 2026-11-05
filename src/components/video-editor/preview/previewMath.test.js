@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
-  dropSlotIndex, effectCanvasSize, fitPlacement, fitStage, isOnScreen, rotateAboutCenter,
+  dropSlotIndex, effectCanvasSize, fitPlacement, fitStage, isOnScreen, mediaAttrs, rotateAboutCenter,
   textResize, videoSyncPlan, videoTimeSec
 } from './previewMath';
 import { rotatedCenter } from '../../../utils/rotation';
@@ -136,5 +136,13 @@ describe('fitStage', () => {
     expect(tall.height).toBe(300);
     expect(tall.width).toBeCloseTo(533.33);
     expect(tall.scale).toBeCloseTo(0.6667);
+  });
+});
+
+describe('mediaAttrs', () => {
+  it('draws a flip mirrored inside the clip’s own box', () => {
+    expect(mediaAttrs({ x: 10, y: 20, width: 300, height: 200, scaleX: 2 })).toMatchObject({ scaleX: 2, scaleY: 1, offsetX: 0, offsetY: 0 });
+    expect(mediaAttrs({ x: 10, y: 20, width: 300, height: 200, scaleX: 2, flipX: true })).toMatchObject({ x: 10, scaleX: -2, offsetX: 300, offsetY: 0 });
+    expect(mediaAttrs({ width: 300, height: 200, flipY: true })).toMatchObject({ scaleY: -1, offsetY: 200, scaleX: 1 });
   });
 });

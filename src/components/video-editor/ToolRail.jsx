@@ -2,7 +2,7 @@ import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
   Type, Sticker, Smile, LayoutGrid, Image as ImageIcon, Film, Clapperboard, Music,
   Gauge, Volume2, VolumeX, Palette, Square, RotateCw, Minimize, Crop, Maximize, Copy, Trash2,
-  Scissors, PencilLine, ALargeSmall, TextAlignStart, TextAlignCenter, TextAlignEnd, SlidersHorizontal, WandSparkles, Pipette, Sparkles, ImagePlay, PaintBucket, Zap, Snowflake, Rewind, Repeat, ZoomIn, BringToFront, SendToBack, Mic, ArrowRightLeft, Frame, Plus, Upload, Library, Laugh, SquarePlay, Captions, Expand, Blend, Scan, Eraser, TypeOutline, Ban
+  Scissors, PencilLine, ALargeSmall, TextAlignStart, TextAlignCenter, TextAlignEnd, SlidersHorizontal, WandSparkles, Pipette, Sparkles, ImagePlay, PaintBucket, Zap, Snowflake, Rewind, Repeat, ZoomIn, BringToFront, SendToBack, Mic, ArrowRightLeft, Frame, Plus, Upload, Library, Laugh, SquarePlay, Captions, Expand, Blend, Scan, Eraser, TypeOutline, Ban, FlipHorizontal2, FlipVertical2
 } from 'lucide-react';
 import { FloatingToolbar, Sheet, ToolDock, ToolStrip } from '../ui';
 import { FiltersIcon } from '../editor/panels/editorIcons';
@@ -295,6 +295,16 @@ function VolumePanel({ item }) {
       <div className="vt-chip-row">{fade('fadeInMs')}{fade('fadeOutMs')}</div>
     </>
   );
+}
+
+// Mirror left-right and/or upside down; each chip is on while that flip is.
+function FlipPanel({ item }) {
+  const chip = (key, label, Icon) => (
+    <button type="button" aria-pressed={Boolean(item[key])} className={`vt-chip${item[key] ? ' is-on' : ''}`} onClick={() => update(item.id, { [key]: !item[key] })}>
+      <Icon size={15} /> {label}
+    </button>
+  );
+  return <div className="vt-chip-row">{chip('flipX', 'Left–right', FlipHorizontal2)}{chip('flipY', 'Upside down', FlipVertical2)}</div>;
 }
 
 function OpacityPanel({ item }) {
@@ -710,6 +720,7 @@ const SHEETS = {
   place: { title: 'Fit to canvas', Icon: Expand, Panel: PlacePanel },
   opacity: { title: 'Opacity', Icon: Blend, Panel: OpacityPanel },
   crop: { title: 'Crop', Icon: Crop, Panel: CropPanel },
+  flip: { title: 'Flip', Icon: FlipHorizontal2, Panel: FlipPanel },
   volume: { title: 'Volume', Icon: SlidersHorizontal, Panel: VolumePanel },
   greenscreen: { title: 'Green screen', Icon: WandSparkles, Panel: GreenScreenPanel },
   punch: { title: 'Zoom punch', Icon: ZoomIn, Panel: PunchPanel },
@@ -777,7 +788,10 @@ function clipTools(item, { sheet, toggle, playhead, items }) {
     );
   }
   if (item.type === 'image' || item.type === 'video' || item.type === 'sticker') {
-    tools.push({ id: 'crop', label: 'Crop', Icon: Crop, ...opens('crop', isCropped(clipCrop(item))) });
+    tools.push(
+      { id: 'crop', label: 'Crop', Icon: Crop, ...opens('crop', isCropped(clipCrop(item))) },
+      { id: 'flip', label: 'Flip', Icon: FlipHorizontal2, ...opens('flip', Boolean(item.flipX || item.flipY)) },
+    );
   }
   if (canCutOut(item) || item.originalUrl) {
     tools.push({ id: 'cutout', label: 'Cut out', title: item.originalUrl ? 'Put the background back' : 'Remove the background', Icon: Eraser, active: Boolean(item.originalUrl), onClick: () => toggleCutOut(item) });

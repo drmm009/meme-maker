@@ -104,7 +104,8 @@ const CanvasMedia = ({ item, isSelected, onSelect, onChange, canvasDimensions })
         }}
         onTransformEnd={() => {
           const node = imageRef.current;
-          onChange({ ...item, x: node.x(), y: node.y(), scaleX: node.scaleX(), scaleY: node.scaleY(), rotation: node.rotation() });
+          // A flipped clip's node has a negative scale; the flip itself is kept in flipX/flipY.
+          onChange({ ...item, x: node.x(), y: node.y(), scaleX: Math.abs(node.scaleX()), scaleY: Math.abs(node.scaleY()), rotation: node.rotation() });
         }}
       />
       {isSelected && (

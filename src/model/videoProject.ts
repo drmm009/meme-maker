@@ -64,6 +64,9 @@ export interface Placed {
   // Photos, videos and stickers: the part of the frame shown (width/height are its size on the
   // canvas); missing or null is the whole frame.
   crop?: ClipCrop | null;
+  // Photos, videos and stickers: mirrored left-right / upside down, within the clip's own box.
+  flipX?: boolean;
+  flipY?: boolean;
   // Set once the clip has been placed at its natural size.
   isPositioned?: boolean;
   // The panel of a multi-panel layout the clip belongs to.

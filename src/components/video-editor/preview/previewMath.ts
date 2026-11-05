@@ -64,14 +64,17 @@ export function dropSlotIndex(
 
 // A photo, sticker or video's Konva.Image attributes, as the preview and the export draw it.
 // A picture clip's Konva attributes. Its crop is in its source's pixels, so applyPunch sets it
-// once the picture has loaded.
+// once the picture has loaded. A flip is a negative scale drawn back into the clip's own box (the
+// offset), so its position, size and turn stay the same.
 export const mediaAttrs = (item: Placed) => ({
   x: item.x || 0,
   y: item.y || 0,
   width: item.width || 200,
   height: item.height || 200,
-  scaleX: item.scaleX || 1,
-  scaleY: item.scaleY || 1,
+  scaleX: (item.scaleX || 1) * (item.flipX ? -1 : 1),
+  scaleY: (item.scaleY || 1) * (item.flipY ? -1 : 1),
+  offsetX: item.flipX ? item.width || 200 : 0,
+  offsetY: item.flipY ? item.height || 200 : 0,
   rotation: item.rotation || 0,
   opacity: clipOpacity(item),
 });
