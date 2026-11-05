@@ -36,6 +36,13 @@ describe('videoDraftStore', () => {
     expect(project.items[1].url).toBe('/sounds/boom.mp3');
   });
 
+  it('keeps a cut-out picture’s original, and gives it a fresh URL too', () => {
+    const items = [{ id: 'p', type: 'image', url: 'blob:old/cut', originalUrl: 'blob:old/photo' }];
+    expect(collectBlobUrls(items)).toEqual(['blob:old/cut', 'blob:old/photo']);
+    const project = restoreProject({ project: { items } }, { 'blob:old/cut': 'CUT', 'blob:old/photo': 'PHOTO' }, (blob) => `blob:new/${blob}`);
+    expect(project.items[0]).toMatchObject({ url: 'blob:new/CUT', originalUrl: 'blob:new/PHOTO' });
+  });
+
   it('keeps files the draft or any saved video still uses', () => {
     const keys = ['blob:a', 'blob:b', 'blob:c', 'blob:d', 42];
     expect(unusedMedia(keys, [['blob:a'], ['blob:b', 'blob:a'], undefined])).toEqual(['blob:c', 'blob:d']);

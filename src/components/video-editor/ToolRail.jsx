@@ -2,7 +2,7 @@ import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
   Type, Sticker, Smile, LayoutGrid, Image as ImageIcon, Film, Clapperboard, Music,
   Gauge, Volume2, VolumeX, Palette, Square, RotateCw, Minimize, Crop, Maximize, Copy, Trash2,
-  Scissors, PencilLine, ALargeSmall, TextAlignStart, TextAlignCenter, TextAlignEnd, SlidersHorizontal, WandSparkles, Pipette, Sparkles, ImagePlay, PaintBucket, Zap, Snowflake, Rewind, Repeat, ZoomIn, BringToFront, SendToBack, Mic, ArrowRightLeft, Frame, Plus, Upload, Library, Laugh, SquarePlay, Captions, Expand, Blend, Scan
+  Scissors, PencilLine, ALargeSmall, TextAlignStart, TextAlignCenter, TextAlignEnd, SlidersHorizontal, WandSparkles, Pipette, Sparkles, ImagePlay, PaintBucket, Zap, Snowflake, Rewind, Repeat, ZoomIn, BringToFront, SendToBack, Mic, ArrowRightLeft, Frame, Plus, Upload, Library, Laugh, SquarePlay, Captions, Expand, Blend, Scan, Eraser
 } from 'lucide-react';
 import { FloatingToolbar, Sheet, ToolDock, ToolStrip } from '../ui';
 import { FiltersIcon } from '../editor/panels/editorIcons';
@@ -10,6 +10,7 @@ import { useEditorStore, clipEffectBase, sourceTimeMs } from '../../store/useVid
 import { clipOpacity } from '../../model/videoProject';
 import { clipCrop, isCropped } from '../../utils/clipCrop';
 import CropPanel from './CropPanel';
+import { canCutOut, cutOutBackground } from '../../utils/cutOut';
 import { captureFrame, renderClipEffect } from '../../utils/clipEffects';
 import { clipPunchTimes } from '../../utils/zoomPunch';
 import { FILTER_PRESETS } from '../../utils/clipFilters';
@@ -115,6 +116,23 @@ const freezeAtPlayhead = (item, playhead) => runJob('Freezing frame…', async (
   const url = await captureFrame(item.url, sourceTimeMs(item, Math.min(Math.max(playhead, item.startMs), item.endMs)));
   useEditorStore.getState().insertFreeze(item.id, playhead, url);
 });
+
+// Cut out toggle: removes a picture's background (keeping the original), or puts it back.
+const toggleCutOut = (item) => {
+  if (item.originalUrl) {
+    update(item.id, { url: item.originalUrl, originalUrl: null });
+    return;
+  }
+  runJob('Cutting out… the first time takes a while', async () => {
+    const url = await cutOutBackground(item.url);
+    const latest = useEditorStore.getState().items.find((i) => i.id === item.id);
+    if (!latest || latest.url !== item.url) {
+      URL.revokeObjectURL(url);
+      return;
+    }
+    update(item.id, { url, originalUrl: item.url });
+  });
+};
 
 // Reverse/boomerang toggle: tapping the active effect switches it off.
 const toggleClipEffect = (item, effect) => {
@@ -718,6 +736,9 @@ function clipTools(item, { sheet, toggle, playhead, items }) {
   }
   if (item.type === 'image' || item.type === 'video' || item.type === 'sticker') {
     tools.push({ id: 'crop', label: 'Crop', Icon: Crop, ...opens('crop', isCropped(clipCrop(item))) });
+  }
+  if (canCutOut(item) || item.originalUrl) {
+    tools.push({ id: 'cutout', label: 'Cut out', title: item.originalUrl ? 'Put the background back' : 'Remove the background', Icon: Eraser, active: Boolean(item.originalUrl), onClick: () => toggleCutOut(item) });
   }
   if (item.type === 'image' || item.type === 'sticker') {
     tools.push({ id: 'rotate', label: 'Rotate', Icon: RotateCw, onClick: () => update(item.id, rotateAboutCenter(item, ((item.rotation || 0) + 90) % 360)) });

@@ -33,7 +33,7 @@ export const projectFromState = (state: Partial<VideoProject> & Record<string, u
 export const collectBlobUrls = (items: Clip[]): string[] => {
   const urls = new Set<string>();
   for (const item of items) {
-    for (const u of ['url' in item ? item.url : undefined, 'thumbnailUrl' in item ? item.thumbnailUrl : undefined]) {
+    for (const u of ['url' in item ? item.url : undefined, 'thumbnailUrl' in item ? item.thumbnailUrl : undefined, 'originalUrl' in item ? item.originalUrl : undefined]) {
       if (isBlobUrl(u)) urls.add(u);
     }
   }
@@ -46,7 +46,12 @@ export const restoreProject = (draft: Pick<VideoDraft, 'project'>, media: Record
   for (const [key, blob] of Object.entries(media)) if (blob) fresh.set(key, makeUrl(blob));
   const fix = <T>(u: T): T | string | null => (isBlobUrl(u) ? fresh.get(u) ?? null : u);
   const items = (draft.project.items || [])
-    .map((i) => ({ ...i, ...('url' in i ? { url: fix(i.url) } : {}), ...('thumbnailUrl' in i ? { thumbnailUrl: fix(i.thumbnailUrl) } : {}) }) as Clip)
+    .map((i) => ({
+      ...i,
+      ...('url' in i ? { url: fix(i.url) } : {}),
+      ...('thumbnailUrl' in i ? { thumbnailUrl: fix(i.thumbnailUrl) } : {}),
+      ...('originalUrl' in i ? { originalUrl: fix(i.originalUrl) } : {}),
+    }) as Clip)
     .filter((i) => i.type === 'text' || ('url' in i && i.url));
   return { ...draft.project, items };
 };

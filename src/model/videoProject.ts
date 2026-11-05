@@ -109,12 +109,16 @@ export interface ImageClip extends ClipBase, Placed {
   // A freeze frame sitting in the main sequence (it can take transitions).
   isFreeze?: boolean;
   transitionIn?: Transition | null;
+  // The picture before Cut out (url is then its subject on a see-through background).
+  originalUrl?: string | null;
 }
 
 export interface StickerClip extends ClipBase, Placed {
   type: 'sticker';
   url: string;
   isGif?: boolean;
+  // The picture before Cut out.
+  originalUrl?: string | null;
 }
 
 export interface TextClip extends ClipBase, Placed {
