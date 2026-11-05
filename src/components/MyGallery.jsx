@@ -1,12 +1,87 @@
 import React, { useState } from 'react';
 import ModalPortal from './ModalPortal';
-import { Download, Trash2, Edit3, X, Sparkles } from 'lucide-react';
+import { Download, Trash2, Edit3, X, Sparkles, Play } from 'lucide-react';
 import { downloadImageHelper } from '../utils/downloadHelper';
 import './MyGallery.css';
 
-export default function MyGallery({ savedMemes, galleryReady, onDeleteMeme, onSelectMeme, onResolveFullImage }) {
+const clock = (ms) => {
+  const sec = Math.max(1, Math.round((ms || 0) / 1000));
+  return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
+};
+
+// A saved video, opened from its card: its exported file playing (or its still, when it was saved
+// without exporting), with Edit, Download and Delete.
+function VideoViewer({ video, onClose, onOpen, onDelete, onGetFile }) {
+  const [file, setFile] = useState(null);
+  const [url, setUrl] = useState('');
+  React.useEffect(() => {
+    let alive = true;
+    let objectUrl = '';
+    if (video.exportType && onGetFile) {
+      onGetFile(video.id).then((blob) => {
+        if (!alive || !blob) return;
+        objectUrl = URL.createObjectURL(blob);
+        setFile(blob);
+        setUrl(objectUrl);
+      }).catch(() => {});
+    }
+    return () => {
+      alive = false;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [video, onGetFile]);
+
+  const isGif = video.exportType === 'image/gif';
+  const download = () => {
+    if (!url || !file) return;
+    const base = String(video.name || 'video').replace(/[^a-z0-9-_]+/gi, '-').toLowerCase().slice(0, 60) || 'video';
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${base}.${isGif ? 'gif' : 'mp4'}`;
+    a.click();
+  };
+
+  return (
+    <ModalPortal>
+      <div className="modal-backdrop animate-fade-in" onClick={onClose}>
+        <div className="modal-content glass-card modal-md animate-scale-up" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-header flex-between margin-bottom-xs">
+            <h3><Play className="icon-sm text-cyan" /> {video.name}</h3>
+            <button className="btn-close" onClick={onClose} title="Close" aria-label="Close">
+              <X size={18} />
+            </button>
+          </div>
+          <div className="modal-body text-center">
+            {url && !isGif ? (
+              <video className="gallery-video-player" src={url} controls autoPlay loop playsInline />
+            ) : (
+              <img className="gallery-video-player" src={url || video.thumbnail} alt={video.name} decoding="async" />
+            )}
+            {!video.exportType && <p className="gallery-video-note">Saved without exporting. Edit it to export.</p>}
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '12px', flexWrap: 'wrap', marginTop: '16px' }}>
+              <button className="btn btn-primary" onClick={() => onOpen(video)}>
+                <Edit3 className="icon-xs" /> Edit
+              </button>
+              {video.exportType && (
+                <button className="btn btn-secondary" onClick={download} disabled={!url}>
+                  <Download className="icon-xs" /> Download
+                </button>
+              )}
+              <button className="btn btn-danger-pill" onClick={() => onDelete(video.id)}>
+                <Trash2 className="icon-xs" /> Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </ModalPortal>
+  );
+}
+
+export default function MyGallery({ savedMemes, galleryReady, onDeleteMeme, onSelectMeme, onResolveFullImage, savedVideos = [], onOpenVideo, onDeleteVideo, onGetVideoFile }) {
   const [selectedMemeForView, setSelectedMemeForView] = useState(null);
   const [fullViewUrl, setFullViewUrl] = useState('');
+  const [videoForView, setVideoForView] = useState(null);
 
   React.useEffect(() => {
     let cancelled = false;
@@ -80,7 +155,40 @@ export default function MyGallery({ savedMemes, galleryReady, onDeleteMeme, onSe
         <div className="empty-state glass-card" style={{ padding: '48px 24px', textAlign: 'center' }}>
           <h3 style={{ fontSize: '1.25rem', marginBottom: '8px' }}>Loading gallery…</h3>
         </div>
-      ) : savedMemes.length > 0 ? (
+      ) : savedMemes.length + savedVideos.length > 0 ? (
+        <>
+        {savedVideos.length > 0 && (
+          <section className="gallery-section" aria-label="Videos">
+            <h3 className="gallery-section-title">Videos</h3>
+            <div className="gallery-grid">
+              {savedVideos.map((video) => (
+                <div key={video.id} className="gallery-card glass-card hover-lift" onClick={() => setVideoForView(video)}>
+                  <div className="gallery-image-wrapper gallery-video-thumb">
+                    {video.thumbnail && <img src={video.thumbnail} alt={video.name} decoding="async" loading="lazy" />}
+                    <span className="gallery-video-play" aria-hidden="true"><Play size={16} fill="currentColor" /></span>
+                    <span className="gallery-video-time">{clock(video.durationMs)}</span>
+                  </div>
+                  <div className="gallery-info flex-between align-center" style={{ gap: '8px' }}>
+                    <div style={{ flex: '1 1 auto', minWidth: '0', overflow: 'hidden' }}>
+                      <h4 style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', margin: 0 }} title={video.name}>{video.name}</h4>
+                      <span className="gallery-date">{new Date(video.savedAt).toLocaleDateString()}</span>
+                    </div>
+                    <button
+                      className="gallery-delete-btn"
+                      onClick={(e) => { e.stopPropagation(); onDeleteVideo?.(video.id); }}
+                      title="Delete video"
+                      aria-label={`Delete ${video.name}`}
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+        {savedMemes.length > 0 && savedVideos.length > 0 && <h3 className="gallery-section-title">Memes</h3>}
+        {savedMemes.length > 0 && (
         <div className="gallery-grid">
           {savedMemes.map((meme) => (
             <div
@@ -119,6 +227,8 @@ export default function MyGallery({ savedMemes, galleryReady, onDeleteMeme, onSe
             </div>
           ))}
         </div>
+        )}
+        </>
       ) : (
         <div className="empty-state glass-card" style={{ padding: '52px 24px', textAlign: 'center' }}>
           <div className="empty-icon-wrap" style={{ margin: '0 auto 16px', display: 'flex', justifyContent: 'center' }}>
@@ -135,6 +245,16 @@ export default function MyGallery({ savedMemes, galleryReady, onDeleteMeme, onSe
             <Sparkles size={16} /> Explore Templates
           </button>
         </div>
+      )}
+
+      {videoForView && (
+        <VideoViewer
+          video={videoForView}
+          onClose={() => setVideoForView(null)}
+          onOpen={(v) => { setVideoForView(null); onOpenVideo?.(v); }}
+          onDelete={(id) => { setVideoForView(null); onDeleteVideo?.(id); }}
+          onGetFile={onGetVideoFile}
+        />
       )}
 
       {/* PORTAL RENDERED TOP-LEVEL MODAL PREVIEW */}

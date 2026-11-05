@@ -902,6 +902,8 @@
   cursor: pointer;
 }
 .vt-ready-btn.is-primary { background: var(--vt-accent); color: #fff; }
+.vt-ready-btn.vt-ready-studio { flex: none; width: 100%; padding: 10px; background: transparent; color: var(--vt-accent); }
+.vt-ready-btn.vt-ready-studio:disabled { color: var(--vt-muted); cursor: default; }
 
 /* ── Busy pill (clip jobs like reverse) ─────────────────────── */
 .vt-busy {

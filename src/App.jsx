@@ -18,6 +18,7 @@ import { makerOfLink, makerTemplate, linkOfTemplate } from './components/editor/
 import { INITIAL_NOTIFICATIONS } from './data/notifications';
 import { idbPutMeme, idbGetAllMemes, idbGetMeme, idbDeleteMeme, dataURLToBlob, createThumbnail, toMetadata } from './utils/galleryStore';
 import { galleryRecord } from './model/galleryRecord';
+import { deleteSavedVideo, getSavedVideoFile, listSavedVideos } from './utils/videoDraftStore';
 import { LayoutGrid, FolderHeart, User, Sun, Moon, Bell, Plus, Users, Compass, Home } from 'lucide-react';
 // The slim motion build: `m` components with only the DOM animation features loaded (the full
 // `motion` used by pages that load later still works inside LazyMotion).
@@ -150,6 +151,13 @@ function App() {
 
   // Saved Memes (IndexedDB for bytes + small metadata in state; avoids localStorage quota crashes)
   const [savedMemes, setSavedMemes] = useState([]);
+  // Videos saved to My Studio from the video editor (their own database; see videoDraftStore).
+  const [savedVideos, setSavedVideos] = useState([]);
+  useEffect(() => {
+    let alive = true;
+    listSavedVideos().then((list) => { if (alive) setSavedVideos(list); }).catch(() => {});
+    return () => { alive = false; };
+  }, []);
   const [galleryReady, setGalleryReady] = useState(false);
   const fullUrlCache = React.useRef(new Map());
 
@@ -473,6 +481,13 @@ function App() {
     setCurrentView('gallery');
   };
 
+  const handleVideoSaved = (meta) => setSavedVideos((prev) => [meta, ...prev.filter((v) => v.id !== meta.id)]);
+  const handleOpenVideo = (meta) => handleSelectTemplate({ id: `saved-${meta.id}`, type: 'video', category: 'saved', name: meta.name, savedVideoId: meta.id });
+  const handleDeleteVideo = (id) => {
+    setSavedVideos((prev) => prev.filter((v) => v.id !== id));
+    deleteSavedVideo(id).catch((e) => console.error('Failed to delete video', e));
+  };
+
   const handleDeleteMeme = (id) => {
     setSavedMemes((prev) => prev.filter((m) => m.id !== id));
     const cached = fullUrlCache.current.get(id);
@@ -599,7 +614,7 @@ function App() {
                 className={`nav-link ${currentView === 'gallery' ? 'active' : ''}`}
                 onClick={() => setCurrentView('gallery')}
               >
-                <FolderHeart className="icon-xs" style={{ color: currentView === 'gallery' ? 'var(--primary-accent)' : 'inherit' }} /> My Studio ({savedMemes.length})
+                <FolderHeart className="icon-xs" style={{ color: currentView === 'gallery' ? 'var(--primary-accent)' : 'inherit' }} /> My Studio ({savedMemes.length + savedVideos.length})
               </button>
             </nav>
 
@@ -716,6 +731,10 @@ function App() {
                   onDeleteMeme={handleDeleteMeme}
                   onSelectMeme={handleSelectTemplate}
                   onResolveFullImage={resolveMemeFullImage}
+                  savedVideos={savedVideos}
+                  onOpenVideo={handleOpenVideo}
+                  onDeleteVideo={handleDeleteVideo}
+                  onGetVideoFile={getSavedVideoFile}
                 />
               </Suspense>
             </motion.div>
@@ -786,6 +805,7 @@ function App() {
                   key={`${selectedTemplate?.id || 'video-editor'}-${videoSessionKey}`}
                   template={selectedTemplate}
                   onBack={handleEditorBack}
+                  onSaved={handleVideoSaved}
                   theme={theme}
                 />
               </Suspense>
@@ -847,8 +867,8 @@ function App() {
           >
             <FolderHeart className="dock-icon" size={20} />
             <span className="dock-label">My Studio</span>
-            {savedMemes.length > 0 && (
-              <span className="dock-count-badge">{savedMemes.length}</span>
+            {savedMemes.length + savedVideos.length > 0 && (
+              <span className="dock-count-badge">{savedMemes.length + savedVideos.length}</span>
             )}
             {currentView === 'gallery' && <span className="dock-active-dot" />}
           </button>

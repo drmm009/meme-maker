@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useStore } from 'zustand';
-import { X, Share, Play, Pause, Undo2, Redo2, ChevronLeft, ChevronUp, ChevronDown, Download, Copy, Check, History, ImagePlay, LoaderCircle, SquarePlay, Image as ImageIcon, Clapperboard } from 'lucide-react';
+import { X, Share, Play, Pause, Undo2, Redo2, ChevronLeft, ChevronUp, ChevronDown, Download, Copy, Check, History, ImagePlay, LoaderCircle, FolderHeart, SquarePlay, Image as ImageIcon, Clapperboard } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import CanvasPreview from './CanvasPreview';
 import TimelinePanel from './timeline/TimelinePanel';
@@ -14,6 +14,7 @@ import SizeMenu from '../ui/SizeMenu';
 import { useAudioPlaybackSync } from './useAudioPlaybackSync';
 import { usePlaybackLoop, togglePlayback } from './usePlaybackLoop';
 import { useVideoDraft } from './useVideoDraft';
+import { loadSavedVideo, restoreProject, saveVideoToStudio } from '../../utils/videoDraftStore';
 import { formatClock, getContentEnd } from './timeline/timelineMath';
 import '../ui/ui.css';
 import './video-editor.css';
@@ -74,7 +75,25 @@ const copyFrame = () => {
   });
 };
 
-export default function VideoEditor({ template, onBack }) {
+// A small still of the preview for the video's card in My Studio (the selection box hidden first).
+const frameThumbnail = async (maxSide = 320) => {
+  useEditorStore.getState().setActiveItem(null);
+  await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+  const src = document.querySelector('.video-canvas-area canvas');
+  if (!src?.width) return '';
+  const scale = Math.min(1, maxSide / Math.max(src.width, src.height));
+  const c = document.createElement('canvas');
+  c.width = Math.max(1, Math.round(src.width * scale));
+  c.height = Math.max(1, Math.round(src.height * scale));
+  try {
+    c.getContext('2d').drawImage(src, 0, 0, c.width, c.height);
+    return c.toDataURL('image/jpeg', 0.75);
+  } catch {
+    return '';
+  }
+};
+
+export default function VideoEditor({ template, onBack, onSaved }) {
   const isPlaying = useEditorStore((s) => s.isPlaying);
   const canvasAspectRatio = useEditorStore((s) => s.canvasAspectRatio);
   const isExporting = useEditorStore((s) => s.isExporting);
@@ -93,6 +112,8 @@ export default function VideoEditor({ template, onBack }) {
   const [exported, setExported] = useState(null); // { blob, fileName } of the last finished export
   const addRef = useRef(null);
   const menuRef = useRef(null);
+  // The My Studio video this editor saves over (opened from My Studio, or saved once already).
+  const savedIdRef = useRef(null);
 
   usePlaybackLoop();
 
@@ -106,6 +127,17 @@ export default function VideoEditor({ template, onBack }) {
     const store = useEditorStore.getState();
     store.clearItems();
     store.setLayoutSlots(template.slots || []);
+    savedIdRef.current = template.savedVideoId || null;
+    if (template.savedVideoId) {
+      // A video from My Studio: its project, with its files given fresh URLs.
+      loadSavedVideo(template.savedVideoId).then((saved) => {
+        if (!saved) return;
+        const project = restoreProject(saved.video, saved.media, (blob) => URL.createObjectURL(blob));
+        useEditorStore.setState({ ...project, playhead: 0, isPlaying: false, activeItemId: null });
+        useEditorStore.temporal.getState().clear();
+      }).catch((e) => console.warn('[video] could not open the saved video', e));
+      return;
+    }
     if (template.category === 'custom') return;
     if (template.type === 'video') {
       store.addItem({
@@ -175,6 +207,33 @@ export default function VideoEditor({ template, onBack }) {
       useEditorStore.getState().setIsExporting(false);
       useEditorStore.getState().setExportProgress(0);
     }
+  };
+
+  // Saves the project (and the exported file, from the ready card) to My Studio, over the same
+  // video when this one was saved or opened from there before.
+  const saveToStudio = async (exportBlob = null) => {
+    setMenuOpen(false);
+    const store = useEditorStore.getState();
+    if (!store.items.length) return;
+    store.setBusy('Saving to My Studio…');
+    try {
+      const meta = await saveVideoToStudio(useEditorStore.getState(), {
+        id: savedIdRef.current,
+        thumbnail: await frameThumbnail(),
+        durationMs: getContentEnd(store.items, 0),
+        exportBlob,
+      });
+      savedIdRef.current = meta.id;
+      onSaved?.(meta);
+      useEditorStore.getState().setBusy('Saved to My Studio');
+    } catch (e) {
+      console.error(e);
+      useEditorStore.getState().setBusy('Couldn’t save. Try again.');
+    }
+    setTimeout(() => {
+      const { busy, setBusy } = useEditorStore.getState();
+      if (busy && !busy.endsWith('…')) setBusy(null);
+    }, 2200);
   };
 
   const deselectOnBackground = (e) => {
@@ -256,6 +315,7 @@ export default function VideoEditor({ template, onBack }) {
                   </button>
                   <button type="button" className="vt-menu-item" onClick={() => handleExport('gif')}><ImagePlay size={16} /> Export GIF</button>
                   <button type="button" className="vt-menu-item" onClick={() => { setMenuOpen(false); copyFrame(); }}><Copy size={16} /> Copy frame</button>
+                  <button type="button" className="vt-menu-item" onClick={() => saveToStudio()}><FolderHeart size={16} /> Save to My Studio</button>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -288,7 +348,7 @@ export default function VideoEditor({ template, onBack }) {
           </button>
         )}
 
-        {exported && !isExporting && <ExportReadyCard result={exported} onClose={() => setExported(null)} />}
+        {exported && !isExporting && <ExportReadyCard result={exported} onClose={() => setExported(null)} onSaveToStudio={() => saveToStudio(exported.blob)} />}
 
         {isExporting && (
           <div className="vt-export-overlay" role="status">

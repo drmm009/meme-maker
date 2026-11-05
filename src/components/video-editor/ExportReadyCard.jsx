@@ -1,14 +1,16 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Download, Share2, X } from 'lucide-react';
+import { Check, Download, FolderHeart, Share2, X } from 'lucide-react';
 import { canShareFile, downloadBlob, shareFile } from '../../utils/shareFile';
 
-// Shown when an export finishes: a preview, then share (phones) or save.
-export default function ExportReadyCard({ result, onClose }) {
+// Shown when an export finishes: a preview, then share (phones) or download, and save to My Studio
+// (the project and this file, to play, share or edit again later).
+export default function ExportReadyCard({ result, onClose, onSaveToStudio }) {
   const { blob, fileName } = result;
   const isGif = blob.type === 'image/gif';
   const file = useMemo(() => new File([blob], fileName, { type: blob.type }), [blob, fileName]);
   const shareable = canShareFile(file);
   const [note, setNote] = useState(null);
+  const [inStudio, setInStudio] = useState(false);
 
   // The preview URL is made and revoked in one effect (React may run effects twice in development).
   const [url, setUrl] = useState(null);
@@ -48,8 +50,18 @@ export default function ExportReadyCard({ result, onClose }) {
           {shareable && (
             <button type="button" className="vt-ready-btn is-primary" onClick={share}><Share2 size={17} /> Share</button>
           )}
-          <button type="button" className={`vt-ready-btn${shareable ? '' : ' is-primary'}`} onClick={save}><Download size={17} /> Save</button>
+          <button type="button" className={`vt-ready-btn${shareable ? '' : ' is-primary'}`} onClick={save}><Download size={17} /> Download</button>
         </div>
+        {onSaveToStudio && (
+          <button
+            type="button"
+            className="vt-ready-btn vt-ready-studio"
+            disabled={inStudio}
+            onClick={() => { setInStudio(true); onSaveToStudio(); }}
+          >
+            {inStudio ? <><Check size={17} /> In My Studio</> : <><FolderHeart size={17} /> Save to My Studio</>}
+          </button>
+        )}
       </div>
     </div>
   );

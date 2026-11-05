@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { projectFromState, collectBlobUrls, restoreProject } from './videoDraftStore';
+import { projectFromState, collectBlobUrls, restoreProject, unusedMedia, videoName, savedVideoMeta } from './videoDraftStore';
 
 describe('videoDraftStore', () => {
   it('keeps only project fields from the editor state', () => {
@@ -34,5 +34,23 @@ describe('videoDraftStore', () => {
     expect(project.items.map((i) => i.id)).toEqual(['v', 'web', 't']);
     expect(project.items[0]).toMatchObject({ url: 'blob:new/VIDEO', thumbnailUrl: 'blob:new/THUMB' });
     expect(project.items[1].url).toBe('/sounds/boom.mp3');
+  });
+
+  it('keeps files the draft or any saved video still uses', () => {
+    const keys = ['blob:a', 'blob:b', 'blob:c', 'blob:d', 42];
+    expect(unusedMedia(keys, [['blob:a'], ['blob:b', 'blob:a'], undefined])).toEqual(['blob:c', 'blob:d']);
+  });
+
+  it('names a video after its first text, else its first clip', () => {
+    expect(videoName([{ type: 'video', name: 'clip.mp4' }, { type: 'text', text: '  when the' + String.fromCharCode(10) + ' code works ' }])).toBe('when the code works');
+    expect(videoName([{ type: 'text', text: ' ' }, { type: 'image', name: 'Drake' }])).toBe('Drake');
+    expect(videoName([])).toBe('My video');
+    expect(videoName([{ type: 'text', text: 'x'.repeat(60) }])).toHaveLength(40);
+  });
+
+  it('lists a saved video without its bytes, saying what file it holds', () => {
+    const meta = savedVideoMeta({ id: 'v1', name: 'Hi', savedAt: 5, durationMs: 3000, thumbnail: 'data:x', project: { items: [] }, mediaKeys: [], exportBlob: { type: 'video/mp4' } });
+    expect(meta).toEqual({ id: 'v1', name: 'Hi', savedAt: 5, durationMs: 3000, thumbnail: 'data:x', exportType: 'video/mp4' });
+    expect(savedVideoMeta({ id: 'v2', name: 'x', savedAt: 1, durationMs: 0, thumbnail: '', project: { items: [] }, mediaKeys: [] }).exportType).toBe(null);
   });
 });

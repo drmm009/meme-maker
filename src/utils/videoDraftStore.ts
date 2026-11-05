@@ -1,12 +1,14 @@
-// Auto-saved video editor draft in IndexedDB, in its own database so the gallery's is untouched.
-// DB: meme-creator-video / stores: drafts (one record, id 'current'), media (uploaded files by key).
+// The video editor's saved work in IndexedDB, in its own database so the gallery's is untouched.
+// DB: meme-creator-video / stores: drafts (the auto-saved draft, id 'current'), projects (videos
+// saved to My Studio, by id), media (uploaded files by key, shared by the draft and projects).
 // Uploaded files only exist as blob: URLs, which die with the page, so their Blobs are stored too.
 import { VIDEO_PROJECT_VERSION, migrateVideoProject } from '../model/videoProject';
 import type { Clip, VideoProject } from '../model/videoProject';
 
 const DB_NAME = 'meme-creator-video';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const DRAFTS = 'drafts';
+const PROJECTS = 'projects';
 const MEDIA = 'media';
 const DRAFT_ID = 'current';
 
@@ -59,6 +61,8 @@ const openDB = (): Promise<IDBDatabase> => {
         const db = req.result;
         if (!db.objectStoreNames.contains(DRAFTS)) db.createObjectStore(DRAFTS, { keyPath: 'id' });
         if (!db.objectStoreNames.contains(MEDIA)) db.createObjectStore(MEDIA);
+        // Version 2: videos saved to My Studio.
+        if (!db.objectStoreNames.contains(PROJECTS)) db.createObjectStore(PROJECTS, { keyPath: 'id' });
       };
       req.onsuccess = () => resolve(req.result);
       req.onerror = () => reject(req.error);
@@ -80,8 +84,8 @@ const run = <T>(storeName: string, mode: IDBTransactionMode, fn: (store: IDBObje
 // Media keys already written this session, so a big video is stored once rather than on every save.
 const storedMedia = new Set<string>();
 
-export async function saveVideoDraft(state: Partial<VideoProject> & Record<string, unknown>): Promise<void> {
-  const project = projectFromState(state);
+// Stores the files behind a project's blob: URLs (once per session) and returns their keys.
+async function storeMedia(project: VideoProject): Promise<string[]> {
   const urls = collectBlobUrls(project.items || []);
   for (const url of urls) {
     if (storedMedia.has(url)) continue;
@@ -89,12 +93,29 @@ export async function saveVideoDraft(state: Partial<VideoProject> & Record<strin
     await run(MEDIA, 'readwrite', (s) => s.put(blob, url));
     storedMedia.add(url);
   }
+  return urls;
+}
+
+// Files neither the draft nor any saved video uses any more.
+export const unusedMedia = (keys: IDBValidKey[], inUse: (string[] | undefined)[]): string[] => {
+  const used = new Set(inUse.flatMap((k) => k || []));
+  return keys.filter((k): k is string => typeof k === 'string' && !used.has(k));
+};
+
+async function dropUnusedMedia(): Promise<void> {
+  const draft = await run<VideoDraft>(DRAFTS, 'readonly', (s) => s.get(DRAFT_ID));
+  const saved = (await run<SavedVideo[]>(PROJECTS, 'readonly', (s) => s.getAll())) || [];
+  const keys = (await run<IDBValidKey[]>(MEDIA, 'readonly', (s) => s.getAllKeys())) || [];
+  const stale = unusedMedia(keys, [draft?.mediaKeys, ...saved.map((v) => v.mediaKeys)]);
+  if (stale.length) await run(MEDIA, 'readwrite', (s) => { stale.forEach((k) => { s.delete(k); storedMedia.delete(k); }); });
+}
+
+export async function saveVideoDraft(state: Partial<VideoProject> & Record<string, unknown>): Promise<void> {
+  const project = projectFromState(state);
+  const urls = await storeMedia(project);
   const draft: VideoDraft = { id: DRAFT_ID, version: VIDEO_PROJECT_VERSION, savedAt: Date.now(), project, mediaKeys: urls };
   await run(DRAFTS, 'readwrite', (s) => s.put(draft));
-  // Drop files no clip uses any more.
-  const keys = (await run<IDBValidKey[]>(MEDIA, 'readonly', (s) => s.getAllKeys())) || [];
-  const stale = keys.filter((k): k is string => typeof k === 'string' && !urls.includes(k));
-  if (stale.length) await run(MEDIA, 'readwrite', (s) => { stale.forEach((k) => { s.delete(k); storedMedia.delete(k); }); });
+  await dropUnusedMedia();
 }
 
 // The saved draft (its project upgraded to the current version) and its files, or null when there
@@ -106,4 +127,96 @@ export async function loadVideoDraft(): Promise<{ draft: VideoDraft; media: Reco
   const media: Record<string, Blob | undefined> = {};
   for (const key of saved.mediaKeys || []) media[key] = await run<Blob>(MEDIA, 'readonly', (s) => s.get(key));
   return { draft: { ...saved, version: VIDEO_PROJECT_VERSION, project }, media };
+}
+
+// A video saved to My Studio: the editable project, a still for its card, and the last exported file
+// when it was saved from an export (so My Studio can play, share and download it).
+export interface SavedVideo {
+  id: string;
+  version?: number;
+  name: string;
+  savedAt: number;
+  durationMs: number;
+  thumbnail: string;
+  project: VideoProject;
+  mediaKeys: string[];
+  exportBlob?: Blob | null;
+}
+
+// What My Studio lists (no project or file bytes).
+export interface SavedVideoMeta {
+  id: string;
+  name: string;
+  savedAt: number;
+  durationMs: number;
+  thumbnail: string;
+  exportType: string | null;
+}
+
+export const savedVideoMeta = (v: SavedVideo): SavedVideoMeta => ({
+  id: v.id,
+  name: v.name,
+  savedAt: v.savedAt,
+  durationMs: v.durationMs,
+  thumbnail: v.thumbnail,
+  exportType: v.exportBlob?.type || null,
+});
+
+// A name for a video: its first line of text, else its first clip's name.
+export const videoName = (items: Clip[]): string => {
+  const text = items.find((i) => i.type === 'text' && 'text' in i && String(i.text || '').trim());
+  const raw = text && 'text' in text ? String(text.text) : items.find((i) => i.name)?.name;
+  const name = String(raw || '').replace(/\s+/g, ' ').trim();
+  return name ? (name.length > 40 ? `${name.slice(0, 39)}…` : name) : 'My video';
+};
+
+// Saves (or, with the id of one saved before, replaces) a video in My Studio. Keeps the previous
+// exported file when this save has none.
+export async function saveVideoToStudio(
+  state: Partial<VideoProject> & Record<string, unknown>,
+  { id, thumbnail, durationMs, exportBlob }: { id?: string | null; thumbnail: string; durationMs: number; exportBlob?: Blob | null },
+): Promise<SavedVideoMeta> {
+  const project = projectFromState(state);
+  const mediaKeys = await storeMedia(project);
+  const videoId = id || `video-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+  const before = id ? await run<SavedVideo>(PROJECTS, 'readonly', (s) => s.get(videoId)) : undefined;
+  const record: SavedVideo = {
+    id: videoId,
+    version: VIDEO_PROJECT_VERSION,
+    name: videoName(project.items || []),
+    savedAt: Date.now(),
+    durationMs,
+    thumbnail,
+    project,
+    mediaKeys,
+    exportBlob: exportBlob ?? before?.exportBlob ?? null,
+  };
+  await run(PROJECTS, 'readwrite', (s) => s.put(record));
+  await dropUnusedMedia();
+  return savedVideoMeta(record);
+}
+
+export async function listSavedVideos(): Promise<SavedVideoMeta[]> {
+  const all = (await run<SavedVideo[]>(PROJECTS, 'readonly', (s) => s.getAll())) || [];
+  return all.map(savedVideoMeta).sort((a, b) => b.savedAt - a.savedAt);
+}
+
+// A saved video's project (upgraded to the current version) with its files, ready for restoreProject.
+export async function loadSavedVideo(id: string): Promise<{ video: SavedVideo; media: Record<string, Blob | undefined> } | null> {
+  const saved = await run<SavedVideo>(PROJECTS, 'readonly', (s) => s.get(id));
+  const project = saved ? migrateVideoProject(saved.project, saved.version ?? 0) : null;
+  if (!saved || !project) return null;
+  const media: Record<string, Blob | undefined> = {};
+  for (const key of saved.mediaKeys || []) media[key] = await run<Blob>(MEDIA, 'readonly', (s) => s.get(key));
+  return { video: { ...saved, version: VIDEO_PROJECT_VERSION, project }, media };
+}
+
+export async function getSavedVideoFile(id: string): Promise<Blob | null> {
+  const saved = await run<SavedVideo>(PROJECTS, 'readonly', (s) => s.get(id));
+  return saved?.exportBlob || null;
+}
+
+export async function deleteSavedVideo(id: string): Promise<void> {
+  await run(PROJECTS, 'readwrite', (s) => { s.delete(id); });
+  await dropUnusedMedia();
 }

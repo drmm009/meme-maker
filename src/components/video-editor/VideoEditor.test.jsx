@@ -293,7 +293,8 @@ describe('VideoEditor', () => {
     await act(async () => { fireEvent.click(screen.getByText('720p · faster')); });
     expect(exportVideoFFmpeg.mock.calls.at(-1)[6]).toMatchObject({ format: 'mp4', resolution: 720, download: false, backgroundColor: '#ffffff' });
     expect(await screen.findByText('Your video is ready')).toBeTruthy();
-    expect(screen.getByText('Save')).toBeTruthy();
+    expect(screen.getByText('Download')).toBeTruthy();
+    expect(screen.getByText('Save to My Studio')).toBeTruthy();
     fireEvent.click(screen.getByLabelText('Close'));
     expect(screen.queryByText('Your video is ready')).toBeNull();
   });
