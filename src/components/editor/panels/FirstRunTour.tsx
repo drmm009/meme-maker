@@ -26,7 +26,7 @@ const STEPS: TourStep[] = [
   },
   {
     // The bar above the canvas, or the top bar's size menu for a tall canvas.
-    target: '.ie-aspect-bar, .ie-size-menu',
+    target: '.ie-aspect-bar, .ui-size-menu',
     title: 'Pick the shape',
     body: 'Square for posts, 9:16 for stories, or keep the original picture.',
   },

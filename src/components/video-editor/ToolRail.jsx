@@ -1,9 +1,10 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
   Type, Sticker, Smile, LayoutGrid, Image as ImageIcon, Film, Clapperboard, Music,
-  Check, Gauge, Volume2, VolumeX, Palette, Square, RotateCw, Minimize, Crop, Maximize, Copy, Trash2,
-  Scissors, PencilLine, ALargeSmall, TextAlignStart, TextAlignCenter, TextAlignEnd, SlidersHorizontal, WandSparkles, Pipette, Sparkles, ImagePlay, PaintBucket, Zap, Snowflake, Rewind, Repeat, ZoomIn, BringToFront, SendToBack, Mic, ArrowRightLeft, Frame, Plus, Upload, Library, Laugh, SquarePlay, Captions, ChevronLeft
+  Gauge, Volume2, VolumeX, Palette, Square, RotateCw, Minimize, Crop, Maximize, Copy, Trash2,
+  Scissors, PencilLine, ALargeSmall, TextAlignStart, TextAlignCenter, TextAlignEnd, SlidersHorizontal, WandSparkles, Pipette, Sparkles, ImagePlay, PaintBucket, Zap, Snowflake, Rewind, Repeat, ZoomIn, BringToFront, SendToBack, Mic, ArrowRightLeft, Frame, Plus, Upload, Library, Laugh, SquarePlay, Captions, Expand
 } from 'lucide-react';
+import { FloatingToolbar, Sheet, ToolDock, ToolStrip } from '../ui';
 import { FiltersIcon } from '../editor/panels/editorIcons';
 import { useEditorStore, clipEffectBase, sourceTimeMs } from '../../store/useVideoEditorStore';
 import { captureFrame, renderClipEffect } from '../../utils/clipEffects';
@@ -33,7 +34,8 @@ const getContrastStroke = (hexColor) => {
   return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255 < 0.5 ? '#ffffff' : '#000000';
 };
 
-// The add tools, grouped like the image editor: a dock of sections, each section's tools as chips.
+// The add tools, grouped like the image editor: a dock of sections, each section's tools in a strip
+// above it. A `panel` tool opens its settings sheet; the rest add straight away (or open a picker).
 const SECTIONS = [
   { id: 'media', label: 'Media', Icon: Film, tools: [
     { kind: 'photo', label: 'Photo', Icon: ImageIcon },
@@ -64,11 +66,21 @@ const SECTIONS = [
 const BACKGROUND_SWATCHES = ['#ffffff', '#000000', '#1a1d27', '#ff5e36', '#ec4899', '#facc15', '#22c55e', '#3b82f6'];
 
 const SPEEDS = [0.5, 1, 1.5, 2];
-const TEXT_BACKGROUNDS = ['none', 'white', 'black'];
+const TEXT_BACKGROUNDS = [
+  { value: 'none', label: 'None' },
+  { value: 'white', label: 'White' },
+  { value: 'black', label: 'Black' },
+];
 const ALIGNS = [
-  { value: 'left', Icon: TextAlignStart },
-  { value: 'center', Icon: TextAlignCenter },
-  { value: 'right', Icon: TextAlignEnd },
+  { value: 'left', label: 'Left', Icon: TextAlignStart },
+  { value: 'center', label: 'Centre', Icon: TextAlignCenter },
+  { value: 'right', label: 'Right', Icon: TextAlignEnd },
+];
+const TEXT_COLORS = ['#ffffff', '#000000', '#ff5a36', '#facc15', '#22c55e', '#3b82f6', '#ec4899', '#a855f7'];
+const PLACEMENTS = [
+  { value: 'fit', label: 'Fit', Icon: Minimize },
+  { value: 'cover', label: 'Fill', Icon: Crop },
+  { value: 'stretch', label: 'Stretch', Icon: Maximize },
 ];
 const MIN_SPLIT_MS = 100;
 
@@ -121,16 +133,78 @@ const placeMedia = (item, aspectRatio, mode) => {
   return { x: (dims.width - w0 * s) / 2, y: (dims.height - h0 * s) / 2, scaleX: s, scaleY: s };
 };
 
-function RailButton({ label, Icon, onClick, active, danger, dim, done, children }) {
+// A row of chips, one of them picked (font, speed, align…).
+function PickRow({ options, value, onPick, label }) {
   return (
-    <button
-      type="button"
-      className={`vt-tool${active ? ' is-active' : ''}${danger ? ' is-danger' : ''}${dim ? ' is-dim' : ''}${done ? ' is-done' : ''}`}
-      onClick={onClick}
-    >
-      <span className="vt-tool-icon">{children || <Icon size={18} />}</span>
-      <span className="vt-tool-label">{label}</span>
-    </button>
+    <div className="vt-chip-row" role="radiogroup" aria-label={label}>
+      {options.map((o) => (
+        <button key={String(o.value)} type="button" role="radio" aria-checked={value === o.value}
+          className={`vt-chip${value === o.value ? ' is-on' : ''}`} style={o.style} onClick={() => onPick(o.value)}>
+          {o.Icon && <o.Icon size={15} />}
+          {o.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function FontPanel({ item }) {
+  const current = (FONTS.find((f) => f.family === item.fontFamily) || FONTS[0]).family;
+  return (
+    <PickRow label="Font" value={current} onPick={(family) => update(item.id, { fontFamily: family })}
+      options={FONTS.map((f) => ({ value: f.family, label: f.id || f.name.split(' ')[0], style: { fontFamily: f.family } }))} />
+  );
+}
+
+function ColorPanel({ item }) {
+  const color = (item.color || '#ffffff').toLowerCase();
+  const set = (c) => update(item.id, { color: c, stroke: item.bgColor && item.bgColor !== 'none' ? 'transparent' : getContrastStroke(c) });
+  return (
+    <div className="vt-swatch-row" role="radiogroup" aria-label="Text colour">
+      {TEXT_COLORS.map((c) => (
+        <button key={c} type="button" role="radio" aria-checked={color === c} aria-label={c}
+          className={`vt-swatch-btn${color === c ? ' is-on' : ''}`} style={{ background: c }} onClick={() => set(c)} />
+      ))}
+      <label className={`vt-swatch-btn vt-swatch-custom${TEXT_COLORS.includes(color) ? '' : ' is-on'}`} title="Custom colour">
+        <Palette size={16} />
+        <input type="color" className="vt-hidden-input" aria-label="Custom colour" value={color} onChange={(e) => set(e.target.value)} />
+      </label>
+    </div>
+  );
+}
+
+function TextBgPanel({ item }) {
+  const bg = item.bgColor && item.bgColor !== 'none' ? item.bgColor : 'none';
+  const pick = (next) => {
+    if (next === 'white') update(item.id, { bgColor: 'white', color: '#000000', stroke: 'transparent' });
+    else if (next === 'black') update(item.id, { bgColor: 'black', color: '#ffffff', stroke: 'transparent' });
+    else update(item.id, { bgColor: 'none', color: item.color === '#000000' ? '#ffffff' : item.color, stroke: '#000000' });
+  };
+  return <PickRow label="Text background" value={bg} onPick={pick} options={TEXT_BACKGROUNDS} />;
+}
+
+function AlignPanel({ item }) {
+  return <PickRow label="Align" value={item.align || 'center'} onPick={(v) => update(item.id, { align: v })} options={ALIGNS} />;
+}
+
+function SpeedPanel({ item }) {
+  const rate = item.playbackRate || 1;
+  const pick = (next) => update(item.id, { playbackRate: next, endMs: item.startMs + (item.endMs - item.startMs) * (rate / next) });
+  return <PickRow label="Speed" value={rate} onPick={pick} options={SPEEDS.map((s) => ({ value: s, label: `${s}×` }))} />;
+}
+
+// Where a picture sits on the canvas; a one-off placement, so nothing stays picked.
+function PlacePanel({ item }) {
+  const aspectRatio = useEditorStore((s) => s.canvasAspectRatio);
+  return (
+    <div className="vt-chip-row">
+      {PLACEMENTS.map((p) => (
+        <button key={p.value} type="button" className="vt-chip" onClick={() => update(item.id, placeMedia(item, aspectRatio, p.value))}>
+          <p.Icon size={15} />
+          {p.label}
+        </button>
+      ))}
+    </div>
   );
 }
 
@@ -545,212 +619,176 @@ function TransitionPanel({ item }) {
   );
 }
 
-const PANELS = { volume: VolumePanel, size: SizePanel, text: TextPanel, greenscreen: GreenScreenPanel, animation: AnimationPanel, background: BackgroundPanel, sfx: SfxPanel, punch: PunchPanel, filter: FilterPanel, voice: VoicePanel, transition: TransitionPanel, captions: CaptionsPanel };
+// Every settings sheet: its title and what it shows (for the selected clip, or for nothing selected).
+const SHEETS = {
+  text: { title: 'Edit text', Panel: TextPanel },
+  font: { title: 'Font', Panel: FontPanel },
+  color: { title: 'Colour', Panel: ColorPanel },
+  textbg: { title: 'Text background', Panel: TextBgPanel },
+  align: { title: 'Align', Panel: AlignPanel },
+  size: { title: 'Text size', Panel: SizePanel },
+  animation: { title: 'Animate', Panel: AnimationPanel },
+  speed: { title: 'Speed', Panel: SpeedPanel },
+  place: { title: 'Fit to canvas', Panel: PlacePanel },
+  volume: { title: 'Volume', Panel: VolumePanel },
+  greenscreen: { title: 'Green screen', Panel: GreenScreenPanel },
+  punch: { title: 'Zoom punch', Panel: PunchPanel },
+  filter: { title: 'Filters', Panel: FilterPanel },
+  transition: { title: 'Transition', Panel: TransitionPanel },
+  background: { title: 'Background', Panel: BackgroundPanel },
+  sfx: { title: 'Sound effects', Panel: SfxPanel },
+  voice: { title: 'Voiceover', Panel: VoicePanel },
+  captions: { title: 'Auto captions', Panel: CaptionsPanel },
+};
 
-function ClipTools({ item, panel, setPanel }) {
-  const aspectRatio = useEditorStore((s) => s.canvasAspectRatio);
-  const playhead = useEditorStore((s) => s.playhead);
+// The selected clip's tools for its pill: what this kind of clip can do (each setting opens its
+// sheet, its button lit while open or while the setting is on), then Split, then the actions every
+// clip shares as small round buttons.
+function clipTools(item, { sheet, toggle, playhead, items }) {
   const store = useEditorStore.getState;
-  const togglePanel = (name) => setPanel((p) => (p === name ? null : name));
-  const canSplit = playhead > item.startMs + MIN_SPLIT_MS && playhead < item.endMs - MIN_SPLIT_MS;
+  const opens = (name, on = false) => ({ active: sheet === name || on, onClick: () => toggle(name) });
   const tools = [];
-
-  tools.push(
-    <RailButton key="split" label="Split" Icon={Scissors} dim={!canSplit} onClick={() => canSplit && store().splitItem(item.id, playhead)} />
-  );
   if (item.type === 'text') {
     const font = FONTS.find((f) => f.family === item.fontFamily) || FONTS[0];
-    const bg = item.bgColor && item.bgColor !== 'none' ? item.bgColor : 'none';
     const align = ALIGNS.find((a) => a.value === (item.align || 'center')) || ALIGNS[1];
     tools.push(
-      <RailButton key="edit" label="Edit" Icon={PencilLine} active={panel === 'text'} onClick={() => togglePanel('text')} />,
-      <RailButton key="font" label={font.id || font.name.split(' ')[0]} Icon={Type} onClick={() => {
-        const idx = Math.max(0, FONTS.findIndex((f) => f.family === (item.fontFamily || font.family)));
-        update(item.id, { fontFamily: FONTS[(idx + 1) % FONTS.length].family });
-      }}>
-        <span className="vt-tool-font" style={{ fontFamily: font.family }}>Aa</span>
-      </RailButton>,
-      <RailButton key="animate" label="Animate" Icon={Sparkles} active={panel === 'animation' || Boolean(item.animation)} onClick={() => togglePanel('animation')} />,
-      <RailButton key="size" label="Size" Icon={ALargeSmall} active={panel === 'size'} onClick={() => togglePanel('size')} />,
-      <label key="color" className="vt-tool">
-        <span className="vt-tool-icon"><Palette size={22} strokeWidth={1.8} style={{ color: item.color || '#fff' }} /></span>
-        <span className="vt-tool-label">Colour</span>
-        <input type="color" className="vt-hidden-input" value={item.color || '#ffffff'}
-          onChange={(e) => update(item.id, { color: e.target.value, stroke: getContrastStroke(e.target.value) })} />
-      </label>,
-      <RailButton key="bg" label="Background" Icon={Square} active={bg !== 'none'} onClick={() => {
-        const next = TEXT_BACKGROUNDS[(TEXT_BACKGROUNDS.indexOf(bg) + 1) % TEXT_BACKGROUNDS.length];
-        if (next === 'white') update(item.id, { bgColor: 'white', color: '#000000', stroke: 'transparent' });
-        else if (next === 'black') update(item.id, { bgColor: 'black', color: '#ffffff', stroke: 'transparent' });
-        else update(item.id, { bgColor: 'none', color: item.color === '#000000' ? '#ffffff' : item.color, stroke: '#000000' });
-      }} />,
-      <RailButton key="align" label="Align" Icon={align.Icon} onClick={() => {
-        const next = ALIGNS[(ALIGNS.indexOf(align) + 1) % ALIGNS.length];
-        update(item.id, { align: next.value });
-      }} />
+      { id: 'edit', label: 'Edit', Icon: PencilLine, ...opens('text') },
+      { id: 'font', label: 'Font', icon: <span className="vt-font-sample" style={{ fontFamily: font.family }}>Aa</span>, ...opens('font') },
+      { id: 'color', label: 'Colour', icon: <span className="vt-color-dot" style={{ background: item.color || '#ffffff' }} />, ...opens('color') },
+      { id: 'textbg', label: 'Background', Icon: Square, ...opens('textbg', Boolean(item.bgColor && item.bgColor !== 'none')) },
+      { id: 'size', label: 'Size', Icon: ALargeSmall, ...opens('size') },
+      { id: 'animate', label: 'Animate', Icon: Sparkles, ...opens('animation', Boolean(item.animation)) },
+      { id: 'align', label: 'Align', Icon: align.Icon, ...opens('align') },
     );
   }
   if (item.type === 'video') {
     const rate = item.playbackRate || 1;
-    tools.push(
-      <RailButton key="greenscreen" label="Green screen" Icon={WandSparkles} active={Boolean(item.chromaKey)} onClick={() => {
-        if (!item.chromaKey) {
-          update(item.id, { chromaKey: { ...DEFAULT_CHROMA_KEY, color: 'auto' } });
-          setPanel('greenscreen');
-        } else {
-          togglePanel('greenscreen');
-        }
-      }} />,
-      <RailButton key="speed" label={`${rate}×`} Icon={Gauge} onClick={() => {
-        const next = SPEEDS[(SPEEDS.indexOf(rate) + 1) % SPEEDS.length];
-        update(item.id, { playbackRate: next, endMs: item.startMs + (item.endMs - item.startMs) * (rate / next) });
-      }} />
-    );
-  }
-  if (previousClip(store().items, item)) {
-    const label = TRANSITIONS.find((t) => t.id === item.transitionIn?.type)?.label;
-    tools.push(
-      <RailButton key="transition" label={label || 'Transition'} Icon={ArrowRightLeft} active={panel === 'transition' || Boolean(item.transitionIn?.type)} onClick={() => togglePanel('transition')} />
-    );
-  }
-  if (item.type === 'video') {
     const insideClip = playhead >= item.startMs && playhead <= item.endMs;
     tools.push(
-      <RailButton key="freeze" label="Freeze" Icon={Snowflake} dim={!insideClip} onClick={() => insideClip && freezeAtPlayhead(item, playhead)} />,
-      <RailButton key="reverse" label="Reverse" Icon={Rewind} active={item.effect === 'reverse'} onClick={() => toggleClipEffect(item, 'reverse')} />,
-      <RailButton key="boomerang" label="Boomerang" Icon={Repeat} active={item.effect === 'boomerang'} onClick={() => toggleClipEffect(item, 'boomerang')} />,
-      <RailButton key="punch" label="Punch" Icon={ZoomIn} active={panel === 'punch' || Boolean(item.punches?.length)} onClick={() => togglePanel('punch')} />
+      { id: 'speed', label: `${rate}×`, title: 'Speed', Icon: Gauge, ...opens('speed', rate !== 1) },
+      { id: 'greenscreen', label: 'Green screen', Icon: WandSparkles, active: sheet === 'greenscreen' || Boolean(item.chromaKey), onClick: () => {
+        if (!item.chromaKey) update(item.id, { chromaKey: { ...DEFAULT_CHROMA_KEY, color: 'auto' } });
+        toggle('greenscreen', !item.chromaKey);
+      } },
+      { id: 'freeze', label: 'Freeze', Icon: Snowflake, title: insideClip ? 'Freeze the frame at the playhead' : 'Move the playhead onto this clip to freeze a frame',
+        onClick: () => insideClip && freezeAtPlayhead(item, playhead) },
+      { id: 'reverse', label: 'Reverse', Icon: Rewind, active: item.effect === 'reverse', onClick: () => toggleClipEffect(item, 'reverse') },
+      { id: 'boomerang', label: 'Boomerang', Icon: Repeat, active: item.effect === 'boomerang', onClick: () => toggleClipEffect(item, 'boomerang') },
+      { id: 'punch', label: 'Punch', Icon: ZoomIn, ...opens('punch', Boolean(item.punches?.length)) },
     );
+  }
+  if (previousClip(items, item)) {
+    const label = TRANSITIONS.find((t) => t.id === item.transitionIn?.type)?.label;
+    tools.push({ id: 'transition', label: label || 'Transition', Icon: ArrowRightLeft, ...opens('transition', Boolean(item.transitionIn?.type)) });
   }
   if (item.type === 'video' || item.type === 'audio') {
     tools.push(
-      <RailButton key="volume" label="Volume" Icon={SlidersHorizontal} active={panel === 'volume'} onClick={() => togglePanel('volume')} />,
-      <RailButton key="mute" label={item.muted ? 'Unmute' : 'Mute'} Icon={item.muted ? VolumeX : Volume2} active={item.muted}
-        onClick={() => update(item.id, { muted: !item.muted })} />
+      { id: 'volume', label: 'Volume', Icon: SlidersHorizontal, ...opens('volume') },
+      { id: 'mute', label: item.muted ? 'Unmute' : 'Mute', Icon: item.muted ? VolumeX : Volume2, active: Boolean(item.muted), onClick: () => update(item.id, { muted: !item.muted }) },
     );
   }
   if (item.type === 'image' || item.type === 'video') {
     const preset = FILTER_PRESETS.find((p) => p.id === (item.filter?.preset ?? null));
     const filtered = Boolean(item.filter && (item.filter.preset || item.filter.brightness || item.filter.contrast || item.filter.saturation));
     tools.push(
-      <RailButton key="filter" label={filtered && preset?.id ? preset.label : 'Filters'} Icon={FiltersIcon} active={panel === 'filter' || filtered} onClick={() => togglePanel('filter')} />,
-      <RailButton key="fit" label="Fit" Icon={Minimize} onClick={() => update(item.id, placeMedia(item, aspectRatio, 'fit'))} />,
-      <RailButton key="cover" label="Fill" Icon={Crop} onClick={() => update(item.id, placeMedia(item, aspectRatio, 'cover'))} />,
-      <RailButton key="stretch" label="Stretch" Icon={Maximize} onClick={() => update(item.id, placeMedia(item, aspectRatio, 'stretch'))} />
+      { id: 'filter', label: filtered && preset?.id ? preset.label : 'Filters', Icon: FiltersIcon, ...opens('filter', filtered) },
+      { id: 'place', label: 'Fit', title: 'Fit, fill or stretch to the canvas', Icon: Expand, ...opens('place') },
     );
   }
   if (item.type === 'image' || item.type === 'sticker') {
-    tools.push(
-      <RailButton key="rotate" label="Rotate" Icon={RotateCw} onClick={() => update(item.id, rotateAboutCenter(item, ((item.rotation || 0) + 90) % 360))} />
-    );
+    tools.push({ id: 'rotate', label: 'Rotate', Icon: RotateCw, onClick: () => update(item.id, rotateAboutCenter(item, ((item.rotation || 0) + 90) % 360)) });
   }
+  const canSplit = playhead > item.startMs + MIN_SPLIT_MS && playhead < item.endMs - MIN_SPLIT_MS;
+  tools.push({ id: 'split', label: 'Split', Icon: Scissors, title: canSplit ? 'Split at the playhead' : 'Move the playhead inside the clip to split it',
+    onClick: () => canSplit && store().splitItem(item.id, playhead) });
   if (item.type !== 'audio') {
     tools.push(
-      <RailButton key="forward" label="Forward" Icon={BringToFront} onClick={() => store().moveLayer(item.id, 1)} />,
-      <RailButton key="back" label="Back" Icon={SendToBack} onClick={() => store().moveLayer(item.id, -1)} />
+      { id: 'forward', label: 'Bring forward', Icon: BringToFront, iconOnly: true, onClick: () => store().moveLayer(item.id, 1) },
+      { id: 'back', label: 'Send back', Icon: SendToBack, iconOnly: true, onClick: () => store().moveLayer(item.id, -1) },
     );
   }
   tools.push(
-    <RailButton key="dup" label="Duplicate" Icon={Copy} onClick={() => store().duplicateItem(item.id)} />,
-    <RailButton key="del" label="Delete" Icon={Trash2} danger onClick={() => store().removeItem(item.id)} />
+    { id: 'duplicate', label: 'Duplicate', Icon: Copy, iconOnly: true, onClick: () => store().duplicateItem(item.id) },
+    { id: 'delete', label: 'Delete', Icon: Trash2, iconOnly: true, danger: true, onClick: () => store().removeItem(item.id) },
   );
-
-  return (
-    <>
-      <RailButton label="Done" Icon={Check} done onClick={() => store().setActiveItem(null)} />
-      <span className="vt-rail-divider" aria-hidden="true" />
-      {tools}
-    </>
-  );
+  return tools;
 }
 
-// Bottom tool rail: add tools, or the selected clip's tools (with an optional slider/text panel above).
-const sectionOfTool = (kind) => SECTIONS.find((sec) => sec.tools.some((t) => t.kind === kind));
+const DOCK = SECTIONS.map(({ id, label, Icon }) => ({ id, label, Icon }));
 
-// Bottom section: a dock of sections, styled like the app's bottom nav. Tapping a section swaps the
-// dock to its tools, with a back button to the sections (a one-tool section runs its tool
-// directly). A selected clip gets its own tool row above the dock; panels (sliders, SFX, voice…)
-// open above everything. Same pattern as the image editor's dock.
+// The bottom of the editor, laid out like the image editor's: a dock of sections, the open
+// section's tools in a strip above it (always one open, Media to start), and a selected clip's tools
+// in a pill in the strip's place (no section lit meanwhile; any section deselects the clip). A
+// setting opens a sheet in the dock's place with the strip or pill still above it; the two rise
+// over the timeline (the bottom keeps its height, so the timeline and preview don't move).
 export default function ToolRail({ onAdd }) {
   const activeItem = useEditorStore((s) => s.items.find((i) => i.id === s.activeItemId));
-  const [panelState, setPanelState] = useState({ id: null, name: null });
-  // A panel belongs to the clip it was opened for (or to "nothing selected"); selecting another closes it.
+  const items = useEditorStore((s) => s.items);
+  const playhead = useEditorStore((s) => s.playhead);
+  const [tab, setTab] = useState('media');
+  // A sheet belongs to the clip it was opened for (or to "nothing selected"); selecting another closes it.
+  const [sheetState, setSheetState] = useState({ id: null, name: null });
   const ownerId = activeItem?.id ?? null;
-  const panel = panelState.id === ownerId ? panelState.name : null;
-  const setPanel = (fn) => setPanelState((prev) => {
-    const current = prev.id === ownerId ? prev.name : null;
-    return { id: ownerId, name: typeof fn === 'function' ? fn(current) : fn };
-  });
-  const Panel = panel && PANELS[panel];
-  const [openId, setOpenId] = useState(null); // section whose tools fill the dock, or null
-  const [lastId, setLastId] = useState('media'); // last section used, highlighted on the main dock
-  // Selecting a clip brings back the sections (the clip's own tools show above them).
-  const activeId = activeItem?.id;
-  useEffect(() => { if (activeId) setOpenId(null); }, [activeId]);
+  const sheet = sheetState.id === ownerId ? sheetState.name : null;
+  const setSheet = (name) => setSheetState({ id: ownerId, name });
+  const toggle = (name, keepOpen = false) => setSheet(sheet === name && !keepOpen ? null : name);
+  const spec = sheet && SHEETS[sheet];
 
-  const runTool = (t) => {
-    if (t.panel) setPanel((p) => (p === t.kind ? null : t.kind));
-    else { setPanel(null); onAdd(t.kind); }
+  // The bottom's height without a sheet, kept while one is open (it then floats over the timeline,
+  // never higher than the timeline's top, the element before it).
+  const wrapRef = useRef(null);
+  const [rest, setRest] = useState(null); // { height, room }
+  useLayoutEffect(() => {
+    const el = wrapRef.current;
+    if (!el || spec) return undefined;
+    const measure = () => setRest({ height: el.offsetHeight, room: el.offsetHeight + (el.previousElementSibling?.offsetHeight || 0) });
+    measure();
+    if (typeof ResizeObserver === 'undefined') return undefined;
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [spec]);
+
+  const section = SECTIONS.find((s) => s.id === tab) || SECTIONS[0];
+  const runTool = (kind) => {
+    const tool = section.tools.find((t) => t.kind === kind);
+    if (tool?.panel) toggle(kind);
+    else {
+      setSheet(null);
+      onAdd(kind);
+    }
   };
-
-  // Opening a section deselects any clip and closes panels.
-  const openSection = (sec) => {
+  const openSection = (id) => {
     if (activeItem) useEditorStore.getState().setActiveItem(null);
-    setPanelState({ id: null, name: null });
-    setLastId(sec.id);
-    if (sec.tools.length === 1) runTool(sec.tools[0]);
-    else setOpenId(sec.id);
+    setSheetState({ id: null, name: null });
+    setTab(id);
   };
-
-  const open = openId && SECTIONS.find((sec) => sec.id === openId);
-  const panelSection = !activeItem && panel ? sectionOfTool(panel) : null;
 
   return (
-    <div className="vt-rail-wrap">
-      {Panel && (
-        <div className="vt-panel" role="group" aria-label="Clip settings">
-          <Panel item={activeItem} onMore={() => { setPanel(null); onAdd('sounds'); }} />
-        </div>
-      )}
-      {activeItem && (
-        <div className="vt-rail" role="toolbar" aria-label="Clip tools">
-          <ClipTools item={activeItem} panel={panel} setPanel={setPanel} />
-        </div>
-      )}
-      {open ? (
-        <nav key={open.id} className="vt-dock vt-dock--tools" aria-label={`${open.label} tools`}>
-          <button type="button" className="vt-dock-tab vt-dock-back" onClick={() => { setOpenId(null); setPanelState({ id: null, name: null }); }} aria-label="Back to sections" title="Back">
-            <ChevronLeft className="vt-dock-icon" size={22} />
-            <span className="vt-dock-label">{open.label}</span>
-          </button>
-          <span className="vt-dock-divider" aria-hidden="true" />
-          <div className="vt-dock-tools">
-            {open.tools.map((t) => {
-              const on = !activeItem && t.panel && panel === t.kind;
-              return (
-                <button key={t.kind} type="button" className={`vt-dock-tab vt-dock-tool${on ? ' is-active' : ''}`} onClick={() => runTool(t)}>
-                  <t.Icon className="vt-dock-icon" size={20} />
-                  <span className="vt-dock-label">{t.label}</span>
-                  {on && <span className="vt-dock-dot" />}
-                </button>
-              );
-            })}
+    <div className="vt-rail-wrap" ref={wrapRef} style={spec && rest ? { height: rest.height } : undefined}>
+      <div className={`vt-bottom${spec ? ' has-sheet' : ''}`} style={spec && rest ? { maxHeight: rest.room } : undefined}>
+        {activeItem ? (
+          <div className="vt-pill">
+            <FloatingToolbar ariaLabel="Clip tools" items={clipTools(activeItem, { sheet, toggle, playhead, items })} />
           </div>
-        </nav>
-      ) : (
-        <nav className="vt-dock" aria-label="Sections">
-          {SECTIONS.map((sec) => {
-            const on = !activeItem && (panelSection ? panelSection.id === sec.id : lastId === sec.id);
-            return (
-              <button key={sec.id} type="button" className={`vt-dock-tab${on ? ' is-active' : ''}`} onClick={() => openSection(sec)}>
-                <sec.Icon className="vt-dock-icon" size={20} />
-                <span className="vt-dock-label">{sec.label}</span>
-                {on && <span className="vt-dock-dot" />}
-              </button>
-            );
-          })}
-        </nav>
-      )}
+        ) : (
+          <ToolStrip
+            key={section.id}
+            ariaLabel={`${section.label} tools`}
+            layout="stacked"
+            items={section.tools.map((t) => ({ id: t.kind, label: t.label, Icon: t.Icon }))}
+            active={sheet}
+            onSelect={runTool}
+          />
+        )}
+        {spec ? (
+          <Sheet key={sheet} title={spec.title} onClose={() => setSheet(null)} className="vt-sheet">
+            <spec.Panel item={activeItem} onMore={() => { setSheet(null); onAdd('sounds'); }} />
+          </Sheet>
+        ) : (
+          <ToolDock ariaLabel="Sections" items={DOCK} active={activeItem ? null : tab} onSelect={openSection} />
+        )}
+      </div>
     </div>
   );
 }

@@ -1,15 +1,18 @@
-/* Video editor. Always dark, like most video tools; colours follow the app's coral/pink tokens. */
+/* Video editor. Always dark, in the image editor's look: pitch black, the dock and panels in one iOS
+   grey, no outlines, and solid orange (no gradients or glows) for what's on or primary. */
 
 .vt-editor {
-  --vt-bg: #07080c;
-  --vt-surface: #11131a;
-  --vt-surface-2: #1a1d27;
-  --vt-line: rgba(255, 255, 255, 0.07);
-  --vt-text: #f5f5f7;
-  --vt-muted: #8b8f9e;
-  --vt-accent: #ff5e36;
-  --vt-grad: linear-gradient(135deg, #ff5e36 0%, #ec4899 100%);
-  --vt-glow: 0 10px 28px -8px rgba(255, 94, 54, 0.7);
+  --vt-bg: #000000;
+  --vt-surface: #1c1c1e;
+  --vt-surface-2: #2c2c2e;
+  --vt-fill: rgba(255, 255, 255, 0.08);
+  --vt-text: #f4f4f6;
+  --vt-muted: #8e8e93;
+  --vt-accent: #ff5a36;
+  --vt-accent-soft: rgba(255, 90, 54, 0.18);
+  /* Solid, like the image editor: what used to be a gradient with a glow. */
+  --vt-grad: #ff5a36;
+  --vt-glow: none;
   --vt-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
   --vt-clip-text: #ff9100;
   --vt-clip-sticker: #ec4899;
@@ -78,9 +81,7 @@
 .vt-fab:disabled { opacity: 0.5; cursor: default; }
 .vt-fab--close {
   left: 12px;
-  background: rgba(30, 32, 40, 0.82);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  background: var(--vt-surface);
 }
 .vt-export { position: absolute; top: calc(12px + var(--vt-safe-top)); right: 12px; z-index: 30; }
 .vt-fab--export { position: static; background: var(--vt-grad); box-shadow: var(--vt-glow); }
@@ -101,8 +102,7 @@
   right: 0;
   min-width: 200px;
   padding: 6px;
-  background: #161922;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--vt-surface-2);
   border-radius: 16px;
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
 }
@@ -121,7 +121,7 @@
   text-align: left;
   cursor: pointer;
 }
-.vt-menu-item:hover { background: rgba(255, 255, 255, 0.06); }
+.vt-menu-item:hover { background: var(--vt-fill); }
 
 .vt-collapse {
   position: absolute;
@@ -152,9 +152,9 @@
   align-items: center;
   gap: 4px;
   padding: 7px 14px 7px 18px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: none;
   border-radius: 999px;
-  background: rgba(10, 11, 16, 0.55);
+  background: rgba(28, 28, 30, 0.8);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   color: #fff;
@@ -181,11 +181,9 @@
   align-items: center;
   gap: 6px;
   padding: 24px 20px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: none;
   border-radius: 22px;
-  background: rgba(12, 13, 18, 0.86);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: var(--vt-surface);
   color: var(--vt-text);
   text-align: center;
   cursor: pointer;
@@ -212,7 +210,7 @@
   align-items: center;
   justify-content: center;
   gap: 14px;
-  background: rgba(7, 8, 12, 0.82);
+  background: rgba(0, 0, 0, 0.82);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   font-weight: 600;
@@ -224,7 +222,7 @@
   border-radius: 50%;
   display: grid;
   place-items: center;
-  background: conic-gradient(#ff5e36, #ec4899 calc(var(--p) * 1%), rgba(255, 255, 255, 0.08) 0);
+  background: conic-gradient(var(--vt-accent) calc(var(--p) * 1%), var(--vt-fill) 0);
 }
 .vt-export-ring span {
   width: 86px;
@@ -353,11 +351,11 @@
   border-radius: 50%;
   display: grid;
   place-items: center;
-  background: rgba(255, 255, 255, 0.07);
+  background: var(--vt-fill);
   color: rgba(255, 255, 255, 0.75);
   cursor: pointer;
 }
-.vt-head-btn.is-off { color: var(--vt-accent); background: rgba(255, 94, 54, 0.14); }
+.vt-head-btn.is-off { color: var(--vt-accent); background: var(--vt-accent-soft); }
 
 .vt-clip {
   position: absolute;
@@ -377,12 +375,12 @@
 .vt-clip.is-selected {
   z-index: 2;
   border-color: #fff;
-  box-shadow: 0 0 0 4px rgba(255, 94, 54, 0.35);
+  box-shadow: 0 0 0 4px rgba(255, 90, 54, 0.35);
   cursor: grab;
   touch-action: none;
 }
 .vt-clip.is-hidden { opacity: 0.35; }
-.vt-clip--video { background-color: var(--vt-surface-2); border-color: rgba(255, 255, 255, 0.1); }
+.vt-clip--video { background-color: var(--vt-surface-2); }
 .vt-clip--text { background-color: rgba(255, 145, 0, 0.14); border-color: var(--vt-clip-text); color: #ffb547; }
 .vt-clip--image { background-color: rgba(255, 94, 54, 0.14); border-color: var(--vt-clip-image); }
 .vt-clip--sticker {
@@ -454,7 +452,7 @@
   cursor: ew-resize;
   touch-action: none;
 }
-.vt-clip-handle::after { content: ''; width: 3px; height: 14px; border-radius: 2px; background: #1a1d27; }
+.vt-clip-handle::after { content: ''; width: 3px; height: 14px; border-radius: 2px; background: var(--vt-surface-2); }
 .vt-clip-handle--start { left: 0; }
 .vt-clip-handle--end { right: 0; }
 
@@ -483,15 +481,15 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  border: 2px dashed rgba(255, 255, 255, 0.18);
+  border: none;
   border-radius: 11px;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--vt-fill);
   color: var(--vt-muted);
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;
 }
-.vt-empty-clip:hover { color: var(--vt-text); border-color: rgba(255, 94, 54, 0.6); }
+.vt-empty-clip:hover { color: var(--vt-text); background: rgba(255, 255, 255, 0.12); }
 
 .vt-snap-line {
   position: absolute;
@@ -524,172 +522,74 @@
   height: 11px;
   border-radius: 6px;
   transform: translateX(-50%);
-  background: var(--vt-grad);
-  box-shadow: 0 2px 8px rgba(255, 94, 54, 0.7);
+  background: var(--vt-accent);
 }
 
-/* ── Bottom section: tab bar with drop-up menus, clip tools above it ──
-   Icons and labels follow the app's bottom nav (.dock-nav-item in App.css). */
-.vt-rail-wrap {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  background: var(--vt-bg);
-}
-.vt-rail {
-  display: flex;
-  justify-content: safe center;
-  align-items: flex-start;
-  gap: 8px;
-  max-width: 100%;
-  overflow-x: auto;
-  scrollbar-width: none;
-  padding: 10px 12px 8px;
-}
-.vt-rail::-webkit-scrollbar { display: none; }
-.vt-tool {
-  position: relative;
-  flex: 0 0 auto;
-  min-width: 56px;
-  padding: 0 4px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 5px;
-  border: none;
-  background: none;
-  color: var(--text-muted, var(--vt-muted));
-  font-size: 0.68rem;
-  font-weight: 650;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-}
-.vt-tool-icon {
-  width: 40px;
-  height: 40px;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--vt-text);
-  transition: transform 0.15s var(--vt-ease), background 0.15s, color 0.15s;
-}
-.vt-tool:hover .vt-tool-icon { background: rgba(255, 255, 255, 0.1); }
-.vt-tool:active .vt-tool-icon { transform: scale(0.9); }
-.vt-tool-label { white-space: nowrap; transition: color 0.15s; }
-.vt-tool:hover .vt-tool-label { color: var(--vt-text); }
-.vt-tool.is-active .vt-tool-icon { background: var(--vt-grad); color: #fff; box-shadow: 0 6px 16px -6px rgba(255, 94, 54, 0.6); }
-.vt-tool.is-active .vt-tool-label { color: #ff5e36; font-weight: 800; }
-.vt-tool.is-danger .vt-tool-icon { color: #ff6b6b; background: rgba(255, 107, 107, 0.08); }
-.vt-tool.is-done .vt-tool-icon { background: var(--vt-text); color: var(--vt-bg); }
-.vt-tool.is-done .vt-tool-label { color: var(--vt-text); }
-.vt-tool-font { font-size: 17px; font-weight: 700; line-height: 1; }
+/* ── Bottom: dock, the open section's strip (or a clip's pill), settings sheets ──
+   The image editor's ToolDock, ToolStrip, FloatingToolbar and Sheet (ui.css). A sheet takes the
+   dock's place with the strip or pill above it; while one is open the two float over the timeline
+   (ToolRail keeps the bottom's height, so the timeline and preview stay put). */
+.vt-rail-wrap { position: relative; flex-shrink: 0; display: flex; flex-direction: column; background: var(--vt-bg); }
 .vt-hidden-input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
-.vt-rail-divider { flex: 0 0 1px; align-self: flex-start; height: 28px; margin: 6px 6px 0; background: rgba(255, 255, 255, 0.1); }
-
-.vt-dock {
-  display: flex;
-  justify-content: space-around;
-  padding: 4px 8px calc(6px + env(safe-area-inset-bottom, 0px));
-  border-top: 1px solid var(--vt-line);
-  background: var(--vt-bg);
+.vt-bottom { display: flex; flex-direction: column; padding-top: 10px; }
+.vt-bottom.has-sheet {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 30;
 }
-.vt-dock-tab {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  padding: 8px 0 4px;
-  border: none;
-  background: none;
-  color: var(--text-muted, var(--vt-muted));
-  font-size: 0.68rem;
-  font-weight: 650;
-  cursor: pointer;
-  user-select: none;
-  -webkit-tap-highlight-color: transparent;
-  transition: color 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+/* Over the timeline's grey, the strip's and pill's tiles a step lighter so they still read. */
+.vt-bottom.has-sheet .ui-strip-btn:not(.is-on),
+.vt-bottom.has-sheet .ui-float-item:not(.is-on) { background: var(--vt-surface-2); }
+.vt-pill { display: flex; justify-content: center; padding: 0 10px 4px; }
+.vt-pill .ui-float { max-width: 100%; }
+.vt-font-sample { font-size: 17px; font-weight: 700; line-height: 1; }
+.vt-color-dot { width: 18px; height: 18px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.5); }
+/* Glass, a step lighter than the timeline it rises over. */
+.vt-sheet.ui-sheet {
+  background: rgba(44, 44, 46, 0.86) !important;
+  -webkit-backdrop-filter: blur(30px) saturate(1.4);
+  backdrop-filter: blur(30px) saturate(1.4);
+  border-top: none;
 }
-.vt-dock-tab:hover { color: var(--text-main, var(--vt-text)); }
-.vt-dock-icon { transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1); }
-.vt-dock-tab.is-active { color: #ff5e36; }
-.vt-dock-tab.is-active .vt-dock-icon { transform: translateY(-1px); }
-.vt-dock-tab.is-active .vt-dock-label { font-weight: 800; }
-.vt-dock-dot { width: 14px; height: 3px; margin-top: 1px; border-radius: 9999px; background: #ff5e36; }
-/* Keep the tab height steady when the dot appears. */
-.vt-dock-tab:not(.is-active)::after { content: ''; height: 4px; }
-
-/* An open section: back button, then the section's tools (scrolls sideways when they don't fit). */
-.vt-dock--tools { justify-content: flex-start; padding-left: 0; padding-right: 0; animation: vt-tools-in 0.22s cubic-bezier(0.16, 1, 0.3, 1); }
-@keyframes vt-tools-in {
-  from { opacity: 0; transform: translateX(16px); }
+.vt-sheet .ui-sheet-body { display: flex; flex-direction: column; gap: 14px; }
+/* The banners and cards over the stage (draft, busy, export ready) rise in. */
+@keyframes vt-panel-in {
+  from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: none; }
 }
-.vt-dock-back { flex: 0 0 64px; color: var(--vt-text); }
-.vt-dock-back .vt-dock-label { max-width: 60px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.vt-dock-divider { flex: 0 0 1px; align-self: center; height: 32px; background: rgba(255, 255, 255, 0.1); }
-.vt-dock-tools {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  justify-content: safe center;
-  overflow-x: auto;
-  scrollbar-width: none;
-  padding: 0 18px 0 6px;
-  /* Fade the right edge so a row that scrolls looks like it does. */
-  -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 22px), transparent);
-  mask-image: linear-gradient(90deg, #000 calc(100% - 22px), transparent);
-}
-.vt-dock-tools::-webkit-scrollbar { display: none; }
-.vt-dock-tool { flex: 0 0 auto; min-width: 56px; padding-left: 6px; padding-right: 6px; white-space: nowrap; }
 
-/* ── Meme clips sheet (rendered in a portal, outside .vt-editor) ── */
-.vclip-grid {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 12px;
-  padding: 4px 2px 8px;
-}
-.vclip-card {
+/* ── Library sheets (Clips, Templates, Stickers, Emoji, GIFs, Sounds) ──
+   The image editor's full-height browse sheets (browseSheet.css, its glass via .ie-panels--full),
+   over everything under the top bar. */
+.vt-library {
+  position: absolute;
+  inset: calc(56px + var(--vt-safe-top)) 0 0;
+  z-index: 80;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 0;
-  border: none;
-  background: none;
-  color: inherit;
-  text-align: left;
-  cursor: pointer;
 }
-.vclip-thumb {
-  position: relative;
-  aspect-ratio: 16 / 10;
-  border-radius: 14px;
-  overflow: hidden;
-  background: #000;
-  transition: transform 0.15s;
-}
-.vclip-card:hover .vclip-thumb { transform: translateY(-2px); }
-.vclip-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.vclip-play {
+.vt-library > .ui-sheet:not(.ui-sheet-ghost) { flex: 1; min-height: 0; }
+
+.vt-clip-card { flex-basis: 168px; width: 168px; }
+.vt-clip-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+.vt-clip-thumb { position: relative; display: block; }
+.vt-clip-media { aspect-ratio: 16 / 10; }
+.vt-clip-play {
   position: absolute;
   inset: 0;
   margin: auto;
-  width: 34px;
-  height: 34px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   display: grid;
   place-items: center;
-  background: rgba(0, 0, 0, 0.45);
-  backdrop-filter: blur(6px);
+  background: rgba(0, 0, 0, 0.5);
   color: #fff;
+  pointer-events: none;
 }
-.vclip-dur {
+.vt-clip-dur {
   position: absolute;
   right: 6px;
   bottom: 6px;
@@ -699,35 +599,51 @@
   color: #fff;
   font-size: 11px;
   font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
 }
-.vclip-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-/* ── Clip settings panel (above the rail) ───────────────────── */
-.vt-rail-wrap { position: relative; flex-shrink: 0; }
-.vt-panel {
-  position: absolute;
-  left: 10px;
-  right: 10px;
-  bottom: calc(100% + 8px);
-  z-index: 25;
+/* Sounds: a row per sound, preview on the left, the rest of the row adds it. */
+.vt-sound-list { display: flex; flex-direction: column; gap: 6px; margin: 0; padding: 4px 16px 16px; list-style: none; }
+.vt-sound { display: flex; align-items: center; gap: 10px; }
+.vt-sound-play {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex: none;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--ui-text);
+  cursor: pointer;
+}
+.vt-sound-play.is-on { background: var(--ui-accent); color: #fff; }
+.vt-sound-add {
   display: flex;
-  flex-direction: column;
-  gap: 12px;
-  max-width: 560px;
-  margin: 0 auto;
-  padding: 14px 16px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 18px;
-  background: rgba(22, 25, 34, 0.94);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  box-shadow: 0 18px 40px -12px rgba(0, 0, 0, 0.8);
-  animation: vt-panel-in 0.2s var(--vt-ease);
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+  min-height: 48px;
+  padding: 0 14px;
+  border: none;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--ui-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
 }
-@keyframes vt-panel-in {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: none; }
+.vt-sound-add:active { background: rgba(255, 255, 255, 0.18); }
+.vt-sound-icon { font-size: 18px; line-height: 1; }
+.vt-sound-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 15px; font-weight: 600; }
+.vt-sound-dur { color: var(--ui-faint); font-size: 13px; font-variant-numeric: tabular-nums; }
+.vt-sound-add svg { flex: none; color: var(--ui-accent); }
+@media (hover: hover) {
+  .vt-sound-add:hover, .vt-sound-play:not(.is-on):hover { background: rgba(255, 255, 255, 0.18); }
 }
+
 .vt-slider-row {
   display: grid;
   grid-template-columns: 64px 1fr 44px;
@@ -746,23 +662,23 @@
 .vt-chip-row { display: flex; flex-wrap: wrap; gap: 8px; }
 .vt-chip {
   padding: 8px 14px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: none;
   border-radius: 999px;
-  background: transparent;
+  background: var(--vt-fill);
   color: var(--vt-text);
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
 }
-.vt-chip.is-on { border-color: transparent; background: var(--vt-grad); }
+.vt-chip.is-on { background: var(--vt-accent); color: #fff; }
 .vt-text-input {
   width: 100%;
   box-sizing: border-box;
   resize: none;
   padding: 10px 12px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: none;
   border-radius: 12px;
-  background: rgba(0, 0, 0, 0.3);
+  background: var(--vt-fill);
   color: var(--vt-text);
   font: inherit;
   font-size: 16px;
@@ -771,8 +687,7 @@
   user-select: text;
   -webkit-user-select: text;
 }
-.vt-text-input:focus { border-color: rgba(255, 94, 54, 0.7); }
-.vt-tool.is-dim { opacity: 0.35; }
+.vt-text-input:focus { box-shadow: inset 0 0 0 2px rgba(255, 90, 54, 0.7); }
 
 /* ── Restore-draft banner ───────────────────────────────────── */
 .vt-draft {
@@ -787,11 +702,8 @@
   align-items: center;
   gap: 10px;
   padding: 8px 8px 8px 14px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 16px;
-  background: rgba(22, 25, 34, 0.95);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: var(--vt-surface);
   box-shadow: 0 18px 40px -12px rgba(0, 0, 0, 0.8);
   font-size: 14px;
   font-weight: 700;
@@ -819,11 +731,6 @@
 .vt-chip { display: inline-flex; align-items: center; gap: 6px; position: relative; }
 .vt-swatch { width: 14px; height: 14px; border-radius: 50%; border: 1px solid rgba(255, 255, 255, 0.4); }
 
-.vclip-grid { scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, 0.18) transparent; }
-.vclip-grid::-webkit-scrollbar { width: 6px; }
-.vclip-grid::-webkit-scrollbar-thumb { border-radius: 3px; background: rgba(255, 255, 255, 0.18); }
-.vclip-grid::-webkit-scrollbar-track { background: transparent; }
-
 /* ── Background swatches ────────────────────────────────────── */
 .vt-swatch-row { display: flex; flex-wrap: wrap; gap: 10px; }
 .vt-swatch-btn {
@@ -838,7 +745,7 @@
   color: var(--vt-text);
   transition: transform 0.15s var(--vt-ease);
 }
-.vt-swatch-btn.is-on { border-color: #fff; box-shadow: 0 0 0 3px rgba(255, 94, 54, 0.6); transform: scale(1.06); }
+.vt-swatch-btn.is-on { border-color: #fff; box-shadow: 0 0 0 3px var(--vt-accent); transform: scale(1.06); }
 .vt-swatch-custom { background: conic-gradient(#ff5e36, #facc15, #22c55e, #3b82f6, #ec4899, #ff5e36); }
 
 /* ── Filmstrip tiles on video clips ─────────────────────────── */
@@ -858,14 +765,14 @@
 .vt-export-cancel {
   margin-top: 4px;
   padding: 9px 22px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  border: none;
   border-radius: 999px;
-  background: transparent;
+  background: var(--vt-surface-2);
   color: var(--vt-text);
   font-weight: 700;
   cursor: pointer;
 }
-.vt-export-cancel:hover { background: rgba(255, 255, 255, 0.06); }
+.vt-export-cancel:hover { background: #3a3a3c; }
 
 /* ── Export ready card ──────────────────────────────────────── */
 .vt-ready {
@@ -875,7 +782,7 @@
   display: grid;
   place-items: center;
   padding: 16px;
-  background: rgba(7, 8, 12, 0.78);
+  background: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   animation: vt-panel-in 0.25s var(--vt-ease);
@@ -889,9 +796,8 @@
   align-items: center;
   gap: 8px;
   padding: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 22px;
-  background: #161922;
+  border-radius: 24px;
+  background: var(--vt-surface);
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
   box-sizing: border-box;
 }
@@ -930,15 +836,15 @@
   justify-content: center;
   gap: 8px;
   padding: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  border: none;
   border-radius: 14px;
-  background: transparent;
+  background: var(--vt-surface-2);
   color: var(--vt-text);
   font-size: 15px;
   font-weight: 700;
   cursor: pointer;
 }
-.vt-ready-btn.is-primary { border-color: transparent; background: var(--vt-grad); box-shadow: var(--vt-glow); }
+.vt-ready-btn.is-primary { background: var(--vt-accent); color: #fff; }
 
 /* ── Busy pill (clip jobs like reverse) ─────────────────────── */
 .vt-busy {
@@ -952,11 +858,8 @@
   gap: 8px;
   max-width: calc(100% - 28px);
   padding: 9px 16px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 999px;
-  background: rgba(22, 25, 34, 0.95);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: var(--vt-surface);
   font-size: 14px;
   font-weight: 700;
   box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.8);
@@ -1037,7 +940,7 @@
 .vt-captions-job { display: flex; flex-direction: column; gap: 8px; }
 .vt-captions-job-text { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; }
 .vt-captions-job-text .vt-chip { padding: 6px 12px; }
-.vt-captions-bar { position: relative; height: 4px; border-radius: 2px; background: rgba(255, 255, 255, 0.1); overflow: hidden; }
+.vt-captions-bar { position: relative; height: 4px; border-radius: 2px; background: var(--vt-fill); overflow: hidden; }
 .vt-captions-bar span { position: absolute; inset: 0 auto 0 0; width: 0; border-radius: inherit; background: var(--vt-grad); transition: width 0.3s var(--vt-ease); }
 .vt-captions-bar.is-busy span { width: 35%; animation: vt-captions-busy 1.2s ease-in-out infinite; }
 @keyframes vt-captions-busy { from { left: -35%; } to { left: 100%; } }

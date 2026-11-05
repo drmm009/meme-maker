@@ -91,13 +91,21 @@ function GridCard({ template, ...rest }: CardProps) {
 // See all; a category or a search shows a grid. A pick adds the template's picture as a photo layer;
 // the star is shared with the home screen and Explore. `onPick` and `title` reuse it for another
 // job (the Face Swap maker's meme picker).
-export default function TemplatesSheet({ actions, onClose, onPick, title = 'Templates' }: {
+export default function TemplatesSheet(props: Omit<TemplatesBrowserProps, 'templates'>) {
+  const templates: SizedTemplate[] = useEditorUiStore((s: { openSourceTemplates: SizedTemplate[] }) => s.openSourceTemplates);
+  return <TemplatesBrowser {...props} templates={templates} />;
+}
+
+interface TemplatesBrowserProps {
+  templates: SizedTemplate[];
   actions: EditorActions;
   onClose: () => void;
   onPick?: (t: SizedTemplate) => void;
   title?: string;
-}) {
-  const templates: SizedTemplate[] = useEditorUiStore((s: { openSourceTemplates: SizedTemplate[] }) => s.openSourceTemplates);
+}
+
+// The sheet itself, on any list of templates (the video editor's, outside the image editor's store).
+export function TemplatesBrowser({ templates, actions, onClose, onPick, title = 'Templates' }: TemplatesBrowserProps) {
   const [query, setQuery] = useState('');
   const [tag, setTag] = useState('all');
   const [favorites, setFavorites] = useState<string[]>(() => {

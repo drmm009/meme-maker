@@ -1,12 +1,11 @@
-import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import { useEditorStore } from '../../store/useVideoEditorStore';
-import { fetchOpenSourceMemes } from '../../services/memeService';
-import EmojiBottomSheet from '../editor/EmojiBottomSheet';
-import MemeStickersBottomSheet from '../editor/MemeStickersBottomSheet';
-import TemplatePickerBottomSheet from '../editor/TemplatePickerBottomSheet';
-import AudioModal from './AudioModal';
-import VideoClipsBottomSheet from './VideoClipsBottomSheet';
-import GifBottomSheet from './GifBottomSheet';
+import EmojiSheet from '../editor/panels/EmojiSheet';
+import StickersSheet from '../editor/panels/StickersSheet';
+import { TemplatesBrowser } from '../editor/panels/TemplatesSheet';
+import { MEME_TEMPLATES } from '../../data/templates';
+import ClipsSheet from './ClipsSheet';
+import SoundsSheet from './SoundsSheet';
 
 const addItem = (item) => useEditorStore.getState().addItem(item);
 
@@ -67,20 +66,34 @@ const emojiToDataUrl = (emoji) => {
   return canvas.toDataURL();
 };
 
-// Everything that adds to the timeline: file pickers, sheets and modals. The tool rail
+// The image editor's library sheets add to the image editor's layers; these add to the timeline.
+const LIBRARY_ACTIONS = {
+  handleAddSticker: (e) => addItem({ type: 'sticker', url: emojiToDataUrl(e.emoji), name: `${e.emoji} Emoji` }),
+  handleAddGraphicSticker: (s) => addItem({ type: 'sticker', url: s.url, name: s.name || 'Sticker', isGif: s.isGif || undefined }),
+};
+
+// Every library, as the image editor's full-height browse sheets over the editor.
+const LIBRARIES = {
+  stickers: (close) => <StickersSheet actions={LIBRARY_ACTIONS} onClose={close} />,
+  gifs: (close) => <StickersSheet actions={LIBRARY_ACTIONS} onClose={close} initialKind="gifs" />,
+  emoji: (close) => <EmojiSheet actions={LIBRARY_ACTIONS} onClose={close} />,
+  templates: (close) => <TemplatesBrowser templates={MEME_TEMPLATES} actions={LIBRARY_ACTIONS} onClose={close} onPick={(t) => addItem({ type: 'image', url: t.imageUrl, name: t.name })} />,
+  clips: (close) => (
+    <ClipsSheet
+      onClose={close}
+      onPick={(t) => addItem({ type: 'video', url: t.videoUrl, thumbnailUrl: t.thumbnailUrl, name: t.name, durationMs: t.durationMs, width: t.width, height: t.height })}
+    />
+  ),
+  sounds: (close) => (
+    <SoundsSheet onClose={close} onPick={(s) => addItem({ type: 'audio', url: s.url, name: s.name, durationMs: s.durationMs || 3000, icon: s.icon })} />
+  ),
+};
+
+// Everything that adds to the timeline: file pickers and the library sheets. The tool rail
 // calls ref.open(kind) with one of: text, stickers, emoji, gifs, templates, photo, video, clips, sounds, audio.
 const AddMedia = forwardRef(function AddMedia(_props, ref) {
   const [sheet, setSheet] = useState(null);
-  const [templates, setTemplates] = useState(undefined);
   const inputs = { photo: useRef(null), video: useRef(null), audio: useRef(null) };
-
-  useEffect(() => {
-    let alive = true;
-    fetchOpenSourceMemes().then((data) => {
-      if (alive && Array.isArray(data) && data.length > 0) setTemplates(data);
-    });
-    return () => { alive = false; };
-  }, []);
 
   useImperativeHandle(ref, () => ({
     open(kind) {
@@ -88,7 +101,7 @@ const AddMedia = forwardRef(function AddMedia(_props, ref) {
         addItem({ type: 'text', text: 'NEW TEXT', durationMs: 3000, name: 'Text Block', color: '#ffffff', stroke: '#000000', fontSize: 100 });
       } else if (inputs[kind]) {
         inputs[kind].current?.click();
-      } else {
+      } else if (LIBRARIES[kind]) {
         setSheet(kind);
       }
     }
@@ -106,37 +119,7 @@ const AddMedia = forwardRef(function AddMedia(_props, ref) {
       <input type="file" ref={inputs.photo} hidden accept="image/*" onChange={onFile('image')} />
       <input type="file" ref={inputs.video} hidden accept="video/*" onChange={onFile('video')} />
       <input type="file" ref={inputs.audio} hidden accept="audio/*" onChange={onFile('audio')} />
-
-      <EmojiBottomSheet
-        isOpen={sheet === 'emoji'}
-        onClose={close}
-        onSelectEmoji={(s) => { addItem({ type: 'sticker', url: emojiToDataUrl(s.emoji), name: `${s.emoji} Emoji` }); close(); }}
-      />
-      <MemeStickersBottomSheet
-        isOpen={sheet === 'stickers'}
-        onClose={close}
-        onSelectSticker={(s) => { addItem({ type: 'sticker', url: s.url, name: s.name || 'Sticker' }); close(); }}
-      />
-      <TemplatePickerBottomSheet
-        isOpen={sheet === 'templates'}
-        onClose={close}
-        templates={templates}
-        onSelectTemplate={(t) => { addItem({ type: 'image', url: t.imageUrl, name: t.name }); close(); }}
-      />
-      <GifBottomSheet
-        isOpen={sheet === 'gifs'}
-        onClose={close}
-        onSelect={(g) => { addItem({ type: 'sticker', url: g.url, name: g.title, isGif: true }); close(); }}
-      />
-      <AudioModal isOpen={sheet === 'sounds'} onClose={close} />
-      <VideoClipsBottomSheet
-        isOpen={sheet === 'clips'}
-        onClose={close}
-        onSelect={(t) => {
-          addItem({ type: 'video', url: t.videoUrl, thumbnailUrl: t.thumbnailUrl, name: t.name, durationMs: t.durationMs, width: t.width, height: t.height });
-          close();
-        }}
-      />
+      {sheet && <div className="vt-library ie-panels--full">{LIBRARIES[sheet](close)}</div>}
     </>
   );
 });

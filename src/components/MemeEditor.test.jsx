@@ -374,7 +374,7 @@ describe('MemeEditor', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Canvas size: Reels & TikTok' }));
     const menu = screen.getByRole('menu', { name: 'Canvas size' });
     const items = within(menu).getAllByRole('menuitemradio');
-    expect(items.map((i) => i.querySelector('.ie-size-menu-name').textContent)).toEqual(['Original', 'Facebook', 'Instagram', 'Reels & TikTok', 'YouTube']);
+    expect(items.map((i) => i.querySelector('.ui-size-menu-name').textContent)).toEqual(['Original', 'Facebook', 'Instagram', 'Reels & TikTok', 'YouTube']);
     expect(items[3].getAttribute('aria-checked')).toBe('true');
 
     fireEvent.click(items[1]);

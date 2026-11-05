@@ -31,7 +31,7 @@ vi.mock('../../services/memeService', () => ({ fetchOpenSourceMemes: () => Promi
 
 const store = () => useEditorStore.getState();
 const clips = (container) => [...container.querySelectorAll('.vt-clip')];
-// Add tools live in dock sections, reached the way a user would.
+// Add tools live in the strips of the dock's sections, reached the way a user would.
 const addTextFromRail = () => { fireEvent.click(screen.getByText('Text')); fireEvent.click(screen.getByText('Add text')); };
 
 beforeEach(() => {
@@ -46,20 +46,31 @@ describe('VideoEditor', () => {
     expect(container.querySelector('.vt-editor.is-edit')).toBeTruthy();
     expect(screen.getByText('Start with a video or photo')).toBeTruthy();
     expect(screen.getByText('Add a video')).toBeTruthy();
-    for (const label of ['Media', 'Text', 'Stickers', 'Audio', 'Canvas']) expect(screen.getByText(label)).toBeTruthy();
+    const dock = screen.getByRole('navigation', { name: 'Sections' });
+    expect([...dock.querySelectorAll('button')].map((b) => b.textContent)).toEqual(['Media', 'Text', 'Stickers', 'Audio', 'Canvas']);
+    // Media is open from the start: its tools in the strip above the dock.
+    const strip = screen.getByRole('toolbar', { name: 'Media tools' });
+    expect([...strip.querySelectorAll('button')].map((b) => b.textContent)).toEqual(['Photo', 'Video', 'Clips', 'Templates']);
+  });
+
+  it('shows the tapped section’s tools in the strip', () => {
+    render(<VideoEditor onBack={() => {}} />);
+    fireEvent.click(screen.getByText('Audio'));
+    expect(screen.getByRole('toolbar', { name: 'Audio tools' })).toBeTruthy();
+    expect(screen.getByText('Voice')).toBeTruthy();
     expect(screen.queryByText('Photo')).toBeNull();
   });
 
-  it('swaps the dock to a section’s tools and goes back to the sections', () => {
+  it('opens a setting as a sheet in the dock’s place, the strip still above it', () => {
     render(<VideoEditor onBack={() => {}} />);
-    fireEvent.click(screen.getByText('Media'));
-    expect(screen.getByRole('navigation', { name: 'Media tools' })).toBeTruthy();
-    for (const label of ['Photo', 'Video', 'Clips', 'Templates']) expect(screen.getByText(label)).toBeTruthy();
-    expect(screen.queryByText('Audio')).toBeNull();
-    fireEvent.click(screen.getByLabelText('Back to sections'));
-    expect(screen.getByRole('navigation', { name: 'Sections' })).toBeTruthy();
     fireEvent.click(screen.getByText('Audio'));
-    expect(screen.getByText('Voice')).toBeTruthy();
+    fireEvent.click(screen.getByText('SFX'));
+    expect(screen.getByRole('dialog', { name: 'Sound effects' })).toBeTruthy();
+    expect(screen.getByRole('toolbar', { name: 'Audio tools' })).toBeTruthy();
+    expect(screen.queryByRole('navigation', { name: 'Sections' })).toBeNull();
+    fireEvent.click(screen.getByText('SFX'));
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(screen.getByRole('navigation', { name: 'Sections' })).toBeTruthy();
   });
 
   it('adds a text clip from the rail and shows it on the timeline', () => {
@@ -72,17 +83,40 @@ describe('VideoEditor', () => {
     expect(screen.queryByText('Start with a video or photo')).toBeNull();
   });
 
-  it('swaps the rail to clip tools on select and back on Done', () => {
+  it('opens a library as a full-height sheet and adds the pick to the timeline', () => {
+    render(<VideoEditor onBack={() => {}} />);
+    fireEvent.click(screen.getByText('Audio'));
+    fireEvent.click(screen.getByText('Sounds'));
+    expect(screen.getByRole('dialog', { name: 'Sounds' })).toBeTruthy();
+    fireEvent.click(screen.getByLabelText('Add Vine Boom'));
+    expect(store().items[0]).toMatchObject({ type: 'audio', name: 'Vine Boom', url: '/sounds/vine_boom.mp3' });
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  it('adds a template from the Templates library', () => {
+    render(<VideoEditor onBack={() => {}} />);
+    fireEvent.click(screen.getByText('Templates'));
+    expect(screen.getByRole('dialog', { name: 'Templates' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('dialog').querySelector('.ie-shelf-card .ie-card'));
+    expect(store().items[0]).toMatchObject({ type: 'image' });
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  it('swaps the strip for the clip’s tool pill on select, and a section brings it back', () => {
     const { container } = render(<VideoEditor onBack={() => {}} />);
     addTextFromRail();
     fireEvent.click(clips(container)[0]);
     expect(store().activeItemId).toBe(store().items[0].id);
     expect(clips(container)[0].className).toContain('is-selected');
-    expect(screen.getByText('Background')).toBeTruthy();
+    const pill = screen.getByRole('toolbar', { name: 'Clip tools' });
+    expect([...pill.querySelectorAll('button')].map((b) => b.textContent)).toEqual(
+      ['Edit', 'AaFont', 'Colour', 'Background', 'Size', 'Animate', 'Align', 'Split', 'Bring forward', 'Send back', 'Duplicate', 'Delete'],
+    );
     expect(screen.queryByText('Add text')).toBeNull();
-    fireEvent.click(screen.getByText('Done'));
+    fireEvent.click(screen.getByText('Text'));
     expect(store().activeItemId).toBe(null);
     expect(screen.queryByRole('toolbar', { name: 'Clip tools' })).toBeNull();
+    expect(screen.getByRole('toolbar', { name: 'Text tools' })).toBeTruthy();
   });
 
   it('duplicates and deletes the selected clip', () => {
@@ -107,11 +141,12 @@ describe('VideoEditor', () => {
     expect(screen.getByLabelText('Unmute clip')).toBeTruthy();
   });
 
-  it('cycles video speed and keeps the clip covering the same footage', () => {
+  it('sets video speed and keeps the clip covering the same footage', () => {
     act(() => store().addItem({ type: 'video', url: 'a.mp4', durationMs: 2000 }));
     const { container } = render(<VideoEditor onBack={() => {}} />);
     fireEvent.click(clips(container)[0]);
     fireEvent.click(screen.getByText('1×'));
+    fireEvent.click(screen.getByRole('radio', { name: '1.5×' }));
     expect(store().items[0]).toMatchObject({ playbackRate: 1.5 });
     expect(store().items[0].endMs).toBeCloseTo(2000 / 1.5);
   });
@@ -164,6 +199,7 @@ describe('VideoEditor', () => {
     fireEvent.click(screen.getByText('Size'));
     fireEvent.change(screen.getByRole('slider'), { target: { value: '150' } });
     fireEvent.click(screen.getByText('Align'));
+    fireEvent.click(screen.getByRole('radio', { name: 'Right' }));
     expect(store().items[0]).toMatchObject({ text: 'WHEN IT WORKS', fontSize: 150, align: 'right' });
   });
 
@@ -199,8 +235,8 @@ describe('VideoEditor', () => {
 
   it('sets the canvas background from the rail', () => {
     render(<VideoEditor onBack={() => {}} />);
-    // Canvas has one tool, so its tab opens the background panel directly.
     fireEvent.click(screen.getByText('Canvas'));
+    fireEvent.click(screen.getByText('Background'));
     fireEvent.click(screen.getByLabelText('#000000'));
     expect(store().backgroundColor).toBe('#000000');
     expect(screen.getByLabelText('#000000').getAttribute('aria-checked')).toBe('true');
@@ -280,7 +316,7 @@ describe('VideoEditor', () => {
     const { container } = render(<VideoEditor onBack={() => {}} />);
     expect(drawOrder(store().items).map((i) => i.type)).toEqual(['sticker', 'text']);
     fireEvent.click(clips(container).find((c) => c.className.includes('vt-clip--sticker')));
-    fireEvent.click(screen.getByText('Forward'));
+    fireEvent.click(screen.getByText('Bring forward'));
     expect(drawOrder(store().items).map((i) => i.type)).toEqual(['text', 'sticker']);
   });
 

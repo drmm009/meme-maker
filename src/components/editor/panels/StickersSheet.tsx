@@ -69,8 +69,9 @@ function StickerCard({ sticker, onPick }: { sticker: GraphicSticker; onPick: (s:
 // Media > Stickers: Stickers / Animated / GIFs in a track at the top. The built-in stickers are laid
 // out like the Explore page, a shelf per category (thug life shades, rage faces, bubbles...) with
 // See all, and a category or a search shows a grid; Animated and GIFs come from Giphy (GiphyResults).
-export default function StickersSheet({ actions, onClose }: { actions: EditorActions; onClose: () => void }) {
-  const [kind, setKind] = useState<Kind>('stickers');
+// The video editor opens it on GIFs too (`initialKind`).
+export default function StickersSheet({ actions, onClose, initialKind = 'stickers' }: { actions: EditorActions; onClose: () => void; initialKind?: Kind }) {
+  const [kind, setKind] = useState<Kind>(initialKind);
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('all');
   const keyed = hasGiphyKey();
@@ -84,7 +85,7 @@ export default function StickersSheet({ actions, onClose }: { actions: EditorAct
     onClose();
   };
   const pickGif = (r: GifResult) => {
-    actions.handleAddGraphicSticker({ name: r.title, url: r.url });
+    actions.handleAddGraphicSticker({ name: r.title, url: r.url, isGif: true });
     onClose();
   };
   const choose = (id: string) => { setCategory(id); setQuery(''); };

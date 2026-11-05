@@ -10,19 +10,22 @@ import ExportReadyCard from './ExportReadyCard';
 import { useEditorStore } from '../../store/useVideoEditorStore';
 import { exportVideoFFmpeg, cancelExport } from '../../utils/ffmpegExport';
 import { ExportCancelledError, formatEta } from '../../utils/exportProgress';
-import AspectRatioDropdown from '../AspectRatioDropdown';
+import SizeMenu from '../ui/SizeMenu';
 import { useAudioPlaybackSync } from './useAudioPlaybackSync';
 import { usePlaybackLoop, togglePlayback } from './usePlaybackLoop';
 import { useVideoDraft } from './useVideoDraft';
 import { formatClock, getContentEnd } from './timeline/timelineMath';
+import '../ui/ui.css';
 import './video-editor.css';
 
-const VIDEO_ASPECT_RATIOS = [
-  { value: 16 / 9, label: '16:9' },
-  { value: 9 / 16, label: '9:16' },
-  { value: 1 / 1, label: '1:1' },
-  { value: 4 / 3, label: '4:3' },
+// The canvas shapes, named like the image editor's (where each fits), with an outline w x h.
+const VIDEO_SIZES = [
+  { value: '1:1', ratio: 1, label: '1:1', name: 'Facebook', sub: '1:1', title: 'Square', w: 22, h: 22 },
+  { value: '4:3', ratio: 4 / 3, label: '4:3', name: 'Classic', sub: '4:3', title: 'Classic', w: 24, h: 18 },
+  { value: '9:16', ratio: 9 / 16, label: '9:16', name: 'Reels & TikTok', sub: '9:16', title: 'Story', w: 16, h: 28 },
+  { value: '16:9', ratio: 16 / 9, label: '16:9', name: 'YouTube', sub: '16:9', title: 'Video', w: 30, h: 17 },
 ];
+const sizeOf = (ratio) => VIDEO_SIZES.find((s) => Math.abs(s.ratio - ratio) < 0.01)?.value ?? null;
 
 // Kept in their own components so the per-frame playhead updates don't re-render the editor.
 function AudioSync() {
@@ -179,7 +182,7 @@ export default function VideoEditor({ template, onBack }) {
   };
 
   return (
-    <div className={`vt-editor is-${mode}`}>
+    <div className={`vt-editor ui-theme is-${mode}`}>
       <AudioSync />
 
       <section className="vt-stage" onPointerDown={deselectOnBackground}>
@@ -208,7 +211,7 @@ export default function VideoEditor({ template, onBack }) {
         </button>
 
         <div className="vt-ratio">
-          <AspectRatioDropdown value={canvasAspectRatio} options={VIDEO_ASPECT_RATIOS} onChange={changeAspectRatio} />
+          <SizeMenu sizes={VIDEO_SIZES} value={sizeOf(canvasAspectRatio)} align="center" onPick={(v) => changeAspectRatio(VIDEO_SIZES.find((s) => s.value === v).ratio)} />
         </div>
 
         <div className="vt-export" ref={menuRef}>
