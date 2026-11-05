@@ -983,6 +983,73 @@
 .vt-rec-btn.is-recording span { width: 22px; height: 22px; border-radius: 6px; animation: vt-rec-pulse 1.2s ease-in-out infinite; }
 .vt-rec-btn:disabled { opacity: 0.5; }
 @keyframes vt-rec-pulse { 50% { opacity: 0.55; } }
+/* ── Camera (Media > Video > Camera): full screen, a live preview with controls over it ── */
+.vt-camera {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  background: #000;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.vt-camera-view {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.vt-camera-view.is-mirrored { transform: scaleX(-1); }
+.vt-camera-top,
+.vt-camera-bottom {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.vt-camera-top {
+  justify-content: space-between;
+  padding: calc(12px + var(--vt-safe-top)) 16px 12px;
+  background: linear-gradient(rgba(0, 0, 0, 0.45), transparent);
+}
+.vt-camera-bottom {
+  flex-direction: column;
+  gap: 10px;
+  padding: 24px 16px calc(28px + env(safe-area-inset-bottom, 0px));
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.5));
+}
+.vt-camera-bottom .vt-rec-btn { width: 72px; height: 72px; }
+.vt-camera-bottom .vt-rec-btn span { width: 54px; height: 54px; }
+.vt-camera-bottom .vt-rec-btn.is-recording span { width: 28px; height: 28px; }
+.vt-camera-icon {
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.45);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+.vt-camera-icon:disabled { opacity: 0.4; cursor: default; }
+.vt-camera-time {
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: #ff3b3b;
+  font-size: 15px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.vt-camera-hint { font-size: 13px; color: rgba(255, 255, 255, 0.8); }
+.vt-camera-error {
+  position: relative;
+  margin: 0 24px;
+  text-align: center;
+  font-size: 15px;
+  line-height: 1.45;
+}
 .vt-voice-text { display: flex; flex-direction: column; gap: 3px; font-size: 13px; }
 .vt-voice-text strong { font-size: 15px; font-variant-numeric: tabular-nums; }
 .vt-voice-text span { color: var(--vt-muted); line-height: 1.4; }

@@ -6,6 +6,7 @@ import { TemplatesBrowser } from '../editor/panels/TemplatesSheet';
 import { MEME_TEMPLATES } from '../../data/templates';
 import ClipsSheet from './ClipsSheet';
 import SoundsSheet from './SoundsSheet';
+import CameraSheet from './CameraSheet';
 
 const addItem = (item) => useEditorStore.getState().addItem(item);
 
@@ -54,6 +55,18 @@ const addUploadedFile = (file, type) => {
   };
 };
 
+// A camera recording: its length comes from the recorder (a fresh WebM often reports no duration).
+const addRecording = ({ blob, type, durationMs }) => {
+  const url = URL.createObjectURL(blob);
+  const count = useEditorStore.getState().items.filter((i) => i.type === 'video' && /^Recording \d/.test(i.name || '')).length;
+  const media = document.createElement('video');
+  media.src = url;
+  media.onloadedmetadata = async () => {
+    const thumbnailUrl = await generateThumbnail(url);
+    addItem({ type: 'video', url, durationMs, width: media.videoWidth, height: media.videoHeight, name: `Recording ${count + 1}`, thumbnailUrl, mimeType: type });
+  };
+};
+
 const emojiToDataUrl = (emoji) => {
   const canvas = document.createElement('canvas');
   canvas.width = 128;
@@ -84,13 +97,14 @@ const LIBRARIES = {
       onPick={(t) => addItem({ type: 'video', url: t.videoUrl, thumbnailUrl: t.thumbnailUrl, name: t.name, durationMs: t.durationMs, width: t.width, height: t.height })}
     />
   ),
+  camera: (close) => <CameraSheet onClose={close} onDone={addRecording} />,
   sounds: (close) => (
     <SoundsSheet onClose={close} onPick={(s) => addItem({ type: 'audio', url: s.url, name: s.name, durationMs: s.durationMs || 3000, icon: s.icon })} />
   ),
 };
 
 // Everything that adds to the timeline: file pickers and the library sheets. The tool rail
-// calls ref.open(kind) with one of: text, stickers, emoji, gifs, templates, photo, video, clips, sounds, audio.
+// calls ref.open(kind) with one of: text, stickers, emoji, gifs, templates, photo, video, clips, camera, sounds, audio.
 const AddMedia = forwardRef(function AddMedia(_props, ref) {
   const [sheet, setSheet] = useState(null);
   const inputs = { photo: useRef(null), video: useRef(null), audio: useRef(null) };
@@ -119,7 +133,7 @@ const AddMedia = forwardRef(function AddMedia(_props, ref) {
       <input type="file" ref={inputs.photo} hidden accept="image/*" onChange={onFile('image')} />
       <input type="file" ref={inputs.video} hidden accept="video/*" onChange={onFile('video')} />
       <input type="file" ref={inputs.audio} hidden accept="audio/*" onChange={onFile('audio')} />
-      {sheet && <div className="vt-library ie-panels--full">{LIBRARIES[sheet](close)}</div>}
+      {sheet === 'camera' ? LIBRARIES.camera(close) : sheet && <div className="vt-library ie-panels--full">{LIBRARIES[sheet](close)}</div>}
     </>
   );
 });
