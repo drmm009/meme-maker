@@ -2,7 +2,7 @@ import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
   Type, Sticker, Smile, LayoutGrid, Image as ImageIcon, Film, Clapperboard, Music,
   Gauge, Volume2, VolumeX, Palette, Square, RotateCw, Minimize, Crop, Maximize, Copy, Trash2,
-  Scissors, PencilLine, ALargeSmall, TextAlignStart, TextAlignCenter, TextAlignEnd, SlidersHorizontal, WandSparkles, Pipette, Sparkles, ImagePlay, PaintBucket, Zap, Snowflake, Rewind, Repeat, ZoomIn, BringToFront, SendToBack, Mic, ArrowRightLeft, Frame, Plus, Upload, Library, Laugh, SquarePlay, Captions, Expand, Blend, Scan, Eraser, TypeOutline, Ban, FlipHorizontal2, FlipVertical2, Move, ListChecks, X, Camera, AtSign, Flag
+  Scissors, PencilLine, ALargeSmall, TextAlignStart, TextAlignCenter, TextAlignEnd, SlidersHorizontal, WandSparkles, Pipette, Sparkles, ImagePlay, PaintBucket, Zap, Snowflake, Rewind, Repeat, ZoomIn, BringToFront, SendToBack, Mic, ArrowRightLeft, Frame, Plus, Upload, Library, Laugh, SquarePlay, Captions, Expand, Blend, Scan, Eraser, TypeOutline, Ban, FlipHorizontal2, FlipVertical2, Move, ListChecks, X, AtSign, Flag
 } from 'lucide-react';
 import { FloatingToolbar, Sheet, ToolDock, ToolStrip } from '../ui';
 import { FiltersIcon } from '../editor/panels/editorIcons';
@@ -52,7 +52,6 @@ const SECTIONS = [
     { kind: 'videos', label: 'Video', Icon: SquarePlay, title: 'Add video', sources: [
       { kind: 'video', label: 'Upload', sub: 'From your phone', Icon: Upload },
       { kind: 'clips', label: 'Clips', sub: 'Meme video clips', Icon: Clapperboard },
-      { kind: 'camera', label: 'Camera', sub: 'Record yourself', Icon: Camera },
     ] },
   ] },
   { id: 'text', label: 'Text', Icon: Type, tools: [

@@ -112,37 +112,10 @@ describe('VideoEditor', () => {
     closeSheet();
     fireEvent.click(screen.getByTitle('Video'));
     const video = screen.getByRole('dialog', { name: 'Add video' });
-    expect([...video.querySelectorAll('.vt-source-label')].map((b) => b.textContent)).toEqual(['Upload', 'Clips', 'Camera']);
+    expect([...video.querySelectorAll('.vt-source-label')].map((b) => b.textContent)).toEqual(['Upload', 'Clips']);
     fireEvent.click(video.querySelectorAll('.vt-source')[1]);
     expect(screen.queryByRole('dialog', { name: 'Add video' })).toBeNull();
     expect(screen.getByRole('dialog', { name: 'Clips' })).toBeTruthy();
-  });
-
-  it('records from the camera full screen and closes it again', async () => {
-    const stop = vi.fn();
-    const stream = { getTracks: () => [{ stop }] };
-    vi.stubGlobal('MediaRecorder', class { static isTypeSupported() { return false; } });
-    const getUserMedia = vi.fn(() => Promise.resolve(stream));
-    Object.defineProperty(navigator, 'mediaDevices', { value: { getUserMedia }, configurable: true });
-    try {
-      render(<VideoEditor onBack={() => {}} />);
-      fireEvent.click(screen.getByText('Media'));
-      fireEvent.click(screen.getByTitle('Video'));
-      fireEvent.click(screen.getByText('Camera'));
-      const camera = screen.getByRole('dialog', { name: 'Record with camera' });
-      expect(getUserMedia).toHaveBeenCalledWith(expect.objectContaining({ video: expect.objectContaining({ facingMode: 'user' }) }));
-      await act(async () => {});
-      expect(screen.getByLabelText('Start recording').disabled).toBe(false);
-      fireEvent.click(screen.getByLabelText('Switch camera'));
-      await act(async () => {});
-      expect(getUserMedia).toHaveBeenLastCalledWith(expect.objectContaining({ video: expect.objectContaining({ facingMode: 'environment' }) }));
-      expect(stop).toHaveBeenCalled();
-      fireEvent.click(screen.getByLabelText('Close camera'));
-      expect(camera.isConnected).toBe(false);
-    } finally {
-      vi.unstubAllGlobals();
-      delete navigator.mediaDevices;
-    }
   });
 
   it('opens Stickers and GIFs as separate sheets', () => {
