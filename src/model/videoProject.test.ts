@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { VIDEO_PROJECT_VERSION, isClip, migrateVideoProject } from './videoProject';
+import { VIDEO_PROJECT_VERSION, clipOpacity, isClip, migrateVideoProject } from './videoProject';
 
 const video = { id: 'v', type: 'video', url: 'blob:x', startMs: 0, endMs: 3000 };
 const text = { id: 't', type: 'text', text: 'HI', startMs: 0, endMs: 3000 };
@@ -35,5 +35,16 @@ describe('migrateVideoProject', () => {
     expect(migrateVideoProject({ items: [video] }, VIDEO_PROJECT_VERSION + 1)).toBeNull();
     expect(migrateVideoProject({ clips: [] })).toBeNull();
     expect(migrateVideoProject('project')).toBeNull();
+  });
+});
+
+describe('clipOpacity', () => {
+  it('is solid when unset or not a number, and kept within 0..1', () => {
+    expect(clipOpacity({})).toBe(1);
+    expect(clipOpacity({ opacity: Number.NaN })).toBe(1);
+    expect(clipOpacity({ opacity: 0.3 })).toBe(0.3);
+    expect(clipOpacity({ opacity: 0 })).toBe(0);
+    expect(clipOpacity({ opacity: 2 })).toBe(1);
+    expect(clipOpacity({ opacity: -1 })).toBe(0);
   });
 });

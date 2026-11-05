@@ -9,6 +9,7 @@
 // With `encodedVideo` (the frame-by-frame WebCodecs export), input 0 is that already-encoded
 // picture instead: it's copied as is, and only the soundtrack is built.
 import type { AudioClip, ImageClip, Media, Placed, StickerClip, TextClip, VideoClip } from '../model/videoProject';
+import { clipOpacity } from '../model/videoProject';
 import { fadeFilter } from './audioFades';
 import { chromaKeyFilter } from './chromaKey';
 import { gifPaletteFilter } from './gif';
@@ -181,6 +182,9 @@ export function createExportGraph({ width, height, durationMs, backgroundColor, 
       // Colour filters on videos and photos (not stickers), after keying like the preview.
       const colour = isVideo || (item.type === 'image' && !isGif) ? filterChain(resolveFilter((item as ImageClip).filter)) : '';
       const punch = isVideo ? punchFilter(clipPunchTimes(item as VideoClip), w, h) : '';
+      // The clip's own opacity, scaling its alpha (transition fades multiply with it).
+      const opacity = clipOpacity(item);
+      const see = opacity < 1 ? `,format=rgba,colorchannelmixer=aa=${Number(opacity.toFixed(3))}` : '';
 
       // Rotation, as in the preview: turned about the clip's corner (x, y). FFmpeg turns about the
       // centre into an upright box that holds the result, so that box is placed around the centre.
@@ -197,7 +201,7 @@ export function createExportGraph({ width, height, durationMs, backgroundColor, 
         rotate = `,format=rgba,rotate=${((item.rotation * Math.PI) / 180).toFixed(6)}:ow=${bw}:oh=${bh}:c=none`;
       }
       const position = transition.dx ? `x='${ox}+(${transition.dx})':y=${oy}` : `${ox}:${oy}`;
-      filters.push(`[${index}:v]setpts=(PTS-STARTPTS)/${rate}${ptsOffset},scale=${w}:${h}${punch}${key}${colour}${transition.chain}${rotate}[vis${index}]`);
+      filters.push(`[${index}:v]setpts=(PTS-STARTPTS)/${rate}${ptsOffset},scale=${w}:${h}${punch}${key}${colour}${transition.chain}${see}${rotate}[vis${index}]`);
       overlay(`vis${index}`, position, `between(t,${start},${end})`);
       index++;
     },

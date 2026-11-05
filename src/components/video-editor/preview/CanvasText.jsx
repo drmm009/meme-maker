@@ -1,6 +1,7 @@
 import React, { useEffect, useLayoutEffect, useRef } from 'react';
 import { Rect, Text as KonvaText, Transformer, Group } from 'react-konva';
 import { hasTextBox, textAttrs, textBoxAttrs } from '../../../utils/textLayer';
+import { clipOpacity } from '../../../model/videoProject';
 import { textResize } from './previewMath';
 import { useTextPlayback } from './useTextPlayback';
 
@@ -81,6 +82,8 @@ const CanvasText = ({ item, isSelected, onSelect, onChange, onEditStart }) => {
 
   return (
     <React.Fragment>
+      {/* The clip's opacity sits outside the group its animation fades, so the two multiply. */}
+      <Group opacity={clipOpacity(item)}>
       <Group ref={groupRef}>
         {boxed && <Rect ref={bgRectRef} {...box} listening={false} />}
         <KonvaText
@@ -113,6 +116,7 @@ const CanvasText = ({ item, isSelected, onSelect, onChange, onEditStart }) => {
             t.scaleY(1);
           }}
         />
+      </Group>
       </Group>
       {isSelected && (
         <Transformer

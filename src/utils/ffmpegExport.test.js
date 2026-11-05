@@ -52,7 +52,9 @@ vi.mock('konva', () => {
   }
   class Stage extends Node {
     toDataURL() {
-      const group = this.children[0].children[0];
+      // Layer > the clip's opacity holder > the animated group.
+      const holder = this.children[0].children[0];
+      const group = holder.children[0];
       const text = group.children.find((c) => c instanceof Text);
       ff.texts.push({ text: text.attrs.text, fontSize: text.attrs.fontSize, opacity: group.attrs.opacity, scale: group.attrs.scaleX, clip: group.attrs.clip ?? null, hasBox: group.children.length > 1 });
       return 'data:image/png;base64,AA==';

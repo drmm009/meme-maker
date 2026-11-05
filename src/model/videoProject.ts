@@ -51,11 +51,17 @@ export interface Placed {
   scaleX?: number;
   scaleY?: number;
   rotation?: number;
+  // 0 (see-through) to 1 (solid); missing means solid.
+  opacity?: number;
   // Set once the clip has been placed at its natural size.
   isPositioned?: boolean;
   // The panel of a multi-panel layout the clip belongs to.
   slotIndex?: number;
 }
+
+// A clip's opacity, 0..1 (1 when unset or not a number).
+export const clipOpacity = (item: { opacity?: number }): number =>
+  typeof item.opacity === 'number' && Number.isFinite(item.opacity) ? Math.min(1, Math.max(0, item.opacity)) : 1;
 
 // Anything played from a file.
 export interface Media {

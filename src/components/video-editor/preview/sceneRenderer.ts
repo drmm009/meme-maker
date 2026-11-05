@@ -5,6 +5,7 @@
 // `canvas`.
 import Konva from 'konva';
 import type { Clip, ImageClip, LayoutSlot, StickerClip, TextClip, VideoClip } from '../../../model/videoProject';
+import { clipOpacity } from '../../../model/videoProject';
 import { drawOrder } from '../../../utils/layerOrder';
 import { gridLines } from '../../../utils/gridLines';
 import { hasTextBox, textAttrs, textBoxAttrs } from '../../../utils/textLayer';
@@ -136,7 +137,10 @@ export async function createSceneRenderer({ items, width, height, aspect, backgr
           group.add(new Konva.Rect(textBoxAttrs(item, { x: text.x(), y: text.y(), width: text.width(), height: text.height() })));
         }
         group.add(text);
-        layer.add(group);
+        // Its opacity outside the group the animation fades, as in the preview.
+        const holder = new Konva.Group({ opacity: clipOpacity(item) });
+        holder.add(group);
+        layer.add(holder);
         texts.push({ item, group, text });
         continue;
       }

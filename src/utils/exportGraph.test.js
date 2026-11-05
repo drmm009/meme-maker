@@ -83,6 +83,15 @@ describe('createExportGraph', () => {
     expect(place).toMatch(/^\[0:v\]\[vis2\]overlay=50:50:/);
   });
 
+  it('fades see-through clips by their alpha, and leaves solid ones alone', () => {
+    const g = graphFor();
+    g.addVisual({ type: 'sticker', url: 's', width: 100, height: 50, opacity: 0.4 }, { fileName: 'input_2.png', kind: 'still', ratio: 1, items: [] });
+    g.addVisual({ type: 'sticker', url: 't', width: 100, height: 50, opacity: 1 }, { fileName: 'input_3.png', kind: 'still', ratio: 1, items: [] });
+    const [first, , second] = filtersOf(g.finish().command);
+    expect(first).toBe('[2:v]setpts=(PTS-STARTPTS)/1,scale=100:50,format=rgba,colorchannelmixer=aa=0.4[vis2]');
+    expect(second).not.toContain('colorchannelmixer');
+  });
+
   it('leaves unturned clips (0 or a full turn) as they are', () => {
     for (const rotation of [0, 360]) {
       const g = graphFor();

@@ -63,6 +63,17 @@ describe('applyMotion', () => {
     expect(node.a.crop.width).toBeLessThan(640);
   });
 
+  it('keeps a see-through clip see-through, and fades it from there', () => {
+    const node = fakeNode();
+    const half = { ...fade, opacity: 0.5 };
+    applyMotion(node, half, { items: [a, half], playhead: 3000 });
+    expect(node.a.opacity).toBe(0.5);
+    const plain = fakeNode();
+    applyMotion(plain, fade, { items: [a, fade], playhead: 2250 });
+    applyMotion(node, half, { items: [a, half], playhead: 2250 });
+    expect(node.a.opacity).toBeCloseTo(plain.a.opacity * 0.5);
+  });
+
   it('changes nothing for a plain clip mid-way', () => {
     expect(applyMotion(fakeNode(), a, { items: [a], playhead: 1000 })).toBe(false);
   });

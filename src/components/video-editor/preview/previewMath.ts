@@ -2,6 +2,7 @@
 // in the preview's 800-wide stage units. How text is drawn lives in utils/textLayer (shared with
 // the export).
 import type { Clip, LayoutSlot, Placed, TextClip } from '../../../model/videoProject';
+import { clipOpacity } from '../../../model/videoProject';
 import { cornerForCenter, rotatedCenter } from '../../../utils/rotation';
 
 export const STAGE_WIDTH = 800;
@@ -71,6 +72,7 @@ export const mediaAttrs = (item: Placed & { crop?: { x: number; y: number; width
   scaleX: item.scaleX || 1,
   scaleY: item.scaleY || 1,
   rotation: item.rotation || 0,
+  opacity: clipOpacity(item),
 });
 
 // Turning a clip to `rotation` degrees about its centre. Konva turns clips about their corner

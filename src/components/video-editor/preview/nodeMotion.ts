@@ -2,13 +2,14 @@
 // if it changed the node (so the caller redraws the layer).
 import type Konva from 'konva';
 import type { VideoClip } from '../../../model/videoProject';
+import { clipOpacity } from '../../../model/videoProject';
 import { clipPunchTimes, punchZoom } from '../../../utils/zoomPunch';
 import { transitionFrame } from '../../../utils/clipTransitions';
 import type { SequenceCandidate } from '../../../utils/clipTransitions';
 import { punchCrop } from './previewMath';
 
 // What applyMotion reads: a clip that may punch and transition, and the store's playhead.
-type MovingClip = SequenceCandidate & Pick<VideoClip, 'x' | 'punches' | 'playbackRate' | 'trimStartMs'>;
+type MovingClip = SequenceCandidate & Pick<VideoClip, 'x' | 'opacity' | 'punches' | 'playbackRate' | 'trimStartMs'>;
 type FrameSource = { videoWidth?: number; videoHeight?: number; width?: number; height?: number };
 
 // Zoom-punch in the preview: crop into the middle of the source so the clip zooms inside its own
@@ -27,11 +28,12 @@ export const applyPunch = (node: Konva.Image, zoom: number): boolean => {
 };
 
 // Zoom-punches and transitions at the store's playhead: the zooms multiply, the transition also
-// fades and slides the clip sideways.
+// fades (on top of the clip's own opacity) and slides the clip sideways.
 export const applyMotion = (node: Konva.Image, item: MovingClip, state: { items: SequenceCandidate[]; playhead: number }): boolean => {
   const tr = transitionFrame(state.items, item, state.playhead);
   let changed = applyPunch(node, punchZoom(clipPunchTimes(item), state.playhead) * tr.zoom);
-  if (Math.abs(node.opacity() - tr.opacity) > 0.001) { node.opacity(tr.opacity); changed = true; }
+  const opacity = tr.opacity * clipOpacity(item);
+  if (Math.abs(node.opacity() - opacity) > 0.001) { node.opacity(opacity); changed = true; }
   const x = (item.x || 0) + tr.dx;
   if (Math.abs(node.x() - x) > 0.01 && (tr.dx !== 0 || node.getAttr('slid'))) {
     node.x(x);

@@ -2,11 +2,12 @@ import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
   Type, Sticker, Smile, LayoutGrid, Image as ImageIcon, Film, Clapperboard, Music,
   Gauge, Volume2, VolumeX, Palette, Square, RotateCw, Minimize, Crop, Maximize, Copy, Trash2,
-  Scissors, PencilLine, ALargeSmall, TextAlignStart, TextAlignCenter, TextAlignEnd, SlidersHorizontal, WandSparkles, Pipette, Sparkles, ImagePlay, PaintBucket, Zap, Snowflake, Rewind, Repeat, ZoomIn, BringToFront, SendToBack, Mic, ArrowRightLeft, Frame, Plus, Upload, Library, Laugh, SquarePlay, Captions, Expand
+  Scissors, PencilLine, ALargeSmall, TextAlignStart, TextAlignCenter, TextAlignEnd, SlidersHorizontal, WandSparkles, Pipette, Sparkles, ImagePlay, PaintBucket, Zap, Snowflake, Rewind, Repeat, ZoomIn, BringToFront, SendToBack, Mic, ArrowRightLeft, Frame, Plus, Upload, Library, Laugh, SquarePlay, Captions, Expand, Blend
 } from 'lucide-react';
 import { FloatingToolbar, Sheet, ToolDock, ToolStrip } from '../ui';
 import { FiltersIcon } from '../editor/panels/editorIcons';
 import { useEditorStore, clipEffectBase, sourceTimeMs } from '../../store/useVideoEditorStore';
+import { clipOpacity } from '../../model/videoProject';
 import { captureFrame, renderClipEffect } from '../../utils/clipEffects';
 import { clipPunchTimes } from '../../utils/zoomPunch';
 import { FILTER_PRESETS } from '../../utils/clipFilters';
@@ -233,6 +234,17 @@ function VolumePanel({ item }) {
       </label>
       <div className="vt-chip-row">{fade('fadeInMs')}{fade('fadeOutMs')}</div>
     </>
+  );
+}
+
+function OpacityPanel({ item }) {
+  const opacity = Math.round(clipOpacity(item) * 100);
+  return (
+    <label className="vt-slider-row">
+      <span>Opacity</span>
+      <input type="range" min="0" max="100" step="1" value={opacity} onChange={(e) => update(item.id, { opacity: Number(e.target.value) / 100 })} />
+      <output>{opacity}%</output>
+    </label>
   );
 }
 
@@ -635,6 +647,7 @@ const SHEETS = {
   animation: { title: 'Animate', Icon: Sparkles, Panel: AnimationPanel },
   speed: { title: 'Speed', Icon: Gauge, Panel: SpeedPanel },
   place: { title: 'Fit to canvas', Icon: Expand, Panel: PlacePanel },
+  opacity: { title: 'Opacity', Icon: Blend, Panel: OpacityPanel },
   volume: { title: 'Volume', Icon: SlidersHorizontal, Panel: VolumePanel },
   greenscreen: { title: 'Green screen', Icon: WandSparkles, Panel: GreenScreenPanel },
   punch: { title: 'Zoom punch', Icon: ZoomIn, Panel: PunchPanel },
@@ -702,6 +715,10 @@ function clipTools(item, { sheet, toggle, playhead, items }) {
   }
   if (item.type === 'image' || item.type === 'sticker') {
     tools.push({ id: 'rotate', label: 'Rotate', Icon: RotateCw, onClick: () => update(item.id, rotateAboutCenter(item, ((item.rotation || 0) + 90) % 360)) });
+  }
+  if (item.type !== 'audio') {
+    const opacity = clipOpacity(item);
+    tools.push({ id: 'opacity', label: opacity < 1 ? `${Math.round(opacity * 100)}%` : 'Opacity', title: 'Opacity', Icon: Blend, ...opens('opacity', opacity < 1) });
   }
   const canSplit = playhead > item.startMs + MIN_SPLIT_MS && playhead < item.endMs - MIN_SPLIT_MS;
   tools.push({ id: 'split', label: 'Split', Icon: Scissors, title: canSplit ? 'Split at the playhead' : 'Move the playhead inside the clip to split it',

@@ -8,6 +8,7 @@ import { downloadBlob } from './shareFile';
 import { drawOrder } from './layerOrder';
 import { captionFrames, concatList, splitCaptionTrack } from './captionTrack';
 import { REST_FRAME, applyTextFrame } from './textAnimation';
+import { clipOpacity } from '../model/videoProject';
 import { audioExtension, createExportGraph, outputSize, textStills, visualSize } from './exportGraph';
 import { hasTextBox, textAttrs, textBoxAttrs } from './textLayer';
 
@@ -179,7 +180,10 @@ const renderTextToPNG = (item, w, h, ratio, frame = REST_FRAME) => new Promise((
     }
 
     group.add(textNode);
-    layer.add(group);
+    // Its opacity outside the group the animation fades, as in the preview.
+    const holder = new Konva.Group({ opacity: clipOpacity(item) });
+    holder.add(group);
+    layer.add(holder);
     // Animation frame (offsets are in 800-wide stage units, like item.x).
     applyTextFrame(group, textNode, { ...frame, dx: frame.dx * ratio, dy: frame.dy * ratio });
     layer.draw();
