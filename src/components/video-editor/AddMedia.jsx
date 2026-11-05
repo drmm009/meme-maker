@@ -74,8 +74,8 @@ const LIBRARY_ACTIONS = {
 
 // Every library, as the image editor's full-height browse sheets over the editor.
 const LIBRARIES = {
-  stickers: (close) => <StickersSheet actions={LIBRARY_ACTIONS} onClose={close} />,
-  gifs: (close) => <StickersSheet actions={LIBRARY_ACTIONS} onClose={close} initialKind="gifs" />,
+  stickers: (close) => <StickersSheet actions={LIBRARY_ACTIONS} onClose={close} only="stickers" />,
+  gifs: (close) => <StickersSheet actions={LIBRARY_ACTIONS} onClose={close} only="gifs" />,
   emoji: (close) => <EmojiSheet actions={LIBRARY_ACTIONS} onClose={close} />,
   templates: (close) => <TemplatesBrowser templates={MEME_TEMPLATES} actions={LIBRARY_ACTIONS} onClose={close} onPick={(t) => addItem({ type: 'image', url: t.imageUrl, name: t.name })} />,
   clips: (close) => (

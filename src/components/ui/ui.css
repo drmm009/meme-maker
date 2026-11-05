@@ -505,6 +505,17 @@
   padding: 0 16px 10px;
   touch-action: none;
 }
+.ui-sheet-title-icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 30px;
+  height: 30px;
+  margin-right: -2px;
+  border-radius: 50%;
+  background: rgba(255, 90, 54, 0.18);
+  color: var(--ui-accent, #ff5a36);
+}
 .ui-sheet-title { min-width: 0; margin: 0; overflow: hidden; font-size: var(--ui-fs-headline, 17px); font-weight: 600; letter-spacing: -0.01em; text-overflow: ellipsis; white-space: nowrap; }
 .ui-sheet-head .ui-badge { flex-shrink: 0; }
 .ui-sheet-head-end { margin-left: auto; display: flex; align-items: center; gap: 6px; }

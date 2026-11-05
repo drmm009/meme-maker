@@ -69,9 +69,10 @@ function StickerCard({ sticker, onPick }: { sticker: GraphicSticker; onPick: (s:
 // Media > Stickers: Stickers / Animated / GIFs in a track at the top. The built-in stickers are laid
 // out like the Explore page, a shelf per category (thug life shades, rage faces, bubbles...) with
 // See all, and a category or a search shows a grid; Animated and GIFs come from Giphy (GiphyResults).
-// The video editor opens it on GIFs too (`initialKind`).
-export default function StickersSheet({ actions, onClose, initialKind = 'stickers' }: { actions: EditorActions; onClose: () => void; initialKind?: Kind }) {
-  const [kind, setKind] = useState<Kind>(initialKind);
+// `only` narrows it to one job (the video editor's separate Stickers and GIFs sheets): 'stickers'
+// keeps Stickers / Animated without GIFs, 'gifs' is a GIFs sheet with no track.
+export default function StickersSheet({ actions, onClose, only }: { actions: EditorActions; onClose: () => void; only?: 'stickers' | 'gifs' }) {
+  const [kind, setKind] = useState<Kind>(only === 'gifs' ? 'gifs' : 'stickers');
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('all');
   const keyed = hasGiphyKey();
@@ -93,11 +94,11 @@ export default function StickersSheet({ actions, onClose, initialKind = 'sticker
 
   return (
     <BrowseSheet
-      title="Stickers"
+      title={only === 'gifs' ? 'GIFs' : 'Stickers'}
       total={local ? TOTAL : undefined}
       onClose={onClose}
       search={local || keyed ? { value: query, onChange: setQuery, ...SEARCH[kind] } : undefined}
-      tabs={{ items: SWITCH_KINDS, extra: GIF_KIND, active: kind, onPick: switchKind }}
+      tabs={only === 'gifs' ? undefined : { items: SWITCH_KINDS, extra: only ? undefined : GIF_KIND, active: kind, onPick: switchKind }}
     >
       {!local && <GiphyResults key={kind} kind={kind === 'gifs' ? 'gifs' : 'stickers'} query={query} keyed={keyed} onClearQuery={() => setQuery('')} onPick={pickGif} />}
 

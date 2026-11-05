@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef } from 'react';
-import type { PointerEvent, ReactNode } from 'react';
+import type { ComponentType, PointerEvent, ReactNode } from 'react';
 import { Plus } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -13,6 +13,8 @@ export interface SheetAction {
 
 interface SheetProps {
   title: string;
+  // Drawn beside the heading, in a soft orange circle.
+  Icon?: ComponentType<{ size?: number; strokeWidth?: number }>;
   onClose: () => void;
   badge?: string;
   action?: SheetAction;
@@ -90,7 +92,7 @@ const NOT_DRAG = 'button:not(.ui-sheet-handle), input, textarea, select, a';
 
 // A panel docked at the bottom of the editor (not a modal: the canvas above stays usable).
 // Close it with a tap on the handle, or by dragging the handle, header or a data-sheet-drag row down.
-export default function Sheet({ title, onClose, badge, action, className = '', hideTitle = false, aside, ariaLabel, children }: SheetProps) {
+export default function Sheet({ title, Icon, onClose, badge, action, className = '', hideTitle = false, aside, ariaLabel, children }: SheetProps) {
   const sheetRef = useRef<HTMLElement>(null);
   const drag = useRef<{ y: number; dy: number } | null>(null);
   const isClosingRef = useRef(false);
@@ -171,6 +173,7 @@ export default function Sheet({ title, onClose, badge, action, className = '', h
       <button type="button" className="ui-sheet-handle" aria-label={`Close ${title}`} onClick={triggerClose} />
       {(!hideTitle || action || aside) && (
         <header className={`ui-sheet-head${hideTitle ? ' ui-sheet-head--bare' : ''}`}>
+          {!hideTitle && Icon && <span className="ui-sheet-title-icon" aria-hidden="true"><Icon size={17} strokeWidth={2.2} /></span>}
           {!hideTitle && <h2 className="ui-sheet-title">{title}</h2>}
           {!hideTitle && badge && <span className="ui-badge">{badge}</span>}
           <div className="ui-sheet-head-end">

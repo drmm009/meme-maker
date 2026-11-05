@@ -35,13 +35,18 @@ const getContrastStroke = (hexColor) => {
 };
 
 // The add tools, grouped like the image editor: a dock of sections, each section's tools in a strip
-// above it. A `panel` tool opens its settings sheet; the rest add straight away (or open a picker).
+// above it. A `panel` tool opens its settings sheet, a `sources` tool a small sheet of where to get
+// it from; the rest add straight away (or open a picker).
 const SECTIONS = [
   { id: 'media', label: 'Media', Icon: Film, tools: [
-    { kind: 'photo', label: 'Photo', Icon: ImageIcon },
-    { kind: 'video', label: 'Video', Icon: SquarePlay },
-    { kind: 'clips', label: 'Clips', Icon: Clapperboard },
-    { kind: 'templates', label: 'Templates', Icon: LayoutGrid },
+    { kind: 'image', label: 'Image', Icon: ImageIcon, title: 'Add image', sources: [
+      { kind: 'photo', label: 'Upload', sub: 'From your phone', Icon: Upload },
+      { kind: 'templates', label: 'Templates', sub: 'Meme pictures', Icon: LayoutGrid },
+    ] },
+    { kind: 'videos', label: 'Video', Icon: SquarePlay, title: 'Add video', sources: [
+      { kind: 'video', label: 'Upload', sub: 'From your phone', Icon: Upload },
+      { kind: 'clips', label: 'Clips', sub: 'Meme video clips', Icon: Clapperboard },
+    ] },
   ] },
   { id: 'text', label: 'Text', Icon: Type, tools: [
     { kind: 'text', label: 'Add text', Icon: Plus },
@@ -619,26 +624,26 @@ function TransitionPanel({ item }) {
   );
 }
 
-// Every settings sheet: its title and what it shows (for the selected clip, or for nothing selected).
+// Every settings sheet: its title, the icon beside it, and what it shows (for the selected clip, or for nothing selected).
 const SHEETS = {
-  text: { title: 'Edit text', Panel: TextPanel },
-  font: { title: 'Font', Panel: FontPanel },
-  color: { title: 'Colour', Panel: ColorPanel },
-  textbg: { title: 'Text background', Panel: TextBgPanel },
-  align: { title: 'Align', Panel: AlignPanel },
-  size: { title: 'Text size', Panel: SizePanel },
-  animation: { title: 'Animate', Panel: AnimationPanel },
-  speed: { title: 'Speed', Panel: SpeedPanel },
-  place: { title: 'Fit to canvas', Panel: PlacePanel },
-  volume: { title: 'Volume', Panel: VolumePanel },
-  greenscreen: { title: 'Green screen', Panel: GreenScreenPanel },
-  punch: { title: 'Zoom punch', Panel: PunchPanel },
-  filter: { title: 'Filters', Panel: FilterPanel },
-  transition: { title: 'Transition', Panel: TransitionPanel },
-  background: { title: 'Background', Panel: BackgroundPanel },
-  sfx: { title: 'Sound effects', Panel: SfxPanel },
-  voice: { title: 'Voiceover', Panel: VoicePanel },
-  captions: { title: 'Auto captions', Panel: CaptionsPanel },
+  text: { title: 'Edit text', Icon: PencilLine, Panel: TextPanel },
+  font: { title: 'Font', Icon: Type, Panel: FontPanel },
+  color: { title: 'Colour', Icon: Palette, Panel: ColorPanel },
+  textbg: { title: 'Text background', Icon: Square, Panel: TextBgPanel },
+  align: { title: 'Align', Icon: TextAlignCenter, Panel: AlignPanel },
+  size: { title: 'Text size', Icon: ALargeSmall, Panel: SizePanel },
+  animation: { title: 'Animate', Icon: Sparkles, Panel: AnimationPanel },
+  speed: { title: 'Speed', Icon: Gauge, Panel: SpeedPanel },
+  place: { title: 'Fit to canvas', Icon: Expand, Panel: PlacePanel },
+  volume: { title: 'Volume', Icon: SlidersHorizontal, Panel: VolumePanel },
+  greenscreen: { title: 'Green screen', Icon: WandSparkles, Panel: GreenScreenPanel },
+  punch: { title: 'Zoom punch', Icon: ZoomIn, Panel: PunchPanel },
+  filter: { title: 'Filters', Icon: FiltersIcon, Panel: FilterPanel },
+  transition: { title: 'Transition', Icon: ArrowRightLeft, Panel: TransitionPanel },
+  background: { title: 'Background', Icon: PaintBucket, Panel: BackgroundPanel },
+  sfx: { title: 'Sound effects', Icon: Zap, Panel: SfxPanel },
+  voice: { title: 'Voiceover', Icon: Mic, Panel: VoicePanel },
+  captions: { title: 'Auto captions', Icon: Captions, Panel: CaptionsPanel },
 };
 
 // The selected clip's tools for its pill: what this kind of clip can do (each setting opens its
@@ -716,27 +721,47 @@ function clipTools(item, { sheet, toggle, playhead, items }) {
 
 const DOCK = SECTIONS.map(({ id, label, Icon }) => ({ id, label, Icon }));
 
-// The bottom of the editor, laid out like the image editor's: a dock of sections, the open
-// section's tools in a strip above it (always one open, Media to start), and a selected clip's tools
+// The `sources` tools' sheets (Media: Add image, Add video), by tool.
+const SOURCE_SHEETS = Object.fromEntries(SECTIONS.flatMap((s) => s.tools.filter((t) => t.sources).map((t) => [t.kind, { title: t.title, Icon: t.Icon, sources: t.sources }])));
+
+// Where to get a photo or video from: two compact tiles side by side.
+function SourcesPanel({ sources, onPick }) {
+  return (
+    <div className="vt-sources">
+      {sources.map(({ kind, label, sub, Icon }) => (
+        <button key={kind} type="button" className="vt-source" onClick={() => onPick(kind)}>
+          <span className="vt-source-icon"><Icon size={18} strokeWidth={2.2} aria-hidden="true" /></span>
+          <span className="vt-source-label">{label}</span>
+          <span className="vt-source-sub">{sub}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// The bottom of the editor, laid out like the image editor's: a dock of sections, a tapped
+// section's tools in a strip above it (none to start; tapping the open section again puts them away;
+// the preview gives up the room), and a selected clip's tools
 // in a pill in the strip's place (no section lit meanwhile; any section deselects the clip). A
-// setting opens a sheet in the dock's place with the strip or pill still above it; the two rise
-// over the timeline (the bottom keeps its height, so the timeline and preview don't move).
+// setting opens a sheet in place of the strip or pill and the dock, nothing floating above it; it
+// rises over the timeline (the bottom keeps its height, so the timeline and preview don't move).
 export default function ToolRail({ onAdd }) {
   const activeItem = useEditorStore((s) => s.items.find((i) => i.id === s.activeItemId));
   const items = useEditorStore((s) => s.items);
   const playhead = useEditorStore((s) => s.playhead);
-  const [tab, setTab] = useState('media');
+  const [tab, setTab] = useState(null);
   // A sheet belongs to the clip it was opened for (or to "nothing selected"); selecting another closes it.
   const [sheetState, setSheetState] = useState({ id: null, name: null });
   const ownerId = activeItem?.id ?? null;
   const sheet = sheetState.id === ownerId ? sheetState.name : null;
   const setSheet = (name) => setSheetState({ id: ownerId, name });
   const toggle = (name, keepOpen = false) => setSheet(sheet === name && !keepOpen ? null : name);
-  const spec = sheet && SHEETS[sheet];
+  const spec = sheet && (SHEETS[sheet] || SOURCE_SHEETS[sheet]);
 
   // The bottom's height without a sheet, kept while one is open (it then floats over the timeline,
   // never higher than the timeline's top, the element before it).
   const wrapRef = useRef(null);
+  const hasPill = Boolean(activeItem);
   const [rest, setRest] = useState(null); // { height, room }
   useLayoutEffect(() => {
     const el = wrapRef.current;
@@ -747,12 +772,14 @@ export default function ToolRail({ onAdd }) {
     const observer = new ResizeObserver(measure);
     observer.observe(el);
     return () => observer.disconnect();
-  }, [spec]);
+    // Measured again as the strip or pill comes and goes (an observer may not have run yet when a
+    // sheet opens straight after).
+  }, [spec, tab, hasPill]);
 
-  const section = SECTIONS.find((s) => s.id === tab) || SECTIONS[0];
+  const section = SECTIONS.find((s) => s.id === tab) ?? null;
   const runTool = (kind) => {
     const tool = section.tools.find((t) => t.kind === kind);
-    if (tool?.panel) toggle(kind);
+    if (tool?.panel || tool?.sources) toggle(kind);
     else {
       setSheet(null);
       onAdd(kind);
@@ -761,17 +788,18 @@ export default function ToolRail({ onAdd }) {
   const openSection = (id) => {
     if (activeItem) useEditorStore.getState().setActiveItem(null);
     setSheetState({ id: null, name: null });
-    setTab(id);
+    setTab(!activeItem && tab === id ? null : id);
   };
 
   return (
     <div className="vt-rail-wrap" ref={wrapRef} style={spec && rest ? { height: rest.height } : undefined}>
-      <div className={`vt-bottom${spec ? ' has-sheet' : ''}`} style={spec && rest ? { maxHeight: rest.room } : undefined}>
-        {activeItem ? (
+      <div className={`vt-bottom${spec ? ' has-sheet' : ''}`} style={spec && rest ? { minHeight: rest.height, maxHeight: rest.room } : undefined}>
+        {/* While a sheet is open nothing floats above it: the strip or pill comes back when it closes. */}
+        {spec ? null : activeItem ? (
           <div className="vt-pill">
             <FloatingToolbar ariaLabel="Clip tools" items={clipTools(activeItem, { sheet, toggle, playhead, items })} />
           </div>
-        ) : (
+        ) : section && (
           <ToolStrip
             key={section.id}
             ariaLabel={`${section.label} tools`}
@@ -782,8 +810,10 @@ export default function ToolRail({ onAdd }) {
           />
         )}
         {spec ? (
-          <Sheet key={sheet} title={spec.title} onClose={() => setSheet(null)} className="vt-sheet">
-            <spec.Panel item={activeItem} onMore={() => { setSheet(null); onAdd('sounds'); }} />
+          <Sheet key={sheet} title={spec.title} Icon={spec.Icon} onClose={() => setSheet(null)} className="vt-sheet">
+            {spec.sources
+              ? <SourcesPanel sources={spec.sources} onPick={(kind) => { setSheet(null); onAdd(kind); }} />
+              : <spec.Panel item={activeItem} onMore={() => { setSheet(null); onAdd('sounds'); }} />}
           </Sheet>
         ) : (
           <ToolDock ariaLabel="Sections" items={DOCK} active={activeItem ? null : tab} onSelect={openSection} />

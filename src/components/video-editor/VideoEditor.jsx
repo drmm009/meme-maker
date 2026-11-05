@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useStore } from 'zustand';
-import { X, Share, Play, Pause, Undo2, Redo2, ChevronUp, ChevronDown, Download, Copy, Check, History, ImagePlay, LoaderCircle } from 'lucide-react';
+import { X, Share, Play, Pause, Undo2, Redo2, ChevronLeft, ChevronUp, ChevronDown, Download, Copy, Check, History, ImagePlay, LoaderCircle, SquarePlay, Image as ImageIcon, Clapperboard } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import CanvasPreview from './CanvasPreview';
 import TimelinePanel from './timeline/TimelinePanel';
@@ -193,11 +193,21 @@ export default function VideoEditor({ template, onBack }) {
         >
           <CanvasPreview />
           {!hasItems && (
-            <button type="button" className="vt-stage-empty" onClick={() => addRef.current?.open('video')}>
-              <span className="vt-stage-empty-icon"><Play size={22} /></span>
-              <span className="vt-stage-empty-title">Start with a video or photo</span>
-              <span className="vt-stage-empty-sub">Or add text, stickers and sounds from the tools below.</span>
-            </button>
+            <div className="vt-start" role="group" aria-labelledby="vt-start-title">
+              <p id="vt-start-title" className="vt-start-title">Start your video</p>
+              <p className="vt-start-sub">Add a clip or a photo, then layer text, stickers and sounds on it.</p>
+              <div className="vt-start-actions">
+                <button type="button" className="vt-start-btn is-primary" onClick={() => addRef.current?.open('video')}>
+                  <SquarePlay size={18} strokeWidth={2.2} aria-hidden="true" /> Video
+                </button>
+                <button type="button" className="vt-start-btn" onClick={() => addRef.current?.open('photo')}>
+                  <ImageIcon size={18} strokeWidth={2.2} aria-hidden="true" /> Photo
+                </button>
+              </div>
+              <button type="button" className="vt-start-link" onClick={() => addRef.current?.open('clips')}>
+                <Clapperboard size={15} strokeWidth={2.2} aria-hidden="true" /> Or pick a meme clip
+              </button>
+            </div>
           )}
           {mode === 'edit' && (
             <button type="button" className="vt-collapse" onClick={() => setMode('preview')} aria-label="Full screen preview">
@@ -206,45 +216,50 @@ export default function VideoEditor({ template, onBack }) {
           )}
         </div>
 
-        <button type="button" className="vt-fab vt-fab--close" onClick={onBack} aria-label="Close editor">
-          <X size={18} strokeWidth={2.5} />
+        <button type="button" className="ui-icon-btn ui-topbar-back vt-back" onClick={onBack} aria-label="Back" title="Back">
+          <ChevronLeft size={22} strokeWidth={2.3} />
         </button>
 
-        <div className="vt-ratio">
-          <SizeMenu sizes={VIDEO_SIZES} value={sizeOf(canvasAspectRatio)} align="center" onPick={(v) => changeAspectRatio(VIDEO_SIZES.find((s) => s.value === v).ratio)} />
-        </div>
-
-        <div className="vt-export" ref={menuRef}>
-          <button
-            type="button"
-            className="vt-fab vt-fab--export"
-            onClick={() => setMenuOpen((o) => !o)}
-            disabled={isExporting || Boolean(busy)}
-            aria-label="Export"
-            aria-expanded={menuOpen}
-          >
-            {exportDone ? <Check size={18} strokeWidth={2.5} /> : <Share size={17} strokeWidth={2.4} />}
-          </button>
-          <AnimatePresence>
-            {menuOpen && (
-              <motion.div
-                className="vt-menu"
-                initial={{ opacity: 0, y: -6, scale: 0.96 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -6, scale: 0.96 }}
-                transition={{ duration: 0.15 }}
-              >
-                <button type="button" className="vt-menu-item" onClick={() => handleExport('mp4', 720)}>
-                  <Download size={16} /> <span className="vt-menu-label">Export video<small>720p · faster</small></span>
-                </button>
-                <button type="button" className="vt-menu-item" onClick={() => handleExport('mp4', 1080)}>
-                  <Download size={16} /> <span className="vt-menu-label">Export video<small>1080p · sharper, slower</small></span>
-                </button>
-                <button type="button" className="vt-menu-item" onClick={() => handleExport('gif')}><ImagePlay size={16} /> Export GIF</button>
-                <button type="button" className="vt-menu-item" onClick={() => { setMenuOpen(false); copyFrame(); }}><Copy size={16} /> Copy frame</button>
-              </motion.div>
-            )}
-          </AnimatePresence>
+        {/* The canvas size sits beside Export while the timeline is closed. */}
+        <div className="vt-top-actions">
+          {mode === 'preview' && (
+            <div className="vt-ratio">
+              <SizeMenu sizes={VIDEO_SIZES} value={sizeOf(canvasAspectRatio)} onPick={(v) => changeAspectRatio(VIDEO_SIZES.find((s) => s.value === v).ratio)} />
+            </div>
+          )}
+          <div className="vt-export" ref={menuRef}>
+            <button
+              type="button"
+              className="ui-btn-accent vt-export-btn"
+              onClick={() => setMenuOpen((o) => !o)}
+              disabled={isExporting || Boolean(busy)}
+              aria-label="Export"
+              aria-expanded={menuOpen}
+            >
+              {exportDone ? <Check size={17} strokeWidth={2.5} aria-hidden="true" /> : <Share size={16} strokeWidth={2.4} aria-hidden="true" />}
+              Export
+            </button>
+            <AnimatePresence>
+              {menuOpen && (
+                <motion.div
+                  className="vt-menu"
+                  initial={{ opacity: 0, y: -6, scale: 0.96 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -6, scale: 0.96 }}
+                  transition={{ duration: 0.15 }}
+                >
+                  <button type="button" className="vt-menu-item" onClick={() => handleExport('mp4', 720)}>
+                    <Download size={16} /> <span className="vt-menu-label">Export video<small>720p · faster</small></span>
+                  </button>
+                  <button type="button" className="vt-menu-item" onClick={() => handleExport('mp4', 1080)}>
+                    <Download size={16} /> <span className="vt-menu-label">Export video<small>1080p · sharper, slower</small></span>
+                  </button>
+                  <button type="button" className="vt-menu-item" onClick={() => handleExport('gif')}><ImagePlay size={16} /> Export GIF</button>
+                  <button type="button" className="vt-menu-item" onClick={() => { setMenuOpen(false); copyFrame(); }}><Copy size={16} /> Copy frame</button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
 
         {busy && (

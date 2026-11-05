@@ -5,6 +5,8 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import React from 'react';
 import { render, screen, fireEvent, cleanup, act } from '@testing-library/react';
 import VideoEditor from './VideoEditor';
+
+const closeSheet = () => fireEvent.click(screen.getByLabelText(/^Close /));
 import { useEditorStore } from '../../store/useVideoEditorStore';
 import { exportVideoFFmpeg } from '../../utils/ffmpegExport';
 
@@ -44,13 +46,19 @@ describe('VideoEditor', () => {
   it('starts in edit mode with an empty-state prompt and the add tools', () => {
     const { container } = render(<VideoEditor onBack={() => {}} />);
     expect(container.querySelector('.vt-editor.is-edit')).toBeTruthy();
-    expect(screen.getByText('Start with a video or photo')).toBeTruthy();
+    const start = screen.getByRole('group', { name: 'Start your video' });
+    expect([...start.querySelectorAll('button')].map((b) => b.textContent.trim())).toEqual(['Video', 'Photo', 'Or pick a meme clip']);
     expect(screen.getByText('Add a video')).toBeTruthy();
     const dock = screen.getByRole('navigation', { name: 'Sections' });
     expect([...dock.querySelectorAll('button')].map((b) => b.textContent)).toEqual(['Media', 'Text', 'Stickers', 'Audio', 'Canvas']);
-    // Media is open from the start: its tools in the strip above the dock.
+    // No section's tools until a section is tapped; tapping it again puts them away.
+    expect(screen.queryByRole('toolbar', { name: /tools$/ })).toBeNull();
+    fireEvent.click(screen.getByText('Media'));
     const strip = screen.getByRole('toolbar', { name: 'Media tools' });
-    expect([...strip.querySelectorAll('button')].map((b) => b.textContent)).toEqual(['Photo', 'Video', 'Clips', 'Templates']);
+    expect([...strip.querySelectorAll('button')].map((b) => b.textContent)).toEqual(['Image', 'Video']);
+    expect(screen.getByTitle('Media').getAttribute('aria-pressed')).toBe('true');
+    fireEvent.click(screen.getByText('Media'));
+    expect(screen.queryByRole('toolbar', { name: 'Media tools' })).toBeNull();
   });
 
   it('shows the tapped section’s tools in the strip', () => {
@@ -58,18 +66,19 @@ describe('VideoEditor', () => {
     fireEvent.click(screen.getByText('Audio'));
     expect(screen.getByRole('toolbar', { name: 'Audio tools' })).toBeTruthy();
     expect(screen.getByText('Voice')).toBeTruthy();
-    expect(screen.queryByText('Photo')).toBeNull();
+    expect(screen.queryByRole('toolbar', { name: 'Media tools' })).toBeNull();
   });
 
-  it('opens a setting as a sheet in the dock’s place, the strip still above it', () => {
+  it('opens a setting as a sheet in place of the strip and dock, and brings them back on close', () => {
     render(<VideoEditor onBack={() => {}} />);
     fireEvent.click(screen.getByText('Audio'));
     fireEvent.click(screen.getByText('SFX'));
     expect(screen.getByRole('dialog', { name: 'Sound effects' })).toBeTruthy();
-    expect(screen.getByRole('toolbar', { name: 'Audio tools' })).toBeTruthy();
+    expect(screen.queryByRole('toolbar', { name: 'Audio tools' })).toBeNull();
     expect(screen.queryByRole('navigation', { name: 'Sections' })).toBeNull();
-    fireEvent.click(screen.getByText('SFX'));
+    closeSheet();
     expect(screen.queryByRole('dialog')).toBeNull();
+    expect(screen.getByRole('toolbar', { name: 'Audio tools' })).toBeTruthy();
     expect(screen.getByRole('navigation', { name: 'Sections' })).toBeTruthy();
   });
 
@@ -93,9 +102,39 @@ describe('VideoEditor', () => {
     expect(screen.queryByRole('dialog')).toBeNull();
   });
 
+  it('opens Add image and Add video sheets from the Media strip', () => {
+    render(<VideoEditor onBack={() => {}} />);
+    fireEvent.click(screen.getByText('Media'));
+    fireEvent.click(screen.getByTitle('Image'));
+    const image = screen.getByRole('dialog', { name: 'Add image' });
+    expect([...image.querySelectorAll('.vt-source-label')].map((b) => b.textContent)).toEqual(['Upload', 'Templates']);
+    expect(screen.queryByRole('toolbar', { name: 'Media tools' })).toBeNull();
+    closeSheet();
+    fireEvent.click(screen.getByTitle('Video'));
+    const video = screen.getByRole('dialog', { name: 'Add video' });
+    expect([...video.querySelectorAll('.vt-source-label')].map((b) => b.textContent)).toEqual(['Upload', 'Clips']);
+    fireEvent.click(video.querySelectorAll('.vt-source')[1]);
+    expect(screen.queryByRole('dialog', { name: 'Add video' })).toBeNull();
+    expect(screen.getByRole('dialog', { name: 'Clips' })).toBeTruthy();
+  });
+
+  it('opens Stickers and GIFs as separate sheets', () => {
+    render(<VideoEditor onBack={() => {}} />);
+    fireEvent.click(screen.getByText('Stickers'));
+    fireEvent.click(screen.getByText('Meme'));
+    const stickers = screen.getByRole('dialog', { name: 'Stickers' });
+    expect([...stickers.querySelectorAll('[role=tab]')].map((t) => t.textContent)).toEqual(['Stickers', 'Animated']);
+    fireEvent.click(screen.getByLabelText('Close stickers'));
+    fireEvent.click(screen.getByText('GIFs'));
+    const gifs = screen.getByRole('dialog', { name: 'GIFs' });
+    expect(gifs.querySelectorAll('[role=tab]').length).toBe(0);
+  });
+
   it('adds a template from the Templates library', () => {
     render(<VideoEditor onBack={() => {}} />);
-    fireEvent.click(screen.getByText('Templates'));
+    fireEvent.click(screen.getByText('Media'));
+    fireEvent.click(screen.getByTitle('Image'));
+    fireEvent.click(screen.getByRole('dialog', { name: 'Add image' }).querySelectorAll('.vt-source')[1]);
     expect(screen.getByRole('dialog', { name: 'Templates' })).toBeTruthy();
     fireEvent.click(screen.getByRole('dialog').querySelector('.ie-shelf-card .ie-card'));
     expect(store().items[0]).toMatchObject({ type: 'image' });
@@ -196,8 +235,10 @@ describe('VideoEditor', () => {
     fireEvent.click(clips(container)[0]);
     fireEvent.click(screen.getByText('Edit'));
     fireEvent.change(screen.getByPlaceholderText('Type your text'), { target: { value: 'WHEN IT WORKS' } });
+    closeSheet();
     fireEvent.click(screen.getByText('Size'));
     fireEvent.change(screen.getByRole('slider'), { target: { value: '150' } });
+    closeSheet();
     fireEvent.click(screen.getByText('Align'));
     fireEvent.click(screen.getByRole('radio', { name: 'Right' }));
     expect(store().items[0]).toMatchObject({ text: 'WHEN IT WORKS', fontSize: 150, align: 'right' });
@@ -329,7 +370,9 @@ describe('VideoEditor', () => {
     const [bright] = screen.getAllByRole('slider');
     fireEvent.change(bright, { target: { value: '30' } });
     expect(store().items[0].filter).toEqual({ preset: 'vintage', brightness: 30 });
-    expect(screen.getAllByText('Vintage').length).toBeGreaterThan(1);
+    closeSheet();
+    // The pill's Filters button now says which preset is on.
+    expect(screen.getByRole('toolbar', { name: 'Clip tools' }).textContent).toContain('Vintage');
   });
 
   it('records a voiceover over the video and drops it where it started', async () => {
@@ -382,10 +425,21 @@ describe('VideoEditor', () => {
     expect(store().items).toHaveLength(1);
   });
 
-  it('calls onBack from the close button', () => {
+  it('calls onBack from the back button', () => {
     const onBack = vi.fn();
     render(<VideoEditor onBack={onBack} />);
-    fireEvent.click(screen.getByLabelText('Close editor'));
+    fireEvent.click(screen.getByLabelText('Back'));
     expect(onBack).toHaveBeenCalled();
+  });
+
+  it('shows the canvas size beside Export only while the timeline is closed', () => {
+    const { container } = render(<VideoEditor onBack={() => {}} />);
+    expect(container.querySelector('.ui-size-menu')).toBeNull();
+    fireEvent.click(screen.getByLabelText('Full screen preview'));
+    const actions = container.querySelector('.vt-top-actions');
+    expect(actions.querySelector('.ui-size-menu')).toBeTruthy();
+    expect(actions.lastElementChild.textContent).toContain('Export');
+    fireEvent.click(screen.getByText('Edit'));
+    expect(container.querySelector('.ui-size-menu')).toBeNull();
   });
 });

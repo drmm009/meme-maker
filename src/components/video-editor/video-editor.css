@@ -63,38 +63,31 @@
 }
 .vt-editor.is-preview .vt-stage-frame .canvas-container #stage-sink-wrapper { border-radius: 26px !important; }
 
-.vt-fab {
+/* The top bar over the stage, as the image editor's: the round Back on the left; on the right
+   Export (the accent button, with the share icon) and, while the timeline is closed, the canvas size. */
+.vt-back {
   position: absolute;
   top: calc(12px + var(--vt-safe-top));
-  z-index: 20;
-  width: 40px;
-  height: 40px;
-  border: none;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  color: #fff;
-  cursor: pointer;
-  transition: transform 0.15s var(--vt-ease), opacity 0.2s;
-}
-.vt-fab:active { transform: scale(0.92); }
-.vt-fab:disabled { opacity: 0.5; cursor: default; }
-.vt-fab--close {
   left: 12px;
+  z-index: 20;
   background: var(--vt-surface);
 }
-.vt-export { position: absolute; top: calc(12px + var(--vt-safe-top)); right: 12px; z-index: 30; }
-.vt-fab--export { position: static; background: var(--vt-grad); box-shadow: var(--vt-glow); }
-
-.vt-ratio {
+.vt-top-actions {
   position: absolute;
-  top: calc(16px + var(--vt-safe-top));
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 20;
-  transition: opacity 0.2s;
+  top: calc(12px + var(--vt-safe-top));
+  right: 12px;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
 }
-.vt-editor.is-preview .vt-ratio { opacity: 0; pointer-events: none; }
+.vt-export { position: relative; }
+.vt-export-btn { gap: 7px; padding: 0 14px 0 13px; }
+.vt-export-btn:active:not(:disabled) { transform: scale(0.96); }
+.vt-export-btn:disabled { opacity: 0.5; cursor: default; }
+.vt-ratio { animation: vt-fade-in 0.2s ease-out; }
+@keyframes vt-fade-in { from { opacity: 0; transform: scale(0.94); } }
 
 .vt-menu {
   position: absolute;
@@ -169,37 +162,66 @@
   80% { transform: translate(-50%, -5px); }
 }
 
-.vt-stage-empty {
+/* An empty video: a card over the blank canvas with the two ways to start (Video first) and a
+   quieter third, a meme clip from the library. */
+.vt-start {
   position: absolute;
-  inset: 0;
+  /* Centred in the canvas above the collapse chevron. */
+  inset: 0 0 40px;
   z-index: 10;
   margin: auto;
-  width: min(80%, 300px);
+  width: min(calc(100% - 32px), 320px);
   height: fit-content;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  padding: 24px 20px;
-  border: none;
-  border-radius: 22px;
+  align-items: stretch;
+  padding: 16px 14px 4px;
+  border-radius: var(--ui-radius-xl, 24px);
   background: var(--vt-surface);
   color: var(--vt-text);
   text-align: center;
+  box-shadow: 0 24px 60px -24px rgba(0, 0, 0, 0.9);
+  animation: vt-panel-in 0.3s ease-out;
+}
+.vt-start-title { margin: 0; font-size: var(--ui-fs-headline, 17px); font-weight: 700; letter-spacing: -0.01em; }
+.vt-start-sub { margin: 4px 4px 14px; color: var(--vt-muted); font-size: var(--ui-fs-footnote, 13px); line-height: 1.4; }
+.vt-start-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.vt-start-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 44px;
+  border: none;
+  border-radius: var(--ui-radius-md, 16px);
+  background: var(--vt-surface-2);
+  color: var(--vt-text);
+  font-size: var(--ui-fs-body, 15px);
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.1s ease, background 0.15s ease;
+}
+.vt-start-btn.is-primary { background: var(--vt-accent); color: #fff; }
+.vt-start-btn:active { transform: scale(0.96); }
+.vt-start-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 38px;
+  margin-top: 2px;
+  border: none;
+  background: none;
+  color: var(--vt-muted);
+  font-size: var(--ui-fs-footnote, 13px);
+  font-weight: 600;
   cursor: pointer;
 }
-.vt-stage-empty-icon {
-  width: 52px;
-  height: 52px;
-  margin-bottom: 6px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  background: var(--vt-grad);
-  box-shadow: var(--vt-glow);
+@media (hover: hover) {
+  .vt-start-btn:not(.is-primary):hover { background: #3a3a3c; }
+  .vt-start-link:hover { color: var(--vt-text); }
 }
-.vt-stage-empty-title { font-size: 16px; font-weight: 700; }
-.vt-stage-empty-sub { font-size: 13px; color: var(--vt-muted); line-height: 1.45; }
+.vt-start-btn:focus-visible, .vt-start-link:focus-visible { outline: 2px solid var(--vt-accent); outline-offset: 2px; }
 
 .vt-export-overlay {
   position: absolute;
@@ -527,8 +549,8 @@
 
 /* ── Bottom: dock, the open section's strip (or a clip's pill), settings sheets ──
    The image editor's ToolDock, ToolStrip, FloatingToolbar and Sheet (ui.css). A sheet takes the
-   dock's place with the strip or pill above it; while one is open the two float over the timeline
-   (ToolRail keeps the bottom's height, so the timeline and preview stay put). */
+   place of the strip or pill and the dock, and floats over the timeline (ToolRail keeps the
+   bottom's height, so the timeline and preview stay put). */
 .vt-rail-wrap { position: relative; flex-shrink: 0; display: flex; flex-direction: column; background: var(--vt-bg); }
 .vt-hidden-input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
 .vt-bottom { display: flex; flex-direction: column; padding-top: 10px; }
@@ -538,11 +560,46 @@
   right: 0;
   bottom: 0;
   z-index: 30;
+  padding-top: 0;
 }
-/* Over the timeline's grey, the strip's and pill's tiles a step lighter so they still read. */
-.vt-bottom.has-sheet .ui-strip-btn:not(.is-on),
-.vt-bottom.has-sheet .ui-float-item:not(.is-on) { background: var(--vt-surface-2); }
+/* At least as tall as the strip and dock it replaces, so no band shows between it and the timeline. */
+.vt-bottom.has-sheet > .ui-sheet:not(.ui-sheet-ghost) { flex: 1 1 auto; }
 .vt-pill { display: flex; justify-content: center; padding: 0 10px 4px; }
+/* Media's Add image / Add video sheets: two compact tiles in a darker grey than the sheet, an orange icon beside the name and a
+   line saying where it comes from. */
+.vt-sources { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.vt-source {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto;
+  column-gap: 10px;
+  align-items: center;
+  min-width: 0;
+  min-height: 60px;
+  padding: 10px 12px;
+  border: none;
+  border-radius: var(--ui-radius-md, 16px);
+  background: var(--vt-surface);
+  color: var(--vt-text);
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.1s ease, background 0.15s ease;
+}
+.vt-source:active { transform: scale(0.97); background: #262628; }
+.vt-source:focus-visible { outline: 2px solid var(--vt-accent); outline-offset: 2px; }
+.vt-source-icon {
+  grid-row: 1 / 3;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--vt-accent-soft);
+  color: var(--vt-accent);
+}
+.vt-source-label { align-self: end; font-size: var(--ui-fs-body, 15px); font-weight: 700; }
+.vt-source-sub { align-self: start; overflow: hidden; color: var(--vt-muted); font-size: var(--ui-fs-label, 12px); white-space: nowrap; text-overflow: ellipsis; }
+@media (hover: hover) { .vt-source:hover { background: #242426; } }
 .vt-pill .ui-float { max-width: 100%; }
 .vt-font-sample { font-size: 17px; font-weight: 700; line-height: 1; }
 .vt-color-dot { width: 18px; height: 18px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.5); }
