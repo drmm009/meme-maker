@@ -114,6 +114,7 @@ export interface ImageClip extends ClipBase, Placed {
   transitionIn?: Transition | null;
   // The picture before Cut out (url is then its subject on a see-through background).
   originalUrl?: string | null;
+  motion?: PhotoMotion | null;
 }
 
 export interface StickerClip extends ClipBase, Placed {
@@ -123,6 +124,9 @@ export interface StickerClip extends ClipBase, Placed {
   // The picture before Cut out.
   originalUrl?: string | null;
 }
+
+// A photo's slow movement while on screen.
+export type PhotoMotion = 'zoom-in' | 'zoom-out' | 'pan-left' | 'pan-right';
 
 // A text shadow: soft (blurred, below), hard (sharp, down-right) or glow (blurred, the text's colour).
 export type TextShadow = 'soft' | 'hard' | 'glow';

@@ -2,7 +2,7 @@ import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
   Type, Sticker, Smile, LayoutGrid, Image as ImageIcon, Film, Clapperboard, Music,
   Gauge, Volume2, VolumeX, Palette, Square, RotateCw, Minimize, Crop, Maximize, Copy, Trash2,
-  Scissors, PencilLine, ALargeSmall, TextAlignStart, TextAlignCenter, TextAlignEnd, SlidersHorizontal, WandSparkles, Pipette, Sparkles, ImagePlay, PaintBucket, Zap, Snowflake, Rewind, Repeat, ZoomIn, BringToFront, SendToBack, Mic, ArrowRightLeft, Frame, Plus, Upload, Library, Laugh, SquarePlay, Captions, Expand, Blend, Scan, Eraser, TypeOutline, Ban, FlipHorizontal2, FlipVertical2
+  Scissors, PencilLine, ALargeSmall, TextAlignStart, TextAlignCenter, TextAlignEnd, SlidersHorizontal, WandSparkles, Pipette, Sparkles, ImagePlay, PaintBucket, Zap, Snowflake, Rewind, Repeat, ZoomIn, BringToFront, SendToBack, Mic, ArrowRightLeft, Frame, Plus, Upload, Library, Laugh, SquarePlay, Captions, Expand, Blend, Scan, Eraser, TypeOutline, Ban, FlipHorizontal2, FlipVertical2, Move
 } from 'lucide-react';
 import { FloatingToolbar, Sheet, ToolDock, ToolStrip } from '../ui';
 import { FiltersIcon } from '../editor/panels/editorIcons';
@@ -11,6 +11,7 @@ import { clipOpacity } from '../../model/videoProject';
 import { clipCrop, isCropped } from '../../utils/clipCrop';
 import CropPanel from './CropPanel';
 import { canCutOut, cutOutBackground } from '../../utils/cutOut';
+import { PHOTO_MOTIONS } from '../../utils/photoMotion';
 import { captureFrame, renderClipEffect } from '../../utils/clipEffects';
 import { clipPunchTimes } from '../../utils/zoomPunch';
 import { FILTER_PRESETS } from '../../utils/clipFilters';
@@ -294,6 +295,14 @@ function VolumePanel({ item }) {
       </label>
       <div className="vt-chip-row">{fade('fadeInMs')}{fade('fadeOutMs')}</div>
     </>
+  );
+}
+
+// A photo's slow zoom or pan while on screen.
+function MotionPanel({ item }) {
+  return (
+    <PickRow label="Photo motion" value={item.motion || null} onPick={(v) => update(item.id, { motion: v })}
+      options={PHOTO_MOTIONS.map((m) => ({ value: m.id, label: m.label }))} />
   );
 }
 
@@ -721,6 +730,7 @@ const SHEETS = {
   opacity: { title: 'Opacity', Icon: Blend, Panel: OpacityPanel },
   crop: { title: 'Crop', Icon: Crop, Panel: CropPanel },
   flip: { title: 'Flip', Icon: FlipHorizontal2, Panel: FlipPanel },
+  motion: { title: 'Photo motion', Icon: Move, Panel: MotionPanel },
   volume: { title: 'Volume', Icon: SlidersHorizontal, Panel: VolumePanel },
   greenscreen: { title: 'Green screen', Icon: WandSparkles, Panel: GreenScreenPanel },
   punch: { title: 'Zoom punch', Icon: ZoomIn, Panel: PunchPanel },
@@ -792,6 +802,10 @@ function clipTools(item, { sheet, toggle, playhead, items }) {
       { id: 'crop', label: 'Crop', Icon: Crop, ...opens('crop', isCropped(clipCrop(item))) },
       { id: 'flip', label: 'Flip', Icon: FlipHorizontal2, ...opens('flip', Boolean(item.flipX || item.flipY)) },
     );
+  }
+  if (item.type === 'image') {
+    const motion = PHOTO_MOTIONS.find((m) => m.id === (item.motion || null));
+    tools.push({ id: 'motion', label: item.motion ? motion.label : 'Motion', title: 'Photo motion', Icon: Move, ...opens('motion', Boolean(item.motion)) });
   }
   if (canCutOut(item) || item.originalUrl) {
     tools.push({ id: 'cutout', label: 'Cut out', title: item.originalUrl ? 'Put the background back' : 'Remove the background', Icon: Eraser, active: Boolean(item.originalUrl), onClick: () => toggleCutOut(item) });

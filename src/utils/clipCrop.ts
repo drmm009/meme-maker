@@ -22,19 +22,21 @@ export const isCropped = (crop: ClipCrop): boolean =>
   crop.x > 0.0005 || crop.y > 0.0005 || crop.width < 0.9995 || crop.height < 0.9995;
 
 // The source rectangle (in the source's pixels) Konva draws: the crop, zoomed into its centre by a
-// zoom-punch. Null when that is the whole frame.
+// zoom-punch or photo motion, shifted sideways by panX (-1 = its left edge, 1 = its right).
+// Null when that is the whole frame.
 export const sourceRect = (
   iw: number,
   ih: number,
   crop: ClipCrop,
   zoom = 1,
+  panX = 0,
 ): { x: number; y: number; width: number; height: number } | null => {
   if (!iw || !ih || (!isCropped(crop) && zoom <= 1.0001)) return null;
   const z = Math.max(1, zoom);
   const width = (crop.width * iw) / z;
   const height = (crop.height * ih) / z;
   return {
-    x: crop.x * iw + (crop.width * iw - width) / 2,
+    x: crop.x * iw + ((crop.width * iw - width) / 2) * (1 + Math.min(1, Math.max(-1, panX))),
     y: crop.y * ih + (crop.height * ih - height) / 2,
     width,
     height,

@@ -1,24 +1,25 @@
 // Per-frame motion of a clip's Konva image node: zoom-punches and transitions. Each returns true
 // if it changed the node (so the caller redraws the layer).
 import type Konva from 'konva';
-import type { VideoClip } from '../../../model/videoProject';
+import type { ImageClip, VideoClip } from '../../../model/videoProject';
 import { clipOpacity } from '../../../model/videoProject';
 import { clipPunchTimes, punchZoom } from '../../../utils/zoomPunch';
 import { transitionFrame } from '../../../utils/clipTransitions';
 import type { SequenceCandidate } from '../../../utils/clipTransitions';
 import { FULL_CROP, clipCrop, sourceRect } from '../../../utils/clipCrop';
+import { photoMotionFrame } from '../../../utils/photoMotion';
 import type { ClipCrop } from '../../../model/videoProject';
 
 // What applyMotion reads: a clip that may punch and transition, and the store's playhead.
-type MovingClip = SequenceCandidate & Pick<VideoClip, 'x' | 'opacity' | 'crop' | 'punches' | 'playbackRate' | 'trimStartMs'>;
+type MovingClip = SequenceCandidate & Pick<VideoClip, 'x' | 'opacity' | 'crop' | 'punches' | 'playbackRate' | 'trimStartMs'> & Pick<ImageClip, 'motion'>;
 type FrameSource = { videoWidth?: number; videoHeight?: number; width?: number; height?: number };
 
 // The clip's crop, and a zoom-punch into the middle of it so the clip zooms inside its own frame
 // (the export crops, scales up and crops back the same way), as the node's source rectangle.
-export const applyPunch = (node: Konva.Image, zoom: number, crop: ClipCrop = FULL_CROP): boolean => {
+export const applyPunch = (node: Konva.Image, zoom: number, crop: ClipCrop = FULL_CROP, panX = 0): boolean => {
   const img = node.image() as FrameSource | undefined;
   if (!img) return false;
-  const rect = sourceRect(img.videoWidth || img.width || 0, img.videoHeight || img.height || 0, crop, zoom);
+  const rect = sourceRect(img.videoWidth || img.width || 0, img.videoHeight || img.height || 0, crop, zoom, panX);
   if (!rect) {
     if (!node.cropWidth()) return false;
     node.crop({ x: 0, y: 0, width: 0, height: 0 });
@@ -35,7 +36,9 @@ export const applyPunch = (node: Konva.Image, zoom: number, crop: ClipCrop = FUL
 // fades (on top of the clip's own opacity) and slides the clip sideways.
 export const applyMotion = (node: Konva.Image, item: MovingClip, state: { items: SequenceCandidate[]; playhead: number }): boolean => {
   const tr = transitionFrame(state.items, item, state.playhead);
-  let changed = applyPunch(node, punchZoom(clipPunchTimes(item), state.playhead) * tr.zoom, clipCrop(item));
+  // A photo's motion zooms and pans like a punch does.
+  const move = photoMotionFrame(item, state.playhead);
+  let changed = applyPunch(node, punchZoom(clipPunchTimes(item), state.playhead) * tr.zoom * move.zoom, clipCrop(item), move.panX);
   const opacity = tr.opacity * clipOpacity(item);
   if (Math.abs(node.opacity() - opacity) > 0.001) { node.opacity(opacity); changed = true; }
   const x = (item.x || 0) + tr.dx;

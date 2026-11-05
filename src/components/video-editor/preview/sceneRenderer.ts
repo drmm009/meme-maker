@@ -204,7 +204,7 @@ export async function createSceneRenderer({ items, width, height, aspect, backgr
           }
         }
         if (m.gif) drawGifFrame(m.gif, ms, m.item);
-        if (m.item.type === 'video' || (m.item.type === 'image' && m.item.isFreeze)) applyMotion(m.node, m.item, state);
+        if (m.item.type === 'video' || (m.item.type === 'image' && (m.item.isFreeze || m.item.motion))) applyMotion(m.node, m.item, state);
       }
       for (const t of texts) {
         const visible = isOnScreen(t.item, ms);

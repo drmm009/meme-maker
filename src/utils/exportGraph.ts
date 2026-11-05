@@ -11,6 +11,7 @@
 import type { AudioClip, ImageClip, Media, Placed, StickerClip, TextClip, VideoClip } from '../model/videoProject';
 import { clipOpacity } from '../model/videoProject';
 import { cropFilter } from './clipCrop';
+import { motionFilter } from './photoMotion';
 import { fadeFilter } from './audioFades';
 import { chromaKeyFilter } from './chromaKey';
 import { gifPaletteFilter } from './gif';
@@ -183,6 +184,8 @@ export function createExportGraph({ width, height, durationMs, backgroundColor, 
       // Colour filters on videos and photos (not stickers), after keying like the preview.
       const colour = isVideo || (item.type === 'image' && !isGif) ? filterChain(resolveFilter((item as ImageClip).filter)) : '';
       const punch = isVideo ? punchFilter(clipPunchTimes(item as VideoClip), w, h) : '';
+      // Photo motion, on the output's clock (stills aren't shifted to their start).
+      const motion = item.type === 'image' && !isGif ? motionFilter(item as ImageClip, w, h, start, end) : '';
       // The clip's own opacity, scaling its alpha (transition fades multiply with it).
       const opacity = clipOpacity(item);
       const flip = `${item.flipX ? ',hflip' : ''}${item.flipY ? ',vflip' : ''}`;
@@ -203,7 +206,7 @@ export function createExportGraph({ width, height, durationMs, backgroundColor, 
         rotate = `,format=rgba,rotate=${((item.rotation * Math.PI) / 180).toFixed(6)}:ow=${bw}:oh=${bh}:c=none`;
       }
       const position = transition.dx ? `x='${ox}+(${transition.dx})':y=${oy}` : `${ox}:${oy}`;
-      filters.push(`[${index}:v]setpts=(PTS-STARTPTS)/${rate}${ptsOffset},${cropFilter(item)}scale=${w}:${h}${punch}${key}${colour}${flip}${transition.chain}${see}${rotate}[vis${index}]`);
+      filters.push(`[${index}:v]setpts=(PTS-STARTPTS)/${rate}${ptsOffset},${cropFilter(item)}scale=${w}:${h}${motion}${punch}${key}${colour}${flip}${transition.chain}${see}${rotate}[vis${index}]`);
       overlay(`vis${index}`, position, `between(t,${start},${end})`);
       index++;
     },

@@ -68,7 +68,7 @@ const CanvasMedia = ({ item, isSelected, onSelect, onChange, canvasDimensions })
         node.getLayer()?.batchDraw();
       }
       if (node && visible && drawGifFrame(gifRef.current, state.playhead, latest)) node.getLayer()?.batchDraw();
-      if (node && latest.isFreeze && applyMotion(node, latest, state)) node.getLayer()?.batchDraw();
+      if (node && (latest.isFreeze || latest.motion) && applyMotion(node, latest, state)) node.getLayer()?.batchDraw();
     });
   }, [item.type, item.startMs, item.endMs]);
 
