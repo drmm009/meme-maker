@@ -42,8 +42,9 @@ export function watermarkClip(wm: WatermarkSettings | null | undefined, endMs: n
     fontSize,
     fontFamily: 'Inter, system-ui, sans-serif',
     color: '#ffffff',
-    stroke: 'transparent',
-    outline: 0,
+    // A thin dark edge and a shadow keep white text readable on light backgrounds too.
+    stroke: 'rgba(0, 0, 0, 0.55)',
+    outline: 0.1,
     shadow: 'soft',
     align: corner[1] === 'l' ? 'left' : 'right',
     opacity: WATERMARK_OPACITY,
@@ -62,6 +63,18 @@ export const isEndCard = (item: Clip): item is ImageClip => item.type === 'image
 export const endCardStart = (items: Clip[]): number => {
   const ends = items.filter((i) => !isEndCard(i)).map((i) => i.endMs).filter((t) => Number.isFinite(t) && t > 0);
   return ends.length ? Math.max(...ends) : 0;
+};
+
+// The clips with the end card kept after everything else: when an edit moves where the other
+// clips end, a card that was last follows (keeping its length). A card someone moved earlier stays.
+export const keepEndCardLast = <T extends Clip>(prev: T[], next: T[]): T[] => {
+  const card = next.find(isEndCard);
+  if (!card) return next;
+  const before = prev.find((i) => i.id === card.id);
+  if (before && before.startMs < endCardStart(prev) - 1) return next;
+  const startMs = endCardStart(next);
+  if (startMs === card.startMs) return next;
+  return next.map((i) => (i === card ? { ...i, startMs, endMs: startMs + (card.endMs - card.startMs) } : i));
 };
 
 // Black or white, whichever reads better on `hex`.

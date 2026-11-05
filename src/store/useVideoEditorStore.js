@@ -1,15 +1,10 @@
 import { create } from 'zustand';
 import { temporal } from 'zundo';
+import { isEndCard, keepEndCardLast } from '../utils/brandCard';
+import { HISTORY_BURST_MS, historyBurst } from '../utils/historyBurst';
 import { duplicateGroup, shiftGroup, togglePick } from '../utils/clipGroup';
 import { moveLayer as moveLayerInItems } from '../utils/layerOrder';
 
-const debounce = (func, wait) => {
-  let timeout;
-  return (...args) => {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => func(...args), wait);
-  };
-};
 
 // An "Item" represents a single piece of media on the timeline (Video, Image, Text)
 // A "Track" is a horizontal row on the timeline that holds Items.
@@ -44,7 +39,15 @@ const calculateDuration = (items) => {
   return Math.min(100000, rawDuration); // Maximum 100s
 };
 
-export const useEditorStore = create(temporal((set, get) => ({
+// Every change to the clips keeps the end card last (see keepEndCardLast).
+const keepingEndCardLast = (creator) => (set, get, api) => creator((partial, replace) => set((state) => {
+  const next = typeof partial === 'function' ? partial(state) : partial;
+  if (!next?.items || next.items === state.items) return next;
+  const items = keepEndCardLast(state.items, next.items);
+  return items === next.items ? next : { ...next, items, duration: calculateDuration(items) };
+}, replace), get, api);
+
+export const useEditorStore = create(temporal(keepingEndCardLast((set, get) => ({
   playhead: 0, // Current time in milliseconds
   isPlaying: false,
   isExporting: false,
@@ -142,7 +145,8 @@ export const useEditorStore = create(temporal((set, get) => ({
       if (maxVideoEnd > 0) {
         endMs = maxVideoEnd;
       } else {
-        const validEnds = state.items.map(i => i.endMs).filter(t => typeof t === 'number' && !isNaN(t) && t > 0);
+        // Not over the end card: new text and stickers cover the video, not its closing card.
+        const validEnds = state.items.filter(i => !isEndCard(i)).map(i => i.endMs).filter(t => typeof t === 'number' && !isNaN(t) && t > 0);
         const maxEnd = validEnds.length > 0 ? Math.max(...validEnds) : 7000;
         endMs = maxEnd > 0 ? maxEnd : 7000;
       }
@@ -322,7 +326,7 @@ export const useEditorStore = create(temporal((set, get) => ({
     duration: 7000,
     isPlaying: false
   }),
-}), {
+})), {
   partialize: (state) => ({ 
     items: state.items, 
     duration: state.duration,
@@ -334,5 +338,5 @@ export const useEditorStore = create(temporal((set, get) => ({
     gridOverlayUrl: state.gridOverlayUrl
   }),
   limit: 20,
-  handleSet: (handleSet) => debounce(handleSet, 1000),
+  handleSet: (handleSet) => historyBurst(handleSet, HISTORY_BURST_MS),
 }));

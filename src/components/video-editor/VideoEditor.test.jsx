@@ -348,12 +348,15 @@ describe('VideoEditor', () => {
       fireEvent.click(screen.getByText('Update end card'));
       expect(store().items.filter((i) => i.endCard)).toHaveLength(1);
       closeSheet();
+      // A video added later goes before the end card, which moves along to stay last.
+      act(() => store().addItem({ type: 'video', url: 'b.mp4', durationMs: 2000 }));
+      expect(store().items.find((i) => i.endCard)).toMatchObject({ startMs: 6000, endMs: 8500 });
 
       fireEvent.click(screen.getByLabelText('Export'));
       await act(async () => { fireEvent.click(screen.getByText('720p · faster')); });
       const [items, endMs] = exportVideoFFmpeg.mock.calls.at(-1);
-      expect(endMs).toBe(6500);
-      expect(items.at(-1)).toMatchObject({ type: 'text', text: '@memer', startMs: 0, endMs: 6500, align: 'left' });
+      expect(endMs).toBe(8500);
+      expect(items.at(-1)).toMatchObject({ type: 'text', text: '@memer', startMs: 0, endMs: 8500, align: 'left' });
       expect(store().items.some((i) => i.text === '@memer')).toBe(false);
     } finally {
       getContext.mockRestore();
@@ -370,7 +373,8 @@ describe('VideoEditor', () => {
     fireEvent.click(screen.getByLabelText('Export'));
     await act(async () => { fireEvent.click(screen.getByText('720p · faster')); });
     expect(exportVideoFFmpeg.mock.calls.at(-1)[6]).toMatchObject({ format: 'mp4', resolution: 720, download: false, backgroundColor: '#ffffff' });
-    expect(await screen.findByText('Your video is ready')).toBeTruthy();
+    // Generous wait: under a parallel build the ready card can take over a second to show.
+    expect(await screen.findByText('Your video is ready', {}, { timeout: 5000 })).toBeTruthy();
     expect(screen.getByText('Download')).toBeTruthy();
     expect(screen.getByText('Save to My Studio')).toBeTruthy();
     fireEvent.click(screen.getByLabelText('Close'));

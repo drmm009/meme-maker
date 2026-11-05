@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { END_CARD_MS, WATERMARK_ID, endCardClip, endCardStart, inkFor, watermarkClip, withWatermark, wrapLines } from './brandCard';
+import { END_CARD_MS, WATERMARK_ID, endCardClip, endCardStart, inkFor, keepEndCardLast, watermarkClip, withWatermark, wrapLines } from './brandCard';
 import type { Clip } from '../model/videoProject';
 
 const clip = (id: string, startMs: number, endMs: number, extra = {}) => ({ id, type: 'video', url: 'blob:x', startMs, endMs, ...extra }) as unknown as Clip;
@@ -29,6 +29,19 @@ describe('end card', () => {
     expect(endCardStart([])).toBe(0);
     const card = endCardClip({ title: 'Bye', subtitle: '', color: '#000000' }, 'data:x', items, 16 / 9);
     expect(card).toMatchObject({ type: 'image', startMs: 6000, endMs: 6000 + END_CARD_MS, x: 0, y: 0, width: 800, height: 450, isPositioned: true });
+  });
+
+  it('follows the other clips when they get longer or shorter, unless it was moved earlier', () => {
+    const card = clip('e', 6000, 8500, { type: 'image', endCard: { title: 'x' } });
+    const prev = [clip('a', 0, 6000), card];
+    const longer = keepEndCardLast(prev, [clip('a', 0, 9000), card]);
+    expect(longer[1]).toMatchObject({ startMs: 9000, endMs: 11500 });
+    const shorter = keepEndCardLast(prev, [clip('a', 0, 4000), card]);
+    expect(shorter[1]).toMatchObject({ startMs: 4000, endMs: 6500 });
+    const unchanged = [clip('a', 0, 6000), card];
+    expect(keepEndCardLast(prev, unchanged)).toBe(unchanged);
+    const movedEarlier = [clip('a', 0, 6000), { ...card, startMs: 2000, endMs: 4500 }];
+    expect(keepEndCardLast(movedEarlier, [clip('a', 0, 9000), movedEarlier[1]])[1].startMs).toBe(2000);
   });
 
   it('writes in black or white, whichever reads on the colour', () => {
