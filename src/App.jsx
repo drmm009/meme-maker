@@ -7,6 +7,7 @@ const CustomLayoutBuilder = lazy(() => import('./components/CustomLayoutBuilder'
 const VideoLayoutBuilder = lazy(() => import('./components/video-editor/VideoLayoutBuilder'));
 const MyGallery = lazy(() => import('./components/MyGallery'));
 const AccountModal = lazy(() => import('./components/AccountModal'));
+const CreditsModal = lazy(() => import('./components/CreditsModal'));
 const MemeEditor = lazy(() => import('./components/MemeEditor'));
 const VideoEditor = lazy(() => import('./components/video-editor/VideoEditor'));
 const NotificationsModal = lazy(() => import('./components/NotificationsModal'));
@@ -72,6 +73,7 @@ function App() {
 
   // Modals state
   const [accountModalOpen, setAccountModalOpen] = useState(false);
+  const [creditsOpen, setCreditsOpen] = useState(false);
   const [notificationsModalOpen, setNotificationsModalOpen] = useState(false);
   const [aiGeneratorModalOpen, setAiGeneratorModalOpen] = useState(false);
 
@@ -878,7 +880,18 @@ function App() {
       {/* Account Modal */}
       {accountModalOpen && (
         <Suspense fallback={null}>
-          <AccountModal isOpen={true} onClose={() => setAccountModalOpen(false)} />
+          <AccountModal
+            isOpen={true}
+            onClose={() => setAccountModalOpen(false)}
+            onOpenCredits={() => { setAccountModalOpen(false); setCreditsOpen(true); }}
+          />
+        </Suspense>
+      )}
+
+      {/* Credits & licences, opened from the Account modal */}
+      {creditsOpen && (
+        <Suspense fallback={null}>
+          <CreditsModal onClose={() => setCreditsOpen(false)} />
         </Suspense>
       )}
 

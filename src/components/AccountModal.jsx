@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import ModalPortal from './ModalPortal';
-import { User, Crown, ShieldCheck, Mail, Lock } from 'lucide-react';
+import { User, Crown, ShieldCheck, Mail, Lock, Heart } from 'lucide-react';
 
-export default function AccountModal({ isOpen = true, onClose }) {
+export default function AccountModal({ isOpen = true, onClose, onOpenCredits }) {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -173,6 +173,12 @@ export default function AccountModal({ isOpen = true, onClose }) {
                   </div>
                 </form>
               </div>
+            )}
+
+            {onOpenCredits && (
+              <button type="button" className="account-credits-link" onClick={onOpenCredits}>
+                <Heart className="icon-xs" aria-hidden="true" /> Credits &amp; licences
+              </button>
             )}
           </div>
         </div>

@@ -4411,3 +4411,27 @@ input:checked + .slider.round.watermark-toggle {
   width: 0 !important;
   height: 0 !important;
 }
+
+/* Account modal: link to Credits & licences */
+.account-credits-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  min-height: 44px;
+  margin-top: 14px;
+  padding: 10px;
+  border: 0;
+  border-top: 1px solid var(--border-subtle);
+  background: none;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.account-credits-link:hover,
+.account-credits-link:focus-visible {
+  color: var(--text-main);
+}
