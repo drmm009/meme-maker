@@ -1,131 +1,45 @@
 import { MEME_TEMPLATES as LOCAL_TEMPLATES, VIDEO_MEME_TEMPLATES as LOCAL_VIDEO_TEMPLATES } from '../data/templates';
+import { fromImgflip, fromMemegen, mergeTemplates } from '../utils/memeTemplateSources';
 
 // In-memory cache for open-source API templates
 let cachedTemplates = null;
 let cachedVideoTemplates = null;
 
+// Fetches JSON, giving up after `ms`.
+const fetchJson = async (url, ms = 8000) => {
+  const ctl = new AbortController();
+  const t = setTimeout(() => ctl.abort(), ms);
+  try {
+    const res = await fetch(url, { signal: ctl.signal });
+    if (!res.ok) throw new Error(`HTTP ${res.status} from ${url}`);
+    return await res.json();
+  } finally {
+    clearTimeout(t);
+  }
+};
+
 /**
- * Fetches 100+ viral meme templates from open-source APIs (Imgflip API & Memegen API)
- * with instant fallback to local curated templates.
+ * The curated templates plus Imgflip's top 100 and memegen.link's ~200, each meme once
+ * (see utils/memeTemplateSources). Either site may be down; whatever loads is used, and with
+ * neither the curated templates alone.
  */
 export async function fetchOpenSourceMemes() {
   if (cachedTemplates) {
     return cachedTemplates;
   }
 
-  try {
-    const ctl = new AbortController();
-    const t = setTimeout(() => ctl.abort(), 8000);
-    const res = await fetch('https://api.imgflip.com/get_memes', { signal: ctl.signal });
-    clearTimeout(t);
-    if (!res.ok) throw new Error(`Imgflip HTTP ${res.status}`);
-    const data = await res.json();
-
-    if (data.success && Array.isArray(data.data?.memes)) {
-      const onlineMemes = data.data.memes.map((m, index) => {
-        const lowerName = m.name.toLowerCase();
-        let category = 'trending';
-
-        if (
-          lowerName.includes('cat') ||
-          lowerName.includes('dog') ||
-          lowerName.includes('drake') ||
-          lowerName.includes('yell') ||
-          lowerName.includes('guy') ||
-          lowerName.includes('man') ||
-          lowerName.includes('face') ||
-          lowerName.includes('smile') ||
-          lowerName.includes('crying') ||
-          lowerName.includes('kid') ||
-          lowerName.includes('pepe')
-        ) {
-          category = 'reaction';
-        } else if (
-          lowerName.includes('vs') ||
-          lowerName.includes('button') ||
-          lowerName.includes('trade') ||
-          lowerName.includes('compare') ||
-          lowerName.includes('choice') ||
-          lowerName.includes('boyfriend') ||
-          lowerName.includes('car') ||
-          lowerName.includes('road')
-        ) {
-          category = 'comparison';
-        } else if (
-          (m.box_count && m.box_count >= 3) ||
-          lowerName.includes('brain') ||
-          lowerName.includes('panel') ||
-          lowerName.includes('board') ||
-          lowerName.includes('gru')
-        ) {
-          category = 'multi-panel';
-        } else if (
-          index < 25 ||
-          lowerName.includes('classic') ||
-          lowerName.includes('doge') ||
-          lowerName.includes('bad luck') ||
-          lowerName.includes('success')
-        ) {
-          category = 'classic';
-        }
-
-        // Auto-generate captions based on box_count
-        const boxCount = Math.min(Math.max(m.box_count || 2, 1), 4);
-        const defaultCaptions = [];
-
-        for (let i = 0; i < boxCount; i++) {
-          let yPos = 0.15;
-          if (boxCount === 1) {
-            yPos = 0.85;
-          } else if (boxCount === 2) {
-            yPos = i === 0 ? 0.15 : 0.85;
-          } else {
-            yPos = 0.12 + i * (0.76 / (boxCount - 1));
-          }
-
-          let defaultText = i === 0 ? 'TOP TEXT' : i === boxCount - 1 ? 'BOTTOM TEXT' : `TEXT ${i + 1}`;
-
-          defaultCaptions.push({
-            id: `cap-auto-${m.id}-${i}`,
-            text: defaultText,
-            x: 0.5,
-            y: Number(yPos.toFixed(2)),
-            fontSize: 44,
-            color: '#ffffff',
-            stroke: '#000000',
-            align: 'center',
-            fontFamily: 'Impact, sans-serif'
-          });
-        }
-
-        return {
-          id: `imgflip-${m.id}`,
-          name: m.name,
-          category: category,
-          tag: 'free',
-          imageUrl: m.url,
-          rawImageUrl: m.url,
-          width: m.width,
-          height: m.height,
-          boxCount: m.box_count,
-          defaultCaptions,
-          trendingScore: 100 - index
-        };
-      });
-
-      // Merge online memes with local curated templates (avoiding duplicates)
-      const localNames = new Set(LOCAL_TEMPLATES.map((t) => t.name.toLowerCase()));
-      const uniqueOnline = onlineMemes.filter((m) => !localNames.has(m.name.toLowerCase()));
-
-      cachedTemplates = [...LOCAL_TEMPLATES, ...uniqueOnline];
-      return cachedTemplates;
-    }
-  } catch (err) {
-    console.warn('Network error or API offline. Falling back to local templates dataset:', err);
+  const [imgflip, memegen] = await Promise.allSettled([
+    fetchJson('https://api.imgflip.com/get_memes').then((data) => (data.success && Array.isArray(data.data?.memes) ? data.data.memes.map(fromImgflip) : [])),
+    fetchJson('https://api.memegen.link/templates').then((list) => (Array.isArray(list) ? list.filter((t) => t?.id && t?.blank).map(fromMemegen) : [])),
+  ]);
+  for (const r of [imgflip, memegen]) {
+    if (r.status === 'rejected') console.warn('A meme template source is offline; using the others:', r.reason);
   }
-
-  cachedTemplates = LOCAL_TEMPLATES;
-  return LOCAL_TEMPLATES;
+  const online = [imgflip, memegen].flatMap((r) => (r.status === 'fulfilled' ? r.value : []));
+  const merged = mergeTemplates(LOCAL_TEMPLATES, online);
+  // Keep trying next time while nothing online came through.
+  if (online.length) cachedTemplates = merged;
+  return merged;
 }
 
 /**
