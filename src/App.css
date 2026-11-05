@@ -1023,7 +1023,7 @@ body.modal-open {
   .mobile-nav-item .icon-sm { width: 22px; height: 22px; }
   .btn { font-size: 0.95rem; }
   .icon-layout-label { font-size: 0.85rem !important; }
-  h3, h4 { font-size: 1.15rem !important; }
+  h3:not(:where(.ui-theme *)), h4:not(:where(.ui-theme *)) { font-size: 1.15rem !important; }
 }
 /*  Editor layout: the phone layout, used at every width (was inside this media query)  */
 .editor-topbar .btn { font-size: 0.88rem !important; padding: 6px 12px !important;
@@ -2391,8 +2391,8 @@ body {
   color: var(--text-main) !important;
 }
 
-/* --- Poster typography ------------------------------------- */
-h1, h2, h3,
+/* --- Poster typography (not in the editor, which has the UI kit's) --- */
+h1:not(:where(.ui-theme *)), h2:not(:where(.ui-theme *)), h3:not(:where(.ui-theme *)),
 .hero-banner h2 {
   font-family: 'Plus Jakarta Sans', Inter, system-ui, -apple-system, sans-serif !important;
   letter-spacing: -0.01em !important;
@@ -2663,11 +2663,12 @@ h1, h2, h3,
   -webkit-backdrop-filter: none !important;
   backdrop-filter: none !important;
 }
-input[type='text']:not(.search-pill-input):not(.bs-search-input):not(.watermark-inner-input):not(.ai-hero-prompt-input):not(.ie-ai-input-field),
-input[type='number'],
-input[type='email'],
-textarea,
-select {
+/* Pill fields everywhere but the editor, whose fields are the UI kit's .ui-field. */
+input[type='text']:not(.search-pill-input):not(.bs-search-input):not(.watermark-inner-input):not(.ai-hero-prompt-input):not(.ie-ai-input-field):not(:where(.ui-theme *)),
+input[type='number']:not(:where(.ui-theme *)),
+input[type='email']:not(:where(.ui-theme *)),
+textarea:not(:where(.ui-theme *)),
+select:not(:where(.ui-theme *)) {
   background: var(--bg-surface-2) !important;
   border: 2px solid var(--glass-border) !important;
   border-radius: 999px !important;
@@ -3291,44 +3292,54 @@ button,
 .category-pill {
   -webkit-tap-highlight-color: transparent !important;
   -webkit-touch-callout: none !important;
+}
+button:not(:where(.ui-theme *)),
+.btn:not(:where(.ui-theme *)),
+.tab-btn:not(:where(.ui-theme *)),
+.btn-icon:not(:where(.ui-theme *)),
+.phrase-chip:not(:where(.ui-theme *)),
+.sticker-chip-btn:not(:where(.ui-theme *)),
+.graphic-sticker-btn:not(:where(.ui-theme *)),
+.aspect-ratio-display:not(:where(.ui-theme *)),
+.category-pill:not(:where(.ui-theme *)) {
   outline: none !important;
 }
 
-button:focus,
-button:focus-visible,
-button:active,
-.btn:focus,
-.btn:focus-visible,
-.btn:active,
-.tab-btn:focus,
-.tab-btn:focus-visible,
-.tab-btn:active,
-.btn-icon:focus,
-.btn-icon:focus-visible,
-.btn-icon:active,
-.phrase-chip:focus,
-.phrase-chip:active,
-.sticker-chip-btn:focus,
-.sticker-chip-btn:active,
-.graphic-sticker-btn:focus,
-.graphic-sticker-btn:active,
-.aspect-ratio-display:focus,
-.aspect-ratio-display:active,
-.category-pill:focus,
-.category-pill:active {
+button:focus:not(:where(.ui-theme *)),
+button:focus-visible:not(:where(.ui-theme *)),
+button:active:not(:where(.ui-theme *)),
+.btn:focus:not(:where(.ui-theme *)),
+.btn:focus-visible:not(:where(.ui-theme *)),
+.btn:active:not(:where(.ui-theme *)),
+.tab-btn:focus:not(:where(.ui-theme *)),
+.tab-btn:focus-visible:not(:where(.ui-theme *)),
+.tab-btn:active:not(:where(.ui-theme *)),
+.btn-icon:focus:not(:where(.ui-theme *)),
+.btn-icon:focus-visible:not(:where(.ui-theme *)),
+.btn-icon:active:not(:where(.ui-theme *)),
+.phrase-chip:focus:not(:where(.ui-theme *)),
+.phrase-chip:active:not(:where(.ui-theme *)),
+.sticker-chip-btn:focus:not(:where(.ui-theme *)),
+.sticker-chip-btn:active:not(:where(.ui-theme *)),
+.graphic-sticker-btn:focus:not(:where(.ui-theme *)),
+.graphic-sticker-btn:active:not(:where(.ui-theme *)),
+.aspect-ratio-display:focus:not(:where(.ui-theme *)),
+.aspect-ratio-display:active:not(:where(.ui-theme *)),
+.category-pill:focus:not(:where(.ui-theme *)),
+.category-pill:active:not(:where(.ui-theme *)) {
   outline: none !important;
   box-shadow: none !important;
   -webkit-tap-highlight-color: transparent !important;
 }
 
 /* Specific button click/active states for editor: no bluish gradient */
-.editor-topbar button:active,
-.editor-topbar .btn:active,
-.editor-sidebar button:active,
-.editor-sidebar .btn:active,
-.tab-buttons button:active,
-.btn:active,
-button:active {
+.editor-topbar button:active:not(:where(.ui-theme *)),
+.editor-topbar .btn:active:not(:where(.ui-theme *)),
+.editor-sidebar button:active:not(:where(.ui-theme *)),
+.editor-sidebar .btn:active:not(:where(.ui-theme *)),
+.tab-buttons button:active:not(:where(.ui-theme *)),
+.btn:active:not(:where(.ui-theme *)),
+button:active:not(:where(.ui-theme *)) {
   
   outline: none !important;
   -webkit-tap-highlight-color: transparent !important;

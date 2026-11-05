@@ -548,12 +548,12 @@
 /* A rule above the section, where the layout changes (as in the mockup: under the caption chips, above Adjustments). */
 .ui-section--rule { margin-top: 6px; padding-top: 16px; border-top: 1px solid rgba(255, 255, 255, 0.08); }
 .ui-section-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
-.ui-section-title { margin: 0; font-size: 13.5px !important; font-weight: 600 !important; color: #ffffff !important; letter-spacing: -0.01em; }
+.ui-section-title { margin: 0; font-size: 13.5px; font-weight: 600; color: #ffffff; letter-spacing: -0.01em; }
 .ui-section-aside { color: var(--ui-muted); font-size: 12px; }
 
 .ui-row { display: flex; align-items: center; gap: 12px; min-height: 40px; }
 .ui-row + .ui-row { margin-top: 6px; }
-.ui-row-label { flex-shrink: 0; width: 76px; color: #ffffff !important; font-size: 12.5px !important; font-weight: 600 !important; letter-spacing: -0.01em; }
+.ui-row-label { flex-shrink: 0; width: 76px; color: #ffffff; font-size: 12.5px; font-weight: 600; letter-spacing: -0.01em; }
 .ui-row-control { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; }
 .ui-row-control--end { justify-content: flex-end; }
 .ui-row-control > .ui-seg--fill, .ui-row-control > .ui-chips { flex: 1; min-width: 0; }
@@ -605,15 +605,15 @@
 }
 .ui-field:focus, .ui-field--accent { border-color: var(--ui-accent); background: rgba(255, 90, 54, 0.1); }
 .ui-field::placeholder { color: var(--ui-faint); }
-/* App.css styles every text input and textarea as a pill with !important. */
+/* App.css's pill fields stay out of the editor (.ui-theme), so these are the editor's fields. */
 .ui-theme .ui-field {
-  border: 1.5px solid var(--ui-line-strong) !important;
-  border-radius: var(--ui-radius-sm) !important;
-  background: var(--ui-surface-2) !important;
-  color: var(--ui-text) !important;
+  border: 1.5px solid var(--ui-line-strong);
+  border-radius: var(--ui-radius-sm);
+  background: var(--ui-surface-2);
+  color: var(--ui-text);
 }
 .ui-theme .ui-field:focus,
-.ui-theme .ui-field--accent { border-color: var(--ui-accent-edge) !important; background: var(--ui-accent-tint) !important; }
+.ui-theme .ui-field--accent { border-color: var(--ui-accent-edge); background: var(--ui-accent-tint); }
 
 /* ── Square toggles (font tiles, B / I / U) ──────────────── */
 .ui-toggle {
