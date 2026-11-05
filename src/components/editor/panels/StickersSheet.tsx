@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   BadgeCheck,
   Crown,
@@ -19,6 +19,9 @@ import { GIPHY_MOODS, hasGiphyKey } from '../../../services/giphy';
 import { filterStickers } from './mediaPickers';
 import type { GraphicSticker } from './mediaPickers';
 import { GRAPHIC_STICKER_CATEGORIES } from '../../../data/memeStickers';
+import { loadStickerPack, packGroups, searchPack } from '../../../utils/stickerPack';
+import type { PackSticker } from '../../../utils/stickerPack';
+import { loadEmojiLibrary } from '../../../utils/emojiLibrary';
 import type { EditorActions } from './selection';
 
 // High-utility Lucide icons and vibrant colors for category shelves
@@ -37,7 +40,22 @@ const CATEGORIES = GRAPHIC_STICKER_CATEGORIES.map((c) => ({
   color: STICKER_CATEGORY_META[c.id]?.color,
   items: filterStickers('', c.id),
 }));
-const TOTAL = CATEGORIES.reduce((n, c) => n + c.items.length, 0);
+const MEME_TOTAL = CATEGORIES.reduce((n, c) => n + c.items.length, 0);
+
+// The 3D pack and its emoji's search words, loaded the first time the Stickers tab shows.
+function useStickerPack(active: boolean) {
+  const [pack, setPack] = useState<PackSticker[]>([]);
+  const [tags, setTags] = useState<Map<string, string[]>>(() => new Map());
+  const [failed, setFailed] = useState(false);
+  useEffect(() => {
+    if (!active || pack.length) return undefined;
+    let alive = true;
+    loadStickerPack().then((p) => { if (alive) setPack(p); }).catch(() => { if (alive) setFailed(true); });
+    loadEmojiLibrary().then((l) => { if (alive) setTags(new Map(l.map((e) => [e.emoji, e.tags]))); }).catch(() => {});
+    return () => { alive = false; };
+  }, [active, pack.length]);
+  return { pack, tags, failed };
+}
 // Two rows of compact stickers per shelf.
 const SHELF_SIZE = 12;
 const SWITCH_KINDS = [
@@ -68,7 +86,8 @@ function StickerCard({ sticker, onPick }: { sticker: GraphicSticker; onPick: (s:
 
 // Media > Stickers: Stickers / Animated / GIFs in a track at the top. The built-in stickers are laid
 // out like the Explore page, a shelf per category (thug life shades, rage faces, bubbles...) with
-// See all, and a category or a search shows a grid; Animated and GIFs come from Giphy (GiphyResults),
+// See all, then the 3D pack (src/utils/stickerPack.ts) a shelf per keyboard group; a category or
+// a search (both kinds) shows a grid; Animated and GIFs come from Giphy (GiphyResults),
 // with mood chips (Trending, Reactions, LOL…) to browse by.
 // `only` narrows it to one job (the video editor's separate Stickers and GIFs sheets): 'stickers'
 // keeps Stickers / Animated without GIFs, 'gifs' is a GIFs sheet with no track.
@@ -80,9 +99,13 @@ export default function StickersSheet({ actions, onClose, only }: { actions: Edi
   const [mood, setMood] = useState('trending');
   const keyed = hasGiphyKey();
   const local = kind === 'stickers';
+  const { pack, tags, failed } = useStickerPack(local);
+  const groups = useMemo(() => packGroups(pack), [pack]);
   const browsing = !query.trim() && category === 'all';
-  const list = browsing ? [] : query.trim() ? filterStickers(query, '') : filterStickers('', category);
-  const label = CATEGORIES.find((c) => c.id === category)?.label ?? 'Stickers';
+  const list: GraphicSticker[] = browsing ? []
+    : query.trim() ? [...filterStickers(query, ''), ...searchPack(pack, query, tags)]
+    : CATEGORIES.find((c) => c.id === category)?.items ?? groups.find((g) => g.id === category)?.items ?? [];
+  const label = CATEGORIES.find((c) => c.id === category)?.label ?? groups.find((g) => g.id === category)?.label ?? 'Stickers';
 
   const pick = (s: GraphicSticker) => {
     actions.handleAddGraphicSticker(s);
@@ -99,7 +122,7 @@ export default function StickersSheet({ actions, onClose, only }: { actions: Edi
   return (
     <BrowseSheet
       title={only === 'gifs' ? 'GIFs' : 'Stickers'}
-      total={local ? TOTAL : undefined}
+      total={local ? MEME_TOTAL + pack.length : undefined}
       onClose={onClose}
       search={local || keyed ? { value: query, onChange: setQuery, ...SEARCH[kind] } : undefined}
       tabs={only === 'gifs' ? undefined : { items: SWITCH_KINDS, extra: only ? undefined : GIF_KIND, active: kind, onPick: switchKind }}
@@ -117,6 +140,17 @@ export default function StickersSheet({ actions, onClose, only }: { actions: Edi
         </Shelf>
       ))}
 
+      {local && browsing && groups.map((g) => (
+        <Shelf key={g.id} twoRow label={g.label} icon={g.icon} onSeeAll={() => choose(g.id)}>
+          {g.items.slice(0, SHELF_SIZE).map((s) => (
+            <div key={s.id} className="ie-shelf-card ie-shelf-card--small"><StickerCard sticker={s} onPick={pick} /></div>
+          ))}
+        </Shelf>
+      ))}
+      {local && browsing && !pack.length && (
+        <p className="ie-browse-note">{failed ? 'Couldn’t load the 3D stickers. Check your connection and reopen.' : 'Loading 3D stickers…'}</p>
+      )}
+
       {local && !browsing && (
         <ResultsHead backLabel="All stickers" summary={query.trim() ? `${list.length} for “${query.trim()}”` : `${label} · ${list.length}`} onBack={() => choose('all')} />
       )}
@@ -132,6 +166,7 @@ export default function StickersSheet({ actions, onClose, only }: { actions: Edi
       {local && !browsing && !list.length && (
         <BrowseEmpty Icon={Search} title={`No stickers match “${query.trim()}”`} text="Try a feeling, like “angry” or “cool”." action={{ label: 'Clear search', onClick: () => setQuery('') }} />
       )}
+      {local && pack.length > 0 && <p className="ie-giphy-credit">3D stickers: Fluent Emoji by Microsoft</p>}
     </BrowseSheet>
   );
 }
