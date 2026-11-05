@@ -192,7 +192,7 @@ function ShortcutsList() {
   );
 }
 
-// History, saved memes and keyboard shortcuts, from the top bar or '?': go back to any step,
+// History, saved memes and keyboard shortcuts, from Canvas > History or '?': go back to any step,
 // save/open memes, or browse shortcuts.
 export default function LibrarySheet({ actions, onClose }: { actions: EditorActions; onClose: () => void }) {
   const tab = useEditorUiStore((s: { libraryTab: 'history' | 'saved' | 'shortcuts' }) => s.libraryTab || 'history');

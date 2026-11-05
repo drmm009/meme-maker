@@ -1,13 +1,14 @@
-import { Undo2, Redo2, History, Maximize2, Sticker, ScanFace, Wand2 } from 'lucide-react';
+import { Undo2, Redo2, Maximize2, Sticker, ScanFace, Wand2 } from 'lucide-react';
 import { TopBar } from '../../ui';
 import { useMemeEditorStore, useMemeEditorHistory } from '../store/useMemeEditorStore';
 import { useEditorUiStore } from '../store/useEditorUiStore';
 import { EDITOR_MODES } from '../editorModes';
+import SizeMenu from './SizeMenu';
 
-// Back, undo/redo, History & saved (the list of steps, and memes saved as projects or
-// templates) and Export (which opens the Export sheet: format, size, download, share, copy, save
-// to gallery); the full editor has no title, so the meme gets the room. A focused maker shows its own title, and Full editor in History's place (the bar
-// stays as wide), which switches to the full editor on the same meme. The Stickers, AI Meme and Face Swap
+// Back, undo/redo, the canvas size for a tall canvas (SizeMenu; a short one has the bar above it) and
+// Export (which opens the Export sheet: format, size, download, share, copy, save to gallery); the full
+// editor has no title, so the meme gets the room. The Social Card maker shows its own title, and Full
+// editor, which switches to the full editor on the same meme. The Stickers, AI Meme and Face Swap
 // makers have their title with an icon, a line under it saying where the work stands, and only
 // undo/redo (Export is in their dock).
 const MAKER_ICONS = { sticker: Sticker, faceswap: ScanFace, ai: Wand2 };
@@ -22,6 +23,7 @@ export default function EditorTopBar({ onBack }) {
   const closeSheet = useEditorUiStore((s) => s.closeSheet);
   const mode = useEditorUiStore((s) => s.mode);
   const openFullEditor = useEditorUiStore((s) => s.openFullEditor);
+  const canvasTall = useEditorUiStore((s) => s.canvasTall);
   // The Stickers maker says under its title where the sticker stands.
   const stickerStage = useMemeEditorStore((s) => (!s.imageLayers.length ? 'Add a photo'
     : s.imageLayers.every((l) => l.originalUrl) ? 'Ready to export' : 'Ready to generate'));
@@ -60,23 +62,13 @@ export default function EditorTopBar({ onBack }) {
             <button type="button" className="ui-icon-btn ui-icon-btn--ghost" onClick={handleRedo} disabled={!canRedo} title="Redo" aria-label="Redo">
               <Redo2 size={19} />
             </button>
-            {mode === 'full' ? (
-              <button
-                type="button"
-                className="ui-icon-btn ui-icon-btn--ghost"
-                onClick={() => (sheet === 'library' ? closeSheet() : openSheet('library'))}
-                title="History & saved memes"
-                aria-label="History and saved memes"
-                aria-expanded={sheet === 'library'}
-              >
-                <History size={19} />
-              </button>
-            ) : (
+            {mode !== 'full' && (
               <button type="button" className="ui-icon-btn ui-icon-btn--ghost" onClick={openFullEditor} title="Open in the full editor" aria-label="Full editor">
                 <Maximize2 size={18} />
               </button>
             )}
           </div>
+          {canvasTall && <SizeMenu />}
           <button
             type="button"
             className="ui-btn-accent"

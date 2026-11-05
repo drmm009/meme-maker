@@ -108,6 +108,10 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
   );
   // Band captions shrink to fit their band, which keeps the height it was given.
   const captions = useMemo(() => fitCaptionsToBands(storeCaptions, headerExtH, footerExtH), [storeCaptions, headerExtH, footerExtH]);
+  // A tall canvas (bands included) moves the size control from the bar above it to the top bar.
+  const setCanvasTall = useEditorUiStore((s) => s.setCanvasTall);
+  const canvasTall = totalCanvasH / canvasW > 1.05;
+  useEffect(() => { setCanvasTall(canvasTall); }, [canvasTall, setCanvasTall]);
 
   const { getCaptionCenterY, getStickerCenterY, getImageLayerCenterY } = makeLayerCenters({
     canvasRef, canvasW, canvasH, headerExtH, footerExtH, totalCanvasH

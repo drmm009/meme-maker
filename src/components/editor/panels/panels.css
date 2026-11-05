@@ -1224,8 +1224,72 @@ div.ie-layer-pick { cursor: default; }
 .ie-bg-card-label { font-size: var(--ui-fs-body, 15px); font-weight: 600; letter-spacing: -0.01em; }
 .ie-bg-card-sub { color: var(--ui-muted, #a5a6ad); font-size: var(--ui-fs-label, 12px); font-weight: 500; }
 
-/* Canvas > Size: each shape's outline in its tile, in the tile's text colour. */
+/* The top bar's canvas size (SizeMenu, for a tall canvas): a soft pill with the shape's outline, and
+   under it a dark menu of shapes, the picked one in orange with a tick. */
 .ie-size-shape { display: block; box-sizing: border-box; border: 2px solid currentColor; border-radius: 3px; }
+.ie-size-menu { position: relative; }
+.ie-size-menu-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 10px 0 12px;
+  border: none;
+  border-radius: var(--ui-radius-full, 999px);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--ui-text, #f5f5f7);
+  font: inherit;
+  font-size: var(--ui-fs-footnote, 13px);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+.ie-size-menu-btn:hover { background: rgba(255, 255, 255, 0.12); }
+.ie-size-menu-btn[aria-expanded='true'] { background: rgba(255, 90, 54, 0.18); color: var(--ui-accent, #ff5a36); }
+.ie-size-menu-btn:focus-visible { outline: 2px solid var(--ui-accent, #ff5a36); outline-offset: 2px; }
+.ie-size-menu-btn svg { color: var(--ui-muted, #a5a6ad); }
+.ie-size-menu-btn[aria-expanded='true'] svg { color: inherit; }
+.ie-size-menu-list {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 200; /* over the canvas (60) and the floating tools */
+  display: flex;
+  flex-direction: column;
+  width: 196px;
+  padding: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--ui-radius-md, 16px);
+  background: #1c1c1e;
+  box-shadow: 0 18px 40px -12px rgba(0, 0, 0, 0.85);
+  transform-origin: top right;
+  animation: ie-size-menu-in 160ms cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+@keyframes ie-size-menu-in { from { opacity: 0; transform: scale(0.94); } }
+@media (prefers-reduced-motion: reduce) { .ie-size-menu-list { animation: none; } }
+.ie-size-menu-item {
+  display: grid;
+  grid-template-columns: 20px 1fr auto 14px;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 0 8px;
+  border: none;
+  border-radius: var(--ui-radius-sm, 12px);
+  background: transparent;
+  color: var(--ui-text, #f5f5f7);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.ie-size-menu-item:hover { background: rgba(255, 255, 255, 0.07); }
+.ie-size-menu-item:focus-visible { outline: 2px solid var(--ui-accent, #ff5a36); outline-offset: -2px; }
+.ie-size-menu-item.is-on { color: var(--ui-accent, #ff5a36); }
+.ie-size-menu-icon { display: grid; place-items: center; color: var(--ui-muted, #a5a6ad); }
+.ie-size-menu-item.is-on .ie-size-menu-icon { color: inherit; }
+.ie-size-menu-name { font-size: var(--ui-fs-footnote, 13px); font-weight: 600; white-space: nowrap; }
+.ie-size-menu-sub { color: var(--ui-muted, #a5a6ad); font-size: var(--ui-fs-label, 12px); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ie-size-menu-check { grid-column: 4; }
 
 /* Face swap, while it's being tuned: Compare (hold), Cancel and Done in one row. */
 .ie-fs-foot { display: flex; gap: 8px; padding-top: 6px; }

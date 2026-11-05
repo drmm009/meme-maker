@@ -25,9 +25,10 @@ const STEPS: TourStep[] = [
     body: 'Select text, a sticker or a photo to get its quick tools floating above it. Drag to move; use the corner handles to resize or rotate.',
   },
   {
-    target: '.ui-dock-item:last-child',
+    // The bar above the canvas, or the top bar's size menu for a tall canvas.
+    target: '.ie-aspect-bar, .ie-size-menu',
     title: 'Pick the shape',
-    body: 'Canvas > Size: square for posts, 9:16 for stories, or keep the original picture.',
+    body: 'Square for posts, 9:16 for stories, or keep the original picture.',
   },
   {
     target: '.ui-topbar .ui-btn-accent',

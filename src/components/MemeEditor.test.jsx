@@ -37,6 +37,10 @@ vi.mock('./CanvasEditor', async () => {
     };
     canvas.props = props;
     canvas.ui = ui;
+    // Like the real canvas, say whether it's tall (here: the portrait shapes, no bands).
+    const tall = ['4:5', '9:16'].includes(doc.aspectRatio);
+    const setCanvasTall = ui.setCanvasTall;
+    React.useEffect(() => { setCanvasTall(tall); }, [tall, setCanvasTall]);
     React.useImperativeHandle(ref, () => ({ toDataURL: () => 'data:image/png;base64,STUB', get animation() { return canvas.animation; } }));
     return (
       <div data-testid="canvas-stub">
@@ -206,7 +210,7 @@ describe('MemeEditor', () => {
       ['Photos, videos, stickers and emoji', 'Media tools', ['Photo', 'Templates', 'Stickers', 'Emoji']],
       ['AI tools and photo filters', 'AI and filter tools', ['Face Swap', 'Background', 'AI Caption', 'Filters']],
       ['Draw on the meme', 'Draw tools', ['Brush', 'Glow', 'Marker', 'Eraser', 'Shapes']],
-      ['Canvas colour, bands and watermark', 'Canvas tools', ['Size', 'Canvas Style', 'Header & Footer', 'Censor', 'Watermark']],
+      ['Canvas colour, bands and watermark', 'Canvas tools', ['History', 'Canvas Style', 'Header & Footer', 'Censor', 'Watermark']],
       ['Text', 'Text tools', ['Add Text', 'Bubble', 'Social Card']],
     ];
     for (const [tab, name, tools] of strips) {
@@ -358,17 +362,26 @@ describe('MemeEditor', () => {
     expect([...tools.querySelectorAll('button > span:last-child')].map((s) => s.textContent)).toEqual(['Font', 'Color', 'Bubble', 'Copy', 'Layers', 'Delete']);
   }, 30000);
 
-  it('the full editor picks the canvas shape in Canvas > Size, not a pill above the canvas', () => {
+  it('a short canvas has its shape in the bar above it, a tall one in the top bar size menu', () => {
     renderEditor();
-    expect(screen.queryByRole('radiogroup', { name: 'Aspect ratio' })).toBeNull();
-    openSection('Canvas colour, bands and watermark');
-    fireEvent.click(within(canvasStrip()).getByText('Size'));
-    const sizes = within(sheet('Size')).getByRole('radiogroup', { name: 'Aspect ratio' });
-    expect(within(sizes).getAllByRole('radio').map((r) => r.getAttribute('aria-label'))).toEqual(['Original', '1:1', '4:5', '9:16', '16:9']);
-    expect(within(sizes).getByRole('radio', { name: 'Original' }).getAttribute('aria-checked')).toBe('true');
-    fireEvent.click(within(sizes).getByRole('radio', { name: '9:16' }));
+    const bar = screen.getByRole('radiogroup', { name: 'Aspect ratio' });
+    expect(within(bar).getAllByRole('radio').map((r) => r.textContent)).toEqual(['Original', '1:1', '4:5', '9:16', '16:9']);
+    expect(within(bar).getByRole('radio', { name: 'Original' }).getAttribute('aria-checked')).toBe('true');
+    expect(screen.queryByRole('button', { name: /^Canvas size/ })).toBeNull();
+
+    fireEvent.click(within(bar).getByRole('radio', { name: '9:16' }));
     expect(canvas.props.aspectRatio).toBe('9:16');
-    expect(within(sizes).getByRole('radio', { name: '9:16' }).getAttribute('aria-checked')).toBe('true');
+    expect(screen.queryByRole('radiogroup', { name: 'Aspect ratio' })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Canvas size: Reels & TikTok' }));
+    const menu = screen.getByRole('menu', { name: 'Canvas size' });
+    const items = within(menu).getAllByRole('menuitemradio');
+    expect(items.map((i) => i.querySelector('.ie-size-menu-name').textContent)).toEqual(['Original', 'Facebook', 'Instagram', 'Reels & TikTok', 'YouTube']);
+    expect(items[3].getAttribute('aria-checked')).toBe('true');
+
+    fireEvent.click(items[1]);
+    expect(canvas.props.aspectRatio).toBe('1:1');
+    expect(screen.queryByRole('menu', { name: 'Canvas size' })).toBeNull();
+    expect(screen.getByRole('radiogroup', { name: 'Aspect ratio' })).toBeTruthy();
   });
 
   it('shows the floating tools for the selected caption once its sheet closes', () => {
@@ -537,7 +550,8 @@ describe('MemeEditor', () => {
     renderEditor();
     act(() => canvas.props.onAddDrawing({ points: [0, 0, 10, 10], color: '#fff', size: 4, tool: 'brush' }));
     addTextFromMenu();
-    fireEvent.click(screen.getByLabelText('History and saved memes'));
+    openSection('Canvas colour, bands and watermark');
+    fireEvent.click(within(canvasStrip()).getByText('History'));
     const steps = () => within(screen.getByRole('list', { name: 'History' })).getAllByRole('button').map((b) => b.textContent);
     expect(steps()).toEqual(['Added textNow', 'Added drawing', 'Start']);
     fireEvent.click(within(screen.getByRole('list', { name: 'History' })).getByText('Start'));
@@ -855,7 +869,7 @@ describe('MemeEditor', () => {
   it('Canvas shows Canvas Style, Watermark, Header & Footer and Censor; each opens its sheet under the strip', () => {
     renderEditor();
     openSection('Canvas colour, bands and watermark');
-    expect(within(canvasStrip()).getAllByRole('button').map((b) => b.textContent)).toEqual(['Size', 'Canvas Style', 'Header & Footer', 'Censor', 'Watermark']);
+    expect(within(canvasStrip()).getAllByRole('button').map((b) => b.textContent)).toEqual(['History', 'Canvas Style', 'Header & Footer', 'Censor', 'Watermark']);
 
     fireEvent.click(within(canvasStrip()).getByText('Canvas Style'));
     fireEvent.click(within(sheet('Canvas Style')).getByRole('radio', { name: '#000000' }));

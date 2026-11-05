@@ -100,6 +100,7 @@ export function buildInitialUi(template) {
     // A sticker exports see-through (stickerMaker.ts); only the full editor's choices are remembered.
     exportPrefs: mode === 'sticker' ? stickerExportPrefs(loadExportPrefs()) : loadExportPrefs(), // { format: 'png' | 'jpeg' | 'webp', quality: 0.5..1, width: 'full' | 720 | 480 }
     libraryTab: 'history', // 'history' | 'saved' | 'shortcuts'
+    canvasTall: false, // the canvas is taller than wide: its size shows in the top bar, not the bar above it
   };
 }
 
@@ -107,7 +108,7 @@ const UI_FIELDS = Object.keys(buildInitialUi(null));
 
 // The dock tab each sheet belongs to: its strip shows above the sheet.
 // null: no strip (Export). Sheets not listed (Layers) keep the strip that shows.
-const SHEET_TAB = { text: 'text', media: 'media', draw: 'draw', canvasColor: 'canvas', watermark: 'canvas', bands: 'canvas', aiCaption: 'fx', filters: 'fx', background: 'fx', export: null, library: null, mediaLink: 'media', templates: 'media', memes: 'swap', card: 'card', cardLook: 'card', faceSwap: 'swap', stickers: 'media', gifs: 'media', emoji: 'media', bubble: 'text', diecut: 'media' };
+const SHEET_TAB = { text: 'text', media: 'media', draw: 'draw', canvasColor: 'canvas', watermark: 'canvas', bands: 'canvas', aiCaption: 'fx', filters: 'fx', background: 'fx', export: null, library: 'canvas', mediaLink: 'media', templates: 'media', memes: 'swap', card: 'card', cardLook: 'card', faceSwap: 'swap', stickers: 'media', gifs: 'media', emoji: 'media', bubble: 'text', diecut: 'media' };
 
 // useState-style setter: accepts a value or an updater function.
 const fieldSetter = (set, key) => (valueOrUpdater) =>
