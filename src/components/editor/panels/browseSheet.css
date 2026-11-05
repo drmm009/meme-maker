@@ -508,6 +508,10 @@
 }
 
 /* GIFs: square cards, filled. */
+/* Show more under Giphy results (also loads by itself as the list nears its end). */
+.ie-browse-more { display: flex; justify-content: center; padding: 4px 0 8px; }
+.ie-browse-more .ie-browse-empty-btn { margin-top: 12px; }
+.ie-browse-more .ie-browse-empty-btn:disabled { opacity: 0.55; cursor: default; }
 .ie-gif-skeleton { border-radius: var(--ui-radius-md, 16px); aspect-ratio: 1; }
 .ie-giphy-credit {
   margin: 22px 0 0;

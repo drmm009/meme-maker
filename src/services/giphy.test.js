@@ -1,5 +1,6 @@
+// @vitest-environment jsdom
 import { describe, it, expect } from 'vitest';
-import { giphyUrl, toGifResult } from './giphy';
+import { GIPHY_PAGE, appendPage, giphyUrl, hasMorePages, readRecentGifs, rememberGif, toGifResult } from './giphy';
 
 describe('giphy', () => {
   it('builds trending and search URLs for stickers and GIFs', () => {
@@ -11,6 +12,24 @@ describe('giphy', () => {
     expect(search.pathname).toBe('/v1/gifs/search');
     expect(search.searchParams.get('q')).toBe('bruh moment');
     expect(search.searchParams.get('offset')).toBe('30');
+  });
+
+  it('pages until a short page or Giphy’s last offset, without repeats', () => {
+    expect(hasMorePages(GIPHY_PAGE, 0)).toBe(true);
+    expect(hasMorePages(12, 30)).toBe(false);
+    expect(hasMorePages(GIPHY_PAGE, 4980)).toBe(false);
+    expect(appendPage([{ id: 'a' }, { id: 'b' }], [{ id: 'b' }, { id: 'c' }]).map((r) => r.id)).toEqual(['a', 'b', 'c']);
+  });
+
+  it('remembers the last picks per kind, newest first', () => {
+    localStorage.removeItem('meme_recent_gifs');
+    const gif = (id) => ({ id, title: id, preview: `p/${id}`, url: `u/${id}`, width: 200, height: 200 });
+    rememberGif('gifs', gif('a'));
+    rememberGif('gifs', gif('b'));
+    rememberGif('gifs', gif('a'));
+    expect(readRecentGifs('gifs').map((r) => r.id)).toEqual(['a', 'b']);
+    expect(readRecentGifs('stickers').some((r) => r.id === 'a')).toBe(false);
+    localStorage.removeItem('meme_recent_gifs');
   });
 
   it('maps a result to a preview and a 200px GIF', () => {

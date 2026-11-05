@@ -15,7 +15,7 @@ import type { LucideIcon } from 'lucide-react';
 import BrowseSheet, { BrowseEmpty, ResultsHead, Shelf, Thumb } from './BrowseSheet';
 import GiphyResults from './GiphyResults';
 import type { GifResult } from './GiphyResults';
-import { hasGiphyKey } from '../../../services/giphy';
+import { GIPHY_MOODS, hasGiphyKey } from '../../../services/giphy';
 import { filterStickers } from './mediaPickers';
 import type { GraphicSticker } from './mediaPickers';
 import { GRAPHIC_STICKER_CATEGORIES } from '../../../data/memeStickers';
@@ -68,13 +68,16 @@ function StickerCard({ sticker, onPick }: { sticker: GraphicSticker; onPick: (s:
 
 // Media > Stickers: Stickers / Animated / GIFs in a track at the top. The built-in stickers are laid
 // out like the Explore page, a shelf per category (thug life shades, rage faces, bubbles...) with
-// See all, and a category or a search shows a grid; Animated and GIFs come from Giphy (GiphyResults).
+// See all, and a category or a search shows a grid; Animated and GIFs come from Giphy (GiphyResults),
+// with mood chips (Trending, Reactions, LOL…) to browse by.
 // `only` narrows it to one job (the video editor's separate Stickers and GIFs sheets): 'stickers'
 // keeps Stickers / Animated without GIFs, 'gifs' is a GIFs sheet with no track.
 export default function StickersSheet({ actions, onClose, only }: { actions: EditorActions; onClose: () => void; only?: 'stickers' | 'gifs' }) {
   const [kind, setKind] = useState<Kind>(only === 'gifs' ? 'gifs' : 'stickers');
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('all');
+  // Animated and GIFs: a mood to browse (the chips), until a search.
+  const [mood, setMood] = useState('trending');
   const keyed = hasGiphyKey();
   const local = kind === 'stickers';
   const browsing = !query.trim() && category === 'all';
@@ -90,7 +93,8 @@ export default function StickersSheet({ actions, onClose, only }: { actions: Edi
     onClose();
   };
   const choose = (id: string) => { setCategory(id); setQuery(''); };
-  const switchKind = (id: string) => { setKind(id as Kind); setQuery(''); };
+  const switchKind = (id: string) => { setKind(id as Kind); setQuery(''); setMood('trending'); };
+  const chooseMood = (id: string) => { setMood(id); setQuery(''); };
 
   return (
     <BrowseSheet
@@ -99,8 +103,11 @@ export default function StickersSheet({ actions, onClose, only }: { actions: Edi
       onClose={onClose}
       search={local || keyed ? { value: query, onChange: setQuery, ...SEARCH[kind] } : undefined}
       tabs={only === 'gifs' ? undefined : { items: SWITCH_KINDS, extra: only ? undefined : GIF_KIND, active: kind, onPick: switchKind }}
+      chips={!local && keyed ? GIPHY_MOODS.map(({ id, label }) => ({ id, label })) : undefined}
+      active={!local && !query.trim() ? mood : null}
+      onChip={chooseMood}
     >
-      {!local && <GiphyResults key={kind} kind={kind === 'gifs' ? 'gifs' : 'stickers'} query={query} keyed={keyed} onClearQuery={() => setQuery('')} onPick={pickGif} />}
+      {!local && <GiphyResults key={kind} kind={kind === 'gifs' ? 'gifs' : 'stickers'} query={query} mood={mood} keyed={keyed} onClearQuery={() => setQuery('')} onPick={pickGif} />}
 
       {local && browsing && CATEGORIES.map((c) => (
         <Shelf key={c.id} twoRow label={c.label} Icon={c.Icon} color={c.color} icon={c.icon} onSeeAll={() => choose(c.id)}>

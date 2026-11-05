@@ -1115,7 +1115,7 @@ describe('MemeEditor', () => {
     expect(screen.queryByRole('dialog', { name: 'Die-cut' })).toBeNull();
   }, 30000);
 
-  it('Media > Stickers has Stickers / Animated / GIFs; the Giphy kinds have no category chips', () => {
+  it('Media > Stickers has Stickers / Animated / GIFs; the Giphy kinds have mood chips, not categories', () => {
     renderEditor();
     openSection('Photos, videos, stickers and emoji');
     fireEvent.click(within(strip('Media tools')).getByText('Stickers'));
@@ -1125,7 +1125,10 @@ describe('MemeEditor', () => {
     expect(within(panel).queryByRole('toolbar', { name: 'Stickers categories' })).toBeNull();
     fireEvent.click(within(kinds).getByRole('tab', { name: 'GIFs' }));
     expect(within(kinds).getByRole('tab', { name: 'GIFs' }).getAttribute('aria-selected')).toBe('true');
-    expect(within(panel).queryByRole('toolbar', { name: 'Stickers categories' })).toBeNull();
+    // Moods to browse need Giphy, so they only show with a key (.env isn't in CI).
+    const moods = within(panel).queryByRole('toolbar', { name: 'Stickers categories' });
+    if (import.meta.env.VITE_GIPHY_API_KEY) expect(within(moods).getAllByRole('button')[0].textContent).toBe('Trending');
+    else expect(moods).toBeNull();
     expect(within(panel).queryByRole('region', { name: 'Memes' })).toBeNull();
   }, 30000);
 
