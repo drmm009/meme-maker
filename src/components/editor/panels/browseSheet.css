@@ -10,13 +10,16 @@
 /* The restore-draft offer floats over the editor; it would cover the sheet's title and close. */
 .meme-editor-container:has(.ie-panels--full) .meme-draft-offer { display: none; }
 
-/* Pitch black: these full-height sheets read as a page of their own
-   and the thumbnails stand out. Anything drawn in the sheet's colour follows (--ui-surface). */
-.ie-browse-sheet {
-  --ui-surface: #000000;
-  height: 100%;
+/* The same grey as every sheet and the dock. */
+.ie-browse-sheet { height: 100%; }
+/* The full-height sheets cover the canvas: frosted glass, the meme blurred behind the dock's grey.
+   The blur is dimmed to half first, so even a white 9:16 canvas behind only lifts the grey a little
+   (to about #303032 at most) and the sheet never turns white. */
+.ie-panels--full .ui-sheet {
+  background: rgba(28, 28, 30, 0.8) !important;
+  -webkit-backdrop-filter: blur(30px) brightness(0.5) saturate(1.4);
+  backdrop-filter: blur(30px) brightness(0.5) saturate(1.4);
 }
-.ui-sheet.ie-browse-sheet { background: var(--ui-surface) !important; }
 .ie-browse-sheet .ui-sheet-body {
   display: flex;
   flex-direction: column;
@@ -545,4 +548,24 @@
 @media (prefers-reduced-motion: reduce) {
   .ie-browse-thumb.is-loading { animation: none; }
   .ie-browse-thumb img, .ie-browse-item { transition: none; }
+}
+
+/* On the glass sheets a solid grey would melt into the blur, so the search field, chips, close button
+   and cards are a white wash instead: always a step brighter than whatever shows through behind. */
+.ie-panels--full .ie-browse-search input,
+.ie-panels--full .ie-browse-close,
+.ie-panels--full .ie-browse-chips--fill,
+.ie-panels--full .ie-browse-chip--standalone:not(.is-on),
+.ie-panels--full .ie-browse-chips:not(.ie-browse-chips--fill) > .ie-browse-chip:not(.is-on),
+.ie-panels--full .ie-card,
+.ie-panels--full .ie-card-media--paper,
+.ie-panels--full .ie-emoji-card { background: rgba(255, 255, 255, 0.12); }
+.ie-panels--full .ie-browse-search input:focus { background: rgba(255, 255, 255, 0.16); }
+.ie-panels--full .ie-browse-chips--fill .ie-browse-chip:hover:not(.is-on) { background: rgba(255, 255, 255, 0.1); }
+@media (hover: hover) {
+  .ie-panels--full .ie-browse-close:hover,
+  .ie-panels--full .ie-browse-chip--standalone:hover:not(.is-on),
+  .ie-panels--full .ie-browse-chips:not(.ie-browse-chips--fill) > .ie-browse-chip:hover:not(.is-on),
+  .ie-panels--full .ie-card:hover,
+  .ie-panels--full .ie-emoji-card:hover { background: rgba(255, 255, 255, 0.18); }
 }
