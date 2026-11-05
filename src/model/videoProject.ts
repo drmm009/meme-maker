@@ -40,6 +40,14 @@ interface ClipBase {
   z?: number;
 }
 
+// The part of a picture's frame a clip shows, as fractions (0..1) of the frame.
+export interface ClipCrop {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
 // Anything drawn on the canvas. x/y are the top-left corner; rotation (degrees, clockwise) turns
 // the clip about that corner, as Konva does.
 export interface Placed {
@@ -53,6 +61,9 @@ export interface Placed {
   rotation?: number;
   // 0 (see-through) to 1 (solid); missing means solid.
   opacity?: number;
+  // Photos, videos and stickers: the part of the frame shown (width/height are its size on the
+  // canvas); missing or null is the whole frame.
+  crop?: ClipCrop | null;
   // Set once the clip has been placed at its natural size.
   isPositioned?: boolean;
   // The panel of a multi-panel layout the clip belongs to.

@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { Image as KonvaImage, Transformer } from 'react-konva';
 import { useEditorStore } from '../../../store/useVideoEditorStore';
-import { applyMotion } from './nodeMotion';
+import { applyMotion, applyPunch } from './nodeMotion';
+import { clipCrop } from '../../../utils/clipCrop';
 import { dropSlotIndex, fitPlacement, isOnScreen, mediaAttrs } from './previewMath';
 import { attachPreviewVideo } from './previewVideo';
 import { useFrameEffects } from './useFrameEffects';
@@ -70,6 +71,14 @@ const CanvasMedia = ({ item, isSelected, onSelect, onChange, canvasDimensions })
       if (node && latest.isFreeze && applyMotion(node, latest, state)) node.getLayer()?.batchDraw();
     });
   }, [item.type, item.startMs, item.endMs]);
+
+  // The crop, in the pixels of whatever is showing (it changes size when a filter or green screen
+  // turns on). Videos and freeze frames keep it up to date as they play (applyMotion).
+  const crop = clipCrop(item);
+  useLayoutEffect(() => {
+    const node = imageRef.current;
+    if (node && applyPunch(node, 1, crop)) node.getLayer()?.batchDraw();
+  }, [crop.x, crop.y, crop.width, crop.height, image, effectImage]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (isSelected && trRef.current && imageRef.current) {

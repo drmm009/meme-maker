@@ -92,6 +92,13 @@ describe('createExportGraph', () => {
     expect(second).not.toContain('colorchannelmixer');
   });
 
+  it('crops a clip’s frame before scaling it to size', () => {
+    const g = graphFor();
+    g.addVisual({ type: 'image', url: 'p', width: 100, height: 50, crop: { x: 0.25, y: 0.1, width: 0.5, height: 0.8 } }, { fileName: 'input_2.png', kind: 'still', ratio: 1, items: [] });
+    const [chain] = filtersOf(g.finish().command);
+    expect(chain).toBe('[2:v]setpts=(PTS-STARTPTS)/1,crop=w=iw*0.5:h=ih*0.8:x=iw*0.25:y=ih*0.1,scale=100:50[vis2]');
+  });
+
   it('leaves unturned clips (0 or a full turn) as they are', () => {
     for (const rotation of [0, 360]) {
       const g = graphFor();

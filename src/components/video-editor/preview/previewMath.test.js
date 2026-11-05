@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
-  dropSlotIndex, effectCanvasSize, fitPlacement, fitStage, isOnScreen, punchCrop, rotateAboutCenter,
+  dropSlotIndex, effectCanvasSize, fitPlacement, fitStage, isOnScreen, rotateAboutCenter,
   textResize, videoSyncPlan, videoTimeSec
 } from './previewMath';
 import { rotatedCenter } from '../../../utils/rotation';
@@ -94,11 +94,6 @@ describe('videoSyncPlan', () => {
 });
 
 describe('frames', () => {
-  it('crops the centre of the frame for a zoom-punch', () => {
-    expect(punchCrop(640, 360, 2)).toEqual({ x: 160, y: 90, width: 320, height: 180 });
-    expect(punchCrop(640, 360, 1)).toBeNull();
-  });
-
   it('keys video at up to 640px and processes photos at up to 1280px', () => {
     expect(effectCanvasSize(1920, 1080, true)).toEqual({ width: 640, height: 360 });
     expect(effectCanvasSize(1920, 1080, false)).toEqual({ width: 1280, height: 720 });

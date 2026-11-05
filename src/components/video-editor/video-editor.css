@@ -1003,3 +1003,52 @@
 .vt-captions-bar span { position: absolute; inset: 0 auto 0 0; width: 0; border-radius: inherit; background: var(--vt-grad); transition: width 0.3s var(--vt-ease); }
 .vt-captions-bar.is-busy span { width: 35%; animation: vt-captions-busy 1.2s ease-in-out infinite; }
 @keyframes vt-captions-busy { from { left: -35%; } to { left: 100%; } }
+
+/* Crop: the clip's whole picture with a box to drag over it; outside the box is dimmed. */
+.vt-crop { display: flex; flex-direction: column; gap: 14px; }
+.vt-crop-host { display: flex; justify-content: center; }
+.vt-crop-frame { position: relative; overflow: hidden; border-radius: 10px; touch-action: none; user-select: none; }
+.vt-crop-frame img { display: block; width: 100%; height: 100%; pointer-events: none; }
+.vt-crop-box {
+  position: absolute;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.6);
+  outline: 2px solid #fff;
+  outline-offset: -1px;
+  cursor: move;
+  touch-action: none;
+}
+.vt-crop-box::before, .vt-crop-box::after {
+  content: '';
+  position: absolute;
+  inset: 33.333% 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.35);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.35);
+  pointer-events: none;
+}
+.vt-crop-box::after { inset: 0 33.333%; border: none; border-left: 1px solid rgba(255, 255, 255, 0.35); border-right: 1px solid rgba(255, 255, 255, 0.35); }
+.vt-crop-handle {
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  touch-action: none;
+}
+.vt-crop-handle::before {
+  content: '';
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border: 0 solid #fff;
+}
+.vt-crop-handle.is-nw { left: -8px; top: -8px; cursor: nwse-resize; }
+.vt-crop-handle.is-ne { right: -8px; top: -8px; cursor: nesw-resize; }
+.vt-crop-handle.is-sw { left: -8px; bottom: -8px; cursor: nesw-resize; }
+.vt-crop-handle.is-se { right: -8px; bottom: -8px; cursor: nwse-resize; }
+.vt-crop-handle.is-nw::before { left: 6px; top: 6px; border-left-width: 4px; border-top-width: 4px; }
+.vt-crop-handle.is-ne::before { right: 6px; top: 6px; border-right-width: 4px; border-top-width: 4px; }
+.vt-crop-handle.is-sw::before { left: 6px; bottom: 6px; border-left-width: 4px; border-bottom-width: 4px; }
+.vt-crop-handle.is-se::before { right: 6px; bottom: 6px; border-right-width: 4px; border-bottom-width: 4px; }
+.vt-crop-loading { display: grid; place-items: center; width: 100%; color: var(--vt-muted); font-size: 13px; }
+.vt-crop-shapes { flex-wrap: nowrap; justify-content: center; gap: 6px; overflow-x: auto; scrollbar-width: none; }
+.vt-crop-shapes .vt-chip { flex: none; padding: 8px 11px; }
+.vt-crop-shapes .vt-chip:disabled { opacity: 0.45; cursor: default; }
+.vt-crop-reset { display: inline-flex; align-items: center; gap: 6px; }

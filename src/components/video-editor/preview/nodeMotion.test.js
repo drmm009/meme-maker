@@ -7,7 +7,7 @@ const fakeNode = (attrs = {}) => {
   return {
     a,
     image: () => a.image,
-    crop: (c) => { a.crop = c; },
+    crop: (c) => (c === undefined ? a.crop : (a.crop = c)),
     cropWidth: () => a.crop.width,
     opacity: (v) => (v === undefined ? a.opacity : (a.opacity = v)),
     x: (v) => (v === undefined ? a.x : (a.x = v)),
@@ -24,6 +24,16 @@ describe('applyPunch', () => {
     expect(applyPunch(node, 1)).toBe(true);
     expect(node.a.crop.width).toBe(0);
     expect(applyPunch(node, 1)).toBe(false); // already uncropped
+  });
+
+  it('shows the clip’s crop, and zooms a punch inside it', () => {
+    const node = fakeNode();
+    const crop = { x: 0.5, y: 0, width: 0.5, height: 1 };
+    expect(applyPunch(node, 1, crop)).toBe(true);
+    expect(node.a.crop).toEqual({ x: 320, y: 0, width: 320, height: 360 });
+    expect(applyPunch(node, 1, crop)).toBe(false); // already showing it
+    applyPunch(node, 2, crop);
+    expect(node.a.crop).toEqual({ x: 400, y: 90, width: 160, height: 180 });
   });
 
   it('waits for the frame to load', () => {

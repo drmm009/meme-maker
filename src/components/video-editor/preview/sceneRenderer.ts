@@ -12,7 +12,8 @@ import { hasTextBox, textAttrs, textBoxAttrs } from '../../../utils/textLayer';
 import { REST_FRAME, applyTextFrame, textAnimFrame } from '../../../utils/textAnimation';
 import { decodeGif, isGifUrl } from '../../../utils/gif';
 import { STAGE_WIDTH, isOnScreen, mediaAttrs, videoTimeSec } from './previewMath';
-import { applyMotion } from './nodeMotion';
+import { applyMotion, applyPunch } from './nodeMotion';
+import { clipCrop } from '../../../utils/clipCrop';
 import { effectsFor, hasEffects, processFrame } from './frameEffects';
 import type { EffectCanvases, FrameEffects } from './frameEffects';
 import { drawGifFrame } from './useGifFrames';
@@ -168,6 +169,8 @@ export async function createSceneRenderer({ items, width, height, aspect, backgr
         const { ok } = hasEffects(entry.effects) ? processFrame(img, entry.effects, entry.canvases) : { ok: false };
         node.image(ok && entry.canvases.canvas ? entry.canvases.canvas : img);
       }
+      // Its crop (videos and freeze frames set it each frame, with their zooms).
+      applyPunch(node, 1, clipCrop(item));
       media.push(entry);
     }
 

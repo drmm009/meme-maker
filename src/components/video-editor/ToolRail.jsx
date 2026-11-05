@@ -2,12 +2,14 @@ import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
   Type, Sticker, Smile, LayoutGrid, Image as ImageIcon, Film, Clapperboard, Music,
   Gauge, Volume2, VolumeX, Palette, Square, RotateCw, Minimize, Crop, Maximize, Copy, Trash2,
-  Scissors, PencilLine, ALargeSmall, TextAlignStart, TextAlignCenter, TextAlignEnd, SlidersHorizontal, WandSparkles, Pipette, Sparkles, ImagePlay, PaintBucket, Zap, Snowflake, Rewind, Repeat, ZoomIn, BringToFront, SendToBack, Mic, ArrowRightLeft, Frame, Plus, Upload, Library, Laugh, SquarePlay, Captions, Expand, Blend
+  Scissors, PencilLine, ALargeSmall, TextAlignStart, TextAlignCenter, TextAlignEnd, SlidersHorizontal, WandSparkles, Pipette, Sparkles, ImagePlay, PaintBucket, Zap, Snowflake, Rewind, Repeat, ZoomIn, BringToFront, SendToBack, Mic, ArrowRightLeft, Frame, Plus, Upload, Library, Laugh, SquarePlay, Captions, Expand, Blend, Scan
 } from 'lucide-react';
 import { FloatingToolbar, Sheet, ToolDock, ToolStrip } from '../ui';
 import { FiltersIcon } from '../editor/panels/editorIcons';
 import { useEditorStore, clipEffectBase, sourceTimeMs } from '../../store/useVideoEditorStore';
 import { clipOpacity } from '../../model/videoProject';
+import { clipCrop, isCropped } from '../../utils/clipCrop';
+import CropPanel from './CropPanel';
 import { captureFrame, renderClipEffect } from '../../utils/clipEffects';
 import { clipPunchTimes } from '../../utils/zoomPunch';
 import { FILTER_PRESETS } from '../../utils/clipFilters';
@@ -85,7 +87,7 @@ const ALIGNS = [
 const TEXT_COLORS = ['#ffffff', '#000000', '#ff5a36', '#facc15', '#22c55e', '#3b82f6', '#ec4899', '#a855f7'];
 const PLACEMENTS = [
   { value: 'fit', label: 'Fit', Icon: Minimize },
-  { value: 'cover', label: 'Fill', Icon: Crop },
+  { value: 'cover', label: 'Fill', Icon: Scan },
   { value: 'stretch', label: 'Stretch', Icon: Maximize },
 ];
 const MIN_SPLIT_MS = 100;
@@ -648,6 +650,7 @@ const SHEETS = {
   speed: { title: 'Speed', Icon: Gauge, Panel: SpeedPanel },
   place: { title: 'Fit to canvas', Icon: Expand, Panel: PlacePanel },
   opacity: { title: 'Opacity', Icon: Blend, Panel: OpacityPanel },
+  crop: { title: 'Crop', Icon: Crop, Panel: CropPanel },
   volume: { title: 'Volume', Icon: SlidersHorizontal, Panel: VolumePanel },
   greenscreen: { title: 'Green screen', Icon: WandSparkles, Panel: GreenScreenPanel },
   punch: { title: 'Zoom punch', Icon: ZoomIn, Panel: PunchPanel },
@@ -712,6 +715,9 @@ function clipTools(item, { sheet, toggle, playhead, items }) {
       { id: 'filter', label: filtered && preset?.id ? preset.label : 'Filters', Icon: FiltersIcon, ...opens('filter', filtered) },
       { id: 'place', label: 'Fit', title: 'Fit, fill or stretch to the canvas', Icon: Expand, ...opens('place') },
     );
+  }
+  if (item.type === 'image' || item.type === 'video' || item.type === 'sticker') {
+    tools.push({ id: 'crop', label: 'Crop', Icon: Crop, ...opens('crop', isCropped(clipCrop(item))) });
   }
   if (item.type === 'image' || item.type === 'sticker') {
     tools.push({ id: 'rotate', label: 'Rotate', Icon: RotateCw, onClick: () => update(item.id, rotateAboutCenter(item, ((item.rotation || 0) + 90) % 360)) });

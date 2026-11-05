@@ -63,12 +63,13 @@ export function dropSlotIndex(
 }
 
 // A photo, sticker or video's Konva.Image attributes, as the preview and the export draw it.
-export const mediaAttrs = (item: Placed & { crop?: { x: number; y: number; width: number; height: number } }) => ({
+// A picture clip's Konva attributes. Its crop is in its source's pixels, so applyPunch sets it
+// once the picture has loaded.
+export const mediaAttrs = (item: Placed) => ({
   x: item.x || 0,
   y: item.y || 0,
   width: item.width || 200,
   height: item.height || 200,
-  crop: item.crop,
   scaleX: item.scaleX || 1,
   scaleY: item.scaleY || 1,
   rotation: item.rotation || 0,
@@ -130,13 +131,6 @@ export function videoSyncPlan({ playing, visible, paused, pending, drift, frameC
   return plan;
 }
 
-// Zoom-punch: the centred part of an iw x ih frame to show at this zoom, or null for the full frame.
-export const punchCrop = (iw: number, ih: number, zoom: number): { x: number; y: number; width: number; height: number } | null => {
-  if (zoom <= 1.0001) return null;
-  const width = iw / zoom;
-  const height = ih / zoom;
-  return { x: (iw - width) / 2, y: (ih - height) / 2, width, height };
-};
 
 // Size of the offscreen canvas a green-screen or filtered frame is drawn into.
 export const effectCanvasSize = (sourceWidth: number, sourceHeight: number, isVideo: boolean): { width: number; height: number } => {
