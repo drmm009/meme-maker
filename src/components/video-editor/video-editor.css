@@ -444,12 +444,14 @@
   inset: 6px 6px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 2px;
-  opacity: 0.45;
+  overflow: hidden;
+  opacity: 0.3;
   pointer-events: none;
+  transition: opacity 0.2s ease;
 }
-.vt-clip-wave span { flex: 0 0 2px; border-radius: 2px; background: currentColor; }
+.vt-clip-wave.is-loaded { opacity: 0.5; }
+.vt-clip-wave span { flex: 0 0 2px; min-height: 2px; border-radius: 2px; background: currentColor; }
 
 .vt-clip-badge {
   position: absolute;

@@ -4,6 +4,7 @@ import { useEditorStore } from '../../../store/useVideoEditorStore';
 import { findSnap, pxToMs } from './timelineMath';
 import { filmstripTiles, loadFilmstrip } from '../../../utils/filmstrip';
 import { clipPunchTimes } from '../../../utils/zoomPunch';
+import { loadPeaks, waveBarsFor } from '../../../utils/waveform';
 
 // Inner height of a video clip (56px row minus borders); filmstrip tiles are this tall.
 const VIDEO_TILE_H = 52;
@@ -20,18 +21,23 @@ function useFilmstrip(url, enabled) {
   return strip;
 }
 
+// A sound's loudness peaks, or null while it decodes (or if it can't be).
+function useWaveform(url, enabled) {
+  const [peaks, setPeaks] = useState(null);
+  useEffect(() => {
+    if (!enabled || !url) return undefined;
+    let alive = true;
+    loadPeaks(url).then((p) => { if (alive) setPeaks(p); }).catch(() => {});
+    return () => { alive = false; };
+  }, [url, enabled]);
+  return peaks;
+}
+
 const MAX_MS = 100000;
 const MIN_CLIP_MS = 100;
-
-// Deterministic pseudo-waveform so an audio clip looks the same on every render.
-const waveBars = (seed, count) => {
-  let h = 0;
-  for (const ch of seed) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
-  return Array.from({ length: count }, (_, i) => {
-    h = (h * 1103515245 + 12345 + i) >>> 0;
-    return 25 + (h % 70);
-  });
-};
+// The waveform sits 6px inside the clip on each side; one bar per 4px.
+const WAVE_INSET = 6;
+const WAVE_BAR_PX = 4;
 
 const clipLabel = (item) => {
   if (item.type === 'text') return item.text || 'Text';
@@ -42,6 +48,12 @@ const clipLabel = (item) => {
 // One clip on a track. Tap selects; once selected it can be dragged and trimmed from either end.
 export default function TimelineClip({ item, left, width, selected, pxPerSec, onSnap }) {
   const strip = useFilmstrip(item.url, item.type === 'video');
+  const peaks = useWaveform(item.url, item.type === 'audio');
+  const waveWidth = Math.max(0, width - 2 * WAVE_INSET);
+  // The sound under the clip; flat while it decodes.
+  const bars = item.type !== 'audio' ? []
+    : peaks ? waveBarsFor(peaks, { width: waveWidth, pxPerSec, trimStartMs: item.trimStartMs || 0, rate: item.playbackRate || 1, barPx: WAVE_BAR_PX })
+    : Array.from({ length: Math.max(1, Math.floor(waveWidth / WAVE_BAR_PX)) }, () => 6);
   const thumb = item.type === 'video'
     ? (strip ? null : item.thumbnailUrl)
     : (item.type === 'image' || item.type === 'sticker') ? item.url : null;
@@ -129,8 +141,8 @@ export default function TimelineClip({ item, left, width, selected, pxPerSec, on
         <span key={t} className="vt-punch-mark" style={{ left: ((t - item.startMs) / 1000) * pxPerSec }} aria-hidden="true" />
       ))}
       {item.type === 'audio' && (
-        <div className="vt-clip-wave" aria-hidden="true">
-          {waveBars(item.id, Math.max(8, Math.floor(width / 5))).map((h, i) => <span key={i} style={{ height: `${h}%` }} />)}
+        <div className={`vt-clip-wave${peaks ? ' is-loaded' : ''}`} aria-hidden="true">
+          {bars.map((h, i) => <span key={i} style={{ height: `${h}%` }} />)}
         </div>
       )}
       {(item.type === 'text' || item.type === 'audio') && (
