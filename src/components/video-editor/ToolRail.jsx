@@ -888,14 +888,19 @@ export default function ToolRail({ onAdd }) {
   const setGroup = (name) => setGroupState({ id: ownerId, name });
 
   // The bottom's height without a sheet, kept while one is open (it then floats over the timeline,
-  // never higher than the timeline's top, the element before it).
+  // never higher than the timeline's top, the element before it; with the timeline closed, as high
+  // as its top would be when open, the clamp in .vt-editor.is-edit .vt-timeline-wrap).
   const wrapRef = useRef(null);
   const hasClip = Boolean(activeItem) || picked.length > 0;
   const [rest, setRest] = useState(null); // { height, room }
   useLayoutEffect(() => {
     const el = wrapRef.current;
     if (!el || spec) return undefined;
-    const measure = () => setRest({ height: el.offsetHeight, room: el.offsetHeight + (el.previousElementSibling?.offsetHeight || 0) });
+    const measure = () => {
+      const openTimeline = Math.min(320, Math.max(180, window.innerHeight * 0.31));
+      const timeline = Math.max(el.previousElementSibling?.offsetHeight || 0, openTimeline);
+      setRest({ height: el.offsetHeight, room: el.offsetHeight + timeline });
+    };
     measure();
     if (typeof ResizeObserver === 'undefined') return undefined;
     const observer = new ResizeObserver(measure);
