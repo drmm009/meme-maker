@@ -547,6 +547,10 @@
   scrollbar-width: none;
 }
 .vt-deckbar-items::-webkit-scrollbar { display: none; }
+.vt-deckbar-items.has-more {
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent);
+  mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent);
+}
 .vt-deckbar-btn {
   flex: 1 0 auto;
   display: flex;
@@ -585,6 +589,11 @@
 /* Media's Add image / Add video sheets: two compact tiles in a darker grey than the sheet, an orange icon beside the name and a
    line saying where it comes from. */
 .vt-sources { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+/* Three tiles: columns, the icon over the words. */
+.vt-sources--3 { grid-template-columns: repeat(3, 1fr); }
+.vt-sources--3 .vt-source { grid-template-columns: 1fr; justify-items: center; row-gap: 2px; padding: 12px 6px; text-align: center; }
+.vt-sources--3 .vt-source-icon { grid-row: auto; margin-bottom: 4px; }
+.vt-sources--3 .vt-source-label, .vt-sources--3 .vt-source-sub { align-self: auto; max-width: 100%; }
 .vt-source {
   display: grid;
   grid-template-columns: auto 1fr;

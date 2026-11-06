@@ -39,25 +39,21 @@ vi.mock('../../services/memeService', () => ({ fetchOpenSourceMemes: () => Promi
 
 const store = () => useEditorStore.getState();
 const clips = (container) => [...container.querySelectorAll('.vt-clip')];
-// Add tools live in the strips of the dock's sections, reached the way a user would.
-const addTextFromRail = () => { fireEvent.click(screen.getByText('Text')); fireEvent.click(screen.getByText('Add text')); };
-// A tool in the bottom bar's clip tools, its group (Effects, Adjust…) opened first when it's in one.
-// The bar's Back leaves a group (on the main tools it deselects the clip).
+// The add tools are one row in the bottom bar; some open a sheet of tiles for where to add from.
+const labels = (el, selector = 'button') => [...el.querySelectorAll(selector)].map((b) => b.textContent);
+const addTool = (label) => fireEvent.click(within(screen.getByRole('toolbar', { name: 'Add tools' })).getByText(label));
+const addFrom = (label, tile) => {
+  addTool(label);
+  fireEvent.click(within(screen.getByRole('dialog')).getByText(tile));
+};
+const addTextFromRail = () => addTool('Text');
+// A tool in the bottom bar's clip tools; Duplicate, the layer moves and Select are in the Arrange sheet.
 const pill = () => document.querySelector('.vt-deckbar[role="toolbar"]');
+const ARRANGE = ['Duplicate', 'Bring forward', 'Send back', 'Select'];
 const clipTool = (text) => {
-  const inPill = () => within(pill().querySelector('.vt-deckbar-items')).queryByText(text);
-  const inGroup = pill().getAttribute('aria-label') !== 'Clip tools';
-  if (text === 'Back') return within(pill()).getByText('Back');
-  if (inGroup && !inPill()) fireEvent.click(within(pill()).getByText('Back'));
-  if (inPill()) return inPill();
-  for (const group of ['Effects', 'Audio', 'Adjust', 'Arrange']) {
-    const button = within(pill()).queryByText(group);
-    if (!button) continue;
-    fireEvent.click(button);
-    if (inPill()) return inPill();
-    fireEvent.click(within(pill()).getByText('Back'));
-  }
-  throw new Error(`No clip tool "${text}"`);
+  if (!ARRANGE.includes(text)) return within(pill()).getByText(text);
+  fireEvent.click(within(pill()).getByText('Arrange'));
+  return within(screen.getByRole('dialog', { name: 'Arrange' })).getByText(text);
 };
 
 beforeEach(() => {
@@ -79,36 +75,21 @@ describe('VideoEditor', () => {
     fireEvent.click(screen.getByText('Done'));
     expect(screen.getByRole('group', { name: 'Start your video' })).toBeTruthy();
     expect(container.querySelector('.vt-timeline-wrap').textContent).toContain('Add a video');
-    const dock = screen.getByRole('navigation', { name: 'Sections' });
-    expect([...dock.querySelectorAll('button')].map((b) => b.textContent)).toEqual(['Media', 'Text', 'Stickers', 'Audio', 'Canvas']);
-    // No section's tools until a section is tapped: they take the sections' row, and Back brings it back.
-    expect(screen.queryByRole('toolbar', { name: /tools$/ })).toBeNull();
-    fireEvent.click(screen.getByText('Media'));
-    const strip = screen.getByRole('toolbar', { name: 'Media tools' });
-    expect([...strip.querySelectorAll('button')].map((b) => b.textContent)).toEqual(['Back', 'Photo', 'Video']);
-    expect(screen.queryByRole('navigation', { name: 'Sections' })).toBeNull();
-    fireEvent.click(within(strip).getByText('Back'));
-    expect(screen.queryByRole('toolbar', { name: 'Media tools' })).toBeNull();
-    expect(screen.getByRole('navigation', { name: 'Sections' })).toBeTruthy();
+    // Every add tool on one row, no Back.
+    const dock = screen.getByRole('toolbar', { name: 'Add tools' });
+    expect(labels(dock)).toEqual(['Video', 'Photo', 'Text', 'Stickers', 'Sounds', 'Voice', 'Subtitles', 'Canvas']);
   });
 
-  it('shows the tapped section’s tools in the bar', () => {
+  it('opens a sheet of tiles from an add tool, and a setting from a tile', () => {
     render(<VideoEditor onBack={() => {}} />);
-    fireEvent.click(screen.getByText('Audio'));
-    expect(screen.getByRole('toolbar', { name: 'Audio tools' })).toBeTruthy();
-    expect(screen.getByText('Voice')).toBeTruthy();
-    expect(screen.queryByRole('toolbar', { name: 'Media tools' })).toBeNull();
-  });
-
-  it('opens a setting as a sheet in place of the bar, and brings it back on close', () => {
-    render(<VideoEditor onBack={() => {}} />);
-    fireEvent.click(screen.getByText('Audio'));
+    addTool('Sounds');
+    expect(labels(screen.getByRole('dialog', { name: 'Add sound' }), '.vt-source-label')).toEqual(['Top sounds', 'All sounds', 'Upload']);
+    expect(screen.queryByRole('toolbar', { name: 'Add tools' })).toBeNull();
     fireEvent.click(screen.getByText('Top sounds'));
     expect(screen.getByRole('dialog', { name: 'Top sounds' })).toBeTruthy();
-    expect(screen.queryByRole('toolbar', { name: 'Audio tools' })).toBeNull();
     closeSheet();
     expect(screen.queryByRole('dialog')).toBeNull();
-    expect(screen.getByRole('toolbar', { name: 'Audio tools' })).toBeTruthy();
+    expect(screen.getByRole('toolbar', { name: 'Add tools' })).toBeTruthy();
   });
 
   it('adds a text clip from the rail and shows it on the timeline', () => {
@@ -123,23 +104,20 @@ describe('VideoEditor', () => {
 
   it('opens a library as a full-height sheet and adds the pick to the timeline', () => {
     render(<VideoEditor onBack={() => {}} />);
-    fireEvent.click(screen.getByText('Audio'));
-    fireEvent.click(screen.getByText('All sounds'));
+    addFrom('Sounds', 'All sounds');
     expect(screen.getByRole('dialog', { name: 'All sounds' })).toBeTruthy();
     fireEvent.click(screen.getByLabelText('Add Vine Boom'));
     expect(store().items[0]).toMatchObject({ type: 'audio', name: 'Vine Boom', url: '/sounds/vine_boom.mp3' });
     expect(screen.queryByRole('dialog')).toBeNull();
   });
 
-  it('opens Add image and Add video sheets from the Media strip', () => {
+  it('opens Add photo and Add video sheets from the add tools', () => {
     render(<VideoEditor onBack={() => {}} />);
-    fireEvent.click(screen.getByText('Media'));
-    fireEvent.click(screen.getByTitle('Photo'));
+    addTool('Photo');
     const image = screen.getByRole('dialog', { name: 'Add photo' });
-    expect([...image.querySelectorAll('.vt-source-label')].map((b) => b.textContent)).toEqual(['Upload', 'Templates']);
-    expect(screen.queryByRole('toolbar', { name: 'Media tools' })).toBeNull();
+    expect(labels(image, '.vt-source-label')).toEqual(['Upload', 'Templates']);
     closeSheet();
-    fireEvent.click(screen.getByTitle('Video'));
+    addTool('Video');
     const video = screen.getByRole('dialog', { name: 'Add video' });
     expect([...video.querySelectorAll('.vt-source-label')].map((b) => b.textContent)).toEqual(['Upload', 'Clips']);
     fireEvent.click(video.querySelectorAll('.vt-source')[1]);
@@ -149,21 +127,20 @@ describe('VideoEditor', () => {
 
   it('opens Stickers and GIFs as separate sheets', () => {
     render(<VideoEditor onBack={() => {}} />);
-    fireEvent.click(screen.getByText('Stickers'));
+    addTool('Stickers');
+    expect(labels(screen.getByRole('dialog', { name: 'Add sticker' }), '.vt-source-label')).toEqual(['Meme', 'Emoji', 'GIFs']);
     fireEvent.click(screen.getByText('Meme'));
     const stickers = screen.getByRole('dialog', { name: 'Stickers' });
     expect([...stickers.querySelectorAll('[role=tab]')].map((t) => t.textContent)).toEqual(['Stickers', 'Animated']);
     fireEvent.click(screen.getByLabelText('Close stickers'));
-    fireEvent.click(screen.getByText('GIFs'));
+    addFrom('Stickers', 'GIFs');
     const gifs = screen.getByRole('dialog', { name: 'GIFs' });
     expect(gifs.querySelectorAll('[role=tab]').length).toBe(0);
   });
 
   it('adds a template from the Templates library', () => {
     render(<VideoEditor onBack={() => {}} />);
-    fireEvent.click(screen.getByText('Media'));
-    fireEvent.click(screen.getByTitle('Photo'));
-    fireEvent.click(screen.getByRole('dialog', { name: 'Add photo' }).querySelectorAll('.vt-source')[1]);
+    addFrom('Photo', 'Templates');
     expect(screen.getByRole('dialog', { name: 'Templates' })).toBeTruthy();
     fireEvent.click(screen.getByRole('dialog').querySelector('.ie-shelf-card .ie-card'));
     expect(store().items[0]).toMatchObject({ type: 'image' });
@@ -177,20 +154,26 @@ describe('VideoEditor', () => {
     expect(store().activeItemId).toBe(store().items[0].id);
     expect(clips(container)[0].className).toContain('is-selected');
     const main = screen.getByRole('toolbar', { name: 'Clip tools' });
-    expect([...main.querySelectorAll('button')].map((b) => b.textContent)).toEqual(['Back', 'Edit', 'Font', 'Style', 'Colour', 'Animate', 'Split', 'Arrange', 'Delete']);
-    // A group's tools take the clip tools' place; Back goes back to them.
+    expect(labels(main)).toEqual(['Back', 'Edit', 'Font', 'Style', 'Colour', 'Animate', 'Split', 'Arrange', 'Delete']);
+    // Arrange is a sheet of tiles, not another row.
     fireEvent.click(within(main).getByText('Arrange'));
-    expect([...screen.getByRole('toolbar', { name: 'Arrange tools' }).querySelectorAll('button')].map((b) => b.textContent)).toEqual(
-      ['Back', 'Duplicate', 'Bring forward', 'Send back', 'Select'],
-    );
-    fireEvent.click(screen.getByText('Back'));
-    expect(screen.getByRole('toolbar', { name: 'Clip tools' })).toBeTruthy();
-    expect(screen.queryByText('Add text')).toBeNull();
-    // Back on the clip's tools lets go of the clip, back to the section it was added from.
-    fireEvent.click(screen.getByText('Back'));
+    expect(labels(screen.getByRole('dialog', { name: 'Arrange' }), '.vt-source-label')).toEqual(['Duplicate', 'Bring forward', 'Send back', 'Select']);
+    closeSheet();
+    // Back, the only one, lets go of the clip and brings the add tools back.
+    fireEvent.click(within(screen.getByRole('toolbar', { name: 'Clip tools' })).getByText('Back'));
     expect(store().activeItemId).toBe(null);
     expect(screen.queryByRole('toolbar', { name: 'Clip tools' })).toBeNull();
-    expect(screen.getByRole('toolbar', { name: 'Text tools' })).toBeTruthy();
+    expect(screen.getByRole('toolbar', { name: 'Add tools' })).toBeTruthy();
+  });
+
+  it('shows a video’s tools in one row, most used first', () => {
+    act(() => store().addItem({ type: 'video', url: 'a.mp4', durationMs: 4000 }));
+    const { container } = render(<VideoEditor onBack={() => {}} />);
+    fireEvent.click(clips(container)[0]);
+    expect(labels(screen.getByRole('toolbar', { name: 'Clip tools' }))).toEqual([
+      'Back', 'Split', '1×', 'Volume', 'Mute', 'Filters', 'Crop', 'Fit', 'Green screen', 'Background', 'Face swap',
+      'Freeze', 'Reverse', 'Boomerang', 'Punch', 'Flip', 'Opacity', 'Arrange', 'Delete',
+    ]);
   });
 
   it('duplicates and deletes the selected clip', () => {
@@ -332,7 +315,7 @@ describe('VideoEditor', () => {
     const { container } = render(<VideoEditor onBack={() => {}} />);
     fireEvent.click(clips(container)[0]);
     const main = screen.getByRole('toolbar', { name: 'Clip tools' });
-    expect([...main.querySelectorAll('button')].map((b) => b.textContent)).toEqual(['Back', 'Edit', 'Die-cut', 'Adjust', 'Split', 'Arrange', 'Delete']);
+    expect([...main.querySelectorAll('button')].map((b) => b.textContent)).toEqual(['Back', 'Edit', 'Die-cut', 'Crop', 'Flip', 'Cut out', 'Rotate', 'Split', 'Arrange', 'Delete']);
     fireEvent.click(clipTool('Edit'));
     fireEvent.change(screen.getByRole('slider', { name: 'Sticker size' }), { target: { value: '0.25' } });
     fireEvent.change(screen.getByRole('slider', { name: 'Shadow size' }), { target: { value: '12' } });
@@ -355,10 +338,7 @@ describe('VideoEditor', () => {
     fireEvent.click(clips(container)[0]);
     const main = screen.getByRole('toolbar', { name: 'Clip tools' });
     expect([...main.querySelectorAll('button')].map((b) => b.textContent || b.getAttribute('aria-label')))
-      .toEqual(['Back', 'Face swap', 'Background', 'Filters', 'More', 'Adjust', 'Motion', 'Split', 'Arrange', 'Delete']);
-    fireEvent.click(clipTool('Adjust'));
-    expect([...pill().querySelectorAll('button')].map((b) => b.textContent)).toEqual(['Back', 'Fit', 'Rotate']);
-    fireEvent.click(clipTool('Back'));
+      .toEqual(['Back', 'Face swap', 'Background', 'Filters', 'More', 'Fit', 'Motion', 'Rotate', 'Split', 'Arrange', 'Delete']);
 
     fireEvent.click(clipTool('Filters'));
     fireEvent.click(screen.getByRole('button', { name: '90s Vintage' }));
@@ -426,8 +406,7 @@ describe('VideoEditor', () => {
 
   it('sets the canvas background from the rail', () => {
     render(<VideoEditor onBack={() => {}} />);
-    fireEvent.click(screen.getByText('Canvas'));
-    fireEvent.click(screen.getByText('Background'));
+    addFrom('Canvas', 'Background');
     fireEvent.click(screen.getByLabelText('#000000'));
     expect(store().backgroundColor).toBe('#000000');
     expect(screen.getByLabelText('#000000').getAttribute('aria-checked')).toBe('true');
@@ -443,14 +422,13 @@ describe('VideoEditor', () => {
     try {
       act(() => store().addItem({ type: 'video', url: 'a.mp4', durationMs: 4000 }));
       render(<VideoEditor onBack={() => {}} />);
-      fireEvent.click(screen.getByText('Canvas'));
-      fireEvent.click(screen.getByText('Watermark'));
+      addFrom('Canvas', 'Watermark');
       fireEvent.change(screen.getByLabelText('Watermark text'), { target: { value: '@memer' } });
       fireEvent.click(screen.getByText('Top left'));
       expect(store().watermark).toEqual({ text: '@memer', corner: 'tl' });
       closeSheet();
 
-      fireEvent.click(screen.getByText('End card'));
+      addFrom('Canvas', 'End card');
       fireEvent.change(screen.getByLabelText('End card title'), { target: { value: 'Bye' } });
       fireEvent.click(screen.getByLabelText('#ff5e36'));
       fireEvent.click(screen.getByText('Add end card'));
@@ -498,8 +476,7 @@ describe('VideoEditor', () => {
     act(() => store().addItem({ type: 'video', url: 'a.mp4', durationMs: 5000 }));
     render(<VideoEditor onBack={() => {}} />);
     act(() => store().setPlayhead(1200));
-    fireEvent.click(screen.getByText('Audio'));
-    fireEvent.click(screen.getByText('Top sounds'));
+    addFrom('Sounds', 'Top sounds');
     fireEvent.click(screen.getByText('Vine Boom'));
     const sound = store().items.find((i) => i.type === 'audio');
     expect(sound).toMatchObject({ name: 'Vine Boom', url: '/sounds/vine_boom.mp3', startMs: 1200 });
@@ -589,8 +566,7 @@ describe('VideoEditor', () => {
     act(() => store().addItem({ type: 'video', url: 'a.mp4', durationMs: 5000 }));
     render(<VideoEditor onBack={() => {}} />);
     act(() => store().setPlayhead(1000));
-    fireEvent.click(screen.getByText('Audio'));
-    fireEvent.click(screen.getByText('Voice'));
+    addTool('Voice');
     await act(async () => { fireEvent.click(screen.getByLabelText('Start recording')); });
     expect(store().isPlaying).toBe(true);
     expect(screen.getByText(/Recording/)).toBeTruthy();
@@ -621,8 +597,7 @@ describe('VideoEditor', () => {
   it('generates auto captions from speech, restyles and removes them', async () => {
     render(<VideoEditor onBack={() => {}} />);
     act(() => { store().addItem({ type: 'video', url: 'blob:talk', durationMs: 2000 }); store().setActiveItem(null); });
-    fireEvent.click(screen.getByText('Text'));
-    fireEvent.click(screen.getByText('Subtitles'));
+    addTool('Subtitles');
     await act(async () => { fireEvent.click(screen.getByText('Generate captions')); });
     const captions = () => store().items.filter((i) => i.autoCaption);
     expect(captions().map((i) => [i.text, i.startMs, i.endMs])).toEqual([['THIS IS', 0, 600], ['FINE.', 600, 1200]]);

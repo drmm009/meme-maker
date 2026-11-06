@@ -1,8 +1,8 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
-  Type, Sticker, Smile, LayoutGrid, Image as ImageIcon, Film, Clapperboard, Music,
+  Type, Sticker, Smile, LayoutGrid, Image as ImageIcon, Clapperboard, Music,
   Gauge, Volume2, VolumeX, Palette, RotateCw, Minimize, Crop, Maximize, Copy, Trash2,
-  Scissors, PencilLine, SlidersHorizontal, WandSparkles, Pipette, Sparkles, ImagePlay, PaintBucket, Zap, Snowflake, Rewind, Repeat, ZoomIn, BringToFront, SendToBack, Mic, ArrowRightLeft, Frame, Plus, Upload, Library, Laugh, SquarePlay, Captions, Expand, Blend, Scan, Eraser, FlipHorizontal2, FlipVertical2, Move, ListChecks, X, AtSign, Flag, Wand, AudioLines, Settings2, Layers, ScanFace, CaseSensitive, Baseline, Ellipsis
+  Scissors, PencilLine, SlidersHorizontal, WandSparkles, Pipette, Sparkles, ImagePlay, PaintBucket, Zap, Snowflake, Rewind, Repeat, ZoomIn, BringToFront, SendToBack, Mic, ArrowRightLeft, Frame, Upload, Library, Laugh, SquarePlay, Captions, Expand, Blend, Scan, Eraser, FlipHorizontal2, FlipVertical2, Move, ListChecks, X, AtSign, Flag, Layers, ScanFace, CaseSensitive, Baseline, Ellipsis
 } from 'lucide-react';
 import { Sheet } from '../ui';
 import DeckBar from './DeckBar';
@@ -38,39 +38,35 @@ import { DEFAULT_CHROMA_KEY } from '../../utils/chromaKey';
 import { TEXT_ANIMATIONS } from '../../utils/textAnimation';
 import { SOUND_EFFECTS } from '../../data/soundEffects';
 
-// The add tools, grouped like the image editor: a dock of sections, each section's tools in a strip
-// above it. A `panel` tool opens its settings sheet, a `sources` tool a small sheet of where to get
-// it from; the rest add straight away (or open a picker).
-const SECTIONS = [
-  { id: 'media', label: 'Media', Icon: Film, tools: [
-    { kind: 'image', label: 'Photo', Icon: ImageIcon, title: 'Add photo', sources: [
-      { kind: 'photo', label: 'Upload', sub: 'From your phone', Icon: Upload },
-      { kind: 'templates', label: 'Templates', sub: 'Meme pictures', Icon: LayoutGrid },
-    ] },
-    { kind: 'videos', label: 'Video', Icon: SquarePlay, title: 'Add video', sources: [
-      { kind: 'video', label: 'Upload', sub: 'From your phone', Icon: Upload },
-      { kind: 'clips', label: 'Clips', sub: 'Meme video clips', Icon: Clapperboard },
-    ] },
+// The add tools: one flat row in the bottom bar, scrolling sideways when they don't fit (new tools
+// go here). A `panel` tool opens its settings sheet, a `sources` tool a small sheet of tiles for
+// where to get it from (a tile that names a settings sheet opens it); the rest add straight away.
+const DOCK = [
+  { kind: 'videos', label: 'Video', Icon: SquarePlay, title: 'Add video', sources: [
+    { kind: 'video', label: 'Upload', sub: 'From your phone', Icon: Upload },
+    { kind: 'clips', label: 'Clips', sub: 'Meme video clips', Icon: Clapperboard },
   ] },
-  { id: 'text', label: 'Text', Icon: Type, tools: [
-    { kind: 'text', label: 'Add text', Icon: Plus },
-    { kind: 'captions', label: 'Subtitles', Icon: Captions, panel: true },
+  { kind: 'image', label: 'Photo', Icon: ImageIcon, title: 'Add photo', sources: [
+    { kind: 'photo', label: 'Upload', sub: 'From your phone', Icon: Upload },
+    { kind: 'templates', label: 'Templates', sub: 'Meme pictures', Icon: LayoutGrid },
   ] },
-  { id: 'stickers', label: 'Stickers', Icon: Sticker, tools: [
-    { kind: 'stickers', label: 'Meme', Icon: Laugh },
-    { kind: 'emoji', label: 'Emoji', Icon: Smile },
-    { kind: 'gifs', label: 'GIFs', Icon: ImagePlay },
+  { kind: 'text', label: 'Text', Icon: Type, title: 'Add text' },
+  { kind: 'addsticker', label: 'Stickers', Icon: Sticker, title: 'Add sticker', sources: [
+    { kind: 'stickers', label: 'Meme', sub: 'Stickers', Icon: Laugh },
+    { kind: 'emoji', label: 'Emoji', sub: 'Every emoji', Icon: Smile },
+    { kind: 'gifs', label: 'GIFs', sub: 'Animated', Icon: ImagePlay },
   ] },
-  { id: 'audio', label: 'Audio', Icon: Music, tools: [
-    { kind: 'sfx', label: 'Top sounds', Icon: Zap, panel: true },
-    { kind: 'sounds', label: 'All sounds', Icon: Library },
-    { kind: 'audio', label: 'Upload', Icon: Upload },
-    { kind: 'voice', label: 'Voice', Icon: Mic, panel: true },
+  { kind: 'addsound', label: 'Sounds', Icon: Music, title: 'Add sound', sources: [
+    { kind: 'sfx', label: 'Top sounds', sub: 'One tap each', Icon: Zap },
+    { kind: 'sounds', label: 'All sounds', sub: 'The library', Icon: Library },
+    { kind: 'audio', label: 'Upload', sub: 'From your phone', Icon: Upload },
   ] },
-  { id: 'canvas', label: 'Canvas', Icon: Frame, tools: [
-    { kind: 'background', label: 'Background', Icon: PaintBucket, panel: true },
-    { kind: 'watermark', label: 'Watermark', Icon: AtSign, panel: true },
-    { kind: 'endcard', label: 'End card', Icon: Flag, panel: true },
+  { kind: 'voice', label: 'Voice', Icon: Mic, title: 'Record a voiceover', panel: true },
+  { kind: 'captions', label: 'Subtitles', Icon: Captions, title: 'Auto captions', panel: true },
+  { kind: 'canvas', label: 'Canvas', Icon: Frame, title: 'Canvas', sources: [
+    { kind: 'background', label: 'Background', sub: 'Colour', Icon: PaintBucket },
+    { kind: 'watermark', label: 'Watermark', sub: 'Your name', Icon: AtSign },
+    { kind: 'endcard', label: 'End card', sub: 'At the end', Icon: Flag },
   ] },
 ];
 
@@ -684,20 +680,16 @@ const SHEETS = {
   sfx: { title: 'Top sounds', Icon: Zap, Panel: SfxPanel },
   voice: { title: 'Voiceover', Icon: Mic, Panel: VoicePanel },
   captions: { title: 'Auto captions', Icon: Captions, Panel: CaptionsPanel },
+  arrange: { title: 'Arrange', Icon: Layers, Panel: ArrangePanel },
 };
 
-// The clip tools' groups: a group's tools take the place of the clip's main tools in the bottom
-// bar, its Back going back to them (see groupedTools).
-const TOOL_GROUPS = {
-  effects: { label: 'Effects', Icon: Wand },
-  audio: { label: 'Audio', Icon: AudioLines },
-  adjust: { label: 'Adjust', Icon: Settings2 },
-  arrange: { label: 'Arrange', Icon: Layers },
-};
+// A video's tools in the bar, most used first.
+const VIDEO_ORDER = ['split', 'speed', 'volume', 'mute', 'filter', 'crop', 'place', 'transition', 'greenscreen', 'bgremove', 'faceswap',
+  'freeze', 'reverse', 'boomerang', 'punch', 'flip', 'opacity', 'arrange', 'delete'];
 
-// The selected clip's tools for the bottom bar: what this kind of clip can do (each setting opens
-// its sheet, its button lit while open or while the setting is on), then Split, then Delete. A tool
-// with a `group` goes in that group (TOOL_GROUPS) instead of the main tools.
+// The selected clip's tools for the bottom bar, all in one row: what this kind of clip can do (each
+// setting opens its sheet, its button lit while open or while the setting is on), then Split,
+// Arrange (a sheet) and Delete; a video's in VIDEO_ORDER.
 function clipTools(item, { sheet, toggle, playhead, items }) {
   const store = useEditorStore.getState;
   const opens = (name, on = false) => ({ active: sheet === name || on, onClick: () => toggle(name) });
@@ -732,48 +724,46 @@ function clipTools(item, { sheet, toggle, playhead, items }) {
     const rate = item.playbackRate || 1;
     const insideClip = playhead >= item.startMs && playhead <= item.endMs;
     tools.push(
-      { id: 'speed', group: 'effects', label: `${rate}×`, title: 'Speed', Icon: Gauge, ...opens('speed', rate !== 1) },
-      { id: 'greenscreen', group: 'effects', label: 'Green screen', Icon: WandSparkles, active: sheet === 'greenscreen' || Boolean(item.chromaKey), onClick: () => {
+      { id: 'speed', label: `${rate}×`, title: 'Speed', Icon: Gauge, ...opens('speed', rate !== 1) },
+      { id: 'greenscreen', label: 'Green screen', Icon: WandSparkles, active: sheet === 'greenscreen' || Boolean(item.chromaKey), onClick: () => {
         if (!item.chromaKey) update(item.id, { chromaKey: { ...DEFAULT_CHROMA_KEY, color: 'auto' } });
         toggle('greenscreen', !item.chromaKey);
       } },
-      { id: 'bgremove', group: 'effects', label: 'Background', title: 'Remove the background behind people', Icon: BackgroundIcon, active: sheet === 'bgremove' || Boolean(item.bgRemoval), onClick: () => {
+      { id: 'bgremove', label: 'Background', title: 'Remove the background behind people', Icon: BackgroundIcon, active: sheet === 'bgremove' || Boolean(item.bgRemoval), onClick: () => {
         if (!item.bgRemoval) setBackgroundRemoval(item, true);
         toggle('bgremove', !item.bgRemoval);
       } },
-      { id: 'freeze', group: 'effects', label: 'Freeze', Icon: Snowflake, title: insideClip ? 'Freeze the frame at the playhead' : 'Move the playhead onto this clip to freeze a frame',
+      { id: 'freeze', label: 'Freeze', Icon: Snowflake, title: insideClip ? 'Freeze the frame at the playhead' : 'Move the playhead onto this clip to freeze a frame',
         onClick: () => insideClip && freezeAtPlayhead(item, playhead) },
-      { id: 'reverse', group: 'effects', label: 'Reverse', Icon: Rewind, active: item.effect === 'reverse', onClick: () => toggleClipEffect(item, 'reverse') },
-      { id: 'boomerang', group: 'effects', label: 'Boomerang', Icon: Repeat, active: item.effect === 'boomerang', onClick: () => toggleClipEffect(item, 'boomerang') },
-      { id: 'punch', group: 'effects', label: 'Punch', Icon: ZoomIn, ...opens('punch', Boolean(item.punches?.length)) },
-      { id: 'faceswap', group: 'effects', label: 'Face swap', Icon: ScanFace, ...opens('faceswap', item.effect === 'faceswap') },
+      { id: 'reverse', label: 'Reverse', Icon: Rewind, active: item.effect === 'reverse', onClick: () => toggleClipEffect(item, 'reverse') },
+      { id: 'boomerang', label: 'Boomerang', Icon: Repeat, active: item.effect === 'boomerang', onClick: () => toggleClipEffect(item, 'boomerang') },
+      { id: 'punch', label: 'Punch', Icon: ZoomIn, ...opens('punch', Boolean(item.punches?.length)) },
+      { id: 'faceswap', label: 'Face swap', Icon: ScanFace, ...opens('faceswap', item.effect === 'faceswap') },
     );
   }
   if (previousClip(items, item)) {
     const label = TRANSITIONS.find((t) => t.id === item.transitionIn?.type)?.label;
-    tools.push({ id: 'transition', group: item.type === 'video' ? 'effects' : undefined, label: label || 'Transition', Icon: ArrowRightLeft, ...opens('transition', Boolean(item.transitionIn?.type)) });
+    tools.push({ id: 'transition', label: label || 'Transition', Icon: ArrowRightLeft, ...opens('transition', Boolean(item.transitionIn?.type)) });
   }
   if (item.type === 'video' || item.type === 'audio') {
-    // A video's sound is a group of its own; an audio clip's is its main tools.
-    const group = item.type === 'video' ? 'audio' : undefined;
     tools.push(
-      { id: 'volume', group, label: 'Volume', Icon: SlidersHorizontal, ...opens('volume') },
-      { id: 'mute', group, label: item.muted ? 'Unmute' : 'Mute', Icon: item.muted ? VolumeX : Volume2, active: Boolean(item.muted), onClick: () => update(item.id, { muted: !item.muted }) },
+      { id: 'volume', label: 'Volume', Icon: SlidersHorizontal, ...opens('volume') },
+      { id: 'mute', label: item.muted ? 'Unmute' : 'Mute', Icon: item.muted ? VolumeX : Volume2, active: Boolean(item.muted), onClick: () => update(item.id, { muted: !item.muted }) },
     );
   }
   if (item.type === 'video') {
     const preset = FILTER_PRESETS.find((p) => p.id === (item.filter?.preset ?? null));
     const filtered = Boolean(item.filter && (item.filter.preset || item.filter.brightness || item.filter.contrast || item.filter.saturation));
-    tools.push({ id: 'filter', group: 'adjust', label: filtered && preset?.id ? preset.label : 'Filters', Icon: FiltersIcon, ...opens('filter', filtered) });
+    tools.push({ id: 'filter', label: filtered && preset?.id ? preset.label : 'Filters', Icon: FiltersIcon, ...opens('filter', filtered) });
   }
   if (item.type === 'image' || item.type === 'video') {
-    tools.push({ id: 'place', group: 'adjust', label: 'Fit', title: 'Fit, fill or stretch to the canvas', Icon: Expand, ...opens('place') });
+    tools.push({ id: 'place', label: 'Fit', title: 'Fit, fill or stretch to the canvas', Icon: Expand, ...opens('place') });
   }
   // A photo's crop and flips are in its More.
   if (item.type === 'video' || item.type === 'sticker') {
     tools.push(
-      { id: 'crop', group: 'adjust', label: 'Crop', Icon: Crop, ...opens('crop', isCropped(clipCrop(item))) },
-      { id: 'flip', group: 'adjust', label: 'Flip', Icon: FlipHorizontal2, ...opens('flip', Boolean(item.flipX || item.flipY)) },
+      { id: 'crop', label: 'Crop', Icon: Crop, ...opens('crop', isCropped(clipCrop(item))) },
+      { id: 'flip', label: 'Flip', Icon: FlipHorizontal2, ...opens('flip', Boolean(item.flipX || item.flipY)) },
     );
   }
   if (item.type === 'image') {
@@ -782,55 +772,50 @@ function clipTools(item, { sheet, toggle, playhead, items }) {
   }
   // A photo's is its Background's Remove.
   if (item.type === 'sticker' && (canCutOut(item) || item.originalUrl)) {
-    tools.push({ id: 'cutout', group: 'adjust', label: 'Cut out', title: item.originalUrl ? 'Put the background back' : 'Remove the background', Icon: Eraser, active: Boolean(item.originalUrl), onClick: () => toggleCutOut(item) });
+    tools.push({ id: 'cutout', label: 'Cut out', title: item.originalUrl ? 'Put the background back' : 'Remove the background', Icon: Eraser, active: Boolean(item.originalUrl), onClick: () => toggleCutOut(item) });
   }
   if (item.type === 'image' || item.type === 'sticker') {
-    tools.push({ id: 'rotate', group: 'adjust', label: 'Rotate', Icon: RotateCw, onClick: () => update(item.id, rotateAboutCenter(item, ((item.rotation || 0) + 90) % 360)) });
+    tools.push({ id: 'rotate', label: 'Rotate', Icon: RotateCw, onClick: () => update(item.id, rotateAboutCenter(item, ((item.rotation || 0) + 90) % 360)) });
   }
   // A text's opacity is in its Colour sheet, a sticker's in its Edit, a photo's in its More.
   if (item.type === 'video') {
     const opacity = clipOpacity(item);
-    tools.push({ id: 'opacity', group: 'adjust', label: opacity < 1 ? `${Math.round(opacity * 100)}%` : 'Opacity', title: 'Opacity', Icon: Blend, ...opens('opacity', opacity < 1) });
+    tools.push({ id: 'opacity', label: opacity < 1 ? `${Math.round(opacity * 100)}%` : 'Opacity', title: 'Opacity', Icon: Blend, ...opens('opacity', opacity < 1) });
   }
   const canSplit = playhead > item.startMs + MIN_SPLIT_MS && playhead < item.endMs - MIN_SPLIT_MS;
   tools.push({ id: 'split', label: 'Split', Icon: Scissors, title: canSplit ? 'Split at the playhead' : 'Move the playhead inside the clip to split it',
     onClick: () => canSplit && store().splitItem(item.id, playhead) });
-  tools.push({ id: 'duplicate', group: 'arrange', label: 'Duplicate', Icon: Copy, onClick: () => store().duplicateItem(item.id) });
-  if (item.type !== 'audio') {
-    tools.push(
-      { id: 'forward', group: 'arrange', label: 'Bring forward', Icon: BringToFront, onClick: () => store().moveLayer(item.id, 1) },
-      { id: 'back', group: 'arrange', label: 'Send back', Icon: SendToBack, onClick: () => store().moveLayer(item.id, -1) },
-    );
-  }
   tools.push(
-    { id: 'select', group: 'arrange', label: 'Select', title: 'Select several clips (or long-press them on the timeline)', Icon: ListChecks, onClick: () => store().togglePicked(item.id) },
-    { id: 'delete', label: 'Delete', Icon: Trash2, iconOnly: true, danger: true, onClick: () => store().removeItem(item.id) },
+    { id: 'arrange', label: 'Arrange', title: 'Duplicate, layer order and select', Icon: Layers, ...opens('arrange') },
+    { id: 'delete', label: 'Delete', Icon: Trash2, danger: true, onClick: () => store().removeItem(item.id) },
   );
+  if (item.type === 'video') tools.sort((a, b) => VIDEO_ORDER.indexOf(a.id) - VIDEO_ORDER.indexOf(b.id));
   return tools;
 }
 
-// The bar's clip tools: with no group open, the main tools with one button per group in the place
-// of its first tool (lit when any of its tools is); with a group open, that group's tools (the bar's
-// Back goes back). Split stays before Arrange, and Delete last.
-function groupedTools(tools, open, setOpen) {
-  if (open) return tools.filter((t) => t.group === open);
-  const out = [];
-  const seen = new Set();
-  for (const t of tools) {
-    if (!t.group) {
-      out.push(t);
-      continue;
-    }
-    if (seen.has(t.group)) continue;
-    seen.add(t.group);
-    const members = tools.filter((m) => m.group === t.group);
-    const { label, Icon } = TOOL_GROUPS[t.group];
-    out.push({ id: `group-${t.group}`, label, Icon, active: members.some((m) => m.active), onClick: () => setOpen(t.group) });
-  }
-  // Arrange after Split, Delete after both.
-  const at = (id) => out.findIndex((t) => t.id === id);
-  if (at('group-arrange') > -1 && at('split') > at('group-arrange')) out.splice(at('split') + 1, 0, ...out.splice(at('group-arrange'), 1));
-  return out;
+// Arrange: tiles for the clip's copy, layer order and picking several. The layer moves keep the
+// sheet open (tap again to move again); the rest close it.
+function ArrangePanel({ item, onOpen }) {
+  const store = useEditorStore.getState;
+  const tiles = [
+    { id: 'duplicate', label: 'Duplicate', sub: 'Right after it', Icon: Copy, run: () => { store().duplicateItem(item.id); onOpen(null); } },
+    ...(item.type === 'audio' ? [] : [
+      { id: 'forward', label: 'Bring forward', sub: 'One layer up', Icon: BringToFront, run: () => store().moveLayer(item.id, 1) },
+      { id: 'back', label: 'Send back', sub: 'One layer down', Icon: SendToBack, run: () => store().moveLayer(item.id, -1) },
+    ]),
+    { id: 'select', label: 'Select', sub: 'Pick several clips', Icon: ListChecks, run: () => { onOpen(null); store().togglePicked(item.id); } },
+  ];
+  return (
+    <div className="vt-sources">
+      {tiles.map(({ id, label, sub, Icon, run }) => (
+        <button key={id} type="button" className="vt-source" onClick={run}>
+          <span className="vt-source-icon"><Icon size={18} strokeWidth={2.2} aria-hidden="true" /></span>
+          <span className="vt-source-label">{label}</span>
+          <span className="vt-source-sub">{sub}</span>
+        </button>
+      ))}
+    </div>
+  );
 }
 
 // The bar while several clips are picked: how many (tap to stop picking), Duplicate, Delete.
@@ -843,15 +828,13 @@ const pickedTools = (ids) => {
   ];
 };
 
-const DOCK = SECTIONS.map(({ id, label, Icon }) => ({ id, label, Icon }));
+// The `sources` tools' sheets (Video, Photo, Stickers, Sounds, Canvas), by tool.
+const SOURCE_SHEETS = Object.fromEntries(DOCK.filter((t) => t.sources).map((t) => [t.kind, { title: t.title, Icon: t.Icon, sources: t.sources }]));
 
-// The `sources` tools' sheets (Media: Add image, Add video), by tool.
-const SOURCE_SHEETS = Object.fromEntries(SECTIONS.flatMap((s) => s.tools.filter((t) => t.sources).map((t) => [t.kind, { title: t.title, Icon: t.Icon, sources: t.sources }])));
-
-// Where to get a photo or video from: two compact tiles side by side.
+// Where to get something from: compact tiles, two side by side, or three as columns.
 function SourcesPanel({ sources, onPick }) {
   return (
-    <div className="vt-sources">
+    <div className={`vt-sources${sources.length === 3 ? ' vt-sources--3' : ''}`}>
       {sources.map(({ kind, label, sub, Icon }) => (
         <button key={kind} type="button" className="vt-source" onClick={() => onPick(kind)}>
           <span className="vt-source-icon"><Icon size={18} strokeWidth={2.2} aria-hidden="true" /></span>
@@ -863,9 +846,9 @@ function SourcesPanel({ sources, onPick }) {
   );
 }
 
-// The bottom of the editor: one flat bar of tools under the timeline (DeckBar). It shows the
-// sections; a tapped section's tools, or a selected clip's, take the same row with a Back. A setting
-// opens a sheet in the bar's place that rises over the timeline (the bottom keeps its height, so
+// The bottom of the editor: one flat bar of tools under the timeline (DeckBar). It shows the add
+// tools; a selected clip's tools take the same row after a Back (the only Back). A setting or a
+// choice of where to add from opens a sheet in the bar's place that rises over the timeline (the bottom keeps its height, so
 // the timeline and preview don't move).
 export default function ToolRail({ onAdd }) {
   const activeItem = useEditorStore((s) => s.items.find((i) => i.id === s.activeItemId));
@@ -874,7 +857,6 @@ export default function ToolRail({ onAdd }) {
   const selectedIds = useEditorStore((s) => s.selectedIds);
   // Picked clips still on the timeline (undo may have taken some away).
   const picked = selectedIds.filter((id) => items.some((i) => i.id === id));
-  const [tab, setTab] = useState(null);
   // A sheet belongs to the clip it was opened for (or to "nothing selected"); selecting another closes it.
   const [sheetState, setSheetState] = useState({ id: null, name: null });
   const ownerId = activeItem?.id ?? null;
@@ -882,10 +864,6 @@ export default function ToolRail({ onAdd }) {
   const setSheet = (name) => setSheetState({ id: ownerId, name });
   const toggle = (name, keepOpen = false) => setSheet(sheet === name && !keepOpen ? null : name);
   const spec = sheet && (SHEETS[sheet] || SOURCE_SHEETS[sheet]);
-  // The open group of the clip's tools, for the clip it was opened on (another clip starts on the main tools).
-  const [groupState, setGroupState] = useState({ id: null, name: null });
-  const group = groupState.id === ownerId ? groupState.name : null;
-  const setGroup = (name) => setGroupState({ id: ownerId, name });
 
   // The bottom's height without a sheet, kept while one is open (it then floats over the timeline,
   // never higher than the timeline's top, the element before it; with the timeline closed, as high
@@ -908,43 +886,37 @@ export default function ToolRail({ onAdd }) {
     return () => observer.disconnect();
     // Measured again as the bar's row changes (an observer may not have run yet when a sheet opens
     // straight after).
-  }, [spec, tab, hasClip]);
+  }, [spec, hasClip]);
 
-  const section = SECTIONS.find((s) => s.id === tab) ?? null;
-  const runTool = (kind) => {
-    const tool = section.tools.find((t) => t.kind === kind);
-    if (tool?.panel || tool?.sources) toggle(kind);
+  const runTool = (tool) => {
+    if (tool.panel || tool.sources) toggle(tool.kind);
+    else {
+      setSheet(null);
+      onAdd(tool.kind);
+    }
+  };
+  // A tile in a sources sheet: a settings sheet (Top sounds, Background…) opens in its place;
+  // anything else is added (or its picker opened).
+  const pickSource = (kind) => {
+    if (SHEETS[kind]) setSheet(kind);
     else {
       setSheet(null);
       onAdd(kind);
     }
   };
-  const openSection = (id) => {
-    setSheetState({ id: null, name: null });
-    setTab(id);
-  };
 
-  // One row at a time: the picked clips' actions, the selected clip's tools (or one group of them),
-  // an open section's tools, or the sections. Back steps out to the row before.
+  // One row at a time: the picked clips' actions, the selected clip's tools, or the add tools.
   let bar;
   if (picked.length) {
     bar = <DeckBar ariaLabel="Selected clips" items={pickedTools(picked)} />;
   } else if (activeItem) {
-    const tools = groupedTools(clipTools(activeItem, { sheet, toggle, playhead, items }), group, setGroup);
-    bar = group
-      ? <DeckBar key={group} ariaLabel={`${TOOL_GROUPS[group].label} tools`} items={tools} back={{ label: 'Back', title: 'Back to all tools', onClick: () => setGroup(null) }} />
-      : <DeckBar key="clip" ariaLabel="Clip tools" items={tools} back={{ label: 'Back', title: 'Done with this clip', onClick: () => useEditorStore.getState().setActiveItem(null) }} />;
-  } else if (section) {
-    bar = (
-      <DeckBar
-        key={section.id}
-        ariaLabel={`${section.label} tools`}
-        items={section.tools.map((t) => ({ id: t.kind, label: t.label, Icon: t.Icon, active: sheet === t.kind, onClick: () => runTool(t.kind) }))}
-        back={{ label: 'Back', title: 'Back to all sections', onClick: () => setTab(null) }}
-      />
-    );
+    const tools = clipTools(activeItem, { sheet, toggle, playhead, items });
+    bar = <DeckBar key="clip" ariaLabel="Clip tools" items={tools} back={{ label: 'Back', title: 'Done with this clip', onClick: () => useEditorStore.getState().setActiveItem(null) }} />;
   } else {
-    bar = <DeckBar nav ariaLabel="Sections" items={DOCK.map((d) => ({ ...d, onClick: () => openSection(d.id) }))} />;
+    bar = (
+      <DeckBar key="add" ariaLabel="Add tools"
+        items={DOCK.map((t) => ({ id: t.kind, label: t.label, title: t.title, Icon: t.Icon, onClick: () => runTool(t) }))} />
+    );
   }
 
   return (
@@ -956,7 +928,7 @@ export default function ToolRail({ onAdd }) {
             aside={spec.Aside && activeItem ? <spec.Aside item={activeItem} /> : undefined}
             action={spec.action && activeItem ? spec.action(activeItem) : undefined}>
             {spec.sources
-              ? <SourcesPanel sources={spec.sources} onPick={(kind) => { setSheet(null); onAdd(kind); }} />
+              ? <SourcesPanel sources={spec.sources} onPick={pickSource} />
               : <spec.Panel item={activeItem} onMore={() => { setSheet(null); onAdd('sounds'); }} onOpen={setSheet} />}
           </Sheet>
         ) : bar}
