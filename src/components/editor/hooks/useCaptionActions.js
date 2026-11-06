@@ -1,6 +1,7 @@
 import { getNonOverlappingPosition } from '../../../utils/captionLayout';
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
 import { useEditorUiStore } from '../store/useEditorUiStore';
+import { captionBgPatch } from '../panels/captionBox';
 
 export function useCaptionActions({ activeCaption }) {
   const captions = useMemeEditorStore((s) => s.captions);
@@ -155,41 +156,8 @@ export function useCaptionActions({ activeCaption }) {
   };
 
   const handleSetCaptionBg = (bg) => {
-    if (!activeCaption) return;
-    if (bg === 'none' || (activeCaption.bgColor === bg && activeCaption.bgStyle !== 'banner')) {
-      // Toggle off / reset to transparent background
-      const nextColor = (activeCaption.color === '#000000' || activeCaption.color === 'black') ? '#ffffff' : (activeCaption.color || '#ffffff');
-      updateActiveCaptionProps({
-        bgColor: 'none',
-        bgStyle: 'box',
-        color: nextColor,
-        stroke: '#000000'
-      });
-    } else if (bg === 'banner') {
-      updateActiveCaptionProps({
-        bgColor: 'white',
-        color: '#000000',
-        stroke: 'transparent',
-        bgStyle: 'banner',
-        align: 'center'
-      });
-    } else if (bg === 'white') {
-      // White Background: crisp black text with transparent stroke
-      updateActiveCaptionProps({
-        bgColor: 'white',
-        color: '#000000',
-        stroke: 'transparent',
-        bgStyle: 'box'
-      });
-    } else if (bg === 'black') {
-      // Black Background: crisp white text with transparent stroke
-      updateActiveCaptionProps({
-        bgColor: 'black',
-        color: '#ffffff',
-        stroke: 'transparent',
-        bgStyle: 'box'
-      });
-    }
+    if (!activeCaption || !['none', 'white', 'black', 'banner'].includes(bg)) return;
+    updateActiveCaptionProps(captionBgPatch(activeCaption, bg));
   };
 
   return { handleAddCaption, handleAddCurvedText, handleAddPresetPhrase, handleToggleTextCase, handleCycleTextAlignment, updateActiveCaptionProps, handleSetCaptionBg };

@@ -8,7 +8,8 @@ describe('watermarkClip', () => {
   it('puts the handle in the chosen corner, small and see-through, for the whole video', () => {
     const br = watermarkClip({ text: ' @me ', corner: 'br' }, 9000, 16 / 9)!;
     expect(br).toMatchObject({ id: WATERMARK_ID, type: 'text', text: '@me', startMs: 0, endMs: 9000, align: 'right', fontSize: 23, x: 18 });
-    expect(br.y).toBe(450 - 18 - 23);
+    // Its box: the line (1.2 x the font) and the padding above and below.
+    expect(br.y).toBe(450 - 18 - Math.round(23 * 1.2 + 2 * 10));
     const tl = watermarkClip({ text: '@me', corner: 'tl' }, 9000, 9 / 16)!;
     expect(tl).toMatchObject({ align: 'left', y: 32, fontSize: 40 });
   });

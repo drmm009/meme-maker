@@ -1,80 +1,71 @@
-import React, { useEffect, useLayoutEffect, useRef } from 'react';
-import { Rect, Text as KonvaText, Transformer, Group } from 'react-konva';
-import { hasTextBox, textAttrs, textBoxAttrs } from '../../../utils/textLayer';
+import React, { useEffect, useReducer, useRef, useState } from 'react';
+import Konva from 'konva';
+import { Image as KonvaImage, Transformer, Group } from 'react-konva';
+import { onTextFontsLoaded, scaleTextLook, textBitmap, textImageAttrs } from '../../../utils/textBitmap';
 import { clipOpacity } from '../../../model/videoProject';
-import { textResize } from './previewMath';
 import { useTextPlayback } from './useTextPlayback';
 
-// A text clip on the preview, with its optional background box, drawn from utils/textLayer (the
-// export draws its text with the same definitions). Tapping it starts editing (onEditStart);
-// resizing it changes the font size.
+// Picture pixels per stage unit for the preview: the stage's scale on this screen, in quarter steps
+// (so resizing the window doesn't redraw every text for each pixel).
+const previewScale = (stage) => {
+  const s = (stage?.scaleX() || 0.5) * (Konva.pixelRatio || 1);
+  return Math.min(3, Math.max(0.5, Math.ceil(s * 4) / 4));
+};
+
+// A text clip on the preview: the image editor's caption painter draws it into a picture
+// (utils/textBitmap), shown here as one image. Tapping it starts editing (onEditStart); the
+// corner handles resize the text (font, outline, shadow and wrap together).
 const CanvasText = ({ item, isSelected, onSelect, onChange, onEditStart }) => {
-  const textRef = useRef(null);
+  const nodeRef = useRef(null);
   const groupRef = useRef(null);
-  const bgRectRef = useRef(null);
   const trRef = useRef(null);
   const itemRef = useRef(item);
-  const attrs = textAttrs(item);
-  const boxed = hasTextBox(item);
+  const [scale, setScale] = useState(1);
+  const [, redraw] = useReducer((n) => n + 1, 0);
+  const bitmap = textBitmap(item, scale);
 
   useEffect(() => {
     itemRef.current = item;
   }, [item]);
 
-  // A background added while the text is off screen mounts visible; match it to the text.
+  // The selection frame and handles go round the text's box, not the room the picture keeps for
+  // the outline, shadow and effects.
+  const bitmapRef = useRef(bitmap);
+  bitmapRef.current = bitmap;
   useEffect(() => {
-    const rect = bgRectRef.current;
-    const node = textRef.current;
-    if (rect && node && rect.visible() !== node.visible()) {
-      rect.visible(node.visible());
-      rect.getLayer()?.batchDraw();
-    }
-  }, [boxed]);
+    const node = nodeRef.current;
+    if (!node) return;
+    node.getSelfRect = () => {
+      const b = bitmapRef.current;
+      return { x: b.boxX, y: b.boxY, width: b.boxWidth, height: b.boxHeight };
+    };
+  }, []);
 
-  useTextPlayback(item, { itemRef, groupRef, textRef, bgRectRef, trRef });
+  // The stage's scale is known once mounted, and changes as the preview resizes.
+  useEffect(() => {
+    const stage = groupRef.current?.getStage();
+    if (!stage) return undefined;
+    const update = () => setScale(previewScale(stage));
+    update();
+    stage.on('scaleXChange.text', update);
+    return () => stage.off('scaleXChange.text', update);
+  }, []);
+
+  // A web font that arrives after the first drawing: draw again with it.
+  useEffect(() => onTextFontsLoaded(redraw), []);
+
+  useTextPlayback(item, { itemRef, groupRef, nodeRef, trRef, scale });
 
   useEffect(() => {
-    if (isSelected && trRef.current && textRef.current) {
-      trRef.current.nodes([textRef.current]);
-      trRef.current.forceUpdate();
+    if (isSelected && trRef.current && nodeRef.current) {
+      trRef.current.nodes([nodeRef.current]);
       trRef.current.getLayer()?.batchDraw();
-
-      // Ensure the transformer updates AFTER any dynamic web fonts finish loading
-      document.fonts.ready.then(() => {
-        if (trRef.current && textRef.current) {
-          trRef.current.forceUpdate();
-          trRef.current.getLayer()?.batchDraw();
-        }
-      });
     }
-  }, [isSelected, item.text, item.fontFamily, item.fontSize, item.width]);
-
-  // The background box around the text node as it is now (dragged, scaled, rotated).
-  const boxAroundNode = (node) => ({
-    ...textBoxAttrs(item, { x: node.x(), y: node.y(), width: node.width(), height: node.height(), scaleX: node.scaleX(), scaleY: node.scaleY() }),
-    rotation: node.rotation(),
+  }, [isSelected]);
+  useEffect(() => {
+    trRef.current?.forceUpdate();
   });
 
-  // The box needs the text's measured size, which only exists once the node is mounted: fit it
-  // after every render (the first render can only guess, below).
-  useLayoutEffect(() => {
-    const textNode = textRef.current;
-    if (bgRectRef.current && textNode) {
-      bgRectRef.current.setAttrs(boxAroundNode(textNode));
-      textNode.getLayer()?.batchDraw();
-    }
-  });
-
-  // Before the text node has measured itself, size the box from the clip.
-  const node = textRef.current;
-  const box = textBoxAttrs(item, {
-    x: attrs.x,
-    y: attrs.y,
-    width: item.width || node?.width() || 120,
-    height: node?.height() || attrs.fontSize,
-    scaleX: node?.scaleX() || 1,
-    scaleY: node?.scaleY() || 1,
-  });
   const startEdit = (e) => {
     if (onEditStart) onEditStart(item);
     onSelect(e);
@@ -84,39 +75,24 @@ const CanvasText = ({ item, isSelected, onSelect, onChange, onEditStart }) => {
     <React.Fragment>
       {/* The clip's opacity sits outside the group its animation fades, so the two multiply. */}
       <Group opacity={clipOpacity(item)}>
-      <Group ref={groupRef}>
-        {boxed && <Rect ref={bgRectRef} {...box} listening={false} />}
-        <KonvaText
-          id={`text-${item.id}`}
-          ref={textRef}
-          {...attrs}
-          draggable
-          onDragMove={(e) => {
-            if (bgRectRef.current) {
-              bgRectRef.current.position({ x: e.target.x(), y: e.target.y() });
-              e.target.getLayer()?.batchDraw();
-            }
-          }}
-          onTransform={() => {
-            if (bgRectRef.current && textRef.current) {
-              bgRectRef.current.setAttrs(boxAroundNode(textRef.current));
-              textRef.current.getLayer()?.batchDraw();
-            }
-          }}
-          onClick={startEdit}
-          onTap={startEdit}
-          onDragEnd={(e) => {
-            onChange({ ...item, x: e.target.x(), y: e.target.y() });
-          }}
-          onTransformEnd={() => {
-            const t = textRef.current;
-            onChange({ ...item, ...textResize(item, { x: t.x(), y: t.y(), rotation: t.rotation(), scaleX: t.scaleX() }) });
-            // Reset scale to 1 to keep text crisp for the next render
-            t.scaleX(1);
-            t.scaleY(1);
-          }}
-        />
-      </Group>
+        <Group ref={groupRef}>
+          <KonvaImage
+            id={`text-${item.id}`}
+            ref={nodeRef}
+            {...textImageAttrs(item, bitmap)}
+            draggable
+            onClick={startEdit}
+            onTap={startEdit}
+            onDragEnd={(e) => onChange({ ...item, x: e.target.x(), y: e.target.y() })}
+            onTransformEnd={() => {
+              const node = nodeRef.current;
+              const k = node.scaleX();
+              node.scaleX(1);
+              node.scaleY(1);
+              onChange({ ...item, x: node.x(), y: node.y(), rotation: node.rotation(), ...scaleTextLook(item, k) });
+            }}
+          />
+        </Group>
       </Group>
       {isSelected && (
         <Transformer

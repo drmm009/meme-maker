@@ -32,37 +32,16 @@ vi.mock('@ffmpeg/util', () => ({
 vi.mock('./gridHelper', () => ({
   generateGridImage: (id) => (id && id !== '1-panel' ? 'data:image/png;base64,AA==' : null),
 }));
-// Text is drawn with Konva; record what each still was asked to show instead.
-vi.mock('konva', () => {
-  class Node {
-    constructor(attrs = {}) { this.attrs = { ...attrs }; this.children = []; }
-    add(c) { this.children.push(c); }
-    setAttrs(a) { Object.assign(this.attrs, a); }
-    clipFunc(f) { this.attrs.clip = f ? 'clipped' : null; }
-    draw() {}
-  }
-  class Text extends Node {
-    width() { return this.attrs.width ?? 300; }
-    height() { return 60; }
-    x() { return this.attrs.x; }
-    y() { return this.attrs.y; }
-    scaleX() { return 1; }
-    scaleY() { return 1; }
-    rotation() { return this.attrs.rotation || 0; }
-  }
-  class Stage extends Node {
-    toDataURL() {
-      // Layer > the clip's opacity holder > the animated group.
-      const holder = this.children[0].children[0];
-      const group = holder.children[0];
-      const text = group.children.find((c) => c instanceof Text);
-      ff.texts.push({ text: text.attrs.text, fontSize: text.attrs.fontSize, opacity: group.attrs.opacity, scale: group.attrs.scaleX, clip: group.attrs.clip ?? null, hasBox: group.children.length > 1 });
-      return 'data:image/png;base64,AA==';
-    }
-    destroy() {}
-  }
-  return { default: { Stage, Layer: Node, Group: Node, Text, Rect: Node } };
-});
+// Text is drawn by textBitmap; record what each still was asked to show instead.
+vi.mock('./textBitmap', () => ({
+  loadTextFonts: async () => {},
+  drawTextClip: (ctx, item, ratio, frame, opacity) => {
+    ff.texts.push({ text: item.text, fontSize: item.fontSize, ratio, opacity, frame: { ...frame, chars: Number.isFinite(frame.chars) ? frame.chars : 'all' } });
+  },
+}));
+
+// jsdom's canvas makes no PNGs: hand back a stand-in.
+HTMLCanvasElement.prototype.toBlob = function toBlob(done) { done(new Blob(['png'], { type: 'image/png' })); };
 
 // Tests share a module cache (isolate: false): load the export fresh, so it uses this file's mocks.
 vi.resetModules();

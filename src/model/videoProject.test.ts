@@ -31,6 +31,21 @@ describe('migrateVideoProject', () => {
     expect(migrateVideoProject({ items: [video] }, VIDEO_PROJECT_VERSION)?.items).toEqual([video]);
   });
 
+  it('gives version 1 text the caption look, close to how it looked', () => {
+    const old = [
+      { ...text, id: 'a', fontSize: 50, outline: 0.1, shadow: 'soft' },
+      { ...text, id: 'b', fontSize: 50, shadow: 'glow' },
+      { ...text, id: 'c', fontSize: 50, bgColor: 'black', shadow: 'hard' },
+    ];
+    const [a, b, c] = migrateVideoProject({ items: old }, 1)!.items as unknown as Record<string, unknown>[];
+    expect(a).toMatchObject({ stroke: '#000000', strokeWidth: 5, shadowSize: 8, shadowColor: 'rgba(0, 0, 0, 0.8)' });
+    expect(a).not.toHaveProperty('outline');
+    expect(a).not.toHaveProperty('shadow');
+    expect(b).toMatchObject({ stroke: '#000000', strokeWidth: 2, effect: 'glow' });
+    expect(c).toMatchObject({ stroke: 'transparent', shadowSize: 4, shadowColor: '#000000' });
+    expect(migrateVideoProject({ items: [video] }, 1)?.items).toEqual([video]);
+  });
+
   it('refuses drafts from a newer app version and things that aren\'t projects', () => {
     expect(migrateVideoProject({ items: [video] }, VIDEO_PROJECT_VERSION + 1)).toBeNull();
     expect(migrateVideoProject({ clips: [] })).toBeNull();

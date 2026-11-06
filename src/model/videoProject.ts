@@ -144,23 +144,36 @@ export interface StickerClip extends ClipBase, Placed {
 // A photo's slow movement while on screen.
 export type PhotoMotion = 'zoom-in' | 'zoom-out' | 'pan-left' | 'pan-right';
 
-// A text shadow: soft (blurred, below), hard (sharp, down-right) or glow (blurred, the text's colour).
-export type TextShadow = 'soft' | 'hard' | 'glow';
+// Version 1's text shadows (now shadowSize and shadowColor, or the glow effect).
+type OldTextShadow = 'soft' | 'hard' | 'glow';
 
 export interface TextClip extends ClipBase, Placed {
   type: 'text';
   text?: string;
+  // The look is the image editor's caption's (MemeCaption), drawn by its painter (utils/textBitmap),
+  // with sizes in stage units. x and y are the box's top-left; width is the wrap width.
   fontSize?: number;
   fontFamily?: string;
   color?: string;
+  // Outline colour ('transparent' or unset: none) and width (unset: the painter's, by font size).
   stroke?: string;
   strokeWidth?: number;
-  // Outline thickness as a share of the font size (follows resizing); wins over strokeWidth.
-  outline?: number;
-  shadow?: TextShadow | null;
   // 'none', 'white', 'black' or a colour.
   bgColor?: string;
+  bgStyle?: 'box' | 'banner';
+  bubbleStyle?: string;
   align?: TextAlign;
+  bold?: boolean;
+  italic?: boolean;
+  underline?: boolean;
+  effect?: string;
+  curve?: number;
+  // Shares of the font size (letters) and a multiple of it (lines).
+  letterSpacing?: number;
+  lineHeight?: number;
+  shadowSize?: number;
+  shadowColor?: string;
+  gradient?: [string, string] | null;
   animation?: TextAnimation | null;
   // Made by auto captions (they share one timeline row and export as one track).
   autoCaption?: boolean;
@@ -197,7 +210,7 @@ export interface VideoProject {
 
 // Saved projects carry this. Bump it when the saved shape changes, and teach
 // migrateVideoProject to upgrade the previous version.
-export const VIDEO_PROJECT_VERSION = 1;
+export const VIDEO_PROJECT_VERSION = 2;
 
 const CLIP_TYPES = new Set<ClipType>(['video', 'image', 'sticker', 'text', 'audio']);
 const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
@@ -218,5 +231,25 @@ export function migrateVideoProject(raw: unknown, version = 0): VideoProject | n
   if (!isRecord(raw) || !Array.isArray(raw.items) || version > VIDEO_PROJECT_VERSION) return null;
   // 0 -> 1: no change in shape; versioning starts here, and clips that can't be used are dropped.
   const project = { ...raw } as unknown as VideoProject;
-  return { ...project, items: (raw.items as unknown[]).filter(isClip) };
+  const items = (raw.items as unknown[]).filter(isClip);
+  // 1 -> 2: text takes the image editor's caption look (see upgradeText).
+  return { ...project, items: version < 2 ? items.map((c) => (c.type === 'text' ? upgradeText(c) : c)) : items };
+}
+
+// A version 1 text clip in version 2's terms, looking as close to before as the caption painter
+// draws it: the outline (a share of the font size, or its 1/25 default) in stage units, black
+// unless on a box; the shadow presets as a shadow size and colour, glow as the glow effect.
+export function upgradeText(clip: TextClip): TextClip {
+  const { outline, shadow, ...rest } = clip as TextClip & { outline?: number; shadow?: OldTextShadow | null };
+  const fontSize = rest.fontSize || 32;
+  const boxed = Boolean(rest.bgColor) && rest.bgColor !== 'none' && rest.bgColor !== 'transparent';
+  const next: TextClip = {
+    ...rest,
+    stroke: rest.stroke || (boxed ? 'transparent' : '#000000'),
+    strokeWidth: isNum(outline) ? Math.max(0, outline) * fontSize : rest.strokeWidth || Math.max(2, fontSize / 25),
+  };
+  if (shadow === 'soft') Object.assign(next, { shadowSize: Math.round(fontSize * 0.16), shadowColor: 'rgba(0, 0, 0, 0.8)' });
+  if (shadow === 'hard') Object.assign(next, { shadowSize: Math.round(fontSize * 0.08), shadowColor: '#000000' });
+  if (shadow === 'glow') next.effect = 'glow';
+  return next;
 }

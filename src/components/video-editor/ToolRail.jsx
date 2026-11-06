@@ -1,8 +1,8 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
   Type, Sticker, Smile, LayoutGrid, Image as ImageIcon, Film, Clapperboard, Music,
-  Gauge, Volume2, VolumeX, Palette, Square, RotateCw, Minimize, Crop, Maximize, Copy, Trash2,
-  Scissors, PencilLine, ALargeSmall, TextAlignStart, TextAlignCenter, TextAlignEnd, SlidersHorizontal, WandSparkles, Pipette, Sparkles, ImagePlay, PaintBucket, Zap, Snowflake, Rewind, Repeat, ZoomIn, BringToFront, SendToBack, Mic, ArrowRightLeft, Frame, Plus, Upload, Library, Laugh, SquarePlay, Captions, Expand, Blend, Scan, Eraser, TypeOutline, Ban, FlipHorizontal2, FlipVertical2, Move, ListChecks, X, AtSign, Flag, Wand, AudioLines, Settings2, Layers, ChevronLeft, ScanFace
+  Gauge, Volume2, VolumeX, Palette, RotateCw, Minimize, Crop, Maximize, Copy, Trash2,
+  Scissors, PencilLine, SlidersHorizontal, WandSparkles, Pipette, Sparkles, ImagePlay, PaintBucket, Zap, Snowflake, Rewind, Repeat, ZoomIn, BringToFront, SendToBack, Mic, ArrowRightLeft, Frame, Plus, Upload, Library, Laugh, SquarePlay, Captions, Expand, Blend, Scan, Eraser, FlipHorizontal2, FlipVertical2, Move, ListChecks, X, AtSign, Flag, Wand, AudioLines, Settings2, Layers, ChevronLeft, ScanFace, CaseSensitive, Baseline
 } from 'lucide-react';
 import { FloatingToolbar, Sheet, ToolDock, ToolStrip } from '../ui';
 import { FiltersIcon } from '../editor/panels/editorIcons';
@@ -11,6 +11,7 @@ import { clipOpacity } from '../../model/videoProject';
 import { clipCrop, isCropped } from '../../utils/clipCrop';
 import CropPanel from './CropPanel';
 import FaceSwapPanel from './FaceSwapPanel';
+import { TextColorPanel, TextEditPanel, TextFontPanel, TextStylePanel } from './TextLookPanel';
 import { canCutOut, cutOutBackground } from '../../utils/cutOut';
 import { PHOTO_MOTIONS } from '../../utils/photoMotion';
 import { DEFAULT_END_CARD, WATERMARK_CORNERS, endCardClip, isEndCard, renderEndCard } from '../../utils/brandCard';
@@ -24,22 +25,10 @@ import { speechClips } from '../../utils/clipAudio';
 import { togglePlayback } from './usePlaybackLoop';
 import { rotateAboutCenter } from './preview/previewMath';
 import { formatClock } from './timeline/timelineMath';
-import { FONTS } from '../../data/stickers';
 import { DEFAULT_FADE_MS } from '../../utils/audioFades';
 import { DEFAULT_CHROMA_KEY } from '../../utils/chromaKey';
 import { TEXT_ANIMATIONS } from '../../utils/textAnimation';
 import { SOUND_EFFECTS } from '../../data/soundEffects';
-
-// White outline on dark text, black on light text.
-const getContrastStroke = (hexColor) => {
-  if (!hexColor) return '#000000';
-  let hex = hexColor.replace('#', '');
-  if (hex.length === 3) hex = hex.split('').map((c) => c + c).join('');
-  const r = parseInt(hex.substr(0, 2), 16) || 0;
-  const g = parseInt(hex.substr(2, 2), 16) || 0;
-  const b = parseInt(hex.substr(4, 2), 16) || 0;
-  return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255 < 0.5 ? '#ffffff' : '#000000';
-};
 
 // The add tools, grouped like the image editor: a dock of sections, each section's tools in a strip
 // above it. A `panel` tool opens its settings sheet, a `sources` tool a small sheet of where to get
@@ -80,17 +69,6 @@ const SECTIONS = [
 const BACKGROUND_SWATCHES = ['#ffffff', '#000000', '#1a1d27', '#ff5e36', '#ec4899', '#facc15', '#22c55e', '#3b82f6'];
 
 const SPEEDS = [0.5, 1, 1.5, 2];
-const TEXT_BACKGROUNDS = [
-  { value: 'none', label: 'None' },
-  { value: 'white', label: 'White' },
-  { value: 'black', label: 'Black' },
-];
-const ALIGNS = [
-  { value: 'left', label: 'Left', Icon: TextAlignStart },
-  { value: 'center', label: 'Centre', Icon: TextAlignCenter },
-  { value: 'right', label: 'Right', Icon: TextAlignEnd },
-];
-const TEXT_COLORS = ['#ffffff', '#000000', '#ff5a36', '#facc15', '#22c55e', '#3b82f6', '#ec4899', '#a855f7'];
 const PLACEMENTS = [
   { value: 'fit', label: 'Fit', Icon: Minimize },
   { value: 'cover', label: 'Fill', Icon: Scan },
@@ -179,85 +157,6 @@ function PickRow({ options, value, onPick, label }) {
   );
 }
 
-function FontPanel({ item }) {
-  const current = (FONTS.find((f) => f.family === item.fontFamily) || FONTS[0]).family;
-  return (
-    <PickRow label="Font" value={current} onPick={(family) => update(item.id, { fontFamily: family })}
-      options={FONTS.map((f) => ({ value: f.family, label: f.id || f.name.split(' ')[0], style: { fontFamily: f.family } }))} />
-  );
-}
-
-function ColorPanel({ item }) {
-  const color = (item.color || '#ffffff').toLowerCase();
-  // The outline follows the colour (black on light, white on dark) unless one was picked in Style.
-  const auto = !item.stroke || item.stroke === '#000000' || item.stroke === '#ffffff';
-  const set = (c) => update(item.id, { color: c, stroke: item.bgColor && item.bgColor !== 'none' ? 'transparent' : auto ? getContrastStroke(c) : item.stroke });
-  return (
-    <div className="vt-swatch-row" role="radiogroup" aria-label="Text colour">
-      {TEXT_COLORS.map((c) => (
-        <button key={c} type="button" role="radio" aria-checked={color === c} aria-label={c}
-          className={`vt-swatch-btn${color === c ? ' is-on' : ''}`} style={{ background: c }} onClick={() => set(c)} />
-      ))}
-      <label className={`vt-swatch-btn vt-swatch-custom${TEXT_COLORS.includes(color) ? '' : ' is-on'}`} title="Custom colour">
-        <Palette size={16} />
-        <input type="color" className="vt-hidden-input" aria-label="Custom colour" value={color} onChange={(e) => set(e.target.value)} />
-      </label>
-    </div>
-  );
-}
-
-function TextBgPanel({ item }) {
-  const bg = item.bgColor && item.bgColor !== 'none' ? item.bgColor : 'none';
-  const pick = (next) => {
-    if (next === 'white') update(item.id, { bgColor: 'white', color: '#000000', stroke: 'transparent' });
-    else if (next === 'black') update(item.id, { bgColor: 'black', color: '#ffffff', stroke: 'transparent' });
-    else update(item.id, { bgColor: 'none', color: item.color === '#000000' ? '#ffffff' : item.color, stroke: '#000000' });
-  };
-  return <PickRow label="Text background" value={bg} onPick={pick} options={TEXT_BACKGROUNDS} />;
-}
-
-const SHADOW_OPTIONS = [
-  { value: null, label: 'None' },
-  { value: 'soft', label: 'Soft' },
-  { value: 'hard', label: 'Hard' },
-  { value: 'glow', label: 'Glow' },
-];
-
-// Outline (colour or none, and thickness) and shadow.
-function StylePanel({ item }) {
-  const boxed = Boolean(item.bgColor && item.bgColor !== 'none');
-  const stroke = (item.stroke || (boxed ? 'transparent' : '#000000')).toLowerCase();
-  const none = stroke === 'transparent';
-  const thickness = Math.round((typeof item.outline === 'number' ? item.outline : (item.strokeWidth || Math.max(2, (item.fontSize || 32) / 25)) / (item.fontSize || 32)) * 1000) / 10;
-  return (
-    <div className="vt-style">
-      <div className="vt-style-label">Outline</div>
-      <div className="vt-swatch-row" role="radiogroup" aria-label="Outline colour">
-        <button type="button" role="radio" aria-checked={none} aria-label="No outline" title="No outline"
-          className={`vt-swatch-btn vt-swatch-none${none ? ' is-on' : ''}`} onClick={() => update(item.id, { stroke: 'transparent' })}>
-          <Ban size={16} />
-        </button>
-        {TEXT_COLORS.map((c) => (
-          <button key={c} type="button" role="radio" aria-checked={stroke === c} aria-label={`Outline ${c}`}
-            className={`vt-swatch-btn${stroke === c ? ' is-on' : ''}`} style={{ background: c }} onClick={() => update(item.id, { stroke: c })} />
-        ))}
-      </div>
-      <label className={`vt-slider-row${none ? ' is-off' : ''}`}>
-        <span>Thickness</span>
-        <input type="range" min="1" max="12" step="0.5" value={Math.min(12, Math.max(1, thickness))} disabled={none}
-          onChange={(e) => update(item.id, { outline: Number(e.target.value) / 100 })} />
-        <output>{none ? '–' : thickness}</output>
-      </label>
-      <div className="vt-style-label">Shadow</div>
-      <PickRow label="Shadow" value={item.shadow || null} onPick={(v) => update(item.id, { shadow: v })} options={SHADOW_OPTIONS} />
-    </div>
-  );
-}
-
-function AlignPanel({ item }) {
-  return <PickRow label="Align" value={item.align || 'center'} onPick={(v) => update(item.id, { align: v })} options={ALIGNS} />;
-}
-
 function SpeedPanel({ item }) {
   const rate = item.playbackRate || 1;
   const pick = (next) => update(item.id, { playbackRate: next, endMs: item.startMs + (item.endMs - item.startMs) * (rate / next) });
@@ -336,30 +235,6 @@ function OpacityPanel({ item }) {
       <input type="range" min="0" max="100" step="1" value={opacity} onChange={(e) => update(item.id, { opacity: Number(e.target.value) / 100 })} />
       <output>{opacity}%</output>
     </label>
-  );
-}
-
-function SizePanel({ item }) {
-  const size = Math.round(item.fontSize || 32);
-  return (
-    <label className="vt-slider-row">
-      <span>Size</span>
-      <input type="range" min="16" max="300" step="1" value={size} onChange={(e) => update(item.id, { fontSize: Number(e.target.value) })} />
-      <output>{size}</output>
-    </label>
-  );
-}
-
-function TextPanel({ item }) {
-  return (
-    <textarea
-      className="vt-text-input"
-      value={item.text || ''}
-      rows={2}
-      autoFocus
-      placeholder="Type your text"
-      onChange={(e) => update(item.id, { text: e.target.value })}
-    />
   );
 }
 
@@ -801,13 +676,11 @@ function TransitionPanel({ item }) {
 
 // Every settings sheet: its title, the icon beside it, and what it shows (for the selected clip, or for nothing selected).
 const SHEETS = {
-  text: { title: 'Edit text', Icon: PencilLine, Panel: TextPanel },
-  font: { title: 'Font', Icon: Type, Panel: FontPanel },
-  color: { title: 'Colour', Icon: Palette, Panel: ColorPanel },
-  textbg: { title: 'Text background', Icon: Square, Panel: TextBgPanel },
-  style: { title: 'Outline & shadow', Icon: TypeOutline, Panel: StylePanel },
-  align: { title: 'Align', Icon: TextAlignCenter, Panel: AlignPanel },
-  size: { title: 'Text size', Icon: ALargeSmall, Panel: SizePanel },
+  // A text's sheets are the image editor's text controls (TextLookPanel): all of them, or one part.
+  text: { title: 'Text', Icon: PencilLine, Panel: TextEditPanel, tall: true },
+  font: { title: 'Font', Icon: CaseSensitive, Panel: TextFontPanel, tall: true },
+  style: { title: 'Style', Icon: Baseline, Panel: TextStylePanel, tall: true },
+  color: { title: 'Colour', Icon: Palette, Panel: TextColorPanel, tall: true },
   animation: { title: 'Animate', Icon: Sparkles, Panel: AnimationPanel },
   speed: { title: 'Speed', Icon: Gauge, Panel: SpeedPanel },
   place: { title: 'Fit to canvas', Icon: Expand, Panel: PlacePanel },
@@ -833,7 +706,6 @@ const SHEETS = {
 // The pill's groups: a group's tools show in the pill in place of the clip's main tools, after a
 // Back button (see groupedTools).
 const TOOL_GROUPS = {
-  style: { label: 'Style', Icon: Palette },
   effects: { label: 'Effects', Icon: Wand },
   audio: { label: 'Audio', Icon: AudioLines },
   adjust: { label: 'Adjust', Icon: Settings2 },
@@ -848,16 +720,12 @@ function clipTools(item, { sheet, toggle, playhead, items }) {
   const opens = (name, on = false) => ({ active: sheet === name || on, onClick: () => toggle(name) });
   const tools = [];
   if (item.type === 'text') {
-    const font = FONTS.find((f) => f.family === item.fontFamily) || FONTS[0];
-    const align = ALIGNS.find((a) => a.value === (item.align || 'center')) || ALIGNS[1];
+    // As the image editor's text bar: Font, Style and Colour each open their part of the controls.
     tools.push(
-      { id: 'edit', label: 'Edit', Icon: PencilLine, ...opens('text') },
-      { id: 'font', group: 'style', label: 'Font', icon: <span className="vt-font-sample" style={{ fontFamily: font.family }}>Aa</span>, ...opens('font') },
-      { id: 'color', group: 'style', label: 'Colour', icon: <span className="vt-color-dot" style={{ background: item.color || '#ffffff' }} />, ...opens('color') },
-      { id: 'style', group: 'style', label: 'Outline', title: 'Outline and shadow', Icon: TypeOutline, ...opens('style', Boolean(item.shadow)) },
-      { id: 'textbg', group: 'style', label: 'Background', Icon: Square, ...opens('textbg', Boolean(item.bgColor && item.bgColor !== 'none')) },
-      { id: 'size', group: 'style', label: 'Size', Icon: ALargeSmall, ...opens('size') },
-      { id: 'align', group: 'style', label: 'Align', Icon: align.Icon, ...opens('align') },
+      { id: 'edit', label: 'Edit', title: 'The words and every setting', Icon: PencilLine, ...opens('text') },
+      { id: 'font', label: 'Font', title: 'Font and my saved styles', Icon: CaseSensitive, ...opens('font') },
+      { id: 'style', label: 'Style', title: 'Size, bold, italic, underline, effects, alignment and spacing', Icon: Baseline, ...opens('style') },
+      { id: 'color', label: 'Colour', title: 'Colour, outline, the box behind the text and opacity', icon: <span className="vt-color-dot" style={{ background: item.color || '#ffffff' }} />, ...opens('color') },
       { id: 'animate', label: 'Animate', Icon: Sparkles, ...opens('animation', Boolean(item.animation)) },
     );
   }
@@ -914,9 +782,10 @@ function clipTools(item, { sheet, toggle, playhead, items }) {
   if (item.type === 'image' || item.type === 'sticker') {
     tools.push({ id: 'rotate', group: 'adjust', label: 'Rotate', Icon: RotateCw, onClick: () => update(item.id, rotateAboutCenter(item, ((item.rotation || 0) + 90) % 360)) });
   }
-  if (item.type !== 'audio') {
+  // A text's opacity is in its Colour sheet.
+  if (item.type !== 'audio' && item.type !== 'text') {
     const opacity = clipOpacity(item);
-    tools.push({ id: 'opacity', group: item.type === 'text' ? 'style' : 'adjust', label: opacity < 1 ? `${Math.round(opacity * 100)}%` : 'Opacity', title: 'Opacity', Icon: Blend, ...opens('opacity', opacity < 1) });
+    tools.push({ id: 'opacity', group: 'adjust', label: opacity < 1 ? `${Math.round(opacity * 100)}%` : 'Opacity', title: 'Opacity', Icon: Blend, ...opens('opacity', opacity < 1) });
   }
   const canSplit = playhead > item.startMs + MIN_SPLIT_MS && playhead < item.endMs - MIN_SPLIT_MS;
   tools.push({ id: 'split', label: 'Split', Icon: Scissors, title: canSplit ? 'Split at the playhead' : 'Move the playhead inside the clip to split it',

@@ -18,6 +18,8 @@ import { useVideoDraft } from './useVideoDraft';
 import { loadSavedVideo, restoreProject, saveVideoToStudio } from '../../utils/videoDraftStore';
 import { formatClock, getContentEnd } from './timeline/timelineMath';
 import { withWatermark } from '../../utils/brandCard';
+import { loadVideoFonts } from './videoFonts';
+import { DEFAULT_TEXT_LOOK } from '../../utils/textBitmap';
 import '../ui/ui.css';
 import './video-editor.css';
 
@@ -120,6 +122,12 @@ export default function VideoEditor({ template, onBack, onSaved }) {
 
   usePlaybackLoop();
 
+  // Fonts people uploaded (in either editor): registered with the page for the text sheets' font
+  // list, then the text drawn again in them.
+  useEffect(() => {
+    loadVideoFonts();
+  }, []);
+
   // Template hand-off: runs once per template (reading the latest one through a ref).
   const templateRef = useRef(template);
   templateRef.current = template;
@@ -147,7 +155,8 @@ export default function VideoEditor({ template, onBack, onSaved }) {
         type: 'video', url: template.videoUrl, thumbnailUrl: template.thumbnailUrl, name: template.name,
         durationMs: template.durationMs || 10000, width: template.width, height: template.height
       });
-      (template.defaultCaptions || []).forEach((cap) => store.addItem({ type: 'text', ...cap }));
+      // Template captions give their words and size; the outline and font are the usual ones.
+      (template.defaultCaptions || []).forEach((cap) => store.addItem({ type: 'text', ...DEFAULT_TEXT_LOOK, ...cap }));
     } else {
       store.addItem({ type: 'image', url: template.imageUrl, name: template.name });
     }

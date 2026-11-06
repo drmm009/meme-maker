@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { textAnimFrame, animationSteps, shakeExpressions, shakeOffset, typeCharMs, revealRects, REST_FRAME, POP_MS } from './textAnimation';
+import { textAnimFrame, animationSteps, shakeExpressions, shakeOffset, typeCharMs, REST_FRAME, POP_MS } from './textAnimation';
 
 const text = (extra) => ({ type: 'text', text: 'HELLO', fontSize: 50, startMs: 1000, endMs: 4000, ...extra });
 
@@ -77,23 +77,3 @@ describe('shakeExpressions', () => {
   });
 });
 
-describe('revealRects', () => {
-  // A stand-in for a laid-out Konva.Text: 10px per character, centred, two lines.
-  const node = {
-    textArr: [{ text: 'HELLO', width: 50 }, { text: 'HI', width: 20 }],
-    fontSize: () => 20, lineHeight: () => 1, width: () => 50, align: () => 'center',
-    padding: () => 0, strokeWidth: () => 0, letterSpacing: () => 0,
-    measureSize: (s) => ({ width: s.length * 10 }),
-  };
-
-  it('reveals the first line partially, keeping centred positions', () => {
-    expect(revealRects(node, 3)).toEqual([{ x: -2, y: -2, width: 32, height: 24 }]);
-  });
-
-  it('finishes earlier lines before starting the next', () => {
-    const rects = revealRects(node, 6);
-    expect(rects).toHaveLength(2);
-    expect(rects[0].width).toBe(54);
-    expect(rects[1]).toMatchObject({ x: 13, y: 18, width: 12 });
-  });
-});

@@ -1,6 +1,5 @@
-// Text clip animations shared by the live preview and the FFmpeg export.
+// Text clip animations shared by the live preview and the exports (textBitmap applies a frame).
 // item.animation is 'pop', 'shake', 'typewriter' or empty. Times are ms from the clip's start.
-import type Konva from 'konva';
 import type { TextAnimation, TextClip } from '../model/videoProject';
 
 // How animated text looks at a moment: scale and fade about its centre, a shake offset (stage
@@ -119,61 +118,4 @@ export const shakeExpressions = (item: Pick<TextClip, 'fontSize'>, startSec: num
     x: `${a.toFixed(2)}*sin(2*PI*${SHAKE.fx}*${t})`,
     y: `${(a * SHAKE.yRatio).toFixed(2)}*sin(2*PI*${SHAKE.fy}*${t}+${SHAKE.phaseY})`,
   };
-};
-
-// Konva-side helpers (they take Konva nodes, so this module doesn't import Konva).
-
-// Clip rectangles, in the text node's own coordinates, that reveal its first `chars` characters
-// line by line while keeping the final layout (centred lines don't shift as they type).
-export const revealRects = (textNode: Konva.Text, chars: number): { x: number; y: number; width: number; height: number }[] => {
-  const lines = textNode.textArr || [];
-  const lineH = textNode.fontSize() * textNode.lineHeight();
-  const width = textNode.width();
-  const align = textNode.align();
-  const pad = textNode.padding();
-  const margin = (textNode.strokeWidth() || 0) + 2;
-  // Konva's own width measure when present (it includes letter spacing), else an equivalent.
-  const internal = textNode as unknown as { _getTextWidth?: (s: string) => number };
-  const measure = (s: string) => (typeof internal._getTextWidth === 'function'
-    ? internal._getTextWidth(s)
-    : textNode.measureSize(s).width + textNode.letterSpacing() * s.length);
-  const rects: { x: number; y: number; width: number; height: number }[] = [];
-  let left = chars;
-  lines.forEach((line, i) => {
-    if (left <= 0) return;
-    const n = line.text.length;
-    const x0 = align === 'center' ? (width - line.width) / 2 : align === 'right' ? width - line.width : 0;
-    const shown = left >= n ? line.width : measure(line.text.slice(0, left));
-    rects.push({ x: pad + x0 - margin, y: pad + i * lineH - margin, width: shown + margin * (left >= n ? 2 : 1), height: lineH + margin * 2 });
-    left -= n;
-  });
-  return rects;
-};
-
-// Apply a frame to a group holding the text (and its background box): scale and fade about the
-// text's centre, shake offset, and the typewriter clip.
-export const applyTextFrame = (group: Konva.Group, textNode: Konva.Text, frame: Readonly<TextFrame>): void => {
-  const w = textNode.width() * textNode.scaleX();
-  const h = textNode.height() * textNode.scaleY();
-  const px = textNode.x() + w / 2;
-  const py = textNode.y() + h / 2;
-  group.setAttrs({
-    offsetX: px, offsetY: py,
-    x: px + frame.dx, y: py + frame.dy,
-    scaleX: frame.scale, scaleY: frame.scale,
-    opacity: frame.opacity,
-  });
-  if (!Number.isFinite(frame.chars)) {
-    group.clipFunc(null);
-    return;
-  }
-  const chars = frame.chars;
-  group.clipFunc((ctx) => {
-    const rot = (textNode.rotation() * Math.PI) / 180;
-    ctx.translate(textNode.x(), textNode.y());
-    ctx.rotate(rot);
-    for (const r of revealRects(textNode, chars)) ctx.rect(r.x, r.y, r.width, r.height);
-    ctx.rotate(-rot);
-    ctx.translate(-textNode.x(), -textNode.y());
-  });
 };

@@ -583,7 +583,6 @@
 .vt-source-sub { align-self: start; overflow: hidden; color: var(--vt-muted); font-size: var(--ui-fs-label, 12px); white-space: nowrap; text-overflow: ellipsis; }
 @media (hover: hover) { .vt-source:hover { background: #242426; } }
 .vt-pill .ui-float { max-width: 100%; }
-.vt-font-sample { font-size: 17px; font-weight: 700; line-height: 1; }
 .vt-color-dot { width: 18px; height: 18px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.5); }
 /* Glass, a step lighter than the timeline it rises over. */
 .vt-sheet.ui-sheet {
@@ -593,6 +592,8 @@
   border-top: none;
 }
 .vt-sheet .ui-sheet-body { display: flex; flex-direction: column; gap: 14px; }
+/* A text's sheets: the image editor's text controls (TextLookPanel), the sheet's height their own. */
+.vt-text-look.ie-panels--sheet { max-height: none; padding-top: 0; }
 /* The banners and cards over the stage (draft, busy, export ready) rise in. */
 @keyframes vt-panel-in {
   from { opacity: 0; transform: translateY(8px); }

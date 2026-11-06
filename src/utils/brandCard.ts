@@ -37,15 +37,17 @@ export function watermarkClip(wm: WatermarkSettings | null | undefined, endMs: n
     startMs: 0,
     endMs,
     x: margin,
-    y: corner[0] === 't' ? margin : stageHeight - margin - fontSize,
+    // x and y are its box's corner: the text's line plus the caption painter's padding above and below.
+    y: corner[0] === 't' ? margin : stageHeight - margin - Math.round(fontSize * 1.2 + 2 * Math.max(10, fontSize * 0.16)),
     width: STAGE_WIDTH - 2 * margin,
     fontSize,
     fontFamily: 'Inter, system-ui, sans-serif',
     color: '#ffffff',
     // A thin dark edge and a shadow keep white text readable on light backgrounds too.
     stroke: 'rgba(0, 0, 0, 0.55)',
-    outline: 0.1,
-    shadow: 'soft',
+    strokeWidth: fontSize * 0.1,
+    shadowSize: Math.round(fontSize * 0.16),
+    shadowColor: 'rgba(0, 0, 0, 0.8)',
     align: corner[1] === 'l' ? 'left' : 'right',
     opacity: WATERMARK_OPACITY,
   } as TextClip;

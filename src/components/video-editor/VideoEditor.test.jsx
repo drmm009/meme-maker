@@ -42,7 +42,7 @@ const clipTool = (text) => {
   const back = within(pill()).queryByText('Back');
   if (back && !inPill()) fireEvent.click(back);
   if (inPill()) return inPill();
-  for (const group of ['Style', 'Effects', 'Audio', 'Adjust', 'Arrange']) {
+  for (const group of ['Effects', 'Audio', 'Adjust', 'Arrange']) {
     const button = within(pill()).queryByText(group);
     if (!button) continue;
     fireEvent.click(button);
@@ -170,14 +170,9 @@ describe('VideoEditor', () => {
     expect(store().activeItemId).toBe(store().items[0].id);
     expect(clips(container)[0].className).toContain('is-selected');
     const main = screen.getByRole('toolbar', { name: 'Clip tools' });
-    expect([...main.querySelectorAll('button')].map((b) => b.textContent)).toEqual(['Edit', 'Style', 'Animate', 'Split', 'Arrange', 'Delete']);
+    expect([...main.querySelectorAll('button')].map((b) => b.textContent)).toEqual(['Edit', 'Font', 'Style', 'Colour', 'Animate', 'Split', 'Arrange', 'Delete']);
     // A group's tools take the pill's place, after Back.
-    fireEvent.click(within(main).getByText('Style'));
-    expect([...screen.getByRole('toolbar', { name: 'Style tools' }).querySelectorAll('button')].map((b) => b.textContent)).toEqual(
-      ['Back', 'AaFont', 'Colour', 'Outline', 'Background', 'Size', 'Align', 'Opacity'],
-    );
-    fireEvent.click(screen.getByText('Back'));
-    fireEvent.click(within(screen.getByRole('toolbar', { name: 'Clip tools' })).getByText('Arrange'));
+    fireEvent.click(within(main).getByText('Arrange'));
     expect([...screen.getByRole('toolbar', { name: 'Arrange tools' }).querySelectorAll('button')].map((b) => b.textContent)).toEqual(
       ['Back', 'Duplicate', 'Bring forward', 'Send back', 'Select'],
     );
@@ -298,19 +293,29 @@ describe('VideoEditor', () => {
     expect(store().items[0].fadeInMs).toBe(0);
   });
 
-  it('edits, resizes and aligns text from the rail', () => {
+  it('edits, styles and colours text with the image editor’s text controls', () => {
     const { container } = render(<VideoEditor onBack={() => {}} />);
     addTextFromRail();
     fireEvent.click(clips(container)[0]);
-    fireEvent.click(within(screen.getByRole('toolbar', { name: 'Clip tools' })).getByText('Edit'));
-    fireEvent.change(screen.getByPlaceholderText('Type your text'), { target: { value: 'WHEN IT WORKS' } });
+    fireEvent.click(clipTool('Edit'));
+    fireEvent.change(screen.getByLabelText('Caption text'), { target: { value: 'WHEN IT WORKS' } });
     closeSheet();
-    fireEvent.click(clipTool('Size'));
-    fireEvent.change(screen.getByRole('slider'), { target: { value: '150' } });
+    fireEvent.click(clipTool('Font'));
+    fireEvent.click(screen.getByRole('button', { name: 'Comic Sans (Fun)' }));
     closeSheet();
-    fireEvent.click(clipTool('Align'));
+    fireEvent.click(clipTool('Style'));
+    fireEvent.change(screen.getByRole('slider', { name: 'Text size' }), { target: { value: '150' } });
     fireEvent.click(screen.getByRole('radio', { name: 'Right' }));
-    expect(store().items[0]).toMatchObject({ text: 'WHEN IT WORKS', fontSize: 150, align: 'right' });
+    fireEvent.click(screen.getByRole('button', { name: 'Italic' }));
+    closeSheet();
+    fireEvent.click(clipTool('Colour'));
+    fireEvent.click(screen.getByRole('tab', { name: 'Box' }));
+    fireEvent.click(screen.getByRole('radio', { name: '#000000' }));
+    expect(store().items[0]).toMatchObject({
+      text: 'WHEN IT WORKS', fontSize: 150, align: 'right', italic: true,
+      bgColor: 'black', color: '#ffffff', stroke: 'transparent',
+    });
+    expect(store().items[0].fontFamily).toMatch(/^"Comic Sans MS"/);
   });
 
   it('turns green-screen removal on, tunes it and turns it off', () => {

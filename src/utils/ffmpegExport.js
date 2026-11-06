@@ -1,17 +1,16 @@
 import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { fetchFile, toBlobURL } from '@ffmpeg/util';
-import Konva from 'konva';
 import { generateGridImage } from './gridHelper';
 import { isGifUrl } from './gif';
 import { ExportCancelledError, etaSeconds, overallPercent, parseFfmpegTime } from './exportProgress';
 import { downloadBlob } from './shareFile';
 import { drawOrder } from './layerOrder';
 import { captionFrames, concatList, splitCaptionTrack } from './captionTrack';
-import { REST_FRAME, applyTextFrame } from './textAnimation';
+import { REST_FRAME } from './textAnimation';
 import { clipOpacity } from '../model/videoProject';
 import { audioExtension, createExportGraph, outputSize, textStills, visualSize } from './exportGraph';
 import { voiceSpans } from './ducking';
-import { hasTextBox, textAttrs, textBoxAttrs } from './textLayer';
+import { drawTextClip, loadTextFonts } from './textBitmap';
 
 let ffmpeg = null;
 let loadPromise = null;
@@ -157,77 +156,22 @@ const rasterizeSvg = (url, w, h) => new Promise((resolve) => {
   img.src = url;
 });
 
-// Text drawn with Konva into a transparent w x h PNG, at one animation frame, from the same
-// definitions as the preview (textLayer). `ratio` converts the 800-wide preview to the output.
-// Empty on failure.
-const renderTextToPNG = (item, w, h, ratio, frame = REST_FRAME) => new Promise((resolve) => {
+// A text clip as a transparent full-frame PNG (w x h) at `ratio` output pixels per stage unit, at
+// an animation frame: its picture from the caption painter, placed and animated as in the preview
+// (textBitmap). Empty on failure.
+const renderTextToPNG = async (item, w, h, ratio, frame = REST_FRAME) => {
   try {
-    const container = document.createElement('div');
-    container.style.position = 'absolute';
-    container.style.left = '-9999px';
-    container.style.top = '-9999px';
-    container.style.width = `${w}px`;
-    container.style.height = `${h}px`;
-    document.body.appendChild(container);
-
-    const stage = new Konva.Stage({ container, width: w, height: h });
-    const layer = new Konva.Layer();
-    stage.add(layer);
-    const group = new Konva.Group();
-
-    const textNode = new Konva.Text({ ...textAttrs(item, ratio), scaleX: 1, scaleY: 1 });
-    if (hasTextBox(item)) {
-      group.add(new Konva.Rect(textBoxAttrs(item, { x: textNode.x(), y: textNode.y(), width: textNode.width(), height: textNode.height() }, ratio)));
-    }
-
-    group.add(textNode);
-    // Its opacity outside the group the animation fades, as in the preview.
-    const holder = new Konva.Group({ opacity: clipOpacity(item) });
-    holder.add(group);
-    layer.add(holder);
-    // Animation frame (offsets are in 800-wide stage units, like item.x).
-    applyTextFrame(group, textNode, { ...frame, dx: frame.dx * ratio, dy: frame.dy * ratio });
-    layer.draw();
-
-    const dataURL = stage.toDataURL({ pixelRatio: 1 });
-    stage.destroy();
-    if (container.parentNode) {
-      container.parentNode.removeChild(container);
-    }
-
-    fetch(dataURL)
-      .then(res => res.arrayBuffer())
-      .then(buffer => resolve(new Uint8Array(buffer)))
-      .catch(() => resolve(new Uint8Array(0)));
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    drawTextClip(canvas.getContext('2d'), item, ratio, frame, clipOpacity(item));
+    const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+    return blob ? new Uint8Array(await blob.arrayBuffer()) : new Uint8Array(0);
   } catch (err) {
-    console.error('[renderTextToPNG] Konva render error:', err);
-    // Canvas 2D fallback
-    try {
-      const canvas = document.createElement('canvas');
-      canvas.width = w;
-      canvas.height = h;
-      const ctx = canvas.getContext('2d');
-      if (ctx) {
-        const a = textAttrs(item, ratio);
-        ctx.font = `bold ${a.fontSize}px ${a.fontFamily}`;
-        ctx.fillStyle = a.fill;
-        ctx.strokeStyle = a.stroke;
-        ctx.lineWidth = a.strokeWidth;
-        ctx.strokeText(a.text, a.x, a.y + a.fontSize);
-        ctx.fillText(a.text, a.x, a.y + a.fontSize);
-        canvas.toBlob(blob => {
-          if (blob) {
-            blob.arrayBuffer().then(buf => resolve(new Uint8Array(buf))).catch(() => resolve(new Uint8Array(0)));
-          } else {
-            resolve(new Uint8Array(0));
-          }
-        });
-        return;
-      }
-    } catch { /* fall through to empty */ }
-    resolve(new Uint8Array(0));
+    console.error('[renderTextToPNG]', err);
+    return new Uint8Array(0);
   }
-});
+};
 
 // The whole render in FFmpeg: fetches each clip into FFmpeg's file system and hands it to the
 // command builder (exportGraph), then runs FFmpeg. Used for GIFs, and for MP4s when the browser
@@ -310,6 +254,7 @@ const exportWithFFmpeg = async (items = [], durationMs = 7000, canvasAspectRatio
 
     // Text goes in as full-canvas PNGs for exact fonts, stroke and rotation; animated text is a run
     // of stills (pop, typewriter) or one still moved by overlay expressions (shake).
+    await loadTextFonts([...textItems, ...captionTrack]);
     const addText = async (item) => {
       for (const still of textStills(item, safeDurationMs, konvaRatio)) {
         const fileName = `text_${graph.nextIndex}.png`;

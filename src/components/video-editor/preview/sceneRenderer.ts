@@ -8,8 +8,9 @@ import type { Clip, ImageClip, LayoutSlot, StickerClip, TextClip, VideoClip } fr
 import { clipOpacity } from '../../../model/videoProject';
 import { drawOrder } from '../../../utils/layerOrder';
 import { gridLines } from '../../../utils/gridLines';
-import { hasTextBox, textAttrs, textBoxAttrs } from '../../../utils/textLayer';
-import { REST_FRAME, applyTextFrame, textAnimFrame } from '../../../utils/textAnimation';
+import { applyTextFrame, loadTextFonts, textBitmap, textImageAttrs } from '../../../utils/textBitmap';
+import type { TextBitmap } from '../../../utils/textBitmap';
+import { REST_FRAME, textAnimFrame } from '../../../utils/textAnimation';
 import { decodeGif, isGifUrl } from '../../../utils/gif';
 import { STAGE_WIDTH, isOnScreen, mediaAttrs, videoTimeSec } from './previewMath';
 import { applyMotion, applyPunch } from './nodeMotion';
@@ -55,7 +56,9 @@ interface MediaEntry {
 interface TextEntry {
   item: TextClip;
   group: Konva.Group;
-  text: Konva.Text;
+  node: Konva.Image;
+  whole: TextBitmap;
+  chars: number;
 }
 
 const SEEK_TIMEOUT_MS = 4000;
@@ -118,6 +121,9 @@ export async function createSceneRenderer({ items, width, height, aspect, backgr
 
   const media: MediaEntry[] = [];
   const texts: TextEntry[] = [];
+  // Text pictures at the output's own scale.
+  const textScale = width / STAGE_WIDTH;
+  await loadTextFonts(items.filter((i): i is TextClip => i.type === 'text'));
   const cleanup = () => {
     for (const m of media) {
       if (m.video) { m.video.pause(); m.video.removeAttribute('src'); m.video.load(); }
@@ -133,16 +139,14 @@ export async function createSceneRenderer({ items, width, height, aspect, backgr
       if (item.hidden) continue;
       if (item.type === 'text') {
         const group = new Konva.Group();
-        const text = new Konva.Text(textAttrs(item));
-        if (hasTextBox(item)) {
-          group.add(new Konva.Rect(textBoxAttrs(item, { x: text.x(), y: text.y(), width: text.width(), height: text.height() })));
-        }
-        group.add(text);
+        const whole = textBitmap(item, textScale);
+        const node = new Konva.Image(textImageAttrs(item, whole));
+        group.add(node);
         // Its opacity outside the group the animation fades, as in the preview.
         const holder = new Konva.Group({ opacity: clipOpacity(item) });
         holder.add(group);
         layer.add(holder);
-        texts.push({ item, group, text });
+        texts.push({ item, group, node, whole, chars: Infinity });
         continue;
       }
       if (item.type === 'audio' || !item.url) continue;
@@ -209,7 +213,13 @@ export async function createSceneRenderer({ items, width, height, aspect, backgr
       for (const t of texts) {
         const visible = isOnScreen(t.item, ms);
         t.group.visible(visible);
-        if (visible) applyTextFrame(t.group, t.text, t.item.animation ? textAnimFrame(t.item, ms - t.item.startMs) : REST_FRAME);
+        if (!visible) continue;
+        const frame = t.item.animation ? textAnimFrame(t.item, ms - t.item.startMs) : REST_FRAME;
+        applyTextFrame(t.group, t.whole, t.node, frame);
+        if (frame.chars !== t.chars) {
+          t.node.setAttrs(textImageAttrs(t.item, textBitmap(t.item, textScale, frame.chars)));
+          t.chars = frame.chars;
+        }
       }
       layer.draw();
     },
