@@ -41,12 +41,14 @@ const store = () => useEditorStore.getState();
 const clips = (container) => [...container.querySelectorAll('.vt-clip')];
 // Add tools live in the strips of the dock's sections, reached the way a user would.
 const addTextFromRail = () => { fireEvent.click(screen.getByText('Text')); fireEvent.click(screen.getByText('Add text')); };
-// A tool on the selected clip's pill, its group (Style, Effects…) opened first when it's in one.
-const pill = () => document.querySelector('.vt-pill [role="toolbar"]');
+// A tool in the bottom bar's clip tools, its group (Effects, Adjust…) opened first when it's in one.
+// The bar's Back leaves a group (on the main tools it deselects the clip).
+const pill = () => document.querySelector('.vt-deckbar[role="toolbar"]');
 const clipTool = (text) => {
-  const inPill = () => within(pill()).queryByText(text);
-  const back = within(pill()).queryByText('Back');
-  if (back && !inPill()) fireEvent.click(back);
+  const inPill = () => within(pill().querySelector('.vt-deckbar-items')).queryByText(text);
+  const inGroup = pill().getAttribute('aria-label') !== 'Clip tools';
+  if (text === 'Back') return within(pill()).getByText('Back');
+  if (inGroup && !inPill()) fireEvent.click(within(pill()).getByText('Back'));
   if (inPill()) return inPill();
   for (const group of ['Effects', 'Audio', 'Adjust', 'Arrange']) {
     const button = within(pill()).queryByText(group);
@@ -79,17 +81,18 @@ describe('VideoEditor', () => {
     expect(container.querySelector('.vt-timeline-wrap').textContent).toContain('Add a video');
     const dock = screen.getByRole('navigation', { name: 'Sections' });
     expect([...dock.querySelectorAll('button')].map((b) => b.textContent)).toEqual(['Media', 'Text', 'Stickers', 'Audio', 'Canvas']);
-    // No section's tools until a section is tapped; tapping it again puts them away.
+    // No section's tools until a section is tapped: they take the sections' row, and Back brings it back.
     expect(screen.queryByRole('toolbar', { name: /tools$/ })).toBeNull();
     fireEvent.click(screen.getByText('Media'));
     const strip = screen.getByRole('toolbar', { name: 'Media tools' });
-    expect([...strip.querySelectorAll('button')].map((b) => b.textContent)).toEqual(['Photo', 'Video']);
-    expect(screen.getByTitle('Media').getAttribute('aria-pressed')).toBe('true');
-    fireEvent.click(screen.getByText('Media'));
+    expect([...strip.querySelectorAll('button')].map((b) => b.textContent)).toEqual(['Back', 'Photo', 'Video']);
+    expect(screen.queryByRole('navigation', { name: 'Sections' })).toBeNull();
+    fireEvent.click(within(strip).getByText('Back'));
     expect(screen.queryByRole('toolbar', { name: 'Media tools' })).toBeNull();
+    expect(screen.getByRole('navigation', { name: 'Sections' })).toBeTruthy();
   });
 
-  it('shows the tapped section’s tools in the strip', () => {
+  it('shows the tapped section’s tools in the bar', () => {
     render(<VideoEditor onBack={() => {}} />);
     fireEvent.click(screen.getByText('Audio'));
     expect(screen.getByRole('toolbar', { name: 'Audio tools' })).toBeTruthy();
@@ -97,17 +100,15 @@ describe('VideoEditor', () => {
     expect(screen.queryByRole('toolbar', { name: 'Media tools' })).toBeNull();
   });
 
-  it('opens a setting as a sheet in place of the strip and dock, and brings them back on close', () => {
+  it('opens a setting as a sheet in place of the bar, and brings it back on close', () => {
     render(<VideoEditor onBack={() => {}} />);
     fireEvent.click(screen.getByText('Audio'));
     fireEvent.click(screen.getByText('Top sounds'));
     expect(screen.getByRole('dialog', { name: 'Top sounds' })).toBeTruthy();
     expect(screen.queryByRole('toolbar', { name: 'Audio tools' })).toBeNull();
-    expect(screen.queryByRole('navigation', { name: 'Sections' })).toBeNull();
     closeSheet();
     expect(screen.queryByRole('dialog')).toBeNull();
     expect(screen.getByRole('toolbar', { name: 'Audio tools' })).toBeTruthy();
-    expect(screen.getByRole('navigation', { name: 'Sections' })).toBeTruthy();
   });
 
   it('adds a text clip from the rail and shows it on the timeline', () => {
@@ -169,22 +170,24 @@ describe('VideoEditor', () => {
     expect(screen.queryByRole('dialog')).toBeNull();
   });
 
-  it('swaps the strip for the clip’s tool pill on select, and a section brings it back', () => {
+  it('swaps the bar for the clip’s tools on select, and Back steps out again', () => {
     const { container } = render(<VideoEditor onBack={() => {}} />);
     addTextFromRail();
     fireEvent.click(clips(container)[0]);
     expect(store().activeItemId).toBe(store().items[0].id);
     expect(clips(container)[0].className).toContain('is-selected');
     const main = screen.getByRole('toolbar', { name: 'Clip tools' });
-    expect([...main.querySelectorAll('button')].map((b) => b.textContent)).toEqual(['Edit', 'Font', 'Style', 'Colour', 'Animate', 'Split', 'Arrange', 'Delete']);
-    // A group's tools take the pill's place, after Back.
+    expect([...main.querySelectorAll('button')].map((b) => b.textContent)).toEqual(['Back', 'Edit', 'Font', 'Style', 'Colour', 'Animate', 'Split', 'Arrange', 'Delete']);
+    // A group's tools take the clip tools' place; Back goes back to them.
     fireEvent.click(within(main).getByText('Arrange'));
     expect([...screen.getByRole('toolbar', { name: 'Arrange tools' }).querySelectorAll('button')].map((b) => b.textContent)).toEqual(
       ['Back', 'Duplicate', 'Bring forward', 'Send back', 'Select'],
     );
     fireEvent.click(screen.getByText('Back'));
+    expect(screen.getByRole('toolbar', { name: 'Clip tools' })).toBeTruthy();
     expect(screen.queryByText('Add text')).toBeNull();
-    fireEvent.click(screen.getByText('Text'));
+    // Back on the clip's tools lets go of the clip, back to the section it was added from.
+    fireEvent.click(screen.getByText('Back'));
     expect(store().activeItemId).toBe(null);
     expect(screen.queryByRole('toolbar', { name: 'Clip tools' })).toBeNull();
     expect(screen.getByRole('toolbar', { name: 'Text tools' })).toBeTruthy();
@@ -329,7 +332,7 @@ describe('VideoEditor', () => {
     const { container } = render(<VideoEditor onBack={() => {}} />);
     fireEvent.click(clips(container)[0]);
     const main = screen.getByRole('toolbar', { name: 'Clip tools' });
-    expect([...main.querySelectorAll('button')].map((b) => b.textContent)).toEqual(['Edit', 'Die-cut', 'Adjust', 'Split', 'Arrange', 'Delete']);
+    expect([...main.querySelectorAll('button')].map((b) => b.textContent)).toEqual(['Back', 'Edit', 'Die-cut', 'Adjust', 'Split', 'Arrange', 'Delete']);
     fireEvent.click(clipTool('Edit'));
     fireEvent.change(screen.getByRole('slider', { name: 'Sticker size' }), { target: { value: '0.25' } });
     fireEvent.change(screen.getByRole('slider', { name: 'Shadow size' }), { target: { value: '12' } });
@@ -352,7 +355,7 @@ describe('VideoEditor', () => {
     fireEvent.click(clips(container)[0]);
     const main = screen.getByRole('toolbar', { name: 'Clip tools' });
     expect([...main.querySelectorAll('button')].map((b) => b.textContent || b.getAttribute('aria-label')))
-      .toEqual(['Face swap', 'Background', 'Filters', 'More', 'Adjust', 'Motion', 'Split', 'Arrange', 'Delete']);
+      .toEqual(['Back', 'Face swap', 'Background', 'Filters', 'More', 'Adjust', 'Motion', 'Split', 'Arrange', 'Delete']);
     fireEvent.click(clipTool('Adjust'));
     expect([...pill().querySelectorAll('button')].map((b) => b.textContent)).toEqual(['Back', 'Fit', 'Rotate']);
     fireEvent.click(clipTool('Back'));

@@ -2,9 +2,10 @@ import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
   Type, Sticker, Smile, LayoutGrid, Image as ImageIcon, Film, Clapperboard, Music,
   Gauge, Volume2, VolumeX, Palette, RotateCw, Minimize, Crop, Maximize, Copy, Trash2,
-  Scissors, PencilLine, SlidersHorizontal, WandSparkles, Pipette, Sparkles, ImagePlay, PaintBucket, Zap, Snowflake, Rewind, Repeat, ZoomIn, BringToFront, SendToBack, Mic, ArrowRightLeft, Frame, Plus, Upload, Library, Laugh, SquarePlay, Captions, Expand, Blend, Scan, Eraser, FlipHorizontal2, FlipVertical2, Move, ListChecks, X, AtSign, Flag, Wand, AudioLines, Settings2, Layers, ChevronLeft, ScanFace, CaseSensitive, Baseline, Ellipsis
+  Scissors, PencilLine, SlidersHorizontal, WandSparkles, Pipette, Sparkles, ImagePlay, PaintBucket, Zap, Snowflake, Rewind, Repeat, ZoomIn, BringToFront, SendToBack, Mic, ArrowRightLeft, Frame, Plus, Upload, Library, Laugh, SquarePlay, Captions, Expand, Blend, Scan, Eraser, FlipHorizontal2, FlipVertical2, Move, ListChecks, X, AtSign, Flag, Wand, AudioLines, Settings2, Layers, ScanFace, CaseSensitive, Baseline, Ellipsis
 } from 'lucide-react';
-import { FloatingToolbar, Sheet, ToolDock, ToolStrip } from '../ui';
+import { Sheet } from '../ui';
+import DeckBar from './DeckBar';
 import { BackgroundIcon, FiltersIcon } from '../editor/panels/editorIcons';
 import { useEditorStore, clipEffectBase, sourceTimeMs } from '../../store/useVideoEditorStore';
 import { clipOpacity } from '../../model/videoProject';
@@ -685,8 +686,8 @@ const SHEETS = {
   captions: { title: 'Auto captions', Icon: Captions, Panel: CaptionsPanel },
 };
 
-// The pill's groups: a group's tools show in the pill in place of the clip's main tools, after a
-// Back button (see groupedTools).
+// The clip tools' groups: a group's tools take the place of the clip's main tools in the bottom
+// bar, its Back going back to them (see groupedTools).
 const TOOL_GROUPS = {
   effects: { label: 'Effects', Icon: Wand },
   audio: { label: 'Audio', Icon: AudioLines },
@@ -694,9 +695,9 @@ const TOOL_GROUPS = {
   arrange: { label: 'Arrange', Icon: Layers },
 };
 
-// The selected clip's tools for its pill: what this kind of clip can do (each setting opens its
-// sheet, its button lit while open or while the setting is on), then Split, then Delete as a small
-// round button. A tool with a `group` goes in that group (TOOL_GROUPS) instead of the main pill.
+// The selected clip's tools for the bottom bar: what this kind of clip can do (each setting opens
+// its sheet, its button lit while open or while the setting is on), then Split, then Delete. A tool
+// with a `group` goes in that group (TOOL_GROUPS) instead of the main tools.
 function clipTools(item, { sheet, toggle, playhead, items }) {
   const store = useEditorStore.getState;
   const opens = (name, on = false) => ({ active: sheet === name || on, onClick: () => toggle(name) });
@@ -808,16 +809,11 @@ function clipTools(item, { sheet, toggle, playhead, items }) {
   return tools;
 }
 
-// The pill's buttons: with no group open, the main tools with one button per group in the place of
-// its first tool (lit when any of its tools is); with a group open, Back and that group's tools.
-// Split stays before Arrange, and Delete last.
+// The bar's clip tools: with no group open, the main tools with one button per group in the place
+// of its first tool (lit when any of its tools is); with a group open, that group's tools (the bar's
+// Back goes back). Split stays before Arrange, and Delete last.
 function groupedTools(tools, open, setOpen) {
-  if (open) {
-    return [
-      { id: 'group-back', label: 'Back', title: 'Back to all tools', Icon: ChevronLeft, onClick: () => setOpen(null) },
-      ...tools.filter((t) => t.group === open),
-    ];
-  }
+  if (open) return tools.filter((t) => t.group === open);
   const out = [];
   const seen = new Set();
   for (const t of tools) {
@@ -867,12 +863,10 @@ function SourcesPanel({ sources, onPick }) {
   );
 }
 
-// The bottom of the editor, laid out like the image editor's: a dock of sections, a tapped
-// section's tools in a strip above it (none to start; tapping the open section again puts them away;
-// the preview gives up the room), and a selected clip's tools
-// in a pill in the strip's place (no section lit meanwhile; any section deselects the clip). A
-// setting opens a sheet in place of the strip or pill and the dock, nothing floating above it; it
-// rises over the timeline (the bottom keeps its height, so the timeline and preview don't move).
+// The bottom of the editor: one flat bar of tools under the timeline (DeckBar). It shows the
+// sections; a tapped section's tools, or a selected clip's, take the same row with a Back. A setting
+// opens a sheet in the bar's place that rises over the timeline (the bottom keeps its height, so
+// the timeline and preview don't move).
 export default function ToolRail({ onAdd }) {
   const activeItem = useEditorStore((s) => s.items.find((i) => i.id === s.activeItemId));
   const items = useEditorStore((s) => s.items);
@@ -888,7 +882,7 @@ export default function ToolRail({ onAdd }) {
   const setSheet = (name) => setSheetState({ id: ownerId, name });
   const toggle = (name, keepOpen = false) => setSheet(sheet === name && !keepOpen ? null : name);
   const spec = sheet && (SHEETS[sheet] || SOURCE_SHEETS[sheet]);
-  // The open group of the pill's tools, for the clip it was opened on (another clip starts on the main tools).
+  // The open group of the clip's tools, for the clip it was opened on (another clip starts on the main tools).
   const [groupState, setGroupState] = useState({ id: null, name: null });
   const group = groupState.id === ownerId ? groupState.name : null;
   const setGroup = (name) => setGroupState({ id: ownerId, name });
@@ -896,7 +890,7 @@ export default function ToolRail({ onAdd }) {
   // The bottom's height without a sheet, kept while one is open (it then floats over the timeline,
   // never higher than the timeline's top, the element before it).
   const wrapRef = useRef(null);
-  const hasPill = Boolean(activeItem) || picked.length > 0;
+  const hasClip = Boolean(activeItem) || picked.length > 0;
   const [rest, setRest] = useState(null); // { height, room }
   useLayoutEffect(() => {
     const el = wrapRef.current;
@@ -907,9 +901,9 @@ export default function ToolRail({ onAdd }) {
     const observer = new ResizeObserver(measure);
     observer.observe(el);
     return () => observer.disconnect();
-    // Measured again as the strip or pill comes and goes (an observer may not have run yet when a
-    // sheet opens straight after).
-  }, [spec, tab, hasPill]);
+    // Measured again as the bar's row changes (an observer may not have run yet when a sheet opens
+    // straight after).
+  }, [spec, tab, hasClip]);
 
   const section = SECTIONS.find((s) => s.id === tab) ?? null;
   const runTool = (kind) => {
@@ -921,37 +915,37 @@ export default function ToolRail({ onAdd }) {
     }
   };
   const openSection = (id) => {
-    if (activeItem || picked.length) useEditorStore.getState().setActiveItem(null);
     setSheetState({ id: null, name: null });
-    setTab(!activeItem && tab === id ? null : id);
+    setTab(id);
   };
+
+  // One row at a time: the picked clips' actions, the selected clip's tools (or one group of them),
+  // an open section's tools, or the sections. Back steps out to the row before.
+  let bar;
+  if (picked.length) {
+    bar = <DeckBar ariaLabel="Selected clips" items={pickedTools(picked)} />;
+  } else if (activeItem) {
+    const tools = groupedTools(clipTools(activeItem, { sheet, toggle, playhead, items }), group, setGroup);
+    bar = group
+      ? <DeckBar key={group} ariaLabel={`${TOOL_GROUPS[group].label} tools`} items={tools} back={{ label: 'Back', title: 'Back to all tools', onClick: () => setGroup(null) }} />
+      : <DeckBar key="clip" ariaLabel="Clip tools" items={tools} back={{ label: 'Back', title: 'Done with this clip', onClick: () => useEditorStore.getState().setActiveItem(null) }} />;
+  } else if (section) {
+    bar = (
+      <DeckBar
+        key={section.id}
+        ariaLabel={`${section.label} tools`}
+        items={section.tools.map((t) => ({ id: t.kind, label: t.label, Icon: t.Icon, active: sheet === t.kind, onClick: () => runTool(t.kind) }))}
+        back={{ label: 'Back', title: 'Back to all sections', onClick: () => setTab(null) }}
+      />
+    );
+  } else {
+    bar = <DeckBar nav ariaLabel="Sections" items={DOCK.map((d) => ({ ...d, onClick: () => openSection(d.id) }))} />;
+  }
 
   return (
     <div className="vt-rail-wrap" ref={wrapRef} style={spec && rest ? { height: rest.height } : undefined}>
       <div className={`vt-bottom${spec ? ' has-sheet' : ''}`} style={spec && rest ? { minHeight: rest.height, maxHeight: spec.tall ? Math.max(rest.room, Math.min(420, window.innerHeight * 0.6)) : rest.room } : undefined}>
-        {/* While a sheet is open nothing floats above it: the strip or pill comes back when it closes. */}
-        {spec ? null : picked.length ? (
-          <div className="vt-pill">
-            <FloatingToolbar ariaLabel="Selected clips" items={pickedTools(picked)} />
-          </div>
-        ) : activeItem ? (
-          <div className="vt-pill">
-            <FloatingToolbar
-              key={group || 'main'}
-              ariaLabel={group ? `${TOOL_GROUPS[group].label} tools` : 'Clip tools'}
-              items={groupedTools(clipTools(activeItem, { sheet, toggle, playhead, items }), group, setGroup)}
-            />
-          </div>
-        ) : section && (
-          <ToolStrip
-            key={section.id}
-            ariaLabel={`${section.label} tools`}
-            layout="stacked"
-            items={section.tools.map((t) => ({ id: t.kind, label: t.label, Icon: t.Icon }))}
-            active={sheet}
-            onSelect={runTool}
-          />
-        )}
+        {/* A setting's sheet takes the bar's place; the bar comes back when it closes. */}
         {spec ? (
           <Sheet key={sheet} title={spec.title} Icon={spec.Icon} onClose={() => setSheet(null)} className="vt-sheet"
             aside={spec.Aside && activeItem ? <spec.Aside item={activeItem} /> : undefined}
@@ -960,9 +954,7 @@ export default function ToolRail({ onAdd }) {
               ? <SourcesPanel sources={spec.sources} onPick={(kind) => { setSheet(null); onAdd(kind); }} />
               : <spec.Panel item={activeItem} onMore={() => { setSheet(null); onAdd('sounds'); }} onOpen={setSheet} />}
           </Sheet>
-        ) : (
-          <ToolDock ariaLabel="Sections" items={DOCK} active={activeItem || picked.length ? null : tab} onSelect={openSection} />
-        )}
+        ) : bar}
       </div>
     </div>
   );
