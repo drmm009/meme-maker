@@ -12,6 +12,8 @@ import { clipCrop, isCropped } from '../../utils/clipCrop';
 import CropPanel from './CropPanel';
 import FaceSwapPanel from './FaceSwapPanel';
 import { TextColorPanel, TextEditPanel, TextFontPanel, TextStylePanel } from './TextLookPanel';
+import { StickerDieCutAside, StickerDieCutPanel, StickerEditPanel, StickerFlipAside } from './StickerLookPanel';
+import { isGifSticker } from '../../utils/stickerLook';
 import { canCutOut, cutOutBackground } from '../../utils/cutOut';
 import { PHOTO_MOTIONS } from '../../utils/photoMotion';
 import { DEFAULT_END_CARD, WATERMARK_CORNERS, endCardClip, isEndCard, renderEndCard } from '../../utils/brandCard';
@@ -681,6 +683,9 @@ const SHEETS = {
   font: { title: 'Font', Icon: CaseSensitive, Panel: TextFontPanel, tall: true },
   style: { title: 'Style', Icon: Baseline, Panel: TextStylePanel, tall: true },
   color: { title: 'Colour', Icon: Palette, Panel: TextColorPanel, tall: true },
+  // A sticker's, as the image editor's (StickerLookPanel); `Aside` goes beside the heading.
+  sticker: { title: 'Sticker', Icon: SlidersHorizontal, Panel: StickerEditPanel, Aside: StickerFlipAside },
+  diecut: { title: 'Die-cut', Icon: Sticker, Panel: StickerDieCutPanel, Aside: StickerDieCutAside },
   animation: { title: 'Animate', Icon: Sparkles, Panel: AnimationPanel },
   speed: { title: 'Speed', Icon: Gauge, Panel: SpeedPanel },
   place: { title: 'Fit to canvas', Icon: Expand, Panel: PlacePanel },
@@ -728,6 +733,11 @@ function clipTools(item, { sheet, toggle, playhead, items }) {
       { id: 'color', label: 'Colour', title: 'Colour, outline, the box behind the text and opacity', icon: <span className="vt-color-dot" style={{ background: item.color || '#ffffff' }} />, ...opens('color') },
       { id: 'animate', label: 'Animate', Icon: Sparkles, ...opens('animation', Boolean(item.animation)) },
     );
+  }
+  if (item.type === 'sticker') {
+    // As the image editor's sticker bar: Edit (size, opacity, shadow, flip) and Die-cut.
+    tools.push({ id: 'edit', label: 'Edit', title: 'Size, opacity, shadow and flip', Icon: SlidersHorizontal, ...opens('sticker') });
+    if (!isGifSticker(item)) tools.push({ id: 'diecut', label: 'Die-cut', title: item.dieCut ? 'Die-cut border (on)' : 'Add die-cut border', Icon: Sticker, ...opens('diecut', Boolean(item.dieCut)) });
   }
   if (item.type === 'video') {
     const rate = item.playbackRate || 1;
@@ -782,8 +792,8 @@ function clipTools(item, { sheet, toggle, playhead, items }) {
   if (item.type === 'image' || item.type === 'sticker') {
     tools.push({ id: 'rotate', group: 'adjust', label: 'Rotate', Icon: RotateCw, onClick: () => update(item.id, rotateAboutCenter(item, ((item.rotation || 0) + 90) % 360)) });
   }
-  // A text's opacity is in its Colour sheet.
-  if (item.type !== 'audio' && item.type !== 'text') {
+  // A text's opacity is in its Colour sheet, a sticker's in its Edit.
+  if (item.type === 'image' || item.type === 'video') {
     const opacity = clipOpacity(item);
     tools.push({ id: 'opacity', group: 'adjust', label: opacity < 1 ? `${Math.round(opacity * 100)}%` : 'Opacity', title: 'Opacity', Icon: Blend, ...opens('opacity', opacity < 1) });
   }
@@ -949,7 +959,8 @@ export default function ToolRail({ onAdd }) {
           />
         )}
         {spec ? (
-          <Sheet key={sheet} title={spec.title} Icon={spec.Icon} onClose={() => setSheet(null)} className="vt-sheet">
+          <Sheet key={sheet} title={spec.title} Icon={spec.Icon} onClose={() => setSheet(null)} className="vt-sheet"
+            aside={spec.Aside && activeItem ? <spec.Aside item={activeItem} /> : undefined}>
             {spec.sources
               ? <SourcesPanel sources={spec.sources} onPick={(kind) => { setSheet(null); onAdd(kind); }} />
               : <spec.Panel item={activeItem} onMore={() => { setSheet(null); onAdd('sounds'); }} />}

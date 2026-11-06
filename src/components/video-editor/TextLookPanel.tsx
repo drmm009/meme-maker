@@ -17,7 +17,7 @@ function TextLook({ item, part }: { item: TextClip; part: TextPart | null }) {
   const [colorTab, setColorTab] = useState<ColorTab>('color');
   const update = (patch: Partial<TextCaption>) => useEditorStore.getState().updateItem(item.id, patch);
   return (
-    <div className="ie-panels--sheet vt-text-look">
+    <div className="ie-panels--sheet vt-ie-look">
       <div className="ie-text-sheet ie-tool-sheet">
         {part === 'color' && <ColorTabs value={colorTab} onChange={setColorTab} />}
         <TextControls

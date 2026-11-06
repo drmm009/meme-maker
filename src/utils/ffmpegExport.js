@@ -11,6 +11,7 @@ import { clipOpacity } from '../model/videoProject';
 import { audioExtension, createExportGraph, outputSize, textStills, visualSize } from './exportGraph';
 import { voiceSpans } from './ducking';
 import { drawTextClip, loadTextFonts } from './textBitmap';
+import { hasStickerLook, stickerLookPng } from './stickerLook';
 
 let ffmpeg = null;
 let loadPromise = null;
@@ -223,7 +224,10 @@ const exportWithFFmpeg = async (items = [], durationMs = 7000, canvasAspectRatio
 
       let fileData;
       try {
-        if (!isVideo && (item.url.startsWith('data:image/svg') || item.url.toLowerCase().endsWith('.svg'))) {
+        if (hasStickerLook(item)) {
+          // Its die-cut border and shadow, drawn as in the preview.
+          fileData = await stickerLookPng(item.url, item);
+        } else if (!isVideo && (item.url.startsWith('data:image/svg') || item.url.toLowerCase().endsWith('.svg'))) {
           const { w, h } = visualSize(item, konvaRatio);
           fileData = await rasterizeSvg(item.url, w, h);
         } else {

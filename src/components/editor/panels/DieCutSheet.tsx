@@ -12,6 +12,20 @@ interface DieCutItem {
   originalUrl?: string | null;
 }
 
+// A die-cut border's colour and width, in both editors; picking either also switches it on.
+export function DieCutControls({ color, width, onChange }: { color: string; width: number; onChange: (patch: { dieCut: true; dieCutColor?: string; dieCutWidth?: number }) => void }) {
+  return (
+    <>
+      <Row label="Color">
+        <SwatchRow ariaLabel="Die-cut border colour" colors={DIECUT_COLORS} value={color} onChange={(c) => onChange({ dieCut: true, dieCutColor: c })} />
+      </Row>
+      <Row label="Width">
+        <Slider label="Border width" min={2} max={20} step={1} value={width} onChange={(w) => onChange({ dieCut: true, dieCutWidth: w })} format={(v) => String(Math.round(v))} />
+      </Row>
+    </>
+  );
+}
+
 // A sticker's die-cut border: the switch beside the heading, then its colour and width (picking
 // either also switches it on, so the sheet can be opened just to look).
 export default function DieCutSheet({ actions, onClose }: { actions: EditorActions; onClose: () => void }) {
@@ -48,26 +62,7 @@ export default function DieCutSheet({ actions, onClose }: { actions: EditorActio
       }
       onClose={onClose}
     >
-      <Row label="Color">
-        <SwatchRow
-          ariaLabel="Die-cut border colour"
-          colors={DIECUT_COLORS}
-          value={color}
-          // A colour or width also switches the border on.
-          onChange={(c) => patchLayer(storeKey, activeId, { dieCut: true, dieCutColor: c })}
-        />
-      </Row>
-      <Row label="Width">
-        <Slider
-          label="Border width"
-          min={2}
-          max={20}
-          step={1}
-          value={width}
-          onChange={(w) => patchLayer(storeKey, activeId, { dieCut: true, dieCutWidth: w })}
-          format={(v) => String(Math.round(v))}
-        />
-      </Row>
+      <DieCutControls color={color} width={width} onChange={(patch) => patchLayer(storeKey, activeId, patch)} />
     </Sheet>
   );
 }

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
-  dropSlotIndex, effectCanvasSize, fitPlacement, fitStage, isOnScreen, mediaAttrs, rotateAboutCenter,
+  dropSlotIndex, effectCanvasSize, fitPlacement, fitStage, isOnScreen, mediaAttrs, resizeAboutCenter, rotateAboutCenter,
   textResize, videoSyncPlan, videoTimeSec
 } from './previewMath';
 import { rotatedCenter } from '../../../utils/rotation';
@@ -98,6 +98,19 @@ describe('frames', () => {
     expect(effectCanvasSize(1920, 1080, true)).toEqual({ width: 640, height: 360 });
     expect(effectCanvasSize(1920, 1080, false)).toEqual({ width: 1280, height: 720 });
     expect(effectCanvasSize(320, 200, true)).toEqual({ width: 320, height: 200 });
+  });
+});
+
+describe('resizeAboutCenter', () => {
+  it('resizes a turned clip to a stage width, keeping its shape and centre', () => {
+    const sticker = { x: 100, y: 50, width: 100, height: 50, scaleX: 2, scaleY: 2, rotation: 30 };
+    const before = rotatedCenter(100, 50, 200, 100, 30);
+    const sized = resizeAboutCenter(sticker, 100);
+    expect(sized.scaleX).toBeCloseTo(1);
+    expect(sized.scaleY).toBeCloseTo(1);
+    const after = rotatedCenter(sized.x, sized.y, 100, 50, 30);
+    expect(after.x).toBeCloseTo(before.x);
+    expect(after.y).toBeCloseTo(before.y);
   });
 });
 

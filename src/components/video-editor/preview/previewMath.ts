@@ -88,6 +88,19 @@ export function rotateAboutCenter(item: Placed, rotation: number): { rotation: n
   return { rotation, ...cornerForCenter(center, w, h, rotation) };
 }
 
+// Resizing a clip to `stageWidth` wide on the stage, keeping its shape and its centre (as the
+// image editor's sticker Size slider does).
+export function resizeAboutCenter(item: Placed, stageWidth: number): { scaleX: number; scaleY: number; x: number; y: number } {
+  const width = item.width || 200;
+  const height = item.height || 200;
+  const sx = item.scaleX || 1;
+  const sy = item.scaleY || sx;
+  const k = stageWidth / (width * sx);
+  const rotation = item.rotation || 0;
+  const center = rotatedCenter(item.x || 0, item.y || 0, width * sx, height * sy, rotation);
+  return { scaleX: sx * k, scaleY: sy * k, ...cornerForCenter(center, width * sx * k, height * sy * k, rotation) };
+}
+
 // Is the clip on screen at this playhead (ms)? Both ends are inclusive.
 export const isOnScreen = (item: Pick<Clip, 'hidden' | 'startMs' | 'endMs'>, playhead: number): boolean =>
   !item.hidden && playhead >= item.startMs && playhead <= item.endMs;

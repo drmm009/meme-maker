@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import { Image as KonvaImage, Transformer } from 'react-konva';
 import { useEditorStore } from '../../../store/useVideoEditorStore';
 import { applyMotion, applyPunch } from './nodeMotion';
@@ -7,6 +7,7 @@ import { dropSlotIndex, fitPlacement, isOnScreen, mediaAttrs } from './previewMa
 import { attachPreviewVideo } from './previewVideo';
 import { useFrameEffects } from './useFrameEffects';
 import { drawGifFrame, useGifFrames } from './useGifFrames';
+import { hasStickerLook, stickerLookImage } from '../../../utils/stickerLook';
 
 // A photo, sticker (animated GIFs included) or video on the preview: draggable and resizable when
 // selected, shown only during its time on the timeline. Videos play from a hidden <video>
@@ -54,6 +55,16 @@ const CanvasMedia = ({ item, isSelected, onSelect, onChange, canvasDimensions })
 
   useGifFrames(item, itemRef, gifRef, setImage);
 
+  // A sticker's die-cut border and shadow, drawn by the image editor's painting into a picture of
+  // the same shape (redrawn when the look or its size on the stage changes).
+  const looked = hasStickerLook(item);
+  const shownWidth = Math.round((item.width || 0) * (item.scaleX || 1));
+  const lookImage = useMemo(
+    () => (looked && image && !gifRef.current ? stickerLookImage(image, itemRef.current) : null),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [looked, image, item.dieCut, item.dieCutColor, item.dieCutWidth, item.shadowSize, item.shadowColor, shownWidth],
+  );
+
   // Photos and stickers: show and hide with the playhead, step GIF frames, and move freeze frames
   // through their transitions. (Videos do this in previewVideo.)
   useEffect(() => {
@@ -78,7 +89,7 @@ const CanvasMedia = ({ item, isSelected, onSelect, onChange, canvasDimensions })
   useLayoutEffect(() => {
     const node = imageRef.current;
     if (node && applyPunch(node, 1, crop)) node.getLayer()?.batchDraw();
-  }, [crop.x, crop.y, crop.width, crop.height, image, effectImage]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [crop.x, crop.y, crop.width, crop.height, image, effectImage, lookImage]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (isSelected && trRef.current && imageRef.current) {
@@ -91,7 +102,7 @@ const CanvasMedia = ({ item, isSelected, onSelect, onChange, canvasDimensions })
     <React.Fragment>
       <KonvaImage
         ref={imageRef}
-        image={effectImage || image}
+        image={lookImage || effectImage || image}
         {...mediaAttrs(item)}
         draggable
         onClick={onSelect}

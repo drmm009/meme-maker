@@ -592,8 +592,8 @@
   border-top: none;
 }
 .vt-sheet .ui-sheet-body { display: flex; flex-direction: column; gap: 14px; }
-/* A text's sheets: the image editor's text controls (TextLookPanel), the sheet's height their own. */
-.vt-text-look.ie-panels--sheet { max-height: none; padding-top: 0; }
+/* Text and sticker sheets: the image editor's controls (TextLookPanel, StickerLookPanel), the sheet's height their own. */
+.vt-ie-look.ie-panels--sheet { max-height: none; padding-top: 0; }
 /* The banners and cards over the stage (draft, busy, export ready) rise in. */
 @keyframes vt-panel-in {
   from { opacity: 0; transform: translateY(8px); }

@@ -18,6 +18,7 @@ import { clipCrop } from '../../../utils/clipCrop';
 import { effectsFor, hasEffects, processFrame } from './frameEffects';
 import type { EffectCanvases, FrameEffects } from './frameEffects';
 import { drawGifFrame } from './useGifFrames';
+import { hasStickerLook, stickerLookImage } from '../../../utils/stickerLook';
 
 export interface SceneOptions {
   items: Clip[];
@@ -171,7 +172,8 @@ export async function createSceneRenderer({ items, width, height, aspect, backgr
         const img = await loadImage(item.url);
         // Photos with a filter are processed once.
         const { ok } = hasEffects(entry.effects) ? processFrame(img, entry.effects, entry.canvases) : { ok: false };
-        node.image(ok && entry.canvases.canvas ? entry.canvases.canvas : img);
+        // A sticker's die-cut border and shadow, as in the preview.
+        node.image(hasStickerLook(item) ? stickerLookImage(img, item) : ok && entry.canvases.canvas ? entry.canvases.canvas : img);
       }
       // Its crop (videos and freeze frames set it each frame, with their zooms).
       applyPunch(node, 1, clipCrop(item));

@@ -139,6 +139,13 @@ export interface StickerClip extends ClipBase, Placed {
   isGif?: boolean;
   // The picture before Cut out.
   originalUrl?: string | null;
+  // As the image editor's stickers (utils/stickerLook): a die-cut border and a drop shadow, sizes
+  // in stage units.
+  dieCut?: boolean;
+  dieCutColor?: string;
+  dieCutWidth?: number;
+  shadowSize?: number;
+  shadowColor?: string;
 }
 
 // A photo's slow movement while on screen.

@@ -318,6 +318,28 @@ describe('VideoEditor', () => {
     expect(store().items[0].fontFamily).toMatch(/^"Comic Sans MS"/);
   });
 
+  it('edits a sticker and gives it a die-cut border with the image editor’s sticker controls', () => {
+    act(() => store().addItem({ type: 'sticker', url: 'a.png', durationMs: 2000, width: 100, height: 100, x: 100, y: 100 }));
+    const { container } = render(<VideoEditor onBack={() => {}} />);
+    fireEvent.click(clips(container)[0]);
+    const main = screen.getByRole('toolbar', { name: 'Clip tools' });
+    expect([...main.querySelectorAll('button')].map((b) => b.textContent)).toEqual(['Edit', 'Die-cut', 'Adjust', 'Split', 'Arrange', 'Delete']);
+    fireEvent.click(clipTool('Edit'));
+    fireEvent.change(screen.getByRole('slider', { name: 'Sticker size' }), { target: { value: '0.25' } });
+    fireEvent.change(screen.getByRole('slider', { name: 'Shadow size' }), { target: { value: '12' } });
+    fireEvent.click(screen.getByRole('switch', { name: 'Flip sticker' }));
+    closeSheet();
+    fireEvent.click(clipTool('Die-cut'));
+    fireEvent.click(screen.getByRole('radio', { name: '#ffd60a' }));
+    const sticker = store().items[0];
+    expect(sticker).toMatchObject({ shadowSize: 12, flipX: true, dieCut: true, dieCutColor: '#ffd60a' });
+    // A quarter of the stage's width, about its centre (150, 150).
+    expect(sticker.width * sticker.scaleX).toBeCloseTo(200);
+    expect(sticker.x).toBeCloseTo(50);
+    fireEvent.click(screen.getByRole('switch', { name: 'Die-cut border' }));
+    expect(store().items[0].dieCut).toBe(false);
+  });
+
   it('turns green-screen removal on, tunes it and turns it off', () => {
     act(() => store().addItem({ type: 'video', url: 'a.mp4', durationMs: 2000 }));
     const { container } = render(<VideoEditor onBack={() => {}} />);

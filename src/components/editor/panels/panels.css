@@ -1506,7 +1506,7 @@ div.ie-layer-pick { cursor: default; }
 .ie-panels--sheet :is(.ie-sticker-sheet, .ie-diecut-sheet) .ui-row + .ui-row { margin-top: 6px; }
 .ie-panels--sheet .ie-sticker-sheet .ui-row + .ie-adjust-grid { margin-top: 8px; }
 .ie-panels--sheet .ie-sticker-sheet .ie-adjust-grid + .ui-row { margin-top: 10px; }
-.ie-panels--sheet .ie-flip-pill {
+:is(.ie-panels--sheet, .vt-sheet) .ie-flip-pill {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -1524,8 +1524,8 @@ div.ie-layer-pick { cursor: default; }
   -webkit-tap-highlight-color: transparent;
   transition: background 0.15s ease, color 0.15s ease;
 }
-.ie-panels--sheet .ie-flip-pill:hover:not(.is-on) { background: rgba(255, 255, 255, 0.1); }
-.ie-panels--sheet .ie-flip-pill.is-on { background: rgba(255, 90, 54, 0.16) !important; color: var(--ui-accent, #ff5a36) !important; }
+:is(.ie-panels--sheet, .vt-sheet) .ie-flip-pill:hover:not(.is-on) { background: rgba(255, 255, 255, 0.1); }
+:is(.ie-panels--sheet, .vt-sheet) .ie-flip-pill.is-on { background: rgba(255, 90, 54, 0.16) !important; color: var(--ui-accent, #ff5a36) !important; }
 
 /* The text layer's sheets (TextSheet: Font, Style, Align, Color, Box, and all of them from the
    Text strip's Edit), on the tool-sheet look: a heading, filled tiles that turn orange when on,
