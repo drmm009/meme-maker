@@ -47,13 +47,22 @@ const addFrom = (label, tile) => {
   fireEvent.click(within(screen.getByRole('dialog')).getByText(tile));
 };
 const addTextFromRail = () => addTool('Text');
-// A tool in the bottom bar's clip tools; Duplicate, the layer moves and Select are in the Arrange sheet.
+// A tool in the bottom bar's clip tools, or in one of its tile sheets (a video's Effects and
+// Adjust; Arrange's Duplicate, layer moves and Select), opened first. An open sheet is closed.
 const pill = () => document.querySelector('.vt-deckbar[role="toolbar"]');
-const ARRANGE = ['Duplicate', 'Bring forward', 'Send back', 'Select'];
 const clipTool = (text) => {
-  if (!ARRANGE.includes(text)) return within(pill()).getByText(text);
-  fireEvent.click(within(pill()).getByText('Arrange'));
-  return within(screen.getByRole('dialog', { name: 'Arrange' })).getByText(text);
+  if (!pill()) closeSheet();
+  const direct = within(pill()).queryByText(text);
+  if (direct) return direct;
+  for (const name of ['Effects', 'Adjust', 'Arrange']) {
+    const button = within(pill()).queryByText(name);
+    if (!button) continue;
+    fireEvent.click(button);
+    const tile = within(screen.getByRole('dialog', { name })).queryByText(text);
+    if (tile) return tile;
+    closeSheet();
+  }
+  throw new Error(`No clip tool "${text}"`);
 };
 
 beforeEach(() => {
@@ -166,14 +175,29 @@ describe('VideoEditor', () => {
     expect(screen.getByRole('toolbar', { name: 'Add tools' })).toBeTruthy();
   });
 
-  it('shows a video’s tools in one row, most used first', () => {
+  it('shows a video’s everyday tools in the row, the rest in Effects and Adjust tiles', () => {
     act(() => store().addItem({ type: 'video', url: 'a.mp4', durationMs: 4000 }));
     const { container } = render(<VideoEditor onBack={() => {}} />);
     fireEvent.click(clips(container)[0]);
-    expect(labels(screen.getByRole('toolbar', { name: 'Clip tools' }))).toEqual([
-      'Back', 'Split', '1×', 'Volume', 'Mute', 'Filters', 'Crop', 'Fit', 'Green screen', 'Background', 'Face swap',
-      'Freeze', 'Reverse', 'Boomerang', 'Punch', 'Flip', 'Opacity', 'Arrange', 'Delete',
-    ]);
+    expect(labels(screen.getByRole('toolbar', { name: 'Clip tools' }))).toEqual(['Back', 'Split', '1×', 'Volume', 'Filters', 'Effects', 'Adjust', 'Arrange', 'Delete']);
+    fireEvent.click(screen.getByText('Effects'));
+    expect(labels(screen.getByRole('dialog', { name: 'Effects' }), '.vt-tool-tile-label'))
+      .toEqual(['Green screen', 'Background', 'Face swap', 'Freeze', 'Reverse', 'Boomerang', 'Punch']);
+    closeSheet();
+    fireEvent.click(screen.getByText('Adjust'));
+    expect(labels(screen.getByRole('dialog', { name: 'Adjust' }), '.vt-tool-tile-label')).toEqual(['Crop', 'Fit', 'Flip', 'Opacity']);
+    // A tile with settings opens its sheet in the tiles' place.
+    fireEvent.click(screen.getByText('Opacity'));
+    expect(screen.getByRole('dialog', { name: 'Opacity' })).toBeTruthy();
+    closeSheet();
+    // Mute is in the Volume sheet; the row's Effects lights up while an effect is on.
+    fireEvent.click(screen.getByText('Volume'));
+    fireEvent.click(screen.getByText('Mute'));
+    expect(store().items[0].muted).toBe(true);
+    closeSheet();
+    expect(within(pill()).getByText('Effects').closest('button').className).not.toContain('is-on');
+    act(() => store().updateItem(store().items[0].id, { punches: [500] }));
+    expect(within(pill()).getByText('Effects').closest('button').className).toContain('is-on');
   });
 
   it('duplicates and deletes the selected clip', () => {

@@ -2,7 +2,7 @@ import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
   Type, Sticker, Smile, LayoutGrid, Image as ImageIcon, Clapperboard, Music,
   Gauge, Volume2, VolumeX, Palette, RotateCw, Minimize, Crop, Maximize, Copy, Trash2,
-  Scissors, PencilLine, SlidersHorizontal, WandSparkles, Pipette, Sparkles, ImagePlay, PaintBucket, Zap, Snowflake, Rewind, Repeat, ZoomIn, BringToFront, SendToBack, Mic, ArrowRightLeft, Frame, Upload, Library, Laugh, SquarePlay, Captions, Expand, Blend, Scan, Eraser, FlipHorizontal2, FlipVertical2, Move, ListChecks, X, AtSign, Flag, Layers, ScanFace, CaseSensitive, Baseline, Ellipsis
+  Scissors, PencilLine, SlidersHorizontal, WandSparkles, Pipette, Sparkles, ImagePlay, PaintBucket, Zap, Snowflake, Rewind, Repeat, ZoomIn, BringToFront, SendToBack, Mic, ArrowRightLeft, Frame, Upload, Library, Laugh, SquarePlay, Captions, Expand, Blend, Scan, Eraser, FlipHorizontal2, FlipVertical2, Move, ListChecks, X, AtSign, Flag, Layers, ScanFace, CaseSensitive, Baseline, Ellipsis, Wand, Settings2
 } from 'lucide-react';
 import { Sheet } from '../ui';
 import DeckBar from './DeckBar';
@@ -170,6 +170,10 @@ function VolumePanel({ item }) {
         <output>{volume}%</output>
       </label>
       <div className="vt-chip-row">
+        <button type="button" aria-pressed={Boolean(item.muted)} className={`vt-chip${item.muted ? ' is-on' : ''}`}
+          onClick={() => update(item.id, { muted: !item.muted })}>
+          {item.muted ? 'Muted' : 'Mute'}
+        </button>
         {fade('fadeInMs')}{fade('fadeOutMs')}
         {item.type === 'audio' && !item.isVoiceover && (
           <button type="button" aria-pressed={Boolean(item.duck)} className={`vt-chip${item.duck ? ' is-on' : ''}`}
@@ -651,15 +655,49 @@ const SHEETS = {
   voice: { title: 'Voiceover', Icon: Mic, Panel: VoicePanel },
   captions: { title: 'Auto captions', Icon: Captions, Panel: CaptionsPanel },
   arrange: { title: 'Arrange', Icon: Layers, Panel: ArrangePanel },
+  // A video's tile sheets (VIDEO_TILES).
+  effects: { title: 'Effects', Icon: Wand, tiles: 'effects' },
+  adjust: { title: 'Adjust', Icon: Settings2, tiles: 'adjust' },
 };
 
-// A video's tools in the bar, most used first.
-const VIDEO_ORDER = ['split', 'speed', 'volume', 'mute', 'filter', 'crop', 'place', 'transition', 'greenscreen', 'bgremove', 'faceswap',
-  'freeze', 'reverse', 'boomerang', 'punch', 'flip', 'opacity', 'arrange', 'delete'];
+// A video has too many tools for one row: the everyday ones stay on it (VIDEO_ROW), the rest go in
+// two sheets of tiles, Effects and Adjust, each a button on the row lit while any of its tools is on.
+// Its Mute is in the Volume sheet.
+const VIDEO_TILES = {
+  effects: { label: 'Effects', Icon: Wand, ids: ['greenscreen', 'bgremove', 'faceswap', 'freeze', 'reverse', 'boomerang', 'punch'] },
+  adjust: { label: 'Adjust', Icon: Settings2, ids: ['crop', 'place', 'flip', 'opacity'] },
+};
+const VIDEO_ROW = ['split', 'speed', 'volume', 'filter', 'effects', 'adjust', 'transition', 'arrange', 'delete'];
+
+function videoRow(tools, sheet, toggle) {
+  const groups = Object.entries(VIDEO_TILES).map(([id, { label, Icon, ids }]) => ({
+    id, label, Icon,
+    active: sheet === id || tools.some((t) => ids.includes(t.id) && t.active),
+    onClick: () => toggle(id),
+  }));
+  return [...tools, ...groups]
+    .filter((t) => VIDEO_ROW.includes(t.id))
+    .sort((a, b) => VIDEO_ROW.indexOf(a.id) - VIDEO_ROW.indexOf(b.id));
+}
+
+// A sheet of a video's tools as tiles (Effects, Adjust): an on/off tool lit while on; one with
+// settings opens its sheet in the tiles' place.
+function ToolTiles({ tools }) {
+  return (
+    <div className="vt-tool-tiles">
+      {tools.map(({ id, label, title, Icon, active, onClick }) => (
+        <button key={id} type="button" className={`vt-tool-tile${active ? ' is-on' : ''}`} title={title || label} aria-pressed={active} onClick={onClick}>
+          <span className="vt-tool-tile-icon"><Icon size={20} strokeWidth={2} aria-hidden="true" /></span>
+          <span className="vt-tool-tile-label">{label}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
 
 // The selected clip's tools for the bottom bar, all in one row: what this kind of clip can do (each
 // setting opens its sheet, its button lit while open or while the setting is on), then Split,
-// Arrange (a sheet) and Delete; a video's in VIDEO_ORDER.
+// Arrange (a sheet) and Delete; a video's laid out by videoRow.
 function clipTools(item, { sheet, toggle, playhead, items }) {
   const store = useEditorStore.getState;
   const opens = (name, on = false) => ({ active: sheet === name || on, onClick: () => toggle(name) });
@@ -759,7 +797,6 @@ function clipTools(item, { sheet, toggle, playhead, items }) {
     { id: 'arrange', label: 'Arrange', title: 'Duplicate, layer order and select', Icon: Layers, ...opens('arrange') },
     { id: 'delete', label: 'Delete', Icon: Trash2, danger: true, onClick: () => store().removeItem(item.id) },
   );
-  if (item.type === 'video') tools.sort((a, b) => VIDEO_ORDER.indexOf(a.id) - VIDEO_ORDER.indexOf(b.id));
   return tools;
 }
 
@@ -875,12 +912,15 @@ export default function ToolRail({ onAdd }) {
     }
   };
 
+  // The selected clip's tools: its row, and a video's Effects and Adjust tiles.
+  const allTools = activeItem ? clipTools(activeItem, { sheet, toggle, playhead, items }) : [];
+
   // One row at a time: the picked clips' actions, the selected clip's tools, or the add tools.
   let bar;
   if (picked.length) {
     bar = <DeckBar ariaLabel="Selected clips" items={pickedTools(picked)} />;
   } else if (activeItem) {
-    const tools = clipTools(activeItem, { sheet, toggle, playhead, items });
+    const tools = activeItem.type === 'video' ? videoRow(allTools, sheet, toggle) : allTools;
     bar = <DeckBar key="clip" ariaLabel="Clip tools" items={tools} back={{ label: 'Back', title: 'Done with this clip', onClick: () => useEditorStore.getState().setActiveItem(null) }} />;
   } else {
     bar = (
@@ -897,7 +937,9 @@ export default function ToolRail({ onAdd }) {
           <Sheet key={sheet} title={spec.title} Icon={spec.Icon} onClose={() => setSheet(null)} className="vt-sheet"
             aside={spec.Aside && activeItem ? <spec.Aside item={activeItem} /> : undefined}
             action={spec.action && activeItem ? spec.action(activeItem) : undefined}>
-            {spec.sources
+            {spec.tiles && activeItem
+              ? <ToolTiles tools={VIDEO_TILES[spec.tiles].ids.map((id) => allTools.find((t) => t.id === id)).filter(Boolean)} />
+              : spec.sources
               ? <SourcesPanel sources={spec.sources} onPick={pickSource} />
               : <spec.Panel item={activeItem} onMore={() => { setSheet(null); onAdd('sounds'); }} onOpen={setSheet} />}
           </Sheet>
