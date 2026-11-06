@@ -779,7 +779,7 @@ function App() {
               onBack={handleEditorBack}
               onReset={() => setEditorSessionKey((k) => k + 1)}
             >
-              <Suspense fallback={<div className="glass-card" style={{ padding: '48px 24px', textAlign: 'center' }}>Loading editor…</div>}>
+              <Suspense fallback={<div className="editor-loading" role="status"><span className="editor-loading-spin" aria-hidden="true" />Loading editor…</div>}>
                 <MemeEditor
                   key={`${selectedTemplate?.id || 'editor'}-${editorSessionKey}`}
                   template={selectedTemplate}
@@ -802,7 +802,7 @@ function App() {
               onBack={handleEditorBack}
               onReset={() => setVideoSessionKey((k) => k + 1)}
             >
-              <Suspense fallback={<div className="glass-card" style={{ padding: '48px 24px', textAlign: 'center' }}>Loading video editor…</div>}>
+              <Suspense fallback={<div className="editor-loading" role="status"><span className="editor-loading-spin" aria-hidden="true" />Loading video editor…</div>}>
                 <VideoEditor
                   key={`${selectedTemplate?.id || 'video-editor'}-${videoSessionKey}`}
                   template={selectedTemplate}

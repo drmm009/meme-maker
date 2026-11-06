@@ -55,7 +55,7 @@ export default function SoundsSheet({ onPick, onClose }: { onPick: (s: Sound) =>
 
   return (
     <BrowseSheet
-      title="Sounds"
+      title="All sounds"
       total={SOUNDS.length}
       onClose={() => { stop(); onClose(); }}
       search={{ value: query, onChange: setQuery, placeholder: 'Search bruh, boom, laugh…', label: 'Search sounds' }}

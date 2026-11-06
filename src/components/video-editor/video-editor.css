@@ -115,6 +115,16 @@
   cursor: pointer;
 }
 .vt-menu-item:hover { background: var(--vt-fill); }
+.vt-menu-head {
+  margin: 0;
+  padding: 8px 12px 4px;
+  color: var(--vt-muted);
+  font-size: var(--ui-fs-caption, 11px);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.vt-menu-divider { height: 1px; margin: 6px 10px; background: var(--ui-line-strong, rgba(255, 255, 255, 0.14)); }
 
 .vt-collapse {
   position: absolute;
@@ -221,10 +231,15 @@
   transition: transform 0.15s var(--vt-ease);
 }
 .vt-play:active { transform: scale(0.92); }
-.vt-history { justify-self: end; display: flex; gap: 12px; }
+.vt-history { justify-self: end; display: flex; gap: 2px; }
 .vt-icon-btn {
-  padding: 6px;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
   border: none;
+  border-radius: 50%;
   background: none;
   color: var(--vt-text);
   cursor: pointer;
@@ -306,6 +321,7 @@
   gap: 8px;
 }
 .vt-head-btn {
+  position: relative;
   width: 34px;
   height: 34px;
   border: none;
@@ -317,13 +333,18 @@
   cursor: pointer;
 }
 .vt-head-btn.is-off { color: var(--vt-accent); background: var(--vt-accent-soft); }
+/* Tap areas a thumb can hit (44px) around the small round buttons. */
+.vt-head-btn::after,
+.vt-collapse::after { content: ''; position: absolute; inset: -5px; }
+.vt-collapse::after { inset: -7px -4px; }
 
 .vt-clip {
   position: absolute;
   top: 0;
   height: 100%;
   box-sizing: border-box;
-  overflow: hidden;
+  overflow: hidden;
+  overflow: clip;
   border: 2px solid transparent;
   border-radius: 11px;
   background-repeat: repeat-x;
@@ -388,14 +409,15 @@
   font-weight: 800;
   pointer-events: none;
 }
-.vt-clip--text .vt-clip-labels { gap: 0; }
-.vt-clip--text .vt-clip-label {
-  flex: 0 0 110px;
+/* One label, kept in view as a long clip scrolls past the timeline's left edge (the clip clips
+   with overflow: clip, which, unlike hidden, leaves the timeline as the label's scroller). */
+.vt-clip-label {
+  position: sticky;
+  left: 14px;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.vt-clip--text .vt-clip-label + .vt-clip-label::before { content: '•'; margin-right: 10px; opacity: 0.7; }
-.vt-clip--audio .vt-clip-label { overflow: hidden; text-overflow: ellipsis; }
 
 .vt-clip-wave {
   position: absolute;

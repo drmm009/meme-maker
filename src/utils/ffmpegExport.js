@@ -407,7 +407,7 @@ const exportWithFFmpeg = async (items = [], durationMs = 7000, canvasAspectRatio
     // Read and clean up
     const data = await ff.readFile(outputFileName);
     const blob = new Blob([data.buffer], { type: isGifOut ? 'image/gif' : 'video/mp4' });
-    const fileName = `meme-studio-${Date.now()}.${isGifOut ? 'gif' : 'mp4'}`;
+    const fileName = exportFileName(isGifOut ? 'gif' : 'mp4');
 
     try {
       if (download) downloadBlob(blob, fileName);
@@ -433,10 +433,17 @@ const exportWithFFmpeg = async (items = [], durationMs = 7000, canvasAspectRatio
 
 const safeDuration = (ms) => ((typeof ms === 'number' && !isNaN(ms) && ms > 0) ? ms : 7000);
 
+// An exported file's name, from when it was made: meme-2026-11-06-143205.mp4.
+export const exportFileName = (ext, date = new Date()) => {
+  const two = (n) => String(n).padStart(2, '0');
+  const day = `${date.getFullYear()}-${two(date.getMonth() + 1)}-${two(date.getDate())}`;
+  return `meme-${day}-${two(date.getHours())}${two(date.getMinutes())}${two(date.getSeconds())}.${ext}`;
+};
+
 // The finished file, saved straight away unless the caller shares or saves it itself.
 const deliver = (data, download) => {
   const blob = new Blob([data], { type: 'video/mp4' });
-  const fileName = `meme-studio-${Date.now()}.mp4`;
+  const fileName = exportFileName('mp4');
   if (download) downloadBlob(blob, fileName);
   return { blob, fileName };
 };

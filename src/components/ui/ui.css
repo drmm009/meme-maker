@@ -477,6 +477,7 @@
   .ui-sheet.ui-sheet-ghost, .ui-sheet-dim-ghost { display: none; }
 }
 .ui-sheet-handle {
+  position: relative;
   align-self: center;
   width: 64px;
   height: 20px;
@@ -489,6 +490,8 @@
 }
 /* A row a sheet marks as part of its drag area (Sheet's data-sheet-drag): a drag, not a scroll. */
 .ui-sheet [data-sheet-drag] { touch-action: none; cursor: grab; }
+/* The handle's tap and drag area reaches past the small bar (44px tall). */
+.ui-sheet-handle::after { content: ''; position: absolute; inset: -12px -40px; }
 .ui-sheet-handle::before {
   content: '';
   display: block;

@@ -176,8 +176,6 @@ export default function TimelineClip({ item, left, width, selected, picked = fal
     window.addEventListener('pointercancel', onUp);
   };
 
-  const repeats = Math.max(1, Math.floor(width / 110));
-
   return (
     <div
       className={`vt-clip vt-clip--${item.type}${selected ? ' is-selected' : ''}${picked ? ' is-picked' : ''}${item.hidden ? ' is-hidden' : ''}`}
@@ -211,9 +209,7 @@ export default function TimelineClip({ item, left, width, selected, picked = fal
       {(item.type === 'text' || item.type === 'audio') && (
         <div className="vt-clip-labels">
           {item.type === 'audio' && <Music size={12} strokeWidth={2.5} aria-hidden="true" />}
-          {Array.from({ length: item.type === 'text' ? repeats : 1 }, (_, i) => (
-            <span key={i} className="vt-clip-label">{clipLabel(item)}</span>
-          ))}
+          <span className="vt-clip-label">{clipLabel(item)}</span>
         </div>
       )}
       {item.muted && (item.type === 'video' || item.type === 'audio') && (

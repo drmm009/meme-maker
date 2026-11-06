@@ -66,7 +66,7 @@ vi.mock('konva', () => {
 
 // Tests share a module cache (isolate: false): load the export fresh, so it uses this file's mocks.
 vi.resetModules();
-const { exportVideoFFmpeg } = await import('./ffmpegExport');
+const { exportVideoFFmpeg, exportFileName } = await import('./ffmpegExport');
 
 beforeEach(() => {
   ff.writes = [];
@@ -92,6 +92,13 @@ const run = async (items, { durationMs = 5000, aspect = 16 / 9, layoutId = null,
   };
 };
 
+describe('exportFileName', () => {
+  it('names a file by when it was made, local time', () => {
+    expect(exportFileName('mp4', new Date(2026, 10, 6, 9, 5, 3))).toBe('meme-2026-11-06-090503.mp4');
+    expect(exportFileName('gif', new Date(2026, 0, 31, 23, 59, 59))).toBe('meme-2026-01-31-235959.gif');
+  });
+});
+
 describe('exportVideoFFmpeg command', () => {
   it('mp4: two videos with a transition, a photo, a GIF sticker, text and two sounds', async () => {
     ff.audioFiles.add('input_2.mp4');
@@ -105,7 +112,7 @@ describe('exportVideoFFmpeg command', () => {
       { id: 'a2', type: 'audio', url: './sounds/bruh.mp3', startMs: 0, endMs: 800, playbackRate: 2 },
       { id: 'h1', type: 'image', url: 'blob:hidden', hidden: true },
     ], { backgroundColor: '#1a1d27' });
-    expect(out.result.fileName).toMatch(/^meme-studio-\d+\.mp4$/);
+    expect(out.result.fileName).toMatch(/^meme-\d{4}-\d{2}-\d{2}-\d{6}\.mp4$/);
     expect({ inputs: out.inputs, filters: out.filters, output: out.output, files: out.files, texts: out.texts }).toMatchSnapshot();
   });
 

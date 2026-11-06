@@ -45,7 +45,7 @@ const getContrastStroke = (hexColor) => {
 // it from; the rest add straight away (or open a picker).
 const SECTIONS = [
   { id: 'media', label: 'Media', Icon: Film, tools: [
-    { kind: 'image', label: 'Image', Icon: ImageIcon, title: 'Add image', sources: [
+    { kind: 'image', label: 'Photo', Icon: ImageIcon, title: 'Add photo', sources: [
       { kind: 'photo', label: 'Upload', sub: 'From your phone', Icon: Upload },
       { kind: 'templates', label: 'Templates', sub: 'Meme pictures', Icon: LayoutGrid },
     ] },
@@ -56,7 +56,7 @@ const SECTIONS = [
   ] },
   { id: 'text', label: 'Text', Icon: Type, tools: [
     { kind: 'text', label: 'Add text', Icon: Plus },
-    { kind: 'captions', label: 'Captions', Icon: Captions, panel: true },
+    { kind: 'captions', label: 'Subtitles', Icon: Captions, panel: true },
   ] },
   { id: 'stickers', label: 'Stickers', Icon: Sticker, tools: [
     { kind: 'stickers', label: 'Meme', Icon: Laugh },
@@ -64,8 +64,8 @@ const SECTIONS = [
     { kind: 'gifs', label: 'GIFs', Icon: ImagePlay },
   ] },
   { id: 'audio', label: 'Audio', Icon: Music, tools: [
-    { kind: 'sfx', label: 'SFX', Icon: Zap, panel: true },
-    { kind: 'sounds', label: 'Sounds', Icon: Library },
+    { kind: 'sfx', label: 'Top sounds', Icon: Zap, panel: true },
+    { kind: 'sounds', label: 'All sounds', Icon: Library },
     { kind: 'audio', label: 'Upload', Icon: Upload },
     { kind: 'voice', label: 'Voice', Icon: Mic, panel: true },
   ] },
@@ -533,7 +533,7 @@ function SfxPanel({ onMore }) {
           <span>{s.name.replace(/\s*\(.*\)$/, '')}</span>
         </button>
       ))}
-      <button type="button" className="vt-chip" onClick={onMore}><Music size={14} /> More sounds</button>
+      <button type="button" className="vt-chip" onClick={onMore}><Music size={14} /> All sounds</button>
     </div>
   );
 }
@@ -822,7 +822,7 @@ const SHEETS = {
   background: { title: 'Background', Icon: PaintBucket, Panel: BackgroundPanel },
   watermark: { title: 'Watermark', Icon: AtSign, Panel: WatermarkPanel },
   endcard: { title: 'End card', Icon: Flag, Panel: EndCardPanel },
-  sfx: { title: 'Sound effects', Icon: Zap, Panel: SfxPanel },
+  sfx: { title: 'Top sounds', Icon: Zap, Panel: SfxPanel },
   voice: { title: 'Voiceover', Icon: Mic, Panel: VoicePanel },
   captions: { title: 'Auto captions', Icon: Captions, Panel: CaptionsPanel },
 };

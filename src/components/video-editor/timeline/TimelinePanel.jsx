@@ -184,7 +184,8 @@ export default function TimelinePanel({ onAddVideo }) {
                 <button
                   type="button"
                   className="vt-empty-clip"
-                  style={{ left: pad }}
+                  // Starts at the playhead, in the middle: kept short enough to end on screen.
+                  style={{ left: pad, width: Math.min(190, pad - 16) }}
                   onClick={(e) => { e.stopPropagation(); onAddVideo(); }}
                 >
                   <Film size={16} /> Add a video

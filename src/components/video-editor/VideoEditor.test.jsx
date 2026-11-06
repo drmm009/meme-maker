@@ -77,7 +77,7 @@ describe('VideoEditor', () => {
     expect(screen.queryByRole('toolbar', { name: /tools$/ })).toBeNull();
     fireEvent.click(screen.getByText('Media'));
     const strip = screen.getByRole('toolbar', { name: 'Media tools' });
-    expect([...strip.querySelectorAll('button')].map((b) => b.textContent)).toEqual(['Image', 'Video']);
+    expect([...strip.querySelectorAll('button')].map((b) => b.textContent)).toEqual(['Photo', 'Video']);
     expect(screen.getByTitle('Media').getAttribute('aria-pressed')).toBe('true');
     fireEvent.click(screen.getByText('Media'));
     expect(screen.queryByRole('toolbar', { name: 'Media tools' })).toBeNull();
@@ -94,8 +94,8 @@ describe('VideoEditor', () => {
   it('opens a setting as a sheet in place of the strip and dock, and brings them back on close', () => {
     render(<VideoEditor onBack={() => {}} />);
     fireEvent.click(screen.getByText('Audio'));
-    fireEvent.click(screen.getByText('SFX'));
-    expect(screen.getByRole('dialog', { name: 'Sound effects' })).toBeTruthy();
+    fireEvent.click(screen.getByText('Top sounds'));
+    expect(screen.getByRole('dialog', { name: 'Top sounds' })).toBeTruthy();
     expect(screen.queryByRole('toolbar', { name: 'Audio tools' })).toBeNull();
     expect(screen.queryByRole('navigation', { name: 'Sections' })).toBeNull();
     closeSheet();
@@ -117,8 +117,8 @@ describe('VideoEditor', () => {
   it('opens a library as a full-height sheet and adds the pick to the timeline', () => {
     render(<VideoEditor onBack={() => {}} />);
     fireEvent.click(screen.getByText('Audio'));
-    fireEvent.click(screen.getByText('Sounds'));
-    expect(screen.getByRole('dialog', { name: 'Sounds' })).toBeTruthy();
+    fireEvent.click(screen.getByText('All sounds'));
+    expect(screen.getByRole('dialog', { name: 'All sounds' })).toBeTruthy();
     fireEvent.click(screen.getByLabelText('Add Vine Boom'));
     expect(store().items[0]).toMatchObject({ type: 'audio', name: 'Vine Boom', url: '/sounds/vine_boom.mp3' });
     expect(screen.queryByRole('dialog')).toBeNull();
@@ -127,8 +127,8 @@ describe('VideoEditor', () => {
   it('opens Add image and Add video sheets from the Media strip', () => {
     render(<VideoEditor onBack={() => {}} />);
     fireEvent.click(screen.getByText('Media'));
-    fireEvent.click(screen.getByTitle('Image'));
-    const image = screen.getByRole('dialog', { name: 'Add image' });
+    fireEvent.click(screen.getByTitle('Photo'));
+    const image = screen.getByRole('dialog', { name: 'Add photo' });
     expect([...image.querySelectorAll('.vt-source-label')].map((b) => b.textContent)).toEqual(['Upload', 'Templates']);
     expect(screen.queryByRole('toolbar', { name: 'Media tools' })).toBeNull();
     closeSheet();
@@ -155,8 +155,8 @@ describe('VideoEditor', () => {
   it('adds a template from the Templates library', () => {
     render(<VideoEditor onBack={() => {}} />);
     fireEvent.click(screen.getByText('Media'));
-    fireEvent.click(screen.getByTitle('Image'));
-    fireEvent.click(screen.getByRole('dialog', { name: 'Add image' }).querySelectorAll('.vt-source')[1]);
+    fireEvent.click(screen.getByTitle('Photo'));
+    fireEvent.click(screen.getByRole('dialog', { name: 'Add photo' }).querySelectorAll('.vt-source')[1]);
     expect(screen.getByRole('dialog', { name: 'Templates' })).toBeTruthy();
     fireEvent.click(screen.getByRole('dialog').querySelector('.ie-shelf-card .ie-card'));
     expect(store().items[0]).toMatchObject({ type: 'image' });
@@ -418,7 +418,7 @@ describe('VideoEditor', () => {
     render(<VideoEditor onBack={() => {}} />);
     act(() => store().setPlayhead(1200));
     fireEvent.click(screen.getByText('Audio'));
-    fireEvent.click(screen.getByText('SFX'));
+    fireEvent.click(screen.getByText('Top sounds'));
     fireEvent.click(screen.getByText('Vine Boom'));
     const sound = store().items.find((i) => i.type === 'audio');
     expect(sound).toMatchObject({ name: 'Vine Boom', url: '/sounds/vine_boom.mp3', startMs: 1200 });
@@ -529,7 +529,7 @@ describe('VideoEditor', () => {
     render(<VideoEditor onBack={() => {}} />);
     act(() => { store().addItem({ type: 'video', url: 'blob:talk', durationMs: 2000 }); store().setActiveItem(null); });
     fireEvent.click(screen.getByText('Text'));
-    fireEvent.click(screen.getByText('Captions'));
+    fireEvent.click(screen.getByText('Subtitles'));
     await act(async () => { fireEvent.click(screen.getByText('Generate captions')); });
     const captions = () => store().items.filter((i) => i.autoCaption);
     expect(captions().map((i) => [i.text, i.startMs, i.endMs])).toEqual([['THIS IS', 0, 600], ['FINE.', 600, 1200]]);

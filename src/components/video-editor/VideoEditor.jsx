@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useStore } from 'zustand';
-import { X, Share, Play, Pause, Undo2, Redo2, ChevronLeft, ChevronUp, ChevronDown, Download, Copy, Check, History, ImagePlay, LoaderCircle, FolderHeart } from 'lucide-react';
+import { X, Share, Play, Pause, Undo2, Redo2, ChevronLeft, ChevronUp, ChevronDown, Copy, Check, History, ImagePlay, LoaderCircle, FolderHeart, SquarePlay } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import CanvasPreview from './CanvasPreview';
 import TimelinePanel from './timeline/TimelinePanel';
@@ -296,15 +296,22 @@ export default function VideoEditor({ template, onBack, onSaved }) {
                   exit={{ opacity: 0, y: -6, scale: 0.96 }}
                   transition={{ duration: 0.15 }}
                 >
+                  {/* What to export as, then keeping the project and grabbing a still. */}
+                  <p className="vt-menu-head">Export as</p>
                   <button type="button" className="vt-menu-item" onClick={() => handleExport('mp4', 720)}>
-                    <Download size={16} /> <span className="vt-menu-label">Export video<small>720p · faster</small></span>
+                    <SquarePlay size={17} /> <span className="vt-menu-label">Video<small>720p · faster</small></span>
                   </button>
                   <button type="button" className="vt-menu-item" onClick={() => handleExport('mp4', 1080)}>
-                    <Download size={16} /> <span className="vt-menu-label">Export video<small>1080p · sharper, slower</small></span>
+                    <SquarePlay size={17} /> <span className="vt-menu-label">Video HD<small>1080p · sharper, slower</small></span>
                   </button>
-                  <button type="button" className="vt-menu-item" onClick={() => handleExport('gif')}><ImagePlay size={16} /> Export GIF</button>
-                  <button type="button" className="vt-menu-item" onClick={() => { setMenuOpen(false); copyFrame(); }}><Copy size={16} /> Copy frame</button>
-                  <button type="button" className="vt-menu-item" onClick={() => saveToStudio()}><FolderHeart size={16} /> Save to My Studio</button>
+                  <button type="button" className="vt-menu-item" onClick={() => handleExport('gif')}>
+                    <ImagePlay size={17} /> <span className="vt-menu-label">GIF<small>Loops, no sound</small></span>
+                  </button>
+                  <div className="vt-menu-divider" role="separator" />
+                  <button type="button" className="vt-menu-item" onClick={() => saveToStudio()}>
+                    <FolderHeart size={17} /> <span className="vt-menu-label">Save to My Studio<small>Keep editing later</small></span>
+                  </button>
+                  <button type="button" className="vt-menu-item" onClick={() => { setMenuOpen(false); copyFrame(); }}><Copy size={17} /> Copy this frame</button>
                 </motion.div>
               )}
             </AnimatePresence>
