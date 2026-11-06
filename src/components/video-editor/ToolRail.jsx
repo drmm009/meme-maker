@@ -11,6 +11,8 @@ import { useEditorStore, clipEffectBase, sourceTimeMs } from '../../store/useVid
 import { clipOpacity } from '../../model/videoProject';
 import { clipCrop, isCropped } from '../../utils/clipCrop';
 import CropPanel from './CropPanel';
+import VideoFilterPanel from './VideoFilterPanel';
+import { cropReset, videoFiltersReset } from './clipSheetActions';
 import FaceSwapPanel from './FaceSwapPanel';
 import { TextColorPanel, TextEditPanel, TextFontPanel, TextStylePanel } from './TextLookPanel';
 import { StickerDieCutAside, StickerDieCutPanel, StickerEditPanel, StickerFlipAside } from './StickerLookPanel';
@@ -415,38 +417,6 @@ function PunchPanel({ item }) {
   );
 }
 
-const FILTER_SLIDERS = [
-  { key: 'brightness', label: 'Bright' },
-  { key: 'contrast', label: 'Contrast' },
-  { key: 'saturation', label: 'Colour' },
-];
-
-function FilterPanel({ item }) {
-  const filter = item.filter || {};
-  const set = (patch) => update(item.id, { filter: { ...filter, ...patch } });
-  return (
-    <>
-      <div className="vt-chip-row">
-        {FILTER_PRESETS.map((p) => (
-          <button key={p.label} type="button" className={`vt-chip${(filter.preset ?? null) === p.id ? ' is-on' : ''}`} onClick={() => set({ preset: p.id })}>
-            {p.label}
-          </button>
-        ))}
-      </div>
-      {FILTER_SLIDERS.map(({ key, label }) => {
-        const value = Math.round(filter[key] || 0);
-        return (
-          <label key={key} className="vt-slider-row">
-            <span>{label}</span>
-            <input type="range" min="-100" max="100" step="1" value={value} onChange={(e) => set({ [key]: Number(e.target.value) })} />
-            <output>{value > 0 ? `+${value}` : value}</output>
-          </label>
-        );
-      })}
-    </>
-  );
-}
-
 // Voiceover: recording plays the video from the playhead so you can talk over it; stopping (or the
 // video ending) drops the recording on the timeline where it started.
 function VoicePanel() {
@@ -663,7 +633,7 @@ const SHEETS = {
   speed: { title: 'Speed', Icon: Gauge, Panel: SpeedPanel },
   place: { title: 'Fit to canvas', Icon: Expand, Panel: PlacePanel },
   opacity: { title: 'Opacity', Icon: Blend, Panel: OpacityPanel },
-  crop: { title: 'Crop', Icon: Crop, Panel: CropPanel },
+  crop: { title: 'Crop', Icon: Crop, Panel: CropPanel, action: cropReset, tall: true },
   flip: { title: 'Flip', Icon: FlipHorizontal2, Panel: FlipPanel },
   motion: { title: 'Photo motion', Icon: Move, Panel: MotionPanel },
   volume: { title: 'Volume', Icon: SlidersHorizontal, Panel: VolumePanel },
@@ -672,7 +642,7 @@ const SHEETS = {
   punch: { title: 'Zoom punch', Icon: ZoomIn, Panel: PunchPanel },
   // `tall`: may rise over the preview (its choices don't need it in view), not just to the timeline's top.
   faceswap: { title: 'Face swap', Icon: ScanFace, Panel: FaceSwapPanel, tall: true },
-  filter: { title: 'Filters', Icon: FiltersIcon, Panel: FilterPanel },
+  filter: { title: 'Filters', Icon: FiltersIcon, Panel: VideoFilterPanel, action: videoFiltersReset, tall: true },
   transition: { title: 'Transition', Icon: ArrowRightLeft, Panel: TransitionPanel },
   background: { title: 'Background', Icon: PaintBucket, Panel: BackgroundPanel },
   watermark: { title: 'Watermark', Icon: AtSign, Panel: WatermarkPanel },

@@ -1,9 +1,8 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
-import { RotateCcw } from 'lucide-react';
-import { useEditorStore, sourceTimeMs } from '../../store/useVideoEditorStore';
-import { captureFrame } from '../../utils/clipEffects';
-import { FULL_CROP, applyCrop, aspectCrop, clipCrop, isCropped, moveCrop, resizeCrop } from '../../utils/clipCrop';
+import useClipFrame from './useClipFrame';
+import { setClipCrop } from './clipSheetActions';
+import { aspectCrop, clipCrop, isCropped, moveCrop, resizeCrop } from '../../utils/clipCrop';
 import type { Corner } from '../../utils/clipCrop';
 import type { ClipCrop, Placed } from '../../model/videoProject';
 
@@ -19,40 +18,19 @@ const SHAPES: { id: string; label: string; aspect: number | null }[] = [
 ];
 const CORNERS: Corner[] = ['nw', 'ne', 'sw', 'se'];
 // The tallest the frame gets in the sheet.
-const MAX_FRAME_HEIGHT = 220;
+const MAX_FRAME_HEIGHT = 230;
 
-// The picture a clip is cropped from: the photo itself, or the video's frame at the playhead.
-function useCropSource(item: CroppableClip): string {
-  const [src, setSrc] = useState('');
-  const isVideo = item.type === 'video';
-  const atMs = isVideo ? sourceTimeMs(item, Math.min(Math.max(useEditorStore.getState().playhead, item.startMs), item.endMs)) : 0;
-  useEffect(() => {
-    if (!item.url) return undefined;
-    if (!isVideo) {
-      setSrc(item.url);
-      return undefined;
-    }
-    let alive = true;
-    let frame = '';
-    captureFrame(item.url, atMs).then((url: string) => {
-      frame = url;
-      if (alive) setSrc(url);
-      else URL.revokeObjectURL(url);
-    }).catch(() => {});
-    return () => {
-      alive = false;
-      if (frame) URL.revokeObjectURL(frame);
-    };
-    // The frame is grabbed once per clip; moving the playhead later doesn't re-grab it.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [item.url, isVideo]);
-  return src;
+// A shape button's picture: a small outline at that shape (dashed for Free).
+function ShapeGlyph({ aspect }: { aspect: number | null }) {
+  const size = aspect ? (aspect >= 1 ? { width: 22, height: 22 / aspect } : { width: 22 * aspect, height: 22 }) : { width: 20, height: 16 };
+  return <span className={`vt-crop-glyph${aspect ? '' : ' is-free'}`} style={size} aria-hidden="true" />;
 }
 
-// Crop: the clip's whole picture with a box over it to drag (inside to move it, a corner to size
-// it), box shapes, and Reset. The clip changes when a drag ends, so each drag is one undo step.
+// Crop: the clip's whole picture in a well, with a box over it to drag (inside to move it, a corner
+// to size it), then the box shapes; Reset is the sheet's. The clip changes when a drag ends, so each
+// drag is one undo step (clipSheetActions).
 export default function CropPanel({ item }: { item: CroppableClip }) {
-  const src = useCropSource(item);
+  const src = useClipFrame(item);
   const [natural, setNatural] = useState<{ w: number; h: number } | null>(null);
   const [room, setRoom] = useState(320);
   const [shape, setShape] = useState('free');
@@ -64,18 +42,21 @@ export default function CropPanel({ item }: { item: CroppableClip }) {
   const saved = clipCrop(item);
   const savedKey = `${saved.x},${saved.y},${saved.width},${saved.height}`;
   useEffect(() => {
-    if (!drag.current) setDraft(clipCrop(item));
+    if (drag.current) return;
+    setDraft(clipCrop(item));
+    // Reset (the heading's) frees the shape too.
+    if (!isCropped(clipCrop(item))) setShape('free');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [savedKey]);
 
   useLayoutEffect(() => {
-    if (hostRef.current?.clientWidth) setRoom(hostRef.current.clientWidth);
+    // Inside the well's padding.
+    if (hostRef.current?.clientWidth) setRoom(hostRef.current.clientWidth - 24);
   }, []);
 
   const commit = (next: ClipCrop) => {
     setDraft(next);
-    const latest = useEditorStore.getState().items.find((i: CroppableClip) => i.id === item.id) as CroppableClip | undefined;
-    if (latest) useEditorStore.getState().updateItem(item.id, applyCrop(latest, next));
+    setClipCrop(item.id, next);
   };
 
   // Shape in fractions of the frame, for locking a corner drag.
@@ -158,17 +139,14 @@ export default function CropPanel({ item }: { item: CroppableClip }) {
           <div className="vt-crop-loading" style={{ height: MAX_FRAME_HEIGHT / 2 }}>Getting the picture…</div>
         )}
       </div>
-      <div className="vt-chip-row vt-crop-shapes" role="radiogroup" aria-label="Crop shape">
+      <div className="vt-crop-shapes" role="radiogroup" aria-label="Crop shape">
         {SHAPES.map((s) => (
           <button key={s.id} type="button" role="radio" aria-checked={shape === s.id}
-            className={`vt-chip${shape === s.id ? ' is-on' : ''}`} disabled={!natural} onClick={() => pickShape(s.id)}>
-            {s.label}
+            className={`vt-crop-shape${shape === s.id ? ' is-on' : ''}`} disabled={!natural} onClick={() => pickShape(s.id)}>
+            <span className="vt-crop-shape-art"><ShapeGlyph aspect={s.aspect} /></span>
+            <span>{s.label}</span>
           </button>
         ))}
-        <button type="button" className="vt-chip vt-crop-reset" disabled={!isCropped(draft)}
-          onClick={() => { setShape('free'); commit({ ...FULL_CROP }); }}>
-          <RotateCcw size={15} /> Reset
-        </button>
       </div>
     </div>
   );

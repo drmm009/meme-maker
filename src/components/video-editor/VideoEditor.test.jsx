@@ -552,13 +552,36 @@ describe('VideoEditor', () => {
     const { container } = render(<VideoEditor onBack={() => {}} />);
     fireEvent.click(clips(container)[0]);
     fireEvent.click(clipTool('Filters'));
+    // As a photo's Filters: Presets, then the sliders under Adjust.
     fireEvent.click(screen.getByText('Vintage'));
-    const [bright] = screen.getAllByRole('slider');
-    fireEvent.change(bright, { target: { value: '30' } });
+    fireEvent.click(screen.getByRole('tab', { name: 'Adjust' }));
+    fireEvent.change(screen.getByRole('slider', { name: 'Brightness' }), { target: { value: '30' } });
     expect(store().items[0].filter).toEqual({ preset: 'vintage', brightness: 30 });
     closeSheet();
-    // The pill's Filters button now says which preset is on.
+    // The pill's Filters button now says which preset is on; Reset in the sheet's heading clears it.
     expect(pill().textContent).toContain('Vintage');
+    fireEvent.click(clipTool('Vintage'));
+    fireEvent.click(screen.getByRole('button', { name: 'Reset' }));
+    expect(store().items[0].filter).toBe(null);
+  });
+
+  it('crops a video to a shape from the crop sheet and resets it from the heading', async () => {
+    act(() => store().addItem({ type: 'video', url: 'a.mp4', durationMs: 2000, width: 400, height: 300 }));
+    const { container } = render(<VideoEditor onBack={() => {}} />);
+    fireEvent.click(clips(container)[0]);
+    fireEvent.click(clipTool('Crop'));
+    // The video's frame (captureFrame, stood in for) arrives, then its picture loads.
+    await act(async () => {});
+    const img = container.ownerDocument.querySelector('.vt-crop-frame img');
+    Object.defineProperty(img, 'naturalWidth', { value: 400 });
+    Object.defineProperty(img, 'naturalHeight', { value: 300 });
+    fireEvent.load(img);
+    expect(screen.getByRole('button', { name: 'Reset' }).disabled).toBe(true);
+    fireEvent.click(screen.getByRole('radio', { name: '1:1' }));
+    expect(store().items[0].crop).toMatchObject({ width: 0.75, height: 1 });
+    fireEvent.click(screen.getByRole('button', { name: 'Reset' }));
+    expect(store().items[0].crop ?? null).toBe(null);
+    expect(screen.getByRole('radio', { name: 'Free' }).getAttribute('aria-checked')).toBe('true');
   });
 
   it('records a voiceover over the video and drops it where it started', async () => {

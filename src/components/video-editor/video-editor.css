@@ -1072,15 +1072,24 @@
 .vt-swap .vt-chip { display: inline-flex; align-items: center; gap: 6px; }
 .vt-panel-hint.is-error { color: #ff6b5b; }
 
-/* Crop: the clip's whole picture with a box to drag over it; outside the box is dimmed. */
-.vt-crop { display: flex; flex-direction: column; gap: 14px; }
-.vt-crop-host { display: flex; justify-content: center; }
-.vt-crop-frame { position: relative; overflow: hidden; border-radius: 10px; touch-action: none; user-select: none; }
+/* Crop: the clip's whole picture in a dark well with a box to drag over it (outside it dimmed, thirds
+   inside, bright corner brackets inside its corners so the frame's edge never clips them), then the
+   box shapes as buttons that each show their shape. */
+.vt-crop { display: flex; flex-direction: column; gap: 12px; }
+.vt-crop-host {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 12px;
+  border-radius: var(--ui-radius-md, 16px);
+  background: rgba(0, 0, 0, 0.35);
+}
+.vt-crop-frame { position: relative; overflow: hidden; border-radius: 6px; touch-action: none; user-select: none; }
 .vt-crop-frame img { display: block; width: 100%; height: 100%; pointer-events: none; }
 .vt-crop-box {
   position: absolute;
-  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.6);
-  outline: 2px solid #fff;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.55);
+  outline: 1.5px solid rgba(255, 255, 255, 0.9);
   outline-offset: -1px;
   cursor: move;
   touch-action: none;
@@ -1089,37 +1098,58 @@
   content: '';
   position: absolute;
   inset: 33.333% 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.35);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.35);
+  border-top: 1px solid rgba(255, 255, 255, 0.3);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
   pointer-events: none;
 }
-.vt-crop-box::after { inset: 0 33.333%; border: none; border-left: 1px solid rgba(255, 255, 255, 0.35); border-right: 1px solid rgba(255, 255, 255, 0.35); }
-.vt-crop-handle {
-  position: absolute;
-  width: 28px;
-  height: 28px;
-  touch-action: none;
-}
+.vt-crop-box::after { inset: 0 33.333%; border: none; border-left: 1px solid rgba(255, 255, 255, 0.3); border-right: 1px solid rgba(255, 255, 255, 0.3); }
+/* A corner's grab area (32px) and its bracket, both inside the box. */
+.vt-crop-handle { position: absolute; z-index: 1; width: 32px; height: 32px; touch-action: none; }
 .vt-crop-handle::before {
   content: '';
   position: absolute;
-  width: 14px;
-  height: 14px;
+  width: 18px;
+  height: 18px;
   border: 0 solid #fff;
+  filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.5));
 }
-.vt-crop-handle.is-nw { left: -8px; top: -8px; cursor: nwse-resize; }
-.vt-crop-handle.is-ne { right: -8px; top: -8px; cursor: nesw-resize; }
-.vt-crop-handle.is-sw { left: -8px; bottom: -8px; cursor: nesw-resize; }
-.vt-crop-handle.is-se { right: -8px; bottom: -8px; cursor: nwse-resize; }
-.vt-crop-handle.is-nw::before { left: 6px; top: 6px; border-left-width: 4px; border-top-width: 4px; }
-.vt-crop-handle.is-ne::before { right: 6px; top: 6px; border-right-width: 4px; border-top-width: 4px; }
-.vt-crop-handle.is-sw::before { left: 6px; bottom: 6px; border-left-width: 4px; border-bottom-width: 4px; }
-.vt-crop-handle.is-se::before { right: 6px; bottom: 6px; border-right-width: 4px; border-bottom-width: 4px; }
+.vt-crop-handle.is-nw { left: 0; top: 0; cursor: nwse-resize; }
+.vt-crop-handle.is-ne { right: 0; top: 0; cursor: nesw-resize; }
+.vt-crop-handle.is-sw { left: 0; bottom: 0; cursor: nesw-resize; }
+.vt-crop-handle.is-se { right: 0; bottom: 0; cursor: nwse-resize; }
+.vt-crop-handle.is-nw::before { left: 0; top: 0; border-left-width: 3px; border-top-width: 3px; }
+.vt-crop-handle.is-ne::before { right: 0; top: 0; border-right-width: 3px; border-top-width: 3px; }
+.vt-crop-handle.is-sw::before { left: 0; bottom: 0; border-left-width: 3px; border-bottom-width: 3px; }
+.vt-crop-handle.is-se::before { right: 0; bottom: 0; border-right-width: 3px; border-bottom-width: 3px; }
 .vt-crop-loading { display: grid; place-items: center; width: 100%; color: var(--vt-muted); font-size: 13px; }
-.vt-crop-shapes { flex-wrap: nowrap; justify-content: center; gap: 6px; overflow-x: auto; scrollbar-width: none; }
-.vt-crop-shapes .vt-chip { flex: none; padding: 8px 11px; }
-.vt-crop-shapes .vt-chip:disabled { opacity: 0.45; cursor: default; }
-.vt-crop-reset { display: inline-flex; align-items: center; gap: 6px; }
+.vt-crop-shapes { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.vt-crop-shape {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 8px 4px 7px;
+  border: none;
+  border-radius: 14px;
+  background: var(--vt-fill);
+  color: var(--vt-muted);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, transform 0.15s var(--vt-ease);
+}
+.vt-crop-shape-art { display: grid; place-items: center; width: 24px; height: 24px; }
+.vt-crop-glyph { display: block; border: 2px solid currentColor; border-radius: 3px; }
+.vt-crop-glyph.is-free { border-style: dashed; }
+.vt-crop-shape.is-on { background: var(--vt-accent-soft); color: var(--vt-accent); }
+.vt-crop-shape:active:not(:disabled) { transform: scale(0.96); }
+.vt-crop-shape:disabled { opacity: 0.45; cursor: default; }
+.vt-crop-shape:focus-visible { outline: 2px solid var(--vt-accent); outline-offset: 2px; }
+@media (hover: hover) { .vt-crop-shape:hover:not(:disabled):not(.is-on) { color: var(--vt-text); } }
+/* A filter tile's still before the video's frame is ready. */
+.vt-filter-thumb-empty { display: block; background: var(--vt-fill); }
 
 /* Text Outline & shadow: an outline colour row (none first), its thickness, then shadow chips. */
 .vt-style { display: flex; flex-direction: column; gap: 12px; }
