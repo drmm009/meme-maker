@@ -14,7 +14,8 @@ const SECTION_ICONS = { video: SquarePlay, image: ImageIcon, text: Type, sticker
 // Scrolling timeline with a fixed centre playhead: the tracks move under it. Scrolling scrubs,
 // playback scrolls, pinch or Ctrl+wheel zooms around the playhead. The tracks are five sections by
 // clip type (timelineSections), each with its icon in a column at the left that stays put as the
-// timeline scrolls; an empty section's icon adds one (onAdd with the section's id).
+// timeline scrolls. Empty sections (bar Videos, which shows Add a video) take no room: their icons
+// wait together in one row at the bottom, each adding one (onAdd with the section's id).
 export default function TimelinePanel({ onAddVideo, onAdd }) {
   const { items, duration, activeItemId, selectedIds } = useEditorStore(
     useShallow((s) => ({ items: s.items, duration: s.duration, activeItemId: s.activeItemId, selectedIds: s.selectedIds }))
@@ -105,7 +106,9 @@ export default function TimelinePanel({ onAddVideo, onAdd }) {
     };
   }, []);
 
-  const sections = timelineSections(items);
+  const all = timelineSections(items);
+  const sections = all.filter((s) => s.lines.length || s.id === 'video');
+  const waiting = all.filter((s) => !sections.includes(s));
   const videos = items.filter((i) => i.type === 'video');
   const lastVideo = videos.length ? videos.reduce((a, b) => (b.endMs > a.endMs ? b : a)) : null;
 
@@ -129,20 +132,11 @@ export default function TimelinePanel({ onAddVideo, onAdd }) {
           <div className="vt-tracks">
             {sections.map((section) => {
               const Icon = SECTION_ICONS[section.id];
-              const empty = !section.lines.length;
               return (
-                <div key={section.id} className={`vt-section vt-section--${section.id}${empty ? ' is-empty' : ''}`}>
-                  {/* The video section's empty state is its Add a video button instead. */}
-                  {empty && section.id !== 'video' ? (
-                    <button type="button" className="vt-section-icon" aria-label={section.add} title={section.add}
-                      onClick={(e) => { e.stopPropagation(); onAdd?.(section.id); }}>
-                      <Icon size={15} strokeWidth={1.9} aria-hidden="true" />
-                    </button>
-                  ) : (
-                    <div className="vt-section-icon" role="img" aria-label={section.label} onClick={(e) => e.stopPropagation()}>
-                      <Icon size={15} strokeWidth={1.9} aria-hidden="true" />
-                    </div>
-                  )}
+                <div key={section.id} className={`vt-section vt-section--${section.id}`}>
+                  <div className="vt-section-icon" role="img" aria-label={section.label} onClick={(e) => e.stopPropagation()}>
+                    <Icon size={15} strokeWidth={1.9} aria-hidden="true" />
+                  </div>
                   <div className="vt-section-lines">
                     {section.lines.map((line) => (
                       <div key={line[0].id} className={`vt-row vt-row--${section.id}`}>
@@ -189,6 +183,23 @@ export default function TimelinePanel({ onAddVideo, onAdd }) {
                 </div>
               );
             })}
+            {waiting.length > 0 && (
+              <div className="vt-section vt-section--waiting">
+                <div className="vt-waiting" role="group" aria-label="Add to the timeline">
+                  {waiting.map((section) => {
+                    const Icon = SECTION_ICONS[section.id];
+                    return (
+                      <button key={section.id} type="button" className={`vt-waiting-btn vt-section--${section.id}`}
+                        aria-label={section.add} title={section.add}
+                        onClick={(e) => { e.stopPropagation(); onAdd?.(section.id); }}>
+                        <Plus size={11} strokeWidth={2.6} aria-hidden="true" />
+                        <Icon size={15} strokeWidth={1.9} aria-hidden="true" />
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
 
           {snapMs !== null && <div className="vt-snap-line" style={{ left: x(snapMs) }} />}

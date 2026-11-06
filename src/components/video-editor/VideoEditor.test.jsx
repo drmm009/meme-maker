@@ -258,12 +258,12 @@ describe('VideoEditor', () => {
     });
     const { container } = render(<VideoEditor onBack={() => {}} />);
     const sections = [...container.querySelectorAll('.vt-section')];
-    expect(sections.map((s) => s.className.match(/vt-section--(\w+)/)[1])).toEqual(['video', 'image', 'text', 'sticker', 'audio']);
+    expect(sections.map((s) => s.className.match(/vt-section--(\w+)/)[1])).toEqual(['video', 'text', 'sticker', 'waiting']);
     // The two stickers overlap, so they take two lines of the Stickers section.
-    expect(sections[3].querySelectorAll('.vt-row')).toHaveLength(2);
-    expect(sections[1].className).toContain('is-empty');
-    // The empty Photos section's icon lets go of the clip and opens Add photo.
-    fireEvent.click(within(sections[1]).getByLabelText('Add photo'));
+    expect(sections[2].querySelectorAll('.vt-row')).toHaveLength(2);
+    // Empty Photos and Sounds wait in the last row; an icon there lets go of the clip and adds one.
+    expect([...sections[3].querySelectorAll('button')].map((b) => b.getAttribute('aria-label'))).toEqual(['Add photo', 'Add sound']);
+    fireEvent.click(within(sections[3]).getByLabelText('Add photo'));
     expect(store().activeItemId).toBe(null);
     expect(screen.getByRole('dialog', { name: 'Add photo' })).toBeTruthy();
   });
