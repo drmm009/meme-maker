@@ -1,12 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useStore } from 'zustand';
-import { X, Share, Play, Pause, Undo2, Redo2, ChevronLeft, ChevronUp, ChevronDown, Download, Copy, Check, History, ImagePlay, LoaderCircle, FolderHeart, SquarePlay, Image as ImageIcon, Clapperboard } from 'lucide-react';
+import { X, Share, Play, Pause, Undo2, Redo2, ChevronLeft, ChevronUp, ChevronDown, Download, Copy, Check, History, ImagePlay, LoaderCircle, FolderHeart } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import CanvasPreview from './CanvasPreview';
 import TimelinePanel from './timeline/TimelinePanel';
 import ToolRail from './ToolRail';
 import AddMedia from './AddMedia';
 import ExportReadyCard from './ExportReadyCard';
+import StartPrompt from './StartPrompt';
 import { useEditorStore } from '../../store/useVideoEditorStore';
 import { exportVideoFFmpeg, cancelExport } from '../../utils/ffmpegExport';
 import { ExportCancelledError, formatEta } from '../../utils/exportProgress';
@@ -105,7 +106,8 @@ export default function VideoEditor({ template, onBack, onSaved }) {
   const canRedo = useStore(useEditorStore.temporal, (s) => s.futureStates.length > 0);
   const { undo, redo } = useEditorStore.temporal.getState();
 
-  const [mode, setMode] = useState('edit');
+  // The timeline starts closed; the Edit handle opens it.
+  const [mode, setMode] = useState('preview');
   const [menuOpen, setMenuOpen] = useState(false);
   const [exportDone, setExportDone] = useState(false);
   const [exportFormat, setExportFormat] = useState('mp4');
@@ -253,23 +255,7 @@ export default function VideoEditor({ template, onBack, onSaved }) {
           onPointerDown={deselectOnBackground}
         >
           <CanvasPreview />
-          {!hasItems && (
-            <div className="vt-start" role="group" aria-labelledby="vt-start-title">
-              <p id="vt-start-title" className="vt-start-title">Start your video</p>
-              <p className="vt-start-sub">Add a clip or a photo, then layer text, stickers and sounds on it.</p>
-              <div className="vt-start-actions">
-                <button type="button" className="vt-start-btn is-primary" onClick={() => addRef.current?.open('video')}>
-                  <SquarePlay size={18} strokeWidth={2.2} aria-hidden="true" /> Video
-                </button>
-                <button type="button" className="vt-start-btn" onClick={() => addRef.current?.open('photo')}>
-                  <ImageIcon size={18} strokeWidth={2.2} aria-hidden="true" /> Photo
-                </button>
-              </div>
-              <button type="button" className="vt-start-link" onClick={() => addRef.current?.open('clips')}>
-                <Clapperboard size={15} strokeWidth={2.2} aria-hidden="true" /> Or pick a meme clip
-              </button>
-            </div>
-          )}
+          {!hasItems && mode === 'preview' && <StartPrompt onPick={(kind) => addRef.current?.open(kind)} />}
           {mode === 'edit' && (
             <button type="button" className="vt-collapse" onClick={() => setMode('preview')} aria-label="Full screen preview">
               <ChevronDown size={22} strokeWidth={2.5} />

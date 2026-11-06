@@ -3,7 +3,7 @@
 // The Konva preview, FFmpeg export and the meme API are replaced; everything else is real.
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import React from 'react';
-import { render, screen, fireEvent, cleanup, act } from '@testing-library/react';
+import { render, screen, fireEvent, cleanup, act, within } from '@testing-library/react';
 import VideoEditor from './VideoEditor';
 
 const closeSheet = () => fireEvent.click(screen.getByLabelText(/^Close /));
@@ -43,11 +43,17 @@ beforeEach(() => {
 afterEach(cleanup);
 
 describe('VideoEditor', () => {
-  it('starts in edit mode with an empty-state prompt and the add tools', () => {
+  it('starts with the timeline closed, an empty-state prompt and the add tools', () => {
     const { container } = render(<VideoEditor onBack={() => {}} />);
-    expect(container.querySelector('.vt-editor.is-edit')).toBeTruthy();
+    expect(container.querySelector('.vt-editor.is-preview')).toBeTruthy();
     const start = screen.getByRole('group', { name: 'Start your video' });
-    expect([...start.querySelectorAll('button')].map((b) => b.textContent.trim())).toEqual(['Video', 'Photo', 'Or pick a meme clip']);
+    expect([...start.querySelectorAll('button')].map((b) => b.textContent.trim())).toEqual(['Video', 'Photo', 'Meme clip']);
+    // Opening the timeline puts the prompt away; closing it brings the prompt back.
+    fireEvent.click(screen.getByText('Edit'));
+    expect(container.querySelector('.vt-editor.is-edit')).toBeTruthy();
+    expect(screen.queryByRole('group', { name: 'Start your video' })).toBeNull();
+    fireEvent.click(screen.getByLabelText('Full screen preview'));
+    expect(screen.getByRole('group', { name: 'Start your video' })).toBeTruthy();
     expect(screen.getByText('Add a video')).toBeTruthy();
     const dock = screen.getByRole('navigation', { name: 'Sections' });
     expect([...dock.querySelectorAll('button')].map((b) => b.textContent)).toEqual(['Media', 'Text', 'Stickers', 'Audio', 'Canvas']);
@@ -230,10 +236,10 @@ describe('VideoEditor', () => {
 
   it('switches between edit and full-screen preview', () => {
     const { container } = render(<VideoEditor onBack={() => {}} />);
-    fireEvent.click(screen.getByLabelText('Full screen preview'));
-    expect(container.querySelector('.vt-editor.is-preview')).toBeTruthy();
     fireEvent.click(screen.getByText('Edit'));
     expect(container.querySelector('.vt-editor.is-edit')).toBeTruthy();
+    fireEvent.click(screen.getByLabelText('Full screen preview'));
+    expect(container.querySelector('.vt-editor.is-preview')).toBeTruthy();
   });
 
   it('plays and pauses from the transport and the space bar', () => {
@@ -271,7 +277,7 @@ describe('VideoEditor', () => {
     const { container } = render(<VideoEditor onBack={() => {}} />);
     addTextFromRail();
     fireEvent.click(clips(container)[0]);
-    fireEvent.click(screen.getByText('Edit'));
+    fireEvent.click(within(screen.getByRole('toolbar', { name: 'Clip tools' })).getByText('Edit'));
     fireEvent.change(screen.getByPlaceholderText('Type your text'), { target: { value: 'WHEN IT WORKS' } });
     closeSheet();
     fireEvent.click(screen.getByText('Size'));
@@ -517,6 +523,7 @@ describe('VideoEditor', () => {
 
   it('shows the canvas size beside Export only while the timeline is closed', () => {
     const { container } = render(<VideoEditor onBack={() => {}} />);
+    fireEvent.click(screen.getByText('Edit'));
     expect(container.querySelector('.ui-size-menu')).toBeNull();
     fireEvent.click(screen.getByLabelText('Full screen preview'));
     const actions = container.querySelector('.vt-top-actions');
