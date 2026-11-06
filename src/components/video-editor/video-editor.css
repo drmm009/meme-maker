@@ -291,10 +291,8 @@
   transform: translateX(-50%);
 }
 
-/* Five sections by clip type (Videos, Photos, Text, Stickers, Sounds). A section's icon is a small
-   floating chip with a hint of its clips' colour (--sec), held at the left (sticky) as the timeline
-   scrolls; clips pass under it. A faint line across the tracks parts the sections. Its lines start
-   at the canvas's left, under the icon. */
+/* Five sections by clip type (Videos, Photos, Text, Stickers, Sounds), told apart by their clips'
+   colours; a faint line across the tracks parts them. --sec tints the waiting add chips below. */
 .vt-tracks { display: flex; flex-direction: column; padding: 2px 0 12px; }
 .vt-section { position: relative; display: flex; padding: 5px 0; --sec: rgba(255, 255, 255, 0.85); }
 .vt-section--image { --sec: var(--vt-clip-image); }
@@ -311,36 +309,6 @@
   background: rgba(255, 255, 255, 0.06);
   pointer-events: none;
 }
-.vt-section-icon {
-  position: sticky;
-  left: 0;
-  z-index: 4;
-  flex: none;
-  width: 48px;
-  display: grid;
-  place-items: center;
-  margin: -5px 0;
-  padding: 0;
-  border: none;
-  /* No column: just the chip, floating over the clips that pass under it. */
-  background: none;
-  pointer-events: none;
-  /* Quiet: mostly grey, a hint of the clips' colour. */
-  color: color-mix(in srgb, var(--sec) 45%, #8e8e93);
-}
-.vt-section-icon::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
-  transform: translate(-50%, -50%);
-  background: color-mix(in srgb, var(--sec) 8%, #2c2c2e);
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35), 0 2px 8px rgba(0, 0, 0, 0.55);
-}
-.vt-section-icon svg { position: relative; }
 /* The empty sections' icons, waiting in one row at the bottom: each a quiet chip that adds one. */
 .vt-section--waiting { padding: 10px 0 0; }
 .vt-waiting { position: sticky; left: 0; display: flex; gap: 6px; padding-left: 10px; }
@@ -360,7 +328,7 @@
 .vt-waiting-btn:active { background: rgba(255, 255, 255, 0.1); }
 .vt-waiting-btn:focus-visible { outline: 2px solid var(--vt-accent); outline-offset: 2px; }
 @media (hover: hover) { .vt-waiting-btn:hover { color: var(--vt-text); } }
-.vt-section-lines { flex: none; width: 100%; margin-left: -48px; display: flex; flex-direction: column; gap: 6px; }
+.vt-section-lines { flex: none; width: 100%; display: flex; flex-direction: column; gap: 6px; }
 .vt-row { position: relative; height: 36px; flex-shrink: 0; }
 .vt-row--video { height: 50px; }
 

@@ -13,8 +13,7 @@ const SECTION_ICONS = { video: SquarePlay, image: ImageIcon, text: Type, sticker
 
 // Scrolling timeline with a fixed centre playhead: the tracks move under it. Scrolling scrubs,
 // playback scrolls, pinch or Ctrl+wheel zooms around the playhead. The tracks are five sections by
-// clip type (timelineSections), each with its icon in a column at the left that stays put as the
-// timeline scrolls. Empty sections (bar Videos, which shows Add a video) take no room: their icons
+// clip type (timelineSections), told apart by their clips' colours. Empty sections (bar Videos, which shows Add a video) take no room: their icons
 // wait together in one row at the bottom, each adding one (onAdd with the section's id).
 export default function TimelinePanel({ onAddVideo, onAdd }) {
   const { items, duration, activeItemId, selectedIds } = useEditorStore(
@@ -131,12 +130,8 @@ export default function TimelinePanel({ onAddVideo, onAdd }) {
 
           <div className="vt-tracks">
             {sections.map((section) => {
-              const Icon = SECTION_ICONS[section.id];
               return (
-                <div key={section.id} className={`vt-section vt-section--${section.id}`}>
-                  <div className="vt-section-icon" role="img" aria-label={section.label} onClick={(e) => e.stopPropagation()}>
-                    <Icon size={15} strokeWidth={1.9} aria-hidden="true" />
-                  </div>
+                <div key={section.id} className={`vt-section vt-section--${section.id}`} role="group" aria-label={section.label}>
                   <div className="vt-section-lines">
                     {section.lines.map((line) => (
                       <div key={line[0].id} className={`vt-row vt-row--${section.id}`}>
