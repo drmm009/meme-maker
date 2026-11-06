@@ -55,21 +55,34 @@ export const TEMPLATE_FACES: (Picture & { label: string })[] = [
   { src: './faces/wifi.jpg', name: 'Wi-Fi hairstyle', label: 'Wi-Fi hair' },
 ];
 
-async function call(path: string, body?: unknown): Promise<Record<string, unknown>> {
-  const init: RequestInit | undefined = body === undefined ? undefined : {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  };
+// The server's answer to a request: through the proxy, or else from the server itself (a page
+// instead of an answer means there's no proxy). Throws 'offline' when neither answers.
+export async function serverFetch(path: string, init?: RequestInit): Promise<Response> {
   for (const base of ['', DIRECT]) {
     try {
       const res = await fetch(`${base}${path}`, init);
-      return await res.json();
-    } catch {
-      // Not there, or a page instead of the server's answer (no proxy): try the server itself.
+      if (!(res.headers.get('content-type') || '').includes('text/html')) return res;
+    } catch (e) {
+      if ((e as Error)?.name === 'AbortError') throw e;
+      // Not there: try the server itself.
     }
   }
   throw new Error('offline');
+}
+
+export const postJson = (body: unknown): RequestInit => ({
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify(body),
+});
+
+async function call(path: string, body?: unknown): Promise<Record<string, unknown>> {
+  const res = await serverFetch(path, body === undefined ? undefined : postJson(body));
+  try {
+    return await res.json();
+  } catch {
+    throw new Error('offline');
+  }
 }
 
 // Whether the server is running with its swap model.

@@ -5,7 +5,7 @@
 export type ClipType = 'video' | 'image' | 'sticker' | 'text' | 'audio';
 export type TextAnimation = 'pop' | 'shake' | 'typewriter';
 export type TransitionType = 'fade' | 'zoom' | 'slide';
-export type ClipEffect = 'reverse' | 'boomerang';
+export type ClipEffect = 'reverse' | 'boomerang' | 'faceswap';
 export type TextAlign = 'left' | 'center' | 'right';
 
 // A colour filter: a preset plus brightness, contrast and saturation in -100..100.
@@ -101,7 +101,7 @@ export interface VideoClip extends ClipBase, Placed, Media {
   // Zoom-punch moments, in source ms.
   punches?: number[];
   effect?: ClipEffect | null;
-  // The clip as it was before reverse/boomerang.
+  // The clip as it was before reverse, boomerang or face swap.
   original?: Pick<Media, 'url' | 'trimStartMs' | 'sourceDurationMs' | 'thumbnailUrl'> & { endMs: number };
 }
 

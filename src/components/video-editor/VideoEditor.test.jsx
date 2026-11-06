@@ -447,6 +447,18 @@ describe('VideoEditor', () => {
     expect(store().items[0]).toMatchObject({ url: 'a.mp4', effect: null });
   });
 
+  it('opens Face swap from Effects, saying when the face swap server is off', async () => {
+    vi.stubGlobal('fetch', vi.fn(() => Promise.reject(new TypeError('Failed to fetch'))));
+    act(() => store().addItem({ type: 'video', url: 'a.mp4', durationMs: 4000 }));
+    const { container } = render(<VideoEditor onBack={() => {}} />);
+    fireEvent.click(clips(container)[0]);
+    const swap = clipTool('Face swap');
+    fireEvent.click(swap);
+    const sheet = screen.getByRole('dialog', { name: 'Face swap' });
+    expect(await within(sheet).findByText('Face swap is offline')).toBeTruthy();
+    vi.unstubAllGlobals();
+  });
+
   it('adds zoom punches at the playhead and clears them', () => {
     act(() => store().addItem({ type: 'video', url: 'a.mp4', durationMs: 4000 }));
     const { container } = render(<VideoEditor onBack={() => {}} />);

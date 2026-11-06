@@ -2,7 +2,7 @@ import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
   Type, Sticker, Smile, LayoutGrid, Image as ImageIcon, Film, Clapperboard, Music,
   Gauge, Volume2, VolumeX, Palette, Square, RotateCw, Minimize, Crop, Maximize, Copy, Trash2,
-  Scissors, PencilLine, ALargeSmall, TextAlignStart, TextAlignCenter, TextAlignEnd, SlidersHorizontal, WandSparkles, Pipette, Sparkles, ImagePlay, PaintBucket, Zap, Snowflake, Rewind, Repeat, ZoomIn, BringToFront, SendToBack, Mic, ArrowRightLeft, Frame, Plus, Upload, Library, Laugh, SquarePlay, Captions, Expand, Blend, Scan, Eraser, TypeOutline, Ban, FlipHorizontal2, FlipVertical2, Move, ListChecks, X, AtSign, Flag, Wand, AudioLines, Settings2, Layers, ChevronLeft
+  Scissors, PencilLine, ALargeSmall, TextAlignStart, TextAlignCenter, TextAlignEnd, SlidersHorizontal, WandSparkles, Pipette, Sparkles, ImagePlay, PaintBucket, Zap, Snowflake, Rewind, Repeat, ZoomIn, BringToFront, SendToBack, Mic, ArrowRightLeft, Frame, Plus, Upload, Library, Laugh, SquarePlay, Captions, Expand, Blend, Scan, Eraser, TypeOutline, Ban, FlipHorizontal2, FlipVertical2, Move, ListChecks, X, AtSign, Flag, Wand, AudioLines, Settings2, Layers, ChevronLeft, ScanFace
 } from 'lucide-react';
 import { FloatingToolbar, Sheet, ToolDock, ToolStrip } from '../ui';
 import { FiltersIcon } from '../editor/panels/editorIcons';
@@ -10,6 +10,7 @@ import { useEditorStore, clipEffectBase, sourceTimeMs } from '../../store/useVid
 import { clipOpacity } from '../../model/videoProject';
 import { clipCrop, isCropped } from '../../utils/clipCrop';
 import CropPanel from './CropPanel';
+import FaceSwapPanel from './FaceSwapPanel';
 import { canCutOut, cutOutBackground } from '../../utils/cutOut';
 import { PHOTO_MOTIONS } from '../../utils/photoMotion';
 import { DEFAULT_END_CARD, WATERMARK_CORNERS, endCardClip, isEndCard, renderEndCard } from '../../utils/brandCard';
@@ -817,6 +818,8 @@ const SHEETS = {
   volume: { title: 'Volume', Icon: SlidersHorizontal, Panel: VolumePanel },
   greenscreen: { title: 'Green screen', Icon: WandSparkles, Panel: GreenScreenPanel },
   punch: { title: 'Zoom punch', Icon: ZoomIn, Panel: PunchPanel },
+  // `tall`: may rise over the preview (its choices don't need it in view), not just to the timeline's top.
+  faceswap: { title: 'Face swap', Icon: ScanFace, Panel: FaceSwapPanel, tall: true },
   filter: { title: 'Filters', Icon: FiltersIcon, Panel: FilterPanel },
   transition: { title: 'Transition', Icon: ArrowRightLeft, Panel: TransitionPanel },
   background: { title: 'Background', Icon: PaintBucket, Panel: BackgroundPanel },
@@ -872,6 +875,7 @@ function clipTools(item, { sheet, toggle, playhead, items }) {
       { id: 'reverse', group: 'effects', label: 'Reverse', Icon: Rewind, active: item.effect === 'reverse', onClick: () => toggleClipEffect(item, 'reverse') },
       { id: 'boomerang', group: 'effects', label: 'Boomerang', Icon: Repeat, active: item.effect === 'boomerang', onClick: () => toggleClipEffect(item, 'boomerang') },
       { id: 'punch', group: 'effects', label: 'Punch', Icon: ZoomIn, ...opens('punch', Boolean(item.punches?.length)) },
+      { id: 'faceswap', group: 'effects', label: 'Face swap', Icon: ScanFace, ...opens('faceswap', item.effect === 'faceswap') },
     );
   }
   if (previousClip(items, item)) {
@@ -1051,7 +1055,7 @@ export default function ToolRail({ onAdd }) {
 
   return (
     <div className="vt-rail-wrap" ref={wrapRef} style={spec && rest ? { height: rest.height } : undefined}>
-      <div className={`vt-bottom${spec ? ' has-sheet' : ''}`} style={spec && rest ? { minHeight: rest.height, maxHeight: rest.room } : undefined}>
+      <div className={`vt-bottom${spec ? ' has-sheet' : ''}`} style={spec && rest ? { minHeight: rest.height, maxHeight: spec.tall ? Math.max(rest.room, Math.min(420, window.innerHeight * 0.6)) : rest.room } : undefined}>
         {/* While a sheet is open nothing floats above it: the strip or pill comes back when it closes. */}
         {spec ? null : picked.length ? (
           <div className="vt-pill">

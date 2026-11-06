@@ -988,6 +988,46 @@
 .vt-captions-bar.is-busy span { width: 35%; animation: vt-captions-busy 1.2s ease-in-out infinite; }
 @keyframes vt-captions-busy { from { left: -35%; } to { left: 100%; } }
 
+/* Face swap: rows of round faces (whose face, and who in the clip), then the job like captions'. */
+.vt-swap { display: flex; flex-direction: column; gap: 12px; }
+.vt-swap-row { display: grid; grid-template-columns: 44px 1fr; align-items: center; gap: 8px; }
+.vt-swap-label { font-size: 13px; font-weight: 700; }
+.vt-swap-faces {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  overflow-x: auto;
+  padding: 3px;
+  margin: -3px;
+  scrollbar-width: none;
+}
+.vt-swap-faces::-webkit-scrollbar { display: none; }
+.vt-swap-face {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--vt-fill);
+  color: var(--vt-text);
+  cursor: pointer;
+}
+.vt-swap-face img { width: 100%; height: 100%; object-fit: cover; }
+.vt-swap-face.is-on { box-shadow: 0 0 0 2px var(--vt-bg, #000), 0 0 0 4px var(--vt-accent); }
+.vt-swap-face:disabled, .vt-swap .vt-chip:disabled { opacity: 0.5; cursor: default; }
+.vt-swap-faces .vt-chip { flex: none; }
+.vt-swap-note { flex: none; color: var(--vt-muted); font-size: 13px; }
+.vt-swap-offline { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 12px; font-size: 13px; color: var(--vt-muted); }
+.vt-swap-offline strong { display: block; color: var(--vt-text); font-size: 14px; }
+.vt-swap-offline svg { color: var(--vt-muted); }
+.vt-swap .vt-chip { display: inline-flex; align-items: center; gap: 6px; }
+.vt-panel-hint.is-error { color: #ff6b5b; }
+
 /* Crop: the clip's whole picture with a box to drag over it; outside the box is dimmed. */
 .vt-crop { display: flex; flex-direction: column; gap: 14px; }
 .vt-crop-host { display: flex; justify-content: center; }
