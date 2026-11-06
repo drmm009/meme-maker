@@ -141,6 +141,9 @@ const CanvasPreview = forwardRef((props, ref) => {
             pointerEvents: 'none'
           }}
         />
+
+        {/* Overlays laid on the canvas (the empty video's start prompt). */}
+        {props.children}
       </div>
     </div>
   );

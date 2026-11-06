@@ -2,6 +2,7 @@ import { Check, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import CanvasEditor from '../CanvasEditor';
 import FacePinpointOverlay from '../FacePinpointOverlay';
+import ImageStartPrompt from './ImageStartPrompt';
 import { useMemeEditorStore } from './store/useMemeEditorStore';
 import { useEditorUiStore } from './store/useEditorUiStore';
 
@@ -12,7 +13,7 @@ const LAYER_SHEETS = ['text', 'media'];
 // face pinpointing). Tapping the empty space around the canvas deselects.
 export default function CanvasStage({
   canvasRef, imageFit, isNativeLayout, layoutDef, isDrawingMode, isRemovingBg, isBlurringBg,
-  onAddDrawing, onDeleteLayer, onUpdateSlotTransform, faceMorph, onDropMedia
+  onAddDrawing, onDeleteLayer, onUpdateSlotTransform, faceMorph, onDropMedia, onAddPhoto
 }) {
   const captions = useMemeEditorStore((s) => s.captions);
   const stickers = useMemeEditorStore((s) => s.stickers);
@@ -129,7 +130,9 @@ export default function CanvasStage({
           onMoveLayers={placeLayers}
           onAddDrawing={onAddDrawing}
           isDrawingMode={isDrawingMode}
-        />
+        >
+          {onAddPhoto && !isDrawingMode && <ImageStartPrompt onPhoto={onAddPhoto} />}
+        </CanvasEditor>
 
         {(isRemovingBg || isBlurringBg) && (
           <div

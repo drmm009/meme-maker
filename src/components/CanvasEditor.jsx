@@ -29,6 +29,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
     onUpdateSlotTransform,
     onAddDrawing,
     isDrawingMode = false,
+    children,
   },
   ref
 ) {
@@ -284,6 +285,9 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
           objectFit: 'contain'
         }}
       />
+
+      {/* Overlays laid on the canvas (a blank canvas's start prompt). */}
+      {children}
 
       {showTextOverlay && (
         <CaptionTextOverlay

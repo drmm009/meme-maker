@@ -254,8 +254,9 @@ export default function VideoEditor({ template, onBack, onSaved }) {
           style={{ '--canvas-aspect-ratio': canvasAspectRatio }}
           onPointerDown={deselectOnBackground}
         >
-          <CanvasPreview />
-          {!hasItems && mode === 'preview' && <StartPrompt onPick={(kind) => addRef.current?.open(kind)} />}
+          <CanvasPreview>
+            {!hasItems && mode === 'preview' && <StartPrompt onPick={(kind) => addRef.current?.open(kind)} />}
+          </CanvasPreview>
           {mode === 'edit' && (
             <button type="button" className="vt-collapse" onClick={() => setMode('preview')} aria-label="Full screen preview">
               <ChevronDown size={22} strokeWidth={2.5} />

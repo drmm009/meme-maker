@@ -2,7 +2,7 @@ import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
   Type, Sticker, Smile, LayoutGrid, Image as ImageIcon, Film, Clapperboard, Music,
   Gauge, Volume2, VolumeX, Palette, Square, RotateCw, Minimize, Crop, Maximize, Copy, Trash2,
-  Scissors, PencilLine, ALargeSmall, TextAlignStart, TextAlignCenter, TextAlignEnd, SlidersHorizontal, WandSparkles, Pipette, Sparkles, ImagePlay, PaintBucket, Zap, Snowflake, Rewind, Repeat, ZoomIn, BringToFront, SendToBack, Mic, ArrowRightLeft, Frame, Plus, Upload, Library, Laugh, SquarePlay, Captions, Expand, Blend, Scan, Eraser, TypeOutline, Ban, FlipHorizontal2, FlipVertical2, Move, ListChecks, X, AtSign, Flag
+  Scissors, PencilLine, ALargeSmall, TextAlignStart, TextAlignCenter, TextAlignEnd, SlidersHorizontal, WandSparkles, Pipette, Sparkles, ImagePlay, PaintBucket, Zap, Snowflake, Rewind, Repeat, ZoomIn, BringToFront, SendToBack, Mic, ArrowRightLeft, Frame, Plus, Upload, Library, Laugh, SquarePlay, Captions, Expand, Blend, Scan, Eraser, TypeOutline, Ban, FlipHorizontal2, FlipVertical2, Move, ListChecks, X, AtSign, Flag, Wand, AudioLines, Settings2, Layers, ChevronLeft
 } from 'lucide-react';
 import { FloatingToolbar, Sheet, ToolDock, ToolStrip } from '../ui';
 import { FiltersIcon } from '../editor/panels/editorIcons';
@@ -827,9 +827,19 @@ const SHEETS = {
   captions: { title: 'Auto captions', Icon: Captions, Panel: CaptionsPanel },
 };
 
+// The pill's groups: a group's tools show in the pill in place of the clip's main tools, after a
+// Back button (see groupedTools).
+const TOOL_GROUPS = {
+  style: { label: 'Style', Icon: Palette },
+  effects: { label: 'Effects', Icon: Wand },
+  audio: { label: 'Audio', Icon: AudioLines },
+  adjust: { label: 'Adjust', Icon: Settings2 },
+  arrange: { label: 'Arrange', Icon: Layers },
+};
+
 // The selected clip's tools for its pill: what this kind of clip can do (each setting opens its
-// sheet, its button lit while open or while the setting is on), then Split, then the actions every
-// clip shares as small round buttons.
+// sheet, its button lit while open or while the setting is on), then Split, then Delete as a small
+// round button. A tool with a `group` goes in that group (TOOL_GROUPS) instead of the main pill.
 function clipTools(item, { sheet, toggle, playhead, items }) {
   const store = useEditorStore.getState;
   const opens = (name, on = false) => ({ active: sheet === name || on, onClick: () => toggle(name) });
@@ -839,53 +849,55 @@ function clipTools(item, { sheet, toggle, playhead, items }) {
     const align = ALIGNS.find((a) => a.value === (item.align || 'center')) || ALIGNS[1];
     tools.push(
       { id: 'edit', label: 'Edit', Icon: PencilLine, ...opens('text') },
-      { id: 'font', label: 'Font', icon: <span className="vt-font-sample" style={{ fontFamily: font.family }}>Aa</span>, ...opens('font') },
-      { id: 'color', label: 'Colour', icon: <span className="vt-color-dot" style={{ background: item.color || '#ffffff' }} />, ...opens('color') },
-      { id: 'style', label: 'Style', title: 'Outline and shadow', Icon: TypeOutline, ...opens('style', Boolean(item.shadow)) },
-      { id: 'textbg', label: 'Background', Icon: Square, ...opens('textbg', Boolean(item.bgColor && item.bgColor !== 'none')) },
-      { id: 'size', label: 'Size', Icon: ALargeSmall, ...opens('size') },
+      { id: 'font', group: 'style', label: 'Font', icon: <span className="vt-font-sample" style={{ fontFamily: font.family }}>Aa</span>, ...opens('font') },
+      { id: 'color', group: 'style', label: 'Colour', icon: <span className="vt-color-dot" style={{ background: item.color || '#ffffff' }} />, ...opens('color') },
+      { id: 'style', group: 'style', label: 'Outline', title: 'Outline and shadow', Icon: TypeOutline, ...opens('style', Boolean(item.shadow)) },
+      { id: 'textbg', group: 'style', label: 'Background', Icon: Square, ...opens('textbg', Boolean(item.bgColor && item.bgColor !== 'none')) },
+      { id: 'size', group: 'style', label: 'Size', Icon: ALargeSmall, ...opens('size') },
+      { id: 'align', group: 'style', label: 'Align', Icon: align.Icon, ...opens('align') },
       { id: 'animate', label: 'Animate', Icon: Sparkles, ...opens('animation', Boolean(item.animation)) },
-      { id: 'align', label: 'Align', Icon: align.Icon, ...opens('align') },
     );
   }
   if (item.type === 'video') {
     const rate = item.playbackRate || 1;
     const insideClip = playhead >= item.startMs && playhead <= item.endMs;
     tools.push(
-      { id: 'speed', label: `${rate}×`, title: 'Speed', Icon: Gauge, ...opens('speed', rate !== 1) },
-      { id: 'greenscreen', label: 'Green screen', Icon: WandSparkles, active: sheet === 'greenscreen' || Boolean(item.chromaKey), onClick: () => {
+      { id: 'speed', group: 'effects', label: `${rate}×`, title: 'Speed', Icon: Gauge, ...opens('speed', rate !== 1) },
+      { id: 'greenscreen', group: 'effects', label: 'Green screen', Icon: WandSparkles, active: sheet === 'greenscreen' || Boolean(item.chromaKey), onClick: () => {
         if (!item.chromaKey) update(item.id, { chromaKey: { ...DEFAULT_CHROMA_KEY, color: 'auto' } });
         toggle('greenscreen', !item.chromaKey);
       } },
-      { id: 'freeze', label: 'Freeze', Icon: Snowflake, title: insideClip ? 'Freeze the frame at the playhead' : 'Move the playhead onto this clip to freeze a frame',
+      { id: 'freeze', group: 'effects', label: 'Freeze', Icon: Snowflake, title: insideClip ? 'Freeze the frame at the playhead' : 'Move the playhead onto this clip to freeze a frame',
         onClick: () => insideClip && freezeAtPlayhead(item, playhead) },
-      { id: 'reverse', label: 'Reverse', Icon: Rewind, active: item.effect === 'reverse', onClick: () => toggleClipEffect(item, 'reverse') },
-      { id: 'boomerang', label: 'Boomerang', Icon: Repeat, active: item.effect === 'boomerang', onClick: () => toggleClipEffect(item, 'boomerang') },
-      { id: 'punch', label: 'Punch', Icon: ZoomIn, ...opens('punch', Boolean(item.punches?.length)) },
+      { id: 'reverse', group: 'effects', label: 'Reverse', Icon: Rewind, active: item.effect === 'reverse', onClick: () => toggleClipEffect(item, 'reverse') },
+      { id: 'boomerang', group: 'effects', label: 'Boomerang', Icon: Repeat, active: item.effect === 'boomerang', onClick: () => toggleClipEffect(item, 'boomerang') },
+      { id: 'punch', group: 'effects', label: 'Punch', Icon: ZoomIn, ...opens('punch', Boolean(item.punches?.length)) },
     );
   }
   if (previousClip(items, item)) {
     const label = TRANSITIONS.find((t) => t.id === item.transitionIn?.type)?.label;
-    tools.push({ id: 'transition', label: label || 'Transition', Icon: ArrowRightLeft, ...opens('transition', Boolean(item.transitionIn?.type)) });
+    tools.push({ id: 'transition', group: item.type === 'video' ? 'effects' : undefined, label: label || 'Transition', Icon: ArrowRightLeft, ...opens('transition', Boolean(item.transitionIn?.type)) });
   }
   if (item.type === 'video' || item.type === 'audio') {
+    // A video's sound is a group of its own; an audio clip's is its main tools.
+    const group = item.type === 'video' ? 'audio' : undefined;
     tools.push(
-      { id: 'volume', label: 'Volume', Icon: SlidersHorizontal, ...opens('volume') },
-      { id: 'mute', label: item.muted ? 'Unmute' : 'Mute', Icon: item.muted ? VolumeX : Volume2, active: Boolean(item.muted), onClick: () => update(item.id, { muted: !item.muted }) },
+      { id: 'volume', group, label: 'Volume', Icon: SlidersHorizontal, ...opens('volume') },
+      { id: 'mute', group, label: item.muted ? 'Unmute' : 'Mute', Icon: item.muted ? VolumeX : Volume2, active: Boolean(item.muted), onClick: () => update(item.id, { muted: !item.muted }) },
     );
   }
   if (item.type === 'image' || item.type === 'video') {
     const preset = FILTER_PRESETS.find((p) => p.id === (item.filter?.preset ?? null));
     const filtered = Boolean(item.filter && (item.filter.preset || item.filter.brightness || item.filter.contrast || item.filter.saturation));
     tools.push(
-      { id: 'filter', label: filtered && preset?.id ? preset.label : 'Filters', Icon: FiltersIcon, ...opens('filter', filtered) },
-      { id: 'place', label: 'Fit', title: 'Fit, fill or stretch to the canvas', Icon: Expand, ...opens('place') },
+      { id: 'filter', group: 'adjust', label: filtered && preset?.id ? preset.label : 'Filters', Icon: FiltersIcon, ...opens('filter', filtered) },
+      { id: 'place', group: 'adjust', label: 'Fit', title: 'Fit, fill or stretch to the canvas', Icon: Expand, ...opens('place') },
     );
   }
   if (item.type === 'image' || item.type === 'video' || item.type === 'sticker') {
     tools.push(
-      { id: 'crop', label: 'Crop', Icon: Crop, ...opens('crop', isCropped(clipCrop(item))) },
-      { id: 'flip', label: 'Flip', Icon: FlipHorizontal2, ...opens('flip', Boolean(item.flipX || item.flipY)) },
+      { id: 'crop', group: 'adjust', label: 'Crop', Icon: Crop, ...opens('crop', isCropped(clipCrop(item))) },
+      { id: 'flip', group: 'adjust', label: 'Flip', Icon: FlipHorizontal2, ...opens('flip', Boolean(item.flipX || item.flipY)) },
     );
   }
   if (item.type === 'image') {
@@ -893,30 +905,59 @@ function clipTools(item, { sheet, toggle, playhead, items }) {
     tools.push({ id: 'motion', label: item.motion ? motion.label : 'Motion', title: 'Photo motion', Icon: Move, ...opens('motion', Boolean(item.motion)) });
   }
   if (canCutOut(item) || item.originalUrl) {
-    tools.push({ id: 'cutout', label: 'Cut out', title: item.originalUrl ? 'Put the background back' : 'Remove the background', Icon: Eraser, active: Boolean(item.originalUrl), onClick: () => toggleCutOut(item) });
+    tools.push({ id: 'cutout', group: 'adjust', label: 'Cut out', title: item.originalUrl ? 'Put the background back' : 'Remove the background', Icon: Eraser, active: Boolean(item.originalUrl), onClick: () => toggleCutOut(item) });
   }
   if (item.type === 'image' || item.type === 'sticker') {
-    tools.push({ id: 'rotate', label: 'Rotate', Icon: RotateCw, onClick: () => update(item.id, rotateAboutCenter(item, ((item.rotation || 0) + 90) % 360)) });
+    tools.push({ id: 'rotate', group: 'adjust', label: 'Rotate', Icon: RotateCw, onClick: () => update(item.id, rotateAboutCenter(item, ((item.rotation || 0) + 90) % 360)) });
   }
   if (item.type !== 'audio') {
     const opacity = clipOpacity(item);
-    tools.push({ id: 'opacity', label: opacity < 1 ? `${Math.round(opacity * 100)}%` : 'Opacity', title: 'Opacity', Icon: Blend, ...opens('opacity', opacity < 1) });
+    tools.push({ id: 'opacity', group: item.type === 'text' ? 'style' : 'adjust', label: opacity < 1 ? `${Math.round(opacity * 100)}%` : 'Opacity', title: 'Opacity', Icon: Blend, ...opens('opacity', opacity < 1) });
   }
-  tools.push({ id: 'select', label: 'Select', title: 'Select several clips (or long-press them on the timeline)', Icon: ListChecks, onClick: () => store().togglePicked(item.id) });
   const canSplit = playhead > item.startMs + MIN_SPLIT_MS && playhead < item.endMs - MIN_SPLIT_MS;
   tools.push({ id: 'split', label: 'Split', Icon: Scissors, title: canSplit ? 'Split at the playhead' : 'Move the playhead inside the clip to split it',
     onClick: () => canSplit && store().splitItem(item.id, playhead) });
+  tools.push({ id: 'duplicate', group: 'arrange', label: 'Duplicate', Icon: Copy, onClick: () => store().duplicateItem(item.id) });
   if (item.type !== 'audio') {
     tools.push(
-      { id: 'forward', label: 'Bring forward', Icon: BringToFront, iconOnly: true, onClick: () => store().moveLayer(item.id, 1) },
-      { id: 'back', label: 'Send back', Icon: SendToBack, iconOnly: true, onClick: () => store().moveLayer(item.id, -1) },
+      { id: 'forward', group: 'arrange', label: 'Bring forward', Icon: BringToFront, onClick: () => store().moveLayer(item.id, 1) },
+      { id: 'back', group: 'arrange', label: 'Send back', Icon: SendToBack, onClick: () => store().moveLayer(item.id, -1) },
     );
   }
   tools.push(
-    { id: 'duplicate', label: 'Duplicate', Icon: Copy, iconOnly: true, onClick: () => store().duplicateItem(item.id) },
+    { id: 'select', group: 'arrange', label: 'Select', title: 'Select several clips (or long-press them on the timeline)', Icon: ListChecks, onClick: () => store().togglePicked(item.id) },
     { id: 'delete', label: 'Delete', Icon: Trash2, iconOnly: true, danger: true, onClick: () => store().removeItem(item.id) },
   );
   return tools;
+}
+
+// The pill's buttons: with no group open, the main tools with one button per group in the place of
+// its first tool (lit when any of its tools is); with a group open, Back and that group's tools.
+// Split stays before Arrange, and Delete last.
+function groupedTools(tools, open, setOpen) {
+  if (open) {
+    return [
+      { id: 'group-back', label: 'Back', title: 'Back to all tools', Icon: ChevronLeft, onClick: () => setOpen(null) },
+      ...tools.filter((t) => t.group === open),
+    ];
+  }
+  const out = [];
+  const seen = new Set();
+  for (const t of tools) {
+    if (!t.group) {
+      out.push(t);
+      continue;
+    }
+    if (seen.has(t.group)) continue;
+    seen.add(t.group);
+    const members = tools.filter((m) => m.group === t.group);
+    const { label, Icon } = TOOL_GROUPS[t.group];
+    out.push({ id: `group-${t.group}`, label, Icon, active: members.some((m) => m.active), onClick: () => setOpen(t.group) });
+  }
+  // Arrange after Split, Delete after both.
+  const at = (id) => out.findIndex((t) => t.id === id);
+  if (at('group-arrange') > -1 && at('split') > at('group-arrange')) out.splice(at('split') + 1, 0, ...out.splice(at('group-arrange'), 1));
+  return out;
 }
 
 // The bar while several clips are picked: how many (tap to stop picking), Duplicate, Delete.
@@ -970,6 +1011,10 @@ export default function ToolRail({ onAdd }) {
   const setSheet = (name) => setSheetState({ id: ownerId, name });
   const toggle = (name, keepOpen = false) => setSheet(sheet === name && !keepOpen ? null : name);
   const spec = sheet && (SHEETS[sheet] || SOURCE_SHEETS[sheet]);
+  // The open group of the pill's tools, for the clip it was opened on (another clip starts on the main tools).
+  const [groupState, setGroupState] = useState({ id: null, name: null });
+  const group = groupState.id === ownerId ? groupState.name : null;
+  const setGroup = (name) => setGroupState({ id: ownerId, name });
 
   // The bottom's height without a sheet, kept while one is open (it then floats over the timeline,
   // never higher than the timeline's top, the element before it).
@@ -1014,7 +1059,11 @@ export default function ToolRail({ onAdd }) {
           </div>
         ) : activeItem ? (
           <div className="vt-pill">
-            <FloatingToolbar ariaLabel="Clip tools" items={clipTools(activeItem, { sheet, toggle, playhead, items })} />
+            <FloatingToolbar
+              key={group || 'main'}
+              ariaLabel={group ? `${TOOL_GROUPS[group].label} tools` : 'Clip tools'}
+              items={groupedTools(clipTools(activeItem, { sheet, toggle, playhead, items }), group, setGroup)}
+            />
           </div>
         ) : section && (
           <ToolStrip

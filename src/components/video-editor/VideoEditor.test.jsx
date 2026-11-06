@@ -10,7 +10,7 @@ const closeSheet = () => fireEvent.click(screen.getByLabelText(/^Close /));
 import { useEditorStore } from '../../store/useVideoEditorStore';
 import { exportVideoFFmpeg } from '../../utils/ffmpegExport';
 
-vi.mock('./CanvasPreview', () => ({ default: () => <div data-testid="canvas-preview" /> }));
+vi.mock('./CanvasPreview', () => ({ default: ({ children }) => <div data-testid="canvas-preview">{children}</div> }));
 vi.mock('../../utils/ffmpegExport', () => ({
   exportVideoFFmpeg: vi.fn(() => Promise.resolve({ blob: new Blob(['x'], { type: 'video/mp4' }), fileName: 'meme-studio-1.mp4' })),
   cancelExport: vi.fn(),
@@ -35,6 +35,22 @@ const store = () => useEditorStore.getState();
 const clips = (container) => [...container.querySelectorAll('.vt-clip')];
 // Add tools live in the strips of the dock's sections, reached the way a user would.
 const addTextFromRail = () => { fireEvent.click(screen.getByText('Text')); fireEvent.click(screen.getByText('Add text')); };
+// A tool on the selected clip's pill, its group (Style, Effects…) opened first when it's in one.
+const pill = () => document.querySelector('.vt-pill [role="toolbar"]');
+const clipTool = (text) => {
+  const inPill = () => within(pill()).queryByText(text);
+  const back = within(pill()).queryByText('Back');
+  if (back && !inPill()) fireEvent.click(back);
+  if (inPill()) return inPill();
+  for (const group of ['Style', 'Effects', 'Audio', 'Adjust', 'Arrange']) {
+    const button = within(pill()).queryByText(group);
+    if (!button) continue;
+    fireEvent.click(button);
+    if (inPill()) return inPill();
+    fireEvent.click(within(pill()).getByText('Back'));
+  }
+  throw new Error(`No clip tool "${text}"`);
+};
 
 beforeEach(() => {
   store().clearItems();
@@ -47,14 +63,14 @@ describe('VideoEditor', () => {
     const { container } = render(<VideoEditor onBack={() => {}} />);
     expect(container.querySelector('.vt-editor.is-preview')).toBeTruthy();
     const start = screen.getByRole('group', { name: 'Start your video' });
-    expect([...start.querySelectorAll('button')].map((b) => b.textContent.trim())).toEqual(['Video', 'Photo', 'Meme clip']);
+    expect([...start.querySelectorAll('button')].map((b) => b.textContent.trim())).toEqual(['Add a video', 'Photo', 'Meme clip']);
     // Opening the timeline puts the prompt away; closing it brings the prompt back.
     fireEvent.click(screen.getByText('Edit'));
     expect(container.querySelector('.vt-editor.is-edit')).toBeTruthy();
     expect(screen.queryByRole('group', { name: 'Start your video' })).toBeNull();
     fireEvent.click(screen.getByLabelText('Full screen preview'));
     expect(screen.getByRole('group', { name: 'Start your video' })).toBeTruthy();
-    expect(screen.getByText('Add a video')).toBeTruthy();
+    expect(container.querySelector('.vt-timeline-wrap').textContent).toContain('Add a video');
     const dock = screen.getByRole('navigation', { name: 'Sections' });
     expect([...dock.querySelectorAll('button')].map((b) => b.textContent)).toEqual(['Media', 'Text', 'Stickers', 'Audio', 'Canvas']);
     // No section's tools until a section is tapped; tapping it again puts them away.
@@ -153,10 +169,19 @@ describe('VideoEditor', () => {
     fireEvent.click(clips(container)[0]);
     expect(store().activeItemId).toBe(store().items[0].id);
     expect(clips(container)[0].className).toContain('is-selected');
-    const pill = screen.getByRole('toolbar', { name: 'Clip tools' });
-    expect([...pill.querySelectorAll('button')].map((b) => b.textContent)).toEqual(
-      ['Edit', 'AaFont', 'Colour', 'Style', 'Background', 'Size', 'Animate', 'Align', 'Opacity', 'Select', 'Split', 'Bring forward', 'Send back', 'Duplicate', 'Delete'],
+    const main = screen.getByRole('toolbar', { name: 'Clip tools' });
+    expect([...main.querySelectorAll('button')].map((b) => b.textContent)).toEqual(['Edit', 'Style', 'Animate', 'Split', 'Arrange', 'Delete']);
+    // A group's tools take the pill's place, after Back.
+    fireEvent.click(within(main).getByText('Style'));
+    expect([...screen.getByRole('toolbar', { name: 'Style tools' }).querySelectorAll('button')].map((b) => b.textContent)).toEqual(
+      ['Back', 'AaFont', 'Colour', 'Outline', 'Background', 'Size', 'Align', 'Opacity'],
     );
+    fireEvent.click(screen.getByText('Back'));
+    fireEvent.click(within(screen.getByRole('toolbar', { name: 'Clip tools' })).getByText('Arrange'));
+    expect([...screen.getByRole('toolbar', { name: 'Arrange tools' }).querySelectorAll('button')].map((b) => b.textContent)).toEqual(
+      ['Back', 'Duplicate', 'Bring forward', 'Send back', 'Select'],
+    );
+    fireEvent.click(screen.getByText('Back'));
     expect(screen.queryByText('Add text')).toBeNull();
     fireEvent.click(screen.getByText('Text'));
     expect(store().activeItemId).toBe(null);
@@ -168,9 +193,9 @@ describe('VideoEditor', () => {
     const { container } = render(<VideoEditor onBack={() => {}} />);
     addTextFromRail();
     fireEvent.click(clips(container)[0]);
-    fireEvent.click(screen.getByText('Duplicate'));
+    fireEvent.click(clipTool('Duplicate'));
     expect(store().items).toHaveLength(2);
-    fireEvent.click(screen.getByText('Delete'));
+    fireEvent.click(clipTool('Delete'));
     expect(store().items).toHaveLength(1);
     expect(store().activeItemId).toBe(null);
   });
@@ -183,7 +208,7 @@ describe('VideoEditor', () => {
     act(() => { store().updateItem(b.id, { startMs: 4000, endMs: 6000 }); store().setActiveItem(null); });
     // Select on the first clip's pill, then Shift-click the second.
     fireEvent.click(clips(container)[0]);
-    fireEvent.click(screen.getByText('Select'));
+    fireEvent.click(clipTool('Select'));
     fireEvent.click(clips(container)[1], { shiftKey: true });
     expect(store().selectedIds).toEqual([a.id, b.id]);
     expect(screen.getByText('2 selected')).toBeTruthy();
@@ -228,7 +253,7 @@ describe('VideoEditor', () => {
     act(() => store().addItem({ type: 'video', url: 'a.mp4', durationMs: 2000 }));
     const { container } = render(<VideoEditor onBack={() => {}} />);
     fireEvent.click(clips(container)[0]);
-    fireEvent.click(screen.getByText('1×'));
+    fireEvent.click(clipTool('1×'));
     fireEvent.click(screen.getByRole('radio', { name: '1.5×' }));
     expect(store().items[0]).toMatchObject({ playbackRate: 1.5 });
     expect(store().items[0].endMs).toBeCloseTo(2000 / 1.5);
@@ -280,10 +305,10 @@ describe('VideoEditor', () => {
     fireEvent.click(within(screen.getByRole('toolbar', { name: 'Clip tools' })).getByText('Edit'));
     fireEvent.change(screen.getByPlaceholderText('Type your text'), { target: { value: 'WHEN IT WORKS' } });
     closeSheet();
-    fireEvent.click(screen.getByText('Size'));
+    fireEvent.click(clipTool('Size'));
     fireEvent.change(screen.getByRole('slider'), { target: { value: '150' } });
     closeSheet();
-    fireEvent.click(screen.getByText('Align'));
+    fireEvent.click(clipTool('Align'));
     fireEvent.click(screen.getByRole('radio', { name: 'Right' }));
     expect(store().items[0]).toMatchObject({ text: 'WHEN IT WORKS', fontSize: 150, align: 'right' });
   });
@@ -292,7 +317,7 @@ describe('VideoEditor', () => {
     act(() => store().addItem({ type: 'video', url: 'a.mp4', durationMs: 2000 }));
     const { container } = render(<VideoEditor onBack={() => {}} />);
     fireEvent.click(clips(container)[0]);
-    fireEvent.click(screen.getByText('Green screen'));
+    fireEvent.click(clipTool('Green screen'));
     expect(store().items[0].chromaKey).toEqual({ color: 'auto', similarity: 0.22, blend: 0.08 });
     const [strength, edges] = screen.getAllByRole('slider');
     fireEvent.change(strength, { target: { value: '30' } });
@@ -404,7 +429,8 @@ describe('VideoEditor', () => {
     const { container } = render(<VideoEditor onBack={() => {}} />);
     fireEvent.click(clips(container)[0]);
     act(() => store().setPlayhead(1500));
-    await act(async () => { fireEvent.click(screen.getByText('Freeze')); });
+    const freeze = clipTool('Freeze');
+    await act(async () => { fireEvent.click(freeze); });
     const still = store().items.find((i) => i.isFreeze);
     expect(still).toMatchObject({ url: 'blob:still', startMs: 1500, endMs: 3000 });
     expect(store().busy).toBe(null);
@@ -414,9 +440,10 @@ describe('VideoEditor', () => {
     act(() => store().addItem({ type: 'video', url: 'a.mp4', durationMs: 2000 }));
     const { container } = render(<VideoEditor onBack={() => {}} />);
     fireEvent.click(clips(container)[0]);
-    await act(async () => { fireEvent.click(screen.getByText('Reverse')); });
+    const reverse = clipTool('Reverse');
+    await act(async () => { fireEvent.click(reverse); });
     expect(store().items[0]).toMatchObject({ url: 'blob:rev', effect: 'reverse' });
-    fireEvent.click(screen.getByText('Reverse'));
+    fireEvent.click(clipTool('Reverse'));
     expect(store().items[0]).toMatchObject({ url: 'a.mp4', effect: null });
   });
 
@@ -424,7 +451,7 @@ describe('VideoEditor', () => {
     act(() => store().addItem({ type: 'video', url: 'a.mp4', durationMs: 4000 }));
     const { container } = render(<VideoEditor onBack={() => {}} />);
     fireEvent.click(clips(container)[0]);
-    fireEvent.click(screen.getByText('Punch'));
+    fireEvent.click(clipTool('Punch'));
     act(() => store().setPlayhead(1200));
     fireEvent.click(screen.getByText('Punch at playhead'));
     act(() => store().setPlayhead(2500));
@@ -446,7 +473,7 @@ describe('VideoEditor', () => {
     const { container } = render(<VideoEditor onBack={() => {}} />);
     expect(drawOrder(store().items).map((i) => i.type)).toEqual(['sticker', 'text']);
     fireEvent.click(clips(container).find((c) => c.className.includes('vt-clip--sticker')));
-    fireEvent.click(screen.getByText('Bring forward'));
+    fireEvent.click(clipTool('Bring forward'));
     expect(drawOrder(store().items).map((i) => i.type)).toEqual(['text', 'sticker']);
   });
 
@@ -454,14 +481,14 @@ describe('VideoEditor', () => {
     act(() => store().addItem({ type: 'video', url: 'a.mp4', durationMs: 2000 }));
     const { container } = render(<VideoEditor onBack={() => {}} />);
     fireEvent.click(clips(container)[0]);
-    fireEvent.click(screen.getByText('Filters'));
+    fireEvent.click(clipTool('Filters'));
     fireEvent.click(screen.getByText('Vintage'));
     const [bright] = screen.getAllByRole('slider');
     fireEvent.change(bright, { target: { value: '30' } });
     expect(store().items[0].filter).toEqual({ preset: 'vintage', brightness: 30 });
     closeSheet();
     // The pill's Filters button now says which preset is on.
-    expect(screen.getByRole('toolbar', { name: 'Clip tools' }).textContent).toContain('Vintage');
+    expect(pill().textContent).toContain('Vintage');
   });
 
   it('records a voiceover over the video and drops it where it started', async () => {
@@ -490,7 +517,7 @@ describe('VideoEditor', () => {
     fireEvent.click(first);
     expect(screen.queryByText('Transition')).toBeNull();
     fireEvent.click(second);
-    fireEvent.click(screen.getByText('Transition'));
+    fireEvent.click(clipTool('Transition'));
     fireEvent.click(screen.getByText('Fade'));
     expect(store().items[1].transitionIn).toEqual({ type: 'fade', durationMs: 500 });
     expect(container.querySelector('.vt-transition-mark')).toBeTruthy();

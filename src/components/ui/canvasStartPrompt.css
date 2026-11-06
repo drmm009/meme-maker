@@ -1,0 +1,147 @@
+/* CanvasStartPrompt: fills the canvas box it sits in. --ink is the canvas's text colour (rgb). */
+.ui-start {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  padding: 10px;
+  container-type: size;
+  --ink: 255, 255, 255;
+  color: rgb(var(--ink));
+  font-family: inherit;
+  pointer-events: none;
+  animation: ui-start-in 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.ui-start.is-ink-dark { --ink: 17, 17, 20; }
+
+.ui-start-zone {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  border: 1.5px dashed rgba(var(--ink), 0.24);
+  border-radius: 18px;
+}
+
+.ui-start-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: calc(100% - 24px);
+  text-align: center;
+}
+.ui-start-body button { pointer-events: auto; }
+
+.ui-start-primary {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 12px;
+  border: none;
+  border-radius: var(--ui-radius-md, 16px);
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.ui-start-plus {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: var(--ui-accent, #ff5a36);
+  color: #fff;
+  box-shadow: 0 0 0 6px rgba(255, 90, 54, 0.16), 0 8px 20px -6px rgba(255, 90, 54, 0.55);
+  transition: transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.ui-start-plus-badge {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #fff;
+  color: var(--ui-accent, #ff5a36);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+}
+.ui-start-label {
+  font-size: var(--ui-fs-headline, 17px);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.ui-start-primary:active .ui-start-plus { transform: scale(0.93); }
+
+.ui-start-hint {
+  max-width: 28ch;
+  margin: 2px 0 0;
+  color: rgba(var(--ink), 0.6);
+  font-size: var(--ui-fs-footnote, 13px);
+  line-height: 1.4;
+}
+
+.ui-start-pills {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 14px;
+}
+.ui-start-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 38px;
+  padding: 0 14px;
+  border: none;
+  border-radius: 999px;
+  background: rgba(var(--ink), 0.07);
+  color: inherit;
+  font: inherit;
+  font-size: var(--ui-fs-footnote, 13px);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s, transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.ui-start-pill:active { transform: scale(0.96); }
+@media (hover: hover) {
+  .ui-start-pill:hover { background: rgba(var(--ink), 0.12); }
+  .ui-start-primary:hover .ui-start-plus { transform: scale(1.04); }
+}
+.ui-start-primary:focus-visible,
+.ui-start-pill:focus-visible { outline: 2px solid var(--ui-accent, #ff5a36); outline-offset: 2px; }
+
+/* Shorter canvases keep clear of the top and bottom captions: 4:3 on a phone drops the hint and
+   shrinks the button; 16:9 puts the button beside its label. */
+@container (max-height: 260px) {
+  .ui-start-hint { display: none; }
+  .ui-start-primary { gap: 8px; }
+  .ui-start-plus { width: 48px; height: 48px; }
+  .ui-start-pills { margin-top: 10px; }
+  .ui-start-pill { min-height: 34px; padding: 0 12px; }
+}
+@container (max-height: 190px) {
+  .ui-start-primary { flex-direction: row; gap: 10px; padding: 2px 8px; }
+  .ui-start-plus { width: 40px; height: 40px; box-shadow: 0 0 0 4px rgba(255, 90, 54, 0.16); }
+  .ui-start-plus svg { width: 19px; height: 19px; }
+  .ui-start-plus-badge { width: 17px; height: 17px; right: -3px; bottom: -3px; }
+  .ui-start-plus-badge svg { width: 10px; height: 10px; }
+  .ui-start-hint { display: none; }
+  .ui-start-pills { margin-top: 8px; }
+  .ui-start-pill { min-height: 34px; padding: 0 12px; }
+}
+
+@keyframes ui-start-in {
+  from { opacity: 0; transform: scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ui-start { animation: none; }
+  .ui-start-plus, .ui-start-pill { transition: none; }
+}
