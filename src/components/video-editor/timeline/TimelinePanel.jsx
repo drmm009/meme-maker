@@ -136,11 +136,11 @@ export default function TimelinePanel({ onAddVideo, onAdd }) {
                   {empty && section.id !== 'video' ? (
                     <button type="button" className="vt-section-icon" aria-label={section.add} title={section.add}
                       onClick={(e) => { e.stopPropagation(); onAdd?.(section.id); }}>
-                      <Icon size={17} strokeWidth={2} aria-hidden="true" />
+                      <Icon size={15} strokeWidth={1.9} aria-hidden="true" />
                     </button>
                   ) : (
                     <div className="vt-section-icon" role="img" aria-label={section.label} onClick={(e) => e.stopPropagation()}>
-                      <Icon size={17} strokeWidth={2} aria-hidden="true" />
+                      <Icon size={15} strokeWidth={1.9} aria-hidden="true" />
                     </div>
                   )}
                   <div className="vt-section-lines">
