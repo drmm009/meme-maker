@@ -1,5 +1,5 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { Eye, EyeOff, Plus, Volume2, VolumeX, Film } from 'lucide-react';
+import { Plus, Film } from 'lucide-react';
 import { useShallow } from 'zustand/react/shallow';
 import { useEditorStore } from '../../../store/useVideoEditorStore';
 import { DEFAULT_PX_PER_SEC, clampZoom, getRulerMarks, msToPx, pxToMs, timelineRows } from './timelineMath';
@@ -104,8 +104,6 @@ export default function TimelinePanel({ onAddVideo }) {
   const rows = timelineRows(items);
   const videos = items.filter((i) => i.type === 'video');
   const lastVideo = videos.length ? videos.reduce((a, b) => (b.endMs > a.endMs ? b : a)) : null;
-  // Row buttons act on every clip in the row (the captions row holds them all).
-  const toggle = (row, key) => row.forEach((clip) => useEditorStore.getState().updateItem(clip.id, { [key]: !row[0][key] }));
 
   return (
     <div className="vt-timeline">
@@ -129,28 +127,6 @@ export default function TimelinePanel({ onAddVideo }) {
               const item = row[0];
               return (
               <div key={item.autoCaption ? 'captions' : item.id} className={`vt-row vt-row--${item.type}`}>
-                <div className="vt-row-head" style={{ left: pad - 10 }} onClick={(e) => e.stopPropagation()}>
-                  {item.type !== 'audio' && (
-                    <button
-                      type="button"
-                      className={`vt-head-btn${item.hidden ? ' is-off' : ''}`}
-                      onClick={() => toggle(row, 'hidden')}
-                      aria-label={item.autoCaption ? (item.hidden ? 'Show captions' : 'Hide captions') : (item.hidden ? 'Show clip' : 'Hide clip')}
-                    >
-                      {item.hidden ? <EyeOff size={15} /> : <Eye size={15} />}
-                    </button>
-                  )}
-                  {(item.type === 'video' || item.type === 'audio') && (
-                    <button
-                      type="button"
-                      className={`vt-head-btn${item.muted ? ' is-off' : ''}`}
-                      onClick={() => toggle(row, 'muted')}
-                      aria-label={item.muted ? 'Unmute clip' : 'Mute clip'}
-                    >
-                      {item.muted ? <VolumeX size={15} /> : <Volume2 size={15} />}
-                    </button>
-                  )}
-                </div>
                 {row.map((clip) => (
                   <TimelineClip
                     key={clip.id}

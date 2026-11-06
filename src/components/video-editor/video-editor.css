@@ -294,30 +294,6 @@
 .vt-row { position: relative; height: 40px; flex-shrink: 0; }
 .vt-row--video { height: 56px; }
 
-.vt-row-head {
-  position: absolute;
-  top: 0;
-  height: 100%;
-  transform: translateX(-100%);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.vt-head-btn {
-  position: relative;
-  width: 34px;
-  height: 34px;
-  border: none;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  background: var(--vt-fill);
-  color: rgba(255, 255, 255, 0.75);
-  cursor: pointer;
-}
-.vt-head-btn.is-off { color: var(--vt-accent); background: var(--vt-accent-soft); }
-/* Tap areas a thumb can hit (44px) around the small round buttons. */
-.vt-head-btn::after { content: ''; position: absolute; inset: -5px; }
 
 .vt-clip {
   position: absolute;
@@ -343,7 +319,7 @@
   cursor: grab;
   touch-action: none;
 }
-.vt-clip.is-hidden { opacity: 0.35; }
+.vt-clip.is-hidden::before { content: ''; position: absolute; inset: 0; z-index: 1; background: rgba(0, 0, 0, 0.62); pointer-events: none; }
 /* Picked with others (long press): an orange ring and a tick, dragged as a group. */
 .vt-clip.is-picked {
   z-index: 2;
@@ -426,6 +402,41 @@
   color: #fff;
   pointer-events: none;
 }
+
+.vt-clip.is-selected .vt-clip-badge { right: 22px; }
+/* Show/hide: a small round button at the clip's start, kept in view (sticky, as the clip's name) while
+   any of the clip is, past the trim handle while selected; the name moves over for it. */
+.vt-clip-eye-lane {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  padding: 0 6px;
+  pointer-events: none;
+}
+.vt-clip.is-selected .vt-clip-eye-lane { padding: 0 22px; }
+.vt-clip.has-eye .vt-clip-labels { padding-left: 42px; }
+.vt-clip.has-eye .vt-clip-label { left: 42px; }
+.vt-clip.is-selected.has-eye .vt-clip-labels { padding-left: 56px; }
+.vt-clip-eye {
+  position: sticky;
+  left: 6px;
+  flex: none;
+  pointer-events: auto;
+  width: 26px;
+  height: 26px;
+  border: none;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  cursor: pointer;
+}
+.vt-clip-eye.is-off { background: var(--vt-accent); }
+/* A tap area a thumb can hit, inside the row. */
+.vt-clip-eye::after { content: ''; position: absolute; inset: -7px; }
 
 .vt-clip-handle {
   position: absolute;

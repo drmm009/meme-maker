@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Music, VolumeX } from 'lucide-react';
+import { Eye, EyeOff, Music, VolumeX } from 'lucide-react';
 import { useEditorStore } from '../../../store/useVideoEditorStore';
 import { findSnap, pxToMs } from './timelineMath';
 import { filmstripTiles, loadFilmstrip } from '../../../utils/filmstrip';
@@ -176,9 +176,10 @@ export default function TimelineClip({ item, left, width, selected, picked = fal
     window.addEventListener('pointercancel', onUp);
   };
 
+  const hasEye = item.type !== 'audio' && (selected || item.hidden);
   return (
     <div
-      className={`vt-clip vt-clip--${item.type}${selected ? ' is-selected' : ''}${picked ? ' is-picked' : ''}${item.hidden ? ' is-hidden' : ''}`}
+      className={`vt-clip vt-clip--${item.type}${selected ? ' is-selected' : ''}${picked ? ' is-picked' : ''}${item.hidden ? ' is-hidden' : ''}${hasEye ? ' has-eye' : ''}`}
       style={{ left, width, ...(thumb ? { backgroundImage: `url(${thumb})` } : {}) }}
       data-clip-id={item.id}
       onClick={(e) => {
@@ -214,6 +215,27 @@ export default function TimelineClip({ item, left, width, selected, picked = fal
       )}
       {item.muted && (item.type === 'video' || item.type === 'audio') && (
         <span className="vt-clip-badge" aria-label="Muted"><VolumeX size={11} /></span>
+      )}
+      {/* Show/hide, at the clip's start: on the selected clip, and always on a hidden one so it can
+          come back. Sound has nothing to show. A caption's acts on all the captions (they share a row). */}
+      {hasEye && (
+        <div className="vt-clip-eye-lane">
+        <button
+          type="button"
+          className={`vt-clip-eye${item.hidden ? ' is-off' : ''}`}
+          aria-label={item.autoCaption ? (item.hidden ? 'Show captions' : 'Hide captions') : (item.hidden ? 'Show clip' : 'Hide clip')}
+          aria-pressed={Boolean(item.hidden)}
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.stopPropagation();
+            const store = useEditorStore.getState();
+            const clips = item.autoCaption ? store.items.filter((i) => i.autoCaption) : [item];
+            clips.forEach((c) => store.updateItem(c.id, { hidden: !item.hidden }));
+          }}
+        >
+          {item.hidden ? <EyeOff size={14} /> : <Eye size={14} />}
+        </button>
+        </div>
       )}
       {selected && (
         <>

@@ -249,15 +249,21 @@ describe('VideoEditor', () => {
     expect(screen.queryByText(/selected$/)).toBeNull();
   });
 
-  it('hides a clip with its eye button and mutes video clips', () => {
+  it('hides a clip with the eye on the selected clip, which stays on it while hidden', () => {
     act(() => store().addItem({ type: 'video', url: 'a.mp4', durationMs: 2000 }));
     const { container } = render(<VideoEditor onBack={() => {}} />);
+    // No row buttons beside the clips; the eye shows on the selected clip.
+    expect(screen.queryByLabelText('Hide clip')).toBeNull();
+    expect(screen.queryByLabelText('Mute clip')).toBeNull();
+    fireEvent.click(clips(container)[0]);
     fireEvent.click(screen.getByLabelText('Hide clip'));
     expect(store().items[0].hidden).toBe(true);
+    expect(store().activeItemId).toBe(store().items[0].id);
+    act(() => store().setActiveItem(null));
     expect(clips(container)[0].className).toContain('is-hidden');
-    fireEvent.click(screen.getByLabelText('Mute clip'));
-    expect(store().items[0].muted).toBe(true);
-    expect(screen.getByLabelText('Unmute clip')).toBeTruthy();
+    fireEvent.click(screen.getByLabelText('Show clip'));
+    expect(store().items[0].hidden).toBe(false);
+    expect(screen.queryByLabelText('Hide clip')).toBeNull();
   });
 
   it('sets video speed and keeps the clip covering the same footage', () => {
