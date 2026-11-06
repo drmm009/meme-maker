@@ -29,11 +29,18 @@ const isBlobUrl = (u: unknown): u is string => typeof u === 'string' && u.starts
 export const projectFromState = (state: Partial<VideoProject> & Record<string, unknown>): VideoProject =>
   Object.fromEntries(PROJECT_KEYS.filter((k) => state[k] !== undefined).map((k) => [k, state[k]])) as unknown as VideoProject;
 
-// blob: URLs the project depends on (clip sources and generated thumbnails).
+// A clip's fields holding files: its source, generated thumbnail, the picture before Cut out or
+// Face swap, and a photo's subject for background blur.
+const FILE_KEYS = ['url', 'thumbnailUrl', 'originalUrl', 'faceSwapOf', 'subjectUrl'] as const;
+// Fields naming one of those files (the picture a subject was cut from).
+const REF_KEYS = ['subjectOf'] as const;
+
+// blob: URLs the project depends on.
 export const collectBlobUrls = (items: Clip[]): string[] => {
   const urls = new Set<string>();
   for (const item of items) {
-    for (const u of ['url' in item ? item.url : undefined, 'thumbnailUrl' in item ? item.thumbnailUrl : undefined, 'originalUrl' in item ? item.originalUrl : undefined]) {
+    for (const key of FILE_KEYS) {
+      const u = (item as unknown as Record<string, unknown>)[key];
       if (isBlobUrl(u)) urls.add(u);
     }
   }
@@ -46,12 +53,11 @@ export const restoreProject = (draft: Pick<VideoDraft, 'project'>, media: Record
   for (const [key, blob] of Object.entries(media)) if (blob) fresh.set(key, makeUrl(blob));
   const fix = <T>(u: T): T | string | null => (isBlobUrl(u) ? fresh.get(u) ?? null : u);
   const items = (draft.project.items || [])
-    .map((i) => ({
-      ...i,
-      ...('url' in i ? { url: fix(i.url) } : {}),
-      ...('thumbnailUrl' in i ? { thumbnailUrl: fix(i.thumbnailUrl) } : {}),
-      ...('originalUrl' in i ? { originalUrl: fix(i.originalUrl) } : {}),
-    }) as Clip)
+    .map((i) => {
+      const fixed: Record<string, unknown> = { ...i };
+      for (const key of [...FILE_KEYS, ...REF_KEYS]) if (key in i) fixed[key] = fix((i as unknown as Record<string, unknown>)[key]);
+      return fixed as unknown as Clip;
+    })
     .filter((i) => i.type === 'text' || ('url' in i && i.url));
   return { ...draft.project, items };
 };

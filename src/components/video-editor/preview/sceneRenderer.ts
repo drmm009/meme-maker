@@ -19,6 +19,7 @@ import { effectsFor, hasEffects, processFrame } from './frameEffects';
 import type { EffectCanvases, FrameEffects } from './frameEffects';
 import { drawGifFrame } from './useGifFrames';
 import { hasStickerLook, stickerLookImage } from '../../../utils/stickerLook';
+import { blurSubjectUrl, hasPhotoPicture, photoNodeAttrs, photoPicture } from '../../../utils/photoLook';
 
 export interface SceneOptions {
   items: Clip[];
@@ -151,7 +152,8 @@ export async function createSceneRenderer({ items, width, height, aspect, backgr
         continue;
       }
       if (item.type === 'audio' || !item.url) continue;
-      const node = new Konva.Image({ ...mediaAttrs(item), image: undefined });
+      // A photo's frame is drawn by its node, as in the preview.
+      const node = new Konva.Image({ ...mediaAttrs(item), ...(item.type === 'image' ? photoNodeAttrs(item) : {}), image: undefined });
       layer.add(node);
       const entry: MediaEntry = { item, node, effects: effectsFor(item), canvases: { canvas: null, scratch: null } };
       if (item.type === 'video') {
@@ -172,8 +174,12 @@ export async function createSceneRenderer({ items, width, height, aspect, backgr
         const img = await loadImage(item.url);
         // Photos with a filter are processed once.
         const { ok } = hasEffects(entry.effects) ? processFrame(img, entry.effects, entry.canvases) : { ok: false };
-        // A sticker's die-cut border and shadow, as in the preview.
-        node.image(hasStickerLook(item) ? stickerLookImage(img, item) : ok && entry.canvases.canvas ? entry.canvases.canvas : img);
+        // A sticker's die-cut border and shadow, and a photo's filter and background blur, as in the preview.
+        const subjectUrl = item.type === 'image' ? blurSubjectUrl(item) : null;
+        const subject = subjectUrl ? await loadImage(subjectUrl).catch(() => null) : null;
+        node.image(hasStickerLook(item) ? stickerLookImage(img, item)
+          : hasPhotoPicture(item) ? photoPicture(img, item, subject)
+            : ok && entry.canvases.canvas ? entry.canvases.canvas : img);
       }
       // Its crop (videos and freeze frames set it each frame, with their zooms).
       applyPunch(node, 1, clipCrop(item));

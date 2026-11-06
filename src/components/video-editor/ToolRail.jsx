@@ -2,10 +2,10 @@ import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
   Type, Sticker, Smile, LayoutGrid, Image as ImageIcon, Film, Clapperboard, Music,
   Gauge, Volume2, VolumeX, Palette, RotateCw, Minimize, Crop, Maximize, Copy, Trash2,
-  Scissors, PencilLine, SlidersHorizontal, WandSparkles, Pipette, Sparkles, ImagePlay, PaintBucket, Zap, Snowflake, Rewind, Repeat, ZoomIn, BringToFront, SendToBack, Mic, ArrowRightLeft, Frame, Plus, Upload, Library, Laugh, SquarePlay, Captions, Expand, Blend, Scan, Eraser, FlipHorizontal2, FlipVertical2, Move, ListChecks, X, AtSign, Flag, Wand, AudioLines, Settings2, Layers, ChevronLeft, ScanFace, CaseSensitive, Baseline
+  Scissors, PencilLine, SlidersHorizontal, WandSparkles, Pipette, Sparkles, ImagePlay, PaintBucket, Zap, Snowflake, Rewind, Repeat, ZoomIn, BringToFront, SendToBack, Mic, ArrowRightLeft, Frame, Plus, Upload, Library, Laugh, SquarePlay, Captions, Expand, Blend, Scan, Eraser, FlipHorizontal2, FlipVertical2, Move, ListChecks, X, AtSign, Flag, Wand, AudioLines, Settings2, Layers, ChevronLeft, ScanFace, CaseSensitive, Baseline, Ellipsis
 } from 'lucide-react';
 import { FloatingToolbar, Sheet, ToolDock, ToolStrip } from '../ui';
-import { FiltersIcon } from '../editor/panels/editorIcons';
+import { BackgroundIcon, FiltersIcon } from '../editor/panels/editorIcons';
 import { useEditorStore, clipEffectBase, sourceTimeMs } from '../../store/useVideoEditorStore';
 import { clipOpacity } from '../../model/videoProject';
 import { clipCrop, isCropped } from '../../utils/clipCrop';
@@ -13,8 +13,12 @@ import CropPanel from './CropPanel';
 import FaceSwapPanel from './FaceSwapPanel';
 import { TextColorPanel, TextEditPanel, TextFontPanel, TextStylePanel } from './TextLookPanel';
 import { StickerDieCutAside, StickerDieCutPanel, StickerEditPanel, StickerFlipAside } from './StickerLookPanel';
+import { PhotoBackgroundPanel, PhotoFiltersPanel, PhotoMorePanel } from './PhotoLookPanel';
+import { photoFiltered, photoFiltersReset } from './photoFilters';
+import { isPhotoFramed } from '../../utils/photoLook';
 import { isGifSticker } from '../../utils/stickerLook';
-import { canCutOut, cutOutBackground } from '../../utils/cutOut';
+import { canCutOut } from '../../utils/cutOut';
+import { runJob, toggleCutOut } from './clipJobs';
 import { PHOTO_MOTIONS } from '../../utils/photoMotion';
 import { DEFAULT_END_CARD, WATERMARK_CORNERS, endCardClip, isEndCard, renderEndCard } from '../../utils/brandCard';
 import { captureFrame, renderClipEffect } from '../../utils/clipEffects';
@@ -80,44 +84,11 @@ const MIN_SPLIT_MS = 100;
 
 const update = (id, patch) => useEditorStore.getState().updateItem(id, patch);
 
-// Runs a slow clip job (FFmpeg render, frame grab) under a busy label; one at a time, never during export.
-const runJob = async (label, job) => {
-  const st = useEditorStore.getState();
-  if (st.busy || st.isExporting) return;
-  st.setBusy(label);
-  try {
-    await job();
-    useEditorStore.getState().setBusy(null);
-  } catch (e) {
-    console.warn('[clip effect]', e);
-    const message = e?.message || 'That didn’t work. Try again.';
-    useEditorStore.getState().setBusy(message);
-    setTimeout(() => { if (useEditorStore.getState().busy === message) useEditorStore.getState().setBusy(null); }, 3500);
-  }
-};
-
 // Freeze the frame under the playhead (the still is cut from what's showing, effects included).
 const freezeAtPlayhead = (item, playhead) => runJob('Freezing frame…', async () => {
   const url = await captureFrame(item.url, sourceTimeMs(item, Math.min(Math.max(playhead, item.startMs), item.endMs)));
   useEditorStore.getState().insertFreeze(item.id, playhead, url);
 });
-
-// Cut out toggle: removes a picture's background (keeping the original), or puts it back.
-const toggleCutOut = (item) => {
-  if (item.originalUrl) {
-    update(item.id, { url: item.originalUrl, originalUrl: null });
-    return;
-  }
-  runJob('Cutting out… the first time takes a while', async () => {
-    const url = await cutOutBackground(item.url);
-    const latest = useEditorStore.getState().items.find((i) => i.id === item.id);
-    if (!latest || latest.url !== item.url) {
-      URL.revokeObjectURL(url);
-      return;
-    }
-    update(item.id, { url, originalUrl: item.url });
-  });
-};
 
 // Reverse/boomerang toggle: tapping the active effect switches it off.
 const toggleClipEffect = (item, effect) => {
@@ -686,6 +657,10 @@ const SHEETS = {
   // A sticker's, as the image editor's (StickerLookPanel); `Aside` goes beside the heading.
   sticker: { title: 'Sticker', Icon: SlidersHorizontal, Panel: StickerEditPanel, Aside: StickerFlipAside },
   diecut: { title: 'Die-cut', Icon: Sticker, Panel: StickerDieCutPanel, Aside: StickerDieCutAside },
+  // A photo's, as the image editor's (PhotoLookPanel); `action` is the heading's button.
+  photobg: { title: 'Background', Icon: BackgroundIcon, Panel: PhotoBackgroundPanel },
+  photofilter: { title: 'Filters', Icon: FiltersIcon, Panel: PhotoFiltersPanel, action: photoFiltersReset, tall: true },
+  photomore: { title: 'Photo', Icon: Ellipsis, Panel: PhotoMorePanel },
   animation: { title: 'Animate', Icon: Sparkles, Panel: AnimationPanel },
   speed: { title: 'Speed', Icon: Gauge, Panel: SpeedPanel },
   place: { title: 'Fit to canvas', Icon: Expand, Panel: PlacePanel },
@@ -739,6 +714,17 @@ function clipTools(item, { sheet, toggle, playhead, items }) {
     tools.push({ id: 'edit', label: 'Edit', title: 'Size, opacity, shadow and flip', Icon: SlidersHorizontal, ...opens('sticker') });
     if (!isGifSticker(item)) tools.push({ id: 'diecut', label: 'Die-cut', title: item.dieCut ? 'Die-cut border (on)' : 'Add die-cut border', Icon: Sticker, ...opens('diecut', Boolean(item.dieCut)) });
   }
+  if (item.type === 'image') {
+    // As the image editor's photo bar: Face swap, Background, Filters and More (mirror, crop,
+    // replace and the look).
+    const more = Boolean(item.flipX || item.flipY || isCropped(clipCrop(item)) || isPhotoFramed(item) || clipOpacity(item) < 1);
+    tools.push(
+      { id: 'faceswap', label: 'Face swap', title: 'Face swap with AI', Icon: ScanFace, ...opens('faceswap', Boolean(item.faceSwapOf)) },
+      { id: 'background', label: 'Background', title: 'Background blur and background removal', Icon: BackgroundIcon, ...opens('photobg', (item.bgBlur || 0) > 0 || Boolean(item.originalUrl)) },
+      { id: 'filter', label: 'Filters', Icon: FiltersIcon, ...opens('photofilter', photoFiltered(item)) },
+      { id: 'more', label: 'More', title: 'More: mirror, crop, replace, look', Icon: Ellipsis, ...opens('photomore', more) },
+    );
+  }
   if (item.type === 'video') {
     const rate = item.playbackRate || 1;
     const insideClip = playhead >= item.startMs && playhead <= item.endMs;
@@ -768,15 +754,16 @@ function clipTools(item, { sheet, toggle, playhead, items }) {
       { id: 'mute', group, label: item.muted ? 'Unmute' : 'Mute', Icon: item.muted ? VolumeX : Volume2, active: Boolean(item.muted), onClick: () => update(item.id, { muted: !item.muted }) },
     );
   }
-  if (item.type === 'image' || item.type === 'video') {
+  if (item.type === 'video') {
     const preset = FILTER_PRESETS.find((p) => p.id === (item.filter?.preset ?? null));
     const filtered = Boolean(item.filter && (item.filter.preset || item.filter.brightness || item.filter.contrast || item.filter.saturation));
-    tools.push(
-      { id: 'filter', group: 'adjust', label: filtered && preset?.id ? preset.label : 'Filters', Icon: FiltersIcon, ...opens('filter', filtered) },
-      { id: 'place', group: 'adjust', label: 'Fit', title: 'Fit, fill or stretch to the canvas', Icon: Expand, ...opens('place') },
-    );
+    tools.push({ id: 'filter', group: 'adjust', label: filtered && preset?.id ? preset.label : 'Filters', Icon: FiltersIcon, ...opens('filter', filtered) });
   }
-  if (item.type === 'image' || item.type === 'video' || item.type === 'sticker') {
+  if (item.type === 'image' || item.type === 'video') {
+    tools.push({ id: 'place', group: 'adjust', label: 'Fit', title: 'Fit, fill or stretch to the canvas', Icon: Expand, ...opens('place') });
+  }
+  // A photo's crop and flips are in its More.
+  if (item.type === 'video' || item.type === 'sticker') {
     tools.push(
       { id: 'crop', group: 'adjust', label: 'Crop', Icon: Crop, ...opens('crop', isCropped(clipCrop(item))) },
       { id: 'flip', group: 'adjust', label: 'Flip', Icon: FlipHorizontal2, ...opens('flip', Boolean(item.flipX || item.flipY)) },
@@ -786,14 +773,15 @@ function clipTools(item, { sheet, toggle, playhead, items }) {
     const motion = PHOTO_MOTIONS.find((m) => m.id === (item.motion || null));
     tools.push({ id: 'motion', label: item.motion ? motion.label : 'Motion', title: 'Photo motion', Icon: Move, ...opens('motion', Boolean(item.motion)) });
   }
-  if (canCutOut(item) || item.originalUrl) {
+  // A photo's is its Background's Remove.
+  if (item.type === 'sticker' && (canCutOut(item) || item.originalUrl)) {
     tools.push({ id: 'cutout', group: 'adjust', label: 'Cut out', title: item.originalUrl ? 'Put the background back' : 'Remove the background', Icon: Eraser, active: Boolean(item.originalUrl), onClick: () => toggleCutOut(item) });
   }
   if (item.type === 'image' || item.type === 'sticker') {
     tools.push({ id: 'rotate', group: 'adjust', label: 'Rotate', Icon: RotateCw, onClick: () => update(item.id, rotateAboutCenter(item, ((item.rotation || 0) + 90) % 360)) });
   }
-  // A text's opacity is in its Colour sheet, a sticker's in its Edit.
-  if (item.type === 'image' || item.type === 'video') {
+  // A text's opacity is in its Colour sheet, a sticker's in its Edit, a photo's in its More.
+  if (item.type === 'video') {
     const opacity = clipOpacity(item);
     tools.push({ id: 'opacity', group: 'adjust', label: opacity < 1 ? `${Math.round(opacity * 100)}%` : 'Opacity', title: 'Opacity', Icon: Blend, ...opens('opacity', opacity < 1) });
   }
@@ -960,10 +948,11 @@ export default function ToolRail({ onAdd }) {
         )}
         {spec ? (
           <Sheet key={sheet} title={spec.title} Icon={spec.Icon} onClose={() => setSheet(null)} className="vt-sheet"
-            aside={spec.Aside && activeItem ? <spec.Aside item={activeItem} /> : undefined}>
+            aside={spec.Aside && activeItem ? <spec.Aside item={activeItem} /> : undefined}
+            action={spec.action && activeItem ? spec.action(activeItem) : undefined}>
             {spec.sources
               ? <SourcesPanel sources={spec.sources} onPick={(kind) => { setSheet(null); onAdd(kind); }} />
-              : <spec.Panel item={activeItem} onMore={() => { setSheet(null); onAdd('sounds'); }} />}
+              : <spec.Panel item={activeItem} onMore={() => { setSheet(null); onAdd('sounds'); }} onOpen={setSheet} />}
           </Sheet>
         ) : (
           <ToolDock ariaLabel="Sections" items={DOCK} active={activeItem || picked.length ? null : tab} onSelect={openSection} />

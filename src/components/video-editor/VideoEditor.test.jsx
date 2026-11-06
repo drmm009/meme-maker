@@ -340,6 +340,37 @@ describe('VideoEditor', () => {
     expect(store().items[0].dieCut).toBe(false);
   });
 
+  it('gives a photo the image editor’s photo bar: filters and the look in More', () => {
+    act(() => store().addItem({ type: 'image', url: 'a.png', durationMs: 2000, width: 200, height: 100, x: 100, y: 100 }));
+    const { container } = render(<VideoEditor onBack={() => {}} />);
+    fireEvent.click(clips(container)[0]);
+    const main = screen.getByRole('toolbar', { name: 'Clip tools' });
+    expect([...main.querySelectorAll('button')].map((b) => b.textContent || b.getAttribute('aria-label')))
+      .toEqual(['Face swap', 'Background', 'Filters', 'More', 'Adjust', 'Motion', 'Split', 'Arrange', 'Delete']);
+    fireEvent.click(clipTool('Adjust'));
+    expect([...pill().querySelectorAll('button')].map((b) => b.textContent)).toEqual(['Back', 'Fit', 'Rotate']);
+    fireEvent.click(clipTool('Back'));
+
+    fireEvent.click(clipTool('Filters'));
+    fireEvent.click(screen.getByRole('button', { name: '90s Vintage' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'Adjust' }));
+    fireEvent.change(screen.getByRole('slider', { name: 'Warmth' }), { target: { value: '40' } });
+    expect(store().items[0]).toMatchObject({ filterId: 'vintage', filters: { sepia: 35, warmth: 40 } });
+    fireEvent.click(screen.getByRole('button', { name: 'Reset' }));
+    expect(store().items[0]).toMatchObject({ filterId: null, filters: null });
+    closeSheet();
+
+    fireEvent.click(within(pill()).getByRole('button', { name: /^More/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Mirror' }));
+    fireEvent.change(screen.getByRole('slider', { name: 'Corner rounding' }), { target: { value: '0.5' } });
+    fireEvent.change(screen.getByRole('slider', { name: 'Border width' }), { target: { value: '8' } });
+    fireEvent.click(screen.getByRole('radio', { name: '#000000' }));
+    expect(store().items[0]).toMatchObject({ flipX: true, cornerRadius: 0.5, borderWidth: 8, borderColor: '#000000' });
+    // Crop opens the clip's crop sheet.
+    fireEvent.click(screen.getByRole('button', { name: 'Crop' }));
+    expect(screen.getByRole('dialog', { name: 'Crop' })).toBeTruthy();
+  });
+
   it('turns green-screen removal on, tunes it and turns it off', () => {
     act(() => store().addItem({ type: 'video', url: 'a.mp4', durationMs: 2000 }));
     const { container } = render(<VideoEditor onBack={() => {}} />);

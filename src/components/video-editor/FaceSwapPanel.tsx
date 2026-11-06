@@ -6,13 +6,16 @@ import { captureFrame } from '../../utils/clipEffects';
 import { FACE_SWAP_MAX_SECONDS, jobStatus, swapClipFaces } from '../../utils/videoFaceSwap';
 import type { SwapJob as Job, SwapQuality } from '../../utils/videoFaceSwap';
 import {
-  SAMPLE_FACES, detectFaces, getRememberedFace, loadPicture, readFile, rememberFace, serverReady,
+  SAMPLE_FACES, detectFaces, getRememberedFace, loadPicture, readFile, rememberFace, serverReady, swapFace,
 } from '../editor/faceSwap';
 import type { Picture, TargetFace } from '../editor/faceSwap';
 
 interface VideoClip {
   id: string;
+  type?: string;
   url: string;
+  // A photo's picture before its face swap.
+  faceSwapOf?: string | null;
   startMs: number;
   endMs: number;
   playbackRate?: number;
@@ -36,10 +39,15 @@ const clipSection = (item: VideoClip, playhead: number) => {
   return { url: base.url as string, startMs: base.trimStartMs as number, lengthMs, atMs };
 };
 
-// Face swap for a video clip (Effects → Face swap): whose face to put in, which person in the clip
-// (found in the frame at the playhead) or everyone, then a job on the face swap server swaps it
-// frame by frame. The swapped clip replaces this one as its effect (Remove puts the original back).
+// Face swap for a video clip (Effects → Face swap) or a photo (its bar's Face swap): whose face to
+// put in, which person (in a video, found in the frame at the playhead) or everyone, then the face
+// swap server swaps it: a video frame by frame in a job, its swapped clip replacing this one as its
+// effect; a photo in one go, as its picture. Remove puts the original back.
 export default function FaceSwapPanel({ item }: { item: VideoClip }) {
+  const isPhoto = item.type === 'image';
+  // The photo as it was before any swap: the one to swap into.
+  const photoBase = item.faceSwapOf || item.url;
+  const swapped = isPhoto ? Boolean(item.faceSwapOf) : item.effect === 'faceswap';
   const [server, setServer] = useState<Server>('checking');
   const [check, setCheck] = useState(0);
   const [face, setFace] = useState<Picture | null>(() => getRememberedFace() || SAMPLE_FACES[0]);
@@ -68,6 +76,13 @@ export default function FaceSwapPanel({ item }: { item: VideoClip }) {
     let alive = true;
     setPeople(null);
     (async () => {
+      if (isPhoto) {
+        const found = await detectFaces((await loadPicture(photoBase)).src);
+        if (!alive) return;
+        setPeople(found);
+        setWho((w) => (w === 'all' || found.length === 0 ? w : Math.min(w, found.length - 1)));
+        return;
+      }
       const still = await captureFrame(section.url, section.startMs + section.atMs);
       try {
         const found = await detectFaces((await loadPicture(still)).src);
@@ -79,7 +94,7 @@ export default function FaceSwapPanel({ item }: { item: VideoClip }) {
       }
     })().catch(() => alive && setPeople([]));
     return () => { alive = false; };
-  }, [server, look, section.url]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [server, look, isPhoto ? photoBase : section.url]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Closing the sheet stops a swap in progress.
   useEffect(() => () => abortRef.current?.abort(), []);
@@ -99,7 +114,41 @@ export default function FaceSwapPanel({ item }: { item: VideoClip }) {
     rememberFace(picked);
   };
 
+  // A photo: one request, its answer the photo's new picture (what was made from the old one goes).
+  const swapPhoto = async () => {
+    if (!face || job) return;
+    const controller = new AbortController();
+    abortRef.current = controller;
+    setMessage(null);
+    setJob({ phase: 'swap', startedAt: Date.now() });
+    try {
+      const [faceData, target] = await Promise.all([loadPicture(face.src), loadPicture(photoBase)]);
+      const image = await swapFace({ face: faceData.src, target: target.src, faces: who, strength });
+      const url = URL.createObjectURL(await (await fetch(image)).blob());
+      const latest = useEditorStore.getState().items.find((i: VideoClip) => i.id === item.id);
+      if (controller.signal.aborted || !latest || (latest.faceSwapOf || latest.url) !== photoBase) {
+        URL.revokeObjectURL(url);
+        return;
+      }
+      useEditorStore.getState().updateItem(item.id, { url, faceSwapOf: photoBase, originalUrl: null, subjectUrl: null, subjectOf: null, bgBlur: 0 });
+      setMessage({ text: 'Face swapped.' });
+    } catch (e) {
+      if (controller.signal.aborted) return;
+      const text = (e as Error)?.message === 'offline' ? 'Lost the face swap server. Is it still running?' : (e as Error)?.message || 'The swap didn’t work.';
+      setMessage({ text, error: true });
+    } finally {
+      if (abortRef.current === controller) {
+        abortRef.current = null;
+        setJob(null);
+      }
+    }
+  };
+
   const swap = async () => {
+    if (isPhoto) {
+      await swapPhoto();
+      return;
+    }
     if (!face || job) return;
     const controller = new AbortController();
     abortRef.current = controller;
@@ -175,7 +224,7 @@ export default function FaceSwapPanel({ item }: { item: VideoClip }) {
     );
   }
 
-  const status = job && jobStatus(job);
+  const status = job && (isPhoto ? { text: 'Swapping the face…', value: null } : jobStatus(job));
   const faces = [...(face && !SAMPLE_FACES.some((s) => s.src === face.src) ? [face] : []), ...SAMPLE_FACES];
   const noPeople = people !== null && people.length === 0;
 
@@ -203,7 +252,7 @@ export default function FaceSwapPanel({ item }: { item: VideoClip }) {
           {people === null ? (
             <span className="vt-swap-note">{server === 'checking' ? 'Connecting…' : 'Finding faces…'}</span>
           ) : noPeople ? (
-            <span className="vt-swap-note">No face at the playhead</span>
+            <span className="vt-swap-note">{isPhoto ? 'No face found' : 'No face at the playhead'}</span>
           ) : (
             <>
               {people.map((p) => (
@@ -220,21 +269,25 @@ export default function FaceSwapPanel({ item }: { item: VideoClip }) {
               )}
             </>
           )}
-          <button type="button" className="vt-swap-face vt-swap-add" aria-label="Find faces at the playhead" title="Find faces at the playhead"
-            disabled={Boolean(job) || server !== 'online'} onClick={() => setLook((n) => n + 1)}>
-            <ScanFace size={18} aria-hidden="true" />
-          </button>
+          {!isPhoto && (
+            <button type="button" className="vt-swap-face vt-swap-add" aria-label="Find faces at the playhead" title="Find faces at the playhead"
+              disabled={Boolean(job) || server !== 'online'} onClick={() => setLook((n) => n + 1)}>
+              <ScanFace size={18} aria-hidden="true" />
+            </button>
+          )}
         </div>
       </div>
 
-      <div className="vt-chip-row" role="radiogroup" aria-label="Quality">
-        {QUALITIES.map((q) => (
-          <button key={q.id} type="button" role="radio" aria-checked={quality === q.id} disabled={Boolean(job)}
-            className={`vt-chip${quality === q.id ? ' is-on' : ''}`} onClick={() => setQuality(q.id)}>
-            {q.label}
-          </button>
-        ))}
-      </div>
+      {!isPhoto && (
+        <div className="vt-chip-row" role="radiogroup" aria-label="Quality">
+          {QUALITIES.map((q) => (
+            <button key={q.id} type="button" role="radio" aria-checked={quality === q.id} disabled={Boolean(job)}
+              className={`vt-chip${quality === q.id ? ' is-on' : ''}`} onClick={() => setQuality(q.id)}>
+              {q.label}
+            </button>
+          ))}
+        </div>
+      )}
       <label className="vt-slider-row">
         <span>Strength</span>
         <input type="range" min="0.5" max="1" step="0.05" value={strength} disabled={Boolean(job)} onChange={(e) => setStrength(Number(e.target.value))} />
@@ -255,17 +308,21 @@ export default function FaceSwapPanel({ item }: { item: VideoClip }) {
         <div className="vt-captions-actions">
           <button type="button" className="vt-captions-go" onClick={swap} disabled={server !== 'online' || !face || people === null || noPeople}>
             <ScanFace size={16} strokeWidth={2.4} aria-hidden="true" />
-            {item.effect === 'faceswap' ? 'Swap again' : 'Swap face'}
+            {swapped ? 'Swap again' : 'Swap face'}
           </button>
-          {item.effect === 'faceswap' && (
-            <button type="button" className="vt-chip" onClick={() => { useEditorStore.getState().applyClipEffect(item.id, null); setMessage(null); }}>
+          {swapped && (
+            <button type="button" className="vt-chip" onClick={() => {
+              if (isPhoto) useEditorStore.getState().updateItem(item.id, { url: photoBase, faceSwapOf: null, originalUrl: null, subjectUrl: null, subjectOf: null, bgBlur: 0 });
+              else useEditorStore.getState().applyClipEffect(item.id, null);
+              setMessage(null);
+            }}>
               Remove
             </button>
           )}
         </div>
       )}
       <p className={`vt-panel-hint${message?.error ? ' is-error' : ''}`} role={message?.error ? 'alert' : undefined}>
-        {message?.text || (quality === 'fast'
+        {message?.text || (isPhoto ? 'Puts the face into the photo. Remove brings the original back.' : quality === 'fast'
           ? `Swaps the face on every 4th frame and follows it in between. Up to ${FACE_SWAP_MAX_SECONDS} seconds.`
           : `Swaps the face on every frame: smoothest, about 4 times slower. Up to ${FACE_SWAP_MAX_SECONDS} seconds.`)}
       </p>

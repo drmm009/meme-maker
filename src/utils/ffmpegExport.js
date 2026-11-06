@@ -12,6 +12,7 @@ import { audioExtension, createExportGraph, outputSize, textStills, visualSize }
 import { voiceSpans } from './ducking';
 import { drawTextClip, loadTextFonts } from './textBitmap';
 import { hasStickerLook, stickerLookPng } from './stickerLook';
+import { hasPhotoPicture, isPhotoFramed, photoLookFile } from './photoLook';
 
 let ffmpeg = null;
 let loadPromise = null;
@@ -223,8 +224,15 @@ const exportWithFFmpeg = async (items = [], durationMs = 7000, canvasAspectRatio
       const isGif = !isVideo && (item.isGif || isGifUrl(item.url));
 
       let fileData;
+      // A framed photo's box grows to hold its frame (photoLookFile).
+      let placed = item;
       try {
-        if (hasStickerLook(item)) {
+        if (item.type === 'image' && (hasPhotoPicture(item) || isPhotoFramed(item))) {
+          // Its filter, background blur and frame, drawn as in the preview.
+          const look = await photoLookFile(item);
+          fileData = look?.data;
+          if (look) placed = { ...item, ...look.patch };
+        } else if (hasStickerLook(item)) {
           // Its die-cut border and shadow, drawn as in the preview.
           fileData = await stickerLookPng(item.url, item);
         } else if (!isVideo && (item.url.startsWith('data:image/svg') || item.url.toLowerCase().endsWith('.svg'))) {
@@ -253,7 +261,7 @@ const exportWithFFmpeg = async (items = [], durationMs = 7000, canvasAspectRatio
           console.warn(`[FFmpeg Export] FFmpeg probe for audio failed:`, e);
         }
       }
-      graph.addVisual(item, { fileName, kind: isVideo ? 'video' : isGif ? 'gif' : 'still', hasAudio, ratio: konvaRatio, items });
+      graph.addVisual(placed, { fileName, kind: isVideo ? 'video' : isGif ? 'gif' : 'still', hasAudio, ratio: konvaRatio, items });
     };
 
     // Text goes in as full-canvas PNGs for exact fonts, stroke and rotation; animated text is a run

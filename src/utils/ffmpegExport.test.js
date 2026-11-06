@@ -40,6 +40,15 @@ vi.mock('./textBitmap', () => ({
   },
 }));
 
+// A photo's look is drawn by the browser: stand in for it, its frame growing the box by 10 each side.
+vi.mock('./photoLook', async (importOriginal) => ({
+  ...(await importOriginal()),
+  photoLookFile: async (item) => ({
+    data: new Uint8Array([1]),
+    patch: item.borderWidth ? { x: item.x - 10, y: item.y - 10, width: item.width * item.scaleX + 20, height: item.height * item.scaleY + 20, scaleX: 1, scaleY: 1, crop: null } : {},
+  }),
+}));
+
 // jsdom's canvas makes no PNGs: hand back a stand-in.
 HTMLCanvasElement.prototype.toBlob = function toBlob(done) { done(new Blob(['png'], { type: 'image/png' })); };
 
@@ -84,7 +93,7 @@ describe('exportVideoFFmpeg command', () => {
     const out = await run([
       { id: 'v1', type: 'video', url: 'blob:v1', startMs: 0, endMs: 3000, trimStartMs: 500, x: 0, y: 0, width: 800, height: 450, volume: 0.8, fadeInMs: 300, fadeOutMs: 300, filter: { preset: 'bw' }, punches: [1500] },
       { id: 'v2', type: 'video', url: 'blob:v2', startMs: 3000, endMs: 5000, x: 0, y: 0, width: 800, height: 450, playbackRate: 1.5, transitionIn: { type: 'fade', durationMs: 500 }, chromaKey: { color: '#00ff00', similarity: 0.3, blend: 0.1 } },
-      { id: 'p1', type: 'image', url: 'https://x.test/photo.png', startMs: 1000, endMs: 4000, x: 100, y: 50, width: 200, height: 150, scaleX: 1.2, scaleY: 1.2, filter: { preset: 'vintage', brightness: 20 } },
+      { id: 'p1', type: 'image', url: 'https://x.test/photo.png', startMs: 1000, endMs: 4000, x: 100, y: 50, width: 200, height: 150, scaleX: 1.2, scaleY: 1.2, filters: { brightness: 120 }, borderWidth: 6 },
       { id: 'g1', type: 'sticker', url: 'https://media.giphy.test/a.gif', isGif: true, startMs: 0, endMs: 5000, x: 600, y: 20, width: 120, height: 120 },
       { id: 't1', type: 'text', text: 'WHEN IT WORKS', startMs: 0, endMs: 5000, x: 100, y: 300, fontSize: 40, bgColor: 'black' },
       { id: 'a1', type: 'audio', url: 'blob:a1', mimeType: 'audio/webm', startMs: 1000, endMs: 2000, trimStartMs: 200, volume: 0.5 },

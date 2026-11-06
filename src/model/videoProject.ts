@@ -1,6 +1,7 @@
 // The video editor's project: the clips on its timeline and how a project is saved.
 // Positions and sizes are in the preview's 800-wide stage units; times are timeline milliseconds
 // unless a field says otherwise.
+import { resolveFilter } from '../utils/clipFilters';
 
 export type ClipType = 'video' | 'image' | 'sticker' | 'text' | 'audio';
 export type TextAnimation = 'pop' | 'shake' | 'typewriter';
@@ -108,7 +109,22 @@ export interface VideoClip extends ClipBase, Placed, Media {
 export interface ImageClip extends ClipBase, Placed {
   type: 'image';
   url: string;
-  filter?: ClipFilter | null;
+  // The look is the image editor's photo's, drawn by its painting (utils/photoLook): its filter
+  // (the image editor's filter values, and the preset they came from), background blur over the
+  // subject cut from `subjectOf`, rounded corners (0..1), a border and a drop shadow (sizes in stage
+  // units).
+  filters?: Record<string, number> | null;
+  filterId?: string | null;
+  bgBlur?: number;
+  subjectUrl?: string | null;
+  subjectOf?: string | null;
+  cornerRadius?: number;
+  borderWidth?: number;
+  borderColor?: string;
+  shadowSize?: number;
+  shadowColor?: string;
+  // The picture before Face swap (url is then the swapped one).
+  faceSwapOf?: string | null;
   // A freeze frame sitting in the main sequence (it can take transitions).
   isFreeze?: boolean;
   transitionIn?: Transition | null;
@@ -217,7 +233,7 @@ export interface VideoProject {
 
 // Saved projects carry this. Bump it when the saved shape changes, and teach
 // migrateVideoProject to upgrade the previous version.
-export const VIDEO_PROJECT_VERSION = 2;
+export const VIDEO_PROJECT_VERSION = 3;
 
 const CLIP_TYPES = new Set<ClipType>(['video', 'image', 'sticker', 'text', 'audio']);
 const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
@@ -240,7 +256,28 @@ export function migrateVideoProject(raw: unknown, version = 0): VideoProject | n
   const project = { ...raw } as unknown as VideoProject;
   const items = (raw.items as unknown[]).filter(isClip);
   // 1 -> 2: text takes the image editor's caption look (see upgradeText).
-  return { ...project, items: version < 2 ? items.map((c) => (c.type === 'text' ? upgradeText(c) : c)) : items };
+  const v2 = version < 2 ? items.map((c) => (c.type === 'text' ? upgradeText(c) : c)) : items;
+  // 2 -> 3: photos take the image editor's filters (see upgradePhotoFilter).
+  return { ...project, items: version < 3 ? v2.map((c) => (c.type === 'image' ? upgradePhotoFilter(c) : c)) : v2 };
+}
+
+// A version 2 photo's colour filter (a video filter preset and sliders) as the image editor's filter
+// values, the same amounts.
+export function upgradePhotoFilter(clip: ImageClip): ImageClip {
+  const { filter, ...rest } = clip as ImageClip & { filter?: ClipFilter | null };
+  const v = resolveFilter(filter);
+  if (!v) return rest;
+  const filters = {
+    brightness: Math.round(v.brightness * 100),
+    contrast: Math.round(v.contrast * 100),
+    saturation: Math.round(v.saturate * 100),
+    grayscale: 0,
+    sepia: Math.round(v.sepia * 100),
+    invert: 0,
+    hueRotate: Math.round(v.hue),
+    blur: 0,
+  };
+  return { ...rest, filters, filterId: 'original' };
 }
 
 // A version 1 text clip in version 2's terms, looking as close to before as the caption painter

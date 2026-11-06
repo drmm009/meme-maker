@@ -46,6 +46,21 @@ describe('migrateVideoProject', () => {
     expect(migrateVideoProject({ items: [video] }, 1)?.items).toEqual([video]);
   });
 
+  it('gives version 2 photos the image editor\'s filter values for their colour filter', () => {
+    const photo = { id: 'p', type: 'image', url: 'blob:p', startMs: 0, endMs: 1000 };
+    const old = [
+      { ...photo, id: 'bw', filter: { preset: 'bw' } },
+      { ...photo, id: 'up', filter: { preset: null, brightness: 20, saturation: -50 } },
+      { ...photo, id: 'none', filter: { preset: null } },
+    ];
+    const [bw, up, none] = migrateVideoProject({ items: old }, 2)!.items as unknown as Record<string, unknown>[];
+    expect(bw).toMatchObject({ filterId: 'original', filters: { saturation: 0, contrast: 110, brightness: 100 } });
+    expect(up).toMatchObject({ filters: { brightness: 110, contrast: 100, saturation: 50, sepia: 0 } });
+    expect(none).not.toHaveProperty('filters');
+    for (const p of [bw, up, none]) expect(p).not.toHaveProperty('filter');
+    expect(migrateVideoProject({ items: [video] }, 2)?.items).toEqual([video]);
+  });
+
   it('refuses drafts from a newer app version and things that aren\'t projects', () => {
     expect(migrateVideoProject({ items: [video] }, VIDEO_PROJECT_VERSION + 1)).toBeNull();
     expect(migrateVideoProject({ clips: [] })).toBeNull();

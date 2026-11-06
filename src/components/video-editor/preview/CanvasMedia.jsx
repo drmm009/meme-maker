@@ -8,6 +8,7 @@ import { attachPreviewVideo } from './previewVideo';
 import { useFrameEffects } from './useFrameEffects';
 import { drawGifFrame, useGifFrames } from './useGifFrames';
 import { hasStickerLook, stickerLookImage } from '../../../utils/stickerLook';
+import { blurSubjectUrl, hasPhotoPicture, photoNodeAttrs, photoPicture } from '../../../utils/photoLook';
 
 // A photo, sticker (animated GIFs included) or video on the preview: draggable and resizable when
 // selected, shown only during its time on the timeline. Videos play from a hidden <video>
@@ -60,9 +61,29 @@ const CanvasMedia = ({ item, isSelected, onSelect, onChange, canvasDimensions })
   const looked = hasStickerLook(item);
   const shownWidth = Math.round((item.width || 0) * (item.scaleX || 1));
   const lookImage = useMemo(
-    () => (looked && image && !gifRef.current ? stickerLookImage(image, itemRef.current) : null),
+    () => (looked && image && !gifRef.current ? stickerLookImage(image, item) : null),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [looked, image, item.dieCut, item.dieCutColor, item.dieCutWidth, item.shadowSize, item.shadowColor, shownWidth],
+  );
+
+  // A photo's filter and background blur, drawn by the image editor's painting into a picture of the
+  // same shape (its frame is drawn by the node: photoNodeAttrs). The blur keeps the subject sharp.
+  const subjectUrl = blurSubjectUrl(item);
+  const [subject, setSubject] = useState(null);
+  useEffect(() => {
+    if (!subjectUrl) return undefined;
+    let alive = true;
+    const img = new window.Image();
+    img.onload = () => alive && setSubject({ url: subjectUrl, img });
+    img.src = subjectUrl;
+    return () => { alive = false; };
+  }, [subjectUrl]);
+  const shownSubject = subject?.url === subjectUrl ? subject.img : null;
+  const pictured = hasPhotoPicture(item);
+  const photoImage = useMemo(
+    () => (pictured && image && !gifRef.current ? photoPicture(image, item, shownSubject) : null),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [pictured, image, shownSubject, JSON.stringify(item.filters || null), item.bgBlur],
   );
 
   // Photos and stickers: show and hide with the playhead, step GIF frames, and move freeze frames
@@ -84,12 +105,12 @@ const CanvasMedia = ({ item, isSelected, onSelect, onChange, canvasDimensions })
   }, [item.type, item.startMs, item.endMs]);
 
   // The crop, in the pixels of whatever is showing (it changes size when a filter or green screen
-  // turns on). Videos and freeze frames keep it up to date as they play (applyMotion).
+  // turns on), and again when photo motion goes off. Videos and freeze frames keep it up to date as they play (applyMotion).
   const crop = clipCrop(item);
   useLayoutEffect(() => {
     const node = imageRef.current;
     if (node && applyPunch(node, 1, crop)) node.getLayer()?.batchDraw();
-  }, [crop.x, crop.y, crop.width, crop.height, image, effectImage, lookImage]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [crop.x, crop.y, crop.width, crop.height, image, effectImage, lookImage, photoImage, item.motion]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (isSelected && trRef.current && imageRef.current) {
@@ -102,8 +123,9 @@ const CanvasMedia = ({ item, isSelected, onSelect, onChange, canvasDimensions })
     <React.Fragment>
       <KonvaImage
         ref={imageRef}
-        image={lookImage || effectImage || image}
+        image={lookImage || photoImage || effectImage || image}
         {...mediaAttrs(item)}
+        {...photoNodeAttrs(item)}
         draggable
         onClick={onSelect}
         onTap={onSelect}

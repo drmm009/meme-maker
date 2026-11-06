@@ -185,8 +185,8 @@ export function createExportGraph({ width, height, durationMs, backgroundColor, 
       const key = isVideo ? chromaKeyFilter((item as VideoClip).chromaKey) : '';
       // Transitions at cuts in the main sequence (fade via alpha, zoom, slide as an x offset).
       const transition = isVideo || (item as ImageClip).isFreeze ? transitionFilters(items, item, w, h, ratio) : { chain: '', dx: null };
-      // Colour filters on videos and photos (not stickers), after keying like the preview.
-      const colour = isVideo || (item.type === 'image' && !isGif) ? filterChain(resolveFilter((item as ImageClip).filter)) : '';
+      // Colour filters on videos, after keying like the preview (a photo's is in its picture: photoLook).
+      const colour = isVideo ? filterChain(resolveFilter((item as VideoClip).filter)) : '';
       const punch = isVideo ? punchFilter(clipPunchTimes(item as VideoClip), w, h) : '';
       // Photo motion, on the output's clock (stills aren't shifted to their start).
       const motion = item.type === 'image' && !isGif ? motionFilter(item as ImageClip, w, h, start, end) : '';

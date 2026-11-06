@@ -1,4 +1,4 @@
-// Green screen (videos) and colour filters (videos and photos), drawn through an offscreen canvas:
+// Green screen and colour filters for videos, drawn through an offscreen canvas:
 // keying first, then filtering, the same order as the FFmpeg export. Shared by the live preview
 // (useFrameEffects) and the frame-by-frame export (sceneRenderer).
 import type { ChromaKey, Clip } from '../../../model/videoProject';
@@ -20,7 +20,8 @@ export interface EffectCanvases {
 
 export const effectsFor = (item: Clip): FrameEffects => ({
   chromaKey: item.type === 'video' && item.chromaKey ? item.chromaKey : null,
-  css: item.type === 'video' || item.type === 'image' ? filterCss(resolveFilter(item.filter)) : '',
+  // A photo's filter is the image editor's, drawn into its picture (utils/photoLook).
+  css: item.type === 'video' ? filterCss(resolveFilter(item.filter)) : '',
 });
 
 export const hasEffects = (effects: FrameEffects): boolean => Boolean(effects.chromaKey || effects.css);

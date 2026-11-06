@@ -1,5 +1,4 @@
-import { Crop, FlipHorizontal, FlipVertical, ImageUp, Copy } from 'lucide-react';
-import { Sheet, Section, Row, ChipRow, Chip, TileGrid, Tile, Slider, SwatchRow } from '../../ui';
+import { Sheet, Section, ChipRow, Chip } from '../../ui';
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
 import { useEditorUiStore } from '../store/useEditorUiStore';
 import { useSelection } from './selection';
@@ -7,10 +6,7 @@ import type { EditorActions } from './selection';
 import type { MemeImageLayer } from '../../../model/memeDocument';
 import StickerControls, { StickerFlip } from './StickerControls';
 import type { MemeSticker } from '../../../model/memeDocument';
-import { COLOR_SWATCHES } from '../../../utils/captionLayout';
-import { SHADOW_COLORS } from '../../canvas/draw/layerLook';
-
-const pct = (v: number) => `${Math.round(v * 100)}%`;
+import { PhotoLookControls, PhotoTiles } from './PhotoControls';
 
 // The Media sheet, under the Media strip (which adds photos, templates, stickers and emoji). For a
 // selected image (its floating bar's More) it is the compact Photo sheet: mirror, flip upside down,
@@ -49,44 +45,16 @@ export default function MediaSheet({ actions, onClose }: { actions: EditorAction
 
       {image && id && (
         <>
-          <Section>
-            <TileGrid columns={5}>
-              <Tile label="Mirror" title="Flip left to right" Icon={FlipHorizontal} active={Boolean(image.flipX)} onClick={() => actions.handleFlipActiveLayer()} />
-              <Tile label="Flip" title="Flip upside down" Icon={FlipVertical} active={Boolean(image.flipY)} onClick={() => setImage({ flipY: !image.flipY })} />
-              <Tile label="Copy" Icon={Copy} title="Duplicate" onClick={() => actions.handleDuplicateLayer(id)} />
-              <Tile label="Replace" Icon={ImageUp} title="Use another picture here" accept="image/*" onFile={actions.handleReplaceImageLayer} />
-              <Tile label="Crop" title="Crop or turn the photo" Icon={Crop} onClick={() => setCropLayerId(id)} />
-            </TileGrid>
-          </Section>
-          {/* The look, two sliders to a line; a colour row follows the border or shadow once there is one. */}
-          <div className="ie-adjust-grid">
-            <div className="ie-adjust-item">
-              <span className="ui-row-label">Opacity</span>
-              <Slider label="Opacity" min={0.1} max={1} step={0.05} value={image.opacity ?? 1} onChange={(opacity) => setImage({ opacity })} format={pct} />
-            </div>
-            <div className="ie-adjust-item">
-              <span className="ui-row-label">Corners</span>
-              <Slider label="Corner rounding" min={0} max={1} step={0.05} value={image.cornerRadius || 0} onChange={(cornerRadius) => setImage({ cornerRadius })} format={pct} />
-            </div>
-            <div className="ie-adjust-item">
-              <span className="ui-row-label">Border</span>
-              <Slider label="Border width" min={0} max={30} value={image.borderWidth || 0} onChange={(borderWidth) => setImage({ borderWidth })} format={String} />
-            </div>
-            <div className="ie-adjust-item">
-              <span className="ui-row-label">Shadow</span>
-              <Slider label="Shadow size" min={0} max={40} value={image.shadowSize || 0} onChange={(shadowSize) => setImage({ shadowSize })} format={String} />
-            </div>
-          </div>
-          {(image.borderWidth || 0) > 0 && (
-            <Row label="Border">
-              <SwatchRow ariaLabel="Border colour" colors={COLOR_SWATCHES} value={image.borderColor || '#ffffff'} onChange={(borderColor) => setImage({ borderColor })} />
-            </Row>
-          )}
-          {(image.shadowSize || 0) > 0 && (
-            <Row label="Shadow">
-              <SwatchRow ariaLabel="Shadow colour" colors={SHADOW_COLORS} value={image.shadowColor || '#000000'} onChange={(shadowColor) => setImage({ shadowColor })} />
-            </Row>
-          )}
+          <PhotoTiles
+            flipX={image.flipX}
+            flipY={image.flipY}
+            onMirror={() => actions.handleFlipActiveLayer()}
+            onFlip={() => setImage({ flipY: !image.flipY })}
+            onCopy={() => actions.handleDuplicateLayer(id)}
+            onReplace={actions.handleReplaceImageLayer}
+            onCrop={() => setCropLayerId(id)}
+          />
+          <PhotoLookControls look={image} set={setImage} />
         </>
       )}
     </Sheet>
