@@ -98,6 +98,8 @@ export interface VideoClip extends ClipBase, Placed, Media {
   type: 'video';
   filter?: ClipFilter | null;
   chromaKey?: ChromaKey | null;
+  // Background removal: only the people are kept (utils/personSegmenter); softness 0..1 of their edge.
+  bgRemoval?: { softness: number } | null;
   transitionIn?: Transition | null;
   // Zoom-punch moments, in source ms.
   punches?: number[];

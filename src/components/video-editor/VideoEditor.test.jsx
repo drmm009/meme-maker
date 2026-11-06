@@ -29,6 +29,12 @@ vi.mock('../../utils/autoCaptions', () => ({
   generateCaptions: vi.fn(() => Promise.resolve({ captions: [{ text: 'this is', startMs: 0, endMs: 600 }, { text: 'fine.', startMs: 600, endMs: 1200 }], clips: 1 })),
 }));
 vi.mock('../../utils/transcriber', () => ({ cancelTranscription: vi.fn() }));
+// Background removal's model comes from a CDN: stand in for loading it.
+vi.mock('../../utils/personSegmenter', async (importOriginal) => ({
+  ...(await importOriginal()),
+  loadPersonSegmenter: vi.fn(() => Promise.resolve()),
+  personSegmenterReady: () => false,
+}));
 vi.mock('../../services/memeService', () => ({ fetchOpenSourceMemes: () => Promise.resolve([]) }));
 
 const store = () => useEditorStore.getState();
@@ -383,6 +389,20 @@ describe('VideoEditor', () => {
     expect(store().items[0].chromaKey).toMatchObject({ similarity: 0.3, blend: 0.12 });
     fireEvent.click(screen.getByText('Turn off'));
     expect(store().items[0].chromaKey).toBe(null);
+  });
+
+  it('removes a video clip\'s background, softens its edge and turns it off', async () => {
+    act(() => store().addItem({ type: 'video', url: 'a.mp4', durationMs: 2000 }));
+    const { container } = render(<VideoEditor onBack={() => {}} />);
+    fireEvent.click(clips(container)[0]);
+    const tool = clipTool('Background');
+    await act(async () => { fireEvent.click(tool); });
+    expect(store().items[0].bgRemoval).toEqual({ softness: 0.3 });
+    fireEvent.change(screen.getByRole('slider', { name: 'Edge softness' }), { target: { value: '0.6' } });
+    expect(store().items[0].bgRemoval).toEqual({ softness: 0.6 });
+    fireEvent.click(screen.getByRole('switch', { name: 'Remove background' }));
+    expect(store().items[0].bgRemoval).toBe(null);
+    expect(screen.queryByRole('slider', { name: 'Edge softness' })).toBeNull();
   });
 
   it('picks a text animation and previews it', () => {

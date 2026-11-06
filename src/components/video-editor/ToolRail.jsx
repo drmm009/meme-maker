@@ -18,7 +18,8 @@ import { photoFiltered, photoFiltersReset } from './photoFilters';
 import { isPhotoFramed } from '../../utils/photoLook';
 import { isGifSticker } from '../../utils/stickerLook';
 import { canCutOut } from '../../utils/cutOut';
-import { runJob, toggleCutOut } from './clipJobs';
+import { runJob, setBackgroundRemoval, toggleCutOut } from './clipJobs';
+import { VideoBackgroundAside, VideoBackgroundPanel } from './VideoBackgroundPanel';
 import { PHOTO_MOTIONS } from '../../utils/photoMotion';
 import { DEFAULT_END_CARD, WATERMARK_CORNERS, endCardClip, isEndCard, renderEndCard } from '../../utils/brandCard';
 import { captureFrame, renderClipEffect } from '../../utils/clipEffects';
@@ -670,6 +671,7 @@ const SHEETS = {
   motion: { title: 'Photo motion', Icon: Move, Panel: MotionPanel },
   volume: { title: 'Volume', Icon: SlidersHorizontal, Panel: VolumePanel },
   greenscreen: { title: 'Green screen', Icon: WandSparkles, Panel: GreenScreenPanel },
+  bgremove: { title: 'Background', Icon: BackgroundIcon, Panel: VideoBackgroundPanel, Aside: VideoBackgroundAside },
   punch: { title: 'Zoom punch', Icon: ZoomIn, Panel: PunchPanel },
   // `tall`: may rise over the preview (its choices don't need it in view), not just to the timeline's top.
   faceswap: { title: 'Face swap', Icon: ScanFace, Panel: FaceSwapPanel, tall: true },
@@ -733,6 +735,10 @@ function clipTools(item, { sheet, toggle, playhead, items }) {
       { id: 'greenscreen', group: 'effects', label: 'Green screen', Icon: WandSparkles, active: sheet === 'greenscreen' || Boolean(item.chromaKey), onClick: () => {
         if (!item.chromaKey) update(item.id, { chromaKey: { ...DEFAULT_CHROMA_KEY, color: 'auto' } });
         toggle('greenscreen', !item.chromaKey);
+      } },
+      { id: 'bgremove', group: 'effects', label: 'Background', title: 'Remove the background behind people', Icon: BackgroundIcon, active: sheet === 'bgremove' || Boolean(item.bgRemoval), onClick: () => {
+        if (!item.bgRemoval) setBackgroundRemoval(item, true);
+        toggle('bgremove', !item.bgRemoval);
       } },
       { id: 'freeze', group: 'effects', label: 'Freeze', Icon: Snowflake, title: insideClip ? 'Freeze the frame at the playhead' : 'Move the playhead onto this clip to freeze a frame',
         onClick: () => insideClip && freezeAtPlayhead(item, playhead) },

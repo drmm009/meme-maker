@@ -20,6 +20,7 @@ import type { EffectCanvases, FrameEffects } from './frameEffects';
 import { drawGifFrame } from './useGifFrames';
 import { hasStickerLook, stickerLookImage } from '../../../utils/stickerLook';
 import { blurSubjectUrl, hasPhotoPicture, photoNodeAttrs, photoPicture } from '../../../utils/photoLook';
+import { loadPersonSegmenter, needsFrameRenderer } from '../../../utils/personSegmenter';
 
 export interface SceneOptions {
   items: Clip[];
@@ -126,6 +127,8 @@ export async function createSceneRenderer({ items, width, height, aspect, backgr
   // Text pictures at the output's own scale.
   const textScale = width / STAGE_WIDTH;
   await loadTextFonts(items.filter((i): i is TextClip => i.type === 'text'));
+  // Background removal's model, before the first frame.
+  if (items.some(needsFrameRenderer)) await loadPersonSegmenter();
   const cleanup = () => {
     for (const m of media) {
       if (m.video) { m.video.pause(); m.video.removeAttribute('src'); m.video.load(); }

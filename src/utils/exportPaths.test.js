@@ -63,6 +63,20 @@ const text = { id: 't', type: 'text', text: 'HI', startMs: 0, endMs: 1000 };
 const run = (items, options = {}) => exportVideoFFmpeg(items, 1000, 16 / 9, { width: 800, height: 450 }, null, () => {}, { download: false, ...options });
 
 describe('export paths', () => {
+  it('draws background removal frame by frame only: no GIF, no FFmpeg fallback', async () => {
+    const cut = [{ id: 'v', type: 'video', url: 'blob:v', startMs: 0, endMs: 1000, bgRemoval: { softness: 0.3 } }];
+    const before = ff.execs.length;
+    await expect(run(cut, { format: 'gif' })).rejects.toThrow(/Background removal/);
+    frames.supported = false;
+    await expect(run(cut)).rejects.toThrow(/Background removal/);
+    frames.supported = true;
+    frames.fail = 'encoder broke';
+    await expect(run(cut)).rejects.toThrow('encoder broke');
+    expect(ff.execs.length).toBe(before);
+    // Off, or on a hidden clip, the usual paths stand.
+    await expect(run([{ ...cut[0], hidden: true }, text], { format: 'gif' })).resolves.toBeTruthy();
+  });
+
   it('uses the encoded picture as is for a silent project, without running FFmpeg', async () => {
     const before = ff.execs.length;
     const { blob, fileName } = await run([text]);

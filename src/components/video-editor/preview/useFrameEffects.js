@@ -1,17 +1,28 @@
 import { useEffect, useRef, useState } from 'react';
 import { useEditorStore } from '../../../store/useVideoEditorStore';
 import { effectsFor, hasEffects, processFrame } from './frameEffects';
+import { loadPersonSegmenter, personSegmenterReady } from '../../../utils/personSegmenter';
 
-// A clip's green screen and colour filter in the preview (the processing itself is shared with
+// A clip's green screen, background removal and colour filter in the preview (the processing itself is shared with
 // the export, in frameEffects). Returns `effectImage`, the canvas to show instead of the source
 // once a frame has been processed (null otherwise), and `drawEffects(src)`, which processes the
 // source's current frame (the video calls it per frame).
 export function useFrameEffects(item, image, imageRef) {
   const effects = effectsFor(item);
-  const { chromaKey, css } = effects;
+  const { chromaKey, cutout, css } = effects;
   const effectsRef = useRef(effects);
   effectsRef.current = effects;
-  const canvasesRef = useRef({ canvas: null, scratch: null });
+  // Background removal may reuse a recent mask while playing (`live`).
+  const canvasesRef = useRef({ canvas: null, scratch: null, cutout: { live: true } });
+  // Background removal's model, once loaded (the frame shows as it is until then).
+  const [cutoutReady, setCutoutReady] = useState(personSegmenterReady);
+  useEffect(() => {
+    if (!cutout || cutoutReady) return undefined;
+    let alive = true;
+    loadPersonSegmenter().then(() => alive && setCutoutReady(true)).catch((e) => console.warn('[background removal]', e));
+    return () => { alive = false; };
+  }, [cutout, cutoutReady]);
+  const softness = cutout ? cutout.softness : null;
   const [keyed, setKeyed] = useState(false);
   const keyedRef = useRef(false);
   // Show the canvas only once a frame has actually been processed (the video may not have loaded yet).
@@ -38,9 +49,11 @@ export function useFrameEffects(item, image, imageRef) {
   // GIF stickers draw their own frames; a GIF's canvas has no naturalWidth.
   useEffect(() => {
     if ((item.type !== 'video' && item.type !== 'image') || !image) return;
+    // A new softness needs a new mask, not the last one again.
+    canvasesRef.current.cutout.maskAt = undefined;
     processRef.current(image);
     imageRef.current?.getLayer()?.batchDraw();
-  }, [image, chromaKey, css, item.type, imageRef]);
+  }, [image, chromaKey, css, softness, cutoutReady, item.type, imageRef]);
 
-  return { effectImage: keyed && (chromaKey || css) ? canvasesRef.current.canvas : null, drawEffects: drawEffectsRef.current };
+  return { effectImage: keyed && (chromaKey || cutout || css) ? canvasesRef.current.canvas : null, drawEffects: drawEffectsRef.current };
 }

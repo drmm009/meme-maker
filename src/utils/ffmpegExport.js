@@ -13,6 +13,7 @@ import { voiceSpans } from './ducking';
 import { drawTextClip, loadTextFonts } from './textBitmap';
 import { hasStickerLook, stickerLookPng } from './stickerLook';
 import { hasPhotoPicture, isPhotoFramed, photoLookFile } from './photoLook';
+import { NEEDS_FRAME_RENDERER, needsFrameRenderer } from './personSegmenter';
 
 let ffmpeg = null;
 let loadPromise = null;
@@ -513,10 +514,13 @@ const exportWithWebCodecs = async (items, durationMs, canvasAspectRatio, layoutI
 // Renders the project to an MP4 (or, with format 'gif', a silent palette-optimised GIF) and returns
 // { blob, fileName }. MP4s are drawn frame by frame with the preview's own renderer and encoded by
 // the browser (WebCodecs) when it can; otherwise, or if that fails part-way, FFmpeg renders the
-// whole thing. Options: { format, resolution, backgroundColor, download, layoutSlots,
-// encoder: 'auto' | 'ffmpeg' }.
+// whole thing. A project with background removal is drawn frame by frame only (FFmpeg can't do
+// it), so it fails with a message rather than lose it. Options: { format, resolution,
+// backgroundColor, download, layoutSlots, encoder: 'auto' | 'ffmpeg' }.
 export const exportVideoFFmpeg = async (items = [], durationMs = 7000, canvasAspectRatio = 16/9, canvasDimensions = { width: 800, height: 600 }, layoutId = null, onProgress = () => {}, options = {}) => {
   const { format = 'mp4', resolution = 720, encoder = 'auto' } = options;
+  const frameOnly = items.some(needsFrameRenderer);
+  if (frameOnly && (format === 'gif' || encoder === 'ffmpeg')) throw new Error(NEEDS_FRAME_RENDERER);
   if (format !== 'gif' && encoder !== 'ffmpeg') {
     const { width, height } = outputSize(canvasAspectRatio, resolution);
     const { canEncodeMp4 } = await import('./webCodecsExport');
@@ -525,9 +529,11 @@ export const exportVideoFFmpeg = async (items = [], durationMs = 7000, canvasAsp
         return await exportWithWebCodecs(items, durationMs, canvasAspectRatio, layoutId, onProgress, options);
       } catch (error) {
         if (cancelRequested || error instanceof ExportCancelledError) throw new ExportCancelledError();
+        if (frameOnly) throw error;
         console.warn('[export] Frame-by-frame export failed; rendering with FFmpeg instead.', error);
       }
     }
+    if (frameOnly) throw new Error(NEEDS_FRAME_RENDERER);
   }
   try {
     return await exportWithFFmpeg(items, durationMs, canvasAspectRatio, canvasDimensions, layoutId, onProgress, options);

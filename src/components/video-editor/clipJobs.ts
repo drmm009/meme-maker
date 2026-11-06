@@ -1,7 +1,8 @@
-// Slow jobs on a clip (an FFmpeg render, a frame grab, finding a picture's subject), run under the
-// editor's busy label: one at a time, never during export.
+// Slow jobs on a clip (an FFmpeg render, a frame grab, finding a picture's subject, loading a
+// model), run under the editor's busy label: one at a time, never during export.
 import { useEditorStore } from '../../store/useVideoEditorStore';
 import { cutOutBackground } from '../../utils/cutOut';
+import { DEFAULT_PERSON_CUTOUT, loadPersonSegmenter, personSegmenterReady } from '../../utils/personSegmenter';
 import type { ImageClip, StickerClip } from '../../model/videoProject';
 
 interface EditorState {
@@ -72,4 +73,17 @@ export function toggleBackgroundBlur(item: Pick<ImageClip, 'id' | 'url' | 'bgBlu
     }
     update(item.id, { subjectUrl, subjectOf: item.url, bgBlur: FULL_BLUR });
   });
+}
+
+export const LOADING_CUTOUT = 'Loading background removal… the first time takes a moment';
+
+// Background removal on a video clip, on or off. Turning it on loads its model the first time,
+// under the busy label (the clip shows as it is until it's ready).
+export function setBackgroundRemoval(item: { id: string }, on: boolean): void {
+  if (!on) {
+    update(item.id, { bgRemoval: null });
+    return;
+  }
+  update(item.id, { bgRemoval: { ...DEFAULT_PERSON_CUTOUT } });
+  if (!personSegmenterReady()) runJob(LOADING_CUTOUT, loadPersonSegmenter);
 }
