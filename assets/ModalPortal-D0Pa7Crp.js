@@ -1,0 +1,1 @@
+import{ir as e}from"./index-C1FtHDpH.js";var t=e(),n=({children:e})=>typeof document>`u`?null:(0,t.createPortal)(e,document.body);export{n as t};
