@@ -291,10 +291,10 @@
   transform: translateX(-50%);
 }
 
-/* Five sections by clip type (Videos, Photos, Text, Stickers, Sounds). A section's icon is a chip in
-   its clips' colour (--sec), in a column at the left that stays put (sticky) as the timeline scrolls;
-   clips pass under it, its soft right edge shading them. A faint line across the tracks parts the
-   sections; the column runs unbroken past it. Its lines start at the canvas's left, under the icon. */
+/* Five sections by clip type (Videos, Photos, Text, Stickers, Sounds). A section's icon is a small
+   floating chip with a hint of its clips' colour (--sec), held at the left (sticky) as the timeline
+   scrolls; clips pass under it. A faint line across the tracks parts the sections. Its lines start
+   at the canvas's left, under the icon. */
 .vt-tracks { display: flex; flex-direction: column; padding: 2px 0 12px; }
 .vt-section { position: relative; display: flex; padding: 5px 0; --sec: rgba(255, 255, 255, 0.85); }
 .vt-section--image { --sec: var(--vt-clip-image); }
@@ -322,8 +322,9 @@
   margin: -5px 0;
   padding: 0;
   border: none;
-  background: var(--vt-surface);
-  box-shadow: 6px 0 10px -6px rgba(0, 0, 0, 0.7);
+  /* No column: just the chip, floating over the clips that pass under it. */
+  background: none;
+  pointer-events: none;
   /* Quiet: mostly grey, a hint of the clips' colour. */
   color: color-mix(in srgb, var(--sec) 45%, #8e8e93);
 }
@@ -336,7 +337,8 @@
   height: 28px;
   border-radius: 8px;
   transform: translate(-50%, -50%);
-  background: color-mix(in srgb, var(--sec) 7%, transparent);
+  background: color-mix(in srgb, var(--sec) 8%, #2c2c2e);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35), 0 2px 8px rgba(0, 0, 0, 0.55);
 }
 .vt-section-icon svg { position: relative; }
 /* The empty sections' icons, waiting in one row at the bottom: each a quiet chip that adds one. */
