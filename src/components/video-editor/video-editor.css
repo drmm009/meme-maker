@@ -339,10 +339,11 @@
   background: color-mix(in srgb, var(--sec) 7%, transparent);
 }
 .vt-section-icon svg { position: relative; }
-/* An empty section: a slim strip whose icon, in a dashed chip, adds one. */
-.vt-section.is-empty:not(.vt-section--video) { height: 36px; padding: 0; }
+/* An empty section: a thin strip whose small icon, in a dashed pill, adds one. */
+.vt-section.is-empty:not(.vt-section--video) { height: 24px; padding: 0; }
 .vt-section.is-empty .vt-section-icon { margin: 0; color: rgba(142, 142, 147, 0.6); }
-.vt-section.is-empty .vt-section-icon::before { width: 28px; height: 28px; background: none; border: 1px dashed rgba(255, 255, 255, 0.16); box-sizing: border-box; }
+.vt-section.is-empty .vt-section-icon svg { width: 12px; height: 12px; }
+.vt-section.is-empty .vt-section-icon::before { width: 32px; height: 18px; border-radius: 9px; background: none; border: 1px dashed rgba(255, 255, 255, 0.16); box-sizing: border-box; }
 button.vt-section-icon { cursor: pointer; }
 button.vt-section-icon:active::before { background: rgba(255, 255, 255, 0.08); }
 button.vt-section-icon:focus-visible { outline: none; }
