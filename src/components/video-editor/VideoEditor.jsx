@@ -108,7 +108,7 @@ export default function VideoEditor({ template, onBack, onSaved }) {
   const canRedo = useStore(useEditorStore.temporal, (s) => s.futureStates.length > 0);
   const { undo, redo } = useEditorStore.temporal.getState();
 
-  // The timeline starts closed; the Edit handle opens it.
+  // The timeline starts closed; the Edit button beside play opens it.
   const [mode, setMode] = useState('preview');
   const [menuOpen, setMenuOpen] = useState(false);
   const [exportDone, setExportDone] = useState(false);
@@ -266,19 +266,18 @@ export default function VideoEditor({ template, onBack, onSaved }) {
           <CanvasPreview>
             {!hasItems && mode === 'preview' && <StartPrompt onPick={(kind) => addRef.current?.open(kind)} />}
           </CanvasPreview>
-          {mode === 'edit' && (
-            <button type="button" className="vt-collapse" onClick={() => setMode('preview')} aria-label="Full screen preview">
-              <ChevronDown size={22} strokeWidth={2.5} />
-            </button>
-          )}
         </div>
 
         <button type="button" className="ui-icon-btn ui-topbar-back vt-back" onClick={onBack} aria-label="Back" title="Back">
           <ChevronLeft size={22} strokeWidth={2.3} />
         </button>
 
-        {/* The canvas size sits beside Export while the timeline is closed. */}
+        {/* Undo and redo, then the canvas size (while the timeline is closed), then Export. */}
         <div className="vt-top-actions">
+          <div className="vt-history">
+            <button type="button" className="vt-icon-btn" onClick={() => undo()} disabled={!canUndo} aria-label="Undo" title="Undo"><Undo2 size={19} /></button>
+            <button type="button" className="vt-icon-btn" onClick={() => redo()} disabled={!canRedo} aria-label="Redo" title="Redo"><Redo2 size={19} /></button>
+          </div>
           {mode === 'preview' && (
             <div className="vt-ratio">
               <SizeMenu sizes={VIDEO_SIZES} value={sizeOf(canvasAspectRatio)} onPick={(v) => changeAspectRatio(VIDEO_SIZES.find((s) => s.value === v).ratio)} />
@@ -346,13 +345,6 @@ export default function VideoEditor({ template, onBack, onSaved }) {
           </div>
         )}
 
-        {mode === 'preview' && (
-          <button type="button" className="vt-edit-handle" onClick={() => setMode('edit')}>
-            <span>Edit</span>
-            <ChevronUp size={20} strokeWidth={2.5} />
-          </button>
-        )}
-
         {exported && !isExporting && <ExportReadyCard result={exported} onClose={() => setExported(null)} onSaveToStudio={() => saveToStudio(exported.blob)} />}
 
         {isExporting && (
@@ -376,10 +368,11 @@ export default function VideoEditor({ template, onBack, onSaved }) {
         <button type="button" className="vt-play" onClick={togglePlayback} aria-label={isPlaying ? 'Pause' : 'Play'}>
           {isPlaying ? <Pause size={20} fill="currentColor" /> : <Play size={20} fill="currentColor" style={{ marginLeft: 2 }} />}
         </button>
-        <div className="vt-history">
-          <button type="button" className="vt-icon-btn" onClick={() => undo()} disabled={!canUndo} aria-label="Undo"><Undo2 size={20} /></button>
-          <button type="button" className="vt-icon-btn" onClick={() => redo()} disabled={!canRedo} aria-label="Redo"><Redo2 size={20} /></button>
-        </div>
+        {/* Opens the timeline up out of the bottom bar, and puts it away again. */}
+        <button type="button" className="vt-mode-btn" onClick={() => setMode(mode === 'edit' ? 'preview' : 'edit')} aria-expanded={mode === 'edit'}>
+          <span>{mode === 'edit' ? 'Done' : 'Edit'}</span>
+          {mode === 'edit' ? <ChevronDown size={19} strokeWidth={2.5} aria-hidden="true" /> : <ChevronUp size={19} strokeWidth={2.5} aria-hidden="true" />}
+        </button>
       </div>
 
       <div className="vt-timeline-wrap" aria-hidden={mode !== 'edit'}>

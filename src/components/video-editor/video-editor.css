@@ -126,52 +126,6 @@
 }
 .vt-menu-divider { height: 1px; margin: 6px 10px; background: var(--ui-line-strong, rgba(255, 255, 255, 0.14)); }
 
-.vt-collapse {
-  position: absolute;
-  bottom: 10px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 15;
-  width: 46px;
-  height: 30px;
-  border: none;
-  border-radius: 15px;
-  display: grid;
-  place-items: center;
-  background: rgba(0, 0, 0, 0.35);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  color: #fff;
-  cursor: pointer;
-}
-
-.vt-edit-handle {
-  position: absolute;
-  bottom: 18px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 15;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 7px 14px 7px 18px;
-  border: none;
-  border-radius: 999px;
-  background: rgba(28, 28, 30, 0.8);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  color: #fff;
-  font-size: 15px;
-  font-weight: 700;
-  letter-spacing: 0.01em;
-  cursor: pointer;
-  animation: vt-nudge 2.4s var(--vt-ease) infinite;
-}
-@keyframes vt-nudge {
-  0%, 70%, 100% { transform: translate(-50%, 0); }
-  80% { transform: translate(-50%, -5px); }
-}
-
 .vt-export-overlay {
   position: absolute;
   inset: 0;
@@ -231,12 +185,14 @@
   transition: transform 0.15s var(--vt-ease);
 }
 .vt-play:active { transform: scale(0.92); }
-.vt-history { justify-self: end; display: flex; gap: 2px; }
+/* Undo and redo at the top, a pill like the canvas size beside them. */
+.vt-history { display: flex; height: 36px; border-radius: 18px; background: var(--vt-surface); }
 .vt-icon-btn {
+  position: relative;
   display: grid;
   place-items: center;
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 36px;
   padding: 0;
   border: none;
   border-radius: 50%;
@@ -246,6 +202,24 @@
   transition: color 0.2s;
 }
 .vt-icon-btn:disabled { color: rgba(255, 255, 255, 0.2); cursor: default; }
+/* Opens and closes the timeline, where undo and redo were. */
+.vt-mode-btn {
+  justify-self: end;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 40px;
+  padding: 0 12px 0 16px;
+  border: none;
+  border-radius: 20px;
+  background: var(--vt-surface);
+  color: var(--vt-text);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s var(--vt-ease);
+}
+.vt-mode-btn:active { transform: scale(0.95); }
 
 /* ── Timeline ───────────────────────────────────────────────── */
 .vt-timeline-wrap {
@@ -334,9 +308,7 @@
 }
 .vt-head-btn.is-off { color: var(--vt-accent); background: var(--vt-accent-soft); }
 /* Tap areas a thumb can hit (44px) around the small round buttons. */
-.vt-head-btn::after,
-.vt-collapse::after { content: ''; position: absolute; inset: -5px; }
-.vt-collapse::after { inset: -7px -4px; }
+.vt-head-btn::after { content: ''; position: absolute; inset: -5px; }
 
 .vt-clip {
   position: absolute;
@@ -556,7 +528,10 @@
   padding: 4px 4px calc(6px + env(safe-area-inset-bottom, 0px));
   background: var(--vt-surface);
   border-top: 0.5px solid rgba(255, 255, 255, 0.1);
+  transition: border-radius 0.35s var(--vt-ease), border-color 0.35s var(--vt-ease);
 }
+/* With the timeline closed the bar takes its rounded top, so the timeline opens up out of it. */
+.vt-editor.is-preview .vt-deckbar { border-radius: 26px 26px 0 0; border-top-color: transparent; }
 .vt-deckbar-items {
   flex: 1 1 auto;
   display: flex;
@@ -567,7 +542,7 @@
 }
 .vt-deckbar-items::-webkit-scrollbar { display: none; }
 .vt-deckbar-btn {
-  flex: 1 0 54px;
+  flex: 1 0 auto;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -575,7 +550,7 @@
   gap: 4px;
   min-width: 54px;
   height: 60px;
-  padding: 0 2px;
+  padding: 0 6px;
   border: none;
   border-radius: 10px;
   background: none;
@@ -587,7 +562,6 @@
   transition: color 0.15s ease, background 0.15s ease;
 }
 .vt-deckbar-btn svg { color: var(--vt-text); transition: color 0.15s ease; }
-.vt-deckbar-btn span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
 .vt-deckbar-btn:active { background: var(--vt-fill); }
 /* A setting that's on, or its sheet open: the icon and label take the accent. */
 .vt-deckbar-btn.is-on,

@@ -76,7 +76,7 @@ describe('VideoEditor', () => {
     fireEvent.click(screen.getByText('Edit'));
     expect(container.querySelector('.vt-editor.is-edit')).toBeTruthy();
     expect(screen.queryByRole('group', { name: 'Start your video' })).toBeNull();
-    fireEvent.click(screen.getByLabelText('Full screen preview'));
+    fireEvent.click(screen.getByText('Done'));
     expect(screen.getByRole('group', { name: 'Start your video' })).toBeTruthy();
     expect(container.querySelector('.vt-timeline-wrap').textContent).toContain('Add a video');
     const dock = screen.getByRole('navigation', { name: 'Sections' });
@@ -267,7 +267,7 @@ describe('VideoEditor', () => {
     const { container } = render(<VideoEditor onBack={() => {}} />);
     fireEvent.click(screen.getByText('Edit'));
     expect(container.querySelector('.vt-editor.is-edit')).toBeTruthy();
-    fireEvent.click(screen.getByLabelText('Full screen preview'));
+    fireEvent.click(screen.getByText('Done'));
     expect(container.querySelector('.vt-editor.is-preview')).toBeTruthy();
   });
 
@@ -645,7 +645,7 @@ describe('VideoEditor', () => {
     const { container } = render(<VideoEditor onBack={() => {}} />);
     fireEvent.click(screen.getByText('Edit'));
     expect(container.querySelector('.ui-size-menu')).toBeNull();
-    fireEvent.click(screen.getByLabelText('Full screen preview'));
+    fireEvent.click(screen.getByText('Done'));
     const actions = container.querySelector('.vt-top-actions');
     expect(actions.querySelector('.ui-size-menu')).toBeTruthy();
     expect(actions.lastElementChild.textContent).toContain('Export');
