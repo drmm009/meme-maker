@@ -89,6 +89,15 @@ describe('VideoEditor', () => {
     expect(labels(dock)).toEqual(['Video', 'Photo', 'Text', 'Stickers', 'Sounds', 'Voice', 'Subtitles', 'Canvas']);
   });
 
+  it('stops the clock at the video’s end when the playhead runs past it', () => {
+    const { container } = render(<VideoEditor onBack={() => {}} />);
+    act(() => store().setPlayhead(1500));
+    expect(container.querySelector('.vt-clock').textContent).toBe('0:00 / 0:00');
+    act(() => { store().addItem({ type: 'video', url: 'a.mp4', startMs: 0, durationMs: 2000 }); store().setPlayhead(4000); });
+    expect(store().playhead).toBe(4000);
+    expect(container.querySelector('.vt-clock').textContent).toBe('0:02 / 0:02');
+  });
+
   it('opens a sheet of tiles from an add tool, and a setting from a tile', () => {
     render(<VideoEditor onBack={() => {}} />);
     addTool('Sounds');

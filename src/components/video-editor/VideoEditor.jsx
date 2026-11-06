@@ -39,12 +39,13 @@ function AudioSync() {
   return null;
 }
 
+// The timeline runs on past the last clip, but the clock stops at the video's end (0:00 when empty).
 function Clock() {
   const playhead = useEditorStore((s) => s.draggingTime ?? s.playhead);
   const end = useEditorStore((s) => getContentEnd(s.items, 0));
   return (
     <div className="vt-clock">
-      <span className="vt-clock-now">{formatClock(playhead)}</span>
+      <span className="vt-clock-now">{formatClock(Math.min(playhead, end))}</span>
       <span className="vt-clock-total"> / {formatClock(end)}</span>
     </div>
   );
