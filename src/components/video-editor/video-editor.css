@@ -291,8 +291,9 @@
   transform: translateX(-50%);
 }
 
-/* Five sections by clip type (Videos, Photos, Text, Stickers, Sounds), told apart by their clips'
-   colours; a faint line across the tracks parts them. --sec tints the waiting add chips below. */
+/* Five sections by clip type (Videos, Photos, Text, Stickers, Sounds). A section's icon is a small
+   chip with a hint of its clips' colour (--sec), just before the timeline's start (left set inline),
+   so it scrolls away with the clips. A faint line across the tracks parts the sections. */
 .vt-tracks { display: flex; flex-direction: column; padding: 2px 0 12px; }
 .vt-section { position: relative; display: flex; padding: 5px 0; --sec: rgba(255, 255, 255, 0.85); }
 .vt-section--image { --sec: var(--vt-clip-image); }
@@ -309,6 +310,29 @@
   background: rgba(255, 255, 255, 0.06);
   pointer-events: none;
 }
+.vt-section-icon {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 40px;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  /* Quiet: mostly grey, a hint of the clips' colour. */
+  color: color-mix(in srgb, var(--sec) 45%, #8e8e93);
+}
+.vt-section-icon::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  transform: translate(-50%, -50%);
+  background: color-mix(in srgb, var(--sec) 9%, transparent);
+}
+.vt-section-icon svg { position: relative; }
 /* The empty sections' icons, waiting in one row at the bottom: each a quiet chip that adds one. */
 .vt-section--waiting { padding: 10px 0 0; }
 .vt-waiting { position: sticky; left: 0; display: flex; gap: 6px; padding-left: 10px; }
