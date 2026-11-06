@@ -1,4 +1,4 @@
-import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import React, { useEffect, useImperativeHandle, useLayoutEffect, useRef, useState } from 'react';
 import {
   Type, Sticker, Smile, LayoutGrid, Image as ImageIcon, Clapperboard, Music,
   Gauge, Volume2, VolumeX, Palette, RotateCw, Minimize, Crop, Maximize, Copy, Trash2,
@@ -838,6 +838,9 @@ const pickedTools = (ids) => {
 // The `sources` tools' sheets (Video, Photo, Stickers, Sounds, Canvas), by tool.
 const SOURCE_SHEETS = Object.fromEntries(DOCK.filter((t) => t.sources).map((t) => [t.kind, { title: t.title, Icon: t.Icon, sources: t.sources }]));
 
+// A timeline section's add tool (an empty section's icon, TimelinePanel), by section.
+const SECTION_TOOLS = { video: 'videos', image: 'image', text: 'text', sticker: 'addsticker', audio: 'addsound' };
+
 // Where to get something from: compact tiles, two side by side, or three as columns.
 function SourcesPanel({ sources, onPick }) {
   return (
@@ -857,7 +860,7 @@ function SourcesPanel({ sources, onPick }) {
 // tools; a selected clip's tools take the same row after a Back (the only Back). A setting or a
 // choice of where to add from opens a sheet in the bar's place that rises over the timeline (the bottom keeps its height, so
 // the timeline and preview don't move).
-export default function ToolRail({ onAdd }) {
+export default function ToolRail({ onAdd, ref }) {
   const activeItem = useEditorStore((s) => s.items.find((i) => i.id === s.activeItemId));
   const items = useEditorStore((s) => s.items);
   const playhead = useEditorStore((s) => s.playhead);
@@ -882,7 +885,7 @@ export default function ToolRail({ onAdd }) {
     const el = wrapRef.current;
     if (!el || spec) return undefined;
     const measure = () => {
-      const openTimeline = Math.min(320, Math.max(180, window.innerHeight * 0.31));
+      const openTimeline = Math.min(340, Math.max(200, window.innerHeight * 0.34));
       const timeline = Math.max(el.previousElementSibling?.offsetHeight || 0, openTimeline);
       setRest({ height: el.offsetHeight, room: el.offsetHeight + timeline });
     };
@@ -902,6 +905,17 @@ export default function ToolRail({ onAdd }) {
       onAdd(tool.kind);
     }
   };
+  // ref.openAdd(section): a timeline section's add tool, as if tapped in the add tools (letting go
+  // of a selected clip first, so its sheet shows).
+  useImperativeHandle(ref, () => ({
+    openAdd(section) {
+      const tool = DOCK.find((t) => t.kind === SECTION_TOOLS[section]);
+      if (!tool) return;
+      useEditorStore.getState().setActiveItem(null);
+      if (tool.panel || tool.sources) setSheetState({ id: null, name: tool.kind });
+      else onAdd(tool.kind);
+    },
+  }));
   // A tile in a sources sheet: a settings sheet (Top sounds, Background…) opens in its place;
   // anything else is added (or its picker opened).
   const pickSource = (kind) => {

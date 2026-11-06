@@ -116,6 +116,7 @@ export default function VideoEditor({ template, onBack, onSaved }) {
   const [exportInfo, setExportInfo] = useState({ phase: 'preparing', etaSec: null });
   const [exported, setExported] = useState(null); // { blob, fileName } of the last finished export
   const addRef = useRef(null);
+  const railRef = useRef(null);
   const menuRef = useRef(null);
   // The My Studio video this editor saves over (opened from My Studio, or saved once already).
   const savedIdRef = useRef(null);
@@ -378,9 +379,9 @@ export default function VideoEditor({ template, onBack, onSaved }) {
       {/* One panel: the timeline opens up out of the bottom bar. */}
       <div className="vt-deck">
         <div className="vt-timeline-wrap" aria-hidden={mode !== 'edit'}>
-          <TimelinePanel onAddVideo={() => addRef.current?.open('video')} />
+          <TimelinePanel onAddVideo={() => addRef.current?.open('video')} onAdd={(section) => railRef.current?.openAdd(section)} />
         </div>
-        <ToolRail onAdd={(kind) => addRef.current?.open(kind)} />
+        <ToolRail ref={railRef} onAdd={(kind) => addRef.current?.open(kind)} />
       </div>
       <AddMedia ref={addRef} />
     </div>

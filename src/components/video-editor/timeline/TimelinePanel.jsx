@@ -1,17 +1,21 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { Plus, Film } from 'lucide-react';
+import { Plus, Film, SquarePlay, Image as ImageIcon, Type, Sticker, Music } from 'lucide-react';
 import { useShallow } from 'zustand/react/shallow';
 import { useEditorStore } from '../../../store/useVideoEditorStore';
-import { DEFAULT_PX_PER_SEC, clampZoom, getRulerMarks, msToPx, pxToMs, timelineRows } from './timelineMath';
+import { DEFAULT_PX_PER_SEC, clampZoom, getRulerMarks, msToPx, pxToMs, timelineSections } from './timelineMath';
 import TimelineClip from './TimelineClip';
 
 // A scroll counts as the user's (and scrubs) only shortly after they touched the timeline;
 // otherwise it is our own scroll following the playhead.
 const USER_SCROLL_WINDOW_MS = 1500;
 
+const SECTION_ICONS = { video: SquarePlay, image: ImageIcon, text: Type, sticker: Sticker, audio: Music };
+
 // Scrolling timeline with a fixed centre playhead: the tracks move under it. Scrolling scrubs,
-// playback scrolls, pinch or Ctrl+wheel zooms around the playhead.
-export default function TimelinePanel({ onAddVideo }) {
+// playback scrolls, pinch or Ctrl+wheel zooms around the playhead. The tracks are five sections by
+// clip type (timelineSections), each with its icon in a column at the left that stays put as the
+// timeline scrolls; an empty section's icon adds one (onAdd with the section's id).
+export default function TimelinePanel({ onAddVideo, onAdd }) {
   const { items, duration, activeItemId, selectedIds } = useEditorStore(
     useShallow((s) => ({ items: s.items, duration: s.duration, activeItemId: s.activeItemId, selectedIds: s.selectedIds }))
   );
@@ -101,7 +105,7 @@ export default function TimelinePanel({ onAddVideo }) {
     };
   }, []);
 
-  const rows = timelineRows(items);
+  const sections = timelineSections(items);
   const videos = items.filter((i) => i.type === 'video');
   const lastVideo = videos.length ? videos.reduce((a, b) => (b.endMs > a.endMs ? b : a)) : null;
 
@@ -123,51 +127,68 @@ export default function TimelinePanel({ onAddVideo }) {
           </div>
 
           <div className="vt-tracks">
-            {rows.map((row) => {
-              const item = row[0];
+            {sections.map((section) => {
+              const Icon = SECTION_ICONS[section.id];
+              const empty = !section.lines.length;
               return (
-              <div key={item.autoCaption ? 'captions' : item.id} className={`vt-row vt-row--${item.type}`}>
-                {row.map((clip) => (
-                  <TimelineClip
-                    key={clip.id}
-                    item={clip}
-                    left={x(clip.startMs)}
-                    width={Math.max(24, msToPx(clip.endMs - clip.startMs, pxPerSec))}
-                    selected={clip.id === activeItemId}
-                    picked={selectedIds.includes(clip.id)}
-                    picking={selectedIds.length > 0}
-                    pxPerSec={pxPerSec}
-                    onSnap={setSnapMs}
-                  />
-                ))}
-                {item === lastVideo && (
-                  <button
-                    type="button"
-                    className="vt-add-after"
-                    style={{ left: x(item.endMs) + 6 }}
-                    onClick={(e) => { e.stopPropagation(); onAddVideo(); }}
-                    aria-label="Add video"
-                  >
-                    <Plus size={18} strokeWidth={3} />
-                  </button>
-                )}
-              </div>
+                <div key={section.id} className={`vt-section vt-section--${section.id}${empty ? ' is-empty' : ''}`}>
+                  {/* The video section's empty state is its Add a video button instead. */}
+                  {empty && section.id !== 'video' ? (
+                    <button type="button" className="vt-section-icon" aria-label={section.add} title={section.add}
+                      onClick={(e) => { e.stopPropagation(); onAdd?.(section.id); }}>
+                      <Icon size={17} strokeWidth={2} aria-hidden="true" />
+                    </button>
+                  ) : (
+                    <div className="vt-section-icon" role="img" aria-label={section.label} onClick={(e) => e.stopPropagation()}>
+                      <Icon size={17} strokeWidth={2} aria-hidden="true" />
+                    </div>
+                  )}
+                  <div className="vt-section-lines">
+                    {section.lines.map((line) => (
+                      <div key={line[0].id} className={`vt-row vt-row--${section.id}`}>
+                        {line.map((clip) => (
+                          <TimelineClip
+                            key={clip.id}
+                            item={clip}
+                            left={x(clip.startMs)}
+                            width={Math.max(24, msToPx(clip.endMs - clip.startMs, pxPerSec))}
+                            selected={clip.id === activeItemId}
+                            picked={selectedIds.includes(clip.id)}
+                            picking={selectedIds.length > 0}
+                            pxPerSec={pxPerSec}
+                            onSnap={setSnapMs}
+                          />
+                        ))}
+                        {line.includes(lastVideo) && (
+                          <button
+                            type="button"
+                            className="vt-add-after"
+                            style={{ left: x(lastVideo.endMs) + 6 }}
+                            onClick={(e) => { e.stopPropagation(); onAddVideo(); }}
+                            aria-label="Add video"
+                          >
+                            <Plus size={18} strokeWidth={3} />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                    {section.id === 'video' && !lastVideo && (
+                      <div className="vt-row vt-row--video">
+                        <button
+                          type="button"
+                          className="vt-empty-clip"
+                          // Starts at the playhead, in the middle: kept short enough to end on screen.
+                          style={{ left: pad, width: Math.min(190, pad - 16) }}
+                          onClick={(e) => { e.stopPropagation(); onAddVideo(); }}
+                        >
+                          <Film size={16} /> Add a video
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
               );
             })}
-
-            {!lastVideo && (
-              <div className="vt-row vt-row--video">
-                <button
-                  type="button"
-                  className="vt-empty-clip"
-                  // Starts at the playhead, in the middle: kept short enough to end on screen.
-                  style={{ left: pad, width: Math.min(190, pad - 16) }}
-                  onClick={(e) => { e.stopPropagation(); onAddVideo(); }}
-                >
-                  <Film size={16} /> Add a video
-                </button>
-              </div>
-            )}
           </div>
 
           {snapMs !== null && <div className="vt-snap-line" style={{ left: x(snapMs) }} />}

@@ -249,6 +249,25 @@ describe('VideoEditor', () => {
     expect(screen.queryByText(/selected$/)).toBeNull();
   });
 
+  it('lays the timeline out in five sections by type; an empty one’s icon adds one', () => {
+    act(() => {
+      store().addItem({ type: 'text', text: 'A', durationMs: 2000 });
+      store().addItem({ type: 'sticker', url: 'a.png', durationMs: 2000 });
+      store().addItem({ type: 'sticker', url: 'b.png', durationMs: 2000 });
+      store().setActiveItem(store().items[0].id);
+    });
+    const { container } = render(<VideoEditor onBack={() => {}} />);
+    const sections = [...container.querySelectorAll('.vt-section')];
+    expect(sections.map((s) => s.className.match(/vt-section--(\w+)/)[1])).toEqual(['video', 'image', 'text', 'sticker', 'audio']);
+    // The two stickers overlap, so they take two lines of the Stickers section.
+    expect(sections[3].querySelectorAll('.vt-row')).toHaveLength(2);
+    expect(sections[1].className).toContain('is-empty');
+    // The empty Photos section's icon lets go of the clip and opens Add photo.
+    fireEvent.click(within(sections[1]).getByLabelText('Add photo'));
+    expect(store().activeItemId).toBe(null);
+    expect(screen.getByRole('dialog', { name: 'Add photo' })).toBeTruthy();
+  });
+
   it('hides a clip with the eye on the selected clip, which stays on it while hidden', () => {
     act(() => store().addItem({ type: 'video', url: 'a.mp4', durationMs: 2000 }));
     const { container } = render(<VideoEditor onBack={() => {}} />);

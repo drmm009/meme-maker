@@ -45,22 +45,32 @@ export const getRulerMarks = (durationMs, pxPerSec) => {
   return marks;
 };
 
-// Overlays sit above the main video and audio sits underneath, like the canvas stacking order.
-const TRACK_ORDER = { text: 0, sticker: 1, image: 2, video: 3, audio: 4 };
-export const orderTracks = (items) =>
-  items
-    .map((item, index) => ({ item, index }))
-    .sort((a, b) => (TRACK_ORDER[a.item.type] ?? 5) - (TRACK_ORDER[b.item.type] ?? 5) || a.index - b.index)
-    .map(({ item }) => item);
+// The timeline's sections, top to bottom, by clip type: each clip sits in its type's section.
+export const TIMELINE_SECTIONS = [
+  { id: 'video', label: 'Videos', add: 'Add video' },
+  { id: 'image', label: 'Photos', add: 'Add photo' },
+  { id: 'text', label: 'Text', add: 'Add text' },
+  { id: 'sticker', label: 'Stickers', add: 'Add sticker' },
+  { id: 'audio', label: 'Sounds', add: 'Add sound' },
+];
 
-// Timeline rows: one per clip, except auto captions, which share one row (where the first is).
-export const timelineRows = (items) => {
-  const rows = [];
-  let captions = null;
-  for (const item of orderTracks(items)) {
-    if (!item.autoCaption) rows.push([item]);
-    else if (captions) captions.push(item);
-    else { captions = [item]; rows.push(captions); }
+// Clips packed into as few lines as they fit: each goes on the first line it doesn't overlap,
+// earliest first (so the order holds steady while nothing moves past another).
+export const packLines = (clips) => {
+  const lines = [];
+  for (const clip of [...clips].sort((a, b) => a.startMs - b.startMs)) {
+    const line = lines.find((l) => l[l.length - 1].endMs <= clip.startMs);
+    if (line) line.push(clip);
+    else lines.push([clip]);
   }
-  return rows;
+  return lines;
 };
+
+// Each section with its clips in lines (none when it's empty). Auto captions share a line of their
+// own at the top of Text.
+export const timelineSections = (items) => TIMELINE_SECTIONS.map((section) => {
+  const clips = items.filter((i) => i.type === section.id);
+  const captions = clips.filter((i) => i.autoCaption);
+  const lines = packLines(clips.filter((i) => !i.autoCaption));
+  return { ...section, lines: captions.length ? [captions, ...lines] : lines };
+});

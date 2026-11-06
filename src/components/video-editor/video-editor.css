@@ -239,7 +239,8 @@
   border-radius: 26px 26px 0 0;
   transition: height 0.35s var(--vt-ease);
 }
-.vt-editor.is-edit .vt-timeline-wrap { height: clamp(180px, 31dvh, 320px); }
+/* Room for the five sections, one line each, on a phone. */
+.vt-editor.is-edit .vt-timeline-wrap { height: clamp(200px, 34dvh, 340px); }
 
 .vt-timeline { position: relative; height: 100%; }
 .vt-scroll {
@@ -290,9 +291,35 @@
   transform: translateX(-50%);
 }
 
-.vt-tracks { display: flex; flex-direction: column; gap: 10px; padding: 12px 0 20px; }
-.vt-row { position: relative; height: 40px; flex-shrink: 0; }
-.vt-row--video { height: 56px; }
+/* Five sections by clip type (Videos, Photos, Text, Stickers, Sounds), a hairline between each. A
+   section's icon sits in a column at the left that stays put (sticky) as the timeline scrolls, over
+   the clips passing under it; its lines start at the canvas's left like the ruler, under the icon. */
+.vt-tracks { display: flex; flex-direction: column; padding: 2px 0 12px; }
+.vt-section { position: relative; display: flex; padding: 5px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
+.vt-section:last-child { border-bottom: none; }
+.vt-section-icon {
+  position: sticky;
+  left: 0;
+  z-index: 4;
+  flex: none;
+  width: 44px;
+  display: grid;
+  place-items: center;
+  margin: -5px 0;
+  border: none;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--vt-surface);
+  color: var(--vt-muted);
+}
+/* An empty section: a slim strip whose icon adds one. */
+.vt-section.is-empty:not(.vt-section--video) { height: 34px; padding: 0; }
+.vt-section.is-empty .vt-section-icon { margin: 0; color: rgba(255, 255, 255, 0.35); }
+button.vt-section-icon { cursor: pointer; }
+button.vt-section-icon:active { color: var(--vt-accent); }
+@media (hover: hover) { button.vt-section-icon:hover { color: var(--vt-text); } }
+.vt-section-lines { flex: none; width: 100%; margin-left: -44px; display: flex; flex-direction: column; gap: 6px; }
+.vt-row { position: relative; height: 36px; flex-shrink: 0; }
+.vt-row--video { height: 50px; }
 
 
 .vt-clip {

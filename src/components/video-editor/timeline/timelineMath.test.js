@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { msToPx, pxToMs, clampZoom, formatClock, getContentEnd, findSnap, getRulerMarks, orderTracks, timelineRows } from './timelineMath';
+import { msToPx, pxToMs, clampZoom, formatClock, getContentEnd, findSnap, getRulerMarks, packLines, timelineSections } from './timelineMath';
 
 describe('timelineMath', () => {
   it('converts between time and pixels at a zoom level', () => {
@@ -34,13 +34,27 @@ describe('timelineMath', () => {
     expect(far.filter((m) => m.major).map((m) => m.label)).toEqual(['0s', '5s', '10s']);
   });
 
-  it('orders tracks overlays-first, then video, then audio', () => {
-    const items = [{ id: 'a', type: 'audio' }, { id: 'v', type: 'video' }, { id: 't', type: 'text' }, { id: 's', type: 'sticker' }, { id: 't2', type: 'text' }];
-    expect(orderTracks(items).map((i) => i.id)).toEqual(['t', 't2', 's', 'v', 'a']);
+  it('packs clips into as few lines as they fit, earliest first', () => {
+    const clip = (id, startMs, endMs) => ({ id, startMs, endMs });
+    const lines = packLines([clip('b', 1000, 3000), clip('a', 0, 1000), clip('c', 500, 2000), clip('d', 3000, 4000)]);
+    expect(lines.map((l) => l.map((c) => c.id))).toEqual([['a', 'b', 'd'], ['c']]);
   });
 
-  it('puts all auto captions in one row', () => {
-    const items = [{ id: 'v', type: 'video' }, { id: 'c1', type: 'text', autoCaption: true }, { id: 't', type: 'text' }, { id: 'c2', type: 'text', autoCaption: true }];
-    expect(timelineRows(items).map((row) => row.map((i) => i.id))).toEqual([['c1', 'c2'], ['t'], ['v']]);
+  it('puts each clip in its type’s section, captions on a line of their own', () => {
+    const items = [
+      { id: 'a', type: 'audio', startMs: 0, endMs: 1000 },
+      { id: 'v', type: 'video', startMs: 0, endMs: 2000 },
+      { id: 'c1', type: 'text', autoCaption: true, startMs: 0, endMs: 500 },
+      { id: 't', type: 'text', startMs: 0, endMs: 1000 },
+      { id: 'c2', type: 'text', autoCaption: true, startMs: 500, endMs: 900 },
+      { id: 's', type: 'sticker', startMs: 0, endMs: 1000 },
+    ];
+    expect(timelineSections(items).map((s) => [s.id, s.lines.map((l) => l.map((c) => c.id))])).toEqual([
+      ['video', [['v']]],
+      ['image', []],
+      ['text', [['c1', 'c2'], ['t']]],
+      ['sticker', [['s']]],
+      ['audio', [['a']]],
+    ]);
   });
 });
