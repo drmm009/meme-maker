@@ -707,10 +707,15 @@ export default function ToolRail({ onAdd, ref }) {
   // Picked clips still on the timeline (undo may have taken some away).
   const picked = selectedIds.filter((id) => items.some((i) => i.id === id));
   // A sheet belongs to the clip it was opened for (or to "nothing selected"); selecting another closes it.
-  const [sheetState, setSheetState] = useState({ id: null, name: null });
+  // One opened from a tile in another sheet (Opacity from Adjust, Background from Canvas) keeps that
+  // sheet as its `parent`, and closing it goes back there.
+  const [sheetState, setSheetState] = useState({ id: null, name: null, parent: null });
   const ownerId = activeItem?.id ?? null;
   const sheet = sheetState.id === ownerId ? sheetState.name : null;
-  const setSheet = (name) => setSheetState({ id: ownerId, name });
+  const setSheet = (name) => setSheetState({ id: ownerId, name, parent: null });
+  const closeSheet = () => setSheetState((s) => ({ ...s, name: s.parent, parent: null }));
+  // After a tile in sheet `from` has run: if it opened a sheet of its own, closing that comes back to `from`.
+  const cameFrom = (from) => setSheetState((s) => (s.name && s.name !== from ? { ...s, parent: from } : s));
   const toggle = (name, keepOpen = false) => setSheet(sheet === name && !keepOpen ? null : name);
   const spec = sheet && (SHEETS[sheet] || SOURCE_SHEETS[sheet]);
 
@@ -758,7 +763,7 @@ export default function ToolRail({ onAdd, ref }) {
   // A tile in a sources sheet: a settings sheet (Top sounds, Background…) opens in its place;
   // anything else is added (or its picker opened).
   const pickSource = (kind) => {
-    if (SHEETS[kind]) setSheet(kind);
+    if (SHEETS[kind]) setSheetState({ id: ownerId, name: kind, parent: sheet });
     else {
       setSheet(null);
       onAdd(kind);
@@ -774,10 +779,10 @@ export default function ToolRail({ onAdd, ref }) {
     bar = <DeckBar ariaLabel="Selected clips" items={pickedTools(picked)} />;
   } else if (activeItem) {
     const tools = activeItem.type === 'video' ? videoRow(allTools, sheet, toggle) : allTools;
-    bar = <DeckBar key="clip" ariaLabel="Clip tools" items={tools} back={{ label: 'Back', title: 'Done with this clip', onClick: () => useEditorStore.getState().setActiveItem(null) }} />;
+    bar = <DeckBar key="clip" scrollKey={`clip:${activeItem.id}`} ariaLabel="Clip tools" items={tools} back={{ label: 'Back', title: 'Done with this clip', onClick: () => useEditorStore.getState().setActiveItem(null) }} />;
   } else {
     bar = (
-      <DeckBar key="add" ariaLabel="Add tools"
+      <DeckBar key="add" scrollKey="add" ariaLabel="Add tools"
         items={DOCK.map((t) => ({ id: t.kind, label: t.label, title: t.title, Icon: t.Icon, tint: DOCK_TINTS[t.kind], onClick: () => runTool(t) }))} />
     );
   }
@@ -787,11 +792,12 @@ export default function ToolRail({ onAdd, ref }) {
       <div className={`vt-bottom${spec ? ' has-sheet' : ''}`} style={spec && rest ? { minHeight: rest.height, maxHeight: spec.tall ? Math.max(rest.room, Math.min(420, window.innerHeight * 0.6)) : rest.room } : undefined}>
         {/* A setting's sheet takes the bar's place; the bar comes back when it closes. */}
         {spec ? (
-          <Sheet key={sheet} title={spec.title} Icon={spec.Icon} onClose={() => setSheet(null)} className="vt-sheet"
+          <Sheet key={sheet} title={spec.title} Icon={spec.Icon} onClose={closeSheet} className="vt-sheet"
             aside={spec.Aside && activeItem ? <spec.Aside item={activeItem} /> : undefined}
             action={spec.action && activeItem ? spec.action(activeItem) : undefined}>
             {spec.tiles && activeItem
-              ? <ToolTiles tools={VIDEO_TILES[spec.tiles].ids.map((id) => allTools.find((t) => t.id === id)).filter(Boolean)} />
+              ? <ToolTiles tools={VIDEO_TILES[spec.tiles].ids.map((id) => allTools.find((t) => t.id === id)).filter(Boolean)
+                .map((t) => ({ ...t, onClick: () => { t.onClick(); cameFrom(sheet); } }))} />
               : spec.sources
               ? <SourcesPanel sources={spec.sources} onPick={pickSource} />
               : <spec.Panel item={activeItem} onMore={() => { setSheet(null); onAdd('sounds'); }} onOpen={setSheet} />}

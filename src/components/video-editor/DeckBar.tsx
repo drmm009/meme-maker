@@ -21,12 +21,17 @@ interface DeckBarProps {
   ariaLabel: string;
   // A Back button pinned at the start, apart from the tools (they scroll sideways past it).
   back?: { label: string; title?: string; onClick: () => void };
+  // Where the row was scrolled to is kept under this key, so a row that goes away (a sheet takes its
+  // place) comes back scrolled where it was.
+  scrollKey?: string;
 }
+
+const scrolledTo = new Map<string, number>();
 
 // The video editor's bottom toolbar: one flat, full-width row of buttons, each a round icon over a
 // small label, joined to the timeline above it. The same row shows the add tools or the selected clip's. When the buttons
 // run past the edge, the row fades out there until it's scrolled to the end.
-export default function DeckBar({ items, ariaLabel, back }: DeckBarProps) {
+export default function DeckBar({ items, ariaLabel, back, scrollKey }: DeckBarProps) {
   const rowRef = useRef<HTMLDivElement>(null);
   const [more, setMore] = useState(false);
   useLayoutEffect(() => {
@@ -42,6 +47,14 @@ export default function DeckBar({ items, ariaLabel, back }: DeckBarProps) {
       observer?.disconnect();
     };
   }, [items.length]);
+  useLayoutEffect(() => {
+    const row = rowRef.current;
+    if (!row || !scrollKey) return undefined;
+    row.scrollLeft = scrolledTo.get(scrollKey) ?? 0;
+    const remember = () => scrolledTo.set(scrollKey, row.scrollLeft);
+    row.addEventListener('scroll', remember, { passive: true });
+    return () => row.removeEventListener('scroll', remember);
+  }, [scrollKey]);
   return (
     <div className="vt-deckbar" role="toolbar" aria-label={ariaLabel}>
       {back && (

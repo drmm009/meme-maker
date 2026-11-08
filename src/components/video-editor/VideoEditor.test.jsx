@@ -105,6 +105,9 @@ describe('VideoEditor', () => {
     expect(screen.queryByRole('toolbar', { name: 'Add tools' })).toBeNull();
     fireEvent.click(screen.getByText('Top sounds'));
     expect(screen.getByRole('dialog', { name: 'Top sounds' })).toBeTruthy();
+    // Closing it goes back to the sheet it was opened from, closing that to the tools.
+    closeSheet();
+    expect(screen.getByRole('dialog', { name: 'Add sound' })).toBeTruthy();
     closeSheet();
     expect(screen.queryByRole('dialog')).toBeNull();
     expect(screen.getByRole('toolbar', { name: 'Add tools' })).toBeTruthy();
@@ -199,6 +202,7 @@ describe('VideoEditor', () => {
     // A tile with settings opens its sheet in the tiles' place.
     fireEvent.click(screen.getByText('Opacity'));
     expect(screen.getByRole('dialog', { name: 'Opacity' })).toBeTruthy();
+    closeSheet();
     closeSheet();
     // Mute is in the Volume sheet; the row's Effects lights up while an effect is on.
     fireEvent.click(screen.getByText('Volume'));
@@ -486,6 +490,7 @@ describe('VideoEditor', () => {
       fireEvent.click(screen.getByText('Top left'));
       expect(store().watermark).toEqual({ text: '@memer', corner: 'tl' });
       closeSheet();
+      closeSheet();
 
       addFrom('Canvas', 'End card');
       fireEvent.change(screen.getByLabelText('End card title'), { target: { value: 'Bye' } });
@@ -496,6 +501,7 @@ describe('VideoEditor', () => {
       // Adding again redraws the same card rather than adding another.
       fireEvent.click(screen.getByText('Update end card'));
       expect(store().items.filter((i) => i.endCard)).toHaveLength(1);
+      closeSheet();
       closeSheet();
       // A video added later goes before the end card, which moves along to stay last.
       act(() => store().addItem({ type: 'video', url: 'b.mp4', durationMs: 2000 }));
@@ -641,6 +647,20 @@ describe('VideoEditor', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Reset' }));
     expect(store().items[0].crop ?? null).toBe(null);
     expect(screen.getByRole('radio', { name: 'Free' }).getAttribute('aria-checked')).toBe('true');
+  });
+
+  it('goes back to the tiles sheet a setting was opened from', () => {
+    act(() => store().addItem({ type: 'video', url: 'a.mp4', durationMs: 2000 }));
+    const { container } = render(<VideoEditor onBack={() => {}} />);
+    fireEvent.click(clips(container)[0]);
+    fireEvent.click(screen.getByText('Adjust'));
+    fireEvent.click(within(screen.getByRole('dialog', { name: 'Adjust' })).getByText('Opacity'));
+    expect(screen.getByRole('dialog', { name: 'Opacity' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Close Opacity' }));
+    expect(screen.getByRole('dialog', { name: 'Adjust' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Close Adjust' }));
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(screen.getByRole('toolbar', { name: 'Clip tools' })).toBeTruthy();
   });
 
   it('lights the placement a video is in and flips it from tiles', () => {
