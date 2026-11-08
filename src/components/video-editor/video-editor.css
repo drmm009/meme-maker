@@ -638,7 +638,7 @@
   -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent);
   mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent);
 }
-/* Each button: a round icon (--tint colours it, white by default) over a small grey label. */
+/* Each button: a round black icon (--tint colours it, white by default) over a small grey label. */
 .vt-deckbar-btn {
   --t: var(--tint, #f4f4f6);
   flex: 1 0 auto;
@@ -669,7 +669,7 @@
   width: 38px;
   height: 38px;
   border-radius: 50%;
-  background: color-mix(in srgb, var(--t) 11%, #2c2c2e);
+  background: #000;
   color: var(--t);
   transition: background 0.15s ease, color 0.15s ease, transform 0.15s var(--vt-ease);
 }
@@ -685,10 +685,9 @@
   border-radius: 12px 0 0 12px;
   box-shadow: inset -0.5px 0 0 rgba(255, 255, 255, 0.14);
 }
-.vt-deckbar-back .vt-deckbar-icon { background: none; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14); }
 @media (hover: hover) {
   .vt-deckbar-btn:hover { color: var(--vt-text); }
-  .vt-deckbar-btn:hover .vt-deckbar-icon { background: color-mix(in srgb, var(--t) 18%, #3a3a3c); }
+  .vt-deckbar-btn:hover .vt-deckbar-icon { background: #0d0d0e; }
 }
 .vt-deckbar-btn:focus-visible { outline: none; }
 .vt-deckbar-btn:focus-visible .vt-deckbar-icon { outline: 2px solid var(--vt-accent); outline-offset: 2px; }
