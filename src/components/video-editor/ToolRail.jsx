@@ -836,6 +836,12 @@ const pickedTools = (ids) => {
 };
 
 // The `sources` tools' sheets (Video, Photo, Stickers, Sounds, Canvas), by tool.
+// The add tools' circles take the colour their clips have on the timeline.
+const DOCK_TINTS = {
+  image: 'var(--vt-clip-image)', text: 'var(--vt-clip-text)', addsticker: 'var(--vt-clip-sticker)',
+  addsound: 'var(--vt-clip-audio)', voice: 'var(--vt-clip-audio)', captions: 'var(--vt-clip-text)',
+};
+
 const SOURCE_SHEETS = Object.fromEntries(DOCK.filter((t) => t.sources).map((t) => [t.kind, { title: t.title, Icon: t.Icon, sources: t.sources }]));
 
 // A timeline section's add tool (an empty section's icon, TimelinePanel), by section.
@@ -939,7 +945,7 @@ export default function ToolRail({ onAdd, ref }) {
   } else {
     bar = (
       <DeckBar key="add" ariaLabel="Add tools"
-        items={DOCK.map((t) => ({ id: t.kind, label: t.label, title: t.title, Icon: t.Icon, onClick: () => runTool(t) }))} />
+        items={DOCK.map((t) => ({ id: t.kind, label: t.label, title: t.title, Icon: t.Icon, tint: DOCK_TINTS[t.kind], onClick: () => runTool(t) }))} />
     );
   }
 
