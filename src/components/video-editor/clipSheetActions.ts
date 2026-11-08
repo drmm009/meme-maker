@@ -1,8 +1,10 @@
-// The heading buttons of a video clip's Crop and Filters sheets (Sheet's `action`): Reset.
-import { RotateCcw } from 'lucide-react';
+// The heading buttons of a video clip's sheets (Sheet's `action`): Crop's and Filters' Reset, Green
+// screen's Turn off, Zoom punch's Clear all.
+import { Power, RotateCcw, Trash2 } from 'lucide-react';
 import { useEditorStore } from '../../store/useVideoEditorStore';
 import { FULL_CROP, applyCrop, clipCrop, isCropped } from '../../utils/clipCrop';
-import type { ClipCrop, ClipFilter, Placed } from '../../model/videoProject';
+import { clipPunchTimes } from '../../utils/zoomPunch';
+import type { ChromaKey, ClipCrop, ClipFilter, Placed } from '../../model/videoProject';
 
 type CroppableClip = Placed & { id: string; crop?: ClipCrop | null };
 
@@ -28,4 +30,22 @@ export const videoFiltersReset = (item: { id: string; filter?: ClipFilter | null
   variant: 'plain' as const,
   disabled: !item.filter || !Object.values(item.filter).some(Boolean),
   onClick: () => useEditorStore.getState().updateItem(item.id, { filter: null }),
+});
+
+// Green screen off.
+export const greenScreenOff = (item: { id: string; chromaKey?: ChromaKey | null }) => ({
+  label: 'Turn off',
+  Icon: Power,
+  variant: 'plain' as const,
+  disabled: !item.chromaKey,
+  onClick: () => useEditorStore.getState().updateItem(item.id, { chromaKey: null }),
+});
+
+// No zoom punches.
+export const punchesClear = (item: Parameters<typeof clipPunchTimes>[0] & { id: string }) => ({
+  label: 'Clear all',
+  Icon: Trash2,
+  variant: 'plain' as const,
+  disabled: !clipPunchTimes(item).length,
+  onClick: () => useEditorStore.getState().updateItem(item.id, { punches: [] }),
 });

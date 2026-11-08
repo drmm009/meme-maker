@@ -1,8 +1,8 @@
 import React, { useEffect, useImperativeHandle, useLayoutEffect, useRef, useState } from 'react';
 import {
   Type, Sticker, Smile, LayoutGrid, Image as ImageIcon, Clapperboard, Music,
-  Gauge, Volume2, VolumeX, Palette, RotateCw, Crop, Copy, Trash2,
-  Scissors, PencilLine, SlidersHorizontal, WandSparkles, Pipette, Sparkles, ImagePlay, PaintBucket, Zap, Snowflake, Rewind, Repeat, ZoomIn, BringToFront, SendToBack, Mic, ArrowRightLeft, Frame, Upload, Library, Laugh, SquarePlay, Captions, Expand, Blend, Eraser, FlipHorizontal2, Move, ListChecks, X, AtSign, Flag, Layers, ScanFace, CaseSensitive, Baseline, Ellipsis, Wand, Settings2
+  Gauge, Volume1, Volume2, VolumeX, Palette, RotateCw, Crop, Copy, Trash2,
+  Scissors, PencilLine, SlidersHorizontal, WandSparkles, Sparkles, ImagePlay, PaintBucket, Zap, Snowflake, Rewind, Repeat, ZoomIn, BringToFront, SendToBack, Mic, ArrowRightLeft, Frame, Upload, Library, Laugh, SquarePlay, Captions, Expand, Blend, Eraser, FlipHorizontal2, Move, ListChecks, X, AtSign, Flag, Layers, ScanFace, CaseSensitive, Baseline, Ellipsis, Wand, Settings2
 } from 'lucide-react';
 import { Sheet } from '../ui';
 import DeckBar from './DeckBar';
@@ -14,7 +14,8 @@ import CropPanel from './CropPanel';
 import VideoFilterPanel from './VideoFilterPanel';
 import { SpeedPanel, VolumePanel } from './SpeedVolumePanels';
 import { FlipPanel, PlacePanel, TransitionPanel } from './ClipLookPanels';
-import { cropReset, videoFiltersReset } from './clipSheetActions';
+import { GreenScreenPanel, OpacityPanel, PunchPanel } from './ClipEffectPanels';
+import { cropReset, greenScreenOff, punchesClear, videoFiltersReset } from './clipSheetActions';
 import FaceSwapPanel from './FaceSwapPanel';
 import { TextColorPanel, TextEditPanel, TextFontPanel, TextStylePanel } from './TextLookPanel';
 import { StickerDieCutAside, StickerDieCutPanel, StickerEditPanel, StickerFlipAside } from './StickerLookPanel';
@@ -28,7 +29,6 @@ import { VideoBackgroundAside, VideoBackgroundPanel } from './VideoBackgroundPan
 import { PHOTO_MOTIONS } from '../../utils/photoMotion';
 import { DEFAULT_END_CARD, WATERMARK_CORNERS, endCardClip, isEndCard, renderEndCard } from '../../utils/brandCard';
 import { captureFrame, renderClipEffect } from '../../utils/clipEffects';
-import { clipPunchTimes } from '../../utils/zoomPunch';
 import { FILTER_PRESETS } from '../../utils/clipFilters';
 import { TRANSITIONS, previousClip } from '../../utils/clipTransitions';
 import { canRecordVoice, startVoiceRecording } from '../../utils/voiceRecorder';
@@ -119,49 +119,6 @@ function MotionPanel({ item }) {
   return (
     <PickRow label="Photo motion" value={item.motion || null} onPick={(v) => update(item.id, { motion: v })}
       options={PHOTO_MOTIONS.map((m) => ({ value: m.id, label: m.label }))} />
-  );
-}
-
-function OpacityPanel({ item }) {
-  const opacity = Math.round(clipOpacity(item) * 100);
-  return (
-    <label className="vt-slider-row">
-      <span>Opacity</span>
-      <input type="range" min="0" max="100" step="1" value={opacity} onChange={(e) => update(item.id, { opacity: Number(e.target.value) / 100 })} />
-      <output>{opacity}%</output>
-    </label>
-  );
-}
-
-function GreenScreenPanel({ item }) {
-  const key = item.chromaKey;
-  if (!key) return null;
-  const setKey = (patch) => update(item.id, { chromaKey: { ...key, ...patch } });
-  const strength = Math.round(key.similarity * 100);
-  const softness = Math.round(key.blend * 100);
-  const detecting = key.color === 'auto';
-  return (
-    <>
-      <label className="vt-slider-row">
-        <span>Strength</span>
-        <input type="range" min="5" max="50" step="1" value={strength} onChange={(e) => setKey({ similarity: Number(e.target.value) / 100 })} />
-        <output>{strength}</output>
-      </label>
-      <label className="vt-slider-row">
-        <span>Edges</span>
-        <input type="range" min="0" max="30" step="1" value={softness} onChange={(e) => setKey({ blend: Number(e.target.value) / 100 })} />
-        <output>{softness}</output>
-      </label>
-      <div className="vt-chip-row">
-        <label className="vt-chip vt-swatch-chip" title="Pick the screen colour">
-          <span className="vt-swatch" style={{ background: detecting ? DEFAULT_CHROMA_KEY.color : key.color }} />
-          {detecting ? 'Detecting…' : 'Colour'}
-          <input type="color" className="vt-hidden-input" value={detecting ? DEFAULT_CHROMA_KEY.color : key.color} onChange={(e) => setKey({ color: e.target.value })} />
-        </label>
-        <button type="button" className="vt-chip" onClick={() => setKey({ color: 'auto' })}><Pipette size={14} /> Re-detect</button>
-        <button type="button" className="vt-chip" onClick={() => update(item.id, { chromaKey: null })}>Turn off</button>
-      </div>
-    </>
   );
 }
 
@@ -306,36 +263,6 @@ function SfxPanel({ onMore }) {
       ))}
       <button type="button" className="vt-chip" onClick={onMore}><Music size={14} /> All sounds</button>
     </div>
-  );
-}
-
-function PunchPanel({ item }) {
-  const playhead = useEditorStore((s) => s.playhead);
-  const inside = playhead >= item.startMs && playhead <= item.endMs;
-  const punches = item.punches || [];
-  const visible = clipPunchTimes(item);
-  const add = () => {
-    if (inside) update(item.id, { punches: [...punches, sourceTimeMs(item, playhead)].sort((a, b) => a - b) });
-  };
-  // The punch whose moment is closest to the playhead (within half a second).
-  const nearest = () => {
-    let best = -1;
-    let bestDist = 500;
-    punches.forEach((s, i) => {
-      const d = Math.abs(item.startMs + (s - (item.trimStartMs || 0)) / (item.playbackRate || 1) - playhead);
-      if (d <= bestDist) { best = i; bestDist = d; }
-    });
-    return best;
-  };
-  return (
-    <>
-      <div className="vt-chip-row">
-        <button type="button" className={`vt-chip${inside ? ' is-on' : ''}`} onClick={add} disabled={!inside}><ZoomIn size={14} /> Punch at playhead</button>
-        <button type="button" className="vt-chip" onClick={() => { const i = nearest(); if (i >= 0) update(item.id, { punches: punches.filter((_, j) => j !== i) }); }}>Remove nearest</button>
-        <button type="button" className="vt-chip" onClick={() => update(item.id, { punches: [] })}>Clear all ({visible.length})</button>
-      </div>
-      <p className="vt-panel-hint">Tip: press play and tap Punch on the beat.</p>
-    </>
   );
 }
 
@@ -533,9 +460,9 @@ const SHEETS = {
   flip: { title: 'Flip', Icon: FlipHorizontal2, Panel: FlipPanel },
   motion: { title: 'Photo motion', Icon: Move, Panel: MotionPanel },
   volume: { title: 'Volume', Icon: Volume2, Panel: VolumePanel },
-  greenscreen: { title: 'Green screen', Icon: WandSparkles, Panel: GreenScreenPanel },
+  greenscreen: { title: 'Green screen', Icon: WandSparkles, Panel: GreenScreenPanel, action: greenScreenOff },
   bgremove: { title: 'Background', Icon: BackgroundIcon, Panel: VideoBackgroundPanel, Aside: VideoBackgroundAside },
-  punch: { title: 'Zoom punch', Icon: ZoomIn, Panel: PunchPanel },
+  punch: { title: 'Zoom punch', Icon: ZoomIn, Panel: PunchPanel, action: punchesClear },
   // `tall`: may rise over the preview (its choices don't need it in view), not just to the timeline's top.
   faceswap: { title: 'Face swap', Icon: ScanFace, Panel: FaceSwapPanel, tall: true },
   filter: { title: 'Filters', Icon: FiltersIcon, Panel: VideoFilterPanel, action: videoFiltersReset, tall: true },
@@ -587,6 +514,18 @@ function ToolTiles({ tools }) {
     </div>
   );
 }
+
+// The Volume button's speaker shows the clip's level: crossed out when muted or silent, one wave
+// when quiet, two otherwise.
+const volumeIcon = (item) => {
+  const level = Number.isFinite(item.volume) ? item.volume : 1;
+  if (item.muted || level === 0) return VolumeX;
+  return level < 0.5 ? Volume1 : Volume2;
+};
+
+// A photo's row, most used first: the look (Filters, Background, Face swap), how it moves and sits
+// (Motion, Fit, Rotate), Transition, More, then Split, Arrange and Delete as on every clip.
+const IMAGE_ROW = ['filter', 'background', 'faceswap', 'motion', 'place', 'rotate', 'transition', 'more', 'split', 'arrange', 'delete'];
 
 // The selected clip's tools for the bottom bar, all in one row: what this kind of clip can do (each
 // setting opens its sheet, its button lit while open or while the setting is on), then Split,
@@ -647,7 +586,8 @@ function clipTools(item, { sheet, toggle, playhead, items }) {
   }
   if (item.type === 'video' || item.type === 'audio') {
     tools.push(
-      { id: 'volume', label: 'Volume', Icon: SlidersHorizontal, ...opens('volume') },
+      { id: 'volume', label: item.muted ? 'Muted' : 'Volume', title: 'Volume and fades', Icon: volumeIcon(item),
+        ...opens('volume', Boolean(item.muted || (Number.isFinite(item.volume) && item.volume !== 1) || item.fadeInMs || item.fadeOutMs)) },
       { id: 'mute', label: item.muted ? 'Unmute' : 'Mute', Icon: item.muted ? VolumeX : Volume2, active: Boolean(item.muted), onClick: () => update(item.id, { muted: !item.muted }) },
     );
   }
@@ -689,6 +629,7 @@ function clipTools(item, { sheet, toggle, playhead, items }) {
     { id: 'arrange', label: 'Arrange', title: 'Duplicate, layer order and select', Icon: Layers, ...opens('arrange') },
     { id: 'delete', label: 'Delete', Icon: Trash2, danger: true, onClick: () => store().removeItem(item.id) },
   );
+  if (item.type === 'image') tools.sort((a, b) => IMAGE_ROW.indexOf(a.id) - IMAGE_ROW.indexOf(b.id));
   return tools;
 }
 

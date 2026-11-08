@@ -397,7 +397,7 @@ describe('VideoEditor', () => {
     fireEvent.click(clips(container)[0]);
     const main = screen.getByRole('toolbar', { name: 'Clip tools' });
     expect([...main.querySelectorAll('button')].map((b) => b.textContent || b.getAttribute('aria-label')))
-      .toEqual(['Back', 'Face swap', 'Background', 'Filters', 'More', 'Fit', 'Motion', 'Rotate', 'Split', 'Arrange', 'Delete']);
+      .toEqual(['Back', 'Filters', 'Background', 'Face swap', 'Motion', 'Fit', 'Rotate', 'More', 'Split', 'Arrange', 'Delete']);
 
     fireEvent.click(clipTool('Filters'));
     fireEvent.click(screen.getByRole('button', { name: '90s Vintage' }));
@@ -587,7 +587,7 @@ describe('VideoEditor', () => {
     fireEvent.click(screen.getByText('Punch at playhead'));
     expect(store().items[0].punches).toEqual([1200, 2500]);
     expect(container.querySelectorAll('.vt-punch-mark')).toHaveLength(2);
-    fireEvent.click(screen.getByText('Remove nearest'));
+    fireEvent.click(screen.getByRole('button', { name: 'Remove the punch at 2.5s' }));
     expect(store().items[0].punches).toEqual([1200]);
     fireEvent.click(screen.getByText(/Clear all/));
     expect(store().items[0].punches).toEqual([]);

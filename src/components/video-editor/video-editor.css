@@ -1574,3 +1574,81 @@
 .vt-transition { display: flex; flex-direction: column; gap: 14px; }
 .vt-transition-length { display: flex; align-items: center; gap: 12px; }
 .vt-transition-label { flex: none; color: var(--vt-text); font-size: 14px; font-weight: 600; }
+
+/* Opacity, Green screen and Zoom punch sheets (ClipEffectPanels.tsx): the value big at the top where
+   there is one, then the control, then black pills. */
+.vt-stack { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.vt-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+.vt-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 56px;
+  height: 36px;
+  padding: 0 14px;
+  border: none;
+  border-radius: 999px;
+  background: #000;
+  color: var(--vt-muted);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, transform 0.15s var(--vt-ease);
+}
+.vt-pill.is-on { background: #3a3a3c; color: var(--vt-text); }
+button.vt-pill:active:not(:disabled) { transform: scale(0.96); }
+button.vt-pill:disabled { color: #636366; cursor: default; }
+.vt-pill:focus-visible, .vt-pill button:focus-visible { outline: 2px solid var(--vt-accent); outline-offset: 2px; }
+@media (hover: hover) { button.vt-pill:hover:not(:disabled):not(.is-on) { color: var(--vt-text); } }
+/* A punch: its time (go to it) and an × (remove it) in one pill. */
+.vt-pill--split { gap: 0; padding: 0; color: var(--vt-text); }
+.vt-pill--split button { height: 100%; border: none; background: none; color: inherit; font: inherit; cursor: pointer; }
+.vt-pill-main { padding: 0 6px 0 14px; }
+.vt-pill-x { display: grid; place-items: center; width: 32px; padding: 0 4px 0 0; color: var(--vt-muted) !important; border-radius: 0 999px 999px 0; }
+@media (hover: hover) { .vt-pill-x:hover { color: var(--vt-text) !important; } }
+
+/* Green screen's colour: a big swatch to tap (pick it yourself), what it is, Detect. */
+.vt-key-colour { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 12px; }
+.vt-key-swatch {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.85), 0 0 0 4px #000;
+  cursor: pointer;
+}
+.vt-key-swatch:focus-within { outline: 2px solid var(--vt-accent); outline-offset: 4px; }
+.vt-key-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.vt-key-text strong { color: var(--vt-text); font-size: 15px; font-weight: 700; }
+.vt-key-text span { overflow: hidden; color: var(--vt-muted); font-size: 12px; white-space: nowrap; text-overflow: ellipsis; }
+/* Named sliders, the names in a column. */
+.vt-tune { display: grid; grid-template-columns: 72px 1fr; align-items: center; gap: 14px 12px; }
+.vt-tune-label { color: var(--vt-text); font-size: 14px; font-weight: 600; }
+.vt-tune .ui-slider-value { min-width: 24px; text-align: right; }
+
+/* A sheet's one big action (Punch at playhead): a black bar, its icon orange. */
+.vt-big-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 52px;
+  border: none;
+  border-radius: var(--ui-radius-md, 16px);
+  background: #000;
+  color: var(--vt-text);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s var(--vt-ease), background 0.15s;
+}
+.vt-big-btn svg { color: var(--vt-accent); }
+.vt-big-btn:active:not(:disabled) { transform: scale(0.98); background: #3a3a3c; }
+.vt-big-btn:disabled { color: var(--vt-muted); font-weight: 600; cursor: default; }
+.vt-big-btn:disabled svg { color: #636366; }
+.vt-big-btn:focus-visible { outline: 2px solid var(--vt-accent); outline-offset: 2px; }
