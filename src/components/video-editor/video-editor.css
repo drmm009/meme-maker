@@ -1388,3 +1388,130 @@
 .vt-mute:focus-visible svg { outline: 2px solid var(--vt-accent); outline-offset: 2px; }
 .vt-volume-row.is-muted .ui-slider-wrap { opacity: 0.4; }
 .vt-volume-tiles { grid-template-columns: repeat(3, 1fr); }
+
+/* A video's Filters sheet: a black two-way switch, then Looks (stills of the clip, scrolling
+   sideways) or Adjust (sliders that fill out from the middle). */
+.vt-filters { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.vt-seg { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; padding: 3px; border-radius: 12px; background: #000; }
+.vt-seg-btn {
+  height: 34px;
+  border: none;
+  border-radius: 9px;
+  background: none;
+  color: var(--vt-muted);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.vt-seg-btn.is-on { background: #3a3a3c; color: var(--vt-text); }
+.vt-seg-btn:focus-visible { outline: 2px solid var(--vt-accent); outline-offset: -2px; }
+.vt-looks {
+  display: flex;
+  gap: 10px;
+  margin: 0 -16px;
+  padding: 2px 16px 4px;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  scroll-padding-inline: 16px;
+  scrollbar-width: none;
+}
+.vt-looks::-webkit-scrollbar { display: none; }
+.vt-look {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  width: 72px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--vt-muted);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  scroll-snap-align: start;
+  cursor: pointer;
+}
+.vt-look-thumb {
+  position: relative;
+  display: block;
+  width: 72px;
+  height: 92px;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #000;
+  transition: transform 0.15s var(--vt-ease);
+}
+.vt-look-thumb img, .vt-look-thumb .vt-filter-thumb-empty { display: block; width: 100%; height: 100%; object-fit: cover; }
+/* The picked look: a white ring with a gap of the sheet's grey, its name white. */
+.vt-look.is-on .vt-look-thumb { box-shadow: 0 0 0 2px var(--vt-surface), 0 0 0 4px #fff; }
+.vt-look.is-on { color: var(--vt-text); }
+.vt-look:active .vt-look-thumb { transform: scale(0.96); }
+.vt-look:focus-visible { outline: none; }
+.vt-look:focus-visible .vt-look-thumb { box-shadow: 0 0 0 2px var(--vt-surface), 0 0 0 4px var(--vt-accent); }
+.vt-look-label { max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.vt-adjust { display: flex; flex-direction: column; gap: 14px; }
+/* input.vt-bislider under .vt-editor: beats App.css's global range input look (orange knob, glow, margin). */
+.vt-adjust-row { display: flex; flex-direction: column; gap: 6px; }
+.vt-adjust-head { display: flex; align-items: center; gap: 10px; }
+.vt-adjust-icon { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: #000; color: var(--vt-text); }
+.vt-adjust-label { flex: 1; min-width: 0; color: var(--vt-text); font-size: 14px; font-weight: 600; }
+/* The value; tapping it puts the setting back to 0. */
+.vt-adjust-value {
+  min-width: 44px;
+  height: 26px;
+  padding: 0 8px;
+  border: none;
+  border-radius: 999px;
+  background: none;
+  color: var(--vt-muted);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  cursor: default;
+}
+.vt-adjust-value.is-set { background: #000; color: var(--vt-text); text-align: center; cursor: pointer; }
+.vt-adjust-value:focus-visible { outline: 2px solid var(--vt-accent); outline-offset: 2px; }
+.vt-editor input.vt-bislider {
+  --lo: 50%;
+  --hi: 50%;
+  width: 100%;
+  height: 26px;
+  margin: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+}
+.vt-editor input.vt-bislider::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 4px;
+  background:
+    linear-gradient(#5a5a5e, #5a5a5e) 50% 50% / 2px 10px no-repeat,
+    linear-gradient(to right, #000 var(--lo), var(--vt-accent) var(--lo), var(--vt-accent) var(--hi), #000 var(--hi));
+}
+.vt-editor input.vt-bislider::-moz-range-track {
+  height: 4px;
+  border-radius: 4px;
+  background: linear-gradient(to right, #000 var(--lo), var(--vt-accent) var(--lo), var(--vt-accent) var(--hi), #000 var(--hi));
+}
+.vt-editor input.vt-bislider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 24px;
+  height: 24px;
+  margin-top: -10px;
+  border: none;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+}
+.vt-editor input.vt-bislider::-moz-range-thumb { width: 22px; height: 22px; border: none; border-radius: 50%; background: #fff; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45); }
+.vt-editor input.vt-bislider:focus-visible { outline: none; }
+.vt-editor input.vt-bislider:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px var(--vt-accent); }
