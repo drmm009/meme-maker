@@ -838,7 +838,7 @@ const pickedTools = (ids) => {
 // The `sources` tools' sheets (Video, Photo, Stickers, Sounds, Canvas), by tool.
 // The add tools' circles take the colour their clips have on the timeline.
 const DOCK_TINTS = {
-  image: 'var(--vt-clip-image)', text: 'var(--vt-clip-text)', addsticker: 'var(--vt-clip-sticker)',
+  videos: 'var(--vt-clip-video)', image: 'var(--vt-clip-image)', text: 'var(--vt-clip-text)', addsticker: 'var(--vt-clip-sticker)',
   addsound: 'var(--vt-clip-audio)', voice: 'var(--vt-clip-audio)', captions: 'var(--vt-clip-text)',
 };
 

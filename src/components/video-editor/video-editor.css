@@ -14,9 +14,10 @@
   --vt-grad: #ff5a36;
   --vt-glow: none;
   --vt-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --vt-clip-video: #ff5e36;
   --vt-clip-text: #ff9100;
   --vt-clip-sticker: #ec4899;
-  --vt-clip-image: #ff5e36;
+  --vt-clip-image: #3b82f6;
   --vt-clip-audio: #2dd4bf;
 
   /* Pinned to the screen like the image editor: viewport heights (100vh/100dvh) come out wrong
@@ -296,6 +297,7 @@
    so it scrolls away with the clips. A faint line across the tracks parts the sections. */
 .vt-tracks { display: flex; flex-direction: column; padding: 2px 0 12px; }
 .vt-section { position: relative; display: flex; padding: 5px 0; --sec: rgba(255, 255, 255, 0.85); }
+.vt-section--video { --sec: var(--vt-clip-video); }
 .vt-section--image { --sec: var(--vt-clip-image); }
 .vt-section--text { --sec: var(--vt-clip-text); }
 .vt-section--sticker { --sec: var(--vt-clip-sticker); }
@@ -415,9 +417,9 @@
   background: var(--vt-accent) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E") center / 11px no-repeat;
   pointer-events: none;
 }
-.vt-clip--video { background-color: var(--vt-surface-2); }
+.vt-clip--video { background-color: var(--vt-surface-2); border-color: var(--vt-clip-video); }
 .vt-clip--text { background-color: rgba(255, 145, 0, 0.14); border-color: var(--vt-clip-text); color: #ffb547; }
-.vt-clip--image { background-color: rgba(255, 94, 54, 0.14); border-color: var(--vt-clip-image); }
+.vt-clip--image { background-color: rgba(59, 130, 246, 0.14); border-color: var(--vt-clip-image); }
 .vt-clip--sticker {
   background-color: rgba(236, 72, 153, 0.14);
   border-color: var(--vt-clip-sticker);
