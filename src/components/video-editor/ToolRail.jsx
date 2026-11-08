@@ -12,6 +12,7 @@ import { clipOpacity } from '../../model/videoProject';
 import { clipCrop, isCropped } from '../../utils/clipCrop';
 import CropPanel from './CropPanel';
 import VideoFilterPanel from './VideoFilterPanel';
+import { SpeedPanel, VolumePanel } from './SpeedVolumePanels';
 import { cropReset, videoFiltersReset } from './clipSheetActions';
 import FaceSwapPanel from './FaceSwapPanel';
 import { TextColorPanel, TextEditPanel, TextFontPanel, TextStylePanel } from './TextLookPanel';
@@ -35,7 +36,6 @@ import { speechClips } from '../../utils/clipAudio';
 import { togglePlayback } from './usePlaybackLoop';
 import { rotateAboutCenter } from './preview/previewMath';
 import { formatClock } from './timeline/timelineMath';
-import { DEFAULT_FADE_MS } from '../../utils/audioFades';
 import { DEFAULT_CHROMA_KEY } from '../../utils/chromaKey';
 import { TEXT_ANIMATIONS } from '../../utils/textAnimation';
 import { SOUND_EFFECTS } from '../../data/soundEffects';
@@ -74,7 +74,6 @@ const DOCK = [
 
 const BACKGROUND_SWATCHES = ['#ffffff', '#000000', '#1a1d27', '#ff5e36', '#ec4899', '#facc15', '#22c55e', '#3b82f6'];
 
-const SPEEDS = [0.5, 1, 1.5, 2];
 const PLACEMENTS = [
   { value: 'fit', label: 'Fit', Icon: Minimize },
   { value: 'cover', label: 'Fill', Icon: Scan },
@@ -130,12 +129,6 @@ function PickRow({ options, value, onPick, label }) {
   );
 }
 
-function SpeedPanel({ item }) {
-  const rate = item.playbackRate || 1;
-  const pick = (next) => update(item.id, { playbackRate: next, endMs: item.startMs + (item.endMs - item.startMs) * (rate / next) });
-  return <PickRow label="Speed" value={rate} onPick={pick} options={SPEEDS.map((s) => ({ value: s, label: `${s}×` }))} />;
-}
-
 // Where a picture sits on the canvas; a one-off placement, so nothing stays picked.
 function PlacePanel({ item }) {
   const aspectRatio = useEditorStore((s) => s.canvasAspectRatio);
@@ -148,41 +141,6 @@ function PlacePanel({ item }) {
         </button>
       ))}
     </div>
-  );
-}
-
-function VolumePanel({ item }) {
-  const volume = Math.round((Number.isFinite(item.volume) ? item.volume : 1) * 100);
-  const fade = (key) => (
-    <button
-      type="button"
-      className={`vt-chip${item[key] ? ' is-on' : ''}`}
-      onClick={() => update(item.id, { [key]: item[key] ? 0 : DEFAULT_FADE_MS })}
-    >
-      {key === 'fadeInMs' ? 'Fade in' : 'Fade out'}
-    </button>
-  );
-  return (
-    <>
-      <label className="vt-slider-row">
-        <span>Volume</span>
-        <input type="range" min="0" max="100" step="1" value={volume} onChange={(e) => update(item.id, { volume: Number(e.target.value) / 100 })} />
-        <output>{volume}%</output>
-      </label>
-      <div className="vt-chip-row">
-        <button type="button" aria-pressed={Boolean(item.muted)} className={`vt-chip${item.muted ? ' is-on' : ''}`}
-          onClick={() => update(item.id, { muted: !item.muted })}>
-          {item.muted ? 'Muted' : 'Mute'}
-        </button>
-        {fade('fadeInMs')}{fade('fadeOutMs')}
-        {item.type === 'audio' && !item.isVoiceover && (
-          <button type="button" aria-pressed={Boolean(item.duck)} className={`vt-chip${item.duck ? ' is-on' : ''}`}
-            title="Quieter while a voiceover or a video's sound plays" onClick={() => update(item.id, { duck: !item.duck })}>
-            Lower under voice
-          </button>
-        )}
-      </div>
-    </>
   );
 }
 
@@ -640,7 +598,7 @@ const SHEETS = {
   crop: { title: 'Crop', Icon: Crop, Panel: CropPanel, action: cropReset, tall: true },
   flip: { title: 'Flip', Icon: FlipHorizontal2, Panel: FlipPanel },
   motion: { title: 'Photo motion', Icon: Move, Panel: MotionPanel },
-  volume: { title: 'Volume', Icon: SlidersHorizontal, Panel: VolumePanel },
+  volume: { title: 'Volume', Icon: Volume2, Panel: VolumePanel },
   greenscreen: { title: 'Green screen', Icon: WandSparkles, Panel: GreenScreenPanel },
   bgremove: { title: 'Background', Icon: BackgroundIcon, Panel: VideoBackgroundPanel, Aside: VideoBackgroundAside },
   punch: { title: 'Zoom punch', Icon: ZoomIn, Panel: PunchPanel },
