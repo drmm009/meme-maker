@@ -48,7 +48,7 @@ const addFrom = (label, tile) => {
 };
 const addTextFromRail = () => addTool('Text');
 // A tool in the bottom bar's clip tools, or in one of its tile sheets (a video's Effects and
-// Adjust; Arrange's Duplicate, layer moves and Select), opened first. An open sheet is closed.
+// Adjust; Arrange's layer moves), opened first. An open sheet is closed.
 const pill = () => document.querySelector('.vt-deckbar[role="toolbar"]');
 const clipTool = (text) => {
   if (!pill()) closeSheet();
@@ -175,10 +175,10 @@ describe('VideoEditor', () => {
     expect(store().activeItemId).toBe(store().items[0].id);
     expect(clips(container)[0].className).toContain('is-selected');
     const main = screen.getByRole('toolbar', { name: 'Clip tools' });
-    expect(labels(main)).toEqual(['Back', 'Edit', 'Font', 'Style', 'Colour', 'Animate', 'Split', 'Arrange', 'Delete']);
-    // Arrange is a sheet of tiles, not another row.
+    expect(labels(main)).toEqual(['Back', 'Edit', 'Font', 'Style', 'Colour', 'Animate', 'Split', 'Duplicate', 'Select', 'Arrange', 'Delete']);
+    // Arrange is the layer order, as tiles.
     fireEvent.click(within(main).getByText('Arrange'));
-    expect(labels(screen.getByRole('dialog', { name: 'Arrange' }), '.vt-source-label')).toEqual(['Duplicate', 'Bring forward', 'Send back', 'Select']);
+    expect(labels(screen.getByRole('dialog', { name: 'Arrange' }), '.vt-source-label')).toEqual(['Bring forward', 'Send back']);
     closeSheet();
     // Back, the only one, lets go of the clip and brings the add tools back.
     fireEvent.click(within(screen.getByRole('toolbar', { name: 'Clip tools' })).getByText('Back'));
@@ -192,7 +192,7 @@ describe('VideoEditor', () => {
     const { container } = render(<VideoEditor onBack={() => {}} />);
     fireEvent.click(clips(container)[0]);
     expect(labels(screen.getByRole('toolbar', { name: 'Clip tools' })))
-      .toEqual(['Back', 'Split', '1×', 'Volume', 'Filters', 'Green screen', 'Face swap', 'Effects', 'Adjust', 'Arrange', 'Delete']);
+      .toEqual(['Back', 'Split', '1×', 'Volume', 'Adjust', 'Filters', 'Effects', 'Green screen', 'Face swap', 'Duplicate', 'Select', 'Arrange', 'Delete']);
     fireEvent.click(screen.getByText('Effects'));
     // No Background tile unless the clip already has background removal on.
     expect(labels(screen.getByRole('dialog', { name: 'Effects' }), '.vt-tool-tile-label')).toEqual(['Freeze', 'Reverse', 'Boomerang', 'Punch']);
@@ -378,7 +378,7 @@ describe('VideoEditor', () => {
     const { container } = render(<VideoEditor onBack={() => {}} />);
     fireEvent.click(clips(container)[0]);
     const main = screen.getByRole('toolbar', { name: 'Clip tools' });
-    expect([...main.querySelectorAll('button')].map((b) => b.textContent)).toEqual(['Back', 'Edit', 'Die-cut', 'Crop', 'Flip', 'Cut out', 'Rotate', 'Split', 'Arrange', 'Delete']);
+    expect([...main.querySelectorAll('button')].map((b) => b.textContent)).toEqual(['Back', 'Edit', 'Die-cut', 'Crop', 'Flip', 'Cut out', 'Rotate', 'Split', 'Duplicate', 'Select', 'Arrange', 'Delete']);
     fireEvent.click(clipTool('Edit'));
     fireEvent.change(screen.getByRole('slider', { name: 'Sticker size' }), { target: { value: '0.25' } });
     fireEvent.change(screen.getByRole('slider', { name: 'Shadow size' }), { target: { value: '12' } });
@@ -401,7 +401,7 @@ describe('VideoEditor', () => {
     fireEvent.click(clips(container)[0]);
     const main = screen.getByRole('toolbar', { name: 'Clip tools' });
     expect([...main.querySelectorAll('button')].map((b) => b.textContent || b.getAttribute('aria-label')))
-      .toEqual(['Back', 'Filters', 'Background', 'Face swap', 'Motion', 'Fit', 'Rotate', 'More', 'Split', 'Arrange', 'Delete']);
+      .toEqual(['Back', 'Filters', 'Background', 'Face swap', 'Motion', 'Fit', 'Rotate', 'More', 'Split', 'Duplicate', 'Select', 'Arrange', 'Delete']);
 
     fireEvent.click(clipTool('Filters'));
     fireEvent.click(screen.getByRole('button', { name: '90s Vintage' }));

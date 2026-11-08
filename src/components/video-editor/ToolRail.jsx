@@ -487,7 +487,10 @@ const VIDEO_TILES = {
   effects: { label: 'Effects', Icon: Wand, ids: ['freeze', 'reverse', 'boomerang', 'punch', 'bgremove'] },
   adjust: { label: 'Adjust', Icon: Settings2, ids: ['crop', 'place', 'flip', 'opacity'] },
 };
-const VIDEO_ROW = ['split', 'speed', 'volume', 'filter', 'greenscreen', 'faceswap', 'effects', 'adjust', 'transition', 'arrange', 'delete'];
+// Cutting and timing first (Split, Speed, Volume), then the picture (Adjust, Filters, Effects,
+// Transition), the AI tools (Green screen, Face swap), then the clip itself (Duplicate, Select,
+// Arrange, Delete).
+const VIDEO_ROW = ['split', 'speed', 'volume', 'adjust', 'filter', 'effects', 'transition', 'greenscreen', 'faceswap', 'duplicate', 'select', 'arrange', 'delete'];
 
 function videoRow(tools, sheet, toggle) {
   const groups = Object.entries(VIDEO_TILES).map(([id, { label, Icon, ids }]) => ({
@@ -524,8 +527,9 @@ const volumeIcon = (item) => {
 };
 
 // A photo's row, most used first: the look (Filters, Background, Face swap), how it moves and sits
-// (Motion, Fit, Rotate), Transition, More, then Split, Arrange and Delete as on every clip.
-const IMAGE_ROW = ['filter', 'background', 'faceswap', 'motion', 'place', 'rotate', 'transition', 'more', 'split', 'arrange', 'delete'];
+// (Motion, Fit, Rotate), Transition, More, then Split, Duplicate, Select, Arrange and Delete as on
+// every clip.
+const IMAGE_ROW = ['filter', 'background', 'faceswap', 'motion', 'place', 'rotate', 'transition', 'more', 'split', 'duplicate', 'select', 'arrange', 'delete'];
 
 // The selected clip's tools for the bottom bar, all in one row: what this kind of clip can do (each
 // setting opens its sheet, its button lit while open or while the setting is on), then Split,
@@ -626,24 +630,23 @@ function clipTools(item, { sheet, toggle, playhead, items }) {
   tools.push({ id: 'split', label: 'Split', Icon: Scissors, title: canSplit ? 'Split at the playhead' : 'Move the playhead inside the clip to split it',
     onClick: () => canSplit && store().splitItem(item.id, playhead) });
   tools.push(
-    { id: 'arrange', label: 'Arrange', title: 'Duplicate, layer order and select', Icon: Layers, ...opens('arrange') },
-    { id: 'delete', label: 'Delete', Icon: Trash2, danger: true, onClick: () => store().removeItem(item.id) },
+    { id: 'duplicate', label: 'Duplicate', title: 'A copy, right after it', Icon: Copy, onClick: () => store().duplicateItem(item.id) },
+    { id: 'select', label: 'Select', title: 'Pick several clips', Icon: ListChecks, onClick: () => store().togglePicked(item.id) },
   );
+  // A sound has no layer to move.
+  if (item.type !== 'audio') tools.push({ id: 'arrange', label: 'Arrange', title: 'Bring forward or send back', Icon: Layers, ...opens('arrange') });
+  tools.push({ id: 'delete', label: 'Delete', Icon: Trash2, danger: true, onClick: () => store().removeItem(item.id) });
   if (item.type === 'image') tools.sort((a, b) => IMAGE_ROW.indexOf(a.id) - IMAGE_ROW.indexOf(b.id));
   return tools;
 }
 
-// Arrange: tiles for the clip's copy, layer order and picking several. The layer moves keep the
-// sheet open (tap again to move again); the rest close it.
-function ArrangePanel({ item, onOpen }) {
+// Arrange: the clip's layer order, as two tiles. They keep the sheet open (tap again to move again).
+// Duplicate and Select are on the toolbar.
+function ArrangePanel({ item }) {
   const store = useEditorStore.getState;
   const tiles = [
-    { id: 'duplicate', label: 'Duplicate', sub: 'Right after it', Icon: Copy, run: () => { store().duplicateItem(item.id); onOpen(null); } },
-    ...(item.type === 'audio' ? [] : [
-      { id: 'forward', label: 'Bring forward', sub: 'One layer up', Icon: BringToFront, run: () => store().moveLayer(item.id, 1) },
-      { id: 'back', label: 'Send back', sub: 'One layer down', Icon: SendToBack, run: () => store().moveLayer(item.id, -1) },
-    ]),
-    { id: 'select', label: 'Select', sub: 'Pick several clips', Icon: ListChecks, run: () => { onOpen(null); store().togglePicked(item.id); } },
+    { id: 'forward', label: 'Bring forward', sub: 'One layer up', Icon: BringToFront, run: () => store().moveLayer(item.id, 1) },
+    { id: 'back', label: 'Send back', sub: 'One layer down', Icon: SendToBack, run: () => store().moveLayer(item.id, -1) },
   ];
   return (
     <div className="vt-sources">
