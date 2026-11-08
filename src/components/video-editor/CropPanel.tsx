@@ -1,6 +1,8 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
+import { Crosshair } from 'lucide-react';
 import useClipFrame from './useClipFrame';
+import { useEditorStore } from '../../store/useVideoEditorStore';
 import { setClipCrop } from './clipSheetActions';
 import { aspectCrop, clipCrop, isCropped, moveCrop, resizeCrop } from '../../utils/clipCrop';
 import type { Corner } from '../../utils/clipCrop';
@@ -8,26 +10,32 @@ import type { ClipCrop, Placed } from '../../model/videoProject';
 
 type CroppableClip = Placed & { id: string; type: string; url?: string; startMs: number; endMs: number; crop?: ClipCrop | null };
 
-// Box shapes (width / height of the picture); Free resizes any way.
-const SHAPES: { id: string; label: string; aspect: number | null }[] = [
+// Box shapes (width / height of the picture); Free resizes any way, Original keeps the clip's own
+// shape and Canvas the project's (both worked out when picked).
+const SHAPES: { id: string; label: string; aspect: number | null | 'original' | 'canvas' }[] = [
   { id: 'free', label: 'Free', aspect: null },
+  { id: 'original', label: 'Original', aspect: 'original' },
+  { id: 'canvas', label: 'Canvas', aspect: 'canvas' },
   { id: '1:1', label: '1:1', aspect: 1 },
   { id: '4:5', label: '4:5', aspect: 4 / 5 },
+  { id: '3:4', label: '3:4', aspect: 3 / 4 },
   { id: '9:16', label: '9:16', aspect: 9 / 16 },
+  { id: '4:3', label: '4:3', aspect: 4 / 3 },
   { id: '16:9', label: '16:9', aspect: 16 / 9 },
 ];
 const CORNERS: Corner[] = ['nw', 'ne', 'sw', 'se'];
 // The tallest the frame gets in the sheet.
-const MAX_FRAME_HEIGHT = 230;
+const MAX_FRAME_HEIGHT = 240;
 
 // A shape button's picture: a small outline at that shape (dashed for Free).
 function ShapeGlyph({ aspect }: { aspect: number | null }) {
-  const size = aspect ? (aspect >= 1 ? { width: 22, height: 22 / aspect } : { width: 22 * aspect, height: 22 }) : { width: 20, height: 16 };
+  const size = aspect ? (aspect >= 1 ? { width: 20, height: 20 / aspect } : { width: 20 * aspect, height: 20 }) : { width: 18, height: 14 };
   return <span className={`vt-crop-glyph${aspect ? '' : ' is-free'}`} style={size} aria-hidden="true" />;
 }
 
-// Crop: the clip's whole picture in a well, with a box over it to drag (inside to move it, a corner
-// to size it), then the box shapes; Reset is the sheet's. The clip changes when a drag ends, so each
+// Crop: the clip's whole picture in a black well, with a box over it to drag (inside to move it, a
+// corner to size it); under it how much of the picture the box keeps and Centre, then the box shapes
+// in a row that scrolls sideways; Reset is the sheet's. The clip changes when a drag ends, so each
 // drag is one undo step (clipSheetActions).
 export default function CropPanel({ item }: { item: CroppableClip }) {
   const src = useClipFrame(item);
@@ -37,6 +45,7 @@ export default function CropPanel({ item }: { item: CroppableClip }) {
   const [draft, setDraft] = useState<ClipCrop>(() => clipCrop(item));
   const drag = useRef<{ kind: 'move' | Corner; x: number; y: number; start: ClipCrop; last: ClipCrop | null; w: number; h: number } | null>(null);
   const hostRef = useRef<HTMLDivElement>(null);
+  const canvasAspect = useEditorStore((st) => st.canvasAspectRatio) as number;
 
   // Follows the clip (undo, another device of the same project) when not mid-drag.
   const saved = clipCrop(item);
@@ -59,17 +68,26 @@ export default function CropPanel({ item }: { item: CroppableClip }) {
     setClipCrop(item.id, next);
   };
 
+  // A shape's width / height in the picture's pixels (null for Free).
+  const aspectOf = (id: string): number | null => {
+    const a = SHAPES.find((sh) => sh.id === id)?.aspect ?? null;
+    if (a === 'original') return natural ? natural.w / natural.h : null;
+    if (a === 'canvas') return canvasAspect || null;
+    return a;
+  };
   // Shape in fractions of the frame, for locking a corner drag.
   const lock = (() => {
-    const a = SHAPES.find((s) => s.id === shape)?.aspect;
+    const a = aspectOf(shape);
     return a && natural ? (a * natural.h) / natural.w : null;
   })();
 
   const pickShape = (id: string) => {
     setShape(id);
-    const a = SHAPES.find((s) => s.id === id)?.aspect;
+    const a = aspectOf(id);
     if (a && natural) commit(aspectCrop(a, natural.w, natural.h));
   };
+  const centre = () => commit({ ...draft, x: (1 - draft.width) / 2, y: (1 - draft.height) / 2 });
+  const centred = Math.abs(draft.x - (1 - draft.width) / 2) < 0.002 && Math.abs(draft.y - (1 - draft.height) / 2) < 0.002;
 
   const start = (kind: 'move' | Corner) => (e: ReactPointerEvent<HTMLElement>) => {
     e.preventDefault();
@@ -139,11 +157,19 @@ export default function CropPanel({ item }: { item: CroppableClip }) {
           <div className="vt-crop-loading" style={{ height: MAX_FRAME_HEIGHT / 2 }}>Getting the picture…</div>
         )}
       </div>
+      <div className="vt-crop-info">
+        <span className="vt-crop-size">
+          {isCropped(draft) ? `Keeps ${Math.round(draft.width * 100)}% × ${Math.round(draft.height * 100)}%` : 'The whole picture'}
+        </span>
+        <button type="button" className="vt-crop-centre" disabled={!natural || centred} onClick={centre}>
+          <Crosshair size={15} aria-hidden="true" /> Centre
+        </button>
+      </div>
       <div className="vt-crop-shapes" role="radiogroup" aria-label="Crop shape">
         {SHAPES.map((s) => (
           <button key={s.id} type="button" role="radio" aria-checked={shape === s.id}
             className={`vt-crop-shape${shape === s.id ? ' is-on' : ''}`} disabled={!natural} onClick={() => pickShape(s.id)}>
-            <span className="vt-crop-shape-art"><ShapeGlyph aspect={s.aspect} /></span>
+            <ShapeGlyph aspect={s.id === 'free' ? null : aspectOf(s.id) ?? 1} />
             <span>{s.label}</span>
           </button>
         ))}

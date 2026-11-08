@@ -1181,34 +1181,35 @@
 /* Crop: the clip's whole picture in a dark well with a box to drag over it (outside it dimmed, thirds
    inside, bright corner brackets inside its corners so the frame's edge never clips them), then the
    box shapes as buttons that each show their shape. */
-.vt-crop { display: flex; flex-direction: column; gap: 12px; }
+.vt-crop { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
 .vt-crop-host {
   display: flex;
   justify-content: center;
   align-items: center;
   padding: 12px;
   border-radius: var(--ui-radius-md, 16px);
-  background: rgba(0, 0, 0, 0.35);
+  background: #000;
 }
-.vt-crop-frame { position: relative; overflow: hidden; border-radius: 6px; touch-action: none; user-select: none; }
+.vt-crop-frame { position: relative; overflow: hidden; border-radius: 4px; touch-action: none; user-select: none; }
 .vt-crop-frame img { display: block; width: 100%; height: 100%; pointer-events: none; }
 .vt-crop-box {
   position: absolute;
-  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.55);
-  outline: 1.5px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.6);
+  outline: 1.5px solid rgba(255, 255, 255, 0.95);
   outline-offset: -1px;
   cursor: move;
   touch-action: none;
 }
+/* Thirds, to line things up by. */
 .vt-crop-box::before, .vt-crop-box::after {
   content: '';
   position: absolute;
   inset: 33.333% 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.3);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+  border-top: 1px solid rgba(255, 255, 255, 0.28);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.28);
   pointer-events: none;
 }
-.vt-crop-box::after { inset: 0 33.333%; border: none; border-left: 1px solid rgba(255, 255, 255, 0.3); border-right: 1px solid rgba(255, 255, 255, 0.3); }
+.vt-crop-box::after { inset: 0 33.333%; border: none; border-left: 1px solid rgba(255, 255, 255, 0.28); border-right: 1px solid rgba(255, 255, 255, 0.28); }
 /* A corner's grab area (32px) and its bracket, both inside the box. */
 .vt-crop-handle { position: absolute; z-index: 1; width: 32px; height: 32px; touch-action: none; }
 .vt-crop-handle::before {
@@ -1228,28 +1229,56 @@
 .vt-crop-handle.is-sw::before { left: 0; bottom: 0; border-left-width: 3px; border-bottom-width: 3px; }
 .vt-crop-handle.is-se::before { right: 0; bottom: 0; border-right-width: 3px; border-bottom-width: 3px; }
 .vt-crop-loading { display: grid; place-items: center; width: 100%; color: var(--vt-muted); font-size: 13px; }
-.vt-crop-shapes { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
-.vt-crop-shape {
-  display: flex;
-  flex-direction: column;
+.vt-crop-info { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 32px; }
+.vt-crop-size { color: var(--vt-muted); font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.vt-crop-centre {
+  display: inline-flex;
   align-items: center;
   gap: 6px;
-  min-width: 0;
-  padding: 8px 4px 7px;
+  height: 32px;
+  padding: 0 12px;
   border: none;
-  border-radius: 14px;
-  background: var(--vt-fill);
+  border-radius: 999px;
+  background: #000;
+  color: var(--vt-text);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.vt-crop-centre:disabled { color: #636366; cursor: default; }
+.vt-crop-centre:focus-visible { outline: 2px solid var(--vt-accent); outline-offset: 2px; }
+/* The shapes: black pills in a row that scrolls sideways; the picked one lighter, white. */
+.vt-crop-shapes {
+  display: flex;
+  gap: 8px;
+  margin: 0 -16px;
+  padding: 0 16px 2px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.vt-crop-shapes::-webkit-scrollbar { display: none; }
+.vt-crop-shape {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 14px 0 12px;
+  border: none;
+  border-radius: 999px;
+  background: #000;
   color: var(--vt-muted);
   font: inherit;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
+  white-space: nowrap;
   cursor: pointer;
   transition: background 0.15s, color 0.15s, transform 0.15s var(--vt-ease);
 }
-.vt-crop-shape-art { display: grid; place-items: center; width: 24px; height: 24px; }
-.vt-crop-glyph { display: block; border: 2px solid currentColor; border-radius: 3px; }
+.vt-crop-glyph { display: block; flex: none; border: 1.75px solid currentColor; border-radius: 3px; }
 .vt-crop-glyph.is-free { border-style: dashed; }
-.vt-crop-shape.is-on { background: var(--vt-accent-soft); color: var(--vt-accent); }
+.vt-crop-shape.is-on { background: #3a3a3c; color: var(--vt-text); }
 .vt-crop-shape:active:not(:disabled) { transform: scale(0.96); }
 .vt-crop-shape:disabled { opacity: 0.45; cursor: default; }
 .vt-crop-shape:focus-visible { outline: 2px solid var(--vt-accent); outline-offset: 2px; }
@@ -1515,3 +1544,33 @@
 .vt-editor input.vt-bislider::-moz-range-thumb { width: 22px; height: 22px; border: none; border-radius: 50%; background: #fff; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45); }
 .vt-editor input.vt-bislider:focus-visible { outline: none; }
 .vt-editor input.vt-bislider:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px var(--vt-accent); }
+
+/* Fit, Flip and Transition sheets (ClipLookPanels): big black tiles, a picture of what each does
+   over its name and a line; the picked one lighter with its picture orange. */
+.vt-options { display: grid; gap: 8px; }
+.vt-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  padding: 14px 6px 12px;
+  border: none;
+  border-radius: 16px;
+  background: #000;
+  color: var(--vt-text);
+  font: inherit;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.15s var(--vt-ease);
+}
+.vt-option-art { display: grid; place-items: center; height: 30px; margin-bottom: 4px; color: #aeaeb2; transition: color 0.15s ease; }
+.vt-option-label { max-width: 100%; font-size: 13px; font-weight: 700; line-height: 1.2; text-align: center; }
+.vt-option-sub { max-width: 100%; color: var(--vt-muted); font-size: 11px; font-weight: 500; line-height: 1.25; text-align: center; }
+.vt-option.is-on { background: #3a3a3c; }
+.vt-option.is-on .vt-option-art { color: var(--vt-accent); }
+.vt-option:active { transform: scale(0.96); }
+.vt-option:focus-visible { outline: 2px solid var(--vt-accent); outline-offset: 2px; }
+@media (hover: hover) { .vt-option:hover:not(.is-on) { background: #0d0d0e; } }
+.vt-transition { display: flex; flex-direction: column; gap: 14px; }
+.vt-transition-length { display: flex; align-items: center; gap: 12px; }
+.vt-transition-label { flex: none; color: var(--vt-text); font-size: 14px; font-weight: 600; }

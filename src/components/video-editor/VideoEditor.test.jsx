@@ -188,10 +188,11 @@ describe('VideoEditor', () => {
     act(() => store().addItem({ type: 'video', url: 'a.mp4', durationMs: 4000 }));
     const { container } = render(<VideoEditor onBack={() => {}} />);
     fireEvent.click(clips(container)[0]);
-    expect(labels(screen.getByRole('toolbar', { name: 'Clip tools' }))).toEqual(['Back', 'Split', '1×', 'Volume', 'Filters', 'Effects', 'Adjust', 'Arrange', 'Delete']);
+    expect(labels(screen.getByRole('toolbar', { name: 'Clip tools' })))
+      .toEqual(['Back', 'Split', '1×', 'Volume', 'Filters', 'Green screen', 'Face swap', 'Effects', 'Adjust', 'Arrange', 'Delete']);
     fireEvent.click(screen.getByText('Effects'));
-    expect(labels(screen.getByRole('dialog', { name: 'Effects' }), '.vt-tool-tile-label'))
-      .toEqual(['Green screen', 'Background', 'Face swap', 'Freeze', 'Reverse', 'Boomerang', 'Punch']);
+    // No Background tile unless the clip already has background removal on.
+    expect(labels(screen.getByRole('dialog', { name: 'Effects' }), '.vt-tool-tile-label')).toEqual(['Freeze', 'Reverse', 'Boomerang', 'Punch']);
     closeSheet();
     fireEvent.click(screen.getByText('Adjust'));
     expect(labels(screen.getByRole('dialog', { name: 'Adjust' }), '.vt-tool-tile-label')).toEqual(['Crop', 'Fit', 'Flip', 'Opacity']);
@@ -432,13 +433,13 @@ describe('VideoEditor', () => {
     expect(store().items[0].chromaKey).toBe(null);
   });
 
-  it('removes a video clip\'s background, softens its edge and turns it off', async () => {
-    act(() => store().addItem({ type: 'video', url: 'a.mp4', durationMs: 2000 }));
+  it('softens a video clip\'s removed background and turns it off', async () => {
+    // Removing a video's background isn't offered any more; a clip saved with it on can still change it.
+    act(() => store().addItem({ type: 'video', url: 'a.mp4', durationMs: 2000, bgRemoval: { softness: 0.3 } }));
     const { container } = render(<VideoEditor onBack={() => {}} />);
     fireEvent.click(clips(container)[0]);
     const tool = clipTool('Background');
     await act(async () => { fireEvent.click(tool); });
-    expect(store().items[0].bgRemoval).toEqual({ softness: 0.3 });
     fireEvent.change(screen.getByRole('slider', { name: 'Edge softness' }), { target: { value: '0.6' } });
     expect(store().items[0].bgRemoval).toEqual({ softness: 0.6 });
     fireEvent.click(screen.getByRole('switch', { name: 'Remove background' }));
@@ -640,6 +641,29 @@ describe('VideoEditor', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Reset' }));
     expect(store().items[0].crop ?? null).toBe(null);
     expect(screen.getByRole('radio', { name: 'Free' }).getAttribute('aria-checked')).toBe('true');
+  });
+
+  it('lights the placement a video is in and flips it from tiles', () => {
+    act(() => {
+      // A tall clip on the 4:3 canvas, so Fit, Fill and Stretch each place it differently.
+      store().addItem({ type: 'video', url: 'a.mp4', durationMs: 2000, width: 300, height: 400 });
+      store().addItem({ type: 'video', url: 'b.mp4', durationMs: 2000, width: 300, height: 400, bgRemoval: { softness: 0.3 } });
+    });
+    const { container } = render(<VideoEditor onBack={() => {}} />);
+    fireEvent.click(clips(container)[0]);
+    fireEvent.click(clipTool('Fit'));
+    fireEvent.click(screen.getByRole('radio', { name: /^Fill/ }));
+    expect(screen.getByRole('radio', { name: /^Fill/ }).getAttribute('aria-checked')).toBe('true');
+    expect(screen.getByRole('radio', { name: /^Fit/ }).getAttribute('aria-checked')).toBe('false');
+    closeSheet();
+    fireEvent.click(clipTool('Flip'));
+    fireEvent.click(screen.getByRole('button', { name: /^Upside down/ }));
+    expect(store().items[0].flipY).toBe(true);
+    closeSheet();
+    // A clip that already has background removal keeps a Background tile, to turn it off.
+    fireEvent.click(clips(container)[1]);
+    fireEvent.click(screen.getByText('Effects'));
+    expect(labels(screen.getByRole('dialog', { name: 'Effects' }), '.vt-tool-tile-label')).toContain('Background');
   });
 
   it('records a voiceover over the video and drops it where it started', async () => {

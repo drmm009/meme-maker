@@ -1,8 +1,8 @@
 import React, { useEffect, useImperativeHandle, useLayoutEffect, useRef, useState } from 'react';
 import {
   Type, Sticker, Smile, LayoutGrid, Image as ImageIcon, Clapperboard, Music,
-  Gauge, Volume2, VolumeX, Palette, RotateCw, Minimize, Crop, Maximize, Copy, Trash2,
-  Scissors, PencilLine, SlidersHorizontal, WandSparkles, Pipette, Sparkles, ImagePlay, PaintBucket, Zap, Snowflake, Rewind, Repeat, ZoomIn, BringToFront, SendToBack, Mic, ArrowRightLeft, Frame, Upload, Library, Laugh, SquarePlay, Captions, Expand, Blend, Scan, Eraser, FlipHorizontal2, FlipVertical2, Move, ListChecks, X, AtSign, Flag, Layers, ScanFace, CaseSensitive, Baseline, Ellipsis, Wand, Settings2
+  Gauge, Volume2, VolumeX, Palette, RotateCw, Crop, Copy, Trash2,
+  Scissors, PencilLine, SlidersHorizontal, WandSparkles, Pipette, Sparkles, ImagePlay, PaintBucket, Zap, Snowflake, Rewind, Repeat, ZoomIn, BringToFront, SendToBack, Mic, ArrowRightLeft, Frame, Upload, Library, Laugh, SquarePlay, Captions, Expand, Blend, Eraser, FlipHorizontal2, Move, ListChecks, X, AtSign, Flag, Layers, ScanFace, CaseSensitive, Baseline, Ellipsis, Wand, Settings2
 } from 'lucide-react';
 import { Sheet } from '../ui';
 import DeckBar from './DeckBar';
@@ -13,6 +13,7 @@ import { clipCrop, isCropped } from '../../utils/clipCrop';
 import CropPanel from './CropPanel';
 import VideoFilterPanel from './VideoFilterPanel';
 import { SpeedPanel, VolumePanel } from './SpeedVolumePanels';
+import { FlipPanel, PlacePanel, TransitionPanel } from './ClipLookPanels';
 import { cropReset, videoFiltersReset } from './clipSheetActions';
 import FaceSwapPanel from './FaceSwapPanel';
 import { TextColorPanel, TextEditPanel, TextFontPanel, TextStylePanel } from './TextLookPanel';
@@ -22,14 +23,14 @@ import { photoFiltered, photoFiltersReset } from './photoFilters';
 import { isPhotoFramed } from '../../utils/photoLook';
 import { isGifSticker } from '../../utils/stickerLook';
 import { canCutOut } from '../../utils/cutOut';
-import { runJob, setBackgroundRemoval, toggleCutOut } from './clipJobs';
+import { runJob, toggleCutOut } from './clipJobs';
 import { VideoBackgroundAside, VideoBackgroundPanel } from './VideoBackgroundPanel';
 import { PHOTO_MOTIONS } from '../../utils/photoMotion';
 import { DEFAULT_END_CARD, WATERMARK_CORNERS, endCardClip, isEndCard, renderEndCard } from '../../utils/brandCard';
 import { captureFrame, renderClipEffect } from '../../utils/clipEffects';
 import { clipPunchTimes } from '../../utils/zoomPunch';
 import { FILTER_PRESETS } from '../../utils/clipFilters';
-import { DEFAULT_TRANSITION_MS, TRANSITIONS, previousClip } from '../../utils/clipTransitions';
+import { TRANSITIONS, previousClip } from '../../utils/clipTransitions';
 import { canRecordVoice, startVoiceRecording } from '../../utils/voiceRecorder';
 import { CAPTION_STYLES, captionItems, captionStyle } from '../../utils/captionChunks';
 import { speechClips } from '../../utils/clipAudio';
@@ -74,11 +75,6 @@ const DOCK = [
 
 const BACKGROUND_SWATCHES = ['#ffffff', '#000000', '#1a1d27', '#ff5e36', '#ec4899', '#facc15', '#22c55e', '#3b82f6'];
 
-const PLACEMENTS = [
-  { value: 'fit', label: 'Fit', Icon: Minimize },
-  { value: 'cover', label: 'Fill', Icon: Scan },
-  { value: 'stretch', label: 'Stretch', Icon: Maximize },
-];
 const MIN_SPLIT_MS = 100;
 
 const update = (id, patch) => useEditorStore.getState().updateItem(id, patch);
@@ -103,17 +99,6 @@ const toggleClipEffect = (item, effect) => {
   });
 };
 
-// Picture placement on the 800-wide logical stage: contain, cover, or stretch to fill.
-const placeMedia = (item, aspectRatio, mode) => {
-  const dims = { width: 800, height: 800 / aspectRatio };
-  const w0 = item.width || 200;
-  const h0 = item.height || 200;
-  if (mode === 'stretch') return { x: 0, y: 0, scaleX: dims.width / w0, scaleY: dims.height / h0 };
-  const wider = w0 / h0 > dims.width / dims.height;
-  const s = (mode === 'fit') === wider ? dims.width / w0 : dims.height / h0;
-  return { x: (dims.width - w0 * s) / 2, y: (dims.height - h0 * s) / 2, scaleX: s, scaleY: s };
-};
-
 // A row of chips, one of them picked (font, speed, align…).
 function PickRow({ options, value, onPick, label }) {
   return (
@@ -129,37 +114,12 @@ function PickRow({ options, value, onPick, label }) {
   );
 }
 
-// Where a picture sits on the canvas; a one-off placement, so nothing stays picked.
-function PlacePanel({ item }) {
-  const aspectRatio = useEditorStore((s) => s.canvasAspectRatio);
-  return (
-    <div className="vt-chip-row">
-      {PLACEMENTS.map((p) => (
-        <button key={p.value} type="button" className="vt-chip" onClick={() => update(item.id, placeMedia(item, aspectRatio, p.value))}>
-          <p.Icon size={15} />
-          {p.label}
-        </button>
-      ))}
-    </div>
-  );
-}
-
 // A photo's slow zoom or pan while on screen.
 function MotionPanel({ item }) {
   return (
     <PickRow label="Photo motion" value={item.motion || null} onPick={(v) => update(item.id, { motion: v })}
       options={PHOTO_MOTIONS.map((m) => ({ value: m.id, label: m.label }))} />
   );
-}
-
-// Mirror left-right and/or upside down; each chip is on while that flip is.
-function FlipPanel({ item }) {
-  const chip = (key, label, Icon) => (
-    <button type="button" aria-pressed={Boolean(item[key])} className={`vt-chip${item[key] ? ' is-on' : ''}`} onClick={() => update(item.id, { [key]: !item[key] })}>
-      <Icon size={15} /> {label}
-    </button>
-  );
-  return <div className="vt-chip-row">{chip('flipX', 'Left–right', FlipHorizontal2)}{chip('flipY', 'Upside down', FlipVertical2)}</div>;
 }
 
 function OpacityPanel({ item }) {
@@ -551,32 +511,6 @@ function CaptionsPanel() {
   );
 }
 
-function TransitionPanel({ item }) {
-  const current = item.transitionIn || {};
-  const ms = current.durationMs || DEFAULT_TRANSITION_MS;
-  const set = (patch) => update(item.id, { transitionIn: { durationMs: ms, ...current, ...patch } });
-  return (
-    <>
-      <div className="vt-chip-row">
-        {TRANSITIONS.map((t) => (
-          <button key={t.label} type="button" className={`vt-chip${(current.type ?? null) === t.id ? ' is-on' : ''}`}
-            onClick={() => (t.id ? set({ type: t.id }) : update(item.id, { transitionIn: null }))}>
-            {t.label}
-          </button>
-        ))}
-      </div>
-      {current.type && (
-        <label className="vt-slider-row">
-          <span>Length</span>
-          <input type="range" min="200" max="1200" step="50" value={ms} onChange={(e) => set({ durationMs: Number(e.target.value) })} />
-          <output>{(ms / 1000).toFixed(2)}s</output>
-        </label>
-      )}
-      <p className="vt-panel-hint">Plays where the previous clip ends and this one starts.</p>
-    </>
-  );
-}
-
 // Every settings sheet: its title, the icon beside it, and what it shows (for the selected clip, or for nothing selected).
 const SHEETS = {
   // A text's sheets are the image editor's text controls (TextLookPanel): all of them, or one part.
@@ -618,14 +552,15 @@ const SHEETS = {
   adjust: { title: 'Adjust', Icon: Settings2, tiles: 'adjust' },
 };
 
-// A video has too many tools for one row: the everyday ones stay on it (VIDEO_ROW), the rest go in
-// two sheets of tiles, Effects and Adjust, each a button on the row lit while any of its tools is on.
-// Its Mute is in the Volume sheet.
+// A video has too many tools for one row: the everyday ones stay on it (VIDEO_ROW), Green screen and
+// Face swap among them, the rest go in two sheets of tiles, Effects and Adjust, each a button on the
+// row lit while any of its tools is on. Its Mute is in the Volume sheet. Background removal is off
+// the menus for now; a clip that already has it keeps a Background tile to turn it off.
 const VIDEO_TILES = {
-  effects: { label: 'Effects', Icon: Wand, ids: ['greenscreen', 'bgremove', 'faceswap', 'freeze', 'reverse', 'boomerang', 'punch'] },
+  effects: { label: 'Effects', Icon: Wand, ids: ['freeze', 'reverse', 'boomerang', 'punch', 'bgremove'] },
   adjust: { label: 'Adjust', Icon: Settings2, ids: ['crop', 'place', 'flip', 'opacity'] },
 };
-const VIDEO_ROW = ['split', 'speed', 'volume', 'filter', 'effects', 'adjust', 'transition', 'arrange', 'delete'];
+const VIDEO_ROW = ['split', 'speed', 'volume', 'filter', 'greenscreen', 'faceswap', 'effects', 'adjust', 'transition', 'arrange', 'delete'];
 
 function videoRow(tools, sheet, toggle) {
   const groups = Object.entries(VIDEO_TILES).map(([id, { label, Icon, ids }]) => ({
@@ -695,10 +630,6 @@ function clipTools(item, { sheet, toggle, playhead, items }) {
         if (!item.chromaKey) update(item.id, { chromaKey: { ...DEFAULT_CHROMA_KEY, color: 'auto' } });
         toggle('greenscreen', !item.chromaKey);
       } },
-      { id: 'bgremove', label: 'Background', title: 'Remove the background behind people', Icon: BackgroundIcon, active: sheet === 'bgremove' || Boolean(item.bgRemoval), onClick: () => {
-        if (!item.bgRemoval) setBackgroundRemoval(item, true);
-        toggle('bgremove', !item.bgRemoval);
-      } },
       { id: 'freeze', label: 'Freeze', Icon: Snowflake, title: insideClip ? 'Freeze the frame at the playhead' : 'Move the playhead onto this clip to freeze a frame',
         onClick: () => insideClip && freezeAtPlayhead(item, playhead) },
       { id: 'reverse', label: 'Reverse', Icon: Rewind, active: item.effect === 'reverse', onClick: () => toggleClipEffect(item, 'reverse') },
@@ -706,6 +637,9 @@ function clipTools(item, { sheet, toggle, playhead, items }) {
       { id: 'punch', label: 'Punch', Icon: ZoomIn, ...opens('punch', Boolean(item.punches?.length)) },
       { id: 'faceswap', label: 'Face swap', Icon: ScanFace, ...opens('faceswap', item.effect === 'faceswap') },
     );
+    if (item.bgRemoval) {
+      tools.push({ id: 'bgremove', label: 'Background', title: 'Background removal (on)', Icon: BackgroundIcon, active: true, ...opens('bgremove', true) });
+    }
   }
   if (previousClip(items, item)) {
     const label = TRANSITIONS.find((t) => t.id === item.transitionIn?.type)?.label;
