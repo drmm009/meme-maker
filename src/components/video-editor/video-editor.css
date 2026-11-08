@@ -1288,3 +1288,30 @@
 .vt-style-label + .vt-swatch-row, .vt-style-label + .vt-chip-row { margin-top: -4px; }
 .vt-swatch-none { background: var(--vt-fill); color: var(--vt-muted); }
 .vt-slider-row.is-off { opacity: 0.45; }
+
+/* Every bottom sheet matches the deck: the deck's grey, solid (no blur), with black controls on it.
+   The kit's grey fills become black inside a sheet; a picked option stays a lighter grey or orange. */
+.vt-editor .ui-sheet {
+  --vt-fill: #000;
+  --vt-surface-2: #000;
+  --ui-surface-2: #000;
+  --ui-surface-3: #000;
+}
+.vt-editor .ui-sheet:not(.ui-sheet-ghost),
+.vt-editor .vt-sheet.ui-sheet {
+  background: var(--vt-surface) !important;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+.vt-editor .ui-sheet .vt-source,
+.vt-editor .ui-sheet .ui-chip,
+.vt-editor .ui-sheet .ui-seg--divided,
+.vt-editor .ui-sheet .ui-seg--fill,
+.vt-editor .ui-sheet .ui-toggle--tile:not(.is-on),
+.vt-editor .ui-sheet .vt-sound-play:not(.is-on),
+.vt-editor .ui-sheet .vt-sound-add,
+.vt-editor .ui-sheet .ui-sheet-title-icon { background: #000; }
+.vt-editor .ui-sheet .ui-chip.is-on,
+.vt-editor .ui-sheet .ui-seg-btn.is-on,
+.vt-editor .ui-sheet .vt-sound-add:active { background: #3a3a3c; }
+@media (hover: hover) { .vt-editor .ui-sheet .vt-tool-tile:hover { background: #0d0d0e; } }
