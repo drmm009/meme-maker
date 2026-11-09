@@ -92,10 +92,15 @@ const CanvasText = ({ item, isSelected, onSelect, onChange, onEditStart }) => {
             onDragEnd={(e) => onChange({ ...item, x: e.target.x(), y: e.target.y() })}
             onTransformEnd={() => {
               const node = nodeRef.current;
-              const k = node.scaleX();
+              const sx = node.scaleX();
+              const sy = node.scaleY();
               node.scaleX(1);
               node.scaleY(1);
-              onChange({ ...item, x: node.x(), y: node.y(), rotation: node.rotation(), ...scaleTextLook(item, k) });
+              const place = { x: node.x(), y: node.y(), rotation: node.rotation() };
+              // A side handle stretches one way only: it sets where the text wraps. The corners
+              // (kept in ratio) scale the whole look.
+              if (Math.abs(sx - sy) > 0.001) onChange({ ...item, ...place, width: Math.max(40, bitmap.boxWidth * sx) });
+              else onChange({ ...item, ...place, ...scaleTextLook(item, sx) });
             }}
           />
         </Group>
@@ -105,7 +110,7 @@ const CanvasText = ({ item, isSelected, onSelect, onChange, onEditStart }) => {
           ref={trRef}
           {...SELECTION_PROPS}
           keepRatio={true}
-          enabledAnchors={['bottom-left', 'bottom-right']}
+          enabledAnchors={['middle-left', 'middle-right', 'bottom-left', 'bottom-right']}
           boundBoxFunc={(oldBox, newBox) => (newBox.width < 20 || newBox.height < 20 ? oldBox : newBox)}
         />
       )}
