@@ -3,13 +3,13 @@ import { useEditorStore } from '../../../store/useVideoEditorStore';
 import { effectsFor, hasEffects, processFrame } from './frameEffects';
 import { loadPersonSegmenter, personSegmenterReady } from '../../../utils/personSegmenter';
 
-// A clip's green screen, background removal and colour filter in the preview (the processing itself is shared with
+// A clip's green screen, background removal, colour filter and effect in the preview (the processing itself is shared with
 // the export, in frameEffects). Returns `effectImage`, the canvas to show instead of the source
 // once a frame has been processed (null otherwise), and `drawEffects(src)`, which processes the
 // source's current frame (the video calls it per frame).
 export function useFrameEffects(item, image, imageRef) {
   const effects = effectsFor(item);
-  const { chromaKey, cutout, css } = effects;
+  const { chromaKey, cutout, css, fx } = effects;
   const effectsRef = useRef(effects);
   effectsRef.current = effects;
   // Background removal may reuse a recent mask while playing (`live`).
@@ -53,7 +53,7 @@ export function useFrameEffects(item, image, imageRef) {
     canvasesRef.current.cutout.maskAt = undefined;
     processRef.current(image);
     imageRef.current?.getLayer()?.batchDraw();
-  }, [image, chromaKey, css, softness, cutoutReady, item.type, imageRef]);
+  }, [image, chromaKey, css, fx, softness, cutoutReady, item.type, imageRef]);
 
-  return { effectImage: keyed && (chromaKey || cutout || css) ? canvasesRef.current.canvas : null, drawEffects: drawEffectsRef.current };
+  return { effectImage: keyed && (chromaKey || cutout || css || fx) ? canvasesRef.current.canvas : null, drawEffects: drawEffectsRef.current };
 }

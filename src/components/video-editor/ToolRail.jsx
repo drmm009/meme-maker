@@ -32,6 +32,7 @@ import { PHOTO_MOTIONS } from '../../utils/photoMotion';
 import { DEFAULT_END_CARD, endCardClip, isEndCard, renderEndCard } from '../../utils/brandCard';
 import { captureFrame, renderClipEffect } from '../../utils/clipEffects';
 import { FILTER_PRESETS } from '../../utils/clipFilters';
+import { CLIP_FX } from '../../utils/clipFx';
 import { TRANSITIONS, previousClip } from '../../utils/clipTransitions';
 import { canRecordVoice, startVoiceRecording } from '../../utils/voiceRecorder';
 import { togglePlayback } from './usePlaybackLoop';
@@ -437,8 +438,10 @@ function clipTools(item, { sheet, toggle, playhead, items }) {
   }
   if (item.type === 'video') {
     const preset = FILTER_PRESETS.find((p) => p.id === (item.filter?.preset ?? null));
-    const filtered = Boolean(item.filter && (item.filter.preset || item.filter.brightness || item.filter.contrast || item.filter.saturation));
-    tools.push({ id: 'filter', label: filtered && preset?.id ? preset.label : 'Filters', Icon: FiltersIcon, ...opens('filter', filtered) });
+    const fx = CLIP_FX.find((f) => f.id === item.filter?.fx);
+    const filtered = Boolean(item.filter && (item.filter.preset || item.filter.brightness || item.filter.contrast || item.filter.saturation || fx));
+    // Named after the effect, else the look.
+    tools.push({ id: 'filter', label: fx ? fx.label : filtered && preset?.id ? preset.label : 'Filters', Icon: FiltersIcon, ...opens('filter', filtered) });
   }
   if (item.type === 'video') {
     tools.push({ id: 'place', label: 'Fit', title: 'Fit, fill or stretch to the canvas', Icon: Expand, ...opens('place') });

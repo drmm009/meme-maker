@@ -1512,7 +1512,7 @@
 /* A video's Filters sheet: a black two-way switch, then Looks (stills of the clip, scrolling
    sideways) or Adjust (sliders that fill out from the middle). */
 .vt-filters { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
-.vt-seg { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; padding: 3px; border-radius: 12px; background: #000; }
+.vt-seg { display: grid; grid-auto-columns: 1fr; grid-auto-flow: column; gap: 2px; padding: 3px; border-radius: 12px; background: #000; }
 .vt-seg-btn {
   height: 34px;
   border: none;

@@ -15,6 +15,9 @@ export interface ClipFilter {
   brightness?: number;
   contrast?: number;
   saturation?: number;
+  // An effect over the filtered picture (utils/clipFx: glitch, pixel, vhs, y2k, thermal, pop,
+  // mirror); version 4.
+  fx?: string | null;
 }
 
 // Green screen: the key colour ('auto' until the preview samples it) and its tolerances (0..1).
@@ -275,7 +278,8 @@ export function migrateVideoProject(raw: unknown, version = 0): VideoProject | n
   const v2 = version < 2 ? items.map((c) => (c.type === 'text' ? upgradeText(c) : c)) : items;
   // 2 -> 3: photos take the image editor's filters (see upgradePhotoFilter).
   // 3 -> 4: the watermark gains a look (colour, size, opacity, logo, on/off), each optional with
-  // its old value as the default, so a version 3 watermark needs nothing.
+  // its old value as the default, so a version 3 watermark needs nothing; a video's filter may
+  // carry an effect (`fx`), none before.
   return { ...project, items: version < 3 ? v2.map((c) => (c.type === 'image' ? upgradePhotoFilter(c) : c)) : v2 };
 }
 

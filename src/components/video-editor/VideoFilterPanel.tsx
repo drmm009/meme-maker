@@ -1,15 +1,17 @@
-import { useState, type CSSProperties } from 'react';
+import { useEffect, useState, type CSSProperties } from 'react';
 import { Contrast, Droplets, Sun } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { FILTER_PRESETS, filterCss, resolveFilter } from '../../utils/clipFilters';
+import { CLIP_FX, applyClipFx, seeded } from '../../utils/clipFx';
+import type { ClipFxId } from '../../utils/clipFx';
 import { useEditorStore } from '../../store/useVideoEditorStore';
 import useClipFrame from './useClipFrame';
 import type { ClipFilter, VideoClip } from '../../model/videoProject';
 
-// A video's Filters sheet, in the sheets' grey with black controls: Looks, a row of stills of the
-// clip in each look, or Adjust, a slider per setting that fills out from the middle (0). The looks
-// and sliders are the video's own (utils/clipFilters), which the FFmpeg export can match; Reset is
-// the sheet's (clipSheetActions).
+// A video's Filters sheet, in the sheets' grey with black controls: Presets, a row of stills of the
+// clip in each look; Effects, the same for the effects drawn over it (Glitch, Pixel, VHS…:
+// utils/clipFx, which only the frame-by-frame export draws); or Adjust, a slider per setting that
+// fills out from the middle (0). Reset is the sheet's (clipSheetActions).
 type FilteredVideo = Pick<VideoClip, 'id' | 'type' | 'url' | 'startMs' | 'endMs'> & { filter?: ClipFilter | null };
 
 const SLIDERS: { key: 'brightness' | 'contrast' | 'saturation'; label: string; Icon: LucideIcon }[] = [
@@ -20,17 +22,66 @@ const SLIDERS: { key: 'brightness' | 'contrast' | 'saturation'; label: string; I
 
 const TABS = [
   { id: 'presets', label: 'Presets' },
+  { id: 'effects', label: 'Effects' },
   { id: 'adjust', label: 'Adjust' },
 ] as const;
+type Tab = (typeof TABS)[number]['id'];
+
+// A moment of the footage at which Glitch is mid-burst, for its still.
+const GLITCH_MS = (() => {
+  for (let k = 0; k < 64; k++) if (seeded(k * 31) < 0.35) return k * 90;
+  return 0;
+})();
+const THUMB_WIDTH = 160;
+
+// Each effect drawn over a still of the clip (with its look), as picture URLs; {} until ready.
+function useFxStills(frame: string | null, css: string): Partial<Record<ClipFxId, string>> {
+  const [stills, setStills] = useState<Partial<Record<ClipFxId, string>>>({});
+  useEffect(() => {
+    if (!frame) return undefined;
+    let live = true;
+    const img = new Image();
+    img.onload = () => {
+      if (!live || !img.width) return;
+      const w = THUMB_WIDTH;
+      const h = Math.max(1, Math.round((img.height / img.width) * w));
+      const canvas = document.createElement('canvas');
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext('2d', { willReadFrequently: true });
+      if (!ctx) return;
+      const holder = {};
+      const out: Partial<Record<ClipFxId, string>> = {};
+      for (const { id } of CLIP_FX) {
+        ctx.filter = css || 'none';
+        ctx.clearRect(0, 0, w, h);
+        ctx.drawImage(img, 0, 0, w, h);
+        ctx.filter = 'none';
+        try {
+          applyClipFx(ctx, w, h, id, id === 'glitch' ? GLITCH_MS : 1200, holder);
+          out[id] = canvas.toDataURL('image/jpeg', 0.8);
+        } catch {
+          // A still that can't be read back: that tile shows the plain still.
+        }
+      }
+      setStills(out);
+    };
+    img.src = frame;
+    return () => { live = false; };
+  }, [frame, css]);
+  return stills;
+}
 
 const update = (id: string, filter: ClipFilter | null) => useEditorStore.getState().updateItem(id, { filter });
 
 const signed = (v: number) => (v > 0 ? `+${v}` : String(v));
 
 export default function VideoFilterPanel({ item }: { item: FilteredVideo }) {
-  const [tab, setTab] = useState<'presets' | 'adjust'>('presets');
+  const [tab, setTab] = useState<Tab>('presets');
   const frame = useClipFrame(item);
   const filter = item.filter || {};
+  const lookCss = filterCss(resolveFilter({ preset: filter.preset ?? null }));
+  const stills = useFxStills(tab === 'effects' ? frame : null, lookCss);
   const set = (patch: ClipFilter) => update(item.id, { ...filter, ...patch });
   return (
     <div className="vt-filters">
@@ -42,7 +93,25 @@ export default function VideoFilterPanel({ item }: { item: FilteredVideo }) {
           </button>
         ))}
       </div>
-      {tab === 'presets' ? (
+      {tab === 'effects' ? (
+        <div className="vt-looks" role="radiogroup" aria-label="Effects">
+          {[{ id: null, label: 'None' }, ...CLIP_FX].map((f) => {
+            const on = (filter.fx ?? null) === f.id;
+            const still = f.id ? stills[f.id] : frame;
+            return (
+              <button key={f.label} type="button" role="radio" aria-checked={on}
+                className={`vt-look${on ? ' is-on' : ''}`} onClick={() => set({ fx: f.id })}>
+                <span className="vt-look-thumb">
+                  {still
+                    ? <img src={still} alt="" style={!f.id && lookCss ? { filter: lookCss } : undefined} />
+                    : <span className="vt-filter-thumb-empty" />}
+                </span>
+                <span className="vt-look-label">{f.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      ) : tab === 'presets' ? (
         <div className="vt-looks" role="radiogroup" aria-label="Looks">
           {FILTER_PRESETS.map((p) => {
             const on = (filter.preset ?? null) === p.id;

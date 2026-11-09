@@ -12,11 +12,12 @@ export interface PersonCutout {
 
 export const DEFAULT_PERSON_CUTOUT: PersonCutout = { softness: 0.3 };
 
-// A clip only the frame-by-frame export can draw (FFmpeg can't remove backgrounds).
-export const needsFrameRenderer = (item: { type: string; hidden?: boolean; bgRemoval?: PersonCutout | null }): boolean =>
-  item.type === 'video' && !item.hidden && Boolean(item.bgRemoval);
+// A clip only the frame-by-frame export can draw (FFmpeg can't remove backgrounds or draw the
+// effects in utils/clipFx).
+export const needsFrameRenderer = (item: { type: string; hidden?: boolean; bgRemoval?: PersonCutout | null; filter?: { fx?: string | null } | null }): boolean =>
+  item.type === 'video' && !item.hidden && Boolean(item.bgRemoval || item.filter?.fx);
 
-export const NEEDS_FRAME_RENDERER = 'Background removal exports as MP4 in a browser that can encode video, like Chrome or Edge. Turn it off to export a GIF or in this browser.';
+export const NEEDS_FRAME_RENDERER = 'Background removal and video effects (Glitch, Pixel, VHS and the rest) export as MP4 in a browser that can encode video, like Chrome or Edge. Turn them off to export a GIF or in this browser.';
 
 interface Mask {
   width: number;
