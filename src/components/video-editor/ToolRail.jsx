@@ -480,10 +480,10 @@ const volumeIcon = (item) => {
   return level < 0.5 ? Volume1 : Volume2;
 };
 
-// A photo's row, most used first: the look (Filters, Background, Face swap), how it moves and sits
-// (Motion, Fit, Rotate), Transition, More, then Split, Duplicate, Select, Arrange and Delete as on
-// every clip.
-const IMAGE_ROW = ['filter', 'background', 'faceswap', 'motion', 'place', 'rotate', 'transition', 'more', 'split', 'duplicate', 'select', 'arrange', 'delete'];
+// A photo's row, as a video's: Split first, then the look (Filters, Background), how it moves
+// (Motion, Transition), the AI tool (Face swap), More (mirror, crop, replace, look), then the clip
+// itself (Duplicate, Select, Arrange, Delete). A photo is placed and turned on the preview.
+const IMAGE_ROW = ['split', 'filter', 'background', 'motion', 'transition', 'faceswap', 'more', 'duplicate', 'select', 'arrange', 'delete'];
 
 // The selected clip's tools for the bottom bar, all in one row: what this kind of clip can do (each
 // setting opens its sheet, its button lit while open or while the setting is on), then Split,
@@ -554,7 +554,7 @@ function clipTools(item, { sheet, toggle, playhead, items }) {
     const filtered = Boolean(item.filter && (item.filter.preset || item.filter.brightness || item.filter.contrast || item.filter.saturation));
     tools.push({ id: 'filter', label: filtered && preset?.id ? preset.label : 'Filters', Icon: FiltersIcon, ...opens('filter', filtered) });
   }
-  if (item.type === 'image' || item.type === 'video') {
+  if (item.type === 'video') {
     tools.push({ id: 'place', label: 'Fit', title: 'Fit, fill or stretch to the canvas', Icon: Expand, ...opens('place') });
   }
   // A photo's crop and flips are in its More.
@@ -572,7 +572,7 @@ function clipTools(item, { sheet, toggle, playhead, items }) {
   if (item.type === 'sticker' && (canCutOut(item) || item.originalUrl)) {
     tools.push({ id: 'cutout', label: 'Cut out', title: item.originalUrl ? 'Put the background back' : 'Remove the background', Icon: Eraser, active: Boolean(item.originalUrl), onClick: () => toggleCutOut(item) });
   }
-  if (item.type === 'image' || item.type === 'sticker') {
+  if (item.type === 'sticker') {
     tools.push({ id: 'rotate', label: 'Rotate', Icon: RotateCw, onClick: () => update(item.id, rotateAboutCenter(item, ((item.rotation || 0) + 90) % 360)) });
   }
   // A text's opacity is in its Colour sheet, a sticker's in its Edit, a photo's in its More.

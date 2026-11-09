@@ -401,7 +401,7 @@ describe('VideoEditor', () => {
     fireEvent.click(clips(container)[0]);
     const main = screen.getByRole('toolbar', { name: 'Clip tools' });
     expect([...main.querySelectorAll('button')].map((b) => b.textContent || b.getAttribute('aria-label')))
-      .toEqual(['Back', 'Filters', 'Background', 'Face swap', 'Motion', 'Fit', 'Rotate', 'More', 'Split', 'Duplicate', 'Select', 'Arrange', 'Delete']);
+      .toEqual(['Back', 'Split', 'Filters', 'Background', 'Motion', 'Face swap', 'More', 'Duplicate', 'Select', 'Arrange', 'Delete']);
 
     fireEvent.click(clipTool('Filters'));
     fireEvent.click(screen.getByRole('button', { name: '90s Vintage' }));
