@@ -19,6 +19,11 @@ export default defineConfig({
       '/api/face-swap': {
         target: 'http://127.0.0.1:5174',
         changeOrigin: true
+      },
+      // The video link helper (video_link_server.py), for the video editor's Paste link.
+      '/api/video-link': {
+        target: 'http://127.0.0.1:5175',
+        changeOrigin: true
       }
     }
   },

@@ -76,7 +76,7 @@ describe('VideoEditor', () => {
     const { container } = render(<VideoEditor onBack={() => {}} />);
     expect(container.querySelector('.vt-editor.is-preview')).toBeTruthy();
     const start = screen.getByRole('group', { name: 'Start your video' });
-    expect([...start.querySelectorAll('button')].map((b) => b.textContent.trim())).toEqual(['Add a video', 'Photo', 'Meme clip']);
+    expect([...start.querySelectorAll('button')].map((b) => b.textContent.trim())).toEqual(['Add a video', 'Link', 'Photo', 'Meme clip']);
     // Opening the timeline puts the prompt away; closing it brings the prompt back.
     fireEvent.click(screen.getByText('Edit'));
     expect(container.querySelector('.vt-editor.is-edit')).toBeTruthy();
@@ -140,10 +140,26 @@ describe('VideoEditor', () => {
     closeSheet();
     addTool('Video');
     const video = screen.getByRole('dialog', { name: 'Add video' });
-    expect([...video.querySelectorAll('.vt-source-label')].map((b) => b.textContent)).toEqual(['Upload', 'Clips']);
-    fireEvent.click(video.querySelectorAll('.vt-source')[1]);
+    expect([...video.querySelectorAll('.vt-source-label')].map((b) => b.textContent)).toEqual(['Upload', 'Link', 'Clips']);
+    fireEvent.click(video.querySelectorAll('.vt-source')[2]);
     expect(screen.queryByRole('dialog', { name: 'Add video' })).toBeNull();
     expect(screen.getByRole('dialog', { name: 'Clips' })).toBeTruthy();
+  });
+
+  it('opens the video link sheet from Add video, and from a link pasted onto the editor', () => {
+    render(<VideoEditor onBack={() => {}} />);
+    addTool('Video');
+    fireEvent.click(screen.getByRole('dialog', { name: 'Add video' }).querySelectorAll('.vt-source')[1]);
+    const sheet = screen.getByRole('dialog', { name: 'Video from a link' });
+    expect(within(sheet).getByRole('button', { name: 'Get video' }).disabled).toBe(true);
+    fireEvent.change(within(sheet).getByLabelText('Video link'), { target: { value: 'https://www.instagram.com/reel/abc/' } });
+    expect(within(sheet).getByText('Instagram link')).toBeTruthy();
+    expect(within(sheet).getByRole('button', { name: 'Get video' }).disabled).toBe(false);
+    closeSheet();
+
+    // A paste with no link in it does nothing.
+    fireEvent.paste(document.body, { clipboardData: { getData: () => 'just words' } });
+    expect(screen.queryByRole('dialog', { name: 'Video from a link' })).toBeNull();
   });
 
   it('opens Stickers and GIFs as separate sheets', () => {

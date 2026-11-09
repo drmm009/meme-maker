@@ -1,6 +1,6 @@
 import React, { useEffect, useImperativeHandle, useLayoutEffect, useRef, useState } from 'react';
 import {
-  Type, Sticker, Smile, LayoutGrid, Image as ImageIcon, Clapperboard, Music,
+  Type, Sticker, Smile, LayoutGrid, Image as ImageIcon, Clapperboard, Music, Link2,
   Gauge, Volume1, Volume2, VolumeX, Palette, RotateCw, Crop, Copy, Trash2,
   Scissors, WandSparkles, Sparkles, ImagePlay, PaintBucket, Zap, Snowflake, Rewind, Repeat, ZoomIn, BringToFront, SendToBack, Mic, ArrowRightLeft, Frame, Upload, Library, Laugh, Video, Captions, Expand, Blend, FlipHorizontal2, Move, ListChecks, X, AtSign, Flag, Layers, ScanFace, CaseSensitive, Baseline, Ellipsis, Wand, Settings2, SquarePen
 } from 'lucide-react';
@@ -19,6 +19,7 @@ import { GreenScreenPanel, OpacityPanel, PunchPanel } from './ClipEffectPanels';
 import { cropReset, greenScreenOff, punchesClear, videoFiltersReset } from './clipSheetActions';
 import FaceSwapPanel from './FaceSwapPanel';
 import WatermarkPanel, { WatermarkAside } from './WatermarkPanel';
+import VideoLinkPanel from './VideoLinkPanel';
 import { TextColorPanel, TextFontPanel, TextStylePanel } from './TextLookPanel';
 import { StickerDieCutAside, StickerDieCutPanel, StickerEditPanel, StickerFlipAside } from './StickerLookPanel';
 import { PhotoBackgroundPanel, PhotoFiltersPanel, PhotoMorePanel } from './PhotoLookPanel';
@@ -47,6 +48,7 @@ import { SOUND_EFFECTS } from '../../data/soundEffects';
 const DOCK = [
   { kind: 'videos', label: 'Video', Icon: Video, title: 'Add video', sources: [
     { kind: 'video', label: 'Upload', sub: 'From your phone', Icon: Upload },
+    { kind: 'link', label: 'Link', sub: 'TikTok, Reels, Shorts', Icon: Link2 },
     { kind: 'clips', label: 'Clips', sub: 'Meme video clips', Icon: Clapperboard },
   ] },
   { kind: 'image', label: 'Photo', Icon: ImageIcon, title: 'Add photo', sources: [
@@ -312,6 +314,8 @@ const SHEETS = {
   sfx: { title: 'Top sounds', Icon: Zap, Panel: SfxPanel },
   voice: { title: 'Voiceover', Icon: Mic, Panel: VoicePanel },
   captions: { title: 'Auto captions', Icon: Captions, Panel: CaptionsPanel },
+  // Add video > Link: a pasted video link loads onto the timeline (closing the sheet).
+  link: { title: 'Video from a link', Icon: Link2, Panel: VideoLinkPanel },
   arrange: { title: 'Arrange', Icon: Layers, Panel: ArrangePanel },
   // A video's tile sheets (VIDEO_TILES).
   effects: { title: 'Effects', Icon: Wand, tiles: 'effects' },
@@ -600,6 +604,13 @@ export default function ToolRail({ onAdd, ref }) {
       if (tool.panel || tool.sources) setSheetState({ id: null, name: tool.kind });
       else onAdd(tool.kind);
     },
+    // ref.openSheet(name): one of the sheets with nothing selected (the start prompt's Link, a
+    // link pasted onto the editor).
+    openSheet(name) {
+      if (!SHEETS[name]) return;
+      useEditorStore.getState().setActiveItem(null);
+      setSheetState({ id: null, name, parent: null });
+    },
   }));
   // A tile in a sources sheet: a settings sheet (Top sounds, Background…) opens in its place;
   // anything else is added (or its picker opened).
@@ -642,7 +653,7 @@ export default function ToolRail({ onAdd, ref }) {
                 .map((t) => ({ ...t, onClick: () => { t.onClick(); cameFrom(sheet); } }))} />
               : spec.sources
               ? <SourcesPanel sources={spec.sources} onPick={pickSource} />
-              : <spec.Panel item={activeItem} onMore={() => { setSheet(null); onAdd('sounds'); }} onOpen={setSheet} />}
+              : <spec.Panel item={activeItem} onMore={() => { setSheet(null); onAdd('sounds'); }} onOpen={setSheet} onClose={closeSheet} />}
           </Sheet>
         ) : bar}
       </div>

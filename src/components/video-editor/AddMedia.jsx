@@ -6,53 +6,9 @@ import { TemplatesBrowser } from '../editor/panels/TemplatesSheet';
 import { MEME_TEMPLATES } from '../../data/templates';
 import ClipsSheet from './ClipsSheet';
 import SoundsSheet from './SoundsSheet';
+import { addMediaFile } from './mediaFile';
 
 const addItem = (item) => useEditorStore.getState().addItem(item);
-
-// One frame from ~1s in, used as the clip's filmstrip on the timeline.
-const generateThumbnail = (url) => new Promise((resolve) => {
-  let done = false;
-  const finish = (val) => { if (!done) { done = true; resolve(val); } };
-  const video = document.createElement('video');
-  video.src = url;
-  video.crossOrigin = 'anonymous';
-  video.muted = true;
-  video.playsInline = true;
-  video.preload = 'auto';
-  setTimeout(() => finish(null), 2000);
-  const capture = () => {
-    try {
-      const canvas = document.createElement('canvas');
-      canvas.width = 160;
-      canvas.height = 90;
-      canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
-      finish(canvas.toDataURL('image/jpeg', 0.5));
-    } catch {
-      finish(null);
-    }
-  };
-  video.onseeked = capture;
-  video.onerror = () => finish(null);
-  video.onloadeddata = () => {
-    if (video.duration > 1) video.currentTime = 1;
-    else capture();
-  };
-});
-
-const addUploadedFile = (file, type) => {
-  const url = URL.createObjectURL(file);
-  if (type === 'image') {
-    addItem({ type, url, name: file.name });
-    return;
-  }
-  const media = document.createElement(type);
-  media.src = url;
-  media.onloadedmetadata = async () => {
-    const durationMs = Math.round(media.duration * 1000);
-    const thumbnailUrl = type === 'video' ? await generateThumbnail(url) : null;
-    addItem({ type, url, durationMs, width: media.videoWidth, height: media.videoHeight, name: file.name, thumbnailUrl, mimeType: file.type || undefined });
-  };
-};
 
 const emojiToDataUrl = (emoji) => {
   const canvas = document.createElement('canvas');
@@ -110,7 +66,7 @@ const AddMedia = forwardRef(function AddMedia(_props, ref) {
   const close = () => setSheet(null);
   const onFile = (type) => (e) => {
     const file = e.target.files?.[0];
-    if (file) addUploadedFile(file, type);
+    if (file) addMediaFile(file, type);
     e.target.value = '';
   };
 

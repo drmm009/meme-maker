@@ -8,6 +8,7 @@ import ToolRail from './ToolRail';
 import AddMedia from './AddMedia';
 import ExportReadyCard from './ExportReadyCard';
 import StartPrompt from './StartPrompt';
+import { offerLinkText, parseVideoLink } from '../../utils/videoLink';
 import { useEditorStore } from '../../store/useVideoEditorStore';
 import { exportVideoFFmpeg, cancelExport } from '../../utils/ffmpegExport';
 import { ExportCancelledError, formatEta } from '../../utils/exportProgress';
@@ -123,6 +124,21 @@ export default function VideoEditor({ template, onBack, onSaved }) {
   const savedIdRef = useRef(null);
 
   usePlaybackLoop();
+
+  // A video link pasted onto the editor (not into a field) opens Add video > Link and loads it.
+  useEffect(() => {
+    const onPaste = (e) => {
+      const el = e.target;
+      if (el instanceof HTMLElement && (el.closest('input, textarea, select') || el.isContentEditable)) return;
+      const text = e.clipboardData?.getData('text') || '';
+      if (!parseVideoLink(text)) return;
+      e.preventDefault();
+      offerLinkText(text);
+      railRef.current?.openSheet('link');
+    };
+    document.addEventListener('paste', onPaste);
+    return () => document.removeEventListener('paste', onPaste);
+  }, []);
 
   // Fonts people uploaded (in either editor): registered with the page for the text sheets' font
   // list, then the text drawn again in them.
@@ -266,7 +282,7 @@ export default function VideoEditor({ template, onBack, onSaved }) {
           onPointerDown={deselectOnBackground}
         >
           <CanvasPreview>
-            {!hasItems && mode === 'preview' && <StartPrompt onPick={(kind) => addRef.current?.open(kind)} />}
+            {!hasItems && mode === 'preview' && <StartPrompt onPick={(kind) => (kind === 'link' ? railRef.current?.openSheet('link') : addRef.current?.open(kind))} />}
           </CanvasPreview>
         </div>
 

@@ -1901,3 +1901,111 @@ button.vt-pill:disabled { color: #636366; cursor: default; }
 .vt-wm-pair-item { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .vt-wm-pair-item .ui-row-label { width: auto; }
 .vt-wm-logo:focus-visible, .vt-wm-logo-pick:focus-visible, .vt-wm-corner:focus-visible { outline: 2px solid var(--vt-accent); outline-offset: 2px; }
+
+/* Add video > Link (VideoLinkPanel): a black link field like the watermark's name, a progress bar
+   while the video comes in, and one wide button. */
+.vt-link { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.vt-link-field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 48px;
+  padding: 0 6px 0 14px;
+  border-radius: 24px;
+  background: #000;
+  cursor: text;
+  transition: box-shadow 0.15s;
+}
+.vt-link-field:focus-within { box-shadow: inset 0 0 0 2px rgba(255, 90, 54, 0.7); }
+.vt-link-icon { flex: none; color: var(--vt-muted); transition: color 0.15s; }
+.vt-link-field.has-link .vt-link-icon { color: var(--vt-accent); }
+.vt-link-field input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--vt-text);
+  font: inherit;
+  font-size: 16px;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  outline: none;
+  user-select: text;
+  -webkit-user-select: text;
+}
+.vt-link-field input::placeholder { color: #636366; }
+/* The field shows focus as a whole (its ring), not the input inside it. */
+.vt-link-field input:focus, .vt-link-field input:focus-visible { outline: none; }
+.vt-link-field input:disabled { color: var(--vt-muted); }
+.vt-link-clear,
+.vt-link-paste {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 36px;
+  border: none;
+  border-radius: 18px;
+  background: var(--vt-surface-2, #2c2c2e);
+  color: var(--vt-text);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.15s var(--vt-ease);
+}
+.vt-link-clear { width: 36px; padding: 0; background: none; color: var(--vt-muted); }
+.vt-link-paste { padding: 0 14px; background: #2c2c2e; }
+.vt-link-clear:active, .vt-link-paste:active { transform: scale(0.94); }
+.vt-link-hint { min-height: 16px; padding: 0 4px; }
+.vt-link-progress { display: flex; flex-direction: column; gap: 6px; padding: 0 4px; }
+.vt-link-bar { position: relative; height: 6px; overflow: hidden; border-radius: 3px; background: #000; }
+.vt-link-bar span {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 0;
+  border-radius: inherit;
+  background: var(--vt-accent);
+  transition: width 0.2s linear;
+}
+.vt-link-bar.is-busy span { width: 35%; animation: vt-link-busy 1.2s var(--vt-ease) infinite; }
+@keyframes vt-link-busy { from { transform: translateX(-100%); } to { transform: translateX(300%); } }
+.vt-link-note { color: var(--vt-muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.vt-link-error { padding: 0 4px; color: #ff6b5b; font-size: 13px; line-height: 1.4; }
+.vt-link-error p { margin: 0; }
+.vt-link-help { margin-top: 4px !important; color: var(--vt-muted); font-size: 12px; }
+.vt-link-help code {
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: #000;
+  color: var(--vt-text);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 11.5px;
+  user-select: all;
+  -webkit-user-select: all;
+}
+.vt-link-actions { display: flex; }
+.vt-link-btn {
+  flex: 1;
+  height: 48px;
+  border: none;
+  border-radius: 24px;
+  background: #000;
+  color: var(--vt-text);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.15s var(--vt-ease);
+}
+.vt-link-btn.is-primary { background: var(--vt-accent); color: #fff; }
+.vt-link-btn:disabled { opacity: 0.4; cursor: default; }
+.vt-link-btn:not(:disabled):active { transform: scale(0.98); }
+.vt-link-fine { margin: -4px 0 0; color: #636366; font-size: 11px; text-align: center; }
+.vt-link-field button:focus-visible, .vt-link-btn:focus-visible { outline: 2px solid var(--vt-accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) {
+  .vt-link-bar.is-busy span { animation-duration: 3s; }
+}
