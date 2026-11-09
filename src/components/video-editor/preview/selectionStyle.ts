@@ -19,6 +19,10 @@ const ROTATER = 30;
 const BUTTON = 28;
 // Extra touch area round each handle.
 const TOUCH = 18;
+// A side handle's touch band: this wide, and up to this long.
+const SIDE_ZONE = 32;
+const SIDE_ZONE_MAX = 64;
+const SIDES = ['middle-left', 'middle-right', 'top-center', 'bottom-center'];
 
 // Lucide's copy and trash, as one path each (24-unit box).
 const COPY_ICON = 'M10 8h10a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2V10a2 2 0 0 1 2-2zM4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2';
@@ -107,6 +111,21 @@ function styleAnchor(anchor: Konva.Rect) {
   if (rotater) {
     anchor.sceneFunc(drawRotater);
     anchor.hitFunc(hitRotater);
+  } else if (isSide(anchor)) {
+    // Its touch area: a band half the frame's side long (the buttons and corner handles keep the
+    // rest), drawn over them, so it's easy to catch even on one line of text.
+    const back = tr?.findOne('.back');
+    const across = anchor.hasName('top-center') || anchor.hasName('bottom-center');
+    const side = Math.abs(((across ? back?.width() : back?.height()) || 0) + (tr?.padding() || 0) * 2);
+    const along = Math.max(across ? w : h, Math.min(SIDE_ZONE_MAX, side / 2));
+    anchor.hitFunc((ctx, shape) => {
+      const bw = across ? along : SIDE_ZONE;
+      const bh = across ? SIDE_ZONE : along;
+      ctx.beginPath();
+      ctx.rect((w - bw) / 2, (h - bh) / 2, bw, bh);
+      ctx.closePath();
+      ctx.fillShape(shape);
+    });
   }
 }
 
@@ -188,6 +207,8 @@ export function decorateSelection(tr: Konva.Transformer | null, actions: Selecti
     copy.position({ x: w + pad, y: top });
     copy.moveToTop();
     remove.moveToTop();
+    // The side handles' bands over the buttons and corners (see styleAnchor).
+    SIDES.forEach((name) => tr.findOne(`.${name}`)?.moveToTop());
     angle.moveToTop();
   };
   // While turning: the angle in a small dark pill.
