@@ -2,7 +2,7 @@ import React, { useEffect, useImperativeHandle, useLayoutEffect, useRef, useStat
 import {
   Type, Sticker, Smile, LayoutGrid, Image as ImageIcon, Clapperboard, Music,
   Gauge, Volume1, Volume2, VolumeX, Palette, RotateCw, Crop, Copy, Trash2,
-  Scissors, PencilLine, SlidersHorizontal, WandSparkles, Sparkles, ImagePlay, PaintBucket, Zap, Snowflake, Rewind, Repeat, ZoomIn, BringToFront, SendToBack, Mic, ArrowRightLeft, Frame, Upload, Library, Laugh, SquarePlay, Captions, Expand, Blend, Eraser, FlipHorizontal2, Move, ListChecks, X, AtSign, Flag, Layers, ScanFace, CaseSensitive, Baseline, Ellipsis, Wand, Settings2
+  Scissors, PencilLine, WandSparkles, Sparkles, ImagePlay, PaintBucket, Zap, Snowflake, Rewind, Repeat, ZoomIn, BringToFront, SendToBack, Mic, ArrowRightLeft, Frame, Upload, Library, Laugh, SquarePlay, Captions, Expand, Blend, FlipHorizontal2, Move, ListChecks, X, AtSign, Flag, Layers, ScanFace, CaseSensitive, Baseline, Ellipsis, Wand, Settings2, SquarePen
 } from 'lucide-react';
 import { Sheet } from '../ui';
 import DeckBar from './DeckBar';
@@ -23,8 +23,7 @@ import { PhotoBackgroundPanel, PhotoFiltersPanel, PhotoMorePanel } from './Photo
 import { photoFiltered, photoFiltersReset } from './photoFilters';
 import { isPhotoFramed } from '../../utils/photoLook';
 import { isGifSticker } from '../../utils/stickerLook';
-import { canCutOut } from '../../utils/cutOut';
-import { runJob, toggleCutOut } from './clipJobs';
+import { runJob } from './clipJobs';
 import { VideoBackgroundAside, VideoBackgroundPanel } from './VideoBackgroundPanel';
 import { PHOTO_MOTIONS } from '../../utils/photoMotion';
 import { DEFAULT_END_CARD, WATERMARK_CORNERS, endCardClip, isEndCard, renderEndCard } from '../../utils/brandCard';
@@ -400,7 +399,7 @@ const SHEETS = {
   style: { title: 'Style', Icon: Baseline, Panel: TextStylePanel, tall: true },
   color: { title: 'Colour', Icon: Palette, Panel: TextColorPanel, tall: true },
   // A sticker's, as the image editor's (StickerLookPanel); `Aside` goes beside the heading.
-  sticker: { title: 'Sticker', Icon: SlidersHorizontal, Panel: StickerEditPanel, Aside: StickerFlipAside },
+  sticker: { title: 'Sticker', Icon: SquarePen, Panel: StickerEditPanel, Aside: StickerFlipAside },
   diecut: { title: 'Die-cut', Icon: Sticker, Panel: StickerDieCutPanel, Aside: StickerDieCutAside },
   // A photo's, as the image editor's (PhotoLookPanel); `action` is the heading's button.
   photobg: { title: 'Background', Icon: BackgroundIcon, Panel: PhotoBackgroundPanel },
@@ -484,6 +483,10 @@ const volumeIcon = (item) => {
 // (Motion, Transition), the AI tool (Face swap), More (mirror, crop, replace, look), then the clip
 // itself (Duplicate, Select, Arrange, Delete). A photo is placed and turned on the preview.
 const IMAGE_ROW = ['split', 'filter', 'background', 'motion', 'transition', 'faceswap', 'more', 'duplicate', 'select', 'arrange', 'delete'];
+// A sticker's, the same way: Split, its look (Edit, Die-cut), its shape and turn (Crop, Flip,
+// Rotate), then the clip itself.
+const STICKER_ROW = ['split', 'edit', 'diecut', 'crop', 'flip', 'rotate', 'transition', 'duplicate', 'select', 'arrange', 'delete'];
+const ROWS = { image: IMAGE_ROW, sticker: STICKER_ROW };
 
 // The selected clip's tools for the bottom bar, all in one row: what this kind of clip can do (each
 // setting opens its sheet, its button lit while open or while the setting is on), then Split,
@@ -504,7 +507,7 @@ function clipTools(item, { sheet, toggle, playhead, items }) {
   }
   if (item.type === 'sticker') {
     // As the image editor's sticker bar: Edit (size, opacity, shadow, flip) and Die-cut.
-    tools.push({ id: 'edit', label: 'Edit', title: 'Size, opacity, shadow and flip', Icon: SlidersHorizontal, ...opens('sticker') });
+    tools.push({ id: 'edit', label: 'Edit', title: 'Size, opacity, shadow and flip', Icon: SquarePen, ...opens('sticker') });
     if (!isGifSticker(item)) tools.push({ id: 'diecut', label: 'Die-cut', title: item.dieCut ? 'Die-cut border (on)' : 'Add die-cut border', Icon: Sticker, ...opens('diecut', Boolean(item.dieCut)) });
   }
   if (item.type === 'image') {
@@ -568,10 +571,6 @@ function clipTools(item, { sheet, toggle, playhead, items }) {
     const motion = PHOTO_MOTIONS.find((m) => m.id === (item.motion || null));
     tools.push({ id: 'motion', label: item.motion ? motion.label : 'Motion', title: 'Photo motion', Icon: Move, ...opens('motion', Boolean(item.motion)) });
   }
-  // A photo's is its Background's Remove.
-  if (item.type === 'sticker' && (canCutOut(item) || item.originalUrl)) {
-    tools.push({ id: 'cutout', label: 'Cut out', title: item.originalUrl ? 'Put the background back' : 'Remove the background', Icon: Eraser, active: Boolean(item.originalUrl), onClick: () => toggleCutOut(item) });
-  }
   if (item.type === 'sticker') {
     tools.push({ id: 'rotate', label: 'Rotate', Icon: RotateCw, onClick: () => update(item.id, rotateAboutCenter(item, ((item.rotation || 0) + 90) % 360)) });
   }
@@ -590,7 +589,8 @@ function clipTools(item, { sheet, toggle, playhead, items }) {
   // A sound has no layer to move.
   if (item.type !== 'audio') tools.push({ id: 'arrange', label: 'Arrange', title: 'Bring forward or send back', Icon: Layers, ...opens('arrange') });
   tools.push({ id: 'delete', label: 'Delete', Icon: Trash2, danger: true, onClick: () => store().removeItem(item.id) });
-  if (item.type === 'image') tools.sort((a, b) => IMAGE_ROW.indexOf(a.id) - IMAGE_ROW.indexOf(b.id));
+  const row = ROWS[item.type];
+  if (row) tools.sort((a, b) => row.indexOf(a.id) - row.indexOf(b.id));
   return tools;
 }
 

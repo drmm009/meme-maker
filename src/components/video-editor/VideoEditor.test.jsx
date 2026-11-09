@@ -378,7 +378,7 @@ describe('VideoEditor', () => {
     const { container } = render(<VideoEditor onBack={() => {}} />);
     fireEvent.click(clips(container)[0]);
     const main = screen.getByRole('toolbar', { name: 'Clip tools' });
-    expect([...main.querySelectorAll('button')].map((b) => b.textContent)).toEqual(['Back', 'Edit', 'Die-cut', 'Crop', 'Flip', 'Cut out', 'Rotate', 'Split', 'Duplicate', 'Select', 'Arrange', 'Delete']);
+    expect([...main.querySelectorAll('button')].map((b) => b.textContent)).toEqual(['Back', 'Split', 'Edit', 'Die-cut', 'Crop', 'Flip', 'Rotate', 'Duplicate', 'Select', 'Arrange', 'Delete']);
     fireEvent.click(clipTool('Edit'));
     fireEvent.change(screen.getByRole('slider', { name: 'Sticker size' }), { target: { value: '0.25' } });
     fireEvent.change(screen.getByRole('slider', { name: 'Shadow size' }), { target: { value: '12' } });
