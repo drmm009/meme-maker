@@ -113,7 +113,10 @@ const CanvasText = ({ item, isSelected, onSelect, onChange, onEditStart, canvasD
           {...SELECTION_PROPS}
           keepRatio={true}
           enabledAnchors={['middle-left', 'middle-right', 'bottom-left', 'bottom-right']}
-          boundBoxFunc={(oldBox, newBox) => (newBox.width < 20 || newBox.height < 20 ? oldBox : newBox)}
+          // Never smaller than 20px across on screen, but a box already that small can always grow.
+          boundBoxFunc={(oldBox, newBox) => (
+            (newBox.width < 20 && newBox.width < oldBox.width) || (newBox.height < 12 && newBox.height < oldBox.height) ? oldBox : newBox
+          )}
         />
       )}
     </React.Fragment>

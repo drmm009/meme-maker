@@ -112,6 +112,16 @@ export function useTextGestures({ item, isSelected, nodeRef, trRef, bitmapRef, s
     changeRef.current(next);
   };
 
+  // Which handle is held: a side one sets the wrap width, a corner one scales the text. (Told by
+  // the handle, not the scales: with the frame's padding a corner's scales can differ a little on
+  // small text.)
+  const sideHeld = useRef(false);
+  const isSide = () => {
+    const anchor = trRef.current?.getActiveAnchor() || '';
+    if (anchor) sideHeld.current = anchor.startsWith('middle');
+    return sideHeld.current;
+  };
+
   // A handle move: the node's scale is the change since the last redraw (put back to 1 each time).
   const resize = () => {
     const node = nodeRef.current;
@@ -121,15 +131,15 @@ export function useTextGestures({ item, isSelected, nodeRef, trRef, bitmapRef, s
     if (Math.abs(sx - 1) < 0.001 && Math.abs(sy - 1) < 0.001) return; // turning only
     const place = { x: node.x(), y: node.y(), rotation: node.rotation() };
     const base = { ...itemRef.current, ...liveRef.current };
-    if (Math.abs(sx - sy) > 0.001) apply({ width: Math.max(40, (bitmapRef.current?.boxWidth || 0) * sx), ...place });
-    else apply({ ...scaleTextLook(base, sx), ...place });
+    if (isSide()) apply({ width: Math.max(40, (bitmapRef.current?.boxWidth || 0) * sx), ...place });
+    else apply({ ...scaleTextLook(base, Math.sqrt(sx * sy)), ...place });
   };
   const onTransform = () => {
     const node = nodeRef.current;
     if (!node) return;
     // A side handle rewraps every frame; a corner leaves Konva's scaling showing until a sharp
     // redraw is due (and once it pauses).
-    if (Math.abs(node.scaleX() - node.scaleY()) > 0.001 || dueCrisp()) schedule(resize);
+    if (isSide() || dueCrisp()) schedule(resize);
     else later(resize);
   };
 
