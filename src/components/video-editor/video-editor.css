@@ -1682,3 +1682,28 @@ button.vt-pill:disabled { color: #636366; cursor: default; }
 .vt-options[aria-label='Photo motion'] { gap: 6px; }
 .vt-options[aria-label='Photo motion'] .vt-option { padding: 12px 2px 10px; }
 .vt-options[aria-label='Photo motion'] .vt-option-label { font-size: 12px; }
+
+/* Auto captions (CaptionsPanel.tsx): the count big, each style as a tile showing a word in it, then a
+   big Generate button (Remove beside it once there are captions), or while it works a progress card. */
+.vt-capstyles .vt-option { padding: 10px 6px 10px; }
+.vt-capstyles .vt-option-art { height: auto; margin-bottom: 6px; }
+.vt-capstyle-frame {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  min-width: 84px;
+  height: 48px;
+  border-radius: 10px;
+  background: linear-gradient(160deg, #8e8e93, #48484a);
+}
+.vt-capstyle-word { padding: 1px 5px; border-radius: 3px; font-size: 15px; font-weight: 700; line-height: 1.2; letter-spacing: 0.01em; white-space: nowrap; }
+.vt-capstyles .vt-option:disabled { opacity: 0.5; cursor: default; }
+.vt-capactions { display: grid; grid-template-columns: 1fr; gap: 8px; }
+.vt-capactions:has(.vt-capremove) { grid-template-columns: 1fr auto; }
+.vt-capremove { padding: 0 18px; }
+.vt-capremove svg { color: var(--vt-muted); }
+.vt-capjob { display: flex; flex-direction: column; gap: 12px; padding: 14px; border-radius: var(--ui-radius-md, 16px); background: #000; }
+.vt-capjob-text { display: flex; align-items: center; justify-content: space-between; gap: 10px; color: var(--vt-text); font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.vt-capjob-text .vt-pill { background: #2c2c2e; color: var(--vt-text); }
+.vt-capjob .vt-captions-bar { background: #2c2c2e; }
+.vt-capjob .vt-captions-bar span { background: var(--vt-accent); }

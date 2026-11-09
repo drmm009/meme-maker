@@ -340,6 +340,8 @@ describe('VideoEditor', () => {
     act(() => store().addItem({ type: 'audio', url: 'boom.mp3', durationMs: 2000 }));
     const { container } = render(<VideoEditor onBack={() => {}} />);
     fireEvent.click(clips(container)[0]);
+    // A sound's Mute is in its Volume sheet, not on the toolbar; it has no layer to arrange.
+    expect(labels(screen.getByRole('toolbar', { name: 'Clip tools' }))).toEqual(['Back', 'Volume', 'Split', 'Duplicate', 'Select', 'Delete']);
     fireEvent.click(screen.getByText('Volume'));
     fireEvent.change(screen.getByRole('slider'), { target: { value: '40' } });
     fireEvent.click(screen.getByText('Fade in'));

@@ -13,6 +13,7 @@ import { clipCrop, isCropped } from '../../utils/clipCrop';
 import CropPanel from './CropPanel';
 import VideoFilterPanel from './VideoFilterPanel';
 import { SpeedPanel, VolumePanel } from './SpeedVolumePanels';
+import CaptionsPanel from './CaptionsPanel';
 import { AnimationPanel, FlipPanel, MotionPanel, PlacePanel, TransitionPanel } from './ClipLookPanels';
 import { GreenScreenPanel, OpacityPanel, PunchPanel } from './ClipEffectPanels';
 import { cropReset, greenScreenOff, punchesClear, videoFiltersReset } from './clipSheetActions';
@@ -31,8 +32,6 @@ import { captureFrame, renderClipEffect } from '../../utils/clipEffects';
 import { FILTER_PRESETS } from '../../utils/clipFilters';
 import { TRANSITIONS, previousClip } from '../../utils/clipTransitions';
 import { canRecordVoice, startVoiceRecording } from '../../utils/voiceRecorder';
-import { CAPTION_STYLES, captionItems, captionStyle } from '../../utils/captionChunks';
-import { speechClips } from '../../utils/clipAudio';
 import { togglePlayback } from './usePlaybackLoop';
 import { rotateAboutCenter } from './preview/previewMath';
 import { formatClock } from './timeline/timelineMath';
@@ -297,99 +296,6 @@ function VoicePanel() {
 
 // Auto captions: transcribe the clips' speech on this device (Whisper, English) and lay it out as
 // short timed captions. Generating again replaces them; picking a style restyles them.
-function CaptionsPanel() {
-  const captionCount = useEditorStore((s) => s.items.filter((i) => i.autoCaption).length);
-  const currentStyle = useEditorStore((s) => s.items.find((i) => i.autoCaption)?.captionStyle);
-  const hasSpeech = useEditorStore((s) => speechClips(s.items).length > 0);
-  const [styleId, setStyleId] = useState(currentStyle || 'classic');
-  const [job, setJob] = useState(null); // { phase, progress, clip, clips } while generating
-  const [message, setMessage] = useState(null);
-  const runRef = useRef(0);
-
-  const pickStyle = (id) => {
-    setStyleId(id);
-    if (captionCount) useEditorStore.getState().restyleAutoCaptions((item) => captionStyle(id, item));
-  };
-
-  const generate = async () => {
-    const run = ++runRef.current;
-    setMessage(null);
-    setJob({ phase: 'listen', clip: 0, clips: 1 });
-    try {
-      const { generateCaptions } = await import('../../utils/autoCaptions');
-      const st = useEditorStore.getState();
-      const { captions } = await generateCaptions(st.items, (p) => { if (runRef.current === run) setJob(p); });
-      if (runRef.current !== run) return;
-      if (!captions.length) { setMessage('No speech heard. Captions work with English speech.'); return; }
-      useEditorStore.getState().setAutoCaptions(captionItems(captions, styleId, useEditorStore.getState().canvasDimensions));
-      setMessage(`${captions.length} captions added. Tap one to edit it.`);
-    } catch (e) {
-      if (runRef.current === run && e?.name !== 'TranscribeCancelledError') {
-        setMessage(navigator.onLine === false ? 'You’re offline. The speech model downloads on first use.' : 'Couldn’t make captions for this video.');
-        if (import.meta.env?.DEV) console.warn('[captions]', e);
-      }
-    } finally {
-      if (runRef.current === run) setJob(null);
-    }
-  };
-
-  const cancel = async () => {
-    runRef.current++;
-    setJob(null);
-    const { cancelTranscription } = await import('../../utils/transcriber');
-    cancelTranscription();
-  };
-  // Closing the panel stops a job in progress.
-  useEffect(() => () => {
-    runRef.current++;
-    import('../../utils/transcriber').then((m) => m.cancelTranscription());
-  }, []);
-
-  const status = !job ? null
-    : job.phase === 'download'
-      ? { text: `Downloading speech model… ${Math.round((job.progress || 0) * 100)}%`, value: job.progress || 0 }
-      : { text: job.clips > 1 ? `Listening to clip ${job.clip + 1} of ${job.clips}…` : 'Listening…', value: null };
-
-  return (
-    <div className="vt-captions">
-      <div className="vt-chip-row">
-        {CAPTION_STYLES.map((s) => (
-          <button key={s.id} type="button" className={`vt-chip${styleId === s.id ? ' is-on' : ''}`} onClick={() => pickStyle(s.id)} disabled={Boolean(job)}>
-            {s.label}
-          </button>
-        ))}
-      </div>
-      {status ? (
-        <div className="vt-captions-job" role="status">
-          <div className="vt-captions-job-text">
-            <span>{status.text}</span>
-            <button type="button" className="vt-chip" onClick={cancel}>Cancel</button>
-          </div>
-          <div className={`vt-captions-bar${status.value === null ? ' is-busy' : ''}`}>
-            <span style={status.value === null ? undefined : { width: `${Math.round(status.value * 100)}%` }} />
-          </div>
-        </div>
-      ) : (
-        <div className="vt-captions-actions">
-          <button type="button" className="vt-captions-go" onClick={generate} disabled={!hasSpeech}>
-            <Captions size={16} strokeWidth={2.4} />
-            {captionCount ? 'Regenerate' : 'Generate captions'}
-          </button>
-          {captionCount > 0 && (
-            <button type="button" className="vt-chip" onClick={() => { useEditorStore.getState().removeAutoCaptions(); setMessage(null); }}>
-              Remove
-            </button>
-          )}
-        </div>
-      )}
-      <p className="vt-panel-hint">
-        {message || (hasSpeech
-          ? 'English speech, transcribed on your device. The first time downloads a 40 MB model.'
-          : 'Add a video with speech or record a voiceover first.')}
-      </p>
-    </div>
-  );
-}
 
 // Every settings sheet: its title, the icon beside it, and what it shows (for the selected clip, or for nothing selected).
 const SHEETS = {
@@ -549,7 +455,6 @@ function clipTools(item, { sheet, toggle, playhead, items }) {
     tools.push(
       { id: 'volume', label: item.muted ? 'Muted' : 'Volume', title: 'Volume and fades', Icon: volumeIcon(item),
         ...opens('volume', Boolean(item.muted || (Number.isFinite(item.volume) && item.volume !== 1) || item.fadeInMs || item.fadeOutMs)) },
-      { id: 'mute', label: item.muted ? 'Unmute' : 'Mute', Icon: item.muted ? VolumeX : Volume2, active: Boolean(item.muted), onClick: () => update(item.id, { muted: !item.muted }) },
     );
   }
   if (item.type === 'video') {
