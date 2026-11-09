@@ -1,11 +1,12 @@
 import React, { useEffect, useReducer, useRef, useState } from 'react';
 import Konva from 'konva';
-import { Image as KonvaImage, Transformer, Group } from 'react-konva';
-import { onTextFontsLoaded, scaleTextLook, textBitmap, textImageAttrs } from '../../../utils/textBitmap';
+import { Image as KonvaImage, Transformer, Group, Line } from 'react-konva';
+import { onTextFontsLoaded, textBitmap, textImageAttrs } from '../../../utils/textBitmap';
 import { useEditorStore } from '../../../store/useVideoEditorStore';
 import { clipOpacity } from '../../../model/videoProject';
 import { useTextPlayback } from './useTextPlayback';
 import { SELECTION_PROPS, decorateSelection } from './selectionStyle';
+import { useTextGestures } from './useTextGestures';
 
 // Picture pixels per stage unit for the preview: the stage's scale on this screen, in quarter steps
 // (so resizing the window doesn't redraw every text for each pixel).
@@ -15,18 +16,17 @@ const previewScale = (stage) => {
 };
 
 // A text clip on the preview: the image editor's caption painter draws it into a picture
-// (utils/textBitmap), shown here as one image. Tapping it starts editing (onEditStart); the
-// corner handles resize the text (font, outline, shadow and wrap together).
-const CanvasText = ({ item, isSelected, onSelect, onChange, onEditStart }) => {
+// (utils/textBitmap), shown here as one image. Tapping it starts editing (onEditStart); its
+// handles, pinch and drag work as the image editor's captions (useTextGestures).
+const CanvasText = ({ item, isSelected, onSelect, onChange, onEditStart, canvasDimensions }) => {
   const nodeRef = useRef(null);
   const groupRef = useRef(null);
   const trRef = useRef(null);
   const itemRef = useRef(item);
   const [scale, setScale] = useState(1);
   const [, redraw] = useReducer((n) => n + 1, 0);
-  // While a side handle drags: the wrap width and place it has reached, before they're saved.
-  const [live, setLive] = useState(null);
-  const liveRef = useRef(null);
+  const bitmapRef = useRef(null);
+  const { live, guides, handlers } = useTextGestures({ item, isSelected, nodeRef, bitmapRef, scale, canvas: canvasDimensions, onChange });
   const shown = live ? { ...item, ...live } : item;
   const bitmap = textBitmap(shown, scale);
 
@@ -36,7 +36,6 @@ const CanvasText = ({ item, isSelected, onSelect, onChange, onEditStart }) => {
 
   // The selection frame and handles go round the text's box, not the room the picture keeps for
   // the outline, shadow and effects.
-  const bitmapRef = useRef(bitmap);
   bitmapRef.current = bitmap;
   useEffect(() => {
     const node = nodeRef.current;
@@ -93,37 +92,21 @@ const CanvasText = ({ item, isSelected, onSelect, onChange, onEditStart }) => {
             draggable
             onClick={startEdit}
             onTap={startEdit}
-            onDragEnd={(e) => onChange({ ...item, x: e.target.x(), y: e.target.y() })}
-            onTransform={() => {
-              // A side handle stretches one way only: it sets where the text wraps, rewrapped as it
-              // moves (drawn straight onto the node, so the box follows the finger this frame).
-              const node = nodeRef.current;
-              const sx = node.scaleX();
-              if (Math.abs(sx - node.scaleY()) < 0.001) return;
-              const next = { width: Math.max(40, bitmapRef.current.boxWidth * sx), x: node.x(), y: node.y() };
-              const look = { ...item, ...next };
-              const b = textBitmap(look, scale);
-              bitmapRef.current = b;
-              node.setAttrs({ ...textImageAttrs(look, b), rotation: node.rotation(), scaleX: 1, scaleY: 1 });
-              liveRef.current = next;
-              setLive(next);
-            }}
-            onTransformEnd={() => {
-              const node = nodeRef.current;
-              const sx = node.scaleX();
-              node.scaleX(1);
-              node.scaleY(1);
-              const place = { x: node.x(), y: node.y(), rotation: node.rotation() };
-              const wrapped = liveRef.current;
-              liveRef.current = null;
-              setLive(null);
-              // A side drag saves its wrap width; the corners (kept in ratio) scale the whole look.
-              if (wrapped) onChange({ ...item, ...place, width: wrapped.width });
-              else onChange({ ...item, ...place, ...scaleTextLook(item, sx) });
-            }}
+            onTouchStart={handlers.onTouchStart}
+            onDragMove={handlers.onDragMove}
+            onDragEnd={handlers.onDragEnd}
+            onTransform={handlers.onTransform}
+            onTransformEnd={handlers.onTransformEnd}
           />
         </Group>
       </Group>
+      {/* Centre guides while a drag has snapped the text onto a centre line. */}
+      {guides && canvasDimensions && (
+        <Group listening={false}>
+          {guides.vertical !== null && <Line points={[guides.vertical, 0, guides.vertical, canvasDimensions.height]} stroke="#ff5a36" strokeWidth={1.5} strokeScaleEnabled={false} dash={[6, 4]} />}
+          {guides.horizontal !== null && <Line points={[0, guides.horizontal, canvasDimensions.width, guides.horizontal]} stroke="#ff5a36" strokeWidth={1.5} strokeScaleEnabled={false} dash={[6, 4]} />}
+        </Group>
+      )}
       {isSelected && (
         <Transformer
           ref={trRef}

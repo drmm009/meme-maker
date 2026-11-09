@@ -97,6 +97,7 @@ const CanvasPreview = forwardRef((props, ref) => {
                 onSelect={select(item.id)}
                 onEditStart={startEditing}
                 onChange={(newAttrs) => updateItem(item.id, newAttrs)}
+                canvasDimensions={logicalDimensions}
               />
             ) : (
               // Photo, video or sticker
