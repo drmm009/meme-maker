@@ -281,6 +281,7 @@
   transition: transform 0.15s var(--vt-ease);
 }
 .vt-mode-btn:active { transform: scale(0.95); }
+.vt-mode-btn { transition: transform 0.15s var(--vt-ease), opacity 0.2s ease, visibility 0.2s; }
 
 /* ── Deck: the timeline and the bottom bar as one rounded panel ─
    It carries the grey and the rounded top; opening the timeline grows the panel up out of the bar. */
@@ -680,6 +681,9 @@
    preview shrinks to fit above it and the play button stays in view. */
 .vt-deck:has(.vt-bottom.has-short-sheet) .vt-timeline-wrap { height: 0; }
 .vt-bottom.has-short-sheet > .ui-sheet { max-height: 55dvh; }
+/* With a short sheet open under the play button, Edit/Done (the timeline's) steps out of the way;
+   its place in the row is kept, so play stays centred. */
+.vt-editor:has(.vt-bottom.has-short-sheet) .vt-mode-btn { visibility: hidden; opacity: 0; pointer-events: none; }
 
 /* The bottom bar (DeckBar): flat and full width on the deck's grey, a hairline between it and the
    open timeline. Buttons share the row; when there are more than fit they scroll sideways past Back. */
