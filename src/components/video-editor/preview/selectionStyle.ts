@@ -79,8 +79,22 @@ function styleAnchor(anchor: Konva.Rect) {
   }
   anchor.width(w);
   anchor.height(h);
-  anchor.offsetX(w / 2);
-  anchor.offsetY(h / 2);
+  // Centred on the frame's line, which sits `padding` outside the layer (as Konva places them; the
+  // rotater's padding is in its position instead).
+  const tr = anchor.getParent() as Konva.Transformer | null;
+  const pad = rotater ? 0 : tr?.padding() || 0;
+  const name = anchor.name();
+  // A corner handle sits on the middle of the frame's rounded corner, not its square corner.
+  let inset = 0;
+  if (!rotater && !isSide(anchor)) {
+    const back = tr?.findOne('.back');
+    const r = Math.min(RADIUS, Math.abs((back?.width() || 0) + pad * 2) / 2, Math.abs((back?.height() || 0) + pad * 2) / 2);
+    inset = r * (1 - Math.SQRT1_2);
+  }
+  const dx = name.includes('left') ? pad - inset : name.includes('right') ? inset - pad : 0;
+  const dy = name.includes('top') ? pad - inset : name.includes('bottom') ? inset - pad : 0;
+  anchor.offsetX(w / 2 + dx);
+  anchor.offsetY(h / 2 + dy);
   anchor.cornerRadius(Math.min(w, h) / 2);
   anchor.fill(rotater && turning(anchor) ? FRAME : '#ffffff');
   anchor.stroke('rgba(0, 0, 0, 0.12)');
