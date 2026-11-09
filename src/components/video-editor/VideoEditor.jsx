@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useStore } from 'zustand';
-import { X, Share, Play, Pause, Undo2, Redo2, ChevronLeft, ChevronUp, ChevronDown, Copy, Check, History, ImagePlay, LoaderCircle, FolderHeart, SquarePlay } from 'lucide-react';
+import { X, Share, Play, Pause, SkipBack, Undo2, Redo2, ChevronLeft, ChevronUp, ChevronDown, Copy, Check, History, ImagePlay, LoaderCircle, FolderHeart, SquarePlay } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import CanvasPreview from './CanvasPreview';
 import TimelinePanel from './timeline/TimelinePanel';
@@ -13,7 +13,7 @@ import { exportVideoFFmpeg, cancelExport } from '../../utils/ffmpegExport';
 import { ExportCancelledError, formatEta } from '../../utils/exportProgress';
 import SizeMenu from '../ui/SizeMenu';
 import { useAudioPlaybackSync } from './useAudioPlaybackSync';
-import { usePlaybackLoop, togglePlayback } from './usePlaybackLoop';
+import { usePlaybackLoop, togglePlayback, goToStart } from './usePlaybackLoop';
 import { useVideoDraft } from './useVideoDraft';
 import { loadSavedVideo, restoreProject, saveVideoToStudio } from '../../utils/videoDraftStore';
 import { formatClock, getContentEnd } from './timeline/timelineMath';
@@ -367,9 +367,15 @@ export default function VideoEditor({ template, onBack, onSaved }) {
 
       <div className="vt-transport">
         <Clock />
-        <button type="button" className="vt-play" onClick={togglePlayback} aria-label={isPlaying ? 'Pause' : 'Play'}>
-          {isPlaying ? <Pause size={20} fill="currentColor" /> : <Play size={20} fill="currentColor" style={{ marginLeft: 2 }} />}
-        </button>
+        {/* Play in the middle, a small Back to start beside it (outside the row's flow, so play stays centred). */}
+        <div className="vt-play-wrap">
+          <button type="button" className="vt-to-start" onClick={goToStart} aria-label="Back to start" title="Back to start">
+            <SkipBack size={16} fill="currentColor" aria-hidden="true" />
+          </button>
+          <button type="button" className="vt-play" onClick={togglePlayback} aria-label={isPlaying ? 'Pause' : 'Play'}>
+            {isPlaying ? <Pause size={20} fill="currentColor" /> : <Play size={20} fill="currentColor" style={{ marginLeft: 2 }} />}
+          </button>
+        </div>
         {/* Opens the timeline up out of the bottom bar, and puts it away again. */}
         <button type="button" className="vt-mode-btn" onClick={() => setMode(mode === 'edit' ? 'preview' : 'edit')} aria-expanded={mode === 'edit'}>
           <span>{mode === 'edit' ? 'Done' : 'Edit'}</span>

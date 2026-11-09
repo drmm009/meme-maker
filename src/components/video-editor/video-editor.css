@@ -246,6 +246,28 @@
   transition: transform 0.15s var(--vt-ease);
 }
 .vt-play:active { transform: scale(0.92); }
+.vt-play-wrap { position: relative; display: grid; place-items: center; }
+/* Back to start: a small grey disc just left of play. */
+.vt-to-start {
+  position: absolute;
+  right: calc(100% + 12px);
+  top: 50%;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--vt-surface);
+  color: var(--vt-text);
+  cursor: pointer;
+  transform: translateY(-50%);
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.15s var(--vt-ease);
+}
+.vt-to-start:active { transform: translateY(-50%) scale(0.9); }
+.vt-to-start:focus-visible { outline: 2px solid var(--vt-accent); outline-offset: 2px; }
 /* Undo and redo at the top, a pill like the canvas size beside them. */
 .vt-history { display: flex; height: 36px; border-radius: 18px; background: var(--vt-surface); }
 .vt-icon-btn {

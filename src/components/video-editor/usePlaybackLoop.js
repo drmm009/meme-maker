@@ -36,3 +36,8 @@ export function togglePlayback() {
   if (state.playhead >= getContentEnd(state.items, state.duration) - 10) state.setPlayhead(0);
   state.setIsPlaying(true);
 }
+
+// Back to the start; playing carries on from there.
+export function goToStart() {
+  useEditorStore.getState().setPlayhead(0);
+}
