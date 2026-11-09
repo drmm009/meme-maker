@@ -24,7 +24,11 @@ const CanvasText = ({ item, isSelected, onSelect, onChange, onEditStart }) => {
   const itemRef = useRef(item);
   const [scale, setScale] = useState(1);
   const [, redraw] = useReducer((n) => n + 1, 0);
-  const bitmap = textBitmap(item, scale);
+  // While a side handle drags: the wrap width and place it has reached, before they're saved.
+  const [live, setLive] = useState(null);
+  const liveRef = useRef(null);
+  const shown = live ? { ...item, ...live } : item;
+  const bitmap = textBitmap(shown, scale);
 
   useEffect(() => {
     itemRef.current = item;
@@ -85,21 +89,36 @@ const CanvasText = ({ item, isSelected, onSelect, onChange, onEditStart }) => {
           <KonvaImage
             id={`text-${item.id}`}
             ref={nodeRef}
-            {...textImageAttrs(item, bitmap)}
+            {...textImageAttrs(shown, bitmap)}
             draggable
             onClick={startEdit}
             onTap={startEdit}
             onDragEnd={(e) => onChange({ ...item, x: e.target.x(), y: e.target.y() })}
+            onTransform={() => {
+              // A side handle stretches one way only: it sets where the text wraps, rewrapped as it
+              // moves (drawn straight onto the node, so the box follows the finger this frame).
+              const node = nodeRef.current;
+              const sx = node.scaleX();
+              if (Math.abs(sx - node.scaleY()) < 0.001) return;
+              const next = { width: Math.max(40, bitmapRef.current.boxWidth * sx), x: node.x(), y: node.y() };
+              const look = { ...item, ...next };
+              const b = textBitmap(look, scale);
+              bitmapRef.current = b;
+              node.setAttrs({ ...textImageAttrs(look, b), rotation: node.rotation(), scaleX: 1, scaleY: 1 });
+              liveRef.current = next;
+              setLive(next);
+            }}
             onTransformEnd={() => {
               const node = nodeRef.current;
               const sx = node.scaleX();
-              const sy = node.scaleY();
               node.scaleX(1);
               node.scaleY(1);
               const place = { x: node.x(), y: node.y(), rotation: node.rotation() };
-              // A side handle stretches one way only: it sets where the text wraps. The corners
-              // (kept in ratio) scale the whole look.
-              if (Math.abs(sx - sy) > 0.001) onChange({ ...item, ...place, width: Math.max(40, bitmap.boxWidth * sx) });
+              const wrapped = liveRef.current;
+              liveRef.current = null;
+              setLive(null);
+              // A side drag saves its wrap width; the corners (kept in ratio) scale the whole look.
+              if (wrapped) onChange({ ...item, ...place, width: wrapped.width });
               else onChange({ ...item, ...place, ...scaleTextLook(item, sx) });
             }}
           />
