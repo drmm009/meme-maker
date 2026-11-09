@@ -1427,8 +1427,10 @@
 .vt-editor .ui-sheet .ui-seg--fill,
 .vt-editor .ui-sheet .ui-toggle--tile:not(.is-on),
 .vt-editor .ui-sheet .vt-sound-play:not(.is-on),
-.vt-editor .ui-sheet .vt-sound-add,
-.vt-editor .ui-sheet .ui-sheet-title-icon { background: #000; }
+.vt-editor .ui-sheet .vt-sound-add { background: #000; }
+/* The heading's icon: just the orange icon beside the title, no circle behind it. */
+.vt-editor .ui-sheet .ui-sheet-title-icon { width: auto; height: auto; margin-right: 0; border-radius: 0; background: none; color: var(--vt-accent); }
+.vt-editor .ui-sheet .ui-sheet-title-icon svg { width: 20px; height: 20px; }
 .vt-editor .ui-sheet .ui-chip.is-on,
 .vt-editor .ui-sheet .ui-seg-btn.is-on,
 .vt-editor .ui-sheet .vt-sound-add:active { background: #3a3a3c; }
