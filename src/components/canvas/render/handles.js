@@ -1,18 +1,64 @@
-// Selection UI drawn over the active layer: box, delete/resize/side badges, rotate knob.
-export const THEME_CORAL = '#f06853';
-
-const THEME_GLOW = 'rgba(240, 104, 83, 0.45)';
+// Selection UI drawn over the active layer: box, delete/resize/side badges, rotate knob. The same
+// look as the video editor's selection (video-editor/preview/selectionStyle.ts): an orange rounded
+// frame with a soft dark shadow, plain white discs and pills with a soft shadow, a red bin for
+// Delete and a dark turning arrow on the rotate knob.
+export const THEME_CORAL = '#ff5a36';
+const DELETE_RED = '#ff3b30';
+const INK = '#1c1c1e';
+const RING = 'rgba(0, 0, 0, 0.12)';
+// Lucide's trash and rotate-cw (24-unit box).
+const TRASH_ICON = 'M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2';
+const ROTATE_ICON = 'M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8M21 3v5h-5';
+// The rounded corner's radius the corner handles sit on (drawSelectionBox's usual 10).
+const CORNER_INSET = 10 * (1 - Math.SQRT1_2);
 
 export const THEME_BADGE_BG = '#ffffff';
 
-// 1. Selection Box Outline (Smooth rounded rectangle with soft coral glow)
+// A soft shadow under a disc or pill.
+const softShadow = (uiCtx) => {
+  uiCtx.shadowColor = 'rgba(0, 0, 0, 0.35)';
+  uiCtx.shadowBlur = 6;
+  uiCtx.shadowOffsetY = 1;
+};
+
+// A Lucide icon, `size` across, centred on (x, y).
+const drawIcon = (uiCtx, path, x, y, size, colour) => {
+  if (typeof Path2D === 'undefined') return;
+  uiCtx.save();
+  uiCtx.shadowColor = 'transparent';
+  uiCtx.translate(x - size / 2, y - size / 2);
+  uiCtx.scale(size / 24, size / 24);
+  uiCtx.strokeStyle = colour;
+  uiCtx.lineWidth = 2.2;
+  uiCtx.lineCap = 'round';
+  uiCtx.lineJoin = 'round';
+  uiCtx.stroke(new Path2D(path));
+  uiCtx.restore();
+};
+
+// A white disc with a soft shadow and a faint ring.
+const drawDisc = (uiCtx, x, y, r) => {
+  uiCtx.save();
+  softShadow(uiCtx);
+  uiCtx.beginPath();
+  uiCtx.arc(x, y, r, 0, Math.PI * 2);
+  uiCtx.fillStyle = THEME_BADGE_BG;
+  uiCtx.fill();
+  uiCtx.shadowColor = 'transparent';
+  uiCtx.strokeStyle = RING;
+  uiCtx.lineWidth = 1;
+  uiCtx.stroke();
+  uiCtx.restore();
+};
+
+// 1. Selection box: an orange rounded frame with a soft dark shadow.
 export const drawSelectionBox = (uiCtx, bx, by, bw, bh, radius = 10) => {
   uiCtx.save();
-  uiCtx.shadowColor = THEME_GLOW;
-  uiCtx.shadowBlur = 8;
+  uiCtx.shadowColor = 'rgba(0, 0, 0, 0.35)';
+  uiCtx.shadowBlur = 6;
   uiCtx.shadowOffsetY = 0;
   uiCtx.strokeStyle = THEME_CORAL;
-  uiCtx.lineWidth = 2.4;
+  uiCtx.lineWidth = 2.5;
   uiCtx.beginPath();
   if (uiCtx.roundRect) {
     uiCtx.roundRect(bx, by, bw, bh, radius);
@@ -23,156 +69,43 @@ export const drawSelectionBox = (uiCtx, bx, by, bw, bh, radius = 10) => {
   uiCtx.restore();
 };
 
-// 2. Delete Handle (Top-Left corner handle: crisp white circular badge, coral border & coral ✕ icon, increased size)
+// 2. Delete (top-left): a plain white disc with a red bin.
 export const drawDeleteHandle = (uiCtx, hx, hy) => {
-  uiCtx.save();
-  uiCtx.shadowColor = 'rgba(0, 0, 0, 0.28)';
-  uiCtx.shadowBlur = 6;
-  uiCtx.shadowOffsetY = 1.5;
-
-  // Button background circle (increased to radius 18)
-  uiCtx.beginPath();
-  uiCtx.arc(hx, hy, 18, 0, Math.PI * 2);
-  uiCtx.fillStyle = THEME_BADGE_BG;
-  uiCtx.fill();
-
-  // Coral border
-  uiCtx.strokeStyle = THEME_CORAL;
-  uiCtx.lineWidth = 2.4;
-  uiCtx.stroke();
-
-  // Coral ✕ inside (scaled up to match radius 18)
-  uiCtx.shadowColor = 'transparent';
-  uiCtx.beginPath();
-  uiCtx.strokeStyle = THEME_CORAL;
-  uiCtx.lineWidth = 2.4;
-  uiCtx.lineCap = 'round';
-  const cr = 5.5;
-  uiCtx.moveTo(hx - cr, hy - cr);
-  uiCtx.lineTo(hx + cr, hy + cr);
-  uiCtx.moveTo(hx + cr, hy - cr);
-  uiCtx.lineTo(hx - cr, hy + cr);
-  uiCtx.stroke();
-  uiCtx.restore();
+  drawDisc(uiCtx, hx, hy, 18);
+  drawIcon(uiCtx, TRASH_ICON, hx, hy, 20, DELETE_RED);
 };
 
-// 3. Resize Handle (Bottom-Right corner handle: crisp white circular badge, coral border & diagonal double-arrows ⤢, increased size)
+// 3. Resize (bottom-right): a white dot on the frame's rounded corner.
 export const drawResizeHandle = (uiCtx, hx, hy) => {
-  uiCtx.save();
-  uiCtx.shadowColor = 'rgba(0, 0, 0, 0.28)';
-  uiCtx.shadowBlur = 6;
-  uiCtx.shadowOffsetY = 1.5;
-
-  // Button background circle (increased to radius 18)
-  uiCtx.beginPath();
-  uiCtx.arc(hx, hy, 18, 0, Math.PI * 2);
-  uiCtx.fillStyle = THEME_BADGE_BG;
-  uiCtx.fill();
-
-  uiCtx.strokeStyle = THEME_CORAL;
-  uiCtx.lineWidth = 2.4;
-  uiCtx.stroke();
-
-  // Diagonal double-arrow icon inside (scaled up for radius 18)
-  uiCtx.shadowColor = 'transparent';
-  uiCtx.strokeStyle = THEME_CORAL;
-  uiCtx.lineWidth = 2.4;
-  uiCtx.lineCap = 'round';
-  uiCtx.lineJoin = 'round';
-
-  // Inside-out diagonal connecting stem (from inside/top-left to outside/bottom-right)
-  uiCtx.beginPath();
-  uiCtx.moveTo(hx - 5.5, hy - 5.5);
-  uiCtx.lineTo(hx + 5.5, hy + 5.5);
-  uiCtx.stroke();
-
-  // Inward arrowhead ↖ (pointing inside toward box center)
-  uiCtx.beginPath();
-  uiCtx.moveTo(hx - 1.5, hy - 5.5);
-  uiCtx.lineTo(hx - 5.5, hy - 5.5);
-  uiCtx.lineTo(hx - 5.5, hy - 1.5);
-  uiCtx.stroke();
-
-  // Outward arrowhead ↘ (pointing outside away from box)
-  uiCtx.beginPath();
-  uiCtx.moveTo(hx + 1.5, hy + 5.5);
-  uiCtx.lineTo(hx + 5.5, hy + 5.5);
-  uiCtx.lineTo(hx + 5.5, hy + 1.5);
-  uiCtx.stroke();
-
-  uiCtx.restore();
+  drawDisc(uiCtx, hx - CORNER_INSET, hy - CORNER_INSET, 11);
 };
 
-
-// 5. Side Stretch Handle (Crisp white rounded capsule for width stretching)
+// 5. Side stretch handle: a slim white pill on the frame's line.
 export const drawSideHandle = (uiCtx, hx, hy, isVertical = true) => {
+  const w = isVertical ? 9 : 26;
+  const h = isVertical ? 26 : 9;
   uiCtx.save();
-  uiCtx.shadowColor = 'rgba(0, 0, 0, 0.25)';
-  uiCtx.shadowBlur = 5;
-  uiCtx.shadowOffsetY = 1;
-
+  softShadow(uiCtx);
   uiCtx.beginPath();
-  if (isVertical) {
-    if (uiCtx.roundRect) {
-      uiCtx.roundRect(hx - 4, hy - 13, 8, 26, 4);
-    } else {
-      uiCtx.rect(hx - 4, hy - 13, 8, 26);
-    }
+  if (uiCtx.roundRect) {
+    uiCtx.roundRect(hx - w / 2, hy - h / 2, w, h, 4);
   } else {
-    if (uiCtx.roundRect) {
-      uiCtx.roundRect(hx - 13, hy - 4, 26, 8, 4);
-    } else {
-      uiCtx.rect(hx - 13, hy - 4, 26, 8);
-    }
+    uiCtx.rect(hx - w / 2, hy - h / 2, w, h);
   }
   uiCtx.fillStyle = THEME_BADGE_BG;
   uiCtx.fill();
-  uiCtx.strokeStyle = THEME_CORAL;
-  uiCtx.lineWidth = 2;
+  uiCtx.shadowColor = 'transparent';
+  uiCtx.strokeStyle = RING;
+  uiCtx.lineWidth = 1;
   uiCtx.stroke();
   uiCtx.restore();
 };
 
-// 6. Rotation Handle (Clean vertical stem + crisp white rotation knob with circular arrow)
+// 6. Rotation knob: a white disc with a dark turning arrow, above the frame without a stem. (The
+// stem's start is kept in the signature for the callers.)
 export const drawRotateHandle = (uiCtx, startX, startY, knobX, knobY) => {
-  uiCtx.save();
-  // Rotation stem
-  uiCtx.strokeStyle = THEME_CORAL;
-  uiCtx.lineWidth = 1.8;
-  uiCtx.beginPath();
-  uiCtx.moveTo(startX, startY);
-  uiCtx.lineTo(knobX, knobY);
-  uiCtx.stroke();
-
-  // Rotation knob
-  uiCtx.shadowColor = 'rgba(0, 0, 0, 0.28)';
-  uiCtx.shadowBlur = 6;
-  uiCtx.shadowOffsetY = 1.5;
-  uiCtx.beginPath();
-  uiCtx.arc(knobX, knobY, 15, 0, Math.PI * 2);
-  uiCtx.fillStyle = THEME_BADGE_BG;
-  uiCtx.fill();
-  uiCtx.strokeStyle = THEME_CORAL;
-  uiCtx.lineWidth = 2.2;
-  uiCtx.stroke();
-
-  // Circular rotate icon inside knob
-  uiCtx.shadowColor = 'transparent';
-  uiCtx.strokeStyle = THEME_CORAL;
-  uiCtx.lineWidth = 2;
-  uiCtx.lineCap = 'round';
-  uiCtx.beginPath();
-  uiCtx.arc(knobX, knobY, 6.5, -Math.PI * 0.7, Math.PI * 0.8);
-  uiCtx.stroke();
-
-  // Arrowhead
-  uiCtx.fillStyle = THEME_CORAL;
-  uiCtx.beginPath();
-  uiCtx.moveTo(knobX + 4.5, knobY + 4.5);
-  uiCtx.lineTo(knobX + 8, knobY);
-  uiCtx.lineTo(knobX + 4, knobY - 3);
-  uiCtx.fill();
-  uiCtx.restore();
+  drawDisc(uiCtx, knobX, knobY, 15);
+  drawIcon(uiCtx, ROTATE_ICON, knobX, knobY, 18, INK);
 };
 
 // A round grab point (a shape's end or corner), radius `r` in canvas pixels.
@@ -185,8 +118,8 @@ export const drawPointHandle = (uiCtx, hx, hy, r) => {
   uiCtx.fillStyle = THEME_BADGE_BG;
   uiCtx.fill();
   uiCtx.shadowColor = 'transparent';
-  uiCtx.strokeStyle = THEME_CORAL;
-  uiCtx.lineWidth = Math.max(2, r * 0.3);
+  uiCtx.strokeStyle = RING;
+  uiCtx.lineWidth = Math.max(1, r * 0.12);
   uiCtx.stroke();
   uiCtx.restore();
 };
