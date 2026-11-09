@@ -18,6 +18,7 @@ import { AnimationPanel, FlipPanel, MotionPanel, PlacePanel, TransitionPanel } f
 import { GreenScreenPanel, OpacityPanel, PunchPanel } from './ClipEffectPanels';
 import { cropReset, greenScreenOff, punchesClear, videoFiltersReset } from './clipSheetActions';
 import FaceSwapPanel from './FaceSwapPanel';
+import WatermarkPanel, { WatermarkAside } from './WatermarkPanel';
 import { TextColorPanel, TextEditPanel, TextFontPanel, TextStylePanel } from './TextLookPanel';
 import { StickerDieCutAside, StickerDieCutPanel, StickerEditPanel, StickerFlipAside } from './StickerLookPanel';
 import { PhotoBackgroundPanel, PhotoFiltersPanel, PhotoMorePanel } from './PhotoLookPanel';
@@ -25,9 +26,10 @@ import { photoFiltered, photoFiltersReset } from './photoFilters';
 import { isPhotoFramed } from '../../utils/photoLook';
 import { isGifSticker } from '../../utils/stickerLook';
 import { runJob } from './clipJobs';
+import { flashCanvas } from './preview/flashBus';
 import { VideoBackgroundAside, VideoBackgroundPanel } from './VideoBackgroundPanel';
 import { PHOTO_MOTIONS } from '../../utils/photoMotion';
-import { DEFAULT_END_CARD, WATERMARK_CORNERS, endCardClip, isEndCard, renderEndCard } from '../../utils/brandCard';
+import { DEFAULT_END_CARD, endCardClip, isEndCard, renderEndCard } from '../../utils/brandCard';
 import { captureFrame, renderClipEffect } from '../../utils/clipEffects';
 import { FILTER_PRESETS } from '../../utils/clipFilters';
 import { TRANSITIONS, previousClip } from '../../utils/clipTransitions';
@@ -80,6 +82,7 @@ const update = (id, patch) => useEditorStore.getState().updateItem(id, patch);
 const freezeAtPlayhead = (item, playhead) => runJob('Freezing frame…', async () => {
   const url = await captureFrame(item.url, sourceTimeMs(item, Math.min(Math.max(playhead, item.startMs), item.endMs)));
   useEditorStore.getState().insertFreeze(item.id, playhead, url);
+  flashCanvas({ kind: 'freeze', url });
 });
 
 // Reverse/boomerang toggle: tapping the active effect switches it off.
@@ -121,32 +124,6 @@ function BackgroundPanel() {
   );
 }
 
-// A handle shown small in a corner for the whole video (on top of everything, in the export too).
-function WatermarkPanel() {
-  const watermark = useEditorStore((s) => s.watermark);
-  const set = (patch) => useEditorStore.getState().setWatermark({ text: '', corner: 'br', ...watermark, ...patch });
-  const corner = watermark?.corner || 'br';
-  return (
-    <>
-      <input
-        className="vt-text-input"
-        value={watermark?.text || ''}
-        maxLength={40}
-        placeholder="@yourname"
-        aria-label="Watermark text"
-        onChange={(e) => set({ text: e.target.value })}
-      />
-      <div className="vt-chip-row" role="radiogroup" aria-label="Corner">
-        {WATERMARK_CORNERS.map((c) => (
-          <button key={c.id} type="button" role="radio" aria-checked={corner === c.id} className={`vt-chip${corner === c.id ? ' is-on' : ''}`} onClick={() => set({ corner: c.id })}>
-            {c.label}
-          </button>
-        ))}
-        {watermark?.text && <button type="button" className="vt-chip" onClick={() => useEditorStore.getState().setWatermark(null)}>Remove</button>}
-      </div>
-    </>
-  );
-}
 
 const END_CARD_SWATCHES = ['#111111', '#ffffff', '#ff5e36', '#ec4899', '#facc15', '#22c55e', '#3b82f6'];
 
@@ -322,12 +299,14 @@ const SHEETS = {
   greenscreen: { title: 'Green screen', Icon: WandSparkles, Panel: GreenScreenPanel, action: greenScreenOff },
   bgremove: { title: 'Background', Icon: BackgroundIcon, Panel: VideoBackgroundPanel, Aside: VideoBackgroundAside },
   punch: { title: 'Zoom punch', Icon: ZoomIn, Panel: PunchPanel, action: punchesClear },
-  // `tall`: may rise over the preview (its choices don't need it in view), not just to the timeline's top.
+  // `tall`: floats up over the timeline, and the preview if it must (its choices don't need it in
+  // view); the others take the timeline's place, below the play button and the preview.
   faceswap: { title: 'Face swap', Icon: ScanFace, Panel: FaceSwapPanel, tall: true },
   filter: { title: 'Filters', Icon: FiltersIcon, Panel: VideoFilterPanel, action: videoFiltersReset, tall: true },
   transition: { title: 'Transition', Icon: ArrowRightLeft, Panel: TransitionPanel },
   background: { title: 'Background', Icon: PaintBucket, Panel: BackgroundPanel },
-  watermark: { title: 'Watermark', Icon: AtSign, Panel: WatermarkPanel },
+  // Not a clip's: its `Aside` (the on/off switch) shows with nothing selected (`global`).
+  watermark: { title: 'Watermark', Icon: AtSign, Panel: WatermarkPanel, Aside: WatermarkAside, global: true },
   endcard: { title: 'End card', Icon: Flag, Panel: EndCardPanel },
   sfx: { title: 'Top sounds', Icon: Zap, Panel: SfxPanel },
   voice: { title: 'Voiceover', Icon: Mic, Panel: VoicePanel },
@@ -575,6 +554,9 @@ export default function ToolRail({ onAdd, ref }) {
   const cameFrom = (from) => setSheetState((s) => (s.name && s.name !== from ? { ...s, parent: from } : s));
   const toggle = (name, keepOpen = false) => setSheet(sheet === name && !keepOpen ? null : name);
   const spec = sheet && (SHEETS[sheet] || SOURCE_SHEETS[sheet]);
+  // A tall sheet floats up over the timeline (and the preview if it must); a short one takes the
+  // timeline's place in the page, so the preview (shrinking to fit) and the play button stay in view.
+  const floats = Boolean(spec?.tall);
 
   // The bottom's height without a sheet, kept while one is open (it then floats over the timeline,
   // never higher than the timeline's top, the element before it; with the timeline closed, as high
@@ -645,12 +627,13 @@ export default function ToolRail({ onAdd, ref }) {
   }
 
   return (
-    <div className="vt-rail-wrap" ref={wrapRef} style={spec && rest ? { height: rest.height } : undefined}>
-      <div className={`vt-bottom${spec ? ' has-sheet' : ''}`} style={spec && rest ? { minHeight: rest.height, maxHeight: spec.tall ? Math.max(rest.room, Math.min(420, window.innerHeight * 0.6)) : rest.room } : undefined}>
+    <div className="vt-rail-wrap" ref={wrapRef} style={floats && rest ? { height: rest.height } : undefined}>
+      <div className={`vt-bottom${floats ? ' has-sheet' : spec ? ' has-short-sheet' : ''}`}
+        style={floats && rest ? { minHeight: rest.height, maxHeight: Math.max(rest.room, Math.min(420, window.innerHeight * 0.6)) } : undefined}>
         {/* A setting's sheet takes the bar's place; the bar comes back when it closes. */}
         {spec ? (
           <Sheet key={sheet} title={spec.title} Icon={spec.Icon} onClose={closeSheet} className="vt-sheet"
-            aside={spec.Aside && activeItem ? <spec.Aside item={activeItem} /> : undefined}
+            aside={spec.Aside && (activeItem || spec.global) ? <spec.Aside item={activeItem} /> : undefined}
             action={spec.action && activeItem ? spec.action(activeItem) : undefined}>
             {spec.tiles && activeItem
               ? <ToolTiles tools={VIDEO_TILES[spec.tiles].ids.map((id) => allTools.find((t) => t.id === id)).filter(Boolean)

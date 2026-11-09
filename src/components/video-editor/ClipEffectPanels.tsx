@@ -5,6 +5,7 @@ import { clipOpacity } from '../../model/videoProject';
 import type { ChromaKey } from '../../model/videoProject';
 import { DEFAULT_CHROMA_KEY } from '../../utils/chromaKey';
 import { clipPunchTimes } from '../../utils/zoomPunch';
+import { flashCanvas } from './preview/flashBus';
 
 // A video clip as these sheets see it.
 interface EffectClip {
@@ -87,7 +88,9 @@ export function PunchPanel({ item }: { item: EffectClip }) {
   const punches = item.punches || [];
   const times = clipPunchTimes(item);
   const add = () => {
-    if (inside) update(item.id, { punches: [...punches, sourceTimeMs(item, playhead)].sort((a, b) => a - b) });
+    if (!inside) return;
+    update(item.id, { punches: [...punches, sourceTimeMs(item, playhead)].sort((a, b) => a - b) });
+    flashCanvas({ kind: 'punch' });
   };
   const rate = item.playbackRate || 1;
   const trim = item.trimStartMs || 0;

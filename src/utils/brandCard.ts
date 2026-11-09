@@ -2,10 +2,12 @@
 // card (a full-frame picture with a title and a line under it, played after everything else).
 // The watermark is a project setting, drawn as a text clip that isn't on the timeline; the end
 // card is an ordinary photo clip, marked so it can be redrawn and kept at the end.
-import type { Clip, ImageClip, TextClip, WatermarkCorner, WatermarkSettings, EndCardSettings } from '../model/videoProject';
+import type { Clip, ImageClip, StickerClip, TextClip, WatermarkCorner, WatermarkSettings, EndCardSettings } from '../model/videoProject';
+import { isSocialLogo, socialLogoUrl } from './socialLogos';
 
 export const STAGE_WIDTH = 800;
 export const WATERMARK_ID = '__watermark';
+export const WATERMARK_LOGO_ID = '__watermark-logo';
 export const WATERMARK_OPACITY = 0.75;
 export const END_CARD_MS = 2500;
 // The end card picture's width (its height follows the canvas shape).
@@ -20,15 +22,44 @@ export const WATERMARK_CORNERS: { id: WatermarkCorner; label: string }[] = [
 
 export const DEFAULT_END_CARD: EndCardSettings = { title: 'Thanks for watching', subtitle: 'Follow for more', color: '#111111' };
 
-// The watermark as a text clip from 0 to `endMs`, in stage units; null when there's nothing to show.
-export function watermarkClip(wm: WatermarkSettings | null | undefined, endMs: number, aspect: number): TextClip | null {
-  const text = wm?.text?.trim();
-  if (!text || !(endMs > 0)) return null;
+// The watermark's sizes: 12 to 48, 24 the standard (the image editor's watermark sizes).
+export const WATERMARK_SIZE = 24;
+
+export const watermarkOn = (wm: WatermarkSettings | null | undefined): wm is WatermarkSettings =>
+  Boolean(wm) && wm!.enabled !== false;
+
+// The logo's picture: a built-in mark in the watermark's colour, or the uploaded one.
+export function watermarkLogoUrl(wm: WatermarkSettings): string | null {
+  if (isSocialLogo(wm.logo)) return socialLogoUrl(wm.logo, wm.color || '#ffffff');
+  return wm.logo === 'custom' && wm.logoUrl ? wm.logoUrl : null;
+}
+
+// Where the watermark's text and logo go: on one line in its corner, the logo on the outside.
+function watermarkLayout(wm: WatermarkSettings, aspect: number) {
   const stageHeight = STAGE_WIDTH / aspect;
   const base = Math.min(STAGE_WIDTH, stageHeight);
-  const fontSize = Math.max(16, Math.round(base * 0.05));
+  const size = Math.min(48, Math.max(12, wm.size || WATERMARK_SIZE));
+  const fontSize = Math.max(8, Math.round(Math.max(16, base * 0.05) * (size / WATERMARK_SIZE)));
   const margin = Math.round(base * 0.04);
-  const corner = wm?.corner || 'br';
+  const corner = wm.corner || 'br';
+  const left = corner[1] === 'l';
+  // The text's box: its line plus the caption painter's padding above and below.
+  const boxHeight = Math.round(fontSize * 1.2 + 2 * Math.max(10, fontSize * 0.16));
+  const y = corner[0] === 't' ? margin : stageHeight - margin - boxHeight;
+  const logo = watermarkLogoUrl(wm);
+  const logoSize = Math.round(fontSize * 1.3);
+  const room = logo ? logoSize + Math.round(fontSize * 0.2) : 0;
+  return { stageHeight, fontSize, margin, left, y, boxHeight, logo, logoSize, room };
+}
+
+// The watermark's text as a text clip from 0 to `endMs`, in stage units; null when there's none.
+export function watermarkClip(wm: WatermarkSettings | null | undefined, endMs: number, aspect: number): TextClip | null {
+  const text = wm?.text?.trim();
+  if (!watermarkOn(wm) || !text || !(endMs > 0)) return null;
+  const { fontSize, margin, left, y, room } = watermarkLayout(wm, aspect);
+  const color = wm.color || '#ffffff';
+  // A thin edge and a shadow in the opposite shade keep it readable on any background.
+  const dark = inkFor(color) === '#ffffff';
   return {
     id: WATERMARK_ID,
     type: 'text',
@@ -36,27 +67,46 @@ export function watermarkClip(wm: WatermarkSettings | null | undefined, endMs: n
     text,
     startMs: 0,
     endMs,
-    x: margin,
-    // x and y are its box's corner: the text's line plus the caption painter's padding above and below.
-    y: corner[0] === 't' ? margin : stageHeight - margin - Math.round(fontSize * 1.2 + 2 * Math.max(10, fontSize * 0.16)),
-    width: STAGE_WIDTH - 2 * margin,
+    x: margin + (left ? room : 0),
+    y,
+    width: STAGE_WIDTH - 2 * margin - room,
     fontSize,
     fontFamily: 'Inter, system-ui, sans-serif',
-    color: '#ffffff',
-    // A thin dark edge and a shadow keep white text readable on light backgrounds too.
-    stroke: 'rgba(0, 0, 0, 0.55)',
+    color,
+    stroke: dark ? 'rgba(255, 255, 255, 0.55)' : 'rgba(0, 0, 0, 0.55)',
     strokeWidth: fontSize * 0.1,
     shadowSize: Math.round(fontSize * 0.16),
-    shadowColor: 'rgba(0, 0, 0, 0.8)',
-    align: corner[1] === 'l' ? 'left' : 'right',
-    opacity: WATERMARK_OPACITY,
+    shadowColor: dark ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.8)',
+    align: left ? 'left' : 'right',
+    opacity: wm.opacity ?? WATERMARK_OPACITY,
   } as TextClip;
+}
+
+// The watermark's logo as a sticker clip beside its text (in the corner itself); null when there's none.
+export function watermarkLogoClip(wm: WatermarkSettings | null | undefined, endMs: number, aspect: number): StickerClip | null {
+  if (!watermarkOn(wm) || !(endMs > 0)) return null;
+  const { margin, left, y, boxHeight, logo, logoSize } = watermarkLayout(wm, aspect);
+  if (!logo) return null;
+  return {
+    id: WATERMARK_LOGO_ID,
+    type: 'sticker',
+    name: 'Watermark logo',
+    url: logo,
+    startMs: 0,
+    endMs,
+    x: left ? margin : STAGE_WIDTH - margin - logoSize,
+    y: y + Math.round((boxHeight - logoSize) / 2),
+    width: logoSize,
+    height: logoSize,
+    rotation: 0,
+    opacity: wm.opacity ?? WATERMARK_OPACITY,
+  } as StickerClip;
 }
 
 // The clips with the watermark on top (it draws last), for the preview and the export.
 export const withWatermark = (items: Clip[], wm: WatermarkSettings | null | undefined, endMs: number, aspect: number): Clip[] => {
-  const clip = watermarkClip(wm, endMs, aspect);
-  return clip ? [...items, clip] : items;
+  const extra = [watermarkClip(wm, endMs, aspect), watermarkLogoClip(wm, endMs, aspect)].filter((c): c is TextClip | StickerClip => Boolean(c));
+  return extra.length ? [...items, ...extra] : items;
 };
 
 export const isEndCard = (item: Clip): item is ImageClip => item.type === 'image' && Boolean((item as ImageClip).endCard);

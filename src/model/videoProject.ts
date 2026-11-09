@@ -145,10 +145,24 @@ export interface EndCardSettings {
 
 export type WatermarkCorner = 'tl' | 'tr' | 'bl' | 'br';
 
-// A handle shown small in a corner for the whole video.
+export type WatermarkLogo = 'instagram' | 'facebook' | 'x' | 'custom';
+
+// A handle shown small in a corner for the whole video, with an optional logo beside it. Every
+// field after `corner` came in version 4; left out, it takes its default.
 export interface WatermarkSettings {
   text: string;
   corner: WatermarkCorner;
+  // Off keeps the settings for when it's switched on again (default on).
+  enabled?: boolean;
+  // The text's and a built-in logo's colour (default white).
+  color?: string;
+  // 12 to 48, the image editor's watermark sizes; 24 is the standard size.
+  size?: number;
+  // 0.1 to 1 (default 0.75).
+  opacity?: number;
+  logo?: WatermarkLogo | null;
+  // An uploaded logo, as a data URL (a built-in logo is drawn from `logo` and `color`).
+  logoUrl?: string | null;
 }
 
 export interface StickerClip extends ClipBase, Placed {
@@ -235,7 +249,7 @@ export interface VideoProject {
 
 // Saved projects carry this. Bump it when the saved shape changes, and teach
 // migrateVideoProject to upgrade the previous version.
-export const VIDEO_PROJECT_VERSION = 3;
+export const VIDEO_PROJECT_VERSION = 4;
 
 const CLIP_TYPES = new Set<ClipType>(['video', 'image', 'sticker', 'text', 'audio']);
 const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
@@ -260,6 +274,8 @@ export function migrateVideoProject(raw: unknown, version = 0): VideoProject | n
   // 1 -> 2: text takes the image editor's caption look (see upgradeText).
   const v2 = version < 2 ? items.map((c) => (c.type === 'text' ? upgradeText(c) : c)) : items;
   // 2 -> 3: photos take the image editor's filters (see upgradePhotoFilter).
+  // 3 -> 4: the watermark gains a look (colour, size, opacity, logo, on/off), each optional with
+  // its old value as the default, so a version 3 watermark needs nothing.
   return { ...project, items: version < 3 ? v2.map((c) => (c.type === 'image' ? upgradePhotoFilter(c) : c)) : v2 };
 }
 

@@ -488,9 +488,11 @@ describe('VideoEditor', () => {
       act(() => store().addItem({ type: 'video', url: 'a.mp4', durationMs: 4000 }));
       render(<VideoEditor onBack={() => {}} />);
       addFrom('Canvas', 'Watermark');
-      fireEvent.change(screen.getByLabelText('Watermark text'), { target: { value: '@memer' } });
-      fireEvent.click(screen.getByText('Top left'));
-      expect(store().watermark).toEqual({ text: '@memer', corner: 'tl' });
+      // Switched on in the heading, then a name (the @ is the field's) and a corner.
+      fireEvent.click(screen.getByRole('switch', { name: 'Watermark' }));
+      fireEvent.change(screen.getByLabelText('Watermark name'), { target: { value: 'memer' } });
+      fireEvent.click(screen.getByLabelText('Top left'));
+      expect(store().watermark).toEqual({ text: '@memer', corner: 'tl', enabled: true });
       closeSheet();
       closeSheet();
 

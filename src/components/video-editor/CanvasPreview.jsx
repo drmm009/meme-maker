@@ -1,13 +1,14 @@
-import React, { useRef, forwardRef, useImperativeHandle, useMemo } from 'react';
-import { Stage, Layer, Rect, Group } from 'react-konva';
+import React, { useEffect, useRef, useState, forwardRef, useImperativeHandle, useMemo } from 'react';
+import { Stage, Layer, Rect, Group, Image as KonvaImage } from 'react-konva';
 import { useEditorStore } from '../../store/useVideoEditorStore';
 import { useShallow } from 'zustand/react/shallow';
 import { drawOrder } from '../../utils/layerOrder';
 import { MAX_TIMELINE_MS } from '../../utils/clipGroup';
-import { watermarkClip } from '../../utils/brandCard';
+import { watermarkClip, watermarkLogoClip } from '../../utils/brandCard';
 import CanvasMedia from './preview/CanvasMedia';
 import CanvasText from './preview/CanvasText';
 import GridOverlay from './preview/GridOverlay';
+import CanvasFlash from './preview/CanvasFlash';
 import { STAGE_WIDTH } from './preview/previewMath';
 import { useStageFit } from './preview/useStageFit';
 import { useTextEditing } from './preview/useTextEditing';
@@ -18,6 +19,20 @@ const INITIAL_SIZE = { width: 800, height: 450 };
 // The video editor's Konva preview: every clip on one layer, bottom to top in the same order as
 // the export, in 800-wide stage units scaled to fit its container. Clips keep themselves in step
 // with the playhead (see preview/).
+// The watermark's logo, as the export draws it (a sticker clip from watermarkLogoClip).
+function WatermarkLogo({ clip }) {
+  const [image, setImage] = useState(null);
+  useEffect(() => {
+    const img = new window.Image();
+    let live = true;
+    img.onload = () => { if (live) setImage(img); };
+    img.src = clip.url;
+    return () => { live = false; };
+  }, [clip.url]);
+  if (!image) return null;
+  return <KonvaImage image={image} x={clip.x} y={clip.y} width={clip.width} height={clip.height} opacity={clip.opacity} />;
+}
+
 const CanvasPreview = forwardRef((props, ref) => {
   const { items, activeItemId, setActiveItem, updateItem, canvasAspectRatio, backgroundColor, layoutId, watermark } = useEditorStore(
     useShallow(state => ({
@@ -38,6 +53,7 @@ const CanvasPreview = forwardRef((props, ref) => {
   const { editingId, startEditing, inputProps } = useTextEditing(updateItem);
   // The watermark sits over everything for the whole video; it can't be picked or dragged.
   const watermarkItem = useMemo(() => watermarkClip(watermark, MAX_TIMELINE_MS, canvasAspectRatio), [watermark, canvasAspectRatio]);
+  const watermarkLogo = useMemo(() => watermarkLogoClip(watermark, MAX_TIMELINE_MS, canvasAspectRatio), [watermark, canvasAspectRatio]);
 
   useStageFit(containerRef, stageRef, canvasAspectRatio);
 
@@ -111,13 +127,15 @@ const CanvasPreview = forwardRef((props, ref) => {
               />
             )))}
             {layoutId && <GridOverlay layoutId={layoutId} width={STAGE_WIDTH} height={stageHeight} />}
-            {watermarkItem && (
+            {(watermarkItem || watermarkLogo) && (
               <Group listening={false}>
-                <CanvasText item={watermarkItem} isSelected={false} onSelect={() => {}} onEditStart={() => {}} onChange={() => {}} />
+                {watermarkItem && <CanvasText item={watermarkItem} isSelected={false} onSelect={() => {}} onEditStart={() => {}} onChange={() => {}} />}
+                {watermarkLogo && <WatermarkLogo clip={watermarkLogo} />}
               </Group>
             )}
           </Layer>
         </Stage>
+        <CanvasFlash />
 
         {/* Permanently mounted textarea to capture mobile keyboard reliably */}
         <textarea

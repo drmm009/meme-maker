@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useRef, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react';
 import { Mic, Volume2, VolumeX } from 'lucide-react';
 import { Slider } from '../ui';
 import { useEditorStore } from '../../store/useVideoEditorStore';
@@ -29,14 +29,33 @@ const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 2];
 export function SpeedPanel({ item }: { item: TimedClip }) {
   const rate = item.playbackRate || 1;
   const footageMs = (item.endMs - item.startMs) * rate;
-  const pick = (next: number) => update(item.id, { playbackRate: next, endMs: item.startMs + footageMs / next });
+  const pick = (next: number) => {
+    if (next !== rate) update(item.id, { playbackRate: next, endMs: item.startMs + footageMs / next });
+  };
+  // Dragging along the scale moves the knob from stop to stop (the nearest to the finger).
+  const dragging = useRef(false);
+  const stopAt = (e: ReactPointerEvent<HTMLDivElement>) => {
+    const box = e.currentTarget.getBoundingClientRect();
+    const share = Math.min(1, Math.max(0, (e.clientX - box.left) / box.width));
+    return SPEEDS[Math.min(SPEEDS.length - 1, Math.floor(share * SPEEDS.length))];
+  };
+  const onPointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
+    dragging.current = true;
+    e.currentTarget.setPointerCapture?.(e.pointerId);
+    pick(stopAt(e));
+  };
+  const onPointerMove = (e: ReactPointerEvent<HTMLDivElement>) => {
+    if (dragging.current) pick(stopAt(e));
+  };
+  const onPointerUp = () => { dragging.current = false; };
   return (
     <div className="vt-speed">
       <div className="vt-readout">
         <strong>{rate}×</strong>
         <span>{rate === 1 ? 'Normal speed' : `${formatClock(footageMs / rate)} long, was ${formatClock(footageMs)}`}</span>
       </div>
-      <div className="vt-speed-scale" role="radiogroup" aria-label="Speed">
+      <div className="vt-speed-scale" role="radiogroup" aria-label="Speed"
+        onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerCancel={onPointerUp}>
         {SPEEDS.map((s) => (
           <button key={s} type="button" role="radio" aria-checked={s === rate} aria-label={`${s}×`}
             className={`vt-speed-stop${s === rate ? ' is-on' : ''}`} onClick={() => pick(s)}>

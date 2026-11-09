@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { END_CARD_MS, WATERMARK_ID, endCardClip, endCardStart, inkFor, keepEndCardLast, watermarkClip, withWatermark, wrapLines } from './brandCard';
+import { END_CARD_MS, WATERMARK_ID, WATERMARK_LOGO_ID, endCardClip, endCardStart, inkFor, keepEndCardLast, watermarkClip, watermarkLogoClip, withWatermark, wrapLines } from './brandCard';
 import type { Clip } from '../model/videoProject';
 
 const clip = (id: string, startMs: number, endMs: number, extra = {}) => ({ id, type: 'video', url: 'blob:x', startMs, endMs, ...extra }) as unknown as Clip;
@@ -20,6 +20,33 @@ describe('watermarkClip', () => {
     const items = [clip('a', 0, 1000)];
     expect(withWatermark(items, null, 1000, 1)).toBe(items);
     expect(withWatermark(items, { text: '@me', corner: 'br' }, 1000, 1).map((i) => i.id)).toEqual(['a', WATERMARK_ID]);
+  });
+
+  it('takes its colour, size and opacity, and is nothing while switched off', () => {
+    const wm = { text: '@me', corner: 'br' as const, color: '#000000', size: 48, opacity: 0.4 };
+    // Twice the standard size; dark text gets a light edge.
+    expect(watermarkClip(wm, 9000, 16 / 9)).toMatchObject({ color: '#000000', fontSize: 45, opacity: 0.4, stroke: 'rgba(255, 255, 255, 0.55)' });
+    expect(watermarkClip({ ...wm, enabled: false }, 9000, 16 / 9)).toBeNull();
+    expect(watermarkLogoClip({ ...wm, logo: 'x', enabled: false }, 9000, 16 / 9)).toBeNull();
+  });
+
+  it('puts a logo in the corner with the text beside it', () => {
+    const wm = { text: '@me', corner: 'br' as const, logo: 'instagram' as const };
+    const logo = watermarkLogoClip(wm, 9000, 16 / 9)!;
+    const text = watermarkClip(wm, 9000, 16 / 9)!;
+    // 1.3 x the font, against the right margin, centred on the text's line.
+    expect(logo).toMatchObject({ id: WATERMARK_LOGO_ID, type: 'sticker', width: 30, height: 30, x: 800 - 18 - 30, startMs: 0, endMs: 9000 });
+    expect(logo.url.startsWith('data:image/svg+xml')).toBe(true);
+    expect(logo.y! + 15).toBe(text.y! + Math.round(23 * 1.2 + 2 * 10) / 2);
+    // The text's box stops short of it.
+    expect(text.x! + text.width!).toBe(800 - 18 - 30 - 5);
+    // In a left corner the logo is on the left and the text after it.
+    const left = watermarkClip({ ...wm, corner: 'tl' }, 9000, 16 / 9)!;
+    expect(left.x).toBe(18 + 35);
+    expect(watermarkLogoClip({ ...wm, corner: 'tl' }, 9000, 16 / 9)!.x).toBe(18);
+    // An uploaded logo is its own picture; a logo with no name still shows.
+    expect(watermarkLogoClip({ text: '', corner: 'br', logo: 'custom', logoUrl: 'data:image/png;base64,x' }, 9000, 1)!.url).toBe('data:image/png;base64,x');
+    expect(withWatermark([], { text: '', corner: 'br', logo: 'x' }, 9000, 1).map((i) => i.id)).toEqual([WATERMARK_LOGO_ID]);
   });
 });
 
