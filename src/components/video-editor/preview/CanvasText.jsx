@@ -2,9 +2,10 @@ import React, { useEffect, useReducer, useRef, useState } from 'react';
 import Konva from 'konva';
 import { Image as KonvaImage, Transformer, Group } from 'react-konva';
 import { onTextFontsLoaded, scaleTextLook, textBitmap, textImageAttrs } from '../../../utils/textBitmap';
+import { useEditorStore } from '../../../store/useVideoEditorStore';
 import { clipOpacity } from '../../../model/videoProject';
 import { useTextPlayback } from './useTextPlayback';
-import { SELECTION_PROPS, shadeSelection } from './selectionStyle';
+import { SELECTION_PROPS, decorateSelection } from './selectionStyle';
 
 // Picture pixels per stage unit for the preview: the stage's scale on this screen, in quarter steps
 // (so resizing the window doesn't redraw every text for each pixel).
@@ -60,10 +61,13 @@ const CanvasText = ({ item, isSelected, onSelect, onChange, onEditStart }) => {
   useEffect(() => {
     if (isSelected && trRef.current && nodeRef.current) {
       trRef.current.nodes([nodeRef.current]);
-      shadeSelection(trRef.current);
+      decorateSelection(trRef.current, {
+        onDuplicate: () => useEditorStore.getState().duplicateItem(item.id),
+        onDelete: () => useEditorStore.getState().removeItem(item.id),
+      });
       trRef.current.getLayer()?.batchDraw();
     }
-  }, [isSelected]);
+  }, [isSelected, item.id]);
   useEffect(() => {
     trRef.current?.forceUpdate();
   });
@@ -101,7 +105,7 @@ const CanvasText = ({ item, isSelected, onSelect, onChange, onEditStart }) => {
           ref={trRef}
           {...SELECTION_PROPS}
           keepRatio={true}
-          enabledAnchors={['top-left', 'top-right', 'bottom-left', 'bottom-right']}
+          enabledAnchors={['bottom-left', 'bottom-right']}
           boundBoxFunc={(oldBox, newBox) => (newBox.width < 20 || newBox.height < 20 ? oldBox : newBox)}
         />
       )}

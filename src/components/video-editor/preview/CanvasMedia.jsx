@@ -9,7 +9,7 @@ import { useFrameEffects } from './useFrameEffects';
 import { drawGifFrame, useGifFrames } from './useGifFrames';
 import { hasStickerLook, stickerLookImage } from '../../../utils/stickerLook';
 import { blurSubjectUrl, hasPhotoPicture, photoNodeAttrs, photoPicture } from '../../../utils/photoLook';
-import { SELECTION_PROPS, shadeSelection } from './selectionStyle';
+import { SELECTION_PROPS, decorateSelection } from './selectionStyle';
 
 // A photo, sticker (animated GIFs included) or video on the preview: draggable and resizable when
 // selected, shown only during its time on the timeline. Videos play from a hidden <video>
@@ -116,10 +116,13 @@ const CanvasMedia = ({ item, isSelected, onSelect, onChange, canvasDimensions })
   useEffect(() => {
     if (isSelected && trRef.current && imageRef.current) {
       trRef.current.nodes([imageRef.current]);
-      shadeSelection(trRef.current);
+      decorateSelection(trRef.current, {
+        onDuplicate: () => useEditorStore.getState().duplicateItem(item.id),
+        onDelete: () => useEditorStore.getState().removeItem(item.id),
+      });
       trRef.current.getLayer().batchDraw();
     }
-  }, [isSelected]);
+  }, [isSelected, item.id]);
 
   return (
     <React.Fragment>
