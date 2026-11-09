@@ -114,24 +114,38 @@ export const getImageLayerBox = (layer: MemeImageLayer, cached: LoadedImage): { 
   return { baseW, baseH, fitScale, scale, w, h };
 };
 
-export const getStickerHandles = (stk: MemeSticker, cx: number, cy: number): Handle[] => {
+// Canvas pixels per screen pixel: the selection handles are sized on screen, however big the canvas
+// is drawn (1 where the canvas isn't on screen).
+export const screenScaleOf = (canvas: { width: number; getBoundingClientRect?: () => { width: number } } | null | undefined): number => {
+  const shown = canvas?.getBoundingClientRect?.().width;
+  return canvas && shown ? canvas.width / Math.max(1, shown) : 1;
+};
+
+// How far above the frame the rotate knob sits, in canvas pixels: 28 on screen, so a knob as big
+// as the video editor's clears the frame and the Delete button.
+export const rotateKnobGap = (screenScale = 1): number => Math.max(28, Math.round(28 * screenScale));
+
+// A handle's touch radius: at least `r` canvas pixels and 22 on screen.
+const touch = (r: number, screenScale: number) => Math.max(r, Math.round(22 * screenScale));
+
+export const getStickerHandles = (stk: MemeSticker, cx: number, cy: number, screenScale = 1): Handle[] => {
   const size = getStickerBoxSize(stk);
   const hs = size / 2 + 6;
   return [
-    { type: 'delete_layer', x: cx - hs, y: cy - hs, r: 26 },
-    { type: 'rotate_sticker', x: cx, y: cy - size / 2 - 28, r: 24 },
-    { type: 'resize_sticker_br', x: cx + hs, y: cy + hs, r: 24 },
+    { type: 'delete_layer', x: cx - hs, y: cy - hs, r: touch(26, screenScale) },
+    { type: 'rotate_sticker', x: cx, y: cy - hs - rotateKnobGap(screenScale), r: touch(24, screenScale) },
+    { type: 'resize_sticker_br', x: cx + hs, y: cy + hs, r: touch(24, screenScale) },
   ];
 };
 
-export const getCaptionHandles = (cx: number, cy: number, boxWidth: number, boxHeight: number, hitRadius: number, deleteRadius: number): Handle[] => {
+export const getCaptionHandles = (cx: number, cy: number, boxWidth: number, boxHeight: number, hitRadius: number, deleteRadius: number, screenScale = 1): Handle[] => {
   const topY = cy - boxHeight / 2;
   const bottomY = cy + boxHeight / 2;
   const leftX = cx - boxWidth / 2;
   const rightX = cx + boxWidth / 2;
   return [
     { type: 'delete_layer', x: leftX, y: topY, r: deleteRadius },
-    { type: 'rotate_caption', x: cx, y: topY - 28, r: hitRadius },
+    { type: 'rotate_caption', x: cx, y: topY - rotateKnobGap(screenScale), r: hitRadius },
     { type: 'resize_caption_l', x: leftX, y: cy, r: hitRadius },
     { type: 'resize_caption_r', x: rightX, y: cy, r: hitRadius },
     { type: 'resize_caption_br', x: rightX, y: bottomY, r: hitRadius },
@@ -139,32 +153,34 @@ export const getCaptionHandles = (cx: number, cy: number, boxWidth: number, boxH
 };
 
 // Face-swap layers keep their corner handles inside the oval; crop mode only has edge handles.
-export const getImageLayerHandles = (layer: MemeImageLayer, cx: number, cy: number, w: number, h: number): Handle[] => {
+export const getImageLayerHandles = (layer: MemeImageLayer, cx: number, cy: number, w: number, h: number, screenScale = 1): Handle[] => {
   const hw = w / 2 + 6;
   const hh = h / 2 + 6;
+  const gap = rotateKnobGap(screenScale);
+  const t = (r: number) => touch(r, screenScale);
   if (layer.isFaceMorph) {
     return [
-      { type: 'delete_layer', x: cx - hw * 0.72, y: cy - hh * 0.72, r: 26 },
-      { type: 'rotate_imageLayer', x: cx, y: cy - hh - 28, r: 24 },
-      { type: 'resize_imageLayer_br', x: cx + hw * 0.72, y: cy + hh * 0.72, r: 24 },
+      { type: 'delete_layer', x: cx - hw * 0.72, y: cy - hh * 0.72, r: t(26) },
+      { type: 'rotate_imageLayer', x: cx, y: cy - hh - gap, r: t(24) },
+      { type: 'resize_imageLayer_br', x: cx + hw * 0.72, y: cy + hh * 0.72, r: t(24) },
     ];
   }
   if (layer.fitMode === 'crop') {
     return [
-      { type: 'resize_imageLayer_t', x: cx, y: cy - hh, r: 24 },
-      { type: 'resize_imageLayer_b', x: cx, y: cy + hh, r: 24 },
-      { type: 'resize_imageLayer_l', x: cx - hw, y: cy, r: 24 },
-      { type: 'resize_imageLayer_r', x: cx + hw, y: cy, r: 24 },
+      { type: 'resize_imageLayer_t', x: cx, y: cy - hh, r: t(24) },
+      { type: 'resize_imageLayer_b', x: cx, y: cy + hh, r: t(24) },
+      { type: 'resize_imageLayer_l', x: cx - hw, y: cy, r: t(24) },
+      { type: 'resize_imageLayer_r', x: cx + hw, y: cy, r: t(24) },
     ];
   }
   return [
-    { type: 'delete_layer', x: cx - hw, y: cy - hh, r: 26 },
-    { type: 'rotate_imageLayer', x: cx, y: cy - hh - 28, r: 22 },
-    { type: 'resize_imageLayer_br', x: cx + hw, y: cy + hh, r: 22 },
-    { type: 'resize_imageLayer_t', x: cx, y: cy - hh, r: 22 },
-    { type: 'resize_imageLayer_b', x: cx, y: cy + hh, r: 22 },
-    { type: 'resize_imageLayer_l', x: cx - hw, y: cy, r: 22 },
-    { type: 'resize_imageLayer_r', x: cx + hw, y: cy, r: 22 },
+    { type: 'delete_layer', x: cx - hw, y: cy - hh, r: t(26) },
+    { type: 'rotate_imageLayer', x: cx, y: cy - hh - gap, r: t(22) },
+    { type: 'resize_imageLayer_br', x: cx + hw, y: cy + hh, r: t(22) },
+    { type: 'resize_imageLayer_t', x: cx, y: cy - hh, r: t(22) },
+    { type: 'resize_imageLayer_b', x: cx, y: cy + hh, r: t(22) },
+    { type: 'resize_imageLayer_l', x: cx - hw, y: cy, r: t(22) },
+    { type: 'resize_imageLayer_r', x: cx + hw, y: cy, r: t(22) },
   ];
 };
 

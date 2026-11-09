@@ -12,7 +12,7 @@ export function drawingHandleDrawer(d, scale = 1) {
     const handles = drawingHandles(d);
     if (handles.length === 4) {
       const b = drawingBox(d);
-      drawSelectionBox(uiCtx, b.x - b.w / 2, b.y - b.h / 2, b.w, b.h, 6 * scale);
+      drawSelectionBox(uiCtx, b.x - b.w / 2, b.y - b.h / 2, b.w, b.h, 6 * scale, { onScreen: false });
     }
     handles.forEach(({ at }) => drawPointHandle(uiCtx, at.x, at.y, POINT_HANDLE_PX * scale));
   };

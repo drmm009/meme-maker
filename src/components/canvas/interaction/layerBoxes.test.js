@@ -74,7 +74,8 @@ describe('handles', () => {
   it('puts the sticker handles on its corners and above it', () => {
     const [del, rot, resize] = getStickerHandles({ scale: 1 }, 100, 100); // 52px box, hs = 32
     expect(del).toMatchObject({ type: 'delete_layer', x: 68, y: 68 });
-    expect(rot).toMatchObject({ type: 'rotate_sticker', x: 100, y: 100 - 26 - 28 });
+    // The knob sits above the frame (hs), where the sticker painter draws it.
+    expect(rot).toMatchObject({ type: 'rotate_sticker', x: 100, y: 100 - 32 - 28 });
     expect(resize).toMatchObject({ type: 'resize_sticker_br', x: 132, y: 132 });
   });
 

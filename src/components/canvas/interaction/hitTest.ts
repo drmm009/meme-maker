@@ -7,7 +7,7 @@ import { getStickerBoxSize, isInBox, rotatePoint } from './geometry';
 import type { Point } from './geometry';
 import {
   findHandle, getCaptionBox, getCaptionCenterX, getCaptionHandles, getImageLayerBox,
-  getImageLayerHandles, getStickerHandles
+  getImageLayerHandles, getStickerHandles, screenScaleOf
 } from './layerBoxes';
 import type { HandleType } from './layerBoxes';
 
@@ -71,9 +71,7 @@ export interface Bands {
 }
 
 // Canvas pixels per screen pixel, so handles stay big enough to touch however the canvas is scaled.
-const getScreenScale = (canvas: SceneCanvas) => (canvas.getBoundingClientRect
-  ? canvas.width / Math.max(1, canvas.getBoundingClientRect().width)
-  : 2.5);
+const getScreenScale = (canvas: SceneCanvas) => (canvas.getBoundingClientRect ? screenScaleOf(canvas) : 2.5);
 
 // The selected layer's handle under `coords`. `hover` uses the smaller caption radii the cursor
 // feedback uses. Locked layers have no handles.
@@ -86,7 +84,7 @@ export function hitActiveHandle(scene: HitScene, coords: Point, activeLayerId: s
     const cx = stk.x * canvas.width;
     const cy = scene.getStickerCenterY(stk);
     const p = rotatePoint(coords.x, coords.y, cx, cy, -(stk.rotation || 0));
-    const handle = findHandle(p, getStickerHandles(stk, cx, cy));
+    const handle = findHandle(p, getStickerHandles(stk, cx, cy, screenScaleOf(canvas)));
     if (handle) {
       return { id: stk.id, type: handle.type, x: stk.x, y: stk.y, scale: stk.scale || 1.0, rotation: stk.rotation || 0 };
     }
@@ -101,7 +99,7 @@ export function hitActiveHandle(scene: HitScene, coords: Point, activeLayerId: s
     const screenScale = getScreenScale(canvas);
     const hitRadius = hover ? Math.max(38, Math.round(18 * screenScale)) : Math.max(48, Math.round(22 * screenScale));
     const deleteRadius = hover ? Math.max(42, Math.round(20 * screenScale)) : Math.max(52, Math.round(24 * screenScale));
-    const handle = findHandle(p, getCaptionHandles(cx, cy, boxWidth, boxHeight, hitRadius, deleteRadius), { closest: true });
+    const handle = findHandle(p, getCaptionHandles(cx, cy, boxWidth, boxHeight, hitRadius, deleteRadius, screenScaleOf(canvas)), { closest: true });
     if (handle) {
       const width = cap.width || (boxWidth / canvas.width);
       return {
@@ -136,7 +134,7 @@ export function hitActiveHandle(scene: HitScene, coords: Point, activeLayerId: s
     const cy = scene.getImageLayerCenterY(img);
     const { baseW, baseH, fitScale, scale, w, h } = getImageLayerBox(img, cached);
     const p = rotatePoint(coords.x, coords.y, cx, cy, -(img.rotation || 0));
-    const handle = findHandle(p, getImageLayerHandles(img, cx, cy, w, h), { closest: true });
+    const handle = findHandle(p, getImageLayerHandles(img, cx, cy, w, h, screenScaleOf(canvas)), { closest: true });
     if (handle) {
       return {
         id: img.id,
