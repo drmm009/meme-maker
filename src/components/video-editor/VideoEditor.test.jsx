@@ -146,6 +146,21 @@ describe('VideoEditor', () => {
     expect(screen.getByRole('dialog', { name: 'Clips' })).toBeTruthy();
   });
 
+  it('sizes the canvas to a video template, with Original in the size menu for an odd shape', () => {
+    useEditorStore.setState({ canvasAspectRatio: 4 / 3 });
+    const tall = { id: 'tall', type: 'video', videoUrl: 'tall.mp4', name: 'Tall', width: 720, height: 1280, durationMs: 3000 };
+    const { rerender } = render(<VideoEditor template={tall} onBack={() => {}} />);
+    expect(store().canvasAspectRatio).toBe(9 / 16);
+    expect(screen.getByRole('button', { name: 'Canvas size: Reels & TikTok' })).toBeTruthy();
+
+    rerender(<VideoEditor template={{ ...tall, id: 'portrait', width: 1080, height: 1350 }} onBack={() => {}} />);
+    expect(store().canvasAspectRatio).toBe(4 / 5);
+    fireEvent.click(screen.getByRole('button', { name: 'Canvas size: Original' }));
+    expect(within(screen.getByRole('menu', { name: 'Canvas size' })).getAllByRole('menuitemradio').map((b) => b.textContent)).toEqual(
+      expect.arrayContaining([expect.stringContaining('Original')]),
+    );
+  });
+
   it('opens the video link sheet from Add video, and from a link pasted onto the editor', () => {
     render(<VideoEditor onBack={() => {}} />);
     addTool('Video');

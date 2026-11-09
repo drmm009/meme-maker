@@ -1,4 +1,5 @@
 import { useEditorStore } from '../../store/useVideoEditorStore';
+import { canvasIsEmpty, fitCanvasToVideo } from './videoCanvas';
 
 type MediaType = 'image' | 'video' | 'audio';
 
@@ -35,7 +36,8 @@ export const generateThumbnail = (url: string): Promise<string | null> => new Pr
 });
 
 // A file from the phone (or a video link) on the timeline; false if this browser can't play it.
-export const addMediaFile = (file: File, type: MediaType): Promise<boolean> => {
+// `fitCanvas`: a video going onto an empty canvas sets the canvas to its shape first.
+export const addMediaFile = (file: File, type: MediaType, { fitCanvas = false } = {}): Promise<boolean> => {
   const url = URL.createObjectURL(file);
   if (type === 'image') {
     addItem({ type, url, name: file.name });
@@ -47,6 +49,7 @@ export const addMediaFile = (file: File, type: MediaType): Promise<boolean> => {
       const durationMs = Math.round(media.duration * 1000);
       const video = type === 'video' ? (media as HTMLVideoElement) : null;
       const thumbnailUrl = video ? await generateThumbnail(url) : null;
+      if (video && fitCanvas && canvasIsEmpty()) fitCanvasToVideo(video.videoWidth, video.videoHeight);
       addItem({ type, url, durationMs, width: video?.videoWidth, height: video?.videoHeight, name: file.name, thumbnailUrl, mimeType: file.type || undefined });
       resolve(true);
     };

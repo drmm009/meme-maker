@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { ClipboardPaste, Link2, X } from 'lucide-react';
 import { addMediaFile } from './mediaFile';
-import { LINK_SERVER_COMMAND, LinkError, loadVideoLink, parseVideoLink, takeOfferedLink } from '../../utils/videoLink';
+import { LINK_SERVER_COMMAND, LinkError, loadVideoLink, onOfferedLink, parseVideoLink, takeOfferedLink } from '../../utils/videoLink';
 import type { LinkErrorCode } from '../../utils/videoLink';
 
 type Status =
@@ -37,7 +37,7 @@ export default function VideoLinkPanel({ onClose }: { onClose?: () => void }) {
         onProgress: (loaded, total) => { if (!ctrl.signal.aborted) setStatus({ state: 'loading', loaded, total }); },
       });
       if (ctrl.signal.aborted) return;
-      if (!(await addMediaFile(file, 'video'))) throw new LinkError('unplayable');
+      if (!(await addMediaFile(file, 'video', { fitCanvas: true }))) throw new LinkError('unplayable');
       if (ctrl.signal.aborted) return;
       setStatus({ state: 'idle' });
       onClose?.();
@@ -50,14 +50,19 @@ export default function VideoLinkPanel({ onClose }: { onClose?: () => void }) {
     }
   };
 
+  const startRef = useRef(start);
+  startRef.current = start;
+
   const cancel = () => {
     job.current?.abort();
     job.current = null;
     setStatus({ state: 'idle' });
   };
 
-  // Opened by a paste onto the editor: start on that link. Leaving stops any download.
+  // Opened by a paste onto the editor: start on that link (and on any pasted while it's open).
+  // Leaving stops any download.
   useEffect(() => {
+    const stopListening = onOfferedLink((t) => startRef.current(t));
     const offered = takeOfferedLink();
     const offeredLink = offered ? parseVideoLink(offered) : null;
     if (offeredLink) {
@@ -66,7 +71,10 @@ export default function VideoLinkPanel({ onClose }: { onClose?: () => void }) {
     } else {
       input.current?.focus({ preventScroll: true });
     }
-    return () => job.current?.abort();
+    return () => {
+      stopListening();
+      job.current?.abort();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

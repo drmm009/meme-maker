@@ -91,3 +91,18 @@ describe('loadVideoLink when the helper never answers', () => {
     vi.useRealTimers();
   });
 });
+
+describe('a link pasted onto the editor', () => {
+  it('reaches a Link sheet that is open, and one that opens just after', async () => {
+    const { offerLinkText, onOfferedLink, takeOfferedLink } = await import('./videoLink');
+    const heard: string[] = [];
+    const stop = onOfferedLink((t) => heard.push(t));
+    offerLinkText('https://youtu.be/a');
+    stop();
+    offerLinkText('https://youtu.be/b');
+    expect(heard).toEqual(['https://youtu.be/a']);
+    expect(takeOfferedLink()).toBe('https://youtu.be/b');
+    // Read twice (React's development checks mount twice), it's still there.
+    expect(takeOfferedLink()).toBe('https://youtu.be/b');
+  });
+});

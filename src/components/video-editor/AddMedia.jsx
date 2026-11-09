@@ -7,6 +7,7 @@ import { MEME_TEMPLATES } from '../../data/templates';
 import ClipsSheet from './ClipsSheet';
 import SoundsSheet from './SoundsSheet';
 import { addMediaFile } from './mediaFile';
+import { canvasIsEmpty, fitCanvasToVideo } from './videoCanvas';
 
 const addItem = (item) => useEditorStore.getState().addItem(item);
 
@@ -37,7 +38,11 @@ const LIBRARIES = {
   clips: (close) => (
     <ClipsSheet
       onClose={close}
-      onPick={(t) => addItem({ type: 'video', url: t.videoUrl, thumbnailUrl: t.thumbnailUrl, name: t.name, durationMs: t.durationMs, width: t.width, height: t.height })}
+      onPick={(t) => {
+        // A meme clip on an empty canvas: the canvas takes its shape.
+        if (canvasIsEmpty()) fitCanvasToVideo(t.width, t.height);
+        addItem({ type: 'video', url: t.videoUrl, thumbnailUrl: t.thumbnailUrl, name: t.name, durationMs: t.durationMs, width: t.width, height: t.height });
+      }}
     />
   ),
   sounds: (close) => (

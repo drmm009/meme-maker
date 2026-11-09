@@ -76,13 +76,22 @@ export function parseVideoLink(text: string): VideoLink | null {
 }
 
 // Text pasted onto the video editor (its paste listener), for the Link sheet to start on as it opens.
-let offered: string | null = null;
-export const offerLinkText = (text: string) => { offered = text; };
-export const takeOfferedLink = (): string | null => {
-  const text = offered;
-  offered = null;
-  return text;
+// It holds for a moment rather than one read, so a sheet mounted twice (React's development
+// checks) still finds it, and a sheet opened later doesn't.
+const OFFER_MS = 1500;
+let offered: { text: string; at: number } | null = null;
+const listeners = new Set<(text: string) => void>();
+export const offerLinkText = (text: string) => {
+  offered = { text, at: Date.now() };
+  listeners.forEach((fn) => fn(text));
 };
+// An open Link sheet hears later pastes too.
+export const onOfferedLink = (fn: (text: string) => void): (() => void) => {
+  listeners.add(fn);
+  return () => { listeners.delete(fn); };
+};
+export const takeOfferedLink = (): string | null =>
+  offered && Date.now() - offered.at < OFFER_MS ? offered.text : null;
 
 type Progress = (loaded: number, total: number | null) => void;
 

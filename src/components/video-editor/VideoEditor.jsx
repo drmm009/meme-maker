@@ -8,6 +8,7 @@ import ToolRail from './ToolRail';
 import AddMedia from './AddMedia';
 import ExportReadyCard from './ExportReadyCard';
 import StartPrompt from './StartPrompt';
+import { aspectLabel, fitCanvasToVideo, originalAspect } from './videoCanvas';
 import { offerLinkText, parseVideoLink } from '../../utils/videoLink';
 import { useEditorStore } from '../../store/useVideoEditorStore';
 import { exportVideoFFmpeg, cancelExport } from '../../utils/ffmpegExport';
@@ -31,7 +32,14 @@ const VIDEO_SIZES = [
   { value: '9:16', ratio: 9 / 16, label: '9:16', name: 'Reels & TikTok', sub: '9:16', title: 'Story', w: 16, h: 28 },
   { value: '16:9', ratio: 16 / 9, label: '16:9', name: 'YouTube', sub: '16:9', title: 'Video', w: 30, h: 17 },
 ];
-const sizeOf = (ratio) => VIDEO_SIZES.find((s) => Math.abs(s.ratio - ratio) < 0.01)?.value ?? null;
+const sizeIn = (sizes, ratio) => sizes.find((s) => Math.abs(s.ratio - ratio) < 0.01)?.value ?? null;
+// The sizes, plus Original (first) when the first video's own shape isn't one of them.
+const sizesWith = (original) => {
+  if (!original || sizeIn(VIDEO_SIZES, original)) return VIDEO_SIZES;
+  const tall = original < 1;
+  const label = aspectLabel(original);
+  return [{ value: 'original', ratio: original, label, name: 'Original', sub: label, title: 'Original', w: tall ? 28 * original : 28, h: tall ? 28 : 28 / original }, ...VIDEO_SIZES];
+};
 
 // Kept in their own components so the per-frame playhead updates don't re-render the editor.
 function AudioSync() {
@@ -102,6 +110,7 @@ const frameThumbnail = async (maxSide = 320) => {
 export default function VideoEditor({ template, onBack, onSaved }) {
   const isPlaying = useEditorStore((s) => s.isPlaying);
   const canvasAspectRatio = useEditorStore((s) => s.canvasAspectRatio);
+  const sizes = sizesWith(useEditorStore((s) => originalAspect(s.items)));
   const isExporting = useEditorStore((s) => s.isExporting);
   const exportProgress = useEditorStore((s) => s.exportProgress);
   const hasItems = useEditorStore((s) => s.items.length > 0);
@@ -169,6 +178,8 @@ export default function VideoEditor({ template, onBack, onSaved }) {
     }
     if (template.category === 'custom') return;
     if (template.type === 'video') {
+      // The canvas takes the template's shape, so the clip fills it.
+      fitCanvasToVideo(template.width, template.height);
       store.addItem({
         type: 'video', url: template.videoUrl, thumbnailUrl: template.thumbnailUrl, name: template.name,
         durationMs: template.durationMs || 10000, width: template.width, height: template.height
@@ -298,7 +309,7 @@ export default function VideoEditor({ template, onBack, onSaved }) {
           </div>
           {mode === 'preview' && (
             <div className="vt-ratio">
-              <SizeMenu sizes={VIDEO_SIZES} value={sizeOf(canvasAspectRatio)} onPick={(v) => changeAspectRatio(VIDEO_SIZES.find((s) => s.value === v).ratio)} />
+              <SizeMenu sizes={sizes} value={sizeIn(sizes, canvasAspectRatio)} onPick={(v) => changeAspectRatio(sizes.find((s) => s.value === v).ratio)} />
             </div>
           )}
           <div className="vt-export" ref={menuRef}>
