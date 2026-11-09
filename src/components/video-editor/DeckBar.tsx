@@ -59,7 +59,7 @@ export default function DeckBar({ items, ariaLabel, back, scrollKey }: DeckBarPr
     <div className="vt-deckbar" role="toolbar" aria-label={ariaLabel}>
       {back && (
         <button type="button" className="vt-deckbar-btn vt-deckbar-back" title={back.title || back.label} onClick={back.onClick}>
-          <span className="vt-deckbar-icon"><ChevronLeft size={20} strokeWidth={2} aria-hidden="true" /></span>
+          <span className="vt-deckbar-icon"><ChevronLeft size={24} strokeWidth={2} aria-hidden="true" /></span>
           <span>{back.label}</span>
         </button>
       )}
@@ -74,7 +74,7 @@ export default function DeckBar({ items, ariaLabel, back, scrollKey }: DeckBarPr
             onClick={onClick}
             style={tint ? ({ '--tint': tint } as CSSProperties) : undefined}
           >
-            <span className="vt-deckbar-icon">{icon ?? (Icon ? <Icon size={20} strokeWidth={1.9} aria-hidden="true" /> : null)}</span>
+            <span className="vt-deckbar-icon">{icon ?? (Icon ? <Icon size={24} strokeWidth={1.9} aria-hidden="true" /> : null)}</span>
             <span>{label}</span>
           </button>
         ))}

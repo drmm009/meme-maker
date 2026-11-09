@@ -14,6 +14,8 @@ type Look = Partial<TextClip>;
 // Two fingers on the text: where they started and are, the text as it was, its centre, and the
 // scale (of the start) its picture was last drawn sharp at.
 interface Pinch { from: TwoFingers; at: TwoFingers; rotation: number; base: Look; centre: { x: number; y: number }; drawn: number }
+type Point = { x: number; y: number };
+type Box = { x: number; y: number; width: number; height: number; rotation: number };
 export interface Guides { vertical: number | null; horizontal: number | null }
 
 interface Options {
@@ -46,6 +48,13 @@ const fingers = (touches: TouchList): TwoFingers => ({
 // at a new size is slow: every size is measured afresh). Side handles rewrap at most once per
 // screen frame. Redraws go straight onto the node (React doesn't render each move; `liveRef`
 // holds what a render should show meanwhile), with the selection box laid out once per redraw.
+// A pinch's change, kept from making the font smaller than scaleTextLook allows (else the
+// GPU-scaled picture shrinks on and the sharp redraw pushes it back).
+const pinchOf = (p: Pinch) => {
+  const change = pinchChange(p.from, p.at, p.rotation);
+  return { ...change, scale: Math.max(change.scale, 10 / (p.base.fontSize || 32)) };
+};
+
 export function useTextGestures({ item, isSelected, nodeRef, trRef, bitmapRef, scale, canvas, onChange }: Options) {
   // The look and place reached so far, before it is saved.
   const liveRef = useRef<Look | null>(null);
@@ -143,6 +152,48 @@ export function useTextGestures({ item, isSelected, nodeRef, trRef, bitmapRef, s
     else later(resize);
   };
 
+  // The handles stop where the text can't go smaller (a 40-unit wrap, a 10-unit font, 20px on
+  // screen), instead of the box going on shrinking and the redraw pushing it back each frame.
+  const boundBoxFunc = (oldBox: Box, newBox: Box): Box => {
+    const node = nodeRef.current;
+    if (!node) return newBox;
+    if (newBox.width <= 0 || newBox.height <= 0) return oldBox;
+    if (newBox.width >= oldBox.width && newBox.height >= oldBox.height) return newBox;
+    const shown = Math.abs(node.scaleX());
+    if (isSide()) return newBox.width < 20 || node.width() * shown * (newBox.width / oldBox.width) < 40 ? oldBox : newBox;
+    if (newBox.width < 20 || newBox.height < 12) return oldBox;
+    const k = Math.sqrt((newBox.width / oldBox.width) * (newBox.height / oldBox.height));
+    const font = { ...itemRef.current, ...liveRef.current }.fontSize || 32;
+    return font * shown * k < 10 ? oldBox : newBox;
+  };
+
+  // The held handle can't be dragged past the handle across from it: a finger past it would turn
+  // the box over (Konva then swaps which side is held) and grow it on the other side.
+  const anchorDragBoundFunc = (_old: Point, pos: Point): Point => {
+    const tr = trRef.current;
+    const name = tr?.getActiveAnchor() || '';
+    if (!tr || !name || name === 'rotater') return pos;
+    const sx = name.includes('right') ? 1 : name.includes('left') ? -1 : 0;
+    const sy = name.includes('bottom') ? 1 : name.includes('top') ? -1 : 0;
+    const across = `${sy > 0 ? 'top' : sy < 0 ? 'bottom' : 'middle'}-${sx > 0 ? 'left' : sx < 0 ? 'right' : 'center'}`;
+    const fixed = tr.findOne(`.${across}`)?.getAbsolutePosition();
+    if (!fixed) return pos;
+    const a = (tr.getAbsoluteRotation() * Math.PI) / 180;
+    const min = tr.padding() * 2 + 20;
+    let { x, y } = pos;
+    const keep = (s: number, ux: number, uy: number) => {
+      if (!s) return;
+      const d = ((x - fixed.x) * ux + (y - fixed.y) * uy) * s;
+      if (d < min) {
+        x += (min - d) * s * ux;
+        y += (min - d) * s * uy;
+      }
+    };
+    keep(sx, Math.cos(a), Math.sin(a));
+    keep(sy, -Math.sin(a), Math.cos(a));
+    return { x, y };
+  };
+
   const onTransformEnd = () => {
     cancelLater();
     flush();
@@ -203,7 +254,7 @@ export function useTextGestures({ item, isSelected, nodeRef, trRef, bitmapRef, s
     };
     // Sharp: the text drawn at the pinch's size, turned about its centre.
     const sharp = (p: Pinch) => {
-      const change = pinchChange(p.from, p.at, p.rotation);
+      const change = pinchOf(p);
       const resized = scaleTextLook(p.base, change.scale);
       const b = textBitmap({ ...p.base, ...resized }, scale);
       apply({ ...resized, rotation: change.rotation, ...cornerForCentre(p.centre, b.boxWidth, b.boxHeight, change.rotation) });
@@ -213,7 +264,7 @@ export function useTextGestures({ item, isSelected, nodeRef, trRef, bitmapRef, s
     const quick = (p: Pinch) => {
       const b = bitmapRef.current;
       if (!b) return;
-      const change = pinchChange(p.from, p.at, p.rotation);
+      const change = pinchOf(p);
       const k = change.scale / p.drawn;
       holdSelection(trRef.current, () => {
         node.scale({ x: k, y: k });
@@ -262,5 +313,5 @@ export function useTextGestures({ item, isSelected, nodeRef, trRef, bitmapRef, s
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isSelected, scale]);
 
-  return { liveRef, guides, handlers: { onTransform, onTransformEnd, onDragMove, onDragEnd } };
+  return { liveRef, guides, handlers: { onTransform, onTransformEnd, onDragMove, onDragEnd }, boundBoxFunc, anchorDragBoundFunc };
 }

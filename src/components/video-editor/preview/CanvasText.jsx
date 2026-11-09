@@ -26,7 +26,7 @@ const CanvasText = ({ item, isSelected, onSelect, onChange, onEditStart, canvasD
   const [scale, setScale] = useState(1);
   const [, redraw] = useReducer((n) => n + 1, 0);
   const bitmapRef = useRef(null);
-  const { liveRef, guides, handlers } = useTextGestures({ item, isSelected, nodeRef, trRef, bitmapRef, scale, canvas: canvasDimensions, onChange });
+  const { liveRef, guides, handlers, boundBoxFunc, anchorDragBoundFunc } = useTextGestures({ item, isSelected, nodeRef, trRef, bitmapRef, scale, canvas: canvasDimensions, onChange });
   // Mid-gesture the node already shows the live look; a render then keeps it.
   const shown = liveRef.current ? { ...item, ...liveRef.current } : item;
   const bitmap = textBitmap(shown, scale);
@@ -113,10 +113,9 @@ const CanvasText = ({ item, isSelected, onSelect, onChange, onEditStart, canvasD
           {...SELECTION_PROPS}
           keepRatio={true}
           enabledAnchors={['middle-left', 'middle-right', 'bottom-left', 'bottom-right']}
-          // Never smaller than 20px across on screen, but a box already that small can always grow.
-          boundBoxFunc={(oldBox, newBox) => (
-            (newBox.width < 20 && newBox.width < oldBox.width) || (newBox.height < 12 && newBox.height < oldBox.height) ? oldBox : newBox
-          )}
+          flipEnabled={false}
+          boundBoxFunc={boundBoxFunc}
+          anchorDragBoundFunc={anchorDragBoundFunc}
         />
       )}
     </React.Fragment>
