@@ -212,8 +212,27 @@ export function decorateSelection(tr: Konva.Transformer | null, actions: Selecti
   tr.on('transformend.vtangle', () => { angle.visible(false); tr.getLayer()?.batchDraw(); });
   const update = tr.update.bind(tr);
   tr.update = () => {
+    if (held.has(tr)) return;
     update();
     place();
   };
   tr.update();
+}
+
+const held = new WeakSet<Konva.Transformer>();
+
+// Runs `change` (several attributes set on the selected node) with the box laid out once at the
+// end, not once per attribute: each one would otherwise lay out every handle again.
+export function holdSelection(tr: Konva.Transformer | null | undefined, change: () => void) {
+  if (!tr) {
+    change();
+    return;
+  }
+  held.add(tr);
+  try {
+    change();
+  } finally {
+    held.delete(tr);
+    tr.update();
+  }
 }

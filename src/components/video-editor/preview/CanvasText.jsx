@@ -26,8 +26,9 @@ const CanvasText = ({ item, isSelected, onSelect, onChange, onEditStart, canvasD
   const [scale, setScale] = useState(1);
   const [, redraw] = useReducer((n) => n + 1, 0);
   const bitmapRef = useRef(null);
-  const { live, guides, handlers } = useTextGestures({ item, isSelected, nodeRef, bitmapRef, scale, canvas: canvasDimensions, onChange });
-  const shown = live ? { ...item, ...live } : item;
+  const { liveRef, guides, handlers } = useTextGestures({ item, isSelected, nodeRef, trRef, bitmapRef, scale, canvas: canvasDimensions, onChange });
+  // Mid-gesture the node already shows the live look; a render then keeps it.
+  const shown = liveRef.current ? { ...item, ...liveRef.current } : item;
   const bitmap = textBitmap(shown, scale);
 
   useEffect(() => {
@@ -92,7 +93,6 @@ const CanvasText = ({ item, isSelected, onSelect, onChange, onEditStart, canvasD
             draggable
             onClick={startEdit}
             onTap={startEdit}
-            onTouchStart={handlers.onTouchStart}
             onDragMove={handlers.onDragMove}
             onDragEnd={handlers.onDragEnd}
             onTransform={handlers.onTransform}
