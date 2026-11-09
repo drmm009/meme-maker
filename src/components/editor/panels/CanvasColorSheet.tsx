@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import { FlipHorizontal, Crop } from 'lucide-react';
+import { FlipHorizontal, Crop, Palette } from 'lucide-react';
 import { Sheet, Section, Row, SwatchRow, TileGrid, Tile } from '../../ui';
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
 import { useEditorUiStore } from '../store/useEditorUiStore';
@@ -31,7 +31,7 @@ export default function CanvasColorSheet({ actions, onClose }: { actions: Editor
   const hasPhoto = useMemeEditorStore((s: { activeTemplate: { canvasOnly?: boolean; imageUrl?: string; rawImageUrl?: string } | null }) => Boolean(s.activeTemplate && !s.activeTemplate.canvasOnly && (s.activeTemplate.rawImageUrl || s.activeTemplate.imageUrl))) && !actions.isNativeLayout;
   const setShowPhotoCrop = useEditorUiStore((s: { setShowPhotoCrop: (v: boolean) => void }) => s.setShowPhotoCrop);
   return (
-    <Sheet className="ie-canvas-color-sheet ie-tool-sheet" title="Canvas Style" onClose={onClose}>
+    <Sheet Icon={Palette} className="ie-canvas-color-sheet ie-tool-sheet" title="Canvas Style" onClose={onClose}>
       <Section>
         <TileGrid columns={2}>
           <Tile label="Mirror" title="Flip the meme left to right" Icon={FlipHorizontal} active={canvasFlipX} onClick={() => actions.handleToggleCanvasFlip()} />

@@ -1,3 +1,4 @@
+import { BubbleIcon } from './editorIcons';
 import { useState } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
 import { Check, X } from 'lucide-react';
@@ -159,7 +160,7 @@ export default function BubbleSheet({ actions, onClose }: { actions: EditorActio
   };
 
   return (
-    <Sheet
+    <Sheet Icon={BubbleIcon}
       className="ie-bubble-sheet ie-tool-sheet"
       title="Bubbles"
       onClose={onClose}

@@ -1,3 +1,4 @@
+import { SocialCardIcon } from './editorIcons';
 import type { ReactNode } from 'react';
 import { Sheet } from '../../ui';
 import type { EditorActions } from './selection';
@@ -64,7 +65,7 @@ export default function SocialCardSheet({ actions, onClose }: { actions: EditorA
   };
 
   return (
-    <Sheet className="ie-social-sheet ie-tool-sheet" title="Social Cards" onClose={onClose}>
+    <Sheet Icon={SocialCardIcon} className="ie-social-sheet ie-tool-sheet" title="Social Cards" onClose={onClose}>
       <div className="ie-social-grid" role="group" aria-label="Social card options">
         {SOCIAL_CARDS.map((opt) => (
           <button

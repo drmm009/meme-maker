@@ -1,3 +1,4 @@
+import { Image as ImageIcon, Sticker, Images } from 'lucide-react';
 import { Sheet, Section, ChipRow, Chip } from '../../ui';
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
 import { useEditorUiStore } from '../store/useEditorUiStore';
@@ -23,7 +24,7 @@ export default function MediaSheet({ actions, onClose }: { actions: EditorAction
   const setImage = (patch: Partial<MemeImageLayer>) => id && patchLayer('imageLayers', id, patch);
 
   return (
-    <Sheet
+    <Sheet Icon={image ? ImageIcon : sticker ? Sticker : Images}
       className={`ie-media-sheet${sticker ? ' ie-sticker-sheet ie-tool-sheet' : ''}${image ? ' ie-photo-sheet ie-tool-sheet' : ''}`}
       title={image ? 'Photo' : sticker ? 'Sticker' : 'Media'}
       hideTitle={!image && !sticker}

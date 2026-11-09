@@ -1,3 +1,4 @@
+import { Type } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { BubbleIcon } from './editorIcons';
 import { Sheet, Section, ChipRow, Chip, TileGrid, Tile } from '../../ui';
@@ -44,7 +45,7 @@ export default function TextSheet({ actions, onClose }: { actions: EditorActions
   const live = (patch: Partial<Caption>) => id && patchLayer('captions', id, patch);
 
   return (
-    <Sheet
+    <Sheet Icon={Type}
       className="ie-text-sheet ie-tool-sheet"
       title={part ? TEXT_PARTS[part] : 'Text'}
       onClose={onClose}

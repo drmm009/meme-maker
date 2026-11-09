@@ -1,3 +1,4 @@
+import { AiCaptionIcon } from './editorIcons';
 import { useEffect, useState } from 'react';
 import type { FormEvent, MouseEvent } from 'react';
 import { ArrowLeft, Check, Copy, Plus, RefreshCw, Shuffle, Sparkles, X } from 'lucide-react';
@@ -124,7 +125,7 @@ export default function AiCaptionSheet({ onClose }: { actions: EditorActions; on
   };
 
   return (
-    <Sheet className="ie-ai-caption-sheet ie-tool-sheet" title="AI Caption" onClose={onClose}>
+    <Sheet Icon={AiCaptionIcon} className="ie-ai-caption-sheet ie-tool-sheet" title="AI Caption" onClose={onClose}>
       {!showing ? (
         <>
           {/* The composer, as on the AI Meme page: the idea on top, Shuffle and Generate under it. */}

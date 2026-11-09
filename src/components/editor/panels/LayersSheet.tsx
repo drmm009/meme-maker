@@ -1,9 +1,5 @@
 import { useState, useRef } from 'react';
-import {
-  ArrowUp, ArrowDown, Eye, EyeOff, Lock, LockOpen, ListChecks, Check, Square, SquareCheck, Link2,
-  AlignStartVertical, AlignCenterVertical, AlignEndVertical, AlignStartHorizontal, AlignCenterHorizontal, AlignEndHorizontal,
-  AlignHorizontalSpaceAround, AlignVerticalSpaceAround, Group, Ungroup, Trash2, Pencil,
-} from 'lucide-react';
+import { ArrowUp, ArrowDown, Eye, EyeOff, Lock, LockOpen, ListChecks, Check, Square, SquareCheck, Link2, AlignStartVertical, AlignCenterVertical, AlignEndVertical, AlignStartHorizontal, AlignCenterHorizontal, AlignEndHorizontal, AlignHorizontalSpaceAround, AlignVerticalSpaceAround, Group, Ungroup, Trash2, Pencil, Layers } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Sheet, Section } from '../../ui';
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
@@ -104,7 +100,7 @@ export default function LayersSheet({ actions, onClose }: { actions: EditorActio
   const grouped = chosen.some((id) => rows.find((r) => r.id === id)?.groupId);
 
   return (
-    <Sheet
+    <Sheet Icon={Layers}
       className="ie-layers-sheet ie-tool-sheet"
       title="Layers"
       badge={rows.length + shapes.length ? String(rows.length + shapes.length) : undefined}

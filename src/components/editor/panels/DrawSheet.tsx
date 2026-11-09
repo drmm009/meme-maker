@@ -54,7 +54,7 @@ export default function DrawSheet({ actions, onClose }: { actions: EditorActions
   const strength: number = censor?.strength ?? ui.censorStrength;
 
   return (
-    <Sheet
+    <Sheet Icon={tool.Icon || PenLine}
       className="ie-draw-sheet ie-tool-sheet"
       title={tool.label}
       onClose={onClose}

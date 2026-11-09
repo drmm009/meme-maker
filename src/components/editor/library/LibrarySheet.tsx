@@ -1,5 +1,5 @@
 import { useEffect, useReducer, useState } from 'react';
-import { X, FolderPlus, LayoutTemplate, Pencil } from 'lucide-react';
+import { X, FolderPlus, LayoutTemplate, Pencil, History } from 'lucide-react';
 import { Sheet, Section, SegmentedControl } from '../../ui';
 import { useMemeEditorStoreApi, HISTORY_FIELDS } from '../store/useMemeEditorStore';
 import { useEditorUiStore } from '../store/useEditorUiStore';
@@ -198,7 +198,7 @@ export default function LibrarySheet({ actions, onClose }: { actions: EditorActi
   const tab = useEditorUiStore((s: { libraryTab: 'history' | 'saved' | 'shortcuts' }) => s.libraryTab || 'history');
   const setTab = useEditorUiStore((s: { setLibraryTab: (t: 'history' | 'saved' | 'shortcuts') => void }) => s.setLibraryTab);
   return (
-    <Sheet title="History & saved" onClose={onClose}>
+    <Sheet Icon={History} title="History & saved" onClose={onClose}>
       <SegmentedControl
         ariaLabel="Show"
         variant="fill"

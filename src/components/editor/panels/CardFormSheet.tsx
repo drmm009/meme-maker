@@ -1,4 +1,4 @@
-import { CheckCheck, Check, Clock, Heart, Plus, X } from 'lucide-react';
+import { CheckCheck, Check, Clock, Heart, Plus, X, FileText, Palette } from 'lucide-react';
 import { Sheet, SegmentedControl } from '../../ui';
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
 import CardControls from './CardControls';
@@ -197,7 +197,7 @@ export default function CardFormSheet({ actions: _actions, onClose }: { actions:
   const title = platform ? PLATFORM_NAMES[platform] : 'Card details';
 
   return (
-    <Sheet
+    <Sheet Icon={FileText}
       className="ie-card-sheet ie-tool-sheet"
       title={title}
       ariaLabel="Card details"
@@ -220,7 +220,7 @@ export function CardLookSheet({ actions, onClose }: { actions: EditorActions; on
   const title = platform ? PLATFORM_NAMES[platform] : 'Card look';
 
   return (
-    <Sheet
+    <Sheet Icon={Palette}
       className="ie-card-sheet ie-card-look-sheet ie-tool-sheet"
       title={title}
       ariaLabel="Card look"

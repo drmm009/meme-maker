@@ -1,3 +1,4 @@
+import { FiltersIcon } from './editorIcons';
 import { RotateCcw } from 'lucide-react';
 import { Sheet } from '../../ui';
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
@@ -60,7 +61,7 @@ export default function FiltersSheet({ actions, onClose }: { actions: EditorActi
   const changed = filtersChanged(preset, value);
 
   return (
-    <Sheet
+    <Sheet Icon={FiltersIcon}
       className="ie-filters-sheet ie-tool-sheet"
       title="Filters"
       onClose={onClose}

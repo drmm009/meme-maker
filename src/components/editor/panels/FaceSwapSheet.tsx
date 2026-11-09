@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Check, Eye, RefreshCw } from 'lucide-react';
+import { Check, Eye, RefreshCw, ScanFace } from 'lucide-react';
 import { Sheet, Row, Slider } from '../../ui';
 import type { EditorActions } from './selection';
 
@@ -19,7 +19,7 @@ export default function FaceSwapSheet({ morphProgress, actions }: FaceSwapSheetP
   };
 
   return (
-    <Sheet
+    <Sheet Icon={ScanFace}
       className="ie-face-swap-sheet ie-tool-sheet"
       title="Face Swap"
       onClose={actions.handleFinalizeTemplateFace}

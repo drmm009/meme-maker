@@ -1,3 +1,4 @@
+import { BackgroundIcon } from './editorIcons';
 import { Droplets, Eraser, Undo2, LoaderCircle } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Sheet, Row, Slider } from '../../ui';
@@ -110,7 +111,7 @@ export default function BackgroundSheet({ actions, onClose }: { actions: EditorA
   };
 
   return (
-    <Sheet className="ie-background-sheet ie-tool-sheet" title="Background" onClose={onClose}>
+    <Sheet Icon={BackgroundIcon} className="ie-background-sheet ie-tool-sheet" title="Background" onClose={onClose}>
       <BackgroundControls
         blur={blurValue}
         blurring={Boolean(actions.isBlurringBg)}

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ImagePlus, ArrowUpLeft, ArrowUpRight, ArrowDownLeft, ArrowDownRight } from 'lucide-react';
+import { ImagePlus, ArrowUpLeft, ArrowUpRight, ArrowDownLeft, ArrowDownRight, AtSign } from 'lucide-react';
 import { Sheet, Section, Row, Slider, Switch, SwatchRow } from '../../ui';
 import { useEditorUiStore } from '../store/useEditorUiStore';
 import type { EditorActions } from './selection';
@@ -72,7 +72,7 @@ export default function WatermarkSheet({ actions, onClose }: { actions: EditorAc
   };
 
   return (
-    <Sheet
+    <Sheet Icon={AtSign}
       className="ie-watermark-sheet ie-tool-sheet"
       title="Watermark"
       onClose={onClose}

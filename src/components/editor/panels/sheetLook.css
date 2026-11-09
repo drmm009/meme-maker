@@ -1,0 +1,71 @@
+/* Every image editor sheet in the video editor's look (video-editor.css, "Every bottom sheet
+   matches the deck"): the dock's grey, solid (no blur), with black controls on it; a picked option
+   orange, or a lighter grey in a switch of tabs. The kit's grey fills become black inside a sheet.
+   Kept in its own file, after the sheets' own styles (EditorPanels imports it). */
+.meme-editor-container .ui-sheet {
+  --ui-surface-2: #000;
+  --ui-surface-3: #000;
+}
+.meme-editor-container .ui-sheet:not(.ui-sheet-ghost) {
+  background: var(--ui-surface, #1c1c1e) !important;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+/* The heading: its icon in a black circle, in orange (as the video sheets'). */
+.meme-editor-container .ui-sheet .ui-sheet-title-icon { background: #000; color: var(--ui-accent); }
+
+/* Controls on black. */
+.meme-editor-container .ui-sheet :is(
+  .ui-chip,
+  .ui-seg--divided,
+  .ui-seg--fill,
+  .ui-toggle--tile:not(.is-on),
+  .ui-field,
+  .ui-btn:not(.ui-btn-accent):not(.is-active),
+  .ui-tile:not(.is-on),
+  .ie-shape-btn:not(.is-on)
+):not(.is-on) { background: #000; }
+.meme-editor-container .ui-sheet .ui-field { border-color: transparent; }
+.meme-editor-container .ui-sheet .ui-field:focus { box-shadow: inset 0 0 0 2px rgba(255, 90, 54, 0.7); }
+
+/* Picked: a lighter grey in a switch of tabs; orange elsewhere (the kit's own). */
+.meme-editor-container .ui-sheet .ui-seg-btn.is-on { background: #3a3a3c; }
+.meme-editor-container .ui-sheet .ui-chip.is-on:not([class*='accent']) { background: var(--ui-accent); color: #fff; }
+
+/* Hover on black stays near black. */
+@media (hover: hover) {
+  .meme-editor-container .ui-sheet :is(.ui-chip, .ui-btn, .ui-tile, .ie-shape-btn):not(.is-on):not(:disabled):hover { background: #0d0d0e; }
+}
+
+/* Sliders: orange up to the value, black after. */
+.meme-editor-container .ui-sheet .ui-slider::-webkit-slider-runnable-track {
+  background: linear-gradient(to right, var(--ui-accent) var(--pct), #000 var(--pct));
+}
+.meme-editor-container .ui-sheet .ui-slider::-moz-range-track { background: #000; }
+
+/* The sheets' own parts on the grey: black too. */
+.meme-editor-container .ui-sheet :is(
+  .ie-style-save,
+  .ui-toggle:not(.is-on),
+  .ui-slider-value,
+  .ui-swatch--none,
+  .ie-aic-composer,
+  .ie-aic-btn:not(.is-on):not([class*='generate']),
+  .ie-filter-tabs,
+  .ie-bg-card,
+  .ie-layer-row:not(.is-on):not(.is-selected),
+  .ie-export-info,
+  .ie-bubble-tab:not(.is-on),
+  .ie-bubble-card,
+  .ie-browse-close,
+  .ie-browse-chips--fill,
+  .ie-browse-chip:not(.is-on),
+  .ie-browse-item.ie-card,
+  .ui-badge
+) { background: #000; }
+.meme-editor-container .ui-sheet input:not([type='range']):not([type='checkbox']):not([type='color']) { background: #000; }
+.meme-editor-container .ui-sheet .ie-filter-tab.is-on { background: #3a3a3c; }
+/* Plain heading buttons (Reset, Select, Clear drawing): text only, as the video sheets' Reset. */
+.meme-editor-container .ui-sheet .ui-sheet-head .ui-sheet-action--plain { background: transparent; }
+.meme-editor-container .ui-sheet .ui-sheet-head .ui-sheet-action--plain:hover:not(:disabled) { background: transparent; color: var(--ui-text); }

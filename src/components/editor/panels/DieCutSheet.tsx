@@ -1,3 +1,4 @@
+import { Scissors } from 'lucide-react';
 import { Sheet, Row, SwatchRow, Slider, Switch } from '../../ui';
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
 import { useSelection } from './selection';
@@ -47,7 +48,7 @@ export default function DieCutSheet({ actions, onClose }: { actions: EditorActio
   const width = typeof activeItem.dieCutWidth === 'number' ? activeItem.dieCutWidth : 6;
 
   return (
-    <Sheet
+    <Sheet Icon={Scissors}
       className="ie-diecut-sheet ie-tool-sheet"
       title="Die-cut"
       aside={

@@ -114,7 +114,7 @@ export default function ExportSheet({ actions, onClose }: { actions: EditorActio
   // ways to save it, Download first.
   if (sticker) {
     return (
-      <Sheet title="Export" onClose={onClose} className="ie-sticker-export">
+      <Sheet Icon={Download} title="Export" onClose={onClose} className="ie-sticker-export">
         <div className="ie-sticker-export-opts">
           <SegmentedControl ariaLabel="File format" variant="fill" value={format} options={FORMATS.filter((f) => f.value !== 'jpeg')} onChange={(f) => set({ format: f })} />
           <SegmentedControl ariaLabel="Image width" variant="fill" value={prefs.width === 512 ? '512' : 'full'} options={[{ value: '512', label: '512 px' }, { value: 'full', label: `${w} px` }]} onChange={(v) => set({ width: v === 'full' ? 'full' : 512 })} />
@@ -142,7 +142,7 @@ export default function ExportSheet({ actions, onClose }: { actions: EditorActio
   }
 
   return (
-    <Sheet title="Export" onClose={onClose}>
+    <Sheet Icon={Download} title="Export" onClose={onClose}>
       <Section>
         <Row label="Format">
           <SegmentedControl ariaLabel="File format" variant="fill" value={format} options={moving ? [...FORMATS, ...MOTION_FORMATS] : FORMATS} onChange={(f) => set({ format: f })} />

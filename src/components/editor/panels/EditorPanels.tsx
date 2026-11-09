@@ -47,6 +47,8 @@ import { useSmoothHeight } from './useSmoothHeight';
 import { EDITOR_MODES } from '../editorModes';
 import type { EditorMode } from '../editorModes';
 import './panels.css';
+// After every sheet's own styles: the sheets in the video editor's grey, black and orange.
+import './sheetLook.css';
 
 // Text sits in the middle; the open section is the wide gradient pill. A focused maker's dock has
 // only its mode's tabs (editorModes.ts), in its order.

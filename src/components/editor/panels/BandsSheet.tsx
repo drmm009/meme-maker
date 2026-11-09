@@ -1,3 +1,4 @@
+import { HeaderFooterIcon } from './editorIcons';
 import { Sheet, Section, Row, Slider, Switch, SwatchRow } from '../../ui';
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
 import { isColorDark } from '../../../utils/captionLayout';
@@ -79,7 +80,7 @@ export default function BandsSheet({ onClose }: { actions?: EditorActions; onClo
   };
 
   return (
-    <Sheet className="ie-bands-sheet ie-tool-sheet" title="Header & footer" onClose={onClose}>
+    <Sheet Icon={HeaderFooterIcon} className="ie-bands-sheet ie-tool-sheet" title="Header & footer" onClose={onClose}>
       <Section>
         <div className="ie-bands-switches">
           <div className="ie-bands-switch">
