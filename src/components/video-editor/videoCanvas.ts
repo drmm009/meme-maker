@@ -1,7 +1,7 @@
 import { useEditorStore } from '../../store/useVideoEditorStore';
 
-// The canvas taking a video's own shape: a video template, or the first video from a link, fills
-// the canvas instead of sitting in the 4:3 default with bars around it.
+// The canvas taking a video's own shape: a video template, or the first video from a link or the
+// phone, fills the canvas instead of sitting in the 4:3 default with bars around it.
 
 // Common shapes a video is "really" in (a 1280x720 file is 16:9); anything else keeps its own.
 const COMMON = [1, 4 / 3, 3 / 4, 9 / 16, 16 / 9, 4 / 5];

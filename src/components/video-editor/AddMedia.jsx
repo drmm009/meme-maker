@@ -71,7 +71,8 @@ const AddMedia = forwardRef(function AddMedia(_props, ref) {
   const close = () => setSheet(null);
   const onFile = (type) => (e) => {
     const file = e.target.files?.[0];
-    if (file) addMediaFile(file, type);
+    // A video onto an empty canvas sets the canvas to its shape (as a link or template does).
+    if (file) addMediaFile(file, type, { fitCanvas: true });
     e.target.value = '';
   };
 
