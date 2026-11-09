@@ -4,6 +4,7 @@ import { Image as KonvaImage, Transformer, Group } from 'react-konva';
 import { onTextFontsLoaded, scaleTextLook, textBitmap, textImageAttrs } from '../../../utils/textBitmap';
 import { clipOpacity } from '../../../model/videoProject';
 import { useTextPlayback } from './useTextPlayback';
+import { SELECTION_PROPS, shadeSelection } from './selectionStyle';
 
 // Picture pixels per stage unit for the preview: the stage's scale on this screen, in quarter steps
 // (so resizing the window doesn't redraw every text for each pixel).
@@ -59,6 +60,7 @@ const CanvasText = ({ item, isSelected, onSelect, onChange, onEditStart }) => {
   useEffect(() => {
     if (isSelected && trRef.current && nodeRef.current) {
       trRef.current.nodes([nodeRef.current]);
+      shadeSelection(trRef.current);
       trRef.current.getLayer()?.batchDraw();
     }
   }, [isSelected]);
@@ -97,6 +99,7 @@ const CanvasText = ({ item, isSelected, onSelect, onChange, onEditStart }) => {
       {isSelected && (
         <Transformer
           ref={trRef}
+          {...SELECTION_PROPS}
           keepRatio={true}
           enabledAnchors={['top-left', 'top-right', 'bottom-left', 'bottom-right']}
           boundBoxFunc={(oldBox, newBox) => (newBox.width < 20 || newBox.height < 20 ? oldBox : newBox)}

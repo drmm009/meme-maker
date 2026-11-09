@@ -9,6 +9,7 @@ import { useFrameEffects } from './useFrameEffects';
 import { drawGifFrame, useGifFrames } from './useGifFrames';
 import { hasStickerLook, stickerLookImage } from '../../../utils/stickerLook';
 import { blurSubjectUrl, hasPhotoPicture, photoNodeAttrs, photoPicture } from '../../../utils/photoLook';
+import { SELECTION_PROPS, shadeSelection } from './selectionStyle';
 
 // A photo, sticker (animated GIFs included) or video on the preview: draggable and resizable when
 // selected, shown only during its time on the timeline. Videos play from a hidden <video>
@@ -115,6 +116,7 @@ const CanvasMedia = ({ item, isSelected, onSelect, onChange, canvasDimensions })
   useEffect(() => {
     if (isSelected && trRef.current && imageRef.current) {
       trRef.current.nodes([imageRef.current]);
+      shadeSelection(trRef.current);
       trRef.current.getLayer().batchDraw();
     }
   }, [isSelected]);
@@ -144,6 +146,7 @@ const CanvasMedia = ({ item, isSelected, onSelect, onChange, canvasDimensions })
       {isSelected && (
         <Transformer
           ref={trRef}
+          {...SELECTION_PROPS}
           // Limit minimum size
           boundBoxFunc={(oldBox, newBox) => (newBox.width < 10 || newBox.height < 10 ? oldBox : newBox)}
         />
