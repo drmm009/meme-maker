@@ -15,7 +15,7 @@ const RADIUS = 14;
 const HANDLE = 14;
 const SIDE_LONG = 20;
 const SIDE_SHORT = 7;
-const ROTATER = 26;
+const ROTATER = 30;
 const BUTTON = 28;
 // Extra touch area round each handle.
 const TOUCH = 18;
@@ -26,27 +26,43 @@ const TRASH_ICON = 'M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2
 
 const isSide = (anchor: Konva.Rect) => ['top-center', 'bottom-center', 'middle-left', 'middle-right'].some((n) => anchor.hasName(n));
 
-// The rotate knob: a white disc with a three-quarter turning arrow.
+// Lucide's rotate-cw (24-unit box): an open circle with an arrowhead at its end.
+const ROTATE_ICON = 'M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8M21 3v5h-5';
+let rotateIcon: Path2D | null = null;
+
+const turning = (shape: Konva.Node) => (shape.getParent() as Konva.Transformer | null)?.getActiveAnchor?.() === 'rotater';
+
+// The rotate knob: a white disc with a turning arrow; orange with a white arrow while it turns.
 function drawRotater(ctx: Konva.Context, shape: Konva.Shape) {
   const r = shape.width() / 2;
   ctx.beginPath();
   ctx.arc(r, r, r, 0, Math.PI * 2);
   ctx.closePath();
   ctx.fillShape(shape);
-  const a = r * 0.42;
-  const end = -Math.PI * 0.35;
+  if (typeof Path2D === 'undefined') return;
+  rotateIcon ??= new Path2D(ROTATE_ICON);
+  const native = ctx._context;
+  const size = r * 1.1;
+  native.save();
+  native.translate(r - size / 2, r - size / 2);
+  native.scale(size / 24, size / 24);
+  // Drawn without the disc's shadow, as a 2px line at this size.
+  native.shadowColor = 'transparent';
+  native.strokeStyle = turning(shape) ? '#ffffff' : INK;
+  native.lineWidth = 2.4;
+  native.lineCap = 'round';
+  native.lineJoin = 'round';
+  native.stroke(rotateIcon);
+  native.restore();
+}
+
+// Its touch area: the disc alone (the arrow is drawn on the picture only).
+function hitRotater(ctx: Konva.Context, shape: Konva.Shape) {
+  const r = shape.width() / 2;
   ctx.beginPath();
-  ctx.arc(r, r, a, -Math.PI * 1.85, end);
-  const tipX = r + a * Math.cos(end);
-  const tipY = r + a * Math.sin(end);
-  ctx.moveTo(tipX - 4.5, tipY - 1);
-  ctx.lineTo(tipX, tipY);
-  ctx.lineTo(tipX + 0.5, tipY - 4.5);
-  ctx.setAttr('strokeStyle', INK);
-  ctx.setAttr('lineWidth', 2);
-  ctx.setAttr('lineCap', 'round');
-  ctx.setAttr('lineJoin', 'round');
-  ctx.stroke();
+  ctx.arc(r, r, r, 0, Math.PI * 2);
+  ctx.closePath();
+  ctx.fillStrokeShape(shape);
 }
 
 function styleAnchor(anchor: Konva.Rect) {
@@ -66,7 +82,7 @@ function styleAnchor(anchor: Konva.Rect) {
   anchor.offsetX(w / 2);
   anchor.offsetY(h / 2);
   anchor.cornerRadius(Math.min(w, h) / 2);
-  anchor.fill('#ffffff');
+  anchor.fill(rotater && turning(anchor) ? FRAME : '#ffffff');
   anchor.stroke('rgba(0, 0, 0, 0.12)');
   anchor.strokeWidth(1);
   anchor.shadowColor('#000000');
@@ -74,7 +90,10 @@ function styleAnchor(anchor: Konva.Rect) {
   anchor.shadowOpacity(0.35);
   anchor.shadowOffsetY(1);
   anchor.hitStrokeWidth(TOUCH);
-  if (rotater) anchor.sceneFunc(drawRotater);
+  if (rotater) {
+    anchor.sceneFunc(drawRotater);
+    anchor.hitFunc(hitRotater);
+  }
 }
 
 // The frame: a rounded rectangle round the layer and its padding.
@@ -95,7 +114,7 @@ export const SELECTION_PROPS = {
   padding: 8,
   rotateLineVisible: false,
   // High enough that the knob clears the corner buttons on a small layer.
-  rotateAnchorOffset: 30,
+  rotateAnchorOffset: 34,
   rotationSnaps: [0, 90, 180, 270],
   rotationSnapTolerance: 5,
   // The top corners hold Delete and Duplicate.
@@ -155,7 +174,28 @@ export function decorateSelection(tr: Konva.Transformer | null, actions: Selecti
     copy.position({ x: w + pad, y: top });
     copy.moveToTop();
     remove.moveToTop();
+    angle.moveToTop();
   };
+  // While turning: the angle in a small dark pill.
+  const angle = new Konva.Label({ name: 'vt-sel-angle', visible: false, listening: false });
+  angle.add(new Konva.Tag({ fill: 'rgba(28, 28, 30, 0.88)', cornerRadius: 11, pointerDirection: 'none' }));
+  angle.add(new Konva.Text({ text: '0°', fontSize: 13, fontStyle: 'bold', fontFamily: 'system-ui, sans-serif', fill: '#ffffff', padding: 5, align: 'center' }));
+  Konva.Group.prototype.add.call(tr, angle);
+  const showAngle = () => {
+    const on = tr.getActiveAnchor() === 'rotater';
+    angle.visible(on);
+    if (!on) return;
+    const back = tr.findOne('.back');
+    const deg = Math.round(((tr.rotation() % 360) + 360) % 360);
+    (angle.getText() as Konva.Text).text(`${deg === 360 ? 0 : deg}°`);
+    angle.offsetX(angle.width() / 2);
+    angle.offsetY(angle.height() / 2);
+    // In the middle of the layer (always on the canvas), kept upright on screen.
+    angle.position({ x: (back?.width() || 0) / 2, y: (back?.height() || 0) / 2 });
+    angle.rotation(-tr.rotation());
+  };
+  tr.on('transform.vtangle', showAngle);
+  tr.on('transformend.vtangle', () => { angle.visible(false); tr.getLayer()?.batchDraw(); });
   const update = tr.update.bind(tr);
   tr.update = () => {
     update();
