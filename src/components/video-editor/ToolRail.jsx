@@ -2,7 +2,7 @@ import React, { useEffect, useImperativeHandle, useLayoutEffect, useRef, useStat
 import {
   Type, Sticker, Smile, LayoutGrid, Image as ImageIcon, Clapperboard, Music,
   Gauge, Volume1, Volume2, VolumeX, Palette, RotateCw, Crop, Copy, Trash2,
-  Scissors, PencilLine, WandSparkles, Sparkles, ImagePlay, PaintBucket, Zap, Snowflake, Rewind, Repeat, ZoomIn, BringToFront, SendToBack, Mic, ArrowRightLeft, Frame, Upload, Library, Laugh, Video, Captions, Expand, Blend, FlipHorizontal2, Move, ListChecks, X, AtSign, Flag, Layers, ScanFace, CaseSensitive, Baseline, Ellipsis, Wand, Settings2, SquarePen
+  Scissors, WandSparkles, Sparkles, ImagePlay, PaintBucket, Zap, Snowflake, Rewind, Repeat, ZoomIn, BringToFront, SendToBack, Mic, ArrowRightLeft, Frame, Upload, Library, Laugh, Video, Captions, Expand, Blend, FlipHorizontal2, Move, ListChecks, X, AtSign, Flag, Layers, ScanFace, CaseSensitive, Baseline, Ellipsis, Wand, Settings2, SquarePen
 } from 'lucide-react';
 import { Sheet } from '../ui';
 import DeckBar from './DeckBar';
@@ -19,7 +19,7 @@ import { GreenScreenPanel, OpacityPanel, PunchPanel } from './ClipEffectPanels';
 import { cropReset, greenScreenOff, punchesClear, videoFiltersReset } from './clipSheetActions';
 import FaceSwapPanel from './FaceSwapPanel';
 import WatermarkPanel, { WatermarkAside } from './WatermarkPanel';
-import { TextColorPanel, TextEditPanel, TextFontPanel, TextStylePanel } from './TextLookPanel';
+import { TextColorPanel, TextFontPanel, TextStylePanel } from './TextLookPanel';
 import { StickerDieCutAside, StickerDieCutPanel, StickerEditPanel, StickerFlipAside } from './StickerLookPanel';
 import { PhotoBackgroundPanel, PhotoFiltersPanel, PhotoMorePanel } from './PhotoLookPanel';
 import { photoFiltered, photoFiltersReset } from './photoFilters';
@@ -276,8 +276,8 @@ function VoicePanel() {
 
 // Every settings sheet: its title, the icon beside it, and what it shows (for the selected clip, or for nothing selected).
 const SHEETS = {
-  // A text's sheets are the image editor's text controls (TextLookPanel): all of them, or one part.
-  text: { title: 'Text', Icon: PencilLine, Panel: TextEditPanel, tall: true },
+  // A text's sheets are parts of the image editor's text controls (TextLookPanel); its words are
+  // edited on the preview (double-tap).
   font: { title: 'Font', Icon: CaseSensitive, Panel: TextFontPanel, tall: true },
   style: { title: 'Style', Icon: Baseline, Panel: TextStylePanel, tall: true },
   color: { title: 'Colour', Icon: Palette, Panel: TextColorPanel, tall: true },
@@ -383,7 +383,6 @@ function clipTools(item, { sheet, toggle, playhead, items }) {
   if (item.type === 'text') {
     // As the image editor's text bar: Font, Style and Colour each open their part of the controls.
     tools.push(
-      { id: 'edit', label: 'Edit', title: 'The words and every setting', Icon: PencilLine, ...opens('text') },
       { id: 'font', label: 'Font', title: 'Font and my saved styles', Icon: CaseSensitive, ...opens('font') },
       { id: 'style', label: 'Style', title: 'Size, bold, italic, underline, effects, alignment and spacing', Icon: Baseline, ...opens('style') },
       { id: 'color', label: 'Colour', title: 'Colour, outline, the box behind the text and opacity', icon: <span className="vt-color-dot" style={{ background: item.color || '#ffffff' }} />, ...opens('color') },

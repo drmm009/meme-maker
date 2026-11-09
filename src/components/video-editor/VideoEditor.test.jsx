@@ -175,7 +175,7 @@ describe('VideoEditor', () => {
     expect(store().activeItemId).toBe(store().items[0].id);
     expect(clips(container)[0].className).toContain('is-selected');
     const main = screen.getByRole('toolbar', { name: 'Clip tools' });
-    expect(labels(main)).toEqual(['Back', 'Edit', 'Font', 'Style', 'Colour', 'Animate', 'Split', 'Duplicate', 'Select', 'Arrange', 'Delete']);
+    expect(labels(main)).toEqual(['Back', 'Font', 'Style', 'Colour', 'Animate', 'Split', 'Duplicate', 'Select', 'Arrange', 'Delete']);
     // Arrange is the layer order, as tiles.
     fireEvent.click(within(main).getByText('Arrange'));
     expect(labels(screen.getByRole('dialog', { name: 'Arrange' }), '.vt-source-label')).toEqual(['Bring forward', 'Send back']);
@@ -350,13 +350,13 @@ describe('VideoEditor', () => {
     expect(store().items[0].fadeInMs).toBe(0);
   });
 
-  it('edits, styles and colours text with the image editor’s text controls', () => {
+  it('styles and colours text with the image editor’s text controls', () => {
     const { container } = render(<VideoEditor onBack={() => {}} />);
     addTextFromRail();
+    // The words are typed on the preview; there's no Edit sheet.
+    act(() => store().updateItem(store().items[0].id, { text: 'WHEN IT WORKS' }));
     fireEvent.click(clips(container)[0]);
-    fireEvent.click(clipTool('Edit'));
-    fireEvent.change(screen.getByLabelText('Caption text'), { target: { value: 'WHEN IT WORKS' } });
-    closeSheet();
+    expect(labels(screen.getByRole('toolbar', { name: 'Clip tools' }))).not.toContain('Edit');
     fireEvent.click(clipTool('Font'));
     fireEvent.click(screen.getByRole('button', { name: 'Comic Sans (Fun)' }));
     closeSheet();
