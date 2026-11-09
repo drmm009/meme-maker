@@ -1,9 +1,11 @@
 import type { ReactNode } from 'react';
-import { Ban, Blend, FlipHorizontal2, FlipVertical2, MoveRight, ZoomIn } from 'lucide-react';
+import { Ban, Blend, FlipHorizontal2, FlipVertical2, Keyboard, MoveLeft, MoveRight, Sparkles, Vibrate, ZoomIn, ZoomOut } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Slider } from '../ui';
 import { useEditorStore } from '../../store/useVideoEditorStore';
 import { DEFAULT_TRANSITION_MS, TRANSITIONS } from '../../utils/clipTransitions';
+import { PHOTO_MOTIONS } from '../../utils/photoMotion';
+import { TEXT_ANIMATIONS } from '../../utils/textAnimation';
 
 // A video or photo clip as these sheets see it.
 interface PlacedClip {
@@ -17,9 +19,12 @@ interface PlacedClip {
   flipX?: boolean;
   flipY?: boolean;
   transitionIn?: { type?: string | null; durationMs?: number } | null;
+  motion?: string | null;
+  animation?: string | null;
 }
 
 const update = (id: string, patch: Partial<PlacedClip>) => useEditorStore.getState().updateItem(id, patch);
+const iconArt = (Icon: LucideIcon) => <Icon size={22} strokeWidth={1.8} />;
 
 // A sheet's choices as big black tiles: a picture of what each does, its name and a line under it;
 // the picked one (or the ones on) lit.
@@ -136,5 +141,33 @@ export function TransitionPanel({ item }: { item: PlacedClip }) {
         <p className="vt-panel-hint">Plays where the previous clip ends and this one starts.</p>
       )}
     </div>
+  );
+}
+
+const MOTION_ICONS: Record<string, LucideIcon> = { none: Ban, 'zoom-in': ZoomIn, 'zoom-out': ZoomOut, 'pan-left': MoveLeft, 'pan-right': MoveRight };
+
+// A photo's slow zoom or pan while it's on screen, as tiles.
+export function MotionPanel({ item }: { item: PlacedClip }) {
+  return (
+    <OptionTiles label="Photo motion" columns={5} options={PHOTO_MOTIONS.map((m) => ({
+      id: m.id ?? 'none', label: m.label, art: iconArt(MOTION_ICONS[m.id ?? 'none']), on: (item.motion || null) === m.id, role: 'radio' as const,
+      onClick: () => update(item.id, { motion: m.id }),
+    }))} />
+  );
+}
+
+const ANIMATION_ICONS: Record<string, LucideIcon> = { none: Ban, pop: Sparkles, shake: Vibrate, typewriter: Keyboard };
+
+// How a text comes on, as tiles; picking one plays it once straight away (the editor otherwise
+// animates text only during playback).
+export function AnimationPanel({ item }: { item: PlacedClip }) {
+  return (
+    <OptionTiles label="Animation" columns={4} options={TEXT_ANIMATIONS.map((a) => ({
+      id: a.id ?? 'none', label: a.label, art: iconArt(ANIMATION_ICONS[a.id ?? 'none']), on: (item.animation || null) === a.id, role: 'radio' as const,
+      onClick: () => {
+        update(item.id, { animation: a.id });
+        if (a.id) window.dispatchEvent(new CustomEvent('vt-preview-text-animation', { detail: { id: item.id } }));
+      },
+    }))} />
   );
 }

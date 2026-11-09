@@ -13,7 +13,7 @@ import { clipCrop, isCropped } from '../../utils/clipCrop';
 import CropPanel from './CropPanel';
 import VideoFilterPanel from './VideoFilterPanel';
 import { SpeedPanel, VolumePanel } from './SpeedVolumePanels';
-import { FlipPanel, PlacePanel, TransitionPanel } from './ClipLookPanels';
+import { AnimationPanel, FlipPanel, MotionPanel, PlacePanel, TransitionPanel } from './ClipLookPanels';
 import { GreenScreenPanel, OpacityPanel, PunchPanel } from './ClipEffectPanels';
 import { cropReset, greenScreenOff, punchesClear, videoFiltersReset } from './clipSheetActions';
 import FaceSwapPanel from './FaceSwapPanel';
@@ -38,7 +38,6 @@ import { togglePlayback } from './usePlaybackLoop';
 import { rotateAboutCenter } from './preview/previewMath';
 import { formatClock } from './timeline/timelineMath';
 import { DEFAULT_CHROMA_KEY } from '../../utils/chromaKey';
-import { TEXT_ANIMATIONS } from '../../utils/textAnimation';
 import { SOUND_EFFECTS } from '../../data/soundEffects';
 
 // The add tools: one flat row in the bottom bar, scrolling sideways when they don't fit (new tools
@@ -98,51 +97,6 @@ const toggleClipEffect = (item, effect) => {
     useEditorStore.getState().applyClipEffect(item.id, effect, rendered);
   });
 };
-
-// A row of chips, one of them picked (font, speed, align…).
-function PickRow({ options, value, onPick, label }) {
-  return (
-    <div className="vt-chip-row" role="radiogroup" aria-label={label}>
-      {options.map((o) => (
-        <button key={String(o.value)} type="button" role="radio" aria-checked={value === o.value}
-          className={`vt-chip${value === o.value ? ' is-on' : ''}`} style={o.style} onClick={() => onPick(o.value)}>
-          {o.Icon && <o.Icon size={15} />}
-          {o.label}
-        </button>
-      ))}
-    </div>
-  );
-}
-
-// A photo's slow zoom or pan while on screen.
-function MotionPanel({ item }) {
-  return (
-    <PickRow label="Photo motion" value={item.motion || null} onPick={(v) => update(item.id, { motion: v })}
-      options={PHOTO_MOTIONS.map((m) => ({ value: m.id, label: m.label }))} />
-  );
-}
-
-function AnimationPanel({ item }) {
-  const current = item.animation || null;
-  return (
-    <div className="vt-chip-row">
-      {TEXT_ANIMATIONS.map((a) => (
-        <button
-          key={a.label}
-          type="button"
-          className={`vt-chip${current === a.id ? ' is-on' : ''}`}
-          onClick={() => {
-            update(item.id, { animation: a.id });
-            // Show it straight away; the editor otherwise animates text only during playback.
-            if (a.id) window.dispatchEvent(new CustomEvent('vt-preview-text-animation', { detail: { id: item.id } }));
-          }}
-        >
-          {a.label}
-        </button>
-      ))}
-    </div>
-  );
-}
 
 function BackgroundPanel() {
   const color = useEditorStore((s) => s.backgroundColor || '#ffffff');
