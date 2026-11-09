@@ -2,7 +2,7 @@ import React, { useEffect, useImperativeHandle, useLayoutEffect, useRef, useStat
 import {
   Type, Sticker, Smile, LayoutGrid, Image as ImageIcon, Clapperboard, Music,
   Gauge, Volume1, Volume2, VolumeX, Palette, RotateCw, Crop, Copy, Trash2,
-  Scissors, PencilLine, WandSparkles, Sparkles, ImagePlay, PaintBucket, Zap, Snowflake, Rewind, Repeat, ZoomIn, BringToFront, SendToBack, Mic, ArrowRightLeft, Frame, Upload, Library, Laugh, SquarePlay, Captions, Expand, Blend, FlipHorizontal2, Move, ListChecks, X, AtSign, Flag, Layers, ScanFace, CaseSensitive, Baseline, Ellipsis, Wand, Settings2, SquarePen
+  Scissors, PencilLine, WandSparkles, Sparkles, ImagePlay, PaintBucket, Zap, Snowflake, Rewind, Repeat, ZoomIn, BringToFront, SendToBack, Mic, ArrowRightLeft, Frame, Upload, Library, Laugh, Video, Captions, Expand, Blend, FlipHorizontal2, Move, ListChecks, X, AtSign, Flag, Layers, ScanFace, CaseSensitive, Baseline, Ellipsis, Wand, Settings2, SquarePen
 } from 'lucide-react';
 import { Sheet } from '../ui';
 import DeckBar from './DeckBar';
@@ -42,7 +42,7 @@ import { SOUND_EFFECTS } from '../../data/soundEffects';
 // go here). A `panel` tool opens its settings sheet, a `sources` tool a small sheet of tiles for
 // where to get it from (a tile that names a settings sheet opens it); the rest add straight away.
 const DOCK = [
-  { kind: 'videos', label: 'Video', Icon: SquarePlay, title: 'Add video', sources: [
+  { kind: 'videos', label: 'Video', Icon: Video, title: 'Add video', sources: [
     { kind: 'video', label: 'Upload', sub: 'From your phone', Icon: Upload },
     { kind: 'clips', label: 'Clips', sub: 'Meme video clips', Icon: Clapperboard },
   ] },
