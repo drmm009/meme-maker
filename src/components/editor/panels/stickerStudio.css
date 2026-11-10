@@ -1,103 +1,259 @@
-/* The Stickers maker before its sticker is made (StickerStudio): the Face Swap page's look
-   (faceSwap.css), one square card in the canvas's place and Generate under it. */
-.ie-sticker-stage {
+/* The Stickers maker before its sticker is made (StickerStudio), in the editors' look: a
+   see-through board with the photo previewed in the picked style, where the photo comes from under
+   it, the styles as a grid of cards, and Generate sticker pinned at the bottom (faceSwap.css's
+   action bar). Greys, solid orange for what's picked; no glass or blur. */
+
+.ie-stk-body {
   flex: 1;
   min-height: 0;
-  display: grid;
-  place-items: center;
-  padding: 12px 16px;
-  container-type: size;
-}
-/* As large as fits, square like the sticker it becomes. */
-.ie-sticker-square {
-  width: min(100cqw, 100cqh);
-  height: min(100cqw, 100cqh);
-}
-/* A photo shows whole, on the checkerboard a see-through sticker is drawn on. */
-.ie-sticker-tile:not(.is-empty) {
-  background: repeating-conic-gradient(#2a2b30 0% 25%, #222327 0% 50%) 0 0 / 20px 20px;
-}
-.ie-sticker-tile img {
-  inset: 16px;
-  width: calc(100% - 32px);
-  height: calc(100% - 32px);
-  object-fit: contain;
-}
-.ie-sticker-tile .ie-swap-empty-hint { max-width: 22ch; }
-.ie-sticker-tile:disabled { cursor: default; }
-
-/* Sticker styles: a row of sample stickers, scrolling sideways when it doesn't fit. */
-.ie-sticker-styles-title {
-  margin: 0;
-  padding: 0 16px 8px;
-  color: var(--ui-text);
-  font-size: var(--ui-fs-footnote, 13px);
-  font-weight: 700;
-}
-.ie-sticker-styles {
   display: flex;
-  gap: 6px;
-  padding: 2px 16px 12px;
-  overflow-x: auto;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+  padding: 4px 16px 14px;
   scrollbar-width: none;
 }
-.ie-sticker-styles::-webkit-scrollbar { display: none; }
-.ie-sticker-style {
-  flex: 1 0 48px;
+.ie-stk-body::-webkit-scrollbar { display: none; }
+
+/* ── The board: square, as large as the rest of the page leaves ── */
+.ie-stk-stage {
+  flex: 1;
+  min-height: 200px;
+  display: grid;
+  place-items: center;
+  container-type: size;
+}
+.ie-stk-board {
+  position: relative;
+  width: min(100cqw, 100cqh);
+  height: min(100cqw, 100cqh);
+  border-radius: var(--ui-radius-xl, 24px);
+  background: repeating-conic-gradient(#26272b 0% 25%, #1d1e21 0% 50%) 50% 50% / 22px 22px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08), 0 18px 36px -22px rgba(0, 0, 0, 0.9);
+  overflow: hidden;
+}
+.ie-stk-board.is-empty { background: var(--ui-surface); }
+.ie-stk-board-btn {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: none;
+  border-radius: inherit;
+  background: none;
+  color: var(--ui-text);
+  font: inherit;
+  cursor: pointer;
+}
+.ie-stk-board-btn:disabled { cursor: default; }
+.ie-stk-board-btn:focus-visible { outline: 2px solid var(--ui-accent); outline-offset: -2px; }
+@media (hover: hover) {
+  .ie-stk-board.is-empty:hover { background: #222224; }
+}
+
+.ie-stk-empty {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 5px;
-  padding: 0;
-  border: none;
-  background: none;
-  color: var(--ui-muted);
-  font-size: var(--ui-fs-label, 12px);
-  font-weight: 600;
-  cursor: pointer;
+  gap: 6px;
+  padding: 20px;
+  text-align: center;
 }
-.ie-sticker-style.is-on { color: var(--ui-text); }
-.ie-sticker-style:disabled { opacity: 0.5; cursor: default; }
-.ie-sticker-style-art {
-  position: relative;
+.ie-stk-empty-icon {
   display: grid;
   place-items: center;
-  width: 48px;
-  height: 48px;
-  border-radius: var(--ui-radius-md, 16px);
-  background: repeating-conic-gradient(#2a2b30 0% 25%, #222327 0% 50%) 0 0 / 12px 12px;
-  font-size: 26px;
-  line-height: 1;
+  width: 60px;
+  height: 60px;
+  margin-bottom: 8px;
+  border-radius: 18px;
+  background: var(--ui-accent-soft);
+  color: var(--ui-accent);
 }
-.ie-sticker-style-art svg {
+.ie-stk-empty-title { font-size: var(--ui-fs-headline, 17px); font-weight: 700; }
+.ie-stk-empty-hint { max-width: 24ch; color: var(--ui-muted); font-size: var(--ui-fs-footnote, 13px); line-height: 1.4; }
+
+/* The photo, whole, in the picked style: its edge stamped round it in the style's colour (a cut-out
+   photo's edge follows its shape), a shadow under it, a tint for Retro. */
+.ie-stk-preview {
+  /* Its own size within the board, so the rounding is the photo's corners. */
   display: block;
-  flex-shrink: 0;
-  transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1);
+  width: auto;
+  height: auto;
+  max-width: 78%;
+  max-height: 78%;
+  border-radius: 14px; /* a photo not cut out yet reads as a rounded sticker */
+  transition: filter 0.24s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
-.ie-sticker-style:hover:not(:disabled) .ie-sticker-style-art svg {
-  transform: scale(1.1);
-}
-.ie-sticker-style:active:not(:disabled) .ie-sticker-style-art svg {
-  transform: scale(0.92);
-}
-/* The picked style's ring, laid over it (global button rules strip outlines). */
-.ie-sticker-style-art::after {
-  content: '';
+.ie-stk-preview--classic { filter: drop-shadow(3px 0 0 #fff) drop-shadow(-3px 0 0 #fff) drop-shadow(0 3px 0 #fff) drop-shadow(0 -3px 0 #fff) drop-shadow(0 8px 12px rgba(0, 0, 0, 0.5)); }
+.ie-stk-preview--bold { filter: drop-shadow(6px 0 0 #fff) drop-shadow(-6px 0 0 #fff) drop-shadow(0 6px 0 #fff) drop-shadow(0 -6px 0 #fff) drop-shadow(0 8px 12px rgba(0, 0, 0, 0.5)); }
+.ie-stk-preview--comic { filter: drop-shadow(2.5px 0 0 #000) drop-shadow(-2.5px 0 0 #000) drop-shadow(0 2.5px 0 #000) drop-shadow(0 -2.5px 0 #000) drop-shadow(0 6px 10px rgba(0, 0, 0, 0.4)); }
+.ie-stk-preview--pop { filter: drop-shadow(4px 0 0 #ffd60a) drop-shadow(-4px 0 0 #ffd60a) drop-shadow(0 4px 0 #ffd60a) drop-shadow(0 -4px 0 #ffd60a) drop-shadow(0 8px 12px rgba(0, 0, 0, 0.5)); }
+.ie-stk-preview--clean { filter: drop-shadow(0 14px 18px rgba(0, 0, 0, 0.6)); }
+.ie-stk-preview--retro { filter: sepia(0.55) saturate(1.15) contrast(0.95) drop-shadow(3px 0 0 #fff1d6) drop-shadow(-3px 0 0 #fff1d6) drop-shadow(0 3px 0 #fff1d6) drop-shadow(0 -3px 0 #fff1d6) drop-shadow(0 8px 12px rgba(0, 0, 0, 0.5)); }
+
+.ie-stk-note {
   position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+  left: 50%;
+  bottom: 10px;
+  padding: 5px 10px;
+  border-radius: var(--ui-radius-full, 999px);
+  background: rgba(0, 0, 0, 0.72);
+  color: rgba(255, 255, 255, 0.86);
+  font-size: var(--ui-fs-caption, 11px);
+  font-weight: 600;
+  white-space: nowrap;
+  transform: translateX(-50%);
   pointer-events: none;
 }
-.ie-sticker-style.is-on .ie-sticker-style-art::after { box-shadow: inset 0 0 0 2.5px var(--ui-accent); }
-.ie-sticker-style:focus-visible .ie-sticker-style-art::after { box-shadow: inset 0 0 0 2.5px var(--ui-accent), 0 0 0 2px rgba(255, 255, 255, 0.5); }
-/* Each sample drawn the way the style cuts: an outline stamped round the shape, a shadow, a tint. */
-.ie-sticker-style--classic .ie-sticker-style-art span { filter: drop-shadow(1.5px 0 0 #fff) drop-shadow(-1.5px 0 0 #fff) drop-shadow(0 1.5px 0 #fff) drop-shadow(0 -1.5px 0 #fff) drop-shadow(0 2px 2px rgba(0, 0, 0, 0.4)); }
-.ie-sticker-style--bold .ie-sticker-style-art span { filter: drop-shadow(3px 0 0 #fff) drop-shadow(-3px 0 0 #fff) drop-shadow(0 3px 0 #fff) drop-shadow(0 -3px 0 #fff) drop-shadow(0 2px 2px rgba(0, 0, 0, 0.4)); font-size: 24px; }
-.ie-sticker-style--comic .ie-sticker-style-art span { filter: drop-shadow(1.2px 0 0 #000) drop-shadow(-1.2px 0 0 #000) drop-shadow(0 1.2px 0 #000) drop-shadow(0 -1.2px 0 #000); }
-.ie-sticker-style--pop .ie-sticker-style-art span { filter: drop-shadow(2px 0 0 #ffd60a) drop-shadow(-2px 0 0 #ffd60a) drop-shadow(0 2px 0 #ffd60a) drop-shadow(0 -2px 0 #ffd60a) drop-shadow(0 2px 2px rgba(0, 0, 0, 0.4)); }
-.ie-sticker-style--clean .ie-sticker-style-art span { filter: drop-shadow(0 4px 5px rgba(0, 0, 0, 0.6)); }
-.ie-sticker-style--retro .ie-sticker-style-art span { filter: sepia(0.6) saturate(1.2) drop-shadow(1.5px 0 0 #fff1d6) drop-shadow(-1.5px 0 0 #fff1d6) drop-shadow(0 1.5px 0 #fff1d6) drop-shadow(0 -1.5px 0 #fff1d6); }
+.ie-stk-remove {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: var(--ui-radius-full, 999px);
+  background: rgba(0, 0, 0, 0.72);
+  color: #fff;
+  cursor: pointer;
+}
+@media (hover: hover) { .ie-stk-remove:hover { background: rgba(0, 0, 0, 0.88); } }
 
-.ie-sticker-sources { grid-template-columns: repeat(3, 1fr); }
-.ie-sticker-sources .ie-swap-source { font-size: var(--ui-fs-footnote, 13px); }
+/* Cutting out: the board dimmed (no blur), a spinner and what's happening. */
+.ie-stk-busy {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: rgba(10, 10, 12, 0.78);
+  color: #fff;
+  font-size: var(--ui-fs-body, 15px);
+  font-weight: 700;
+}
+
+/* ── Where the photo comes from ── */
+.ie-stk-sources {
+  flex: none;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.ie-stk-source {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  height: 44px;
+  min-width: 0;
+  padding: 0 8px;
+  border: none;
+  border-radius: var(--ui-radius-sm, 12px);
+  background: var(--ui-surface);
+  color: var(--ui-text);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.12s ease;
+}
+.ie-stk-source svg { flex: none; width: 18px; height: 18px; color: var(--ui-accent); }
+.ie-stk-source:active { transform: scale(0.97); }
+.ie-stk-source:focus-within { outline: 2px solid var(--ui-accent); outline-offset: 2px; }
+.ie-stk-source:disabled, .ie-stk-source.is-off { opacity: 0.45; pointer-events: none; }
+@media (hover: hover) { .ie-stk-source:hover { background: #26262a; } }
+
+/* ── Styles: a 3 × 2 grid of cards, the sample sticker over its name and what it does ── */
+.ie-stk-styles-title {
+  flex: none;
+  margin: 6px 2px -2px;
+  color: var(--ui-text);
+  font-size: var(--ui-fs-body, 15px);
+  font-weight: 700;
+}
+.ie-stk-styles {
+  flex: none;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.ie-stk-style {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  min-width: 0;
+  padding: 10px 6px 9px;
+  border: none;
+  border-radius: var(--ui-radius-md, 16px);
+  background: var(--ui-surface);
+  color: var(--ui-text);
+  font: inherit;
+  cursor: pointer;
+  transition: background-color 0.15s ease, box-shadow 0.15s ease, transform 0.12s ease;
+}
+.ie-stk-style-art {
+  display: grid;
+  place-items: center;
+  height: 38px;
+  margin-bottom: 4px;
+}
+.ie-stk-style-art svg { display: block; transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1); }
+/* The name above the note (the name is the button's last child, for its text). */
+.ie-stk-style-label { order: -1; font-size: 14px; font-weight: 700; line-height: 1.25; }
+.ie-stk-style-art { order: -2; }
+.ie-stk-style-note {
+  max-width: 100%;
+  overflow: hidden;
+  color: var(--ui-muted);
+  font-size: var(--ui-fs-caption, 11px);
+  font-weight: 500;
+  line-height: 1.3;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.ie-stk-style.is-on { background: var(--ui-accent-soft); box-shadow: inset 0 0 0 2px var(--ui-accent); }
+.ie-stk-style.is-on .ie-stk-style-note { color: var(--ui-accent-text); }
+.ie-stk-style.is-on .ie-stk-style-art svg { transform: scale(1.08); }
+.ie-stk-style:active:not(:disabled) { transform: scale(0.97); }
+.ie-stk-style:disabled { opacity: 0.5; cursor: default; }
+@media (hover: hover) { .ie-stk-style:not(.is-on):not(:disabled):hover { background: #26262a; } }
+
+/* ── Generate ── */
+.ie-stk-go {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.ie-stk-go svg { width: 19px; height: 19px; }
+
+/* The sources sheet a tap on the empty board opens: three across. */
+.ie-stk-sheet-sources { grid-template-columns: repeat(3, 1fr); }
+.ie-stk-sheet-sources .ie-swap-source { font-size: var(--ui-fs-footnote, 13px); }
+
+/* Room to breathe on a wide screen: the page keeps a phone's width. */
+@media (min-width: 720px) {
+  .ie-stk-body, .ie-stk > .ie-swap-actions { width: 100%; max-width: 520px; margin: 0 auto; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ie-stk-preview, .ie-stk-source, .ie-stk-style, .ie-stk-style-art svg { transition: none; }
+  .ie-stk-source:active, .ie-stk-style:active:not(:disabled) { transform: none; }
+  .ie-stk-style.is-on .ie-stk-style-art svg { transform: none; }
+}
+
+/* panels.css rounds every button in a sheet panel into a pill (.ie-panels--sheet button:not(…)),
+   with a selector too long to outrank: the page's own buttons keep their shapes. */
+.ie-stk .ie-stk-board-btn { border-radius: inherit !important; }
+.ie-stk .ie-stk-source { border-radius: var(--ui-radius-sm, 12px) !important; }
+.ie-stk .ie-stk-style { border-radius: var(--ui-radius-md, 16px) !important; }
