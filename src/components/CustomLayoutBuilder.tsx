@@ -266,7 +266,7 @@ export default function CustomLayoutBuilder({ onLayoutComplete, onSelectTemplate
   const grids = layouts.filter((l) => l.id !== '1-panel' && l.id !== '3-hybrid');
 
   return (
-    <div className="pg lb custom-layout-builder">
+    <div className="pg lb">
       <div className="pg-head">
         <h1 className="pg-title">Choose a layout</h1>
       </div>
@@ -275,7 +275,7 @@ export default function CustomLayoutBuilder({ onLayoutComplete, onSelectTemplate
         <span className="lb-blank-canvas pg-pic" aria-hidden="true" />
         <span className="lb-blank-text">
           <span className="lb-name">Blank canvas</span>
-          <span className="lb-sub">An empty square to build on</span>
+          <span className="lb-sub">An empty square</span>
         </span>
         <span className="lb-blank-go">Start</span>
       </button>
