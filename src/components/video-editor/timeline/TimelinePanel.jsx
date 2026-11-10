@@ -10,30 +10,12 @@ import TimelineClip from './TimelineClip';
 const USER_SCROLL_WINDOW_MS = 1500;
 
 const SECTION_ICONS = { video: SquarePlay, image: ImageIcon, text: Type, sticker: Sticker, audio: Music };
-// Each section's button names one of its clips: + Video, + Photo…
-const SECTION_NAMES = { video: 'Video', image: 'Photo', text: 'Text', sticker: 'Sticker', audio: 'Sound' };
-// Room for the widest button (+ Sticker) before the timeline's start.
-const ADD_BTN_W = 104;
-
-// A section's add button: + with its icon and name, the icon in the section's colour.
-function SectionAdd({ section, onAdd, style }) {
-  const Icon = SECTION_ICONS[section.id];
-  return (
-    <button type="button" className={`vt-sec-add vt-section--${section.id}`} style={style}
-      aria-label={section.add} title={section.add}
-      onClick={(e) => { e.stopPropagation(); onAdd?.(section.id); }}>
-      <Plus className="vt-sec-add-plus" size={13} strokeWidth={2.8} aria-hidden="true" />
-      <Icon size={15} strokeWidth={2} aria-hidden="true" />
-      <span>{SECTION_NAMES[section.id]}</span>
-    </button>
-  );
-}
 
 // Scrolling timeline with a fixed centre playhead: the tracks move under it. Scrolling scrubs,
 // playback scrolls, pinch or Ctrl+wheel zooms around the playhead. The tracks are five sections by
-// clip type (timelineSections), each with its add button (+ Photo…) just before the timeline's start,
-// scrolling with the clips. Empty sections (bar Videos, which shows Add a video) take no room: their
-// buttons wait together in one row at the bottom, each adding one (onAdd with the section's id).
+// clip type (timelineSections), each with its icon just before the timeline's start, scrolling with
+// the clips. Empty sections (bar Videos, which shows Add a video) take no room: their icons
+// wait together in one row at the bottom, each adding one (onAdd with the section's id).
 export default function TimelinePanel({ onAddVideo, onAdd }) {
   const { items, duration, activeItemId, selectedIds } = useEditorStore(
     useShallow((s) => ({ items: s.items, duration: s.duration, activeItemId: s.activeItemId, selectedIds: s.selectedIds }))
@@ -149,10 +131,12 @@ export default function TimelinePanel({ onAddVideo, onAdd }) {
 
           <div className="vt-tracks">
             {sections.map((section) => {
+              const Icon = SECTION_ICONS[section.id];
               return (
-                <div key={section.id} className={`vt-section vt-section--${section.id}`} role="group" aria-label={section.label}>
-                  <SectionAdd section={section} onAdd={onAdd}
-                    style={{ left: Math.max(6, pad - ADD_BTN_W - 8), width: Math.min(ADD_BTN_W, pad - 14) }} />
+                <div key={section.id} className={`vt-section vt-section--${section.id}`}>
+                  <div className="vt-section-icon" role="img" aria-label={section.label} style={{ left: pad - 46 }}>
+                    <Icon size={15} strokeWidth={1.9} aria-hidden="true" />
+                  </div>
                   <div className="vt-section-lines">
                     {section.lines.map((line) => (
                       <div key={line[0].id} className={`vt-row vt-row--${section.id}`}>
@@ -202,7 +186,17 @@ export default function TimelinePanel({ onAddVideo, onAdd }) {
             {waiting.length > 0 && (
               <div className="vt-section vt-section--waiting">
                 <div className="vt-waiting" role="group" aria-label="Add to the timeline">
-                  {waiting.map((section) => <SectionAdd key={section.id} section={section} onAdd={onAdd} />)}
+                  {waiting.map((section) => {
+                    const Icon = SECTION_ICONS[section.id];
+                    return (
+                      <button key={section.id} type="button" className={`vt-waiting-btn vt-section--${section.id}`}
+                        aria-label={section.add} title={section.add}
+                        onClick={(e) => { e.stopPropagation(); onAdd?.(section.id); }}>
+                        <Plus size={11} strokeWidth={2.6} aria-hidden="true" />
+                        <Icon size={15} strokeWidth={1.9} aria-hidden="true" />
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             )}

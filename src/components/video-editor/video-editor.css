@@ -377,8 +377,9 @@
   transform: translateX(-50%);
 }
 
-/* Five sections by clip type (Videos, Photos, Text, Stickers, Sounds). Each has an add button
-   (.vt-sec-add, below), in a hint of its clips' colour (--sec). A faint line across the tracks parts the sections. */
+/* Five sections by clip type (Videos, Photos, Text, Stickers, Sounds). A section's icon is a small
+   chip with a hint of its clips' colour (--sec), just before the timeline's start (left set inline),
+   so it scrolls away with the clips. A faint line across the tracks parts the sections. */
 .vt-tracks { display: flex; flex-direction: column; padding: 2px 0 12px; }
 .vt-section { position: relative; display: flex; padding: 5px 0; --sec: rgba(255, 255, 255, 0.85); }
 .vt-section--video { --sec: var(--vt-clip-video); }
@@ -396,36 +397,62 @@
   background: rgba(255, 255, 255, 0.06);
   pointer-events: none;
 }
-/* A section's add button (+ Photo…): a grey pill, its icon in the clips' colour, just before the
-   timeline's start (left and width set inline), so it scrolls away with the clips. */
-.vt-sec-add {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  height: 32px;
-  padding: 0 10px 0 8px;
-  border: none;
-  border-radius: 10px;
-  background: #2c2c2e;
-  color: var(--vt-text);
-  font: inherit;
-  font-size: 13px;
-  font-weight: 600;
-  white-space: nowrap;
-  cursor: pointer;
-  transition: background 0.15s ease;
+.vt-section-icon {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 40px;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  /* Quiet: mostly grey, a hint of the clips' colour. */
+  color: color-mix(in srgb, var(--sec) 45%, #8e8e93);
 }
-.vt-section > .vt-sec-add { position: absolute; top: 50%; z-index: 2; transform: translateY(-50%); }
-.vt-sec-add svg { flex: none; color: var(--sec); }
-.vt-sec-add .vt-sec-add-plus { color: var(--vt-text); opacity: 0.7; margin-right: -1px; }
-.vt-sec-add span { overflow: hidden; text-overflow: ellipsis; }
-.vt-sec-add:active { background: #3a3a3c; }
-.vt-sec-add:focus-visible { outline: 2px solid var(--vt-accent); outline-offset: 2px; }
-@media (hover: hover) { .vt-sec-add:hover { background: #3a3a3c; } }
-/* The empty sections' buttons, waiting in one row at the bottom, each adding one. */
+.vt-section-icon::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: color-mix(in srgb, var(--sec) 9%, transparent);
+}
+.vt-section-icon svg { position: relative; }
+/* The empty sections' icons, waiting in one row at the bottom: each a quiet chip that adds one. */
 .vt-section--waiting { padding: 10px 0 0; }
-.vt-waiting { position: sticky; left: 0; display: flex; flex-wrap: wrap; gap: 8px; width: 100vw; max-width: 100%; padding: 0 10px; box-sizing: border-box; }
+.vt-waiting { position: sticky; left: 0; display: flex; gap: 6px; padding-left: 10px; }
+.vt-waiting-btn {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.05);
+  color: color-mix(in srgb, var(--sec) 22%, #8e8e93);
+  cursor: pointer;
+}
+/* The + sits as a small badge on the circle's top right. */
+.vt-waiting-btn svg:first-child {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 14px;
+  height: 14px;
+  padding: 2px;
+  box-sizing: border-box;
+  border-radius: 50%;
+  background: #3a3a3c;
+  color: var(--vt-text);
+  box-shadow: 0 0 0 2px var(--vt-surface);
+}
+.vt-waiting-btn:active { background: rgba(255, 255, 255, 0.1); }
+.vt-waiting-btn:focus-visible { outline: 2px solid var(--vt-accent); outline-offset: 2px; }
+@media (hover: hover) { .vt-waiting-btn:hover { color: var(--vt-text); } }
 .vt-section-lines { flex: none; width: 100%; display: flex; flex-direction: column; gap: 6px; }
 .vt-row { position: relative; height: 36px; flex-shrink: 0; }
 .vt-row--video { height: 50px; }
