@@ -1,229 +1,89 @@
-/* ==========================================================================
-   FLAGSHIP CURVX LIQUID MY GALLERY
-   Continuous Squircles (24px), Frosted Glass Cards, Micro-Interactions
-   ========================================================================== */
+/* My saved memes (My Studio), on the shared page look (pages/pageLook.css). */
 
-.my-gallery {
-  position: relative;
-  z-index: 1;
-  padding-bottom: 24px;
-}
+.gl-section + .gl-section { margin-top: 24px; }
+.pg .gl-section-title { margin-bottom: 10px; color: var(--pg-text); font-size: 17px; font-weight: 700; }
+.gl-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+@media (min-width: 600px) { .gl-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (min-width: 900px) { .gl-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 
-.gallery-header {
-  margin-bottom: 28px;
-  text-align: center;
-}
-
-.gallery-title {
-  margin: 0 0 6px;
-  font-size: 2rem;
-  font-weight: 800;
-  font-family: 'Plus Jakarta Sans', Inter, system-ui, -apple-system, sans-serif;
-  background: var(--primary-gradient);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  color: var(--text-main);
-  letter-spacing: -0.025em;
-}
-
-[data-theme='light'] .gallery-title {
-  background: linear-gradient(135deg, #171310 30%, #ff5e36 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.gallery-subtitle {
-  color: #ffffff !important;
-  font-size: 0.92rem;
-  font-weight: 500;
-  margin: 0 auto;
-  max-width: 480px;
-}
-
-.gallery-grid {
-  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
-  gap: 16px;
-  display: grid;
-}
-
-@media (min-width: 640px) {
-  .gallery-grid {
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 20px;
-  }
-}
-
-.gallery-card {
-  border-radius: 24px !important;
-  background: var(--bg-surface-1) !important;
-  border: 1px solid var(--glass-border) !important;
-  box-shadow: var(--shadow-card) !important;
-  overflow: hidden;
+/* A tile: the picture, then the name and date with Delete beside them. */
+.gl-thumb { position: relative; aspect-ratio: 1 / 1; margin: 6px 6px 0; overflow: hidden; border-radius: 11px; background: #000; }
+.gl-thumb img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.gl-time { position: absolute; bottom: 6px; left: 6px; }
+.gl-info { display: flex; align-items: center; gap: 4px; padding: 8px 4px 10px 12px; }
+.gl-text { display: flex; flex: 1; flex-direction: column; min-width: 0; }
+.gl-name { overflow: hidden; color: var(--pg-text); font-size: 14px; font-weight: 700; line-height: 1.25; white-space: nowrap; text-overflow: ellipsis; }
+.gl-date { color: var(--pg-muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.gl-tile-delete {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  color: var(--pg-muted);
   cursor: pointer;
-  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease, border-color 0.25s ease;
+}
+@media (hover: hover) { .gl-tile-delete:hover { background: var(--pg-surface-2); color: var(--pg-danger); } }
+
+/* The viewer: black backdrop (no blur), a grey sheet up from the bottom; centred on a wide screen. */
+body:has(.gl-viewer) { overflow: hidden; overscroll-behavior: none; }
+.gl-viewer {
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.78);
+  animation: gl-fade 0.18s ease-out;
+}
+.gl-sheet {
   display: flex;
   flex-direction: column;
-}
-
-.gallery-card:hover {
-  transform: translateY(-4px);
-  border-color: rgba(255, 94, 54, 0.35) !important;
-  box-shadow: 0 16px 36px -8px var(--primary-glow), var(--shadow-card) !important;
-}
-
-.gallery-image-wrapper {
-  aspect-ratio: 1;
-  position: relative;
-  background: var(--bg-surface-2);
-  overflow: hidden;
-}
-
-.gallery-image-wrapper img {
-  object-fit: cover;
   width: 100%;
-  height: 100%;
-  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  max-width: 520px;
+  max-height: calc(100dvh - 24px - env(safe-area-inset-top, 0px));
+  padding: 14px 16px calc(16px + env(safe-area-inset-bottom, 0px));
+  overflow-y: auto;
+  border-radius: 20px 20px 0 0;
+  background: var(--pg-surface);
+  animation: gl-up 0.26s var(--pg-ease);
 }
-
-.gallery-card:hover .gallery-image-wrapper img {
-  transform: scale(1.05);
+@media (min-width: 600px) {
+  .gl-viewer { align-items: center; }
+  .gl-sheet { border-radius: 20px; padding-bottom: 16px; }
 }
-
-.gallery-info {
-  justify-content: space-between;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 14px;
-  display: flex;
-  background: var(--bg-surface-1);
-  border-top: 1px solid var(--glass-border);
-}
-
-.gallery-info h4 {
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  margin: 0 0 2px;
-  font-size: 0.92rem;
-  font-weight: 700;
-  color: var(--text-main);
-  overflow: hidden;
-}
-
-.gallery-date {
-  color: var(--text-muted);
-  font-size: 0.72rem;
-  font-weight: 500;
-  display: block;
-}
-
-.gallery-delete-btn {
-  background: rgba(239, 68, 68, 0.12);
-  border: 1px solid rgba(239, 68, 68, 0.25);
-  color: #ef4444;
-  border-radius: 10px;
-  width: 32px;
-  height: 32px;
-  display: flex;
+.gl-sheet-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.pg-layer .gl-sheet-title { overflow: hidden; color: var(--pg-text); font-size: 17px; font-weight: 700; white-space: nowrap; text-overflow: ellipsis; }
+.gl-close {
+  display: inline-flex;
+  flex: none;
   align-items: center;
   justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: #000;
+  color: var(--pg-text);
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  flex-shrink: 0;
 }
+.gl-media { display: block; max-width: 100%; max-height: 56dvh; margin: 0 auto; border-radius: 12px; background: #000; object-fit: contain; }
+.pg-layer .gl-note { margin-top: 10px; color: var(--pg-muted); font-size: 13px; text-align: center; }
+.gl-actions { display: flex; gap: 8px; margin-top: 16px; }
+.gl-actions .pg-btn { flex: 1; height: 44px; padding: 0 10px; }
+/* Black controls on the grey sheet; Delete in red text. */
+.gl-actions .pg-btn:not(.pg-btn--accent) { background: #000; }
+.gl-actions .pg-btn:disabled { opacity: 0.45; cursor: default; }
+.gl-delete { color: var(--pg-danger) !important; }
+@media (hover: hover) { .gl-actions .pg-btn:not(.pg-btn--accent):not(:disabled):hover { background: #0d0d0e; } }
 
-.gallery-delete-btn:hover {
-  background: #ef4444;
-  border-color: #ef4444;
-  color: #ffffff;
-  transform: scale(1.08);
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
-}
-
-/* Danger Pill in Modal */
-.btn-danger-pill {
-  background: rgba(239, 68, 68, 0.14) !important;
-  border: 1px solid rgba(239, 68, 68, 0.35) !important;
-  color: #ef4444 !important;
-  border-radius: var(--radius-pill) !important;
-  padding: 10px 20px !important;
-  font-weight: 700 !important;
-  font-size: 0.88rem !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  gap: 8px !important;
-  cursor: pointer !important;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
-}
-
-.btn-danger-pill:hover {
-  background: #ef4444 !important;
-  border-color: #ef4444 !important;
-  color: #ffffff !important;
-  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.4) !important;
-  transform: translateY(-2px);
-}
-
-/* Empty State */
-.empty-state {
-  text-align: center;
-  max-width: 440px;
-  margin: 30px auto;
-  padding: 48px 24px;
-  border-radius: var(--radius-xl, 32px);
-}
-
-.empty-icon-wrap {
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  background: rgba(255, 94, 54, 0.12);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.empty-icon {
-  width: 32px;
-  height: 32px;
-  color: var(--primary-accent);
-}
-
-[data-theme='light'] .gallery-subtitle {
-  color: #475569 !important;
-}
-
-/* Videos saved from the video editor: a section above the memes, each card's still with a play
-   badge and its length. */
-.gallery-section { margin-bottom: 28px; }
-.gallery-section-title { margin: 0 0 12px; font-size: 1.05rem; font-weight: 800; color: var(--text-main); }
-.gallery-video-thumb { position: relative; background: #000; }
-.gallery-video-play {
-  position: absolute;
-  inset: 0;
-  margin: auto;
-  width: 38px;
-  height: 38px;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  background: rgba(0, 0, 0, 0.55);
-  color: #fff;
-  pointer-events: none;
-}
-.gallery-video-time {
-  position: absolute;
-  right: 8px;
-  bottom: 8px;
-  padding: 2px 7px;
-  border-radius: 7px;
-  background: rgba(0, 0, 0, 0.7);
-  color: #fff;
-  font-size: 11px;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  pointer-events: none;
-}
-.gallery-video-player { display: block; max-width: 100%; max-height: 52vh; margin: 0 auto; border-radius: 16px; background: #000; }
-.gallery-video-note { margin: 10px 0 0; color: var(--text-muted); font-size: 0.85rem; }
+@keyframes gl-fade { from { opacity: 0; } }
+@keyframes gl-up { from { transform: translateY(24px); opacity: 0.6; } }
+@media (prefers-reduced-motion: reduce) { .gl-viewer, .gl-sheet { animation: none; } }

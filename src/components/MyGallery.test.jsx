@@ -34,6 +34,15 @@ describe('MyGallery', () => {
     expect(screen.getByText(/no saved memes yet/i)).toBeTruthy();
   });
 
+  it('sends the empty state to Explore', () => {
+    const onBrowseTemplates = vi.fn();
+    render(
+      <MyGallery savedMemes={[]} galleryReady onDeleteMeme={() => {}} onSelectMeme={() => {}} onBrowseTemplates={onBrowseTemplates} />
+    );
+    fireEvent.click(screen.getByRole('button', { name: /explore templates/i }));
+    expect(onBrowseTemplates).toHaveBeenCalled();
+  });
+
   it('renders thumbnails with Unknown date fallback', () => {
     render(
       <MyGallery
@@ -74,7 +83,7 @@ describe('MyGallery', () => {
         onSelectMeme={() => {}}
       />
     );
-    fireEvent.click(screen.getAllByTitle('Delete Meme')[0]);
+    fireEvent.click(screen.getAllByTitle('Delete meme')[0]);
     expect(onDeleteMeme).toHaveBeenCalledWith('meme-1');
   });
 });

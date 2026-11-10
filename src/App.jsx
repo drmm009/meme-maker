@@ -737,6 +737,7 @@ function App() {
                   onOpenVideo={handleOpenVideo}
                   onDeleteVideo={handleDeleteVideo}
                   onGetVideoFile={getSavedVideoFile}
+                  onBrowseTemplates={() => setCurrentView('explore')}
                 />
               </Suspense>
             </motion.div>

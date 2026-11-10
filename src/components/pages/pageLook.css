@@ -2,7 +2,8 @@
    look (video-editor.css, editor/panels/sheetLook.css): pitch black, cards and controls in iOS greys,
    solid orange for what's primary or picked, heading icons in plain orange with no circle, a faint
    light hairline around pictures; no gradients, glows, glass or blur. Always dark.
-   A page's root carries `pg`; the classes below are its parts. */
+   A page's root carries `pg`; the classes below are its parts. Something the page portals out of
+   itself (a viewer over the page) carries `pg-layer` for the same tokens and base. */
 
 /* Pitch black behind the page while one is showing (the layout chooser stays mounted, hidden, so
    only a visible one counts). The app shell's glow lives in App.css. */
@@ -14,7 +15,7 @@ body:has(.pg:not(.hidden-view *)),
 /* The shell's fixed glow layer paints over in-flow content's background, so it's hidden, not recoloured. */
 .app-root:has(.pg:not(.hidden-view *)) .app-static-bg { display: none !important; }
 
-.pg {
+.pg, .pg-layer {
   --pg-bg: #000000;
   --pg-surface: #1c1c1e;
   --pg-surface-2: #2c2c2e;
@@ -33,20 +34,18 @@ body:has(.pg:not(.hidden-view *)),
 
   color-scheme: dark;
   box-sizing: border-box;
-  max-width: 760px;
-  margin: 0 auto;
-  padding: 8px 6px 56px;
   color: var(--pg-text);
   font-family: var(--pg-font);
   font-size: 15px;
   line-height: 1.4;
   -webkit-tap-highlight-color: transparent;
 }
-.pg *, .pg *::before, .pg *::after { box-sizing: border-box; }
-:where(.pg) button { font-family: inherit; color: inherit; }
-.pg ::selection { background: rgba(255, 90, 54, 0.4); color: #fff; }
-.pg :focus-visible { outline: 2px solid var(--pg-accent); outline-offset: 2px; }
-.pg :is(h1, h2, h3, h4, p) { margin: 0; }
+.pg { max-width: 760px; margin: 0 auto; padding: 8px 6px 56px; }
+:is(.pg, .pg-layer) *, :is(.pg, .pg-layer) *::before, :is(.pg, .pg-layer) *::after { box-sizing: border-box; }
+:where(.pg, .pg-layer) button { font-family: inherit; color: inherit; }
+:is(.pg, .pg-layer) ::selection { background: rgba(255, 90, 54, 0.4); color: #fff; }
+:is(.pg, .pg-layer) :focus-visible { outline: 2px solid var(--pg-accent); outline-offset: 2px; }
+:is(.pg, .pg-layer) :is(h1, h2, h3, h4, p) { margin: 0; }
 
 /* ── Page title ─────────────────────────────────────────── */
 .pg-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 4px 0 16px; }
