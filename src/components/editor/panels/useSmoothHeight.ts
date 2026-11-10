@@ -9,8 +9,11 @@ const EASE = 'cubic-bezier(0.32, 0.72, 0, 1)';
 // old height and transitions to the new one, then goes back to auto. Changes from React are caught
 // before paint by the layout effect, others by a ResizeObserver (also before paint). Off with reduced
 // motion, and while `skip` (the full-height library sheets) or in tests.
-export function useSmoothHeight(ref: RefObject<HTMLElement | null>, skip: boolean) {
+// `content`, when given, names what the element shows: mid-glide, a render that keeps it the same
+// leaves the glide running (a restart each render would keep easing and land late).
+export function useSmoothHeight(ref: RefObject<HTMLElement | null>, skip: boolean, content?: string) {
   const last = useRef(0);
+  const shown = useRef(content);
   const animating = useRef(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const skipRef = useRef(skip);
@@ -54,7 +57,11 @@ export function useSmoothHeight(ref: RefObject<HTMLElement | null>, skip: boolea
     timer.current = setTimeout(() => settle(el), DURATION_MS + 30);
   };
 
-  useLayoutEffect(run);
+  useLayoutEffect(() => {
+    if (animating.current && content !== undefined && content === shown.current) return;
+    shown.current = content;
+    run();
+  });
 
   useEffect(() => {
     const el = ref.current;

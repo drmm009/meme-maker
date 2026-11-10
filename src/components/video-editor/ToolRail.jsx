@@ -591,7 +591,7 @@ export default function ToolRail({ onAdd, timelineOpen = false, ref }) {
   }, [spec, hasClip]);
   // A short sheet grows the bottom up out of the bar (and shrinks it back on closing), so the preview
   // above resizes with it frame by frame, as when the timeline opens. A tall one floats, so it's left out.
-  useSmoothHeight(wrapRef, floats);
+  useSmoothHeight(wrapRef, floats, `${sheet}|${activeItem?.id ?? ''}|${picked.length}`);
 
   const runTool = (tool) => {
     if (tool.panel || tool.sources) toggle(tool.kind);
