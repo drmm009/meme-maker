@@ -21,6 +21,7 @@ import { useMemeDraft } from './editor/hooks/useMemeDraft';
 import { useStickerMaker } from './editor/hooks/useStickerMaker';
 import { useCustomFonts } from './editor/hooks/useCustomFonts';
 import EditorTopBar from './editor/top-bar/EditorTopBar';
+import StickerTopBar from './editor/top-bar/StickerTopBar';
 import CanvasStage from './editor/CanvasStage';
 import EditorModals from './editor/EditorModals';
 import DraftOffer from './editor/DraftOffer';
@@ -139,7 +140,8 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, c
 
   return (
     <div className="meme-editor-container ui-theme animate-fade-in">
-      <EditorTopBar onBack={onBack} />
+      {/* The Stickers maker has its own bar, with its steps. */}
+      {mode === 'sticker' ? <StickerTopBar onBack={onBack} /> : <EditorTopBar onBack={onBack} />}
 
       {draft.offer && <DraftOffer offer={draft.offer} onRestore={draft.restore} onDismiss={draft.dismiss} />}
       {/* The tour explains the full editor's tabs; the makers explain themselves. */}

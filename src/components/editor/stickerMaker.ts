@@ -68,3 +68,10 @@ export const stickerExportPrefs = (prefs: ExportPrefs): ExportPrefs => ({
   transparent: true,
   width: STICKER_SIZE,
 });
+
+// Where a sticker stands (the Stickers top bar's steps): 0 with no photo, 1 with a photo not cut
+// out yet (picking its style), 2 once every photo is cut out.
+export function stickerStep(layers: { originalUrl?: string | null }[]): 0 | 1 | 2 {
+  if (!layers.length) return 0;
+  return layers.every((l) => Boolean(l.originalUrl)) ? 2 : 1;
+}

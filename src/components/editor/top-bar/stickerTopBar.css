@@ -1,0 +1,153 @@
+/* The Stickers maker's top bar (StickerTopBar): a row of Back, the title on its green tile and the
+   undo/redo capsule, then the step track. Editor greys, orange for the step it's on; no glass. */
+.stb {
+  --stb-tone: #14c08a;
+  flex: none;
+  padding: calc(8px + env(safe-area-inset-top, 0px)) 14px 10px;
+  color: var(--ui-text, #f4f4f6);
+  font-family: var(--ui-font, 'Plus Jakarta Sans', Inter, system-ui, sans-serif);
+}
+.stb-row {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 8px;
+}
+.stb button { font: inherit; -webkit-tap-highlight-color: transparent; }
+.stb button:focus-visible { outline: 2px solid var(--ui-accent, #ff5a36); outline-offset: 2px; }
+
+.stb-round {
+  justify-self: start;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: var(--ui-surface, #1c1c1e);
+  color: var(--ui-text, #f4f4f6);
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.1s ease;
+}
+.stb-round svg { margin-left: -2px; }
+.stb-round:active { transform: scale(0.92); }
+
+.stb .stb-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: var(--ui-text, #f4f4f6);
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+/* The title's tile: white scissors on Home's Stickers green, lit from the top. */
+.stb-tile {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--stb-tone) 80%, #fff) 0%, var(--stb-tone) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  color: #fff;
+}
+
+.stb-history {
+  justify-self: end;
+  display: flex;
+  height: 40px;
+  padding: 0 2px;
+  border-radius: 999px;
+  background: var(--ui-surface, #1c1c1e);
+}
+.stb-history-btn {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 40px;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: none;
+  color: var(--ui-text, #f4f4f6);
+  cursor: pointer;
+  transition: color 0.15s ease, transform 0.1s ease;
+}
+.stb-history-btn:disabled { color: #5b5c63; cursor: default; }
+.stb-history-btn:active:not(:disabled) { transform: scale(0.9); }
+@media (hover: hover) {
+  .stb-round:hover { background: #2a2a2d; }
+  .stb-history-btn:hover:not(:disabled) { color: #fff; background: rgba(255, 255, 255, 0.06); }
+}
+
+/* ── Steps: three dots joined by lines, the label beside each ── */
+.stb-steps {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 2px 0;
+  padding: 0;
+  list-style: none;
+}
+.stb-step {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  color: var(--ui-muted, #a5a6ad);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: color 0.2s ease;
+}
+/* The line to the next step fills the room between them, orange once that step is reached. */
+.stb-step:not(:last-child) { flex: 1; }
+.stb-step:not(:last-child)::after {
+  content: '';
+  flex: 1;
+  height: 2px;
+  min-width: 12px;
+  border-radius: 1px;
+  background: #2c2c2e;
+  transition: background-color 0.25s ease;
+}
+.stb-step.is-done::after { background: var(--ui-accent, #ff5a36); }
+.stb-dot {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: #2c2c2e;
+  color: var(--ui-muted, #a5a6ad);
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+.stb-step.is-now { color: var(--ui-text, #f4f4f6); }
+.stb-step.is-now .stb-dot { background: var(--ui-accent, #ff5a36); color: #fff; box-shadow: 0 0 0 4px rgba(255, 90, 54, 0.18); }
+.stb-step.is-done { color: var(--ui-text, #f4f4f6); }
+.stb-step.is-done .stb-dot { background: rgba(255, 90, 54, 0.18); color: var(--ui-accent-text, #ff7652); }
+
+/* Where it stands, in words, for screen readers only (the track says it to the eye). */
+.stb .stb-status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stb-round, .stb-history-btn, .stb-step, .stb-dot, .stb-step::after { transition: none; }
+  .stb-round:active, .stb-history-btn:active:not(:disabled) { transform: none; }
+}
