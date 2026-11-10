@@ -1,0 +1,59 @@
+/* Home's makers grid, in the editors' look (see pages/pageLook.css): grey cards, plain orange icons;
+   no gradients, glows or glass. Three across, then two. */
+
+.hh-tools {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px;
+  margin: 12px 0 8px;
+  font-family: 'Plus Jakarta Sans', Inter, system-ui, -apple-system, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+.hh-tool {
+  grid-column: span 2;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  min-height: 86px;
+  padding: 14px 12px 12px;
+  border: none;
+  border-radius: 18px;
+  background: #1c1c1e;
+  color: #f4f4f6;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.15s cubic-bezier(0.2, 0.8, 0.2, 1), transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.hh-tool:nth-child(n + 4) {
+  grid-column: span 3;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  min-height: 56px;
+}
+.hh-tool:active { transform: scale(0.97); }
+.hh-tool:focus-visible { outline: 2px solid #ff5a36; outline-offset: 2px; }
+@media (hover: hover) { .hh-tool:hover { background: #242426; } }
+.hh-tool-icon { flex: none; width: 24px; height: 24px; color: #ff5a36; }
+.hh-tool-label { overflow: hidden; font-size: 14px; font-weight: 700; line-height: 1.2; white-space: nowrap; text-overflow: ellipsis; }
+
+@media (min-width: 720px) {
+  .hh-tools { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  .hh-tool, .hh-tool:nth-child(n + 4) {
+    grid-column: span 1;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: space-between;
+    min-height: 86px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hh-tool { transition: none; }
+  .hh-tool:active { transform: none; }
+}

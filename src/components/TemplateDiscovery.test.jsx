@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import React from 'react';
-import { render, screen, fireEvent, cleanup } from '@testing-library/react';
+import { render, screen, fireEvent, cleanup, within } from '@testing-library/react';
 import TemplateDiscovery from './TemplateDiscovery';
 import { templateNumericId } from '../utils/templateOrder';
 
@@ -11,6 +11,9 @@ afterEach(() => {
 });
 
 function stubBrowserAPIs() {
+  if (typeof window !== 'undefined') {
+    window.__PAUSE_CAROUSEL__ = true;
+  }
   if (!window.matchMedia) {
     window.matchMedia = () => ({
       matches: false,
@@ -34,7 +37,7 @@ describe('TemplateDiscovery', () => {
 
   it('renders hero actions and curated shelves without search bar', () => {
     render(<TemplateDiscovery onSelectTemplate={() => {}} onCreateCustom={() => {}} />);
-    expect(screen.getByRole('heading', { name: /make a meme/i })).toBeTruthy();
+    expect(screen.getAllByText(/unleash your/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/trending memes/i)).toBeTruthy();
     expect(screen.queryByPlaceholderText(/search templates/i)).toBeNull();
   }, 60000);
@@ -53,6 +56,20 @@ describe('TemplateDiscovery', () => {
     fireEvent.click(seeAllButtons[0]);
     expect(onNavigateExplore).toHaveBeenCalled();
   }, 30000);
+
+  it('shows the makers as tiles under the carousel', () => {
+    const onSelectTemplate = vi.fn();
+    const onCreateCustom = vi.fn();
+    render(<TemplateDiscovery onSelectTemplate={onSelectTemplate} onCreateCustom={onCreateCustom} />);
+    const tiles = screen.getByRole('navigation', { name: 'Makers' });
+    for (const name of ['Meme video', 'Stickers', 'Face swap', 'Social card', 'AI meme']) {
+      expect(within(tiles).getByRole('button', { name })).toBeTruthy();
+    }
+    fireEvent.click(within(tiles).getByRole('button', { name: 'Meme video' }));
+    expect(onCreateCustom).toHaveBeenCalledWith('video');
+    fireEvent.click(within(tiles).getByRole('button', { name: 'Face swap' }));
+    expect(onSelectTemplate).toHaveBeenCalledWith(expect.objectContaining({ editorMode: 'faceswap' }));
+  });
 
   it('templateNumericId never returns NaN', () => {
     const ids = [{ id: 'imgflip-1' }, { id: 'giphy-abc', trendingScore: 3 }, { id: undefined }];
@@ -74,29 +91,29 @@ describe('TemplateDiscovery', () => {
       />
     );
 
-    // The Create card and all five makers show at once (no carousel)
-    expect(screen.getByRole('button', { name: 'Stickers' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Face swap' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Meme video' })).toBeTruthy();
+    // Verify all 6 feature containers render
+    expect(screen.getByRole('button', { name: 'Generate Stickers' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Face Swap' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Create Viral Video' })).toBeTruthy();
     expect(screen.getByRole('button', { name: /start creating/i })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Upload' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Social card' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'AI meme' })).toBeTruthy();
+    expect(screen.getAllByRole('button', { name: 'Upload' }).length).toBeGreaterThan(0);
+    expect(screen.getByRole('button', { name: 'Social Cards' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'AI Punchlines' })).toBeTruthy();
 
     // Click Face Swap
-    fireEvent.click(screen.getByRole('button', { name: 'Face swap' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Face Swap' }));
     expect(onSelectTemplate).toHaveBeenCalledWith(
       expect.objectContaining({ editorMode: 'faceswap' })
     );
 
     // Click Generate Stickers
-    fireEvent.click(screen.getByRole('button', { name: 'Stickers' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Generate Stickers' }));
     expect(onSelectTemplate).toHaveBeenCalledWith(
       expect.objectContaining({ editorMode: 'sticker', canvasBgColor: 'transparent', defaultCaptions: [] })
     );
 
     // Click Video Trimming
-    fireEvent.click(screen.getByRole('button', { name: 'Meme video' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Create Viral Video' }));
     expect(onCreateCustom).toHaveBeenCalledWith('video');
 
     // Click Create Now
@@ -104,7 +121,7 @@ describe('TemplateDiscovery', () => {
     expect(onCreateCustom).toHaveBeenCalledWith('image');
 
     // Click AI Punchlines: the AI Meme maker, on an image meme (not a social card)
-    fireEvent.click(screen.getByRole('button', { name: 'AI meme' }));
+    fireEvent.click(screen.getByRole('button', { name: 'AI Punchlines' }));
     expect(onSelectTemplate).toHaveBeenLastCalledWith(expect.objectContaining({ editorMode: 'ai', aiPrompt: '' }));
     expect(onSelectTemplate.mock.lastCall[0].category).not.toBe('social');
     expect(onOpenAiGenerator).not.toHaveBeenCalled();
