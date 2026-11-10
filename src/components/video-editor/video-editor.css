@@ -52,6 +52,9 @@
 /* Edge to edge while the timeline is closed, but always below the top bar: a tall canvas (9:16)
    fits the height and would otherwise reach up under Back, the size menu and Export. */
 .vt-editor.is-preview .vt-stage { padding: calc(62px + var(--vt-safe-top)) 0 0; }
+/* With the timeline open the top bar steps away (undo and redo move to the play row), so the canvas
+   grows up into its room, short of the status bar. */
+.vt-editor.is-edit .vt-stage { padding-top: calc(12px + var(--vt-safe-top)); }
 
 .vt-stage-frame {
   position: relative;
@@ -145,6 +148,8 @@
   gap: 8px;
   height: 40px;
 }
+.vt-back, .vt-top-actions { transition: opacity 0.25s ease, transform 0.35s var(--vt-ease), visibility 0.35s; }
+.vt-editor.is-edit :is(.vt-back, .vt-top-actions) { opacity: 0; visibility: hidden; transform: translateY(-12px); pointer-events: none; }
 .vt-export { position: relative; }
 .vt-export-btn { gap: 7px; padding: 0 14px 0 13px; }
 .vt-export-btn:active:not(:disabled) { transform: scale(0.96); }
@@ -287,9 +292,12 @@
   transition: color 0.2s;
 }
 .vt-icon-btn:disabled { color: rgba(255, 255, 255, 0.2); cursor: default; }
-/* Opens and closes the timeline, where undo and redo were. */
+/* The row's right end: Edit; or, with the timeline open, undo and redo then a round Done chevron. */
+.vt-transport-end { justify-self: end; display: flex; align-items: center; gap: 8px; }
+.vt-transport-end .vt-history { animation: vt-fade-in 0.2s ease-out; }
+.vt-transport-end .vt-icon-btn { width: 36px; }
+/* Opens and closes the timeline. */
 .vt-mode-btn {
-  justify-self: end;
   display: flex;
   align-items: center;
   gap: 4px;
@@ -305,6 +313,8 @@
   transition: transform 0.15s var(--vt-ease);
 }
 .vt-mode-btn:active { transform: scale(0.95); }
+.vt-mode-btn.is-edit { width: 40px; padding: 0; justify-content: center; }
+.vt-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .vt-mode-btn { transition: transform 0.15s var(--vt-ease), opacity 0.2s ease, visibility 0.2s; }
 
 /* ── Deck: the timeline and the bottom bar as one rounded panel ─

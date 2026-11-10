@@ -282,6 +282,14 @@ export default function VideoEditor({ template, onBack, onSaved }) {
     if (e.target === e.currentTarget) useEditorStore.getState().setActiveItem(null);
   };
 
+  // Undo and redo: in the top bar, or in the play row while the timeline is open.
+  const history = (
+    <div className="vt-history">
+      <button type="button" className="vt-icon-btn" onClick={() => undo()} disabled={!canUndo} aria-label="Undo" title="Undo"><Undo2 size={19} /></button>
+      <button type="button" className="vt-icon-btn" onClick={() => redo()} disabled={!canRedo} aria-label="Redo" title="Redo"><Redo2 size={19} /></button>
+    </div>
+  );
+
   return (
     <div className={`vt-editor ui-theme is-${mode}`}>
       <AudioSync />
@@ -301,12 +309,10 @@ export default function VideoEditor({ template, onBack, onSaved }) {
           <ChevronLeft size={22} strokeWidth={2.3} />
         </button>
 
-        {/* Undo and redo, then the canvas size (while the timeline is closed), then Export. */}
+        {/* Undo and redo, then the canvas size, then Export. While the timeline is open the whole top
+            bar steps away to give the canvas the room (undo and redo move to the play row). */}
         <div className="vt-top-actions">
-          <div className="vt-history">
-            <button type="button" className="vt-icon-btn" onClick={() => undo()} disabled={!canUndo} aria-label="Undo" title="Undo"><Undo2 size={19} /></button>
-            <button type="button" className="vt-icon-btn" onClick={() => redo()} disabled={!canRedo} aria-label="Redo" title="Redo"><Redo2 size={19} /></button>
-          </div>
+          {mode === 'preview' && history}
           {mode === 'preview' && (
             <div className="vt-ratio">
               <SizeMenu sizes={sizes} value={sizeIn(sizes, canvasAspectRatio)} onPick={(v) => changeAspectRatio(sizes.find((s) => s.value === v).ratio)} />
@@ -403,11 +409,16 @@ export default function VideoEditor({ template, onBack, onSaved }) {
             {isPlaying ? <Pause size={20} fill="currentColor" /> : <Play size={20} fill="currentColor" style={{ marginLeft: 2 }} />}
           </button>
         </div>
-        {/* Opens the timeline up out of the bottom bar, and puts it away again. */}
-        <button type="button" className="vt-mode-btn" onClick={() => setMode(mode === 'edit' ? 'preview' : 'edit')} aria-expanded={mode === 'edit'}>
-          <span>{mode === 'edit' ? 'Done' : 'Edit'}</span>
-          {mode === 'edit' ? <ChevronDown size={19} strokeWidth={2.5} aria-hidden="true" /> : <ChevronUp size={19} strokeWidth={2.5} aria-hidden="true" />}
-        </button>
+        {/* Opens the timeline up out of the bottom bar, and puts it away again: with it open, just a
+            chevron (Done) after undo and redo, the top bar being away. */}
+        <div className="vt-transport-end">
+          {mode === 'edit' && history}
+          <button type="button" className={`vt-mode-btn${mode === 'edit' ? ' is-edit' : ''}`} onClick={() => { setMenuOpen(false); setMode(mode === 'edit' ? 'preview' : 'edit'); }}
+            aria-expanded={mode === 'edit'} title={mode === 'edit' ? 'Done' : undefined}>
+            <span className={mode === 'edit' ? 'vt-sr' : undefined}>{mode === 'edit' ? 'Done' : 'Edit'}</span>
+            {mode === 'edit' ? <ChevronDown size={20} strokeWidth={2.5} aria-hidden="true" /> : <ChevronUp size={19} strokeWidth={2.5} aria-hidden="true" />}
+          </button>
+        </div>
       </div>
 
       {/* One panel: the timeline opens up out of the bottom bar. */}

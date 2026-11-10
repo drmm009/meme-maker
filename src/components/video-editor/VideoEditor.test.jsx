@@ -81,7 +81,11 @@ describe('VideoEditor', () => {
     fireEvent.click(screen.getByText('Edit'));
     expect(container.querySelector('.vt-editor.is-edit')).toBeTruthy();
     expect(screen.queryByRole('group', { name: 'Start your video' })).toBeNull();
+    // The top bar steps away; undo and redo move to the play row, before Done.
+    expect(container.querySelector('.vt-top-actions .vt-history')).toBeNull();
+    expect([...container.querySelectorAll('.vt-transport-end button')].map((b) => b.getAttribute('aria-label') || b.textContent)).toEqual(['Undo', 'Redo', 'Done']);
     fireEvent.click(screen.getByText('Done'));
+    expect(container.querySelector('.vt-top-actions .vt-history')).toBeTruthy();
     expect(screen.getByRole('group', { name: 'Start your video' })).toBeTruthy();
     expect(container.querySelector('.vt-timeline-wrap').textContent).toContain('Add a video');
     // Every add tool on one row, no Back.
