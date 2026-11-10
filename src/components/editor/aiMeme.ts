@@ -67,3 +67,7 @@ export const AI_CAPTION_STYLES = [
 // The style a caption has (by its font and colour), or null once those are changed by hand.
 export const aiCaptionStyleOf = (cap: { fontFamily?: unknown; color?: unknown }) =>
   AI_CAPTION_STYLES.find((s) => s.look.fontFamily === cap.fontFamily && s.look.color === cap.color)?.id ?? null;
+
+// Where an AI meme stands (the AI Meme top bar's steps): 0 with no picture, 1 with a meme to write
+// on, 2 once Generate has made it.
+export const aiStep = (t: { imageUrl?: unknown; aiPicked?: unknown } | null): 0 | 1 | 2 => (t?.aiPicked ? 2 : t?.imageUrl ? 1 : 0);

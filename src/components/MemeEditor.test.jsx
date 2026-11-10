@@ -1382,7 +1382,7 @@ describe('MemeEditor', () => {
     expect(card().waMessages[0].text).toBe('hi');
   }, 30000);
 
-  it('the AI Meme maker opens on its chat page (ideas, the meme, vibe and key pills, the message box); sending makes the meme, whose Shuffle switches between the AI captions', async () => {
+  it('the AI Meme maker opens on its page (the meme with Change, the idea box, ideas and vibes as chips, the key line); sending makes the meme, whose Shuffle switches between the AI captions', async () => {
     localStorage.removeItem('gemini_api_key');
     renderEditor({ ...TEMPLATE, editorMode: 'ai', aiPrompt: 'mondays' });
     const page = () => screen.getByRole('region', { name: 'Make an AI meme' });
@@ -1403,13 +1403,11 @@ describe('MemeEditor', () => {
     expect(screen.queryByRole('dialog', { name: 'Your meme' })).toBeNull();
     expect(within(page()).getByRole('button', { name: `Meme: ${pickedName}` })).toBeTruthy();
     expect(within(page()).getByLabelText("What's it about?").value).toBe('mondays');
-    // The vibe pill opens the vibes; a pick closes the sheet.
-    fireEvent.click(within(page()).getByRole('button', { name: 'Vibe: Anything' }));
-    const vibes = screen.getByRole('radiogroup', { name: 'Choose a vibe' });
-    expect(within(vibes).getByRole('radio', { name: /Anything/ }).getAttribute('aria-checked')).toBe('true');
-    fireEvent.click(within(vibes).getByRole('radio', { name: /Tech & Code/ }));
-    expect(screen.queryByRole('dialog', { name: 'Choose a vibe' })).toBeNull();
-    expect(within(page()).getByRole('button', { name: 'Vibe: Tech & Code' })).toBeTruthy();
+    // The vibes are chips on the page, Anything picked to start.
+    const vibe = (name) => within(within(page()).getByRole('radiogroup', { name: 'Choose a vibe' })).getByRole('radio', { name });
+    expect(vibe(/Anything/).getAttribute('aria-checked')).toBe('true');
+    fireEvent.click(vibe(/Tech & Code/));
+    expect(vibe(/Tech & Code/).getAttribute('aria-checked')).toBe('true');
 
     // Send: the first caption on the meme and the editing page; Shuffle puts the next one on it.
     fireEvent.click(within(page()).getByRole('button', { name: 'Generate captions' }));
@@ -1457,7 +1455,7 @@ describe('MemeEditor', () => {
     fireEvent.click(within(bar()).getByText('New'));
     expect(within(page()).getByRole('button', { name: `Meme: ${pickedName}` })).toBeTruthy();
     expect(within(page()).getByLabelText("What's it about?").value).toBe('mondays');
-    expect(within(page()).getByRole('button', { name: 'Vibe: Tech & Code' })).toBeTruthy();
+    expect(vibe(/Tech & Code/).getAttribute('aria-checked')).toBe('true');
     expect(captionTexts()).toEqual([]);
 
     // An idea sends itself, with its vibe.

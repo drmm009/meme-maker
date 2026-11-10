@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import type { ChangeEvent } from 'react';
-import { ArrowUp, ChevronDown, ImagePlus, KeyRound, LayoutTemplate, Sparkles } from 'lucide-react';
+import { ImagePlus, KeyRound, LayoutTemplate, Repeat2, Sparkles } from 'lucide-react';
 import { useEditorUiStore } from '../store/useEditorUiStore';
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
 import TemplatesSheet from './TemplatesSheet';
@@ -19,8 +19,7 @@ interface Vibe { id: string; label: string; icon: string }
 const KEY = 'gemini_api_key';
 const IDEAS = 4;
 const POPULAR = 6;
-const vibeOf = (id: string): Vibe => AI_MEME_CATEGORIES.find((c: Vibe) => c.id === id) ?? AI_MEME_CATEGORIES[0];
-// 'All Random' reads as Anything in a sentence-like pill.
+// 'All Random' reads as Anything.
 const vibeLabel = (v: Vibe) => (v.id === 'all' ? 'Anything' : v.label);
 
 // The idea and vibe typed on the page, kept in the UI store so the Gallery (which takes the page's
@@ -40,24 +39,25 @@ export function AiMemeGallerySheet({ actions, onClose }: { actions: EditorAction
 }
 
 // The AI Meme maker's page, until its meme is made (EditorPanels shows it in the canvas's place),
-// laid out like a chat: a greeting with ideas to start from (a tap sends one), and at the bottom a
-// composer of the meme, the vibe and the Gemini key (each a pill opening its sheet) over
-// the message box. Sending asks for four captions (the user's Gemini key, or else the built-in
-// library), the idea showing as a sent message with the AI writing back, then puts the first on
-// the meme and opens the editing page.
+// the meme first: the meme as large as fits, with Change (popular memes, upload or the whole
+// gallery) on its corner; under it the idea box with ideas to start from (a tap sends one), then
+// the vibes as a row of chips; Generate captions pinned at the bottom with a line saying where the
+// captions come from (the user's Gemini key, opening its sheet). Sending asks for four captions
+// (with the key, or else the built-in library), the meme dimmed while they're written, then puts
+// the first on the meme and opens the editing page.
 export default function AiMemeStudio({ actions }: { actions: EditorActions; onClose?: () => void }) {
   const template: Template | null = useMemeEditorStore((s: { activeTemplate: Template | null }) => s.activeTemplate);
   const templates: Template[] = useEditorUiStore((s: { openSourceTemplates: Template[] }) => s.openSourceTemplates);
   const openSheet = useEditorUiStore((s: { openSheet: (sheet: string) => void }) => s.openSheet);
   const { idea, vibe, setIdea, setVibe } = useAsk();
-  const [picker, setPicker] = useState<'meme' | 'vibe' | 'key' | null>(null);
+  const [picker, setPicker] = useState<'meme' | 'key' | null>(null);
   // What was sent, while the captions are being written.
   const [sent, setSent] = useState<string | null>(null);
   const [apiKey, setApiKey] = useState<string>(() => String(safeGet(KEY) || ''));
   const [keyDraft, setKeyDraft] = useState('');
   const popular = useMemo(() => templates.filter((t) => suitsAiCaption(t) && t.id !== template?.id).slice(0, POPULAR), [templates, template]);
   const busy = sent !== null;
-  const currentVibe = vibeOf(vibe);
+  const memeName = template?.name || 'your meme';
 
   const pickMeme = (t: Template) => {
     setPicker(null);
@@ -93,72 +93,90 @@ export default function AiMemeStudio({ actions }: { actions: EditorActions; onCl
   };
 
   return (
-    <section className="ie-swap ie-ai-page" aria-label="Make an AI meme">
-      <div className="ie-ai-chat">
-        {sent === null ? (
-          <div className="ie-ai-hello">
-            <span className="ie-ai-hello-icon" aria-hidden="true"><Sparkles size={26} strokeWidth={2} /></span>
-            <h2 className="ie-ai-hello-title">What's the meme about today?</h2>
-            <p className="ie-ai-hello-hint">Type an idea, or tap one to start</p>
-            <div className="ie-ai-suggestions" role="group" aria-label="Ideas">
-              {AI_MEME_IDEAS.map((s: { text: string; icon: string; category: string }) => (
-                <button key={s.text} type="button" className="ie-ai-suggestion" onClick={() => void send(s.text, s.category)}>
-                  <span aria-hidden="true">{s.icon}</span>{s.text}
-                </button>
-              ))}
-            </div>
+    <section className="ie-swap ie-aim" aria-label="Make an AI meme">
+      <div className="ie-aim-body">
+        <div className="ie-aim-stage">
+          <div className="ie-aim-meme">
+            {template?.imageUrl ? (
+              <img src={template.imageUrl} alt={memeName} />
+            ) : (
+              <span className="ie-aim-meme-empty"><LayoutTemplate size={26} aria-hidden="true" />Pick a meme to caption</span>
+            )}
+            {!busy && (
+              <button type="button" className="ie-aim-change" aria-label={`Meme: ${template?.name || 'none'}`} onClick={() => setPicker('meme')}>
+                <Repeat2 aria-hidden="true" />
+                Change
+              </button>
+            )}
+            {busy && (
+              <div className="ie-aim-busy" role="status">
+                <span className="ie-swap-spinner" aria-hidden="true" />
+                <span className="ie-aim-busy-title">Writing captions on {memeName}…</span>
+                <span className="ie-aim-busy-idea">“{sent}”</span>
+              </div>
+            )}
           </div>
-        ) : (
-          <div className="ie-ai-thread" role="status">
-            <p className="ie-ai-bubble ie-ai-bubble--me">{sent}</p>
-            <div className="ie-ai-bubble ie-ai-bubble--ai">
-              {template?.imageUrl && <img src={template.imageUrl} alt="" />}
-              <span>
-                Writing captions on {template?.name || 'your meme'}
-                <span className="ie-ai-dots" aria-hidden="true"><i /><i /><i /></span>
-              </span>
-            </div>
-          </div>
-        )}
-      </div>
-
-      <div className="ie-ai-composer">
-        <div className="ie-ai-options">
-          <button type="button" className="ie-ai-option" aria-label={`Meme: ${template?.name || 'none'}`} disabled={busy} onClick={() => setPicker('meme')}>
-            {template?.imageUrl ? <img src={template.imageUrl} alt="" /> : <LayoutTemplate size={15} aria-hidden="true" />}
-            <span className="ie-ai-option-text">{template?.name || 'Pick a meme'}</span>
-            <ChevronDown size={14} aria-hidden="true" />
-          </button>
-          <button type="button" className="ie-ai-option" aria-label={`Vibe: ${vibeLabel(currentVibe)}`} disabled={busy} onClick={() => setPicker('vibe')}>
-            <span aria-hidden="true">{currentVibe.icon}</span>
-            <span className="ie-ai-option-text">{vibeLabel(currentVibe)}</span>
-            <ChevronDown size={14} aria-hidden="true" />
-          </button>
-          <button
-            type="button"
-            className={`ie-ai-option ie-ai-option--icon${apiKey ? ' is-on' : ''}`}
-            aria-label={apiKey ? 'Captions by Gemini with your key' : 'Built-in captions: add a Gemini key'}
-            title={apiKey ? 'Captions by Gemini with your key' : 'Built-in captions: add a Gemini key'}
-            onClick={() => setPicker('key')}
-          >
-            <KeyRound size={15} aria-hidden="true" />
-          </button>
         </div>
-        <form className="ie-ai-input" onSubmit={(e) => { e.preventDefault(); void send(); }}>
+
+        <form className="ie-aim-ask" onSubmit={(e) => { e.preventDefault(); void send(); }}>
+          <Sparkles className="ie-aim-ask-icon" aria-hidden="true" />
           <input
-            className="ie-ai-input-field"
+            className="ie-ai-input-field ie-aim-ask-field"
             type="text"
             aria-label="What's it about?"
             enterKeyHint="send"
-            placeholder="Type an idea…"
+            placeholder="What's it about?"
             value={idea}
             disabled={busy}
             onChange={(e) => setIdea(e.target.value)}
           />
-          <button type="submit" className="ie-ai-send" aria-label="Generate captions" disabled={busy || !template}>
-            <ArrowUp size={20} strokeWidth={2.6} aria-hidden="true" />
-          </button>
         </form>
+
+        <div className="ie-aim-row">
+          <h2 className="ie-aim-row-title">Ideas</h2>
+          <div className="ie-aim-chips" role="group" aria-label="Ideas">
+            {AI_MEME_IDEAS.map((s: { text: string; icon: string; category: string }) => (
+              <button key={s.text} type="button" className="ie-aim-chip" disabled={busy} onClick={() => void send(s.text, s.category)}>
+                <span aria-hidden="true">{s.icon}</span>{s.text}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="ie-aim-row">
+          <h2 className="ie-aim-row-title">Vibe</h2>
+          <div className="ie-aim-chips" role="radiogroup" aria-label="Choose a vibe">
+            {AI_MEME_CATEGORIES.map((c: Vibe) => (
+              <button
+                key={c.id}
+                type="button"
+                role="radio"
+                aria-checked={vibe === c.id}
+                className={`ie-aim-chip${vibe === c.id ? ' is-on' : ''}`}
+                disabled={busy}
+                onClick={() => setVibe(c.id)}
+              >
+                <span aria-hidden="true">{c.icon}</span>{vibeLabel(c)}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="ie-swap-actions ie-aim-actions">
+        <button type="button" className="ie-swap-btn ie-swap-btn--primary ie-aim-go" aria-label="Generate captions" disabled={busy || !template} onClick={() => void send()}>
+          <Sparkles aria-hidden="true" />
+          {busy ? 'Writing captions…' : 'Generate captions'}
+        </button>
+        <button
+          type="button"
+          className="ie-aim-source"
+          aria-label={apiKey ? 'Captions by Gemini with your key' : 'Built-in captions: add a Gemini key'}
+          onClick={() => setPicker('key')}
+        >
+          <KeyRound aria-hidden="true" />
+          {apiKey ? <>Captions by Gemini · <b>Change key</b></> : <>Built-in captions · <b>Add a Gemini key</b></>}
+        </button>
       </div>
 
       {picker === 'meme' && (
@@ -187,28 +205,6 @@ export default function AiMemeStudio({ actions }: { actions: EditorActions; onCl
               <LayoutTemplate size={22} aria-hidden="true" />
               All memes
             </button>
-          </div>
-        </PickerSheet>
-      )}
-
-      {picker === 'vibe' && (
-        <PickerSheet title="Choose a vibe" onClose={() => setPicker(null)}>
-          <div className="ie-ai-vibes" role="radiogroup" aria-label="Choose a vibe">
-            {AI_MEME_CATEGORIES.map((c: Vibe) => (
-              <button
-                key={c.id}
-                type="button"
-                role="radio"
-                aria-checked={vibe === c.id}
-                className={`ie-ai-vibe${vibe === c.id ? ' is-on' : ''}`}
-                onClick={() => {
-                  setVibe(c.id);
-                  setPicker(null);
-                }}
-              >
-                <span className="ie-ai-vibe-icon" aria-hidden="true">{c.icon}</span>{vibeLabel(c)}
-              </button>
-            ))}
           </div>
         </PickerSheet>
       )}
