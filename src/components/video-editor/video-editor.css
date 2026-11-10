@@ -63,9 +63,11 @@
   min-height: 0;
   display: flex;
 }
+/* A faint light hairline around the canvas, so its edge still shows on the black editor when the
+   canvas itself is black (or any dark colour); on a light canvas it is barely there. */
 .vt-stage-frame .canvas-container #stage-sink-wrapper {
   border-radius: 18px !important;
-  box-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.9) !important;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.16), 0 24px 60px -20px rgba(0, 0, 0, 0.9) !important;
 }
 .vt-editor.is-preview .vt-stage-frame .canvas-container #stage-sink-wrapper { border-radius: 26px !important; }
 
