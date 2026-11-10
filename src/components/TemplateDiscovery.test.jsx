@@ -60,15 +60,18 @@ describe('TemplateDiscovery', () => {
   it('shows the makers as tiles under the carousel', () => {
     const onSelectTemplate = vi.fn();
     const onCreateCustom = vi.fn();
-    render(<TemplateDiscovery onSelectTemplate={onSelectTemplate} onCreateCustom={onCreateCustom} />);
+    const onOpenGifMaker = vi.fn();
+    render(<TemplateDiscovery onSelectTemplate={onSelectTemplate} onCreateCustom={onCreateCustom} onOpenGifMaker={onOpenGifMaker} />);
     const tiles = screen.getByRole('navigation', { name: 'Makers' });
-    for (const name of ['Meme video', 'Stickers', 'Face swap', 'Social card', 'AI meme']) {
+    for (const name of ['Meme video', 'Stickers', 'Face swap', 'Social card', 'AI meme', 'GIF maker']) {
       expect(within(tiles).getByRole('button', { name })).toBeTruthy();
     }
     fireEvent.click(within(tiles).getByRole('button', { name: 'Meme video' }));
     expect(onCreateCustom).toHaveBeenCalledWith('video');
     fireEvent.click(within(tiles).getByRole('button', { name: 'Face swap' }));
     expect(onSelectTemplate).toHaveBeenCalledWith(expect.objectContaining({ editorMode: 'faceswap' }));
+    fireEvent.click(within(tiles).getByRole('button', { name: 'GIF maker' }));
+    expect(onOpenGifMaker).toHaveBeenCalled();
   });
 
   it('templateNumericId never returns NaN', () => {

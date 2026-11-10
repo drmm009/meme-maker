@@ -1,19 +1,20 @@
 // Home's makers as tiles under the hero carousel, all visible at once: Meme video, Stickers, Face
-// swap, Social card, AI meme. Each in its own colour (its carousel slide's), the icon in a squircle
+// swap, Social card, AI meme, GIF maker. Each in its own colour (its carousel slide's), the icon in a squircle
 // of it, a faint wash of it in the tile's corner, and one line saying what it does.
-import { Clapperboard, MessagesSquare, ScanFace, Scissors, Wand2 } from 'lucide-react';
+import { Clapperboard, ImagePlay, MessagesSquare, ScanFace, Scissors, Wand2 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { CSSProperties } from 'react';
 import './homeTools.css';
 
-export type ToolAction = 'video' | 'stickers' | 'faceswap' | 'social' | 'ai';
+export type ToolAction = 'video' | 'stickers' | 'faceswap' | 'social' | 'ai' | 'gif';
 
 const TOOLS: { action: ToolAction; label: string; sub: string; tone: string; Icon: LucideIcon }[] = [
   { action: 'video', label: 'Meme video', sub: 'Trim, sound, captions', tone: '#1fb6e8', Icon: Clapperboard },
   { action: 'stickers', label: 'Stickers', sub: 'Cut out any photo', tone: '#14c08a', Icon: Scissors },
   { action: 'faceswap', label: 'Face swap', sub: 'Your face, any meme', tone: '#f5a524', Icon: ScanFace },
   { action: 'social', label: 'Social card', sub: 'Tweet or chat', tone: '#ec4899', Icon: MessagesSquare },
-  { action: 'ai', label: 'AI meme', sub: 'From a prompt', tone: '#8b7bff', Icon: Wand2 }
+  { action: 'ai', label: 'AI meme', sub: 'From a prompt', tone: '#8b7bff', Icon: Wand2 },
+  { action: 'gif', label: 'GIF maker', sub: 'Loop a clip', tone: '#9bd02a', Icon: ImagePlay },
 ];
 
 export default function HomeTools({ onAction }: { onAction: (action: ToolAction) => void }) {

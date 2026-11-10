@@ -1,13 +1,11 @@
-// The Stickers and AI Meme makers' top bar: Back, the maker's title on a tile in its colour (its Home
-// tile's), undo and redo in one capsule, and under them a three-step track, the step the work is on
-// lit orange and the ones done ticked. Where it stands is also said in words for screen readers.
-import { Check, ChevronLeft, Redo2, Scissors, Undo2, Wand2 } from 'lucide-react';
-import type { CSSProperties } from 'react';
+// The Stickers and AI Meme makers' top bar (MakerBar): the maker's title on a tile in its colour (its
+// Home tile's), undo and redo in one capsule, and its three steps, from the editor's state.
+import { Redo2, Scissors, Undo2, Wand2 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import MakerBar from './MakerBar';
 import { useMemeEditorHistory, useMemeEditorStore } from '../store/useMemeEditorStore';
 import { stickerStep } from '../stickerMaker';
 import { aiStep } from '../aiMeme';
-import './makerTopBar.css';
 
 type Step = 0 | 1 | 2;
 type DocState = {
@@ -47,34 +45,15 @@ export default function MakerTopBar({ mode, onBack }: { mode: MakerBarMode; onBa
   const canRedo = useMemeEditorHistory((s: HistoryState) => s.futureStates.length > 0);
 
   return (
-    <header className="mtb" style={{ '--mtb-tone': tone } as CSSProperties}>
-      <div className="mtb-row">
-        <button type="button" className="mtb-round" onClick={onBack} aria-label="Back" title="Back">
-          <ChevronLeft size={22} strokeWidth={2.3} />
+    <MakerBar title={title} Icon={Icon} tone={tone} steps={steps} step={step} status={status[step]} onBack={onBack}>
+      <div className="mtb-history">
+        <button type="button" className="mtb-history-btn" onClick={undo} disabled={!canUndo} aria-label="Undo" title="Undo">
+          <Undo2 size={19} />
         </button>
-        <h1 className="mtb-title ui-topbar-title">
-          <span className="mtb-tile" aria-hidden="true"><Icon size={15} strokeWidth={2.4} /></span>
-          <span>{title}</span>
-        </h1>
-        <div className="mtb-history">
-          <button type="button" className="mtb-history-btn" onClick={undo} disabled={!canUndo} aria-label="Undo" title="Undo">
-            <Undo2 size={19} />
-          </button>
-          <button type="button" className="mtb-history-btn" onClick={redo} disabled={!canRedo} aria-label="Redo" title="Redo">
-            <Redo2 size={19} />
-          </button>
-        </div>
+        <button type="button" className="mtb-history-btn" onClick={redo} disabled={!canRedo} aria-label="Redo" title="Redo">
+          <Redo2 size={19} />
+        </button>
       </div>
-
-      <ol className="mtb-steps" aria-hidden="true">
-        {steps.map((label, i) => (
-          <li key={label} className={`mtb-step${i < step ? ' is-done' : ''}${i === step ? ' is-now' : ''}`}>
-            <span className="mtb-dot">{i < step ? <Check size={11} strokeWidth={3.2} /> : i + 1}</span>
-            {label}
-          </li>
-        ))}
-      </ol>
-      <p className="mtb-status ui-topbar-subtitle" aria-live="polite">{status[step]}</p>
-    </header>
+    </MakerBar>
   );
 }

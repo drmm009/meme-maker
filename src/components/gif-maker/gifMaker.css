@@ -1,0 +1,340 @@
+/* The GIF maker (GifMaker), a page of its own over the app, in the editors' look (ui.css .ui-theme
+   tokens): pitch black, cards and controls in iOS greys, solid orange for what's picked and for
+   Make GIF; no glass or blur. */
+.gm {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  background: var(--ui-bg, #000);
+  color: var(--ui-text, #f4f4f6);
+  font-family: var(--ui-font, 'Plus Jakarta Sans', Inter, system-ui, sans-serif);
+  -webkit-tap-highlight-color: transparent;
+}
+.gm *, .gm *::before, .gm *::after { box-sizing: border-box; }
+.gm button { font: inherit; color: inherit; }
+.gm :focus-visible { outline: 2px solid var(--ui-accent, #ff5a36); outline-offset: 2px; }
+.gm p { margin: 0; }
+
+.gm-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+  padding: 4px 16px 14px;
+  scrollbar-width: none;
+}
+.gm-body::-webkit-scrollbar { display: none; }
+
+/* ── Empty: two cards to start from ── */
+.gm-start { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 14px; }
+.gm-sources { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.gm-source {
+  --gm-tone: #ff5a36;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  min-height: 200px;
+  padding: 16px 14px;
+  border-radius: var(--ui-radius-lg, 20px);
+  background:
+    radial-gradient(120% 90% at 100% 0%, color-mix(in srgb, var(--gm-tone) 22%, transparent) 0%, transparent 62%),
+    var(--ui-surface, #1c1c1e);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06), 0 12px 24px -16px rgba(0, 0, 0, 0.9);
+  cursor: pointer;
+  transition: transform 0.18s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.gm-source:active { transform: scale(0.97); }
+.gm-source:focus-within { outline: 2px solid var(--gm-tone); outline-offset: 2px; }
+.gm-source-icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  margin-bottom: auto;
+  border-radius: 14px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--gm-tone) 82%, #fff) 0%, var(--gm-tone) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  color: #fff;
+}
+.gm-source-icon svg { width: 24px; height: 24px; }
+.gm-source-title { margin-top: 18px; font-size: 18px; font-weight: 700; }
+.gm-source-hint { color: var(--ui-muted, #a5a6ad); font-size: 13px; line-height: 1.35; }
+.gm-start-note { color: var(--ui-muted, #a5a6ad); font-size: 13px; line-height: 1.45; text-align: center; }
+.gm-error { color: #ff8a73; font-size: 13px; text-align: center; }
+
+/* ── The preview: the GIF's shape, as large as the room left ── */
+.gm-stage { flex: 1; min-height: 190px; display: grid; place-items: center; container-type: size; }
+.gm-preview {
+  position: relative;
+  /* As large as fits in the stage at the GIF's shape (--gm-ar, its width over its height). */
+  width: min(100cqw, calc(100cqh * var(--gm-ar, 1)));
+  aspect-ratio: var(--gm-ar, 1);
+  overflow: hidden;
+  border-radius: var(--ui-radius-md, 16px);
+  background: #111;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.14);
+  container-type: inline-size;
+}
+.gm-preview video, .gm-preview > img { display: block; width: 100%; height: 100%; object-fit: cover; }
+/* The caption as the GIF draws it: a tenth of the width, white with a black edge. */
+.gm-preview-caption {
+  position: absolute;
+  left: 4%;
+  right: 4%;
+  color: #fff;
+  font-size: 10cqw;
+  line-height: 1.1;
+  text-align: center;
+  overflow-wrap: break-word;
+  -webkit-text-stroke: 0.24em #000;
+  paint-order: stroke fill;
+  pointer-events: none;
+}
+.gm-preview-caption.is-top { top: 4%; }
+.gm-preview-caption.is-bottom { bottom: 4%; }
+.gm-busy {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: rgba(10, 10, 12, 0.8);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── The clip's trim ── */
+.gm-trim { flex: none; display: flex; flex-direction: column; gap: 8px; }
+.gm-trim-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin: 0 2px; }
+.gm-trim-title, .gm-setting-name { font-size: 15px; font-weight: 700; }
+.gm-trim-time { color: var(--ui-muted, #a5a6ad); font-size: 13px; font-variant-numeric: tabular-nums; }
+.gm-trim-time b { color: var(--ui-text, #f4f4f6); font-weight: 700; }
+.gm-track {
+  position: relative;
+  height: 56px;
+  margin: 0 12px;
+  border-radius: 10px;
+  background: var(--ui-surface, #1c1c1e);
+  touch-action: none;
+  user-select: none;
+}
+.gm-track.is-off { opacity: 0.5; pointer-events: none; }
+.gm-strip { position: absolute; inset: 0; display: flex; overflow: hidden; border-radius: inherit; }
+.gm-strip img { flex: 1; min-width: 0; height: 100%; object-fit: cover; }
+.gm-shade { position: absolute; top: 0; bottom: 0; background: rgba(0, 0, 0, 0.62); pointer-events: none; }
+.gm-shade:first-of-type { border-radius: 10px 0 0 10px; }
+.gm-window {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  border-radius: 10px;
+  box-shadow: inset 0 0 0 3px var(--ui-accent, #ff5a36);
+  cursor: grab;
+}
+.gm-handle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 18px;
+  background: var(--ui-accent, #ff5a36);
+  cursor: ew-resize;
+}
+/* A light grip line on each handle; the handles reach past the clip so a short one stays easy to hold. */
+.gm-handle::after { content: ''; position: absolute; top: 50%; left: 50%; width: 3px; height: 18px; border-radius: 2px; background: rgba(255, 255, 255, 0.9); transform: translate(-50%, -50%); }
+.gm-handle.is-start { left: -12px; border-radius: 10px 0 0 10px; }
+.gm-handle.is-end { right: -12px; border-radius: 0 10px 10px 0; }
+
+/* ── Photo frames ── */
+.gm-frames {
+  flex: none;
+  display: flex;
+  gap: 8px;
+  margin: 0 -16px;
+  padding: 2px 16px 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.gm-frames::-webkit-scrollbar { display: none; }
+.gm-frame { position: relative; flex: none; width: 64px; }
+.gm-frame-pic {
+  position: relative;
+  display: block;
+  width: 64px;
+  height: 64px;
+  padding: 0;
+  overflow: hidden;
+  border: none;
+  border-radius: 12px;
+  background: var(--ui-surface, #1c1c1e);
+  cursor: pointer;
+}
+.gm-frame-pic img { width: 100%; height: 100%; object-fit: cover; }
+.gm-frame-pic::after { content: ''; position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12); }
+.gm-frame.is-on .gm-frame-pic::after { box-shadow: inset 0 0 0 2.5px var(--ui-accent, #ff5a36); }
+.gm-frame-n {
+  position: absolute;
+  left: 4px;
+  bottom: 4px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.72);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 18px;
+  font-variant-numeric: tabular-nums;
+}
+.gm-frame-tools { display: flex; justify-content: space-between; margin-top: 4px; }
+.gm-frame-tools button {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: var(--ui-surface-2, #34363c);
+  cursor: pointer;
+}
+.gm-frame-tools button:disabled { opacity: 0.35; cursor: default; }
+.gm-frame-add {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  height: 64px;
+  border-radius: 12px;
+  background: var(--ui-surface, #1c1c1e);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+  color: var(--ui-accent-text, #ff7652);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.gm-frame-add.is-off { opacity: 0.45; pointer-events: none; }
+
+/* ── Caption ── */
+.gm-caption {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 52px;
+  padding: 0 6px 0 14px;
+  border-radius: var(--ui-radius-md, 16px);
+  background: var(--ui-surface, #1c1c1e);
+}
+.gm-caption:focus-within { box-shadow: inset 0 0 0 2px var(--ui-accent, #ff5a36); }
+.gm .gm-caption-field {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: none;
+  outline: none;
+  background: none;
+  box-shadow: none;
+  color: var(--ui-text, #f4f4f6);
+  font: inherit;
+  font-size: 16px; /* 16px keeps phones from zooming in on focus */
+}
+.gm .gm-caption-field::placeholder { color: var(--ui-muted, #a5a6ad); opacity: 1; }
+
+/* ── Speed, Loop, Size: one card, a row each ── */
+.gm-settings { flex: none; border-radius: var(--ui-radius-md, 16px); background: var(--ui-surface, #1c1c1e); }
+.gm-setting { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 52px; padding: 6px 6px 6px 14px; }
+.gm-setting + .gm-setting { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07); }
+.gm-setting-name small { margin-left: 4px; color: var(--ui-muted, #a5a6ad); font-size: 12px; font-weight: 500; font-variant-numeric: tabular-nums; }
+
+/* A segmented control: grey track, the picked one orange. */
+.gm-seg { display: flex; flex: none; gap: 2px; padding: 3px; border-radius: 12px; background: #2c2c2e; }
+.gm-seg-btn {
+  height: 32px;
+  min-width: 52px;
+  padding: 0 10px;
+  border: none;
+  border-radius: 9px;
+  background: none;
+  color: var(--ui-muted, #a5a6ad);
+  font-size: 13px !important;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.gm .gm-seg-btn.is-on { background: var(--ui-accent, #ff5a36); color: #fff; }
+.gm-seg-btn:disabled { cursor: default; opacity: 0.5; }
+@media (hover: hover) { .gm .gm-seg-btn:not(.is-on):not(:disabled):hover { color: var(--ui-text, #f4f4f6); } }
+
+/* ── Make GIF ── */
+.gm-actions {
+  flex: none;
+  padding: 10px 16px calc(14px + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--ui-line, rgba(255, 255, 255, 0.07));
+  background: var(--ui-bg, #000);
+}
+.gm-make {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  height: 50px;
+  border: none;
+  border-radius: 999px;
+  background: var(--ui-accent, #ff5a36);
+  box-shadow: 0 6px 18px -6px rgba(255, 90, 54, 0.55);
+  color: #fff !important;
+  font-size: 15px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.1s ease;
+}
+.gm-make svg { width: 19px; height: 19px; }
+.gm-make:active:not(:disabled) { transform: scale(0.98); }
+.gm-make:disabled { background: var(--ui-accent-tint, #4c3025); box-shadow: none; color: rgba(255, 255, 255, 0.55) !important; cursor: default; }
+@media (hover: hover) { .gm-make:hover:not(:disabled) { background: var(--ui-accent-hover, #ff6d4d); } }
+
+/* ── The finished GIF (in the PickerSheet) ── */
+.gm-result { display: flex; flex-direction: column; gap: 12px; }
+.gm-result-pic { display: grid; place-items: center; max-height: 46vh; overflow: hidden; border-radius: 14px; background: #000; }
+.gm-result-pic img { display: block; max-width: 100%; max-height: 46vh; object-fit: contain; }
+.gm-result-meta { color: var(--ui-muted, #a5a6ad); font-size: 13px; text-align: center; font-variant-numeric: tabular-nums; }
+.gm-result-actions { display: flex; gap: 8px; }
+.gm-result-main { flex: 1; }
+.gm-result-btn {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 50px;
+  height: 50px;
+  border: none;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+}
+.gm-result-btn svg { width: 20px; height: 20px; }
+.gm-result-btn:disabled { color: var(--ui-accent-text, #ff7652); cursor: default; }
+
+/* Room to breathe on a wide screen: the page keeps a phone's width. */
+@media (min-width: 720px) {
+  .gm-body, .gm-actions, .gm > .mtb { width: 100%; max-width: 560px; margin: 0 auto; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gm-source, .gm-make, .gm-seg-btn { transition: none; }
+  .gm-source:active, .gm-make:active:not(:disabled) { transform: none; }
+}

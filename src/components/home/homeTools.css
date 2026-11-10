@@ -1,4 +1,4 @@
-/* Home's makers grid: three across, then two wide. Each tile is a dark grey card in its tool's colour
+/* Home's makers grid: two rows of three (one row of six on a wide screen). Each tile is a dark grey card in its tool's colour
    (--tone, set per tile): the icon white in a squircle of it, lit from the top; a faint wash of it
    in the top-right corner; a fine light edge and a soft drop shadow for depth. No glass or blur. */
 
@@ -86,23 +86,9 @@
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
 }
-/* The two wide tiles: a smaller icon beside the name and its line. */
-.hh-tool:nth-child(n + 4) {
-  grid-column: span 3;
-  flex-direction: row;
-  align-items: center;
-  gap: 10px;
-  padding: 12px;
-}
-.hh-tool:nth-child(n + 4) .hh-tool-icon { width: 36px; height: 36px; border-radius: 11px; }
-.hh-tool:nth-child(n + 4) .hh-tool-icon svg { width: 19px; height: 19px; }
-.hh-tool:nth-child(n + 4) .hh-tool-text { flex: 1; }
-.hh-tool:nth-child(n + 4) .hh-tool-sub { -webkit-line-clamp: 1; }
-
 @media (min-width: 720px) {
-  .hh-tools { grid-template-columns: repeat(5, minmax(0, 1fr)); }
-  .hh-tool, .hh-tool:nth-child(n + 4) { grid-column: span 1; flex-direction: column; align-items: flex-start; gap: 12px; padding: 14px 12px 13px; }
-  .hh-tool:nth-child(n + 4) .hh-tool-icon { width: 40px; height: 40px; border-radius: 12px; }
+  .hh-tools { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  .hh-tool { grid-column: span 1; }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -14,6 +14,7 @@ const NotificationsModal = lazy(() => import('./components/NotificationsModal'))
 const SocialFeed = lazy(() => import('./components/SocialFeed'));
 const AiCaptionModal = lazy(() => import('./components/AiCaptionModal'));
 const ExploreView = lazy(() => import('./components/ExploreView'));
+const GifMaker = lazy(() => import('./components/gif-maker/GifMaker'));
 import { MEME_TEMPLATES } from './data/templates';
 import { makerOfLink, makerTemplate, linkOfTemplate } from './components/editor/makers';
 import { INITIAL_NOTIFICATIONS } from './data/notifications';
@@ -24,6 +25,7 @@ import { LayoutGrid, FolderHeart, User, Sun, Moon, Bell, Plus, Users, Compass, H
 // The slim motion build: `m` components with only the DOM animation features loaded (the full
 // `motion` used by pages that load later still works inside LazyMotion).
 import { LazyMotion, domAnimation, m as motion, AnimatePresence } from 'framer-motion';
+import { GIF_MAKER_LINK } from './components/gif-maker/gifPlan';
 import './App.css';
 
 function App() {
@@ -33,7 +35,8 @@ function App() {
     const maker = makerOfLink(window.location.hash);
     return maker ? makerTemplate(maker, MEME_TEMPLATES) : null;
   });
-  const [currentView, setCurrentView] = useState(linkedTemplate ? 'editor' : 'templates'); // 'templates' | 'custom-builder' | 'editor' | 'video-editor' | 'gallery'
+  // The GIF maker's link (#/gif) opens on it too.
+  const [currentView, setCurrentView] = useState(linkedTemplate ? 'editor' : window.location.hash === GIF_MAKER_LINK ? 'gif' : 'templates'); // 'templates' | 'custom-builder' | 'editor' | 'video-editor' | 'gallery' | 'gif'
   const [builderMode, setBuilderMode] = useState('image');
   const [exploreCategory, setExploreCategory] = useState('all'); // 'image' | 'video'
   const [selectedTemplate, setSelectedTemplate] = useState(linkedTemplate || MEME_TEMPLATES[0]);
@@ -137,7 +140,7 @@ function App() {
   // Each view is a history entry, so Back returns to the one before. A focused maker's entry carries
   // its link (#/stickers…, editor/makers.ts), which opens it again when reloaded or shared.
   useEffect(() => {
-    const url = window.location.pathname + window.location.search + (currentView === 'editor' ? linkOfTemplate(selectedTemplate) : '');
+    const url = window.location.pathname + window.location.search + (currentView === 'editor' ? linkOfTemplate(selectedTemplate) : currentView === 'gif' ? GIF_MAKER_LINK : '');
     if (window.history.state?.view !== currentView) {
       window.history.pushState({ view: currentView }, '', url);
     } else if (window.location.pathname + window.location.search + window.location.hash !== url) {
@@ -235,7 +238,7 @@ function App() {
     document.documentElement.scrollTop = 0;
     document.body.scrollTop = 0;
 
-    const isEditorView = currentView === 'editor' || currentView === 'video-editor';
+    const isEditorView = currentView === 'editor' || currentView === 'video-editor' || currentView === 'gif';
     if (isEditorView) {
       document.body.classList.add('editor-view-locked');
       document.documentElement.classList.add('editor-view-locked');
@@ -546,7 +549,7 @@ function App() {
       <div className="app-static-bg" aria-hidden="true" />
 
       {/* Top Navbar Header - HIDDEN ON EDITOR & BUILDER VIEWS FOR BIGGER CANVAS */}
-      {currentView !== 'editor' && currentView !== 'video-editor' && (
+      {currentView !== 'editor' && currentView !== 'video-editor' && currentView !== 'gif' && (
         <header className="app-header glass-card">
           <div className="header-container flex-between">
             <div className="app-brand flex-gap" onClick={() => setCurrentView('templates')}>
@@ -679,6 +682,7 @@ function App() {
                   if (cat) setExploreCategory(cat);
                   setCurrentView('explore');
                 }}
+                onOpenGifMaker={() => setCurrentView('gif')}
               />
             </motion.div>
           )}
@@ -714,6 +718,14 @@ function App() {
                   onRemixMeme={handleRemixCommunityMeme}
                   onCreateCustom={handleCreateCustom}
                 />
+              </Suspense>
+            </motion.div>
+          )}
+
+          {currentView === 'gif' && (
+            <motion.div key="gif" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+              <Suspense fallback={<div className="editor-loading" role="status"><span className="editor-loading-spin" aria-hidden="true" />Loading GIF maker…</div>}>
+                <GifMaker onBack={() => setCurrentView('templates')} onSaveToGallery={handleSaveToGallery} />
               </Suspense>
             </motion.div>
           )}
@@ -818,7 +830,7 @@ function App() {
       </main>
 
       {/* Floating Island Capsule Dock - Hidden during editing for maximum canvas space */}
-      {currentView !== 'editor' && currentView !== 'video-editor' && (
+      {currentView !== 'editor' && currentView !== 'video-editor' && currentView !== 'gif' && (
         <nav className="floating-island-dock">
           <button
             className={`dock-nav-item ${currentView === 'templates' ? 'active' : ''}`}

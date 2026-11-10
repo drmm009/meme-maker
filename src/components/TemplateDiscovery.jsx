@@ -536,7 +536,7 @@ function getTemplateBadge(template, index = 0) {
   return { label: 'Popular', icon: Flame, color: '#ff5e36' };
 }
 
-export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom, onOpenAiGenerator, onNavigateExplore }) {
+export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom, onOpenAiGenerator, onNavigateExplore, onOpenGifMaker }) {
   const [selectedTag, setSelectedTag] = useState('featured');
   const [sortBy, setSortBy] = useState('trending');
   const [aiPromptText, setAiPromptText] = useState('');
@@ -790,6 +790,8 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom, on
       }
     } else if (actionKey === 'ai') {
       openAiMeme();
+    } else if (actionKey === 'gif') {
+      if (onOpenGifMaker) onOpenGifMaker();
     } else if (actionKey === 'upload') {
       cutoutFileInputRef.current?.click();
     }
