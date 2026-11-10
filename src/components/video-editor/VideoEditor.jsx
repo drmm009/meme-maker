@@ -415,7 +415,7 @@ export default function VideoEditor({ template, onBack, onSaved }) {
         <div className="vt-timeline-wrap" aria-hidden={mode !== 'edit'}>
           <TimelinePanel onAddVideo={() => addRef.current?.open('video')} onAdd={(section) => railRef.current?.openAdd(section)} />
         </div>
-        <ToolRail ref={railRef} onAdd={(kind) => addRef.current?.open(kind)} />
+        <ToolRail ref={railRef} timelineOpen={mode === 'edit'} onAdd={(kind) => addRef.current?.open(kind)} />
       </div>
       <AddMedia ref={addRef} />
     </div>

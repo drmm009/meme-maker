@@ -542,7 +542,7 @@ function SourcesPanel({ sources, onPick }) {
 // tools; a selected clip's tools take the same row after a Back (the only Back). A setting or a
 // choice of where to add from opens a sheet in the bar's place that rises over the timeline (the bottom keeps its height, so
 // the timeline and preview don't move).
-export default function ToolRail({ onAdd, ref }) {
+export default function ToolRail({ onAdd, timelineOpen = false, ref }) {
   const activeItem = useEditorStore((s) => s.items.find((i) => i.id === s.activeItemId));
   const items = useEditorStore((s) => s.items);
   const playhead = useEditorStore((s) => s.playhead);
@@ -561,9 +561,11 @@ export default function ToolRail({ onAdd, ref }) {
   const cameFrom = (from) => setSheetState((s) => (s.name && s.name !== from ? { ...s, parent: from } : s));
   const toggle = (name, keepOpen = false) => setSheet(sheet === name && !keepOpen ? null : name);
   const spec = sheet && (SHEETS[sheet] || SOURCE_SHEETS[sheet]);
-  // A tall sheet floats up over the timeline (and the preview if it must); a short one takes the
-  // timeline's place in the page, so the preview (shrinking to fit) and the play button stay in view.
-  const floats = Boolean(spec?.tall);
+  // A tall sheet, or any sheet while the timeline is open, floats up over the timeline (and the
+  // preview if it must), so the timeline stays open and the preview keeps its size. A short one with
+  // the timeline closed takes the timeline's place in the page, so the preview (shrinking to fit) and
+  // the play button stay in view.
+  const floats = Boolean(spec?.tall) || (Boolean(spec) && timelineOpen);
 
   // The bottom's height without a sheet, kept while one is open (it then floats over the timeline,
   // never higher than the timeline's top, the element before it; with the timeline closed, as high
