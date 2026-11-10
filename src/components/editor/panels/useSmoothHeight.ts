@@ -27,6 +27,11 @@ export function useSmoothHeight(ref: RefObject<HTMLElement | null>, skip: boolea
   const run = () => {
     const el = ref.current;
     if (!el) return;
+    // Skipped and not mid-glide: its height is left alone (a caller may set its own).
+    if (skipRef.current && !animating.current) {
+      last.current = 0;
+      return;
+    }
     const still = skipRef.current || typeof ResizeObserver === 'undefined'
       || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
     // Mid-glide, start from where it is now; otherwise from the last settled height.

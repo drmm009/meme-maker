@@ -689,6 +689,8 @@
    A sheet (ui.css) takes the bar's place and floats over the timeline (ToolRail keeps the bottom's
    height, so the timeline and preview stay put). On the deck's grey, so no background of its own. */
 .vt-rail-wrap { position: relative; flex-shrink: 0; display: flex; flex-direction: column; }
+/* While it glides between the bar and a short sheet, what doesn't fit yet is cut off at the bottom. */
+.vt-rail-wrap:has(> .vt-bottom:not(.has-sheet)) { overflow: hidden; }
 .vt-hidden-input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
 .vt-bottom { display: flex; flex-direction: column; }
 .vt-bottom.has-sheet {

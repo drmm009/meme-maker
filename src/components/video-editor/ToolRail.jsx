@@ -7,6 +7,7 @@ import {
 import { Sheet } from '../ui';
 import DeckBar from './DeckBar';
 import { BackgroundIcon, FiltersIcon } from '../editor/panels/editorIcons';
+import { useSmoothHeight } from '../editor/panels/useSmoothHeight';
 import { useEditorStore, clipEffectBase, sourceTimeMs } from '../../store/useVideoEditorStore';
 import { clipOpacity } from '../../model/videoProject';
 import { clipCrop, isCropped } from '../../utils/clipCrop';
@@ -586,6 +587,9 @@ export default function ToolRail({ onAdd, ref }) {
     // Measured again as the bar's row changes (an observer may not have run yet when a sheet opens
     // straight after).
   }, [spec, hasClip]);
+  // A short sheet grows the bottom up out of the bar (and shrinks it back on closing), so the preview
+  // above resizes with it frame by frame, as when the timeline opens. A tall one floats, so it's left out.
+  useSmoothHeight(wrapRef, floats);
 
   const runTool = (tool) => {
     if (tool.panel || tool.sources) toggle(tool.kind);
