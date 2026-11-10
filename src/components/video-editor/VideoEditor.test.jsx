@@ -294,7 +294,7 @@ describe('VideoEditor', () => {
     expect(screen.queryByText(/selected$/)).toBeNull();
   });
 
-  it('lays the timeline out in five sections by type; an empty one’s icon adds one', () => {
+  it('lays the timeline out in five sections by type, each with a row; an empty one’s icon adds one', () => {
     act(() => {
       store().addItem({ type: 'text', text: 'A', durationMs: 2000 });
       store().addItem({ type: 'sticker', url: 'a.png', durationMs: 2000 });
@@ -303,12 +303,13 @@ describe('VideoEditor', () => {
     });
     const { container } = render(<VideoEditor onBack={() => {}} />);
     const sections = [...container.querySelectorAll('.vt-section')];
-    expect(sections.map((s) => s.className.match(/vt-section--(\w+)/)[1])).toEqual(['video', 'text', 'sticker', 'waiting']);
+    expect(sections.map((s) => s.className.match(/vt-section--(\w+)/)[1])).toEqual(['video', 'image', 'text', 'sticker', 'audio']);
     // The two stickers overlap, so they take two lines of the Stickers section.
-    expect(sections[2].querySelectorAll('.vt-row')).toHaveLength(2);
-    // Empty Photos and Sounds wait in the last row; an icon there lets go of the clip and adds one.
-    expect([...sections[3].querySelectorAll('button')].map((b) => b.getAttribute('aria-label'))).toEqual(['Add photo', 'Add sound']);
-    fireEvent.click(within(sections[3]).getByLabelText('Add photo'));
+    expect(sections[3].querySelectorAll('.vt-row')).toHaveLength(2);
+    // Empty Photos and Sounds keep a row each, their icon a button there that lets go of the clip and adds one.
+    expect(sections[1].querySelectorAll('.vt-row')).toHaveLength(1);
+    expect([...container.querySelectorAll('.vt-waiting-btn')].map((b) => b.getAttribute('aria-label'))).toEqual(['Add photo', 'Add sound']);
+    fireEvent.click(within(sections[1]).getByLabelText('Add photo'));
     expect(store().activeItemId).toBe(null);
     expect(screen.getByRole('dialog', { name: 'Add photo' })).toBeTruthy();
   });

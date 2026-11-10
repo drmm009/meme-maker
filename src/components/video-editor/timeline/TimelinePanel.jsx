@@ -13,9 +13,9 @@ const SECTION_ICONS = { video: SquarePlay, image: ImageIcon, text: Type, sticker
 
 // Scrolling timeline with a fixed centre playhead: the tracks move under it. Scrolling scrubs,
 // playback scrolls, pinch or Ctrl+wheel zooms around the playhead. The tracks are five sections by
-// clip type (timelineSections), each with its icon just before the timeline's start, scrolling with
-// the clips. Empty sections (bar Videos, which shows Add a video) take no room: their icons
-// wait together in one row at the bottom, each adding one (onAdd with the section's id).
+// clip type (timelineSections), always all five, each with its icon just before the timeline's start,
+// scrolling with the clips. An empty section (bar Videos, which shows Add a video) keeps one empty row
+// and its icon is a button with a + badge that adds one (onAdd with the section's id).
 export default function TimelinePanel({ onAddVideo, onAdd }) {
   const { items, duration, activeItemId, selectedIds } = useEditorStore(
     useShallow((s) => ({ items: s.items, duration: s.duration, activeItemId: s.activeItemId, selectedIds: s.selectedIds }))
@@ -106,9 +106,7 @@ export default function TimelinePanel({ onAddVideo, onAdd }) {
     };
   }, []);
 
-  const all = timelineSections(items);
-  const sections = all.filter((s) => s.lines.length || s.id === 'video');
-  const waiting = all.filter((s) => !sections.includes(s));
+  const sections = timelineSections(items);
   const videos = items.filter((i) => i.type === 'video');
   const lastVideo = videos.length ? videos.reduce((a, b) => (b.endMs > a.endMs ? b : a)) : null;
 
@@ -134,9 +132,18 @@ export default function TimelinePanel({ onAddVideo, onAdd }) {
               const Icon = SECTION_ICONS[section.id];
               return (
                 <div key={section.id} className={`vt-section vt-section--${section.id}`}>
-                  <div className="vt-section-icon" role="img" aria-label={section.label} style={{ left: pad - 46 }}>
-                    <Icon size={15} strokeWidth={1.9} aria-hidden="true" />
-                  </div>
+                  {section.lines.length || section.id === 'video' ? (
+                    <div className="vt-section-icon" role="img" aria-label={section.label} style={{ left: pad - 46 }}>
+                      <Icon size={15} strokeWidth={1.9} aria-hidden="true" />
+                    </div>
+                  ) : (
+                    <button type="button" className="vt-waiting-btn" style={{ left: pad - 43 }}
+                      aria-label={section.add} title={section.add}
+                      onClick={(e) => { e.stopPropagation(); onAdd?.(section.id); }}>
+                      <Plus size={11} strokeWidth={2.6} aria-hidden="true" />
+                      <Icon size={15} strokeWidth={1.9} aria-hidden="true" />
+                    </button>
+                  )}
                   <div className="vt-section-lines">
                     {section.lines.map((line) => (
                       <div key={line[0].id} className={`vt-row vt-row--${section.id}`}>
@@ -166,6 +173,7 @@ export default function TimelinePanel({ onAddVideo, onAdd }) {
                         )}
                       </div>
                     ))}
+                    {!section.lines.length && section.id !== 'video' && <div className={`vt-row vt-row--${section.id} vt-row--empty`} />}
                     {section.id === 'video' && !lastVideo && (
                       <div className="vt-row vt-row--video">
                         <button
@@ -183,23 +191,6 @@ export default function TimelinePanel({ onAddVideo, onAdd }) {
                 </div>
               );
             })}
-            {waiting.length > 0 && (
-              <div className="vt-section vt-section--waiting">
-                <div className="vt-waiting" role="group" aria-label="Add to the timeline">
-                  {waiting.map((section) => {
-                    const Icon = SECTION_ICONS[section.id];
-                    return (
-                      <button key={section.id} type="button" className={`vt-waiting-btn vt-section--${section.id}`}
-                        aria-label={section.add} title={section.add}
-                        onClick={(e) => { e.stopPropagation(); onAdd?.(section.id); }}>
-                        <Plus size={11} strokeWidth={2.6} aria-hidden="true" />
-                        <Icon size={15} strokeWidth={1.9} aria-hidden="true" />
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
           </div>
 
           {snapMs !== null && <div className="vt-snap-line" style={{ left: x(snapMs) }} />}

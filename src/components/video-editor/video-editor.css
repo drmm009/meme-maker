@@ -420,11 +420,12 @@
   background: color-mix(in srgb, var(--sec) 9%, transparent);
 }
 .vt-section-icon svg { position: relative; }
-/* The empty sections' icons, waiting in one row at the bottom: each a quiet chip that adds one. */
-.vt-section--waiting { padding: 10px 0 0; }
-.vt-waiting { position: sticky; left: 0; display: flex; gap: 6px; padding-left: 10px; }
+/* An empty section's icon, in the same place: a quiet chip with a + badge that adds one. */
 .vt-waiting-btn {
-  position: relative;
+  position: absolute;
+  top: 50%;
+  z-index: 2;
+  transform: translateY(-50%);
   display: grid;
   place-items: center;
   width: 34px;
