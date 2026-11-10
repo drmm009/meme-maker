@@ -1,0 +1,246 @@
+/* The app's pages outside the editors (Choose a layout, Explore, Social, My Studio) in the editors'
+   look (video-editor.css, editor/panels/sheetLook.css): pitch black, cards and controls in iOS greys,
+   solid orange for what's primary or picked, heading icons in plain orange with no circle, a faint
+   light hairline around pictures; no gradients, glows, glass or blur. Always dark.
+   A page's root carries `pg`; the classes below are its parts. */
+
+/* Pitch black behind the page while one is showing (the layout chooser stays mounted, hidden, so
+   only a visible one counts). The app shell's glow lives in App.css. */
+html:has(.pg:not(.hidden-view *)),
+body:has(.pg:not(.hidden-view *)),
+.app-root:has(.pg:not(.hidden-view *)) {
+  background: #000 !important;
+}
+/* The shell's fixed glow layer paints over in-flow content's background, so it's hidden, not recoloured. */
+.app-root:has(.pg:not(.hidden-view *)) .app-static-bg { display: none !important; }
+
+.pg {
+  --pg-bg: #000000;
+  --pg-surface: #1c1c1e;
+  --pg-surface-2: #2c2c2e;
+  --pg-surface-3: #3a3a3c;
+  --pg-text: #f4f4f6;
+  --pg-muted: #8e8e93;
+  --pg-accent: #ff5a36;
+  --pg-accent-hover: #ff6d4d;
+  --pg-accent-text: #ff7652;
+  --pg-danger: #ff5268;
+  --pg-hairline: 0 0 0 1px rgba(255, 255, 255, 0.16);
+  --pg-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --pg-font: 'Plus Jakarta Sans', Inter, system-ui, -apple-system, sans-serif;
+  /* The app shell pads 10px each side; with this the gutter is 16px. */
+  --pg-gutter: 16px;
+
+  color-scheme: dark;
+  box-sizing: border-box;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 8px 6px 56px;
+  color: var(--pg-text);
+  font-family: var(--pg-font);
+  font-size: 15px;
+  line-height: 1.4;
+  -webkit-tap-highlight-color: transparent;
+}
+.pg *, .pg *::before, .pg *::after { box-sizing: border-box; }
+.pg button { font-family: inherit; color: inherit; }
+.pg ::selection { background: rgba(255, 90, 54, 0.4); color: #fff; }
+.pg :focus-visible { outline: 2px solid var(--pg-accent); outline-offset: 2px; }
+.pg :is(h1, h2, h3, h4, p) { margin: 0; }
+
+/* ── Page title ─────────────────────────────────────────── */
+.pg-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 4px 0 16px; }
+.pg .pg-title {
+  margin: 0;
+  color: var(--pg-text);
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1.15;
+  text-wrap: balance;
+}
+.pg-count { color: var(--pg-muted); font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+/* ── Sections: a plain orange icon beside the title ─────── */
+.pg-section { margin-top: 28px; }
+.pg-section-head { display: flex; align-items: center; gap: 8px; min-height: 32px; margin-bottom: 10px; }
+.pg-section-icon { flex: none; width: 20px; height: 20px; color: var(--pg-accent); }
+.pg .pg-section-title { margin: 0; color: var(--pg-text); font-size: 17px; font-weight: 700; line-height: 1.2; }
+.pg-section-aside {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 0 6px 8px;
+  border: none;
+  background: none;
+  color: var(--pg-accent-text);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.pg-section-aside svg { width: 16px; height: 16px; }
+
+/* ── A row that scrolls sideways, to the screen's edges ─── */
+.pg-rail {
+  display: flex;
+  gap: 12px;
+  margin: 0 calc(-1 * var(--pg-gutter));
+  padding: 0 var(--pg-gutter) 2px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-padding: 0 var(--pg-gutter);
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;
+}
+.pg-rail::-webkit-scrollbar { display: none; }
+.pg-rail > * { flex: none; scroll-snap-align: start; }
+
+/* ── Cards ──────────────────────────────────────────────── */
+.pg-card {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+  border: none;
+  border-radius: 16px;
+  background: var(--pg-surface);
+  color: var(--pg-text);
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.18s var(--pg-ease), background-color 0.18s var(--pg-ease);
+}
+button.pg-card:active, .pg-card[role='button']:active { transform: scale(0.97); }
+@media (hover: hover) {
+  button.pg-card:hover, .pg-card[role='button']:hover { background: #242426; }
+}
+
+/* A picture: the faint light hairline, so a black one still shows on black. */
+.pg-pic { box-shadow: var(--pg-hairline); background: var(--pg-surface-2); }
+
+/* Small black tag over a picture (views, length, rank). */
+.pg-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 22px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.72);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.pg-tag svg { width: 12px; height: 12px; }
+
+/* ── Search field ───────────────────────────────────────── */
+.pg-search {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  height: 44px;
+  padding: 0 12px;
+  border-radius: 12px;
+  background: var(--pg-surface);
+  color: var(--pg-muted);
+}
+.pg-search > svg { flex: none; width: 18px; height: 18px; }
+.pg-search:focus-within { box-shadow: inset 0 0 0 2px rgba(255, 90, 54, 0.7); }
+.pg .pg-search input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: none;
+  outline: none;
+  background: none;
+  box-shadow: none;
+  color: var(--pg-text);
+  font: inherit;
+  font-size: 16px; /* 16px keeps iOS from zooming in on focus */
+}
+.pg .pg-search input::placeholder { color: var(--pg-muted); opacity: 1; }
+.pg .pg-search input::-webkit-search-cancel-button { display: none; }
+
+/* ── Chips: grey, the picked one orange ─────────────────── */
+.pg-chips {
+  display: flex;
+  gap: 8px;
+  margin: 0 calc(-1 * var(--pg-gutter));
+  padding: 0 var(--pg-gutter);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.pg-chips::-webkit-scrollbar { display: none; }
+.pg-chip {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 14px;
+  border: none;
+  border-radius: 999px;
+  background: var(--pg-surface-2);
+  color: var(--pg-text);
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 0.15s var(--pg-ease);
+}
+.pg-chip svg { width: 15px; height: 15px; }
+.pg-chip.is-on { background: var(--pg-accent); color: #fff; }
+.pg-chip-count { color: var(--pg-muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.pg-chip.is-on .pg-chip-count { color: rgba(255, 255, 255, 0.82); }
+@media (hover: hover) { .pg-chip:not(.is-on):hover { background: var(--pg-surface-3); } }
+
+/* ── Buttons ────────────────────────────────────────────── */
+.pg-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 40px;
+  padding: 0 16px;
+  border: none;
+  border-radius: 12px;
+  background: var(--pg-surface-2);
+  color: var(--pg-text);
+  font-size: 15px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 0.15s var(--pg-ease), transform 0.15s var(--pg-ease);
+}
+.pg-btn svg { width: 18px; height: 18px; }
+.pg-btn:active { transform: scale(0.96); }
+.pg-btn--accent { background: var(--pg-accent); color: #fff; }
+.pg-btn--icon { width: 40px; padding: 0; }
+.pg-btn--block { width: 100%; height: 48px; }
+@media (hover: hover) {
+  .pg-btn:not(.pg-btn--accent):hover { background: var(--pg-surface-3); }
+  .pg-btn--accent:hover { background: var(--pg-accent-hover); }
+}
+
+/* ── Empty state ────────────────────────────────────────── */
+.pg-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 24px;
+  border-radius: 20px;
+  background: var(--pg-surface);
+  text-align: center;
+}
+.pg-empty-icon { width: 32px; height: 32px; margin-bottom: 12px; color: var(--pg-accent); }
+.pg .pg-empty-title { margin-bottom: 6px; color: var(--pg-text); font-size: 17px; font-weight: 700; }
+.pg-empty-text { max-width: 34ch; margin-bottom: 20px !important; color: var(--pg-muted); font-size: 15px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .pg-card, .pg-btn, .pg-chip { transition: none; }
+  button.pg-card:active, .pg-card[role='button']:active, .pg-btn:active { transform: none; }
+}
