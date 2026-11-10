@@ -49,7 +49,9 @@
   padding: calc(62px + var(--vt-safe-top)) 14px 6px;
   transition: padding 0.35s var(--vt-ease);
 }
-.vt-editor.is-preview .vt-stage { padding: var(--vt-safe-top) 0 0; }
+/* Edge to edge while the timeline is closed, but always below the top bar: a tall canvas (9:16)
+   fits the height and would otherwise reach up under Back, the size menu and Export. */
+.vt-editor.is-preview .vt-stage { padding: calc(62px + var(--vt-safe-top)) 0 0; }
 
 .vt-stage-frame {
   position: relative;
