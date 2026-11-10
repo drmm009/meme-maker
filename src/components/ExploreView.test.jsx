@@ -56,16 +56,24 @@ describe('ExploreView', () => {
     expect(cards.length).toBeGreaterThan(0);
   });
 
-  it('renders shelf category headings with icons matching category colors', () => {
+  it('renders shelf headings with their plain icon and a See all', () => {
     render(<ExploreView onSelectTemplate={() => {}} initialCategory="all" />);
     const heading = screen.getByText('Trending Memes');
-    expect(heading).toBeTruthy();
-    const headingRow = heading.closest('.explore-shelf-header-row');
+    const headingRow = heading.closest('.pg-section-head');
     expect(headingRow).toBeTruthy();
-    const iconSvg = headingRow.querySelector('.explore-shelf-icon-badge svg');
+    // The icon takes the page's orange from CSS, not a colour of its own.
+    const iconSvg = headingRow.querySelector('svg.pg-section-icon');
     expect(iconSvg).toBeTruthy();
-    // Trending memes color is #ff3b60 (rgb(255, 59, 96))
-    expect(iconSvg.getAttribute('color') || iconSvg.style.color).toMatch(/(#ff3b60|rgb\(255,\s*59,\s*96\))/i);
+    expect(iconSvg.getAttribute('color') ?? 'currentColor').toBe('currentColor');
+    expect(headingRow.querySelector('.pg-section-aside').textContent).toMatch(/see all/i);
+  });
+
+  it('shows a grid of the category after See all', () => {
+    render(<ExploreView onSelectTemplate={() => {}} initialCategory="all" />);
+    const seeAll = screen.getByText('Trending Memes').closest('.pg-section-head').querySelector('.pg-section-aside');
+    fireEvent.click(seeAll);
+    expect(document.querySelector('.ex-grid')).toBeTruthy();
+    expect(screen.getByRole('tab', { name: /trending/i }).getAttribute('aria-selected')).toBe('true');
   });
 
   it('keeps active category button visible in screen when category changes', async () => {
