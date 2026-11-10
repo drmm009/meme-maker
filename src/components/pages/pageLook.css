@@ -1,19 +1,23 @@
 /* The app's pages outside the editors (Choose a layout, Explore, Social, My Studio) in the editors'
-   look (video-editor.css, editor/panels/sheetLook.css): pitch black, cards and controls in iOS greys,
-   solid orange for what's primary or picked, heading icons in plain orange with no circle, a faint
-   light hairline around pictures; no gradients, glows, glass or blur. Always dark.
+   look (video-editor.css, editor/panels/sheetLook.css): cards and controls in iOS greys, solid orange
+   for what's primary or picked, heading icons in plain orange with no circle, a faint light hairline
+   around pictures; no glass or blur. Always dark. Behind them, a warm glow like Home's, cleaner.
    A page's root carries `pg`; the classes below are its parts. Something the page portals out of
    itself (a viewer over the page) carries `pg-layer` for the same tokens and base. */
 
-/* Pitch black behind the page while one is showing (the layout chooser stays mounted, hidden, so
-   only a visible one counts). The app shell's glow lives in App.css. */
-html:has(.pg:not(.hidden-view *)),
-body:has(.pg:not(.hidden-view *)),
-.app-root:has(.pg:not(.hidden-view *)) {
-  background: #000 !important;
+/* The backdrop while a page shows (the layout chooser stays mounted, hidden, so only a visible one
+   counts): the shell's fixed layer (App.css .app-static-bg) recoloured. Near black, with the accent
+   glowing down from the top, a touch of pink at the top right and amber at the top left, gone by
+   the middle of the screen so the cards below sit on calm dark. */
+.app-root:has(.pg:not(.hidden-view *)) .app-static-bg {
+  background-color: #0a0a0c !important;
+  background-image:
+    radial-gradient(130% 72% at 50% -8%, rgba(255, 90, 54, 0.55) 0%, rgba(255, 90, 54, 0.26) 38%, rgba(255, 90, 54, 0.08) 64%, transparent 86%),
+    radial-gradient(80% 50% at 100% 4%, rgba(236, 72, 153, 0.24) 0%, transparent 72%),
+    radial-gradient(70% 45% at 0% 10%, rgba(255, 145, 0, 0.16) 0%, transparent 72%) !important;
 }
-/* The shell's fixed glow layer paints over in-flow content's background, so it's hidden, not recoloured. */
-.app-root:has(.pg:not(.hidden-view *)) .app-static-bg { display: none !important; }
+html:has(.pg:not(.hidden-view *)),
+body:has(.pg:not(.hidden-view *)) { background: #0a0a0c !important; }
 
 .pg, .pg-layer {
   --pg-bg: #000000;
@@ -40,7 +44,8 @@ body:has(.pg:not(.hidden-view *)),
   line-height: 1.4;
   -webkit-tap-highlight-color: transparent;
 }
-.pg { max-width: 760px; margin: 0 auto; padding: 8px 6px 56px; }
+/* Above the shell's fixed backdrop layer (z-index 0), which would otherwise paint over the page. */
+.pg { position: relative; z-index: 1; max-width: 760px; margin: 0 auto; padding: 8px 6px 56px; }
 :is(.pg, .pg-layer) *, :is(.pg, .pg-layer) *::before, :is(.pg, .pg-layer) *::after { box-sizing: border-box; }
 :where(.pg, .pg-layer) button { font-family: inherit; color: inherit; }
 :is(.pg, .pg-layer) ::selection { background: rgba(255, 90, 54, 0.4); color: #fff; }

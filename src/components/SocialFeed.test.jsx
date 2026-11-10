@@ -15,7 +15,7 @@ describe('SocialFeed', () => {
       />
     );
 
-    expect(screen.getByRole('heading', { name: /Community/i })).toBeDefined();
+    expect(screen.queryByRole('heading', { level: 1 })).toBeNull();
     expect(screen.getByPlaceholderText(/Search memes/i)).toBeDefined();
     expect(screen.getByText('Writing unit tests at 3 AM')).toBeDefined();
     expect(screen.getByText('CyberDoge')).toBeDefined();

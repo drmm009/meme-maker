@@ -123,10 +123,6 @@ export default function SocialFeed({ onRemixMeme }: SocialFeedProps) {
         </div>
       )}
 
-      <div className="pg-head">
-        <h1 className="pg-title">Community</h1>
-      </div>
-
       <label className="pg-search sf-search">
         <Search aria-hidden="true" />
         <input

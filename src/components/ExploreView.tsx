@@ -240,10 +240,6 @@ export default function ExploreView({ onSelectTemplate, initialCategory = 'all' 
 
   return (
     <div className="pg ex explore-view-page">
-      <div className="pg-head">
-        <h1 className="pg-title">Explore</h1>
-      </div>
-
       <div className="ex-top">
         <label className="pg-search">
           <Search aria-hidden="true" />
