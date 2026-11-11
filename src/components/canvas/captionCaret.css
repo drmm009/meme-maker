@@ -1,0 +1,19 @@
+/* The text cursor over a caption being typed into (CaptionCaret): an orange bar, as the video
+   editor's, with a soft dark edge so it shows on light and dark pictures alike. Blinks as a phone's
+   cursor does: on, then off, holding solid for a moment after each move (a new element). */
+.caption-caret {
+  position: absolute;
+  z-index: 16;
+  width: 2.5px;
+  border-radius: 2px;
+  background: var(--ui-accent, #ff5a36);
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.55);
+  pointer-events: none;
+  animation: caption-caret-blink 1.06s steps(1, end) 0.5s infinite;
+}
+@keyframes caption-caret-blink {
+  50% { opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .caption-caret { animation: none; }
+}

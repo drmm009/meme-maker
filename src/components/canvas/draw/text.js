@@ -1,53 +1,64 @@
 import { isColorDark } from '../../../utils/captionLayout';
 
-export const wrapText = (ctx, text, maxWidth) => {
+// The lines `text` is drawn in at `maxWidth`: explicit line breaks, then words moved down when a
+// line is full (the space at a break dropped, runs of spaces kept as one) and a word longer than
+// a line broken across lines. Each line keeps where its characters came from in `text` (`map[i]`
+// is the index of its i-th character; `start`/`end` the first character and just past the last),
+// so a cursor in `text` can be found on the drawn lines (caretInLines).
+export const wrapTextLines = (ctx, text, maxWidth) => {
   if (!text) return [];
-  const explicitLines = text.split('\n');
   const lines = [];
+  const fits = (str) => ctx.measureText(str).width <= maxWidth;
+  const range = (from, length) => Array.from({ length }, (_, i) => from + i);
+  let base = 0;
 
-  for (const eLine of explicitLines) {
-    let currentLine = '';
-    const words = eLine.split(' ');
-    
-    for (let i = 0; i < words.length; i++) {
-      let word = words[i];
-      
+  for (const eLine of text.split('\n')) {
+    let cur = null;
+    let pos = base;
+    for (const w of eLine.split(' ')) {
+      let word = w;
+      let at = pos;
+      pos += w.length + 1;
+
       // Force break word if it's longer than maxWidth
       while (ctx.measureText(word).width > maxWidth && word.length > 0) {
         let splitIndex = 1;
-        while (splitIndex <= word.length && ctx.measureText(word.substring(0, splitIndex)).width <= maxWidth) {
+        while (splitIndex <= word.length && fits(word.substring(0, splitIndex))) {
           splitIndex++;
         }
         splitIndex--;
-        if (splitIndex === 0) splitIndex = 1; 
-        
-        const part = word.substring(0, splitIndex);
-        if (currentLine !== '') {
-          lines.push(currentLine);
-          currentLine = '';
+        if (splitIndex === 0) splitIndex = 1;
+
+        if (cur) {
+          lines.push(cur);
+          cur = null;
         }
-        lines.push(part);
+        lines.push({ text: word.substring(0, splitIndex), start: at, end: at + splitIndex, map: range(at, splitIndex) });
         word = word.substring(splitIndex);
+        at += splitIndex;
       }
-      
+
       if (word === '') continue;
 
-      const testLine = currentLine === '' ? word : currentLine + ' ' + word;
-      if (ctx.measureText(testLine).width <= maxWidth) {
-        currentLine = testLine;
+      if (cur && fits(cur.text + ' ' + word)) {
+        // The space before the word (the last of a run of them) joins it to the line.
+        cur = { text: cur.text + ' ' + word, start: cur.start, end: at + word.length, map: [...cur.map, at - 1, ...range(at, word.length)] };
+      } else if (!cur && fits(word)) {
+        cur = { text: word, start: at, end: at + word.length, map: range(at, word.length) };
       } else {
-        lines.push(currentLine);
-        currentLine = word;
+        lines.push(cur || { text: '', start: at, end: at, map: [] });
+        cur = { text: word, start: at, end: at + word.length, map: range(at, word.length) };
       }
     }
-    if (currentLine !== '') {
-      lines.push(currentLine);
-    }
+    if (cur) lines.push(cur);
+    base += eLine.length + 1;
   }
-  
-  if (lines.length === 0) return [''];
+
+  if (lines.length === 0) return [{ text: '', start: 0, end: 0, map: [] }];
   return lines;
 };
+
+export const wrapText = (ctx, text, maxWidth) => wrapTextLines(ctx, text, maxWidth).map((line) => line.text);
 
 export const drawRoundRect = (ctx, x, y, width, height, radius) => {
   if (width <= 0 || height <= 0) return;

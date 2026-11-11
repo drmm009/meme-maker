@@ -1,12 +1,13 @@
 import { THEME_BADGE_BG, THEME_CORAL, drawDeleteHandle, drawResizeHandle, drawRotateHandle, drawSelectionBox, drawSideHandle } from './handles';
 import { isColorDark } from '../../../utils/captionLayout';
-import { drawCurvedText, drawRoundRect, drawTextLineWithEffect, getCurveSagitta, wrapText } from '../draw/text';
+import { drawCurvedText, drawRoundRect, drawTextLineWithEffect } from '../draw/text';
 import { drawWhatsAppCard, getWhatsAppCardHeight } from '../draw/socialCards/whatsapp';
 import { drawBreakingNewsChyron, getBreakingNewsHeight } from '../draw/chyron';
 import { drawTweetCard, getTweetCardHeight } from '../draw/socialCards/tweet';
 import { drawInstagramCard, getInstagramCardHeight } from '../draw/socialCards/instagram';
 import { drawSpeechBubble } from '../draw/speechBubble';
-import { applyCaptionFont, captionGradient, captionLineHeight, ensureIndicFonts, fittedFontSize, spacedText, underlineMetrics } from '../draw/captionFont';
+import { captionGradient, ensureIndicFonts, underlineMetrics } from '../draw/captionFont';
+import { captionTextLayout } from './captionTextLayout';
 
 export function paintCaption({
   activeLayerId, canvas, dragTarget, getCaptionCenterY, isDragging, isDrawingMode, layer,
@@ -46,43 +47,12 @@ if (cap.blur && Number(cap.blur) > 0) {
   targetCtx.filter = 'none';
 }
 
-const fontFamily = cap.fontFamily || 'Impact, sans-serif';
 ensureIndicFonts(cap.text, () => window.__memeCanvasForceRender?.());
-const fontSize = fittedFontSize(targetCtx, { ...cap, fontFamily }, (cap.width || 0.9) * canvas.width);
-applyCaptionFont(targetCtx, { ...cap, fontFamily }, fontSize);
-const align = cap.align || 'center';
-targetCtx.textAlign = align;
-targetCtx.textBaseline = 'middle';
-
-const renderMaxWidth = (cap.width || 0.9) * canvas.width;
-
-const displayString = spacedText(targetCtx, cap.text || '', cap, fontSize);
-
-// Use the SAME global wrapText for rendering and hit-testing
-const lines = wrapText(targetCtx, displayString, renderMaxWidth);
-
-let maxLineWidth = 0;
-for (const line of lines) {
-  maxLineWidth = Math.max(maxLineWidth, targetCtx.measureText(line).width);
-}
-// Draw Meme Text Background if enabled (white, black, or custom)
-const isBubble = !!cap.bubbleStyle;
-const hasBg = (cap.bgColor && cap.bgColor !== 'transparent' && cap.bgColor !== 'none') || isBubble;
-
-// The visual bounding box is sized to match the actual text
-const padX = isBubble ? Math.max(24, fontSize * 0.5) : (hasBg && cap.bgStyle !== 'banner' ? Math.max(16, fontSize * 0.35) : Math.max(16, fontSize * 0.25));
-const padY = isBubble ? Math.max(18, fontSize * 0.4) : (hasBg && cap.bgStyle !== 'banner' ? Math.max(10, fontSize * 0.2) : Math.max(10, fontSize * 0.16));
-let boxWidth = (cap.hasCustomWidth && cap.width)
-  ? Math.max(maxLineWidth + padX * 2, cap.width * canvas.width)
-  : (maxLineWidth + padX * 2);
-boxWidth = Math.min(canvas.width - 16, boxWidth);
-const lineHeight = captionLineHeight(cap, fontSize);
-const totalHeight = lines.length * lineHeight;
-let boxHeight = totalHeight + padY * 2;
-if (cap.curve && Math.abs(cap.curve) > 0) {
-  boxHeight += Math.round(getCurveSagitta(maxLineWidth, cap.curve));
-}
-const startY = - ((lines.length - 1) * lineHeight) / 2;
+// The font, the wrapped lines and the box round them (shared with the cursor while typing).
+const layout = captionTextLayout(targetCtx, cap, canvas.width);
+const { fontSize, align, maxLineWidth, isBubble, hasBg, lineHeight, totalHeight, startY } = layout;
+const lines = layout.lines.map((line) => line.text);
+let { boxWidth, boxHeight } = layout;
 
 if (cap.isBreakingNews) {
   boxWidth = Math.max(300, (cap.width || 0.94) * canvas.width);
@@ -159,7 +129,7 @@ if (cap.isBreakingNews) {
   if (gradientFill) textColor = gradientFill;
 
   const shouldStroke = cap.stroke && cap.stroke !== 'transparent' && (!hasBg || (cap.stroke !== cap.bgColor && cap.stroke !== bgFillColor));
-  const textAnchorX = align === 'left' ? (-boxWidth / 2 + padX) : (align === 'right' ? (boxWidth / 2 - padX) : 0);
+  const { textAnchorX } = layout;
 
   // The caption's own drop shadow, under every line (the text effects may add their own).
   targetCtx.save();

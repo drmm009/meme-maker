@@ -12,6 +12,7 @@ import CanvasFlash from './preview/CanvasFlash';
 import { STAGE_WIDTH } from './preview/previewMath';
 import { useStageFit } from './preview/useStageFit';
 import { useTextEditing } from './preview/useTextEditing';
+import { useCaretIndex } from '../canvas/useCaretIndex';
 
 // Initial stage size before useStageFit measures the space (it then sizes the stage directly).
 const INITIAL_SIZE = { width: 800, height: 450 };
@@ -51,6 +52,8 @@ const CanvasPreview = forwardRef((props, ref) => {
   const stageHeight = STAGE_WIDTH / canvasAspectRatio;
   const logicalDimensions = useMemo(() => ({ width: STAGE_WIDTH, height: STAGE_WIDTH / canvasAspectRatio }), [canvasAspectRatio]);
   const { editingId, startEditing, inputProps } = useTextEditing(updateItem);
+  // Where the cursor is in the text being typed, shown on the clip.
+  const caretIndex = useCaretIndex(inputProps.ref, Boolean(editingId));
   // The watermark sits over everything for the whole video; it can't be picked or dragged.
   const watermarkItem = useMemo(() => watermarkClip(watermark, MAX_TIMELINE_MS, canvasAspectRatio), [watermark, canvasAspectRatio]);
   const watermarkLogo = useMemo(() => watermarkLogoClip(watermark, MAX_TIMELINE_MS, canvasAspectRatio), [watermark, canvasAspectRatio]);
@@ -114,6 +117,7 @@ const CanvasPreview = forwardRef((props, ref) => {
                 onEditStart={startEditing}
                 onChange={(newAttrs) => updateItem(item.id, newAttrs)}
                 canvasDimensions={logicalDimensions}
+                caretIndex={item.id === editingId ? caretIndex : null}
               />
             ) : (
               // Photo, video or sticker

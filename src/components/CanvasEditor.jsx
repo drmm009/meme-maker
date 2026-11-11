@@ -9,6 +9,8 @@ import { useCanvasView } from './canvas/interaction/useCanvasView';
 import { isZoomed } from './canvas/interaction/viewZoom';
 import { useAnimatedLayers } from './canvas/media/useAnimatedLayers';
 import CaptionTextOverlay from './canvas/CaptionTextOverlay';
+import CaptionCaret from './canvas/CaptionCaret';
+import { useCaretIndex } from './canvas/useCaretIndex';
 
 // The meme canvas: works out the layout, draws the scene with renderScene, and hands pointer
 // input to useCanvasInteraction. Drawing and hit testing live in ./canvas.
@@ -122,6 +124,8 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
 
   const activeCaption = captions.find((c) => c.id === activeLayerId);
   const showTextOverlay = !isDrawingMode && activeCaption && !isSocialCardCaption(activeCaption);
+  // Where the cursor is while the caption is typed into (null when the text box isn't focused).
+  const caretIndex = useCaretIndex(editableRef, Boolean(showTextOverlay));
 
   // Focus textarea ONLY when explicitly called (not on selection change, never on Social Cards)
   const focusTextarea = () => {
@@ -301,6 +305,14 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
           onBlur={() => setEditingCaptionId(null)}
           onPointerDown={handleTextOverlayPointerDown}
           onPointerEnd={handleTextOverlayPointerEnd}
+        />
+      )}
+      {showTextOverlay && caretIndex !== null && canvasRef.current && (
+        <CaptionCaret
+          caption={activeCaption}
+          canvas={canvasRef.current}
+          centerY={getCaptionCenterY(activeCaption, canvasRef.current)}
+          index={caretIndex}
         />
       )}
     </div>

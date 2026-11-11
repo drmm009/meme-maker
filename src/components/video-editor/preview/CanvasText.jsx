@@ -1,7 +1,7 @@
 import React, { useEffect, useReducer, useRef, useState } from 'react';
 import Konva from 'konva';
-import { Image as KonvaImage, Transformer, Group, Line } from 'react-konva';
-import { onTextFontsLoaded, textBitmap, textImageAttrs } from '../../../utils/textBitmap';
+import { Image as KonvaImage, Transformer, Group, Line, Rect } from 'react-konva';
+import { onTextFontsLoaded, textBitmap, textCaret, textImageAttrs } from '../../../utils/textBitmap';
 import { useEditorStore } from '../../../store/useVideoEditorStore';
 import { clipOpacity } from '../../../model/videoProject';
 import { useTextPlayback } from './useTextPlayback';
@@ -15,10 +15,51 @@ const previewScale = (stage) => {
   return Math.min(3, Math.max(0.5, Math.ceil(s * 4) / 4));
 };
 
+const CARET_BLINK_MS = 530;
+
+// The text cursor while the clip is typed into: a thin orange bar at `caret` (textCaret: from the
+// box's top-left, before the clip turns), blinking, and solid again whenever it moves. Only on the
+// preview: the export draws its own scene.
+function TextCaret({ attrs, caret, width }) {
+  const ref = useRef(null);
+  useEffect(() => {
+    const node = ref.current;
+    if (!node) return undefined;
+    node.visible(true);
+    node.getLayer()?.batchDraw();
+    const timer = setInterval(() => {
+      node.visible(!node.visible());
+      node.getLayer()?.batchDraw();
+    }, CARET_BLINK_MS);
+    return () => clearInterval(timer);
+  }, [caret.x, caret.y]);
+  return (
+    <Group x={attrs.x} y={attrs.y} rotation={attrs.rotation} listening={false}>
+      <Rect
+        ref={ref}
+        x={caret.x}
+        y={caret.y}
+        width={width}
+        height={caret.height}
+        offsetX={width / 2}
+        offsetY={caret.height / 2}
+        rotation={caret.rotation}
+        cornerRadius={width / 2}
+        fill="#ff5a36"
+        shadowColor="#000"
+        shadowOpacity={0.45}
+        shadowBlur={2}
+        shadowForStrokeEnabled={false}
+      />
+    </Group>
+  );
+}
+
 // A text clip on the preview: the image editor's caption painter draws it into a picture
-// (utils/textBitmap), shown here as one image. Tapping it starts editing (onEditStart); its
-// handles, pinch and drag work as the image editor's captions (useTextGestures).
-const CanvasText = ({ item, isSelected, onSelect, onChange, onEditStart, canvasDimensions }) => {
+// (utils/textBitmap), shown here as one image. Tapping it starts editing (onEditStart); while it's
+// typed into, `caretIndex` is where the cursor is in its text (TextCaret shows it). Its handles,
+// pinch and drag work as the image editor's captions (useTextGestures).
+const CanvasText = ({ item, isSelected, onSelect, onChange, onEditStart, canvasDimensions, caretIndex = null }) => {
   const nodeRef = useRef(null);
   const groupRef = useRef(null);
   const trRef = useRef(null);
@@ -30,6 +71,8 @@ const CanvasText = ({ item, isSelected, onSelect, onChange, onEditStart, canvasD
   // Mid-gesture the node already shows the live look; a render then keeps it.
   const shown = liveRef.current ? { ...item, ...liveRef.current } : item;
   const bitmap = textBitmap(shown, scale);
+  const attrs = textImageAttrs(shown, bitmap);
+  const caret = caretIndex === null ? null : textCaret(shown, scale, caretIndex);
 
   useEffect(() => {
     itemRef.current = item;
@@ -89,7 +132,7 @@ const CanvasText = ({ item, isSelected, onSelect, onChange, onEditStart, canvasD
           <KonvaImage
             id={`text-${item.id}`}
             ref={nodeRef}
-            {...textImageAttrs(shown, bitmap)}
+            {...attrs}
             draggable
             onClick={startEdit}
             onTap={startEdit}
@@ -98,6 +141,8 @@ const CanvasText = ({ item, isSelected, onSelect, onChange, onEditStart, canvasD
             onTransform={handlers.onTransform}
             onTransformEnd={handlers.onTransformEnd}
           />
+          {/* About 2.5 screen pixels wide at any zoom (scale is picture pixels per stage unit). */}
+          {caret && <TextCaret attrs={attrs} caret={caret} width={(2.5 * (Konva.pixelRatio || 1)) / scale} />}
         </Group>
       </Group>
       {/* Centre guides while a drag has snapped the text onto a centre line. */}

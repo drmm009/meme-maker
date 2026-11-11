@@ -8,6 +8,7 @@
 import { paintCaption } from '../components/canvas/render/paintCaption';
 import { wrapText } from '../components/canvas/draw/text';
 import { applyCaptionFont, fittedFontSize } from '../components/canvas/draw/captionFont';
+import { captionCaret, captionTextLayout } from '../components/canvas/render/captionTextLayout';
 import type { MemeCaption } from '../model/memeDocument';
 import type { TextClip } from '../model/videoProject';
 import type { TextFrame } from './textAnimation';
@@ -188,6 +189,25 @@ function draw(item: Partial<TextClip>, scale: number, text: string, whole: TextB
     boxY: (box.y - box.h / 2 - top) / scale,
     boxWidth: boxW / scale,
     boxHeight: boxH / scale,
+  };
+}
+
+// The text cursor at `index` in the clip's text, as the clip is drawn at `scale`: its middle in
+// stage units from the top-left of the clip's box (before the clip turns), its height, and its own
+// tilt in degrees (on curved text). Null where there's no cursor (a card).
+export function textCaret(item: Partial<TextClip>, scale: number, index: number): { x: number; y: number; height: number; rotation: number } | null {
+  scratch = scratch || document.createElement('canvas');
+  const ctx = scratch.getContext('2d') as CanvasRenderingContext2D;
+  const cap = captionOf(item, scale);
+  // On a canvas as wide as the picture draw() paints on, so the lines wrap the same.
+  const layout = captionTextLayout(ctx, cap, Math.ceil(STAGE_WIDTH * scale));
+  const spot = captionCaret(ctx, cap, layout, index);
+  if (!spot) return null;
+  return {
+    x: (layout.boxWidth / 2 + spot.x) / scale,
+    y: (layout.boxHeight / 2 + spot.y) / scale,
+    height: spot.height / scale,
+    rotation: (spot.angle * 180) / Math.PI,
   };
 }
 
