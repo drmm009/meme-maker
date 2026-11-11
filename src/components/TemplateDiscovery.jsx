@@ -90,16 +90,16 @@ const STUDIO_HERO_SLIDES = [
   {
     id: 'customlayout',
     action: 'custom',
-    title: "Start Creating ✨",
+    title: 'Start Creating',
     titleMain: 'Unleash Your',
     titleGradient: 'Viral Meme Ideas',
     titleGradClass: 'grad-sunset',
-    tagline: 'Unleash your viral meme ideas using our studio editor.',
-    glowTheme: 'glow-theme-studio',
-    glowColor: 'rgba(255, 94, 54, 0.45)',
+    tagline: 'Any layout, your pictures, your captions.',
     icon: Sparkles,
     image: './images/drake-smile.jpg',
-    primaryVariant: 'pill-sunset studio-pill-long'
+    secondaryLabel: 'Upload',
+    secondaryIcon: Upload,
+    secondaryAction: 'upload'
   },
   {
     id: 'videotrim',
@@ -108,15 +108,11 @@ const STUDIO_HERO_SLIDES = [
     titleMain: 'Create Viral',
     titleGradient: 'Meme Videos',
     titleGradClass: 'grad-electric',
-    tagline: 'Trim video clips, sync audio & curved captions',
-    glowTheme: 'glow-theme-ai',
-    glowColor: 'rgba(6, 182, 212, 0.45)',
+    tagline: 'Trim clips, add sound and captions.',
     icon: Video,
     image: './images/Akshay-Kumar-Dance-at-Baraat-1024x428.webp',
-    primaryVariant: 'pill-cyan',
     secondaryLabel: 'Upload',
     secondaryIcon: Upload,
-    secondaryVariant: 'studio-pill-dark',
     secondaryAction: 'upload'
   },
   {
@@ -126,15 +122,11 @@ const STUDIO_HERO_SLIDES = [
     titleMain: 'Remove Background',
     titleGradient: 'Make Stickers',
     titleGradClass: 'grad-mint-cyan',
-    tagline: 'Extract clean cutout stickers in 1 tap for any photo.',
-    glowTheme: 'glow-theme-cutout',
-    glowColor: 'rgba(16, 185, 129, 0.45)',
+    tagline: 'Cut any photo into a sticker in one tap.',
     icon: Scissors,
     image: './images/aura-farming-kid.webp',
-    primaryVariant: 'pill-mint',
     secondaryLabel: 'Upload',
     secondaryIcon: Upload,
-    secondaryVariant: 'studio-pill-dark',
     secondaryAction: 'upload'
   },
   {
@@ -144,16 +136,12 @@ const STUDIO_HERO_SLIDES = [
     titleMain: 'Swap Your Face',
     titleGradient: 'Into Any Meme',
     titleGradClass: 'grad-amber-fuchsia',
-    tagline: 'Swap your face into viral memes instantly without hassle.',
-    glowTheme: 'glow-theme-face',
-    glowColor: 'rgba(245, 158, 11, 0.45)',
+    tagline: 'Put your face in any meme.',
     icon: Smile,
     image: './images/akshay-kumar-disguised-reaction-1024x955.jpg',
     imageFocus: '50% 46%',
-    primaryVariant: 'pill-amber',
     secondaryLabel: 'Upload',
     secondaryIcon: Upload,
-    secondaryVariant: 'studio-pill-dark',
     secondaryAction: 'upload'
   },
   {
@@ -163,16 +151,12 @@ const STUDIO_HERO_SLIDES = [
     titleMain: 'Create Realistic',
     titleGradient: 'Social Cards',
     titleGradClass: 'grad-fuchsia-violet',
-    tagline: 'Craft Twitter, WhatsApp & Instagram cards',
-    glowTheme: 'glow-theme-face',
-    glowColor: 'rgba(217, 70, 239, 0.45)',
+    tagline: 'Tweets, chats and Instagram posts.',
     icon: Share2,
     image: './images/social-tweet-card.svg',
     imageFocus: '50% 44%',
-    primaryVariant: 'pill-fuchsia',
     secondaryLabel: 'Upload',
     secondaryIcon: Upload,
-    secondaryVariant: 'studio-pill-dark',
     secondaryAction: 'upload'
   },
   {
@@ -182,15 +166,11 @@ const STUDIO_HERO_SLIDES = [
     titleMain: 'Prompt-To-Meme',
     titleGradient: 'AI Punchlines',
     titleGradClass: 'grad-electric',
-    tagline: 'Turn prompts into viral captions & punchlines',
-    glowTheme: 'glow-theme-ai',
-    glowColor: 'rgba(129, 140, 248, 0.45)',
+    tagline: 'Type an idea, get four punchlines.',
     icon: Wand2,
     image: './images/Lekin-ye-sala-kar-kya-raha-hai-yaha-1024x576.webp',
-    primaryVariant: 'studio-pill-ai',
     secondaryLabel: 'Upload',
     secondaryIcon: Upload,
-    secondaryVariant: 'studio-pill-dark',
     secondaryAction: 'upload'
   }
 ];
@@ -538,7 +518,6 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom, on
     touchStartRef.current = { x: null, y: null };
   };
 
-  const currentSlide = STUDIO_HERO_SLIDES[activeSlideIndex] || STUDIO_HERO_SLIDES[0];
 
   const handleResetToFeatured = () => {
     setSelectedTag('featured');
@@ -550,16 +529,14 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom, on
       {/* 1. STUDIO FEATURES: Flagship Hero Banner Carousel (ON TOP OF HOMESCREEN) */}
       {!isGridView && (
         <section className="features-carousel-section" aria-label="Studio Features Showcase">
-          {/* Flagship Hero Banner Carousel with Primary Orange Glow Glass Effect */}
+          {/* The carousel: a picture card at a time, its dashes under it */}
           <div 
-            className={`hero-banner-wrapper ${currentSlide.glowTheme}`}
+            className={`hero-banner-wrapper${isCarouselHovered ? ' is-held' : ''}`}
             onMouseEnter={() => setIsCarouselHovered(true)}
             onMouseLeave={() => setIsCarouselHovered(false)}
             onTouchStart={(e) => { setIsCarouselHovered(true); handleTouchStart(e); }}
             onTouchEnd={(e) => { setIsCarouselHovered(false); handleTouchEnd(e); }}
           >
-            <div className="hero-glow-orb hero-glow-orb-1" aria-hidden="true" />
-
             {/* Carousel Left / Right Navigation Controls (Desktop hover arrows) */}
             <button 
               type="button"
@@ -579,7 +556,7 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom, on
               <ChevronRight size={16} />
             </button>
 
-            <div className="hero-banner">
+            <div className="hero-banner hero-banner--pic">
               <div className="hero-slides-viewport">
                 <div
                   className="hero-slides-track"
@@ -613,41 +590,16 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom, on
                           </div>
                         </div>
 
-                        <div className="hero-actions">
-                          {slide.id === 'customlayout' ? (
-                            <button
-                              type="button"
-                              className="hero-pill-capsule-cta"
-                              onClick={() => handleFeatureClick(slide)}
-                              aria-label={slide.title}
-                            >
-                              <Sparkles size={17} className="hero-pill-capsule-icon" />
-                              <span className="hero-pill-capsule-text">Start Creating</span>
-                              <span className="hero-pill-capsule-knob" aria-hidden="true">
-                                <ChevronRight size={17} strokeWidth={2.8} />
-                              </span>
-                            </button>
-                          ) : (
-                            <button
-                              type="button"
-                              className={`studio-pill-btn ${slide.primaryVariant}`}
-                              onClick={() => handleFeatureClick(slide)}
-                              aria-label={slide.title}
-                            >
-                              <SlideIcon size={17} className="studio-pill-icon" />
-                              <span className="studio-pill-text">{slide.title}</span>
-                            </button>
-                          )}
-
+                        <div className="hero-cta-row">
+                          <button type="button" className="hero-go" onClick={() => handleFeatureClick(slide)} aria-label={slide.title}>
+                            <SlideIcon size={17} aria-hidden="true" />
+                            <span>{slide.title}</span>
+                            <ChevronRight size={17} strokeWidth={2.6} className="hero-go-arrow" aria-hidden="true" />
+                          </button>
                           {slide.secondaryLabel && (
-                            <button
-                              type="button"
-                              className={`studio-pill-btn ${slide.secondaryVariant}`}
-                              onClick={() => handleFeatureClick(slide.secondaryAction)}
-                              aria-label={slide.secondaryLabel}
-                            >
-                              <SecIcon size={17} className="studio-pill-icon" />
-                              <span className="studio-pill-text">{slide.secondaryLabel}</span>
+                            <button type="button" className="hero-up" onClick={() => handleFeatureClick(slide.secondaryAction)} aria-label={slide.secondaryLabel}>
+                              <SecIcon size={16} aria-hidden="true" />
+                              <span>{slide.secondaryLabel}</span>
                             </button>
                           )}
                         </div>
@@ -666,20 +618,23 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom, on
                 onChange={handleCutoutImageSelected}
               />
 
-              {/* Carousel Dot / Pill Indicators */}
-              <div className="hero-carousel-indicators" role="tablist" aria-label="Studio features navigation">
-                {STUDIO_HERO_SLIDES.map((slide, idx) => (
-                  <button
-                    key={slide.id}
-                    type="button"
-                    className={`hero-indicator-dot ${idx === activeSlideIndex ? 'active' : ''}`}
-                    onClick={() => handleDotClick(idx)}
-                    aria-label={`Slide ${idx + 1}: ${slide.titleMain} ${slide.titleGradient}`}
-                    aria-selected={idx === activeSlideIndex}
-                    role="tab"
-                  />
-                ))}
-              </div>
+            </div>
+
+            {/* Which card shows: a dash each, the lit one filling as its time runs */}
+            <div className="hero-dashes" role="tablist" aria-label="Studio features navigation">
+              {STUDIO_HERO_SLIDES.map((slide, idx) => (
+                <button
+                  key={slide.id}
+                  type="button"
+                  className={`hero-dash${idx === activeSlideIndex ? ' active' : ''}`}
+                  onClick={() => handleDotClick(idx)}
+                  aria-label={`Slide ${idx + 1}: ${slide.titleMain} ${slide.titleGradient}`}
+                  aria-selected={idx === activeSlideIndex}
+                  role="tab"
+                >
+                  <span className="hero-dash-fill" aria-hidden="true" />
+                </button>
+              ))}
             </div>
           </div>
         </section>

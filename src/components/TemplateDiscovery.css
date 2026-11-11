@@ -3138,11 +3138,23 @@ input.ai-hero-prompt-input {
   color: #475569 !important;
 }
 
-/* ── The carousel's cards on pictures: each slide a meme behind a dark fade, its heading, tagline
-   and buttons at the bottom (the badge and the 3D drawing are gone). ── */
-.hero-slide-inner {
-  min-height: 224px;
+/* ── The carousel's cards: each slide a meme filling the card behind a dark fade, with its
+   two-line heading, one line under it and its buttons at the bottom; no glass frame, glow or
+   shine. Under the card, a dash for each slide, the lit one filling as its time runs. ── */
+.hero-banner.hero-banner--pic {
+  border: none !important;
+  border-radius: 26px !important;
+  background: #1c1c1e !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1), 0 22px 36px -24px rgba(0, 0, 0, 0.95) !important;
+}
+.hero-banner.hero-banner--pic::after { display: none; }
+.hero-banner--pic .hero-slide-inner {
+  min-height: 256px;
   justify-content: flex-end !important;
+  padding: 18px !important;
+  overflow: hidden;
 }
 .hero-slide-pic {
   position: absolute;
@@ -3155,14 +3167,77 @@ input.ai-hero-prompt-input {
   user-select: none;
   pointer-events: none;
 }
+/* The showing picture drifts in, slowly. */
+.hero-slide-inner.active .hero-slide-pic { animation: heroPicDrift 7s cubic-bezier(0.2, 0.6, 0.2, 1) both; }
+@keyframes heroPicDrift { from { transform: scale(1.08); } to { transform: scale(1); } }
 .hero-slide-shade {
   position: absolute;
   inset: 0;
   z-index: 1;
-  background: linear-gradient(to top, rgba(8, 8, 10, 0.96) 0%, rgba(8, 8, 10, 0.86) 30%, rgba(8, 8, 10, 0.52) 58%, rgba(8, 8, 10, 0.12) 100%);
+  background: linear-gradient(to top, rgba(8, 8, 10, 0.96) 0%, rgba(8, 8, 10, 0.86) 26%, rgba(8, 8, 10, 0.5) 50%, rgba(8, 8, 10, 0.1) 76%, transparent 100%);
   pointer-events: none;
 }
-.hero-slide-inner .hero-card-header,
-.hero-slide-inner .hero-actions { position: relative; z-index: 2; }
-.hero-slide-inner .hero-text-content { max-width: 100% !important; }
-.hero-slide-inner .hero-tagline { color: rgba(255, 255, 255, 0.82) !important; }
+.hero-banner--pic .hero-card-header,
+.hero-banner--pic .hero-cta-row { position: relative; z-index: 2; }
+.hero-banner--pic .hero-text-content { max-width: 100% !important; }
+.hero-banner--pic .hero-tagline {
+  margin-top: 8px !important;
+  color: rgba(255, 255, 255, 0.84) !important;
+  font-size: 0.86rem !important;
+  font-weight: 500 !important;
+  text-shadow: none;
+}
+
+/* The buttons: the card's action in solid orange, Upload a quiet dark pill beside it. */
+.hero-cta-row { display: flex; align-items: center; gap: 8px; margin-top: 14px; }
+.hero-go, .hero-up {
+  display: inline-flex;
+  align-items: center;
+  height: 42px;
+  border: none;
+  border-radius: 999px;
+  font-family: 'Plus Jakarta Sans', Inter, system-ui, -apple-system, sans-serif;
+  font-size: 14.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1), background-color 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.hero-go { gap: 7px; padding: 0 10px 0 15px; background: #ff5a36; color: #fff; }
+.hero-go-arrow { margin-left: -2px; opacity: 0.9; }
+.hero-up { gap: 6px; padding: 0 15px 0 13px; background: rgba(28, 28, 30, 0.92); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18); color: #fff; }
+.hero-go:active, .hero-up:active { transform: scale(0.96); }
+.hero-go:focus-visible, .hero-up:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+@media (hover: hover) {
+  .hero-go:hover { background: #ff6d4d; }
+  .hero-up:hover { background: #2c2c2e; }
+}
+
+/* The dashes. */
+.hero-dashes { display: flex; justify-content: center; gap: 5px; margin-top: 10px; }
+.hero-dash {
+  position: relative;
+  width: 8px;
+  height: 20px; /* a taller tap area than the dash drawn in it */
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  transition: width 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.hero-dash::before, .hero-dash-fill { position: absolute; top: 8px; left: 0; height: 4px; border-radius: 2px; }
+.hero-dash::before { content: ''; right: 0; background: rgba(255, 255, 255, 0.24); }
+.hero-dash-fill { width: 0; background: #ff5a36; }
+.hero-dash.active { width: 30px; }
+/* 5.5s, the time a card shows; it stays full while the carousel is held. */
+.hero-dash.active .hero-dash-fill { animation: heroDashFill 5.5s linear both; }
+.hero-banner-wrapper.is-held .hero-dash.active .hero-dash-fill { animation: none; width: 100%; }
+@keyframes heroDashFill { from { width: 0; } to { width: 100%; } }
+.hero-dash:focus-visible { outline: 2px solid #ff5a36; outline-offset: 2px; border-radius: 4px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-slide-inner.active .hero-slide-pic { animation: none; }
+  .hero-dash.active .hero-dash-fill { animation: none; width: 100%; }
+  .hero-go, .hero-up, .hero-dash { transition: none; }
+}
