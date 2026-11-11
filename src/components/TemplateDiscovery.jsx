@@ -22,100 +22,7 @@ const AI_VIBE_MODES = [
   { id: 'tech', icon: Code, emoji: '🧠', label: 'Tech Humor', prompt: 'Pushing directly to production on a Friday afternoon' },
 ];
 
-/* --- Bespoke 3D Volumetric SVG Graphics for Hero Carousel (From Primary Version) --- */
-
-function GraphicRocket3D() {
-  return (
-    <svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" className="hero-3d-svg rocket-3d-svg">
-      <defs>
-        <linearGradient id="rocketBody3D" x1="0%" y1="30%" x2="100%" y2="70%">
-          <stop offset="0%" stopColor="#ffffff" />
-          <stop offset="20%" stopColor="#f8fafc" />
-          <stop offset="55%" stopColor="#e2e8f0" />
-          <stop offset="80%" stopColor="#c084fc" />
-          <stop offset="100%" stopColor="#7c3aed" />
-        </linearGradient>
-        <linearGradient id="rocketNose3D" x1="15%" y1="15%" x2="85%" y2="85%">
-          <stop offset="0%" stopColor="#fda4af" />
-          <stop offset="35%" stopColor="#f43f5e" />
-          <stop offset="75%" stopColor="#be123c" />
-          <stop offset="100%" stopColor="#881337" />
-        </linearGradient>
-        <linearGradient id="rocketFinLeft" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#fda4af" />
-          <stop offset="40%" stopColor="#f43f5e" />
-          <stop offset="100%" stopColor="#be123c" />
-        </linearGradient>
-        <linearGradient id="rocketFinRight" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#f43f5e" />
-          <stop offset="60%" stopColor="#be123c" />
-          <stop offset="100%" stopColor="#700733" />
-        </linearGradient>
-        <linearGradient id="portholeChrome" x1="20%" y1="20%" x2="85%" y2="85%">
-          <stop offset="0%" stopColor="#ffffff" />
-          <stop offset="40%" stopColor="#e2e8f0" />
-          <stop offset="75%" stopColor="#94a3b8" />
-          <stop offset="100%" stopColor="#334155" />
-        </linearGradient>
-        <radialGradient id="portholeCyan" cx="35%" cy="35%" r="68%">
-          <stop offset="0%" stopColor="#e0f2fe" />
-          <stop offset="30%" stopColor="#38bdf8" />
-          <stop offset="75%" stopColor="#0284c7" />
-          <stop offset="100%" stopColor="#082f49" />
-        </radialGradient>
-        <radialGradient id="flameCore" cx="50%" cy="20%" r="80%">
-          <stop offset="0%" stopColor="#ffffff" />
-          <stop offset="25%" stopColor="#fef08a" />
-          <stop offset="55%" stopColor="#ff5e36" />
-          <stop offset="85%" stopColor="#ec4899" />
-          <stop offset="100%" stopColor="#ec4899" stopOpacity="0" />
-        </radialGradient>
-        <radialGradient id="flameInnerHot" cx="50%" cy="25%" r="70%">
-          <stop offset="0%" stopColor="#ffffff" />
-          <stop offset="45%" stopColor="#fde047" />
-          <stop offset="100%" stopColor="#f97316" stopOpacity="0" />
-        </radialGradient>
-        <filter id="thrusterGlow" x="-50%" y="-50%" width="200%" height="200%">
-          <feGaussianBlur stdDeviation="3.5" result="blur" />
-          <feComposite in="SourceGraphic" in2="blur" operator="over" />
-        </filter>
-      </defs>
-      <g transform="translate(6, 2) rotate(38, 60, 60)">
-        <g filter="url(#thrusterGlow)">
-          <path d="M53 82 C44 94 48 108 60 118 C72 108 76 94 67 82 Z" fill="url(#flameCore)" />
-          <path d="M55 83 C49 92 53 101 60 109 C67 101 71 92 65 83 Z" fill="url(#flameInnerHot)" />
-          <path d="M57 83 C54 89 57 95 60 99 C63 95 66 89 63 83 Z" fill="#ffffff" opacity="0.95" />
-        </g>
-        <circle cx="56" cy="116" r="2.2" fill="#fde047" opacity="0.95" />
-        <circle cx="64" cy="118" r="1.8" fill="#ff5e36" opacity="0.85" />
-        <circle cx="60" cy="122" r="1.5" fill="#ec4899" opacity="0.8" />
-        <path d="M47 62 C34 68 25 75 25 81 C25 84 28 85 34 84 L48 78 Z" fill="url(#rocketFinLeft)" />
-        <path d="M47 62 C37 67 30 73 30 78 C30 80 33 81 37 80 L48 76 Z" fill="#fda4af" opacity="0.5" />
-        <path d="M73 62 C86 68 95 75 95 81 C95 84 92 85 86 84 L72 78 Z" fill="url(#rocketFinRight)" />
-        <path d="M73 62 C83 67 90 73 90 78 C90 80 87 81 83 80 L72 76 Z" fill="#4c0519" opacity="0.6" />
-        <path d="M49 77 L71 77 L67 83 L53 83 Z" fill="#1e293b" />
-        <ellipse cx="60" cy="83" rx="7" ry="2.2" fill="#f97316" />
-        <path d="M48 35 C42 49 42 65 48 78 L72 78 C78 65 78 49 72 35 Z" fill="url(#rocketBody3D)" />
-        <path d="M50 36 C45 49 45 65 49 75 C52 75 51 50 55 38 Z" fill="#ffffff" opacity="0.8" />
-        <path d="M59 58 L57 78 L63 78 L61 58 Z" fill="#be123c" />
-        <path d="M59 58 L58 78 L60 78 L60 58 Z" fill="#fda4af" opacity="0.6" />
-        <path d="M48 35 C48 23 54 15 60 15 C66 15 72 23 72 35 Z" fill="url(#rocketNose3D)" />
-        <ellipse cx="56" cy="24" rx="3.5" ry="6.5" transform="rotate(-15 56 24)" fill="#ffffff" opacity="0.85" />
-        <circle cx="60" cy="50" r="11" fill="url(#portholeChrome)" />
-        <circle cx="60" cy="50" r="8.8" fill="#0f172a" />
-        <circle cx="60" cy="50" r="7.5" fill="url(#portholeCyan)" />
-        <ellipse cx="58" cy="47.5" rx="3.8" ry="1.8" transform="rotate(-30 58 47.5)" fill="#ffffff" opacity="0.95" />
-        <circle cx="62.5" cy="52.5" r="1.1" fill="#ffffff" opacity="0.75" />
-      </g>
-      <path d="M104 7 C104 12 100 16 95 16 C100 16 104 20 104 25 C104 20 108 16 113 16 C108 16 104 12 104 7 Z" fill="#facc15" />
-      <circle cx="104" cy="16" r="1.5" fill="#ffffff" />
-      <path d="M112 40 C112 43 109 45 106 45 C109 45 112 47 112 50 C112 47 115 45 118 45 C115 45 112 43 112 40 Z" fill="#ffffff" opacity="0.95" />
-      <path d="M82 3 C82 6 79 8 76 8 C79 8 82 10 82 13 C82 10 85 8 88 8 C85 8 82 6 82 3 Z" fill="#f472b6" opacity="0.9" />
-      <circle cx="101" cy="58" r="1.8" fill="#f472b6" opacity="0.85" />
-      <circle cx="114" cy="28" r="1.2" fill="#ffffff" opacity="0.9" />
-    </svg>
-  );
-}
+/* --- The robot drawn on Home's AI card --- */
 
 function GraphicAiRobot3D() {
   return (
@@ -178,218 +85,12 @@ function GraphicAiRobot3D() {
   );
 }
 
-function GraphicFaceSwap3D() {
-  return (
-    <svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" className="hero-3d-svg face-swap-3d-svg">
-      <defs>
-        <linearGradient id="maskGold3D" x1="15%" y1="10%" x2="85%" y2="85%">
-          <stop offset="0%" stopColor="#fffbeb" />
-          <stop offset="25%" stopColor="#fef08a" />
-          <stop offset="55%" stopColor="#f59e0b" />
-          <stop offset="85%" stopColor="#b45309" />
-          <stop offset="100%" stopColor="#78350f" />
-        </linearGradient>
-        <linearGradient id="maskBacking" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#ec4899" />
-          <stop offset="100%" stopColor="#8b5cf6" />
-        </linearGradient>
-        <filter id="maskGlow" x="-50%" y="-50%" width="200%" height="200%">
-          <feGaussianBlur stdDeviation="3" result="blur" />
-          <feComposite in="SourceGraphic" in2="blur" operator="over" />
-        </filter>
-      </defs>
-      <g transform="translate(6, 4)">
-        <ellipse cx="64" cy="62" rx="27" ry="33" fill="url(#maskBacking)" opacity="0.45" transform="rotate(18 64 62)" filter="url(#maskGlow)" className="face-motion-backing" />
-        <g className="face-motion-mask" transform="rotate(-10 56 60)">
-          <path d="M30 42 C30 24 42 16 58 16 C74 16 86 24 86 42 C86 64 74 86 58 92 C42 86 30 64 30 42 Z" fill="url(#maskGold3D)" />
-          <ellipse cx="58" cy="26" rx="16" ry="6" fill="#ffffff" opacity="0.65" />
-          <circle cx="41" cy="58" r="6" fill="#f43f5e" opacity="0.5" />
-          <circle cx="75" cy="58" r="6" fill="#f43f5e" opacity="0.5" />
-          <path d="M40 44 C44 38 52 38 54 44 C50 42 44 42 40 44 Z" fill="#1e1b4b" />
-          <path d="M62 44 C64 38 72 38 76 44 C72 42 66 42 62 44 Z" fill="#1e1b4b" />
-          <circle cx="47" cy="42" r="1.5" fill="#ffffff" />
-          <circle cx="69" cy="42" r="1.5" fill="#ffffff" />
-          <path d="M45 66 C49 76 67 76 71 66 Z" fill="#450a0a" />
-          <path d="M48 66 C51 70 65 70 68 66 Z" fill="#ffffff" />
-          <path d="M58 32 L58 56" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" opacity="0.55" />
-        </g>
-        <g className="face-motion-arrows">
-          <path d="M88 42 C96 50 96 66 86 76" fill="none" stroke="#ec4899" strokeWidth="2.5" strokeLinecap="round" strokeDasharray="4 2" />
-          <polygon points="84,72 87,79 92,75" fill="#ec4899" />
-          <path d="M28 72 C20 64 20 48 30 38" fill="none" stroke="#facc15" strokeWidth="2.5" strokeLinecap="round" strokeDasharray="4 2" />
-          <polygon points="32,42 29,35 24,39" fill="#facc15" />
-        </g>
-      </g>
-      <g className="face-motion-sparkles">
-        <path d="M104 12 C104 17 100 21 95 21 C100 21 104 25 104 30 C104 25 108 21 113 21 C108 21 104 17 104 12 Z" fill="#facc15" />
-        <circle cx="104" cy="21" r="1.5" fill="#ffffff" />
-        <path d="M80 6 C80 9 77 11 74 11 C77 11 80 13 80 16 C80 13 83 11 86 11 C83 11 80 9 80 6 Z" fill="#ec4899" opacity="0.9" />
-        <circle cx="112" cy="46" r="1.6" fill="#f43f5e" />
-        <circle cx="16" cy="30" r="1.8" fill="#facc15" opacity="0.8" />
-      </g>
-    </svg>
-  );
-}
-
-function GraphicCutout3D() {
-  return (
-    <svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" className="hero-3d-svg cutout-3d-svg">
-      <defs>
-        <linearGradient id="scissorChrome" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#ffffff" />
-          <stop offset="45%" stopColor="#cbd5e1" />
-          <stop offset="75%" stopColor="#64748b" />
-          <stop offset="100%" stopColor="#1e293b" />
-        </linearGradient>
-        <linearGradient id="scissorMint" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#6ee7b7" />
-          <stop offset="50%" stopColor="#10b981" />
-          <stop offset="100%" stopColor="#065f46" />
-        </linearGradient>
-        <pattern id="cutoutChecker" width="8" height="8" patternUnits="userSpaceOnUse">
-          <rect width="4" height="4" fill="#334155" opacity="0.3" />
-          <rect x="4" y="4" width="4" height="4" fill="#334155" opacity="0.3" />
-        </pattern>
-        <filter id="laserGlow" x="-50%" y="-50%" width="200%" height="200%">
-          <feGaussianBlur stdDeviation="2.5" result="blur" />
-          <feComposite in="SourceGraphic" in2="blur" operator="over" />
-        </filter>
-      </defs>
-      <g transform="translate(4, 4)">
-        <g className="cutout-motion-card" transform="rotate(-8 52 62)">
-          <rect x="22" y="28" width="56" height="56" rx="14" fill="#1e293b" stroke="#38bdf8" strokeWidth="1.5" strokeDasharray="4 3" />
-          <rect x="23" y="29" width="54" height="54" rx="13" fill="url(#cutoutChecker)" />
-          <path d="M64 28 L78 42 L64 42 Z" fill="#38bdf8" opacity="0.85" />
-          <path d="M64 28 L78 42 L64 42 Z" stroke="#ffffff" strokeWidth="1" />
-        </g>
-        <path d="M26 36 Q 52 14 78 36" fill="none" stroke="#34d399" strokeWidth="2.5" filter="url(#laserGlow)" strokeDasharray="3 3" className="cutout-motion-laser" />
-        <g className="cutout-motion-scissors" transform="translate(56, 32) rotate(42)">
-          <g className="scissor-blade-top-group">
-            <path d="M0 0 L34 -5 C36 -5 36 -2 34 0 L0 3 Z" fill="url(#scissorChrome)" />
-            <path d="M0 0 L32 -3" stroke="#ffffff" strokeWidth="1" opacity="0.8" />
-            <path d="M-2 -2 C-8 -8 -18 -8 -20 -2 C-22 4 -14 10 -6 4 Z" fill="url(#scissorMint)" />
-            <circle cx="-11" cy="-1" r="3.5" fill="#0f172a" />
-          </g>
-          <g className="scissor-blade-bottom-group">
-            <path d="M0 0 L34 5 C36 5 36 2 34 0 L0 -3 Z" fill="url(#scissorChrome)" />
-            <path d="M-2 2 C-8 8 -18 8 -20 2 C-22 -4 -14 -10 -6 -4 Z" fill="url(#scissorMint)" />
-            <circle cx="-11" cy="1" r="3.5" fill="#0f172a" />
-          </g>
-          <circle cx="2" cy="0" r="3.5" fill="#facc15" />
-          <circle cx="2" cy="0" r="1.5" fill="#1e293b" />
-        </g>
-      </g>
-      <g className="cutout-motion-sparkles">
-        <path d="M104 10 C104 15 100 19 95 19 C100 19 104 23 104 28 C104 23 108 19 113 19 C108 19 104 15 104 10 Z" fill="#34d399" />
-        <circle cx="104" cy="19" r="1.5" fill="#ffffff" />
-        <path d="M80 6 C80 9 77 11 74 11 C77 11 80 13 80 16 C80 13 83 11 86 11 C83 11 80 9 80 6 Z" fill="#38bdf8" opacity="0.9" />
-        <circle cx="112" cy="44" r="1.5" fill="#ffffff" />
-        <circle cx="14" cy="50" r="1.8" fill="#34d399" opacity="0.8" />
-      </g>
-    </svg>
-  );
-}
-
-function GraphicVideoTimeline3D() {
-  return (
-    <svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" className="hero-3d-svg video-3d-svg">
-      <defs>
-        <linearGradient id="clapperBodyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#1e293b" />
-          <stop offset="50%" stopColor="#0f172a" />
-          <stop offset="100%" stopColor="#0284c7" />
-        </linearGradient>
-        <linearGradient id="clapperCyan" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#38bdf8" />
-          <stop offset="100%" stopColor="#0284c7" />
-        </linearGradient>
-        <filter id="videoGlow" x="-50%" y="-50%" width="200%" height="200%">
-          <feGaussianBlur stdDeviation="3" result="blur" />
-          <feComposite in="SourceGraphic" in2="blur" operator="over" />
-        </filter>
-      </defs>
-      <g transform="translate(6, 4)">
-        <ellipse cx="58" cy="100" rx="26" ry="6" fill="#0f172a" opacity="0.4" filter="blur(4px)" className="video-motion-shadow" />
-        <g className="video-motion-clapper" transform="rotate(-8 56 58)">
-          <rect x="20" y="38" width="72" height="52" rx="10" fill="url(#clapperBodyGrad)" stroke="#38bdf8" strokeWidth="1.5" />
-          <rect x="26" y="58" width="60" height="20" rx="6" fill="#0369a1" opacity="0.35" />
-          <line x1="36" y1="58" x2="36" y2="78" stroke="#38bdf8" strokeWidth="1.5" strokeDasharray="2 2" />
-          <line x1="48" y1="58" x2="48" y2="78" stroke="#38bdf8" strokeWidth="1.5" strokeDasharray="2 2" />
-          <line x1="60" y1="58" x2="60" y2="78" stroke="#38bdf8" strokeWidth="1.5" strokeDasharray="2 2" />
-          <line x1="72" y1="58" x2="72" y2="78" stroke="#38bdf8" strokeWidth="1.5" strokeDasharray="2 2" />
-          <polygon points="52,62 64,68 52,74" fill="#38bdf8" filter="url(#videoGlow)" />
-          <polygon points="53,63 62,68 53,73" fill="#ffffff" />
-          <g className="video-motion-stick" transform="translate(20, 22)">
-            <rect x="0" y="0" width="72" height="14" rx="4" fill="#0f172a" stroke="#38bdf8" strokeWidth="1.5" />
-            <polygon points="10,0 20,0 12,14 2,14" fill="#38bdf8" />
-            <polygon points="30,0 40,0 32,14 22,14" fill="#38bdf8" />
-            <polygon points="50,0 60,0 52,14 42,14" fill="#38bdf8" />
-          </g>
-        </g>
-      </g>
-      <g className="video-motion-sparkles">
-        <path d="M102 12 C102 17 98 21 93 21 C98 21 102 25 102 30 C102 25 106 21 111 21 C106 21 102 17 102 12 Z" fill="#38bdf8" />
-        <circle cx="102" cy="21" r="1.5" fill="#ffffff" />
-        <path d="M78 6 C78 9 75 11 72 11 C75 11 78 13 78 16 C78 13 81 11 84 11 C81 11 78 9 78 6 Z" fill="#818cf8" opacity="0.9" />
-        <circle cx="112" cy="46" r="1.6" fill="#38bdf8" />
-      </g>
-    </svg>
-  );
-}
-
-function GraphicSocialChat3D() {
-  return (
-    <svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" className="hero-3d-svg social-3d-svg">
-      <defs>
-        <linearGradient id="socialCardGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#1e1b4b" />
-          <stop offset="50%" stopColor="#311042" />
-          <stop offset="100%" stopColor="#ec4899" />
-        </linearGradient>
-        <linearGradient id="waGreenGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#25d366" />
-          <stop offset="100%" stopColor="#128c7e" />
-        </linearGradient>
-        <filter id="socialGlow" x="-50%" y="-50%" width="200%" height="200%">
-          <feGaussianBlur stdDeviation="3" result="blur" />
-          <feComposite in="SourceGraphic" in2="blur" operator="over" />
-        </filter>
-      </defs>
-      <g transform="translate(6, 4)">
-        <ellipse cx="58" cy="100" rx="26" ry="6" fill="#0f172a" opacity="0.4" filter="blur(4px)" className="social-motion-shadow" />
-        <g className="social-motion-phone" transform="rotate(-6 56 58)">
-          <rect x="22" y="24" width="68" height="72" rx="14" fill="url(#socialCardGrad)" stroke="#ec4899" strokeWidth="1.5" />
-          <circle cx="34" cy="38" r="6" fill="#f43f5e" />
-          <rect x="44" y="35" width="28" height="4" rx="2" fill="#ffffff" opacity="0.8" />
-          <rect x="44" y="41" width="18" height="3" rx="1.5" fill="#f472b6" opacity="0.6" />
-          <rect x="28" y="50" width="56" height="18" rx="8" fill="url(#waGreenGrad)" filter="url(#socialGlow)" opacity="0.9" />
-          <rect x="34" y="56" width="36" height="4" rx="2" fill="#ffffff" />
-          <rect x="34" y="62" width="22" height="3" rx="1.5" fill="#dcfce7" opacity="0.9" />
-          <g transform="translate(60, 68)" className="social-motion-heart">
-            <circle cx="12" cy="12" r="10" fill="#f43f5e" />
-            <path d="M12 8 C10 6 7 7 7 10 C7 13 12 16 12 16 C12 16 17 13 17 10 C17 7 14 6 12 8 Z" fill="#ffffff" />
-          </g>
-        </g>
-      </g>
-      <g className="social-motion-sparkles">
-        <path d="M102 12 C102 17 98 21 93 21 C98 21 102 25 102 30 C102 25 106 21 111 21 C106 21 102 17 102 12 Z" fill="#ec4899" />
-        <circle cx="102" cy="21" r="1.5" fill="#ffffff" />
-        <path d="M78 6 C78 9 75 11 72 11 C75 11 78 13 78 16 C78 13 81 11 84 11 C81 11 78 9 78 6 Z" fill="#facc15" opacity="0.9" />
-        <circle cx="112" cy="46" r="1.6" fill="#f43f5e" />
-      </g>
-    </svg>
-  );
-}
-
-/* --- Carousel Slides Configuration (Studio Features in Primary Hero Banner UI) --- */
+/* --- Carousel slides: each a meme picture behind its heading, tagline and buttons --- */
 const STUDIO_HERO_SLIDES = [
   {
     id: 'customlayout',
     action: 'custom',
     title: "Start Creating ✨",
-    badgeText: '🚀 100% FREE APP',
-    badgeClass: 'badge-emerald',
-    badgeDotClass: 'dot-emerald',
     titleMain: 'Unleash Your',
     titleGradient: 'Viral Meme Ideas',
     titleGradClass: 'grad-sunset',
@@ -397,16 +98,13 @@ const STUDIO_HERO_SLIDES = [
     glowTheme: 'glow-theme-studio',
     glowColor: 'rgba(255, 94, 54, 0.45)',
     icon: Sparkles,
-    renderGraphic: () => <GraphicRocket3D />,
+    image: './images/drake-smile.jpg',
     primaryVariant: 'pill-sunset studio-pill-long'
   },
   {
     id: 'videotrim',
     action: 'video',
     title: 'Create Viral Video',
-    badgeText: '🎬 TIMELINE & AUDIO SYNC',
-    badgeClass: 'badge-cyan',
-    badgeDotClass: 'dot-cyan',
     titleMain: 'Create Viral',
     titleGradient: 'Meme Videos',
     titleGradClass: 'grad-electric',
@@ -414,7 +112,7 @@ const STUDIO_HERO_SLIDES = [
     glowTheme: 'glow-theme-ai',
     glowColor: 'rgba(6, 182, 212, 0.45)',
     icon: Video,
-    renderGraphic: () => <GraphicVideoTimeline3D />,
+    image: './images/Akshay-Kumar-Dance-at-Baraat-1024x428.webp',
     primaryVariant: 'pill-cyan',
     secondaryLabel: 'Upload',
     secondaryIcon: Upload,
@@ -425,9 +123,6 @@ const STUDIO_HERO_SLIDES = [
     id: 'stickers',
     action: 'stickers',
     title: 'Generate Stickers',
-    badgeText: '🔥 100% FREE AI CUTOUT',
-    badgeClass: 'badge-mint',
-    badgeDotClass: 'dot-mint',
     titleMain: 'Remove Background',
     titleGradient: 'Make Stickers',
     titleGradClass: 'grad-mint-cyan',
@@ -435,7 +130,7 @@ const STUDIO_HERO_SLIDES = [
     glowTheme: 'glow-theme-cutout',
     glowColor: 'rgba(16, 185, 129, 0.45)',
     icon: Scissors,
-    renderGraphic: () => <GraphicCutout3D />,
+    image: './images/aura-farming-kid.webp',
     primaryVariant: 'pill-mint',
     secondaryLabel: 'Upload',
     secondaryIcon: Upload,
@@ -446,9 +141,6 @@ const STUDIO_HERO_SLIDES = [
     id: 'faceswap',
     action: 'faceswap',
     title: 'Face Swap',
-    badgeText: '🎭 100% FREE FACE SWAP',
-    badgeClass: 'badge-amber',
-    badgeDotClass: 'dot-amber',
     titleMain: 'Swap Your Face',
     titleGradient: 'Into Any Meme',
     titleGradClass: 'grad-amber-fuchsia',
@@ -456,7 +148,8 @@ const STUDIO_HERO_SLIDES = [
     glowTheme: 'glow-theme-face',
     glowColor: 'rgba(245, 158, 11, 0.45)',
     icon: Smile,
-    renderGraphic: () => <GraphicFaceSwap3D />,
+    image: './images/akshay-kumar-disguised-reaction-1024x955.jpg',
+    imageFocus: '50% 46%',
     primaryVariant: 'pill-amber',
     secondaryLabel: 'Upload',
     secondaryIcon: Upload,
@@ -467,9 +160,6 @@ const STUDIO_HERO_SLIDES = [
     id: 'socialcards',
     action: 'social',
     title: 'Social Cards',
-    badgeText: '💬 INTERACTIVE SOCIAL CARDS',
-    badgeClass: 'badge-fuchsia',
-    badgeDotClass: 'dot-fuchsia',
     titleMain: 'Create Realistic',
     titleGradient: 'Social Cards',
     titleGradClass: 'grad-fuchsia-violet',
@@ -477,7 +167,8 @@ const STUDIO_HERO_SLIDES = [
     glowTheme: 'glow-theme-face',
     glowColor: 'rgba(217, 70, 239, 0.45)',
     icon: Share2,
-    renderGraphic: () => <GraphicSocialChat3D />,
+    image: './images/social-tweet-card.svg',
+    imageFocus: '50% 44%',
     primaryVariant: 'pill-fuchsia',
     secondaryLabel: 'Upload',
     secondaryIcon: Upload,
@@ -488,9 +179,6 @@ const STUDIO_HERO_SLIDES = [
     id: 'aipunchlines',
     action: 'ai',
     title: 'AI Punchlines',
-    badgeText: '⚡ 100% FREE AI MEMES',
-    badgeClass: 'badge-cyan',
-    badgeDotClass: 'dot-cyan',
     titleMain: 'Prompt-To-Meme',
     titleGradient: 'AI Punchlines',
     titleGradClass: 'grad-electric',
@@ -498,7 +186,7 @@ const STUDIO_HERO_SLIDES = [
     glowTheme: 'glow-theme-ai',
     glowColor: 'rgba(129, 140, 248, 0.45)',
     icon: Wand2,
-    renderGraphic: () => <GraphicAiRobot3D />,
+    image: './images/Lekin-ye-sala-kar-kya-raha-hai-yaha-1024x576.webp',
     primaryVariant: 'studio-pill-ai',
     secondaryLabel: 'Upload',
     secondaryIcon: Upload,
@@ -906,12 +594,10 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom, on
                         key={slide.id}
                         className={`hero-slide-inner slide-${slide.id} ${isActive ? 'active' : ''}`}
                       >
+                        <img className="hero-slide-pic" src={slide.image} alt="" style={slide.imageFocus ? { objectPosition: slide.imageFocus } : undefined} loading={idx === 0 ? 'eager' : 'lazy'} draggable={false} />
+                        <span className="hero-slide-shade" aria-hidden="true" />
                         <div className="hero-card-header">
                           <div className="hero-text-content">
-                            <div className={`hero-free-badge ${slide.badgeClass}`}>
-                              <span className={`hero-free-dot ${slide.badgeDotClass}`} />
-                              <span>{slide.badgeText}</span>
-                            </div>
                             <h2 className="hero-title">
                               <span className="hero-title-line hero-title-line-1">
                                 <span className="hero-title-main">{slide.titleMain}</span>
@@ -924,10 +610,6 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom, on
                               </span>
                             </h2>
                             <p className="hero-tagline">{slide.tagline}</p>
-                          </div>
-
-                          <div className="hero-rocket-graphic" aria-hidden="true">
-                            {slide.renderGraphic()}
                           </div>
                         </div>
 
