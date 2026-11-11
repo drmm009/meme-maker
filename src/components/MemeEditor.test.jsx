@@ -1177,27 +1177,19 @@ describe('MemeEditor', () => {
     expect(canvas.props.captions).toBe(captions);
   });
 
-  it('the Stickers page: Choose your photo opens Upload, Take a photo and Gallery; a style is picked; Generate sticker waits for a photo', () => {
+  it('the Stickers page with no photo: a card to add one, with Upload, Take a photo and Gallery; Generate sticker waits for a photo', () => {
     renderEditor({ ...TEMPLATE, defaultCaptions: [], editorMode: 'sticker' });
     expect(screen.getByText('Add a photo', { selector: '.ui-topbar-subtitle' })).toBeTruthy();
     const page = screen.getByRole('region', { name: 'Make a sticker' });
-    // Only the photo and one button.
-    expect(within(page).getByRole('button', { name: 'Choose your photo' })).toBeTruthy();
-    // The styles to cut it in, Classic first and picked.
-    const styles = within(page).getByRole('radiogroup', { name: 'Sticker style' });
-    expect(within(styles).getAllByRole('radio').map((b) => b.lastChild.textContent)).toEqual(['Classic', 'Bold', 'Comic', 'Pop', 'Clean', 'Retro']);
-    expect(within(styles).getByRole('radio', { name: 'Classic' }).getAttribute('aria-checked')).toBe('true');
-    fireEvent.click(within(styles).getByRole('radio', { name: 'Pop' }));
-    expect(within(styles).getByRole('radio', { name: 'Pop' }).getAttribute('aria-checked')).toBe('true');
+    expect(within(page).getByLabelText('Choose your photo')).toBeTruthy();
+    // The styles come once there is a photo to show them on.
+    expect(within(page).queryByRole('radiogroup', { name: 'Sticker style' })).toBeNull();
     expect(within(page).getByRole('button', { name: 'Generate sticker' }).disabled).toBe(true);
-
-    fireEvent.click(within(page).getByRole('button', { name: 'Choose your photo' }));
-    const picker = screen.getByRole('dialog', { name: 'Your photo' });
-    expect(within(picker).getByLabelText('Upload a photo')).toBeTruthy();
-    expect(within(picker).getByLabelText('Take a photo')).toBeTruthy();
+    const sources = within(page).getByRole('group', { name: 'Add a photo' });
+    expect(within(sources).getByLabelText('Upload a photo')).toBeTruthy();
+    expect(within(sources).getByLabelText('Take a photo')).toBeTruthy();
     // Gallery is the Templates browser; its pick becomes the photo.
-    fireEvent.click(within(picker).getByRole('button', { name: 'Gallery' }));
-    expect(screen.queryByRole('dialog', { name: 'Your photo' })).toBeNull();
+    fireEvent.click(within(sources).getByRole('button', { name: 'Gallery' }));
     expect(sheet('Pick a picture')).toBeTruthy();
   });
 
@@ -1206,6 +1198,12 @@ describe('MemeEditor', () => {
     const page = screen.getByRole('region', { name: 'Make a sticker' });
     expect(within(page).getByRole('button', { name: 'Generate sticker' }).disabled).toBe(false);
     expect(within(page).getByRole('button', { name: 'Change the photo' })).toBeTruthy();
+    // The styles to cut it in, each on the photo, Classic first and picked.
+    const styles = within(page).getByRole('radiogroup', { name: 'Sticker style' });
+    expect(within(styles).getAllByRole('radio').map((b) => b.lastChild.textContent)).toEqual(['Classic', 'Bold', 'Comic', 'Pop', 'Clean', 'Retro']);
+    expect(within(styles).getByRole('radio', { name: 'Classic' }).getAttribute('aria-checked')).toBe('true');
+    fireEvent.click(within(styles).getByRole('radio', { name: 'Pop' }));
+    expect(within(styles).getByRole('radio', { name: 'Pop' }).getAttribute('aria-checked')).toBe('true');
     expect(screen.getByText('Ready to generate', { selector: '.ui-topbar-subtitle' })).toBeTruthy();
     fireEvent.click(within(page).getByRole('button', { name: 'Remove the photo' }));
     expect(canvas.props.imageLayers).toHaveLength(0);
