@@ -8,7 +8,7 @@
 import { paintCaption } from '../components/canvas/render/paintCaption';
 import { wrapText } from '../components/canvas/draw/text';
 import { applyCaptionFont, fittedFontSize } from '../components/canvas/draw/captionFont';
-import { captionCaret, captionTextLayout } from '../components/canvas/render/captionTextLayout';
+import { captionCaret, captionIndexAt, captionSelectionBoxes, captionTextLayout } from '../components/canvas/render/captionTextLayout';
 import type { MemeCaption } from '../model/memeDocument';
 import type { TextClip } from '../model/videoProject';
 import type { TextFrame } from './textAnimation';
@@ -195,12 +195,17 @@ function draw(item: Partial<TextClip>, scale: number, text: string, whole: TextB
 // The text cursor at `index` in the clip's text, as the clip is drawn at `scale`: its middle in
 // stage units from the top-left of the clip's box (before the clip turns), its height, and its own
 // tilt in degrees (on curved text). Null where there's no cursor (a card).
-export function textCaret(item: Partial<TextClip>, scale: number, index: number): { x: number; y: number; height: number; rotation: number } | null {
+function textLayoutOf(item: Partial<TextClip>, scale: number) {
   scratch = scratch || document.createElement('canvas');
   const ctx = scratch.getContext('2d') as CanvasRenderingContext2D;
   const cap = captionOf(item, scale);
   // On a canvas as wide as the picture draw() paints on, so the lines wrap the same.
   const layout = captionTextLayout(ctx, cap, Math.ceil(STAGE_WIDTH * scale));
+  return { ctx, cap, layout };
+}
+
+export function textCaret(item: Partial<TextClip>, scale: number, index: number): { x: number; y: number; height: number; rotation: number } | null {
+  const { ctx, cap, layout } = textLayoutOf(item, scale);
   const spot = captionCaret(ctx, cap, layout, index);
   if (!spot) return null;
   return {
@@ -209,6 +214,26 @@ export function textCaret(item: Partial<TextClip>, scale: number, index: number)
     height: spot.height / scale,
     rotation: (spot.angle * 180) / Math.PI,
   };
+}
+
+// The place in a clip's text nearest a tap at (u, v) stage units from its box's top-left (before
+// the clip turns), or null for a card.
+export function textIndexAt(item: Partial<TextClip>, scale: number, u: number, v: number): number | null {
+  const { ctx, cap, layout } = textLayoutOf(item, scale);
+  return captionIndexAt(ctx, cap, layout, u * scale - layout.boxWidth / 2, v * scale - layout.boxHeight / 2);
+}
+
+// The highlight behind the selected letters, as boxes from the box's top-left in stage units (as
+// textCaret), each with its own turn in degrees.
+export function textSelectionBoxes(item: Partial<TextClip>, scale: number, start: number, end: number): { x: number; y: number; width: number; height: number; rotation: number }[] {
+  const { ctx, cap, layout } = textLayoutOf(item, scale);
+  return captionSelectionBoxes(ctx, cap, layout, start, end).map((box) => ({
+    x: (layout.boxWidth / 2 + box.x) / scale,
+    y: (layout.boxHeight / 2 + box.y) / scale,
+    width: box.width / scale,
+    height: box.height / scale,
+    rotation: (box.angle * 180) / Math.PI,
+  }));
 }
 
 // Konva.Image attributes for a clip's picture: placed so the box's top-left is at (x, y), turning

@@ -17,3 +17,13 @@
 @media (prefers-reduced-motion: reduce) {
   .caption-caret { animation: none; }
 }
+
+/* The letters selected in a caption being typed into: the cursor's orange, soft enough that the
+   text reads through it. */
+.caption-selection {
+  position: absolute;
+  z-index: 16;
+  background: var(--ui-accent, #ff5a36);
+  opacity: 0.38;
+  pointer-events: none;
+}

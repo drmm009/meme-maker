@@ -14,6 +14,9 @@ import { pinchChange, pinchPatch } from './layerPinch';
 import { useMemeEditorStore } from '../../editor/store/useMemeEditorStore';
 import { useEditorUiStore } from '../../editor/store/useEditorUiStore';
 import { isSocialCardCaption } from '../../editor/memeEditorUtils';
+import { captionIndexAtPoint } from '../captionTextHit';
+import { wordAt } from '../render/captionTextLayout';
+import { placeSelection } from '../useCaretIndex';
 
 // A second tap within this many ms counts as a double tap.
 const DOUBLE_TAP_MS = 350;
@@ -55,6 +58,10 @@ export function useCanvasInteraction({
   const lastTapRef = useRef({ id: null, time: 0 });
   // Whether the caption under this tap was already the selected one (then the tap edits it).
   const tapWasActive = useRef(false);
+  // A tap on the caption being typed into: where it landed (it moves the cursor there), and the
+  // last such tap, for a double tap that selects a word.
+  const caretTap = useRef(null);
+  const lastCaretTap = useRef({ id: null, time: 0 });
   const pendingDragRef = useRef(null);
   const groupStart = useRef([]);
   // Two fingers on a layer: the layer and the fingers as they came down.
@@ -294,6 +301,7 @@ export function useCanvasInteraction({
     }
 
     tapWasActive.current = hit.type === 'caption' && hit.id === activeLayerId;
+    caretTap.current = tapWasActive.current && editableRef.current && document.activeElement === editableRef.current ? coords : null;
 
     if (onSelectLayer) onSelectLayer(hit.id);
     if (!hit.locked) beginDrag(hit, coords, canvas);
@@ -355,7 +363,9 @@ export function useCanvasInteraction({
     if (wasCleanTap && tappedType === 'caption' && tappedId) {
       if (onSelectLayer) onSelectLayer(tappedId);
       const isSocial = isSocialCardCaption(captions.find((c) => c.id === tappedId));
-      if (!isSocial && tapWasActive.current) {
+      if (!isSocial && tapWasActive.current && caretTap.current) {
+        placeCaretAtTap(tappedId, caretTap.current);
+      } else if (!isSocial && tapWasActive.current) {
         setEditingCaptionId(tappedId);
         focusTextarea();
       } else {
@@ -363,6 +373,21 @@ export function useCanvasInteraction({
         if (editableRef.current) editableRef.current.blur();
       }
     }
+  };
+
+  // A tap on the caption already typed into moves the cursor to the letter tapped (as the canvas
+  // draws it, not where the hidden box would put it); twice quickly selects that word.
+  const placeCaretAtTap = (id, coords) => {
+    const caption = captions.find((c) => c.id === id);
+    const canvas = canvasRef.current;
+    if (!caption || !canvas) return;
+    const at = captionIndexAtPoint(caption, canvas, getCaptionCenterY(caption, canvas), coords.x, coords.y);
+    if (at === null) return;
+    const now = Date.now();
+    const again = lastCaretTap.current.id === id && now - lastCaretTap.current.time < DOUBLE_TAP_MS;
+    lastCaretTap.current = again ? { id: null, time: 0 } : { id, time: now };
+    const [start, end] = again ? wordAt(caption.text || '', at) : [at, at];
+    placeSelection(editableRef.current, start, end);
   };
 
   const handleTextOverlayPointerDown = (e) => {

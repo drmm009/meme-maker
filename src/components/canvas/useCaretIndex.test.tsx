@@ -2,7 +2,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { useRef, useState } from 'react';
-import { useCaretIndex } from './useCaretIndex';
+import { placeSelection, useCaretIndex, useTextSelection } from './useCaretIndex';
 
 // A controlled text box, as the image editor's caption box, showing where the cursor is.
 function Box({ active = true }: { active?: boolean }) {
@@ -52,5 +52,28 @@ describe('useCaretIndex', () => {
     act(() => (screen.getByLabelText('text') as HTMLTextAreaElement).focus());
     await settle();
     expect(screen.getByRole('status').textContent).toBe('none');
+  });
+});
+
+function SelBox() {
+  const ref = useRef<HTMLTextAreaElement>(null);
+  const sel = useTextSelection(ref, true);
+  return (
+    <>
+      <textarea aria-label="text" ref={ref} defaultValue="HELLO THERE" />
+      <button type="button" onClick={() => placeSelection(ref.current, 6, 11)}>pick</button>
+      <output>{sel ? `${sel.start}-${sel.end}` : 'none'}</output>
+    </>
+  );
+}
+
+describe('useTextSelection and placeSelection', () => {
+  it('places a selection and reports it', async () => {
+    render(<SelBox />);
+    act(() => (screen.getByLabelText('text') as HTMLTextAreaElement).focus());
+    fireEvent.click(screen.getByText('pick'));
+    await settle();
+    await settle();
+    expect(screen.getByRole('status').textContent).toBe('6-11');
   });
 });

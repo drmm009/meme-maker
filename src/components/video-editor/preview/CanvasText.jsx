@@ -1,7 +1,8 @@
 import React, { useEffect, useReducer, useRef, useState } from 'react';
 import Konva from 'konva';
 import { Image as KonvaImage, Transformer, Group, Line, Rect } from 'react-konva';
-import { onTextFontsLoaded, textBitmap, textCaret, textImageAttrs } from '../../../utils/textBitmap';
+import { onTextFontsLoaded, textBitmap, textCaret, textImageAttrs, textIndexAt, textSelectionBoxes } from '../../../utils/textBitmap';
+import { wordAt } from '../../canvas/render/captionTextLayout';
 import { useEditorStore } from '../../../store/useVideoEditorStore';
 import { clipOpacity } from '../../../model/videoProject';
 import { useTextPlayback } from './useTextPlayback';
@@ -55,11 +56,35 @@ function TextCaret({ attrs, caret, width }) {
   );
 }
 
+// The selected letters while the clip is typed into: a soft orange highlight over them (boxes from
+// textSelectionBoxes, placed as TextCaret's).
+function TextHighlight({ attrs, boxes }) {
+  return (
+    <Group x={attrs.x} y={attrs.y} rotation={attrs.rotation} listening={false}>
+      {boxes.map((box, i) => (
+        <Rect
+          key={i}
+          x={box.x}
+          y={box.y}
+          width={box.width}
+          height={box.height}
+          offsetX={box.width / 2}
+          offsetY={box.height / 2}
+          rotation={box.rotation}
+          fill="#ff5a36"
+          opacity={0.38}
+        />
+      ))}
+    </Group>
+  );
+}
+
 // A text clip on the preview: the image editor's caption painter draws it into a picture
 // (utils/textBitmap), shown here as one image. Tapping it starts editing (onEditStart); while it's
-// typed into, `caretIndex` is where the cursor is in its text (TextCaret shows it). Its handles,
-// pinch and drag work as the image editor's captions (useTextGestures).
-const CanvasText = ({ item, isSelected, onSelect, onChange, onEditStart, canvasDimensions, caretIndex = null }) => {
+// typed into, `selection` is where the cursor is in its text, or the letters selected (TextCaret,
+// TextHighlight show them), and a tap on it moves the cursor there, a double tap selects the word
+// (onPlaceCaret). Its handles, pinch and drag work as the image editor's captions (useTextGestures).
+const CanvasText = ({ item, isSelected, onSelect, onChange, onEditStart, canvasDimensions, selection = null, onPlaceCaret }) => {
   const nodeRef = useRef(null);
   const groupRef = useRef(null);
   const trRef = useRef(null);
@@ -72,7 +97,9 @@ const CanvasText = ({ item, isSelected, onSelect, onChange, onEditStart, canvasD
   const shown = liveRef.current ? { ...item, ...liveRef.current } : item;
   const bitmap = textBitmap(shown, scale);
   const attrs = textImageAttrs(shown, bitmap);
-  const caret = caretIndex === null ? null : textCaret(shown, scale, caretIndex);
+  const selected = selection && selection.start !== selection.end;
+  const caret = selection && !selected ? textCaret(shown, scale, selection.end) : null;
+  const highlight = selected ? textSelectionBoxes(shown, scale, selection.start, selection.end) : null;
 
   useEffect(() => {
     itemRef.current = item;
@@ -119,9 +146,35 @@ const CanvasText = ({ item, isSelected, onSelect, onChange, onEditStart, canvasD
     trRef.current?.forceUpdate();
   });
 
+  // Where in the text a tap on the clip landed (from the pointer, through the clip's own turn,
+  // scale and animation).
+  const indexAtPointer = () => {
+    const node = nodeRef.current;
+    const pointer = node?.getStage()?.getPointerPosition();
+    if (!node || !pointer) return null;
+    const local = node.getAbsoluteTransform().copy().invert().point(pointer);
+    return textIndexAt(shown, scale, local.x - bitmap.boxX, local.y - bitmap.boxY);
+  };
+
   const startEdit = (e) => {
+    // Already typed into: the tap moves the cursor instead.
+    if (selection && onPlaceCaret) {
+      const at = indexAtPointer();
+      if (at !== null) onPlaceCaret(at);
+      return;
+    }
     if (onEditStart) onEditStart(item);
     onSelect(e);
+  };
+  const selectWord = () => {
+    const at = selection && onPlaceCaret ? indexAtPointer() : null;
+    if (at === null) return;
+    const [start, end] = wordAt(shown.text ?? '', at);
+    onPlaceCaret(start, end);
+  };
+  // While typed into, pressing the clip keeps the keyboard: the hidden text box stays focused.
+  const keepFocus = (e) => {
+    if (selection) e.evt.preventDefault();
   };
 
   return (
@@ -136,12 +189,16 @@ const CanvasText = ({ item, isSelected, onSelect, onChange, onEditStart, canvasD
             draggable
             onClick={startEdit}
             onTap={startEdit}
+            onDblClick={selectWord}
+            onDblTap={selectWord}
+            onMouseDown={keepFocus}
             onDragMove={handlers.onDragMove}
             onDragEnd={handlers.onDragEnd}
             onTransform={handlers.onTransform}
             onTransformEnd={handlers.onTransformEnd}
           />
           {/* About 2.5 screen pixels wide at any zoom (scale is picture pixels per stage unit). */}
+          {highlight && <TextHighlight attrs={attrs} boxes={highlight} />}
           {caret && <TextCaret attrs={attrs} caret={caret} width={(2.5 * (Konva.pixelRatio || 1)) / scale} />}
         </Group>
       </Group>
