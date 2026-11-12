@@ -19,7 +19,7 @@ export default function MediaSheet({ actions, onClose }: { actions: EditorAction
   const setActiveLayerId = useMemeEditorStore((s: { setActiveLayerId: (id: string | null) => void }) => s.setActiveLayerId);
   const stickers: MemeSticker[] = useMemeEditorStore((s: { stickers: MemeSticker[] }) => s.stickers);
   const patchLayer = useMemeEditorStore((s: { patchLayer: (key: string, id: string, patch: object) => void }) => s.patchLayer);
-  const setCropLayerId = useEditorUiStore((s: { setCropLayerId: (id: string | null) => void }) => s.setCropLayerId);
+  const openSheet = useEditorUiStore((s: { openSheet: (sheet: string, focus?: string | null, fromPill?: boolean) => void }) => s.openSheet);
   const { id, image, sticker } = useSelection();
   const setImage = (patch: Partial<MemeImageLayer>) => id && patchLayer('imageLayers', id, patch);
 
@@ -53,7 +53,7 @@ export default function MediaSheet({ actions, onClose }: { actions: EditorAction
             onFlip={() => setImage({ flipY: !image.flipY })}
             onCopy={() => actions.handleDuplicateLayer(id)}
             onReplace={actions.handleReplaceImageLayer}
-            onCrop={() => setCropLayerId(id)}
+            onCrop={() => openSheet('crop', null, true)}
           />
           <PhotoLookControls look={image} set={setImage} />
         </>

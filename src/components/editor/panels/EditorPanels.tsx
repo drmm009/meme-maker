@@ -41,6 +41,7 @@ import BubbleSheet from './BubbleSheet';
 import BackgroundSheet from './BackgroundSheet';
 import DieCutSheet from './DieCutSheet';
 import SocialCardSheet from './SocialCardSheet';
+import CropSheet from './CropSheet';
 import LayerToolbar from './LayerToolbar';
 import { DRAW_TOOLS, isDrawingOn } from './drawTools';
 import { useSmoothHeight } from './useSmoothHeight';
@@ -70,9 +71,9 @@ const DOCK: DockItem[] = [
 
 const SHEETS = { text: TextSheet, media: MediaSheet, draw: DrawSheet, canvasColor: CanvasColorSheet, watermark: WatermarkSheet, bands: BandsSheet, aiCaption: AiCaptionSheet, filters: FiltersSheet, background: BackgroundSheet, layers: LayersSheet, export: ExportSheet, library: LibrarySheet, mediaLink: LinkSheet,
   templates: TemplatesSheet, memes: MemePickerSheet, stickers: StickersSheet, emoji: EmojiSheet, bubble: BubbleSheet, diecut: DieCutSheet, socialCard: SocialCardSheet,
-  card: CardFormSheet, cardLook: CardLookSheet, aiGallery: AiMemeGallerySheet, faceSwap: FaceSwapStudio, stickerGallery: StickerGallerySheet };
+  card: CardFormSheet, cardLook: CardLookSheet, aiGallery: AiMemeGallerySheet, faceSwap: FaceSwapStudio, stickerGallery: StickerGallerySheet, crop: CropSheet };
 // Sheets for browsing a big library, shown full height (the meme needn't stay in view).
-const FULL_SHEETS = new Set<string>(['templates', 'memes', 'stickers', 'emoji', 'aiGallery', 'faceSwap', 'stickerGallery']);
+const FULL_SHEETS = new Set<string>(['templates', 'memes', 'stickers', 'emoji', 'aiGallery', 'faceSwap', 'stickerGallery', 'crop']);
 // Sheets laid over the canvas from the bottom, as tall as they need, on a dim that closes them.
 const OVER_SHEETS = new Set<string>(['export']);
 
@@ -80,7 +81,7 @@ const OVER_SHEETS = new Set<string>(['export']);
 // tab's sheets is open, the strip above the sheet (so its tools stay one tap away). While a layer is
 // selected (and not drawing), its tools pill (LayerToolbar) takes the strip's place above the dock,
 // and above the sheets it opens, and no dock tab is lit.
-export default function EditorPanels({ actions }: { actions: EditorActions }) {
+export default function EditorPanels({ actions, onBack }: { actions: EditorActions; onBack?: () => void }) {
   const sheet: keyof typeof SHEETS | null = useEditorUiStore((s: { sheet: keyof typeof SHEETS | null }) => s.sheet);
   const openSheet = useEditorUiStore((s: { openSheet: (sheet: string) => void }) => s.openSheet);
   const closeSheet = useEditorUiStore((s: { closeSheet: () => void }) => s.closeSheet);
@@ -130,7 +131,7 @@ export default function EditorPanels({ actions }: { actions: EditorActions }) {
   if (stickerPage && sheet !== 'stickerGallery') {
     return (
       <div ref={panelRef} className="ie-panels ie-panels--sheet ie-panels--full">
-        <StickerStudio actions={actions} />
+        <StickerStudio actions={actions} onBack={onBack} />
       </div>
     );
   }

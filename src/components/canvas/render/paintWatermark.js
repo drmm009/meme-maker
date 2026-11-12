@@ -10,10 +10,10 @@ export function paintWatermark({
 
     const getPositions = (w, h) => {
       const pos = watermark.position || 'bottom-right';
-      if (pos === 'bottom-right') return { x: canvas.width - pad - w, y: canvas.height - pad - h };
-      if (pos === 'bottom-left') return { x: pad, y: canvas.height - pad - h };
-      if (pos === 'top-right') return { x: canvas.width - pad - w, y: pad };
-      if (pos === 'top-left') return { x: pad, y: pad };
+      if (pos === 'bottom-right' || pos === 'br') return { x: canvas.width - pad - w, y: canvas.height - pad - h };
+      if (pos === 'bottom-left' || pos === 'bl') return { x: pad, y: canvas.height - pad - h };
+      if (pos === 'top-right' || pos === 'tr') return { x: canvas.width - pad - w, y: pad };
+      if (pos === 'top-left' || pos === 'tl') return { x: pad, y: pad };
       return { x: pad, y: pad };
     };
 

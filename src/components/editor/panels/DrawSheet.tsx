@@ -1,4 +1,4 @@
-import { Trash2, MoveUpRight, Circle, Square, Minus, Droplets, Grid3x3, RectangleHorizontal, PenLine, Highlighter, MoveHorizontal } from 'lucide-react';
+import { Trash2, MoveUpRight, Circle, Square, Minus, Droplets, Grid3x3, PenLine, Highlighter, MoveHorizontal } from 'lucide-react';
 import { Sheet, Section, Row, SwatchRow, Slider, Switch } from '../../ui';
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
 import { useEditorUiStore } from '../store/useEditorUiStore';
@@ -20,7 +20,6 @@ const SHAPES = [
 const CENSORS = [
   { id: 'blur', label: 'Blur', Icon: Droplets },
   { id: 'pixelate', label: 'Pixelate', Icon: Grid3x3 },
-  { id: 'bar', label: 'Black bar', Icon: RectangleHorizontal },
 ];
 
 // The picked draw tool's settings, under the Draw strip (Censor's under the Canvas strip): brushes get colour and size; Shapes the
@@ -109,32 +108,30 @@ export default function DrawSheet({ actions, onClose }: { actions: EditorActions
         </div>
       )}
 
-      {(!isCensor || censorMode !== 'bar') && (
-        <Section>
-          {!isCensor && !isEraser && (
-            <Row label="Color">
-              <SwatchRow ariaLabel="Brush colour" colors={DRAW_COLORS} value={color} onChange={both(ui.setBrushColor, (v) => ({ color: v }))} />
-            </Row>
-          )}
-          {!isCensor && (
-            <Row label={isShape ? 'Width' : 'Size'}>
-              <Slider label="Brush size" min={2} max={isShape ? 30 : 50} value={size} onChange={both(ui.setBrushSize, (v) => ({ size: v }))} format={String} />
-            </Row>
-          )}
-          {isShape && (shapeKind === 'ellipse' || shapeKind === 'rect') && (
-            <Row label="Fill" end>
-              <Switch label="Fill shape" checked={fill} onChange={both(ui.setShapeFill, (v) => ({ fill: v }))} />
-            </Row>
-          )}
-          {isCensor && censorMode !== 'bar' && (
-            <Row label="Strength">
-              <Slider label="Censor strength" min={4} max={40} value={strength} onChange={both(ui.setCensorStrength, (v) => ({ strength: v }))} format={String} />
-            </Row>
-          )}
-        </Section>
-      )}
+      <Section>
+        {!isCensor && !isEraser && (
+          <Row label="Color">
+            <SwatchRow ariaLabel="Brush colour" colors={DRAW_COLORS} value={color} onChange={both(ui.setBrushColor, (v) => ({ color: v }))} />
+          </Row>
+        )}
+        {!isCensor && (
+          <Row label={isShape ? 'Width' : 'Size'}>
+            <Slider label="Brush size" min={2} max={isShape ? 30 : 50} value={size} onChange={both(ui.setBrushSize, (v) => ({ size: v }))} format={String} />
+          </Row>
+        )}
+        {isShape && (shapeKind === 'ellipse' || shapeKind === 'rect') && (
+          <Row label="Fill" end>
+            <Switch label="Fill shape" checked={fill} onChange={both(ui.setShapeFill, (v) => ({ fill: v }))} />
+          </Row>
+        )}
+        {isCensor && (
+          <Row label="Strength">
+            <Slider label="Censor strength" min={4} max={40} value={strength} onChange={both(ui.setCensorStrength, (v) => ({ strength: v }))} format={String} />
+          </Row>
+        )}
+      </Section>
 
-      {isCensor && !censor && (
+      {isCensor && (
         <p className="ie-empty">Drag over the part you want to hide.</p>
       )}
     </Sheet>

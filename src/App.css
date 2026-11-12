@@ -557,7 +557,7 @@ body.modal-open {
 }
 
 .dock-nav-item {
-  color: var(--text-muted);
+  color: #d4d5db;
   cursor: pointer;
   background: transparent;
   border: none;
@@ -578,8 +578,14 @@ body.modal-open {
   -webkit-tap-highlight-color: transparent;
 }
 
+.dock-nav-item .dock-icon {
+  color: #d4d5db;
+}
+.dock-nav-item .dock-label {
+  color: #d4d5db;
+}
 .dock-nav-item:hover {
-  color: var(--text-main);
+  color: #ffffff;
 }
 
 [data-theme='light'] .dock-nav-item {

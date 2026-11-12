@@ -25,8 +25,10 @@ export interface BrowseTabs {
 
 interface BrowseSheetProps {
   title: string;
+  Icon?: LucideIcon;
   total?: number;
   onClose: () => void;
+  className?: string;
   search?: { value: string; onChange: (v: string) => void; placeholder: string; label: string };
   // A few kinds of thing (Stickers: Stickers / Animated / GIFs), a segmented track above the chips.
   tabs?: BrowseTabs;
@@ -40,7 +42,7 @@ interface BrowseSheetProps {
 // The full-height library sheets (Media: Templates, Stickers, Emoji): over the meme, which
 // needn't show while choosing, with a title and close, a search and category chips pinned at the
 // top, and only the content below them scrolling.
-export default function BrowseSheet({ title, total, onClose, search, tabs, chips = [], active = null, onChip = () => {}, busy, children }: BrowseSheetProps) {
+export default function BrowseSheet({ title, Icon, total, onClose, className, search, tabs, chips = [], active = null, onChip = () => {}, busy, children }: BrowseSheetProps) {
   const chipsRef = useRef<HTMLDivElement>(null);
   // The line under the chips only shows once the content has scrolled under it.
   const [scrolled, setScrolled] = useState(false);
@@ -56,9 +58,17 @@ export default function BrowseSheet({ title, total, onClose, search, tabs, chips
   }, [active]);
 
   return (
-    <Sheet className="ie-browse-sheet" title={title} hideTitle onClose={onClose}>
+    <Sheet className={`ie-browse-sheet${className ? ` ${className}` : ''}`} title={title} Icon={Icon} hideTitle onClose={onClose}>
       <header className="ie-browse-head" data-sheet-drag>
-        <h2 className="ie-browse-title">{title}{total != null && <span className="ie-browse-total">{total}</span>}</h2>
+        <h2 className="ie-browse-title">
+          {Icon && (
+            <span className="ui-sheet-title-icon ie-browse-title-icon" aria-hidden="true">
+              <Icon size={20} strokeWidth={2.2} />
+            </span>
+          )}
+          {title}
+          {total != null && <span className="ie-browse-total">{total}</span>}
+        </h2>
         <button type="button" className="ie-browse-close" aria-label={`Close ${title.toLowerCase()}`} onClick={onClose}>
           <X size={18} strokeWidth={2.2} />
         </button>

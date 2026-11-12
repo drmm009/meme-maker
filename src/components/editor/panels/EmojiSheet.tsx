@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Clock, LayoutGrid, Search, Star } from 'lucide-react';
+import { Clock, LayoutGrid, Search, Smile, Star } from 'lucide-react';
 import BrowseSheet, { BrowseEmpty, ResultsHead, Shelf } from './BrowseSheet';
 import { POPULAR_EMOJIS as POPULAR, filterEmojis } from './mediaPickers';
 import type { EmojiItem } from './mediaPickers';
@@ -67,7 +67,9 @@ export default function EmojiSheet({ actions, onClose }: { actions: EditorAction
 
   return (
     <BrowseSheet
+      className="ie-emoji-sheet"
       title="Emoji"
+      Icon={Smile}
       onClose={onClose}
       search={{ value: query, onChange: setQuery, placeholder: 'Search laugh, fire, skull…', label: 'Search emoji' }}
       chips={[{ id: 'all', label: 'All', Icon: LayoutGrid }, ...shelves.map(({ id, label, Icon, icon, items }) => ({ id, label, Icon, icon, count: items.length }))]}

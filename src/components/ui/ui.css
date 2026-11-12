@@ -141,14 +141,14 @@
   line-height: 1.25;
   white-space: nowrap;
 }
-.ui-topbar-actions { display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
-/* Back: a soft filled circle, the same weight as the bar's other round controls. */
+.ui-topbar-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
+/* Back: a solid dark surface circle, identical to the Video Editor's round Back button. */
 .ui-topbar-back {
   width: 40px;
   height: 40px;
   border: none;
   border-radius: var(--ui-radius-full, 999px);
-  background: rgba(255, 255, 255, 0.07);
+  background: var(--ui-surface, #1c1c1e);
   color: var(--ui-text);
   transition: background 0.15s ease, transform 0.1s ease;
 }
@@ -233,7 +233,7 @@
   border: none;
   border-radius: var(--ui-radius-full, 999px);
   background: transparent;
-  color: #8e8e93;
+  color: #d4d5db;
   font-size: var(--ui-fs-footnote, 13px);
   font-weight: 600;
   letter-spacing: 0.02em;
@@ -241,10 +241,25 @@
   cursor: pointer;
   transition: background 0.2s, color 0.2s;
 }
+.ui-dock-item svg {
+  color: #d4d5db;
+  stroke: currentColor;
+}
+.ui-dock-item span {
+  color: #d4d5db;
+}
+.ui-dock-item:hover:not(:disabled):not(.is-on) {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+}
 /* The open section: a solid orange capsule with a white icon and label. */
 .ui-dock-item.is-on {
   background: var(--ui-accent, #ff5a36);
-  color: #fff;
+  color: #ffffff;
+}
+.ui-dock-item.is-on svg,
+.ui-dock-item.is-on span {
+  color: #ffffff;
 }
 /* A maker's action buttons (DockItem variant): icon beside the label, the primary filled with the
    accent, the secondary a quiet outline. Disabled while it has nothing to act on. */
@@ -311,8 +326,9 @@
 }
 .ui-strip-btn .lucide-loader-circle { animation: ui-spin 0.9s linear infinite; }
 @keyframes ui-spin { to { transform: rotate(360deg); } }
-/* The open tool: an iOS tinted button, orange on a soft orange fill. */
-.ui-strip-btn.is-on { background: rgba(255, 90, 54, 0.18); color: var(--ui-accent, #ff5a36); }
+/* The open tool: a normal button with an orange icon. */
+.ui-strip-btn.is-on { background: var(--ui-surface); color: #d4d5db; }
+.ui-strip-btn.is-on svg { color: var(--ui-accent, #ff5a36); }
 /* In use with its settings closed (a brush still drawing): a normal button with an orange icon. */
 .ui-strip-btn.is-live svg { color: var(--ui-accent, #ff5a36); }
 /* Five tiles across a phone: slim side padding and gaps, and caption-size labels, so the longest
@@ -386,8 +402,9 @@
 .ui-float-label { color: #d4d5db; transition: color 0.15s ease; }
 .ui-float-item:hover:not(.is-on) { background: #26272b; }
 .ui-float-item:active { transform: scale(0.94); }
-.ui-float-item.is-on { background: rgba(255, 90, 54, 0.18); color: var(--ui-accent, #ff5a36); }
-.ui-float-item.is-on .ui-float-label { color: var(--ui-accent, #ff5a36); }
+.ui-float-item.is-on { background: var(--ui-surface); color: #d4d5db; }
+.ui-float-item.is-on svg { color: var(--ui-accent, #ff5a36); }
+.ui-float-item.is-on .ui-float-label { color: #d4d5db; }
 .ui-float-item--icon { min-width: 40px; width: 40px; height: 40px; padding: 0; border-radius: 50%; }
 .ui-float-divider { flex: none; width: 1px; height: 28px; margin: 0 2px; background: rgba(255, 255, 255, 0.14); }
 .ui-visually-hidden {

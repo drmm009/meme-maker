@@ -14,6 +14,21 @@
 .fmm-sheet .bs-specular-beam,
 .fmm-sheet .bs-ambient-glow { display: none; }
 .fmm-sheet .bs-header { padding: 2px 16px 12px; }
+.fmm-sheet .bs-header-icon {
+  width: auto;
+  height: auto;
+  margin-right: 0;
+  border-radius: 0;
+  background: none;
+  border: none;
+  box-shadow: none;
+  color: var(--ui-accent, #ff5a36);
+}
+.fmm-sheet .bs-header-icon svg {
+  width: 20px;
+  height: 20px;
+  color: var(--ui-accent, #ff5a36) !important;
+}
 .fmm-sheet .bs-title { font-size: 17px; font-weight: 800; letter-spacing: -0.01em; }
 .fmm-sheet .bs-close-btn {
   background: rgba(255, 255, 255, 0.08);

@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { ChevronLeft, Sparkles } from 'lucide-react';
 import { createMemeEditorStore, MemeEditorStoreContext, useMemeEditorStore } from './editor/store/useMemeEditorStore';
 import { createEditorUiStore, EditorUiStoreContext, useEditorUiStore, useEditorUiStoreApi } from './editor/store/useEditorUiStore';
 import { useEditorSetup } from './editor/hooks/useEditorSetup';
@@ -83,6 +84,23 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, c
   const canvasRef = useRef(null);
   const { memeName, canvasSize, exportBlob, exportMotion, motionLoops, saveToGallery } = useExport({ canvasRef, template, onSaveToGallery, imageFit, isNativeLayout, layoutDef });
   const { isRemovingBg, isBlurringBg, handleRemoveBackground, handleApplyBackgroundBlur, setPortraitBlur } = useBackgroundRemoval();
+  const patchLayer = useMemeEditorStore((s) => s.patchLayer);
+  const imageLayers = useMemeEditorStore((s) => s.imageLayers || []);
+  const isStickerMode = mode === 'sticker';
+  const isStickerPage = isStickerMode && (!imageLayers.some((l) => Boolean(l.originalUrl)) || isRemovingBg);
+  const showTopBar = !isStickerMode && (mode === 'ai' || !isStickerPage);
+
+  const handleStickerStepBack = () => {
+    const layerWithOriginal = imageLayers.find((l) => Boolean(l.originalUrl));
+    if (layerWithOriginal) {
+      patchLayer('imageLayers', layerWithOriginal.id, {
+        url: layerWithOriginal.originalUrl,
+        originalUrl: null,
+      });
+    } else if (onBack) {
+      onBack();
+    }
+  };
   const { generate: handleGenerateSticker, setDieCut: handleStickerDieCut } = useStickerMaker({ removeBackground: handleRemoveBackground });
   const faceMorph = useFaceMorph({ canvasRef });
   const {
@@ -139,9 +157,38 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, c
   });
 
   return (
-    <div className="meme-editor-container ui-theme animate-fade-in">
-      {/* The Stickers and AI Meme makers have their own bar, with their steps. */}
-      {mode === 'sticker' || mode === 'ai' ? <MakerTopBar mode={mode} onBack={onBack} /> : <EditorTopBar onBack={onBack} />}
+    <div className={`meme-editor-container ui-theme animate-fade-in ${isStickerMode ? 'meme-editor--sticker-mode' : ''} ${isStickerPage ? 'meme-editor--sticker-page' : ''}`}>
+      {/* The Stickers and AI Meme makers have their own bar, with their steps. Sticker mode is a unified single unit without top bar */}
+      {showTopBar ? (
+        mode === 'sticker' || mode === 'ai' ? <MakerTopBar mode={mode} onBack={onBack} /> : <EditorTopBar onBack={onBack} />
+      ) : null}
+
+      {/* In sticker mode Step 3 (ready to export), render the integrated back header matching Step 1 & 2 */}
+      {isStickerMode && !isStickerPage && (
+        <header className="ie-stk-header ie-stk-header--step3">
+          <button
+            type="button"
+            className="ie-stk-back-btn"
+            onClick={handleStickerStepBack}
+            aria-label="Back"
+            title="Back"
+          >
+            <ChevronLeft size={22} strokeWidth={2.4} />
+          </button>
+          <div className="ie-stk-header-main">
+            <span className="ie-stk-tagline">
+              <Sparkles size={10} className="ie-stk-sparkle-icon" aria-hidden="true" />
+              <span>AI Sticker Studio</span>
+            </span>
+            <h1 className="ie-stk-title ui-topbar-title">
+              <span>Create Custom </span><span>Stickers</span>
+            </h1>
+          </div>
+          <p className="ie-stk-status ui-topbar-subtitle" aria-live="polite">
+            Ready to export
+          </p>
+        </header>
+      )}
 
       {draft.offer && <DraftOffer offer={draft.offer} onRestore={draft.restore} onDismiss={draft.dismiss} />}
       {/* The tour explains the full editor's tabs; the makers explain themselves. */}
@@ -167,7 +214,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, c
           />
         </div>
 
-        <EditorPanels actions={actions} />
+        <EditorPanels actions={actions} onBack={onBack} />
       </div>
 
       <EditorModals

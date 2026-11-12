@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { Download, Share2, Copy, Save, X } from 'lucide-react';
-import { Sheet, Section, Row, Slider, SegmentedControl, Switch, TileGrid, Tile } from '../../ui';
+import { Download, Share2, Copy, Save, X, PenLine } from 'lucide-react';
+import { Sheet, Section, Row, Slider, SegmentedControl, Switch } from '../../ui';
 import { useEditorUiStore } from '../store/useEditorUiStore';
 import { downloadImageHelper } from '../../../utils/downloadHelper';
 import { triggerConfetti } from '../hooks/useExport';
@@ -21,11 +21,11 @@ const MOTION_FORMATS: { value: ExportPrefs['format']; label: string }[] = [
 const TYPE_LABEL: Record<string, string> = { 'image/png': 'PNG', 'image/jpeg': 'JPG', 'image/webp': 'WebP' };
 
 // Export: pick the format (PNG, JPG, WebP; GIF or MP4 when a GIF or video layer moves), quality
-// and size, see what the file will be, then download, share, copy or save it to the gallery. The
-// choices are remembered.
+// and size, name the file, see what the file will be, then download, share, copy or save it to the gallery.
 export default function ExportSheet({ actions, onClose }: { actions: EditorActions; onClose: () => void }) {
   const prefs: ExportPrefs = useEditorUiStore((s: { exportPrefs: ExportPrefs }) => s.exportPrefs);
   const setExportPrefs = useEditorUiStore((s: { setExportPrefs: (p: ExportPrefs) => void }) => s.setExportPrefs);
+  const [name, setName] = useState<string>(() => actions.memeName?.() || '');
   const [info, setInfo] = useState<{ bytes: number; type: string } | null>(null);
   const [busy, setBusy] = useState(false);
   // 0..1 while a GIF or MP4 renders.
@@ -40,6 +40,7 @@ export default function ExportSheet({ actions, onClose }: { actions: EditorActio
   const size = motion ? motionSize(w, h, motion, prefs.width) : outputSize(w, h, prefs.width);
   const set = (patch: Partial<ExportPrefs>) => setExportPrefs({ ...prefs, ...patch });
   const sticker = useEditorUiStore((s: { mode: string }) => s.mode) === 'sticker';
+  const ext = motion || (format === 'jpeg' ? 'jpg' : format);
 
   // What the file will be like with these choices (GIFs and MP4s only once they are made).
   useEffect(() => {
@@ -89,11 +90,17 @@ export default function ExportSheet({ actions, onClose }: { actions: EditorActio
       } else {
         blob = await actions.exportBlob({ ...prefs, format });
       }
-      const fileName = fileNameFor(`${sticker ? 'sticker' : 'meme'}-${actions.memeName().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'custom'}`, blob.type);
+      const rawName = name.trim() || `${sticker ? 'sticker' : 'meme'}-${actions.memeName() || 'custom'}`;
+      const slug = rawName.toLowerCase().replace(/[^a-z0-9-_]+/g, '-').replace(/^-|-$/g, '') || 'meme';
+      const fileName = fileNameFor(slug, blob.type);
       if (what === 'share') {
         const file = new File([blob], fileName, { type: blob.type });
-        if (navigator.canShare && navigator.canShare({ files: [file] })) await navigator.share({ title: actions.memeName(), text: 'Check out this meme! 😂', files: [file] });
-        else await downloadImageHelper(URL.createObjectURL(blob), fileName);
+        const shareTitle = name.trim() || actions.memeName() || 'Check out this meme!';
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({ title: shareTitle, text: 'Check out this meme! 😂', files: [file] });
+        } else {
+          await downloadImageHelper(URL.createObjectURL(blob), fileName);
+        }
       } else {
         await downloadImageHelper(URL.createObjectURL(blob), fileName);
       }
@@ -115,6 +122,32 @@ export default function ExportSheet({ actions, onClose }: { actions: EditorActio
   if (sticker) {
     return (
       <Sheet Icon={Download} title="Export" onClose={onClose} className="ie-sticker-export">
+        <div className="ie-export-name-wrap">
+          <label className="ie-export-name-label">
+            <PenLine size={15} className="ie-export-name-icon" aria-hidden="true" />
+            <input
+              type="text"
+              className="ie-export-name-input"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Sticker name"
+              aria-label="Sticker name"
+              maxLength={60}
+            />
+            {name ? (
+              <button
+                type="button"
+                className="ie-export-name-clear"
+                onClick={() => setName('')}
+                aria-label="Clear file name"
+                title="Clear"
+              >
+                <X size={14} />
+              </button>
+            ) : null}
+            <span className="ie-export-name-ext">.{ext}</span>
+          </label>
+        </div>
         <div className="ie-sticker-export-opts">
           <SegmentedControl ariaLabel="File format" variant="fill" value={format} options={FORMATS.filter((f) => f.value !== 'jpeg')} onChange={(f) => set({ format: f })} />
           <SegmentedControl ariaLabel="Image width" variant="fill" value={prefs.width === 512 ? '512' : 'full'} options={[{ value: '512', label: '512 px' }, { value: 'full', label: `${w} px` }]} onChange={(v) => set({ width: v === 'full' ? 'full' : 512 })} />
@@ -123,7 +156,7 @@ export default function ExportSheet({ actions, onClose }: { actions: EditorActio
           {`${typeLabel} · ${size.w} × ${size.h} · ${info ? `≈ ${formatBytes(info.bytes)}` : 'measuring…'}`}
         </p>
         <div className="ie-sticker-export-actions">
-          <button type="button" className="ie-sticker-export-download" disabled={busy} onClick={() => run('download')}>
+          <button type="button" className="ie-sticker-export-download" disabled={busy} onClick={() => run('download')} aria-label="Download">
             <Download size={18} strokeWidth={2.2} aria-hidden="true" />
             Download
           </button>
@@ -133,7 +166,7 @@ export default function ExportSheet({ actions, onClose }: { actions: EditorActio
           <button type="button" className="ui-icon-btn ie-sticker-export-icon" disabled={busy} onClick={copy} title="Copy as PNG" aria-label="Copy">
             <Copy size={19} />
           </button>
-          <button type="button" className="ui-icon-btn ie-sticker-export-icon" disabled={busy} onClick={actions.saveToGallery} title="Save to Gallery" aria-label="Save to Gallery">
+          <button type="button" className="ui-icon-btn ie-sticker-export-icon" disabled={busy} onClick={() => actions.saveToGallery?.(name)} title="Save to Gallery" aria-label="Save to Gallery">
             <Save size={19} />
           </button>
         </div>
@@ -142,8 +175,34 @@ export default function ExportSheet({ actions, onClose }: { actions: EditorActio
   }
 
   return (
-    <Sheet Icon={Download} title="Export" onClose={onClose}>
+    <Sheet Icon={Download} title="Export" onClose={onClose} className="ie-export-sheet">
       <Section>
+        <div className="ie-export-name-wrap">
+          <label className="ie-export-name-label">
+            <PenLine size={15} className="ie-export-name-icon" aria-hidden="true" />
+            <input
+              type="text"
+              className="ie-export-name-input"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Meme name"
+              aria-label="Meme name"
+              maxLength={60}
+            />
+            {name ? (
+              <button
+                type="button"
+                className="ie-export-name-clear"
+                onClick={() => setName('')}
+                aria-label="Clear file name"
+                title="Clear"
+              >
+                <X size={14} />
+              </button>
+            ) : null}
+            <span className="ie-export-name-ext">.{ext}</span>
+          </label>
+        </div>
         <Row label="Format">
           <SegmentedControl ariaLabel="File format" variant="fill" value={format} options={moving ? [...FORMATS, ...MOTION_FORMATS] : FORMATS} onChange={(f) => set({ format: f })} />
         </Row>
@@ -170,15 +229,65 @@ export default function ExportSheet({ actions, onClose }: { actions: EditorActio
           {!motion && fellBack ? ' (this browser can\'t write WebP)' : ''}
         </p>
       </Section>
-      <Section rule>
-        <TileGrid columns={2}>
-          <Tile label="Download" Icon={Download} title={motion ? `Download the ${motion.toUpperCase()}` : 'Download the image'} disabled={busy} onClick={() => run('download')} />
-          <Tile label="Share" Icon={Share2} title={motion ? `Share the ${motion.toUpperCase()}` : 'Share the image'} disabled={busy} onClick={() => run('share')} />
-          {!motion && <Tile label="Copy" Icon={Copy} sub="as PNG" title="Copy the image" disabled={busy} onClick={copy} />}
-          {!motion && <Tile label="Save to Gallery" Icon={Save} title="Save to Gallery" disabled={busy} onClick={actions.saveToGallery} />}
-          {progress !== null && <Tile label="Cancel" Icon={X} title="Stop making it" onClick={() => { cancelled.current = true; }} />}
-        </TileGrid>
-      </Section>
+      <div className="ie-export-actions">
+        <button
+          type="button"
+          className="ie-export-btn-primary"
+          disabled={busy}
+          onClick={() => run('download')}
+          aria-label="Download"
+        >
+          <Download size={18} strokeWidth={2.2} aria-hidden="true" />
+          <span>Download</span>
+        </button>
+        <div className="ie-export-actions-row">
+          <button
+            type="button"
+            className="ie-export-action-btn"
+            disabled={busy}
+            onClick={() => run('share')}
+            aria-label="Share"
+          >
+            <Share2 size={16} strokeWidth={2} aria-hidden="true" />
+            <span>Share</span>
+          </button>
+          {!motion && (
+            <button
+              type="button"
+              className="ie-export-action-btn"
+              disabled={busy}
+              onClick={copy}
+              aria-label="Copy"
+            >
+              <Copy size={16} strokeWidth={2} aria-hidden="true" />
+              <span>Copy</span>
+            </button>
+          )}
+          {!motion && (
+            <button
+              type="button"
+              className="ie-export-action-btn"
+              disabled={busy}
+              onClick={() => actions.saveToGallery?.(name)}
+              aria-label="Save to Gallery"
+            >
+              <Save size={16} strokeWidth={2} aria-hidden="true" />
+              <span>Save to Gallery</span>
+            </button>
+          )}
+          {progress !== null && (
+            <button
+              type="button"
+              className="ie-export-action-btn ie-export-action-btn--cancel"
+              onClick={() => { cancelled.current = true; }}
+              aria-label="Cancel"
+            >
+              <X size={16} strokeWidth={2} aria-hidden="true" />
+              <span>Cancel</span>
+            </button>
+          )}
+        </div>
+      </div>
     </Sheet>
   );
 }

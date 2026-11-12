@@ -9,7 +9,8 @@ import {
   CloudOff,
   LoaderCircle,
   Sparkles,
-  ArrowRight
+  ArrowRight,
+  ScanFace
 } from 'lucide-react';
 import { TEMPLATE_FACES } from './editor/faceSwap';
 import BottomSheet from './BottomSheet';
@@ -325,6 +326,7 @@ export default function FaceMorphModal({
       isOpen={isOpen}
       onClose={onClose}
       title="Face Swap"
+      icon={<ScanFace size={20} strokeWidth={2.2} />}
       className="fmm-sheet"
       badge={targetLabel ? <span className="fmm-badge">{targetLabel}</span> : null}
       maxHeight="88vh"

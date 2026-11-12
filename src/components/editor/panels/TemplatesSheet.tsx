@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { LayoutGrid, Share2, Image, Smile, Star, Drama, Columns2, Search, Flame } from 'lucide-react';
+import { LayoutGrid, Share2, Image, Smile, Star, Drama, Columns2, Search, Flame, LayoutTemplate } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import BrowseSheet, { BrowseEmpty, ResultsHead, Shelf, Thumb } from './BrowseSheet';
 import { TEMPLATE_TAGS, filterTemplates } from './mediaPickers';
@@ -145,7 +145,9 @@ export function TemplatesBrowser({ templates, actions, onClose, onPick, title = 
 
   return (
     <BrowseSheet
+      className="ie-templates-sheet"
       title={title}
+      Icon={LayoutTemplate}
       total={counts.all}
       onClose={onClose}
       search={{ value: query, onChange: setQuery, placeholder: 'Search Drake, Doge, Chad…', label: 'Search templates' }}

@@ -34,7 +34,7 @@ describe('MakerTopBar', () => {
     expect(step('Style').className).toContain('is-now');
     expect(step('Export').className).not.toMatch(/is-(now|done)/);
     expect(screen.getByText('Ready to generate')).toBeTruthy();
-    expect((screen.getByRole('button', { name: 'Undo' }) as HTMLButtonElement).disabled).toBe(true);
+    expect(screen.queryByRole('button', { name: 'Undo' })).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Back' }));
     expect(onBack).toHaveBeenCalled();
   });
@@ -47,5 +47,6 @@ describe('MakerTopBar', () => {
     expect(step('Meme').className).toContain('is-done');
     expect(step('Idea').className).toContain('is-now');
     expect(screen.getByText('Pick a meme and an idea')).toBeTruthy();
+    expect((screen.getByRole('button', { name: 'Undo' }) as HTMLButtonElement).disabled).toBe(true);
   });
 });

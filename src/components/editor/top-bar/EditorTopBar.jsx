@@ -1,11 +1,11 @@
-import { Undo2, Redo2, Maximize2, Sticker, ScanFace, Wand2 } from 'lucide-react';
+import { Undo2, Redo2, Maximize2, Sticker, ScanFace, Wand2, History, Share } from 'lucide-react';
 import { TopBar } from '../../ui';
 import { useMemeEditorStore, useMemeEditorHistory } from '../store/useMemeEditorStore';
 import { useEditorUiStore } from '../store/useEditorUiStore';
 import { EDITOR_MODES } from '../editorModes';
 import SizeMenu from './SizeMenu';
 
-// Back, undo/redo, the canvas size for a tall canvas (SizeMenu; a short one has the bar above it) and
+// Back, undo/redo, the canvas size for a tall canvas (SizeMenu; a short one has the bar above it), History and
 // Export (which opens the Export sheet: format, size, download, share, copy, save to gallery); the full
 // editor has no title, so the meme gets the room. The Social Card maker shows its own title, and Full
 // editor, which switches to the full editor on the same meme. The Stickers, AI Meme and Face Swap
@@ -45,25 +45,25 @@ export default function EditorTopBar({ onBack }) {
   return (
     <TopBar title={mode === 'full' ? null : title} subtitle={mode === 'sticker' ? stickerStage : mode === 'faceswap' ? swapStage : mode === 'ai' ? aiStage : null} onBack={onBack}>
       {MakerIcon ? (
-        <div className="ie-topbar-history ie-topbar-history--capsule">
-          <button type="button" className="ui-icon-btn ui-icon-btn--ghost" onClick={handleUndo} disabled={!canUndo} title="Undo" aria-label="Undo">
+        <div className="ie-topbar-history vt-history ie-topbar-history--capsule">
+          <button type="button" className="ui-icon-btn ui-icon-btn--ghost vt-icon-btn" onClick={handleUndo} disabled={!canUndo} title="Undo" aria-label="Undo">
             <Undo2 size={19} />
           </button>
-          <button type="button" className="ui-icon-btn ui-icon-btn--ghost" onClick={handleRedo} disabled={!canRedo} title="Redo" aria-label="Redo">
+          <button type="button" className="ui-icon-btn ui-icon-btn--ghost vt-icon-btn" onClick={handleRedo} disabled={!canRedo} title="Redo" aria-label="Redo">
             <Redo2 size={19} />
           </button>
         </div>
       ) : (
         <>
-          <div className="ie-topbar-history">
-            <button type="button" className="ui-icon-btn ui-icon-btn--ghost" onClick={handleUndo} disabled={!canUndo} title="Undo" aria-label="Undo">
+          <div className="ie-topbar-history vt-history">
+            <button type="button" className="ui-icon-btn ui-icon-btn--ghost vt-icon-btn" onClick={handleUndo} disabled={!canUndo} title="Undo" aria-label="Undo">
               <Undo2 size={19} />
             </button>
-            <button type="button" className="ui-icon-btn ui-icon-btn--ghost" onClick={handleRedo} disabled={!canRedo} title="Redo" aria-label="Redo">
+            <button type="button" className="ui-icon-btn ui-icon-btn--ghost vt-icon-btn" onClick={handleRedo} disabled={!canRedo} title="Redo" aria-label="Redo">
               <Redo2 size={19} />
             </button>
             {mode !== 'full' && (
-              <button type="button" className="ui-icon-btn ui-icon-btn--ghost" onClick={openFullEditor} title="Open in the full editor" aria-label="Full editor">
+              <button type="button" className="ui-icon-btn ui-icon-btn--ghost vt-icon-btn" onClick={openFullEditor} title="Open in the full editor" aria-label="Full editor">
                 <Maximize2 size={18} />
               </button>
             )}
@@ -71,11 +71,23 @@ export default function EditorTopBar({ onBack }) {
           {canvasTall && <SizeMenu />}
           <button
             type="button"
-            className="ui-btn-accent"
+            className={`ie-topbar-history-btn${sheet === 'library' ? ' is-on' : ''}`}
+            onClick={() => (sheet === 'library' ? closeSheet() : openSheet('library'))}
+            title="History & saved memes"
+            aria-label="History"
+            aria-expanded={sheet === 'library'}
+          >
+            <History size={16} aria-hidden="true" />
+            <span>History</span>
+          </button>
+          <button
+            type="button"
+            className="ui-btn-accent vt-export-btn ie-export-btn"
             onClick={() => (sheet === 'export' ? closeSheet() : openSheet('export'))}
             aria-label="Export"
             aria-expanded={sheet === 'export'}
           >
+            <Share size={16} strokeWidth={2.4} aria-hidden="true" />
             Export
           </button>
         </>

@@ -52,13 +52,14 @@ export function useExport({ canvasRef, template, onSaveToGallery, imageFit, isNa
     return renderMotion(canvas, { format: prefs.format, width: prefs.width, onProgress, isCancelled });
   };
 
-  const saveToGallery = () => {
+  const saveToGallery = (customName) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const { captions, stickers, imageLayers, aspectRatio, slotImages, slotTransforms } = store.getState();
+    const finalName = (typeof customName === 'string' && customName.trim()) ? customName.trim() : memeName();
     onSaveToGallery({
       id: `meme-${Date.now()}`,
-      name: memeName(),
+      name: finalName,
       imageUrl: renderCleanImage(canvas),
       rawImageUrl: template?.rawImageUrl || template?.imageUrl,
       captions: JSON.parse(JSON.stringify(captions)),

@@ -1,0 +1,206 @@
+.ie-crop-sheet {
+  --vt-accent: var(--ui-accent, #ff5a36);
+  --vt-text: var(--ui-text, #ffffff);
+  --vt-muted: var(--ui-muted, rgba(255, 255, 255, 0.65));
+}
+
+.ie-crop-sheet .vt-crop {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  height: 100%;
+}
+
+.ie-crop-sheet .vt-crop-host {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 220px;
+  padding: 12px;
+  border-radius: var(--ui-radius-md, 16px);
+  background: #000;
+}
+
+.ie-crop-sheet .vt-crop-frame {
+  position: relative;
+  overflow: hidden;
+  border-radius: 4px;
+  touch-action: none;
+  user-select: none;
+}
+
+.ie-crop-sheet .vt-crop-frame img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.ie-crop-sheet .vt-crop-box {
+  position: absolute;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.6);
+  outline: 1.5px solid rgba(255, 255, 255, 0.95);
+  outline-offset: -1px;
+  cursor: move;
+  touch-action: none;
+}
+
+/* Thirds, to line things up by. */
+.ie-crop-sheet .vt-crop-box::before,
+.ie-crop-sheet .vt-crop-box::after {
+  content: '';
+  position: absolute;
+  inset: 33.333% 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.28);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.28);
+  pointer-events: none;
+}
+.ie-crop-sheet .vt-crop-box::after {
+  inset: 0 33.333%;
+  border: none;
+  border-left: 1px solid rgba(255, 255, 255, 0.28);
+  border-right: 1px solid rgba(255, 255, 255, 0.28);
+}
+
+/* A corner's grab area (32px) and its bracket, both inside the box. */
+.ie-crop-sheet .vt-crop-handle {
+  position: absolute;
+  z-index: 1;
+  width: 32px;
+  height: 32px;
+  touch-action: none;
+}
+
+.ie-crop-sheet .vt-crop-handle::before {
+  content: '';
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border: 0 solid #fff;
+  filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.5));
+}
+
+.ie-crop-sheet .vt-crop-handle.is-nw { left: 0; top: 0; cursor: nwse-resize; }
+.ie-crop-sheet .vt-crop-handle.is-ne { right: 0; top: 0; cursor: nesw-resize; }
+.ie-crop-sheet .vt-crop-handle.is-sw { left: 0; bottom: 0; cursor: nesw-resize; }
+.ie-crop-sheet .vt-crop-handle.is-se { right: 0; bottom: 0; cursor: nwse-resize; }
+
+.ie-crop-sheet .vt-crop-handle.is-nw::before { left: 0; top: 0; border-left-width: 3px; border-top-width: 3px; }
+.ie-crop-sheet .vt-crop-handle.is-ne::before { right: 0; top: 0; border-right-width: 3px; border-top-width: 3px; }
+.ie-crop-sheet .vt-crop-handle.is-sw::before { left: 0; bottom: 0; border-left-width: 3px; border-bottom-width: 3px; }
+.ie-crop-sheet .vt-crop-handle.is-se::before { right: 0; bottom: 0; border-right-width: 3px; border-bottom-width: 3px; }
+
+.ie-crop-sheet .vt-crop-loading {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  color: var(--ui-muted, #999);
+  font-size: 13px;
+}
+
+.ie-crop-sheet .vt-crop-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 38px;
+}
+
+.ie-crop-sheet .vt-crop-size {
+  color: var(--ui-muted, #999);
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.ie-crop-sheet .vt-crop-centre {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 38px;
+  padding: 0 16px;
+  border: none;
+  border-radius: 999px;
+  background: #000;
+  color: var(--ui-text, #fff);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.ie-crop-sheet .vt-crop-centre:disabled {
+  color: #636366;
+  cursor: default;
+}
+.ie-crop-sheet .vt-crop-centre:focus-visible {
+  outline: 2px solid var(--ui-accent, #ff5a36);
+  outline-offset: 2px;
+}
+
+/* The shapes: black tiles with bigger height in a row that scrolls sideways; the picked one accent. */
+.ie-crop-sheet .vt-crop-shapes {
+  display: flex;
+  gap: 10px;
+  margin: 0 -16px;
+  padding: 4px 16px calc(14px + env(safe-area-inset-bottom, 0px));
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.ie-crop-sheet .vt-crop-shapes::-webkit-scrollbar {
+  display: none;
+}
+
+.ie-crop-sheet .vt-crop-shape {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  height: 64px;
+  min-width: 68px;
+  padding: 8px 12px 7px;
+  border: none;
+  border-radius: var(--ui-radius-md, 16px);
+  background: #000;
+  color: var(--ui-muted, rgba(255, 255, 255, 0.65));
+  font: inherit;
+  font-size: var(--ui-fs-label, 12px);
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, transform 0.15s ease;
+}
+.ie-crop-sheet .vt-crop-glyph {
+  display: block;
+  flex: none;
+  border: 1.75px solid currentColor;
+  border-radius: 3px;
+}
+.ie-crop-sheet .vt-crop-glyph.is-free {
+  border-style: dashed;
+}
+.ie-crop-sheet .vt-crop-shape.is-on {
+  background: var(--ui-accent, #ff5a36) !important;
+  color: #fff !important;
+  box-shadow: 0 4px 14px -4px rgba(255, 90, 54, 0.65);
+}
+.ie-crop-sheet .vt-crop-shape:active:not(:disabled) {
+  transform: scale(0.96);
+}
+.ie-crop-sheet .vt-crop-shape:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.ie-crop-sheet .vt-crop-shape:focus-visible {
+  outline: 2px solid var(--ui-accent, #ff5a36);
+  outline-offset: 2px;
+}
+@media (hover: hover) {
+  .ie-crop-sheet .vt-crop-shape:hover:not(:disabled):not(.is-on) {
+    color: var(--ui-text, #fff);
+  }
+}

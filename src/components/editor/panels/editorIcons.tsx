@@ -103,7 +103,7 @@ export function BackgroundIcon({ size = 19, strokeWidth = 2.1 }: { size?: number
   );
 }
 
-// Bubbles: a rounded chat bubble with a tail and three typing dots
+// Bubbles: WhatsApp-style speech bubble silhouette
 export function BubbleIcon({ size = 19, strokeWidth = 2.1 }: { size?: number; strokeWidth?: number }) {
   return (
     <svg
@@ -117,10 +117,7 @@ export function BubbleIcon({ size = 19, strokeWidth = 2.1 }: { size?: number; st
       strokeLinejoin="round"
       aria-hidden="true"
     >
-      <path d="M12 17h5a4 4 0 0 0 4-4V8a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v5a4 4 0 0 0 4 4h1v3.5Z" />
-      <circle cx="8" cy="10.5" r="1.15" fill="currentColor" stroke="none" />
-      <circle cx="12" cy="10.5" r="1.15" fill="currentColor" stroke="none" />
-      <circle cx="16" cy="10.5" r="1.15" fill="currentColor" stroke="none" />
+      <path d="M12 3.2a8.8 8.8 0 0 0-7.6 13.2L3.2 20.8l4.5-1.2A8.8 8.8 0 1 0 12 3.2z" />
     </svg>
   );
 }

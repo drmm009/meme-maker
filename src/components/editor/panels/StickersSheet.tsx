@@ -121,7 +121,9 @@ export default function StickersSheet({ actions, onClose, only }: { actions: Edi
 
   return (
     <BrowseSheet
+      className="ie-stickers-sheet"
       title={only === 'gifs' ? 'GIFs' : 'Stickers'}
+      Icon={only === 'gifs' ? ImagePlay : Sticker}
       total={local ? MEME_TOTAL + pack.length : undefined}
       onClose={onClose}
       search={local || keyed ? { value: query, onChange: setQuery, ...SEARCH[kind] } : undefined}

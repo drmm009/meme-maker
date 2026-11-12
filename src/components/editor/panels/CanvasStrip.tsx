@@ -1,4 +1,4 @@
-import { AtSign, History } from 'lucide-react';
+import { AtSign } from 'lucide-react';
 import { HeaderFooterIcon } from './editorIcons';
 import { CENSOR_TOOL } from './drawTools';
 import { ToolStrip } from '../../ui';
@@ -7,7 +7,7 @@ import { useMemeEditorStore } from '../store/useMemeEditorStore';
 import { useEditorUiStore } from '../store/useEditorUiStore';
 import type { EditorActions } from './selection';
 
-// The Canvas tab's strip: History (undo steps and saved memes), Canvas Style (background colour, mirror,
+// The Canvas tab's strip: Canvas Style (background colour, mirror,
 // crop) and Watermark open their sheets; Header & Footer opens the bands' sheet (switching the header on if neither band is); Censor
 // picks the censor draw tool, dragging out regions while this tab shows (its settings in the draw sheet).
 export default function CanvasStrip({ actions }: { actions: EditorActions }) {
@@ -30,7 +30,6 @@ export default function CanvasStrip({ actions }: { actions: EditorActions }) {
     />
   );
   const items: StripItem[] = [
-    { id: 'history', label: 'History', title: 'History & saved memes', Icon: History, active: sheet === 'library' },
     { id: 'style', label: 'Canvas Style', title: 'Background colour, mirror and crop', icon: swatch, active: sheet === 'canvasColor', className: 'ie-strip-btn--two-line' },
     { id: 'bands', label: 'Header & Footer', title: 'Bands above and below the meme', Icon: HeaderFooterIcon, active: sheet === 'bands', className: 'ie-strip-btn--two-line' },
     { ...CENSOR_TOOL, active: censoring && sheet === 'draw' },
@@ -38,10 +37,7 @@ export default function CanvasStrip({ actions }: { actions: EditorActions }) {
   ];
 
   const onSelect = (id: string) => {
-    if (id === 'history') {
-      if (sheet === 'library') closeSheet();
-      else openSheet('library');
-    } else if (id === 'style') {
+    if (id === 'style') {
       if (sheet === 'canvasColor') closeSheet();
       else openSheet('canvasColor');
     } else if (id === 'watermark') {

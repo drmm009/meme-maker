@@ -1,230 +1,1111 @@
-/* The Stickers maker before its sticker is made (StickerStudio), in the editors' look: graphite
-   panels, one orange accent, no glass or blur. Two screens: with no photo, a tall card to add one
-   over a panel of where else it can come from; with a photo, the photo large in the picked style
-   and the styles under it as a strip of small pictures of that photo. Generate sticker is pinned
-   at the bottom (faceSwap.css's action bar). */
+/* StickerStudio: Revamped Sticker Creator - Single Unified Unit */
 
+/* The entire sticker creator runs as a single unit without external top bar or bottom panel */
+.meme-editor-container.meme-editor--sticker-page {
+  gap: 0 !important;
+}
+.meme-editor-container.meme-editor--sticker-page .editor-main {
+  height: 100% !important;
+  max-height: 100% !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  width: 100% !important;
+}
+.meme-editor-container.meme-editor--sticker-page .editor-workspace,
+.meme-editor-container.meme-editor--sticker-page .aspect-bar {
+  display: none !important;
+}
+.meme-editor-container.meme-editor--sticker-page .ie-panels.ie-panels--full {
+  inset: 0 !important;
+  height: 100% !important;
+  max-height: 100% !important;
+  position: absolute !important;
+}
+
+.ie-stk {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-height: 100%;
+  width: 100%;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 90% 45% at 50% -8%, rgba(20, 192, 138, 0.22) 0%, rgba(13, 14, 18, 0) 70%),
+    radial-gradient(ellipse 60% 30% at 85% 0%, rgba(255, 90, 54, 0.08) 0%, transparent 60%),
+    linear-gradient(180deg, #101217 0%, #0b0c10 100%) !important;
+  color: var(--ui-text, #f4f4f6);
+  font-family: var(--ui-font, 'Plus Jakarta Sans', Inter, system-ui, sans-serif);
+  padding: 8px 14px calc(12px + env(safe-area-inset-bottom, 0px));
+  box-sizing: border-box;
+  gap: 8px;
+  position: relative;
+}
+
+/* ── Top Header with Back Button + AI Studio Tagline & Main Title ── */
+.ie-stk-header {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 13px;
+  min-height: 48px;
+  padding: 4px 2px 8px;
+  position: relative;
+  z-index: 20;
+}
+
+.ie-stk-header-main {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3px;
+  min-width: 0;
+}
+
+.ie-stk-tagline {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  width: fit-content;
+  padding: 2.5px 9px 2.5px 8px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, rgba(20, 192, 138, 0.25) 0%, rgba(14, 150, 107, 0.12) 100%);
+  border: 1px solid rgba(20, 192, 138, 0.45);
+  color: #2bf2b5;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  line-height: 1.2;
+  box-shadow: 0 0 14px rgba(20, 192, 138, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+.ie-stk-sparkle-icon {
+  color: #2bf2b5;
+  filter: drop-shadow(0 0 4px rgba(43, 242, 181, 0.8));
+  animation: ie-stk-sparkle-pulse 2.2s infinite ease-in-out;
+}
+
+@keyframes ie-stk-sparkle-pulse {
+  0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.9; }
+  50% { transform: scale(1.2) rotate(15deg); opacity: 1; filter: drop-shadow(0 0 8px #2bf2b5); }
+}
+
+.ie-stk-title {
+  margin: 0;
+  padding: 0;
+  font-size: 18.5px;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  color: #ffffff;
+  line-height: 1.15;
+  white-space: nowrap;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.6);
+}
+
+.ie-stk-back-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.03) 100%);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  color: #ffffff;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  transition: transform 0.14s cubic-bezier(0.2, 0.8, 0.2, 1),
+              background-color 0.15s ease,
+              border-color 0.15s ease,
+              box-shadow 0.15s ease;
+}
+.ie-stk-back-btn:hover {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0.06) 100%);
+  border-color: rgba(255, 255, 255, 0.28);
+  box-shadow: 0 6px 20px -2px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+.ie-stk-back-btn:active {
+  transform: scale(0.94);
+}
+
+.ie-stk-status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ── Main Body: Adjusted Spacing, Strictly Zero Scrolling ── */
 .ie-stk-body {
-  flex: 1;
+  flex: 1 1 0;
   min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  overflow-y: auto;
-  padding: 6px 16px 14px;
-  scrollbar-width: none;
-}
-.ie-stk-body::-webkit-scrollbar { display: none; }
-
-/* A graphite panel: the card to add a photo, and the sources under it. */
-.ie-stk-drop, .ie-stk-sources {
-  border-radius: 24px;
-  background: linear-gradient(180deg, #1f1f22 0%, #17171a 100%);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 20px 34px -24px rgba(0, 0, 0, 0.95);
+  gap: 10px;
+  overflow: hidden;
+  padding: 0 2px;
 }
 
-/* ── No photo yet ── */
+/* ── Hero Section (Empty state) ── */
+.ie-stk-hero {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 2px 8px 6px;
+  gap: 4px;
+}
+
+.ie-stk-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 11px;
+  border-radius: 999px;
+  background: rgba(20, 192, 138, 0.12);
+  border: 1px solid rgba(20, 192, 138, 0.28);
+  color: #2fe0a4;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.ie-stk-sparkle-icon {
+  color: #2fe0a4;
+  animation: ie-stk-pulse 2s infinite ease-in-out;
+}
+
+@keyframes ie-stk-pulse {
+  0%, 100% { transform: scale(1); opacity: 0.85; }
+  50% { transform: scale(1.15); opacity: 1; }
+}
+
+.ie-stk-hero-title {
+  font-size: 21px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #ffffff;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.ie-stk-hero-subtitle {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.62);
+  max-width: 38ch;
+  line-height: 1.35;
+  margin: 0;
+}
+
+/* ── Drag & Drop Upload Zone (Flexibly expands to absorb empty space) ── */
 .ie-stk-drop {
-  flex: 1;
-  min-height: 220px;
+  flex: 1 1 0;
+  min-height: 160px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  padding: 24px;
-  color: var(--ui-text);
+  gap: 10px;
+  padding: 18px 20px;
+  border-radius: 26px;
+  background: linear-gradient(180deg, rgba(30, 34, 46, 0.75) 0%, rgba(16, 18, 25, 0.9) 100%);
+  border: 1.5px dashed rgba(20, 192, 138, 0.38);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12),
+              0 16px 36px -12px rgba(0, 0, 0, 0.8);
+  color: var(--ui-text, #f4f4f6);
   text-align: center;
   cursor: pointer;
-  transition: transform 0.18s cubic-bezier(0.2, 0.8, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1),
+              border-color 0.2s ease,
+              background 0.2s ease,
+              box-shadow 0.2s ease;
 }
-.ie-stk-drop:active { transform: scale(0.985); }
-.ie-stk-drop:focus-within { outline: 2px solid var(--ui-accent); outline-offset: 2px; }
-/* The icon: orange on a dark tile with a fine light edge, as Home's makers. */
-.ie-stk-drop-icon, .ie-stk-source-icon {
-  display: grid;
-  flex: none;
-  place-items: center;
-  background: #29292d;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 6px 12px -8px rgba(0, 0, 0, 0.8);
-  color: #ff6a47;
-}
-.ie-stk-drop-icon { width: 72px; height: 72px; margin-bottom: 12px; border-radius: 22px; }
-.ie-stk-drop-icon svg { width: 32px; height: 32px; }
-.ie-stk-drop-title { font-size: 20px; font-weight: 700; letter-spacing: -0.01em; }
-.ie-stk-drop-hint { max-width: 26ch; color: var(--ui-muted); font-size: 14px; line-height: 1.4; }
 
-/* Where a photo comes from: three cells in one panel, parted by hairlines. */
-.ie-stk-sources { flex: none; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); overflow: hidden; }
+.ie-stk-drop::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 20%;
+  right: 20%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(20, 192, 138, 0.5), transparent);
+  pointer-events: none;
+}
+
+.ie-stk-drop:hover {
+  border-color: rgba(20, 192, 138, 0.75);
+  background: linear-gradient(180deg, rgba(36, 42, 58, 0.85) 0%, rgba(18, 21, 30, 0.96) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2),
+              0 0 32px rgba(20, 192, 138, 0.22),
+              0 20px 44px -10px rgba(0, 0, 0, 0.9);
+  transform: translateY(-2px);
+}
+
+.ie-stk-drop:active {
+  transform: scale(0.985);
+}
+
+.ie-stk-drop.is-drag-over {
+  border-color: #2bf2b5;
+  background: linear-gradient(180deg, rgba(20, 192, 138, 0.18) 0%, rgba(20, 192, 138, 0.05) 100%);
+  box-shadow: 0 0 36px rgba(20, 192, 138, 0.35), inset 0 0 20px rgba(20, 192, 138, 0.12);
+}
+
+.ie-stk-drop-visual {
+  margin-bottom: 2px;
+}
+
+.ie-stk-drop-sticker-pill {
+  width: 62px;
+  height: 62px;
+  border-radius: 20px;
+  background: linear-gradient(145deg, #2b3040 0%, #161822 100%);
+  border: 1.5px solid rgba(255, 255, 255, 0.16);
+  display: grid;
+  place-items: center;
+  color: #ff5a36;
+  position: relative;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2),
+              0 10px 24px -4px rgba(0, 0, 0, 0.7),
+              0 0 16px rgba(255, 90, 54, 0.2);
+  transition: transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1),
+              box-shadow 0.22s ease;
+}
+
+.ie-stk-drop:hover .ie-stk-drop-sticker-pill {
+  transform: scale(1.08) rotate(-4deg);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3),
+              0 14px 28px -4px rgba(0, 0, 0, 0.8),
+              0 0 24px rgba(255, 90, 54, 0.35);
+}
+
+.ie-stk-drop-peel-corner {
+  position: absolute;
+  top: -1px;
+  right: -1px;
+  width: 17px;
+  height: 17px;
+  background: linear-gradient(135deg, transparent 50%, rgba(255, 255, 255, 0.28) 50%, rgba(255, 255, 255, 0.65) 100%);
+  border-bottom-left-radius: 6px;
+  border-top-right-radius: 19px;
+  box-shadow: -2px 2px 5px rgba(0, 0, 0, 0.35);
+}
+
+.ie-stk-drop-cut-icon {
+  filter: drop-shadow(0 2px 8px rgba(255, 90, 54, 0.5));
+}
+
+.ie-stk-drop-title {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.015em;
+  color: #ffffff;
+}
+
+.ie-stk-drop-hint {
+  max-width: 32ch;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 12.5px;
+  line-height: 1.35;
+}
+
+.ie-stk-drop-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 4px;
+  padding: 8px 18px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.05) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+  font-size: 13.5px;
+  font-weight: 700;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  transition: all 0.16s ease;
+}
+
+.ie-stk-drop:hover .ie-stk-drop-cta {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.09) 100%);
+  border-color: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+/* ── Source Options Grid ── */
+.ie-stk-sources {
+  flex: none;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
 .ie-stk-source {
   position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  height: 96px;
-  padding: 0;
-  border: none;
-  background: none;
-  color: #ececf0;
+  gap: 5px;
+  padding: 10px 6px 9px;
+  border-radius: 18px !important;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 10px -2px rgba(0, 0, 0, 0.35);
+  color: #f0f0f4;
   font: inherit;
-  font-size: 13.5px;
+  cursor: pointer;
+  transition: transform 0.16s ease, background-color 0.16s ease, border-color 0.16s ease;
+}
+
+.ie-stk-source:hover {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%);
+  border-color: rgba(255, 255, 255, 0.16);
+  transform: translateY(-2px);
+}
+
+.ie-stk-source:active {
+  transform: scale(0.96);
+}
+
+.ie-stk-source-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: grid;
+  place-items: center;
+  color: #14c08a;
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.ie-stk-source:hover .ie-stk-source-icon {
+  color: var(--ui-accent, #ff5a36);
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.ie-stk-source-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+}
+
+.ie-stk-source-title {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.ie-stk-source-sub {
+  font-size: 10.5px;
+  color: rgba(255, 255, 255, 0.45);
+  font-weight: 500;
+}
+
+/* ── Sample Quick Presets ── */
+.ie-stk-samples-section {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 2px;
+}
+
+.ie-stk-samples-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px;
+}
+
+.ie-stk-samples-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.5);
+  letter-spacing: 0.01em;
+}
+
+.ie-stk-samples-row {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 1px 0 2px;
+}
+.ie-stk-samples-row::-webkit-scrollbar {
+  display: none;
+}
+
+.ie-stk-sample-chip {
+  flex: 1 1 0;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 5px 6px;
+  border-radius: 999px !important;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  color: #ececf2;
+  font: inherit;
+  font-size: 11px;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.18s ease;
+  transition: transform 0.14s ease, background-color 0.15s ease, border-color 0.15s ease;
 }
-.ie-stk-source + .ie-stk-source::before { content: ''; position: absolute; top: 16px; bottom: 16px; left: 0; width: 1px; background: rgba(255, 255, 255, 0.07); }
-.ie-stk-source-icon { width: 44px; height: 44px; border-radius: 14px; }
-.ie-stk-source-icon svg { width: 21px; height: 21px; }
-.ie-stk-source:active { background: rgba(255, 255, 255, 0.05); }
-.ie-stk-source:focus-within, .ie-stk-source:focus-visible { outline: 2px solid var(--ui-accent); outline-offset: -3px; }
-@media (hover: hover) { .ie-stk-source:hover { background: rgba(255, 255, 255, 0.035); } }
-/* In the Change sheet the panel sits on the sheet's own grey. */
-.ie-swap-sheet .ie-stk-sources { background: rgba(255, 255, 255, 0.07); box-shadow: none; }
 
-/* ── With a photo: the board ── */
-.ie-stk-stage { flex: 1; min-height: 220px; display: grid; place-items: center; container-type: size; }
+.ie-stk-sample-chip:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.ie-stk-sample-chip:active {
+  transform: scale(0.95);
+}
+
+.ie-stk-sample-avatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  object-fit: cover;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  flex-shrink: 0;
+}
+
+.ie-stk-sample-name {
+  white-space: nowrap;
+  overflow: visible;
+  text-overflow: clip;
+}
+
+/* ── Photo Loaded State: Main Stage (Optimized Board Scaling) ── */
+.ie-stk-stage {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 0;
+  overflow: hidden;
+}
+
 .ie-stk-board {
   position: relative;
   display: grid;
   place-items: center;
-  width: min(100cqw, 100cqh);
-  height: min(100cqw, 100cqh);
+  width: min(100%, 48vh, 420px);
+  height: min(100%, 48vh, 420px);
+  max-width: 420px;
+  max-height: 48vh;
+  aspect-ratio: 1;
   overflow: hidden;
-  border-radius: 24px;
-  /* A quiet checkerboard: the sticker will be see-through. */
-  background: repeating-conic-gradient(#1b1b1e 0% 25%, #151518 0% 50%) 50% 50% / 24px 24px;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08), 0 20px 34px -24px rgba(0, 0, 0, 0.95);
+  border-radius: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1),
+              0 20px 40px -18px rgba(0, 0, 0, 0.9);
+  transition: background 0.25s ease;
 }
+
+/* Stage Backdrops */
+.ie-stk-board--check {
+  background: repeating-conic-gradient(#1c1d22 0% 25%, #131418 0% 50%) 50% 50% / 22px 22px;
+}
+.ie-stk-board--dark {
+  background: #0d0e12;
+}
+.ie-stk-board--gradient {
+  background: radial-gradient(circle at 50% 50%, #1f2a3c 0%, #0d1017 100%);
+}
+
 .ie-stk-preview {
   display: block;
   width: auto;
   height: auto;
-  max-width: 80%;
-  max-height: 80%;
-  border-radius: 16px;
-  transition: filter 0.24s cubic-bezier(0.2, 0.8, 0.2, 1);
+  max-width: 82%;
+  max-height: 82%;
+  border-radius: 18px;
+  object-fit: contain;
+  transition: filter 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
-.ie-stk-board-tools { position: absolute; top: 10px; right: 10px; display: flex; gap: 8px; }
-.ie-stk-round {
-  display: grid;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-  padding: 0;
-  border: none;
-  background: rgba(12, 12, 14, 0.82);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
-  color: #fff;
+
+/* Floating Stage Tools */
+.ie-stk-board-left-tools {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 5;
+}
+
+.ie-stk-board-tools {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 5;
+  display: flex;
+  gap: 8px;
+}
+
+.ie-stk-pill-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 999px !important;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(16, 17, 22, 0.82);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: #ffffff;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
   cursor: pointer;
-  transition: transform 0.12s ease, background-color 0.15s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
 }
-.ie-stk-round svg { width: 17px; height: 17px; }
-.ie-stk-round:active { transform: scale(0.92); }
-@media (hover: hover) { .ie-stk-round:hover { background: rgba(32, 32, 36, 0.95); } }
+
+.ie-stk-pill-btn:hover {
+  background: rgba(32, 34, 44, 0.95);
+  border-color: rgba(255, 255, 255, 0.24);
+}
+
+.ie-stk-pill-btn:active {
+  transform: scale(0.96);
+}
+
+.ie-stk-pill-btn--danger {
+  color: #ff6b6b;
+  border-color: rgba(255, 80, 80, 0.25);
+  background: rgba(30, 14, 16, 0.82);
+}
+
+.ie-stk-pill-btn--danger:hover {
+  background: rgba(50, 18, 22, 0.95);
+  border-color: rgba(255, 80, 80, 0.45);
+}
+
 .ie-stk-note {
   position: absolute;
-  left: 50%;
   bottom: 10px;
-  padding: 5px 11px;
-  border-radius: 999px;
-  background: rgba(12, 12, 14, 0.82);
-  color: rgba(255, 255, 255, 0.84);
-  font-size: 11.5px;
-  font-weight: 600;
-  white-space: nowrap;
+  left: 50%;
   transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: rgba(14, 15, 20, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
   pointer-events: none;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
+
+.ie-stk-note-icon {
+  color: #14c08a;
+}
+
+/* Busy overlay on stage */
 .ie-stk-busy {
   position: absolute;
   inset: 0;
+  background: rgba(11, 12, 16, 0.88);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  background: rgba(10, 10, 12, 0.8);
-  color: #fff;
-  font-size: var(--ui-fs-body, 15px);
-  font-weight: 700;
+  gap: 12px;
+  z-index: 10;
+  text-align: center;
+  padding: 16px;
 }
 
-/* The looks, on the big photo and (finer) on the strip's small ones: the style's edge stamped
-   round the picture, a shadow under it, Retro's tint. --e is the edge's width. */
-.ie-stk-preview { --e: 3px; --s: 0 10px 14px rgba(0, 0, 0, 0.55); }
-.ie-stk-thumb img { --e: 1.5px; --s: 0 3px 4px rgba(0, 0, 0, 0.5); }
-.ie-stk-look--classic { filter: drop-shadow(var(--e) 0 0 #fff) drop-shadow(calc(-1 * var(--e)) 0 0 #fff) drop-shadow(0 var(--e) 0 #fff) drop-shadow(0 calc(-1 * var(--e)) 0 #fff) drop-shadow(var(--s)); }
-.ie-stk-look--bold { --b: calc(var(--e) * 2); filter: drop-shadow(var(--b) 0 0 #fff) drop-shadow(calc(-1 * var(--b)) 0 0 #fff) drop-shadow(0 var(--b) 0 #fff) drop-shadow(0 calc(-1 * var(--b)) 0 #fff) drop-shadow(var(--s)); }
-.ie-stk-look--comic { --c: calc(var(--e) * 0.8); filter: drop-shadow(var(--c) 0 0 #000) drop-shadow(calc(-1 * var(--c)) 0 0 #000) drop-shadow(0 var(--c) 0 #000) drop-shadow(0 calc(-1 * var(--c)) 0 #000) drop-shadow(0 0 1px rgba(255, 255, 255, 0.5)); }
-.ie-stk-look--pop { --p: calc(var(--e) * 1.3); filter: drop-shadow(var(--p) 0 0 #ffd60a) drop-shadow(calc(-1 * var(--p)) 0 0 #ffd60a) drop-shadow(0 var(--p) 0 #ffd60a) drop-shadow(0 calc(-1 * var(--p)) 0 #ffd60a) drop-shadow(var(--s)); }
-.ie-stk-look--clean { filter: drop-shadow(var(--s)) drop-shadow(var(--s)); }
-.ie-stk-look--retro { filter: sepia(0.55) saturate(1.15) contrast(0.95) drop-shadow(var(--e) 0 0 #fff1d6) drop-shadow(calc(-1 * var(--e)) 0 0 #fff1d6) drop-shadow(0 var(--e) 0 #fff1d6) drop-shadow(0 calc(-1 * var(--e)) 0 #fff1d6) drop-shadow(var(--s)); }
+.ie-stk-busy-spinner-wrap {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+}
 
-/* ── The styles: a strip to the screen's edges ── */
-.ie-stk-styles {
+.ie-stk-busy-spinner-wrap .ie-swap-spinner {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border-width: 3px;
+  border-color: rgba(20, 192, 138, 0.2);
+  border-top-color: #14c08a;
+  border-radius: 50%;
+  animation: ie-swap-spin 0.8s linear infinite;
+}
+
+@keyframes ie-swap-spin {
+  to { transform: rotate(360deg); }
+}
+
+.ie-stk-busy-icon {
+  color: #14c08a;
+  animation: ie-stk-pulse 1s infinite alternate;
+}
+
+.ie-stk-busy-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.ie-stk-busy-headline {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.ie-stk-busy-sub {
+  font-size: 11.5px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* ── Die-Cut Style Filter Definitions ── */
+.ie-stk-preview {
+  --e: 3.5px;
+  --s: 0 12px 22px rgba(0, 0, 0, 0.6);
+}
+.ie-stk-thumb img {
+  --e: 1.8px;
+  --s: 0 4px 8px rgba(0, 0, 0, 0.45);
+}
+
+.ie-stk-look--classic {
+  filter: drop-shadow(var(--e) 0 0 #fff)
+          drop-shadow(calc(-1 * var(--e)) 0 0 #fff)
+          drop-shadow(0 var(--e) 0 0 #fff)
+          drop-shadow(0 calc(-1 * var(--e)) 0 #fff)
+          drop-shadow(var(--s));
+}
+.ie-stk-look--bold {
+  --b: calc(var(--e) * 1.9);
+  filter: drop-shadow(var(--b) 0 0 #fff)
+          drop-shadow(calc(-1 * var(--b)) 0 0 #fff)
+          drop-shadow(0 var(--b) 0 #fff)
+          drop-shadow(0 calc(-1 * var(--b)) 0 #fff)
+          drop-shadow(var(--s));
+}
+.ie-stk-look--comic {
+  --c: calc(var(--e) * 0.95);
+  filter: drop-shadow(var(--c) 0 0 #000)
+          drop-shadow(calc(-1 * var(--c)) 0 0 #000)
+          drop-shadow(0 var(--c) 0 #000)
+          drop-shadow(0 calc(-1 * var(--c)) 0 #000)
+          drop-shadow(0 0 2px rgba(255, 255, 255, 0.65));
+}
+.ie-stk-look--pop {
+  --p: calc(var(--e) * 1.35);
+  filter: drop-shadow(var(--p) 0 0 #ffd60a)
+          drop-shadow(calc(-1 * var(--p)) 0 0 #ffd60a)
+          drop-shadow(0 var(--p) 0 #ffd60a)
+          drop-shadow(0 calc(-1 * var(--p)) 0 #ffd60a)
+          drop-shadow(var(--s));
+}
+.ie-stk-look--clean {
+  filter: drop-shadow(var(--s)) drop-shadow(var(--s));
+}
+.ie-stk-look--retro {
+  filter: sepia(0.55) saturate(1.15) contrast(0.95)
+          drop-shadow(var(--e) 0 0 #fff1d6)
+          drop-shadow(calc(-1 * var(--e)) 0 0 #fff1d6)
+          drop-shadow(0 var(--e) 0 #fff1d6)
+          drop-shadow(0 calc(-1 * var(--e)) 0 #fff1d6)
+          drop-shadow(var(--s));
+}
+
+/* ── Style Selector Ribbon ── */
+.ie-stk-style-picker-header {
   flex: none;
   display: flex;
-  gap: 10px;
-  margin: 2px -16px 0;
-  padding: 3px 16px 2px;
-  overflow-x: auto;
-  scrollbar-width: none;
-  overscroll-behavior-x: contain;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 4px 2px;
 }
-.ie-stk-styles::-webkit-scrollbar { display: none; }
-.ie-stk-style {
+
+.ie-stk-picker-title {
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.ie-stk-picker-badge {
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: rgba(255, 90, 54, 0.14);
+  color: #ff7552;
+  border: 1px solid rgba(255, 90, 54, 0.28);
+}
+
+.ie-stk-styles {
   flex: none;
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 6px;
+  padding: 2px 0 6px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.ie-stk-style {
+  width: 100%;
+  max-width: 54px;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 7px;
-  width: 72px;
+  gap: 4px;
   padding: 0;
   border: none;
   background: none;
-  color: var(--ui-muted);
+  color: rgba(255, 255, 255, 0.6);
   font: inherit;
   cursor: pointer;
+  border-radius: 16px !important;
+  transition: color 0.16s ease, transform 0.14s ease;
 }
+
 .ie-stk-thumb {
   position: relative;
   display: grid;
   place-items: center;
-  width: 72px;
-  height: 72px;
-  border-radius: 18px;
-  background: #1c1c1e;
-  transition: transform 0.18s cubic-bezier(0.2, 0.8, 0.2, 1);
+  width: 100%;
+  aspect-ratio: 1;
+  max-width: 52px;
+  max-height: 52px;
+  border-radius: 15px;
+  background: #18191f;
+  border: 1.5px solid rgba(255, 255, 255, 0.09);
+  box-shadow: 0 4px 10px -2px rgba(0, 0, 0, 0.4);
+  transition: transform 0.18s cubic-bezier(0.2, 0.8, 0.2, 1),
+              border-color 0.18s ease,
+              box-shadow 0.18s ease;
 }
-.ie-stk-thumb img { max-width: 68%; max-height: 68%; border-radius: 6px; }
-/* The ring: a hairline, orange on the picked one (laid over, so it isn't clipped). */
-.ie-stk-thumb::after { content: ''; position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08); pointer-events: none; }
-.ie-stk-style.is-on .ie-stk-thumb::after { box-shadow: inset 0 0 0 2.5px var(--ui-accent); }
-.ie-stk-style-label { font-size: 12.5px; font-weight: 600; line-height: 1.2; }
-.ie-stk-style.is-on { color: var(--ui-text); }
-.ie-stk-style:active:not(:disabled) .ie-stk-thumb { transform: scale(0.94); }
-.ie-stk-style:disabled { opacity: 0.5; cursor: default; }
-.ie-stk-style:focus-visible { outline: none; }
-.ie-stk-style:focus-visible .ie-stk-thumb::after { box-shadow: inset 0 0 0 2.5px var(--ui-accent), 0 0 0 2px rgba(255, 255, 255, 0.5); }
 
-/* ── Generate ── */
-.ie-stk-go { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
-.ie-stk-go svg { width: 19px; height: 19px; }
+.ie-stk-thumb img {
+  max-width: 72%;
+  max-height: 72%;
+  border-radius: 7px;
+}
 
-/* panels.css rounds every button in a sheet panel into a pill (.ie-panels--sheet button:not(…)),
-   with a selector too long to outrank: the page's own buttons keep their shapes. */
-.ie-stk .ie-stk-source { border-radius: 0 !important; }
-.ie-stk .ie-stk-style { border-radius: 18px !important; }
-.ie-stk .ie-stk-round { border-radius: 999px !important; }
+.ie-stk-style.is-on {
+  color: #ffffff;
+}
 
-/* Room to breathe on a wide screen: the page keeps a phone's width. */
+.ie-stk-style.is-on .ie-stk-thumb {
+  border-color: var(--ui-accent, #ff5a36);
+  box-shadow: 0 0 14px rgba(255, 90, 54, 0.4), inset 0 0 0 1px var(--ui-accent, #ff5a36);
+  transform: translateY(-2px);
+}
+
+.ie-stk-thumb-check {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  background: var(--ui-accent, #ff5a36);
+  color: #ffffff;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+}
+
+.ie-stk-style-label {
+  font-size: 10.5px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.ie-stk-style.is-on .ie-stk-style-label {
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.ie-stk-style:active:not(:disabled) .ie-stk-thumb {
+  transform: scale(0.93);
+}
+
+.ie-stk-style:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.ie-stk-style:focus-visible {
+  outline: none;
+}
+.ie-stk-style:focus-visible .ie-stk-thumb {
+  border-color: var(--ui-accent, #ff5a36);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5);
+}
+
+/* ── Integrated Bottom Action Button ── */
+.ie-stk-go {
+  flex: none;
+  width: 100%;
+  height: 50px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  font-size: 15.5px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, #ff5a36 0%, #ff7347 100%);
+  border: none;
+  color: #ffffff;
+  box-shadow: 0 6px 20px -3px rgba(255, 90, 54, 0.45);
+  cursor: pointer;
+  transition: transform 0.14s ease, opacity 0.15s ease, box-shadow 0.15s ease;
+}
+
+.ie-stk-go:hover:not(:disabled) {
+  box-shadow: 0 8px 24px -3px rgba(255, 90, 54, 0.55);
+  transform: translateY(-1px);
+}
+
+.ie-stk-go:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.ie-stk-go:disabled {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: rgba(255, 255, 255, 0.3) !important;
+  box-shadow: none !important;
+  cursor: not-allowed;
+}
+
+/* In the Change picker sheet */
+.ie-swap-sheet .ie-stk-sources {
+  background: transparent;
+  box-shadow: none;
+  gap: 10px;
+}
+
+/* Wide screen containment */
 @media (min-width: 720px) {
-  .ie-stk-body, .ie-stk > .ie-swap-actions { width: 100%; max-width: 520px; margin: 0 auto; }
+  .ie-stk-header,
+  .ie-stk-body,
+  .ie-stk-go {
+    width: 100%;
+    max-width: 480px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+/* ── Unified Sticker Studio Mode (Step 3: Cutout / Export) ── */
+.meme-editor-container.meme-editor--sticker-mode {
+  background:
+    radial-gradient(ellipse 90% 45% at 50% -8%, rgba(20, 192, 138, 0.22) 0%, rgba(13, 14, 18, 0) 70%),
+    radial-gradient(ellipse 60% 30% at 85% 0%, rgba(255, 90, 54, 0.08) 0%, transparent 60%),
+    linear-gradient(180deg, #101217 0%, #0b0c10 100%) !important;
+  gap: 0 !important;
+  height: 100% !important;
+  max-height: 100% !important;
+}
+
+.meme-editor-container.meme-editor--sticker-mode .aspect-bar {
+  display: none !important;
+}
+
+/* Step 3 Header matching Step 1 and Step 2 */
+.ie-stk-header--step3 {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 13px;
+  min-height: 48px;
+  padding: 10px 14px 6px;
+  box-sizing: border-box;
+  z-index: 50;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  position: relative;
+}
+
+/* Step 3 Workspace & Board: Matches Step 2 rounded board */
+.meme-editor-container.meme-editor--sticker-mode .editor-workspace {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 14px 8px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.meme-editor-container.meme-editor--sticker-mode .canvas-wrapper {
+  padding: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 420px !important;
+  max-height: 48vh !important;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.meme-editor-container.meme-editor--sticker-mode .canvas-viewport {
+  padding: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.meme-editor-container.meme-editor--sticker-mode .canvas-interactive-wrapper {
+  width: 100% !important;
+  height: 100% !important;
+  border-radius: 28px !important;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1),
+              0 20px 40px -18px rgba(0, 0, 0, 0.9) !important;
+  background: repeating-conic-gradient(#1c1d22 0% 25%, #131418 0% 50%) 50% 50% / 22px 22px !important;
+}
+
+.meme-editor-container.meme-editor--sticker-mode .meme-canvas {
+  border-radius: 28px !important;
+  border: none !important;
+}
+
+/* Step 3 Bottom Panels: Seamless Single Unit */
+.meme-editor-container.meme-editor--sticker-mode .ie-panels:not(.ie-panels--full):not(.ie-panels--over) {
+  flex: none;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 0 14px calc(12px + env(safe-area-inset-bottom, 0px));
+  box-sizing: border-box;
+  background: transparent;
+  gap: 8px;
+}
+
+/* Quick Tool Strip (Die-cut, Crop, Text, Effects) */
+.meme-editor-container.meme-editor--sticker-mode .ie-strip {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  padding: 4px;
+  gap: 4px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+}
+
+.meme-editor-container.meme-editor--sticker-mode .ie-strip .ui-strip-item {
+  border-radius: 16px;
+  padding: 6px 4px;
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+/* Action Dock (New, Move to editor, Export) */
+.meme-editor-container.meme-editor--sticker-mode .ui-dock {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  gap: 8px !important;
+  box-shadow: none !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.meme-editor-container.meme-editor--sticker-mode .ui-dock .ui-dock-item {
+  height: 48px !important;
+  border-radius: 9999px !important;
+  border: 1px solid rgba(255, 255, 255, 0.09) !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  color: #fff !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  flex: 1 1 0 !important;
+  flex-direction: row !important;
+  gap: 6px !important;
+  padding: 0 12px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
+  transition: transform 0.14s ease, background-color 0.15s ease !important;
+}
+
+.meme-editor-container.meme-editor--sticker-mode .ui-dock .ui-dock-item:hover {
+  background: rgba(255, 255, 255, 0.09) !important;
+  transform: translateY(-1px) !important;
+}
+
+.meme-editor-container.meme-editor--sticker-mode .ui-dock .ui-dock-item:active {
+  transform: scale(0.97) !important;
+}
+
+/* Primary Export CTA: Big Orange Button matching Step 2 Generate sticker */
+.meme-editor-container.meme-editor--sticker-mode .ui-dock .ui-dock-item--primary {
+  flex: 1.5 1 0 !important;
+  height: 50px !important;
+  background: linear-gradient(135deg, #ff5a36 0%, #ff7347 100%) !important;
+  border: none !important;
+  color: #ffffff !important;
+  font-size: 14.5px !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.01em !important;
+  box-shadow: 0 6px 20px -3px rgba(255, 90, 54, 0.45) !important;
+}
+
+.meme-editor-container.meme-editor--sticker-mode .ui-dock .ui-dock-item--primary:hover {
+  box-shadow: 0 8px 24px -3px rgba(255, 90, 54, 0.55) !important;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ie-stk-drop, .ie-stk-preview, .ie-stk-source, .ie-stk-round, .ie-stk-thumb { transition: none; }
-  .ie-stk-drop:active, .ie-stk-round:active, .ie-stk-style:active:not(:disabled) .ie-stk-thumb { transform: none; }
+  .ie-stk-drop,
+  .ie-stk-preview,
+  .ie-stk-source,
+  .ie-stk-pill-btn,
+  .ie-stk-thumb,
+  .ie-stk-sample-chip {
+    transition: none;
+  }
+  .ie-stk-sparkle-icon,
+  .ie-stk-busy-icon {
+    animation: none;
+  }
 }

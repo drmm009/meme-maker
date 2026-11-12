@@ -46,14 +46,16 @@ export default function MakerTopBar({ mode, onBack }: { mode: MakerBarMode; onBa
 
   return (
     <MakerBar title={title} Icon={Icon} tone={tone} steps={steps} step={step} status={status[step]} onBack={onBack}>
-      <div className="mtb-history">
-        <button type="button" className="mtb-history-btn" onClick={undo} disabled={!canUndo} aria-label="Undo" title="Undo">
-          <Undo2 size={19} />
-        </button>
-        <button type="button" className="mtb-history-btn" onClick={redo} disabled={!canRedo} aria-label="Redo" title="Redo">
-          <Redo2 size={19} />
-        </button>
-      </div>
+      {mode !== 'sticker' && (
+        <div className="mtb-history">
+          <button type="button" className="mtb-history-btn" onClick={undo} disabled={!canUndo} aria-label="Undo" title="Undo">
+            <Undo2 size={19} />
+          </button>
+          <button type="button" className="mtb-history-btn" onClick={redo} disabled={!canRedo} aria-label="Redo" title="Redo">
+            <Redo2 size={19} />
+          </button>
+        </div>
+      )}
     </MakerBar>
   );
 }

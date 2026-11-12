@@ -1,9 +1,10 @@
+/* "Continue your last meme?" floating container banner under top bar.
+   Positioned directly below the Export panel / button with a bit of padding. */
 .meme-draft-offer {
   position: absolute;
   top: calc(64px + env(safe-area-inset-top, 0px));
-  left: 50%;
+  right: 14px;
   z-index: 450;
-  transform: translateX(-50%);
   width: max-content;
   max-width: calc(100% - 28px);
   box-sizing: border-box;
@@ -11,44 +12,83 @@
   align-items: center;
   gap: 10px;
   padding: 8px 8px 8px 14px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: var(--radius-sm);
-  background: var(--surface-card-elevated);
-  color: var(--text-main);
-  box-shadow: 0 18px 40px -12px rgba(0, 0, 0, 0.6);
-  font-size: var(--ui-fs-body, 15px);
+  border: none;
+  border-radius: 16px;
+  background: var(--ui-surface, #1c1c1e);
+  color: var(--ui-text, #f4f4f6);
+  box-shadow: 0 18px 40px -12px rgba(0, 0, 0, 0.8);
+  font-size: 14px;
   font-weight: 700;
-  animation: meme-draft-in 0.25s ease-out;
+  animation: meme-draft-in 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
-.meme-draft-text { display: flex; flex-direction: column; min-width: 0; line-height: 1.25; }
+
+.meme-draft-offer > svg {
+  flex-shrink: 0;
+  color: inherit;
+}
+
+.meme-draft-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.25;
+}
+
 .meme-draft-text small {
   overflow: hidden;
-  color: var(--text-muted);
-  font-size: var(--ui-fs-label, 12px);
+  color: var(--ui-muted, #8e8e93);
+  font-size: 12px;
   font-weight: 600;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
 .meme-draft-restore {
   flex-shrink: 0;
   padding: 8px 14px;
   border: none;
-  border-radius: var(--ui-radius-sm, 12px);
-  background: var(--primary-gradient);
-  color: #fff;
+  border-radius: 11px;
+  background: var(--ui-accent, #ff5a36);
+  color: #ffffff;
+  font-size: 14px;
   font-weight: 700;
   cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease;
 }
+
+.meme-draft-restore:hover {
+  background: var(--ui-accent-hover, #ff6f4e);
+}
+
+.meme-draft-restore:active {
+  transform: scale(0.96);
+}
+
 .meme-draft-close {
   flex-shrink: 0;
   display: grid;
+  place-items: center;
   padding: 6px;
   border: none;
+  border-radius: var(--ui-radius-full, 999px);
   background: none;
-  color: var(--text-muted);
+  color: var(--ui-muted, #8e8e93);
   cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease;
 }
+
+.meme-draft-close:hover {
+  color: var(--ui-text, #f4f4f6);
+  background: rgba(255, 255, 255, 0.08);
+}
+
 @keyframes meme-draft-in {
-  from { opacity: 0; transform: translate(-50%, -8px); }
-  to { opacity: 1; transform: translate(-50%, 0); }
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }

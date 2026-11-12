@@ -207,9 +207,9 @@ describe('MemeEditor', () => {
     renderEditor();
     const strips = [
       ['Photos, videos, stickers and emoji', 'Media tools', ['Photo', 'Templates', 'Stickers', 'Emoji']],
-      ['AI tools and photo filters', 'AI and filter tools', ['Face Swap', 'Background', 'AI Caption', 'Filters']],
+      ['AI tools and photo filters', 'AI and filter tools', ['Filters', 'Background', 'AI Caption', 'Face Swap']],
       ['Draw on the meme', 'Draw tools', ['Brush', 'Glow', 'Marker', 'Eraser', 'Shapes']],
-      ['Canvas colour, bands and watermark', 'Canvas tools', ['History', 'Canvas Style', 'Header & Footer', 'Censor', 'Watermark']],
+      ['Canvas colour, bands and watermark', 'Canvas tools', ['Canvas Style', 'Header & Footer', 'Censor', 'Watermark']],
       ['Text', 'Text tools', ['Add Text', 'Bubble', 'Social Card']],
     ];
     for (const [tab, name, tools] of strips) {
@@ -347,18 +347,25 @@ describe('MemeEditor', () => {
     expect(strip('Media tools')).toBeTruthy();
   }, 30000);
 
-  it('Text: Bubble opens styles, and picking one adds a speech bubble', () => {
+  it('Text: Bubble opens styles, and picking one adds a speech bubble; Remove removes it from canvas', () => {
     renderEditor();
     fireEvent.click(within(textStrip()).getByText('Bubble'));
     expect(canvas.props.captions.some((c) => c.bubbleStyle)).toBe(false);
-    // The styles dock under the Text strip; picking one adds the new bubble with that style.
+    // The styles dock under the Text strip; Remove button is visible but disabled before adding a bubble.
     const bubbles = sheet('Bubbles');
     expect(document.querySelector('.bottom-sheet-panel')).toBeNull();
+    const removeBtn = within(bubbles).getByRole('button', { name: 'Remove' });
+    expect(removeBtn.disabled).toBe(true);
+
+    // Picking one adds the new bubble with that style; Remove button becomes enabled.
     fireEvent.click(within(bubbles).getByText('WhatsApp Sent').closest('button'));
     expect(canvas.props.captions.some((c) => c.bubbleStyle === 'whatsapp-send')).toBe(true);
-    closeSheet();
-    const tools = layerToolbar();
-    expect([...tools.querySelectorAll('button > span:last-child')].map((s) => s.textContent)).toEqual(['Font', 'Color', 'Bubble', 'Copy', 'Layers', 'Delete']);
+    expect(removeBtn.disabled).toBe(false);
+
+    // Clicking Remove removes the bubble from the canvas, and Remove button returns to disabled.
+    fireEvent.click(removeBtn);
+    expect(canvas.props.captions.some((c) => c.bubbleStyle === 'whatsapp-send')).toBe(false);
+    expect(removeBtn.disabled).toBe(true);
   }, 30000);
 
   it('a short canvas has its shape in the bar above it, a tall one in the top bar size menu', () => {
@@ -550,7 +557,7 @@ describe('MemeEditor', () => {
     act(() => canvas.props.onAddDrawing({ points: [0, 0, 10, 10], color: '#fff', size: 4, tool: 'brush' }));
     addTextFromMenu();
     openSection('Canvas colour, bands and watermark');
-    fireEvent.click(within(canvasStrip()).getByText('History'));
+    fireEvent.click(screen.getByRole('button', { name: 'History' }));
     const steps = () => within(screen.getByRole('list', { name: 'History' })).getAllByRole('button').map((b) => b.textContent);
     expect(steps()).toEqual(['Added textNow', 'Added drawing', 'Start']);
     fireEvent.click(within(screen.getByRole('list', { name: 'History' })).getByText('Start'));
@@ -706,10 +713,13 @@ describe('MemeEditor', () => {
     expect(canvas.props.drawTool).toBe('censor');
     expect(canvas.props.isDrawingMode).toBe(true);
     const censor = sheet('Censor');
-    for (const name of ['Blur', 'Pixelate', 'Black bar']) expect(within(censor).getByText(name)).toBeTruthy();
+    for (const name of ['Blur', 'Pixelate']) expect(within(censor).getByText(name)).toBeTruthy();
+    expect(within(censor).queryByText('Black bar')).toBeNull();
+    expect(within(censor).getByText('Drag over the part you want to hide.')).toBeTruthy();
     expect(within(censor).getByLabelText('Censor strength')).toBeTruthy();
-    fireEvent.click(within(censor).getByText('Black bar'));
-    expect(within(sheet('Censor')).queryByLabelText('Censor strength')).toBeNull();
+    fireEvent.click(within(censor).getByText('Pixelate'));
+    expect(within(sheet('Censor')).getByLabelText('Censor strength')).toBeTruthy();
+    expect(within(sheet('Censor')).getByText('Drag over the part you want to hide.')).toBeTruthy();
     fireEvent.click(within(sheet('Censor')).getByRole('button', { name: 'Close Censor' }));
     expect(canvas.props.isDrawingMode).toBe(true);
     // Clicking active Censor button when sheet is closed turns it inactive without opening sheet
@@ -868,7 +878,7 @@ describe('MemeEditor', () => {
   it('Canvas shows Canvas Style, Watermark, Header & Footer and Censor; each opens its sheet under the strip', () => {
     renderEditor();
     openSection('Canvas colour, bands and watermark');
-    expect(within(canvasStrip()).getAllByRole('button').map((b) => b.textContent)).toEqual(['History', 'Canvas Style', 'Header & Footer', 'Censor', 'Watermark']);
+    expect(within(canvasStrip()).getAllByRole('button').map((b) => b.textContent)).toEqual(['Canvas Style', 'Header & Footer', 'Censor', 'Watermark']);
 
     fireEvent.click(within(canvasStrip()).getByText('Canvas Style'));
     fireEvent.click(within(sheet('Canvas Style')).getByRole('radio', { name: '#000000' }));
@@ -921,11 +931,11 @@ describe('MemeEditor', () => {
     expect(screen.queryByRole('dialog', { name: 'Crop photo' })).toBeNull();
   }, 30000);
 
-  it('AI/Filters shows Face Swap, Background, AI Caption and Filters', () => {
+  it('AI/Filters shows Filters, Background, AI Caption and Face Swap', () => {
     renderEditor();
     openSection('AI tools and photo filters');
     const strip = screen.getByRole('toolbar', { name: 'AI and filter tools' });
-    expect(within(strip).getAllByRole('button').map((b) => b.textContent)).toEqual(['Face Swap', 'Background', 'AI Caption', 'Filters']);
+    expect(within(strip).getAllByRole('button').map((b) => b.textContent)).toEqual(['Filters', 'Background', 'AI Caption', 'Face Swap']);
     expect(screen.queryByRole('dialog')).toBeNull();
   }, 30000);
 
@@ -1025,12 +1035,12 @@ describe('MemeEditor', () => {
     fireEvent.click(within(sheet('Photo')).getByText('Copy'));
     expect(canvas.props.imageLayers).toHaveLength(2);
 
-    // Crop opens the same cropper as the main photo's, for this layer.
+    // Crop opens the crop bottom sheet for this layer.
     fireEvent.click(within(sheet('Photo')).getByText('Crop'));
-    const cropper = screen.getByRole('dialog', { name: 'Crop photo' });
+    const cropper = sheet('Crop');
     expect(within(cropper).getByRole('radiogroup', { name: 'Crop shape' })).toBeTruthy();
-    fireEvent.click(within(cropper).getByText('Cancel'));
-    expect(screen.queryByRole('dialog', { name: 'Crop photo' })).toBeNull();
+    fireEvent.click(within(cropper).getByRole('button', { name: 'Close Crop' }));
+    expect(screen.queryByRole('dialog', { name: 'Crop' })).toBeNull();
   }, 30000);
 
   it("image layer toolbar has Background (opens Background sheet) and Face Swap buttons", () => {
@@ -1159,9 +1169,9 @@ describe('MemeEditor', () => {
     expect(screen.getByRole('region', { name: 'Make a sticker' })).toBeTruthy();
     expect(screen.queryByRole('navigation', { name: 'Editor tools' })).toBeNull();
     expect(screen.getByText('Stickers', { selector: '.ui-topbar-title *' })).toBeTruthy();
-    // Undo and redo sit in the top bar, in Full editor's place (Editor Pro is in its dock once the sticker is made).
-    expect(screen.getByRole('button', { name: 'Undo' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Redo' })).toBeTruthy();
+    // The Stickers maker has no undo/redo buttons in its top bar.
+    expect(screen.queryByRole('button', { name: 'Undo' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Redo' })).toBeNull();
     expect(screen.queryByRole('button', { name: 'Full editor' })).toBeNull();
     // Its tour is the full editor's, so it waits for that.
     expect(screen.queryByRole('dialog', { name: 'Editor tour' })).toBeNull();

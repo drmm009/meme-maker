@@ -12,13 +12,82 @@
 
 /* The same grey as every sheet and the dock. */
 .ie-browse-sheet { height: 100%; }
-/* The full-height sheets cover the canvas: frosted glass, the meme blurred behind the dock's grey.
-   The blur is dimmed to half first, so even a white 9:16 canvas behind only lifts the grey a little
-   (to about #303032 at most) and the sheet never turns white. */
+/* The full-height library sheets (Media: Templates, Stickers, Emoji): subtle frosted glass blur over canvas,
+   dimmed to dampen bright canvas colors behind so the sheet stays comfortably dark. */
+.meme-editor-container .ui-sheet.ie-browse-sheet,
 .ie-panels--full .ui-sheet {
-  background: rgba(28, 28, 30, 0.8) !important;
-  -webkit-backdrop-filter: blur(30px) brightness(0.5) saturate(1.4);
-  backdrop-filter: blur(30px) brightness(0.5) saturate(1.4);
+  background: rgba(20, 21, 25, 0.92) !important;
+  -webkit-backdrop-filter: blur(12px) brightness(0.65) saturate(1.1) !important;
+  backdrop-filter: blur(12px) brightness(0.65) saturate(1.1) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 -16px 36px -16px rgba(0, 0, 0, 0.75);
+}
+
+/* Use elevated mellow translucent glass color instead of black in browse sheets */
+.meme-editor-container .ui-sheet.ie-browse-sheet {
+  --ui-surface-2: rgba(255, 255, 255, 0.05);
+  --ui-surface-3: rgba(255, 255, 255, 0.1);
+}
+
+.meme-editor-container .ui-sheet.ie-browse-sheet :is(
+  .ie-card,
+  .ie-browse-item.ie-card,
+  .ie-emoji-card,
+  .ie-browse-close,
+  .ie-browse-chips--fill,
+  .ie-browse-chip--standalone:not(.is-on),
+  .ie-browse-chip:not(.is-on),
+  .ie-results-back
+) {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: #fff;
+}
+
+/* Inside segmented fill tracks, unselected chips remain transparent */
+.meme-editor-container .ui-sheet.ie-browse-sheet .ie-browse-chips--fill .ie-browse-chip:not(.is-on) {
+  background: transparent !important;
+  border-color: transparent !important;
+}
+
+.meme-editor-container .ui-sheet.ie-browse-sheet .ie-card-media {
+  background-color: rgba(0, 0, 0, 0.18) !important;
+}
+
+.meme-editor-container .ui-sheet.ie-browse-sheet .ie-card-media--paper {
+  background-color: rgba(255, 255, 255, 0.04) !important;
+}
+
+.meme-editor-container .ui-sheet.ie-browse-sheet .ie-browse-search input {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.07) !important;
+  color: #fff !important;
+}
+
+.meme-editor-container .ui-sheet.ie-browse-sheet .ie-browse-search input:focus {
+  background: rgba(255, 255, 255, 0.09) !important;
+  border-color: rgba(255, 90, 54, 0.7) !important;
+  box-shadow: 0 0 0 2px rgba(255, 90, 54, 0.25) !important;
+}
+
+@media (hover: hover) {
+  .meme-editor-container .ui-sheet.ie-browse-sheet :is(
+    .ie-card,
+    .ie-browse-item.ie-card,
+    .ie-emoji-card,
+    .ie-browse-close,
+    .ie-browse-chip--standalone:not(.is-on),
+    .ie-browse-chip:not(.is-on),
+    .ie-results-back
+  ):hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+
+  .meme-editor-container .ui-sheet.ie-browse-sheet .ie-browse-chips--fill .ie-browse-chip:not(.is-on):hover {
+    background: rgba(255, 255, 255, 0.08) !important;
+    border-color: transparent !important;
+  }
 }
 .ie-browse-sheet .ui-sheet-body {
   display: flex;
@@ -36,14 +105,25 @@
 }
 .ie-browse-title {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 8px;
   margin: 0;
-  color: var(--ui-accent);
+  color: #ffffff;
   font-size: 24px;
   font-weight: 800;
   letter-spacing: -0.01em;
   line-height: 1.1;
+}
+.ie-browse-title-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ui-accent, #ff5a36);
+  flex-shrink: 0;
+}
+.ie-browse-title-icon svg {
+  width: 20px;
+  height: 20px;
 }
 .ie-browse-total {
   color: var(--ui-faint);
@@ -453,9 +533,9 @@
 }
 
 /* Stickers and animated stickers: drawn on light paper, so black artwork (thug shades) shows. */
-.ie-card-media--paper { padding: 14%; background-color: #2a2b30; }
+.ie-card-media--paper { padding: 14%; background-color: #202124; }
 .ie-card-media--paper img { position: static; display: block; width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.35)); }
-.ie-card-media--paper.is-loading { background: #2a2b30; animation: none; }
+.ie-card-media--paper.is-loading { background: #202124; animation: none; }
 .ie-card-grid--small { grid-template-columns: repeat(auto-fill, minmax(68px, 1fr)); gap: 8px; }
 .ie-shelf-card--small { flex: none; width: 68px; height: 68px; }
 /* Stickers sit in rounded squares; light paper background so dark artwork shows. */
@@ -564,22 +644,27 @@
 
 /* On the glass sheets a solid grey would melt into the blur, so the search field, chips, close button
    and cards are a white wash instead: always a step brighter than whatever shows through behind. */
+.ie-panels--full .ie-card { background: rgba(255, 255, 255, 0.12); }
 .ie-panels--full .ie-browse-search input,
 .ie-panels--full .ie-browse-close,
 .ie-panels--full .ie-browse-chips--fill,
 .ie-panels--full .ie-browse-chip--standalone:not(.is-on),
 .ie-panels--full .ie-browse-chips:not(.ie-browse-chips--fill) > .ie-browse-chip:not(.is-on),
-.ie-panels--full .ie-card,
-.ie-panels--full .ie-card-media--paper,
-.ie-panels--full .ie-emoji-card { background: rgba(255, 255, 255, 0.12); }
-.ie-panels--full .ie-browse-search input:focus { background: rgba(255, 255, 255, 0.16); }
-.ie-panels--full .ie-browse-chips--fill .ie-browse-chip:hover:not(.is-on) { background: rgba(255, 255, 255, 0.1); }
+.ie-panels--full .ie-results-back,
+.ie-panels--full .ie-card--sticker,
+.ie-panels--full .ie-emoji-card { background: rgba(255, 255, 255, 0.06); }
+.ie-panels--full .ie-card--sticker .ie-card-media--paper { background: transparent; }
+.ie-panels--full .ie-browse-search input:focus { background: rgba(255, 255, 255, 0.10); }
+.ie-panels--full .ie-browse-chips--fill .ie-browse-chip:hover:not(.is-on) { background: rgba(255, 255, 255, 0.08); }
+.ie-panels--full .ie-browse-chips:not(.ie-browse-chips--fill) > .ie-browse-chip:not(.is-on) .ie-browse-chip-count { background: rgba(255, 255, 255, 0.08); }
 @media (hover: hover) {
+  .ie-panels--full .ie-card:not(.ie-card--sticker):hover { background: rgba(255, 255, 255, 0.18); }
   .ie-panels--full .ie-browse-close:hover,
   .ie-panels--full .ie-browse-chip--standalone:hover:not(.is-on),
   .ie-panels--full .ie-browse-chips:not(.ie-browse-chips--fill) > .ie-browse-chip:hover:not(.is-on),
-  .ie-panels--full .ie-card:hover,
-  .ie-panels--full .ie-emoji-card:hover { background: rgba(255, 255, 255, 0.18); }
+  .ie-panels--full .ie-results-back:hover,
+  .ie-panels--full .ie-card--sticker:hover,
+  .ie-panels--full .ie-emoji-card:hover { background: rgba(255, 255, 255, 0.12); }
 }
 
 /* A sheet laid over the canvas (Export): from the bottom, as tall as it needs, on a dim that closes

@@ -1,9 +1,8 @@
 import { BubbleIcon } from './editorIcons';
-import { useState } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
 import { Check, X } from 'lucide-react';
 import { Sheet } from '../../ui';
-import { BUBBLE_PRESETS, BUBBLE_CATEGORIES } from './bubblePresets';
+import { BUBBLE_PRESETS } from './bubblePresets';
 import type { BubblePreset } from './bubblePresets';
 import { useSelection } from './selection';
 import type { EditorActions } from './selection';
@@ -147,37 +146,50 @@ function BubblePreview({ preset, text }: { preset: BubblePreset; text: string })
 // Cards preview real shapes with matching tails, beaks, and thought dots.
 // Tapping a card adds/applies the bubble style; tapping the active one removes it.
 export default function BubbleSheet({ actions, onClose }: { actions: EditorActions; onClose: () => void }) {
-  const [category, setCategory] = useState('All');
-  const { caption } = useSelection();
+  const { id, caption } = useSelection();
   const current = caption?.bubbleStyle as string | undefined;
   const words = typeof caption?.text === 'string' && caption.text.length <= 26 ? caption.text : '';
-  const list = BUBBLE_PRESETS.filter((p) => category === 'All' || p.category === category);
 
-  const removeBubble = () => actions.updateActiveCaptionProps({ bubbleStyle: null });
+  const removeBubble = () => {
+    const targetId = id || caption?.id;
+    if (targetId) {
+      actions.handleDeleteLayer?.(targetId);
+    } else {
+      actions.handleDeleteLayer?.();
+    }
+  };
+
   const pick = (presetId: string) => {
     if (current === presetId) removeBubble();
     else actions.handleApplyBubbleStyle(presetId);
   };
 
   return (
-    <Sheet Icon={BubbleIcon}
+    <Sheet
+      Icon={BubbleIcon}
       className="ie-bubble-sheet ie-tool-sheet"
       title="Bubbles"
       onClose={onClose}
-      action={current ? { label: 'Remove', Icon: X, variant: 'plain', onClick: removeBubble } : undefined}
+      action={{
+        label: 'Remove',
+        Icon: X,
+        variant: 'plain',
+        disabled: !current,
+        onClick: removeBubble,
+      }}
     >
-      <div className="ie-bubble-tabs" role="group" aria-label="Bubble kinds">
-        {BUBBLE_CATEGORIES.map((c) => (
-          <button key={c} type="button" className={`ie-bubble-tab${category === c ? ' is-on' : ''}`} aria-pressed={category === c} onClick={() => setCategory(c)}>
-            {c}
-          </button>
-        ))}
-      </div>
-      <div className="ie-bubble-grid">
-        {list.map((p) => {
+      <div className="ie-bubble-grid" role="region" aria-label="Bubble styles">
+        {BUBBLE_PRESETS.map((p) => {
           const on = current === p.id;
           return (
-            <button key={p.id} type="button" className={`ie-bubble-card${on ? ' is-on' : ''}`} aria-pressed={on} title={p.description} onClick={() => pick(p.id)}>
+            <button
+              key={p.id}
+              type="button"
+              className={`ie-bubble-card${on ? ' is-on' : ''}`}
+              aria-pressed={on}
+              title={p.description}
+              onClick={() => pick(p.id)}
+            >
               <span className="ie-bubble-stage">
                 <BubblePreview preset={p} text={words || p.sampleText} />
               </span>

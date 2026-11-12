@@ -46,7 +46,7 @@ export default function TextSheet({ actions, onClose }: { actions: EditorActions
 
   return (
     <Sheet Icon={Type}
-      className="ie-text-sheet ie-tool-sheet"
+      className={`ie-text-sheet ie-tool-sheet${part === 'color' ? ' ie-text-sheet--color' : ''}`}
       title={part ? TEXT_PARTS[part] : 'Text'}
       onClose={onClose}
       aside={part === 'color' && kind === 'caption' ? <ColorTabs value={colorTab} onChange={setColorTab} /> : undefined}

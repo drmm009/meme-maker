@@ -6,7 +6,7 @@ import { useSelection } from './selection';
 import type { EditorActions } from './selection';
 import { AiCaptionIcon, BackgroundIcon, FiltersIcon } from './editorIcons';
 
-// The AI tab's strip: Face Swap, Background (blur & removal), AI Caption (AiCaptionSheet), Filters.
+// The AI tab's strip: Filters, Background (blur & removal), AI Caption (AiCaptionSheet), Face Swap.
 export default function AiFiltersStrip({ actions }: { actions: EditorActions }) {
   const sheet: string | null = useEditorUiStore((s: { sheet: string | null }) => s.sheet);
   const openSheet = useEditorUiStore((s: { openSheet: (sheet: string, focus?: string | null) => void }) => s.openSheet);
@@ -14,7 +14,7 @@ export default function AiFiltersStrip({ actions }: { actions: EditorActions }) 
   const { image } = useSelection();
 
   const items: StripItem[] = [
-    { id: 'faceswap', label: 'Face Swap', title: 'Swap faces with another photo using AI', Icon: ScanFace },
+    { id: 'filters', label: 'Filters', title: 'Photo filters and adjustments', Icon: FiltersIcon, active: sheet === 'filters' },
     {
       id: 'background',
       label: 'Background',
@@ -23,7 +23,7 @@ export default function AiFiltersStrip({ actions }: { actions: EditorActions }) 
       active: sheet === 'background',
     },
     { id: 'caption', label: 'AI Caption', title: 'Write or shuffle the caption, and its look', Icon: AiCaptionIcon, active: sheet === 'aiCaption' },
-    { id: 'filters', label: 'Filters', title: 'Photo filters and adjustments', Icon: FiltersIcon, active: sheet === 'filters' },
+    { id: 'faceswap', label: 'Face Swap', title: 'Swap faces with another photo using AI', Icon: ScanFace },
   ];
 
   const onSelect = (id: string) => {
