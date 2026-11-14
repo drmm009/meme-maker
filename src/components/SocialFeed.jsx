@@ -1,293 +1,304 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Heart, 
-  Repeat, 
-  Share2, 
-  Search, 
-  Sparkles, 
-  Flame, 
-  Trophy, 
-  Check, 
-  Download,
-  Users
-} from 'lucide-react';
+// Social: the community's memes as a feed. A centred title, a search field and filter chips (For
+// you, Trending, Hot, Hall of Fame), a row of top creators (tap one to see only theirs), then the
+// posts: each a creator line, the meme drawn with its captions, and Like (or double-tap the
+// picture), Share, Download and Remix (opens it in the editor, App's handleRemixCommunityMeme).
+// Likes are remembered on this device.
+import React, { useMemo, useRef, useState } from 'react';
+import { Check, Download, Flame, Heart, Repeat, Search, Share2, Sparkles, Trophy, X } from 'lucide-react';
 import { COMMUNITY_MEMES } from '../data/communityMemes';
 import { safeGet, safeSet } from '../utils/storage';
 import './SocialFeed.css';
 
-export default function SocialFeed({ onRemixMeme }) {
-  const [activeTab, setActiveTab] = useState('all');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [likedPosts, setLikedPosts] = useState(() => {
-    return safeGet('meme_liked_posts', ['post-1']);
-  });
-  const [toastMessage, setToastMessage] = useState(null);
+const FILTERS = [
+  { id: 'all', label: 'For you', Icon: Sparkles },
+  { id: 'trending', label: 'Trending', Icon: Flame },
+  { id: 'hot', label: 'Hot', Icon: Heart },
+  { id: 'hall-of-fame', label: 'Hall of Fame', Icon: Trophy },
+];
 
-  const showToast = (msg) => {
-    setToastMessage(msg);
-    setTimeout(() => {
-      setToastMessage(null);
-    }, 2400);
+const LIKES_KEY = 'meme_liked_posts';
+const compact = (n) => (n >= 1000 ? `${(n / 1000).toFixed(n >= 10000 ? 0 : 1).replace(/\.0$/, '')}k` : String(n));
+const fileName = (title) => `${String(title).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'meme'}.jpg`;
+
+const inFilter = (post, filter) =>
+  filter === 'all' ||
+  (filter === 'trending' && (post.category === 'trending' || post.likes > 400)) ||
+  post.category === filter;
+
+const matches = (post, query) => {
+  if (!query) return true;
+  const q = query.toLowerCase().replace(/^[#@]/, '');
+  return (
+    post.title.toLowerCase().includes(q) ||
+    post.creator.name.toLowerCase().includes(q) ||
+    post.creator.handle.toLowerCase().includes(q) ||
+    post.tags.some((t) => t.toLowerCase().includes(q))
+  );
+};
+
+// The community's creators, most-liked first.
+const CREATORS = (() => {
+  const byHandle = new Map();
+  for (const p of COMMUNITY_MEMES) {
+    const c = byHandle.get(p.creator.handle) || { ...p.creator, likes: 0 };
+    c.likes += p.likes;
+    byHandle.set(p.creator.handle, c);
+  }
+  return [...byHandle.values()].sort((a, b) => b.likes - a.likes);
+})();
+
+// One post: the creator, the meme with its captions, its actions, then its title and tags.
+function Post({ post, liked, onLike, onShare, onDownload, onRemix, onTag }) {
+  const [burst, setBurst] = useState(0);
+  const likes = post.likes + (liked ? 1 : 0);
+  const like = () => {
+    if (!liked) onLike(post.id);
+    setBurst((b) => b + 1);
   };
 
-  const handleToggleLike = (postId, e) => {
-    e?.stopPropagation();
-    setLikedPosts((prev) => {
-      const isLiked = prev.includes(postId);
-      const next = isLiked ? prev.filter((id) => id !== postId) : [...prev, postId];
-      safeSet('meme_liked_posts', next);
+  return (
+    <article className="sf-post" aria-label={post.title}>
+      <header className="sf-post-head">
+        <span className="sf-avatar" aria-hidden="true">{post.creator.avatar}</span>
+        <div className="sf-post-who">
+          <span className="sf-post-name">
+            {post.creator.name}
+            {post.creator.badge && <span className="sf-badge">{post.creator.badge}</span>}
+          </span>
+          <span className="sf-post-meta">@{post.creator.handle} · {post.timestamp}</span>
+        </div>
+      </header>
+
+      <div className={`sf-meme${post.captionLook ? ` sf-meme--${post.captionLook}` : ''}`} onDoubleClick={like}>
+        <img
+          src={post.imageUrl}
+          alt={post.title}
+          loading="lazy"
+          decoding="async"
+          draggable={false}
+          onError={(e) => {
+            const img = e.currentTarget;
+            if (post.fallbackUrl && !img.dataset.fellBack) {
+              img.dataset.fellBack = '1';
+              img.src = post.fallbackUrl;
+            }
+          }}
+        />
+        {(post.captions || []).map((c, i) => (
+          <span key={i} className="sf-meme-caption" style={{ top: `${(c.y ?? 0.5) * 100}%` }}>{c.text}</span>
+        ))}
+        {burst > 0 && <Heart key={burst} className="sf-meme-heart" aria-hidden="true" fill="currentColor" strokeWidth={0} />}
+      </div>
+
+      <div className="sf-actions">
+        <button
+          type="button"
+          className={`sf-action ${liked ? 'is-liked' : ''}`}
+          onClick={() => onLike(post.id)}
+          aria-pressed={liked}
+          aria-label={liked ? 'Unlike' : 'Like'}
+        >
+          <Heart size={21} fill={liked ? 'currentColor' : 'none'} />
+          <span>{compact(likes)}</span>
+        </button>
+        <span className="sf-action sf-action--static" title="Remixes">
+          <Repeat size={19} aria-hidden="true" />
+          <span>{compact(post.remixes || 0)}</span>
+        </span>
+        <button type="button" className="sf-action" onClick={() => onShare(post)} aria-label="Share" title="Share">
+          <Share2 size={19} />
+        </button>
+        <button type="button" className="sf-action" onClick={() => onDownload(post)} aria-label="Download" title="Download">
+          <Download size={19} />
+        </button>
+        <button type="button" className="sf-remix" onClick={() => onRemix(post)} aria-label={`Remix ${post.title}`}>
+          <Repeat size={16} strokeWidth={2.4} />
+          Remix
+        </button>
+      </div>
+
+      <div className="sf-post-body">
+        <h3 className="sf-post-title">{post.title}</h3>
+        <div className="sf-tags">
+          {post.tags.map((t) => (
+            <button key={t} type="button" className="sf-tag" onClick={() => onTag(t)}>#{t}</button>
+          ))}
+        </div>
+      </div>
+    </article>
+  );
+}
+
+export default function SocialFeed({ onRemixMeme }) {
+  const [filter, setFilter] = useState('all');
+  const [query, setQuery] = useState('');
+  const [creator, setCreator] = useState(null);
+  const [liked, setLiked] = useState(() => {
+    const v = safeGet(LIKES_KEY, []);
+    return Array.isArray(v) ? v : [];
+  });
+  const [toast, setToast] = useState('');
+  const toastTimer = useRef(0);
+  const searchRef = useRef(null);
+
+  const say = (msg) => {
+    setToast(msg);
+    clearTimeout(toastTimer.current);
+    toastTimer.current = window.setTimeout(() => setToast(''), 2200);
+  };
+
+  const toggleLike = (id) => {
+    setLiked((prev) => {
+      const next = prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id];
+      safeSet(LIKES_KEY, next);
       return next;
     });
   };
 
-  const handleShare = async (post, e) => {
-    e?.stopPropagation();
-    const shareData = {
-      title: `${post.title} | Meme Studio`,
-      text: `Check out this hilarious meme "${post.title}" on Meme Studio!`,
-      url: window.location.href
-    };
-
+  const share = async (post) => {
+    const text = `"${post.title}" on Meme Studio`;
+    const url = window.location.href;
     if (navigator.share) {
       try {
-        await navigator.share(shareData);
+        await navigator.share({ title: post.title, text, url });
         return;
       } catch {
-        // Fallback to clipboard if user canceled or unsupported
+        // Cancelled or not allowed: copy the link instead.
       }
     }
-
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(`${shareData.text} ${shareData.url}`).then(() => {
-        showToast('Link copied to clipboard!');
-      }).catch(() => {
-        showToast('Share link ready!');
-      });
-    } else {
-      showToast('Share link ready!');
+    try {
+      await navigator.clipboard?.writeText(`${text} ${url}`);
+      say('Link copied');
+    } catch {
+      say('Could not copy the link');
     }
   };
 
-  const handleDownloadImage = (post, e) => {
-    e?.stopPropagation();
-    const link = document.createElement('a');
-    link.href = post.imageUrl;
-    link.download = `${post.title.toLowerCase().replace(/[^a-z0-9]/g, '-')}-meme.jpg`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    showToast('Downloading meme image...');
+  const download = (post) => {
+    const a = document.createElement('a');
+    a.href = post.imageUrl;
+    a.download = fileName(post.title);
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    say('Downloading…');
   };
 
-  const filteredMemes = COMMUNITY_MEMES.filter((post) => {
-    const matchesTab =
-      activeTab === 'all' ||
-      (activeTab === 'trending' && (post.category === 'trending' || post.likes > 400)) ||
-      (activeTab === 'hot' && post.category === 'hot') ||
-      (activeTab === 'hall-of-fame' && post.category === 'hall-of-fame');
+  const searchTag = (tag) => {
+    setCreator(null);
+    setQuery(`#${tag}`);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
-    const query = searchQuery.trim().toLowerCase();
-    const matchesQuery =
-      !query ||
-      post.title.toLowerCase().includes(query) ||
-      post.creator.name.toLowerCase().includes(query) ||
-      post.creator.handle.toLowerCase().includes(query) ||
-      post.tags.some((t) => t.toLowerCase().includes(query));
+  const posts = useMemo(
+    () => COMMUNITY_MEMES.filter((p) => inFilter(p, filter) && matches(p, query.trim()) && (!creator || p.creator.handle === creator)),
+    [filter, query, creator]
+  );
+  const creatorName = creator && CREATORS.find((c) => c.handle === creator)?.name;
 
-    return matchesTab && matchesQuery;
-  });
+  const reset = () => {
+    setQuery('');
+    setFilter('all');
+    setCreator(null);
+  };
 
   return (
-    <div className="social-feed-container">
-      {/* Toast Notification */}
-      <AnimatePresence>
-        {toastMessage && (
-          <motion.div
-            className="social-toast glass-card"
-            initial={{ opacity: 0, y: -20, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -20, scale: 0.95 }}
-          >
-            <Check size={16} className="text-emerald" />
-            <span>{toastMessage}</span>
-          </motion.div>
+    <div className="sf">
+      <header className="sf-head">
+        <h2 className="sf-title">Social</h2>
+        <p className="sf-sub">Memes from the community. Remix any of them.</p>
+      </header>
+
+      <div className="sf-search">
+        <Search size={18} className="sf-search-icon" aria-hidden="true" />
+        <input
+          ref={searchRef}
+          type="search"
+          className="sf-search-input"
+          placeholder="Search memes, creators, #tags"
+          aria-label="Search memes"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
+        {query && (
+          <button type="button" className="sf-search-clear" onClick={() => { setQuery(''); searchRef.current?.focus(); }} aria-label="Clear search">
+            <X size={16} />
+          </button>
         )}
-      </AnimatePresence>
-
-      {/* Hero Banner Header */}
-      <div className="social-hero-header glass-card">
-        <div className="social-hero-badge">
-          <Users size={14} />
-          <span>COMMUNITY MEME FEED</span>
-        </div>
-        <h2 className="social-hero-title">
-          Trending <span className="text-gradient-sunset">Community Memes</span>
-        </h2>
-        <p className="social-hero-subtitle">
-          Explore viral memes made by fellow creators. Upvote your favorites, share the laughs, or remix any meme directly in the Studio!
-        </p>
-
-        {/* Search Bar */}
-        <div className="social-search-wrapper">
-          <Search size={18} className="social-search-icon" />
-          <input
-            type="text"
-            className="social-search-input"
-            placeholder="Search memes, jokes, tags (#developer, #desi)..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          {searchQuery && (
-            <button
-              className="social-search-clear"
-              onClick={() => setSearchQuery('')}
-              aria-label="Clear search"
-            >
-              ✕
-            </button>
-          )}
-        </div>
-
-        {/* Filter Navigation Tabs */}
-        <div className="social-tabs-row">
-          <button
-            className={`social-tab-btn ${activeTab === 'all' ? 'active' : ''}`}
-            onClick={() => setActiveTab('all')}
-          >
-            <Sparkles size={15} /> All Feed
-          </button>
-          <button
-            className={`social-tab-btn ${activeTab === 'trending' ? 'active' : ''}`}
-            onClick={() => setActiveTab('trending')}
-          >
-            <Flame size={15} /> Trending
-          </button>
-          <button
-            className={`social-tab-btn ${activeTab === 'hot' ? 'active' : ''}`}
-            onClick={() => setActiveTab('hot')}
-          >
-            <Sparkles size={15} /> Hot
-          </button>
-          <button
-            className={`social-tab-btn ${activeTab === 'hall-of-fame' ? 'active' : ''}`}
-            onClick={() => setActiveTab('hall-of-fame')}
-          >
-            <Trophy size={15} /> Hall of Fame
-          </button>
-        </div>
       </div>
 
-      {/* Memes Grid */}
-      {filteredMemes.length === 0 ? (
-        <div className="social-empty-feed glass-card">
-          <div className="social-empty-icon">🔍</div>
-          <h3>No memes found matching "{searchQuery}"</h3>
-          <p>Try searching another keyword or browse all community creations.</p>
+      <div className="sf-chips" role="tablist" aria-label="Feed">
+        {FILTERS.map(({ id, label, Icon }) => (
           <button
-            className="btn btn-primary margin-top"
-            onClick={() => {
-              setSearchQuery('');
-              setActiveTab('all');
+            key={id}
+            type="button"
+            role="tab"
+            aria-selected={filter === id}
+            className={`sf-chip ${filter === id ? 'is-active' : ''}`}
+            onClick={(e) => {
+              setFilter(id);
+              e.currentTarget.scrollIntoView?.({ block: 'nearest', inline: 'nearest', behavior: 'smooth' });
             }}
           >
-            Reset Filters
+            <Icon size={15} aria-hidden="true" />
+            {label}
           </button>
+        ))}
+      </div>
+
+      <section className="sf-creators" aria-label="Top creators">
+        <h3 className="sf-section-title">Top creators</h3>
+        <div className="sf-creator-row">
+          {CREATORS.map((c) => (
+            <button
+              key={c.handle}
+              type="button"
+              className={`sf-creator ${creator === c.handle ? 'is-active' : ''}`}
+              onClick={() => setCreator((cur) => (cur === c.handle ? null : c.handle))}
+              aria-pressed={creator === c.handle}
+              aria-label={`Show memes by ${c.name}`}
+            >
+              <span className="sf-creator-avatar" aria-hidden="true">{c.avatar}</span>
+              <span className="sf-creator-name">{c.name}</span>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      {creatorName && (
+        <div className="sf-filtering">
+          Showing memes by <strong>{creatorName}</strong>
+          <button type="button" onClick={() => setCreator(null)}>Show all</button>
+        </div>
+      )}
+
+      {posts.length === 0 ? (
+        <div className="sf-empty">
+          <span className="sf-empty-icon" aria-hidden="true"><Search size={24} /></span>
+          <h3 className="sf-empty-title">No memes found</h3>
+          <p className="sf-empty-text">{query.trim() ? `Nothing matches "${query.trim()}".` : 'Nothing here yet.'} Try another word or filter.</p>
+          <button type="button" className="sf-btn" onClick={reset}>Reset filters</button>
         </div>
       ) : (
-        <div className="social-feed-grid">
-          {filteredMemes.map((post) => {
-            const isLiked = likedPosts.includes(post.id);
-            const totalLikes = post.likes + (isLiked ? 1 : 0);
+        <div className="sf-feed">
+          {posts.map((post) => (
+            <Post
+              key={post.id}
+              post={post}
+              liked={liked.includes(post.id)}
+              onLike={toggleLike}
+              onShare={share}
+              onDownload={download}
+              onRemix={(p) => onRemixMeme?.(p)}
+              onTag={searchTag}
+            />
+          ))}
+        </div>
+      )}
 
-            return (
-              <motion.article
-                key={post.id}
-                className="social-card glass-card"
-                whileHover={{ y: -3 }}
-                transition={{ duration: 0.2 }}
-              >
-                {/* Creator Header */}
-                <div className="social-card-creator">
-                  <div className="social-avatar">{post.creator.avatar}</div>
-                  <div className="social-creator-info">
-                    <div className="social-creator-name-row">
-                      <span className="social-creator-name">{post.creator.name}</span>
-                      {post.creator.badge && (
-                        <span className="social-creator-badge">{post.creator.badge}</span>
-                      )}
-                    </div>
-                    <span className="social-creator-handle">@{post.creator.handle} • {post.timestamp}</span>
-                  </div>
-                </div>
-
-                {/* Meme Title / Caption */}
-                <h3 className="social-card-title">{post.title}</h3>
-
-                {/* Meme Media Display */}
-                <div className="social-card-media-wrapper">
-                  <img
-                    src={post.imageUrl}
-                    alt={post.title}
-                    className="social-card-image"
-                    loading="lazy"
-                    onError={(e) => {
-                      if (post.fallbackUrl && e.target.src !== post.fallbackUrl) {
-                        e.target.src = post.fallbackUrl;
-                      }
-                    }}
-                  />
-                </div>
-
-                {/* Tags */}
-                <div className="social-card-tags">
-                  {post.tags.map((tag) => (
-                    <span key={tag} className="social-tag">#{tag}</span>
-                  ))}
-                </div>
-
-                {/* Action Bar */}
-                <div className="social-card-actions">
-                  <div className="social-action-buttons-group">
-                    <button
-                      className={`social-action-btn like-btn ${isLiked ? 'liked' : ''}`}
-                      onClick={(e) => handleToggleLike(post.id, e)}
-                      title={isLiked ? 'Unlike' : 'Like'}
-                    >
-                      <Heart size={18} fill={isLiked ? '#ff3b60' : 'none'} stroke={isLiked ? '#ff3b60' : 'currentColor'} />
-                      <span>{totalLikes}</span>
-                    </button>
-
-                    <button
-                      className="social-action-btn share-btn"
-                      onClick={(e) => handleShare(post, e)}
-                      title="Share meme"
-                    >
-                      <Share2 size={17} />
-                    </button>
-
-                    <button
-                      className="social-action-btn download-btn"
-                      onClick={(e) => handleDownloadImage(post, e)}
-                      title="Download image"
-                    >
-                      <Download size={17} />
-                    </button>
-                  </div>
-
-                  {/* Remix in Studio CTA Button */}
-                  <button
-                    className="social-remix-btn"
-                    onClick={() => onRemixMeme?.(post)}
-                    title="Remix this meme in Studio"
-                  >
-                    <Repeat size={15} />
-                    <span>Remix</span>
-                  </button>
-                </div>
-              </motion.article>
-            );
-          })}
+      {toast && (
+        <div className="sf-toast" role="status">
+          <Check size={16} aria-hidden="true" /> {toast}
         </div>
       )}
     </div>

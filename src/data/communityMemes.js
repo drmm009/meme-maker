@@ -81,9 +81,11 @@ export const COMMUNITY_MEMES = [
     remixes: 312,
     category: 'hall-of-fame',
     tags: ['budget', 'tools', 'lifestyle'],
+    // Drawn in the poster's own style (serif on black) over its printed title and line.
+    captionLook: 'poster',
     captions: [
-      { text: 'FINANCIAL ADVICE', y: 0.8 },
-      { text: 'Free forever means I will use it 1,000 times a day.', y: 0.9 }
+      { text: 'FINANCIAL ADVICE', y: 0.81 },
+      { text: 'Free forever means I will use it 1,000 times a day.', y: 0.88 }
     ]
   },
   {

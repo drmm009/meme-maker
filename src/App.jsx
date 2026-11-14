@@ -320,6 +320,13 @@ function App() {
   };
 
   const handleCreateCustom = (mode) => {
+    if (mode === 'video') {
+      // Video goes straight to an empty video editor (no layout page first): a blank custom template
+      // opens it with nothing on the timeline.
+      setBuilderMode('video');
+      handleSelectTemplate({ id: `custom-video-${Date.now()}`, name: 'New video', type: 'video', category: 'custom', width: 1080, height: 1080, aspectRatio: 1, defaultCaptions: [] });
+      return;
+    }
     setBuilderMode(mode);
     setCustomBuilderKey((k) => k + 1);
     setCustomBuilderState(null);
