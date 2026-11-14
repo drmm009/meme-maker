@@ -1,10 +1,15 @@
-// A meme saved to the gallery (IndexedDB 'meme-creator' / 'memes'): its finished image plus the
-// editable layers the image editor reopens it with.
+// A meme, sticker or GIF saved to the gallery (IndexedDB 'meme-creator' / 'memes'): its finished
+// image plus the editable layers the image editor reopens it with. Videos are kept apart
+// (savedVideos), so My Studio lists four kinds: memes, stickers, GIFs and videos.
 import type { MemeCaption, MemeImageLayer, MemeSticker } from './memeDocument';
 
 // Saved records carry this. Bump it when the saved shape changes, and teach migrateGalleryRecord
 // to upgrade the previous version.
-export const GALLERY_RECORD_VERSION = 1;
+export const GALLERY_RECORD_VERSION = 2;
+
+// What was saved, for My Studio's tabs.
+export type GalleryKind = 'meme' | 'sticker' | 'gif';
+export const GALLERY_KINDS: GalleryKind[] = ['meme', 'sticker', 'gif'];
 
 export interface SlotTransform {
   offsetX?: number;
@@ -15,6 +20,8 @@ export interface SlotTransform {
 export interface GalleryRecord {
   // Absent on memes saved before versioning.
   version?: number;
+  // Since version 2; older records are memes, or GIFs when their image is a GIF.
+  kind: GalleryKind;
   id: string;
   name: string;
   createdAt: string;
@@ -35,6 +42,7 @@ export interface GalleryRecord {
 // The editable parts of a meme being saved: the editor's save, or an entry of the old
 // localStorage gallery (which kept stickers as defaultStickers).
 export interface SavableMeme {
+  kind?: GalleryKind;
   rawImageUrl?: string | null;
   captions?: MemeCaption[];
   stickers?: MemeSticker[];
@@ -55,6 +63,7 @@ export function galleryRecord(
 ): GalleryRecord {
   return {
     version: GALLERY_RECORD_VERSION,
+    kind: isKind(meme.kind) ? meme.kind : 'meme',
     ...meta,
     rawImageUrl: meme.rawImageUrl || null,
     captions: meme.captions || [],
@@ -69,6 +78,15 @@ export function galleryRecord(
   };
 }
 
+export const isKind = (v: unknown): v is GalleryKind => GALLERY_KINDS.includes(v as GalleryKind);
+
+// A record saved before kinds: a GIF if its image is one, else a meme.
+const guessKind = (raw: Record<string, unknown>): GalleryKind => {
+  const blob = raw.imageBlob as { type?: string } | null | undefined;
+  const url = typeof raw.rawImageUrl === 'string' ? raw.rawImageUrl : '';
+  return blob?.type === 'image/gif' || url.startsWith('data:image/gif') ? 'gif' : 'meme';
+};
+
 const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
 const list = <T>(v: unknown): T[] => (Array.isArray(v) ? (v as T[]) : []);
 
@@ -80,9 +98,11 @@ export function migrateGalleryRecord(raw: unknown): GalleryRecord | null {
   const version = typeof raw.version === 'number' ? raw.version : 0;
   if (version > GALLERY_RECORD_VERSION) return raw as unknown as GalleryRecord;
   // 0 -> 1: no change in shape; versioning starts here, and layer lists are always arrays.
+  // 1 -> 2: records say what they are (kind), guessed from the image for older ones.
   return {
     ...(raw as unknown as GalleryRecord),
     version: GALLERY_RECORD_VERSION,
+    kind: isKind(raw.kind) ? raw.kind : guessKind(raw),
     captions: list<MemeCaption>(raw.captions),
     stickers: list<MemeSticker>(raw.stickers),
     imageLayers: list<MemeImageLayer>(raw.imageLayers),

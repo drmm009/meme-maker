@@ -107,7 +107,8 @@ export async function blobToDataURL(blob: Blob | string | null | undefined): Pro
   return `data:${mime};base64,${base64}`;
 }
 
-export function createThumbnail(dataUrl: string, maxSide = 320): Promise<string> {
+// A small preview of a saved image: a JPEG, or a PNG (type) for a sticker, which keeps its see-through edges.
+export function createThumbnail(dataUrl: string, maxSide = 320, type: 'image/jpeg' | 'image/png' = 'image/jpeg'): Promise<string> {
   return new Promise<string>((resolve) => {
     try {
       const img = new Image();
@@ -120,7 +121,7 @@ export function createThumbnail(dataUrl: string, maxSide = 320): Promise<string>
           c.width = w;
           c.height = h;
           c.getContext('2d')?.drawImage(img, 0, 0, w, h);
-          resolve(c.toDataURL('image/jpeg', 0.7));
+          resolve(type === 'image/png' ? c.toDataURL('image/png') : c.toDataURL('image/jpeg', 0.7));
         } catch {
           resolve(dataUrl.slice(0, 200000));
         }
@@ -137,6 +138,7 @@ export function createThumbnail(dataUrl: string, maxSide = 320): Promise<string>
 export function toMetadata(record: GalleryRecord) {
   return {
     id: record.id,
+    kind: record.kind || 'meme',
     name: record.name,
     createdAt: record.createdAt,
     thumbnailUrl: record.thumbnailUrl,

@@ -1168,7 +1168,7 @@ describe('MemeEditor', () => {
     // The Stickers maker opens on its page, over the canvas and dock.
     expect(screen.getByRole('region', { name: 'Make a sticker' })).toBeTruthy();
     expect(screen.queryByRole('navigation', { name: 'Editor tools' })).toBeNull();
-    expect(screen.getByText('Stickers', { selector: '.ui-topbar-title *' })).toBeTruthy();
+    expect(screen.getByText('Sticker Studio', { selector: '.ui-topbar-title *' })).toBeTruthy();
     // The Stickers maker has no undo/redo buttons in its top bar.
     expect(screen.queryByRole('button', { name: 'Undo' })).toBeNull();
     expect(screen.queryByRole('button', { name: 'Redo' })).toBeNull();
@@ -1187,19 +1187,20 @@ describe('MemeEditor', () => {
     expect(canvas.props.captions).toBe(captions);
   });
 
-  it('the Stickers page with no photo: a card to add one, with Upload, Take a photo and Gallery; Generate sticker waits for a photo', () => {
+  it('the Stickers page with no photo: a card to add one, with Upload, Take a photo and Templates on the page; Generate sticker waits for a photo', () => {
     renderEditor({ ...TEMPLATE, defaultCaptions: [], editorMode: 'sticker' });
     expect(screen.getByText('Add a photo', { selector: '.ui-topbar-subtitle' })).toBeTruthy();
     const page = screen.getByRole('region', { name: 'Make a sticker' });
-    expect(within(page).getByLabelText('Choose your photo')).toBeTruthy();
-    // The styles come once there is a photo to show them on.
-    expect(within(page).queryByRole('radiogroup', { name: 'Sticker style' })).toBeNull();
+    // The outline styles are on the page already, shown on a sample picture until there is a photo.
+    expect(within(page).getByRole('radiogroup', { name: 'Sticker style' })).toBeTruthy();
     expect(within(page).getByRole('button', { name: 'Generate sticker' }).disabled).toBe(true);
+    // The photo card uploads; Upload, Camera and Templates are on the page too.
+    expect(within(page).getByLabelText('Add your photo')).toBeTruthy();
     const sources = within(page).getByRole('group', { name: 'Add a photo' });
     expect(within(sources).getByLabelText('Upload a photo')).toBeTruthy();
     expect(within(sources).getByLabelText('Take a photo')).toBeTruthy();
-    // Gallery is the Templates browser; its pick becomes the photo.
-    fireEvent.click(within(sources).getByRole('button', { name: 'Gallery' }));
+    // Templates is the Templates browser; its pick becomes the photo.
+    fireEvent.click(within(sources).getByRole('button', { name: 'Templates' }));
     expect(sheet('Pick a picture')).toBeTruthy();
   });
 
@@ -1207,7 +1208,7 @@ describe('MemeEditor', () => {
     renderEditor({ ...TEMPLATE, editorMode: 'sticker', imageLayers: [{ id: 'p', url: 'photo.png', x: 0.5, y: 0.5 }] });
     const page = screen.getByRole('region', { name: 'Make a sticker' });
     expect(within(page).getByRole('button', { name: 'Generate sticker' }).disabled).toBe(false);
-    expect(within(page).getByRole('button', { name: 'Change the photo' })).toBeTruthy();
+    expect(within(page).getByRole('group', { name: 'Add a photo' })).toBeTruthy();
     // The styles to cut it in, each on the photo, Classic first and picked.
     const styles = within(page).getByRole('radiogroup', { name: 'Sticker style' });
     expect(within(styles).getAllByRole('radio').map((b) => b.lastChild.textContent)).toEqual(['Classic', 'Bold', 'Comic', 'Pop', 'Clean', 'Retro']);
@@ -1220,13 +1221,23 @@ describe('MemeEditor', () => {
     expect(within(page).getByRole('button', { name: 'Generate sticker' }).disabled).toBe(true);
   });
 
-  it('once the Stickers maker has cut its picture out, its strip has Die-cut, Crop, Text and Effects, and the dock New, Editor Pro and Export', () => {
+  it('once the Stickers maker has cut its picture out, its strip has Die-cut, Crop, Text and Effects, the outline styles to restyle it, and the dock Export alone', () => {
     renderEditor({ ...TEMPLATE, editorMode: 'sticker', imageLayers: [{ id: 'p', url: 'cut.png', originalUrl: 'photo.png', x: 0.5, y: 0.5 }] });
     const tabs = () => within(screen.getByRole('navigation', { name: 'Editor tools' })).getAllByRole('button').map((b) => b.textContent.trim());
     expect(screen.queryByRole('region', { name: 'Make a sticker' })).toBeNull();
-    expect(tabs()).toEqual(['New', 'Move to editor', 'Export']);
+    expect(tabs()).toEqual(['Export']);
     expect(screen.getByText('Ready to export', { selector: '.ui-topbar-subtitle' })).toBeTruthy();
     expect([...strip('Sticker tools').children].map((b) => b.textContent)).toEqual(['Die-cut', 'Crop', 'Text', 'Effects']);
+    // The outline styles are still to hand, shown on the photo as it was; a pick restyles the cut-out,
+    // leaving nothing of the style before it.
+    const styles = screen.getByRole('radiogroup', { name: 'Sticker style' });
+    expect(styles.querySelector('img').getAttribute('src')).toBe('photo.png');
+    fireEvent.click(within(styles).getByRole('radio', { name: 'Pop' }));
+    expect(canvas.props.imageLayers[0]).toMatchObject({ dieCut: true, dieCutColor: '#ffd60a', dieCutWidth: 14 });
+    fireEvent.click(within(styles).getByRole('radio', { name: 'Clean' }));
+    expect(canvas.props.imageLayers[0]).toMatchObject({ dieCut: false, shadowSize: 28 });
+    fireEvent.click(within(styles).getByRole('radio', { name: 'Classic' }));
+    expect(canvas.props.imageLayers[0]).toMatchObject({ dieCut: true, dieCutColor: '#ffffff', dieCutWidth: 12, shadowSize: 0 });
     // Die-cut opens the DieCutSheet bottom sheet
     const dieCut = within(strip('Sticker tools')).getByRole('button', { name: /Die-cut/ });
     expect(dieCut.getAttribute('aria-pressed')).toBe('false');
@@ -1275,18 +1286,19 @@ describe('MemeEditor', () => {
     act(() => canvas.props.onSelectLayer(canvas.props.captions.at(-1).id));
     expect(within(layerToolbar()).queryByRole('button', { name: /Layers|Copy|Duplicate/ })).toBeNull();
     expect(within(layerToolbar()).getByRole('button', { name: /Delete/ })).toBeTruthy();
+    // They take only the four tools' place: the Style card and Export stay.
+    expect(screen.queryByRole('toolbar', { name: 'Sticker tools' })).toBeNull();
+    expect(screen.getByRole('radiogroup', { name: 'Sticker style' })).toBeTruthy();
+    expect(within(screen.getByRole('navigation', { name: 'Editor tools' })).getByRole('button', { name: 'Export' })).toBeTruthy();
     act(() => canvas.props.onSelectLayer(null));
-
-    // New starts a blank sticker, back on the page.
-    fireEvent.click(within(screen.getByRole('navigation', { name: 'Editor tools' })).getByText('New'));
-    expect(canvas.props.imageLayers).toHaveLength(0);
-    expect(screen.getByRole('region', { name: 'Make a sticker' })).toBeTruthy();
+    expect(strip('Sticker tools')).toBeTruthy();
   });
 
-  it('Move to editor in the Stickers dock carries the sticker into the full editor', () => {
+  it('Move to editor, a pill on the sticker\'s board, carries the sticker into the full editor', () => {
     renderEditor({ ...TEMPLATE, editorMode: 'sticker', imageLayers: [{ id: 'p', url: 'cut.png', originalUrl: 'photo.png', x: 0.5, y: 0.5 }] });
     const tabs = () => within(screen.getByRole('navigation', { name: 'Editor tools' })).getAllByRole('button').map((b) => b.textContent.trim());
-    fireEvent.click(within(screen.getByRole('navigation', { name: 'Editor tools' })).getByText('Move to editor'));
+    fireEvent.click(screen.getByRole('button', { name: 'Move to editor' }));
+    expect(screen.queryByRole('button', { name: 'Move to editor' })).toBeNull();
     expect(tabs()).toEqual(['Draw', 'Media', 'Text', 'AI', 'Canvas']);
     expect(screen.queryByText('Meme Editor')).toBeNull();
     expect(canvas.props.imageLayers).toHaveLength(1);
@@ -1390,7 +1402,7 @@ describe('MemeEditor', () => {
     expect(card().waMessages[0].text).toBe('hi');
   }, 30000);
 
-  it('the AI Meme maker opens on its page (the meme with Change, the idea box, ideas and vibes as chips, the key line); sending makes the meme, whose Shuffle switches between the AI captions', async () => {
+  it('the AI Meme maker opens on its page (the question, the prompt box with the meme along its foot, idea cards, vibe chips, the key line); sending makes the meme, whose caption card steps through the AI captions', async () => {
     localStorage.removeItem('gemini_api_key');
     renderEditor({ ...TEMPLATE, editorMode: 'ai', aiPrompt: 'mondays' });
     const page = () => screen.getByRole('region', { name: 'Make an AI meme' });
@@ -1400,15 +1412,15 @@ describe('MemeEditor', () => {
     expect(screen.getByText('Pick a meme and an idea', { selector: '.ui-topbar-subtitle' })).toBeTruthy();
     expect(screen.queryByRole('navigation', { name: 'Editor tools' })).toBeNull();
 
-    // The meme pill opens popular memes (and upload, and the whole gallery); a pick keeps the idea.
+    // Its own header and the question; the prompt box holds the meme it's for and Upload.
+    expect(within(page()).getByRole('heading', { name: 'What should the meme be about?' })).toBeTruthy();
+    expect(within(page()).getByRole('heading', { name: 'AI Meme Studio' })).toBeTruthy();
+    expect(within(page()).getByLabelText('Upload a photo')).toBeTruthy();
+    // The meme opens the Templates browser; a pick keeps the idea.
     fireEvent.click(within(page()).getByRole('button', { name: /^Meme: / }));
-    const picker = screen.getByRole('dialog', { name: 'Your meme' });
-    expect(within(picker).getByLabelText('Upload a photo')).toBeTruthy();
-    expect(within(picker).getByRole('button', { name: 'All memes' })).toBeTruthy();
-    const popular = within(within(picker).getByRole('group', { name: 'Popular memes' })).getAllByRole('button');
-    const pickedName = popular[0].getAttribute('aria-label');
-    fireEvent.click(popular[0]);
-    expect(screen.queryByRole('dialog', { name: 'Your meme' })).toBeNull();
+    const card = within(sheet('Pick a meme')).getAllByRole('button').find((b) => b.classList.contains('ie-card'));
+    const pickedName = card.getAttribute('aria-label');
+    fireEvent.click(card);
     expect(within(page()).getByRole('button', { name: `Meme: ${pickedName}` })).toBeTruthy();
     expect(within(page()).getByLabelText("What's it about?").value).toBe('mondays');
     // The vibes are chips on the page, Anything picked to start.
@@ -1417,7 +1429,7 @@ describe('MemeEditor', () => {
     fireEvent.click(vibe(/Tech & Code/));
     expect(vibe(/Tech & Code/).getAttribute('aria-checked')).toBe('true');
 
-    // Send: the first caption on the meme and the editing page; Shuffle puts the next one on it.
+    // Send: the first caption on the meme and the editing page; the caption card steps on through them.
     fireEvent.click(within(page()).getByRole('button', { name: 'Generate captions' }));
     const tools = await screen.findByRole('toolbar', { name: 'AI meme tools' });
     expect(screen.queryByRole('region', { name: 'Make an AI meme' })).toBeNull();
@@ -1425,19 +1437,31 @@ describe('MemeEditor', () => {
     const ideas = canvas.props.template.aiIdeas;
     expect(ideas).toHaveLength(4);
     expect(captionTexts()).toEqual([ideas[0]]);
-    expect([...tools.children].map((b) => b.textContent)).toEqual(['Shuffle', 'Text', 'Style', 'Header & Footer', 'Effects']);
+    expect([...tools.children].map((b) => b.textContent)).toEqual(['Text', 'Style', 'Header & Footer', 'Effects']);
+    expect(screen.getByText('Caption 1 of 4')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Previous caption' }).disabled).toBe(true);
     for (const text of ideas.slice(1)) {
-      fireEvent.click(within(tools).getByText('Shuffle'));
+      fireEvent.click(screen.getByRole('button', { name: 'Next caption' }));
       await waitFor(() => expect(captionTexts()).toEqual([text]));
     }
+    expect(screen.getByText('Caption 4 of 4')).toBeTruthy();
+    // Back one, then on to the last again.
+    fireEvent.click(screen.getByRole('button', { name: 'Previous caption' }));
+    await waitFor(() => expect(captionTexts()).toEqual([ideas[2]]));
+    fireEvent.click(screen.getByRole('button', { name: 'Next caption' }));
+    await waitFor(() => expect(captionTexts()).toEqual([ideas[3]]));
     // Past the last, four new ones are written.
-    fireEvent.click(within(tools).getByText('Shuffle'));
-    expect(within(tools).getByText('Writing…')).toBeTruthy();
-    await within(tools).findByText('Shuffle');
+    fireEvent.click(screen.getByRole('button', { name: 'Next caption' }));
+    expect(screen.getByText('Writing new captions…')).toBeTruthy();
+    await screen.findByText('Caption 1 of 4');
     expect(captionTexts()).toHaveLength(1);
     expect(screen.getByRole('radiogroup', { name: 'Aspect ratio' })).toBeTruthy();
     expect(screen.getByText('Ready to export', { selector: '.ui-topbar-subtitle' })).toBeTruthy();
-    expect(within(bar()).getAllByRole('button').map((b) => b.textContent.trim())).toEqual(['New', 'Move to editor', 'Export']);
+    expect(within(bar()).getAllByRole('button').map((b) => b.textContent.trim())).toEqual(['Export']);
+    // Its own header: the title, undo and redo; Move to editor is a pill on the board.
+    expect(screen.getByRole('heading', { name: 'AI Meme Studio' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Undo' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Move to editor' })).toBeTruthy();
     // Style opens its looks over the tools; a pick restyles the caption.
     const aiCap = () => canvas.props.captions.find((c) => c.id.startsWith('cap-ai-'));
     fireEvent.click(within(tools).getByText('Style'));
@@ -1459,8 +1483,8 @@ describe('MemeEditor', () => {
     expect(within(layerToolbar()).getByText('Font')).toBeTruthy();
     act(() => canvas.props.onSelectLayer(null));
 
-    // New: the same meme, idea and vibe, back on the page.
-    fireEvent.click(within(bar()).getByText('New'));
+    // Back: the same meme, idea and vibe, back on the page.
+    fireEvent.click(screen.getByRole('button', { name: 'Back' }));
     expect(within(page()).getByRole('button', { name: `Meme: ${pickedName}` })).toBeTruthy();
     expect(within(page()).getByLabelText("What's it about?").value).toBe('mondays');
     expect(vibe(/Tech & Code/).getAttribute('aria-checked')).toBe('true');

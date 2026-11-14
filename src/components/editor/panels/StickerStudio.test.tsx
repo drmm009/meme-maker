@@ -24,16 +24,27 @@ function renderStudio(imageLayers: object[] = [], actions: Partial<EditorActions
 }
 
 describe('StickerStudio', () => {
-  it('with no photo: a card to add one, and Upload, Camera and Gallery; no styles yet', () => {
+  it('with no photo: one card to add one, Upload, Camera and Templates above the outline styles, and the styles to pick already', () => {
     const { ui } = renderStudio();
     const page = screen.getByRole('region', { name: 'Make a sticker' });
-    expect(within(page).getByLabelText('Choose your photo')).toBeTruthy();
+    // The card itself uploads.
+    expect(within(page).getByLabelText('Add your photo')).toBeTruthy();
+    expect(within(page).queryByText('Add a photo to start')).toBeNull();
+    expect(within(page).queryByText('Choose photo')).toBeNull();
+    expect(within(page).queryByRole('radiogroup', { name: 'Preview backdrop' })).toBeNull();
+    // Where the photo comes from, on the page, before the outline styles.
     const sources = within(page).getByRole('group', { name: 'Add a photo' });
     expect(within(sources).getByLabelText('Upload a photo')).toBeTruthy();
     expect(within(sources).getByLabelText('Take a photo')).toBeTruthy();
-    expect(within(page).queryByRole('radiogroup', { name: 'Sticker style' })).toBeNull();
+    const styles = within(page).getByRole('radiogroup', { name: 'Sticker style' });
+    expect(sources.compareDocumentPosition(styles) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    // The styles are there from the start, on a sample picture; the pick is kept for Generate.
+    expect(within(styles).getAllByRole('radio').map((r) => r.textContent)).toEqual(['Classic', 'Bold', 'Comic', 'Pop', 'Clean', 'Retro']);
+    fireEvent.click(within(styles).getByRole('radio', { name: 'Comic' }));
+    expect(ui.getState().stickerStyle).toBe('comic');
     expect((within(page).getByRole('button', { name: 'Generate sticker' }) as HTMLButtonElement).disabled).toBe(true);
-    fireEvent.click(within(sources).getByRole('button', { name: 'Gallery' }));
+    // Templates is the Templates browser; its pick becomes the photo.
+    fireEvent.click(within(sources).getByRole('button', { name: 'Templates' }));
     expect(ui.getState().sheet).toBe('stickerGallery');
   });
 
@@ -52,15 +63,15 @@ describe('StickerStudio', () => {
     expect(within(styles).getByRole('radio', { name: 'Retro' }).getAttribute('aria-checked')).toBe('true');
   });
 
-  it('Change opens where a photo comes from; Remove goes back to the first screen', () => {
+  it('with a photo the sources stay to change it; Remove goes back to the empty card', () => {
     const { doc } = renderStudio([{ id: 'p', url: 'photo.png', x: 0.5, y: 0.5 }]);
-    fireEvent.click(screen.getByRole('button', { name: 'Change the photo' }));
-    const sheet = screen.getByRole('dialog', { name: 'Your photo' });
-    expect(within(sheet).getByLabelText('Upload a photo')).toBeTruthy();
-    expect(within(sheet).getByRole('button', { name: 'Gallery' })).toBeTruthy();
+    const sources = screen.getByRole('group', { name: 'Add a photo' });
+    expect(within(sources).getByLabelText('Upload a photo')).toBeTruthy();
+    expect(within(sources).getByRole('button', { name: 'Templates' })).toBeTruthy();
+    expect(screen.queryByText('Change photo')).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Remove the photo' }));
     expect((doc.getState() as { imageLayers: unknown[] }).imageLayers).toHaveLength(0);
-    expect(screen.getByLabelText('Choose your photo')).toBeTruthy();
+    expect(screen.getByLabelText('Add your photo')).toBeTruthy();
   });
 
   it('while cutting out, says so and holds every control', () => {
@@ -69,6 +80,7 @@ describe('StickerStudio', () => {
     expect((screen.getByRole('button', { name: 'Generating…' }) as HTMLButtonElement).disabled).toBe(true);
     expect((screen.getByRole('radio', { name: 'Classic' }) as HTMLButtonElement).disabled).toBe(true);
     expect(screen.queryByRole('button', { name: 'Remove the photo' })).toBeNull();
-    expect(screen.queryByRole('button', { name: 'Change the photo' })).toBeNull();
+    expect((screen.getByRole('button', { name: 'Templates' }) as HTMLButtonElement).disabled).toBe(true);
+    expect((screen.getByLabelText('Upload a photo') as HTMLInputElement).disabled).toBe(true);
   });
 });

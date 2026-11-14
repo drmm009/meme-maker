@@ -1,8 +1,10 @@
+import type { ReactNode } from 'react';
 import { Scissors, Crop, Type, Sparkles } from 'lucide-react';
 import { ToolStrip } from '../../ui';
 import type { StripItem } from '../../ui';
 import { useEditorUiStore } from '../store/useEditorUiStore';
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
+import StickerStylePicker from './StickerStylePicker';
 import type { EditorActions } from './selection';
 
 interface LayerItem {
@@ -11,9 +13,11 @@ interface LayerItem {
 }
 
 // The Stickers maker's strip on its editing page, once the sticker is made (before that its page,
-// StickerStudio, shows): Die-cut (border settings), Crop, Text and Effects (photo filters), above
-// New, Move to editor and Export (EditorPanels).
-export default function StickerStrip({ actions }: { actions: EditorActions }) {
+// StickerStudio, shows), laid out as that page: Die-cut (border settings), Crop, Text and Effects
+// (photo filters) as a row of tiles, then the Style card (StickerStylePicker), above Export (EditorPanels).
+// With a text layer selected, its tools (LayerToolbar, as `tools`) take the four tiles' place; the rest
+// of the page stays as it is.
+export default function StickerStrip({ actions, tools }: { actions: EditorActions; tools?: ReactNode }) {
   const sheet: string | null = useEditorUiStore((s: { sheet: string | null }) => s.sheet);
   const openSheet = useEditorUiStore((s: { openSheet: (sheet: string) => void }) => s.openSheet);
   const closeSheet = useEditorUiStore((s: { closeSheet: () => void }) => s.closeSheet);
@@ -47,5 +51,18 @@ export default function StickerStrip({ actions }: { actions: EditorActions }) {
     } else if (id === 'text') actions.handleAddCaption();
   };
 
-  return <ToolStrip ariaLabel="Sticker tools" layout="stacked" items={items} onSelect={onSelect} />;
+  return (
+    <>
+      {tools ?? <ToolStrip ariaLabel="Sticker tools" layout="stacked" items={items} onSelect={onSelect} />}
+      {/* The style stays to hand after Generate (a pick restyles the cut-out), in its card as on the
+          sticker page, making way for an open sheet. */}
+      {!sheet && photo?.originalUrl && (
+        <div className="ie-stk-restyle">
+          <div className="ie-stk-panel-stack">
+            <StickerStylePicker previewUrl={photo.originalUrl} onPick={actions.handleStickerStyle} />
+          </div>
+        </div>
+      )}
+    </>
+  );
 }

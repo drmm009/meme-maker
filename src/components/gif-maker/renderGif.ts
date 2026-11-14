@@ -1,6 +1,6 @@
-// Making the GIF in the browser: the caption drawn as a meme caption (white Impact, black edge),
-// photos drawn as frames the GIF's size, then FFmpeg (loaded only now) encoding them.
-import { frameOrder, photosGifArgs, videoGifArgs, wrapCaption } from './gifPlan';
+// Making the GIF in the browser: the caption drawn as a meme caption (white Impact, black edge) on a
+// see-through layer the GIF's size, then FFmpeg (loaded only now) cutting the clip and laying it over.
+import { videoGifArgs, wrapCaption } from './gifPlan';
 import type { CaptionPlace, Loop, Trim } from './gifPlan';
 
 // The caption's look, shared with the page's preview (gifMaker.css): its size a tenth of the GIF's
@@ -50,31 +50,7 @@ async function pngBytes(canvas: HTMLCanvasElement): Promise<Uint8Array> {
   return new Uint8Array(await blob.arrayBuffer());
 }
 
-const loadImage = (url: string) =>
-  new Promise<HTMLImageElement>((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => resolve(img);
-    img.onerror = () => reject(new Error('A photo could not be read'));
-    img.src = url;
-  });
-
-// A photo as a frame: covering the GIF's shape (cropped from its middle), the caption on it.
-async function photoFrame(url: string, caption: Caption, w: number, h: number): Promise<Uint8Array> {
-  const img = await loadImage(url);
-  const { canvas, ctx } = canvasOf(w, h);
-  ctx.fillStyle = '#000';
-  ctx.fillRect(0, 0, w, h);
-  const k = Math.max(w / img.naturalWidth, h / img.naturalHeight);
-  const dw = img.naturalWidth * k;
-  const dh = img.naturalHeight * k;
-  ctx.drawImage(img, (w - dw) / 2, (h - dh) / 2, dw, dh);
-  drawCaption(ctx, caption, w, h);
-  return pngBytes(canvas);
-}
-
-export type GifJob =
-  | { kind: 'video'; file: Blob; trim: Trim; speed: number; loop: Loop; w: number; h: number; caption: Caption }
-  | { kind: 'photos'; urls: string[]; frameS: number; loop: Loop; w: number; h: number; caption: Caption };
+export interface GifJob { file: Blob; trim: Trim; speed: number; loop: Loop; w: number; h: number; caption: Caption }
 
 interface FF {
   writeFile(path: string, data: Uint8Array): Promise<unknown>;
@@ -96,23 +72,15 @@ export async function makeGif(job: GifJob, onProgress?: (p: number) => void): Pr
   const progress = ({ progress: p }: { progress: number }) => onProgress?.(Math.max(0, Math.min(1, p)));
   ff.on('progress', progress);
   try {
-    let args: string[];
-    if (job.kind === 'video') {
-      await write('gif_in.mp4', new Uint8Array(await job.file.arrayBuffer()));
-      let caption: string | undefined;
-      if (job.caption.text.trim()) {
-        const { canvas, ctx } = canvasOf(job.w, job.h);
-        drawCaption(ctx, job.caption, job.w, job.h);
-        await write('gif_caption.png', await pngBytes(canvas));
-        caption = 'gif_caption.png';
-      }
-      args = videoGifArgs({ input: 'gif_in.mp4', output: 'gif_out.gif', trim: job.trim, speed: job.speed, loop: job.loop, w: job.w, h: job.h, caption });
-    } else {
-      const frames = await Promise.all(job.urls.map((url) => photoFrame(url, job.caption, job.w, job.h)));
-      const order = frameOrder(frames.length, job.loop);
-      for (let i = 0; i < order.length; i++) await write(`gif_f_${String(i).padStart(3, '0')}.png`, frames[order[i]]);
-      args = photosGifArgs({ pattern: 'gif_f_%03d.png', output: 'gif_out.gif', frameS: job.frameS });
+    await write('gif_in.mp4', new Uint8Array(await job.file.arrayBuffer()));
+    let caption: string | undefined;
+    if (job.caption.text.trim()) {
+      const { canvas, ctx } = canvasOf(job.w, job.h);
+      drawCaption(ctx, job.caption, job.w, job.h);
+      await write('gif_caption.png', await pngBytes(canvas));
+      caption = 'gif_caption.png';
     }
+    const args = videoGifArgs({ input: 'gif_in.mp4', output: 'gif_out.gif', trim: job.trim, speed: job.speed, loop: job.loop, w: job.w, h: job.h, caption });
     await runFFmpeg(ff, args);
     written.push('gif_out.gif');
     const data = await ff.readFile('gif_out.gif');

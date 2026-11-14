@@ -1,100 +1,99 @@
-/* Home's makers: one graphite panel, three cells across and two down (six across on a wide
-   screen), parted by hairlines. In each cell the maker's icon, in the app's orange, on a small dark
-   tile with a fine light edge, and its name under it. One accent, no colour blocks, glass or blur. */
+/* Home's makers (HomeTools): six compact tiles under the carousel, three across on a phone and six
+   across on a wide screen. Each a flat grey tile: the maker's icon on a soft disc in its own colour,
+   its name under it. No glass, glow, tags or arrows. */
 
 .hh-tools {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  margin: 14px 0 10px;
-  overflow: hidden;
-  border-radius: 24px;
-  background: linear-gradient(180deg, #1f1f22 0%, #17171a 100%);
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.07),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1),
-    0 20px 34px -24px rgba(0, 0, 0, 0.95);
+  gap: 8px;
+  margin: 16px 0 14px;
   font-family: 'Plus Jakarta Sans', Inter, system-ui, -apple-system, sans-serif;
   -webkit-tap-highlight-color: transparent;
 }
 
 .hh-tool {
-  position: relative;
+  --tool-color: #ff5a36;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 9px;
+  gap: 8px;
   min-width: 0;
-  height: 104px;
-  padding: 10px 6px;
+  min-height: 92px;
+  padding: 14px 6px 12px;
   border: none;
-  border-radius: 0;
-  background: none;
+  border-radius: 18px !important;
+  background: #1a1b20;
   color: #f4f4f6;
   font: inherit;
+  text-align: center;
   cursor: pointer;
-  transition: background-color 0.18s ease;
+  transition: background-color 0.15s ease, transform 0.12s ease;
 }
-/* Hairlines between the cells: down the side of all but the last in a row, and under the top row. */
-.hh-tool:not(:nth-child(3n))::after,
-.hh-tool:nth-child(-n + 3)::before {
-  content: '';
-  position: absolute;
-  background: rgba(255, 255, 255, 0.07);
-  pointer-events: none;
-}
-.hh-tool:not(:nth-child(3n))::after { top: 16px; bottom: 16px; right: 0; width: 1px; }
-.hh-tool:nth-child(-n + 3)::before { left: 0; right: 0; bottom: 0; height: 1px; }
-.hh-tool:nth-child(1)::before { left: 16px; }
-.hh-tool:nth-child(3)::before { right: 16px; }
 
-.hh-tool:active { background: rgba(255, 255, 255, 0.05); }
-.hh-tool:active .hh-tool-icon { transform: scale(0.94); }
-.hh-tool:focus-visible { outline: 2px solid #ff5a36; outline-offset: -3px; border-radius: 16px; }
-@media (hover: hover) {
-  .hh-tool:hover { background: rgba(255, 255, 255, 0.035); }
-  .hh-tool:hover .hh-tool-icon { background: #303034; }
-}
+/* Each maker's colour. */
+.hh-tool--video { --tool-color: #38bdf8; }
+.hh-tool--stickers { --tool-color: #14c08a; }
+.hh-tool--faceswap { --tool-color: #ff5a36; }
+.hh-tool--social { --tool-color: #ec4899; }
+.hh-tool--ai { --tool-color: #a99bff; }
+.hh-tool--gif { --tool-color: #a3d93a; }
 
 .hh-tool-icon {
-  display: inline-flex;
-  flex: none;
-  align-items: center;
-  justify-content: center;
-  width: 46px;
-  height: 46px;
-  border-radius: 14px;
-  background: #29292d;
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.07),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1),
-    0 6px 12px -8px rgba(0, 0, 0, 0.8);
-  color: #ff6a47;
-  transition: transform 0.18s cubic-bezier(0.2, 0.8, 0.2, 1), background-color 0.18s ease;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--tool-color) 16%, transparent);
+  color: var(--tool-color);
 }
 .hh-tool-icon svg { width: 22px; height: 22px; }
 
 .hh-tool-label {
   max-width: 100%;
   overflow: hidden;
-  color: #ececf0;
-  font-size: 13.5px;
-  font-weight: 600;
-  line-height: 1.2;
-  letter-spacing: -0.005em;
-  white-space: nowrap;
   text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
 }
 
-@media (min-width: 720px) {
-  .hh-tools { grid-template-columns: repeat(6, minmax(0, 1fr)); }
-  .hh-tool:nth-child(n)::before { display: none; }
-  .hh-tool:nth-child(n)::after { content: ''; position: absolute; top: 16px; bottom: 16px; right: 0; width: 1px; background: rgba(255, 255, 255, 0.07); }
-  .hh-tool:last-child::after { display: none; }
+.hh-tool:active { transform: scale(0.96); }
+.hh-tool:focus-visible { outline: 2px solid var(--tool-color); outline-offset: 2px; }
+@media (hover: hover) {
+  .hh-tool:hover { background: #222329; }
+}
+
+/* A 320px-wide phone: a little tighter. */
+@media (max-width: 350px) {
+  .hh-tools { gap: 6px; }
+  .hh-tool { min-height: 84px; padding: 12px 4px 10px; gap: 6px; }
+  .hh-tool-icon { width: 40px; height: 40px; }
+  .hh-tool-label { font-size: 12px; }
+}
+
+/* A wide screen: all six in one row. */
+@media (min-width: 640px) {
+  .hh-tools { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px; }
+  .hh-tool { min-height: 104px; }
+}
+
+/* The light theme: white tiles on the light page. */
+[data-theme='light'] .hh-tool {
+  background: #ffffff;
+  color: #18181b;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06), inset 0 0 0 1px rgba(15, 23, 42, 0.07);
+}
+[data-theme='light'] .hh-tool-icon { background: color-mix(in srgb, var(--tool-color) 14%, transparent); }
+@media (hover: hover) {
+  [data-theme='light'] .hh-tool:hover { background: #f6f6f8; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .hh-tool, .hh-tool-icon { transition: none; }
-  .hh-tool:active .hh-tool-icon { transform: none; }
+  .hh-tool { transition: none; }
+  .hh-tool:active { transform: none; }
 }

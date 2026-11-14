@@ -1,8 +1,11 @@
-// The Stickers and AI Meme makers' top bar (MakerBar): the maker's title on a tile in its colour (its
-// Home tile's), undo and redo in one capsule, and its three steps, from the editor's state.
-import { Redo2, Scissors, Undo2, Wand2 } from 'lucide-react';
+// The AI Meme and Face Swap makers' top section (MakerBar; the Stickers maker draws its own in
+// StickerStudio): the maker's tagline and title in its colour, undo and redo in one capsule, and its
+// steps, from the editor's state.
+import { Redo2, ScanFace, Scissors, Undo2, Wand2 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import MakerBar from './MakerBar';
+import { MAKER_TONES } from './makerTones';
+import type { MakerBarMode } from './makerTones';
 import { useMemeEditorHistory, useMemeEditorStore } from '../store/useMemeEditorStore';
 import { stickerStep } from '../stickerMaker';
 import { aiStep } from '../aiMeme';
@@ -10,34 +13,47 @@ import { aiStep } from '../aiMeme';
 type Step = 0 | 1 | 2;
 type DocState = {
   imageLayers: { originalUrl?: string | null }[];
-  activeTemplate: { imageUrl?: unknown; aiPicked?: unknown } | null;
+  activeTemplate: { imageUrl?: unknown; aiPicked?: unknown; faceSwap?: unknown } | null;
   undo: () => void;
   redo: () => void;
 };
 type HistoryState = { pastStates: unknown[]; futureStates: unknown[] };
-export type MakerBarMode = 'sticker' | 'ai';
 
-const MAKERS: Record<MakerBarMode, { title: string; Icon: LucideIcon; tone: string; steps: string[]; status: string[]; stepOf: (s: DocState) => Step }> = {
+const MAKERS: Record<MakerBarMode, { title: string; lead?: string; tagline: string; Icon: LucideIcon; steps: string[]; status: string[]; stepOf: (s: DocState) => Step }> = {
   sticker: {
     title: 'Stickers',
+    lead: 'Create Custom ',
+    tagline: 'AI Sticker Studio',
     Icon: Scissors,
-    tone: '#14c08a',
     steps: ['Photo', 'Style', 'Export'],
     status: ['Add a photo', 'Ready to generate', 'Ready to export'],
     stepOf: (s) => stickerStep(s.imageLayers),
   },
   ai: {
     title: 'AI Meme',
+    lead: 'Create an ',
+    tagline: 'AI Meme Studio',
     Icon: Wand2,
-    tone: '#8b7bff',
-    steps: ['Meme', 'Idea', 'Export'],
+    // No step track on its page; where it stands is still said in words (status).
+    steps: [],
     status: ['Pick a meme', 'Pick a meme and an idea', 'Ready to export'],
     stepOf: (s) => aiStep(s.activeTemplate),
+  },
+  // No step track: the page itself shows the two pictures and the swap.
+  faceswap: {
+    title: 'Face Swap',
+    lead: 'Instant ',
+    tagline: 'AI Face Studio',
+    Icon: ScanFace,
+    steps: [],
+    status: ['Pick a face and a picture', 'Ready to export'],
+    stepOf: (s) => (s.activeTemplate?.faceSwap ? 1 : 0),
   },
 };
 
 export default function MakerTopBar({ mode, onBack }: { mode: MakerBarMode; onBack: () => void }) {
-  const { title, Icon, tone, steps, status, stepOf } = MAKERS[mode];
+  const { title, lead, tagline, Icon, steps, status, stepOf } = MAKERS[mode];
+  const tone = MAKER_TONES[mode];
   const step = useMemeEditorStore((s: DocState) => stepOf(s));
   const undo = useMemeEditorStore((s: DocState) => s.undo);
   const redo = useMemeEditorStore((s: DocState) => s.redo);
@@ -45,7 +61,7 @@ export default function MakerTopBar({ mode, onBack }: { mode: MakerBarMode; onBa
   const canRedo = useMemeEditorHistory((s: HistoryState) => s.futureStates.length > 0);
 
   return (
-    <MakerBar title={title} Icon={Icon} tone={tone} steps={steps} step={step} status={status[step]} onBack={onBack}>
+    <MakerBar title={title} lead={lead} tagline={tagline} Icon={Icon} tone={tone} steps={steps} step={step} status={status[step]} onBack={onBack}>
       {mode !== 'sticker' && (
         <div className="mtb-history">
           <button type="button" className="mtb-history-btn" onClick={undo} disabled={!canUndo} aria-label="Undo" title="Undo">

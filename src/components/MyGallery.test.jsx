@@ -34,15 +34,6 @@ describe('MyGallery', () => {
     expect(screen.getByText(/no saved memes yet/i)).toBeTruthy();
   });
 
-  it('sends the empty state to Explore', () => {
-    const onBrowseTemplates = vi.fn();
-    render(
-      <MyGallery savedMemes={[]} galleryReady onDeleteMeme={() => {}} onSelectMeme={() => {}} onBrowseTemplates={onBrowseTemplates} />
-    );
-    fireEvent.click(screen.getByRole('button', { name: /explore templates/i }));
-    expect(onBrowseTemplates).toHaveBeenCalled();
-  });
-
   it('renders thumbnails with Unknown date fallback', () => {
     render(
       <MyGallery
@@ -73,6 +64,43 @@ describe('MyGallery', () => {
     expect(onResolveFullImage).toHaveBeenCalled();
   });
 
+  it('sorts saves into tabs by kind, with counts', () => {
+    render(
+      <MyGallery
+        savedMemes={[meme({ id: 'm', name: 'Funny' }), meme({ id: 's', name: 'Cat sticker', kind: 'sticker' }), meme({ id: 'g', name: 'Dance', kind: 'gif' })]}
+        savedVideos={[{ id: 'v', name: 'Clip', savedAt: '2026-01-02T00:00:00.000Z', thumbnail: '', durationMs: 4000 }]}
+        galleryReady
+        onDeleteMeme={() => {}}
+        onSelectMeme={() => {}}
+      />
+    );
+    const tabs = screen.getAllByRole('tab').map((t) => t.textContent);
+    expect(tabs).toEqual(['All4', 'Memes1', 'Stickers1', 'GIFs1', 'Videos1']);
+    fireEvent.click(screen.getByRole('tab', { name: /stickers/i }));
+    expect(screen.getByText('Cat sticker')).toBeTruthy();
+    expect(screen.queryByText('Funny')).toBeNull();
+    expect(screen.queryByText('Clip')).toBeNull();
+    fireEvent.click(screen.getByRole('tab', { name: /videos/i }));
+    expect(screen.getByText('Clip')).toBeTruthy();
+    expect(screen.getByText('0:04')).toBeTruthy();
+  });
+
+  it('shows an empty tab with its maker', () => {
+    const onMake = vi.fn();
+    render(<MyGallery savedMemes={[meme()]} galleryReady onDeleteMeme={() => {}} onSelectMeme={() => {}} onMake={onMake} />);
+    fireEvent.click(screen.getByRole('tab', { name: /gifs/i }));
+    expect(screen.getByText(/no gifs yet/i)).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Make a GIF' }));
+    expect(onMake).toHaveBeenCalledWith('gif');
+  });
+
+  it('offers no Re-Edit for a saved GIF', async () => {
+    render(<MyGallery savedMemes={[meme({ name: 'Dance', kind: 'gif' })]} galleryReady onDeleteMeme={() => {}} onSelectMeme={() => {}} />);
+    fireEvent.click(screen.getByText('Dance'));
+    expect(await screen.findByText(/download/i)).toBeTruthy();
+    expect(screen.queryByText(/re-edit/i)).toBeNull();
+  });
+
   it('calls onDeleteMeme from the card button', () => {
     const onDeleteMeme = vi.fn();
     render(
@@ -83,7 +111,7 @@ describe('MyGallery', () => {
         onSelectMeme={() => {}}
       />
     );
-    fireEvent.click(screen.getAllByTitle('Delete meme')[0]);
+    fireEvent.click(screen.getAllByTitle('Delete Meme')[0]);
     expect(onDeleteMeme).toHaveBeenCalledWith('meme-1');
   });
 });

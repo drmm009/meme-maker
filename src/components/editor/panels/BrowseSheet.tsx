@@ -149,11 +149,12 @@ export default function BrowseSheet({ title, Icon, total, onClose, className, se
 }
 
 // A picture that shows a soft sheen until it arrives, then fades in.
-export function Thumb({ src, alt = '', className = '', style }: { src?: string; alt?: string; className?: string; style?: CSSProperties }) {
+// `onError` hears when the picture can't be had, for a caller that has something else to show.
+export function Thumb({ src, alt = '', className = '', style, onError }: { src?: string; alt?: string; className?: string; style?: CSSProperties; onError?: () => void }) {
   const [state, setState] = useState<'loading' | 'ready' | 'failed'>('loading');
   return (
     <span className={`ie-browse-thumb is-${state} ${className}`} style={style}>
-      {state !== 'failed' && src && <img src={src} alt={alt} loading="lazy" decoding="async" onLoad={() => setState('ready')} onError={() => setState('failed')} />}
+      {state !== 'failed' && src && <img src={src} alt={alt} loading="lazy" decoding="async" onLoad={() => setState('ready')} onError={() => { setState('failed'); onError?.(); }} />}
     </span>
   );
 }

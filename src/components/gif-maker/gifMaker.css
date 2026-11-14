@@ -1,13 +1,18 @@
-/* The GIF maker (GifMaker), a page of its own over the app, in the editors' look (ui.css .ui-theme
-   tokens): pitch black, cards and controls in iOS greys, solid orange for what's picked and for
-   Make GIF; no glass or blur. */
+/* The GIF maker (GifMaker), a page of its own over the app, in the Stickers page's look
+   (stickerStudio.css): a dark page with a soft glow in the maker's lime at the top, a plain centred
+   title, one card for the video, raised grey tiles and cards, orange kept for what's picked and for
+   Make GIF; no glass, blur or glow on the controls. */
 .gm {
   position: fixed;
   inset: 0;
   z-index: 50;
   display: flex;
   flex-direction: column;
-  background: var(--ui-bg, #000);
+  padding: calc(8px + env(safe-area-inset-top, 0px)) 14px calc(12px + env(safe-area-inset-bottom, 0px));
+  gap: 8px;
+  background:
+    radial-gradient(ellipse 90% 45% at 50% -8%, rgba(155, 208, 42, 0.18) 0%, rgba(13, 14, 18, 0) 70%),
+    linear-gradient(180deg, #101217 0%, #0b0c10 100%) !important;
   color: var(--ui-text, #f4f4f6);
   font-family: var(--ui-font, 'Plus Jakarta Sans', Inter, system-ui, sans-serif);
   -webkit-tap-highlight-color: transparent;
@@ -17,70 +22,113 @@
 .gm :focus-visible { outline: 2px solid var(--ui-accent, #ff5a36); outline-offset: 2px; }
 .gm p { margin: 0; }
 
+/* ── Header: the Back chevron and the title, centred ── */
+.gm-header {
+  flex: none;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 4px 2px 8px;
+}
+.gm-back {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  margin-top: -23px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: #ffffff;
+  cursor: pointer;
+  transition: opacity 0.15s ease, transform 0.12s ease;
+}
+.gm-back svg { width: 26px; height: 26px; margin-left: -1px; }
+.gm-back:hover { opacity: 0.75; }
+.gm-back:active { opacity: 0.55; transform: scale(0.9); }
+.gm .gm-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+  color: #ffffff;
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  white-space: nowrap;
+}
+.gm-title-icon { flex: none; color: #b5e04a; }
+.gm .gm-status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ── The body: one screen, scrolling only when the controls need it ── */
 .gm-body {
   flex: 1;
   min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   overflow-y: auto;
-  padding: 4px 16px 14px;
+  padding: 0 2px;
   scrollbar-width: none;
 }
 .gm-body::-webkit-scrollbar { display: none; }
 
-/* ── Empty: two cards to start from ── */
-.gm-start { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 14px; }
-.gm-sources { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.gm-source {
-  --gm-tone: #ff5a36;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 4px;
+/* ── The card: the empty drop zone, or the preview ── */
+.gm-stage {
+  position: relative;
+  flex: 1 1 auto;
   min-height: 200px;
-  padding: 16px 14px;
-  border-radius: var(--ui-radius-lg, 20px);
-  background:
-    radial-gradient(120% 90% at 100% 0%, color-mix(in srgb, var(--gm-tone) 22%, transparent) 0%, transparent 62%),
-    var(--ui-surface, #1c1c1e);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06), 0 12px 24px -16px rgba(0, 0, 0, 0.9);
-  cursor: pointer;
-  transition: transform 0.18s cubic-bezier(0.2, 0.8, 0.2, 1);
+  display: flex;
 }
-.gm-source:active { transform: scale(0.97); }
-.gm-source:focus-within { outline: 2px solid var(--gm-tone); outline-offset: 2px; }
-.gm-source-icon {
+/* Empty: Face Swap's Your face card (faceSwap.css: .ie-swap-tile.is-empty, EmptyTile), filling the
+   room: lit softly from the top, a quiet edge, the icon in a soft orange circle, Add a video and Choose. */
+.gm .gm-video-tile {
+  flex: 1;
+  height: auto;
+  min-height: 0;
+  cursor: pointer;
+}
+.gm .gm-video-tile.is-drag-over { box-shadow: inset 0 0 0 2px var(--ui-accent, #ff5a36); }
+.gm .gm-video-tile:focus-within { outline: 2px solid var(--ui-accent, #ff5a36); outline-offset: 2px; }
+.gm .gm-video-tile .ie-swap-empty-hint { max-width: 22ch; }
+.gm .gm-video-tile .ie-swap-spinner { margin-bottom: 14px; }
+
+/* The preview: the GIF's shape, as large as the card allows. */
+.gm-preview-box {
+  position: relative;
+  flex: 1;
   display: grid;
   place-items: center;
-  width: 48px;
-  height: 48px;
-  margin-bottom: auto;
-  border-radius: 14px;
-  background: linear-gradient(180deg, color-mix(in srgb, var(--gm-tone) 82%, #fff) 0%, var(--gm-tone) 100%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28);
-  color: #fff;
+  padding: 12px;
+  overflow: hidden;
+  border-radius: var(--ui-radius-lg, 20px);
+  background: var(--ui-surface, #1c1c1e);
+  container-type: size;
 }
-.gm-source-icon svg { width: 24px; height: 24px; }
-.gm-source-title { margin-top: 18px; font-size: 18px; font-weight: 700; }
-.gm-source-hint { color: var(--ui-muted, #a5a6ad); font-size: 13px; line-height: 1.35; }
-.gm-start-note { color: var(--ui-muted, #a5a6ad); font-size: 13px; line-height: 1.45; text-align: center; }
-.gm-error { color: #ff8a73; font-size: 13px; text-align: center; }
-
-/* ── The preview: the GIF's shape, as large as the room left ── */
-.gm-stage { flex: 1; min-height: 190px; display: grid; place-items: center; container-type: size; }
 .gm-preview {
   position: relative;
-  /* As large as fits in the stage at the GIF's shape (--gm-ar, its width over its height). */
   width: min(100cqw, calc(100cqh * var(--gm-ar, 1)));
   aspect-ratio: var(--gm-ar, 1);
   overflow: hidden;
-  border-radius: var(--ui-radius-md, 16px);
-  background: #111;
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.14);
+  border-radius: 12px;
+  background: #000;
   container-type: inline-size;
 }
-.gm-preview video, .gm-preview > img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.gm-preview video { display: block; width: 100%; height: 100%; object-fit: cover; }
 /* The caption as the GIF draws it: a tenth of the width, white with a black edge. */
 .gm-preview-caption {
   position: absolute;
@@ -100,30 +148,125 @@
 .gm-busy {
   position: absolute;
   inset: 0;
+  z-index: 2;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 10px;
-  background: rgba(10, 10, 12, 0.8);
+  border-radius: inherit;
+  background: rgba(12, 12, 14, 0.86);
   color: #fff;
   font-size: 15px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
+/* Remove the video: the card's corner, as the sticker card's. */
+.gm-remove {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: rgba(18, 18, 20, 0.86);
+  color: #fff;
+  cursor: pointer;
+}
+.gm-remove::after { content: ''; position: absolute; inset: -7px; }
 
-/* ── The clip's trim ── */
-.gm-trim { flex: none; display: flex; flex-direction: column; gap: 8px; }
-.gm-trim-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin: 0 2px; }
-.gm-trim-title, .gm-setting-name { font-size: 15px; font-weight: 700; }
+.gm-error { color: #ff8a73; font-size: 13px; text-align: center; }
+
+/* ── Upload / Record: raised grey tiles, a soft white icon over the word ── */
+.gm-sources { flex: none; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.gm-source {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 12px 4px 10px;
+  border-radius: 16px;
+  background: var(--ui-surface, #1c1c1e);
+  color: #ffffff;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.1s ease;
+}
+.gm-source svg { width: 22px; height: 22px; color: rgba(255, 255, 255, 0.82); }
+.gm-source:hover { background: #26272b; }
+.gm-source:active { transform: scale(0.97); }
+.gm-source:focus-within { outline: 2px solid var(--ui-accent, #ff5a36); outline-offset: 2px; }
+.gm-source:disabled { opacity: 0.45; cursor: default; }
+.gm .gm-source { border: none; border-radius: 16px !important; font-size: 12.5px; font-weight: 700; }
+
+/* The meme clips (the video editor's Clips sheet), full height over the page. */
+.gm-library {
+  position: fixed;
+  inset: env(safe-area-inset-top, 0px) 0 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+}
+.gm-library > .ui-sheet:not(.ui-sheet-ghost) { flex: 1; min-height: 0; }
+.gm-library .vt-clip-card { flex-basis: 168px; width: 168px; }
+.gm-library .vt-clip-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+.gm-library .vt-clip-thumb { position: relative; display: block; }
+.gm-library .vt-clip-media { aspect-ratio: 16 / 10; }
+.gm-library .vt-clip-play {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+}
+.gm-library .vt-clip-dur {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.7);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* ── The cards under the preview: Clip, Caption, and Speed / Loop / Size ── */
+.gm-panel { flex: none; border-radius: var(--ui-radius-lg, 20px); background: var(--ui-surface, #1c1c1e); }
+.gm-row-icon { flex: none; color: rgba(255, 255, 255, 0.6); }
+.gm-setting-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.gm-setting-name small { margin-left: -2px; color: var(--ui-muted, #a5a6ad); font-size: 12px; font-weight: 500; font-variant-numeric: tabular-nums; }
+
+/* The clip's trim. */
+.gm-trim { display: flex; flex-direction: column; gap: 10px; padding: 12px 14px 14px; }
+.gm-trim-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .gm-trim-time { color: var(--ui-muted, #a5a6ad); font-size: 13px; font-variant-numeric: tabular-nums; }
 .gm-trim-time b { color: var(--ui-text, #f4f4f6); font-weight: 700; }
 .gm-track {
   position: relative;
-  height: 56px;
+  height: 52px;
   margin: 0 12px;
   border-radius: 10px;
-  background: var(--ui-surface, #1c1c1e);
+  background: #2a2b31;
   touch-action: none;
   user-select: none;
 }
@@ -153,88 +296,13 @@
 .gm-handle.is-start { left: -12px; border-radius: 10px 0 0 10px; }
 .gm-handle.is-end { right: -12px; border-radius: 0 10px 10px 0; }
 
-/* ── Photo frames ── */
-.gm-frames {
-  flex: none;
-  display: flex;
-  gap: 8px;
-  margin: 0 -16px;
-  padding: 2px 16px 4px;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-.gm-frames::-webkit-scrollbar { display: none; }
-.gm-frame { position: relative; flex: none; width: 64px; }
-.gm-frame-pic {
-  position: relative;
-  display: block;
-  width: 64px;
-  height: 64px;
-  padding: 0;
-  overflow: hidden;
-  border: none;
-  border-radius: 12px;
-  background: var(--ui-surface, #1c1c1e);
-  cursor: pointer;
-}
-.gm-frame-pic img { width: 100%; height: 100%; object-fit: cover; }
-.gm-frame-pic::after { content: ''; position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12); }
-.gm-frame.is-on .gm-frame-pic::after { box-shadow: inset 0 0 0 2.5px var(--ui-accent, #ff5a36); }
-.gm-frame-n {
-  position: absolute;
-  left: 4px;
-  bottom: 4px;
-  min-width: 18px;
-  height: 18px;
-  padding: 0 5px;
-  border-radius: 999px;
-  background: rgba(0, 0, 0, 0.72);
-  color: #fff;
-  font-size: 11px;
-  font-weight: 700;
-  line-height: 18px;
-  font-variant-numeric: tabular-nums;
-}
-.gm-frame-tools { display: flex; justify-content: space-between; margin-top: 4px; }
-.gm-frame-tools button {
-  display: grid;
-  place-items: center;
-  width: 20px;
-  height: 22px;
-  padding: 0;
-  border: none;
-  border-radius: 6px;
-  background: var(--ui-surface-2, #34363c);
-  cursor: pointer;
-}
-.gm-frame-tools button:disabled { opacity: 0.35; cursor: default; }
-.gm-frame-add {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 2px;
-  height: 64px;
-  border-radius: 12px;
-  background: var(--ui-surface, #1c1c1e);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
-  color: var(--ui-accent-text, #ff7652);
-  font-size: 12px;
-  font-weight: 700;
-  cursor: pointer;
-}
-.gm-frame-add.is-off { opacity: 0.45; pointer-events: none; }
-
-/* ── Caption ── */
+/* The caption: a line to type in, its icon before it and Top / Bottom after. */
 .gm-caption {
-  flex: none;
   display: flex;
   align-items: center;
-  gap: 8px;
-  height: 52px;
-  padding: 0 6px 0 14px;
-  border-radius: var(--ui-radius-md, 16px);
-  background: var(--ui-surface, #1c1c1e);
+  gap: 10px;
+  height: 54px;
+  padding: 0 8px 0 14px;
 }
 .gm-caption:focus-within { box-shadow: inset 0 0 0 2px var(--ui-accent, #ff5a36); }
 .gm .gm-caption-field {
@@ -252,20 +320,18 @@
 }
 .gm .gm-caption-field::placeholder { color: var(--ui-muted, #a5a6ad); opacity: 1; }
 
-/* ── Speed, Loop, Size: one card, a row each ── */
-.gm-settings { flex: none; border-radius: var(--ui-radius-md, 16px); background: var(--ui-surface, #1c1c1e); }
-.gm-setting { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 52px; padding: 6px 6px 6px 14px; }
+/* Speed, Loop, Size: a row each. */
+.gm-setting { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 54px; padding: 6px 8px 6px 14px; }
 .gm-setting + .gm-setting { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07); }
-.gm-setting-name small { margin-left: 4px; color: var(--ui-muted, #a5a6ad); font-size: 12px; font-weight: 500; font-variant-numeric: tabular-nums; }
 
-/* A segmented control: grey track, the picked one orange. */
-.gm-seg { display: flex; flex: none; gap: 2px; padding: 3px; border-radius: 12px; background: #2c2c2e; }
+/* A segmented control: a darker track, the picked one orange. */
+.gm-seg { display: flex; flex: none; gap: 2px; padding: 3px; border-radius: 12px; background: #2a2b31; }
 .gm-seg-btn {
   height: 32px;
   min-width: 52px;
   padding: 0 10px;
   border: none;
-  border-radius: 9px;
+  border-radius: 9px !important;
   background: none;
   color: var(--ui-muted, #a5a6ad);
   font-size: 13px !important;
@@ -278,13 +344,8 @@
 .gm-seg-btn:disabled { cursor: default; opacity: 0.5; }
 @media (hover: hover) { .gm .gm-seg-btn:not(.is-on):not(:disabled):hover { color: var(--ui-text, #f4f4f6); } }
 
-/* ── Make GIF ── */
-.gm-actions {
-  flex: none;
-  padding: 10px 16px calc(14px + env(safe-area-inset-bottom, 0px));
-  border-top: 1px solid var(--ui-line, rgba(255, 255, 255, 0.07));
-  background: var(--ui-bg, #000);
-}
+/* ── Make GIF: the page's one wide button; grey until there is a video ── */
+.gm-actions { flex: none; }
 .gm-make {
   display: flex;
   align-items: center;
@@ -305,7 +366,7 @@
 }
 .gm-make svg { width: 19px; height: 19px; }
 .gm-make:active:not(:disabled) { transform: scale(0.98); }
-.gm-make:disabled { background: var(--ui-accent-tint, #4c3025); box-shadow: none; color: rgba(255, 255, 255, 0.55) !important; cursor: default; }
+.gm-make:disabled { background: var(--ui-surface, #1c1c1e); box-shadow: none; color: rgba(255, 255, 255, 0.38) !important; cursor: default; }
 @media (hover: hover) { .gm-make:hover:not(:disabled) { background: var(--ui-accent-hover, #ff6d4d); } }
 
 /* ── The finished GIF (in the PickerSheet) ── */
@@ -329,12 +390,46 @@
 .gm-result-btn svg { width: 20px; height: 20px; }
 .gm-result-btn:disabled { color: var(--ui-accent-text, #ff7652); cursor: default; }
 
+/* A short phone: a smaller film frame, no hint, slimmer rows. */
+@media (max-height: 700px) {
+  .gm .gm-video-tile .ie-swap-empty-icon { width: 52px; height: 52px; margin-bottom: 10px; }
+  .gm-stage { min-height: 170px; }
+  .gm-setting, .gm-caption { min-height: 48px; height: auto; }
+  .gm-caption { height: 48px; }
+  .gm-trim { padding: 10px 14px 12px; gap: 8px; }
+  .gm-track { height: 46px; }
+}
+@media (max-height: 640px) {
+  .gm .gm-video-tile .ie-swap-empty-hint { display: none; }
+  .gm .gm-video-tile .ie-swap-empty-cta { margin-top: 12px; }
+}
+/* A 320px-wide phone: a smaller title and tighter segmented controls. */
+@media (max-width: 350px) {
+  .gm .gm-title { font-size: 17px; }
+  .gm-seg-btn { min-width: 44px; padding: 0 8px; }
+}
+
 /* Room to breathe on a wide screen: the page keeps a phone's width. */
 @media (min-width: 720px) {
-  .gm-body, .gm-actions, .gm > .mtb { width: 100%; max-width: 560px; margin: 0 auto; }
+  .gm-header, .gm-body, .gm-actions { width: 100%; max-width: 480px; margin-left: auto; margin-right: auto; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .gm-source, .gm-make, .gm-seg-btn { transition: none; }
+  .gm-source, .gm-make, .gm-seg-btn, .gm-back { transition: none; }
   .gm-source:active, .gm-make:active:not(:disabled) { transform: none; }
+}
+
+/* The shortest phones: everything a notch tighter so the controls fit under the preview. */
+@media (max-height: 620px) {
+  .gm { gap: 6px; }
+  .gm-body { gap: 8px; }
+  .gm-header { min-height: 40px; padding-bottom: 4px; }
+  .gm-stage { min-height: 140px; }
+  .gm-preview-box { padding: 8px; }
+  .gm-trim { padding: 8px 12px 10px; gap: 6px; }
+  .gm-track { height: 40px; }
+  .gm-caption { height: 44px; }
+  .gm-setting { min-height: 44px; padding-top: 4px; padding-bottom: 4px; }
+  .gm-seg-btn { height: 30px; }
+  .gm-make { height: 46px; }
 }

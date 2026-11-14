@@ -22,6 +22,14 @@ export const STICKER_STYLES = [
   { id: 'clean', label: 'Clean', look: { dieCut: false, shadowSize: 28, shadowColor: 'rgba(0, 0, 0, 0.45)' } },
   { id: 'retro', label: 'Retro', look: { dieCut: true, dieCutColor: '#fff1d6', dieCutWidth: 12, ...(VINTAGE && { filterId: VINTAGE.id, filter: VINTAGE.filterString, filters: VINTAGE.values }) } },
 ] as const;
+// A cut-out photo with every style's marks taken off (outline, shadow, filter): what a style picked
+// after Generate is laid over, so nothing of the style before it stays.
+const ORIGINAL = PHOTO_FILTERS[0] as { id: string; filterString?: string; values?: object } | undefined;
+export const STICKER_LOOK_RESET: object = {
+  dieCut: false,
+  shadowSize: 0,
+  ...(ORIGINAL && { filterId: ORIGINAL.id, filter: ORIGINAL.filterString, filters: ORIGINAL.values }),
+};
 // A style's look; Classic for one this app doesn't know.
 export const stickerStyleLook = (id: string): object => (STICKER_STYLES.find((s) => s.id === id) ?? STICKER_STYLES[0]).look;
 

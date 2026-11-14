@@ -1,13 +1,20 @@
-// Home's makers under the hero carousel, all visible at once: Meme video, Stickers, Face swap,
-// Social card, AI meme, GIF maker. One graphite panel, three across and two down, its cells parted
-// by hairlines; in each, the maker's icon in the app's orange on a small dark tile, its name under it.
+// Home's makers under the hero carousel: Meme video, Stickers, Face swap, Social card, AI meme and
+// GIF maker, as six compact tiles three across (six across on a wide screen): each a flat grey tile
+// with the maker's icon on a soft disc in its own colour over its name. The names stay short so
+// two lines at most; there are no tags or arrows (homeTools.css).
 import { Clapperboard, ImagePlay, MessagesSquare, ScanFace, Scissors, Wand2 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import './homeTools.css';
 
 export type ToolAction = 'video' | 'stickers' | 'faceswap' | 'social' | 'ai' | 'gif';
 
-const TOOLS: { action: ToolAction; label: string; Icon: LucideIcon }[] = [
+interface ToolItem {
+  action: ToolAction;
+  label: string;
+  Icon: LucideIcon;
+}
+
+const TOOLS: ToolItem[] = [
   { action: 'video', label: 'Meme video', Icon: Clapperboard },
   { action: 'stickers', label: 'Stickers', Icon: Scissors },
   { action: 'faceswap', label: 'Face swap', Icon: ScanFace },
@@ -20,7 +27,7 @@ export default function HomeTools({ onAction }: { onAction: (action: ToolAction)
   return (
     <nav className="hh-tools" aria-label="Makers">
       {TOOLS.map(({ action, label, Icon }) => (
-        <button key={action} type="button" className="hh-tool" onClick={() => onAction(action)} aria-label={label}>
+        <button key={action} type="button" className={`hh-tool hh-tool--${action}`} onClick={() => onAction(action)} aria-label={label}>
           <span className="hh-tool-icon" aria-hidden="true">
             <Icon strokeWidth={2} />
           </span>

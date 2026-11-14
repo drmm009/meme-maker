@@ -1,6 +1,6 @@
-// The GIF maker (GifMaker.tsx): a video clip or a set of photos made into a looping GIF with an
-// optional meme caption. The rules here are pure: how long a clip may be, how a trim handle moves,
-// the GIF's size, the order photo frames play in, and the FFmpeg commands that make it.
+// The GIF maker (GifMaker.tsx): a video clip made into a looping GIF with an optional meme caption.
+// The rules here are pure: how long a clip may be, how a trim handle moves, the GIF's size, how long
+// it plays, and the FFmpeg command that makes it.
 import { GIF_FPS } from '../../utils/gif';
 
 // The GIF maker's link (as in location.hash): App opens the page on it.
@@ -11,8 +11,6 @@ export const MAX_CLIP_S = 10;
 export const DEFAULT_CLIP_S = 5;
 // The shortest clip a trim leaves.
 export const MIN_CLIP_S = 0.5;
-// At most this many photos make a GIF.
-export const MAX_PHOTOS = 30;
 
 export type Loop = 'loop' | 'bounce';
 export type GifSize = 320 | 480;
@@ -58,19 +56,10 @@ export function gifDimensions(width: number, height: number, size: GifSize): { w
   return { w: even(width * k), h: even(height * k) };
 }
 
-// How long the GIF plays, in seconds: the clip at its speed, or each photo for its frame time; a
-// bounce plays it forwards then back.
-export function gifSeconds(o: { clip?: number; speed?: number; photos?: number; frameS?: number; loop: Loop }): number {
-  const once = o.photos !== undefined ? o.photos * (o.frameS ?? 0.5) : (o.clip ?? 0) / (o.speed || 1);
+// How long the GIF plays, in seconds: the clip at its speed; a bounce plays it forwards then back.
+export function gifSeconds(o: { clip: number; speed: number; loop: Loop }): number {
+  const once = o.clip / (o.speed || 1);
   return o.loop === 'bounce' ? once * 2 : once;
-}
-
-// The order photo frames play in: as added, or for a bounce forwards then back without showing the
-// two ends twice.
-export function frameOrder(count: number, loop: Loop): number[] {
-  const forward = Array.from({ length: count }, (_, i) => i);
-  if (loop !== 'bounce' || count < 3) return forward;
-  return [...forward, ...forward.slice(1, -1).reverse()];
 }
 
 // The FFmpeg filter that turns frames into a good-looking GIF: a palette built from them all,
@@ -99,17 +88,6 @@ export function videoGifArgs(o: { input: string; output: string; trim: Trim; spe
     ...(o.caption ? ['-i', o.caption] : []),
     '-filter_complex', chain.join(';'),
     '-map', '[gif]', '-an', '-loop', '0', '-y', o.output,
-  ];
-}
-
-// The command for photo frames: numbered PNGs (`pattern`, e.g. frame_%03d.png, already the GIF's
-// size with the caption drawn on), each shown for `frameS` seconds.
-export function photosGifArgs(o: { pattern: string; output: string; frameS: number }): string[] {
-  const rate = (1 / Math.max(0.05, o.frameS)).toFixed(4);
-  return [
-    '-framerate', rate, '-i', o.pattern,
-    '-filter_complex', palette('[0:v]'),
-    '-map', '[gif]', '-loop', '0', '-y', o.output,
   ];
 }
 

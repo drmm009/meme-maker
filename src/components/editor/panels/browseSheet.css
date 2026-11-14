@@ -703,3 +703,15 @@
 @media (prefers-reduced-motion: reduce) {
   .ie-panels-dim { animation: none; }
 }
+/* A video frame standing in for a missing picture (ClipsSheet): laid out and faded in as a picture is. */
+.ie-browse-thumb video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s ease;
+}
+.ie-browse-thumb.is-ready video { opacity: 1; }

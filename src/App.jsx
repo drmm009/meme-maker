@@ -201,7 +201,7 @@ function App() {
                   const id = m.id || `meme-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
                   const imageUrl = m.imageUrl || m.thumbnailUrl || '';
                   const thumbnailUrl = imageUrl.startsWith('data:image')
-                    ? await createThumbnail(imageUrl)
+                    ? await createThumbnail(imageUrl, 320, newMeme.kind === 'sticker' ? 'image/png' : 'image/jpeg')
                     : imageUrl;
                   const record = galleryRecord(m, {
                     id,
@@ -750,6 +750,12 @@ function App() {
                   onDeleteVideo={handleDeleteVideo}
                   onGetVideoFile={getSavedVideoFile}
                   onBrowseTemplates={() => setCurrentView('explore')}
+                  onMake={(kind) => {
+                    if (kind === 'sticker') handleSelectTemplate(makerTemplate('sticker', MEME_TEMPLATES));
+                    else if (kind === 'gif') setCurrentView('gif');
+                    else if (kind === 'video') handleCreateCustom('video');
+                    else setCurrentView('explore');
+                  }}
                 />
               </Suspense>
             </motion.div>

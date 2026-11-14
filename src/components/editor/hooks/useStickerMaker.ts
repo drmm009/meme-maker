@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useMemeEditorStoreApi } from '../store/useMemeEditorStore';
 import { useEditorUiStoreApi } from '../store/useEditorUiStore';
-import { STICKER_OUTLINE, STICKER_PHOTO, stickerStyleLook } from '../stickerMaker';
+import { STICKER_LOOK_RESET, STICKER_OUTLINE, STICKER_PHOTO, stickerStyleLook } from '../stickerMaker';
 
 interface ImageLayer {
   id: string;
@@ -13,12 +13,14 @@ interface EditorState {
   activeLayerId: string | null;
   setActiveLayerId: (id: string | null) => void;
   patchLayer: (key: string, id: string, patch: object) => void;
+  pushHistory: () => void;
 }
 interface UiState {
   mode: string;
   stickerDieCut: boolean;
   stickerStyle: string;
   setStickerDieCut: (on: boolean) => void;
+  setStickerStyle: (id: string) => void;
 }
 interface StoreApi<S> {
   getState(): S;
@@ -78,5 +80,14 @@ export function useStickerMaker({ removeBackground }: { removeBackground: () => 
     }
   };
 
-  return { generate, setDieCut };
+  // A style picked: kept for the next Generate, and laid on every photo already cut out (one undo step).
+  const setStyle = (id: string) => {
+    ui.getState().setStickerStyle(id);
+    const cut = store.getState().imageLayers.filter((l) => l.originalUrl);
+    if (!cut.length) return;
+    for (const layer of cut) store.getState().patchLayer('imageLayers', layer.id, { ...STICKER_LOOK_RESET, ...stickerStyleLook(id) });
+    store.getState().pushHistory();
+  };
+
+  return { generate, setDieCut, setStyle };
 }

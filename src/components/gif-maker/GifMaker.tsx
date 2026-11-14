@@ -1,29 +1,27 @@
-// The GIF maker: a video clip or a set of photos made into a looping GIF. A page of its own (App's
-// 'gif' view, link #/gif), in the editors' look: the top bar with its steps (Clip · Caption ·
-// Export); empty, two cards to start from (Video, Photos); then a live preview with the caption on
-// it, the clip's trim (a filmstrip with two handles, at most 10 seconds) or the photo frames (add,
-// remove, move), the caption (top or bottom), Speed, Loop (loop or bounce) and Size; Make GIF pinned
-// at the bottom, opening a sheet with the GIF to download, share or save to My Studio.
+// The GIF maker: a video clip made into a looping GIF. A page of its own (App's 'gif' view, link
+// #/gif), in the Stickers page's look: the Back chevron and the title; one card that takes the video
+// (empty, a card like Face Swap's Your face that takes a tap or a drop; with one, the live preview with
+// the caption on it and a remove button); under it Upload, Record and Clips (the meme clips the video
+// editor offers, downloaded on a pick) until there is a video, then the clip's trim (a filmstrip with two handles, at
+// most 10 seconds), the caption (top or bottom), and Speed, Loop and Size, each in its grey card;
+// Make GIF pinned at the bottom, opening a sheet with the GIF to download, share or save to My Studio.
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { ChangeEvent, CSSProperties, KeyboardEvent, PointerEvent as ReactPointerEvent } from 'react';
-import { ChevronLeft, ChevronRight, Download, FolderHeart, Images, ImagePlay, Plus, RotateCcw, Share2, Check, Video, X } from 'lucide-react';
-import MakerBar from '../editor/top-bar/MakerBar';
-import { PickerSheet } from '../editor/panels/MakerPage';
-import { MAX_CLIP_S, MAX_PHOTOS, clock, defaultTrim, frameOrder, gifDimensions, gifSeconds, moveTrim, slideTrim } from './gifPlan';
+import type { ChangeEvent, CSSProperties, DragEvent, KeyboardEvent, PointerEvent as ReactPointerEvent } from 'react';
+import { Camera, Check, ChevronLeft, Clapperboard, Download, FolderHeart, Gauge, ImagePlay, Maximize2, Repeat, Scissors, Share2, Type, UploadCloud, Video, X } from 'lucide-react';
+import { EmptyTile, PickerSheet } from '../editor/panels/MakerPage';
+import ClipsSheet from '../video-editor/ClipsSheet';
+import type { VideoClip } from '../video-editor/ClipsSheet';
+import { MAX_CLIP_S, clock, defaultTrim, gifDimensions, gifSeconds, moveTrim, slideTrim } from './gifPlan';
 import type { CaptionPlace, GifSize, Loop, Trim } from './gifPlan';
 import { CAPTION_FONT, makeGif } from './renderGif';
 import { downloadImageHelper } from '../../utils/downloadHelper';
 import './gifMaker.css';
 
-interface Photo { id: string; url: string; w: number; h: number }
-type Source =
-  | { kind: 'video'; file: File; url: string; duration: number; w: number; h: number }
-  | { kind: 'photos'; photos: Photo[] };
+interface VideoSrc { file: File; url: string; duration: number; w: number; h: number }
 interface Result { blob: Blob; url: string; w: number; h: number; seconds: number }
-export interface SavedGif { name: string; imageUrl: string; rawImageUrl: string }
+export interface SavedGif { kind: 'gif'; name: string; imageUrl: string; rawImageUrl: string }
 
-const VIDEO_SPEEDS = [{ value: 0.5, label: '0.5×' }, { value: 1, label: '1×' }, { value: 2, label: '2×' }];
-const PHOTO_SPEEDS = [{ value: 1, label: 'Slow' }, { value: 0.5, label: 'Normal' }, { value: 0.2, label: 'Fast' }];
+const SPEEDS = [{ value: 0.5, label: '0.5×' }, { value: 1, label: '1×' }, { value: 2, label: '2×' }];
 const LOOPS: { value: Loop; label: string }[] = [{ value: 'loop', label: 'Loop' }, { value: 'bounce', label: 'Bounce' }];
 const SIZES: { value: GifSize; label: string }[] = [{ value: 320, label: 'Small' }, { value: 480, label: 'Large' }];
 const PLACES: { value: CaptionPlace; label: string }[] = [{ value: 'top', label: 'Top' }, { value: 'bottom', label: 'Bottom' }];
@@ -45,16 +43,6 @@ function videoInfo(url: string) {
     v.onloadedmetadata = () => resolve({ duration: v.duration, w: v.videoWidth, h: v.videoHeight });
     v.onerror = () => reject(new Error('unreadable'));
     v.src = url;
-  });
-}
-
-function photoInfo(file: File): Promise<Photo> {
-  const url = URL.createObjectURL(file);
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => resolve({ id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, url, w: img.naturalWidth, h: img.naturalHeight });
-    img.onerror = () => reject(new Error('unreadable'));
-    img.src = url;
   });
 }
 
@@ -104,19 +92,20 @@ function Segmented<T extends string | number>({ label, options, value, onChange,
 }
 
 export default function GifMaker({ onBack, onSaveToGallery }: { onBack: () => void; onSaveToGallery?: (gif: SavedGif) => void }) {
-  const [source, setSource] = useState<Source | null>(null);
+  const [video, setVideo] = useState<VideoSrc | null>(null);
   const [error, setError] = useState('');
   const [trim, setTrim] = useState<Trim>({ start: 0, end: 0 });
   const [speed, setSpeed] = useState(1);
-  const [frameS, setFrameS] = useState(0.5);
   const [loop, setLoop] = useState<Loop>('loop');
   const [size, setSize] = useState<GifSize>(480);
   const [caption, setCaption] = useState('');
   const [place, setPlace] = useState<CaptionPlace>('top');
-  const [picked, setPicked] = useState<string | null>(null);
   const [progress, setProgress] = useState<number | null>(null);
   const [result, setResult] = useState<Result | null>(null);
   const [saved, setSaved] = useState(false);
+  const [dragging, setDragging] = useState(false);
+  const [library, setLibrary] = useState(false);
+  const [fetching, setFetching] = useState<string | null>(null);
   const making = progress !== null;
 
   // Object URLs go when they're replaced or the page closes.
@@ -124,73 +113,68 @@ export default function GifMaker({ onBack, onSaveToGallery }: { onBack: () => vo
   const keep = (url: string) => { urls.current.add(url); return url; };
   useEffect(() => () => { urls.current.forEach((u) => URL.revokeObjectURL(u)); }, []);
 
-  const video = source?.kind === 'video' ? source : null;
-  const photos = source?.kind === 'photos' ? source.photos : [];
-  const shape = video ? { w: video.w, h: video.h } : photos[0] ? { w: photos[0].w, h: photos[0].h } : { w: 1, h: 1 };
-  const dims = gifDimensions(shape.w, shape.h, size);
-  const step = result ? 2 : source ? 1 : 0;
+  const dims = gifDimensions(video?.w ?? 1, video?.h ?? 1, size);
+  const step = result ? 2 : video ? 1 : 0;
 
-  const pickVideo = async (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    e.target.value = '';
+  const takeFile = async (file: File | undefined) => {
     if (!file) return;
     const url = keep(URL.createObjectURL(file));
     try {
       const info = await videoInfo(url);
-      setSource({ kind: 'video', file, url, ...info });
+      setVideo({ file, url, ...info });
       setTrim(defaultTrim(info.duration));
       setError('');
     } catch {
       setError("That video can't be played here. Try an MP4.");
     }
   };
-  const addPhotos = async (e: ChangeEvent<HTMLInputElement>) => {
-    const files = [...(e.target.files ?? [])].slice(0, MAX_PHOTOS - photos.length);
+  const pickVideo = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
     e.target.value = '';
-    if (!files.length) return;
-    const added = (await Promise.all(files.map((f) => photoInfo(f).catch(() => null)))).filter((p): p is Photo => Boolean(p));
-    added.forEach((p) => keep(p.url));
-    if (!added.length) {
-      setError("Those photos couldn't be read.");
-      return;
-    }
-    setSource({ kind: 'photos', photos: [...photos, ...added] });
-    setError('');
+    void takeFile(file);
   };
-  const setPhotos = (next: Photo[]) => setSource(next.length ? { kind: 'photos', photos: next } : null);
-  const movePhoto = (id: string, by: -1 | 1) => {
-    const i = photos.findIndex((p) => p.id === id);
-    const j = i + by;
-    if (i < 0 || j < 0 || j >= photos.length) return;
-    const next = [...photos];
-    [next[i], next[j]] = [next[j], next[i]];
-    setPhotos(next);
+  // A video dropped on the card becomes the clip.
+  const onDragOver = (e: DragEvent<HTMLElement>) => { e.preventDefault(); setDragging(true); };
+  const onDragLeave = (e: DragEvent<HTMLElement>) => { e.preventDefault(); setDragging(false); };
+  const onDrop = (e: DragEvent<HTMLElement>) => {
+    e.preventDefault();
+    setDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file && file.type.startsWith('video/')) void takeFile(file);
+  };
+  // A meme clip from the app's library (the video editor's Clips), downloaded to make the GIF from.
+  const pickClip = async (clip: VideoClip) => {
+    setFetching(clip.name);
+    setError('');
+    try {
+      const res = await fetch(clip.videoUrl);
+      if (!res.ok) throw new Error('unavailable');
+      const blob = await res.blob();
+      await takeFile(new File([blob], `${clip.name}.mp4`, { type: blob.type || 'video/mp4' }));
+    } catch {
+      setError("That clip couldn't be downloaded. Check the connection and try again.");
+    } finally {
+      setFetching(null);
+    }
   };
   const startOver = () => {
-    setSource(null);
+    setVideo(null);
     setResult(null);
     setCaption('');
-    setPicked(null);
     setError('');
   };
 
   const make = async () => {
-    if (!source || making) return;
+    if (!video || making) return;
     setError('');
     setProgress(0);
-    const cap = { text: caption, place };
     try {
-      const blob = await makeGif(
-        source.kind === 'video'
-          ? { kind: 'video', file: source.file, trim, speed, loop, w: dims.w, h: dims.h, caption: cap }
-          : { kind: 'photos', urls: photos.map((p) => p.url), frameS, loop, w: dims.w, h: dims.h, caption: cap },
-        setProgress,
-      );
-      const seconds = gifSeconds(source.kind === 'video' ? { clip: trim.end - trim.start, speed, loop } : { photos: photos.length, frameS, loop });
+      const blob = await makeGif({ file: video.file, trim, speed, loop, w: dims.w, h: dims.h, caption: { text: caption, place } }, setProgress);
+      const seconds = gifSeconds({ clip: trim.end - trim.start, speed, loop });
       setResult({ blob, url: keep(URL.createObjectURL(blob)), ...dims, seconds });
       setSaved(false);
     } catch {
-      setError("The GIF couldn't be made. Try a shorter clip or fewer photos.");
+      setError("The GIF couldn't be made. Try a shorter clip.");
     } finally {
       setProgress(null);
     }
@@ -198,76 +182,71 @@ export default function GifMaker({ onBack, onSaveToGallery }: { onBack: () => vo
 
   return (
     <div className="ui-theme gm">
-      <MakerBar
-        title="GIF maker"
-        Icon={ImagePlay}
-        tone="#9bd02a"
-        steps={['Clip', 'Caption', 'Export']}
-        step={step}
-        status={['Add a video or photos', 'Ready to make', 'Ready to export'][step]}
-        onBack={onBack}
-      >
-        {source && (
-          <button type="button" className="mtb-round" onClick={startOver} disabled={making} aria-label="Start over" title="Start over">
-            <RotateCcw size={18} strokeWidth={2.2} />
-          </button>
-        )}
-      </MakerBar>
+      <header className="gm-header">
+        <button type="button" className="gm-back" onClick={onBack} aria-label="Back" title="Back">
+          <ChevronLeft size={22} strokeWidth={2.4} />
+        </button>
+        <h1 className="gm-title ui-topbar-title">
+          <ImagePlay size={17} strokeWidth={2.3} className="gm-title-icon" aria-hidden="true" />
+          <span>GIF Studio</span>
+        </h1>
+        {/* Said for screen readers (and the tests): where the GIF stands. */}
+        <p className="gm-status ui-topbar-subtitle" aria-live="polite">{['Add a video', 'Ready to make', 'Ready to export'][step]}</p>
+      </header>
 
       <main className="gm-body" aria-label="Make a GIF">
-        {!source ? (
-          <div className="gm-start">
-            <div className="gm-sources">
-              <label className="gm-source" style={{ '--gm-tone': '#1fb6e8' } as CSSProperties}>
-                <span className="gm-source-icon" aria-hidden="true"><Video /></span>
-                <span className="gm-source-title">Video</span>
-                <span className="gm-source-hint">Trim up to {MAX_CLIP_S} seconds of it</span>
-                <input type="file" accept="video/*" aria-label="Choose a video" onChange={(e) => void pickVideo(e)} hidden />
-              </label>
-              <label className="gm-source" style={{ '--gm-tone': '#ec4899' } as CSSProperties}>
-                <span className="gm-source-icon" aria-hidden="true"><Images /></span>
-                <span className="gm-source-title">Photos</span>
-                <span className="gm-source-hint">Each one a frame, up to {MAX_PHOTOS}</span>
-                <input type="file" accept="image/*" multiple aria-label="Choose photos" onChange={(e) => void addPhotos(e)} hidden />
-              </label>
-            </div>
-            <p className="gm-start-note">Then add a caption, pick the speed and the loop, and make it a GIF.</p>
-            {error && <p className="gm-error" role="alert">{error}</p>}
+        <div className="gm-stage" onDragOver={onDragOver} onDragLeave={onDragLeave} onDrop={onDrop}>
+          {video ? (
+            <>
+              <Preview video={video} trim={trim} speed={speed} loop={loop} caption={caption} place={place} progress={progress} />
+              {!making && (
+                <button type="button" className="gm-remove" aria-label="Remove the video" onClick={startOver}>
+                  <X size={14} strokeWidth={2.6} aria-hidden="true" />
+                </button>
+              )}
+            </>
+          ) : (
+            <label className={`ie-swap-tile is-empty gm-video-tile${dragging ? ' is-drag-over' : ''}`}>
+              {/* As Face Swap's Your face card: the icon in a soft orange circle, what goes in, Choose. */}
+              {fetching ? (
+                <span className="ie-swap-empty" role="status">
+                  <span className="ie-swap-spinner" aria-hidden="true" />
+                  <span className="ie-swap-empty-title gm-fetching">Getting the clip…</span>
+                  <span className="ie-swap-empty-hint">{fetching}</span>
+                </span>
+              ) : (
+                <EmptyTile Icon={Video} title={dragging ? 'Drop it here' : 'Add a video'} hint={`Up to ${MAX_CLIP_S} seconds of it becomes your GIF`} />
+              )}
+              <input type="file" accept="video/*" aria-label="Choose a video" onChange={pickVideo} disabled={Boolean(fetching)} hidden />
+            </label>
+          )}
+        </div>
+
+        {error && <p className="gm-error" role="alert">{error}</p>}
+
+        {!video ? (
+          <div className="gm-sources" role="group" aria-label="Add a video">
+            <label className="gm-source">
+              <UploadCloud size={22} aria-hidden="true" />
+              Upload
+              <input type="file" accept="video/*" aria-label="Upload a video" onChange={pickVideo} hidden />
+            </label>
+            <label className="gm-source">
+              <Camera size={22} aria-hidden="true" />
+              Record
+              <input type="file" accept="video/*" capture="environment" aria-label="Record a video" onChange={pickVideo} hidden />
+            </label>
+            <button type="button" className="gm-source" aria-label="Clips" disabled={Boolean(fetching)} onClick={() => setLibrary(true)}>
+              <Clapperboard size={22} aria-hidden="true" />
+              Clips
+            </button>
           </div>
         ) : (
           <>
-            <Preview source={source} trim={trim} speed={speed} frameS={frameS} loop={loop} caption={caption} place={place} progress={progress} />
+            <TrimBar video={video} trim={trim} onChange={setTrim} disabled={making} />
 
-            {video && <TrimBar video={video} trim={trim} onChange={setTrim} disabled={making} />}
-
-            {source.kind === 'photos' && (
-              <div className="gm-frames" role="list" aria-label="Frames">
-                {photos.map((p, i) => (
-                  <div key={p.id} role="listitem" className={`gm-frame${picked === p.id ? ' is-on' : ''}`}>
-                    <button type="button" className="gm-frame-pic" aria-label={`Frame ${i + 1}`} aria-pressed={picked === p.id} disabled={making} onClick={() => setPicked(picked === p.id ? null : p.id)}>
-                      <img src={p.url} alt="" />
-                      <span className="gm-frame-n" aria-hidden="true">{i + 1}</span>
-                    </button>
-                    {picked === p.id && !making && (
-                      <div className="gm-frame-tools">
-                        <button type="button" aria-label="Move earlier" disabled={i === 0} onClick={() => movePhoto(p.id, -1)}><ChevronLeft size={15} /></button>
-                        <button type="button" aria-label="Remove frame" onClick={() => { setPhotos(photos.filter((x) => x.id !== p.id)); setPicked(null); }}><X size={15} /></button>
-                        <button type="button" aria-label="Move later" disabled={i === photos.length - 1} onClick={() => movePhoto(p.id, 1)}><ChevronRight size={15} /></button>
-                      </div>
-                    )}
-                  </div>
-                ))}
-                {photos.length < MAX_PHOTOS && (
-                  <label className={`gm-frame gm-frame-add${making ? ' is-off' : ''}`}>
-                    <Plus size={20} aria-hidden="true" />
-                    <span>Add</span>
-                    <input type="file" accept="image/*" multiple aria-label="Add photos" onChange={(e) => void addPhotos(e)} disabled={making} hidden />
-                  </label>
-                )}
-              </div>
-            )}
-
-            <div className="gm-caption">
+            <div className="gm-panel gm-caption">
+              <Type size={16} className="gm-row-icon" aria-hidden="true" />
               <input
                 className="gm-caption-field"
                 type="text"
@@ -281,39 +260,43 @@ export default function GifMaker({ onBack, onSaveToGallery }: { onBack: () => vo
               <Segmented label="Caption place" options={PLACES} value={place} onChange={setPlace} disabled={making} />
             </div>
 
-            <div className="gm-settings">
+            <div className="gm-panel gm-settings">
               <div className="gm-setting">
-                <span className="gm-setting-name">Speed</span>
-                {video
-                  ? <Segmented label="Speed" options={VIDEO_SPEEDS} value={speed} onChange={setSpeed} disabled={making} />
-                  : <Segmented label="Speed" options={PHOTO_SPEEDS} value={frameS} onChange={setFrameS} disabled={making} />}
+                <span className="gm-setting-name"><Gauge size={16} className="gm-row-icon" aria-hidden="true" />Speed</span>
+                <Segmented label="Speed" options={SPEEDS} value={speed} onChange={setSpeed} disabled={making} />
               </div>
               <div className="gm-setting">
-                <span className="gm-setting-name">Loop</span>
+                <span className="gm-setting-name"><Repeat size={16} className="gm-row-icon" aria-hidden="true" />Loop</span>
                 <Segmented label="Loop" options={LOOPS} value={loop} onChange={setLoop} disabled={making} />
               </div>
               <div className="gm-setting">
-                <span className="gm-setting-name">Size <small>{dims.w} × {dims.h}</small></span>
+                <span className="gm-setting-name"><Maximize2 size={16} className="gm-row-icon" aria-hidden="true" />Size <small>{dims.w} × {dims.h}</small></span>
                 <Segmented label="Size" options={SIZES} value={size} onChange={setSize} disabled={making} />
               </div>
             </div>
-            {error && <p className="gm-error" role="alert">{error}</p>}
           </>
         )}
       </main>
 
       <div className="gm-actions">
-        <button type="button" className="gm-make" disabled={!source || making} onClick={() => void make()}>
+        <button type="button" className="gm-make" disabled={!video || making} onClick={() => void make()}>
           <ImagePlay aria-hidden="true" />
           {making ? `Making GIF… ${Math.round((progress ?? 0) * 100)}%` : 'Make GIF'}
         </button>
       </div>
 
+      {/* The meme clips, full height over the page. */}
+      {library && (
+        <div className="gm-library ie-panels--full">
+          <ClipsSheet onClose={() => setLibrary(false)} onPick={(c) => void pickClip(c)} />
+        </div>
+      )}
+
       {result && (
         <PickerSheet title="Your GIF" onClose={() => setResult(null)}>
           <ResultSheet result={result} saved={saved} onSave={onSaveToGallery ? async () => {
             const dataUrl = await readDataUrl(result.blob);
-            onSaveToGallery({ name: caption.trim() || 'My GIF', imageUrl: dataUrl, rawImageUrl: dataUrl });
+            onSaveToGallery({ kind: 'gif', name: caption.trim() || 'My GIF', imageUrl: dataUrl, rawImageUrl: dataUrl });
             setSaved(true);
           } : undefined} />
         </PickerSheet>
@@ -323,17 +306,13 @@ export default function GifMaker({ onBack, onSaveToGallery }: { onBack: () => vo
 }
 
 // The live preview: the clip looping between its trim at its speed (a bounce played back by
-// stepping the video), or the photos in turn; the caption laid over in the GIF's look.
-function Preview({ source, trim, speed, frameS, loop, caption, place, progress }: { source: Source; trim: Trim; speed: number; frameS: number; loop: Loop; caption: string; place: CaptionPlace; progress: number | null }) {
+// stepping the video), the caption laid over in the GIF's look.
+function Preview({ video, trim, speed, loop, caption, place, progress }: { video: VideoSrc; trim: Trim; speed: number; loop: Loop; caption: string; place: CaptionPlace; progress: number | null }) {
   const ref = useRef<HTMLVideoElement>(null);
-  const [frame, setFrame] = useState(0);
-  const photos = source.kind === 'photos' ? source.photos : [];
-  const order = useMemo(() => frameOrder(photos.length, loop), [photos.length, loop]);
-  const shape = source.kind === 'video' ? source : photos[0] ?? { w: 1, h: 1 };
 
   useEffect(() => {
     const v = ref.current;
-    if (source.kind !== 'video' || !v) return;
+    if (!v) return;
     const len = Math.max(0.1, trim.end - trim.start);
     v.playbackRate = speed;
     if (loop === 'loop') {
@@ -359,39 +338,29 @@ function Preview({ source, trim, speed, frameS, loop, caption, place, progress }
     };
     raf = requestAnimationFrame(tick);
     return () => { cancelAnimationFrame(raf); v.removeEventListener('seeked', onSeeked); };
-  }, [source, trim.start, trim.end, speed, loop]);
+  }, [video, trim.start, trim.end, speed, loop]);
 
-  useEffect(() => {
-    if (source.kind !== 'photos' || order.length < 2) { setFrame(0); return; }
-    let i = 0;
-    const id = setInterval(() => { i = (i + 1) % order.length; setFrame(i); }, frameS * 1000);
-    return () => clearInterval(id);
-  }, [source.kind, order, frameS]);
-
-  const photo = photos[order[frame] ?? 0] ?? photos[0];
   return (
-    <div className="gm-stage">
-      <div className="gm-preview" style={{ '--gm-ar': String(shape.w / Math.max(1, shape.h)) } as CSSProperties}>
-        {source.kind === 'video'
-          ? <video ref={ref} src={source.url} muted playsInline aria-label="Preview" />
-          : photo && <img src={photo.url} alt="Preview" />}
+    <div className="gm-preview-box">
+      <div className="gm-preview" style={{ '--gm-ar': String(video.w / Math.max(1, video.h)) } as CSSProperties}>
+        <video ref={ref} src={video.url} muted playsInline aria-label="Preview" />
         {caption.trim() && (
           <span className={`gm-preview-caption is-${place}`} style={{ fontFamily: CAPTION_FONT }} aria-hidden="true">{caption.toUpperCase()}</span>
         )}
-        {progress !== null && (
-          <div className="gm-busy" role="status">
-            <span className="ie-swap-spinner" aria-hidden="true" />
-            Making your GIF… {Math.round(progress * 100)}%
-          </div>
-        )}
       </div>
+      {progress !== null && (
+        <div className="gm-busy" role="status">
+          <span className="ie-swap-spinner" aria-hidden="true" />
+          Making your GIF… {Math.round(progress * 100)}%
+        </div>
+      )}
     </div>
   );
 }
 
-// The clip's trim: a filmstrip of the video with the chosen part framed in orange between two
-// handles; drag a handle to move that end, or the frame to slide the whole clip.
-function TrimBar({ video, trim, onChange, disabled }: { video: Extract<Source, { kind: 'video' }>; trim: Trim; onChange: (t: Trim) => void; disabled: boolean }) {
+// The clip's trim, in its card: a filmstrip of the video with the chosen part framed in orange
+// between two handles; drag a handle to move that end, or the frame to slide the whole clip.
+function TrimBar({ video, trim, onChange, disabled }: { video: VideoSrc; trim: Trim; onChange: (t: Trim) => void; disabled: boolean }) {
   const track = useRef<HTMLDivElement>(null);
   const frames = useFilmstrip(video.url, video.duration);
   const d = video.duration;
@@ -424,9 +393,9 @@ function TrimBar({ video, trim, onChange, disabled }: { video: Extract<Source, {
   const pct = (s: number) => `${(s / d) * 100}%`;
 
   return (
-    <div className="gm-trim">
+    <div className="gm-panel gm-trim">
       <div className="gm-trim-head">
-        <span className="gm-trim-title">Clip</span>
+        <span className="gm-setting-name"><Scissors size={16} className="gm-row-icon" aria-hidden="true" />Clip</span>
         <span className="gm-trim-time">{clock(trim.start)} – {clock(trim.end)} · <b>{(trim.end - trim.start).toFixed(1)} s</b></span>
       </div>
       <div className={`gm-track${disabled ? ' is-off' : ''}`} ref={track} onPointerMove={move} onPointerUp={up} onPointerCancel={up}>

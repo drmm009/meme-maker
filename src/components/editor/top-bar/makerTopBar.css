@@ -1,27 +1,87 @@
-/* MakerTopBar & MakerBar: Modernized Glassmorphic Top Bar */
+/* MakerTopBar & MakerBar: the makers' top section, in the Sticker Studio's look (stickerStudio.css):
+   no bar behind it, a glass Back button, a glowing tagline pill over the title, and the page's own
+   glow showing through. */
+
+/* The page behind a maker's top section: a soft glow in the maker's colour at the top. Two
+   selectors so it outranks both `.gm` and panels.css's flat `.meme-editor-container.ui-theme`. */
+.ui-theme.maker-glow,
+.meme-editor-container.ui-theme.maker-glow {
+  background:
+    radial-gradient(ellipse 90% 45% at 50% -8%, color-mix(in srgb, var(--maker-tone, #14c08a) 24%, transparent) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 30% at 85% 0%, rgba(255, 90, 54, 0.08) 0%, transparent 60%),
+    linear-gradient(180deg, #101217 0%, #0b0c10 100%) !important;
+}
+
+/* A maker's own page (AI Meme, Face Swap: `.ie-swap`, a full panel over the editor) lets that glow
+   through; the editor's canvas under it is hidden instead of painted over. */
+.maker-glow .ie-swap,
+.maker-glow .ie-swap-actions {
+  background: transparent;
+}
+.maker-glow:has(.ie-panels--full > .ie-swap) .editor-main > :not(.ie-panels) {
+  visibility: hidden;
+}
 
 .mtb {
   flex: none;
-  padding: calc(10px + env(safe-area-inset-top, 0px)) 16px 12px;
-  background: rgba(14, 15, 19, 0.82);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.4);
+  padding: calc(10px + env(safe-area-inset-top, 0px)) 14px 8px;
+  background: transparent;
   color: var(--ui-text, #f4f4f6);
   font-family: var(--ui-font, 'Plus Jakarta Sans', Inter, system-ui, sans-serif);
   position: relative;
   z-index: 20;
 }
 
-/* ── Top Header Row ── */
+/* ── Top Header Row: equal side columns keep the heading on the true centre ── */
 .mtb-row {
   display: grid;
-  grid-template-columns: 40px 1fr 40px;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+  min-height: 48px;
   max-width: 600px;
   margin: 0 auto;
+}
+
+/* Centre: tagline pill over the title */
+.mtb-main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-width: 0;
+  text-align: center;
+}
+
+.mtb-tagline {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  width: fit-content;
+  padding: 2.5px 9px 2.5px 8px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--mtb-tone) 25%, transparent) 0%, color-mix(in srgb, var(--mtb-tone) 12%, transparent) 100%);
+  border: 1px solid color-mix(in srgb, var(--mtb-tone) 45%, transparent);
+  color: color-mix(in srgb, var(--mtb-tone) 70%, #fff);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  line-height: 1.2;
+  white-space: nowrap;
+  box-shadow: 0 0 14px color-mix(in srgb, var(--mtb-tone) 22%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+.mtb-tagline-icon {
+  flex: none;
+  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--mtb-tone) 80%, transparent));
+  animation: mtb-tagline-pulse 2.2s infinite ease-in-out;
+}
+
+@keyframes mtb-tagline-pulse {
+  0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.9; }
+  50% { transform: scale(1.2) rotate(15deg); opacity: 1; }
 }
 
 .mtb button {
@@ -49,7 +109,22 @@
   cursor: pointer;
   transition: background-color 0.16s ease, border-color 0.16s ease, transform 0.12s ease;
 }
-.mtb-round svg {
+.mtb-round:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+/* Back: the Sticker Studio's glass button */
+.mtb-back {
+  width: 42px;
+  height: 42px;
+  border-color: rgba(255, 255, 255, 0.16);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.03) 100%);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  color: #ffffff;
+  box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+.mtb-back svg {
   margin-left: -1px;
 }
 .mtb-round:hover {
@@ -61,35 +136,17 @@
   transform: scale(0.92);
 }
 
-/* Center Title with Tone Tile */
+/* Centre Title */
 .mtb .mtb-title {
-  justify-self: center;
-  display: inline-flex;
-  align-items: center;
-  gap: 9px;
   margin: 0;
-  color: var(--ui-text, #ffffff);
-  font-size: 17.5px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  line-height: 1.2;
-  white-space: nowrap;
-}
-
-.mtb-tile {
-  display: grid;
-  place-items: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 9px;
-  background: linear-gradient(135deg, color-mix(in srgb, var(--mtb-tone) 85%, #fff) 0%, var(--mtb-tone) 100%);
-  box-shadow: 0 4px 12px color-mix(in srgb, var(--mtb-tone) 35%, transparent),
-              inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  padding: 0;
   color: #ffffff;
-  transition: transform 0.18s ease;
-}
-.mtb-title:hover .mtb-tile {
-  transform: scale(1.08) rotate(-4deg);
+  font-size: 18.5px;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+  white-space: nowrap;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.6);
 }
 
 /* Right Action End */
@@ -241,13 +298,14 @@
   .mtb-history-btn,
   .mtb-step,
   .mtb-dot,
-  .mtb-step::after,
-  .mtb-tile {
+  .mtb-step::after {
     transition: none;
   }
+  .mtb-tagline-icon {
+    animation: none;
+  }
   .mtb-round:active,
-  .mtb-history-btn:active:not(:disabled),
-  .mtb-title:hover .mtb-tile {
+  .mtb-history-btn:active:not(:disabled) {
     transform: none;
   }
 }

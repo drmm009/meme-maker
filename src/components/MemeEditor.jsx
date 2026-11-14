@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
-import { ChevronLeft, Sparkles } from 'lucide-react';
-import { createMemeEditorStore, MemeEditorStoreContext, useMemeEditorStore } from './editor/store/useMemeEditorStore';
+import { ChevronLeft, Palette, Redo2, Sparkles, Undo2, Wand2 } from 'lucide-react';
+import { createMemeEditorStore, MemeEditorStoreContext, useMemeEditorStore, useMemeEditorHistory } from './editor/store/useMemeEditorStore';
 import { createEditorUiStore, EditorUiStoreContext, useEditorUiStore, useEditorUiStoreApi } from './editor/store/useEditorUiStore';
 import { useEditorSetup } from './editor/hooks/useEditorSetup';
 import { useActiveLayer } from './editor/hooks/useActiveLayer';
@@ -23,6 +23,8 @@ import { useStickerMaker } from './editor/hooks/useStickerMaker';
 import { useCustomFonts } from './editor/hooks/useCustomFonts';
 import EditorTopBar from './editor/top-bar/EditorTopBar';
 import MakerTopBar from './editor/top-bar/MakerTopBar';
+import { MAKER_TONES } from './editor/top-bar/makerTones';
+import { aiRestart, opensOnPrompt } from './editor/aiMeme';
 import CanvasStage from './editor/CanvasStage';
 import EditorModals from './editor/EditorModals';
 import DraftOffer from './editor/DraftOffer';
@@ -69,6 +71,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, c
   const dockTab = useEditorUiStore((s) => s.dockTab);
   const mode = useEditorUiStore((s) => s.mode);
   const drawTool = useEditorUiStore((s) => s.drawTool);
+  const openFullEditor = useEditorUiStore((s) => s.openFullEditor);
 
   // Native Multi-Panel Layout Support
   const isNativeLayout = template?.isNativeLayout || false;
@@ -88,7 +91,15 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, c
   const imageLayers = useMemeEditorStore((s) => s.imageLayers || []);
   const isStickerMode = mode === 'sticker';
   const isStickerPage = isStickerMode && (!imageLayers.some((l) => Boolean(l.originalUrl)) || isRemovingBg);
-  const showTopBar = !isStickerMode && (mode === 'ai' || !isStickerPage);
+  // The AI Meme maker's page (before its meme is made) draws its own header, as the Stickers page does.
+  const activeTemplate = useMemeEditorStore((s) => s.activeTemplate);
+  const isAiPage = mode === 'ai' && opensOnPrompt(activeTemplate);
+  // And once its meme is made, its editing page has the Stickers editing page's header too.
+  const isAiEdit = mode === 'ai' && !isAiPage;
+  const canUndo = useMemeEditorHistory((s) => s.pastStates.length > 0);
+  const canRedo = useMemeEditorHistory((s) => s.futureStates.length > 0);
+  const showTopBar = !isStickerMode && mode !== 'ai';
+  const hasMakerBar = mode === 'ai' || mode === 'faceswap';
 
   const handleStickerStepBack = () => {
     const layerWithOriginal = imageLayers.find((l) => Boolean(l.originalUrl));
@@ -101,7 +112,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, c
       onBack();
     }
   };
-  const { generate: handleGenerateSticker, setDieCut: handleStickerDieCut } = useStickerMaker({ removeBackground: handleRemoveBackground });
+  const { generate: handleGenerateSticker, setDieCut: handleStickerDieCut, setStyle: handleStickerStyle } = useStickerMaker({ removeBackground: handleRemoveBackground });
   const faceMorph = useFaceMorph({ canvasRef });
   const {
     showFaceMorphModal, setShowFaceMorphModal, morphTargetLayerId, setMorphTargetLayerId,
@@ -139,7 +150,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, c
     handleRemoveBackground, handleApplyBackgroundBlur, setPortraitBlur, isRemovingBg, isBlurringBg, isNativeLayout, setShowFaceMorphModal, handleStartMorphFace,
     handleUpdateTemplateMorphProgress, handleChangeFace, handleRevertTemplateFace, handleFinalizeTemplateFace, setIsHoldingCanvasCompare,
     handleChangeMeme: (t) => onChangeMeme(t, uiStore.getState().mode),
-    handleGenerateSticker, handleStickerDieCut,
+    handleGenerateSticker, handleStickerDieCut, handleStickerStyle,
     memeName, canvasSize, exportBlob, exportMotion, motionLoops, saveToGallery,
   };
 
@@ -157,10 +168,13 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, c
   });
 
   return (
-    <div className={`meme-editor-container ui-theme animate-fade-in ${isStickerMode ? 'meme-editor--sticker-mode' : ''} ${isStickerPage ? 'meme-editor--sticker-page' : ''}`}>
-      {/* The Stickers and AI Meme makers have their own bar, with their steps. Sticker mode is a unified single unit without top bar */}
+    <div
+      className={`meme-editor-container ui-theme animate-fade-in ${isStickerMode ? 'meme-editor--sticker-mode' : ''} ${isStickerPage ? 'meme-editor--sticker-page' : ''} ${isAiPage ? 'meme-editor--ai-page' : ''} ${isAiEdit ? 'meme-editor--ai-edit' : ''} ${hasMakerBar ? 'maker-glow' : ''}`}
+      style={hasMakerBar ? { '--maker-tone': MAKER_TONES[mode] } : undefined}
+    >
+      {/* The AI Meme and Face Swap makers have their own top section, on a page that glows in their colour. Sticker mode is a unified single unit without top bar */}
       {showTopBar ? (
-        mode === 'sticker' || mode === 'ai' ? <MakerTopBar mode={mode} onBack={onBack} /> : <EditorTopBar onBack={onBack} />
+        hasMakerBar ? <MakerTopBar mode={mode} onBack={onBack} /> : <EditorTopBar onBack={onBack} />
       ) : null}
 
       {/* In sticker mode Step 3 (ready to export), render the integrated back header matching Step 1 & 2 */}
@@ -176,13 +190,39 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, c
             <ChevronLeft size={22} strokeWidth={2.4} />
           </button>
           <div className="ie-stk-header-main">
-            <span className="ie-stk-tagline">
-              <Sparkles size={10} className="ie-stk-sparkle-icon" aria-hidden="true" />
-              <span>AI Sticker Studio</span>
-            </span>
             <h1 className="ie-stk-title ui-topbar-title">
-              <span>Create Custom </span><span>Stickers</span>
+              <Sparkles size={16} strokeWidth={2.4} className="ie-stk-title-icon" aria-hidden="true" />
+              <span>Sticker Studio</span>
             </h1>
+          </div>
+          <p className="ie-stk-status ui-topbar-subtitle" aria-live="polite">
+            Ready to export
+          </p>
+        </header>
+      )}
+
+      {/* The AI Meme maker's editing page: Back to its page (the same meme, idea and vibe), the title,
+          and undo and redo on the right. */}
+      {isAiEdit && (
+        <header className="ie-stk-header ie-stk-header--step3 ie-aim-edit-header">
+          <button
+            type="button"
+            className="ie-stk-back-btn"
+            onClick={() => actions.handleChangeMeme(aiRestart(activeTemplate))}
+            aria-label="Back"
+            title="Back"
+          >
+            <ChevronLeft size={22} strokeWidth={2.4} />
+          </button>
+          <div className="ie-stk-header-main">
+            <h1 className="ie-stk-title ui-topbar-title">
+              <Wand2 size={16} strokeWidth={2.4} className="ie-aim-title-icon" aria-hidden="true" />
+              <span>AI Meme Studio</span>
+            </h1>
+          </div>
+          <div className="ie-aim-history">
+            <button type="button" onClick={handleUndo} disabled={!canUndo} aria-label="Undo" title="Undo"><Undo2 size={19} /></button>
+            <button type="button" onClick={handleRedo} disabled={!canRedo} aria-label="Redo" title="Redo"><Redo2 size={19} /></button>
           </div>
           <p className="ie-stk-status ui-topbar-subtitle" aria-live="polite">
             Ready to export
@@ -212,6 +252,14 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, c
             onDropMedia={media.handleDropMedia}
             onAddPhoto={handleFileUploadImageLayer}
           />
+          {/* The made sticker's board carries Move to editor as a pill on its corner, as the photo's
+              board carries Change and Remove; the dock under it is Export alone. */}
+          {((isStickerMode && !isStickerPage) || isAiEdit) && (
+            <button type="button" className="ie-stk-pill-btn ie-stk-to-editor" onClick={openFullEditor} title="Keep editing in the full editor">
+              <Palette size={14} aria-hidden="true" />
+              <span className="ie-stk-pill-text">Move to editor</span>
+            </button>
+          )}
         </div>
 
         <EditorPanels actions={actions} onBack={onBack} />

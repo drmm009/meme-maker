@@ -1,5 +1,6 @@
 import { cleanTemplateName } from '../memeEditorUtils';
 import { useMemeEditorStoreApi } from '../store/useMemeEditorStore';
+import { useEditorUiStoreApi } from '../store/useEditorUiStore';
 import { renderExport, wantsTransparency } from '../export/exportImage';
 import { renderMotion } from '../export/motionExport';
 
@@ -25,6 +26,7 @@ const renderCleanImage = (canvas) => (
 // it to the gallery (always a full-size PNG, with its layers for re-editing).
 export function useExport({ canvasRef, template, onSaveToGallery, imageFit, isNativeLayout, layoutDef }) {
   const store = useMemeEditorStoreApi();
+  const uiStore = useEditorUiStoreApi();
 
   // A default name for the meme: the template's, else the first real caption.
   const memeName = () => {
@@ -58,6 +60,8 @@ export function useExport({ canvasRef, template, onSaveToGallery, imageFit, isNa
     const { captions, stickers, imageLayers, aspectRatio, slotImages, slotTransforms } = store.getState();
     const finalName = (typeof customName === 'string' && customName.trim()) ? customName.trim() : memeName();
     onSaveToGallery({
+      // The Sticker maker's saves go under Stickers in My Studio; everything else is a meme.
+      kind: uiStore.getState().mode === 'sticker' ? 'sticker' : 'meme',
       id: `meme-${Date.now()}`,
       name: finalName,
       imageUrl: renderCleanImage(canvas),

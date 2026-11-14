@@ -62,7 +62,7 @@ const DOCK: DockItem[] = [
   { id: 'swap', label: 'Face Swap', Icon: ScanFace, title: 'Your face and the meme' },
   { id: 'card', label: 'Card', Icon: SocialCardIcon, title: 'The social card' },
   { id: 'ai', label: 'AI', Icon: Wand2, title: 'AI meme ideas' },
-  // The Stickers and AI Meme makers' New: their page again (a blank sticker; the same meme and idea).
+  // The AI Meme maker's New: its page again (the same meme and idea).
   { id: 'new', label: 'New', Icon: Plus, title: 'Start again', variant: 'secondary' },
   // The Face Swap, Stickers and AI Meme makers': Move to editor takes the meme into the full editor.
   { id: 'pro', label: 'Move to editor', Icon: Palette, title: 'Keep editing in the full editor', variant: 'secondary' },
@@ -96,10 +96,10 @@ export default function EditorPanels({ actions, onBack }: { actions: EditorActio
   const photos: { originalUrl?: string | null }[] = useMemeEditorStore((s: { imageLayers: { originalUrl?: string | null }[] }) => s.imageLayers);
   const generated = photos.length > 0 && photos.every((l) => Boolean(l.originalUrl));
   // The Stickers maker shows its page (StickerStudio) until the sticker is made, unless its Gallery
-  // is open over it; then its dock is New, Move to editor and Export.
+  // is open over it; then its dock is Move to editor and Export.
   const stickerPage = mode === 'sticker' && (!generated || busy);
   // The AI Meme maker shows its page (AiMemeStudio) until Generate makes the meme, unless its Gallery
-  // is open over it; then its dock is New, Move to editor and Export too.
+  // is open over it; then its dock is New, Move to editor and Export.
   const activeTemplate = useMemeEditorStore((s: { activeTemplate: { editorMode?: string; aiPicked?: boolean } | null }) => s.activeTemplate);
   const aiPage = mode === 'ai' && opensOnPrompt(activeTemplate);
   // The Face Swap maker's dock: Swap face (its page); once a swap is the meme, Swap again, Move to editor
@@ -139,7 +139,7 @@ export default function EditorPanels({ actions, onBack }: { actions: EditorActio
   if (aiPage && sheet !== 'aiGallery') {
     return (
       <div ref={panelRef} className="ie-panels ie-panels--sheet ie-panels--full">
-        <AiMemeStudio actions={actions} />
+        <AiMemeStudio actions={actions} onBack={onBack} />
       </div>
     );
   }
@@ -167,6 +167,10 @@ export default function EditorPanels({ actions, onBack }: { actions: EditorActio
   // then draw rather than select). In the Stickers maker a photo keeps the Sticker strip: its few
   // buttons are the whole job there.
   const layerTools = Boolean(kind) && !isDrawingOn(dockTab, drawTool) && !faceMorph && !(mode === 'sticker' && kind === 'image');
+  // In the Stickers maker the layer's tools take only the tool tiles' place: its Style card stays.
+  const layerPill = dockTab === 'sticker'
+    ? <StickerStrip actions={actions} tools={<LayerToolbar actions={actions} />} />
+    : <LayerToolbar actions={actions} />;
   const SheetComponent = sheet && !orphaned ? SHEETS[sheet] : null;
   if (SheetComponent && full) {
     // A browsing sheet takes the editor's whole height, over the meme, with its own close button.
@@ -188,7 +192,7 @@ export default function EditorPanels({ actions, onBack }: { actions: EditorActio
   if (SheetComponent) {
     return (
       <div ref={panelRef} className={`ie-panels ie-panels--sheet${actionDock ? ' ie-panels--actions' : ''}`} data-sheet-ghosts="">
-        {layerTools && sheetFromPill ? <LayerToolbar actions={actions} /> : strip}
+        {layerTools && sheetFromPill ? layerPill : strip}
         <SheetComponent actions={actions} onClose={closeSheet} />
       </div>
     );
@@ -196,7 +200,7 @@ export default function EditorPanels({ actions, onBack }: { actions: EditorActio
 
   return (
     <div ref={panelRef} className={`ie-panels${actionDock ? ' ie-panels--maker' : ''}${actionDock ? ' ie-panels--actions' : ''}`} data-sheet-ghosts="">
-      {layerTools ? <LayerToolbar actions={actions} /> : strip}
+      {layerTools ? layerPill : strip}
       <ToolDock
         ariaLabel="Editor tools"
         items={dock}

@@ -1,131 +1,267 @@
-/* The AI Meme maker's page (AiMemeStudio), the meme first: the meme as large as fits with Change
-   on its corner, the idea box, ideas and vibes as rows of chips, and Generate captions pinned at
-   the bottom (faceSwap.css's action bar) over a line saying where captions come from. Editor greys,
-   solid orange for what's picked; no glass or blur. */
+/* The AI Meme maker: its page (AiMemeStudio) and its editing page's strip (AiStrip).
+   The page puts the idea first, as in an AI chat: a big question, the prompt box (edged in the
+   maker's purple-to-orange) with the meme it's for along its foot, ideas as tinted cards, the vibes
+   as chips, and Generate captions in the same purple-to-orange. The editing page keeps the meme on
+   a board, then a caption card to step through the AI captions, the tools as grey tiles, and
+   Export. The maker's purple glow sits at the top of both (maker-glow). */
 
+/* ════════ The page ════════ */
+
+/* It covers the editor (the top bar is hidden on it) and keeps clear of the notch. */
+.meme-editor--ai-page .ie-panels.ie-panels--full { inset: 0 !important; }
+.meme-editor--ai-page .ie-panels.ie-panels--full:has(> .ui-sheet) {
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+}
+.ie-aim {
+  --aim-violet: #8b7bff;
+  --aim-grad: linear-gradient(120deg, #8b7bff 0%, #c86bff 45%, #ff5a36 100%);
+  padding: calc(8px + env(safe-area-inset-top, 0px)) 16px calc(12px + env(safe-area-inset-bottom, 0px));
+  gap: 8px;
+  box-sizing: border-box;
+}
+.ie-aim button:focus-visible { outline: 2px solid var(--aim-violet); outline-offset: 2px; }
+
+/* ── Header: the Back chevron and the title, centred ── */
+.ie-aim-header {
+  flex: none;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 4px 0 6px;
+}
+.ie-aim .ie-aim-back {
+  position: absolute;
+  left: -4px;
+  top: 50%;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  margin-top: -22px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: #ffffff;
+  cursor: pointer;
+  transition: opacity 0.15s ease, transform 0.12s ease;
+}
+.ie-aim-back svg { width: 26px; height: 26px; }
+.ie-aim .ie-aim-back:hover { opacity: 0.75; }
+.ie-aim .ie-aim-back:active { opacity: 0.55; transform: scale(0.9); }
+.ie-aim .ie-aim-title,
+.ie-aim-edit-header .ie-stk-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+  color: #ffffff;
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  white-space: nowrap;
+  text-shadow: none;
+}
+.ie-aim-title-icon { flex: none; color: #a99bff; }
+.ie-aim .ie-aim-status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ── The body: scrolls only on a short phone ── */
 .ie-aim-body {
   flex: 1;
   min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
   overflow-y: auto;
-  padding: 4px 16px 14px;
+  padding: 4px 0 4px;
   scrollbar-width: none;
 }
 .ie-aim-body::-webkit-scrollbar { display: none; }
 
-/* ── The meme ── */
-.ie-aim-stage {
-  flex: 1;
-  min-height: 180px;
-  display: grid;
-  place-items: center;
-  container-type: size;
+/* ── The question ── */
+.ie-aim-hero { flex: none; display: flex; flex-direction: column; gap: 6px; padding: 4px 2px 0; }
+.ie-aim .ie-aim-question {
+  margin: 0;
+  max-width: 16ch;
+  color: #ffffff;
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
 }
-.ie-aim-meme {
+.ie-aim-lede { margin: 0; color: var(--ui-muted, rgba(255, 255, 255, 0.6)); font-size: 14px; line-height: 1.4; }
+
+/* ── The prompt box: edged in the maker's gradient, the idea above, the meme along its foot ── */
+.ie-aim-prompt {
   position: relative;
-  display: grid;
-  place-items: center;
-  max-width: 100cqw;
-  max-height: 100cqh;
-  overflow: hidden;
-  border-radius: var(--ui-radius-lg, 20px);
-  background: var(--ui-surface);
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12), 0 18px 36px -22px rgba(0, 0, 0, 0.9);
-}
-.ie-aim-meme img {
-  display: block;
-  max-width: 100cqw;
-  max-height: 100cqh;
-  object-fit: contain;
-}
-.ie-aim-meme-empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  width: min(100cqw, 100cqh);
-  aspect-ratio: 1;
-  justify-content: center;
-  color: var(--ui-muted);
-  font-size: var(--ui-fs-body, 15px);
-  font-weight: 600;
-}
-.ie-aim-meme-empty svg { color: var(--ui-accent); }
-.ie-aim-change {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  height: 34px;
-  padding: 0 13px 0 11px;
-  border: none;
-  background: rgba(0, 0, 0, 0.74);
-  color: #fff;
-  font: inherit;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background-color 0.15s ease, transform 0.12s ease;
-}
-.ie-aim-change svg { width: 16px; height: 16px; }
-.ie-aim-change:active { transform: scale(0.96); }
-@media (hover: hover) { .ie-aim-change:hover { background: rgba(0, 0, 0, 0.9); } }
-
-/* Writing: the meme dimmed (no blur), a spinner, and the idea it's writing about. */
-.ie-aim-busy {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 20px;
-  background: rgba(10, 10, 12, 0.8);
-  color: #fff;
-  text-align: center;
-}
-.ie-aim-busy-title { font-size: var(--ui-fs-body, 15px); font-weight: 700; }
-.ie-aim-busy-idea { max-width: 28ch; color: rgba(255, 255, 255, 0.72); font-size: var(--ui-fs-footnote, 13px); }
-
-/* ── The idea box ── */
-.ie-aim-ask {
   flex: none;
+  display: flex;
+  flex-direction: column;
+  border: 1.5px solid transparent;
+  border-radius: 22px;
+  background:
+    linear-gradient(#17181d, #17181d) padding-box,
+    linear-gradient(120deg, rgba(139, 123, 255, 0.75), rgba(200, 107, 255, 0.45) 50%, rgba(255, 90, 54, 0.6)) border-box;
+  transition: background 0.2s ease;
+}
+.ie-aim-prompt:focus-within {
+  background:
+    linear-gradient(#191a20, #191a20) padding-box,
+    var(--aim-grad) border-box;
+}
+.ie-aim .ie-aim-prompt-field {
+  display: block;
+  width: 100%;
+  min-height: 84px;
+  padding: 16px 16px 8px;
+  border: none;
+  outline: none;
+  resize: none;
+  background: none;
+  box-shadow: none;
+  color: var(--ui-text, #f4f4f6);
+  font: inherit;
+  /* 16px or more, or phones zoom the page in on focus. */
+  font-size: 17px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+.ie-aim .ie-aim-prompt-field::placeholder { color: rgba(255, 255, 255, 0.38); opacity: 1; }
+.ie-aim .ie-aim-prompt-field:disabled { opacity: 0.5; }
+.ie-aim-prompt-foot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+/* The meme it's for: a small picture, its name, and a chevron to change it. */
+.ie-aim .ie-aim-meme-chip {
+  flex: 1;
+  min-width: 0;
   display: flex;
   align-items: center;
   gap: 10px;
   height: 52px;
-  padding: 0 14px;
-  border-radius: var(--ui-radius-md, 16px);
-  background: var(--ui-surface);
-  transition: box-shadow 0.15s ease;
-}
-.ie-aim-ask:focus-within { box-shadow: inset 0 0 0 2px var(--ui-accent); }
-.ie-aim-ask-icon { flex: none; width: 19px; height: 19px; color: var(--ui-accent); }
-.ie-aim .ie-aim-ask-field {
-  flex: 1;
-  min-width: 0;
-  height: 100%;
-  padding: 0;
+  padding: 6px 10px 6px 6px;
   border: none;
-  outline: none;
-  background: none;
-  box-shadow: none;
-  color: var(--ui-text);
+  border-radius: 14px !important;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--ui-text, #fff);
   font: inherit;
-  /* 16px or more, or phones zoom the page in on focus. */
-  font-size: 16px;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
 }
-.ie-aim .ie-aim-ask-field::placeholder { color: var(--ui-muted); opacity: 1; }
-.ie-aim .ie-aim-ask-field:disabled { opacity: 0.6; }
+.ie-aim .ie-aim-meme-chip:hover:not(:disabled) { background: rgba(255, 255, 255, 0.09); }
+.ie-aim .ie-aim-meme-chip:disabled { opacity: 0.5; cursor: default; }
+.ie-aim-meme-thumb {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  overflow: hidden;
+  border-radius: 10px;
+  background: #2a2b31;
+  color: rgba(255, 255, 255, 0.7);
+}
+.ie-aim-meme-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.ie-aim-meme-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.ie-aim-meme-kicker { color: var(--ui-muted, rgba(255, 255, 255, 0.55)); font-size: 10.5px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+.ie-aim-meme-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; font-weight: 700; }
+.ie-aim-meme-go { flex: none; color: rgba(255, 255, 255, 0.5); }
+/* Your own photo instead. */
+.ie-aim-upload {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.82);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+.ie-aim-upload:hover { background: rgba(255, 255, 255, 0.09); }
+.ie-aim-upload:focus-within { outline: 2px solid var(--aim-violet); outline-offset: 2px; }
+.ie-aim-upload.is-disabled { opacity: 0.5; pointer-events: none; }
+/* Writing: the box says so, over what was asked. */
+.ie-aim-writing {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 16px;
+  border-radius: 21px;
+  background: rgba(17, 17, 23, 0.94);
+  color: #ffffff;
+  text-align: center;
+}
+.ie-aim-writing-icon { width: 26px; height: 26px; color: #b9adff; animation: ie-aim-pulse 1.2s ease-in-out infinite; }
+@keyframes ie-aim-pulse {
+  0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.8; }
+  50% { transform: scale(1.18) rotate(12deg); opacity: 1; }
+}
+.ie-aim-writing-title { font-size: 15px; font-weight: 700; }
+.ie-aim-writing-idea { max-width: 30ch; color: rgba(255, 255, 255, 0.65); font-size: 13px; }
 
-/* ── Ideas and vibes: a title over a row of chips that scrolls to the screen's edges ── */
-.ie-aim-row { flex: none; display: flex; flex-direction: column; gap: 8px; }
-.ie-aim-row-title { margin: 0 2px; color: var(--ui-text); font-size: var(--ui-fs-body, 15px); font-weight: 700; }
+/* ── Sections: Try one, Vibe ── */
+.ie-aim-section { flex: none; display: flex; flex-direction: column; gap: 10px; }
+.ie-aim .ie-aim-section-title {
+  margin: 0 2px;
+  color: var(--ui-muted, rgba(255, 255, 255, 0.55));
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+/* Ideas: four tinted cards, two across. */
+.ie-aim-ideas { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.ie-aim .ie-aim-idea {
+  --tint: 139, 123, 255;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 60px;
+  padding: 10px 12px;
+  border: 1px solid rgba(var(--tint), 0.28);
+  border-radius: 16px !important;
+  background: rgba(var(--tint), 0.12);
+  color: #ffffff;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.12s ease, border-color 0.15s ease;
+}
+.ie-aim .ie-aim-idea.is-violet { --tint: 139, 123, 255; }
+.ie-aim .ie-aim-idea.is-orange { --tint: 255, 122, 69; }
+.ie-aim .ie-aim-idea.is-teal { --tint: 45, 212, 191; }
+.ie-aim .ie-aim-idea.is-pink { --tint: 236, 72, 153; }
+.ie-aim .ie-aim-idea:hover:not(:disabled) { background: rgba(var(--tint), 0.2); border-color: rgba(var(--tint), 0.45); }
+.ie-aim .ie-aim-idea:active:not(:disabled) { transform: scale(0.97); }
+.ie-aim .ie-aim-idea:disabled { opacity: 0.5; cursor: default; }
+.ie-aim-idea-icon { flex: none; font-size: 22px; line-height: 1; }
+.ie-aim-idea-text { min-width: 0; font-size: 14px; font-weight: 700; line-height: 1.25; }
+
+/* Vibes: a row of chips that scrolls to the screen's edges. */
 .ie-aim-chips {
   display: flex;
   gap: 8px;
@@ -136,7 +272,7 @@
   overscroll-behavior-x: contain;
 }
 .ie-aim-chips::-webkit-scrollbar { display: none; }
-.ie-aim-chip {
+.ie-aim .ie-aim-chip {
   flex: none;
   display: inline-flex;
   align-items: center;
@@ -144,57 +280,109 @@
   height: 38px;
   padding: 0 14px;
   border: none;
-  background: var(--ui-surface);
-  color: var(--ui-text);
+  border-radius: 999px !important;
+  background: var(--ui-surface, #1c1c1e);
+  color: var(--ui-text, #fff);
   font: inherit;
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 600;
   white-space: nowrap;
   cursor: pointer;
-  transition: background-color 0.15s ease, transform 0.12s ease;
+  transition: background-color 0.15s ease, color 0.15s ease, transform 0.12s ease;
 }
-.ie-aim-chip > span { font-size: 16px; line-height: 1; }
-.ie-aim-chip.is-on { background: var(--ui-accent); color: #fff; }
-.ie-aim-chip:active:not(:disabled) { transform: scale(0.96); }
-.ie-aim-chip:disabled { opacity: 0.5; cursor: default; }
-@media (hover: hover) { .ie-aim-chip:not(.is-on):not(:disabled):hover { background: #26262a; } }
+.ie-aim-chip > span { font-size: 15px; line-height: 1; }
+.ie-aim .ie-aim-chip.is-on { background: #ffffff; color: #111114; }
+.ie-aim .ie-aim-chip:active:not(:disabled) { transform: scale(0.96); }
+.ie-aim .ie-aim-chip:disabled { opacity: 0.5; cursor: default; }
+@media (hover: hover) { .ie-aim .ie-aim-chip:not(.is-on):not(:disabled):hover { background: #26272b; } }
 
-/* ── Generate, and where captions come from ── */
-.ie-aim-actions { flex-direction: column; gap: 6px; padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px)); }
-.ie-aim-go { display: inline-flex; flex: none; align-items: center; justify-content: center; gap: 8px; }
+/* ── Generate, in the maker's gradient, and where captions come from ── */
+.ie-aim-actions { flex: none; display: flex; flex-direction: column; gap: 4px; padding-top: 4px; }
+.ie-aim .ie-aim-go {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  height: 52px;
+  border: none;
+  border-radius: 999px !important;
+  background: var(--aim-grad);
+  box-shadow: 0 8px 22px -10px rgba(200, 107, 255, 0.7);
+  color: #ffffff;
+  font: inherit;
+  font-size: 15.5px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 0.12s ease, opacity 0.15s ease, filter 0.15s ease;
+}
 .ie-aim-go svg { width: 19px; height: 19px; }
-.ie-aim-source {
+.ie-aim .ie-aim-go:hover:not(:disabled) { filter: brightness(1.08); }
+.ie-aim .ie-aim-go:active:not(:disabled) { transform: scale(0.98); }
+.ie-aim .ie-aim-go:disabled { background: var(--ui-surface, #1c1c1e); box-shadow: none; color: rgba(255, 255, 255, 0.38); cursor: default; }
+.ie-aim .ie-aim-key {
   align-self: center;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  height: 30px;
+  height: 28px;
   padding: 0 10px;
   border: none;
+  border-radius: 999px !important;
   background: none;
-  color: var(--ui-muted);
+  color: var(--ui-muted, rgba(255, 255, 255, 0.55));
   font: inherit;
   font-size: 12.5px;
   font-weight: 500;
   cursor: pointer;
 }
-.ie-aim-source svg { width: 14px; height: 14px; }
-.ie-aim-source b { color: var(--ui-accent-text); font-weight: 700; }
+.ie-aim-key svg { width: 14px; height: 14px; }
+.ie-aim-key b { color: #b9adff; font-weight: 700; }
 
-.ie-aim button:focus-visible { outline: 2px solid var(--ui-accent); outline-offset: 2px; }
-
-/* panels.css rounds every button in a sheet panel into a pill (.ie-panels--sheet button:not(…)),
-   with a selector too long to outrank: the page's own buttons keep their shapes. */
-.ie-aim .ie-aim-change, .ie-aim .ie-aim-chip, .ie-aim .ie-aim-source { border-radius: var(--ui-radius-full, 999px) !important; }
-
+/* A short phone: a smaller question, a shorter prompt and cards. */
+@media (max-height: 700px) {
+  .ie-aim-body { gap: 12px; }
+  .ie-aim .ie-aim-question { font-size: 24px; }
+  .ie-aim .ie-aim-prompt-field { min-height: 64px; padding-top: 12px; }
+  .ie-aim .ie-aim-idea { min-height: 52px; padding: 8px 10px; }
+}
+@media (max-height: 620px) {
+  .ie-aim-lede { display: none; }
+  .ie-aim-header { min-height: 40px; padding-bottom: 2px; }
+  .ie-aim .ie-aim-question { font-size: 22px; }
+  .ie-aim .ie-aim-prompt-field { min-height: 52px; }
+  .ie-aim .ie-aim-meme-chip, .ie-aim-upload { height: 46px; }
+  .ie-aim-upload { width: 46px; }
+  .ie-aim .ie-aim-idea { min-height: 46px; }
+  .ie-aim-idea-icon { font-size: 18px; }
+  .ie-aim .ie-aim-chip { height: 34px; }
+  .ie-aim .ie-aim-go { height: 48px; }
+}
+/* The shortest phones: the page a notch tighter again, so the vibes fit above Generate. */
+@media (max-height: 600px) {
+  .ie-aim-body { gap: 10px; }
+  .ie-aim-hero { padding-top: 0; }
+  .ie-aim .ie-aim-question { font-size: 20px; max-width: none; }
+  .ie-aim .ie-aim-prompt-field { min-height: 44px; padding: 10px 14px 6px; font-size: 16px; }
+  .ie-aim-prompt-foot { padding: 6px; }
+  .ie-aim .ie-aim-meme-chip, .ie-aim-upload { height: 42px; }
+  .ie-aim-upload { width: 42px; }
+  .ie-aim-meme-thumb { width: 32px; height: 32px; }
+  .ie-aim-section { gap: 6px; }
+  .ie-aim .ie-aim-idea { min-height: 42px; padding: 6px 10px; }
+  .ie-aim .ie-aim-chip { height: 32px; }
+}
+@media (max-width: 350px) {
+  .ie-aim .ie-aim-title { font-size: 17px; }
+  .ie-aim-idea-text { font-size: 13px; }
+}
 /* Room to breathe on a wide screen: the page keeps a phone's width. */
 @media (min-width: 720px) {
-  .ie-aim-body, .ie-aim > .ie-swap-actions { width: 100%; max-width: 520px; margin: 0 auto; }
+  .ie-aim-header, .ie-aim-body, .ie-aim-actions { width: 100%; max-width: 480px; margin-left: auto; margin-right: auto; }
 }
-
 @media (prefers-reduced-motion: reduce) {
-  .ie-aim-change, .ie-aim-chip, .ie-aim-ask { transition: none; }
-  .ie-aim-change:active, .ie-aim-chip:active:not(:disabled) { transform: none; }
+  .ie-aim-writing-icon { animation: none; }
+  .ie-aim-chip, .ie-aim-idea, .ie-aim-back, .ie-aim-go { transition: none; }
 }
 
 /* The key sheet. */
@@ -215,68 +403,159 @@
 .ie-ai-key-field:focus { border-color: var(--ui-accent); outline: none; }
 .ie-ai-key-form .ie-swap-btn { flex: 0 0 auto; padding: 0 20px; }
 
-/* The meme picker: popular memes, then upload or the whole gallery. */
-.ie-ai-popular {
+/* ════════ The editing page (after Generate) ════════ */
+.meme-editor-container.meme-editor--ai-edit { gap: 0 !important; }
+
+/* Header: undo and redo on the right, as quiet icons; the title stays on the true centre. */
+.ie-aim-edit-header .ie-aim-history {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  display: flex;
+  gap: 2px;
+  margin-top: calc(env(safe-area-inset-top, 0px) / 2 + 2px);
+  transform: translateY(-50%);
+}
+.ie-aim-edit-header .ie-aim-history button {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-  margin-bottom: 12px;
-}
-.ie-ai-popular-item {
-  aspect-ratio: 1;
+  place-items: center;
+  width: 38px;
+  height: 38px;
   padding: 0;
-  overflow: hidden;
   border: none;
-  border-radius: var(--ui-radius-md, 16px);
-  background: var(--ui-surface);
+  border-radius: 999px;
+  background: none;
+  color: #ffffff;
   cursor: pointer;
+  transition: opacity 0.15s ease, background-color 0.15s ease;
 }
-.ie-ai-popular-item img { display: block; width: 100%; height: 100%; object-fit: cover; }
-.ie-ai-popular-item:focus-visible { outline: 2px solid var(--ui-accent); outline-offset: 2px; }
+.ie-aim-edit-header .ie-aim-history button:hover:not(:disabled) { background: rgba(255, 255, 255, 0.08); }
+.ie-aim-edit-header .ie-aim-history button:disabled { opacity: 0.3; cursor: default; }
 
-/* The editing page's strip (AiStrip): its tools, with Style's choices above when open.
-   Shuffle's icon spins while four new captions are written. */
-.ie-ai-strip { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
-.ie-ai-strip .ie-ai-choices { margin: 0 16px; }
-/* Six tools across a phone. */
-.ie-ai-strip .ui-strip--stacked { gap: 5px; padding-inline: 12px; }
-/* Shuffle, the strip's action trigger button. */
-.ui-strip-btn.ie-ai-shuffle {
-  border-color: rgba(255, 90, 54, 0.4);
-  background: rgba(255, 90, 54, 0.12);
-  color: var(--ui-text);
+/* The meme, on a board lit faintly purple from the top. */
+.meme-editor-container.meme-editor--ai-edit .editor-workspace {
+  position: relative;
+  padding: 4px 16px 10px !important;
+}
+.meme-editor-container.meme-editor--ai-edit .canvas-wrapper {
+  border-radius: var(--ui-radius-lg, 20px);
+  background:
+    radial-gradient(120% 80% at 50% 0%, rgba(139, 123, 255, 0.1), transparent 60%),
+    var(--ui-surface, #1c1c1e) !important;
+}
+.meme-editor-container.meme-editor--ai-edit .canvas-interactive-wrapper,
+.meme-editor-container.meme-editor--ai-edit .meme-canvas { border-radius: 14px !important; }
+.meme-editor-container.meme-editor--ai-edit .ie-stk-to-editor { top: 14px; right: 26px; }
+
+/* The panels under it: the page's width and side room. */
+.meme-editor-container.meme-editor--ai-edit .ie-panels:not(.ie-panels--full):not(.ie-panels--over):not(.ie-panels--sheet) {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 0 16px calc(12px + env(safe-area-inset-bottom, 0px));
+  box-sizing: border-box;
+  gap: 10px;
+  background: transparent;
+}
+.ie-ai-strip { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+
+/* The caption card: which caption, the caption itself, and arrows through them. */
+.ie-ai-caption {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 12px 14px 14px;
+  border: 1px solid rgba(139, 123, 255, 0.3);
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(139, 123, 255, 0.16) 0%, rgba(200, 107, 255, 0.08) 55%, rgba(255, 90, 54, 0.08) 100%);
+}
+.ie-ai-caption-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.ie-ai-caption-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #c3b8ff;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.ie-ai-caption-nav { display: flex; gap: 6px; }
+.ie-ai-caption-nav button {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: none;
+  border-radius: 999px !important;
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.12s ease;
+}
+.ie-ai-caption-nav button:hover:not(:disabled) { background: rgba(255, 255, 255, 0.18); }
+.ie-ai-caption-nav button:active:not(:disabled) { transform: scale(0.92); }
+.ie-ai-caption-nav button:disabled { opacity: 0.35; cursor: default; }
+.ie-ai-caption-nav .ie-ai-caption-next { background: #ffffff; color: #111114; }
+.ie-ai-caption-nav .ie-ai-caption-next:hover:not(:disabled) { background: #e9e6ff; }
+.ie-ai-caption-text {
+  display: -webkit-box;
+  margin: 0;
+  overflow: hidden;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  color: #ffffff;
+  font-size: 15px;
   font-weight: 700;
-  transition: transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.15s ease, border-color 0.15s ease;
+  line-height: 1.35;
 }
-.ui-strip-btn.ie-ai-shuffle:hover:not(:disabled) {
-  border-color: rgba(255, 90, 54, 0.65);
-  background: rgba(255, 90, 54, 0.22);
-}
-.ui-strip-btn.ie-ai-shuffle:active:not(:disabled) {
-  transform: scale(0.92);
-}
-.ui-strip-btn.ie-ai-shuffle svg {
-  color: var(--ui-accent);
-  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-.ui-strip-btn.ie-ai-shuffle.is-shuffling svg {
-  animation: ie-ai-shuffle-turn 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-@keyframes ie-ai-shuffle-turn {
-  0% { transform: rotate(0deg) scale(0.9); }
-  50% { transform: rotate(180deg) scale(1.22); }
-  100% { transform: rotate(360deg) scale(1); }
-}
-.ui-strip .is-busy svg { animation: ie-ai-spin 0.9s linear infinite; }
-@keyframes ie-ai-spin { to { transform: rotate(360deg); } }
-@media (prefers-reduced-motion: reduce) {
-  .ui-strip .is-busy svg,
-  .ui-strip-btn.ie-ai-shuffle.is-shuffling svg { animation: none; }
-}
-.ie-ai-choice:focus-visible { outline: 2px solid var(--ui-accent); outline-offset: 2px; }
+.ie-ai-caption.is-turning .ie-ai-caption-text { animation: ie-ai-turn 0.35s ease; }
+@keyframes ie-ai-turn { from { opacity: 0; transform: translateX(10px); } }
 
-/* Style's choices: a card each, a small picture over its name. */
-.ie-ai-choices { display: grid; grid-auto-columns: 1fr; grid-auto-flow: column; gap: 8px; min-height: 112px; }
+/* The tools: four raised grey tiles, icon over word. */
+.ie-ai-strip .ui-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  padding: 0;
+  margin: 0;
+}
+.ie-ai-strip .ui-strip-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+  height: auto;
+  min-height: 62px;
+  padding: 10px 2px 8px;
+  border: none;
+  border-radius: 16px !important;
+  background: var(--ui-surface, #1c1c1e);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  box-shadow: none;
+}
+.ie-ai-strip .ui-strip-btn svg { width: 21px; height: 21px; color: rgba(255, 255, 255, 0.82); }
+.ie-ai-strip .ui-strip-btn.is-on { background: #26272b; }
+.ie-ai-strip .ui-strip-btn.is-on svg { color: #b9adff; }
+@media (hover: hover) { .ie-ai-strip .ui-strip-btn:hover:not(:disabled) { background: #26272b; } }
+
+/* Style's looks: a grey card above the caption card when open. */
+.ie-ai-choices {
+  display: grid;
+  grid-auto-columns: 1fr;
+  grid-auto-flow: column;
+  gap: 8px;
+  padding: 10px;
+  border-radius: 18px;
+  background: var(--ui-surface, #1c1c1e);
+}
 .ie-ai-choice {
   position: relative;
   display: flex;
@@ -284,21 +563,21 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 10px 4px;
+  padding: 10px 4px 8px;
   border: none;
-  border-radius: var(--ui-radius-md, 16px);
-  background: var(--ui-surface);
+  border-radius: 14px !important;
+  background: #2a2b31;
   color: var(--ui-text);
   font: inherit;
-  font-size: var(--ui-fs-footnote, 13px);
+  font-size: 12.5px;
   font-weight: 600;
   cursor: pointer;
 }
 /* The picked one's ring, laid over it (global button rules strip outlines). */
 .ie-ai-choice::after { content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; }
-.ie-ai-choice.is-on { background: var(--ui-accent-soft); }
-.ie-ai-choice.is-on::after { box-shadow: inset 0 0 0 2px var(--ui-accent); }
+.ie-ai-choice.is-on::after { box-shadow: inset 0 0 0 2px #a99bff; }
 .ie-ai-choice:disabled { opacity: 0.5; cursor: default; }
+.ie-ai-choice:focus-visible { outline: 2px solid #a99bff; outline-offset: 2px; }
 /* Aa in each look. */
 .ie-ai-look {
   display: grid;
@@ -315,3 +594,44 @@
 /* Aa on a white box, over the little meme. */
 .ie-ai-look--label { color: #000; font-family: Arial, sans-serif; font-size: 16px; font-weight: 700; background: linear-gradient(#fff, #fff) center / 36px 26px no-repeat, linear-gradient(160deg, #5b6474, #2c313c); }
 .ie-ai-look--comic { color: #ffd400; font-family: Bangers, Impact, sans-serif; -webkit-text-stroke: 1px #000; }
+
+/* Export: Generate's gradient, the one wide button. */
+.meme-editor-container.meme-editor--ai-edit .ui-dock {
+  padding: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+.meme-editor-container.meme-editor--ai-edit .ui-dock .ui-dock-item--primary {
+  flex: 1 1 0 !important;
+  flex-direction: row !important;
+  gap: 8px !important;
+  height: 52px !important;
+  border: none !important;
+  border-radius: 999px !important;
+  background: linear-gradient(120deg, #8b7bff 0%, #c86bff 45%, #ff5a36 100%) !important;
+  box-shadow: 0 8px 22px -10px rgba(200, 107, 255, 0.7) !important;
+  color: #ffffff !important;
+  font-size: 15.5px !important;
+  font-weight: 800 !important;
+}
+.meme-editor-container.meme-editor--ai-edit .ui-dock .ui-dock-item--primary:hover { filter: brightness(1.08); }
+/* Export's word and icon in full white on the gradient (the dock greys its children). */
+.meme-editor-container.meme-editor--ai-edit .ui-dock .ui-dock-item--primary span,
+.meme-editor-container.meme-editor--ai-edit .ui-dock .ui-dock-item--primary svg { color: #ffffff !important; }
+
+/* A short phone: slimmer card and tiles. */
+@media (max-height: 700px) {
+  .ie-ai-caption { gap: 4px; padding: 10px 10px 10px 12px; }
+  .ie-ai-caption-text { -webkit-line-clamp: 1; font-size: 14px; }
+  .ie-ai-caption-nav button { width: 30px; height: 30px; }
+  .ie-ai-strip .ui-strip-btn { min-height: 52px; padding: 7px 2px 6px; gap: 4px; }
+  .ie-ai-strip .ui-strip-btn svg { width: 18px; height: 18px; }
+  .meme-editor-container.meme-editor--ai-edit .ui-dock .ui-dock-item--primary { height: 48px !important; }
+}
+@media (min-width: 720px) {
+  .meme-editor-container.meme-editor--ai-edit .editor-workspace { width: 100%; max-width: 480px; margin: 0 auto; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ie-ai-caption.is-turning .ie-ai-caption-text { animation: none; }
+}

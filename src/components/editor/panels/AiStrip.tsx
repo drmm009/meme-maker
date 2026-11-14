@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Palette, Pencil, Shuffle, Sparkles } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Palette, Pencil, Sparkles } from 'lucide-react';
 import { HeaderFooterIcon } from './editorIcons';
 import { ToolStrip } from '../../ui';
 import type { StripItem } from '../../ui';
@@ -22,11 +22,11 @@ interface CaptionStore {
 }
 
 // The AI Meme maker's strip on its editing page, once its meme is made (before that its page,
-// AiMemeStudio, shows): Shuffle, set apart in the accent, puts the next of the AI captions on the
-// meme (after the last, it asks for four more); Style opens a row of looks for the caption above the
-// tools; Text selects it (its layer pill); Header & Footer opens the bands' sheet (as on the Canvas
-// strip); Effects opens the photo filters. New, Move to editor and Export are the
-// dock under it (EditorPanels).
+// AiMemeStudio, shows): the caption card, saying which of the AI captions is on the meme with the
+// caption itself, and arrows to step back and on through them (on past the last asks for four
+// more); then the tools: Text selects the caption (its layer pill); Style opens a row of looks for
+// it above the card; Header & Footer opens the bands' sheet (as on the Canvas strip); Effects opens
+// the photo filters. Export is the dock under it (EditorPanels).
 export default function AiStrip({ actions }: { actions: EditorActions }) {
   const sheet: string | null = useEditorUiStore((s: { sheet: string | null }) => s.sheet);
   const openSheet = useEditorUiStore((s: { openSheet: (sheet: string) => void }) => s.openSheet);
@@ -95,10 +95,15 @@ export default function AiStrip({ actions }: { actions: EditorActions }) {
     }
   };
 
+  // The caption before this one.
+  const prev = () => {
+    if (busy || index <= 0) return;
+    apply(ideas[index - 1]);
+  };
+
   const look = aiCaption ? aiCaptionStyleOf(aiCaption) : null;
 
   const items: StripItem[] = [
-    { id: 'next', label: busy ? 'Writing…' : 'Shuffle', title: 'Another AI caption on the meme', Icon: Shuffle, className: `ie-ai-shuffle${busy ? ' is-busy' : ''}${shuffling ? ' is-shuffling' : ''}` },
     { id: 'edit', label: 'Text', title: 'Edit the caption: its words, font and colour', Icon: Pencil },
     { id: 'style', label: 'Style', title: 'How the caption looks', Icon: Palette, active: styling },
     { id: 'bands', label: 'Header & Footer', title: 'Bands above and below the meme', Icon: HeaderFooterIcon, active: sheet === 'bands', className: 'ie-strip-btn--two-line' },
@@ -110,10 +115,6 @@ export default function AiStrip({ actions }: { actions: EditorActions }) {
   const onSelect = (id: string) => {
     if (id === 'style') {
       setStyling(!styling);
-      return;
-    }
-    if (id === 'next') {
-      void next();
       return;
     }
     setStyling(false);
@@ -142,6 +143,23 @@ export default function AiStrip({ actions }: { actions: EditorActions }) {
           ))}
         </div>
       )}
+      <div className={`ie-ai-caption${shuffling ? ' is-turning' : ''}`}>
+        <div className="ie-ai-caption-head">
+          <span className="ie-ai-caption-kicker" aria-live="polite">
+            <Sparkles size={13} aria-hidden="true" />
+            {busy ? 'Writing new captions…' : index >= 0 ? `Caption ${index + 1} of ${ideas.length}` : 'Your caption'}
+          </span>
+          <div className="ie-ai-caption-nav">
+            <button type="button" aria-label="Previous caption" title="Previous caption" disabled={busy || index <= 0} onClick={prev}>
+              <ChevronLeft size={18} strokeWidth={2.6} />
+            </button>
+            <button type="button" className="ie-ai-caption-next" aria-label="Next caption" title={index >= 0 && index < ideas.length - 1 ? 'Next caption' : 'Four new captions'} disabled={busy} onClick={() => void next()}>
+              <ChevronRight size={18} strokeWidth={2.6} />
+            </button>
+          </div>
+        </div>
+        <p className="ie-ai-caption-text">{aiCaption?.text || 'Tap › for an AI caption'}</p>
+      </div>
       <ToolStrip ariaLabel="AI meme tools" layout="stacked" items={items} onSelect={onSelect} />
     </div>
   );

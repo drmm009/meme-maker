@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Clapperboard, LayoutGrid, Play, Search } from 'lucide-react';
 import BrowseSheet, { BrowseEmpty, ResultsHead, Shelf, Thumb } from '../editor/panels/BrowseSheet';
 import { VIDEO_MEME_TEMPLATES } from '../../data/videoTemplates';
@@ -18,11 +18,54 @@ const CLIPS = VIDEO_MEME_TEMPLATES as VideoClip[];
 const CATEGORIES = [...new Set(CLIPS.map((c) => c.category))].map((id) => ({ id, label: id, items: CLIPS.filter((c) => c.category === id) }));
 const SHELF_SIZE = 10;
 
+// A clip's picture: its thumbnail, or, when that can't be had (the meme site no longer serves many
+// of them), a frame from half a second into the clip itself, loaded only once the card is near view.
+function ClipThumb({ clip }: { clip: VideoClip }) {
+  const [noThumb, setNoThumb] = useState(false);
+  const [near, setNear] = useState(false);
+  const [frame, setFrame] = useState<'loading' | 'ready' | 'failed'>('loading');
+  const ref = useRef<HTMLSpanElement>(null);
+  useEffect(() => {
+    if (!noThumb || near) return undefined;
+    const el = ref.current;
+    if (!el || typeof IntersectionObserver === 'undefined') {
+      setNear(true);
+      return undefined;
+    }
+    const io = new IntersectionObserver((entries) => {
+      if (entries.some((e) => e.isIntersecting)) {
+        setNear(true);
+        io.disconnect();
+      }
+    }, { rootMargin: '200px' });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [noThumb, near]);
+
+  if (!noThumb) return <Thumb src={clip.thumbnailUrl} className="ie-card-media vt-clip-media" onError={() => setNoThumb(true)} />;
+  return (
+    <span ref={ref} className={`ie-browse-thumb is-${frame} ie-card-media vt-clip-media`}>
+      {near && (
+        <video
+          src={`${clip.videoUrl}#t=0.5`}
+          muted
+          playsInline
+          preload="metadata"
+          aria-hidden="true"
+          onLoadedData={() => setFrame('ready')}
+          onSeeked={() => setFrame('ready')}
+          onError={() => setFrame('failed')}
+        />
+      )}
+    </span>
+  );
+}
+
 function ClipCard({ clip, onPick }: { clip: VideoClip; onPick: (c: VideoClip) => void }) {
   return (
     <button type="button" className="ie-browse-item ie-card" aria-label={clip.name} onClick={() => onPick(clip)}>
       <span className="vt-clip-thumb">
-        <Thumb src={clip.thumbnailUrl} className="ie-card-media vt-clip-media" />
+        <ClipThumb clip={clip} />
         <span className="vt-clip-play" aria-hidden="true"><Play size={14} fill="currentColor" /></span>
         <span className="vt-clip-dur">{Math.max(1, Math.round(clip.durationMs / 1000))}s</span>
       </span>

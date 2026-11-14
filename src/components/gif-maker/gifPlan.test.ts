@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { clock, defaultTrim, frameOrder, gifDimensions, gifSeconds, moveTrim, photosGifArgs, slideTrim, videoGifArgs, wrapCaption, MAX_CLIP_S } from './gifPlan';
+import { clock, defaultTrim, gifDimensions, gifSeconds, moveTrim, slideTrim, videoGifArgs, wrapCaption, MAX_CLIP_S } from './gifPlan';
 
 describe('gifPlan', () => {
   it('starts a video on its first five seconds, or the whole of a shorter one', () => {
@@ -23,12 +23,9 @@ describe('gifPlan', () => {
     expect(gifDimensions(201, 151, 480)).toEqual({ w: 202, h: 152 });
   });
 
-  it('times the GIF, and bounces photos forwards then back without doubling the ends', () => {
+  it('times the GIF: the clip at its speed, twice as long for a bounce', () => {
     expect(gifSeconds({ clip: 4, speed: 2, loop: 'loop' })).toBe(2);
-    expect(gifSeconds({ photos: 4, frameS: 0.5, loop: 'bounce' })).toBe(4);
-    expect(frameOrder(4, 'loop')).toEqual([0, 1, 2, 3]);
-    expect(frameOrder(4, 'bounce')).toEqual([0, 1, 2, 3, 2, 1]);
-    expect(frameOrder(2, 'bounce')).toEqual([0, 1]);
+    expect(gifSeconds({ clip: 3, speed: 1, loop: 'bounce' })).toBe(6);
   });
 
   it('builds the video command: cut, speed, size, bounce, caption, palette', () => {
@@ -44,10 +41,6 @@ describe('gifPlan', () => {
 
     const plain = videoGifArgs({ input: 'in.mp4', output: 'out.gif', trim: { start: 0, end: 1 }, speed: 1, loop: 'loop', w: 320, h: 320 });
     expect(plain.join(' ')).not.toMatch(/reverse|overlay/);
-  });
-
-  it('builds the photos command at the frame rate their time gives', () => {
-    expect(photosGifArgs({ pattern: 'f_%03d.png', output: 'o.gif', frameS: 0.25 }).slice(0, 4)).toEqual(['-framerate', '4.0000', '-i', 'f_%03d.png']);
   });
 
   it('wraps a caption in upper case to the width', () => {
