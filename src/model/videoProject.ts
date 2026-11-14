@@ -230,7 +230,6 @@ export interface AudioClip extends ClipBase, Media {
 }
 
 export type Clip = VideoClip | ImageClip | StickerClip | TextClip | AudioClip;
-export type VisualClip = Exclude<Clip, AudioClip>;
 
 export interface LayoutSlot {
   x: number;

@@ -217,5 +217,3 @@ export const BUBBLE_PRESETS: BubblePreset[] = [
     description: 'Neon cyberpunk dialogue HUD',
   },
 ];
-
-export const BUBBLE_CATEGORIES = ['All', 'iMessage', 'WhatsApp', 'Comic', 'Action'];

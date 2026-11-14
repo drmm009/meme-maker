@@ -1,9 +1,12 @@
 // @vitest-environment jsdom
-import { describe, it, expect, vi, afterEach } from 'vitest';
+import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
 import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import EmojiSheet from './EmojiSheet';
 import type { EditorActions } from './selection';
 
+// Other test files pick emoji too, and the test files share one page (isolate: false), so the
+// Recent shelf would repeat a Popular emoji here.
+beforeEach(() => localStorage.removeItem('meme_recent_emoji'));
 afterEach(cleanup);
 
 describe('EmojiSheet', () => {

@@ -64,21 +64,6 @@ export const CANONICAL_LANDMARKS = [
   { id: 'chin_bot', name: 'Chin Bottom', x: 0.50, y: 0.94, category: 'jaw' }
 ];
 
-// Pre-computed canonical triangulation indices
-export const CANONICAL_TRIANGLES = (() => {
-  const pts = CANONICAL_LANDMARKS.map(p => [p.x, p.y]);
-  const delaunay = Delaunay.from(pts);
-  const triIndices = [];
-  for (let i = 0; i < delaunay.triangles.length; i += 3) {
-    triIndices.push([
-      delaunay.triangles[i],
-      delaunay.triangles[i + 1],
-      delaunay.triangles[i + 2]
-    ]);
-  }
-  return triIndices;
-})();
-
 import { getDefaultLandmarks as getUnifiedLandmarks, createAnatomicalFaceMask, createInnerFeatureMask } from './faceLandmarkerService';
 import { blendLaplacianMultiBand } from './laplacianBlendEngine';
 
@@ -87,59 +72,6 @@ import { blendLaplacianMultiBand } from './laplacianBlendEngine';
  */
 export function getDefaultLandmarks() {
   return getUnifiedLandmarks();
-}
-
-/**
- * Generates angle/expression presets for quick alignment
- */
-export function getLandmarkPreset(presetType = 'front') {
-  const base = getDefaultLandmarks();
-  if (presetType === 'front') return base;
-
-  if (presetType === 'left') {
-    // 3/4 View turned towards left (like Drake upper panel)
-    return base.map(p => {
-      if (p.isAnchor) return p;
-      let nx = p.x;
-      let ny = p.y;
-      // Shift features slightly left and compress left side
-      if (p.x < 0.5) {
-        nx = 0.5 - (0.5 - p.x) * 0.75 - 0.06;
-      } else {
-        nx = 0.5 + (p.x - 0.5) * 1.15 - 0.06;
-      }
-      return { ...p, x: Math.max(0.04, Math.min(0.96, nx)), y: ny };
-    });
-  }
-
-  if (presetType === 'right') {
-    // 3/4 View turned towards right
-    return base.map(p => {
-      if (p.isAnchor) return p;
-      let nx = p.x;
-      let ny = p.y;
-      if (p.x > 0.5) {
-        nx = 0.5 + (p.x - 0.5) * 0.75 + 0.06;
-      } else {
-        nx = 0.5 - (0.5 - p.x) * 1.15 + 0.06;
-      }
-      return { ...p, x: Math.max(0.04, Math.min(0.96, nx)), y: ny };
-    });
-  }
-
-  if (presetType === 'smile') {
-    // Wide meme smile
-    return base.map(p => {
-      if (p.id === 'mouth_corner_l') return { ...p, x: p.x - 0.04, y: p.y - 0.03 };
-      if (p.id === 'mouth_corner_r') return { ...p, x: p.x + 0.04, y: p.y - 0.03 };
-      if (p.id === 'mouth_lip_bot') return { ...p, y: p.y + 0.03 };
-      if (p.id === 'cheek_l') return { ...p, y: p.y - 0.02 };
-      if (p.id === 'cheek_r') return { ...p, y: p.y - 0.02 };
-      return p;
-    });
-  }
-
-  return base;
 }
 
 /**
@@ -340,82 +272,5 @@ export function morphFaceMesh({
     outCtx.globalCompositeOperation = 'destination-in';
     outCtx.drawImage(maskCanvas, 0, 0);
     outCtx.globalCompositeOperation = 'source-over';
-  }
-}
-
-/**
- * Draws interactive wireframe mesh and draggable landmark pins for visual tuning
- */
-export function drawLandmarkMeshOverlay(ctx, landmarks, size, { showTriangles = true, showPins = true, activePinId = null, color = '#06b6d4', triangles = null } = {}) {
-  if (!ctx || !landmarks) return;
-
-  const pts = landmarks.map(p => ({ id: p.id, name: p.name, x: p.x * size, y: p.y * size, isAnchor: p.isAnchor, isKeyPin: p.isKeyPin }));
-
-  // Draw wireframe triangles
-  if (showTriangles) {
-    let triList = triangles;
-    if (!triList || triList.length === 0) {
-      if (landmarks.length === CANONICAL_LANDMARKS.length) {
-        triList = CANONICAL_TRIANGLES;
-      } else {
-        const rawPts = landmarks.map(p => [p.x, p.y]);
-        const d = Delaunay.from(rawPts);
-        triList = [];
-        for (let i = 0; i < d.triangles.length; i += 3) {
-          triList.push([d.triangles[i], d.triangles[i + 1], d.triangles[i + 2]]);
-        }
-      }
-    }
-
-    ctx.save();
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 1;
-    ctx.globalAlpha = 0.4;
-
-    for (let i = 0; i < triList.length; i++) {
-      const [i1, i2, i3] = triList[i];
-      if (i1 >= pts.length || i2 >= pts.length || i3 >= pts.length) continue;
-      const p1 = pts[i1], p2 = pts[i2], p3 = pts[i3];
-      ctx.beginPath();
-      ctx.moveTo(p1.x, p1.y);
-      ctx.lineTo(p2.x, p2.y);
-      ctx.lineTo(p3.x, p3.y);
-      ctx.closePath();
-      ctx.stroke();
-    }
-    ctx.restore();
-  }
-
-  // Draw landmark pins
-  if (showPins) {
-    pts.forEach(p => {
-      if (p.isAnchor) return; // Don't draw border anchors as interactive pins
-
-      const isActive = p.id === activePinId;
-      const isKey = p.isKeyPin;
-      const radius = isActive ? 7 : (isKey ? 5.5 : 3.5);
-
-      ctx.save();
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
-
-      if (isActive) {
-        ctx.fillStyle = '#ff0055';
-        ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 2.5;
-      } else if (isKey) {
-        ctx.fillStyle = color;
-        ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 2;
-      } else {
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-        ctx.strokeStyle = color;
-        ctx.lineWidth = 1;
-      }
-
-      ctx.fill();
-      ctx.stroke();
-      ctx.restore();
-    });
   }
 }

@@ -6,16 +6,6 @@ export type BlendMode = 'normal' | 'multiply' | 'screen' | 'overlay' | 'darken' 
 // The shadow colours offered for a photo or sticker.
 export const SHADOW_COLORS = ['#000000', '#1e1b4b', '#7f1d1d', '#ffffff', '#ff2a5f', '#00f0ff'];
 
-export const BLEND_MODES: { value: BlendMode; label: string }[] = [
-  { value: 'normal', label: 'Normal' },
-  { value: 'multiply', label: 'Multiply' },
-  { value: 'screen', label: 'Screen' },
-  { value: 'overlay', label: 'Overlay' },
-  { value: 'darken', label: 'Darken' },
-  { value: 'lighten', label: 'Lighten' },
-  { value: 'difference', label: 'Difference' },
-];
-
 export interface LayerLook {
   blend?: BlendMode;
   // Drop shadow blur in canvas pixels (0 or unset: none), and its colour.

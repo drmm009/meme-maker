@@ -20,9 +20,6 @@ export interface Selection {
 // The edit handlers MemeEditor wires up (editor/hooks/use*Actions), passed to the panels as one object.
 export type EditorActions = Record<string, any>;
 
-// Which sheet edits each kind of layer.
-export const SHEET_FOR_KIND: Record<LayerKind, string> = { caption: 'text', card: 'text', sticker: 'media', image: 'media', shape: 'draw' };
-
 export function useSelection(): Selection {
   const id: string | null = useMemeEditorStore((s: { activeLayerId: string | null }) => s.activeLayerId);
   const caption = useMemeEditorStore((s: { captions: MemeCaption[] }) => s.captions.find((c) => c.id === id)) || null;

@@ -22,30 +22,6 @@ export const AI_MEME_IDEAS = [
   { text: 'My sleep schedule', icon: '😴', category: 'life' },
 ];
 
-export const TEMPLATE_SPECIFIC_CAPTIONS = {
-  'drake': [
-    { top: 'Writing documentation', bottom: 'Writing code that only God and I understand' },
-    { top: 'Fixing the root cause of the bug', bottom: 'Wrapping the entire function in try { ... } catch (e) {}' },
-    { top: 'Going to bed at 10 PM', bottom: 'Watching a 45-minute documentary on Byzantine architecture at 3 AM' },
-    { top: 'Saving money for the future', bottom: 'Buying something I don\'t need because it was 15% off' },
-    { top: 'Reading the error message', bottom: 'Rerunning the code 10 times hoping it fixes itself' }
-  ],
-  'distracted_boyfriend': [
-    { top: 'My unfinished side projects', bottom: 'A brand new framework released 2 hours ago' },
-    { top: '8 hours of healthy sleep', bottom: 'One more episode / match at 1:30 AM' },
-    { top: 'My current budget', bottom: 'Adding $80 of items to cart for free shipping' }
-  ],
-  'two_buttons': [
-    { top: 'Sleep at a reasonable hour', bottom: 'Overthink every life choice made since 2014' },
-    { top: 'Fix the bug properly', bottom: 'Comment out the failing test and push to main' },
-    { top: 'Eat healthy homemade food', bottom: 'Order takeout because cooking requires washing dishes' }
-  ],
-  'buff_doge': [
-    { top: 'Programmers in 1969:\nLanding Apollo 11 on the Moon with 4KB of RAM', bottom: 'Programmers in 2026:\nMy chat app requires 16GB RAM and Chromium to say hello' },
-    { top: 'Me planning my life on Sunday night', bottom: 'Me waking up on Monday morning' }
-  ]
-};
-
 export const CURATED_CAPTIONS = [
   // Tech & Code
   { category: 'tech', text: 'When the code works on the first try and you spend 2 hours figuring out why' },

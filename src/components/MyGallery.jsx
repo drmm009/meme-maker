@@ -103,7 +103,10 @@ function VideoViewer({ video, onClose, onOpen, onDelete, onGetFile }) {
   );
 }
 
-export default function MyGallery({ savedMemes, galleryReady, onDeleteMeme, onSelectMeme, onResolveFullImage, savedVideos = [], onOpenVideo, onDeleteVideo, onGetVideoFile, onBrowseTemplates, onMake }) {
+// One empty list for every render, so the tiles' memo below isn't redone when no videos are passed.
+const NO_VIDEOS = [];
+
+export default function MyGallery({ savedMemes, galleryReady, onDeleteMeme, onSelectMeme, onResolveFullImage, savedVideos = NO_VIDEOS, onOpenVideo, onDeleteVideo, onGetVideoFile, onBrowseTemplates, onMake }) {
   const [tab, setTab] = useState('all');
   const [selectedMemeForView, setSelectedMemeForView] = useState(null);
   const [fullViewUrl, setFullViewUrl] = useState('');

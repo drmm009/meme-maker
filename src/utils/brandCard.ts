@@ -2,7 +2,7 @@
 // card (a full-frame picture with a title and a line under it, played after everything else).
 // The watermark is a project setting, drawn as a text clip that isn't on the timeline; the end
 // card is an ordinary photo clip, marked so it can be redrawn and kept at the end.
-import type { Clip, ImageClip, StickerClip, TextClip, WatermarkCorner, WatermarkSettings, EndCardSettings } from '../model/videoProject';
+import type { Clip, ImageClip, StickerClip, TextClip, WatermarkSettings, EndCardSettings } from '../model/videoProject';
 import { isSocialLogo, socialLogoUrl } from './socialLogos';
 
 export const STAGE_WIDTH = 800;
@@ -12,13 +12,6 @@ export const WATERMARK_OPACITY = 0.75;
 export const END_CARD_MS = 2500;
 // The end card picture's width (its height follows the canvas shape).
 export const END_CARD_PX = 1280;
-
-export const WATERMARK_CORNERS: { id: WatermarkCorner; label: string }[] = [
-  { id: 'tl', label: 'Top left' },
-  { id: 'tr', label: 'Top right' },
-  { id: 'bl', label: 'Bottom left' },
-  { id: 'br', label: 'Bottom right' },
-];
 
 export const DEFAULT_END_CARD: EndCardSettings = { title: 'Thanks for watching', subtitle: 'Follow for more', color: '#111111' };
 

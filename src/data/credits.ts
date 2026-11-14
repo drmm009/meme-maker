@@ -42,7 +42,7 @@ export const CREDIT_GROUPS: CreditGroup[] = [
       { name: 'Framer Motion', what: 'Animations', license: 'MIT', url: 'https://motion.dev' },
       { name: 'Lucide', what: 'Icons', license: 'ISC', url: 'https://lucide.dev' },
       { name: 'Zustand and zundo', what: 'Editor state and undo', license: 'MIT', url: 'https://github.com/pmndrs/zustand' },
-      { name: 'gifler and omggif', what: 'GIF playback and GIF export', license: 'Apache-2.0, MIT', url: 'https://github.com/deanm/omggif' },
+      { name: 'omggif', what: 'GIF playback and GIF export', license: 'MIT', url: 'https://github.com/deanm/omggif' },
       { name: 'd3-delaunay', what: 'Face morph', license: 'ISC', url: 'https://github.com/d3/d3-delaunay' },
       { name: 'canvas-confetti', what: 'Confetti', license: 'ISC', url: 'https://github.com/catdad/canvas-confetti' },
       { name: 'Capacitor', what: 'Android app', license: 'MIT', url: 'https://capacitorjs.com' },

@@ -26,7 +26,7 @@ textarea {
   font-family: inherit;
 }
 
-h1, h2, h3, h4, h5, h6, .display-font {
+h1, h2, h3, h4, h5, h6 {
   font-family: 'Plus Jakarta Sans', Inter, system-ui, -apple-system, sans-serif;
   text-transform: none;
 }
@@ -196,10 +196,6 @@ h1, h2, h3, h4, h5, h6, .display-font {
   width: 18px;
   height: 18px;
 }
-.icon-md {
-  width: 22px;
-  height: 22px;
-}
 .animate-fade-in {
   animation: 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards fadeIn;
 }
@@ -234,9 +230,6 @@ h1, h2, h3, h4, h5, h6, .display-font {
 .shelf-subtext,
 .hero-tagline,
 .brand-tagline,
-.gallery-subtitle,
-.social-hero-subtitle,
-.promo-banner-desc,
 .empty-state p {
   color: #ffffff !important;
 }
@@ -244,9 +237,6 @@ h1, h2, h3, h4, h5, h6, .display-font {
 [data-theme='light'] .shelf-subtext,
 [data-theme='light'] .hero-tagline,
 [data-theme='light'] .brand-tagline,
-[data-theme='light'] .gallery-subtitle,
-[data-theme='light'] .social-hero-subtitle,
-[data-theme='light'] .promo-banner-desc,
 [data-theme='light'] .empty-state p {
   color: #475569 !important;
 }

@@ -1,4 +1,7 @@
-import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+// Explore: search, sort and category pills over shelves of templates (one per category), or a grid
+// of one category or a search's results.
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import type { MouseEvent } from 'react';
 import {
   Search,
   Flame,
@@ -26,7 +29,33 @@ import { templateNumericId } from '../utils/templateOrder';
 import { EXPLORE_CATEGORIES } from '../data/exploreCategories';
 import './ExploreView.css';
 
+interface Template {
+  id: string;
+  name?: string;
+  type?: string;
+  category?: string;
+  tag?: string;
+  tags?: string[];
+  trendingScore?: number;
+  imageUrl?: string;
+  thumbnailUrl?: string;
+  videoUrl?: string;
+  durationMs?: number;
+  width?: number;
+  height?: number;
+}
 
+interface ExploreViewProps {
+  onSelectTemplate?: (template: Template) => void;
+  initialCategory?: string;
+}
+
+interface ExploreCardProps {
+  template: Template;
+  isFavorite: boolean;
+  onToggleFavorite: (e: MouseEvent, templateId: string) => void;
+  onSelectTemplate?: (template: Template) => void;
+}
 
 const SORT_OPTIONS = [
   { id: 'trending', label: 'Trending', icon: Flame, color: '#ff5e36' },
@@ -35,8 +64,7 @@ const SORT_OPTIONS = [
   { id: 'name', label: 'A-Z Name', icon: ArrowDownAZ, color: '#a855f7' }
 ];
 
-
-function getTemplateBadge(template, index = 0) {
+function getTemplateBadge(template: Template | null | undefined, index = 0) {
   if (!template) return { label: 'Popular', icon: Flame, color: '#ff5e36' };
   if (template.type === 'video') {
     return { label: 'Video', icon: Video, color: '#06b6d4' };
@@ -65,19 +93,19 @@ function getTemplateBadge(template, index = 0) {
   return { label: 'Popular', icon: Flame, color: '#ff5e36' };
 }
 
-export default function ExploreView({ onSelectTemplate, onCreateCustom: _onCreateCustom, initialCategory = 'all' }) {
+export default function ExploreView({ onSelectTemplate, initialCategory = 'all' }: ExploreViewProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState(initialCategory);
   const [sortBy, setSortBy] = useState('trending');
   const [isSortOpen, setIsSortOpen] = useState(false);
-  const [favorites, setFavorites] = useState(() => safeGet('meme_favorite_templates', []));
-  const [templatesList, setTemplatesList] = useState(() => [...MEME_TEMPLATES, ...VIDEO_MEME_TEMPLATES]);
+  const [favorites, setFavorites] = useState<string[]>(() => safeGet('meme_favorite_templates') || []);
+  const [templatesList, setTemplatesList] = useState<Template[]>(() => [...MEME_TEMPLATES, ...VIDEO_MEME_TEMPLATES]);
 
-  const searchInputRef = useRef(null);
-  const sortRef = useRef(null);
-  const tagsScrollRef = useRef(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const sortRef = useRef<HTMLDivElement>(null);
+  const tagsScrollRef = useRef<HTMLDivElement>(null);
 
-  const handleSelectCategory = (catId, shouldScrollTop = false) => {
+  const handleSelectCategory = (catId: string, shouldScrollTop = false) => {
     setSelectedCategory(catId);
     if (shouldScrollTop && typeof window !== 'undefined') {
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -123,8 +151,8 @@ export default function ExploreView({ onSelectTemplate, onCreateCustom: _onCreat
 
   // Click outside listener for sort popover
   useEffect(() => {
-    const handleOutsideClick = (e) => {
-      if (sortRef.current && !sortRef.current.contains(e.target)) {
+    const handleOutsideClick = (e: Event) => {
+      if (sortRef.current && !sortRef.current.contains(e.target as Node)) {
         setIsSortOpen(false);
       }
     };
@@ -136,7 +164,7 @@ export default function ExploreView({ onSelectTemplate, onCreateCustom: _onCreat
 
   useEffect(() => {
     let isCancelled = false;
-    fetchOpenSourceMemes().then((online) => {
+    fetchOpenSourceMemes().then((online: Template[]) => {
       if (!isCancelled && online && online.length > 0) {
         setTemplatesList((prev) => {
           const existingIds = new Set(prev.map((t) => t.id));
@@ -150,7 +178,7 @@ export default function ExploreView({ onSelectTemplate, onCreateCustom: _onCreat
     };
   }, []);
 
-  const toggleFavorite = (e, templateId) => {
+  const toggleFavorite = (e: MouseEvent, templateId: string) => {
     e.stopPropagation();
     setFavorites((prev) => {
       const next = prev.includes(templateId)
@@ -162,7 +190,7 @@ export default function ExploreView({ onSelectTemplate, onCreateCustom: _onCreat
   };
 
   // Helper keyword matchers
-  const matchesCategory = useCallback((t, catId) => {
+  const matchesCategory = useCallback((t: Template, catId: string) => {
     if (!t) return false;
     const nameLower = (t.name || '').toLowerCase();
     const tags = t.tags || [];
@@ -209,7 +237,7 @@ export default function ExploreView({ onSelectTemplate, onCreateCustom: _onCreat
 
   // Counts for all categories
   const categoryCounts = useMemo(() => {
-    const counts = {};
+    const counts: Record<string, number> = {};
     EXPLORE_CATEGORIES.forEach((cat) => {
       counts[cat.id] = templatesList.filter((t) => matchesCategory(t, cat.id)).length;
     });
@@ -483,7 +511,7 @@ export default function ExploreView({ onSelectTemplate, onCreateCustom: _onCreat
 }
 
 /* Horizontal Shelf Card matching Home Screen Shelf Cards */
-function ExploreShelfCard({ template, rank, isFavorite, onToggleFavorite, onSelectTemplate }) {
+function ExploreShelfCard({ template, rank, isFavorite, onToggleFavorite, onSelectTemplate }: ExploreCardProps & { rank: number | null }) {
   const isVideo = template.type === 'video';
 
   return (
@@ -555,7 +583,7 @@ function ExploreShelfCard({ template, rank, isFavorite, onToggleFavorite, onSele
 }
 
 /* Grid Template Card matching Home Screen Masonry Cards */
-function ExploreGridCard({ template, index, isFavorite, onToggleFavorite, onSelectTemplate }) {
+function ExploreGridCard({ template, index, isFavorite, onToggleFavorite, onSelectTemplate }: ExploreCardProps & { index: number }) {
   const isVideo = template.type === 'video';
   const badge = getTemplateBadge(template, index);
   const BadgeIcon = badge.icon;

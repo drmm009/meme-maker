@@ -1027,7 +1027,6 @@
   display: grid;
 }
 .vt-chip { display: inline-flex; align-items: center; gap: 6px; position: relative; }
-.vt-swatch { width: 14px; height: 14px; border-radius: 50%; border: 1px solid rgba(255, 255, 255, 0.4); }
 
 /* ── Background swatches ────────────────────────────────────── */
 .vt-swatch-row { display: flex; flex-wrap: wrap; gap: 10px; }
@@ -1220,7 +1219,6 @@
 }
 
 /* ── Auto captions panel ────────────────────────────────────── */
-.vt-captions { display: flex; flex-direction: column; gap: 12px; }
 .vt-captions-actions { display: flex; align-items: center; gap: 8px; }
 .vt-captions-go {
   display: inline-flex;
@@ -1418,10 +1416,6 @@
 .vt-filter-thumb-empty { display: block; background: var(--vt-fill); }
 
 /* Text Outline & shadow: an outline colour row (none first), its thickness, then shadow chips. */
-.vt-style { display: flex; flex-direction: column; gap: 12px; }
-.vt-style-label { color: var(--vt-muted); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
-.vt-style-label + .vt-swatch-row, .vt-style-label + .vt-chip-row { margin-top: -4px; }
-.vt-swatch-none { background: var(--vt-fill); color: var(--vt-muted); }
 .vt-slider-row.is-off { opacity: 0.45; }
 
 /* Every bottom sheet matches the deck: the deck's grey, solid (no blur), with black controls on it.

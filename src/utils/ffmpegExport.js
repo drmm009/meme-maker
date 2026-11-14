@@ -384,7 +384,7 @@ const exportWithFFmpeg = async (items = [], durationMs = 7000, canvasAspectRatio
     if (error instanceof Error) {
       throw error;
     } else {
-      throw new Error(typeof error === 'string' ? error : JSON.stringify(error));
+      throw new Error(typeof error === 'string' ? error : JSON.stringify(error), { cause: error });
     }
   }
 };

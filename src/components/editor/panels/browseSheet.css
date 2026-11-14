@@ -354,18 +354,6 @@
   .ie-browse-scroll::-webkit-scrollbar { display: none; }
 }
 .ie-browse-section + .ie-browse-section { margin-top: 26px; }
-.ie-browse-heading {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin: 0 20px 12px;
-  color: var(--ui-text);
-  font-size: 16px;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-}
-.ie-browse-heading svg { color: var(--ui-accent); }
-.ie-browse-heading-count { color: var(--ui-faint); font-size: var(--ui-fs-footnote, 13px); font-weight: 600; font-variant-numeric: tabular-nums; }
 
 /* A picture that shimmers until it arrives, then fades in. */
 .ie-browse-thumb {

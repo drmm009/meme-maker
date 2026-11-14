@@ -1,8 +1,36 @@
-import React, { useState } from 'react';
+// Choose a layout (the dock's Creator): a blank canvas, then rows of image grids, video caption
+// layouts and social cards. Picking one opens it in the editor.
+import { useState } from 'react';
+import type { KeyboardEvent } from 'react';
 import { LAYOUT_OPTIONS, MEME_TEMPLATES } from '../data/templates';
 import { Image as ImageIcon, X, Plus, Minus, Grid, Clapperboard, Share2, Type } from 'lucide-react';
 import { motion } from 'framer-motion';
 import './CustomLayoutBuilder.css';
+
+type Template = Record<string, unknown>;
+
+interface LayoutOption {
+  id: string;
+  name?: string;
+  slots: number;
+  cols?: number;
+  rows?: number;
+}
+
+type VideoLayoutOption = (typeof VIDEO_LAYOUT_OPTIONS)[number];
+
+interface CustomLayoutBuilderProps {
+  onLayoutComplete?: (template: Template) => void;
+  onSelectTemplate?: (template: Template) => void;
+}
+
+// Enter or Space on a card that acts as a button.
+const onActivate = (run: () => void) => (e: KeyboardEvent) => {
+  if (e.key === 'Enter' || e.key === ' ') {
+    e.preventDefault();
+    run();
+  }
+};
 
 const VIDEO_LAYOUT_OPTIONS = [
   {
@@ -59,7 +87,7 @@ const SOCIAL_LAYOUT_OPTIONS = [
   }
 ];
 
-const createLayoutTemplate = (layout) => {
+const createLayoutTemplate = (layout: LayoutOption): Template => {
   const width = 800;
   const height = 800;
   const canvas = document.createElement('canvas');
@@ -185,12 +213,12 @@ const createLayoutTemplate = (layout) => {
 export default function CustomLayoutBuilder({
   onLayoutComplete,
   onSelectTemplate
-}) {
+}: CustomLayoutBuilderProps) {
   const [isConfiguringCustom, setIsConfiguringCustom] = useState(false);
   const [customCols, setCustomCols] = useState(2);
   const [customRows, setCustomRows] = useState(2);
 
-  const handleSelectLayoutOption = (layout) => {
+  const handleSelectLayoutOption = (layout: LayoutOption) => {
     const template = createLayoutTemplate(layout);
     if (onSelectTemplate) {
       onSelectTemplate(template);
@@ -199,8 +227,8 @@ export default function CustomLayoutBuilder({
     }
   };
 
-  const handleSelectVideoLayout = (layoutOption) => {
-    const videoTemplate = {
+  const handleSelectVideoLayout = (layoutOption: VideoLayoutOption) => {
+    const videoTemplate: Template = {
       id: `custom-video-${layoutOption.layoutType}-${Date.now()}`,
       name: layoutOption.name,
       type: 'video',
@@ -219,8 +247,8 @@ export default function CustomLayoutBuilder({
     }
   };
 
-  const handleSelectSocialCard = (cardId) => {
-    const template = MEME_TEMPLATES.find((t) => t.id === cardId) || {
+  const handleSelectSocialCard = (cardId: string) => {
+    const template: Template = MEME_TEMPLATES.find((t: { id: string }) => t.id === cardId) || {
       id: cardId,
       name:
         cardId === 'social-tweet-card'
@@ -255,9 +283,7 @@ export default function CustomLayoutBuilder({
             onClick={() => handleSelectLayoutOption(LAYOUT_OPTIONS[0])}
             role="button"
             tabIndex={0}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') handleSelectLayoutOption(LAYOUT_OPTIONS[0]);
-            }}
+            onKeyDown={onActivate(() => handleSelectLayoutOption(LAYOUT_OPTIONS[0]))}
           >
             <div className="wireframe-container blank-wf-wrap">
               <div className="layout-wireframe grid-1-panel">
@@ -293,6 +319,7 @@ export default function CustomLayoutBuilder({
                   key={layout.id}
                   className="shelf-meme-card layout-shelf-card"
                   onClick={() => handleSelectLayoutOption(layout)}
+                onKeyDown={onActivate(() => handleSelectLayoutOption(layout))}
                   role="button"
                   tabIndex={0}
                 >
@@ -313,6 +340,7 @@ export default function CustomLayoutBuilder({
               <div
                 className="shelf-meme-card layout-shelf-card custom-grid-shelf-card"
                 onClick={() => setIsConfiguringCustom(true)}
+                onKeyDown={onActivate(() => setIsConfiguringCustom(true))}
                 role="button"
                 tabIndex={0}
               >
@@ -398,6 +426,7 @@ export default function CustomLayoutBuilder({
                 key={opt.id}
                 className="shelf-meme-card layout-shelf-card"
                 onClick={() => handleSelectVideoLayout(opt)}
+                onKeyDown={onActivate(() => handleSelectVideoLayout(opt))}
                 role="button"
                 tabIndex={0}
               >
@@ -447,6 +476,7 @@ export default function CustomLayoutBuilder({
                 key={card.id}
                 className="shelf-meme-card layout-shelf-card social-shelf-card"
                 onClick={() => handleSelectSocialCard(card.id)}
+                onKeyDown={onActivate(() => handleSelectSocialCard(card.id))}
                 role="button"
                 tabIndex={0}
               >

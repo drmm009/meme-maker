@@ -358,10 +358,6 @@ export const getWhatsAppCardMetrics = (ctx, cap, cardW) => {
   return layout;
 };
 
-export const getWhatsAppCardScale = (ctx, cap, cardW) => {
-  return getWhatsAppCardMetrics(ctx, cap, cardW).scale;
-};
-
 export const getWhatsAppCardHeight = (ctx, cap, cardW) => {
   return getWhatsAppCardMetrics(ctx, cap, cardW).totalH;
 };

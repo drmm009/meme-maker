@@ -4,8 +4,6 @@
  * Extracts 78-point Delaunay morph topology (70 anatomical features + 8 boundary anchors).
  */
 
-import { Delaunay } from 'd3-delaunay';
-
 // 70 anatomical MediaPipe landmark indices
 export const KEY_LANDMARK_INDICES = [
   // Jawline & Chin (21 points)
@@ -145,54 +143,6 @@ export async function getFaceLandmarker() {
 }
 
 /**
- * Extracts 70-landmark normalized points + 8 boundary anchors from an image or canvas.
- * Always returns 78 points with the exact same topological index mapping.
- */
-export async function detectFaceLandmarks(imageOrCanvas) {
-  if (!imageOrCanvas) return getDefaultLandmarks();
-
-  try {
-    const landmarker = await getFaceLandmarker();
-    if (!landmarker) return getDefaultLandmarks();
-
-    let source = imageOrCanvas;
-
-    if (source instanceof HTMLImageElement && (!source.complete || source.naturalWidth === 0)) {
-      await new Promise((resolve, reject) => {
-        source.onload = resolve;
-        source.onerror = reject;
-      });
-    }
-
-    const results = landmarker.detect(source);
-    if (!results || !results.faceLandmarks || results.faceLandmarks.length === 0) {
-      return getDefaultLandmarks();
-    }
-
-    const raw478 = results.faceLandmarks[0];
-
-    const featurePoints = KEY_LANDMARK_INDICES.map((meshIdx, i) => {
-      const p = raw478[meshIdx] || CANONICAL_70_COORDS[i];
-      return {
-        id: `mp_${meshIdx}`,
-        meshIdx,
-        x: Math.max(0.01, Math.min(0.99, p.x)),
-        y: Math.max(0.01, Math.min(0.99, p.y)),
-        isKeyPin: KEY_PIN_INDICES.has(meshIdx),
-        name: `Landmark ${i}`
-      };
-    });
-
-    const anchors = BOUNDARY_ANCHORS.map((b) => ({ ...b }));
-
-    return [...featurePoints, ...anchors];
-  } catch (err) {
-    console.warn('Error during face landmark detection, using canonical fallback:', err);
-    return getDefaultLandmarks();
-  }
-}
-
-/**
  * Detects any prominent face on a full meme template image or canvas,
  * returning normalized { x, y, radius } in [0, 1].
  */
@@ -235,31 +185,6 @@ export async function detectFaceOnTemplate(canvasOrImg) {
     console.warn('detectFaceOnTemplate error:', err);
     return null;
   }
-}
-
-/**
- * Computes Delaunay triangulation indices from two sets of landmarks (Face A and Face B).
- * Uses the mean midpoint coordinates so triangles are valid and non-crossing for both geometries.
- */
-export function computeDelaunayTriangles(landmarksA, landmarksB) {
-  if (!landmarksA || landmarksA.length === 0) return [];
-
-  const points = landmarksA.map((ptA, i) => {
-    const ptB = landmarksB?.[i] || ptA;
-    return [(ptA.x + ptB.x) / 2, (ptA.y + ptB.y) / 2];
-  });
-
-  const delaunay = Delaunay.from(points);
-  const triangles = [];
-  for (let i = 0; i < delaunay.triangles.length; i += 3) {
-    triangles.push([
-      delaunay.triangles[i],
-      delaunay.triangles[i + 1],
-      delaunay.triangles[i + 2]
-    ]);
-  }
-
-  return triangles;
 }
 
 // Perimeter contour indices that outline the natural anatomical boundary of the human face
