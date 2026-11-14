@@ -3,11 +3,46 @@
 // posts: each a creator line, the meme drawn with its captions, and Like (or double-tap the
 // picture), Share, Download and Remix (opens it in the editor, App's handleRemixCommunityMeme).
 // Likes are remembered on this device.
-import React, { useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { Check, Download, Flame, Heart, Repeat, Search, Share2, Sparkles, Trophy, X } from 'lucide-react';
 import { COMMUNITY_MEMES } from '../data/communityMemes';
 import { safeGet, safeSet } from '../utils/storage';
 import './SocialFeed.css';
+
+interface Creator {
+  name: string;
+  handle: string;
+  avatar: string;
+  badge?: string;
+}
+
+interface CommunityPost {
+  id: string;
+  creator: Creator;
+  title: string;
+  timestamp: string;
+  imageUrl: string;
+  fallbackUrl?: string;
+  likes: number;
+  remixes?: number;
+  category: string;
+  tags: string[];
+  captions?: { text: string; y?: number }[];
+  // How the captions are drawn when not the default (e.g. 'poster').
+  captionLook?: string;
+}
+
+interface PostProps {
+  post: CommunityPost;
+  liked: boolean;
+  onLike: (id: string) => void;
+  onShare: (post: CommunityPost) => void;
+  onDownload: (post: CommunityPost) => void;
+  onRemix: (post: CommunityPost) => void;
+  onTag: (tag: string) => void;
+}
+
+const POSTS = COMMUNITY_MEMES as CommunityPost[];
 
 const FILTERS = [
   { id: 'all', label: 'For you', Icon: Sparkles },
@@ -17,15 +52,15 @@ const FILTERS = [
 ];
 
 const LIKES_KEY = 'meme_liked_posts';
-const compact = (n) => (n >= 1000 ? `${(n / 1000).toFixed(n >= 10000 ? 0 : 1).replace(/\.0$/, '')}k` : String(n));
-const fileName = (title) => `${String(title).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'meme'}.jpg`;
+const compact = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(n >= 10000 ? 0 : 1).replace(/\.0$/, '')}k` : String(n));
+const fileName = (title: string) => `${String(title).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'meme'}.jpg`;
 
-const inFilter = (post, filter) =>
+const inFilter = (post: CommunityPost, filter: string) =>
   filter === 'all' ||
   (filter === 'trending' && (post.category === 'trending' || post.likes > 400)) ||
   post.category === filter;
 
-const matches = (post, query) => {
+const matches = (post: CommunityPost, query: string) => {
   if (!query) return true;
   const q = query.toLowerCase().replace(/^[#@]/, '');
   return (
@@ -38,8 +73,8 @@ const matches = (post, query) => {
 
 // The community's creators, most-liked first.
 const CREATORS = (() => {
-  const byHandle = new Map();
-  for (const p of COMMUNITY_MEMES) {
+  const byHandle = new Map<string, Creator & { likes: number }>();
+  for (const p of POSTS) {
     const c = byHandle.get(p.creator.handle) || { ...p.creator, likes: 0 };
     c.likes += p.likes;
     byHandle.set(p.creator.handle, c);
@@ -48,7 +83,7 @@ const CREATORS = (() => {
 })();
 
 // One post: the creator, the meme with its captions, its actions, then its title and tags.
-function Post({ post, liked, onLike, onShare, onDownload, onRemix, onTag }) {
+function Post({ post, liked, onLike, onShare, onDownload, onRemix, onTag }: PostProps) {
   const [burst, setBurst] = useState(0);
   const likes = post.likes + (liked ? 1 : 0);
   const like = () => {
@@ -129,25 +164,25 @@ function Post({ post, liked, onLike, onShare, onDownload, onRemix, onTag }) {
   );
 }
 
-export default function SocialFeed({ onRemixMeme }) {
+export default function SocialFeed({ onRemixMeme }: { onRemixMeme?: (post: CommunityPost) => void }) {
   const [filter, setFilter] = useState('all');
   const [query, setQuery] = useState('');
-  const [creator, setCreator] = useState(null);
-  const [liked, setLiked] = useState(() => {
-    const v = safeGet(LIKES_KEY, []);
+  const [creator, setCreator] = useState<string | null>(null);
+  const [liked, setLiked] = useState<string[]>(() => {
+    const v: unknown = safeGet(LIKES_KEY);
     return Array.isArray(v) ? v : [];
   });
   const [toast, setToast] = useState('');
   const toastTimer = useRef(0);
-  const searchRef = useRef(null);
+  const searchRef = useRef<HTMLInputElement>(null);
 
-  const say = (msg) => {
+  const say = (msg: string) => {
     setToast(msg);
     clearTimeout(toastTimer.current);
     toastTimer.current = window.setTimeout(() => setToast(''), 2200);
   };
 
-  const toggleLike = (id) => {
+  const toggleLike = (id: string) => {
     setLiked((prev) => {
       const next = prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id];
       safeSet(LIKES_KEY, next);
@@ -155,7 +190,7 @@ export default function SocialFeed({ onRemixMeme }) {
     });
   };
 
-  const share = async (post) => {
+  const share = async (post: CommunityPost) => {
     const text = `"${post.title}" on Meme Studio`;
     const url = window.location.href;
     if (navigator.share) {
@@ -174,7 +209,7 @@ export default function SocialFeed({ onRemixMeme }) {
     }
   };
 
-  const download = (post) => {
+  const download = (post: CommunityPost) => {
     const a = document.createElement('a');
     a.href = post.imageUrl;
     a.download = fileName(post.title);
@@ -184,14 +219,14 @@ export default function SocialFeed({ onRemixMeme }) {
     say('Downloading…');
   };
 
-  const searchTag = (tag) => {
+  const searchTag = (tag: string) => {
     setCreator(null);
     setQuery(`#${tag}`);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const posts = useMemo(
-    () => COMMUNITY_MEMES.filter((p) => inFilter(p, filter) && matches(p, query.trim()) && (!creator || p.creator.handle === creator)),
+    () => POSTS.filter((p) => inFilter(p, filter) && matches(p, query.trim()) && (!creator || p.creator.handle === creator)),
     [filter, query, creator]
   );
   const creatorName = creator && CREATORS.find((c) => c.handle === creator)?.name;

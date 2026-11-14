@@ -27,6 +27,7 @@ import { fetchOpenSourceMemes } from '../services/memeService';
 import { safeGet, safeSet } from '../utils/storage';
 import { templateNumericId } from '../utils/templateOrder';
 import { EXPLORE_CATEGORIES } from '../data/exploreCategories';
+import TemplateThumb from './TemplateThumb';
 import './ExploreView.css';
 
 interface Template {
@@ -549,10 +550,10 @@ function ExploreShelfCard({ template, rank, isFavorite, onToggleFavorite, onSele
       </button>
 
       <div className="explore-shelf-thumb-wrap">
-        <img
+        <TemplateThumb
           src={isVideo ? template.thumbnailUrl : (template.imageUrl || template.thumbnailUrl)}
+          videoUrl={isVideo ? template.videoUrl : undefined}
           alt={template.name}
-          loading="lazy"
           className="explore-shelf-card-img"
         />
 
@@ -634,11 +635,10 @@ function ExploreGridCard({ template, index, isFavorite, onToggleFavorite, onSele
             : '1 / 1'
         }}
       >
-        <img
+        <TemplateThumb
           src={isVideo ? template.thumbnailUrl : (template.imageUrl || template.thumbnailUrl)}
+          videoUrl={isVideo ? template.videoUrl : undefined}
           alt={template.name}
-          loading="lazy"
-          decoding="async"
           className="explore-grid-img"
         />
 

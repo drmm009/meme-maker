@@ -706,7 +706,6 @@ function App() {
                 <ExploreView
                   initialCategory={exploreCategory}
                   onSelectTemplate={handleSelectTemplate}
-                  onCreateCustom={handleCreateCustom}
                 />
               </Suspense>
             </motion.div>
@@ -723,7 +722,6 @@ function App() {
               <Suspense fallback={<div className="glass-card" style={{ padding: '48px 24px', textAlign: 'center' }}>Loading community memes…</div>}>
                 <SocialFeed
                   onRemixMeme={handleRemixCommunityMeme}
-                  onCreateCustom={handleCreateCustom}
                 />
               </Suspense>
             </motion.div>

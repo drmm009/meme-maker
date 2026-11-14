@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { safeGet, safeSet } from '../utils/storage';
 import { templateNumericId } from '../utils/templateOrder';
+import TemplateThumb from './TemplateThumb';
 import './TemplateDiscovery.css';
 import HomeTools from './home/HomeTools';
 import { makerTemplate } from './editor/makers';
@@ -1209,17 +1210,11 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom, on
                                 : '1 / 1'
                             }}
                           >
-                            <img
+                            <TemplateThumb
                               src={template.type === 'video' ? template.thumbnailUrl : template.imageUrl}
+                              fallbackSrc={template.fallbackUrl}
+                              videoUrl={template.type === 'video' ? template.videoUrl : undefined}
                               alt={template.name}
-                              loading="lazy"
-                              decoding="async"
-                              onError={(e) => {
-                                const el = e.currentTarget;
-                                if (el.dataset.fbk || !template.fallbackUrl) return;
-                                el.dataset.fbk = '1';
-                                el.src = template.fallbackUrl;
-                              }}
                             />
                             
                             {template.type === 'video' && (
