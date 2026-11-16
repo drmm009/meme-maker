@@ -1,1002 +1,469 @@
-/* ==========================================================================
-   MY STUDIO: CYBER-VAULT SHOWCASE
-   Built from scratch with Frontend-Design principles:
-   - Dramatic lighting and editorial poster silhouettes
-   - Spotlight Hero for latest creation
-   - Ambient glow backdrops and acrylic glass micro-controls
-   - Dual view modes (Poster Grid vs. Compact Archive List)
-   ========================================================================== */
+/* My Studio (MyGallery.jsx): what is its own, on the shared iOS look (pages/iosLook.css): the
+   Grid/List switch, the tiles, the More menu, the inset list and a save's sheet. */
 
-.mg-vault,
-.mg-viewer {
-  --v-bg: #090a0f;
-  --v-surface: #10121a;
-  --v-surface-elevated: #161a26;
-  --v-surface-active: #1e2333;
-  --v-border: rgba(255, 255, 255, 0.08);
-  --v-border-hover: rgba(255, 255, 255, 0.16);
-  --v-border-accent: rgba(255, 94, 54, 0.4);
-  --v-text: #f8fafc;
-  --v-text-muted: rgba(248, 250, 252, 0.6);
-  --v-text-dim: rgba(248, 250, 252, 0.35);
-  --v-flame: #ff5e36;
-  --v-flame-glow: rgba(255, 94, 54, 0.25);
-  --v-cyan: #00d2ff;
-  --v-violet: #a855f7;
-  --v-emerald: #10b981;
-  --v-radius-card: 20px;
-  --v-radius-pill: 9999px;
-  font-family: 'Plus Jakarta Sans', Inter, -apple-system, BlinkMacSystemFont, sans-serif;
-  color: var(--v-text);
-  box-sizing: border-box;
-}
+/* ---- Grid/List switch ---- */
 
-.mg-vault {
-  position: relative;
-  z-index: 1;
-  max-width: 1240px;
-  margin: 0 auto;
-  padding: 8px 14px 44px 14px;
-}
-
-/* Ambient glow orb behind the studio */
-.mg-ambient-glow {
-  position: absolute;
-  top: -60px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 700px;
-  max-width: 90vw;
-  height: 280px;
-  background: radial-gradient(ellipse at center, rgba(255, 94, 54, 0.09) 0%, rgba(139, 92, 246, 0.04) 50%, transparent 75%);
-  pointer-events: none;
-  z-index: -1;
-  filter: blur(40px);
-}
-
-/* Category Accent Tokens */
-.mg-kind-tag--meme { --tag-color: #ff5e36; --tag-bg: rgba(255, 94, 54, 0.14); }
-.mg-kind-tag--sticker { --tag-color: #10b981; --tag-bg: rgba(16, 185, 129, 0.14); }
-.mg-kind-tag--gif { --tag-color: #a855f7; --tag-bg: rgba(168, 85, 247, 0.14); }
-.mg-kind-tag--video { --tag-color: #00d2ff; --tag-bg: rgba(0, 210, 255, 0.14); }
-
-.mg-kind-glow--meme { color: #ff5e36; background: rgba(255, 94, 54, 0.12); }
-.mg-kind-glow--sticker { color: #10b981; background: rgba(16, 185, 129, 0.12); }
-.mg-kind-glow--gif { color: #a855f7; background: rgba(168, 85, 247, 0.12); }
-.mg-kind-glow--video { color: #00d2ff; background: rgba(0, 210, 255, 0.12); }
-
-/* ==========================================================================
-   1. HEADER DECK & TOOLBAR
-   ========================================================================== */
-
-.mg-header-deck {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  margin-bottom: 22px;
-}
-
-@media (min-width: 768px) {
-  .mg-header-deck {
-    flex-direction: row;
-    align-items: flex-end;
-    justify-content: space-between;
-  }
-}
-
-.mg-hero-identity {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.mg-hero-pill-badge {
+.mg-view-switch {
   display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  width: fit-content;
-  padding: 3px 10px;
-  border-radius: var(--v-radius-pill);
-  background: var(--v-flame-glow);
-  border: 1px solid rgba(255, 94, 54, 0.3);
-  font-size: 0.7rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  color: var(--v-flame);
-}
-
-.mg-pulsing-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--v-flame);
-  box-shadow: 0 0 8px var(--v-flame);
-}
-
-.mg-hero-title {
-  margin: 2px 0 0;
-  font-size: 2.2rem;
-  font-weight: 900;
-  letter-spacing: -0.04em;
-  color: var(--v-text);
-  line-height: 1.1;
-  background: linear-gradient(180deg, #ffffff 0%, rgba(255, 255, 255, 0.82) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.mg-hero-stats {
-  margin: 0;
-  font-size: 0.88rem;
-  font-weight: 500;
-  color: var(--v-text-muted);
-}
-
-.mg-stat-value {
-  color: var(--v-text);
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-}
-
-/* Controls Bar */
-.mg-controls-bar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  max-width: 380px;
-}
-
-.mg-search-capsule {
-  position: relative;
-  flex: 1;
-  display: flex;
-  align-items: center;
-  height: 42px;
-  background: var(--v-surface);
-  border: 1px solid var(--v-border);
-  border-radius: var(--v-radius-pill);
-  padding: 0 12px 0 36px;
-  transition: all 0.2s ease;
-}
-
-.mg-search-capsule:focus-within {
-  border-color: var(--v-flame);
-  box-shadow: 0 0 0 3px var(--v-flame-glow);
-  background: var(--v-surface-elevated);
-}
-
-.mg-search-icon {
-  position: absolute;
-  left: 12px;
-  color: var(--v-text-dim);
-  pointer-events: none;
-}
-
-.mg-search-input {
-  width: 100%;
-  border: none;
-  background: transparent;
-  color: var(--v-text);
-  font: inherit;
-  font-size: 0.84rem;
-  font-weight: 500;
-  outline: none;
-}
-
-.mg-search-input::placeholder {
-  color: var(--v-text-dim);
-}
-
-.mg-search-clear {
-  display: grid;
-  place-items: center;
-  width: 20px;
-  height: 20px;
-  border: none;
-  border-radius: 50%;
-  background: var(--v-surface-active);
-  color: var(--v-text-muted);
-  cursor: pointer;
-  padding: 0;
-}
-
-/* Dual View Toggle */
-.mg-view-toggle-capsule {
-  display: flex;
-  align-items: center;
-  background: var(--v-surface);
-  border: 1px solid var(--v-border);
-  border-radius: var(--v-radius-pill);
-  padding: 3px;
-  gap: 2px;
+  flex: none;
+  padding: 2px;
+  border-radius: 10px;
+  background: var(--ios-fill);
 }
 
 .mg-view-btn {
   display: grid;
   place-items: center;
-  width: 34px;
-  height: 34px;
-  border: none;
-  border-radius: 50%;
-  background: transparent;
-  color: var(--v-text-dim);
+  width: 40px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--ios-label-2);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: background-color 0.2s var(--ios-ease), color 0.2s var(--ios-ease);
 }
 
-.mg-view-btn.is-active {
-  background: #ffffff;
-  color: #090a0f;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+.mg-view-btn[aria-pressed='true'] {
+  background: var(--ios-key);
+  color: #fff;
+  /* The hairline keeps the black key's edge visible on the dark track. */
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1), 0 3px 8px rgba(0, 0, 0, 0.3);
 }
 
-.mg-poster-badges-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
+/* ---- Grid of tiles ---- */
 
-.mg-featured-glow-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  height: 22px;
-  padding: 0 8px;
-  border-radius: var(--v-radius-pill);
-  background: var(--v-flame);
-  color: #ffffff;
-  font-size: 0.68rem;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  box-shadow: 0 2px 10px rgba(255, 94, 54, 0.5);
-}
-
-@media (min-width: 620px) {
-  .mg-poster-card--featured {
-    grid-column: span 2;
-  }
-  .mg-poster-card--featured .mg-poster-window {
-    aspect-ratio: 16 / 9.5;
-  }
-}
-
-/* ==========================================================================
-   3. CATEGORY SEGMENTED RAIL
-   ========================================================================== */
-
-.mg-category-rail {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 0 -14px 20px -14px;
-  padding: 2px 14px;
-  overflow-x: auto;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
-}
-
-.mg-category-rail::-webkit-scrollbar {
-  display: none;
-}
-
-.mg-tab-chip {
-  flex: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  height: 38px;
-  padding: 0 12px 0 14px;
-  border-radius: var(--v-radius-pill);
-  border: 1px solid var(--v-border);
-  background: var(--v-surface);
-  color: var(--v-text-muted);
-  font: inherit;
-  font-size: 0.84rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.16s cubic-bezier(0.16, 1, 0.3, 1);
-  box-sizing: border-box;
-}
-
-.mg-tab-chip:hover {
-  color: var(--v-text);
-  background: var(--v-surface-elevated);
-  border-color: var(--v-border-hover);
-}
-
-.mg-tab-chip.is-active {
-  background: #ffffff;
-  color: #090a0f;
-  border-color: #ffffff;
-  font-weight: 800;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
-}
-
-.mg-chip-count {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 20px;
-  height: 20px;
-  padding: 0 6px;
-  border-radius: var(--v-radius-pill);
-  background: rgba(255, 255, 255, 0.08);
-  font-size: 0.72rem;
-  font-weight: 800;
-  font-variant-numeric: tabular-nums;
-  line-height: 1;
-}
-
-.mg-tab-chip.is-active .mg-chip-count {
-  background: rgba(9, 10, 15, 0.12);
-  color: #090a0f;
-}
-
-/* Kind tags */
-.mg-kind-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  height: 22px;
-  padding: 0 8px;
-  border-radius: var(--v-radius-pill);
-  background: var(--tag-bg, rgba(255, 94, 54, 0.14));
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  color: var(--tag-color, var(--v-flame));
-  font-size: 0.68rem;
-  font-weight: 800;
-  letter-spacing: 0.02em;
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
-}
-
-/* ==========================================================================
-   4. POSTER GRID: ART-FIRST ELEVATED CARDS
-   ========================================================================== */
-
-.mg-poster-grid {
+.mg-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 22px 14px;
+  margin-top: 22px;
 }
 
-@media (min-width: 620px) {
-  .mg-poster-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 16px;
-  }
-}
-
-@media (min-width: 940px) {
-  .mg-poster-grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 18px;
-  }
-}
-
-@media (min-width: 1240px) {
-  .mg-poster-grid {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    gap: 20px;
-  }
-}
-
-.mg-poster-card {
+.mg-tile {
   position: relative;
-  display: flex;
-  flex-direction: column;
   min-width: 0;
-  border-radius: var(--v-radius-card);
-  background: var(--v-surface);
-  border: 1px solid var(--v-border);
-  overflow: hidden;
-  cursor: pointer;
-  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
-              box-shadow 0.22s ease,
-              border-color 0.2s ease;
 }
 
-.mg-poster-card:hover {
-  transform: translateY(-4px);
-  border-color: var(--v-border-hover);
-  box-shadow: 0 16px 36px -10px rgba(0, 0, 0, 0.6);
+.mg-tile:has(.ios-menu-wrap.is-open),
+.mg-row:has(.ios-menu-wrap.is-open) {
+  z-index: 5;
 }
 
-.mg-poster-card:active {
-  transform: scale(0.985);
-}
-
-/* Media Artwork Window */
-.mg-poster-window {
-  position: relative;
+.mg-tile-open {
+  display: grid;
   width: 100%;
-  aspect-ratio: 4 / 4.5;
-  background: #06070a;
-  overflow: hidden;
+  padding: 0;
+  border: 0;
+  border-radius: 14px;
+  background: none;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.mg-tile-pic {
+  position: relative;
   display: grid;
   place-items: center;
+  aspect-ratio: 1;
+  border-radius: 14px;
+  background: var(--ios-surface);
+  overflow: hidden;
+  transition: transform 0.18s var(--ios-ease);
 }
 
-.mg-poster-img {
+/* A hairline, so a dark picture still has an edge on the black page. */
+.mg-tile-pic::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 1px solid var(--ios-hairline);
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.mg-tile-pic img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
-  transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.45s var(--ios-ease);
 }
 
-.mg-poster-card:hover .mg-poster-img {
-  transform: scale(1.04);
+/* A sticker is see-through: show it whole, on a lighter tile. */
+.mg-tile--sticker .mg-tile-pic {
+  background: var(--ios-surface-2);
 }
 
-/* Sticker Checkerboard Canvas */
-.mg-poster-card--sticker .mg-poster-window,
-.mg-viewer-pic.mg-viewer-pic--sticker {
-  background-color: #0c0e14;
-  background-image: conic-gradient(#151924 25%, transparent 0 50%, #151924 0 75%, transparent 0);
-  background-size: 16px 16px;
-}
-
-.mg-poster-card--sticker .mg-poster-img {
+.mg-tile--sticker .mg-tile-pic img {
   object-fit: contain;
-  padding: 14px;
+  padding: 9%;
   box-sizing: border-box;
 }
 
-.mg-poster-placeholder {
-  color: var(--v-text-dim);
-}
-
-/* Top bar on card */
-.mg-poster-top-bar {
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  right: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  z-index: 2;
-  pointer-events: none;
-}
-
-.mg-poster-time-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  height: 20px;
-  padding: 0 7px;
-  border-radius: var(--v-radius-pill);
-  background: rgba(9, 10, 15, 0.85);
-  border: 1px solid var(--v-border);
-  color: #ffffff;
-  font-size: 0.68rem;
-  font-weight: 800;
-  font-variant-numeric: tabular-nums;
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
-}
-
-/* Quick Hover Ribbon */
-.mg-poster-hover-actions {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(9, 10, 15, 0.35);
-  opacity: 0;
-  transition: opacity 0.2s ease;
-  z-index: 3;
-  pointer-events: none;
+.mg-tile-open:active .mg-tile-pic {
+  transform: scale(0.97);
 }
 
 @media (hover: hover) {
-  .mg-poster-card:hover .mg-poster-hover-actions {
-    opacity: 1;
+  .mg-tile-open:hover .mg-tile-pic img {
+    transform: scale(1.035);
   }
 }
 
-.mg-hover-open-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 7px 16px;
-  border-radius: var(--v-radius-pill);
-  background: rgba(255, 255, 255, 0.96);
-  color: #090a0f;
-  font-size: 0.78rem;
-  font-weight: 800;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
-  transform: translateY(4px);
-  transition: transform 0.2s ease;
+.mg-tile-placeholder {
+  width: 30%;
+  height: 30%;
+  max-width: 40px;
+  max-height: 40px;
+  color: var(--ios-label-3);
 }
 
-.mg-poster-card:hover .mg-hover-open-pill {
-  transform: translateY(0);
+.mg-tile-kind,
+.mg-tile-time {
+  position: absolute;
+  bottom: 8px;
+  background: rgba(0, 0, 0, 0.55);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  color: #fff;
 }
 
-/* Card Deck Footer */
-.mg-poster-deck {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px;
-  padding: 10px 10px 10px 12px;
-  background: var(--v-surface);
-  border-top: 1px solid var(--v-border);
+.mg-tile-kind {
+  left: 8px;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
 }
 
-.mg-poster-card:hover .mg-poster-deck {
-  background: var(--v-surface-elevated);
-}
-
-.mg-poster-info {
-  flex: 1 1 auto;
-  min-width: 0;
-}
-
-.mg-poster-title {
-  margin: 0;
-  font-size: 0.86rem;
-  font-weight: 700;
-  color: var(--v-text);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  line-height: 1.25;
-}
-
-.mg-poster-date {
-  display: block;
-  margin-top: 2px;
-  font-size: 0.72rem;
-  font-weight: 500;
-  color: var(--v-text-muted);
+.mg-tile-time {
+  right: 8px;
+  padding: 2px 7px;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
   font-variant-numeric: tabular-nums;
 }
 
-.mg-poster-action-group {
+.mg-tile-name,
+.mg-tile-date {
+  padding-right: 34px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mg-tile-name {
+  margin-top: 9px;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.mg-tile-date {
+  margin-top: 1px;
+  font-size: 13px;
+  line-height: 1.35;
+  color: var(--ios-label-2);
+}
+
+.mg-tile .ios-menu-wrap {
+  position: absolute;
+  right: -2px;
+  bottom: 3px;
+}
+
+/* ---- Inset grouped list ---- */
+
+.mg-list {
+  max-width: 760px;
+  margin-top: 22px;
+  border-radius: 14px;
+  background: var(--ios-surface);
+}
+
+.mg-row {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 2px;
-  flex-shrink: 0;
+  padding-right: 8px;
 }
 
-.mg-mini-btn {
-  display: grid;
-  place-items: center;
-  width: 28px;
-  height: 28px;
-  padding: 0;
-  border: none;
-  border-radius: var(--v-radius-pill);
-  background: transparent;
-  color: var(--v-text-muted);
-  cursor: pointer;
-  transition: all 0.15s ease;
+.mg-row + .mg-row::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 76px;
+  height: 1px;
+  background: var(--ios-separator);
 }
 
-.mg-mini-btn:hover {
-  background: rgba(255, 255, 255, 0.12);
-  color: #ffffff;
-}
-
-.mg-mini-btn--danger:hover {
-  background: rgba(239, 68, 68, 0.2);
-  color: #ff6b6b;
-}
-
-/* ==========================================================================
-   5. ARCHIVE LIST VIEW (COMPACT DENSE TIMELINE)
-   ========================================================================== */
-
-.mg-archive-list {
+.mg-row-open {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.mg-archive-row {
-  display: flex;
+  flex: 1;
   align-items: center;
   gap: 12px;
-  padding: 8px 12px;
+  min-width: 0;
+  padding: 10px 6px 10px 12px;
+  border: 0;
   border-radius: 14px;
-  background: var(--v-surface);
-  border: 1px solid var(--v-border);
+  background: none;
+  color: inherit;
+  text-align: left;
   cursor: pointer;
-  transition: all 0.16s ease;
 }
 
-.mg-archive-row:hover {
-  background: var(--v-surface-elevated);
-  border-color: var(--v-border-hover);
-  transform: translateX(2px);
+.mg-row-open:active {
+  background: var(--ios-press);
 }
 
-.mg-archive-thumb-wrap {
-  position: relative;
-  width: 48px;
-  height: 48px;
-  border-radius: 10px;
-  overflow: hidden;
-  background: #06070a;
+.mg-row-pic {
   display: grid;
+  flex: none;
   place-items: center;
-  flex-shrink: 0;
+  width: 52px;
+  height: 52px;
+  border-radius: 9px;
+  background: var(--ios-surface-2);
+  overflow: hidden;
 }
 
-.mg-archive-thumb-wrap img {
+.mg-row-pic img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
 }
 
-.mg-archive-row-duration {
-  position: absolute;
-  bottom: 2px;
-  right: 2px;
-  background: rgba(0, 0, 0, 0.8);
-  color: #ffffff;
-  font-size: 0.6rem;
-  padding: 1px 4px;
-  border-radius: 4px;
+.mg-row--sticker .mg-row-pic img {
+  object-fit: contain;
+  padding: 5px;
+  box-sizing: border-box;
 }
 
-.mg-archive-row-main {
-  flex: 1 1 auto;
+.mg-row-text {
+  display: grid;
+  gap: 2px;
   min-width: 0;
 }
 
-.mg-archive-row-title-bar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.mg-archive-row-title {
-  margin: 0;
-  font-size: 0.9rem;
-  font-weight: 700;
-  color: var(--v-text);
+.mg-row-name,
+.mg-row-meta {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.mg-archive-row-date {
-  font-size: 0.72rem;
-  color: var(--v-text-muted);
+.mg-row-name {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.3;
 }
 
-.mg-archive-row-actions {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  flex-shrink: 0;
+.mg-row-meta {
+  font-size: 14px;
+  line-height: 1.35;
+  color: var(--ios-label-2);
 }
 
-/* ==========================================================================
-   6. EMPTY & LOADING STATES
-   ========================================================================== */
-
-.mg-empty-vault {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 14px;
-  padding: 64px 24px;
-  border-radius: 24px;
-  background: var(--v-surface);
-  border: 1px solid var(--v-border);
-  text-align: center;
+.mg-row-time {
+  font-variant-numeric: tabular-nums;
 }
 
-.mg-empty-vault--sub {
-  padding: 48px 24px;
-}
+/* ---- A save's sheet ---- */
 
-.mg-vault-spinner {
-  width: 46px;
-  height: 46px;
-  border-radius: 50%;
-  border: 3px solid rgba(255, 94, 54, 0.2);
-  border-top-color: var(--v-flame);
-  animation: mgVaultSpin 0.75s linear infinite;
-}
-
-@keyframes mgVaultSpin {
-  to { transform: rotate(360deg); }
-}
-
-.mg-empty-icon-shield {
-  display: grid;
-  place-items: center;
-  width: 68px;
-  height: 68px;
-  border-radius: 50%;
-  background: var(--v-flame-glow);
-  color: var(--v-flame);
-  border: 1px solid rgba(255, 94, 54, 0.3);
-}
-
-.mg-empty-vault-title {
-  margin: 0;
-  font-size: 1.25rem;
-  font-weight: 800;
-  color: var(--v-text);
-  letter-spacing: -0.02em;
-}
-
-.mg-empty-vault-desc {
-  margin: 0 0 6px;
-  max-width: 380px;
-  font-size: 0.88rem;
-  line-height: 1.5;
-  color: var(--v-text-muted);
-}
-
-.mg-vault-launch-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  height: 44px;
-  padding: 0 22px;
-  border-radius: var(--v-radius-pill);
-  border: none;
-  background: var(--v-flame);
-  color: #ffffff;
-  font: inherit;
-  font-size: 0.88rem;
-  font-weight: 800;
-  cursor: pointer;
-  box-shadow: 0 6px 20px rgba(255, 94, 54, 0.4);
-  transition: all 0.16s ease;
-}
-
-.mg-vault-launch-btn:hover {
-  background: #ff734d;
-  transform: translateY(-1px);
-}
-
-.mg-vault-sub-btn {
-  display: inline-flex;
-  align-items: center;
-  height: 40px;
-  padding: 0 18px;
-  border-radius: var(--v-radius-pill);
-  border: 1px solid var(--v-border);
-  background: var(--v-surface-elevated);
-  color: var(--v-text);
-  font: inherit;
-  font-size: 0.84rem;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-/* ==========================================================================
-   7. LIGHTBOX VIEWER / PREVIEW SHEET
-   ========================================================================== */
-
-.mg-viewer-backdrop {
+.mg-sheet-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 1000;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  background: rgba(4, 5, 8, 0.82);
-  -webkit-backdrop-filter: blur(16px);
-  backdrop-filter: blur(16px);
+  z-index: 5000;
+  display: grid;
+  align-items: end;
+  justify-items: center;
+  background: rgba(0, 0, 0, 0.52);
+  animation: mg-fade-in 0.26s ease-out;
 }
 
-.mg-viewer {
+.mg-sheet {
   box-sizing: border-box;
   width: 100%;
-  max-width: 580px;
+  max-width: 560px;
   max-height: 92dvh;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  padding: 16px 18px calc(18px + env(safe-area-inset-bottom, 0px));
-  border-radius: 28px 28px 0 0;
-  background: var(--v-surface);
-  border: 1px solid var(--v-border);
-  box-shadow: 0 -12px 48px rgba(0, 0, 0, 0.7);
+  padding: 6px 16px calc(16px + env(safe-area-inset-bottom, 0px));
+  border-radius: 18px 18px 0 0;
+  background: var(--ios-surface);
+  box-shadow: 0 -12px 44px rgba(0, 0, 0, 0.5);
   overflow-y: auto;
+  outline: none;
+  animation: mg-sheet-up 0.44s var(--ios-ease);
 }
 
-@media (min-width: 640px) {
-  .mg-viewer-backdrop {
-    align-items: center;
-    padding: 24px;
-  }
-  .mg-viewer {
-    border-radius: 24px;
-    padding-bottom: 20px;
-    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.8);
-  }
+.mg-sheet:focus-visible {
+  outline: none;
 }
 
-.mg-viewer-head {
+.mg-sheet-grabber {
+  display: block;
+  width: 36px;
+  height: 5px;
+  margin: 0 auto 4px;
+  border-radius: 3px;
+  background: var(--ios-label-3);
+}
+
+.mg-sheet-bar {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 12px;
+  min-height: 48px;
+}
+
+.mg-sheet-heading {
+  display: grid;
   min-width: 0;
 }
 
-.mg-viewer-title {
-  flex: 1 1 auto;
-  min-width: 0;
+.mg-sheet-title {
   margin: 0;
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.3;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 1.05rem;
-  font-weight: 800;
-  color: var(--v-text);
 }
 
-.mg-viewer-close {
-  flex-shrink: 0;
+.mg-sheet-kind {
+  font-size: 13px;
+  line-height: 1.35;
+  color: var(--ios-label-2);
+}
+
+.mg-sheet-pic {
   display: grid;
   place-items: center;
-  width: 36px;
-  height: 36px;
-  padding: 0;
-  border: 1px solid var(--v-border);
-  border-radius: var(--v-radius-pill);
-  background: var(--v-surface-elevated);
-  color: var(--v-text-muted);
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.mg-viewer-close:hover {
-  background: var(--v-surface-active);
-  color: #ffffff;
-}
-
-.mg-viewer-pic {
-  display: grid;
-  place-items: center;
-  min-height: 200px;
-  border-radius: 16px;
-  background: #06070a;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  margin-top: 8px;
+  border-radius: 12px;
+  background: #000;
   overflow: hidden;
 }
 
-.mg-viewer-media {
+.mg-sheet-pic--sticker {
+  background: var(--ios-surface-2);
+}
+
+.mg-sheet-media {
   display: block;
   max-width: 100%;
   max-height: 56dvh;
   object-fit: contain;
 }
 
-.mg-viewer-note {
-  margin: -6px 0 0;
-  font-size: 0.82rem;
-  color: var(--v-text-muted);
-  text-align: center;
+.mg-sheet-note {
+  margin: 10px 2px 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--ios-label-2);
 }
 
-.mg-viewer-actions {
-  display: flex;
+.mg-sheet-actions {
+  display: grid;
   gap: 10px;
+  margin-top: 14px;
 }
 
-.mg-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  height: 42px;
-  padding: 0 16px;
-  border: none;
-  border-radius: 14px;
-  font: inherit;
-  font-size: 0.88rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.16s ease;
-  box-sizing: border-box;
+@keyframes mg-fade-in {
+  from {
+    opacity: 0;
+  }
 }
 
-.mg-viewer-actions .mg-btn {
-  flex: 1 1 0;
-  min-width: 0;
-  white-space: nowrap;
+@keyframes mg-sheet-up {
+  from {
+    transform: translateY(100%);
+  }
 }
 
-.mg-btn--primary {
-  background: var(--v-flame);
-  color: #ffffff;
-  box-shadow: 0 4px 16px rgba(255, 94, 54, 0.35);
+@keyframes mg-sheet-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
 }
 
-.mg-btn--primary:hover:not(:disabled) {
-  background: #ff734d;
+/* ---- Wider screens ---- */
+
+@media (min-width: 480px) {
+  .mg-sheet-actions {
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+  }
 }
 
-.mg-btn--secondary {
-  background: var(--v-surface-elevated);
-  border: 1px solid var(--v-border);
-  color: var(--v-text);
+@media (min-width: 640px) {
+  .mg-sheet-backdrop {
+    align-items: center;
+    padding: 24px;
+  }
+
+  .mg-sheet {
+    padding-top: 10px;
+    padding-bottom: 16px;
+    border-radius: 18px;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.6);
+    animation-name: mg-sheet-pop;
+    animation-duration: 0.3s;
+  }
+
+  .mg-sheet-grabber {
+    display: none;
+  }
 }
 
-.mg-btn--secondary:hover:not(:disabled) {
-  background: var(--v-surface-active);
+@media (min-width: 720px) {
+
+  .mg-grid {
+    grid-template-columns: repeat(auto-fill, minmax(176px, 1fr));
+    gap: 30px 20px;
+    margin-top: 26px;
+  }
 }
 
-.mg-btn--danger {
-  background: rgba(239, 68, 68, 0.15);
-  color: #ff6b6b;
-}
+/* The search field beside the segmented control, neither stretched across a wide page. */
+@media (min-width: 900px) {
+  .mg-nav {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 320px;
+    column-gap: 16px;
+    align-items: center;
+  }
 
-.mg-btn--danger:hover:not(:disabled) {
-  background: rgba(239, 68, 68, 0.25);
-}
+  .mg-nav .ios-nav-row,
+  .mg-nav .ios-subtitle {
+    grid-column: 1 / -1;
+  }
 
-/* ==========================================================================
-   8. LIGHT THEME
-   ========================================================================== */
+  .mg-nav .ios-segments {
+    grid-column: 1;
+    grid-row: 3;
+    justify-self: start;
+    max-width: 100%;
+    margin-top: 16px;
+  }
 
-[data-theme='light'] .mg-vault,
-[data-theme='light'] .mg-viewer {
-  --v-bg: #f8fafc;
-  --v-surface: #ffffff;
-  --v-surface-elevated: #f1f5f9;
-  --v-surface-active: #e2e8f0;
-  --v-border: rgba(15, 23, 42, 0.08);
-  --v-border-hover: rgba(15, 23, 42, 0.16);
-  --v-text: #0f172a;
-  --v-text-muted: #64748b;
-  --v-text-dim: #94a3b8;
-}
+  .mg-nav .ios-segment {
+    padding: 0 16px;
+  }
 
-[data-theme='light'] .mg-hero-title {
-  background: linear-gradient(180deg, #0f172a 0%, #334155 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-[data-theme='light'] .mg-tab-chip.is-active,
-[data-theme='light'] .mg-view-btn.is-active {
-  background: #0f172a;
-  color: #ffffff;
-  border-color: #0f172a;
-}
-
-[data-theme='light'] .mg-tab-chip.is-active .mg-chip-count {
-  background: rgba(255, 255, 255, 0.2);
-  color: #ffffff;
-}
-
-[data-theme='light'] .mg-poster-window,
-[data-theme='light'] .mg-viewer-pic {
-  background: #f1f5f9;
-}
-
-[data-theme='light'] .mg-viewer-backdrop {
-  background: rgba(15, 23, 42, 0.5);
-}
-
-/* ==========================================================================
-   9. REDUCED MOTION
-   ========================================================================== */
-
-@media (prefers-reduced-motion: reduce) {
-  .mg-poster-card,
-  .mg-poster-img,
-  .mg-tab-chip,
-  .mg-spotlight-cta,
-  .mg-hover-open-pill,
-  .mg-vault-spinner {
-    transition: none !important;
-    transform: none !important;
-    animation: none !important;
+  .mg-nav .ios-search {
+    grid-column: 2;
+    grid-row: 3;
+    margin-top: 16px;
   }
 }

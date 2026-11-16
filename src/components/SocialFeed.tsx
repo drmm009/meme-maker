@@ -1,12 +1,14 @@
-// Social: the community's memes as a feed. A centred title, a search field and filter chips (For
-// you, Trending, Hot, Hall of Fame), a row of top creators (tap one to see only theirs), then the
-// posts: each a creator line, the meme drawn with its captions, and Like (or double-tap the
-// picture), Share, Download and Remix (opens it in the editor, App's handleRemixCommunityMeme).
-// Likes are remembered on this device.
+// Social: the community's memes as a feed, in the pages' iOS look (pages/iosLook.css, SocialFeed.css).
+// A large title, a search field and a segmented control (For you, Trending, Hot, Hall of Fame), a
+// row of top creators (tap one to see only theirs), then the posts: each a creator line, the meme
+// drawn with its captions, and Like (or double-tap the picture), Share, Download and Remix (opens
+// it in the editor, App's handleRemixCommunityMeme). Likes are remembered on this device.
 import { useMemo, useRef, useState } from 'react';
-import { Check, Download, Flame, Heart, Repeat, Search, Share2, Sparkles, Trophy, X } from 'lucide-react';
+import { Check, Download, Heart, Repeat, Search, Share } from 'lucide-react';
 import { COMMUNITY_MEMES } from '../data/communityMemes';
 import { safeGet, safeSet } from '../utils/storage';
+import SegmentedControl from './pages/SegmentedControl';
+import SearchField from './pages/SearchField';
 import './SocialFeed.css';
 
 interface Creator {
@@ -45,10 +47,10 @@ interface PostProps {
 const POSTS = COMMUNITY_MEMES as CommunityPost[];
 
 const FILTERS = [
-  { id: 'all', label: 'For you', Icon: Sparkles },
-  { id: 'trending', label: 'Trending', Icon: Flame },
-  { id: 'hot', label: 'Hot', Icon: Heart },
-  { id: 'hall-of-fame', label: 'Hall of Fame', Icon: Trophy },
+  { id: 'all', label: 'For you' },
+  { id: 'trending', label: 'Trending' },
+  { id: 'hot', label: 'Hot' },
+  { id: 'hall-of-fame', label: 'Hall of Fame' },
 ];
 
 const LIKES_KEY = 'meme_liked_posts';
@@ -97,7 +99,7 @@ function Post({ post, liked, onLike, onShare, onDownload, onRemix, onTag }: Post
         <span className="sf-avatar" aria-hidden="true">{post.creator.avatar}</span>
         <div className="sf-post-who">
           <span className="sf-post-name">
-            {post.creator.name}
+            <span className="sf-post-name-text">{post.creator.name}</span>
             {post.creator.badge && <span className="sf-badge">{post.creator.badge}</span>}
           </span>
           <span className="sf-post-meta">@{post.creator.handle} · {post.timestamp}</span>
@@ -133,21 +135,20 @@ function Post({ post, liked, onLike, onShare, onDownload, onRemix, onTag }: Post
           aria-pressed={liked}
           aria-label={liked ? 'Unlike' : 'Like'}
         >
-          <Heart size={21} fill={liked ? 'currentColor' : 'none'} />
+          <Heart size={22} fill={liked ? 'currentColor' : 'none'} aria-hidden="true" />
           <span>{compact(likes)}</span>
         </button>
         <span className="sf-action sf-action--static" title="Remixes">
-          <Repeat size={19} aria-hidden="true" />
+          <Repeat size={20} aria-hidden="true" />
           <span>{compact(post.remixes || 0)}</span>
         </span>
         <button type="button" className="sf-action" onClick={() => onShare(post)} aria-label="Share" title="Share">
-          <Share2 size={19} />
+          <Share size={20} aria-hidden="true" />
         </button>
         <button type="button" className="sf-action" onClick={() => onDownload(post)} aria-label="Download" title="Download">
-          <Download size={19} />
+          <Download size={20} aria-hidden="true" />
         </button>
-        <button type="button" className="sf-remix" onClick={() => onRemix(post)} aria-label={`Remix ${post.title}`}>
-          <Repeat size={16} strokeWidth={2.4} />
+        <button type="button" className="ios-btn ios-btn--filled ios-btn--small sf-remix" onClick={() => onRemix(post)} aria-label={`Remix ${post.title}`}>
           Remix
         </button>
       </div>
@@ -174,7 +175,6 @@ export default function SocialFeed({ onRemixMeme }: { onRemixMeme?: (post: Commu
   });
   const [toast, setToast] = useState('');
   const toastTimer = useRef(0);
-  const searchRef = useRef<HTMLInputElement>(null);
 
   const say = (msg: string) => {
     setToast(msg);
@@ -238,57 +238,22 @@ export default function SocialFeed({ onRemixMeme }: { onRemixMeme?: (post: Commu
   };
 
   return (
-    <div className="sf">
-      <header className="sf-head">
-        <h2 className="sf-title">Social</h2>
-        <p className="sf-sub">Memes from the community. Remix any of them.</p>
+    <div className="sf ios ios-page">
+      <header className="sf-nav">
+        <h1 className="ios-title">Social</h1>
+        <p className="ios-subtitle">Memes from the community. Remix any of them.</p>
+        <SearchField value={query} onChange={setQuery} label="Search memes" placeholder="Search memes, creators, #tags" />
+        <SegmentedControl label="Feed" segments={FILTERS} value={filter} onChange={setFilter} />
       </header>
 
-      <div className="sf-search">
-        <Search size={18} className="sf-search-icon" aria-hidden="true" />
-        <input
-          ref={searchRef}
-          type="search"
-          className="sf-search-input"
-          placeholder="Search memes, creators, #tags"
-          aria-label="Search memes"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-        />
-        {query && (
-          <button type="button" className="sf-search-clear" onClick={() => { setQuery(''); searchRef.current?.focus(); }} aria-label="Clear search">
-            <X size={16} />
-          </button>
-        )}
-      </div>
-
-      <div className="sf-chips" role="tablist" aria-label="Feed">
-        {FILTERS.map(({ id, label, Icon }) => (
-          <button
-            key={id}
-            type="button"
-            role="tab"
-            aria-selected={filter === id}
-            className={`sf-chip ${filter === id ? 'is-active' : ''}`}
-            onClick={(e) => {
-              setFilter(id);
-              e.currentTarget.scrollIntoView?.({ block: 'nearest', inline: 'nearest', behavior: 'smooth' });
-            }}
-          >
-            <Icon size={15} aria-hidden="true" />
-            {label}
-          </button>
-        ))}
-      </div>
-
       <section className="sf-creators" aria-label="Top creators">
-        <h3 className="sf-section-title">Top creators</h3>
+        <h2 className="ios-section-title">Top creators</h2>
         <div className="sf-creator-row">
           {CREATORS.map((c) => (
             <button
               key={c.handle}
               type="button"
-              className={`sf-creator ${creator === c.handle ? 'is-active' : ''}`}
+              className="sf-creator"
               onClick={() => setCreator((cur) => (cur === c.handle ? null : c.handle))}
               aria-pressed={creator === c.handle}
               aria-label={`Show memes by ${c.name}`}
@@ -302,17 +267,19 @@ export default function SocialFeed({ onRemixMeme }: { onRemixMeme?: (post: Commu
 
       {creatorName && (
         <div className="sf-filtering">
-          Showing memes by <strong>{creatorName}</strong>
-          <button type="button" onClick={() => setCreator(null)}>Show all</button>
+          <span>
+            Showing memes by <strong>{creatorName}</strong>
+          </span>
+          <button type="button" className="ios-text-btn" onClick={() => setCreator(null)}>Show all</button>
         </div>
       )}
 
       {posts.length === 0 ? (
-        <div className="sf-empty">
-          <span className="sf-empty-icon" aria-hidden="true"><Search size={24} /></span>
-          <h3 className="sf-empty-title">No memes found</h3>
-          <p className="sf-empty-text">{query.trim() ? `Nothing matches "${query.trim()}".` : 'Nothing here yet.'} Try another word or filter.</p>
-          <button type="button" className="sf-btn" onClick={reset}>Reset filters</button>
+        <div className="ios-empty">
+          <Search className="ios-empty-icon" aria-hidden="true" />
+          <h2 className="ios-empty-title">No memes found</h2>
+          <p className="ios-empty-text">{query.trim() ? `Nothing matches “${query.trim()}”.` : 'Nothing here yet.'} Try another word or filter.</p>
+          <button type="button" className="ios-btn ios-btn--gray ios-btn--capsule" onClick={reset}>Reset filters</button>
         </div>
       ) : (
         <div className="sf-feed">
@@ -333,7 +300,7 @@ export default function SocialFeed({ onRemixMeme }: { onRemixMeme?: (post: Commu
 
       {toast && (
         <div className="sf-toast" role="status">
-          <Check size={16} aria-hidden="true" /> {toast}
+          <Check size={17} strokeWidth={2.6} aria-hidden="true" /> {toast}
         </div>
       )}
     </div>

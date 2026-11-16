@@ -1,29 +1,27 @@
-// My Studio: The Creator Vault & Production Showcase.
-// Redesigned with a cyber-studio aesthetic:
-// - Category segmented rail with live count badges
-// - Dual view modes: Cinematic Poster Grid vs Compact Archive List
-// - Quick search filter
-// - Ambient glow lightbox viewer with keyboard accessibility
+// My Studio: everything saved on this device, in an iOS look (MyGallery.css). A large title with
+// the count and a grid/list switch, a search field, and a segmented control for the kinds (All,
+// Memes, Stickers, GIFs, Videos) whose thumb slides to the picked one. Saves show as square tiles
+// or as an inset grouped list; each has a More button that pulls down Edit, Download and Delete.
+// Tapping a save opens it in a sheet (from the bottom on a phone) with the same actions.
 import React, { useMemo, useState, useEffect, useRef } from 'react';
 import ModalPortal from './ModalPortal';
 import {
   Clapperboard,
   Download,
-  Edit3,
+  Ellipsis,
   ImageIcon,
   ImagePlay,
   LayoutGrid,
   List,
-  Play,
+  Pencil,
   Scissors,
-  Trash2,
-  X,
   Search,
-  Sparkles,
-  Flame,
-  ArrowUpRight
+  Trash2,
 } from 'lucide-react';
 import { downloadImageHelper } from '../utils/downloadHelper';
+import SegmentedControl from './pages/SegmentedControl';
+import SearchField from './pages/SearchField';
+import PullDownMenu from './pages/PullDownMenu';
 import './MyGallery.css';
 
 const clock = (ms) => {
@@ -54,45 +52,49 @@ const day = (iso) =>
       })
     : 'Unknown date';
 
-// Fullscreen Darkroom Lightbox Viewer
+// A save's sheet: its name and kind, Done, then what the caller puts in it (the picture, the
+// actions). Escape or a tap outside closes it; focus returns to what opened it.
 function Viewer({ title, kind, onClose, children }) {
-  const { Icon, label } = KINDS[kind] || KINDS.meme;
+  const { label } = KINDS[kind] || KINDS.meme;
+  const sheetRef = useRef(null);
 
   useEffect(() => {
+    const opener = document.activeElement;
+    sheetRef.current?.focus();
     const onKeyDown = (e) => {
       if (e.key === 'Escape') onClose();
     };
     window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
+    return () => {
+      window.removeEventListener('keydown', onKeyDown);
+      if (opener instanceof HTMLElement && opener.isConnected) opener.focus();
+    };
   }, [onClose]);
 
   return (
     <ModalPortal>
-      <div className="mg-viewer-backdrop animate-fade-in" onClick={onClose} role="presentation">
+      <div className="ios ios-layer mg-sheet-backdrop" onClick={onClose} role="presentation">
         <div
-          className="mg-viewer animate-scale-up"
+          ref={sheetRef}
+          className="mg-sheet"
           role="dialog"
           aria-modal="true"
           aria-label={title}
+          tabIndex={-1}
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="mg-viewer-head">
-            <span className={`mg-kind-tag mg-kind-tag--${kind}`}>
-              <Icon size={12} strokeWidth={2.4} /> {label}
-            </span>
-            <h3 className="mg-viewer-title" title={title}>
-              {title}
-            </h3>
-            <button
-              type="button"
-              className="mg-viewer-close"
-              onClick={onClose}
-              title="Close"
-              aria-label="Close"
-            >
-              <X size={18} />
+          <span className="mg-sheet-grabber" aria-hidden="true" />
+          <header className="mg-sheet-bar">
+            <div className="mg-sheet-heading">
+              <h3 className="mg-sheet-title" title={title}>
+                {title}
+              </h3>
+              <span className="mg-sheet-kind">{label}</span>
+            </div>
+            <button type="button" className="ios-text-btn" onClick={onClose}>
+              Done
             </button>
-          </div>
+          </header>
           {children}
         </div>
       </div>
@@ -100,7 +102,7 @@ function Viewer({ title, kind, onClose, children }) {
   );
 }
 
-// Saved video preview modal
+// A saved video in its sheet: the exported file playing, or the project's picture.
 function VideoViewer({ video, onClose, onOpen, onDelete, onGetFile }) {
   const [file, setFile] = useState(null);
   const [url, setUrl] = useState('');
@@ -135,12 +137,12 @@ function VideoViewer({ video, onClose, onOpen, onDelete, onGetFile }) {
 
   return (
     <Viewer title={video.name} kind="video" onClose={onClose}>
-      <div className="mg-viewer-pic">
+      <div className="mg-sheet-pic">
         {url && !isGif ? (
-          <video className="mg-viewer-media" src={url} controls autoPlay loop playsInline />
+          <video className="mg-sheet-media" src={url} controls autoPlay loop playsInline />
         ) : (
           <img
-            className="mg-viewer-media"
+            className="mg-sheet-media"
             src={url || video.thumbnail}
             alt={video.name}
             decoding="async"
@@ -148,32 +150,19 @@ function VideoViewer({ video, onClose, onOpen, onDelete, onGetFile }) {
         )}
       </div>
       {!video.exportType && (
-        <p className="mg-viewer-note">Saved draft project. Re-edit to render full HD video.</p>
+        <p className="mg-sheet-note">This project hasn’t been exported yet. Edit it to export a video.</p>
       )}
-      <div className="mg-viewer-actions">
-        <button
-          type="button"
-          className="mg-btn mg-btn--primary"
-          onClick={() => onOpen(video)}
-        >
-          <Edit3 size={16} /> Edit
+      <div className="mg-sheet-actions">
+        <button type="button" className="ios-btn ios-btn--filled" onClick={() => onOpen(video)}>
+          <Pencil size={17} aria-hidden="true" /> Edit
         </button>
         {video.exportType && (
-          <button
-            type="button"
-            className="mg-btn mg-btn--secondary"
-            onClick={download}
-            disabled={!url}
-          >
-            <Download size={16} /> Download
+          <button type="button" className="ios-btn ios-btn--gray" onClick={download} disabled={!url}>
+            <Download size={17} aria-hidden="true" /> Download
           </button>
         )}
-        <button
-          type="button"
-          className="mg-btn mg-btn--danger"
-          onClick={() => onDelete(video.id)}
-        >
-          <Trash2 size={16} /> Delete
+        <button type="button" className="ios-btn ios-btn--destructive" onClick={() => onDelete(video.id)}>
+          <Trash2 size={17} aria-hidden="true" /> Delete
         </button>
       </div>
     </Viewer>
@@ -201,7 +190,6 @@ export default function MyGallery({
   const [selectedMemeForView, setSelectedMemeForView] = useState(null);
   const [fullViewUrl, setFullViewUrl] = useState('');
   const [videoForView, setVideoForView] = useState(null);
-  const searchInputRef = useRef(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -220,7 +208,7 @@ export default function MyGallery({
 
   const thumbOf = (meme) => meme.thumbnailUrl || meme.imageUrl || '';
 
-  // Consolidate creations chronologically
+  // Everything as one list, newest first.
   const items = useMemo(() => {
     const images = (savedMemes || []).map((m) => ({
       kind: KINDS[m.kind] ? m.kind : 'meme',
@@ -243,7 +231,6 @@ export default function MyGallery({
     );
   }, [savedMemes, savedVideos]);
 
-  // Tab counts
   const counts = useMemo(() => {
     const c = { all: items.length, meme: 0, sticker: 0, gif: 0, video: 0 };
     for (const it of items) {
@@ -252,7 +239,6 @@ export default function MyGallery({
     return c;
   }, [items]);
 
-  // Filtered items
   const shown = useMemo(() => {
     const byTab = tab === 'all' ? items : items.filter((it) => it.kind === tab);
     const q = searchQuery.trim().toLowerCase();
@@ -310,396 +296,192 @@ export default function MyGallery({
     else if (onSelectMeme) onSelectMeme(null);
   };
 
+  // What a save's More menu offers. A GIF can't be edited again; a video's download is in its
+  // sheet, where the file loads.
+  const actionsFor = (it) => {
+    const { label } = KINDS[it.kind];
+    return [
+      it.kind !== 'gif' && {
+        id: 'edit',
+        label: 'Edit',
+        title: `Edit ${label}`,
+        Icon: Pencil,
+        run: () => (it.video ? onOpenVideo?.(it.video) : handleEdit(it.meme)),
+      },
+      {
+        id: 'download',
+        label: 'Download',
+        title: `Download ${label}`,
+        Icon: Download,
+        run: () => (it.video ? setVideoForView(it.video) : handleDownload(it.meme)),
+      },
+      {
+        id: 'delete',
+        label: 'Delete',
+        title: `Delete ${label}`,
+        Icon: Trash2,
+        destructive: true,
+        run: () => (it.video ? onDeleteVideo?.(it.id) : handleDelete(it.id)),
+      },
+    ].filter(Boolean);
+  };
+
+  const openItem = (it) => (it.video ? setVideoForView(it.video) : setSelectedMemeForView(it.meme));
   const viewing = selectedMemeForView;
   const viewingKind = viewing && KINDS[viewing.kind] ? viewing.kind : 'meme';
   const TabIcon = tab === 'all' ? LayoutGrid : KINDS[tab].Icon;
+  const panelLabel = tab === 'all' ? 'All' : KINDS[tab].plural;
+  const hasSaves = galleryReady !== false && items.length > 0;
 
   return (
-    <div className="my-gallery mg-vault">
-      {/* Background ambient lighting */}
-      <div className="mg-ambient-glow" aria-hidden="true" />
-
-      {/* 1. VAULT COMMAND HEADER */}
-      <header className="mg-header-deck">
-        <div className="mg-hero-identity">
-          <div className="mg-hero-pill-badge">
-            <span className="mg-pulsing-dot" />
-            <span>CREATOR VAULT</span>
-          </div>
-          <h1 className="mg-hero-title">My Studio</h1>
-          {galleryReady !== false && items.length > 0 && (
-            <p className="mg-hero-stats">
-              <span className="mg-stat-value">{items.length}</span> creations secured on device
-            </p>
+    <div className="my-gallery mg ios ios-page">
+      <header className="mg-nav">
+        <div className="ios-nav-row">
+          <h1 className="ios-title">My Studio</h1>
+          {hasSaves && (
+            <div className="mg-view-switch" role="group" aria-label="Layout">
+              <button
+                type="button"
+                className="mg-view-btn"
+                aria-pressed={viewMode === 'grid'}
+                aria-label="Grid"
+                title="Grid"
+                onClick={() => setViewMode('grid')}
+              >
+                <LayoutGrid size={17} aria-hidden="true" />
+              </button>
+              <button
+                type="button"
+                className="mg-view-btn"
+                aria-pressed={viewMode === 'list'}
+                aria-label="List"
+                title="List"
+                onClick={() => setViewMode('list')}
+              >
+                <List size={17} aria-hidden="true" />
+              </button>
+            </div>
           )}
         </div>
+        {hasSaves && (
+          <p className="ios-subtitle">
+            {items.length} {items.length === 1 ? 'item' : 'items'} saved on this device
+          </p>
+        )}
 
-        {/* Action Toolbar: Search & View Switcher */}
-        {items.length > 0 && (
-          <div className="mg-controls-bar">
-            <div className="mg-search-capsule">
-              <Search size={15} className="mg-search-icon" aria-hidden="true" />
-              <input
-                ref={searchInputRef}
-                type="text"
-                className="mg-search-input"
-                placeholder="Search creations..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                aria-label="Filter creations"
-              />
-              {searchQuery && (
-                <button
-                  type="button"
-                  className="mg-search-clear"
-                  onClick={() => {
-                    setSearchQuery('');
-                    searchInputRef.current?.focus();
-                  }}
-                  aria-label="Clear search"
-                >
-                  <X size={14} />
-                </button>
-              )}
-            </div>
+        {hasSaves && <SearchField value={searchQuery} onChange={setSearchQuery} label="Search My Studio" />}
 
-            {/* View Mode Switcher */}
-            <div className="mg-view-toggle-capsule" role="group" aria-label="Layout mode">
-              <button
-                type="button"
-                className={`mg-view-btn ${viewMode === 'grid' ? 'is-active' : ''}`}
-                onClick={() => setViewMode('grid')}
-                title="Poster Grid"
-                aria-label="Poster Grid"
-              >
-                <LayoutGrid size={16} />
-              </button>
-              <button
-                type="button"
-                className={`mg-view-btn ${viewMode === 'list' ? 'is-active' : ''}`}
-                onClick={() => setViewMode('list')}
-                title="Archive List"
-                aria-label="Archive List"
-              >
-                <List size={16} />
-              </button>
-            </div>
-          </div>
+        {hasSaves && (
+          <SegmentedControl
+            label="Kinds of saves"
+            segments={TABS.map((t) => ({ id: t, label: t === 'all' ? 'All' : KINDS[t].plural, count: counts[t] }))}
+            value={tab}
+            onChange={setTab}
+          />
         )}
       </header>
 
-      {/* 2. CATEGORY SEGMENTED FILTER RAIL */}
-      {items.length > 0 && (
-        <nav className="mg-category-rail" role="tablist" aria-label="Saved categories">
-          {TABS.map((t) => {
-            const label = t === 'all' ? 'All' : KINDS[t].plural;
-            const count = counts[t];
-            const isActive = tab === t;
-            return (
-              <button
-                key={t}
-                type="button"
-                role="tab"
-                aria-selected={isActive}
-                className={`mg-tab-chip ${isActive ? 'is-active' : ''}`}
-                onClick={(e) => {
-                  setTab(t);
-                  e.currentTarget.scrollIntoView?.({
-                    block: 'nearest',
-                    inline: 'nearest',
-                    behavior: 'smooth',
-                  });
-                }}
-              >
-                {label}
-                <span className="mg-chip-count">{count}</span>
-              </button>
-            );
-          })}
-        </nav>
-      )}
-
-      {/* 4. CONTENT AREA: LOADING, EMPTY, OR CREATION CARDS */}
       {galleryReady === false ? (
-        <div className="mg-empty-vault" role="status">
-          <div className="mg-vault-spinner" />
-          <h3 className="mg-empty-vault-title">Loading gallery…</h3>
-          <p className="mg-empty-vault-desc">Decrypting your saved memes and assets from local vault.</p>
+        <div className="ios-empty" role="status">
+          <span className="ios-spinner" aria-hidden="true" />
+          <h2 className="ios-empty-title">Loading gallery…</h2>
         </div>
       ) : items.length === 0 ? (
-        /* Empty Studio */
-        <div className="mg-empty-vault">
-          <div className="mg-empty-icon-shield">
-            <LayoutGrid size={32} />
-          </div>
-          <h3 className="mg-empty-vault-title">No Saved Memes Yet</h3>
-          <p className="mg-empty-vault-desc">
-            Your studio vault is pristine. Memes, stickers, GIFs, and reels you generate will live here.
-          </p>
-          <button
-            type="button"
-            className="mg-vault-launch-btn"
-            onClick={() => make('meme')}
-          >
-            <Sparkles size={16} /> Make a meme
+        <div className="ios-empty">
+          <LayoutGrid className="ios-empty-icon" aria-hidden="true" />
+          <h2 className="ios-empty-title">No Saved Memes Yet</h2>
+          <p className="ios-empty-text">Memes, stickers, GIFs and videos you save appear here.</p>
+          <button type="button" className="ios-btn ios-btn--filled ios-btn--capsule" onClick={() => make('meme')}>
+            Make a meme
           </button>
         </div>
       ) : shown.length === 0 ? (
-        /* Empty Filter or Search */
-        <div className="mg-empty-vault mg-empty-vault--sub">
-          <div className={`mg-empty-icon-shield mg-kind-glow--${tab}`}>
-            <TabIcon size={26} />
-          </div>
+        <div className="ios-empty">
           {searchQuery ? (
             <>
-              <h3 className="mg-empty-vault-title">No creations matching &ldquo;{searchQuery}&rdquo;</h3>
-              <p className="mg-empty-vault-desc">Try searching for a different keyword or reset your filters.</p>
-              <button
-                type="button"
-                className="mg-vault-sub-btn"
-                onClick={() => setSearchQuery('')}
-              >
+              <Search className="ios-empty-icon" aria-hidden="true" />
+              <h2 className="ios-empty-title">No Results for “{searchQuery}”</h2>
+              <p className="ios-empty-text">Check the spelling or try a new search.</p>
+              <button type="button" className="ios-text-btn" onClick={() => setSearchQuery('')}>
                 Clear Search
               </button>
             </>
           ) : (
             <>
-              <h3 className="mg-empty-vault-title">No {KINDS[tab].plural.toLowerCase()} yet</h3>
-              <p className="mg-empty-vault-desc">
-                Unleash your creativity and create your first {KINDS[tab].label.toLowerCase()}.
-              </p>
-              <button
-                type="button"
-                className="mg-vault-launch-btn"
-                onClick={() => make(tab)}
-              >
+              <TabIcon className="ios-empty-icon" aria-hidden="true" />
+              <h2 className="ios-empty-title">No {KINDS[tab].plural} Yet</h2>
+              <p className="ios-empty-text">{KINDS[tab].plural} you save appear here.</p>
+              <button type="button" className="ios-btn ios-btn--filled ios-btn--capsule" onClick={() => make(tab)}>
                 {KINDS[tab].make}
               </button>
             </>
           )}
         </div>
       ) : viewMode === 'grid' ? (
-        /* =================================================================
-           POSTER GRID LAYOUT: ART-FIRST ELEVATED SQUIRCLES
-           ================================================================= */
-        <div
-          className="mg-poster-grid"
-          role="tabpanel"
-          aria-label={tab === 'all' ? 'All' : KINDS[tab].plural}
-        >
-          {shown.map((it, idx) => {
-            const isFeatured = idx === 0 && tab === 'all' && !searchQuery && shown.length > 1;
+        <div className="mg-grid" role="tabpanel" aria-label={panelLabel}>
+          {shown.map((it) => {
             const { Icon, label } = KINDS[it.kind];
-            const open = () =>
-              it.video ? setVideoForView(it.video) : setSelectedMemeForView(it.meme);
-            const remove = (e) => {
-              e.stopPropagation();
-              if (it.video) onDeleteVideo?.(it.id);
-              else handleDelete(it.id, e);
-            };
-            const downloadQuick = (e) => {
-              e.stopPropagation();
-              if (it.video) setVideoForView(it.video);
-              else handleDownload(it.meme, e);
-            };
-            const editQuick = (e) => {
-              e.stopPropagation();
-              if (it.video) onOpenVideo?.(it.video);
-              else handleEdit(it.meme, e);
-            };
-
             return (
-              <article
-                key={`${it.kind}-${it.id}`}
-                className={`mg-poster-card mg-poster-card--${it.kind} ${isFeatured ? 'mg-poster-card--featured' : ''}`}
-                onClick={open}
-              >
-                {/* Media Artwork Window */}
-                <div className="mg-poster-window">
-                  {it.thumb ? (
-                    <img
-                      src={it.thumb}
-                      alt={it.name}
-                      decoding="async"
-                      loading="lazy"
-                      className="mg-poster-img"
-                    />
-                  ) : (
-                    <div className="mg-poster-placeholder">
-                      <Icon size={36} />
-                    </div>
-                  )}
-
-                  {/* Top Kind Badge */}
-                  <div className="mg-poster-top-bar">
-                    <div className="mg-poster-badges-row">
-                      <span className={`mg-kind-tag mg-kind-tag--${it.kind}`}>
-                        <Icon size={11} strokeWidth={2.4} /> {label}
-                      </span>
-                      {isFeatured && (
-                        <span className="mg-featured-glow-tag">
-                          <Flame size={11} className="mg-flame-icon" /> LATEST
-                        </span>
-                      )}
-                    </div>
-                    {it.video && (
-                      <span className="mg-poster-time-pill">
-                        <Play size={9} fill="currentColor" /> {clock(it.video.durationMs)}
+              <article key={`${it.kind}-${it.id}`} className={`mg-tile mg-tile--${it.kind}`}>
+                <button type="button" className="mg-tile-open" onClick={() => openItem(it)}>
+                  <span className="mg-tile-pic">
+                    {it.thumb ? (
+                      <img src={it.thumb} alt="" decoding="async" loading="lazy" />
+                    ) : (
+                      <Icon className="mg-tile-placeholder" aria-hidden="true" />
+                    )}
+                    {tab === 'all' && (
+                      <span className="mg-tile-kind" title={label}>
+                        <Icon size={12} strokeWidth={2.4} aria-hidden="true" />
                       </span>
                     )}
-                  </div>
-
-                  {/* Quick Action Floating Ribbon on Hover */}
-                  <div className="mg-poster-hover-actions">
-                    <span className="mg-hover-open-pill">
-                      <ArrowUpRight size={14} /> Open
-                    </span>
-                  </div>
-                </div>
-
-                {/* Poster Deck Footer */}
-                <div className="mg-poster-deck">
-                  <div className="mg-poster-info">
-                    <h4 className="mg-poster-title" title={it.name}>
-                      {it.name}
-                    </h4>
-                    <span className="mg-poster-date">{day(it.date)}</span>
-                  </div>
-
-                  <div className="mg-poster-action-group">
-                    {it.kind !== 'gif' && (
-                      <button
-                        type="button"
-                        className="mg-mini-btn"
-                        onClick={editQuick}
-                        title={`Edit ${label}`}
-                        aria-label={`Edit ${it.name}`}
-                      >
-                        <Edit3 size={13} />
-                      </button>
-                    )}
-                    <button
-                      type="button"
-                      className="mg-mini-btn"
-                      onClick={downloadQuick}
-                      title={`Download ${label}`}
-                      aria-label={`Download ${it.name}`}
-                    >
-                      <Download size={13} />
-                    </button>
-                    <button
-                      type="button"
-                      className="mg-mini-btn mg-mini-btn--danger"
-                      onClick={remove}
-                      title={`Delete ${label}`}
-                      aria-label={`Delete ${it.name}`}
-                    >
-                      <Trash2 size={13} />
-                    </button>
-                  </div>
-                </div>
+                    {it.video && <span className="mg-tile-time">{clock(it.video.durationMs)}</span>}
+                  </span>
+                  <span className="mg-tile-name" title={it.name}>
+                    {it.name}
+                  </span>
+                  <span className="mg-tile-date">{day(it.date)}</span>
+                </button>
+                <PullDownMenu label={`More for ${it.name}`} menuLabel={it.name} actions={actionsFor(it)}>
+                  <Ellipsis size={18} aria-hidden="true" />
+                </PullDownMenu>
               </article>
             );
           })}
         </div>
       ) : (
-        /* =================================================================
-           COMPACT ARCHIVE LIST LAYOUT: DENSE STUDIO TIMELINE
-           ================================================================= */
-        <div
-          className="mg-archive-list"
-          role="tabpanel"
-          aria-label={tab === 'all' ? 'All' : KINDS[tab].plural}
-        >
+        <div className="mg-list" role="tabpanel" aria-label={panelLabel}>
           {shown.map((it) => {
             const { Icon, label } = KINDS[it.kind];
-            const open = () =>
-              it.video ? setVideoForView(it.video) : setSelectedMemeForView(it.meme);
-            const remove = (e) => {
-              e.stopPropagation();
-              if (it.video) onDeleteVideo?.(it.id);
-              else handleDelete(it.id, e);
-            };
-            const downloadQuick = (e) => {
-              e.stopPropagation();
-              if (it.video) setVideoForView(it.video);
-              else handleDownload(it.meme, e);
-            };
-            const editQuick = (e) => {
-              e.stopPropagation();
-              if (it.video) onOpenVideo?.(it.video);
-              else handleEdit(it.meme, e);
-            };
-
             return (
-              <div
-                key={`${it.kind}-${it.id}`}
-                className={`mg-archive-row mg-archive-row--${it.kind}`}
-                onClick={open}
-              >
-                <div className="mg-archive-thumb-wrap">
-                  {it.thumb ? (
-                    <img src={it.thumb} alt="" decoding="async" loading="lazy" />
-                  ) : (
-                    <Icon size={20} />
-                  )}
-                  {it.video && (
-                    <span className="mg-archive-row-duration">
-                      <Play size={8} fill="currentColor" /> {clock(it.video.durationMs)}
-                    </span>
-                  )}
-                </div>
-
-                <div className="mg-archive-row-main">
-                  <div className="mg-archive-row-title-bar">
-                    <span className={`mg-kind-tag mg-kind-tag--${it.kind}`}>
-                      {label}
-                    </span>
-                    <h4 className="mg-archive-row-title" title={it.name}>
+              <div key={`${it.kind}-${it.id}`} className={`mg-row mg-row--${it.kind}`}>
+                <button type="button" className="mg-row-open" onClick={() => openItem(it)}>
+                  <span className="mg-row-pic">
+                    {it.thumb ? (
+                      <img src={it.thumb} alt="" decoding="async" loading="lazy" />
+                    ) : (
+                      <Icon className="mg-tile-placeholder" aria-hidden="true" />
+                    )}
+                  </span>
+                  <span className="mg-row-text">
+                    <span className="mg-row-name" title={it.name}>
                       {it.name}
-                    </h4>
-                  </div>
-                  <span className="mg-archive-row-date">{day(it.date)}</span>
-                </div>
-
-                <div className="mg-archive-row-actions">
-                  {it.kind !== 'gif' && (
-                    <button
-                      type="button"
-                      className="mg-mini-btn"
-                      onClick={editQuick}
-                      title={`Edit ${label}`}
-                      aria-label={`Edit ${it.name}`}
-                    >
-                      <Edit3 size={14} />
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    className="mg-mini-btn"
-                    onClick={downloadQuick}
-                    title={`Download ${label}`}
-                    aria-label={`Download ${it.name}`}
-                  >
-                    <Download size={14} />
-                  </button>
-                  <button
-                    type="button"
-                    className="mg-mini-btn mg-mini-btn--danger"
-                    onClick={remove}
-                    title={`Delete ${label}`}
-                    aria-label={`Delete ${it.name}`}
-                  >
-                    <Trash2 size={14} />
-                  </button>
-                </div>
+                    </span>
+                    <span className="mg-row-meta">
+                      {label} · {day(it.date)}
+                      {it.video && <> · <span className="mg-row-time">{clock(it.video.durationMs)}</span></>}
+                    </span>
+                  </span>
+                </button>
+                <PullDownMenu label={`More for ${it.name}`} menuLabel={it.name} actions={actionsFor(it)}>
+                  <Ellipsis size={18} aria-hidden="true" />
+                </PullDownMenu>
               </div>
             );
           })}
         </div>
       )}
 
-      {/* 5. LIGHTBOX PREVIEWS */}
       {videoForView && (
         <VideoViewer
           video={videoForView}
@@ -717,42 +499,30 @@ export default function MyGallery({
       )}
 
       {viewing && (
-        <Viewer
-          title={viewing.name}
-          kind={viewingKind}
-          onClose={() => setSelectedMemeForView(null)}
-        >
-          <div className={`mg-viewer-pic mg-viewer-pic--${viewingKind}`}>
+        <Viewer title={viewing.name} kind={viewingKind} onClose={() => setSelectedMemeForView(null)}>
+          <div className={`mg-sheet-pic mg-sheet-pic--${viewingKind}`}>
             <img
-              className="mg-viewer-media"
+              className="mg-sheet-media"
               src={fullViewUrl || thumbOf(viewing)}
               alt={viewing.name}
               decoding="async"
             />
           </div>
-          <div className="mg-viewer-actions">
+          <div className="mg-sheet-actions">
             {viewingKind !== 'gif' && (
-              <button
-                type="button"
-                className="mg-btn mg-btn--primary"
-                onClick={(e) => handleEdit(viewing, e)}
-              >
-                <Edit3 size={16} /> Re-Edit
+              <button type="button" className="ios-btn ios-btn--filled" onClick={(e) => handleEdit(viewing, e)}>
+                <Pencil size={17} aria-hidden="true" /> Re-Edit
               </button>
             )}
             <button
               type="button"
-              className={`mg-btn ${viewingKind === 'gif' ? 'mg-btn--primary' : 'mg-btn--secondary'}`}
+              className={`ios-btn ${viewingKind === 'gif' ? 'ios-btn--filled' : 'ios-btn--gray'}`}
               onClick={(e) => handleDownload(viewing, e)}
             >
-              <Download size={16} /> Download
+              <Download size={17} aria-hidden="true" /> Download
             </button>
-            <button
-              type="button"
-              className="mg-btn mg-btn--danger"
-              onClick={(e) => handleDelete(viewing.id, e)}
-            >
-              <Trash2 size={16} /> Delete
+            <button type="button" className="ios-btn ios-btn--destructive" onClick={(e) => handleDelete(viewing.id, e)}>
+              <Trash2 size={17} aria-hidden="true" /> Delete
             </button>
           </div>
         </Viewer>

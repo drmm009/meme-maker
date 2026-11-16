@@ -1,10 +1,11 @@
-// Choose a layout (the dock's Creator): a blank canvas, then rows of image grids, video caption
-// layouts and social cards. Picking one opens it in the editor.
+// Choose Canvas Layout (the dock's Creator), in the pages' iOS look (pages/iosLook.css,
+// CustomLayoutBuilder.css): a Blank Canvas cell, then shelves of image grids (plus Custom Grid,
+// which asks for columns and rows), video caption layouts and social cards. Picking one opens it
+// in the editor.
 import { useState } from 'react';
-import type { KeyboardEvent } from 'react';
 import { LAYOUT_OPTIONS, MEME_TEMPLATES } from '../data/templates';
-import { Image as ImageIcon, X, Plus, Minus, Grid, Clapperboard, Share2, Type } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { ChevronRight, Grid3x3, Minus, Play, Plus } from 'lucide-react';
+import './pages/iosLook.css';
 import './CustomLayoutBuilder.css';
 
 type Template = Record<string, unknown>;
@@ -24,13 +25,42 @@ interface CustomLayoutBuilderProps {
   onSelectTemplate?: (template: Template) => void;
 }
 
-// Enter or Space on a card that acts as a button.
-const onActivate = (run: () => void) => (e: KeyboardEvent) => {
-  if (e.key === 'Enter' || e.key === ' ') {
-    e.preventDefault();
-    run();
-  }
-};
+// How a preset grid's panels are arranged, for its drawing.
+const gridShape = (id: string) =>
+  id === '2-vert' ? { cols: 1, rows: 2 }
+    : id === '2-horiz' ? { cols: 2, rows: 1 }
+      : id === '3-stacked' ? { cols: 1, rows: 3 }
+        : id === '3-horiz' ? { cols: 3, rows: 1 }
+          : id === '4-grid' ? { cols: 2, rows: 2 }
+            : { cols: 1, rows: 1 };
+
+// A small drawing of a grid of panels.
+function GridGlyph({ cols, rows }: { cols: number; rows: number }) {
+  return (
+    <span className="clb-glyph" style={{ gridTemplateColumns: `repeat(${cols}, 1fr)`, gridTemplateRows: `repeat(${rows}, 1fr)` }}>
+      {Array.from({ length: cols * rows }, (_, i) => (
+        <span key={i} />
+      ))}
+    </span>
+  );
+}
+
+// Minus and plus around a number from 1 to 6.
+function Stepper({ value, unit, onChange }: { value: number; unit: string; onChange: (value: number) => void }) {
+  return (
+    <span className="clb-stepper-wrap">
+      <output className="clb-stepper-value">{value}</output>
+      <span className="clb-stepper">
+        <button type="button" aria-label={`Fewer ${unit}`} disabled={value <= 1} onClick={() => onChange(Math.max(1, value - 1))}>
+          <Minus size={17} aria-hidden="true" />
+        </button>
+        <button type="button" aria-label={`More ${unit}`} disabled={value >= 6} onClick={() => onChange(Math.min(6, value + 1))}>
+          <Plus size={17} aria-hidden="true" />
+        </button>
+      </span>
+    </span>
+  );
+}
 
 const VIDEO_LAYOUT_OPTIONS = [
   {
@@ -68,21 +98,21 @@ const SOCIAL_LAYOUT_OPTIONS = [
     id: 'social-tweet-card',
     name: 'Tweet / X Post Card',
     description: 'Verified tweet format with metrics & handle',
-    badge: '𝕏 Post',
+    badge: 'X post',
     imageUrl: './images/social-tweet-card.svg'
   },
   {
     id: 'social-instagram-card',
     name: 'Instagram Feed Post',
     description: 'Square post format with username & avatar',
-    badge: 'Instagram',
+    badge: 'Instagram post',
     imageUrl: './images/social-instagram-card.svg'
   },
   {
     id: 'social-whatsapp-card',
     name: 'WhatsApp Chat Card',
     description: 'Realistic chat format with speech bubbles',
-    badge: 'WhatsApp',
+    badge: 'WhatsApp chat',
     imageUrl: './images/social-whatsapp-card.svg'
   }
 ];
@@ -268,232 +298,121 @@ export default function CustomLayoutBuilder({
     }
   };
 
+  const gridLayouts: LayoutOption[] = LAYOUT_OPTIONS.filter((l: LayoutOption) => l.id !== '1-panel' && l.id !== '3-hybrid');
+
   return (
-    <div className="custom-layout-builder">
-      {/* CHOOSE CANVAS LAYOUT BODY */}
-      <div className="choose-layout-scroll-body step-selection-area animate-fade-in">
-        <div className="choose-canvas-layout-title-section">
-          <h2 className="choose-canvas-layout-heading">Choose Canvas Layout</h2>
-        </div>
+    <div className="clb ios ios-page">
+      <header className="clb-nav">
+        <h1 className="ios-title">Choose Canvas Layout</h1>
+        <p className="ios-subtitle">Start blank, or from a grid, a video layout or a social card.</p>
+      </header>
 
-        {/* Prominent Blank Canvas Card */}
-        <div className="blank-canvas-section">
-          <div
-            className="icon-layout-card glass-card blank-canvas-card hover-lift"
-            onClick={() => handleSelectLayoutOption(LAYOUT_OPTIONS[0])}
-            role="button"
-            tabIndex={0}
-            onKeyDown={onActivate(() => handleSelectLayoutOption(LAYOUT_OPTIONS[0]))}
-          >
-            <div className="wireframe-container blank-wf-wrap">
-              <div className="layout-wireframe grid-1-panel">
-                <div className="wf-box" />
-              </div>
-            </div>
-            <div className="blank-canvas-text-wrap">
-              <span className="icon-layout-label blank-canvas-title">
-                {LAYOUT_OPTIONS[0].name}
+      <button type="button" className="clb-blank" onClick={() => handleSelectLayoutOption(LAYOUT_OPTIONS[0])}>
+        <span className="clb-blank-pic" aria-hidden="true">
+          <GridGlyph cols={1} rows={1} />
+        </span>
+        <span className="clb-blank-text">
+          <span className="clb-blank-name">{LAYOUT_OPTIONS[0].name}</span>
+          <span className="clb-blank-sub">Recommended</span>
+        </span>
+        <ChevronRight className="clb-chevron" size={18} aria-hidden="true" />
+      </button>
+
+      <section className="clb-section">
+        <h2 className="ios-section-title">Image Layout</h2>
+        <p className="ios-section-sub">Multi-panel grids and custom layouts</p>
+        {!isConfiguringCustom ? (
+          <div className="clb-shelf">
+            {gridLayouts.map((layout) => (
+              <button key={layout.id} type="button" className="clb-card" onClick={() => handleSelectLayoutOption(layout)}>
+                <span className="clb-card-pic" aria-hidden="true">
+                  <GridGlyph {...gridShape(layout.id)} />
+                </span>
+                <span className="clb-card-name">{layout.name}</span>
+              </button>
+            ))}
+            <button type="button" className="clb-card" onClick={() => setIsConfiguringCustom(true)}>
+              <span className="clb-card-pic" aria-hidden="true">
+                <Grid3x3 className="clb-card-icon" />
               </span>
-              <span className="blank-canvas-badge">Recommended</span>
+              <span className="clb-card-name">Custom Grid</span>
+            </button>
+          </div>
+        ) : (
+          <div className="clb-custom">
+            <span className="clb-custom-preview" aria-hidden="true">
+              <GridGlyph cols={customCols} rows={customRows} />
+            </span>
+            <div className="clb-form">
+              <div className="clb-form-row">
+                <span className="clb-form-label">Columns</span>
+                <Stepper value={customCols} unit="columns" onChange={setCustomCols} />
+              </div>
+              <div className="clb-form-row">
+                <span className="clb-form-label">Rows</span>
+                <Stepper value={customRows} unit="rows" onChange={setCustomRows} />
+              </div>
+            </div>
+            <div className="clb-custom-actions">
+              <button type="button" className="ios-btn ios-btn--gray" onClick={() => setIsConfiguringCustom(false)}>
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="ios-btn ios-btn--filled"
+                onClick={() =>
+                  handleSelectLayoutOption({
+                    id: 'custom-grid',
+                    name: `Custom ${customCols}x${customRows}`,
+                    slots: customCols * customRows,
+                    cols: customCols,
+                    rows: customRows,
+                  })
+                }
+              >
+                Create {customCols * customRows} {customCols * customRows === 1 ? 'Panel' : 'Panels'}
+              </button>
             </div>
           </div>
+        )}
+      </section>
+
+      <section className="clb-section">
+        <h2 className="ios-section-title">Video Layout</h2>
+        <p className="ios-section-sub">Caption bars on a video canvas</p>
+        <div className="clb-shelf">
+          {VIDEO_LAYOUT_OPTIONS.map((opt) => (
+            <button key={opt.id} type="button" className="clb-card" onClick={() => handleSelectVideoLayout(opt)}>
+              <span className="clb-card-pic" aria-hidden="true">
+                <span className="clb-video">
+                  {opt.layoutType !== 'footer' && <span className="clb-video-bar" />}
+                  <span className="clb-video-stage">
+                    <Play size={16} fill="currentColor" strokeWidth={0} />
+                  </span>
+                  {opt.layoutType !== 'header' && <span className="clb-video-bar" />}
+                </span>
+              </span>
+              <span className="clb-card-name">{opt.name}</span>
+            </button>
+          ))}
         </div>
+      </section>
 
-        {/* ── SHELF 1: IMAGE LAYOUTS ── */}
-        <section className="curated-shelf-section layout-shelf-section">
-          <div className="shelf-header-row">
-            <div className="shelf-title-left">
-              <div className="shelf-icon-badge">
-                <ImageIcon size={20} />
-              </div>
-              <div>
-                <h3 className="shelf-heading">Image Layout</h3>
-                <p className="shelf-subtext">Multi-panel grids &amp; custom layouts</p>
-              </div>
-            </div>
-          </div>
-          {!isConfiguringCustom ? (
-            <div className="shelf-horizontal-scroll">
-              {LAYOUT_OPTIONS.filter((l) => l.id !== '1-panel' && l.id !== '3-hybrid').map((layout) => (
-                <div
-                  key={layout.id}
-                  className="shelf-meme-card layout-shelf-card"
-                  onClick={() => handleSelectLayoutOption(layout)}
-                onKeyDown={onActivate(() => handleSelectLayoutOption(layout))}
-                  role="button"
-                  tabIndex={0}
-                >
-                  <div className="shelf-card-thumb-wrap layout-thumb-wrap">
-                    <div className="wireframe-container layout-wf-container">
-                      <div className={`layout-wireframe grid-${layout.id}`}>
-                        {Array.from({ length: layout.slots }).map((_, idx) => (
-                          <div key={idx} className="wf-box" />
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="shelf-card-info">
-                    <span className="shelf-card-name">{layout.name}</span>
-                  </div>
-                </div>
-              ))}
-              <div
-                className="shelf-meme-card layout-shelf-card custom-grid-shelf-card"
-                onClick={() => setIsConfiguringCustom(true)}
-                onKeyDown={onActivate(() => setIsConfiguringCustom(true))}
-                role="button"
-                tabIndex={0}
-              >
-                <div className="shelf-card-thumb-wrap layout-thumb-wrap">
-                  <div className="custom-grid-icon-box">
-                    <Grid style={{ color: 'var(--poster-orange)', width: '38px', height: '38px', filter: 'drop-shadow(0 0 6px rgba(255, 94, 54, 0.4))' }} />
-                  </div>
-                </div>
-                <div className="shelf-card-info">
-                  <span className="shelf-card-name">Custom Grid</span>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div style={{ display: 'flex', justifyContent: 'center' }}>
-              <motion.div
-                className="glass-card"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
-                style={{ padding: '20px', borderRadius: '16px', width: '100%', maxWidth: '350px' }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
-                  <h4 style={{ margin: 0 }}>Custom Grid Size</h4>
-                  <div style={{ cursor: 'pointer', color: '#ff4d4d', display: 'flex', alignItems: 'center' }} onClick={() => setIsConfiguringCustom(false)}>
-                    <X className="icon-sm" />
-                  </div>
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '20px' }}>
-                  <div className="flex-between">
-                    <span>Columns</span>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', background: 'var(--bg-main)', padding: '4px', borderRadius: '8px' }}>
-                      <button className="btn btn-icon btn-xs" onClick={() => setCustomCols(Math.max(1, customCols - 1))}><Minus className="icon-xs" /></button>
-                      <span style={{ fontWeight: 'bold', width: '20px', textAlign: 'center' }}>{customCols}</span>
-                      <button className="btn btn-icon btn-xs" onClick={() => setCustomCols(Math.min(6, customCols + 1))}><Plus className="icon-xs" /></button>
-                    </div>
-                  </div>
-                  <div className="flex-between">
-                    <span>Rows</span>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', background: 'var(--bg-main)', padding: '4px', borderRadius: '8px' }}>
-                      <button className="btn btn-icon btn-xs" onClick={() => setCustomRows(Math.max(1, customRows - 1))}><Minus className="icon-xs" /></button>
-                      <span style={{ fontWeight: 'bold', width: '20px', textAlign: 'center' }}>{customRows}</span>
-                      <button className="btn btn-icon btn-xs" onClick={() => setCustomRows(Math.min(6, customRows + 1))}><Plus className="icon-xs" /></button>
-                    </div>
-                  </div>
-                </div>
-                <button
-                  className="btn btn-primary"
-                  style={{ width: '100%', padding: '10px' }}
-                  onClick={() => {
-                    handleSelectLayoutOption({
-                      id: 'custom-grid',
-                      name: `Custom ${customCols}x${customRows}`,
-                      slots: customCols * customRows,
-                      cols: customCols,
-                      rows: customRows
-                    });
-                  }}
-                >
-                  Create {customCols * customRows} Panels
-                </button>
-              </motion.div>
-            </div>
-          )}
-        </section>
-
-        {/* ── SHELF 2: VIDEO LAYOUTS ── */}
-        <section className="curated-shelf-section layout-shelf-section">
-          <div className="shelf-header-row">
-            <div className="shelf-title-left">
-              <div className="shelf-icon-badge">
-                <Clapperboard size={20} />
-              </div>
-              <div>
-                <h3 className="shelf-heading">Video Layout</h3>
-                <p className="shelf-subtext">Caption bars on video canvas</p>
-              </div>
-            </div>
-          </div>
-          <div className="shelf-horizontal-scroll">
-            {VIDEO_LAYOUT_OPTIONS.map((opt) => (
-              <div
-                key={opt.id}
-                className="shelf-meme-card layout-shelf-card"
-                onClick={() => handleSelectVideoLayout(opt)}
-                onKeyDown={onActivate(() => handleSelectVideoLayout(opt))}
-                role="button"
-                tabIndex={0}
-              >
-                <div className="shelf-card-thumb-wrap layout-thumb-wrap">
-                  <div className={`video-wireframe-display ${opt.layoutType === 'header' ? 'header-layout-display' : opt.layoutType === 'footer' ? 'footer-layout-display' : 'both-layout-display'} layout-shelf-video-wf`}>
-                    {(opt.layoutType === 'header' || opt.layoutType === 'both') && (
-                      <div className="video-wf-bar top-text-bar">
-                        <Type size={9} className="video-wf-type-icon" />
-                        <span>HEADER</span>
-                      </div>
-                    )}
-                    <div className={`video-wf-stage ${opt.layoutType === 'both' ? 'compact-stage' : ''}`}>
-                      <Clapperboard size={18} className="video-stage-icon" />
-                    </div>
-                    {(opt.layoutType === 'footer' || opt.layoutType === 'both') && (
-                      <div className="video-wf-bar bottom-text-bar">
-                        <Type size={9} className="video-wf-type-icon" />
-                        <span>FOOTER</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <div className="shelf-card-info">
-                  <span className="shelf-card-name">{opt.name}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* ── SHELF 3: SOCIAL CARDS ── */}
-        <section className="curated-shelf-section layout-shelf-section">
-          <div className="shelf-header-row">
-            <div className="shelf-title-left">
-              <div className="shelf-icon-badge">
-                <Share2 size={20} />
-              </div>
-              <div>
-                <h3 className="shelf-heading">Social Cards</h3>
-                <p className="shelf-subtext">Twitter, WhatsApp &amp; Instagram</p>
-              </div>
-            </div>
-          </div>
-          <div className="shelf-horizontal-scroll">
-            {SOCIAL_LAYOUT_OPTIONS.map((card) => (
-              <div
-                key={card.id}
-                className="shelf-meme-card layout-shelf-card social-shelf-card"
-                onClick={() => handleSelectSocialCard(card.id)}
-                onKeyDown={onActivate(() => handleSelectSocialCard(card.id))}
-                role="button"
-                tabIndex={0}
-              >
-                <div className="shelf-card-thumb-wrap">
-                  <img src={card.imageUrl} alt={card.name} className="shelf-card-img" />
-                  <div className={`shelf-card-views social-deck-badge badge-${card.id}`}>
-                    {card.badge}
-                  </div>
-                </div>
-                <div className="shelf-card-info">
-                  <span className="shelf-card-name">{card.name}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      </div>
+      <section className="clb-section">
+        <h2 className="ios-section-title">Social Cards</h2>
+        <p className="ios-section-sub">X, Instagram and WhatsApp</p>
+        <div className="clb-shelf">
+          {SOCIAL_LAYOUT_OPTIONS.map((card) => (
+            <button key={card.id} type="button" className="clb-card" onClick={() => handleSelectSocialCard(card.id)}>
+              <span className="clb-card-pic clb-card-pic--photo">
+                <img src={card.imageUrl} alt="" loading="lazy" decoding="async" />
+              </span>
+              <span className="clb-card-name">{card.name}</span>
+              <span className="clb-card-sub">{card.badge}</span>
+            </button>
+          ))}
+        </div>
+      </section>
     </div>
   );
 }

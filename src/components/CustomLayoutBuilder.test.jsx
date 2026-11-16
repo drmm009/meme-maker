@@ -21,9 +21,7 @@ describe('CustomLayoutBuilder (live website version)', () => {
   it('triggers onSelectTemplate when Blank Canvas is clicked', () => {
     const handleSelect = vi.fn();
     render(<CustomLayoutBuilder onSelectTemplate={handleSelect} />);
-    const blankCard = screen.getByText('Blank Canvas').closest('.blank-canvas-card');
-    expect(blankCard).toBeTruthy();
-    fireEvent.click(blankCard);
+    fireEvent.click(screen.getByRole('button', { name: /Blank Canvas/ }));
 
     expect(handleSelect).toHaveBeenCalledTimes(1);
     const template = handleSelect.mock.calls[0][0];
@@ -49,9 +47,7 @@ describe('CustomLayoutBuilder (live website version)', () => {
     const handleSelect = vi.fn();
     render(<CustomLayoutBuilder onSelectTemplate={handleSelect} />);
 
-    const videoCard = screen.getByText('Header Text Video').closest('.layout-shelf-card');
-    expect(videoCard).toBeTruthy();
-    fireEvent.click(videoCard);
+    fireEvent.click(screen.getByRole('button', { name: 'Header Text Video' }));
 
     expect(handleSelect).toHaveBeenCalledTimes(1);
     const template = handleSelect.mock.calls[0][0];
@@ -59,13 +55,22 @@ describe('CustomLayoutBuilder (live website version)', () => {
     expect(template.videoLayout).toBe('header');
   });
 
+  it('makes a custom grid from the columns and rows picked', () => {
+    const handleSelect = vi.fn();
+    render(<CustomLayoutBuilder onSelectTemplate={handleSelect} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Custom Grid' }));
+    fireEvent.click(screen.getByRole('button', { name: 'More columns' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Fewer rows' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Create 3 Panels' }));
+    expect(handleSelect.mock.calls[0][0]).toMatchObject({ layoutId: 'custom-grid', name: 'Custom 3x1' });
+    expect(handleSelect.mock.calls[0][0].defaultCaptions).toHaveLength(3);
+  });
+
   it('selects a social card', () => {
     const handleSelect = vi.fn();
     render(<CustomLayoutBuilder onSelectTemplate={handleSelect} />);
 
-    const tweetCard = screen.getByText('Tweet / X Post Card').closest('.layout-shelf-card');
-    expect(tweetCard).toBeTruthy();
-    fireEvent.click(tweetCard);
+    fireEvent.click(screen.getByRole('button', { name: /X Post Card/ }));
 
     expect(handleSelect).toHaveBeenCalledTimes(1);
     const template = handleSelect.mock.calls[0][0];

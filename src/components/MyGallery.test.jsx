@@ -101,7 +101,43 @@ describe('MyGallery', () => {
     expect(screen.queryByText(/re-edit/i)).toBeNull();
   });
 
-  it('calls onDeleteMeme from the card button', () => {
+  it('searches by name and switches between the grid and the list', () => {
+    render(
+      <MyGallery
+        savedMemes={[meme({ id: 'm', name: 'Funny' }), meme({ id: 's', name: 'Cat sticker', kind: 'sticker' })]}
+        galleryReady
+        onDeleteMeme={() => {}}
+        onSelectMeme={() => {}}
+      />
+    );
+    expect(screen.getByText('2 items saved on this device')).toBeTruthy();
+    fireEvent.change(screen.getByLabelText('Search My Studio'), { target: { value: 'cat' } });
+    expect(screen.getByText('Cat sticker')).toBeTruthy();
+    expect(screen.queryByText('Funny')).toBeNull();
+    fireEvent.change(screen.getByLabelText('Search My Studio'), { target: { value: 'zzz' } });
+    expect(screen.getByText('No Results for “zzz”')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Clear Search' }));
+    expect(screen.getByText('Funny')).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('button', { name: 'List' }));
+    expect(screen.getByRole('button', { name: 'List' }).getAttribute('aria-pressed')).toBe('true');
+    // The list says each save's kind beside its date.
+    expect(screen.getByText(/^Sticker · /)).toBeTruthy();
+  });
+
+  it('pulls down a menu from More, and closes it on Escape', () => {
+    const onSelectMeme = vi.fn();
+    render(<MyGallery savedMemes={[meme({ name: 'Dance', kind: 'gif' })]} galleryReady onDeleteMeme={() => {}} onSelectMeme={onSelectMeme} />);
+    const more = screen.getByRole('button', { name: 'More for Dance' });
+    expect(more.getAttribute('aria-expanded')).toBe('false');
+    fireEvent.click(more);
+    // A GIF can't be edited again.
+    expect(screen.getAllByRole('menuitem').map((m) => m.textContent)).toEqual(['Download', 'Delete']);
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(screen.queryByRole('menu')).toBeNull();
+  });
+
+  it('calls onDeleteMeme from the More menu', () => {
     const onDeleteMeme = vi.fn();
     render(
       <MyGallery
@@ -111,7 +147,8 @@ describe('MyGallery', () => {
         onSelectMeme={() => {}}
       />
     );
-    fireEvent.click(screen.getAllByTitle('Delete Meme')[0]);
+    fireEvent.click(screen.getByRole('button', { name: 'More for My Meme' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Delete' }));
     expect(onDeleteMeme).toHaveBeenCalledWith('meme-1');
   });
 });

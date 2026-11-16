@@ -56,16 +56,37 @@ describe('ExploreView', () => {
     expect(cards.length).toBeGreaterThan(0);
   });
 
-  it('renders shelf category headings with icons matching category colors', () => {
+  it('shows a shelf per category, and See All opens that category as a grid', () => {
     render(<ExploreView onSelectTemplate={() => {}} initialCategory="all" />);
-    const heading = screen.getByText('Trending Memes');
-    expect(heading).toBeTruthy();
-    const headingRow = heading.closest('.explore-shelf-header-row');
-    expect(headingRow).toBeTruthy();
-    const iconSvg = headingRow.querySelector('.explore-shelf-icon-badge svg');
-    expect(iconSvg).toBeTruthy();
-    // Trending memes color is #ff3b60 (rgb(255, 59, 96))
-    expect(iconSvg.getAttribute('color') || iconSvg.style.color).toMatch(/(#ff3b60|rgb\(255,\s*59,\s*96\))/i);
+    expect(screen.getByRole('heading', { name: 'Trending Memes' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'See all Trending Memes' }));
+    expect(screen.getByRole('tab', { name: /trending/i }).getAttribute('aria-selected')).toBe('true');
+    expect(screen.getByRole('heading', { name: 'Trending' })).toBeTruthy();
+    expect(screen.queryByRole('heading', { name: 'Trending Memes' })).toBeNull();
+  });
+
+  it('opens a template, and stars one into My Favorites', () => {
+    localStorage.removeItem('meme_favorite_templates');
+    const onSelectTemplate = vi.fn();
+    render(<ExploreView onSelectTemplate={onSelectTemplate} initialCategory="social" />);
+    fireEvent.click(screen.getByRole('button', { name: /X Post Card.*views/ }));
+    expect(onSelectTemplate).toHaveBeenCalledWith(expect.objectContaining({ id: 'social-tweet-card' }));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add Tweet / X Post Card to favorites' }));
+    expect(JSON.parse(localStorage.getItem('meme_favorite_templates'))).toEqual(['social-tweet-card']);
+    fireEvent.click(screen.getByRole('tab', { name: /my favorites/i }));
+    expect(screen.getByRole('button', { name: 'Remove Tweet / X Post Card from favorites' })).toBeTruthy();
+    localStorage.removeItem('meme_favorite_templates');
+  });
+
+  it('sorts from the Sort menu, ticking the picked order', () => {
+    render(<ExploreView onSelectTemplate={() => {}} initialCategory="social" />);
+    fireEvent.click(screen.getByRole('button', { name: 'Sort templates' }));
+    expect(screen.getByRole('menuitemradio', { name: 'Trending' }).getAttribute('aria-checked')).toBe('true');
+    fireEvent.click(screen.getByRole('menuitemradio', { name: 'Name' }));
+    expect(screen.queryByRole('menu')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Sort templates' }));
+    expect(screen.getByRole('menuitemradio', { name: 'Name' }).getAttribute('aria-checked')).toBe('true');
   });
 
   it('keeps active category button visible in screen when category changes', async () => {
@@ -76,7 +97,7 @@ describe('ExploreView', () => {
     expect(desiTab).toBeTruthy();
 
     fireEvent.click(desiTab);
-    expect(desiTab.classList.contains('active')).toBe(true);
+    expect(desiTab.getAttribute('aria-selected')).toBe('true');
 
     // Give requestAnimationFrame timer a turn to execute scroll
     await new Promise((resolve) => setTimeout(resolve, 20));

@@ -1,0 +1,545 @@
+/* The iOS look shared by the pages outside the editors (My Studio, Social, Explore, Choose Canvas Layout):
+   the system greys, one orange tint, a large title, a search field, a segmented control with a
+   black key, section headings, buttons and the empty state. A page's root carries `ios ios-page`;
+   something it portals out of itself (a sheet) carries `ios-layer` for the same tokens. Dark by
+   default; the app's light theme (data-theme='light' on <html> and <body>) swaps the tokens. */
+
+.ios,
+.ios-layer {
+  --ios-surface: #1c1c1e;
+  --ios-surface-2: #2c2c2e;
+  --ios-fill: rgba(118, 118, 128, 0.24);
+  --ios-fill-strong: rgba(118, 118, 128, 0.36);
+  --ios-key: #000000;
+  --ios-label: #f4f4f6;
+  --ios-label-2: rgba(235, 235, 245, 0.64);
+  --ios-label-3: rgba(235, 235, 245, 0.32);
+  --ios-separator: rgba(84, 84, 88, 0.65);
+  --ios-hairline: rgba(255, 255, 255, 0.08);
+  --ios-material: rgba(44, 44, 46, 0.86);
+  --ios-press: rgba(255, 255, 255, 0.08);
+  --ios-accent: #ff5a36;
+  --ios-accent-text: #ff7652;
+  --ios-red: #ff5268;
+  --ios-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  font-family: 'Plus Jakarta Sans', Inter, system-ui, -apple-system, sans-serif;
+  color: var(--ios-label);
+  -webkit-font-smoothing: antialiased;
+}
+
+[data-theme='light'] .ios,
+[data-theme='light'] .ios-layer {
+  --ios-surface: #ffffff;
+  --ios-surface-2: #f2f2f7;
+  --ios-fill: rgba(118, 118, 128, 0.14);
+  --ios-fill-strong: rgba(118, 118, 128, 0.24);
+  --ios-label: #1c1c1e;
+  --ios-label-2: rgba(60, 60, 67, 0.72);
+  --ios-label-3: rgba(60, 60, 67, 0.34);
+  --ios-separator: rgba(60, 60, 67, 0.24);
+  --ios-hairline: rgba(0, 0, 0, 0.08);
+  --ios-material: rgba(250, 250, 252, 0.9);
+  --ios-press: rgba(0, 0, 0, 0.06);
+  --ios-accent-text: #d93d1a;
+  --ios-red: #d6263f;
+}
+
+/* Positioned, so the page sits above the app's fixed backdrop (App.css .app-static-bg). */
+.ios-page {
+  position: relative;
+  z-index: 1;
+  padding: 6px 6px 28px;
+  text-align: left;
+}
+
+.ios ::selection,
+.ios-layer ::selection {
+  background: rgba(255, 90, 54, 0.36);
+  color: #fff;
+}
+
+/* Buttons take the app's font, not the browser's. Inside :where(), so this never outweighs a
+   button's own size and weight. */
+:where(.ios, .ios-layer) button {
+  font: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ios :focus-visible,
+.ios-layer :focus-visible {
+  outline: 2px solid var(--ios-accent-text);
+  outline-offset: 2px;
+}
+
+/* ---- Large title ---- */
+
+.ios-nav-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.ios-title {
+  margin: 0;
+  font-size: clamp(28px, 7.4vw, 34px);
+  font-weight: 700;
+  line-height: 1.12;
+  letter-spacing: -0.022em;
+  color: var(--ios-label);
+  text-wrap: balance;
+}
+
+.ios-subtitle {
+  margin: 3px 0 0;
+  font-size: 15px;
+  line-height: 1.4;
+  color: var(--ios-label-2);
+  font-variant-numeric: tabular-nums;
+  text-wrap: pretty;
+}
+
+/* ---- Section heading ---- */
+
+.ios-section-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.012em;
+  color: var(--ios-label);
+}
+
+.ios-section-sub {
+  margin: 1px 0 0;
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--ios-label-2);
+}
+
+/* ---- Search field (SearchField.tsx) ---- */
+
+.ios-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 38px;
+  margin-top: 14px;
+  border-radius: 11px;
+  background: var(--ios-fill);
+}
+
+.ios-search:has(.ios-search-input:focus-visible) {
+  outline: 2px solid var(--ios-accent-text);
+  outline-offset: 1px;
+}
+
+.ios-search-icon {
+  position: absolute;
+  left: 10px;
+  color: var(--ios-label-2);
+  pointer-events: none;
+}
+
+.ios-search-input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0 36px 0 35px;
+  border: 0;
+  border-radius: inherit;
+  background: none;
+  color: var(--ios-label);
+  font: inherit;
+  font-size: 17px;
+  caret-color: var(--ios-accent);
+  appearance: none;
+}
+
+.ios-search-input:focus-visible {
+  outline: none;
+}
+
+.ios-search-input::placeholder {
+  color: var(--ios-label-2);
+  opacity: 1;
+}
+
+.ios-search-input::-webkit-search-cancel-button,
+.ios-search-input::-webkit-search-decoration {
+  appearance: none;
+  display: none;
+}
+
+.ios-search-clear {
+  position: absolute;
+  right: 9px;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--ios-label-2);
+  color: var(--ios-surface);
+  cursor: pointer;
+}
+
+/* A fingertip-sized target around the small glyph. */
+.ios-search-clear::before {
+  content: '';
+  position: absolute;
+  inset: -13px;
+}
+
+/* ---- Segmented control (SegmentedControl.tsx) ---- */
+
+.ios-segments {
+  position: relative;
+  display: flex;
+  margin-top: 12px;
+  padding: 2px;
+  border-radius: 10px;
+  background: var(--ios-fill);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.ios-segments::-webkit-scrollbar {
+  display: none;
+}
+
+/* The key under the picked segment: black, with a hairline so its edge shows on the dark track. */
+.ios-segments-key {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  left: 0;
+  width: var(--ios-key-w, 0);
+  border-radius: 8px;
+  background: var(--ios-key);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1), 0 3px 8px rgba(0, 0, 0, 0.3);
+  transform: translateX(var(--ios-key-x, 0));
+  transition: transform 0.34s var(--ios-ease), width 0.34s var(--ios-ease);
+}
+
+.ios-segment {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  flex: 1 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  height: 32px;
+  padding: 0 11px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--ios-label);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 0.2s var(--ios-ease);
+}
+
+.ios-segment[aria-selected='true'] {
+  color: #fff;
+}
+
+.ios-segment-count {
+  color: var(--ios-label-2);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.ios-segment[aria-selected='true'] .ios-segment-count {
+  color: rgba(255, 255, 255, 0.66);
+}
+
+/* On a phone many segments only fit without their counts: the picked one keeps its own. */
+@media (max-width: 479px) {
+  .ios-segment {
+    padding: 0 9px;
+  }
+
+  .ios-segment:not([aria-selected='true']) .ios-segment-count {
+    display: none;
+  }
+}
+
+/* ---- Buttons ---- */
+
+.ios-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 50px;
+  padding: 0 20px;
+  border: 0;
+  border-radius: 14px;
+  font-size: 17px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.16s var(--ios-ease), opacity 0.16s var(--ios-ease);
+}
+
+.ios-btn:active {
+  transform: scale(0.97);
+  opacity: 0.86;
+}
+
+.ios-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.ios-btn--filled {
+  background: var(--ios-accent);
+  color: #fff;
+}
+
+.ios-btn--gray {
+  background: var(--ios-fill);
+  color: var(--ios-accent-text);
+}
+
+.ios-btn--destructive {
+  background: rgba(255, 82, 104, 0.14);
+  color: var(--ios-red);
+}
+
+.ios-btn--capsule {
+  min-height: 46px;
+  padding: 0 24px;
+  border-radius: 999px;
+  font-size: 16px;
+}
+
+.ios-btn--small {
+  min-height: 34px;
+  padding: 0 16px;
+  border-radius: 999px;
+  font-size: 15px;
+}
+
+.ios-text-btn {
+  flex: none;
+  min-height: 44px;
+  padding: 0 4px;
+  border: 0;
+  background: none;
+  color: var(--ios-accent-text);
+  font-size: 17px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ios-text-btn:active {
+  opacity: 0.6;
+}
+
+/* ---- Pull-down menu (PullDownMenu.tsx) ---- */
+
+.ios-menu-wrap {
+  position: relative;
+  flex: none;
+}
+
+.ios-menu-btn {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--ios-label-2);
+  cursor: pointer;
+  transition: background-color 0.2s var(--ios-ease), color 0.2s var(--ios-ease);
+}
+
+.ios-menu-btn::before {
+  content: '';
+  position: absolute;
+  inset: -6px;
+}
+
+.ios-menu-wrap.is-open .ios-menu-btn {
+  background: var(--ios-fill-strong);
+  color: var(--ios-label);
+}
+
+@media (hover: hover) {
+  .ios-menu-btn:hover {
+    background: var(--ios-fill);
+    color: var(--ios-label);
+  }
+}
+
+.ios-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 20;
+  border-radius: 13px;
+  background: var(--ios-material);
+  -webkit-backdrop-filter: blur(26px) saturate(180%);
+  backdrop-filter: blur(26px) saturate(180%);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  transform-origin: top right;
+  animation: ios-menu-in 0.24s var(--ios-ease);
+}
+
+.ios-menu-wrap.is-up .ios-menu {
+  top: auto;
+  bottom: calc(100% + 6px);
+  transform-origin: bottom right;
+}
+
+.ios-menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 0;
+  background: none;
+  color: var(--ios-label);
+  font-size: 16px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.ios-menu-item + .ios-menu-item {
+  border-top: 1px solid var(--ios-separator);
+}
+
+.ios-menu-item--destructive {
+  color: var(--ios-red);
+}
+
+.ios-menu-item:focus-visible {
+  outline: none;
+  background: var(--ios-press);
+}
+
+.ios-menu-item:active {
+  background: var(--ios-fill-strong);
+}
+
+@media (hover: hover) {
+  .ios-menu-item:hover {
+    background: var(--ios-press);
+  }
+}
+
+@keyframes ios-menu-in {
+  from {
+    opacity: 0;
+    transform: scale(0.72);
+  }
+}
+
+.ios-menu-btn--filled {
+  width: 36px;
+  height: 36px;
+  background: var(--ios-fill);
+  color: var(--ios-label);
+}
+
+.ios-menu-item {
+  gap: 10px;
+}
+
+.ios-menu-label {
+  flex: 1;
+  min-width: 0;
+}
+
+/* A pick-one menu keeps a column for the tick, so the words line up. */
+.ios-menu-tick {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 18px;
+  color: var(--ios-accent-text);
+}
+
+/* ---- Empty and loading ---- */
+
+.ios-empty {
+  display: grid;
+  justify-items: center;
+  padding: 76px 24px 48px;
+  text-align: center;
+}
+
+.ios-empty-icon {
+  width: 52px;
+  height: 52px;
+  color: var(--ios-label-3);
+  stroke-width: 1.6;
+}
+
+.ios-empty-title {
+  margin: 16px 0 0;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.012em;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+}
+
+.ios-empty-text {
+  max-width: 34ch;
+  margin: 6px 0 0;
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--ios-label-2);
+  text-wrap: pretty;
+}
+
+.ios-empty .ios-btn,
+.ios-empty .ios-text-btn {
+  margin-top: 18px;
+}
+
+.ios-spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid var(--ios-fill);
+  border-top-color: var(--ios-label-2);
+  border-radius: 50%;
+  animation: ios-spin 0.9s linear infinite;
+}
+
+@keyframes ios-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (min-width: 720px) {
+  .ios-page {
+    padding: 14px 8px 36px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ios *,
+  .ios-layer,
+  .ios-layer * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
