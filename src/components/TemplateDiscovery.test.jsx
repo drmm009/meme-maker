@@ -57,15 +57,17 @@ describe('TemplateDiscovery', () => {
     expect(onNavigateExplore).toHaveBeenCalled();
   }, 30000);
 
-  it('shows the makers as tiles under the carousel', () => {
+  it('shows the makers as tiles on Home', () => {
     const onSelectTemplate = vi.fn();
     const onCreateCustom = vi.fn();
     const onOpenGifMaker = vi.fn();
     render(<TemplateDiscovery onSelectTemplate={onSelectTemplate} onCreateCustom={onCreateCustom} onOpenGifMaker={onOpenGifMaker} />);
     const tiles = screen.getByRole('navigation', { name: 'Makers' });
-    for (const name of ['Meme video', 'Stickers', 'Face swap', 'Social card', 'AI meme', 'GIF maker']) {
+    for (const name of ['Meme video', 'Stickers', 'Face swap', 'AI meme', 'GIF maker']) {
       expect(within(tiles).getByRole('button', { name })).toBeTruthy();
     }
+    // Social cards have their own shelf on Home, not a tile.
+    expect(within(tiles).queryByRole('button', { name: 'Social card' })).toBeNull();
     fireEvent.click(within(tiles).getByRole('button', { name: 'Meme video' }));
     expect(onCreateCustom).toHaveBeenCalledWith('video');
     fireEvent.click(within(tiles).getByRole('button', { name: 'Face swap' }));

@@ -275,9 +275,6 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom, on
         <HeroCarousel onAction={handleFeatureClick} uploadInputRef={cutoutFileInputRef} onUploadSelected={handleCutoutImageSelected} />
       )}
 
-      {/* The makers as tiles under the carousel, all visible at once */}
-      {!isGridView && <HomeTools onAction={handleFeatureClick} />}
-
       {/* VIEW MODE 1: FEATURED SHELVES (Default Homescreen) */}
       {!isGridView ? (
         <div className="featured-shelves-container">
@@ -289,6 +286,9 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom, on
             trendingShelfTemplates={trendingShelfTemplates}
             handleShelfSeeAll={handleShelfSeeAll}
           />
+
+          {/* The makers as tiles, below trending */}
+          <HomeTools onAction={handleFeatureClick} />
 
           {/* 3. AI MEME STUDIO GENERATOR CONTAINER (BELOW TRENDING MEMES) */}
           <AiMemePrompt onOpen={openAiMeme} />

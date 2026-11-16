@@ -613,6 +613,12 @@ body.modal-open {
     align-items: center !important;
     box-sizing: border-box !important;
   }
+  .app-header.app-header--hide-mobile {
+    display: none !important;
+  }
+  .main-content-container.main-content--no-header-mobile {
+    padding-top: calc(12px + env(safe-area-inset-top, 0px)) !important;
+  }
   .app-header .header-container {
     width: 100% !important;
     height: 100% !important;
@@ -804,6 +810,12 @@ body.modal-open {
   .btn { font-size: 0.95rem; }
   .icon-layout-label { font-size: 0.85rem !important; }
   h3:not(:where(.ui-theme *)), h4:not(:where(.ui-theme *)) { font-size: 1.15rem !important; }
+  .app-header.app-header--hide-mobile {
+    display: none !important;
+  }
+  .main-content-container.main-content--no-header-mobile {
+    padding-top: calc(12px + env(safe-area-inset-top, 0px)) !important;
+  }
 }
 /*  Editor layout: the phone layout, used at every width (was inside this media query)  */
 .editor-topbar .btn { font-size: 0.88rem !important; padding: 6px 12px !important;

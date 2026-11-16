@@ -557,7 +557,7 @@ function App() {
 
       {/* Top Navbar Header - HIDDEN ON EDITOR & BUILDER VIEWS FOR BIGGER CANVAS */}
       {currentView !== 'editor' && currentView !== 'video-editor' && currentView !== 'gif' && (
-        <header className="app-header glass-card">
+        <header className={`app-header glass-card ${['explore', 'social', 'gallery'].includes(currentView) ? 'app-header--hide-mobile' : ''}`}>
           <div className="header-container flex-between">
             <div className="app-brand flex-gap" onClick={() => setCurrentView('templates')}>
               <motion.div className="brand-ribbon-logo" whileHover={{ scale: 1.08, rotate: 4 }}>
@@ -671,7 +671,11 @@ function App() {
 
       {/* Main Content Area with Animated Motion Transitions */}
       {/* Main Content Area with Animated Transitions & Persistent Builder Tabs */}
-      <main className={`main-content-container ${currentView === 'editor' || currentView === 'video-editor' ? 'editor-view-mode' : ''}`}>
+      <main
+        className={`main-content-container ${
+          currentView === 'editor' || currentView === 'video-editor' ? 'editor-view-mode' : ''
+        } ${['explore', 'social', 'gallery'].includes(currentView) ? 'main-content--no-header-mobile' : ''}`}
+      >
         <AnimatePresence mode="wait">
           {currentView === 'templates' && (
             <motion.div

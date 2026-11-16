@@ -1,12 +1,12 @@
-// Home's makers under the hero carousel: Meme video, Stickers, Face swap, Social card, AI meme and
-// GIF maker, as six compact tiles three across (six across on a wide screen): each a flat grey tile
+// Home's makers, below the Trending shelf: Meme video, Stickers, Face swap, AI meme and GIF maker,
+// as five compact tiles (social cards have their own shelf on Home, not a tile): each a flat grey tile
 // with the maker's icon on a soft disc in its own colour over its name. The names stay short so
 // two lines at most; there are no tags or arrows (homeTools.css).
-import { Clapperboard, ImagePlay, MessagesSquare, ScanFace, Scissors, Wand2 } from 'lucide-react';
+import { Clapperboard, ImagePlay, ScanFace, Scissors, Wand2 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import './homeTools.css';
 
-export type ToolAction = 'video' | 'stickers' | 'faceswap' | 'social' | 'ai' | 'gif';
+export type ToolAction = 'video' | 'stickers' | 'faceswap' | 'ai' | 'gif';
 
 interface ToolItem {
   action: ToolAction;
@@ -18,7 +18,6 @@ const TOOLS: ToolItem[] = [
   { action: 'video', label: 'Meme video', Icon: Clapperboard },
   { action: 'stickers', label: 'Stickers', Icon: Scissors },
   { action: 'faceswap', label: 'Face swap', Icon: ScanFace },
-  { action: 'social', label: 'Social card', Icon: MessagesSquare },
   { action: 'ai', label: 'AI meme', Icon: Wand2 },
   { action: 'gif', label: 'GIF maker', Icon: ImagePlay },
 ];
