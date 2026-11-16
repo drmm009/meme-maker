@@ -43,3 +43,6 @@ design-preview/
 
 # Retired copies and scratch files (see CLAUDE.md)
 _old/
+
+# A local agent skill, not shared with the repo
+.agents/skills/frontend-design/
