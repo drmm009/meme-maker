@@ -231,7 +231,6 @@ describe('MemeEditor', () => {
     const card = canvas.props.captions.find((c) => c.isTweetCard);
     expect(card).toBeTruthy();
     expect(canvas.props.activeLayerId).toBe(card.id);
-    expect(canvas.ui.showStylesModal).toBe(false);
 
     fireEvent.click(within(layerToolbar()).getByText('Details'));
     expect(within(layerToolbar()).getByText('Details').closest('button').getAttribute('aria-pressed')).toBe('true');
@@ -1374,10 +1373,9 @@ describe('MemeEditor', () => {
   it('the Social Card maker opens on its Details form, edits the card live and swaps the kind of card', async () => {
     const { MEME_TEMPLATES } = await import('../data/templates');
     const { unmount } = renderEditor({ ...MEME_TEMPLATES.find((t) => t.id === 'social-tweet-card'), editorMode: 'social' });
-    // The form, under the Card tab's strip, not the studio.
+    // The form, under the Card tab's strip.
     sheet('Card details');
-    expect(within(strip('Card tools')).getAllByRole('button').map((b) => b.textContent)).toEqual(['Details', 'Look', 'Studio']);
-    expect(canvas.ui.showStylesModal).toBe(false);
+    expect(within(strip('Card tools')).getAllByRole('button').map((b) => b.textContent)).toEqual(['Details', 'Look']);
     fireEvent.click(within(strip('Card tools')).getByText('Details'));
     expect(within(bar()).getAllByRole('button').map((b) => b.textContent.trim())).toEqual(['Card', 'Text', 'Media', 'Canvas']);
     fireEvent.click(within(strip('Card tools')).getByText('Details'));

@@ -285,66 +285,6 @@
   color: rgba(255, 255, 255, 0.42);
 }
 
-/* ─── Category Tabs Navigation (Clean Underline Style) ─── */
-.bs-category-bar {
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  overflow-x: auto;
-  overflow-y: hidden;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-  padding: 0 4px;
-  margin-bottom: 12px;
-  flex-shrink: 0;
-  -webkit-overflow-scrolling: touch;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  position: relative;
-}
-
-.bs-category-bar::-webkit-scrollbar {
-  display: none;
-}
-
-.bs-category-btn {
-  height: 36px;
-  padding: 0 4px 8px 4px;
-  border: none !important;
-  border-bottom: 2px solid transparent !important;
-  border-radius: 0 !important;
-  background: transparent !important;
-  color: rgba(255, 255, 255, 0.55);
-  font-size: 0.86rem;
-  font-weight: 500;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  white-space: nowrap;
-  cursor: pointer;
-  flex-shrink: 0;
-  box-shadow: none !important;
-  transition: color 0.18s ease, border-color 0.18s ease;
-  user-select: none;
-  margin-bottom: -1px;
-}
-
-.bs-category-btn:hover {
-  background: transparent !important;
-  color: rgba(255, 255, 255, 0.88);
-  transform: none !important;
-  box-shadow: none !important;
-}
-
-.bs-category-btn.active {
-  background: transparent !important;
-  border: none !important;
-  border-bottom: 2px solid var(--ui-accent, #ff5e36) !important;
-  border-radius: 0 !important;
-  color: var(--ui-accent, #ff5e36) !important;
-  font-weight: 600 !important;
-  box-shadow: none !important;
-}
-
 /* ─── Scrollable Content ─── */
 .bs-content-scroll {
   flex: 1;
@@ -447,26 +387,4 @@
 [data-theme='light'] .bottom-sheet-panel input[type="text"]:not(.bs-search-input)::placeholder,
 [data-theme='light'] .bottom-sheet-panel textarea::placeholder {
   color: #64748b !important;
-}
-
-[data-theme='light'] .bs-category-bar {
-  border-bottom-color: rgba(0, 0, 0, 0.08);
-}
-
-[data-theme='light'] .bs-category-btn {
-  background: transparent !important;
-  border: none !important;
-  border-bottom: 2px solid transparent !important;
-  color: #64748b !important;
-}
-
-[data-theme='light'] .bs-category-btn:hover {
-  background: transparent !important;
-  color: #0f172a !important;
-}
-
-[data-theme='light'] .bs-category-btn.active {
-  background: transparent !important;
-  border-bottom-color: var(--ui-accent, #ff5e36) !important;
-  color: var(--ui-accent, #ff5e36) !important;
 }

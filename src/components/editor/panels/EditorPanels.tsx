@@ -159,7 +159,7 @@ export default function EditorPanels({ actions, onBack }: { actions: EditorActio
     : dockTab === 'fx' ? <AiFiltersStrip actions={actions} />
     : dockTab === 'canvas' ? <CanvasStrip actions={actions} />
     : dockTab === 'swap' ? <FaceSwapStrip actions={actions} />
-    : dockTab === 'card' ? <CardStrip actions={actions} />
+    : dockTab === 'card' ? <CardStrip />
     : dockTab === 'ai' ? <AiStrip actions={actions} />
     : dockTab === 'sticker' ? <StickerStrip actions={actions} /> : null;
 

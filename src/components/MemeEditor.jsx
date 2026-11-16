@@ -82,7 +82,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, c
   const uiStore = useEditorUiStoreApi();
   const draft = useMemeDraft({ restored: restoredDraft || changedMeme, onRestore: onRestoreDraft, getMode: () => uiStore.getState().mode });
   useCustomFonts();
-  const { activeCaption, activeSticker, activeImageLayer, currentEditingSocialCard } = useActiveLayer();
+  const { activeCaption, activeSticker, activeImageLayer } = useActiveLayer();
 
   const canvasRef = useRef(null);
   const { memeName, canvasSize, exportBlob, exportMotion, motionLoops, saveToGallery } = useExport({ canvasRef, template, onSaveToGallery, imageFit, isNativeLayout, layoutDef });
@@ -122,7 +122,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, c
     handleUpdateTemplateMorphProgress, handleChangeFace, handleRevertTemplateFace, handleFinalizeTemplateFace,
   } = faceMorph;
 
-  const { handleOpenSocialModalForActiveCard, handleUpdateSocialCard, handleAddTweetCard, handleAddInstagramCard, handleAddWhatsAppCard } = useSocialCardActions();
+  const { handleAddTweetCard, handleAddInstagramCard, handleAddWhatsAppCard } = useSocialCardActions();
   const { handleSetCanvasBgColor, handleSetCanvasBgGradient, handleToggleCanvasHeader, handleToggleCanvasFooter, handleToggleCanvasFlip, handleWatermarkImageUpload } = useCanvasFrameActions();
   const { handleApplyMainPhotoCrop, handleRestoreMainPhoto, handleReplaceImageLayer, handleApplyLayerCrop, handleRestoreLayerPhoto } = usePhotoActions();
   const { handleAlignLayers, handleDistributeLayers, handleGroupLayers, handleUngroupLayers, handleDeleteLayers } = useArrangeActions({ canvasRef });
@@ -137,7 +137,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, c
 
   const actions = {
     handleAddCaption, handleToggleTextCase, updateActiveCaptionProps, handleSetCaptionBg, handleAddBubble, handleApplyBubbleStyle,
-    handleOpenSocialModalForActiveCard, handleAddTweetCard, handleAddInstagramCard, handleAddWhatsAppCard,
+    handleAddTweetCard, handleAddInstagramCard, handleAddWhatsAppCard,
     handleSetCanvasBgColor, handleSetCanvasBgGradient, handleToggleCanvasHeader, handleToggleCanvasFooter, handleToggleCanvasFlip, handleWatermarkImageUpload,
     handleApplyMainPhotoCrop, handleRestoreMainPhoto, handleReplaceImageLayer,
     handleAlignLayers, handleDistributeLayers, handleGroupLayers, handleUngroupLayers, handleDeleteLayers,
@@ -271,14 +271,9 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, c
         handleRestoreMainPhoto={handleRestoreMainPhoto}
         handleApplyLayerCrop={handleApplyLayerCrop}
         handleRestoreLayerPhoto={handleRestoreLayerPhoto}
-        currentEditingSocialCard={currentEditingSocialCard}
         extractedMemeFace={extractedMemeFace}
         faceTarget={faceTarget}
-        handleAddInstagramCard={handleAddInstagramCard}
-        handleAddTweetCard={handleAddTweetCard}
-        handleAddWhatsAppCard={handleAddWhatsAppCard}
         handleApplyFaceMorph={handleApplyFaceMorph}
-        handleUpdateSocialCard={handleUpdateSocialCard}
         morphTargetLayerId={morphTargetLayerId}
         morphTargetUrl={morphTargetUrl}
         originalTemplateImgRef={originalTemplateImgRef}

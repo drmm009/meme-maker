@@ -1,22 +1,16 @@
 import React, { Suspense, lazy } from 'react';
 import { createPortal } from 'react-dom';
 import VideoTrimmer from '../VideoTrimmer';
-// The social card studio and the face swap studio load when first opened.
-const MemeStylesModal = lazy(() => import('../MemeStylesModal'));
+// The face swap studio loads when first opened.
 const FaceMorphModal = lazy(() => import('../FaceMorphModal'));
 import PhotoCropSheet from './crop/PhotoCropSheet';
 import { useMemeEditorStore } from './store/useMemeEditorStore';
 import { useEditorUiStore } from './store/useEditorUiStore';
 
 export default function EditorModals({
-  currentEditingSocialCard,
   extractedMemeFace,
   faceTarget,
-  handleAddInstagramCard,
-  handleAddTweetCard,
-  handleAddWhatsAppCard,
   handleApplyFaceMorph,
-  handleUpdateSocialCard,
   morphTargetLayerId,
   morphTargetUrl,
   originalTemplateImgRef,
@@ -34,9 +28,6 @@ export default function EditorModals({
 }) {
   const pendingVideoLayer = useEditorUiStore((s) => s.pendingVideoLayer);
   const setPendingVideoLayer = useEditorUiStore((s) => s.setPendingVideoLayer);
-  const setShowStylesModal = useEditorUiStore((s) => s.setShowStylesModal);
-  const showStylesModal = useEditorUiStore((s) => s.showStylesModal);
-  const socialModalPlatform = useEditorUiStore((s) => s.socialModalPlatform);
   const imageLayers = useMemeEditorStore((s) => s.imageLayers);
   const activeTemplate = useMemeEditorStore((s) => s.activeTemplate);
   const stickers = useMemeEditorStore((s) => s.stickers);
@@ -68,22 +59,6 @@ export default function EditorModals({
           onRestore={(url) => { handleRestoreLayerPhoto(cropLayer.id, url); setCropLayerId(null); }}
           onClose={() => setCropLayerId(null)}
         />
-      )}
-
-      {/* Meme Style Modal (Unified Social Cards Studio) */}
-      {showStylesModal && (
-      <Suspense fallback={null}>
-      <MemeStylesModal
-        isOpen={showStylesModal}
-        onClose={() => setShowStylesModal(false)}
-        initialPlatform={socialModalPlatform}
-        cardData={currentEditingSocialCard || null}
-        onUpdateCard={handleUpdateSocialCard}
-        onAddTweetCard={handleAddTweetCard}
-        onAddInstagramCard={handleAddInstagramCard}
-        onAddWhatsAppCard={handleAddWhatsAppCard}
-      />
-      </Suspense>
       )}
 
       {/* Face Morph & Swap Studio Modal */}

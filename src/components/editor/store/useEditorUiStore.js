@@ -39,16 +39,6 @@ function loadExportPrefs() {
   return saved && typeof saved === 'object' ? { ...DEFAULT_EXPORT_PREFS, ...saved } : { ...DEFAULT_EXPORT_PREFS };
 }
 
-function initialSocialModalPlatform(template) {
-  const socialCap = template?.defaultCaptions?.find((c) => isSocialCardCaption(c));
-  if (socialCap?.isInstagramCard) return 'instagram';
-  if (socialCap?.isWhatsAppCard) return 'whatsapp';
-  if (socialCap?.isTweetCard) return 'tweet';
-  if (template?.id?.includes('instagram')) return 'instagram';
-  if (template?.id?.includes('whatsapp')) return 'whatsapp';
-  return 'tweet';
-}
-
 export function buildInitialUi(template) {
   const mode = editorModeOf(template);
   const social = Boolean(
@@ -61,9 +51,9 @@ export function buildInitialUi(template) {
   return {
     mode, // the full editor or one focused maker (editor/editorModes.ts): its title and dock tabs
     activeTab: 'text', // 'text' | 'images' | 'draw' | 'canvas' | 'watermark' | 'filters'
-    // A social card opens its studio, or in the Social Card maker its Details form.
+    // A social card opens on its Details form.
     // A maker opens on its first step: the card form, or the face swap page until a swap is made.
-    sheet: social && mode === 'social' ? 'card' : mode === 'faceswap' && !template?.faceSwap ? 'faceSwap' : null, // the open bottom sheet: 'text' | 'media' | 'draw' | 'canvasColor' | 'watermark' | 'filters' | null
+    sheet: social ? 'card' : mode === 'faceswap' && !template?.faceSwap ? 'faceSwap' : null, // the open bottom sheet: 'text' | 'media' | 'draw' | 'canvasColor' | 'watermark' | 'filters' | null
     dockTab: EDITOR_MODES[mode].startTab, // the dock tab whose tool strip shows: 'draw' | 'media' | 'text' | 'fx' | 'canvas' | null
     sheetFromPill: false, // the open sheet came from the layer tools pill, which then stays above it
     sheetFocus: null, // what part of the sheet to show: one Text part's sections (TEXT_PARTS), 'size' to scroll the Media sheet to, or null
@@ -76,8 +66,6 @@ export function buildInitialUi(template) {
     showFilterPresets: false,
     showLayerMenu: false,
     showBubbleLayouts: false,
-    showStylesModal: social && mode !== 'social',
-    socialModalPlatform: initialSocialModalPlatform(template),
     showFiltersModal: false,
     openSourceTemplates: MEME_TEMPLATES,
     pendingVideoLayer: null,

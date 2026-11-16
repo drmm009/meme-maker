@@ -1,123 +1,17 @@
 import { TWEET_TREND_PRESETS } from '../../canvas/draw/socialCards/tweet';
 import { IG_PRESET_IMAGES } from '../../../data/igPresetImages';
-import { isSocialCardCaption } from '../memeEditorUtils';
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
 import { useEditorUiStore } from '../store/useEditorUiStore';
 
 export function useSocialCardActions() {
   const captions = useMemeEditorStore((s) => s.captions);
-  const activeLayerId = useMemeEditorStore((s) => s.activeLayerId);
   const setActiveLayerId = useMemeEditorStore((s) => s.setActiveLayerId);
-  const showStylesModal = useEditorUiStore((s) => s.showStylesModal);
-  const socialModalPlatform = useEditorUiStore((s) => s.socialModalPlatform);
-  const setShowStylesModal = useEditorUiStore((s) => s.setShowStylesModal);
-  const setSocialModalPlatform = useEditorUiStore((s) => s.setSocialModalPlatform);
   const setCaptions = useMemeEditorStore((s) => s.setCaptions);
   const pushHistory = useMemeEditorStore((s) => s.pushHistory);
   const stickers = useMemeEditorStore((s) => s.stickers);
   const imageLayers = useMemeEditorStore((s) => s.imageLayers);
   const setActiveSubmenu = useEditorUiStore((s) => s.setActiveSubmenu);
   const setActiveTab = useEditorUiStore((s) => s.setActiveTab);
-
-    const handleOpenSocialModalForActiveCard = (targetPlatform) => {
-    let platform = targetPlatform;
-    const currentActiveCap = captions.find((c) => c.id === activeLayerId);
-    const targetCap = (currentActiveCap && isSocialCardCaption(currentActiveCap))
-      ? currentActiveCap
-      : captions.find(c => {
-          if (targetPlatform === 'whatsapp') return c.isWhatsAppCard;
-          if (targetPlatform === 'instagram') return c.isInstagramCard;
-          return c.isTweetCard;
-        }) || captions.find(c => isSocialCardCaption(c));
-
-    if (targetCap) {
-      setActiveLayerId(targetCap.id);
-      if (!platform) {
-        if (targetCap.isInstagramCard) platform = 'instagram';
-        else if (targetCap.isWhatsAppCard) platform = 'whatsapp';
-        else platform = 'tweet';
-      }
-    }
-    const finalPlatform = platform || 'tweet';
-    if (showStylesModal && socialModalPlatform === finalPlatform) {
-      setShowStylesModal(false);
-    } else {
-      setSocialModalPlatform(finalPlatform);
-      setShowStylesModal(true);
-    }
-  };
-
-  const handleUpdateSocialCard = (data = {}) => {
-    const currentActiveCap = captions.find((c) => c.id === activeLayerId);
-    const targetCap = (currentActiveCap && isSocialCardCaption(currentActiveCap))
-      ? currentActiveCap
-      : captions.find(c => {
-          if (socialModalPlatform === 'whatsapp') return c.isWhatsAppCard;
-          if (socialModalPlatform === 'instagram') return c.isInstagramCard;
-          return c.isTweetCard;
-        }) || captions.find(c => isSocialCardCaption(c));
-
-    if (!targetCap) return;
-    const targetId = targetCap.id;
-
-    let updates = {};
-    if (targetCap.isTweetCard) {
-      updates = {
-        text: data.text !== undefined ? data.text : targetCap.text,
-        tweetName: data.name !== undefined ? data.name : targetCap.tweetName,
-        tweetHandle: data.handle !== undefined ? data.handle : targetCap.tweetHandle,
-        tweetVerified: data.verified !== undefined ? data.verified : targetCap.tweetVerified,
-        tweetTheme: data.theme || targetCap.tweetTheme,
-        tweetAvatarBg: data.avatarBg || targetCap.tweetAvatarBg,
-        tweetTime: data.time || targetCap.tweetTime,
-        tweetMetrics: data.metrics || targetCap.tweetMetrics
-      };
-    } else if (targetCap.isInstagramCard) {
-      updates = {
-        text: data.text !== undefined ? data.text : targetCap.text,
-        igUsername: data.username !== undefined ? data.username : targetCap.igUsername,
-        igSubtitle: data.subtitle !== undefined ? data.subtitle : targetCap.igSubtitle,
-        igVerified: data.verified !== undefined ? data.verified : targetCap.igVerified,
-        igHasStoryRing: data.hasStoryRing !== undefined ? data.hasStoryRing : targetCap.igHasStoryRing,
-        igLikesCount: data.likesCount !== undefined ? data.likesCount : targetCap.igLikesCount,
-        igLikesText: data.likesText !== undefined ? data.likesText : targetCap.igLikesText,
-        igCommentsCount: data.commentsCount !== undefined ? data.commentsCount : targetCap.igCommentsCount,
-        igRepostsCount: data.repostsCount !== undefined ? data.repostsCount : targetCap.igRepostsCount,
-        igSharesCount: data.sharesCount !== undefined ? data.sharesCount : targetCap.igSharesCount,
-        igFollowText: data.followText !== undefined ? data.followText : targetCap.igFollowText,
-        topCommentUser: data.topCommentUser !== undefined ? data.topCommentUser : targetCap.topCommentUser,
-        topCommentText: data.topCommentText !== undefined ? data.topCommentText : targetCap.topCommentText,
-        igPostImage: data.postImage !== undefined ? data.postImage : targetCap.igPostImage,
-        igTheme: data.theme || targetCap.igTheme,
-        igTime: data.time || targetCap.igTime,
-        color: (data.theme || targetCap.igTheme) === 'light' ? '#262626' : '#f5f5f5'
-      };
-    } else if (targetCap.isWhatsAppCard) {
-      updates = {
-        text: data.messages?.[0]?.text || data.text || targetCap.text,
-        waContactName: data.contactName || data.name || targetCap.waContactName,
-        waStatus: data.status !== undefined ? data.status : targetCap.waStatus,
-        waMessages: data.messages && Array.isArray(data.messages) ? data.messages : targetCap.waMessages,
-        waTheme: data.theme || targetCap.waTheme,
-        waShowHeader: data.showHeader !== undefined ? data.showHeader : targetCap.waShowHeader,
-        waShowFooter: data.showFooter !== undefined ? data.showFooter : targetCap.waShowFooter,
-        waShowDoodles: data.showDoodles !== undefined ? data.showDoodles : targetCap.waShowDoodles,
-        waDatePill: data.datePill !== undefined ? data.datePill : targetCap.waDatePill,
-        waAvatarBg: data.avatarBg || targetCap.waAvatarBg
-      };
-    }
-
-    const nextCaps = captions.map((cap) => {
-      if (cap.id === targetId) {
-        return { ...cap, ...updates };
-      }
-      return cap;
-    });
-    setCaptions(nextCaps);
-    pushHistory();
-    setActiveLayerId(targetId);
-    setShowStylesModal(false);
-  };
 
   // A new card on top, or (with `replaceId`) in an old card's place, at its spot and depth.
   const withCard = (newCap, replaceId) => {
@@ -277,5 +171,5 @@ export function useSocialCardActions() {
     pushHistory();
   };
 
-  return { handleOpenSocialModalForActiveCard, handleUpdateSocialCard, handleAddTweetCard, handleAddInstagramCard, handleAddWhatsAppCard };
+  return { handleAddTweetCard, handleAddInstagramCard, handleAddWhatsAppCard };
 }

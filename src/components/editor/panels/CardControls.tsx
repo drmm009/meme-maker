@@ -2,6 +2,7 @@ import type { ChangeEvent } from 'react';
 import { Settings, ImagePlus, X } from 'lucide-react';
 import { Section, Row, ChipRow, Chip, Switch, SegmentedControl } from '../../ui';
 import { TWEET_TREND_PRESETS } from '../../canvas/draw/socialCards/tweet';
+import { useEditorUiStore } from '../store/useEditorUiStore';
 import type { EditorActions } from './selection';
 import type { MemeCaption } from '../../../model/memeDocument';
 
@@ -59,9 +60,9 @@ const TICKS = [
   { value: 'single', label: 'Sent' },
 ];
 
-// A selected social card's settings in the Text sheet (the full editor is the social card studio),
-// and the Social Card maker's Look, which passes `onChange` for a card that needn't be selected
-// (and has its own Studio button, so no Edit card details).
+// A selected social card's settings in the Text sheet, with Edit card details opening its Details
+// form (CardFormSheet), and the Social Card maker's Look, which passes `onChange` for a card that
+// needn't be selected (its Details is a tab of its own, so no Edit card details).
 export default function CardControls({
   caption,
   actions,
@@ -73,8 +74,8 @@ export default function CardControls({
   onChange?: (patch: Partial<Caption>) => void;
   isSheet?: boolean;
 }) {
+  const openSheet = useEditorUiStore((s: { openSheet: (sheet: string) => void }) => s.openSheet);
   const set = onChange ?? ((patch: Partial<Caption>) => actions.updateActiveCaptionProps(patch));
-  const platform = caption.isTweetCard ? 'tweet' : caption.isInstagramCard ? 'instagram' : 'whatsapp';
 
   const uploadPostImage = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -213,7 +214,7 @@ export default function CardControls({
     <>
       {!onChange && (
         <Section rule>
-          <button type="button" className="ui-btn ie-wide-btn" onClick={() => actions.handleOpenSocialModalForActiveCard(platform)}>
+          <button type="button" className="ui-btn ie-wide-btn" onClick={() => openSheet('card')}>
             <Settings size={16} />Edit card details
           </button>
         </Section>

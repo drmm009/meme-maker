@@ -9,8 +9,6 @@ describe('createEditorUiStore', () => {
     const s = createEditorUiStore({ id: 't' }).getState();
     expect(s.activeTab).toBe('text');
     expect(s.activeSubmenu).toBeNull();
-    expect(s.showStylesModal).toBe(false);
-    expect(s.socialModalPlatform).toBe('tweet');
   });
 
   it("starts a focused maker on its own tab; the Stickers maker exports see-through without changing what is remembered", () => {
@@ -35,13 +33,12 @@ describe('createEditorUiStore', () => {
     expect(JSON.parse(localStorage.getItem('meme-maker-export-prefs')).format).toBe('webp');
   });
 
-  it('opens the social card studio for social templates', () => {
+  it("opens a social template on its card's Details form", () => {
     const s = createEditorUiStore({ defaultCaptions: [{ id: 'w', isWhatsAppCard: true }] }).getState();
-    expect(s.showStylesModal).toBe(true);
-    expect(s.socialModalPlatform).toBe('whatsapp');
-    // The Social Card maker opens on its Details form instead.
+    expect(s).toMatchObject({ mode: 'full', sheet: 'card' });
+    // The Social Card maker too, on its own Card tab.
     const maker = createEditorUiStore({ editorMode: 'social', defaultCaptions: [{ id: 'w', isWhatsAppCard: true }] }).getState();
-    expect(maker).toMatchObject({ showStylesModal: false, sheet: 'card', dockTab: 'card' });
+    expect(maker).toMatchObject({ sheet: 'card', dockTab: 'card' });
   });
 
   it('toggleSubmenu opens, closes and remembers the last button', () => {
