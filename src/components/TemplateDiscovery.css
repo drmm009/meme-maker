@@ -11,6 +11,10 @@
   max-width: 1240px;
   margin: 0 auto;
   box-sizing: border-box;
+  /* Enforce the app's font throughout — prevents browser/OS fallback fonts
+     from appearing in any child that doesn't explicitly inherit. */
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
 /* Mobile-only spacing for search and category tags */
@@ -690,7 +694,7 @@ input.ai-hero-prompt-input {
 /* High-Energy Headline Typography */
 .hero-title {
   margin: 0 0 4px 0 !important;
-  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 1.32rem !important;
   font-weight: 850 !important;
   letter-spacing: -0.01em !important;
@@ -1008,7 +1012,7 @@ input.ai-hero-prompt-input {
 }
 
 .hero-pill-capsule-text {
-  font-family: 'Plus Jakarta Sans', Inter, system-ui, -apple-system, sans-serif !important;
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
   font-size: 0.94rem !important;
   font-weight: 750 !important;
   letter-spacing: -0.01em !important;
@@ -1455,7 +1459,7 @@ input.ai-hero-prompt-input {
   top: 53%;
   left: 50%;
   transform: translate(-50%, -50%);
-  font-family: 'Plus Jakarta Sans', Inter, system-ui, -apple-system, sans-serif !important;
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
   font-size: 1.08rem;
   font-weight: 950;
   line-height: 1;

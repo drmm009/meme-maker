@@ -5,6 +5,7 @@
 
 /* A row that scrolls sideways, running off the screen's edge. */
 .ex-chips {
+  position: relative;
   display: flex;
   gap: 8px;
   margin: 12px -16px 0;
@@ -17,7 +18,25 @@
   display: none;
 }
 
+/* The black key behind the picked chip (useSlidingKey sets where and how wide). It sits in the
+   scrolling row, so it scrolls with the chips. */
+.ex-chips-key {
+  position: absolute;
+  top: 2px;
+  left: 0;
+  width: var(--ios-key-w, 0);
+  height: 34px;
+  border-radius: 999px;
+  background: var(--ios-key);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+  transform: translateX(var(--ios-key-x, 0));
+  transition: transform 0.34s var(--ios-ease), width 0.34s var(--ios-ease);
+  pointer-events: none;
+}
+
 .ex-chip {
+  position: relative;
+  z-index: 1;
   display: inline-flex;
   flex: none;
   align-items: center;
@@ -39,11 +58,10 @@
   transform: scale(0.96);
 }
 
-/* The picked chip is black, like the segmented control's key. */
+/* The picked chip lets the black key behind it show, its words white. */
 .ex-chip[aria-selected='true'] {
-  background: var(--ios-key);
+  background: transparent;
   color: #fff;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
 }
 
 .ex-chip-count {
@@ -67,13 +85,47 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  min-height: 32px;
+  min-height: 38px;
+}
+
+.ex-head-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
+}
+
+/* The shelf's icon, on a grey disc beside its title. */
+.ex-head-icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--ios-fill);
+  color: var(--ios-label);
+}
+
+.ex-head-words {
+  min-width: 0;
+}
+
+.ex-head-sub {
+  display: block;
+  margin-top: 1px;
+  font-size: 13px;
+  line-height: 1.35;
+  color: var(--ios-label-2);
 }
 
 .ex-see-all {
-  min-height: 32px;
-  font-size: 15px;
-  font-weight: 500;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 2px;
+  white-space: nowrap;
 }
 
 /* A shelf scrolls sideways on every screen, running off the edge. */

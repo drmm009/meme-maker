@@ -1,10 +1,10 @@
 // Choose Canvas Layout (the dock's Creator), in the pages' iOS look (pages/iosLook.css,
-// CustomLayoutBuilder.css): a Blank Canvas cell, then shelves of image grids (plus Custom Grid,
-// which asks for columns and rows), video caption layouts and social cards. Picking one opens it
-// in the editor.
+// CustomLayoutBuilder.css): shelves of image grids (with Blank Canvas & Custom Grid),
+// and video caption layouts. Picking one opens it in the editor.
 import { useState } from 'react';
-import { LAYOUT_OPTIONS, MEME_TEMPLATES } from '../data/templates';
-import { ChevronRight, Grid3x3, Minus, Play, Plus } from 'lucide-react';
+import { LAYOUT_OPTIONS } from '../data/templates';
+import { Grid3x3, Minus, Play, Plus } from 'lucide-react';
+import SegmentedControl, { Segment } from './pages/SegmentedControl';
 import './pages/iosLook.css';
 import './CustomLayoutBuilder.css';
 
@@ -24,6 +24,12 @@ interface CustomLayoutBuilderProps {
   onLayoutComplete?: (template: Template) => void;
   onSelectTemplate?: (template: Template) => void;
 }
+
+const TABS: Segment[] = [
+  { id: 'all', label: 'All' },
+  { id: 'image', label: 'Image' },
+  { id: 'video', label: 'Video' },
+];
 
 // How a preset grid's panels are arranged, for its drawing.
 const gridShape = (id: string) =>
@@ -64,6 +70,13 @@ function Stepper({ value, unit, onChange }: { value: number; unit: string; onCha
 
 const VIDEO_LAYOUT_OPTIONS = [
   {
+    id: 'video-blank',
+    name: 'Blank Canvas',
+    description: 'Clean video canvas with no preset caption bars',
+    layoutType: 'none',
+    defaultCaptions: []
+  },
+  {
     id: 'video-header',
     name: 'Header Text Video',
     description: 'Video canvas with top header text bar',
@@ -90,30 +103,6 @@ const VIDEO_LAYOUT_OPTIONS = [
       { id: 'v-cap-top', text: 'TOP HEADER TEXT', fontSize: 32, y: 0.08, align: 'center', color: '#ffffff' },
       { id: 'v-cap-bottom', text: 'BOTTOM FOOTER TEXT', fontSize: 32, y: 0.90, align: 'center', color: '#ffffff' }
     ]
-  }
-];
-
-const SOCIAL_LAYOUT_OPTIONS = [
-  {
-    id: 'social-tweet-card',
-    name: 'Tweet / X Post Card',
-    description: 'Verified tweet format with metrics & handle',
-    badge: 'X post',
-    imageUrl: './images/social-tweet-card.svg'
-  },
-  {
-    id: 'social-instagram-card',
-    name: 'Instagram Feed Post',
-    description: 'Square post format with username & avatar',
-    badge: 'Instagram post',
-    imageUrl: './images/social-instagram-card.svg'
-  },
-  {
-    id: 'social-whatsapp-card',
-    name: 'WhatsApp Chat Card',
-    description: 'Realistic chat format with speech bubbles',
-    badge: 'WhatsApp chat',
-    imageUrl: './images/social-whatsapp-card.svg'
   }
 ];
 
@@ -244,6 +233,7 @@ export default function CustomLayoutBuilder({
   onLayoutComplete,
   onSelectTemplate
 }: CustomLayoutBuilderProps) {
+  const [activeTab, setActiveTab] = useState<'all' | 'image' | 'video'>('all');
   const [isConfiguringCustom, setIsConfiguringCustom] = useState(false);
   const [customCols, setCustomCols] = useState(2);
   const [customRows, setCustomRows] = useState(2);
@@ -266,7 +256,7 @@ export default function CustomLayoutBuilder({
       width: 1080,
       height: 1080,
       aspectRatio: 1,
-      videoLayout: layoutOption.layoutType,
+      videoLayout: layoutOption.layoutType === 'none' ? undefined : layoutOption.layoutType,
       defaultCaptions: layoutOption.defaultCaptions || []
     };
 
@@ -277,142 +267,131 @@ export default function CustomLayoutBuilder({
     }
   };
 
-  const handleSelectSocialCard = (cardId: string) => {
-    const template: Template = MEME_TEMPLATES.find((t: { id: string }) => t.id === cardId) || {
-      id: cardId,
-      name:
-        cardId === 'social-tweet-card'
-          ? 'Tweet / X Post Card'
-          : cardId === 'social-instagram-card'
-          ? 'Instagram Feed Post Card'
-          : 'WhatsApp Chat Card',
-      category: 'social',
-      type: 'image',
-      imageUrl: `./images/${cardId}.svg`
-    };
+  const imageLayouts: LayoutOption[] = [
+    LAYOUT_OPTIONS[0],
+    ...LAYOUT_OPTIONS.filter((l: LayoutOption) => l.id !== '1-panel' && l.id !== '3-hybrid')
+  ];
 
-    if (onSelectTemplate) {
-      onSelectTemplate(template);
-    } else if (onLayoutComplete) {
-      onLayoutComplete(template);
-    }
-  };
-
-  const gridLayouts: LayoutOption[] = LAYOUT_OPTIONS.filter((l: LayoutOption) => l.id !== '1-panel' && l.id !== '3-hybrid');
+  const showImage = activeTab === 'all' || activeTab === 'image';
+  const showVideo = activeTab === 'all' || activeTab === 'video';
 
   return (
     <div className="clb ios ios-page">
       <header className="clb-nav">
-        <h1 className="ios-title">Choose Canvas Layout</h1>
-        <p className="ios-subtitle">Start blank, or from a grid, a video layout or a social card.</p>
+        <h1 className="ios-title">Canvas Layout</h1>
+        <p className="ios-subtitle">Choose a layout or start with a blank canvas</p>
+        <SegmentedControl
+          label="Layout category"
+          segments={TABS}
+          value={activeTab}
+          onChange={(id) => setActiveTab(id as 'all' | 'image' | 'video')}
+          className="clb-segments"
+        />
       </header>
 
-      <button type="button" className="clb-blank" onClick={() => handleSelectLayoutOption(LAYOUT_OPTIONS[0])}>
-        <span className="clb-blank-pic" aria-hidden="true">
-          <GridGlyph cols={1} rows={1} />
-        </span>
-        <span className="clb-blank-text">
-          <span className="clb-blank-name">{LAYOUT_OPTIONS[0].name}</span>
-          <span className="clb-blank-sub">Recommended</span>
-        </span>
-        <ChevronRight className="clb-chevron" size={18} aria-hidden="true" />
-      </button>
-
-      <section className="clb-section">
-        <h2 className="ios-section-title">Image Layout</h2>
-        <p className="ios-section-sub">Multi-panel grids and custom layouts</p>
-        {!isConfiguringCustom ? (
-          <div className="clb-shelf">
-            {gridLayouts.map((layout) => (
-              <button key={layout.id} type="button" className="clb-card" onClick={() => handleSelectLayoutOption(layout)}>
+      {showImage && (
+        <section className="clb-section">
+          <h2 className="ios-section-title">Image Layout</h2>
+          <p className="ios-section-sub">Multi-panel grids and custom layouts</p>
+          {!isConfiguringCustom ? (
+            <div className="clb-shelf">
+              {imageLayouts.map((layout) => (
+                <button
+                  key={layout.id}
+                  type="button"
+                  className={`clb-card ${layout.id === '1-panel' ? 'clb-card--blank' : ''}`}
+                  onClick={() => handleSelectLayoutOption(layout)}
+                >
+                  <span className="clb-card-pic" aria-hidden="true">
+                    <GridGlyph {...gridShape(layout.id)} />
+                  </span>
+                  <span className="clb-card-name">{layout.name}</span>
+                  {layout.id === '1-panel' && <span className="clb-card-sub">Recommended</span>}
+                </button>
+              ))}
+              <button type="button" className="clb-card clb-card--custom" onClick={() => setIsConfiguringCustom(true)}>
                 <span className="clb-card-pic" aria-hidden="true">
-                  <GridGlyph {...gridShape(layout.id)} />
+                  <Grid3x3 className="clb-card-icon" />
                 </span>
-                <span className="clb-card-name">{layout.name}</span>
+                <span className="clb-card-name">Custom Grid</span>
+              </button>
+            </div>
+          ) : (
+            <div className="clb-custom">
+              <span className="clb-custom-preview" aria-hidden="true">
+                <GridGlyph cols={customCols} rows={customRows} />
+              </span>
+              <div className="clb-form">
+                <div className="clb-form-row">
+                  <span className="clb-form-label">Columns</span>
+                  <Stepper value={customCols} unit="columns" onChange={setCustomCols} />
+                </div>
+                <div className="clb-form-row">
+                  <span className="clb-form-label">Rows</span>
+                  <Stepper value={customRows} unit="rows" onChange={setCustomRows} />
+                </div>
+              </div>
+              <div className="clb-custom-actions">
+                <button type="button" className="ios-btn ios-btn--gray" onClick={() => setIsConfiguringCustom(false)}>
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="ios-btn ios-btn--filled"
+                  onClick={() =>
+                    handleSelectLayoutOption({
+                      id: 'custom-grid',
+                      name: `Custom ${customCols}x${customRows}`,
+                      slots: customCols * customRows,
+                      cols: customCols,
+                      rows: customRows,
+                    })
+                  }
+                >
+                  Create {customCols * customRows} {customCols * customRows === 1 ? 'Panel' : 'Panels'}
+                </button>
+              </div>
+            </div>
+          )}
+        </section>
+      )}
+
+      {showVideo && (
+        <section className="clb-section">
+          <h2 className="ios-section-title">Video Layout</h2>
+          <p className="ios-section-sub">Caption bars on a video canvas</p>
+          <div className="clb-shelf">
+            {VIDEO_LAYOUT_OPTIONS.map((opt) => (
+              <button
+                key={opt.id}
+                type="button"
+                className={`clb-card ${opt.id === 'video-blank' ? 'clb-card--blank' : ''}`}
+                onClick={() => handleSelectVideoLayout(opt)}
+              >
+                <span className="clb-card-pic" aria-hidden="true">
+                  <span className="clb-video">
+                    {opt.layoutType === 'none' ? (
+                      <span className="clb-video-stage clb-video-stage--blank">
+                        <Play size={18} fill="currentColor" strokeWidth={0} />
+                      </span>
+                    ) : (
+                      <>
+                        {opt.layoutType !== 'footer' && <span className="clb-video-bar" />}
+                        <span className="clb-video-stage">
+                          <Play size={16} fill="currentColor" strokeWidth={0} />
+                        </span>
+                        {opt.layoutType !== 'header' && <span className="clb-video-bar" />}
+                      </>
+                    )}
+                  </span>
+                </span>
+                <span className="clb-card-name">{opt.name}</span>
+                {opt.id === 'video-blank' && <span className="clb-card-sub">Recommended</span>}
               </button>
             ))}
-            <button type="button" className="clb-card" onClick={() => setIsConfiguringCustom(true)}>
-              <span className="clb-card-pic" aria-hidden="true">
-                <Grid3x3 className="clb-card-icon" />
-              </span>
-              <span className="clb-card-name">Custom Grid</span>
-            </button>
           </div>
-        ) : (
-          <div className="clb-custom">
-            <span className="clb-custom-preview" aria-hidden="true">
-              <GridGlyph cols={customCols} rows={customRows} />
-            </span>
-            <div className="clb-form">
-              <div className="clb-form-row">
-                <span className="clb-form-label">Columns</span>
-                <Stepper value={customCols} unit="columns" onChange={setCustomCols} />
-              </div>
-              <div className="clb-form-row">
-                <span className="clb-form-label">Rows</span>
-                <Stepper value={customRows} unit="rows" onChange={setCustomRows} />
-              </div>
-            </div>
-            <div className="clb-custom-actions">
-              <button type="button" className="ios-btn ios-btn--gray" onClick={() => setIsConfiguringCustom(false)}>
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="ios-btn ios-btn--filled"
-                onClick={() =>
-                  handleSelectLayoutOption({
-                    id: 'custom-grid',
-                    name: `Custom ${customCols}x${customRows}`,
-                    slots: customCols * customRows,
-                    cols: customCols,
-                    rows: customRows,
-                  })
-                }
-              >
-                Create {customCols * customRows} {customCols * customRows === 1 ? 'Panel' : 'Panels'}
-              </button>
-            </div>
-          </div>
-        )}
-      </section>
-
-      <section className="clb-section">
-        <h2 className="ios-section-title">Video Layout</h2>
-        <p className="ios-section-sub">Caption bars on a video canvas</p>
-        <div className="clb-shelf">
-          {VIDEO_LAYOUT_OPTIONS.map((opt) => (
-            <button key={opt.id} type="button" className="clb-card" onClick={() => handleSelectVideoLayout(opt)}>
-              <span className="clb-card-pic" aria-hidden="true">
-                <span className="clb-video">
-                  {opt.layoutType !== 'footer' && <span className="clb-video-bar" />}
-                  <span className="clb-video-stage">
-                    <Play size={16} fill="currentColor" strokeWidth={0} />
-                  </span>
-                  {opt.layoutType !== 'header' && <span className="clb-video-bar" />}
-                </span>
-              </span>
-              <span className="clb-card-name">{opt.name}</span>
-            </button>
-          ))}
-        </div>
-      </section>
-
-      <section className="clb-section">
-        <h2 className="ios-section-title">Social Cards</h2>
-        <p className="ios-section-sub">X, Instagram and WhatsApp</p>
-        <div className="clb-shelf">
-          {SOCIAL_LAYOUT_OPTIONS.map((card) => (
-            <button key={card.id} type="button" className="clb-card" onClick={() => handleSelectSocialCard(card.id)}>
-              <span className="clb-card-pic clb-card-pic--photo">
-                <img src={card.imageUrl} alt="" loading="lazy" decoding="async" />
-              </span>
-              <span className="clb-card-name">{card.name}</span>
-              <span className="clb-card-sub">{card.badge}</span>
-            </button>
-          ))}
-        </div>
-      </section>
+        </section>
+      )}
     </div>
   );
 }

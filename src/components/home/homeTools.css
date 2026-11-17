@@ -1,104 +1,184 @@
-/* HomeTools — horizontal pill rows */
+/* Home's makers as cards (HomeTools.tsx): a grey card each, with the maker's icon on a tile of its
+   own colour, its name, a line about it and a small arrow. On a phone the first card runs the full
+   width with its words beside the icon, and the rest sit two across; from 640px two wide cards sit
+   over three; from 1000px all five share one row. */
 
 .hh-tools {
+  --hh-card: #1c1c1e;
+  --hh-card-hover: #252528;
+  --hh-edge: rgba(255, 255, 255, 0.07);
+  --hh-label: #f4f4f6;
+  --hh-label-2: rgba(235, 235, 245, 0.64);
+  --hh-label-3: rgba(235, 235, 245, 0.32);
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-  margin: 4px 0 20px;
-  font-family: 'Plus Jakarta Sans', Inter, system-ui, -apple-system, sans-serif;
+  gap: 10px;
+  margin: 6px 0 22px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Last item (5th) spans both columns on mobile so it's centred */
-.hh-tool:last-child {
-  grid-column: 1 / -1;
-  max-width: 50%;
-  justify-self: center;
-  width: 100%;
+[data-theme='light'] .hh-tools {
+  --hh-card: #ffffff;
+  --hh-card-hover: #f6f6f8;
+  --hh-edge: rgba(0, 0, 0, 0.08);
+  --hh-label: #1c1c1e;
+  --hh-label-2: rgba(60, 60, 67, 0.72);
+  --hh-label-3: rgba(60, 60, 67, 0.34);
 }
 
 .hh-tool {
   --tool-color: #ff5a36;
-
+  position: relative;
   box-sizing: border-box;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
+  display: grid;
+  align-content: start;
+  gap: 14px;
   min-width: 0;
-  padding: 13px 18px;
-
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: 14px !important;
-
-  color: #d4d4d8;
+  min-height: 128px;
+  padding: 14px;
+  border: 1px solid var(--hh-edge);
+  border-radius: 18px !important;
+  background: var(--hh-card);
+  color: var(--hh-label);
   font: inherit;
   text-align: left;
   cursor: pointer;
-  transition: background 0.15s ease, transform 0.12s ease;
+  transition: background-color 0.2s cubic-bezier(0.22, 1, 0.36, 1), transform 0.16s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* Per-maker accent colour */
-.hh-tool--video    { --tool-color: #38bdf8; }
-.hh-tool--stickers { --tool-color: #14c08a; }
-.hh-tool--faceswap { --tool-color: #ff5a36; }
-.hh-tool--ai       { --tool-color: #a99bff; }
-.hh-tool--gif      { --tool-color: #a3d93a; }
+/* Each maker's own colour, on its icon tile. */
+.hh-tool--video { --tool-color: #38bdf8; }
+.hh-tool--stickers { --tool-color: #2fd39b; }
+.hh-tool--faceswap { --tool-color: #ff6a48; }
+.hh-tool--ai { --tool-color: #b3a6ff; }
+.hh-tool--gif { --tool-color: #b4e04a; }
 
 .hh-tool-icon {
-  flex-shrink: 0;
   display: grid;
   place-items: center;
-  color: var(--tool-color);
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: var(--tool-color);
+  color: #101012;
 }
-.hh-tool-icon svg { width: 22px; height: 22px; }
+
+.hh-tool-icon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.hh-tool-text {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
 
 .hh-tool-label {
-  min-width: 0;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.012em;
+}
+
+.hh-tool-about {
+  display: -webkit-box;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
   font-size: 13px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  line-height: 1;
+  line-height: 1.35;
+  color: var(--hh-label-2);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
-.hh-tool:active { transform: scale(0.97); }
-.hh-tool:focus-visible { outline: 2px solid var(--tool-color); outline-offset: 2px; }
+.hh-tool-go {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 18px;
+  height: 18px;
+  color: var(--hh-label-3);
+  transition: color 0.2s cubic-bezier(0.22, 1, 0.36, 1), transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.hh-tool:active {
+  transform: scale(0.97);
+}
+
+.hh-tool:focus-visible {
+  outline: 2px solid var(--tool-color);
+  outline-offset: 2px;
+}
 
 @media (hover: hover) {
-  .hh-tool:hover { background: rgba(255, 255, 255, 0.08); }
+  .hh-tool:hover {
+    background: var(--hh-card-hover);
+  }
+
+  .hh-tool:hover .hh-tool-go {
+    color: var(--hh-label);
+    transform: translate(2px, -2px);
+  }
 }
 
-/* Narrow phone */
-@media (max-width: 350px) {
-  .hh-tools { gap: 6px; }
-  .hh-tool  { padding: 11px 12px; gap: 8px; }
-  .hh-tool-icon svg { width: 20px; height: 20px; }
-  .hh-tool-label { font-size: 12px; }
+/* On a phone, the first card runs the full width, its words beside the icon. */
+@media (max-width: 639px) {
+  .hh-tool:first-child {
+    grid-column: 1 / -1;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    min-height: 0;
+    padding-right: 44px;
+  }
+
+  .hh-tool:first-child .hh-tool-go {
+    top: 50%;
+    margin-top: -9px;
+  }
 }
 
-/* Wide screen: all five in a single row */
+/* Two wide cards over three. */
 @media (min-width: 640px) {
-  .hh-tools { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
-  .hh-tool:last-child { grid-column: auto; max-width: none; justify-self: auto; }
-  .hh-tool { justify-content: center; padding: 14px 10px; }
+  .hh-tools {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .hh-tool {
+    grid-column: span 2;
+    padding: 16px;
+  }
+
+  .hh-tool:nth-child(-n + 2) {
+    grid-column: span 3;
+  }
+
+  .hh-tool-go {
+    top: 16px;
+    right: 16px;
+  }
 }
 
-/* Light theme */
-[data-theme='light'] .hh-tool {
-  background: rgba(0, 0, 0, 0.03);
-  border-color: rgba(0, 0, 0, 0.08);
-  color: #3f3f46;
-}
-@media (hover: hover) {
-  [data-theme='light'] .hh-tool:hover { background: rgba(0, 0, 0, 0.06); }
+/* All five in one row. */
+@media (min-width: 1000px) {
+  .hh-tools {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .hh-tool,
+  .hh-tool:nth-child(-n + 2) {
+    grid-column: auto;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .hh-tool { transition: none; }
-  .hh-tool:active { transform: none; }
+  .hh-tool,
+  .hh-tool-go {
+    transition: none;
+  }
+
+  .hh-tool:active {
+    transform: none;
+  }
 }

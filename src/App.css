@@ -96,7 +96,7 @@
   font-weight: 900;
   line-height: 1.1;
   letter-spacing: 0.02em;
-  font-family: 'Plus Jakarta Sans', Inter, system-ui, -apple-system, sans-serif;
+  font-family: 'Plus Jakarta Sans', sans-serif;
   margin: 0;
 }
 
@@ -1439,13 +1439,13 @@ body {
 /* --- Poster typography (not in the editor, which has the UI kit's) --- */
 h1:not(:where(.ui-theme *)), h2:not(:where(.ui-theme *)), h3:not(:where(.ui-theme *)),
 .hero-banner h2 {
-  font-family: 'Plus Jakarta Sans', Inter, system-ui, -apple-system, sans-serif !important;
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
   letter-spacing: -0.01em !important;
   word-spacing: normal !important;
   text-transform: none !important;
 }
 .brand-title {
-  font-family: 'Plus Jakarta Sans', Inter, system-ui, -apple-system, sans-serif !important;
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
   background: none !important;
   -webkit-text-fill-color: currentColor !important;
   color: var(--text-main) !important;

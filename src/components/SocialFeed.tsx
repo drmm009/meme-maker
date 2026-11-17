@@ -1,10 +1,11 @@
 // Social: the community's memes as a feed, in the pages' iOS look (pages/iosLook.css, SocialFeed.css).
-// A large title, a search field and a segmented control (For you, Trending, Hot, Hall of Fame), a
-// row of top creators (tap one to see only theirs), then the posts: each a creator line, the meme
-// drawn with its captions, and Like (or double-tap the picture), Share, Download and Remix (opens
-// it in the editor, App's handleRemixCommunityMeme). Likes are remembered on this device.
+// A large title with a small Feed switch at the top right (For you, Trending, Hot), a search field, a row of top creators (tap one to see only theirs), then the posts: each a square
+// picture card with the creator over its top, and Like (or double-tap the picture), Remix (opens it
+// in the editor, App's handleRemixCommunityMeme), Copy link and Download over its foot. Likes are
+// remembered on this device.
 import { useMemo, useRef, useState } from 'react';
-import { Check, Download, Heart, Repeat, Search, Share } from 'lucide-react';
+import type { CSSProperties, MouseEvent } from 'react';
+import { Check, Download, Heart, Link, Repeat, Search } from 'lucide-react';
 import { COMMUNITY_MEMES } from '../data/communityMemes';
 import { safeGet, safeSet } from '../utils/storage';
 import SegmentedControl from './pages/SegmentedControl';
@@ -14,7 +15,10 @@ import './SocialFeed.css';
 interface Creator {
   name: string;
   handle: string;
+  // An emoji, shown when there's no photo.
   avatar: string;
+  // A profile picture (public/images/avatars/).
+  photo?: string;
   badge?: string;
 }
 
@@ -38,10 +42,9 @@ interface PostProps {
   post: CommunityPost;
   liked: boolean;
   onLike: (id: string) => void;
-  onShare: (post: CommunityPost) => void;
+  onCopyLink: (post: CommunityPost) => void;
   onDownload: (post: CommunityPost) => void;
   onRemix: (post: CommunityPost) => void;
-  onTag: (tag: string) => void;
 }
 
 const POSTS = COMMUNITY_MEMES as CommunityPost[];
@@ -50,7 +53,6 @@ const FILTERS = [
   { id: 'all', label: 'For you' },
   { id: 'trending', label: 'Trending' },
   { id: 'hot', label: 'Hot' },
-  { id: 'hall-of-fame', label: 'Hall of Fame' },
 ];
 
 const LIKES_KEY = 'meme_liked_posts';
@@ -84,81 +86,92 @@ const CREATORS = (() => {
   return [...byHandle.values()].sort((a, b) => b.likes - a.likes);
 })();
 
-// One post: the creator, the meme with its captions, its actions, then its title and tags.
-function Post({ post, liked, onLike, onShare, onDownload, onRemix, onTag }: PostProps) {
+// A creator's profile picture, or their emoji when they have none (or it fails to load).
+function Avatar({ creator, className }: { creator: Creator; className: string }) {
+  const [broken, setBroken] = useState(false);
+  return (
+    <span className={className} aria-hidden="true">
+      {creator.photo && !broken ? (
+        <img className="sf-avatar-img" src={creator.photo} alt="" draggable={false} onError={() => setBroken(true)} />
+      ) : (
+        creator.avatar
+      )}
+    </span>
+  );
+}
+
+// One post: the meme as a square, rounded picture card with the creator in a small frosted pill
+// at its top left, and along its foot small frosted pills for Like, Remix and Copy link, Download at
+// the right, all laid on the picture. The title is the post's name for screen readers only.
+function Post({ post, liked, onLike, onCopyLink, onDownload, onRemix }: PostProps) {
   const [burst, setBurst] = useState(0);
+  const [src, setSrc] = useState(post.imageUrl);
   const likes = post.likes + (liked ? 1 : 0);
-  const like = () => {
+  const like = (e: MouseEvent) => {
+    // A double-tap on one of the pills is two taps on that button, not a like.
+    if ((e.target as HTMLElement).closest('button')) return;
     if (!liked) onLike(post.id);
     setBurst((b) => b + 1);
   };
 
   return (
-    <article className="sf-post" aria-label={post.title}>
-      <header className="sf-post-head">
-        <span className="sf-avatar" aria-hidden="true">{post.creator.avatar}</span>
-        <div className="sf-post-who">
-          <span className="sf-post-name">
-            <span className="sf-post-name-text">{post.creator.name}</span>
-            {post.creator.badge && <span className="sf-badge">{post.creator.badge}</span>}
-          </span>
-          <span className="sf-post-meta">@{post.creator.handle} · {post.timestamp}</span>
-        </div>
-      </header>
-
-      <div className={`sf-meme${post.captionLook ? ` sf-meme--${post.captionLook}` : ''}`} onDoubleClick={like}>
-        <img
-          src={post.imageUrl}
-          alt={post.title}
-          loading="lazy"
-          decoding="async"
-          draggable={false}
-          onError={(e) => {
-            const img = e.currentTarget;
-            if (post.fallbackUrl && !img.dataset.fellBack) {
-              img.dataset.fellBack = '1';
-              img.src = post.fallbackUrl;
-            }
-          }}
-        />
-        {(post.captions || []).map((c, i) => (
-          <span key={i} className="sf-meme-caption" style={{ top: `${(c.y ?? 0.5) * 100}%` }}>{c.text}</span>
-        ))}
-        {burst > 0 && <Heart key={burst} className="sf-meme-heart" aria-hidden="true" fill="currentColor" strokeWidth={0} />}
-      </div>
-
-      <div className="sf-actions">
-        <button
-          type="button"
-          className={`sf-action ${liked ? 'is-liked' : ''}`}
-          onClick={() => onLike(post.id)}
-          aria-pressed={liked}
-          aria-label={liked ? 'Unlike' : 'Like'}
-        >
-          <Heart size={22} fill={liked ? 'currentColor' : 'none'} aria-hidden="true" />
-          <span>{compact(likes)}</span>
-        </button>
-        <span className="sf-action sf-action--static" title="Remixes">
-          <Repeat size={20} aria-hidden="true" />
-          <span>{compact(post.remixes || 0)}</span>
-        </span>
-        <button type="button" className="sf-action" onClick={() => onShare(post)} aria-label="Share" title="Share">
-          <Share size={20} aria-hidden="true" />
-        </button>
-        <button type="button" className="sf-action" onClick={() => onDownload(post)} aria-label="Download" title="Download">
-          <Download size={20} aria-hidden="true" />
-        </button>
-        <button type="button" className="ios-btn ios-btn--filled ios-btn--small sf-remix" onClick={() => onRemix(post)} aria-label={`Remix ${post.title}`}>
-          Remix
-        </button>
-      </div>
-
-      <div className="sf-post-body">
-        <h3 className="sf-post-title">{post.title}</h3>
-        <div className="sf-tags">
-          {post.tags.map((t) => (
-            <button key={t} type="button" className="sf-tag" onClick={() => onTag(t)}>#{t}</button>
+    <article className="sf-post" aria-label={post.title} data-post-id={post.id}>
+      <div className="sf-card" onDoubleClick={like}>
+        <div className={`sf-meme${post.captionLook ? ` sf-meme--${post.captionLook}` : ''}`}>
+          <img
+            src={src}
+            alt={post.title}
+            loading="lazy"
+            decoding="async"
+            draggable={false}
+            onError={() => {
+              if (post.fallbackUrl && src !== post.fallbackUrl) setSrc(post.fallbackUrl);
+            }}
+          />
+          {(post.captions || []).map((c, i) => (
+            <span key={i} className="sf-meme-caption" style={{ '--y': c.y ?? 0.5 } as CSSProperties}>{c.text}</span>
           ))}
+        </div>
+        {burst > 0 && <Heart key={burst} className="sf-meme-heart" aria-hidden="true" fill="currentColor" strokeWidth={0} />}
+
+        <header className="sf-post-head">
+          <Avatar creator={post.creator} className="sf-avatar" />
+          <span className="sf-post-who">
+            <span className="sf-post-name">
+              <span className="sf-post-name-text">{post.creator.name}</span>
+              {post.creator.badge && <span className="sf-badge">{post.creator.badge}</span>}
+            </span>
+            <span className="sf-post-meta">{post.timestamp}</span>
+          </span>
+        </header>
+
+        <div className="sf-actions">
+          <button
+            type="button"
+            className={`sf-pill ${liked ? 'is-liked' : ''}`}
+            onClick={() => onLike(post.id)}
+            aria-pressed={liked}
+            aria-label={liked ? 'Unlike' : 'Like'}
+          >
+            <Heart size={15} fill="currentColor" strokeWidth={liked ? 0 : 2} aria-hidden="true" />
+            <span>{compact(likes)}</span>
+          </button>
+          <button type="button" className="sf-pill" onClick={() => onRemix(post)} aria-label={`Remix ${post.title}`}>
+            <Repeat size={14} strokeWidth={2.4} aria-hidden="true" />
+            <span>Remix</span>
+          </button>
+          <button type="button" className="sf-pill sf-pill--round" onClick={() => onCopyLink(post)} aria-label="Copy link" title="Copy link">
+            <Link size={14} strokeWidth={2.4} aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            className="sf-pill sf-pill--round sf-pill--end"
+            onClick={() => onDownload(post)}
+            aria-label="Download"
+            title="Download"
+          >
+            <Download size={14} strokeWidth={2.4} aria-hidden="true" />
+          </button>
         </div>
       </div>
     </article>
@@ -190,19 +203,9 @@ export default function SocialFeed({ onRemixMeme }: { onRemixMeme?: (post: Commu
     });
   };
 
-  const share = async (post: CommunityPost) => {
-    const text = `"${post.title}" on Meme Studio`;
-    const url = window.location.href;
-    if (navigator.share) {
-      try {
-        await navigator.share({ title: post.title, text, url });
-        return;
-      } catch {
-        // Cancelled or not allowed: copy the link instead.
-      }
-    }
+  const copyLink = async (post: CommunityPost) => {
     try {
-      await navigator.clipboard?.writeText(`${text} ${url}`);
+      await navigator.clipboard.writeText(`"${post.title}" on Meme Studio ${window.location.href}`);
       say('Link copied');
     } catch {
       say('Could not copy the link');
@@ -217,12 +220,6 @@ export default function SocialFeed({ onRemixMeme }: { onRemixMeme?: (post: Commu
     a.click();
     a.remove();
     say('Downloading…');
-  };
-
-  const searchTag = (tag: string) => {
-    setCreator(null);
-    setQuery(`#${tag}`);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const posts = useMemo(
@@ -240,14 +237,15 @@ export default function SocialFeed({ onRemixMeme }: { onRemixMeme?: (post: Commu
   return (
     <div className="sf ios ios-page">
       <header className="sf-nav">
-        <h1 className="ios-title">Social</h1>
-        <p className="ios-subtitle">Memes from the community. Remix any of them.</p>
+        <div className="ios-nav-row sf-nav-row">
+          <h1 className="ios-title">Social</h1>
+          {/* Which feed: a small switch at the top right. */}
+          <SegmentedControl label="Feed" segments={FILTERS} value={filter} onChange={setFilter} className="sf-feed-switch" />
+        </div>
         <SearchField value={query} onChange={setQuery} label="Search memes" placeholder="Search memes, creators, #tags" />
-        <SegmentedControl label="Feed" segments={FILTERS} value={filter} onChange={setFilter} />
       </header>
 
       <section className="sf-creators" aria-label="Top creators">
-        <h2 className="ios-section-title">Top creators</h2>
         <div className="sf-creator-row">
           {CREATORS.map((c) => (
             <button
@@ -258,7 +256,7 @@ export default function SocialFeed({ onRemixMeme }: { onRemixMeme?: (post: Commu
               aria-pressed={creator === c.handle}
               aria-label={`Show memes by ${c.name}`}
             >
-              <span className="sf-creator-avatar" aria-hidden="true">{c.avatar}</span>
+              <Avatar creator={c} className="sf-creator-avatar" />
               <span className="sf-creator-name">{c.name}</span>
             </button>
           ))}
@@ -289,10 +287,9 @@ export default function SocialFeed({ onRemixMeme }: { onRemixMeme?: (post: Commu
               post={post}
               liked={liked.includes(post.id)}
               onLike={toggleLike}
-              onShare={share}
+              onCopyLink={copyLink}
               onDownload={download}
               onRemix={(p) => onRemixMeme?.(p)}
-              onTag={searchTag}
             />
           ))}
         </div>

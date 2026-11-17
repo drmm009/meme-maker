@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import React from 'react';
-import { render, screen, fireEvent, cleanup } from '@testing-library/react';
+import { render, screen, fireEvent, cleanup, within } from '@testing-library/react';
 import MyGallery from './MyGallery';
 
 afterEach(() => cleanup());
@@ -97,8 +97,27 @@ describe('MyGallery', () => {
   it('offers no Re-Edit for a saved GIF', async () => {
     render(<MyGallery savedMemes={[meme({ name: 'Dance', kind: 'gif' })]} galleryReady onDeleteMeme={() => {}} onSelectMeme={() => {}} />);
     fireEvent.click(screen.getByText('Dance'));
-    expect(await screen.findByText(/download/i)).toBeTruthy();
+    expect(await screen.findByRole('button', { name: /download/i })).toBeTruthy();
     expect(screen.queryByText(/re-edit/i)).toBeNull();
+  });
+
+  it('shows a save in a sheet with its kind and no Done button, and closes on Escape', async () => {
+    render(<MyGallery savedMemes={[meme()]} galleryReady onDeleteMeme={() => {}} onSelectMeme={() => {}} />);
+    fireEvent.click(screen.getByText('My Meme'));
+    const sheet = await screen.findByRole('dialog', { name: 'My Meme' });
+    expect(sheet.querySelector('.mg-sheet-kind').textContent).toBe('Meme');
+    expect(screen.queryByRole('button', { name: 'Done' })).toBeNull();
+    fireEvent.keyDown(window, { key: 'Escape' });
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  it('deletes from the sheet', async () => {
+    const onDeleteMeme = vi.fn();
+    render(<MyGallery savedMemes={[meme()]} galleryReady onDeleteMeme={onDeleteMeme} onSelectMeme={() => {}} />);
+    fireEvent.click(screen.getByText('My Meme'));
+    const sheet = await screen.findByRole('dialog');
+    fireEvent.click(within(sheet).getByRole('button', { name: 'Delete' }));
+    expect(onDeleteMeme).toHaveBeenCalledWith('meme-1');
   });
 
   it('searches by name and switches between the grid and the list', () => {

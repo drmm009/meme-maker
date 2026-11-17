@@ -52,11 +52,47 @@ const day = (iso) =>
       })
     : 'Unknown date';
 
-// A save's sheet: its name and kind, Done, then what the caller puts in it (the picture, the
-// actions). Escape or a tap outside closes it; focus returns to what opened it.
-function Viewer({ title, kind, onClose, children }) {
+// The sheet's actions in one row: Re-Edit (grey), Download (orange) and a round Delete.
+function SheetActions({ editLabel, onEdit, onDownload, downloadDisabled, onDelete }) {
+  return (
+    <div className="mg-sheet-actions">
+      {onEdit && (
+        <button type="button" className="ios-btn ios-btn--gray mg-sheet-btn-edit" onClick={onEdit}>
+          <Pencil size={17} aria-hidden="true" /> {editLabel}
+        </button>
+      )}
+      {onDownload && (
+        <button
+          type="button"
+          className="ios-btn ios-btn--filled mg-sheet-btn-download"
+          onClick={onDownload}
+          disabled={downloadDisabled}
+        >
+          <Download size={17} aria-hidden="true" /> Download
+        </button>
+      )}
+      <button
+        type="button"
+        className="ios-btn ios-btn--destructive mg-sheet-btn-delete"
+        onClick={onDelete}
+        aria-label="Delete"
+        title="Delete"
+      >
+        <Trash2 size={20} strokeWidth={2.2} aria-hidden="true" />
+      </button>
+    </div>
+  );
+}
+
+// A save's sheet: the grabber, the picture, its name and kind, then what the caller puts in it
+// (the actions). Escape, a tap outside or dragging the grabber down closes it; focus returns to
+// what opened it.
+function Viewer({ title, kind, onClose, preview, children }) {
   const { label } = KINDS[kind] || KINDS.meme;
   const sheetRef = useRef(null);
+  const dragStartY = useRef(0);
+  const currentDeltaY = useRef(0);
+  const isDragging = useRef(false);
 
   useEffect(() => {
     const opener = document.activeElement;
@@ -71,6 +107,65 @@ function Viewer({ title, kind, onClose, children }) {
     };
   }, [onClose]);
 
+  // Pull handle down to close gesture (touch & pointer)
+  const handlePointerDown = (e) => {
+    if (e.button !== undefined && e.button !== 0) return;
+    dragStartY.current = e.clientY;
+    currentDeltaY.current = 0;
+    isDragging.current = true;
+    if (sheetRef.current) {
+      sheetRef.current.style.transition = 'none';
+    }
+    const target = e.currentTarget;
+    try {
+      target.setPointerCapture?.(e.pointerId);
+    } catch {
+      // ignore
+    }
+
+    const onPointerMove = (moveEvt) => {
+      if (!isDragging.current) return;
+      const deltaY = moveEvt.clientY - dragStartY.current;
+      if (deltaY > 0) {
+        currentDeltaY.current = deltaY;
+        if (sheetRef.current) {
+          sheetRef.current.style.transform = `translateY(${deltaY}px)`;
+        }
+      } else {
+        currentDeltaY.current = 0;
+        if (sheetRef.current) {
+          sheetRef.current.style.transform = 'translateY(0)';
+        }
+      }
+    };
+
+    const onPointerUp = (upEvt) => {
+      if (!isDragging.current) return;
+      isDragging.current = false;
+      try {
+        target.releasePointerCapture?.(upEvt.pointerId);
+      } catch {
+        // ignore
+      }
+      window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('pointerup', onPointerUp);
+      window.removeEventListener('pointercancel', onPointerUp);
+      if (sheetRef.current) {
+        sheetRef.current.style.transition = 'transform 0.24s cubic-bezier(0.2, 0.9, 0.3, 1)';
+        if (currentDeltaY.current > 60) {
+          sheetRef.current.style.transform = 'translateY(100%)';
+          setTimeout(onClose, 200);
+        } else {
+          sheetRef.current.style.transform = 'translateY(0)';
+        }
+      }
+    };
+
+    window.addEventListener('pointermove', onPointerMove);
+    window.addEventListener('pointerup', onPointerUp);
+    window.addEventListener('pointercancel', onPointerUp);
+  };
+
   return (
     <ModalPortal>
       <div className="ios ios-layer mg-sheet-backdrop" onClick={onClose} role="presentation">
@@ -83,18 +178,20 @@ function Viewer({ title, kind, onClose, children }) {
           tabIndex={-1}
           onClick={(e) => e.stopPropagation()}
         >
-          <span className="mg-sheet-grabber" aria-hidden="true" />
-          <header className="mg-sheet-bar">
-            <div className="mg-sheet-heading">
-              <h3 className="mg-sheet-title" title={title}>
-                {title}
-              </h3>
-              <span className="mg-sheet-kind">{label}</span>
-            </div>
-            <button type="button" className="ios-text-btn" onClick={onClose}>
-              Done
-            </button>
-          </header>
+          {/* Dragging the grabber down closes the sheet; so do Escape and a tap outside. */}
+          <div className="mg-sheet-handle-area" onPointerDown={handlePointerDown} aria-hidden="true">
+            <span className="mg-sheet-grabber" />
+          </div>
+
+          {preview}
+
+          <div className="mg-sheet-heading">
+            <h3 className="mg-sheet-title" title={title}>
+              {title}
+            </h3>
+            <span className="mg-sheet-kind">{label}</span>
+          </div>
+
           {children}
         </div>
       </div>
@@ -135,36 +232,33 @@ function VideoViewer({ video, onClose, onOpen, onDelete, onGetFile }) {
     a.click();
   };
 
+  const preview = (
+    <div className="mg-sheet-pic">
+      {url && !isGif ? (
+        <video className="mg-sheet-media" src={url} controls autoPlay loop playsInline />
+      ) : (
+        <img
+          className="mg-sheet-media"
+          src={url || video.thumbnail}
+          alt={video.name}
+          decoding="async"
+        />
+      )}
+    </div>
+  );
+
   return (
-    <Viewer title={video.name} kind="video" onClose={onClose}>
-      <div className="mg-sheet-pic">
-        {url && !isGif ? (
-          <video className="mg-sheet-media" src={url} controls autoPlay loop playsInline />
-        ) : (
-          <img
-            className="mg-sheet-media"
-            src={url || video.thumbnail}
-            alt={video.name}
-            decoding="async"
-          />
-        )}
-      </div>
+    <Viewer title={video.name} kind="video" onClose={onClose} preview={preview}>
       {!video.exportType && (
         <p className="mg-sheet-note">This project hasn’t been exported yet. Edit it to export a video.</p>
       )}
-      <div className="mg-sheet-actions">
-        <button type="button" className="ios-btn ios-btn--filled" onClick={() => onOpen(video)}>
-          <Pencil size={17} aria-hidden="true" /> Edit
-        </button>
-        {video.exportType && (
-          <button type="button" className="ios-btn ios-btn--gray" onClick={download} disabled={!url}>
-            <Download size={17} aria-hidden="true" /> Download
-          </button>
-        )}
-        <button type="button" className="ios-btn ios-btn--destructive" onClick={() => onDelete(video.id)}>
-          <Trash2 size={17} aria-hidden="true" /> Delete
-        </button>
-      </div>
+      <SheetActions
+        editLabel="Edit"
+        onEdit={() => onOpen(video)}
+        onDownload={video.exportType ? download : undefined}
+        downloadDisabled={!url}
+        onDelete={() => onDelete(video.id)}
+      />
     </Viewer>
   );
 }
@@ -499,32 +593,27 @@ export default function MyGallery({
       )}
 
       {viewing && (
-        <Viewer title={viewing.name} kind={viewingKind} onClose={() => setSelectedMemeForView(null)}>
-          <div className={`mg-sheet-pic mg-sheet-pic--${viewingKind}`}>
-            <img
-              className="mg-sheet-media"
-              src={fullViewUrl || thumbOf(viewing)}
-              alt={viewing.name}
-              decoding="async"
-            />
-          </div>
-          <div className="mg-sheet-actions">
-            {viewingKind !== 'gif' && (
-              <button type="button" className="ios-btn ios-btn--filled" onClick={(e) => handleEdit(viewing, e)}>
-                <Pencil size={17} aria-hidden="true" /> Re-Edit
-              </button>
-            )}
-            <button
-              type="button"
-              className={`ios-btn ${viewingKind === 'gif' ? 'ios-btn--filled' : 'ios-btn--gray'}`}
-              onClick={(e) => handleDownload(viewing, e)}
-            >
-              <Download size={17} aria-hidden="true" /> Download
-            </button>
-            <button type="button" className="ios-btn ios-btn--destructive" onClick={(e) => handleDelete(viewing.id, e)}>
-              <Trash2 size={17} aria-hidden="true" /> Delete
-            </button>
-          </div>
+        <Viewer
+          title={viewing.name}
+          kind={viewingKind}
+          onClose={() => setSelectedMemeForView(null)}
+          preview={
+            <div className={`mg-sheet-pic mg-sheet-pic--${viewingKind}`}>
+              <img
+                className="mg-sheet-media"
+                src={fullViewUrl || thumbOf(viewing)}
+                alt={viewing.name}
+                decoding="async"
+              />
+            </div>
+          }
+        >
+          <SheetActions
+            editLabel="Re-Edit"
+            onEdit={viewingKind !== 'gif' ? () => handleEdit(viewing) : undefined}
+            onDownload={() => handleDownload(viewing)}
+            onDelete={() => handleDelete(viewing.id)}
+          />
         </Viewer>
       )}
     </div>

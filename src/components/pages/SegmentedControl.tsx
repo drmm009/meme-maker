@@ -1,6 +1,8 @@
 // An iOS segmented control (pages/iosLook.css): tabs in one track, with a black key that slides
-// under the picked one. The key is measured, since each segment is as wide as its words.
-import { useLayoutEffect, useRef } from 'react';
+// under the picked one and grows into place when the control comes into view (useSlidingKey). The
+// key is measured, since each segment is as wide as its words.
+import { useRef } from 'react';
+import useSlidingKey from './useSlidingKey';
 import './iosLook.css';
 
 export interface Segment {
@@ -23,22 +25,7 @@ export default function SegmentedControl({ label, segments, value, onChange, cla
   const trackRef = useRef<HTMLDivElement>(null);
   // Anything that changes a segment's width moves the key.
   const shape = segments.map((s) => `${s.label}${s.count ?? ''}`).join('|');
-
-  useLayoutEffect(() => {
-    const track = trackRef.current;
-    if (!track) return undefined;
-    const place = () => {
-      const on = track.querySelector<HTMLElement>('[aria-selected="true"]');
-      if (!on) return;
-      track.style.setProperty('--ios-key-x', `${on.offsetLeft}px`);
-      track.style.setProperty('--ios-key-w', `${on.offsetWidth}px`);
-    };
-    place();
-    if (typeof ResizeObserver === 'undefined') return undefined;
-    const observer = new ResizeObserver(place);
-    observer.observe(track);
-    return () => observer.disconnect();
-  }, [value, shape]);
+  useSlidingKey(trackRef, `${value}|${shape}`);
 
   return (
     <div className={`ios-segments ${className}`} role="tablist" aria-label={label} ref={trackRef}>

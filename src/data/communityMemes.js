@@ -5,6 +5,7 @@ export const COMMUNITY_MEMES = [
       name: 'CyberDoge',
       handle: 'cyberdoge_ai',
       avatar: '🐶',
+      photo: './images/avatars/cyberdoge_ai.svg',
       badge: 'PRO'
     },
     title: 'Writing unit tests at 3 AM',
@@ -27,6 +28,7 @@ export const COMMUNITY_MEMES = [
       name: 'PixelQueen',
       handle: 'pixelqueen',
       avatar: '👑',
+      photo: './images/avatars/pixelqueen.svg',
       badge: 'TOP CREATOR'
     },
     title: 'When the AI writes better jokes than you',
@@ -48,6 +50,7 @@ export const COMMUNITY_MEMES = [
       name: 'CoffeeOverflow',
       handle: 'coffee_dev',
       avatar: '☕',
+      photo: './images/avatars/coffee_dev.svg',
       badge: null
     },
     title: 'Modern CSS centered div expectation vs reality',
@@ -70,6 +73,7 @@ export const COMMUNITY_MEMES = [
       name: 'VibeCheck',
       handle: 'vibe_master',
       avatar: '🔥',
+      photo: './images/avatars/vibe_master.svg',
       badge: 'STAFF PICK'
     },
     title: 'My wallet every time a new meme tech tool drops',
@@ -94,6 +98,7 @@ export const COMMUNITY_MEMES = [
       name: 'NeonPhantom',
       handle: 'neon_meme',
       avatar: '⚡',
+      photo: './images/avatars/neon_meme.svg',
       badge: null
     },
     title: 'Aura farming in every meeting',
@@ -115,6 +120,7 @@ export const COMMUNITY_MEMES = [
       name: 'MidnightSnacker',
       handle: 'night_owl',
       avatar: '🦉',
+      photo: './images/avatars/night_owl.svg',
       badge: 'PRO'
     },
     title: 'Baraat entrance when WiFi connects on first try',

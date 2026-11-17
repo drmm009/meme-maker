@@ -27,7 +27,7 @@
   padding: calc(10px + env(safe-area-inset-top, 0px)) 14px 8px;
   background: transparent;
   color: var(--ui-text, #f4f4f6);
-  font-family: var(--ui-font, 'Plus Jakarta Sans', Inter, system-ui, sans-serif);
+  font-family: var(--ui-font, 'Plus Jakarta Sans', sans-serif);
   position: relative;
   z-index: 20;
 }

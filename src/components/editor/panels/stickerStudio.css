@@ -39,7 +39,7 @@
     radial-gradient(ellipse 60% 30% at 85% 0%, rgba(255, 90, 54, 0.08) 0%, transparent 60%),
     linear-gradient(180deg, #101217 0%, #0b0c10 100%) !important;
   color: var(--ui-text, #f4f4f6);
-  font-family: var(--ui-font, 'Plus Jakarta Sans', Inter, system-ui, sans-serif);
+  font-family: var(--ui-font, 'Plus Jakarta Sans', sans-serif);
   /* Top inset keeps the header below the iPhone notch / status bar. */
   padding: calc(8px + env(safe-area-inset-top, 0px)) 14px calc(12px + env(safe-area-inset-bottom, 0px));
   box-sizing: border-box;

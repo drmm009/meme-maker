@@ -32,7 +32,7 @@
   --ui-radius-full: 999px;
   --ui-shadow: 0 18px 40px -14px rgba(0, 0, 0, 0.75);
   /* The app's one UI font (src/styles/core.css), so the editor matches the other screens. */
-  --ui-font: 'Plus Jakarta Sans', Inter, system-ui, -apple-system, sans-serif;
+  --ui-font: 'Plus Jakarta Sans', sans-serif;
   color: var(--ui-text);
   font-family: var(--ui-font);
   -webkit-tap-highlight-color: transparent;

@@ -4,7 +4,21 @@
 // with See All; a category or a search shows a grid. A card opens its template in the editor; its
 // star keeps it under My Favorites (on this device).
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
-import { ArrowUpDown, Search, Star } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+import {
+  ArrowUpDown,
+  Briefcase,
+  ChevronRight,
+  Clapperboard,
+  Drama,
+  Flame,
+  Heart,
+  Search,
+  Share2,
+  Sparkles,
+  Star,
+  Zap,
+} from 'lucide-react';
 import { MEME_TEMPLATES } from '../data/templates';
 import { VIDEO_MEME_TEMPLATES } from '../data/videoTemplates';
 import { fetchOpenSourceMemes } from '../services/memeService';
@@ -14,6 +28,7 @@ import { EXPLORE_CATEGORIES } from '../data/exploreCategories';
 import TemplateThumb from './TemplateThumb';
 import SearchField from './pages/SearchField';
 import PullDownMenu from './pages/PullDownMenu';
+import useSlidingKey from './pages/useSlidingKey';
 import './ExploreView.css';
 
 interface Template {
@@ -57,15 +72,29 @@ const SORT_OPTIONS = [
 
 // The shelves shown under All Templates, in order, with how many each holds.
 const SHELVES = [
-  { id: 'trending', label: 'Trending Memes', size: 10 },
-  { id: 'social', label: 'Social Media Cards', size: 8 },
-  { id: 'videos', label: 'Motion Video Templates', size: 8 },
-  { id: 'work', label: 'Work & 9-to-5 Memes', size: 10 },
-  { id: 'reaction', label: 'Expressive Reactions', size: 10 },
-  { id: 'relatable', label: 'Relationships Memes', size: 10 },
-  { id: 'desi', label: 'Bollywood Culture', size: 10 },
-  { id: 'classic', label: 'Classic Legends', size: 10 },
+  { id: 'trending', label: 'Trending Memes', size: 10, Icon: Flame, subtitle: 'Updated today' },
+  { id: 'social', label: 'Social Media Cards', size: 8, Icon: Share2, subtitle: 'Twitter, WhatsApp & Instagram' },
+  { id: 'videos', label: 'Motion Video Templates', size: 8, Icon: Clapperboard, subtitle: 'Motion clips & video templates' },
+  { id: 'work', label: 'Work & 9-to-5 Memes', size: 10, Icon: Briefcase, subtitle: 'Relatable 9-to-5 & tech humor' },
+  { id: 'reaction', label: 'Expressive Reactions', size: 10, Icon: Zap, subtitle: 'Timeless internet gold' },
+  { id: 'relatable', label: 'Relationships Memes', size: 10, Icon: Heart, subtitle: 'Dating, couples & friendships' },
+  { id: 'desi', label: 'Bollywood Culture', size: 10, Icon: Sparkles, subtitle: 'Iconic cinema & pop culture memes' },
+  { id: 'classic', label: 'Classic Legends', size: 10, Icon: Drama, subtitle: 'Historic meme hall of fame' },
 ];
+
+// A category's icon, beside its title when it is picked.
+const CATEGORY_ICONS: Record<string, LucideIcon> = {
+  trending: Flame,
+  social: Share2,
+  videos: Clapperboard,
+  work: Briefcase,
+  reaction: Zap,
+  relatable: Heart,
+  desi: Sparkles,
+  classic: Drama,
+  favorites: Star,
+  popular: Star,
+};
 
 const clock = (ms: number) => {
   const sec = Math.max(1, Math.round(ms / 1000));
@@ -80,6 +109,8 @@ export default function ExploreView({ onSelectTemplate, initialCategory = 'all' 
   const [templatesList, setTemplatesList] = useState<Template[]>(() => [...MEME_TEMPLATES, ...VIDEO_MEME_TEMPLATES]);
 
   const chipsRef = useRef<HTMLDivElement>(null);
+  // The black key behind the picked chip: it slides between chips and grows in as the page opens.
+  useSlidingKey(chipsRef, selectedCategory);
 
   const handleSelectCategory = (catId: string, shouldScrollTop = false) => {
     setSelectedCategory(catId);
@@ -238,6 +269,7 @@ export default function ExploreView({ onSelectTemplate, initialCategory = 'all' 
 
   const categoryLabel = (EXPLORE_CATEGORIES.find((c) => c.id === selectedCategory) || EXPLORE_CATEGORIES[0]).label;
   const query = searchQuery.trim();
+  const CategoryIcon = !query && selectedCategory !== 'all' ? CATEGORY_ICONS[selectedCategory] : undefined;
   const found = filteredTemplates.length;
 
   return (
@@ -264,6 +296,7 @@ export default function ExploreView({ onSelectTemplate, initialCategory = 'all' 
       </header>
 
       <div className="ex-chips" role="tablist" aria-label="Categories" ref={chipsRef}>
+        <span className="ex-chips-key" aria-hidden="true" />
         {EXPLORE_CATEGORIES.map((cat) => (
           <button
             key={cat.id}
@@ -280,38 +313,64 @@ export default function ExploreView({ onSelectTemplate, initialCategory = 'all' 
       </div>
 
       {shelves && shelves.length > 0 ? (
-        shelves.map((shelf) => (
-          <section key={shelf.id} className="ex-section">
-            <div className="ex-section-head">
-              <h2 className="ios-section-title">{shelf.label}</h2>
-              <button type="button" className="ios-text-btn ex-see-all" onClick={() => handleSelectCategory(shelf.id, true)} aria-label={`See all ${shelf.label}`}>
-                See All
-              </button>
-            </div>
-            <div className="ex-shelf">
-              {shelf.templates.map((template, idx) => (
-                <TemplateCard
-                  key={template.id}
-                  template={template}
-                  rank={shelf.id === 'trending' ? idx + 1 : undefined}
-                  views={[28, 20]}
-                  isFavorite={favorites.includes(template.id)}
-                  onToggleFavorite={toggleFavorite}
-                  onSelectTemplate={onSelectTemplate}
-                />
-              ))}
-            </div>
-          </section>
-        ))
+        shelves.map((shelf) => {
+          const ShelfIcon = shelf.Icon;
+          return (
+            <section key={shelf.id} className="ex-section">
+              <div className="ex-section-head">
+                <div className="ex-head-left">
+                  <span className="ex-head-icon" aria-hidden="true">
+                    <ShelfIcon size={18} />
+                  </span>
+                  <div className="ex-head-words">
+                    <h2 className="ios-section-title">{shelf.label}</h2>
+                    <span className="ex-head-sub">{shelf.subtitle}</span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className="ios-text-btn ex-see-all"
+                  onClick={() => handleSelectCategory(shelf.id, true)}
+                  aria-label={`See all ${shelf.label}`}
+                >
+                  <span>See all</span>
+                  <ChevronRight size={14} aria-hidden="true" />
+                </button>
+              </div>
+              <div className="ex-shelf">
+                {shelf.templates.map((template, idx) => (
+                  <TemplateCard
+                    key={template.id}
+                    template={template}
+                    rank={shelf.id === 'trending' ? idx + 1 : undefined}
+                    views={[28, 20]}
+                    isFavorite={favorites.includes(template.id)}
+                    onToggleFavorite={toggleFavorite}
+                    onSelectTemplate={onSelectTemplate}
+                  />
+                ))}
+              </div>
+            </section>
+          );
+        })
       ) : found > 0 ? (
         <section className="ex-section">
           <div className="ex-section-head">
-            <h2 className="ios-section-title">{query ? `Results for “${query}”` : categoryLabel}</h2>
+            <div className="ex-head-left">
+              {CategoryIcon && (
+                <span className="ex-head-icon" aria-hidden="true">
+                  <CategoryIcon size={18} />
+                </span>
+              )}
+              <div className="ex-head-words">
+                <h2 className="ios-section-title">{query ? `Results for “${query}”` : categoryLabel}</h2>
+                <span className="ex-head-sub">
+                  {found} {found === 1 ? 'template' : 'templates'}
+                  {query && selectedCategory !== 'all' ? ` in ${categoryLabel}` : ''}
+                </span>
+              </div>
+            </div>
           </div>
-          <p className="ios-section-sub">
-            {found} {found === 1 ? 'template' : 'templates'}
-            {query && selectedCategory !== 'all' ? ` in ${categoryLabel}` : ''}
-          </p>
           <div className="ex-grid">
             {filteredTemplates.map((template) => (
               <TemplateCard

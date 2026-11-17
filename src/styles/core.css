@@ -10,11 +10,7 @@ body {
   -webkit-tap-highlight-color: transparent;
   overflow-y: scroll;
   font-family:
-    'Plus Jakarta Sans',
-    Inter,
-    system-ui,
-    -apple-system,
-    sans-serif;
+    'Plus Jakarta Sans', sans-serif;
   line-height: 1.5;
 }
 
@@ -27,7 +23,7 @@ textarea {
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: 'Plus Jakarta Sans', Inter, system-ui, -apple-system, sans-serif;
+  font-family: 'Plus Jakarta Sans', sans-serif;
   text-transform: none;
 }
 

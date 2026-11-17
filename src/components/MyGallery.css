@@ -92,7 +92,7 @@
   transition: transform 0.45s var(--ios-ease);
 }
 
-/* A sticker is see-through: show it whole, on a lighter tile. */
+/* A sticker is see-through: show it whole, on a plain tile. */
 .mg-tile--sticker .mg-tile-pic {
   background: var(--ios-surface-2);
 }
@@ -183,7 +183,7 @@
 .mg-list {
   max-width: 760px;
   margin-top: 22px;
-  border-radius: 14px;
+  border-radius: 16px;
   background: var(--ios-surface);
 }
 
@@ -221,6 +221,12 @@
 
 .mg-row-open:active {
   background: var(--ios-press);
+}
+
+@media (hover: hover) {
+  .mg-row-open:hover {
+    background: var(--ios-press);
+  }
 }
 
 .mg-row-pic {
@@ -276,7 +282,7 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* ---- A save's sheet ---- */
+/* ---- A save's sheet (iOS bottom sheet) ---- */
 
 .mg-sheet-backdrop {
   position: fixed;
@@ -286,83 +292,129 @@
   align-items: end;
   justify-items: center;
   background: rgba(0, 0, 0, 0.52);
-  animation: mg-fade-in 0.26s ease-out;
+  animation: mg-fade-in 0.24s cubic-bezier(0.2, 0.9, 0.3, 1);
 }
 
 .mg-sheet {
   box-sizing: border-box;
   width: 100%;
-  max-width: 560px;
+  max-width: 520px;
   max-height: 92dvh;
-  padding: 6px 16px calc(16px + env(safe-area-inset-bottom, 0px));
-  border-radius: 18px 18px 0 0;
+  padding: 8px 16px calc(18px + env(safe-area-inset-bottom, 0px));
+  border-radius: 28px 28px 0 0;
   background: var(--ios-surface);
-  box-shadow: 0 -12px 44px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.35);
   overflow-y: auto;
   outline: none;
-  animation: mg-sheet-up 0.44s var(--ios-ease);
+  animation: mg-sheet-up 0.38s cubic-bezier(0.2, 0.9, 0.3, 1);
 }
 
 .mg-sheet:focus-visible {
   outline: none;
 }
 
+.mg-sheet-handle-area {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  padding: 8px 0 14px;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.mg-sheet-handle-area:active {
+  cursor: grabbing;
+}
+
 .mg-sheet-grabber {
   display: block;
-  width: 36px;
+  width: 38px;
   height: 5px;
-  margin: 0 auto 4px;
-  border-radius: 3px;
+  margin: 0 auto;
+  border-radius: 999px;
   background: var(--ios-label-3);
 }
 
-.mg-sheet-bar {
+.mg-sheet-heading {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  min-height: 48px;
-}
-
-.mg-sheet-heading {
-  display: grid;
   min-width: 0;
+  margin: 14px 2px 6px;
 }
 
 .mg-sheet-title {
   margin: 0;
-  font-size: 17px;
-  font-weight: 600;
-  line-height: 1.3;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+  color: var(--ios-label);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .mg-sheet-kind {
-  font-size: 13px;
-  line-height: 1.35;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: var(--ios-fill);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
   color: var(--ios-label-2);
+  white-space: nowrap;
 }
 
 .mg-sheet-pic {
+  position: relative;
   display: grid;
   place-items: center;
-  margin-top: 8px;
-  border-radius: 12px;
-  background: #000;
+  margin: 4px auto 0;
+  max-width: 360px;
+  width: 100%;
+  border-radius: 20px;
+  background: var(--ios-surface-2);
+  border: 1px solid var(--ios-hairline);
   overflow: hidden;
 }
 
+/* Compact centered preview for stickers so the sheet stays balanced */
 .mg-sheet-pic--sticker {
-  background: var(--ios-surface-2);
+  width: min(220px, 60vw);
+  height: min(220px, 60vw);
+  aspect-ratio: 1;
+  margin: 8px auto;
+  padding: 12px;
+  box-sizing: border-box;
+  border-radius: 20px;
 }
 
 .mg-sheet-media {
   display: block;
   max-width: 100%;
-  max-height: 56dvh;
+  max-height: 36dvh;
   object-fit: contain;
+  border-radius: 16px;
+}
+
+.mg-sheet-pic--sticker .mg-sheet-media {
+  max-height: 100%;
+  max-width: 100%;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 12px;
 }
 
 .mg-sheet-note {
@@ -372,10 +424,48 @@
   color: var(--ios-label-2);
 }
 
+/* One row of actions: Re-Edit, Download, and a round Delete at the end. */
 .mg-sheet-actions {
-  display: grid;
-  gap: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   margin-top: 14px;
+  width: 100%;
+}
+
+.mg-sheet-actions .ios-btn {
+  height: 44px;
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  transition: transform 0.16s var(--ios-ease), background-color 0.16s var(--ios-ease);
+}
+
+.mg-sheet-actions .ios-btn:active {
+  transform: scale(0.96);
+}
+
+.mg-sheet-btn-edit,
+.mg-sheet-btn-download {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+/* Re-Edit is a plain grey button here, its label in the page's text colour. */
+.mg-sheet-actions .ios-btn--gray {
+  color: var(--ios-label);
+}
+
+/* Delete, a round icon button at the row's end (ios-btn--destructive's colours). */
+.mg-sheet-actions .mg-sheet-btn-delete {
+  flex: none;
+  width: 44px;
+  padding: 0;
+  border-radius: 50%;
 }
 
 @keyframes mg-fade-in {
@@ -399,13 +489,6 @@
 
 /* ---- Wider screens ---- */
 
-@media (min-width: 480px) {
-  .mg-sheet-actions {
-    grid-auto-flow: column;
-    grid-auto-columns: 1fr;
-  }
-}
-
 @media (min-width: 640px) {
   .mg-sheet-backdrop {
     align-items: center;
@@ -413,12 +496,16 @@
   }
 
   .mg-sheet {
-    padding-top: 10px;
-    padding-bottom: 16px;
-    border-radius: 18px;
-    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.6);
+    padding: 16px 20px 20px;
+    border-radius: 28px;
+    border: none;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.65);
     animation-name: mg-sheet-pop;
-    animation-duration: 0.3s;
+    animation-duration: 0.28s;
+  }
+
+  [data-theme='light'] .mg-sheet {
+    border: none;
   }
 
   .mg-sheet-grabber {

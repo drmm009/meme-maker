@@ -9,19 +9,21 @@ afterEach(() => {
 });
 
 describe('CustomLayoutBuilder (live website version)', () => {
-  it('renders heading and shelf sections', () => {
+  it('renders heading, tabs and shelf sections', () => {
     render(<CustomLayoutBuilder />);
-    expect(screen.getByText('Choose Canvas Layout')).toBeTruthy();
+    expect(screen.getByText('Canvas Layout')).toBeTruthy();
+    expect(screen.getByRole('tab', { name: 'All' })).toBeTruthy();
+    expect(screen.getByRole('tab', { name: 'Image' })).toBeTruthy();
+    expect(screen.getByRole('tab', { name: 'Video' })).toBeTruthy();
     expect(screen.getByText('Image Layout')).toBeTruthy();
     expect(screen.getByText('Video Layout')).toBeTruthy();
-    expect(screen.getByText('Social Cards')).toBeTruthy();
-    expect(screen.getByText('Blank Canvas')).toBeTruthy();
+    expect(screen.getAllByText('Blank Canvas').length).toBe(2);
   });
 
   it('triggers onSelectTemplate when Blank Canvas is clicked', () => {
     const handleSelect = vi.fn();
     render(<CustomLayoutBuilder onSelectTemplate={handleSelect} />);
-    fireEvent.click(screen.getByRole('button', { name: /Blank Canvas/ }));
+    fireEvent.click(screen.getAllByRole('button', { name: /Blank Canvas/ })[0]);
 
     expect(handleSelect).toHaveBeenCalledTimes(1);
     const template = handleSelect.mock.calls[0][0];
@@ -66,14 +68,26 @@ describe('CustomLayoutBuilder (live website version)', () => {
     expect(handleSelect.mock.calls[0][0].defaultCaptions).toHaveLength(3);
   });
 
-  it('selects a social card', () => {
+  it('filters sections with the segmented control', () => {
+    render(<CustomLayoutBuilder />);
+    fireEvent.click(screen.getByRole('tab', { name: 'Video' }));
+    expect(screen.queryByText('Image Layout')).toBeNull();
+    expect(screen.getByText('Video Layout')).toBeTruthy();
+    fireEvent.click(screen.getByRole('tab', { name: 'Image' }));
+    expect(screen.getByText('Image Layout')).toBeTruthy();
+    expect(screen.queryByText('Video Layout')).toBeNull();
+  });
+
+  it('selects a blank video canvas', () => {
     const handleSelect = vi.fn();
     render(<CustomLayoutBuilder onSelectTemplate={handleSelect} />);
 
-    fireEvent.click(screen.getByRole('button', { name: /X Post Card/ }));
+    fireEvent.click(screen.getByRole('tab', { name: 'Video' }));
+    fireEvent.click(screen.getByRole('button', { name: /Blank Canvas/ }));
 
     expect(handleSelect).toHaveBeenCalledTimes(1);
     const template = handleSelect.mock.calls[0][0];
-    expect(template.category).toBe('social');
+    expect(template.type).toBe('video');
+    expect(template.videoLayout).toBeUndefined();
   });
 });
