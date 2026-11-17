@@ -1,8 +1,15 @@
 // @vitest-environment jsdom
-import { describe, it, expect, vi, afterEach } from 'vitest';
+import { describe, it, expect, vi, afterEach, beforeAll } from 'vitest';
 import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import StickersSheet from './StickersSheet';
 import type { EditorActions } from './selection';
+import { loadStickerPack } from '../../../utils/stickerPack';
+
+// The sheet imports the 3D pack's list (about 1,600 rows) lazily; under a busy run that can outlast
+// findBy's one second. Load it first: the sheet then gets the cached copy.
+beforeAll(async () => {
+  await loadStickerPack();
+}, 30000);
 
 afterEach(cleanup);
 

@@ -1,30 +1,34 @@
-/* Home's makers as cards (HomeTools.tsx): a grey card each, with the maker's icon on a tile of its
-   own colour, its name, a line about it and a small arrow. On a phone the first card runs the full
-   width with its words beside the icon, and the rest sit two across; from 640px two wide cards sit
-   over three; from 1000px all five share one row. */
+/* Home's makers (HomeTools.tsx): a shelf heading, then a card each, tinted with the maker's own
+   colour (its edge too), with the icon on a solid tile of that colour, its name and a line about it.
+   On a phone the first card runs the full width as a row with a chevron, and the rest sit two
+   across; from 640px two wide cards sit over three; from 1000px all five share one row. */
+
+.hh-makers {
+  margin: 6px 0 22px;
+}
 
 .hh-tools {
   --hh-card: #1c1c1e;
-  --hh-card-hover: #252528;
-  --hh-edge: rgba(255, 255, 255, 0.07);
   --hh-label: #f4f4f6;
-  --hh-label-2: rgba(235, 235, 245, 0.64);
-  --hh-label-3: rgba(235, 235, 245, 0.32);
+  --hh-label-2: rgba(235, 235, 245, 0.66);
+  --hh-tint: 14%;
+  --hh-tint-hover: 20%;
+  --hh-edge-tint: 26%;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
-  margin: 6px 0 22px;
+  margin-top: 12px;
   font-family: 'Plus Jakarta Sans', sans-serif;
   -webkit-tap-highlight-color: transparent;
 }
 
 [data-theme='light'] .hh-tools {
   --hh-card: #ffffff;
-  --hh-card-hover: #f6f6f8;
-  --hh-edge: rgba(0, 0, 0, 0.08);
   --hh-label: #1c1c1e;
-  --hh-label-2: rgba(60, 60, 67, 0.72);
-  --hh-label-3: rgba(60, 60, 67, 0.34);
+  --hh-label-2: rgba(60, 60, 67, 0.74);
+  --hh-tint: 11%;
+  --hh-tint-hover: 16%;
+  --hh-edge-tint: 30%;
 }
 
 .hh-tool {
@@ -33,13 +37,16 @@
   box-sizing: border-box;
   display: grid;
   align-content: start;
-  gap: 14px;
+  gap: 18px;
   min-width: 0;
-  min-height: 128px;
+  min-height: 132px;
   padding: 14px;
-  border: 1px solid var(--hh-edge);
-  border-radius: 18px !important;
+  /* Plain card first, for a browser without color-mix. */
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid color-mix(in srgb, var(--tool-color) var(--hh-edge-tint), transparent);
+  border-radius: 20px;
   background: var(--hh-card);
+  background: color-mix(in srgb, var(--tool-color) var(--hh-tint), var(--hh-card));
   color: var(--hh-label);
   font: inherit;
   text-align: left;
@@ -47,21 +54,22 @@
   transition: background-color 0.2s cubic-bezier(0.22, 1, 0.36, 1), transform 0.16s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* Each maker's own colour, on its icon tile. */
+/* Each maker's own colour. */
 .hh-tool--video { --tool-color: #38bdf8; }
 .hh-tool--stickers { --tool-color: #2fd39b; }
 .hh-tool--faceswap { --tool-color: #ff6a48; }
-.hh-tool--ai { --tool-color: #b3a6ff; }
-.hh-tool--gif { --tool-color: #b4e04a; }
+.hh-tool--ai { --tool-color: #a78bfa; }
+.hh-tool--gif { --tool-color: #a8d834; }
 
 .hh-tool-icon {
   display: grid;
   place-items: center;
-  width: 42px;
-  height: 42px;
-  border-radius: 12px;
+  width: 44px;
+  height: 44px;
+  border-radius: 13px;
   background: var(--tool-color);
   color: #101012;
+  box-shadow: 0 6px 16px -6px var(--tool-color);
 }
 
 .hh-tool-icon svg {
@@ -77,9 +85,9 @@
 
 .hh-tool-label {
   font-size: 16px;
-  font-weight: 700;
+  font-weight: 750;
   line-height: 1.2;
-  letter-spacing: -0.012em;
+  letter-spacing: -0.015em;
 }
 
 .hh-tool-about {
@@ -92,14 +100,9 @@
   -webkit-line-clamp: 2;
 }
 
+/* The chevron shows only on the wide row card (phone); a tile is plainly tappable already. */
 .hh-tool-go {
-  position: absolute;
-  top: 14px;
-  right: 14px;
-  width: 18px;
-  height: 18px;
-  color: var(--hh-label-3);
-  transition: color 0.2s cubic-bezier(0.22, 1, 0.36, 1), transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+  display: none;
 }
 
 .hh-tool:active {
@@ -113,28 +116,25 @@
 
 @media (hover: hover) {
   .hh-tool:hover {
-    background: var(--hh-card-hover);
-  }
-
-  .hh-tool:hover .hh-tool-go {
-    color: var(--hh-label);
-    transform: translate(2px, -2px);
+    background: color-mix(in srgb, var(--tool-color) var(--hh-tint-hover), var(--hh-card));
   }
 }
 
-/* On a phone, the first card runs the full width, its words beside the icon. */
+/* On a phone, the first card is a full-width row: icon, words, chevron. */
 @media (max-width: 639px) {
   .hh-tool:first-child {
     grid-column: 1 / -1;
-    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-columns: auto minmax(0, 1fr) auto;
     align-items: center;
+    gap: 14px;
     min-height: 0;
-    padding-right: 44px;
   }
 
   .hh-tool:first-child .hh-tool-go {
-    top: 50%;
-    margin-top: -9px;
+    display: block;
+    width: 20px;
+    height: 20px;
+    color: var(--tool-color);
   }
 }
 
@@ -153,11 +153,6 @@
   .hh-tool:nth-child(-n + 2) {
     grid-column: span 3;
   }
-
-  .hh-tool-go {
-    top: 16px;
-    right: 16px;
-  }
 }
 
 /* All five in one row. */
@@ -173,8 +168,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .hh-tool,
-  .hh-tool-go {
+  .hh-tool {
     transition: none;
   }
 

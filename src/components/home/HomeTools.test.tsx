@@ -22,6 +22,11 @@ describe('HomeTools', () => {
     expect(within(nav).getByText('Cut out a photo in one tap')).toBeTruthy();
   });
 
+  it('has a heading in the shelves\' style above the cards', () => {
+    render(<HomeTools onAction={vi.fn()} />);
+    expect(screen.getByRole('heading', { name: 'Make your own' })).toBeTruthy();
+  });
+
   it('invokes onAction with correct action key on click', () => {
     const onAction = vi.fn();
     render(<HomeTools onAction={onAction} />);

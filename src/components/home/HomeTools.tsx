@@ -1,10 +1,11 @@
-// Home's makers, below the Trending shelf, as cards: Meme video, Stickers, Face swap, AI meme and
-// GIF maker (social cards have their own shelf on Home, not a card). Each card has the maker's icon
-// on a tile of its own colour, its name, and a line saying what it does. On a phone the first card
-// runs the full width and the rest sit two across; a wide screen puts all five in a row
+// Home's makers, below the Trending shelf: a heading in Home's shelf style ("Make your own"), then
+// Meme video, Stickers, Face swap, AI meme and GIF maker as cards (social cards have their own shelf
+// on Home, not a card). Each card is tinted with its maker's colour, with the icon on a solid tile of
+// that colour, its name, and a line saying what it does. On a phone Meme video runs the full width as
+// a row with a chevron and the rest sit two across; a wide screen puts all five in a row
 // (homeTools.css).
 import { useId } from 'react';
-import { ArrowUpRight, Clapperboard, ImagePlay, ScanFace, Scissors, Wand2 } from 'lucide-react';
+import { ChevronRight, Clapperboard, ImagePlay, ScanFace, Scissors, Sparkles, Wand2 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import './homeTools.css';
 
@@ -28,26 +29,40 @@ const TOOLS: ToolItem[] = [
 export default function HomeTools({ onAction }: { onAction: (action: ToolAction) => void }) {
   const id = useId();
   return (
-    <nav className="hh-tools" aria-label="Makers">
-      {TOOLS.map(({ action, label, about, Icon }) => (
-        <button
-          key={action}
-          type="button"
-          className={`hh-tool hh-tool--${action}`}
-          onClick={() => onAction(action)}
-          aria-label={label}
-          aria-describedby={`${id}-${action}`}
-        >
-          <span className="hh-tool-icon" aria-hidden="true">
-            <Icon strokeWidth={2.1} />
-          </span>
-          <span className="hh-tool-text">
-            <span className="hh-tool-label">{label}</span>
-            <span className="hh-tool-about" id={`${id}-${action}`}>{about}</span>
-          </span>
-          <ArrowUpRight className="hh-tool-go" aria-hidden="true" />
-        </button>
-      ))}
-    </nav>
+    <section className="hh-makers">
+      <div className="shelf-header-row">
+        <div className="shelf-title-left">
+          <div className="shelf-icon-badge" aria-hidden="true">
+            <Sparkles size={20} />
+          </div>
+          <div>
+            <h3 className="shelf-heading">Make your own</h3>
+            <span className="shelf-subtext">Videos, stickers, GIFs and more</span>
+          </div>
+        </div>
+      </div>
+
+      <nav className="hh-tools" aria-label="Makers">
+        {TOOLS.map(({ action, label, about, Icon }) => (
+          <button
+            key={action}
+            type="button"
+            className={`hh-tool hh-tool--${action}`}
+            onClick={() => onAction(action)}
+            aria-label={label}
+            aria-describedby={`${id}-${action}`}
+          >
+            <span className="hh-tool-icon" aria-hidden="true">
+              <Icon strokeWidth={2.1} />
+            </span>
+            <span className="hh-tool-text">
+              <span className="hh-tool-label">{label}</span>
+              <span className="hh-tool-about" id={`${id}-${action}`}>{about}</span>
+            </span>
+            <ChevronRight className="hh-tool-go" aria-hidden="true" />
+          </button>
+        ))}
+      </nav>
+    </section>
   );
 }
