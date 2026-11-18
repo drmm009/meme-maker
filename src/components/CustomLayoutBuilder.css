@@ -1,36 +1,97 @@
 /* Choose Canvas Layout (CustomLayoutBuilder.tsx): what is its own, on the shared iOS look
-   (pages/iosLook.css): the SegmentedControl filter, the glassmorphic shelves of layout cards
-   with their crisp wireframes, and the Custom Grid form. */
+   (pages/iosLook.css): the Blank Canvas row under the title, the grids of layout cards with their
+   drawings, and the Custom Grid form. */
 
-/* ---- Category Filter (Segmented Control) ---- */
-
-.clb-segments {
-  margin-top: 16px;
-  max-width: 320px;
+/* Room under the last row, so it scrolls clear of the dock. */
+.clb.ios-page {
+  padding-bottom: 48px;
 }
 
-/* ---- Sections and their shelves ---- */
+/* ---- Sections ---- */
 
 .clb-section {
-  margin-top: 26px;
+  margin-top: 30px;
 }
 
-/* A row that scrolls sideways on a phone, running off the screen's edge. */
-.clb-shelf {
+/* ---- Blank Canvas: a wide row under the title ---- */
+
+.clb-start {
   display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: 136px;
-  gap: 12px;
-  margin: 12px -16px 0;
-  padding: 4px 16px 8px;
-  overflow-x: auto;
-  scrollbar-width: none;
-  scroll-snap-type: x proximity;
-  scroll-padding-left: 16px;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  margin-top: 14px;
+  padding: 12px 14px 12px 12px;
+  border: 1px solid var(--ios-hairline);
+  border-radius: 18px;
+  background: var(--ios-surface);
+  color: var(--ios-label);
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.16s var(--ios-ease), background-color 0.2s var(--ios-ease);
 }
 
-.clb-shelf::-webkit-scrollbar {
-  display: none;
+.clb-start:active {
+  transform: scale(0.98);
+}
+
+@media (hover: hover) {
+  .clb-start:hover {
+    background: var(--ios-surface-2);
+  }
+}
+
+/* The empty frame (or the play mark of an empty video), dashed in orange. */
+.clb-start-pic {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 13px;
+  background: color-mix(in srgb, var(--ios-accent) 14%, transparent);
+  color: var(--ios-accent);
+}
+
+.clb-start-frame {
+  width: 26px;
+  height: 26px;
+  border: 2px dashed var(--ios-accent);
+  border-radius: 6px;
+}
+
+.clb-start-text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.clb-start-name {
+  font-size: 17px;
+  font-weight: 750;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+
+.clb-start-detail {
+  font-size: 14px;
+  line-height: 1.35;
+  color: var(--ios-label-2);
+}
+
+.clb-start-go {
+  width: 20px;
+  height: 20px;
+  color: var(--ios-label-3);
+}
+
+/* ---- Layout cards: three across on a phone, more as the page widens ---- */
+
+.clb-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px 10px;
+  margin-top: 14px;
 }
 
 .clb-card {
@@ -44,7 +105,6 @@
   color: var(--ios-label);
   text-align: left;
   cursor: pointer;
-  scroll-snap-align: start;
 }
 
 .clb-card-pic {
@@ -52,6 +112,7 @@
   display: grid;
   place-items: center;
   aspect-ratio: 1;
+  border: 1px solid var(--ios-hairline);
   border-radius: 16px;
   background: var(--ios-surface);
   overflow: hidden;
@@ -76,43 +137,24 @@
 }
 
 .clb-card-name {
-  display: -webkit-box;
-  margin-top: 10px;
+  margin-top: 8px;
   overflow: hidden;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
   line-height: 1.3;
   letter-spacing: -0.01em;
-  color: var(--ios-label);
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.clb-card-sub {
-  display: inline-flex;
-  align-items: center;
-  margin-top: 3px;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--ios-accent-text);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-/* Custom Grid card: center text label */
-.clb-card--custom {
-  text-align: center;
-}
-
-.clb-card--custom .clb-card-name {
-  text-align: center;
-  width: 100%;
-}
-
-/* Blank Canvas: an empty frame, a dashed orange edge. */
-.clb-card--blank .clb-glyph > span {
-  border: 1.5px dashed var(--ios-accent);
-  background: none;
+.clb-card-detail {
+  margin-top: 1px;
+  overflow: hidden;
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--ios-label-2);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* ---- Crisp Wireframe Drawings ---- */
@@ -152,15 +194,6 @@
   border-radius: 5px;
   background: var(--ios-fill-strong);
   color: var(--ios-label);
-}
-
-/* The blank video canvas: the whole frame, dashed, its play mark orange. */
-.clb-video-stage--blank {
-  width: 100%;
-  height: 100%;
-  border: 1.5px dashed var(--ios-accent);
-  background: none;
-  color: var(--ios-accent);
 }
 
 /* ---- Custom Grid ---- */
@@ -280,19 +313,20 @@
   gap: 10px;
 }
 
-/* ---- Wider screens: the shelves wrap into a grid ---- */
+/* ---- Wider screens ---- */
 
 @media (min-width: 720px) {
   .clb-section {
-    margin-top: 36px;
+    margin-top: 38px;
   }
 
-  .clb-shelf {
-    grid-auto-flow: row;
-    grid-template-columns: repeat(auto-fill, minmax(148px, 164px));
-    gap: 22px 18px;
-    margin: 14px 0 0;
-    padding: 0;
-    overflow: visible;
+  .clb-start {
+    max-width: 520px;
+  }
+
+  .clb-grid {
+    grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+    gap: 24px 18px;
+    max-width: 1080px;
   }
 }

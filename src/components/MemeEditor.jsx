@@ -129,7 +129,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, c
   const { listProjects, handleSaveProject, handleOpenProject, handleDeleteProject, handleRenameProject } = useProjects({ canvasRef, onOpen: onRestoreDraft });
   const { handleAddDrawing, handleClearDrawings, handleUndoDrawing } = useDrawingActions();
   const { handleAddCaption, handleToggleTextCase, updateActiveCaptionProps, handleSetCaptionBg } = useCaptionActions({ activeCaption });
-  const { commitAddImageLayer, handleAddImageLayer, handleFileUploadImageLayer, updateActiveImageLayer, moveLayer, handleDeleteLayer, handleDuplicateLayer, handleRotateLayer, handleFlipActiveLayer, handleToggleDieCutSticker, handleSetDieCutColor, updateSlotTransform, handleAddSticker, handleAddGraphicSticker } = useLayerActions({ activeCaption, activeImageLayer, activeSticker, updateActiveCaptionProps });
+  const { commitAddImageLayer, handleAddImageLayer, handleFileUploadImageLayer, handleFitImageToPanel, updateActiveImageLayer, moveLayer, handleDeleteLayer, handleDuplicateLayer, handleRotateLayer, handleFlipActiveLayer, handleToggleDieCutSticker, handleSetDieCutColor, updateSlotTransform, handleAddSticker, handleAddGraphicSticker } = useLayerActions({ activeCaption, activeImageLayer, activeSticker, updateActiveCaptionProps, canvasRef });
   const { handleAddBubble, handleApplyBubbleStyle } = useBubbleActions({ activeCaption, updateActiveCaptionProps });
 
   // Everything the panels can do, in one object (see editor/panels/selection.ts).
@@ -146,7 +146,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, c
     handleClearDrawings, handleUndoDrawing,
     handleAddImageLayer, handleAddSticker, handleAddGraphicSticker,
     handleFileUploadImageLayer, updateActiveImageLayer, moveLayer, handleDeleteLayer, handleDuplicateLayer, handleRotateLayer,
-    handleFlipActiveLayer, handleToggleDieCutSticker, handleSetDieCutColor,
+    handleFitImageToPanel, handleFlipActiveLayer, handleToggleDieCutSticker, handleSetDieCutColor,
     handleRemoveBackground, handleApplyBackgroundBlur, setPortraitBlur, isRemovingBg, isBlurringBg, isNativeLayout, setShowFaceMorphModal, handleStartMorphFace,
     handleUpdateTemplateMorphProgress, handleChangeFace, handleRevertTemplateFace, handleFinalizeTemplateFace, setIsHoldingCanvasCompare,
     handleChangeMeme: (t) => onChangeMeme(t, uiStore.getState().mode),

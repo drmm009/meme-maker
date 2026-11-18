@@ -8,6 +8,8 @@ import type { Clip, ImageClip, LayoutSlot, StickerClip, TextClip, VideoClip } fr
 import { clipOpacity } from '../../../model/videoProject';
 import { drawOrder } from '../../../utils/layerOrder';
 import { gridLines } from '../../../utils/gridLines';
+import { BANDS, bandRects, bandsOn, withBands } from '../../../utils/videoBands';
+import type { VideoBand } from '../../../utils/videoBands';
 import { applyTextFrame, loadTextFonts, textBitmap, textImageAttrs } from '../../../utils/textBitmap';
 import type { TextBitmap } from '../../../utils/textBitmap';
 import { REST_FRAME, textAnimFrame } from '../../../utils/textAnimation';
@@ -31,6 +33,8 @@ export interface SceneOptions {
   backgroundColor?: string;
   layoutId?: string | null;
   layoutSlots?: LayoutSlot[];
+  videoHeader?: VideoBand | null;
+  videoFooter?: VideoBand | null;
 }
 
 export interface SceneRenderer {
@@ -109,7 +113,7 @@ const seekTo = async (video: HTMLVideoElement, sec: number) => {
   await seeked;
 };
 
-export async function createSceneRenderer({ items, width, height, aspect, backgroundColor, layoutId, layoutSlots = [] }: SceneOptions): Promise<SceneRenderer> {
+export async function createSceneRenderer({ items, width, height, aspect, backgroundColor, layoutId, layoutSlots = [], videoHeader, videoFooter }: SceneOptions): Promise<SceneRenderer> {
   const stageHeight = STAGE_WIDTH / aspect;
   const container = document.createElement('div');
   container.style.cssText = 'position:absolute;left:-99999px;top:0;';
@@ -139,7 +143,12 @@ export async function createSceneRenderer({ items, width, height, aspect, backgr
   };
 
   try {
-    for (const item of drawOrder(items)) {
+    for (const item of withBands(drawOrder(items), bandsOn(videoHeader, videoFooter))) {
+      // The header and footer bars, over the clips and photos and under stickers and text.
+      if (item === BANDS) {
+        for (const r of bandRects(videoHeader, videoFooter, STAGE_WIDTH, stageHeight)) layer.add(new Konva.Rect(r));
+        continue;
+      }
       // Hidden clips never show (transitions still see them, through `items`).
       if (item.hidden) continue;
       if (item.type === 'text') {

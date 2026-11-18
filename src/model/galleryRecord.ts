@@ -5,7 +5,7 @@ import type { MemeCaption, MemeImageLayer, MemeSticker } from './memeDocument';
 
 // Saved records carry this. Bump it when the saved shape changes, and teach migrateGalleryRecord
 // to upgrade the previous version.
-export const GALLERY_RECORD_VERSION = 2;
+export const GALLERY_RECORD_VERSION = 3;
 
 // What was saved, for My Studio's tabs.
 export type GalleryKind = 'meme' | 'sticker' | 'gif';
@@ -34,7 +34,8 @@ export interface GalleryRecord {
   aspectRatio?: string;
   imageFit?: string;
   isNativeLayout?: boolean;
-  layoutDef?: { id: string; slots: number };
+  // A custom grid's also carries its columns and rows (version 3).
+  layoutDef?: { id: string; slots: number; cols?: number; rows?: number };
   slotImages?: (string | null)[];
   slotTransforms?: SlotTransform[];
 }
@@ -99,6 +100,7 @@ export function migrateGalleryRecord(raw: unknown): GalleryRecord | null {
   if (version > GALLERY_RECORD_VERSION) return raw as unknown as GalleryRecord;
   // 0 -> 1: no change in shape; versioning starts here, and layer lists are always arrays.
   // 1 -> 2: records say what they are (kind), guessed from the image for older ones.
+  // 2 -> 3: a custom grid's layoutDef may carry cols and rows; older records have none to add.
   return {
     ...(raw as unknown as GalleryRecord),
     version: GALLERY_RECORD_VERSION,

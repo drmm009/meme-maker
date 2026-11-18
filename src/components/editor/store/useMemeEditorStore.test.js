@@ -21,8 +21,11 @@ describe('buildInitialDocument', () => {
   it('gives a plain template TOP/BOTTOM captions at font size 50', () => {
     const doc = buildInitialDocument(TEMPLATE);
     expect(doc.captions.map((c) => [c.text, c.fontSize])).toEqual([['TOP TEXT', 50], ['BOTTOM TEXT', 50]]);
+    // Their boxes are wide enough to tap and type into easily.
+    expect(doc.captions.map((c) => [c.width, c.hasCustomWidth])).toEqual([[0.25, true], [0.25, true]]);
     expect(doc.activeTemplate).toBe(TEMPLATE);
-    expect(doc.canvasHeader).toEqual({ enabled: false, bgColor: '#ffffff', height: 140 });
+    // Bands start black, their own colour, as the video editor's bars.
+    expect(doc.canvasHeader).toEqual({ enabled: false, bgColor: '#000000', ownColor: true, height: 140 });
   });
 
   it('creates one caption per text panel for native layouts', () => {

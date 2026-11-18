@@ -1,6 +1,7 @@
 import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { fetchFile, toBlobURL } from '@ffmpeg/util';
 import { generateGridImage } from './gridHelper';
+import { BANDS, bandsImage, bandsOn, withBands } from './videoBands';
 import { isGifUrl } from './gif';
 import { ExportCancelledError, etaSeconds, overallPercent, parseFfmpegTime } from './exportProgress';
 import { downloadBlob } from './shareFile';
@@ -179,7 +180,7 @@ const renderTextToPNG = async (item, w, h, ratio, frame = REST_FRAME) => {
 // The whole render in FFmpeg: fetches each clip into FFmpeg's file system and hands it to the
 // command builder (exportGraph), then runs FFmpeg. Used for GIFs, and for MP4s when the browser
 // can't encode them itself.
-const exportWithFFmpeg = async (items = [], durationMs = 7000, canvasAspectRatio = 16/9, canvasDimensions = { width: 800, height: 600 }, layoutId = null, onProgress = () => {}, { format = 'mp4', backgroundColor = '#ffffff', download = true, resolution = 720 } = {}) => {
+const exportWithFFmpeg = async (items = [], durationMs = 7000, canvasAspectRatio = 16/9, canvasDimensions = { width: 800, height: 600 }, layoutId = null, onProgress = () => {}, { format = 'mp4', backgroundColor = '#ffffff', download = true, resolution = 720, videoHeader = null, videoFooter = null } = {}) => {
   const isGifOut = format === 'gif';
   try {
     cancelRequested = false;
@@ -278,8 +279,22 @@ const exportWithFFmpeg = async (items = [], durationMs = 7000, canvasAspectRatio
       }
     };
 
-    // Everything visible, bottom to top in the same order as the preview.
-    for (const item of drawOrder([...visualItems, ...textItems])) {
+    // The header and footer bars as one full-canvas still.
+    const addBands = async () => {
+      const url = bandsImage(videoHeader, videoFooter, canvasW, canvasH, konvaRatio);
+      if (!url) return;
+      const fileName = `bands_${graph.nextIndex}.png`;
+      await writeFile(fileName, new Uint8Array(await (await fetch(url)).arrayBuffer()));
+      graph.addStill(fileName);
+    };
+
+    // Everything visible, bottom to top in the same order as the preview (the bars over the clips
+    // and photos, under stickers and text).
+    for (const item of withBands(drawOrder([...visualItems, ...textItems]), bandsOn(videoHeader, videoFooter))) {
+      if (item === BANDS) {
+        await addBands();
+        continue;
+      }
       prepStep();
       if (item.type === 'text') await addText(item);
       else await addVisual(item);
@@ -476,7 +491,7 @@ const mixSound = async (picture, sounds, { width, height, durationMs, onProgress
 // MP4 drawn frame by frame with the preview's own renderer and encoded by the browser
 // (webCodecsExport), with the sound mixed in by FFmpeg (skipped, with FFmpeg never loaded, when
 // the project is silent).
-const exportWithWebCodecs = async (items, durationMs, canvasAspectRatio, layoutId, onProgress, { backgroundColor = '#ffffff', download = true, resolution = 720, layoutSlots = [] } = {}) => {
+const exportWithWebCodecs = async (items, durationMs, canvasAspectRatio, layoutId, onProgress, { backgroundColor = '#ffffff', download = true, resolution = 720, layoutSlots = [], videoHeader = null, videoFooter = null } = {}) => {
   cancelRequested = false;
   let phaseStart = performance.now();
   const report = (phase, fraction) => onProgress(overallPercent(phase, fraction), { phase, etaSec: etaSeconds(performance.now() - phaseStart, fraction) });
@@ -492,7 +507,7 @@ const exportWithWebCodecs = async (items, durationMs, canvasAspectRatio, layoutI
 
   const { encodeProjectVideo } = await import('./webCodecsExport');
   const picture = await encodeProjectVideo({
-    items, width, height, aspect, durationMs: safeDurationMs, backgroundColor, layoutId, layoutSlots,
+    items, width, height, aspect, durationMs: safeDurationMs, backgroundColor, layoutId, layoutSlots, videoHeader, videoFooter,
     onLoaded: () => {
       report('preparing', 1);
       phaseStart = performance.now();

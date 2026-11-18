@@ -1,4 +1,4 @@
-import { Trash2, FileText, SlidersHorizontal, Copy, Scissors, ScanFace, Ellipsis, Layers, Palette, CaseSensitive, Baseline } from 'lucide-react';
+import { Trash2, FileText, SlidersHorizontal, Copy, Scissors, ScanFace, Ellipsis, Layers, Palette, CaseSensitive, Baseline, Shrink, Expand, MoveHorizontal } from 'lucide-react';
 import { BackgroundIcon, BubbleIcon, FiltersIcon } from './editorIcons';
 import { FloatingToolbar } from '../../ui';
 import type { ToolbarItem } from '../../ui';
@@ -9,7 +9,10 @@ import type { EditorActions } from './selection';
 // The selected layer's quick tools, a pill sitting just above the dock in place of the tab's tool
 // strip (EditorPanels). A caption's Font, Style and Color each open the Text sheet with just their
 // sections; the pill scrolls sideways if tools don't fit. A sheet opened here keeps the pill above
-// it, its button lit; tapping that button again closes the sheet.
+// it, its button lit; tapping that button again closes the sheet. In a grid layout a photo's pill has,
+// before More, one Fit / Fill / Stretch switch: it names how the photo sits in its panel now (Fit: the
+// whole picture inside it; Fill: the panel covered exactly, the picture cropped; Stretch: the whole
+// picture pulled to the panel's shape; the last two lit) and a tap moves on to the next.
 
 type OpenSheet = (sheet: string, focus?: string | null, fromPill?: boolean) => void;
 
@@ -79,10 +82,30 @@ export default function LayerToolbar({ actions }: { actions: EditorActions }) {
       del,
     ];
   } else if (kind === 'image' && image) {
+    // A grid layout: one switch through Fit, Fill and Stretch for the photo's panel. Filled, the photo
+    // has the panel as its box (boxWidth) and a crop; stretched, the box and no crop.
+    const sizing = !image.boxWidth ? 'fit' : image.crop ? 'fill' : 'stretch';
+    const NEXT = { fit: 'fill', fill: 'stretch', stretch: 'fit' } as const;
+    const SIZING = {
+      fit: { label: 'Fit', Icon: Shrink, title: 'Fitting inside its panel. Tap to fill the panel' },
+      fill: { label: 'Fill', Icon: Expand, title: 'Filling its panel (cropped). Tap to stretch it to the panel' },
+      stretch: { label: 'Stretch', Icon: MoveHorizontal, title: 'Stretched to its panel. Tap to fit it inside' },
+    } as const;
+    const panelTools: ToolbarItem[] = actions.isNativeLayout ? [
+      {
+        id: 'sizing',
+        label: SIZING[sizing].label,
+        title: SIZING[sizing].title,
+        Icon: SIZING[sizing].Icon,
+        active: sizing !== 'fit',
+        onClick: () => actions.handleFitImageToPanel(NEXT[sizing]),
+      },
+    ] : [];
     items = [
       { id: 'faceswap', label: 'Face Swap', title: 'Face swap with AI', Icon: ScanFace, onClick: () => actions.handleStartMorphFace(image) },
       { id: 'background', label: 'Background', title: 'Background blur and background removal', Icon: BackgroundIcon, ...opens('background') },
       { id: 'filters', label: 'Filters', Icon: FiltersIcon, ...opens('filters') },
+      ...panelTools,
       { id: 'more', label: 'More', title: 'More: mirror, crop, replace, look', Icon: Ellipsis, iconOnly: true, ...opens('media') },
       layers,
       del,

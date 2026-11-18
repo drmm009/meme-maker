@@ -1,0 +1,32 @@
+/* The canvas's image area (between the header and footer bands), for overlays laid on it:
+   CanvasEditor sets --canvas-img-top and --canvas-img-h on its box. Only buttons take taps. */
+.ie-image-area {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: var(--canvas-img-top, 0%);
+  height: var(--canvas-img-h, 100%);
+  z-index: 10;
+  pointer-events: none;
+}
+
+/* A multi-panel layout's start cards (ImagePanelPrompts): each panel's box places a small copy of
+   the blank canvas's start card (ui/canvasStartPrompt.css), which fills it. */
+.ie-panel-starts {
+  position: absolute;
+  inset: 0;
+}
+
+.ie-panel-start {
+  position: absolute;
+  box-sizing: border-box;
+}
+
+/* A little less room around the card than on a whole canvas. */
+.ie-panel-start .ui-start { padding: 6px; }
+
+/* Too small for even the narrow card: the panel starts empty. */
+@container (max-width: 64px) or (max-height: 64px) {
+  .ie-panel-start .ui-start-zone { display: none; }
+}
+

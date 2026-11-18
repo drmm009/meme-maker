@@ -6,10 +6,16 @@ import { useEditorStore } from '../../store/useVideoEditorStore';
 import { DEFAULT_TRANSITION_MS, TRANSITIONS } from '../../utils/clipTransitions';
 import { PHOTO_MOTIONS } from '../../utils/photoMotion';
 import { TEXT_ANIMATIONS } from '../../utils/textAnimation';
+import { currentPanelPlacement, panelPlacement } from './preview/previewMath';
+import type { LayoutSlot } from '../../model/videoProject';
 
 // A video or photo clip as these sheets see it.
 interface PlacedClip {
   id: string;
+  type?: string;
+  url?: string;
+  slotIndex?: number;
+  crop?: { x: number; y: number; width: number; height: number } | null;
   x?: number;
   y?: number;
   width?: number;
@@ -24,6 +30,26 @@ interface PlacedClip {
 }
 
 const update = (id: string, patch: Partial<PlacedClip>) => useEditorStore.getState().updateItem(id, patch);
+
+// A clip's source size (a photo's pixels, a video's frame), or null if it can't be read in a moment.
+const mediaSize = (item: PlacedClip): Promise<{ w: number; h: number } | null> => new Promise((resolve) => {
+  if (!item.url || typeof document === 'undefined') { resolve(null); return; }
+  const done = (v: { w: number; h: number } | null) => { clearTimeout(timer); resolve(v); };
+  const timer = setTimeout(() => done(null), 5000);
+  if (item.type === 'video') {
+    const v = document.createElement('video');
+    v.preload = 'metadata';
+    v.muted = true;
+    v.onloadedmetadata = () => done(v.videoWidth && v.videoHeight ? { w: v.videoWidth, h: v.videoHeight } : null);
+    v.onerror = () => done(null);
+    v.src = item.url;
+  } else {
+    const img = new Image();
+    img.onload = () => done(img.naturalWidth && img.naturalHeight ? { w: img.naturalWidth, h: img.naturalHeight } : null);
+    img.onerror = () => done(null);
+    img.src = item.url;
+  }
+});
 const iconArt = (Icon: LucideIcon) => <Icon size={22} strokeWidth={1.8} />;
 
 // A sheet's choices as big black tiles: a picture of what each does, its name and a line under it;
@@ -88,15 +114,26 @@ const PLACEMENTS: { mode: Placement; label: string; sub: string }[] = [
   { mode: 'stretch', label: 'Stretch', sub: 'Pulled to fit' },
 ];
 
-// Where a picture sits on the canvas. The placement it's in now is lit; moving or sizing it by hand
-// leaves none lit.
+// Where a picture sits: on the canvas, or in a grid layout on its panel (the one it belongs to). The
+// placement it's in now is lit; moving or sizing it by hand leaves none lit.
 export function PlacePanel({ item }: { item: PlacedClip }) {
   const aspectRatio = useEditorStore((s) => s.canvasAspectRatio) as number;
-  const now = currentPlacement(item, aspectRatio);
+  const slots = useEditorStore((s: { layoutSlots: LayoutSlot[] }) => s.layoutSlots);
+  const slot = item.slotIndex !== undefined ? slots?.[item.slotIndex] : undefined;
+  const now = slot ? currentPanelPlacement(item, slot) : currentPlacement(item, aspectRatio);
+  // On a panel the source's own size decides the fit (the clip may be cropped or stretched now).
+  const place = async (mode: Placement) => {
+    if (!slot) {
+      update(item.id, placeMedia(item, aspectRatio, mode));
+      return;
+    }
+    const size = await mediaSize(item);
+    if (size) update(item.id, panelPlacement(size, slot, mode));
+  };
   return (
-    <OptionTiles label="Fit to canvas" columns={3} options={PLACEMENTS.map((p) => ({
+    <OptionTiles label={slot ? 'Fit to panel' : 'Fit to canvas'} columns={3} options={PLACEMENTS.map((p) => ({
       id: p.mode, label: p.label, sub: p.sub, art: <PlacementArt mode={p.mode} />, on: now === p.mode, role: 'radio' as const,
-      onClick: () => update(item.id, placeMedia(item, aspectRatio, p.mode)),
+      onClick: () => { place(p.mode); },
     }))} />
   );
 }

@@ -1,5 +1,6 @@
 import { drawImageFiltered } from '../../../data/photoFilters';
 import { blurredCopy } from '../draw/photoEffects';
+import { panelRects } from '../layout/panels';
 
 export function paintBase({
   activeIsNativeLayout, activeLayoutDef, baseImgRef, bgFilterCss, canvasFlipX,
@@ -10,39 +11,15 @@ export function paintBase({
 }) {
   // Draw Base Image or Native Layout Slots
   if (activeIsNativeLayout && activeLayoutDef) {
-    const totalSlots = activeLayoutDef.slots;
-    const isVert = activeLayoutDef.id === '2-vert' || activeLayoutDef.id === '3-stacked';
-    const isHoriz = activeLayoutDef.id === '2-horiz' || activeLayoutDef.id === '3-horiz';
-    const isGrid = activeLayoutDef.id === '4-grid';
-    const isHybrid = activeLayoutDef.id === '3-hybrid';
+    const rects = panelRects(activeLayoutDef);
+    const totalSlots = rects.length;
 
     for (let idx = 0; idx < totalSlots; idx++) {
-      let x = 0, y = 0, slotW = imageAreaW, slotH = imageAreaH;
-
-      if (isVert) {
-        slotH = imageAreaH / totalSlots;
-        y = idx * slotH;
-      } else if (isHoriz) {
-        slotW = imageAreaW / totalSlots;
-        x = idx * slotW;
-      } else if (isGrid) {
-        slotW = imageAreaW / 2;
-        slotH = imageAreaH / 2;
-        x = (idx % 2) * slotW;
-        y = Math.floor(idx / 2) * slotH;
-      } else if (isHybrid) {
-        if (idx === 0) {
-          slotW = imageAreaW;
-          slotH = imageAreaH / 2;
-          x = 0;
-          y = 0;
-        } else {
-          slotW = imageAreaW / 2;
-          slotH = imageAreaH / 2;
-          x = (idx - 1) * slotW;
-          y = imageAreaH / 2;
-        }
-      }
+      const r = rects[idx];
+      const x = r.x * imageAreaW;
+      const y = r.y * imageAreaH;
+      const slotW = r.width * imageAreaW;
+      const slotH = r.height * imageAreaH;
 
       const src = slotImages[idx];
       if (src) {

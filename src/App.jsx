@@ -4,6 +4,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 
 // Code-split heavy views and editors so the initial bundle stays lean.
 const CustomLayoutBuilder = lazy(() => import('./components/CustomLayoutBuilder'));
+import CreatorSheet from './components/CreatorSheet';
 const VideoLayoutBuilder = lazy(() => import('./components/video-editor/VideoLayoutBuilder'));
 const MyGallery = lazy(() => import('./components/MyGallery'));
 const AccountModal = lazy(() => import('./components/AccountModal'));
@@ -18,7 +19,7 @@ const GifMaker = lazy(() => import('./components/gif-maker/GifMaker'));
 import { MEME_TEMPLATES } from './data/templates';
 import { makerOfLink, makerTemplate, linkOfTemplate } from './components/editor/makers';
 import { INITIAL_NOTIFICATIONS } from './data/notifications';
-import { idbPutMeme, idbGetAllMemes, idbGetMeme, idbDeleteMeme, dataURLToBlob, createThumbnail, toMetadata } from './utils/galleryStore';
+import { idbPutMeme, idbGetAllMemes, idbGetMeme, idbDeleteMeme, dataURLToBlob, createThumbnail, toMetadata, repairStickerThumbnails } from './utils/galleryStore';
 import { galleryRecord } from './model/galleryRecord';
 import { deleteSavedVideo, getSavedVideoFile, listSavedVideos } from './utils/videoDraftStore';
 import { LayoutGrid, FolderHeart, User, Sun, Moon, Bell, Plus, Users, Compass, Home } from 'lucide-react';
@@ -38,6 +39,9 @@ function App() {
   // The GIF maker's link (#/gif) opens on it too.
   const [currentView, setCurrentView] = useState(linkedTemplate ? 'editor' : window.location.hash === GIF_MAKER_LINK ? 'gif' : 'templates'); // 'templates' | 'custom-builder' | 'editor' | 'video-editor' | 'gallery' | 'gif'
   const [builderMode, setBuilderMode] = useState('image');
+  // Which section Choose Canvas Layout opens on ('image' or 'video'); the Creator sheet picks it.
+  const [canvasKind, setCanvasKind] = useState('image');
+  const [creatorSheetOpen, setCreatorSheetOpen] = useState(false);
   const [exploreCategory, setExploreCategory] = useState('all'); // 'image' | 'video'
   const [selectedTemplate, setSelectedTemplate] = useState(linkedTemplate || MEME_TEMPLATES[0]);
 
@@ -189,6 +193,12 @@ function App() {
         const records = await idbGetAllMemes();
         if (!cancelled && records.length > 0) {
           setSavedMemes(records.map(toMetadata));
+          // Stickers saved with a JPEG thumbnail (black where see-through) get a PNG one, once.
+          repairStickerThumbnails(records).then((fixed) => {
+            if (cancelled || !fixed.length) return;
+            const byId = new Map(fixed.map((r) => [r.id, r.thumbnailUrl]));
+            setSavedMemes((cur) => cur.map((m) => (byId.has(m.id) ? { ...m, thumbnailUrl: byId.get(m.id), imageUrl: byId.get(m.id) } : m)));
+          }).catch(() => {});
         } else {
           // Migrate legacy localStorage gallery (full dataURLs) into IDB once, then free the key
           try {
@@ -201,7 +211,7 @@ function App() {
                   const id = m.id || `meme-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
                   const imageUrl = m.imageUrl || m.thumbnailUrl || '';
                   const thumbnailUrl = imageUrl.startsWith('data:image')
-                    ? await createThumbnail(imageUrl, 320, newMeme.kind === 'sticker' ? 'image/png' : 'image/jpeg')
+                    ? await createThumbnail(imageUrl, 320, m.kind === 'sticker' ? 'image/png' : 'image/jpeg')
                     : imageUrl;
                   const record = galleryRecord(m, {
                     id,
@@ -328,10 +338,20 @@ function App() {
       return;
     }
     setBuilderMode(mode);
+    setCanvasKind('image');
     setCustomBuilderKey((k) => k + 1);
     setCustomBuilderState(null);
     setHasOpenedCustomBuilder(true);
     setLastBuilderView('custom-builder');
+    setCurrentView('custom-builder');
+  };
+
+  // The Creator sheet's pick: Choose Canvas Layout, opened afresh on that kind's section.
+  const openCanvas = (kind) => {
+    setCreatorSheetOpen(false);
+    setBuilderMode('image');
+    setCanvasKind(kind);
+    setCustomBuilderKey((k) => k + 1);
     setCurrentView('custom-builder');
   };
 
@@ -460,7 +480,7 @@ function App() {
         try {
           const imageUrl = newMeme.imageUrl || '';
           const thumbnailUrl = imageUrl.startsWith('data:image')
-            ? await createThumbnail(imageUrl)
+            ? await createThumbnail(imageUrl, 320, newMeme.kind === 'sticker' ? 'image/png' : 'image/jpeg')
             : imageUrl;
           const record = galleryRecord(newMeme, {
             id,
@@ -786,6 +806,7 @@ function App() {
               ) : (
                 <CustomLayoutBuilder
                   key={`custom-builder-${customBuilderKey}`}
+                  kind={canvasKind}
                   savedState={customBuilderState}
                   onSaveState={setCustomBuilderState}
                   onSelectTemplate={handleSelectTemplate}
@@ -870,11 +891,9 @@ function App() {
               className={`dock-creator-squircle ${currentView === 'custom-builder' ? 'active' : ''}`}
               whileHover={{ scale: 1.08 }}
               whileTap={{ scale: 0.92 }}
-              onClick={() => {
-                setBuilderMode('image');
-                setCurrentView('custom-builder');
-              }}
-              title="Create Custom Meme"
+              onClick={() => setCreatorSheetOpen(true)}
+              title="Create a meme"
+              aria-haspopup="dialog"
             >
               <Plus size={22} strokeWidth={2.8} />
             </motion.button>
@@ -935,6 +954,9 @@ function App() {
           />
         </Suspense>
       )}
+
+      {/* The dock's Creator: Video meme or Image meme, then Choose Canvas Layout on that kind's section */}
+      <CreatorSheet open={creatorSheetOpen} onClose={() => setCreatorSheetOpen(false)} onPick={openCanvas} />
 
       {/* Standalone AI Prompt Generator Modal */}
       {aiGeneratorModalOpen && (

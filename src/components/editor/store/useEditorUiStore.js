@@ -89,6 +89,7 @@ export function buildInitialUi(template) {
     exportPrefs: mode === 'sticker' ? stickerExportPrefs(loadExportPrefs()) : loadExportPrefs(), // { format: 'png' | 'jpeg' | 'webp', quality: 0.5..1, width: 'full' | 720 | 480 }
     libraryTab: 'history', // 'history' | 'saved' | 'shortcuts'
     canvasTall: false, // the canvas is taller than wide: its size shows in the top bar, not the bar above it
+    panelTarget: null, // the panel (index) a panel's start card opened Templates for: the pick fills it (ImagePanelPrompts)
   };
 }
 
@@ -147,6 +148,7 @@ export function createEditorUiStore(template) {
       sheet: null,
       sheetFocus: null,
       sheetFromPill: false,
+      panelTarget: null,
       dockTab: state.dockTab || (state.mode === 'sticker' ? 'sticker' : null),
     })),
 
@@ -157,6 +159,7 @@ export function createEditorUiStore(template) {
       sheet: null,
       sheetFocus: null,
       sheetFromPill: false,
+      panelTarget: null,
       drawTool: null,
       activeTab: tab === 'draw' ? 'draw' : state.activeTab === 'draw' ? 'text' : state.activeTab,
     })),

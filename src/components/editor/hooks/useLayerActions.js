@@ -1,11 +1,30 @@
 import { blobToDataURL } from '../../../utils/galleryStore';
 import { getNonOverlappingPosition } from '../../../utils/captionLayout';
 import { isSocialCardCaption, isVideoUrl } from '../memeEditorUtils';
-import { useMemeEditorStore } from '../store/useMemeEditorStore';
-import { useEditorUiStore } from '../store/useEditorUiStore';
+import { useMemeEditorStore, useMemeEditorStoreApi, WHITE_PIXEL_URL } from '../store/useMemeEditorStore';
+import { useEditorUiStore, useEditorUiStoreApi } from '../store/useEditorUiStore';
 import { duplicateDrawing, isDragDrawing } from '../../canvas/interaction/drawingHits';
+import { fitLayerScale, panelPlacement } from '../../canvas/interaction/layerBoxes';
+import { inPanel, panelRects } from '../../canvas/layout/panels';
 
-export function useLayerActions({ activeCaption, activeImageLayer, activeSticker, updateActiveCaptionProps }) {
+// A picture's natural size, or null if it can't be read (a video, a broken link) within a moment.
+const naturalSize = (src) => new Promise((resolve) => {
+  if (typeof Image === 'undefined') { resolve(null); return; }
+  const img = new Image();
+  const done = (v) => { clearTimeout(timer); resolve(v); };
+  const timer = setTimeout(() => done(null), 4000);
+  img.onload = () => done(img.naturalWidth && img.naturalHeight ? { w: img.naturalWidth, h: img.naturalHeight } : null);
+  img.onerror = () => done(null);
+  img.src = src;
+});
+
+// A multi-panel layout's first panel with nothing in it (no photo layer with its middle there, no
+// panel photo of its own), or null when every panel has one.
+export const firstEmptyPanel = (rects, layers = [], slotImages = []) => rects.find((r, i) =>
+  !(slotImages[i] && slotImages[i] !== WHITE_PIXEL_URL)
+  && !layers.some((l) => inPanel(r, l.x ?? 0.5, l.y ?? 0.5))) || null;
+
+export function useLayerActions({ activeCaption, activeImageLayer, activeSticker, updateActiveCaptionProps, canvasRef }) {
   const activeLayerId = useMemeEditorStore((s) => s.activeLayerId);
   const stickers = useMemeEditorStore((s) => s.stickers);
   const imageLayers = useMemeEditorStore((s) => s.imageLayers);
@@ -22,6 +41,9 @@ export function useLayerActions({ activeCaption, activeImageLayer, activeSticker
   const setSlotTransforms = useMemeEditorStore((s) => s.setSlotTransforms);
   const drawings = useMemeEditorStore((s) => s.drawings);
   const setDrawings = useMemeEditorStore((s) => s.setDrawings);
+  // Read at the moment of adding (a panel's card sets the target just before).
+  const uiApi = useEditorUiStoreApi();
+  const docApi = useMemeEditorStoreApi();
 
   // Horizontal Flip / Mirror for Stickers & Media Overlays
   const handleFlipActiveLayer = () => {
@@ -40,29 +62,76 @@ export function useLayerActions({ activeCaption, activeImageLayer, activeSticker
     }
   };
 
-    const commitAddImageLayer = (src, trimStart, trimEnd) => {
-    const pos = getNonOverlappingPosition('image', captions, stickers, imageLayers);
+  // A photo, template or clip as a layer. A picture fits the canvas's image area whole, centred, or a
+  // multi-panel layout's `panel` (its rectangle, fractions of the image area: layout/panels), centred
+  // in it (its size is read first); one whose size can't be read comes in at the old default, beside
+  // the others.
+  const commitAddImageLayer = async (src, trimStart, trimEnd, target = null) => {
+    // In a grid layout a photo with no panel named goes into the first empty one (else the canvas).
+    const { activeTemplate, imageLayers: nowLayers, slotImages } = docApi.getState();
+    const panel = target || (activeTemplate?.isNativeLayout ? firstEmptyPanel(panelRects(activeTemplate.layoutDef), nowLayers, slotImages) : null);
+    const area = canvasRef?.current?.imageArea;
+    const size = area ? await naturalSize(src) : null;
+    const box = panel && area ? { w: panel.width * area.w, h: panel.height * area.h } : area;
+    const pos = size
+      ? (panel ? { x: panel.x + panel.width / 2, y: panel.y + panel.height / 2 } : { x: 0.5, y: 0.5 })
+      : getNonOverlappingPosition('image', captions, stickers, imageLayers);
     const maxZ = Math.max(-1, ...captions.map(c => c.zIndex ?? -1), ...stickers.map(s => s.zIndex ?? -1), ...(imageLayers || []).map(i => i.zIndex ?? -1));
+    // A fitted picture covers the canvas, so it goes under the text (as a meme's picture is);
+    // otherwise on top, as before.
+    const minCapZ = captions.length ? Math.min(...captions.map(c => c.zIndex ?? 0)) : null;
+    const zIndex = size && minCapZ !== null ? minCapZ - 1 : maxZ + 1;
     const newImgLayer = {
       id: `img-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
       url: src,
       x: pos.x,
       y: pos.y,
-      scale: 1.5,
+      scale: size ? fitLayerScale(size, box) : 1.5,
       rotation: 0,
       fitMode: 'stretch',
-      zIndex: maxZ + 1,
+      zIndex,
       ...(trimStart !== undefined ? { trimStart } : {}),
       ...(trimEnd !== undefined ? { trimEnd } : {})
     };
-    const nextImgLayers = [...imageLayers, newImgLayer];
-    setImageLayers(nextImgLayers);
+    // The list as it is now (the size was read after a wait).
+    setImageLayers((prev) => [...(prev || []), newImgLayer]);
     setActiveLayerId(newImgLayer.id);
     setActiveTab('images');
     pushHistory();
   };
 
+  // A grid layout's Fit / Fill / Stretch for the selected photo: the whole picture inside its panel,
+  // the panel covered exactly (the picture cropped to its shape), or the whole picture pulled to the
+  // panel's shape; centred. Its panel is the one its middle
+  // is in (else the nearest).
+  const handleFitImageToPanel = async (mode) => {
+    const { activeLayerId: id, imageLayers: layers, activeTemplate } = docApi.getState();
+    const layer = (layers || []).find((l) => l.id === id);
+    const area = canvasRef?.current?.imageArea;
+    const rects = panelRects(activeTemplate?.layoutDef);
+    if (!layer || !area || !rects.length) return;
+    const x = layer.x ?? 0.5;
+    const y = layer.y ?? 0.5;
+    const centre = (r) => [r.x + r.width / 2, r.y + r.height / 2];
+    const panel = rects.find((r) => inPanel(r, x, y))
+      || rects.reduce((a, b) => (Math.hypot(...centre(a).map((v, i) => v - [x, y][i])) <= Math.hypot(...centre(b).map((v, i) => v - [x, y][i])) ? a : b));
+    const size = await naturalSize(layer.url);
+    if (!size) return;
+    const patch = panelPlacement(size, { w: panel.width * area.w, h: panel.height * area.h }, mode);
+    const [px, py] = centre(panel);
+    setImageLayers((prev) => (prev || []).map((l) => (l.id === layer.id ? { ...l, ...patch, x: px, y: py } : l)));
+    pushHistory();
+  };
+
   const handleAddImageLayer = (src) => {
+    // From a panel's start card (Add photo or Templates): a layer fitted inside that panel.
+    const target = uiApi.getState().panelTarget;
+    if (target !== null && target !== undefined && !isVideoUrl(src)) {
+      uiApi.getState().setPanelTarget(null);
+      const panel = panelRects(docApi.getState().activeTemplate?.layoutDef)[target] || null;
+      commitAddImageLayer(src, undefined, undefined, panel);
+      return;
+    }
     if (isVideoUrl(src)) {
       setPendingVideoLayer(src);
     } else {
@@ -327,5 +396,5 @@ export function useLayerActions({ activeCaption, activeImageLayer, activeSticker
     pushHistory();
   };
 
-  return { commitAddImageLayer, handleAddImageLayer, handleFileUploadImageLayer, updateActiveImageLayer, moveLayer, handleDeleteLayer, handleDuplicateLayer, handleRotateLayer, handleFlipActiveLayer, handleToggleDieCutSticker, handleSetDieCutColor, updateSlotTransform, handleAddSticker, handleAddGraphicSticker };
+  return { commitAddImageLayer, handleAddImageLayer, handleFileUploadImageLayer, handleFitImageToPanel, updateActiveImageLayer, moveLayer, handleDeleteLayer, handleDuplicateLayer, handleRotateLayer, handleFlipActiveLayer, handleToggleDieCutSticker, handleSetDieCutColor, updateSlotTransform, handleAddSticker, handleAddGraphicSticker };
 }

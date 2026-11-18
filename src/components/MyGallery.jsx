@@ -1,10 +1,13 @@
 // My Studio: everything saved on this device, in an iOS look (MyGallery.css). A large title with
 // the count and a grid/list switch, a search field, and a segmented control for the kinds (All,
-// Memes, Stickers, GIFs, Videos) whose thumb slides to the picked one. Saves show as square tiles
-// or as an inset grouped list; each has a More button that pulls down Edit, Download and Delete.
+// Memes, Stickers, GIFs, Videos) whose thumb slides to the picked one. Saves show as a collage (each
+// picture at its own shape, dealt across columns so the newest run along the top; the name and date
+// only for screen readers) or as an inset grouped list; each has a More button that pulls down
+// Edit, Download and Delete.
 // Tapping a save opens it in a sheet (from the bottom on a phone) with the same actions.
 import React, { useMemo, useState, useEffect, useRef } from 'react';
 import ModalPortal from './ModalPortal';
+import useCollageColumns, { dealColumns } from './useCollageColumns';
 import {
   Clapperboard,
   Download,
@@ -52,10 +55,12 @@ const day = (iso) =>
       })
     : 'Unknown date';
 
-// The sheet's actions in one row: Re-Edit (grey), Download (orange) and a round Delete.
+// The sheet's actions in one row: Re-Edit (grey) and Download (orange) pills with their icon and
+// name, then Delete, a round grey button with only a red bin. With no Re-Edit (a GIF), Download keeps
+// its size and the two sit together in the middle instead of stretching across.
 function SheetActions({ editLabel, onEdit, onDownload, downloadDisabled, onDelete }) {
   return (
-    <div className="mg-sheet-actions">
+    <div className={`mg-sheet-actions ${onEdit ? '' : 'mg-sheet-actions--compact'}`}>
       {onEdit && (
         <button type="button" className="ios-btn ios-btn--gray mg-sheet-btn-edit" onClick={onEdit}>
           <Pencil size={17} aria-hidden="true" /> {editLabel}
@@ -73,12 +78,12 @@ function SheetActions({ editLabel, onEdit, onDownload, downloadDisabled, onDelet
       )}
       <button
         type="button"
-        className="ios-btn ios-btn--destructive mg-sheet-btn-delete"
+        className="ios-btn ios-btn--gray mg-sheet-btn-delete"
         onClick={onDelete}
         aria-label="Delete"
         title="Delete"
       >
-        <Trash2 size={20} strokeWidth={2.2} aria-hidden="true" />
+        <Trash2 size={19} aria-hidden="true" />
       </button>
     </div>
   );
@@ -280,6 +285,7 @@ export default function MyGallery({
 }) {
   const [tab, setTab] = useState('all');
   const [viewMode, setViewMode] = useState('grid'); // 'grid' | 'list'
+  const columnCount = useCollageColumns();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedMemeForView, setSelectedMemeForView] = useState(null);
   const [fullViewUrl, setFullViewUrl] = useState('');
@@ -513,35 +519,40 @@ export default function MyGallery({
         </div>
       ) : viewMode === 'grid' ? (
         <div className="mg-grid" role="tabpanel" aria-label={panelLabel}>
-          {shown.map((it) => {
-            const { Icon, label } = KINDS[it.kind];
-            return (
-              <article key={`${it.kind}-${it.id}`} className={`mg-tile mg-tile--${it.kind}`}>
-                <button type="button" className="mg-tile-open" onClick={() => openItem(it)}>
-                  <span className="mg-tile-pic">
-                    {it.thumb ? (
-                      <img src={it.thumb} alt="" decoding="async" loading="lazy" />
-                    ) : (
-                      <Icon className="mg-tile-placeholder" aria-hidden="true" />
-                    )}
-                    {tab === 'all' && (
-                      <span className="mg-tile-kind" title={label}>
-                        <Icon size={12} strokeWidth={2.4} aria-hidden="true" />
+          {dealColumns(shown, columnCount).map((column, c) => (
+            <div className="mg-grid-col" key={c}>
+              {column.map((it) => {
+                const { Icon } = KINDS[it.kind];
+                return (
+                  <article key={`${it.kind}-${it.id}`} className={`mg-tile mg-tile--${it.kind}`}>
+                    <button type="button" className="mg-tile-open" onClick={() => openItem(it)}>
+                      <span className="mg-tile-pic">
+                        {it.thumb ? (
+                          <img src={it.thumb} alt="" decoding="async" loading="lazy" />
+                        ) : (
+                          <Icon className="mg-tile-placeholder" aria-hidden="true" />
+                        )}
+                        {it.video && <span className="mg-tile-time">{clock(it.video.durationMs)}</span>}
                       </span>
-                    )}
-                    {it.video && <span className="mg-tile-time">{clock(it.video.durationMs)}</span>}
-                  </span>
-                  <span className="mg-tile-name" title={it.name}>
-                    {it.name}
-                  </span>
-                  <span className="mg-tile-date">{day(it.date)}</span>
-                </button>
-                <PullDownMenu label={`More for ${it.name}`} menuLabel={it.name} actions={actionsFor(it)}>
-                  <Ellipsis size={18} aria-hidden="true" />
-                </PullDownMenu>
-              </article>
-            );
-          })}
+                      {/* The collage shows only pictures; the name and date are read out, not shown. */}
+                      <span className="mg-tile-words">
+                        <span className="mg-tile-name">{it.name}</span>
+                        <span className="mg-tile-date">{day(it.date)}</span>
+                      </span>
+                    </button>
+                    <PullDownMenu
+                      label={`More for ${it.name}`}
+                      menuLabel={it.name}
+                      actions={actionsFor(it)}
+                      buttonClassName="mg-tile-more"
+                    >
+                      <Ellipsis size={18} aria-hidden="true" />
+                    </PullDownMenu>
+                  </article>
+                );
+              })}
+            </div>
+          ))}
         </div>
       ) : (
         <div className="mg-list" role="tabpanel" aria-label={panelLabel}>

@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import { clientToCanvas } from './geometry';
-import { usePointerListeners } from './usePointerListeners';
+import { isOverlayControl, usePointerListeners } from './usePointerListeners';
 import { findSlotAt } from './layerBoxes';
 import { hitActiveHandle, hitBandCaption, hitLayerAt } from './hitTest';
 import { getHoverCursor } from './hoverCursor';
@@ -215,6 +215,8 @@ export function useCanvasInteraction({
   };
 
   const handlePointerDown = (e) => {
+    // A control laid over the canvas (a start card's buttons) handles its own taps.
+    if (isOverlayControl(e.target, editableRef.current)) return;
     if (e.cancelable && e.target !== editableRef.current) {
       e.preventDefault();
     }

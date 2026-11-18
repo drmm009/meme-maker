@@ -263,6 +263,9 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         maxWidth: '100%',
         maxHeight: '100%',
         aspectRatio: `${canvasW} / ${totalCanvasH}`,
+        // Where the image area sits in the box (between the bands), for overlays (editor/imagePanelPrompts.css).
+        '--canvas-img-top': `${(headerExtH / totalCanvasH) * 100}%`,
+        '--canvas-img-h': `${(canvasH / totalCanvasH) * 100}%`,
         boxSizing: 'border-box',
         transform: zoomed ? `translate(${view.x}px, ${view.y}px) scale(${view.zoom})` : undefined,
         willChange: zoomed ? 'transform' : undefined

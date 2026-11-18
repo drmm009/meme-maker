@@ -74,6 +74,12 @@ describe('paintHeaderFooter', () => {
     expect(callsNamed(ctx, 'stroke')[0].state.strokeStyle).toBe('rgba(0, 0, 0, 0.08)');
   });
 
+  it('leaves the divider line out of the export (divider off), keeping the bands', () => {
+    const ctx = paint({ isHeaderEnabled: true, isFooterEnabled: true, divider: false });
+    expect(callsNamed(ctx, 'fillRect')).toHaveLength(2);
+    expect(callsNamed(ctx, 'stroke')).toHaveLength(0);
+  });
+
   it('uses a colour picked for the band over the canvas colour', () => {
     const ctx = paint({ isHeaderEnabled: true, isFooterEnabled: true, liveBgColor: '#000000',
       canvasHeader: { bgColor: '#ff5a36', ownColor: true }, canvasFooter: { bgColor: '#ff5a36' } });
@@ -193,12 +199,14 @@ describe('paintOverlays', () => {
     return canvas.ctx;
   };
 
-  it('draws snap guides only mid-drag: cyan through the centre, purple elsewhere', () => {
+  it('draws snap guides only mid-drag, in the app\'s orange (a little thicker through the centre)', () => {
     const ctx = paint({ horizontal: 0.5, vertical: 0.25 });
     const [h, v] = callsNamed(ctx, 'stroke');
-    expect(h.state.strokeStyle).toBe('#00f0ff');
+    expect(h.state.strokeStyle).toBe('#ff5a36');
+    expect(h.state.lineWidth).toBe(2);
     expect(callsNamed(ctx, 'moveTo')[0].args).toEqual([0, 400]); // below the 100px header
-    expect(v.state.strokeStyle).toBe('#a855f7');
+    expect(v.state.strokeStyle).toBe('#ff5a36');
+    expect(v.state.lineWidth).toBe(1.5);
     expect(paint({ dragging: false, horizontal: 0.5 }).calls).toHaveLength(0);
   });
 
@@ -258,4 +266,5 @@ describe('renderScene', () => {
     expect(shapesAtExport).toBe(perPass); // the clean pass added no handles
     expect(handleShapes()).toBe(perPass * 2); // and they're back on screen afterwards
   });
+
 });

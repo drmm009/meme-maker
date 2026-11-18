@@ -2,6 +2,7 @@
 // Positions and sizes are in the preview's 800-wide stage units; times are timeline milliseconds
 // unless a field says otherwise.
 import { resolveFilter } from '../utils/clipFilters';
+import type { VideoBand } from '../utils/videoBands';
 
 export type ClipType = 'video' | 'image' | 'sticker' | 'text' | 'audio';
 export type TextAnimation = 'pop' | 'shake' | 'typewriter';
@@ -247,11 +248,14 @@ export interface VideoProject {
   layoutSlots?: LayoutSlot[];
   gridOverlayUrl?: string | null;
   watermark?: WatermarkSettings | null;
+  // The header and footer bars (utils/videoBands); version 5. Missing means off.
+  videoHeader?: VideoBand;
+  videoFooter?: VideoBand;
 }
 
 // Saved projects carry this. Bump it when the saved shape changes, and teach
 // migrateVideoProject to upgrade the previous version.
-export const VIDEO_PROJECT_VERSION = 4;
+export const VIDEO_PROJECT_VERSION = 5;
 
 const CLIP_TYPES = new Set<ClipType>(['video', 'image', 'sticker', 'text', 'audio']);
 const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
@@ -279,6 +283,8 @@ export function migrateVideoProject(raw: unknown, version = 0): VideoProject | n
   // 3 -> 4: the watermark gains a look (colour, size, opacity, logo, on/off), each optional with
   // its old value as the default, so a version 3 watermark needs nothing; a video's filter may
   // carry an effect (`fx`), none before.
+  // 4 -> 5: the header and footer bars (`videoHeader`, `videoFooter`), optional and off when missing,
+  // so a version 4 project needs nothing.
   return { ...project, items: version < 3 ? v2.map((c) => (c.type === 'image' ? upgradePhotoFilter(c) : c)) : v2 };
 }
 

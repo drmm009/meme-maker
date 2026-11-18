@@ -206,7 +206,9 @@ export function renderScene(scene) {
 
     paintHeaderFooter({
       canvasBgColor, canvasFooter, canvasH, canvasHeader, canvasW, footerExtH, headerExtH,
-      isFooterEnabled, isHeaderEnabled, liveBgColor, targetCtx
+      isFooterEnabled, isHeaderEnabled, liveBgColor, targetCtx,
+      // The guide line between a band and the picture shows while editing, never in the export.
+      divider: !skipHandles
     });
 
     // A selected shape or censor region gets the selection UI a selected layer would.

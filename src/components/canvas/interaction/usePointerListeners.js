@@ -1,5 +1,13 @@
 import { useEffect, useLayoutEffect, useRef } from 'react';
 
+// A control laid over the canvas (a start card's buttons, a panel's card): its taps are its own, not
+// the canvas's. Without this, the touch listener below would cancel the tap's click (preventDefault)
+// and take it as a tap on the canvas. The caption's text box (`editable`) keeps the canvas's handling.
+export const isOverlayControl = (target, editable) =>
+  typeof Element !== 'undefined' && target instanceof Element
+  && !(editable && (target === editable || editable.contains(target)))
+  && Boolean(target.closest('button, a[href], input, select, label'));
+
 // Something is being dragged, drawn, pinched or panned, so moves are followed.
 const isFollowing = (isDragging, isDrawingActive, isViewGesture) =>
   isDragging.current || isDrawingActive.current || Boolean(isViewGesture?.current);
@@ -29,6 +37,7 @@ export function usePointerListeners({
     if (!wrapper) return;
 
     const onTouchStart = (e) => {
+      if (isOverlayControl(e.target, editableRef.current)) return;
       if (e.cancelable && e.target !== editableRef.current) {
         e.preventDefault();
       }
@@ -36,6 +45,7 @@ export function usePointerListeners({
     };
 
     const onTouchMove = (e) => {
+      if (isOverlayControl(e.target, editableRef.current) && !isFollowing(isDragging, isDrawingActive, isViewGesture)) return;
       if (e.cancelable) {
         e.preventDefault();
         e.stopPropagation();
@@ -50,6 +60,7 @@ export function usePointerListeners({
     };
 
     const onTouchEnd = (e) => {
+      if (isOverlayControl(e.target, editableRef.current) && !isFollowing(isDragging, isDrawingActive, isViewGesture)) return;
       if (handlePointerEndRef.current) handlePointerEndRef.current(e);
     };
 

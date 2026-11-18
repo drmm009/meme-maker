@@ -83,7 +83,8 @@
 .ios-title {
   margin: 0;
   font-size: clamp(28px, 7.4vw, 34px);
-  font-weight: 700;
+  /* As heavy as Home's headings (App.css .shelf-heading). */
+  font-weight: 850;
   line-height: 1.12;
   letter-spacing: -0.022em;
   color: var(--ios-label);
@@ -93,6 +94,7 @@
 .ios-subtitle {
   margin: 3px 0 0;
   font-size: 15px;
+  font-weight: 500;
   line-height: 1.4;
   color: var(--ios-label-2);
   font-variant-numeric: tabular-nums;
@@ -104,7 +106,7 @@
 .ios-section-title {
   margin: 0;
   font-size: 20px;
-  font-weight: 700;
+  font-weight: 850;
   line-height: 1.25;
   letter-spacing: -0.012em;
   color: var(--ios-label);
@@ -246,7 +248,7 @@
   background: none;
   color: var(--ios-label);
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
   white-space: nowrap;
   cursor: pointer;
   transition: color 0.2s var(--ios-ease);
@@ -289,7 +291,7 @@
   border: 0;
   border-radius: 14px;
   font-size: 17px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   transition: transform 0.16s var(--ios-ease), opacity 0.16s var(--ios-ease);
 }
@@ -341,7 +343,7 @@
   background: none;
   color: var(--ios-accent-text);
   font-size: 17px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
 }
 
@@ -500,7 +502,7 @@
 .ios-empty-title {
   margin: 16px 0 0;
   font-size: 22px;
-  font-weight: 700;
+  font-weight: 800;
   line-height: 1.2;
   letter-spacing: -0.012em;
   text-wrap: balance;

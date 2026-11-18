@@ -8,6 +8,7 @@ import { watermarkClip, watermarkLogoClip } from '../../utils/brandCard';
 import CanvasMedia from './preview/CanvasMedia';
 import CanvasText from './preview/CanvasText';
 import GridOverlay from './preview/GridOverlay';
+import { BANDS, bandRects, bandsOn, withBands } from '../../utils/videoBands';
 import CanvasFlash from './preview/CanvasFlash';
 import { STAGE_WIDTH } from './preview/previewMath';
 import { useStageFit } from './preview/useStageFit';
@@ -35,7 +36,7 @@ function WatermarkLogo({ clip }) {
 }
 
 const CanvasPreview = forwardRef((props, ref) => {
-  const { items, activeItemId, setActiveItem, updateItem, canvasAspectRatio, backgroundColor, layoutId, watermark } = useEditorStore(
+  const { items, activeItemId, setActiveItem, updateItem, canvasAspectRatio, backgroundColor, layoutId, watermark, videoHeader, videoFooter } = useEditorStore(
     useShallow(state => ({
       items: state.items,
       activeItemId: state.activeItemId,
@@ -44,7 +45,9 @@ const CanvasPreview = forwardRef((props, ref) => {
       canvasAspectRatio: state.canvasAspectRatio,
       backgroundColor: state.backgroundColor,
       layoutId: state.layoutId,
-      watermark: state.watermark
+      watermark: state.watermark,
+      videoHeader: state.videoHeader,
+      videoFooter: state.videoFooter
     }))
   );
   const containerRef = useRef(null);
@@ -109,8 +112,13 @@ const CanvasPreview = forwardRef((props, ref) => {
             {/* Solid background so video export isn't transparent/black */}
             <Rect x={0} y={0} width={STAGE_WIDTH} height={stageHeight} fill={backgroundColor || '#ffffff'} listening={false} />
 
-            {/* All clips stay mounted; each shows itself only during its time on the timeline. */}
-            {drawOrder(items).map((item) => (item.type === 'text' ? (
+            {/* All clips stay mounted; each shows itself only during its time on the timeline. The
+                header and footer bars sit over the clips and photos, under stickers and text. */}
+            {withBands(drawOrder(items), bandsOn(videoHeader, videoFooter)).map((item) => (item === BANDS ? (
+              <Group key="video-bands" listening={false}>
+                {bandRects(videoHeader, videoFooter, STAGE_WIDTH, stageHeight).map((r, i) => <Rect key={i} {...r} listening={false} />)}
+              </Group>
+            ) : item.type === 'text' ? (
               <CanvasText
                 key={item.id}
                 item={item}

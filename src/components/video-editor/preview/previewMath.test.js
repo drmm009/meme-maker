@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
-  dropSlotIndex, effectCanvasSize, fitPlacement, fitStage, isOnScreen, mediaAttrs, resizeAboutCenter, rotateAboutCenter,
+  currentPanelPlacement, dropSlotIndex, effectCanvasSize, fitPlacement, fitStage, isOnScreen, mediaAttrs, panelPlacement, resizeAboutCenter, rotateAboutCenter,
   textResize, videoSyncPlan, videoTimeSec
 } from './previewMath';
 import { rotatedCenter } from '../../../utils/rotation';
@@ -157,5 +157,36 @@ describe('mediaAttrs', () => {
     expect(mediaAttrs({ x: 10, y: 20, width: 300, height: 200, scaleX: 2 })).toMatchObject({ scaleX: 2, scaleY: 1, offsetX: 0, offsetY: 0 });
     expect(mediaAttrs({ x: 10, y: 20, width: 300, height: 200, scaleX: 2, flipX: true })).toMatchObject({ x: 10, scaleX: -2, offsetX: 300, offsetY: 0 });
     expect(mediaAttrs({ width: 300, height: 200, flipY: true })).toMatchObject({ scaleY: -1, offsetY: 200, scaleX: 1 });
+  });
+});
+
+describe('panelPlacement', () => {
+  // The right half of a 2-panel side-by-side grid on the 800 x 600 stage.
+  const slot = { x: 400, y: 0, width: 400, height: 600 };
+  const square = { w: 1000, h: 1000 };
+
+  it('fits the whole picture inside the panel, centred', () => {
+    const p = panelPlacement(square, slot, 'fit');
+    expect([p.x, p.y, p.width, p.height]).toEqual([400, 100, 400, 400]);
+    expect(p.crop).toBeNull();
+    expect(currentPanelPlacement(p, slot)).toBe('fit');
+  });
+
+  it('fills the panel exactly, cropping the sides of a square picture to its shape', () => {
+    const p = panelPlacement(square, slot, 'cover');
+    expect([p.x, p.y, p.width, p.height]).toEqual([400, 0, 400, 600]);
+    expect(p.crop.width).toBeCloseTo(2 / 3);
+    expect(p.crop.x).toBeCloseTo(1 / 6);
+    expect(currentPanelPlacement(p, slot)).toBe('cover');
+  });
+
+  it('stretches the whole picture to the panel', () => {
+    const p = panelPlacement(square, slot, 'stretch');
+    expect([p.x, p.y, p.width, p.height, p.crop]).toEqual([400, 0, 400, 600, null]);
+    expect(currentPanelPlacement(p, slot)).toBe('stretch');
+  });
+
+  it('names none once the clip has been moved by hand', () => {
+    expect(currentPanelPlacement({ x: 420, y: 30, width: 200, height: 200 }, slot)).toBeNull();
   });
 });

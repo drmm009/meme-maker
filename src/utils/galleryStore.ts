@@ -107,31 +107,102 @@ export async function blobToDataURL(blob: Blob | string | null | undefined): Pro
   return `data:${mime};base64,${base64}`;
 }
 
-// A small preview of a saved image: a JPEG, or a PNG (type) for a sticker, which keeps its see-through edges.
-export function createThumbnail(dataUrl: string, maxSide = 320, type: 'image/jpeg' | 'image/png' = 'image/jpeg'): Promise<string> {
-  return new Promise<string>((resolve) => {
-    try {
-      const img = new Image();
-      img.onload = () => {
-        try {
-          const scale = Math.min(1, maxSide / Math.max(img.naturalWidth || 1, img.naturalHeight || 1));
-          const w = Math.max(1, Math.round((img.naturalWidth || 320) * scale));
-          const h = Math.max(1, Math.round((img.naturalHeight || 320) * scale));
-          const c = document.createElement('canvas');
-          c.width = w;
-          c.height = h;
-          c.getContext('2d')?.drawImage(img, 0, 0, w, h);
-          resolve(type === 'image/png' ? c.toDataURL('image/png') : c.toDataURL('image/jpeg', 0.7));
-        } catch {
-          resolve(dataUrl.slice(0, 200000));
-        }
-      };
-      img.onerror = () => resolve(dataUrl.slice(0, 200000));
-      img.src = dataUrl;
-    } catch {
-      resolve(dataUrl.slice(0, 200000));
+// The box around a picture's visible pixels (alpha above 8 of 255), from its RGBA bytes; null when
+// it has none.
+export function opaqueBounds(data: Uint8ClampedArray, width: number, height: number) {
+  let left = width;
+  let top = height;
+  let right = -1;
+  let bottom = -1;
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      if (data[(y * width + x) * 4 + 3] > 8) {
+        if (x < left) left = x;
+        if (x > right) right = x;
+        if (y < top) top = y;
+        if (y > bottom) bottom = y;
+      }
     }
-  });
+  }
+  return right < 0 ? null : { x: left, y: top, w: right - left + 1, h: bottom - top + 1 };
+}
+
+const loadImage = (src: string) => new Promise<HTMLImageElement>((resolve, reject) => {
+  const img = new Image();
+  img.onload = () => resolve(img);
+  img.onerror = reject;
+  img.src = src;
+});
+
+// The visible part of a picture, as a box in its own pixels (the whole picture when there is no
+// see-through margin to trim, or the pixels can't be read).
+function visibleBox(img: HTMLImageElement) {
+  const width = img.naturalWidth || 1;
+  const height = img.naturalHeight || 1;
+  const whole = { x: 0, y: 0, w: width, h: height };
+  try {
+    const c = document.createElement('canvas');
+    c.width = width;
+    c.height = height;
+    const ctx = c.getContext('2d', { willReadFrequently: true });
+    if (!ctx) return whole;
+    ctx.drawImage(img, 0, 0);
+    return opaqueBounds(ctx.getImageData(0, 0, width, height).data, width, height) ?? whole;
+  } catch {
+    return whole;
+  }
+}
+
+// A small preview of a saved image: a JPEG, or a PNG (type) for a sticker, which keeps its
+// see-through edges and is trimmed to the sticker, so its tile in My Studio isn't mostly empty.
+export function createThumbnail(dataUrl: string, maxSide = 320, type: 'image/jpeg' | 'image/png' = 'image/jpeg'): Promise<string> {
+  return loadImage(dataUrl)
+    .then((img) => {
+      const box = type === 'image/png'
+        ? visibleBox(img)
+        : { x: 0, y: 0, w: img.naturalWidth || 320, h: img.naturalHeight || 320 };
+      const scale = Math.min(1, maxSide / Math.max(box.w, box.h));
+      const c = document.createElement('canvas');
+      c.width = Math.max(1, Math.round(box.w * scale));
+      c.height = Math.max(1, Math.round(box.h * scale));
+      c.getContext('2d')?.drawImage(img, box.x, box.y, box.w, box.h, 0, 0, c.width, c.height);
+      return type === 'image/png' ? c.toDataURL('image/png') : c.toDataURL('image/jpeg', 0.7);
+    })
+    .catch(() => dataUrl.slice(0, 200000));
+}
+
+// Whether a sticker's thumbnail needs making again: a JPEG one (black where the sticker is
+// see-through, as stickers once got), or one with an empty see-through margin (from before they were
+// trimmed).
+async function stickerThumbNeedsRemake(thumbnailUrl: string): Promise<boolean> {
+  if (thumbnailUrl.startsWith('data:image/jpeg')) return true;
+  if (!thumbnailUrl.startsWith('data:image/png')) return false;
+  const img = await loadImage(thumbnailUrl);
+  const box = visibleBox(img);
+  // A pixel or two of margin is the scaling's soft edge, not empty space.
+  return img.naturalWidth - box.w > 4 || img.naturalHeight - box.h > 4;
+}
+
+// Remakes the thumbnails of saved stickers that need it (stickerThumbNeedsRemake) from the saved full
+// image (when that image kept its transparency), stores them, and returns the records it fixed. Once
+// a thumbnail is a trimmed PNG it is left alone, so this does its work once.
+export async function repairStickerThumbnails(records: GalleryRecord[]): Promise<GalleryRecord[]> {
+  const fixed: GalleryRecord[] = [];
+  for (const record of records) {
+    const blob = record.imageBlob;
+    if (record.kind !== 'sticker' || !blob || blob.type === 'image/jpeg' || !record.thumbnailUrl) continue;
+    try {
+      if (!(await stickerThumbNeedsRemake(record.thumbnailUrl))) continue;
+      const thumbnailUrl = await createThumbnail(await blobToDataURL(blob), 320, 'image/png');
+      if (!thumbnailUrl.startsWith('data:image/png') || thumbnailUrl === record.thumbnailUrl) continue;
+      const next = { ...record, thumbnailUrl };
+      await idbPutMeme(next);
+      fixed.push(next);
+    } catch {
+      // Leave this one as it was.
+    }
+  }
+  return fixed;
 }
 
 // Metadata kept in React state (small). Full bytes stay in IDB.

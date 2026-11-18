@@ -2,8 +2,9 @@ import Konva from 'konva';
 
 // How a selected layer's box looks on the preview (every Transformer in the video editor): a
 // rounded orange frame with a soft shadow; a Delete button on its top-left corner and a Duplicate
-// button on its top-right, plain white discs with a soft shadow; round white resize handles on the
-// bottom corners and white pills on the sides; and a white rotate knob with a turning arrow above
+// button on its top-right, plain white discs with a soft shadow; resize handles on the bottom corners
+// as discs of the same size on the corners, each with a dark two-way enlarge arrow (as the image
+// editor's, canvas/render/handles.js); white pills on the sides; and a white rotate knob with a turning arrow above
 // the top, clear of the buttons. Turning snaps to straight angles. Sizes are in screen pixels (the
 // Transformer draws unscaled).
 
@@ -27,6 +28,41 @@ const SIDES = ['middle-left', 'middle-right', 'top-center', 'bottom-center'];
 // Lucide's copy and trash, as one path each (24-unit box).
 const COPY_ICON = 'M10 8h10a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2V10a2 2 0 0 1 2-2zM4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2';
 const TRASH_ICON = 'M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2';
+
+// Lucide's move-diagonal-2 (top-left to bottom-right) and move-diagonal (bottom-left to top-right).
+const RESIZE_ICONS: Record<string, string> = {
+  'bottom-right': 'M19 13v6h-6M5 11V5h6M5 5l14 14',
+  'top-left': 'M19 13v6h-6M5 11V5h6M5 5l14 14',
+  'bottom-left': 'M11 19H5v-6M13 5h6v6M19 5L5 19',
+  'top-right': 'M11 19H5v-6M13 5h6v6M19 5L5 19',
+};
+const resizeIcons: Record<string, Path2D> = {};
+const cornerOf = (anchor: Konva.Node) => Object.keys(RESIZE_ICONS).find((n) => anchor.hasName(n)) || 'bottom-right';
+const cornerHeld = (shape: Konva.Node) => (shape.getParent() as Konva.Transformer | null)?.getActiveAnchor?.() === cornerOf(shape);
+
+// A corner resize handle: a white disc with a dark two-way arrow; orange with a white arrow while held.
+function drawCorner(ctx: Konva.Context, shape: Konva.Shape) {
+  const r = shape.width() / 2;
+  ctx.beginPath();
+  ctx.arc(r, r, r, 0, Math.PI * 2);
+  ctx.closePath();
+  ctx.fillStrokeShape(shape);
+  if (typeof Path2D === 'undefined') return;
+  const corner = cornerOf(shape);
+  resizeIcons[corner] ??= new Path2D(RESIZE_ICONS[corner]);
+  const native = ctx._context;
+  const size = r * 1.05;
+  native.save();
+  native.translate(r - size / 2, r - size / 2);
+  native.scale(size / 24, size / 24);
+  native.shadowColor = 'transparent';
+  native.strokeStyle = cornerHeld(shape) ? '#ffffff' : INK;
+  native.lineWidth = 2.4;
+  native.lineCap = 'round';
+  native.lineJoin = 'round';
+  native.stroke(resizeIcons[corner]);
+  native.restore();
+}
 
 const isSide = (anchor: Konva.Rect) => ['top-center', 'bottom-center', 'middle-left', 'middle-right'].some((n) => anchor.hasName(n));
 
@@ -71,9 +107,13 @@ function hitRotater(ctx: Konva.Context, shape: Konva.Shape) {
 
 function styleAnchor(anchor: Konva.Rect) {
   const rotater = anchor.hasName('rotater');
+  const corner = !rotater && !isSide(anchor);
   let w = HANDLE;
   let h = HANDLE;
-  if (rotater) {
+  if (corner) {
+    w = BUTTON;
+    h = BUTTON;
+  } else if (rotater) {
     w = ROTATER;
     h = ROTATER;
   } else if (isSide(anchor)) {
@@ -88,19 +128,14 @@ function styleAnchor(anchor: Konva.Rect) {
   const tr = anchor.getParent() as Konva.Transformer | null;
   const pad = rotater ? 0 : tr?.padding() || 0;
   const name = anchor.name();
-  // A corner handle sits on the middle of the frame's rounded corner, not its square corner.
-  let inset = 0;
-  if (!rotater && !isSide(anchor)) {
-    const back = tr?.findOne('.back');
-    const r = Math.min(RADIUS, Math.abs((back?.width() || 0) + pad * 2) / 2, Math.abs((back?.height() || 0) + pad * 2) / 2);
-    inset = r * (1 - Math.SQRT1_2);
-  }
+  // A corner handle sits on the frame's corner, as the Delete and Duplicate buttons do.
+  const inset = 0;
   const dx = name.includes('left') ? pad - inset : name.includes('right') ? inset - pad : 0;
   const dy = name.includes('top') ? pad - inset : name.includes('bottom') ? inset - pad : 0;
   anchor.offsetX(w / 2 + dx);
   anchor.offsetY(h / 2 + dy);
   anchor.cornerRadius(Math.min(w, h) / 2);
-  anchor.fill(rotater && turning(anchor) ? FRAME : '#ffffff');
+  anchor.fill((rotater && turning(anchor)) || (corner && cornerHeld(anchor)) ? FRAME : '#ffffff');
   anchor.stroke('rgba(0, 0, 0, 0.12)');
   anchor.strokeWidth(1);
   anchor.shadowColor('#000000');
@@ -110,6 +145,9 @@ function styleAnchor(anchor: Konva.Rect) {
   anchor.hitStrokeWidth(TOUCH);
   if (rotater) {
     anchor.sceneFunc(drawRotater);
+    anchor.hitFunc(hitRotater);
+  } else if (corner) {
+    anchor.sceneFunc(drawCorner);
     anchor.hitFunc(hitRotater);
   } else if (isSide(anchor)) {
     // Its touch area: a band half the frame's side long (the buttons and corner handles keep the

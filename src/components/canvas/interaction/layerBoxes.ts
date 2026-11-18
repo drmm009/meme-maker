@@ -9,6 +9,8 @@ import { getInstagramCardHeight } from '../draw/socialCards/instagram';
 import { getStickerBoxSize } from './geometry';
 import { applyCaptionFont, captionLineHeight, fittedFontSize, spacedText } from '../draw/captionFont';
 import type { Point } from './geometry';
+import { inPanel, panelRects } from '../layout/panels';
+import type { PanelLayout } from '../layout/panels';
 
 // Image layers fit inside a square this many pixels wide at scale 1.
 export const IMAGE_LAYER_FIT = 320;
@@ -114,6 +116,46 @@ export const getImageLayerBox = (layer: MemeImageLayer, cached: LoadedImage): { 
   return { baseW, baseH, fitScale, scale, w, h };
 };
 
+// The scale (a layer's `scale`) at which a picture of natural size `w` x `h` fits a box (the
+// canvas's image area) whole, as large as it can be: the picture is first sized to IMAGE_LAYER_FIT
+// on its longer side (scale 1), as getImageLayerBox does.
+export const fitLayerScale = (natural: { w: number; h: number }, area: { w: number; h: number }): number => {
+  const w = Math.max(1, natural.w);
+  const h = Math.max(1, natural.h);
+  const fitScale = Math.min(IMAGE_LAYER_FIT / w, IMAGE_LAYER_FIT / h);
+  return Math.min(area.w / (w * fitScale), area.h / (h * fitScale));
+};
+
+// A photo layer's look to fit, fill or stretch into a box (a grid panel, `w` x `h` canvas pixels),
+// as a patch: 'fit' shows the whole picture inside it (no crop, no set box, the scale that fits);
+// 'fill' covers it exactly (the box is the panel, the picture cropped, centred, to the panel's shape,
+// drawn stretched into it, so nothing spills out); 'stretch' is the whole picture pulled to the
+// panel's shape (the box is the panel, no crop). Its place (x, y) is the caller's: the panel's middle.
+export const panelPlacement = (
+  natural: { w: number; h: number },
+  box: { w: number; h: number },
+  mode: 'fit' | 'fill' | 'stretch'
+): { scale: number; crop: { x: number; y: number; width: number; height: number } | null; boxWidth?: number; boxHeight?: number; width?: number; height?: number; fitMode: 'stretch'; rotation: 0 } => {
+  const w = Math.max(1, natural.w);
+  const h = Math.max(1, natural.h);
+  const base = { width: undefined, height: undefined, fitMode: 'stretch' as const, rotation: 0 as const };
+  if (mode === 'fit') return { ...base, scale: fitLayerScale(natural, box), crop: null, boxWidth: undefined, boxHeight: undefined };
+  if (mode === 'stretch') {
+    const fitScale = Math.min(IMAGE_LAYER_FIT / w, IMAGE_LAYER_FIT / h);
+    return { ...base, scale: box.w / (w * fitScale), crop: null, boxWidth: box.w, boxHeight: box.h };
+  }
+  const boxAspect = box.w / Math.max(1, box.h);
+  const imgAspect = w / h;
+  // Keep the middle of the picture: trim its sides (a wider picture) or its top and bottom.
+  const crop = imgAspect > boxAspect
+    ? { x: (1 - boxAspect / imgAspect) / 2, y: 0, width: boxAspect / imgAspect, height: 1 }
+    : { x: 0, y: (1 - imgAspect / boxAspect) / 2, width: 1, height: imgAspect / boxAspect };
+  const fitScale = Math.min(IMAGE_LAYER_FIT / w, IMAGE_LAYER_FIT / h);
+  // The scale that gives the cropped picture the box's width (so it matches if the box is cleared).
+  const scale = box.w / (w * fitScale * crop.width);
+  return { ...base, scale, crop, boxWidth: box.w, boxHeight: box.h };
+};
+
 // Canvas pixels per screen pixel: the selection handles are sized on screen, however big the canvas
 // is drawn (1 where the canvas isn't on screen).
 export const screenScaleOf = (canvas: { width: number; getBoundingClientRect?: () => { width: number } } | null | undefined): number => {
@@ -197,30 +239,10 @@ export const findHandle = (p: Point, handles: Handle[], { closest = false }: { c
   return best;
 };
 
-// A multi-image layout: its id (e.g. '2-vert') and how many panels it has.
-export interface LayoutDef {
-  id: string;
-  slots: number;
-}
+// A multi-image layout: its id (e.g. '2-vert'), how many panels it has, and a custom grid's
+// columns and rows (layout/panels).
+export type LayoutDef = PanelLayout;
 
 // Which panel of a multi-image layout (activeLayoutDef) contains `coords`, or -1.
-export const findSlotAt = (coords: Point, layoutDef: LayoutDef, { canvasW, canvasH, headerExtH }: { canvasW: number; canvasH: number; headerExtH: number }): number => {
-  const totalSlots = layoutDef.slots;
-  const isVert = layoutDef.id === '2-vert' || layoutDef.id === '3-stacked';
-  const isHoriz = layoutDef.id === '2-horiz' || layoutDef.id === '3-horiz';
-  const isGrid = layoutDef.id === '4-grid';
-  const isHybrid = layoutDef.id === '3-hybrid';
-
-  for (let idx = 0; idx < totalSlots; idx++) {
-    let x = 0, y = headerExtH, slotW = canvasW, slotH = canvasH;
-    if (isVert) { slotH = canvasH / totalSlots; y = headerExtH + idx * slotH; }
-    else if (isHoriz) { slotW = canvasW / totalSlots; x = idx * slotW; y = headerExtH; }
-    else if (isGrid) { slotW = canvasW / 2; slotH = canvasH / 2; x = (idx % 2) * slotW; y = headerExtH + Math.floor(idx / 2) * slotH; }
-    else if (isHybrid) {
-      if (idx === 0) { slotW = canvasW; slotH = canvasH / 2; x = 0; y = headerExtH; }
-      else { slotW = canvasW / 2; slotH = canvasH / 2; x = (idx - 1) * slotW; y = headerExtH + canvasH / 2; }
-    }
-    if (coords.x >= x && coords.x <= x + slotW && coords.y >= y && coords.y <= y + slotH) return idx;
-  }
-  return -1;
-};
+export const findSlotAt = (coords: Point, layoutDef: LayoutDef, { canvasW, canvasH, headerExtH }: { canvasW: number; canvasH: number; headerExtH: number }): number =>
+  panelRects(layoutDef).findIndex((r) => inPanel(r, coords.x / canvasW, (coords.y - headerExtH) / canvasH));

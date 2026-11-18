@@ -19,7 +19,8 @@ describe('SocialFeed', () => {
     const post = screen.getByRole('article', { name: 'Writing unit tests at 3 AM' });
     expect(within(post).getByText('Testing code before deploying to production')).toBeDefined();
     expect(within(post).getByRole('button', { name: 'Remix Writing unit tests at 3 AM' }).textContent).toBe('Remix');
-    expect(within(post).getByRole('button', { name: 'Copy link' })).toBeDefined();
+    expect(within(post).queryByRole('button', { name: 'Copy link' })).toBeNull();
+    expect(within(post).getByRole('button', { name: 'Download' })).toBeDefined();
   });
 
   it('picks the feed from the switch at the top right', () => {

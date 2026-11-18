@@ -7,7 +7,7 @@ import TimelinePanel from './timeline/TimelinePanel';
 import ToolRail from './ToolRail';
 import AddMedia from './AddMedia';
 import ExportReadyCard from './ExportReadyCard';
-import StartPrompt from './StartPrompt';
+import VideoStartArea from './VideoStartArea';
 import { aspectLabel, fitCanvasToVideo, originalAspect } from './videoCanvas';
 import { offerLinkText, parseVideoLink } from '../../utils/videoLink';
 import { useEditorStore } from '../../store/useVideoEditorStore';
@@ -21,7 +21,8 @@ import { loadSavedVideo, restoreProject, saveVideoToStudio } from '../../utils/v
 import { formatClock, getContentEnd } from './timeline/timelineMath';
 import { withWatermark } from '../../utils/brandCard';
 import { loadVideoFonts } from './videoFonts';
-import { DEFAULT_TEXT_LOOK } from '../../utils/textBitmap';
+import { DEFAULT_TEXT_LOOK, textBitmap } from '../../utils/textBitmap';
+import { DEFAULT_VIDEO_BAND, bandRects, centreInBand } from '../../utils/videoBands';
 import '../ui/ui.css';
 import './video-editor.css';
 
@@ -78,6 +79,29 @@ const changeAspectRatio = (newRatio) => {
   }
 };
 
+// A caption layout's captions, each in the middle of its bar (the header bar for one in the top
+// half, the footer bar for one below), as text clips.
+const addBandCaptions = (template) => {
+  const store = useEditorStore.getState();
+  const stageH = 800 / (store.canvasAspectRatio || 1);
+  const [headerBar] = bandRects(template.videoHeader, null, 800, stageH);
+  const [footerBar] = bandRects(null, template.videoFooter, 800, stageH);
+  for (const cap of template.defaultCaptions || []) {
+    const item = { type: 'text', ...DEFAULT_TEXT_LOOK, ...cap };
+    const bar = (cap.y ?? 0.5) < 0.5 ? headerBar : footerBar;
+    let place = { x: 40, y: Math.round((cap.y ?? 0.5) * stageH) };
+    if (bar) {
+      try {
+        const box = textBitmap(item, 1);
+        place = box.boxWidth ? centreInBand({ width: box.boxWidth, height: box.boxHeight }, bar) : { x: 40, y: Math.round(bar.y + bar.height / 4) };
+      } catch {
+        place = { x: 40, y: Math.round(bar.y + bar.height / 4) };
+      }
+    }
+    store.addItem({ ...item, ...place });
+  }
+};
+
 const copyFrame = () => {
   const el = document.querySelector('.video-canvas-area canvas');
   el?.toBlob(async (blob) => {
@@ -113,7 +137,6 @@ export default function VideoEditor({ template, onBack, onSaved }) {
   const sizes = sizesWith(useEditorStore((s) => originalAspect(s.items)));
   const isExporting = useEditorStore((s) => s.isExporting);
   const exportProgress = useEditorStore((s) => s.exportProgress);
-  const hasItems = useEditorStore((s) => s.items.length > 0);
   const busy = useEditorStore((s) => s.busy);
   const canUndo = useStore(useEditorStore.temporal, (s) => s.pastStates.length > 0);
   const canRedo = useStore(useEditorStore.temporal, (s) => s.futureStates.length > 0);
@@ -165,18 +188,31 @@ export default function VideoEditor({ template, onBack, onSaved }) {
     const store = useEditorStore.getState();
     store.clearItems();
     store.setLayoutSlots(template.slots || []);
+    // A grid layout draws its divider lines; a caption layout brings its header and footer bars
+    // (both off otherwise).
+    store.setLayoutId(template.slots?.length ? template.layoutId || null : null);
+    store.setVideoHeader(template.videoHeader || DEFAULT_VIDEO_BAND);
+    store.setVideoFooter(template.videoFooter || DEFAULT_VIDEO_BAND);
     savedIdRef.current = template.savedVideoId || null;
     if (template.savedVideoId) {
       // A video from My Studio: its project, with its files given fresh URLs.
       loadSavedVideo(template.savedVideoId).then((saved) => {
         if (!saved) return;
         const project = restoreProject(saved.video, saved.media, (blob) => URL.createObjectURL(blob));
-        useEditorStore.setState({ watermark: null, ...project, playhead: 0, isPlaying: false, activeItemId: null });
+        useEditorStore.setState({ watermark: null, videoHeader: DEFAULT_VIDEO_BAND, videoFooter: DEFAULT_VIDEO_BAND, ...project, playhead: 0, isPlaying: false, activeItemId: null });
         useEditorStore.temporal.getState().clear();
       }).catch((e) => console.warn('[video] could not open the saved video', e));
       return;
     }
-    if (template.category === 'custom') return;
+    if (template.category === 'custom') {
+      // A layout from Choose Canvas Layout: a grid keeps the 4:3 its panels were drawn on, a caption
+      // layout its square, and its captions go in its bars.
+      if (template.slots?.length || template.videoHeader || template.videoFooter) {
+        store.setCanvasAspectRatio(template.width / template.height);
+      }
+      addBandCaptions(template);
+      return;
+    }
     if (template.type === 'video') {
       // The canvas takes the template's shape, so the clip fills it.
       fitCanvasToVideo(template.width, template.height);
@@ -235,7 +271,7 @@ export default function VideoEditor({ template, onBack, onSaved }) {
           useEditorStore.getState().setExportProgress(progress);
           if (info) setExportInfo(info);
         },
-        { format, resolution, backgroundColor: store.backgroundColor, layoutSlots: store.layoutSlots, download: false }
+        { format, resolution, backgroundColor: store.backgroundColor, layoutSlots: store.layoutSlots, videoHeader: store.videoHeader, videoFooter: store.videoFooter, download: false }
       );
       setExported(result);
       setExportDone(true);
@@ -301,7 +337,7 @@ export default function VideoEditor({ template, onBack, onSaved }) {
           onPointerDown={deselectOnBackground}
         >
           <CanvasPreview>
-            {!hasItems && mode === 'preview' && <StartPrompt onPick={(kind) => (kind === 'link' ? railRef.current?.openSheet('link') : addRef.current?.open(kind))} />}
+            <VideoStartArea open={mode === 'preview'} onPick={(kind) => (kind === 'link' ? railRef.current?.openSheet('link') : addRef.current?.open(kind))} />
           </CanvasPreview>
         </div>
 

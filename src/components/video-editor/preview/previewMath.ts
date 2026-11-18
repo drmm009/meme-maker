@@ -15,6 +15,44 @@ const STILL_FX_MAX_SIDE = 1280;
 type PlacementPatch = Required<Pick<Placed, 'isPositioned' | 'x' | 'y' | 'width' | 'height'>> &
   Partial<Pick<Placed, 'scaleX' | 'scaleY'>> & { crop?: undefined };
 
+export type PanelPlacement = 'fit' | 'cover' | 'stretch';
+
+// A clip's place in a grid layout's panel (stage units), from its source's natural size: 'fit' the
+// whole picture inside it, centred; 'cover' the panel exactly, the picture cropped (centred) to the
+// panel's shape (clips aren't clipped to their panel, so the crop keeps it inside); 'stretch' the
+// whole picture pulled to the panel's shape. Always unscaled (scale 1), so width and height are its size.
+export function panelPlacement(natural: { w: number; h: number }, slot: LayoutSlot, mode: PanelPlacement) {
+  const w = Math.max(1, natural.w);
+  const h = Math.max(1, natural.h);
+  const whole = { x: slot.x, y: slot.y, width: slot.width, height: slot.height, scaleX: 1, scaleY: 1, isPositioned: true };
+  if (mode === 'stretch') return { ...whole, crop: null };
+  if (mode === 'cover') {
+    const slotAspect = slot.width / Math.max(1, slot.height);
+    const aspect = w / h;
+    const crop = aspect > slotAspect
+      ? { x: (1 - slotAspect / aspect) / 2, y: 0, width: slotAspect / aspect, height: 1 }
+      : { x: 0, y: (1 - aspect / slotAspect) / 2, width: 1, height: aspect / slotAspect };
+    return { ...whole, crop };
+  }
+  const s = Math.min(slot.width / w, slot.height / h);
+  const width = w * s;
+  const height = h * s;
+  return { ...whole, x: slot.x + (slot.width - width) / 2, y: slot.y + (slot.height - height) / 2, width, height, crop: null };
+}
+
+// Which of those a clip in a panel is in now, if any (it may have been moved or sized by hand since).
+export function currentPanelPlacement(item: Pick<Placed, 'x' | 'y' | 'width' | 'height' | 'scaleX' | 'scaleY' | 'crop'>, slot: LayoutSlot): PanelPlacement | null {
+  const near = (a = 0, b = 0) => Math.abs(a - b) < 0.5;
+  const w = (item.width || 0) * (item.scaleX || 1);
+  const h = (item.height || 0) * (item.scaleY || 1);
+  const cropped = Boolean(item.crop && (item.crop.width < 0.999 || item.crop.height < 0.999));
+  const fillsPanel = near(item.x, slot.x) && near(item.y, slot.y) && near(w, slot.width) && near(h, slot.height);
+  if (fillsPanel) return cropped ? 'cover' : 'stretch';
+  const centred = near((item.x || 0) + w / 2, slot.x + slot.width / 2) && near((item.y || 0) + h / 2, slot.y + slot.height / 2);
+  const touches = near(w, slot.width) || near(h, slot.height);
+  return !cropped && centred && touches && w <= slot.width + 0.5 && h <= slot.height + 0.5 ? 'fit' : null;
+}
+
 // Where newly loaded media goes (null once it has been placed): fitted inside its layout panel,
 // or fitted and centred on the canvas. Stickers keep their natural size.
 export function fitPlacement(

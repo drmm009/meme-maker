@@ -68,6 +68,7 @@ const clipTool = (text) => {
 beforeEach(() => {
   store().clearItems();
   store().setLayoutSlots([]);
+  store().setLayoutId(null);
 });
 afterEach(cleanup);
 
@@ -91,6 +92,30 @@ describe('VideoEditor', () => {
     // Every add tool on one row, no Back.
     const dock = screen.getByRole('toolbar', { name: 'Add tools' });
     expect(labels(dock)).toEqual(['Video', 'Photo', 'Text', 'Stickers', 'Sounds', 'Voice', 'Subtitles', 'Canvas']);
+  });
+
+  it('opens a grid layout with its lines and no start prompt over them', () => {
+    const template = { id: 'grid-1', type: 'video', category: 'custom', layoutId: '2-horiz', width: 800, height: 600,
+      slots: [{ x: 0, y: 0, width: 400, height: 600 }, { x: 400, y: 0, width: 400, height: 600 }], defaultCaptions: [] };
+    render(<VideoEditor template={template} onBack={() => {}} />);
+    expect(store().layoutId).toBe('2-horiz');
+    expect(store().layoutSlots).toHaveLength(2);
+    expect(screen.queryByRole('group', { name: 'Start your video' })).toBeNull();
+  });
+
+  it('opens a caption layout with its bars on and its captions as text clips', () => {
+    const band = { enabled: true, bgColor: '#000000', height: 120 };
+    const template = { id: 'cap-1', type: 'video', category: 'custom', width: 1080, height: 1080,
+      videoHeader: band, videoFooter: { ...band, enabled: false },
+      defaultCaptions: [{ id: 'v-cap-top', text: 'TOP TEXT', fontSize: 60, y: 0.1, align: 'center', color: '#ffffff' }] };
+    render(<VideoEditor template={template} onBack={() => {}} />);
+    expect(store().videoHeader.enabled).toBe(true);
+    expect(store().videoFooter.enabled).toBe(false);
+    expect(store().canvasAspectRatio).toBe(1);
+    const text = store().items.filter((i) => i.type === 'text');
+    expect(text.map((t) => t.text)).toEqual(['TOP TEXT']);
+    // In the header bar (the top 120 of the 800-tall square canvas).
+    expect(text[0].y).toBeLessThan(120);
   });
 
   it('stops the clock at the video’s end when the playhead runs past it', () => {

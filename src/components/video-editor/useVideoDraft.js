@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
 import { useEditorStore } from '../../store/useVideoEditorStore';
 import { loadVideoDraft, restoreProject, saveVideoDraft } from '../../utils/videoDraftStore';
+import { DEFAULT_VIDEO_BAND } from '../../utils/videoBands';
 
 const SAVE_DELAY_MS = 700;
 
 const projectChanged = (s, p) =>
   s.items !== p.items || s.canvasAspectRatio !== p.canvasAspectRatio || s.layoutSlots !== p.layoutSlots
-  || s.backgroundColor !== p.backgroundColor || s.watermark !== p.watermark;
+  || s.backgroundColor !== p.backgroundColor || s.watermark !== p.watermark
+  || s.videoHeader !== p.videoHeader || s.videoFooter !== p.videoFooter;
 
 // Auto-saves the project after each edit and offers to bring back the previous draft.
 // Call it after the template hand-off so the hand-off itself doesn't count as an edit.
@@ -53,7 +55,7 @@ export function useVideoDraft() {
     const saved = savedRef.current;
     if (!saved) return;
     const project = restoreProject(saved.draft, saved.media, (blob) => URL.createObjectURL(blob));
-    useEditorStore.setState({ watermark: null, ...project, playhead: 0, isPlaying: false, activeItemId: null });
+    useEditorStore.setState({ watermark: null, videoHeader: DEFAULT_VIDEO_BAND, videoFooter: DEFAULT_VIDEO_BAND, ...project, playhead: 0, isPlaying: false, activeItemId: null });
     useEditorStore.temporal.getState().clear();
   };
 

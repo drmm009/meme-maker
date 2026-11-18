@@ -1,0 +1,180 @@
+/* The Creator sheet (CreatorSheet.tsx), on the shared iOS look (pages/iosLook.css): a grabber, a
+   heading, and two large tiles side by side, each tinted with its kind's colour (video sky blue as
+   on Home's Meme video card, image the app's orange) with its icon on a solid tile of that colour. */
+
+.cs-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+  animation: cs-fade 0.22s var(--ios-ease);
+}
+
+.cs-sheet {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 520px;
+  padding: 0 16px calc(20px + env(safe-area-inset-bottom, 0px));
+  border-radius: 24px 24px 0 0;
+  background: var(--ios-surface);
+  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.4);
+  transition: transform 0.24s var(--ios-ease);
+  animation: cs-up 0.32s var(--ios-ease);
+}
+
+.cs-handle {
+  display: grid;
+  place-items: center;
+  height: 22px;
+  cursor: grab;
+  touch-action: none;
+}
+
+.cs-grabber {
+  width: 36px;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--ios-fill-strong);
+}
+
+.cs-title {
+  margin: 4px 2px 14px;
+  font-size: 20px;
+  font-weight: 850;
+  line-height: 1.25;
+  letter-spacing: -0.012em;
+  color: var(--ios-label);
+}
+
+.cs-choices {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.cs-choice {
+  --cs-color: #ff5a36;
+  display: grid;
+  align-content: start;
+  justify-items: start;
+  gap: 4px;
+  min-width: 0;
+  min-height: 148px;
+  padding: 16px;
+  border: 1px solid var(--ios-hairline);
+  border: 1px solid color-mix(in srgb, var(--cs-color) 28%, transparent);
+  border-radius: 20px;
+  background: var(--ios-surface-2);
+  background: color-mix(in srgb, var(--cs-color) 13%, var(--ios-surface));
+  color: var(--ios-label);
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.16s var(--ios-ease), background-color 0.2s var(--ios-ease);
+}
+
+.cs-choice--video {
+  --cs-color: #38bdf8;
+}
+
+.cs-choice--image {
+  --cs-color: #ff6a48;
+}
+
+.cs-choice:active {
+  transform: scale(0.97);
+}
+
+@media (hover: hover) {
+  .cs-choice:hover {
+    background: color-mix(in srgb, var(--cs-color) 20%, var(--ios-surface));
+  }
+}
+
+.cs-choice:focus-visible {
+  outline: 2px solid var(--cs-color);
+  outline-offset: 2px;
+}
+
+.cs-choice-icon {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  margin-bottom: 14px;
+  border-radius: 14px;
+  background: var(--cs-color);
+  color: #101012;
+  box-shadow: 0 6px 16px -6px var(--cs-color);
+}
+
+.cs-choice-icon svg {
+  width: 23px;
+  height: 23px;
+}
+
+.cs-choice-label {
+  font-size: 17px;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+}
+
+.cs-choice-about {
+  font-size: 13px;
+  line-height: 1.35;
+  color: var(--ios-label-2);
+}
+
+/* A wide screen: the sheet in the middle, rounded all round. */
+@media (min-width: 720px) {
+  .cs-backdrop {
+    align-items: center;
+  }
+
+  .cs-sheet {
+    padding-top: 6px;
+    border-radius: 24px;
+    animation-name: cs-pop;
+  }
+
+  .cs-handle {
+    display: none;
+  }
+
+  .cs-title {
+    margin-top: 16px;
+  }
+}
+
+@keyframes cs-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes cs-up {
+  from {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes cs-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cs-backdrop,
+  .cs-sheet {
+    animation: none;
+  }
+
+  .cs-choice:active {
+    transform: none;
+  }
+}

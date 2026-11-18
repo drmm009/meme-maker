@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { toMetadata, dataURLToBlob, blobToDataURL } from './galleryStore';
+import { toMetadata, dataURLToBlob, blobToDataURL, repairStickerThumbnails, opaqueBounds } from './galleryStore';
 import { templateNumericId } from './templateOrder';
 
 // 1x1 transparent PNG
@@ -55,5 +55,33 @@ describe('templateNumericId', () => {
       { id: 'imgflip-99', trendingScore: 1 },
     ].sort((a, b) => templateNumericId(b) - templateNumericId(a));
     expect(sorted[0].id).toBe('imgflip-99');
+  });
+});
+
+describe('galleryStore.repairStickerThumbnails', () => {
+  it('leaves memes, and stickers whose full image is a JPEG, alone', async () => {
+    const base = { id: 'x', name: 'X', createdAt: '', captions: [], stickers: [], imageLayers: [], rawImageUrl: null };
+    const fixed = await repairStickerThumbnails([
+      { ...base, id: 'meme', kind: 'meme', thumbnailUrl: 'data:image/jpeg;base64,AAA', imageBlob: dataURLToBlob(TINY_PNG) },
+      { ...base, id: 'jpeg', kind: 'sticker', thumbnailUrl: 'data:image/jpeg;base64,AAA', imageBlob: new Blob(['x'], { type: 'image/jpeg' }) },
+    ]);
+    expect(fixed).toEqual([]);
+  });
+});
+
+describe('galleryStore.opaqueBounds', () => {
+  // A 4x3 picture, see-through but for two pixels: (1,1) and (2,2).
+  const pixels = (on) => {
+    const data = new Uint8ClampedArray(4 * 3 * 4);
+    for (const [x, y] of on) data[(y * 4 + x) * 4 + 3] = 255;
+    return data;
+  };
+
+  it('finds the box around the visible pixels', () => {
+    expect(opaqueBounds(pixels([[1, 1], [2, 2]]), 4, 3)).toEqual({ x: 1, y: 1, w: 2, h: 2 });
+  });
+
+  it('is null for a picture with nothing visible', () => {
+    expect(opaqueBounds(pixels([]), 4, 3)).toBeNull();
   });
 });

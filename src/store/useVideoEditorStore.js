@@ -4,6 +4,7 @@ import { isEndCard, keepEndCardLast } from '../utils/brandCard';
 import { HISTORY_BURST_MS, historyBurst } from '../utils/historyBurst';
 import { duplicateGroup, shiftGroup, togglePick } from '../utils/clipGroup';
 import { moveLayer as moveLayerInItems } from '../utils/layerOrder';
+import { DEFAULT_VIDEO_BAND } from '../utils/videoBands';
 
 
 // An "Item" represents a single piece of media on the timeline (Video, Image, Text)
@@ -68,10 +69,20 @@ export const useEditorStore = create(temporal(keepingEndCardLast((set, get) => (
   draggingTime: null, // Time to preview while dragging
   layoutSlots: [], // Geometric data for grid panels [{x,y,width,height}]
   layoutId: null, // Stores the active layout type (e.g. '2-vert')
+  // The panel a grid panel's start card picked (VideoStartArea): the next photo or video added goes
+  // there. Not saved, and cleared once used or when the layout changes.
+  targetSlot: null,
+  setTargetSlot: (index) => set({ targetSlot: index }),
+  // The header and footer bars (utils/videoBands), off until switched on.
+  videoHeader: DEFAULT_VIDEO_BAND,
+  videoFooter: DEFAULT_VIDEO_BAND,
 
   // Actions
   setLayoutId: (id) => set({ layoutId: id }),
-  setLayoutSlots: (slots) => set({ layoutSlots: slots || [] }),
+  setLayoutSlots: (slots) => set({ layoutSlots: slots || [], targetSlot: null }),
+  // A value, or a function of the bar as it is.
+  setVideoHeader: (band) => set((state) => ({ videoHeader: typeof band === 'function' ? band(state.videoHeader) : band })),
+  setVideoFooter: (band) => set((state) => ({ videoFooter: typeof band === 'function' ? band(state.videoFooter) : band })),
   setDraggingTime: (time) => set({ draggingTime: time }),
   setIsExporting: (exporting) => set({ isExporting: exporting }),
   setExportProgress: (progress) => set({ exportProgress: progress }),
@@ -114,8 +125,11 @@ export const useEditorStore = create(temporal(keepingEndCardLast((set, get) => (
   setGridOverlayUrl: (url) => set({ gridOverlayUrl: url }),
   
   addItem: (item) => set((state) => {
-    // Auto-assign empty slot if applicable
+    // A panel picked on its start card, else the first empty one.
     let slotIndex = item.slotIndex;
+    const targeted = slotIndex === undefined && (item.type === 'image' || item.type === 'video')
+      && Number.isInteger(state.targetSlot) && state.targetSlot < state.layoutSlots.length;
+    if (targeted) slotIndex = state.targetSlot;
     if (slotIndex === undefined && (item.type === 'image' || item.type === 'video') && state.layoutSlots.length > 0) {
       const usedSlots = new Set(state.items.filter(i => i.slotIndex !== undefined).map(i => i.slotIndex));
       for (let i = 0; i < state.layoutSlots.length; i++) {
@@ -174,6 +188,7 @@ export const useEditorStore = create(temporal(keepingEndCardLast((set, get) => (
     }];
 
     return {
+      targetSlot: null,
       duration: calculateDuration(newItems),
       items: newItems
     };
@@ -335,6 +350,8 @@ export const useEditorStore = create(temporal(keepingEndCardLast((set, get) => (
     canvasAspectRatio: state.canvasAspectRatio,
     backgroundColor: state.backgroundColor,
     watermark: state.watermark,
+    videoHeader: state.videoHeader,
+    videoFooter: state.videoFooter,
     gridOverlayUrl: state.gridOverlayUrl
   }),
   limit: 20,

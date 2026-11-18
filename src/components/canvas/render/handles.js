@@ -1,6 +1,7 @@
 import { rotateKnobGap, screenScaleOf } from '../interaction/layerBoxes';
 
-// Selection UI drawn over the active layer: box, delete/resize/side badges, rotate knob. The same
+// Selection UI drawn over the active layer: box, delete/resize/side badges, rotate knob (Delete and
+// resize both white discs on their corners, a red bin and a dark enlarge arrow). The same
 // look as the video editor's selection (video-editor/preview/selectionStyle.ts): an orange rounded
 // frame with a soft dark shadow, plain white discs and pills with a soft shadow, a red bin for
 // Delete and a dark turning arrow on the rotate knob.
@@ -11,6 +12,8 @@ const RING = 'rgba(0, 0, 0, 0.12)';
 // Lucide's trash and rotate-cw (24-unit box).
 const TRASH_ICON = 'M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2';
 const ROTATE_ICON = 'M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8M21 3v5h-5';
+// Lucide's move-diagonal-2: a two-way arrow from corner to corner (enlarge / shrink).
+const RESIZE_ICON = 'M19 13v6h-6M5 11V5h6M5 5l14 14';
 // Sizes below are screen pixels, turned into canvas pixels by the canvas's on-screen scale (the
 // hit test's own: interaction/layerBoxes' screenScaleOf), so the handles are as big on a phone as
 // the video editor's however big the canvas is.
@@ -84,11 +87,11 @@ export const drawDeleteHandle = (uiCtx, hx, hy) => {
   drawIcon(uiCtx, TRASH_ICON, hx, hy, 16 * k, DELETE_RED);
 };
 
-// 3. Resize (bottom-right): a white dot on the middle of the frame's rounded corner.
+// 3. Resize (bottom-right): as Delete, a white disc on the corner, with a dark two-way enlarge arrow.
 export const drawResizeHandle = (uiCtx, hx, hy) => {
   const k = unit(uiCtx);
-  const inset = FRAME_RADIUS * k * (1 - Math.SQRT1_2);
-  drawDisc(uiCtx, hx - inset, hy - inset, 7 * k, k);
+  drawDisc(uiCtx, hx, hy, 14 * k, k);
+  drawIcon(uiCtx, RESIZE_ICON, hx, hy, 15 * k, INK);
 };
 
 // 5. Side stretch handle: a slim white pill on the frame's line.

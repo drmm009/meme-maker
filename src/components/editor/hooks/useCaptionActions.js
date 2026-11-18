@@ -31,6 +31,9 @@ export function useCaptionActions({ activeCaption }) {
       bgColor: referenceCap ? referenceCap.bgColor : undefined,
       opacity: referenceCap !== null && referenceCap.opacity !== undefined ? referenceCap.opacity : 1,
       rotation: 0,
+      // A box wide enough to tap and type into easily (it still wraps the text).
+      width: 0.25,
+      hasCustomWidth: true,
       zIndex: maxZ + 1
     };
     const nextCaps = [...captions, newCap];

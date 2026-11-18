@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import { Sheet } from '../ui';
 import DeckBar from './DeckBar';
-import { BackgroundIcon, FiltersIcon } from '../editor/panels/editorIcons';
+import { BackgroundIcon, FiltersIcon, HeaderFooterIcon } from '../editor/panels/editorIcons';
 import { useSmoothHeight } from '../editor/panels/useSmoothHeight';
 import { useEditorStore, clipEffectBase, sourceTimeMs } from '../../store/useVideoEditorStore';
 import { clipOpacity } from '../../model/videoProject';
@@ -30,6 +30,7 @@ import { isGifSticker } from '../../utils/stickerLook';
 import { runJob } from './clipJobs';
 import { flashCanvas } from './preview/flashBus';
 import { VideoBackgroundAside, VideoBackgroundPanel } from './VideoBackgroundPanel';
+import VideoBandsPanel from './VideoBandsPanel';
 import { PHOTO_MOTIONS } from '../../utils/photoMotion';
 import { DEFAULT_END_CARD, endCardClip, isEndCard, renderEndCard } from '../../utils/brandCard';
 import { captureFrame, renderClipEffect } from '../../utils/clipEffects';
@@ -71,6 +72,7 @@ const DOCK = [
   { kind: 'captions', label: 'Subtitles', Icon: Captions, title: 'Auto captions', panel: true },
   { kind: 'canvas', label: 'Canvas', Icon: Frame, title: 'Canvas', sources: [
     { kind: 'background', label: 'Background', sub: 'Colour', Icon: PaintBucket },
+    { kind: 'bands', label: 'Header & footer', sub: 'Caption bars', Icon: HeaderFooterIcon },
     { kind: 'watermark', label: 'Watermark', sub: 'Your name', Icon: AtSign },
     { kind: 'endcard', label: 'End card', sub: 'At the end', Icon: Flag },
   ] },
@@ -294,7 +296,7 @@ const SHEETS = {
   photomore: { title: 'Photo', Icon: Ellipsis, Panel: PhotoMorePanel },
   animation: { title: 'Animate', Icon: Sparkles, Panel: AnimationPanel },
   speed: { title: 'Speed', Icon: Gauge, Panel: SpeedPanel },
-  place: { title: 'Fit to canvas', Icon: Expand, Panel: PlacePanel },
+  place: { title: 'Fit', Icon: Expand, Panel: PlacePanel },
   opacity: { title: 'Opacity', Icon: Blend, Panel: OpacityPanel },
   crop: { title: 'Crop', Icon: Crop, Panel: CropPanel, action: cropReset, tall: true },
   flip: { title: 'Flip', Icon: FlipHorizontal2, Panel: FlipPanel },
@@ -309,6 +311,7 @@ const SHEETS = {
   filter: { title: 'Filters', Icon: FiltersIcon, Panel: VideoFilterPanel, action: videoFiltersReset, tall: true },
   transition: { title: 'Transition', Icon: ArrowRightLeft, Panel: TransitionPanel },
   background: { title: 'Background', Icon: PaintBucket, Panel: BackgroundPanel },
+  bands: { title: 'Header & footer', Icon: HeaderFooterIcon, Panel: VideoBandsPanel },
   // Not a clip's: its `Aside` (the on/off switch) shows with nothing selected (`global`).
   watermark: { title: 'Watermark', Icon: AtSign, Panel: WatermarkPanel, Aside: WatermarkAside, global: true },
   endcard: { title: 'End card', Icon: Flag, Panel: EndCardPanel },
@@ -373,7 +376,7 @@ const volumeIcon = (item) => {
 // A photo's row, as a video's: Split first, then the look (Filters, Background), how it moves
 // (Motion, Transition), the AI tool (Face swap), More (mirror, crop, replace, look), then the clip
 // itself (Duplicate, Select, Arrange, Delete). A photo is placed and turned on the preview.
-const IMAGE_ROW = ['split', 'filter', 'background', 'motion', 'transition', 'faceswap', 'more', 'duplicate', 'select', 'arrange', 'delete'];
+const IMAGE_ROW = ['split', 'filter', 'background', 'motion', 'transition', 'faceswap', 'place', 'more', 'duplicate', 'select', 'arrange', 'delete'];
 // A sticker's, the same way: Split, its look (Edit, Die-cut), its shape and turn (Crop, Flip,
 // Rotate), then the clip itself.
 const STICKER_ROW = ['split', 'edit', 'diecut', 'crop', 'flip', 'rotate', 'transition', 'duplicate', 'select', 'arrange', 'delete'];
@@ -410,6 +413,10 @@ function clipTools(item, { sheet, toggle, playhead, items }) {
       { id: 'filter', label: 'Filters', Icon: FiltersIcon, ...opens('photofilter', photoFiltered(item)) },
       { id: 'more', label: 'More', title: 'More: mirror, crop, replace, look', Icon: Ellipsis, ...opens('photomore', more) },
     );
+    // A photo in a grid layout's panel: fit, fill or stretch it to the panel (PlacePanel).
+    if (item.slotIndex !== undefined) {
+      tools.push({ id: 'place', label: 'Fit', title: 'Fit, fill or stretch to its panel', Icon: Expand, ...opens('place') });
+    }
   }
   if (item.type === 'video') {
     const rate = item.playbackRate || 1;
@@ -449,7 +456,7 @@ function clipTools(item, { sheet, toggle, playhead, items }) {
     tools.push({ id: 'filter', label: fx ? fx.label : filtered && preset?.id ? preset.label : 'Filters', Icon: FiltersIcon, ...opens('filter', filtered) });
   }
   if (item.type === 'video') {
-    tools.push({ id: 'place', label: 'Fit', title: 'Fit, fill or stretch to the canvas', Icon: Expand, ...opens('place') });
+    tools.push({ id: 'place', label: 'Fit', title: item.slotIndex !== undefined ? 'Fit, fill or stretch to its panel' : 'Fit, fill or stretch to the canvas', Icon: Expand, ...opens('place') });
   }
   // A photo's crop and flips are in its More.
   if (item.type === 'video' || item.type === 'sticker') {

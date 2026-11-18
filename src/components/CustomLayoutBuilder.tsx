@@ -1,10 +1,12 @@
-// Choose Canvas Layout (the dock's Creator), in the pages' iOS look (pages/iosLook.css,
-// CustomLayoutBuilder.css): shelves of image grids (with Blank Canvas & Custom Grid),
-// and video caption layouts. Picking one opens it in the editor.
-import { useState } from 'react';
+// Choose Canvas Layout, in the pages' iOS look (pages/iosLook.css, CustomLayoutBuilder.css). The
+// dock's Creator sheet (CreatorSheet.tsx) picks the kind (`kind`), and every layout here opens in
+// that kind's editor: the video editor for a video meme, the image editor for an image meme. Under
+// the title, one Blank Canvas row (an icon, its name, a line about it, a chevron), then two sections
+// as grids of cards (a drawing, a short name and a detail line): Grid layout (panels, then Custom
+// Grid) and Caption layout (a header bar, a footer bar, or both).
+import { useEffect, useState } from 'react';
 import { LAYOUT_OPTIONS } from '../data/templates';
-import { Grid3x3, Minus, Play, Plus } from 'lucide-react';
-import SegmentedControl, { Segment } from './pages/SegmentedControl';
+import { ChevronRight, Grid3x3, ImageIcon, Minus, Play, Plus } from 'lucide-react';
 import './pages/iosLook.css';
 import './CustomLayoutBuilder.css';
 
@@ -21,15 +23,11 @@ interface LayoutOption {
 type VideoLayoutOption = (typeof VIDEO_LAYOUT_OPTIONS)[number];
 
 interface CustomLayoutBuilderProps {
+  // Which editor every layout opens in: the image editor or the video editor; the Creator sheet picks it.
+  kind?: 'image' | 'video';
   onLayoutComplete?: (template: Template) => void;
   onSelectTemplate?: (template: Template) => void;
 }
-
-const TABS: Segment[] = [
-  { id: 'all', label: 'All' },
-  { id: 'image', label: 'Image' },
-  { id: 'video', label: 'Video' },
-];
 
 // How a preset grid's panels are arranged, for its drawing.
 const gridShape = (id: string) =>
@@ -39,6 +37,12 @@ const gridShape = (id: string) =>
         : id === '3-horiz' ? { cols: 3, rows: 1 }
           : id === '4-grid' ? { cols: 2, rows: 2 }
             : { cols: 1, rows: 1 };
+
+// A preset's name split for its card: "2 Panels (Top/Bottom)" is "2 Panels" over "Top / Bottom".
+const splitName = (name = '') => {
+  const m = /^(.*?)\s*\((.*)\)$/.exec(name);
+  return m ? { title: m[1], detail: m[2].replace(/\s*\/\s*/g, ' / ') } : { title: name, detail: '' };
+};
 
 // A small drawing of a grid of panels.
 function GridGlyph({ cols, rows }: { cols: number; rows: number }) {
@@ -68,10 +72,29 @@ function Stepper({ value, unit, onChange }: { value: number; unit: string; onCha
   );
 }
 
+// Blank Canvas, a wide row under the title: the place most people start.
+function StartRow({ kind, detail, onClick }: { kind: 'image' | 'video'; detail: string; onClick: () => void }) {
+  return (
+    <button type="button" className="clb-start" onClick={onClick}>
+      <span className="clb-start-pic" aria-hidden="true">
+        {kind === 'video' ? <Play size={18} fill="currentColor" strokeWidth={0} /> : <span className="clb-start-frame" />}
+      </span>
+      <span className="clb-start-text">
+        <span className="clb-start-name">Blank Canvas</span>
+        <span className="clb-start-detail">{detail}</span>
+      </span>
+      <ChevronRight className="clb-start-go" aria-hidden="true" />
+    </button>
+  );
+}
+
+// A caption layout's TOP TEXT / BOTTOM TEXT: its box hugs the words, as the image editor's bar text.
 const VIDEO_LAYOUT_OPTIONS = [
   {
     id: 'video-blank',
     name: 'Blank Canvas',
+    label: 'Blank Canvas',
+    detail: 'A video with no caption bars',
     description: 'Clean video canvas with no preset caption bars',
     layoutType: 'none',
     defaultCaptions: []
@@ -79,29 +102,35 @@ const VIDEO_LAYOUT_OPTIONS = [
   {
     id: 'video-header',
     name: 'Header Text Video',
+    label: 'Top Caption',
+    detail: 'Bar on top',
     description: 'Video canvas with top header text bar',
     layoutType: 'header',
     defaultCaptions: [
-      { id: 'v-cap-top', text: 'TOP HEADER TEXT', fontSize: 34, y: 0.08, align: 'center', color: '#ffffff' }
+      { id: 'v-cap-top', text: 'TOP TEXT', fontSize: 60, y: 0.1, align: 'center', color: '#ffffff' }
     ]
   },
   {
     id: 'video-footer',
     name: 'Footer Text Video',
+    label: 'Bottom Caption',
+    detail: 'Bar at the bottom',
     description: 'Video canvas with bottom footer text bar',
     layoutType: 'footer',
     defaultCaptions: [
-      { id: 'v-cap-bottom', text: 'BOTTOM FOOTER TEXT', fontSize: 34, y: 0.90, align: 'center', color: '#ffffff' }
+      { id: 'v-cap-bottom', text: 'BOTTOM TEXT', fontSize: 60, y: 0.9, align: 'center', color: '#ffffff' }
     ]
   },
   {
     id: 'video-both',
     name: 'Header & Footer Text',
+    label: 'Top & Bottom',
+    detail: 'Bars on both',
     description: 'Video canvas with both top & bottom caption bars',
     layoutType: 'both',
     defaultCaptions: [
-      { id: 'v-cap-top', text: 'TOP HEADER TEXT', fontSize: 32, y: 0.08, align: 'center', color: '#ffffff' },
-      { id: 'v-cap-bottom', text: 'BOTTOM FOOTER TEXT', fontSize: 32, y: 0.90, align: 'center', color: '#ffffff' }
+      { id: 'v-cap-top', text: 'TOP TEXT', fontSize: 60, y: 0.1, align: 'center', color: '#ffffff' },
+      { id: 'v-cap-bottom', text: 'BOTTOM TEXT', fontSize: 60, y: 0.9, align: 'center', color: '#ffffff' }
     ]
   }
 ];
@@ -134,87 +163,23 @@ const createLayoutTemplate = (layout: LayoutOption): Template => {
       // A real empty canvas: the white picture is only its thumbnail, so Canvas Style's colour shows.
       canvasOnly: true,
       canvasBgColor: '#ffffff',
-      defaultCaptions: [
-        {
-          id: `cap-top-${Date.now()}`,
-          text: 'TOP TEXT',
-          x: 0.5,
-          y: 0.12,
-          fontSize: 48,
-          color: '#ffffff',
-          stroke: '#000000',
-          fontFamily: 'Impact, sans-serif',
-          align: 'center'
-        },
-        {
-          id: `cap-bottom-${Date.now()}`,
-          text: 'BOTTOM TEXT',
-          x: 0.5,
-          y: 0.88,
-          fontSize: 48,
-          color: '#ffffff',
-          stroke: '#000000',
-          fontFamily: 'Impact, sans-serif',
-          align: 'center'
-        }
-      ]
+      // No text to start: the start card's Text pill adds some (ImageStartPrompt).
+      defaultCaptions: []
     };
   }
 
-  // Multi-panel grids
+  // Multi-panel grids: the image editor's own panels (a native layout). Each panel starts empty,
+  // white, and takes a photo or text of its own (up to 4 panels, each with a start card there:
+  // ImagePanelPrompts); the picture drawn here is only the template's thumbnail.
+  const rects = panelRects(layout, width, height);
   if (ctx) {
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, width, height);
     ctx.strokeStyle = '#000000';
     ctx.lineWidth = 4;
+    for (const r of rects) ctx.strokeRect(r.x, r.y, r.width, r.height);
   }
-
-  const totalSlots = layout.slots;
-  const generatedCaptions = [];
-
-  for (let idx = 0; idx < totalSlots; idx++) {
-    const isVert = layout.id === '2-vert' || layout.id === '3-stacked';
-    const isHoriz = layout.id === '2-horiz' || layout.id === '3-horiz';
-    const isGrid = layout.id === '4-grid';
-    let slotW = width, slotH = height, x = 0, y = 0;
-
-    if (isVert) {
-      slotH = height / totalSlots;
-      y = idx * slotH;
-    } else if (isHoriz) {
-      slotW = width / totalSlots;
-      x = idx * slotW;
-    } else if (isGrid) {
-      slotW = width / 2;
-      slotH = height / 2;
-      x = (idx % 2) * slotW;
-      y = Math.floor(idx / 2) * slotH;
-    } else if (layout.id === 'custom-grid') {
-      const cols = layout.cols || 2;
-      const rows = layout.rows || 2;
-      slotW = width / cols;
-      slotH = height / rows;
-      x = (idx % cols) * slotW;
-      y = Math.floor(idx / cols) * slotH;
-    }
-
-    ctx?.strokeRect(x, y, slotW, slotH);
-
-    generatedCaptions.push({
-      id: `cap-auto-${Date.now()}-${idx}`,
-      text: `TEXT ${idx + 1}`,
-      x: (x + slotW / 2) / width,
-      y: (y + slotH / 2) / height,
-      width: (slotW / width) * 0.85,
-      fontSize: totalSlots > 2 ? 32 : 44,
-      color: '#ffffff',
-      stroke: '#000000',
-      fontFamily: 'Impact, sans-serif',
-      align: 'center'
-    });
-  }
-
-  const dataUrl = canvas.toDataURL('image/png');
+  const dataUrl = canvas.toDataURL ? canvas.toDataURL('image/png') : '';
   return {
     id: `custom-${layout.id}-${Date.now()}`,
     name: layout.name || 'Custom Layout',
@@ -225,26 +190,84 @@ const createLayoutTemplate = (layout: LayoutOption): Template => {
     height,
     aspectRatio: 1,
     category: 'custom',
-    defaultCaptions: generatedCaptions
+    canvasBgColor: '#ffffff',
+    isNativeLayout: true,
+    layoutDef: { id: layout.id, slots: rects.length, ...(layout.id === 'custom-grid' ? { cols: layout.cols, rows: layout.rows } : {}) },
+    slotImages: rects.map(() => null),
+    defaultCaptions: [],
+  };
+};
+
+// A preset or custom grid's panels as rectangles on a width x height canvas.
+const panelRects = (layout: LayoutOption, width: number, height: number) => {
+  const { cols, rows } = layout.id === 'custom-grid' ? { cols: layout.cols || 2, rows: layout.rows || 2 } : gridShape(layout.id);
+  return Array.from({ length: cols * rows }, (_, i) => ({
+    x: (i % cols) * (width / cols),
+    y: Math.floor(i / cols) * (height / rows),
+    width: width / cols,
+    height: height / rows,
+  }));
+};
+
+// A grid for the video editor: its panels (`slots`, on the editor's 800 x 600 canvas, 4:3) take a
+// clip or photo each, and `layoutId` draws the divider lines.
+const createVideoGridTemplate = (layout: LayoutOption): Template => ({
+  id: `custom-video-${layout.id}-${Date.now()}`,
+  name: layout.name || 'Custom Layout',
+  type: 'video',
+  category: 'custom',
+  layoutId: layout.id,
+  slots: panelRects(layout, 800, 600),
+  width: 800,
+  height: 600,
+  defaultCaptions: [],
+});
+
+// A caption layout for the image editor: a blank canvas with the header bar, the footer bar or both
+// switched on, black as the video editor's, each with its caption in it (white), big enough to read at a glance;
+// the bar shrinks longer text to fit (canvasLayout's fitCaptionsToBands).
+const createCaptionImageTemplate = (layoutType: string): Template => {
+  const base = createLayoutTemplate({ id: '1-panel', name: 'Blank Canvas', slots: 1 });
+  const top = layoutType === 'header' || layoutType === 'both';
+  const bottom = layoutType === 'footer' || layoutType === 'both';
+  const look = { x: 0.5, fontSize: 84, color: '#ffffff', stroke: 'transparent', fontFamily: 'Impact, sans-serif', align: 'center' };
+  const stamp = Date.now();
+  return {
+    ...base,
+    id: `custom-caption-${layoutType}-${stamp}`,
+    name: 'Caption Layout',
+    canvasHeader: { enabled: top, bgColor: '#000000', ownColor: true, height: 170 },
+    canvasFooter: { enabled: bottom, bgColor: '#000000', ownColor: true, height: 170 },
+    defaultCaptions: [
+      ...(top ? [{ ...look, id: `cap-header-${stamp}`, text: 'TOP TEXT', y: 0.08, isHeaderCaption: true }] : []),
+      ...(bottom ? [{ ...look, id: `cap-footer-${stamp}`, text: 'BOTTOM TEXT', y: 0.92, isFooterCaption: true }] : []),
+    ],
   };
 };
 
 export default function CustomLayoutBuilder({
+  kind = 'image',
   onLayoutComplete,
   onSelectTemplate
 }: CustomLayoutBuilderProps) {
-  const [activeTab, setActiveTab] = useState<'all' | 'image' | 'video'>('all');
+  // Each time the page opens (App remounts it on every Creator pick) it starts at the top, with the
+  // Blank Canvas row in view, even when it was already showing further down.
+  useEffect(() => {
+    window.scrollTo?.(0, 0);
+  }, [kind]);
   const [isConfiguringCustom, setIsConfiguringCustom] = useState(false);
   const [customCols, setCustomCols] = useState(2);
   const [customRows, setCustomRows] = useState(2);
 
+  const open = (template: Template) => {
+    if (onSelectTemplate) onSelectTemplate(template);
+    else if (onLayoutComplete) onLayoutComplete(template);
+  };
+  const isVideo = kind === 'video';
+
+  // A grid (or Custom Grid), in the picked kind's editor.
   const handleSelectLayoutOption = (layout: LayoutOption) => {
-    const template = createLayoutTemplate(layout);
-    if (onSelectTemplate) {
-      onSelectTemplate(template);
-    } else if (onLayoutComplete) {
-      onLayoutComplete(template);
-    }
+    open(isVideo && layout.id !== '1-panel' ? createVideoGridTemplate(layout) : createLayoutTemplate(layout));
   };
 
   const handleSelectVideoLayout = (layoutOption: VideoLayoutOption) => {
@@ -257,141 +280,128 @@ export default function CustomLayoutBuilder({
       height: 1080,
       aspectRatio: 1,
       videoLayout: layoutOption.layoutType === 'none' ? undefined : layoutOption.layoutType,
+      // A caption layout's bars, on in the video editor like the image editor's.
+      ...(layoutOption.layoutType === 'none' ? {} : {
+        videoHeader: { enabled: layoutOption.layoutType !== 'footer', bgColor: '#000000', height: 120 },
+        videoFooter: { enabled: layoutOption.layoutType !== 'header', bgColor: '#000000', height: 120 },
+      }),
       defaultCaptions: layoutOption.defaultCaptions || []
     };
 
-    if (onSelectTemplate) {
-      onSelectTemplate(videoTemplate);
-    } else if (onLayoutComplete) {
-      onLayoutComplete(videoTemplate);
-    }
+    open(videoTemplate);
   };
 
-  const imageLayouts: LayoutOption[] = [
-    LAYOUT_OPTIONS[0],
-    ...LAYOUT_OPTIONS.filter((l: LayoutOption) => l.id !== '1-panel' && l.id !== '3-hybrid')
-  ];
+  // A caption layout, in the picked kind's editor.
+  const handleSelectCaptionLayout = (layoutOption: VideoLayoutOption) => {
+    if (isVideo) handleSelectVideoLayout(layoutOption);
+    else open(createCaptionImageTemplate(layoutOption.layoutType));
+  };
 
-  const showImage = activeTab === 'all' || activeTab === 'image';
-  const showVideo = activeTab === 'all' || activeTab === 'video';
+  const blankImage = (LAYOUT_OPTIONS.find((l: LayoutOption) => l.id === '1-panel') ?? LAYOUT_OPTIONS[0]) as LayoutOption;
+  const imageLayouts: LayoutOption[] = LAYOUT_OPTIONS.filter((l: LayoutOption) => l.id !== '1-panel' && l.id !== '3-hybrid');
+  const [blankVideo, ...videoLayouts] = VIDEO_LAYOUT_OPTIONS;
+
 
   return (
     <div className="clb ios ios-page">
       <header className="clb-nav">
         <h1 className="ios-title">Canvas Layout</h1>
-        <p className="ios-subtitle">Choose a layout or start with a blank canvas</p>
-        <SegmentedControl
-          label="Layout category"
-          segments={TABS}
-          value={activeTab}
-          onChange={(id) => setActiveTab(id as 'all' | 'image' | 'video')}
-          className="clb-segments"
-        />
+        <p className="ios-subtitle">{isVideo ? 'Every layout opens in the video editor' : 'Every layout opens in the image editor'}</p>
       </header>
 
-      {showImage && (
-        <section className="clb-section">
-          <h2 className="ios-section-title">Image Layout</h2>
-          <p className="ios-section-sub">Multi-panel grids and custom layouts</p>
-          {!isConfiguringCustom ? (
-            <div className="clb-shelf">
-              {imageLayouts.map((layout) => (
-                <button
-                  key={layout.id}
-                  type="button"
-                  className={`clb-card ${layout.id === '1-panel' ? 'clb-card--blank' : ''}`}
-                  onClick={() => handleSelectLayoutOption(layout)}
-                >
-                  <span className="clb-card-pic" aria-hidden="true">
-                    <GridGlyph {...gridShape(layout.id)} />
-                  </span>
-                  <span className="clb-card-name">{layout.name}</span>
-                  {layout.id === '1-panel' && <span className="clb-card-sub">Recommended</span>}
-                </button>
-              ))}
-              <button type="button" className="clb-card clb-card--custom" onClick={() => setIsConfiguringCustom(true)}>
+      {kind === 'video' ? (
+        <StartRow kind="video" detail={blankVideo.detail} onClick={() => handleSelectVideoLayout(blankVideo)} />
+      ) : (
+        <StartRow kind="image" detail="An empty square to build on" onClick={() => handleSelectLayoutOption(blankImage)} />
+      )}
+
+      <section className="clb-section">
+        <h2 className="ios-section-title">Grid layout</h2>
+        <p className="ios-section-sub">{isVideo ? 'Clips side by side, stacked or in a grid' : 'Photos side by side, stacked or in a grid'}</p>
+        {!isConfiguringCustom ? (
+          <>
+            <div className="clb-grid">
+              {imageLayouts.map((layout) => {
+                const { title, detail } = splitName(layout.name);
+                return (
+                  <button key={layout.id} type="button" className="clb-card" onClick={() => handleSelectLayoutOption(layout)}>
+                    <span className="clb-card-pic" aria-hidden="true">
+                      <GridGlyph {...gridShape(layout.id)} />
+                    </span>
+                    <span className="clb-card-name">{title}</span>
+                    {detail && <span className="clb-card-detail">{detail}</span>}
+                  </button>
+                );
+              })}
+              <button type="button" className="clb-card" onClick={() => setIsConfiguringCustom(true)}>
                 <span className="clb-card-pic" aria-hidden="true">
                   <Grid3x3 className="clb-card-icon" />
                 </span>
                 <span className="clb-card-name">Custom Grid</span>
+                <span className="clb-card-detail">Rows & columns</span>
               </button>
             </div>
-          ) : (
-            <div className="clb-custom">
-              <span className="clb-custom-preview" aria-hidden="true">
-                <GridGlyph cols={customCols} rows={customRows} />
-              </span>
-              <div className="clb-form">
-                <div className="clb-form-row">
-                  <span className="clb-form-label">Columns</span>
-                  <Stepper value={customCols} unit="columns" onChange={setCustomCols} />
-                </div>
-                <div className="clb-form-row">
-                  <span className="clb-form-label">Rows</span>
-                  <Stepper value={customRows} unit="rows" onChange={setCustomRows} />
-                </div>
+          </>
+        ) : (
+          <div className="clb-custom">
+            <span className="clb-custom-preview" aria-hidden="true">
+              <GridGlyph cols={customCols} rows={customRows} />
+            </span>
+            <div className="clb-form">
+              <div className="clb-form-row">
+                <span className="clb-form-label">Columns</span>
+                <Stepper value={customCols} unit="columns" onChange={setCustomCols} />
               </div>
-              <div className="clb-custom-actions">
-                <button type="button" className="ios-btn ios-btn--gray" onClick={() => setIsConfiguringCustom(false)}>
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  className="ios-btn ios-btn--filled"
-                  onClick={() =>
-                    handleSelectLayoutOption({
-                      id: 'custom-grid',
-                      name: `Custom ${customCols}x${customRows}`,
-                      slots: customCols * customRows,
-                      cols: customCols,
-                      rows: customRows,
-                    })
-                  }
-                >
-                  Create {customCols * customRows} {customCols * customRows === 1 ? 'Panel' : 'Panels'}
-                </button>
+              <div className="clb-form-row">
+                <span className="clb-form-label">Rows</span>
+                <Stepper value={customRows} unit="rows" onChange={setCustomRows} />
               </div>
             </div>
-          )}
-        </section>
-      )}
-
-      {showVideo && (
-        <section className="clb-section">
-          <h2 className="ios-section-title">Video Layout</h2>
-          <p className="ios-section-sub">Caption bars on a video canvas</p>
-          <div className="clb-shelf">
-            {VIDEO_LAYOUT_OPTIONS.map((opt) => (
+            <div className="clb-custom-actions">
+              <button type="button" className="ios-btn ios-btn--gray" onClick={() => setIsConfiguringCustom(false)}>
+                Cancel
+              </button>
               <button
-                key={opt.id}
                 type="button"
-                className={`clb-card ${opt.id === 'video-blank' ? 'clb-card--blank' : ''}`}
-                onClick={() => handleSelectVideoLayout(opt)}
+                className="ios-btn ios-btn--filled"
+                onClick={() =>
+                  handleSelectLayoutOption({
+                    id: 'custom-grid',
+                    name: `Custom ${customCols}x${customRows}`,
+                    slots: customCols * customRows,
+                    cols: customCols,
+                    rows: customRows,
+                  })
+                }
               >
-                <span className="clb-card-pic" aria-hidden="true">
-                  <span className="clb-video">
-                    {opt.layoutType === 'none' ? (
-                      <span className="clb-video-stage clb-video-stage--blank">
-                        <Play size={18} fill="currentColor" strokeWidth={0} />
-                      </span>
-                    ) : (
-                      <>
-                        {opt.layoutType !== 'footer' && <span className="clb-video-bar" />}
-                        <span className="clb-video-stage">
-                          <Play size={16} fill="currentColor" strokeWidth={0} />
-                        </span>
-                        {opt.layoutType !== 'header' && <span className="clb-video-bar" />}
-                      </>
-                    )}
-                  </span>
-                </span>
-                <span className="clb-card-name">{opt.name}</span>
-                {opt.id === 'video-blank' && <span className="clb-card-sub">Recommended</span>}
+                Create {customCols * customRows} {customCols * customRows === 1 ? 'Panel' : 'Panels'}
               </button>
-            ))}
+            </div>
           </div>
-        </section>
-      )}
+        )}
+      </section>
+
+      <section className="clb-section">
+        <h2 className="ios-section-title">Caption layout</h2>
+        <p className="ios-section-sub">{isVideo ? 'Caption bars above and below the clip' : 'Caption bars above and below the picture'}</p>
+        <div className="clb-grid">
+          {videoLayouts.map((opt) => (
+            <button key={opt.id} type="button" className="clb-card" onClick={() => handleSelectCaptionLayout(opt)}>
+              <span className="clb-card-pic" aria-hidden="true">
+                <span className="clb-video">
+                  {opt.layoutType !== 'footer' && <span className="clb-video-bar" />}
+                  <span className="clb-video-stage">
+                    {isVideo ? <Play size={16} fill="currentColor" strokeWidth={0} /> : <ImageIcon size={16} />}
+                  </span>
+                  {opt.layoutType !== 'header' && <span className="clb-video-bar" />}
+                </span>
+              </span>
+              <span className="clb-card-name">{opt.label}</span>
+              <span className="clb-card-detail">{opt.detail}</span>
+            </button>
+          ))}
+        </div>
+      </section>
     </div>
   );
 }

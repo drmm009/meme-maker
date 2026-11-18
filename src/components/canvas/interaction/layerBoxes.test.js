@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
-  IMAGE_LAYER_FIT, findHandle, findSlotAt, getCaptionBox, getCaptionCenterX, getCaptionHandles,
+  IMAGE_LAYER_FIT, findHandle, findSlotAt, fitLayerScale, panelPlacement, getCaptionBox, getCaptionCenterX, getCaptionHandles,
   getImageLayerBox, getImageLayerHandles, getStickerHandles
 } from './layerBoxes';
 
@@ -117,5 +117,49 @@ describe('findSlotAt', () => {
 
   it('misses the header band', () => {
     expect(findSlotAt({ x: 10, y: 50 }, { id: '2-vert', slots: 2 }, size)).toBe(-1);
+  });
+});
+
+describe('fitLayerScale', () => {
+  it('fits a picture whole in the image area, as large as it can be', () => {
+    // A 2:1 photo in a 1080 square: as wide as the canvas.
+    const wide = fitLayerScale({ w: 2000, h: 1000 }, { w: 1080, h: 1080 });
+    expect(2000 * (IMAGE_LAYER_FIT / 2000) * wide).toBeCloseTo(1080);
+    // A tall one: as tall as the area.
+    const tall = fitLayerScale({ w: 600, h: 1200 }, { w: 1080, h: 740 });
+    expect(1200 * (IMAGE_LAYER_FIT / 1200) * tall).toBeCloseTo(740);
+  });
+});
+
+describe('panelPlacement', () => {
+  const panel = { w: 1080, h: 540 }; // a 2:1 panel (top half of a square canvas)
+
+  it('fits the whole picture inside the panel, with no crop or set box', () => {
+    const fit = panelPlacement({ w: 1000, h: 1000 }, panel, 'fit');
+    expect(fit.crop).toBeNull();
+    expect(fit.boxWidth).toBeUndefined();
+    // A square picture in a 2:1 panel: as tall as the panel.
+    expect(1000 * (IMAGE_LAYER_FIT / 1000) * fit.scale).toBeCloseTo(540);
+  });
+
+  it("fills the panel exactly, cropping a square picture top and bottom to the panel's shape", () => {
+    const fill = panelPlacement({ w: 1000, h: 1000 }, panel, 'fill');
+    expect([fill.boxWidth, fill.boxHeight]).toEqual([1080, 540]);
+    expect(fill.crop).toEqual({ x: 0, y: 0.25, width: 1, height: 0.5 });
+    expect(fill.fitMode).toBe('stretch');
+  });
+
+  it('stretches the whole picture to the panel: the panel as its box, no crop', () => {
+    const stretch = panelPlacement({ w: 1000, h: 1000 }, panel, 'stretch');
+    expect([stretch.boxWidth, stretch.boxHeight]).toEqual([1080, 540]);
+    expect(stretch.crop).toBeNull();
+    expect(stretch.fitMode).toBe('stretch');
+  });
+
+  it('crops a wide picture at the sides', () => {
+    const fill = panelPlacement({ w: 4000, h: 1000 }, panel, 'fill');
+    expect(fill.crop.width).toBeCloseTo(0.5);
+    expect(fill.crop.x).toBeCloseTo(0.25);
+    expect(fill.crop.height).toBe(1);
   });
 });

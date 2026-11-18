@@ -3,6 +3,7 @@
 // the sound onto it afterwards, or uses it as is when the project is silent.
 import type { Clip, LayoutSlot } from '../model/videoProject';
 import { createSceneRenderer } from '../components/video-editor/preview/sceneRenderer';
+import type { VideoBand } from './videoBands';
 import { ExportCancelledError } from './exportProgress';
 
 export const EXPORT_FPS = 30;
@@ -27,6 +28,8 @@ export interface EncodeOptions {
   backgroundColor?: string;
   layoutId?: string | null;
   layoutSlots?: LayoutSlot[];
+  videoHeader?: VideoBand | null;
+  videoFooter?: VideoBand | null;
   // Called once every clip's media has loaded, then after each frame with (done, total).
   onLoaded?: () => void;
   onFrame?: (done: number, total: number) => void;
@@ -34,9 +37,9 @@ export interface EncodeOptions {
 }
 
 // The project's picture as a silent MP4 (H.264, EXPORT_FPS frames a second).
-export async function encodeProjectVideo({ items, width, height, aspect, durationMs, backgroundColor, layoutId, layoutSlots, onLoaded, onFrame, isCancelled }: EncodeOptions): Promise<Uint8Array> {
+export async function encodeProjectVideo({ items, width, height, aspect, durationMs, backgroundColor, layoutId, layoutSlots, videoHeader, videoFooter, onLoaded, onFrame, isCancelled }: EncodeOptions): Promise<Uint8Array> {
   const { Output, Mp4OutputFormat, BufferTarget, CanvasSource, QUALITY_HIGH } = await import('mediabunny');
-  const renderer = await createSceneRenderer({ items, width, height, aspect, backgroundColor, layoutId, layoutSlots });
+  const renderer = await createSceneRenderer({ items, width, height, aspect, backgroundColor, layoutId, layoutSlots, videoHeader, videoFooter });
   const output = new Output({ format: new Mp4OutputFormat({ fastStart: 'in-memory' }), target: new BufferTarget() });
   let started = false;
   try {

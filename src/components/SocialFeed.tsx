@@ -1,11 +1,11 @@
 // Social: the community's memes as a feed, in the pages' iOS look (pages/iosLook.css, SocialFeed.css).
 // A large title with a small Feed switch at the top right (For you, Trending, Hot), a search field, a row of top creators (tap one to see only theirs), then the posts: each a square
 // picture card with the creator over its top, and Like (or double-tap the picture), Remix (opens it
-// in the editor, App's handleRemixCommunityMeme), Copy link and Download over its foot. Likes are
+// in the editor, App's handleRemixCommunityMeme) and Download over its foot. Likes are
 // remembered on this device.
 import { useMemo, useRef, useState } from 'react';
 import type { CSSProperties, MouseEvent } from 'react';
-import { Check, Download, Heart, Link, Repeat, Search } from 'lucide-react';
+import { Check, Download, Heart, Repeat, Search } from 'lucide-react';
 import { COMMUNITY_MEMES } from '../data/communityMemes';
 import { safeGet, safeSet } from '../utils/storage';
 import SegmentedControl from './pages/SegmentedControl';
@@ -42,7 +42,6 @@ interface PostProps {
   post: CommunityPost;
   liked: boolean;
   onLike: (id: string) => void;
-  onCopyLink: (post: CommunityPost) => void;
   onDownload: (post: CommunityPost) => void;
   onRemix: (post: CommunityPost) => void;
 }
@@ -101,9 +100,9 @@ function Avatar({ creator, className }: { creator: Creator; className: string })
 }
 
 // One post: the meme as a square, rounded picture card with the creator in a small frosted pill
-// at its top left, and along its foot small frosted pills for Like, Remix and Copy link, Download at
+// at its top left, and along its foot small frosted pills for Like and Remix, Download at
 // the right, all laid on the picture. The title is the post's name for screen readers only.
-function Post({ post, liked, onLike, onCopyLink, onDownload, onRemix }: PostProps) {
+function Post({ post, liked, onLike, onDownload, onRemix }: PostProps) {
   const [burst, setBurst] = useState(0);
   const [src, setSrc] = useState(post.imageUrl);
   const likes = post.likes + (liked ? 1 : 0);
@@ -160,9 +159,6 @@ function Post({ post, liked, onLike, onCopyLink, onDownload, onRemix }: PostProp
             <Repeat size={14} strokeWidth={2.4} aria-hidden="true" />
             <span>Remix</span>
           </button>
-          <button type="button" className="sf-pill sf-pill--round" onClick={() => onCopyLink(post)} aria-label="Copy link" title="Copy link">
-            <Link size={14} strokeWidth={2.4} aria-hidden="true" />
-          </button>
           <button
             type="button"
             className="sf-pill sf-pill--round sf-pill--end"
@@ -201,15 +197,6 @@ export default function SocialFeed({ onRemixMeme }: { onRemixMeme?: (post: Commu
       safeSet(LIKES_KEY, next);
       return next;
     });
-  };
-
-  const copyLink = async (post: CommunityPost) => {
-    try {
-      await navigator.clipboard.writeText(`"${post.title}" on Meme Studio ${window.location.href}`);
-      say('Link copied');
-    } catch {
-      say('Could not copy the link');
-    }
   };
 
   const download = (post: CommunityPost) => {
@@ -287,7 +274,6 @@ export default function SocialFeed({ onRemixMeme }: { onRemixMeme?: (post: Commu
               post={post}
               liked={liked.includes(post.id)}
               onLike={toggleLike}
-              onCopyLink={copyLink}
               onDownload={download}
               onRemix={(p) => onRemixMeme?.(p)}
             />

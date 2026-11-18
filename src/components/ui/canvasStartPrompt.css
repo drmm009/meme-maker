@@ -137,6 +137,20 @@
   .ui-start-pill { min-height: 34px; padding: 0 12px; }
 }
 
+/* A narrow space (a grid panel two or three across): a smaller button and round icon pills, their
+   names still read out. */
+@container (max-width: 190px) {
+  .ui-start-primary { flex-direction: column; gap: 6px; padding: 2px 4px; }
+  .ui-start-plus { width: 44px; height: 44px; box-shadow: 0 0 0 4px rgba(255, 90, 54, 0.16); }
+  .ui-start-plus svg { width: 20px; height: 20px; }
+  .ui-start-plus-badge { width: 17px; height: 17px; right: -3px; bottom: -3px; }
+  .ui-start-plus-badge svg { width: 10px; height: 10px; }
+  .ui-start-label { font-size: 13px; white-space: nowrap; }
+  .ui-start-hint { display: none; }
+  .ui-start-pills { flex-wrap: nowrap; gap: 6px; margin-top: 8px; }
+  .ui-start-pill { width: 34px; min-height: 34px; padding: 0; justify-content: center; gap: 0; font-size: 0; }
+}
+
 @keyframes ui-start-in {
   from { opacity: 0; transform: scale(0.98); }
   to { opacity: 1; transform: none; }

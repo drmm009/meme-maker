@@ -1,5 +1,10 @@
 import { drawImageFiltered } from '../../../data/photoFilters';
 
+// The snapping guides shown while a layer is dragged: the app's orange, as the selection frame and
+// the video editor's guides (video-editor/preview/CanvasText).
+const GUIDE = '#ff5a36';
+const GUIDE_GLOW = 'rgba(255, 90, 54, 0.55)';
+
 export function paintOverlays({
   activeCaption, activeHandleDrawer, applyGlobalFilter, canvas, canvasH, compCanvas, ctx,
   filterCss, headerExtH, isDragging, skipHandles, snappingLines
@@ -25,9 +30,9 @@ export function paintOverlays({
       const isHeaderOrFooter = activeCaption?.isHeaderCaption || activeCaption?.isFooterCaption;
       const y = isHeaderOrFooter ? (horizontal * canvas.height) : (headerExtH + horizontal * canvasH);
       const isCenter = Math.abs(horizontal - 0.5) < 0.002;
-      ctx.strokeStyle = isCenter ? '#00f0ff' : '#a855f7';
+      ctx.strokeStyle = GUIDE;
       ctx.lineWidth = isCenter ? 2 : 1.5;
-      ctx.shadowColor = isCenter ? 'rgba(0, 240, 255, 0.7)' : 'rgba(168, 85, 247, 0.7)';
+      ctx.shadowColor = GUIDE_GLOW;
       ctx.shadowBlur = 6;
       ctx.beginPath();
       ctx.moveTo(0, y);
@@ -38,9 +43,9 @@ export function paintOverlays({
     if (vertical !== null) {
       const x = vertical * canvas.width;
       const isCenter = Math.abs(vertical - 0.5) < 0.002;
-      ctx.strokeStyle = isCenter ? '#00f0ff' : '#a855f7';
+      ctx.strokeStyle = GUIDE;
       ctx.lineWidth = isCenter ? 2 : 1.5;
-      ctx.shadowColor = isCenter ? 'rgba(0, 240, 255, 0.7)' : 'rgba(168, 85, 247, 0.7)';
+      ctx.shadowColor = GUIDE_GLOW;
       ctx.shadowBlur = 6;
       ctx.beginPath();
       ctx.moveTo(x, 0);

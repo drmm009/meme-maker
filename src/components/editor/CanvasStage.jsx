@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import CanvasEditor from '../CanvasEditor';
 import FacePinpointOverlay from '../FacePinpointOverlay';
 import ImageStartPrompt from './ImageStartPrompt';
+import ImagePanelPrompts from './ImagePanelPrompts';
 import { useMemeEditorStore } from './store/useMemeEditorStore';
 import { useEditorUiStore } from './store/useEditorUiStore';
 
@@ -131,7 +132,12 @@ export default function CanvasStage({
           onAddDrawing={onAddDrawing}
           isDrawingMode={isDrawingMode}
         >
-          {onAddPhoto && !isDrawingMode && <ImageStartPrompt onPhoto={onAddPhoto} />}
+          {/* Laid on the image area, clear of the header and footer bands: a blank canvas's start
+              card, or a multi-panel layout's card in each empty panel. */}
+          <div className="ie-image-area">
+            {onAddPhoto && !isDrawingMode && <ImageStartPrompt onPhoto={onAddPhoto} />}
+            {isNativeLayout && <ImagePanelPrompts layoutDef={layoutDef} isDrawingMode={isDrawingMode} onPhoto={onAddPhoto} />}
+          </div>
         </CanvasEditor>
 
         {(isRemovingBg || isBlurringBg) && (

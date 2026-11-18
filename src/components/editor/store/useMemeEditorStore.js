@@ -2,6 +2,7 @@ import { createContext, useContext } from 'react';
 import { createStore, useStore } from 'zustand';
 import { temporal } from 'zundo';
 import { isSocialCardCaption } from '../memeEditorUtils';
+import { panelRects } from '../../canvas/layout/panels';
 
 // Document state for one MemeEditor session: what the meme *is*.
 // UI state (open menus, modals, tabs) stays in components.
@@ -27,7 +28,8 @@ export const HISTORY_FIELDS = [
   'templateFaceMorph',
 ];
 
-const WHITE_PIXEL_URL = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=';
+// An empty panel's picture: one white pixel (a panel with it counts as empty).
+export const WHITE_PIXEL_URL = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=';
 
 export const DEFAULT_IMAGE_FILTERS = {
   preset: 'original',
@@ -70,44 +72,27 @@ function buildInitialCaptions(template) {
       zIndex: baseZ + idx
     }));
   } else if (template?.isNativeLayout && template?.layoutDef) {
-    const layoutDef = template.layoutDef;
-    const totalSlots = layoutDef.slots;
-    const isVert = layoutDef.id === '2-vert' || layoutDef.id === '3-stacked';
-    const isHoriz = layoutDef.id === '2-horiz' || layoutDef.id === '3-horiz';
-    const isGrid = layoutDef.id === '4-grid';
-    const isHybrid = layoutDef.id === '3-hybrid';
+    const rects = panelRects(template.layoutDef);
 
     (template.slotImages || []).forEach((img, idx) => {
       if (!img || img === 'TEXT_PANEL') {
-        let cx = 0.5, cy = 0.5;
-        if (isVert) {
-          cy = (idx + 0.5) / totalSlots;
-        } else if (isHoriz) {
-          cx = (idx + 0.5) / totalSlots;
-        } else if (isGrid) {
-          cx = ((idx % 2) + 0.5) / 2;
-          cy = (Math.floor(idx / 2) + 0.5) / 2;
-        } else if (isHybrid) {
-          if (idx === 0) {
-            cx = 0.5; cy = 0.25;
-          } else {
-            cx = ((idx - 1) + 0.5) / 2;
-            cy = 0.75;
-          }
-        }
+        const r = rects[idx] || { x: 0, y: 0, width: 1, height: 1 };
+        const cx = r.x + r.width / 2;
+        const cy = r.y + r.height / 2;
         initialCaps.push({
           text: 'ADD TEXT', x: cx, y: cy, fontSize: 45, color: '#000000', stroke: 'transparent', align: 'center', fontFamily: 'Impact, sans-serif',
-          rotation: 0, width: undefined, id: `cap-slot-${idx}-${Date.now()}`,
+          rotation: 0, width: r.width * 0.4, hasCustomWidth: true, id: `cap-slot-${idx}-${Date.now()}`,
           zIndex: baseZ + initialCaps.length
         });
       }
     });
   } else {
+    // Each box is wide enough to tap and type into easily (the text still wraps in it).
     initialCaps = [
       { text: 'TOP TEXT', x: 0.5, y: 0.15, fontSize: 50, color: '#ffffff', stroke: '#000000', align: 'center', fontFamily: 'Impact, sans-serif',
-        rotation: 0, id: `cap-top-${Date.now()}`, zIndex: baseZ },
+        rotation: 0, width: 0.25, hasCustomWidth: true, id: `cap-top-${Date.now()}`, zIndex: baseZ },
       { text: 'BOTTOM TEXT', x: 0.5, y: 0.85, fontSize: 50, color: '#ffffff', stroke: '#000000', align: 'center', fontFamily: 'Impact, sans-serif',
-        rotation: 0, id: `cap-bot-${Date.now()}`, zIndex: baseZ + 1 }
+        rotation: 0, width: 0.25, hasCustomWidth: true, id: `cap-bot-${Date.now()}`, zIndex: baseZ + 1 }
     ];
   }
   return initialCaps;
@@ -152,14 +137,18 @@ export function buildInitialDocument(template) {
     // A two-colour diagonal background instead of canvasBgColor, or null.
     canvasBgGradient: null,
     canvasFlipX: template?.canvasFlipX || false,
+    // The header and footer bands start black (their own colour, not the canvas's), as the video
+    // editor's bars; the Header & footer sheet changes it.
     canvasHeader: template?.canvasHeader || {
       enabled: false,
-      bgColor: template?.canvasBgColor || '#ffffff',
+      bgColor: '#000000',
+      ownColor: true,
       height: 140
     },
     canvasFooter: template?.canvasFooter || {
       enabled: false,
-      bgColor: template?.canvasBgColor || '#ffffff',
+      bgColor: '#000000',
+      ownColor: true,
       height: 140
     },
     demotivational: template?.demotivational || {

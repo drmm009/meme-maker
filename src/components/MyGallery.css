@@ -1,5 +1,5 @@
 /* My Studio (MyGallery.jsx): what is its own, on the shared iOS look (pages/iosLook.css): the
-   Grid/List switch, the tiles, the More menu, the inset list and a save's sheet. */
+   Grid/List switch, the collage, the More menu, the inset list and a save's sheet. */
 
 /* ---- Grid/List switch ---- */
 
@@ -32,18 +32,29 @@
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1), 0 3px 8px rgba(0, 0, 0, 0.3);
 }
 
-/* ---- Grid of tiles ---- */
+/* ---- Collage ----
+   Each picture at its own shape, in columns (MyGallery.jsx deals the saves across them in turn, and
+   useCollageColumns.ts picks how many: two on a phone, three from 720px, four from 1000px, five from
+   1400px), with a thin gap; the More button sits on the picture's top right corner. */
 
 .mg-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 22px 14px;
-  margin-top: 22px;
+  --mg-gap: 6px;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--mg-gap);
+  margin-top: 20px;
+}
+
+.mg-grid-col {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  gap: var(--mg-gap);
+  min-width: 0;
 }
 
 .mg-tile {
   position: relative;
-  min-width: 0;
 }
 
 .mg-tile:has(.ios-menu-wrap.is-open),
@@ -52,7 +63,7 @@
 }
 
 .mg-tile-open {
-  display: grid;
+  display: block;
   width: 100%;
   padding: 0;
   border: 0;
@@ -63,11 +74,16 @@
   cursor: pointer;
 }
 
+.mg-tile-open:focus-visible {
+  outline: 2px solid var(--ios-accent);
+  outline-offset: 2px;
+}
+
 .mg-tile-pic {
   position: relative;
-  display: grid;
-  place-items: center;
-  aspect-ratio: 1;
+  display: block;
+  /* Holds a place while the picture loads. */
+  min-height: 96px;
   border-radius: 14px;
   background: var(--ios-surface);
   overflow: hidden;
@@ -85,22 +101,36 @@
 }
 
 .mg-tile-pic img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
   display: block;
+  width: 100%;
+  height: auto;
   transition: transform 0.45s var(--ios-ease);
 }
 
-/* A sticker is see-through: show it whole, on a plain tile. */
+/* A sticker is see-through: a tile at the sticker's own shape (its thumbnail is trimmed to the
+   sticker, galleryStore.ts) with a slim margin, a faint checkerboard behind (what an editor shows
+   behind transparency), and a soft shadow that follows its outline. */
 .mg-tile--sticker .mg-tile-pic {
-  background: var(--ios-surface-2);
+  --mg-check: rgba(255, 255, 255, 0.045);
+  min-height: 0;
+  padding: 14px;
+  background-color: var(--ios-surface);
+  background-image:
+    conic-gradient(var(--mg-check) 25%, transparent 0 50%, var(--mg-check) 0 75%, transparent 0);
+  background-size: 18px 18px;
+}
+
+[data-theme='light'] .mg-tile--sticker .mg-tile-pic {
+  --mg-check: rgba(0, 0, 0, 0.045);
 }
 
 .mg-tile--sticker .mg-tile-pic img {
-  object-fit: contain;
-  padding: 9%;
-  box-sizing: border-box;
+  /* A tall sticker stays short enough to sit beside the memes. */
+  max-height: 220px;
+  margin: 0 auto;
+  width: auto;
+  max-width: 100%;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.35));
 }
 
 .mg-tile-open:active .mg-tile-pic {
@@ -113,35 +143,24 @@
   }
 }
 
+/* A save with no picture: a square with its kind's icon. */
 .mg-tile-placeholder {
-  width: 30%;
-  height: 30%;
-  max-width: 40px;
-  max-height: 40px;
+  display: block;
+  width: 36px;
+  height: 36px;
+  margin: calc(50% - 18px) auto;
   color: var(--ios-label-3);
 }
 
-.mg-tile-kind,
+/* A video's length, on its picture. */
 .mg-tile-time {
   position: absolute;
   bottom: 8px;
+  right: 8px;
   background: rgba(0, 0, 0, 0.55);
   -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
   color: #fff;
-}
-
-.mg-tile-kind {
-  left: 8px;
-  display: grid;
-  place-items: center;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-}
-
-.mg-tile-time {
-  right: 8px;
   padding: 2px 7px;
   border-radius: 7px;
   font-size: 12px;
@@ -150,41 +169,66 @@
   font-variant-numeric: tabular-nums;
 }
 
-.mg-tile-name,
-.mg-tile-date {
-  padding-right: 34px;
+/* Read out with the button, not shown. */
+.mg-tile-words {
+  position: absolute;
+  width: 1px;
+  height: 1px;
   overflow: hidden;
-  text-overflow: ellipsis;
+  clip-path: inset(50%);
   white-space: nowrap;
 }
 
-.mg-tile-name {
-  margin-top: 9px;
-  font-size: 15px;
-  font-weight: 600;
-  line-height: 1.3;
-}
-
-.mg-tile-date {
-  margin-top: 1px;
-  font-size: 13px;
-  line-height: 1.35;
-  color: var(--ios-label-2);
+.mg-tile-date::before {
+  content: ', ';
 }
 
 .mg-tile .ios-menu-wrap {
   position: absolute;
-  right: -2px;
-  bottom: 3px;
+  top: 6px;
+  right: 6px;
+}
+
+/* The More button, frosted on the picture. */
+.mg-tile .mg-tile-more {
+  width: 28px;
+  height: 28px;
+  background: rgba(0, 0, 0, 0.5);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  color: #fff;
+}
+
+.mg-tile .ios-menu-wrap.is-open .mg-tile-more {
+  background: rgba(0, 0, 0, 0.72);
+  color: #fff;
+}
+
+@media (hover: hover) {
+  .mg-tile .mg-tile-more:hover {
+    background: rgba(0, 0, 0, 0.68);
+    color: #fff;
+  }
 }
 
 /* ---- Inset grouped list ---- */
 
+/* Frosted glass: the page's glow shows softly through. */
 .mg-list {
   max-width: 760px;
   margin-top: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 16px;
-  background: var(--ios-surface);
+  background: rgba(36, 36, 40, 0.5);
+  -webkit-backdrop-filter: blur(22px) saturate(160%);
+  backdrop-filter: blur(22px) saturate(160%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 10px 30px -12px rgba(0, 0, 0, 0.45);
+}
+
+[data-theme='light'] .mg-list {
+  border-color: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.55);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 10px 30px -14px rgba(31, 38, 70, 0.18);
 }
 
 .mg-row {
@@ -268,7 +312,7 @@
 
 .mg-row-name {
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 700;
   line-height: 1.3;
 }
 
@@ -424,7 +468,7 @@
   color: var(--ios-label-2);
 }
 
-/* One row of actions: Re-Edit, Download, and a round Delete at the end. */
+/* One row of actions: Re-Edit, Download, and Delete at the end, each a pill. */
 .mg-sheet-actions {
   display: flex;
   align-items: center;
@@ -434,12 +478,13 @@
 }
 
 .mg-sheet-actions .ios-btn {
+  gap: 6px;
   height: 44px;
   min-height: 44px;
   padding: 0 14px;
   border-radius: 999px;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: -0.01em;
   white-space: nowrap;
   transition: transform 0.16s var(--ios-ease), background-color 0.16s var(--ios-ease);
@@ -460,12 +505,27 @@
   color: var(--ios-label);
 }
 
-/* Delete, a round icon button at the row's end (ios-btn--destructive's colours). */
+/* Delete: a round icon button, grey like Re-Edit (ios-btn--gray), its bin in red. */
 .mg-sheet-actions .mg-sheet-btn-delete {
   flex: none;
   width: 44px;
   padding: 0;
-  border-radius: 50%;
+  color: var(--ios-red);
+}
+
+.mg-sheet-actions .mg-sheet-btn-delete:focus-visible {
+  outline: 2px solid var(--ios-red);
+  outline-offset: 2px;
+}
+
+/* No Re-Edit (a GIF): Download at its own size beside Delete, the pair in the middle. */
+.mg-sheet-actions--compact {
+  justify-content: center;
+}
+
+.mg-sheet-actions--compact .mg-sheet-btn-download {
+  flex: none;
+  padding: 0 22px;
 }
 
 @keyframes mg-fade-in {
@@ -516,9 +576,8 @@
 @media (min-width: 720px) {
 
   .mg-grid {
-    grid-template-columns: repeat(auto-fill, minmax(176px, 1fr));
-    gap: 30px 20px;
-    margin-top: 26px;
+    --mg-gap: 8px;
+    margin-top: 24px;
   }
 }
 
@@ -554,3 +613,4 @@
     margin-top: 16px;
   }
 }
+
