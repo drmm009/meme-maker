@@ -1,7 +1,41 @@
 /* My Studio (MyGallery.jsx): what is its own, on the shared iOS look (pages/iosLook.css): the
-   Grid/List switch, the collage, the More menu, the inset list and a save's sheet. */
+   Backup button, the Grid/List switch, the collage, the More menu, the inset list and a save's sheet. */
 
-/* ---- Grid/List switch ---- */
+/* ---- Backup button and Grid/List switch ---- */
+
+.mg-nav-actions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+}
+
+/* A round grey button that opens the Backup sheet (StudioBackupSheet.tsx). */
+.mg-backup-btn {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--ios-fill);
+  color: var(--ios-label);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color 0.2s var(--ios-ease);
+}
+
+.mg-backup-btn:active { background: var(--ios-fill-strong); }
+
+@media (hover: hover) {
+  .mg-backup-btn:hover { background: var(--ios-fill-strong); }
+}
+
+.mg-backup-btn:focus-visible {
+  outline: 2px solid var(--ios-accent);
+  outline-offset: 2px;
+}
 
 .mg-view-switch {
   display: inline-flex;

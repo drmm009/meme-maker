@@ -37,7 +37,7 @@ They aren't separate pages. Each one is the **same image editor** in a different
 | Page | Strip / sheets | Logic |
 |---|---|---|
 | **Stickers** | `panels/StickerStrip.tsx`, whose buttons grow with the sticker: Upload, Gallery and Text; then Crop and Effects once there's a photo; then Die-cut, Crop, Text, Effects and New once it's cut out. The dock (in `EditorPanels.tsx`) has **Generate Sticker**, then **Export** and **Full editor**. An empty canvas shows `StickerStart.tsx`. | `hooks/useStickerMaker.ts`, `stickerMaker.ts`. The canvas is see-through and shown on a checkerboard (`.canvas-wrapper--sticker` in `MemeEditor.css`). |
-| **AI Meme** | `panels/AiStrip.tsx`, and `panels/AiMemeSheet.tsx` + `panels/aiMeme.css`. The sheet is a full-height prompt screen: template rail, "What's it about?", theme chips, Generate captions, 4 caption previews, and the Gemini key line. | `aiMeme.ts`. Captions come from `src/data/aiMemeCaptions.js` (`GEMINI_MODEL`, with the key sent in a header). |
+| **AI Meme** | `panels/AiStrip.tsx`, and `panels/AiMemeSheet.tsx` + `panels/aiMeme.css`. The sheet is a full-height prompt screen: template rail, "What's it about?", theme chips, Generate captions, 4 caption previews. | `aiMeme.ts`. Captions come from `src/data/aiMemeCaptions.js` (`generateMemeCaptions`, the built-in library). |
 | **Face Swap** | `panels/FaceSwapStrip.tsx` (Your face, Meme), and `MemePickerSheet` in `panels/TemplatesSheet.tsx`. The face picker is `src/components/FaceMorphModal.jsx` + `.css`. | The effect in `MemeEditor.jsx` opens the picker when the page starts. The swap needs `face_swap_server.py` running locally, so it shows "offline" without it. |
 | **Social Card** | `panels/CardStrip.tsx` (Details, Look, Studio), `panels/CardFormSheet.tsx` + `panels/cardForm.css` (the Details form, plus `CardLookSheet`), and `panels/CardControls.tsx`. | `panels/socialCard.ts` (`useCard`). Studio opens the old full-screen `MemeStylesModal.jsx`. |
 
@@ -53,7 +53,7 @@ Shared UI kit: `src/components/ui/` (`Sheet`, `ToolStrip`, `ToolDock`, `Segmente
 - **Every new sheet needs an entry in `SHEET_TAB`**, or opening it switches the dock tab.
 - **Write new code in TypeScript**, keep plain CSS next to components, and **match the comment style**: short plain-English comments saying what the code is for.
 - **Heavy libraries stay lazy** (background removal, MediaPipe, FFmpeg). Never import them eagerly.
-- **Never hardcode API keys.** Gemini keys are user-supplied and kept in localStorage under `gemini_api_key`.
+- **Never hardcode API keys.** There is no Gemini key in the app; AI captions come from the built-in library.
 
 ## Rules
 

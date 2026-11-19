@@ -18,7 +18,6 @@
     "@capacitor/core": "^8.5.0",
     "@ffmpeg/ffmpeg": "^0.12.15",
     "@ffmpeg/util": "^0.12.2",
-    "@imgly/background-removal": "^1.7.0",
     "canvas-confetti": "^1.9.4",
     "d3-delaunay": "^6.0.4",
     "emojibase-data": "^16.0.3",

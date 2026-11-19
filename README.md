@@ -14,6 +14,6 @@ Browser-first meme studio: templates, custom multi-panel builder, canvas-2D imag
 
 ## Notes
 - Gallery + favorites + watermark live in `localStorage` (5MB quota — keep exports small).
-- AI captions: user supplies their own Gemini key in-app; otherwise curated fallback is used.
-- Heavy models load at runtime: MediaPipe (CDN), FFmpeg WASM, `@imgly/background-removal`.
+- AI captions: from the built-in curated library for now; a backend will write them later.
+- Heavy models load at runtime: MediaPipe (CDN; faces and background removal) and FFmpeg WASM.
 - Optional local face-swap: `face_swap_server.py` on `:5174` (Vite proxies `/api/face-swap`). Requires `insightface` + `inswapper_128.onnx`.

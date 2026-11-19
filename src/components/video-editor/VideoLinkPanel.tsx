@@ -144,9 +144,19 @@ export default function VideoLinkPanel({ onClose }: { onClose?: () => void }) {
         </div>
       ) : status.state === 'error' ? (
         <div className="vt-link-error" role="alert">
-          <p>{status.message}</p>
-          {status.code === 'server-off' && (
-            <p className="vt-link-help">Run <code>{LINK_SERVER_COMMAND}</code> in the app folder on your computer, then try again.</p>
+          {/* The link helper only runs beside the dev server; anyone else is told what to do instead. */}
+          {status.code === 'server-off' && !import.meta.env.DEV ? (
+            <>
+              <p>Links from TikTok, Instagram, YouTube and other apps can't be opened here yet.</p>
+              <p className="vt-link-help">Save the video to your device, then add it with Upload. A direct link to a video file (ending in .mp4 or .webm) works.</p>
+            </>
+          ) : (
+            <>
+              <p>{status.message}</p>
+              {status.code === 'server-off' && import.meta.env.DEV && (
+                <p className="vt-link-help">Run <code>{LINK_SERVER_COMMAND}</code> in the app folder on your computer, then try again.</p>
+              )}
+            </>
           )}
         </div>
       ) : (

@@ -26,6 +26,13 @@ export const HISTORY_FIELDS = [
   'canvasFlipX',
   'activeTemplate',
   'templateFaceMorph',
+  // The canvas and its panels: their pictures and framing, the background, the size and filters.
+  'slotImages',
+  'slotTransforms',
+  'canvasBgColor',
+  'canvasBgGradient',
+  'aspectRatio',
+  'imageFilters',
 ];
 
 // An empty panel's picture: one white pixel (a panel with it counts as empty).

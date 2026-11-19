@@ -91,7 +91,7 @@ function Segmented<T extends string | number>({ label, options, value, onChange,
   );
 }
 
-export default function GifMaker({ onBack, onSaveToGallery }: { onBack: () => void; onSaveToGallery?: (gif: SavedGif) => void }) {
+export default function GifMaker({ onBack, onSaveToGallery }: { onBack: () => void; onSaveToGallery?: (gif: SavedGif) => boolean | void | Promise<boolean | void> }) {
   const [video, setVideo] = useState<VideoSrc | null>(null);
   const [error, setError] = useState('');
   const [trim, setTrim] = useState<Trim>({ start: 0, end: 0 });
@@ -103,6 +103,7 @@ export default function GifMaker({ onBack, onSaveToGallery }: { onBack: () => vo
   const [progress, setProgress] = useState<number | null>(null);
   const [result, setResult] = useState<Result | null>(null);
   const [saved, setSaved] = useState(false);
+  const [saveFailed, setSaveFailed] = useState(false);
   const [dragging, setDragging] = useState(false);
   const [library, setLibrary] = useState(false);
   const [fetching, setFetching] = useState<string | null>(null);
@@ -173,6 +174,7 @@ export default function GifMaker({ onBack, onSaveToGallery }: { onBack: () => vo
       const seconds = gifSeconds({ clip: trim.end - trim.start, speed, loop });
       setResult({ blob, url: keep(URL.createObjectURL(blob)), ...dims, seconds });
       setSaved(false);
+      setSaveFailed(false);
     } catch {
       setError("The GIF couldn't be made. Try a shorter clip.");
     } finally {
@@ -294,10 +296,11 @@ export default function GifMaker({ onBack, onSaveToGallery }: { onBack: () => vo
 
       {result && (
         <PickerSheet title="Your GIF" onClose={() => setResult(null)}>
-          <ResultSheet result={result} saved={saved} onSave={onSaveToGallery ? async () => {
+          <ResultSheet result={result} saved={saved} saveFailed={saveFailed} onSave={onSaveToGallery ? async () => {
             const dataUrl = await readDataUrl(result.blob);
-            onSaveToGallery({ kind: 'gif', name: caption.trim() || 'My GIF', imageUrl: dataUrl, rawImageUrl: dataUrl });
-            setSaved(true);
+            const ok = await onSaveToGallery({ kind: 'gif', name: caption.trim() || 'My GIF', imageUrl: dataUrl, rawImageUrl: dataUrl });
+            setSaveFailed(ok === false);
+            setSaved(ok !== false);
           } : undefined} />
         </PickerSheet>
       )}
@@ -435,7 +438,7 @@ function TrimBar({ video, trim, onChange, disabled }: { video: VideoSrc; trim: T
   );
 }
 
-function ResultSheet({ result, saved, onSave }: { result: Result; saved: boolean; onSave?: () => Promise<void> }) {
+function ResultSheet({ result, saved, saveFailed, onSave }: { result: Result; saved: boolean; saveFailed?: boolean; onSave?: () => Promise<void> }) {
   const file = useMemo(() => new File([result.blob], `meme-${Date.now()}.gif`, { type: 'image/gif' }), [result.blob]);
   const canShare = typeof navigator !== 'undefined' && typeof navigator.canShare === 'function' && navigator.canShare({ files: [file] });
   const kb = result.blob.size / 1024;
@@ -464,6 +467,9 @@ function ResultSheet({ result, saved, onSave }: { result: Result; saved: boolean
           </button>
         )}
       </div>
+      {saveFailed && (
+        <p className="gm-result-error" role="alert">Couldn't save to My Studio. Your device may be out of space. Download it instead.</p>
+      )}
     </div>
   );
 }

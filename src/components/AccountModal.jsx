@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import ModalPortal from './ModalPortal';
+import useEscape from './useEscape';
 import { User, Crown, ShieldCheck, Mail, Lock, Heart } from 'lucide-react';
 
 export default function AccountModal({ isOpen = true, onClose, onOpenCredits }) {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  useEscape(isOpen !== false, onClose);
 
   if (isOpen === false) return null;
 

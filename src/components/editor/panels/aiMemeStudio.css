@@ -320,24 +320,6 @@
 .ie-aim .ie-aim-go:hover:not(:disabled) { filter: brightness(1.08); }
 .ie-aim .ie-aim-go:active:not(:disabled) { transform: scale(0.98); }
 .ie-aim .ie-aim-go:disabled { background: var(--ui-surface, #1c1c1e); box-shadow: none; color: rgba(255, 255, 255, 0.38); cursor: default; }
-.ie-aim .ie-aim-key {
-  align-self: center;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  height: 28px;
-  padding: 0 10px;
-  border: none;
-  border-radius: 999px !important;
-  background: none;
-  color: var(--ui-muted, rgba(255, 255, 255, 0.55));
-  font: inherit;
-  font-size: 12.5px;
-  font-weight: 500;
-  cursor: pointer;
-}
-.ie-aim-key svg { width: 14px; height: 14px; }
-.ie-aim-key b { color: #b9adff; font-weight: 700; }
 
 /* A short phone: a smaller question, a shorter prompt and cards. */
 @media (max-height: 700px) {
@@ -384,24 +366,6 @@
   .ie-aim-writing-icon { animation: none; }
   .ie-aim-chip, .ie-aim-idea, .ie-aim-back, .ie-aim-go { transition: none; }
 }
-
-/* The key sheet. */
-.ie-ai-key-note { margin: 0 0 14px; color: var(--ui-muted); font-size: var(--ui-fs-footnote, 13px); line-height: 1.45; }
-.ie-ai-key-form { display: flex; gap: 8px; }
-.ie-ai-key-field {
-  flex: 1;
-  min-width: 0;
-  height: 46px;
-  padding: 0 14px;
-  border: 1px solid var(--ui-line);
-  border-radius: var(--ui-radius-md, 16px);
-  background: var(--ui-surface);
-  color: var(--ui-text);
-  font: inherit;
-  font-size: 16px;
-}
-.ie-ai-key-field:focus { border-color: var(--ui-accent); outline: none; }
-.ie-ai-key-form .ie-swap-btn { flex: 0 0 auto; padding: 0 20px; }
 
 /* ════════ The editing page (after Generate) ════════ */
 .meme-editor-container.meme-editor--ai-edit { gap: 0 !important; }

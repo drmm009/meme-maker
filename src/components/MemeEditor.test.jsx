@@ -58,7 +58,7 @@ vi.mock('./CanvasEditor', async () => {
     TWEET_TREND_PRESETS: { viral: { label: '#1 Trending', topic: 'Trending in World', text: 'metrics' } },
   };
 });
-vi.mock('@imgly/background-removal', () => ({ removeBackground: vi.fn() }));
+vi.mock('../utils/photoCutout', () => ({ cutOutPhoto: vi.fn() }));
 vi.mock('canvas-confetti', () => ({ default: vi.fn() }));
 vi.mock('../services/memeService', () => ({ fetchOpenSourceMemes: vi.fn(() => Promise.resolve([])) }));
 vi.mock('../utils/faceGraftEngine', () => ({ fuseFaceIntoTemplate: vi.fn() }));
@@ -851,6 +851,15 @@ describe('MemeEditor', () => {
     expect(within(sheet('Export')).getByRole('radio', { name: 'PNG' }).getAttribute('aria-checked')).toBe('true');
   }, 30000);
 
+  it('Save to Gallery says so when the meme could not be stored', async () => {
+    const onSave = vi.fn(async () => false);
+    renderEditor(TEMPLATE, onSave);
+    fireEvent.click(screen.getByRole('button', { name: /Export/ }));
+    fireEvent.click(screen.getByText('Save to Gallery'));
+    expect(await screen.findByText(/Couldn't save to My Studio/)).toBeTruthy();
+    expect(onSave).toHaveBeenCalledTimes(1);
+  });
+
   it('Save to Gallery names the meme after the template on the first save', () => {
     const onSave = vi.fn();
     renderEditor(TEMPLATE, onSave);
@@ -1400,12 +1409,10 @@ describe('MemeEditor', () => {
     expect(card().waMessages[0].text).toBe('hi');
   }, 30000);
 
-  it('the AI Meme maker opens on its page (the question, the prompt box with the meme along its foot, idea cards, vibe chips, the key line); sending makes the meme, whose caption card steps through the AI captions', async () => {
-    localStorage.removeItem('gemini_api_key');
+  it('the AI Meme maker opens on its page (the question, the prompt box with the meme along its foot, idea cards, vibe chips); sending makes the meme, whose caption card steps through the AI captions', async () => {
     renderEditor({ ...TEMPLATE, editorMode: 'ai', aiPrompt: 'mondays' });
     const page = () => screen.getByRole('region', { name: 'Make an AI meme' });
     expect(within(page()).getByLabelText("What's it about?").value).toBe('mondays');
-    expect(within(page()).getByRole('button', { name: 'Built-in captions: add a Gemini key' })).toBeTruthy();
     expect(within(within(page()).getByRole('group', { name: 'Ideas' })).getAllByRole('button').length).toBeGreaterThan(3);
     expect(screen.getByText('Pick a meme and an idea', { selector: '.ui-topbar-subtitle' })).toBeTruthy();
     expect(screen.queryByRole('navigation', { name: 'Editor tools' })).toBeNull();

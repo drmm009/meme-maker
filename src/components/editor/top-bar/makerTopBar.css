@@ -98,8 +98,8 @@
   justify-self: start;
   display: grid;
   place-items: center;
-  width: 38px;
-  height: 38px;
+  width: 40px;
+  height: 40px;
   padding: 0;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 999px;
@@ -174,8 +174,8 @@
 .mtb-history-btn {
   display: grid;
   place-items: center;
-  width: 36px;
-  height: 34px;
+  width: 40px;
+  height: 40px;
   padding: 0;
   border: none;
   border-radius: 999px;

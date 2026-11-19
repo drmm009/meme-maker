@@ -7,6 +7,19 @@ import { TopBar, SegmentedControl, ToolDock, ToolStrip, FloatingToolbar, Sheet, 
 afterEach(cleanup);
 
 describe('UI kit', () => {
+  it('Sheet: Escape closes it, unless a modal is open over it', () => {
+    const onClose = vi.fn();
+    render(<Sheet title="Text" onClose={onClose}><p>body</p></Sheet>);
+    const modal = document.createElement('div');
+    modal.setAttribute('aria-modal', 'true');
+    document.body.appendChild(modal);
+    fireEvent.keyDown(window, { key: 'Escape' });
+    expect(onClose).not.toHaveBeenCalled();
+    modal.remove();
+    fireEvent.keyDown(window, { key: 'Escape' });
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
   it('TopBar: title, back and actions', () => {
     const onBack = vi.fn();
     render(<TopBar title="Meme Editor" onBack={onBack}><button type="button">Export</button></TopBar>);

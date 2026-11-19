@@ -86,6 +86,30 @@ describe('createMemeEditorStore', () => {
     expect(canUndo(store)).toBe(false);
   });
 
+  it('undoes the canvas too: panel framing, background, size and filters', () => {
+    const before = store.getState();
+    const start = { bg: before.canvasBgColor, ratio: before.aspectRatio, filters: before.imageFilters };
+    store.getState().setCanvasBgColor('#ff0000');
+    store.getState().setCanvasBgGradient(['#000000', '#ffffff']);
+    store.getState().setAspectRatio('9:16');
+    store.getState().setImageFilters((f) => ({ ...f, brightness: 150 }));
+    store.getState().setSlotTransforms([{ offsetX: 10, offsetY: 0, scale: 2 }]);
+    store.getState().pushHistory();
+
+    store.getState().undo();
+    const after = store.getState();
+    expect(after.canvasBgColor).toBe(start.bg);
+    expect(after.canvasBgGradient).toBeNull();
+    expect(after.aspectRatio).toBe(start.ratio);
+    expect(after.imageFilters).toEqual(start.filters);
+    expect(after.slotTransforms).toEqual([]);
+
+    store.getState().redo();
+    expect(store.getState().canvasBgColor).toBe('#ff0000');
+    expect(store.getState().aspectRatio).toBe('9:16');
+    expect(store.getState().imageFilters.brightness).toBe(150);
+  });
+
   it('undoes and redoes checkpoints', () => {
     addCaption(store, 'A');
     addCaption(store, 'B');

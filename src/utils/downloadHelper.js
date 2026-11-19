@@ -1,9 +1,12 @@
 import { dataURLToBlob } from './galleryStore';
 
+// Saves a picture: `dataUrl` is a Blob, a data: URL or any other URL.
 export const downloadImageHelper = async (dataUrl, filename = 'meme.png') => {
   try {
     let blob;
-    if (typeof dataUrl === 'string' && dataUrl.startsWith('data:')) {
+    if (typeof Blob !== 'undefined' && dataUrl instanceof Blob) {
+      blob = dataUrl;
+    } else if (typeof dataUrl === 'string' && dataUrl.startsWith('data:')) {
       blob = dataURLToBlob(dataUrl);
     } else {
       const response = await fetch(dataUrl);

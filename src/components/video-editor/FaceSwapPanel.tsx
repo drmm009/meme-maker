@@ -213,8 +213,11 @@ export default function FaceSwapPanel({ item }: { item: VideoClip }) {
         <div className="vt-swap-offline" role="status">
           <CloudOff size={20} aria-hidden="true" />
           <span>
-            <strong>Face swap is offline</strong>
-            Start face_swap_server.py on this computer, then try again.
+            {/* The face swap server runs beside the dev server; anyone else gets a plain note. */}
+            <strong>{import.meta.env.DEV ? 'Face swap is offline' : "Face swap isn't available yet"}</strong>
+            {import.meta.env.DEV
+              ? 'Start face_swap_server.py on this computer, then try again.'
+              : "It's coming in a later version. Every other tool works as usual."}
           </span>
           <button type="button" className="vt-chip" onClick={() => setCheck((n) => n + 1)}>
             <RefreshCw size={14} aria-hidden="true" /> Retry

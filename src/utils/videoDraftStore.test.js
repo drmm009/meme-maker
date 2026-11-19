@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { projectFromState, collectBlobUrls, restoreProject, unusedMedia, videoName, savedVideoMeta } from './videoDraftStore';
+import { projectFromState, collectBlobUrls, restoreProject, unusedMedia, videoName, savedVideoMeta, serially } from './videoDraftStore';
 
 describe('videoDraftStore', () => {
   it('keeps only project fields from the editor state', () => {
@@ -59,5 +59,25 @@ describe('videoDraftStore', () => {
     const meta = savedVideoMeta({ id: 'v1', name: 'Hi', savedAt: 5, durationMs: 3000, thumbnail: 'data:x', project: { items: [] }, mediaKeys: [], exportBlob: { type: 'video/mp4' } });
     expect(meta).toEqual({ id: 'v1', name: 'Hi', savedAt: 5, durationMs: 3000, thumbnail: 'data:x', exportType: 'video/mp4' });
     expect(savedVideoMeta({ id: 'v2', name: 'x', savedAt: 1, durationMs: 0, thumbnail: '', project: { items: [] }, mediaKeys: [] }).exportType).toBe(null);
+  });
+});
+
+describe('serially', () => {
+  it('runs writes one at a time, in order, even when they overlap', async () => {
+    const log = [];
+    const slow = (name, ms) => () => new Promise((resolve) => {
+      log.push(`start ${name}`);
+      setTimeout(() => { log.push(`end ${name}`); resolve(name); }, ms);
+    });
+    const results = await Promise.all([serially(slow('a', 30)), serially(slow('b', 5)), serially(slow('c', 1))]);
+    expect(results).toEqual(['a', 'b', 'c']);
+    expect(log).toEqual(['start a', 'end a', 'start b', 'end b', 'start c', 'end c']);
+  });
+
+  it('keeps going after a write fails', async () => {
+    const failed = serially(async () => { throw new Error('quota'); });
+    const next = serially(async () => 'ok');
+    await expect(failed).rejects.toThrow('quota');
+    expect(await next).toBe('ok');
   });
 });

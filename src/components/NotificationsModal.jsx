@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Bell, Flame, Sparkles, Bot, ShieldCheck, CheckCheck, X, ArrowRight } from 'lucide-react';
 import ModalPortal from './ModalPortal';
+import useEscape from './useEscape';
 import './NotificationsModal.css';
 
 export default function NotificationsModal({
@@ -11,6 +12,7 @@ export default function NotificationsModal({
   onMarkAllRead,
   onNotificationAction
 }) {
+  useEscape(Boolean(isOpen), onClose);
   if (!isOpen) return null;
 
   const unreadCount = notifications.filter((n) => !n.read).length;

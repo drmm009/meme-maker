@@ -10,6 +10,7 @@ import ModalPortal from './ModalPortal';
 import useCollageColumns, { dealColumns } from './useCollageColumns';
 import {
   Clapperboard,
+  DatabaseBackup,
   Download,
   Ellipsis,
   ImageIcon,
@@ -25,6 +26,7 @@ import { downloadImageHelper } from '../utils/downloadHelper';
 import SegmentedControl from './pages/SegmentedControl';
 import SearchField from './pages/SearchField';
 import PullDownMenu from './pages/PullDownMenu';
+import StudioBackupSheet from './StudioBackupSheet';
 import './MyGallery.css';
 
 const clock = (ms) => {
@@ -282,7 +284,9 @@ export default function MyGallery({
   onGetVideoFile,
   onBrowseTemplates,
   onMake,
+  onRestored,
 }) {
+  const [backupOpen, setBackupOpen] = useState(false);
   const [tab, setTab] = useState('all');
   const [viewMode, setViewMode] = useState('grid'); // 'grid' | 'list'
   const columnCount = useCollageColumns();
@@ -435,33 +439,53 @@ export default function MyGallery({
 
   return (
     <div className="my-gallery mg ios ios-page">
+      <StudioBackupSheet
+        open={backupOpen}
+        onClose={() => setBackupOpen(false)}
+        saveCount={items.length}
+        onRestored={() => onRestored?.()}
+      />
       <header className="mg-nav">
         <div className="ios-nav-row">
           <h1 className="ios-title">My Studio</h1>
-          {hasSaves && (
-            <div className="mg-view-switch" role="group" aria-label="Layout">
+          <div className="mg-nav-actions">
+            {galleryReady !== false && (
               <button
                 type="button"
-                className="mg-view-btn"
-                aria-pressed={viewMode === 'grid'}
-                aria-label="Grid"
-                title="Grid"
-                onClick={() => setViewMode('grid')}
+                className="mg-backup-btn"
+                aria-label="Backup"
+                title="Back up or restore your saves"
+                aria-haspopup="dialog"
+                onClick={() => setBackupOpen(true)}
               >
-                <LayoutGrid size={17} aria-hidden="true" />
+                <DatabaseBackup size={17} aria-hidden="true" />
               </button>
-              <button
-                type="button"
-                className="mg-view-btn"
-                aria-pressed={viewMode === 'list'}
-                aria-label="List"
-                title="List"
-                onClick={() => setViewMode('list')}
-              >
-                <List size={17} aria-hidden="true" />
-              </button>
-            </div>
-          )}
+            )}
+            {hasSaves && (
+              <div className="mg-view-switch" role="group" aria-label="Layout">
+                <button
+                  type="button"
+                  className="mg-view-btn"
+                  aria-pressed={viewMode === 'grid'}
+                  aria-label="Grid"
+                  title="Grid"
+                  onClick={() => setViewMode('grid')}
+                >
+                  <LayoutGrid size={17} aria-hidden="true" />
+                </button>
+                <button
+                  type="button"
+                  className="mg-view-btn"
+                  aria-pressed={viewMode === 'list'}
+                  aria-label="List"
+                  title="List"
+                  onClick={() => setViewMode('list')}
+                >
+                  <List size={17} aria-hidden="true" />
+                </button>
+              </div>
+            )}
+          </div>
         </div>
         {hasSaves && (
           <p className="ios-subtitle">

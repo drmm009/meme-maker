@@ -107,7 +107,7 @@ export default function FaceMorphModal({
 
       if (isMounted) {
         setIsNeuralAvailable(isOnline);
-        setNeuralError(isOnline ? null : 'Start face_swap_server.py on this computer, then try again.');
+        setNeuralError(isOnline ? null : import.meta.env.DEV ? 'Start face_swap_server.py on this computer, then try again.' : "Face swap isn't available yet. It's coming in a later version.");
       }
 
       // Auto-detect faces in the meme template
@@ -356,7 +356,7 @@ export default function FaceMorphModal({
             <span className="fmm-stage-icon" aria-hidden="true">
               {isNeuralAvailable ? <AlertCircle size={20} /> : <CloudOff size={20} />}
             </span>
-            <span className="fmm-stage-title">{isNeuralAvailable ? 'That face didn’t swap' : 'Face swap is offline'}</span>
+            <span className="fmm-stage-title">{isNeuralAvailable ? 'That face didn’t swap' : (import.meta.env.DEV ? 'Face swap is offline' : "Face swap isn't available yet")}</span>
             <span className="fmm-stage-sub">{neuralError}</span>
             <button type="button" className="fmm-retry" onClick={retry}>
               <RefreshCw size={14} strokeWidth={2.3} aria-hidden="true" />

@@ -1,10 +1,9 @@
-// Cut out: a picture's subject on a see-through background, as a new blob: URL (PNG). The
-// background-removal library is big, so it loads on first use (the first cut also downloads its
-// model, which takes a while).
+// Cut out: a picture's subject on a see-through background, as a new blob: URL (PNG), through
+// utils/photoCutout (MediaPipe, loaded on first use).
 export async function cutOutBackground(url: string): Promise<string> {
   const source = await (await fetch(url)).blob();
-  const { removeBackground } = await import('@imgly/background-removal');
-  return URL.createObjectURL(await removeBackground(source));
+  const { cutOutPhoto } = await import('./photoCutout');
+  return URL.createObjectURL(await cutOutPhoto(source));
 }
 
 // Photos and stickers can be cut out; animated GIFs can't (only their first frame would be kept).

@@ -160,6 +160,9 @@ function App() {
 
   // Saved Memes (IndexedDB for bytes + small metadata in state; avoids localStorage quota crashes)
   const [savedMemes, setSavedMemes] = useState([]);
+  // The list as it is now, for code that runs after an await (handleSaveToGallery's names).
+  const savedMemesRef = useRef(savedMemes);
+  savedMemesRef.current = savedMemes;
   // Videos saved to My Studio from the video editor (their own database; see videoDraftStore).
   const [savedVideos, setSavedVideos] = useState([]);
   useEffect(() => {
@@ -167,7 +170,17 @@ function App() {
     listSavedVideos().then((list) => { if (alive) setSavedVideos(list); }).catch(() => {});
     return () => { alive = false; };
   }, []);
+  // Gemini keys were once typed in by users and kept in this browser; captions now come from the
+  // app (a backend later), so a key left behind is removed.
+  useEffect(() => {
+    try { localStorage.removeItem('gemini_api_key'); } catch { /* storage blocked */ }
+  }, []);
   const [galleryReady, setGalleryReady] = useState(false);
+  // After a backup is restored (My Studio's Backup sheet): list everything saved again.
+  const reloadStudio = React.useCallback(() => {
+    idbGetAllMemes().then((records) => setSavedMemes(records.map(toMetadata))).catch(() => {});
+    listSavedVideos().then(setSavedVideos).catch(() => {});
+  }, []);
   const fullUrlCache = React.useRef(new Map());
 
   // Cleanup object URLs on unmount/pagehide to prevent mobile Safari memory leaks
@@ -329,6 +342,27 @@ function App() {
     }
   };
 
+  // A maker's link typed into the address bar while the app is open (#/stickers, #/gif…) opens
+  // that maker, as it does on a fresh load. Only for a new entry: the app's own history entries
+  // carry a state, and Back and Forward through them are handled by popstate above.
+  const selectTemplateRef = useRef(handleSelectTemplate);
+  selectTemplateRef.current = handleSelectTemplate;
+  useEffect(() => {
+    const onHashChange = () => {
+      if (window.history.state?.view) return;
+      const hash = window.location.hash;
+      if (hash === GIF_MAKER_LINK) {
+        setCurrentView('gif');
+        return;
+      }
+      const maker = makerOfLink(hash);
+      const template = maker ? makerTemplate(maker, MEME_TEMPLATES) : null;
+      if (template) selectTemplateRef.current(template);
+    };
+    window.addEventListener('hashchange', onHashChange);
+    return () => window.removeEventListener('hashchange', onHashChange);
+  }, []);
+
   const handleCreateCustom = (mode) => {
     if (mode === 'video') {
       // Video goes straight to an empty video editor (no layout page first): a blank custom template
@@ -461,68 +495,41 @@ function App() {
     setCurrentView('editor');
   };
 
-  const handleSaveToGallery = (newMeme) => {
+  // Saves a meme, sticker or GIF to My Studio. Resolves true once it is stored, or false when it
+  // couldn't be (storage full or blocked), so the maker can say so instead of celebrating.
+  const handleSaveToGallery = async (newMeme) => {
     const baseName = (newMeme.name || 'My Meme').trim();
-    setSavedMemes((prev) => {
-      const existingNames = prev.map((m) => (m.name || '').toLowerCase());
-
-      let finalName = baseName;
-      if (existingNames.includes(baseName.toLowerCase())) {
-        let counter = 1;
-        while (existingNames.includes(`${baseName} (${counter})`.toLowerCase())) {
-          counter++;
-        }
-        finalName = `${baseName} (${counter})`;
-      }
-
-      const id = newMeme.id || `meme-${Date.now()}`;
-      const createdAt = newMeme.createdAt || new Date().toISOString();
-      const meta = {
-        ...newMeme,
+    const existingNames = savedMemesRef.current.map((m) => (m.name || '').toLowerCase());
+    let finalName = baseName;
+    if (existingNames.includes(baseName.toLowerCase())) {
+      let counter = 1;
+      while (existingNames.includes(`${baseName} (${counter})`.toLowerCase())) counter++;
+      finalName = `${baseName} (${counter})`;
+    }
+    const id = newMeme.id || `meme-${Date.now()}`;
+    const createdAt = newMeme.createdAt || new Date().toISOString();
+    let record;
+    try {
+      const imageUrl = newMeme.imageUrl || '';
+      const thumbnailUrl = imageUrl.startsWith('data:image')
+        ? await createThumbnail(imageUrl, 320, newMeme.kind === 'sticker' ? 'image/png' : 'image/jpeg')
+        : imageUrl;
+      record = galleryRecord(newMeme, {
         id,
         name: finalName,
         createdAt,
-        thumbnailUrl: newMeme.thumbnailUrl || '',
-        imageUrl: newMeme.thumbnailUrl || '',
-      };
-      const next = [meta, ...prev].slice(0, 100);
-
-      // Persist bytes async (fire-and-forget); thumbnail first for instant UI
-      (async () => {
-        try {
-          const imageUrl = newMeme.imageUrl || '';
-          const thumbnailUrl = imageUrl.startsWith('data:image')
-            ? await createThumbnail(imageUrl, 320, newMeme.kind === 'sticker' ? 'image/png' : 'image/jpeg')
-            : imageUrl;
-          const record = galleryRecord(newMeme, {
-            id,
-            name: finalName,
-            createdAt,
-            thumbnailUrl,
-            imageBlob: imageUrl.startsWith('data:image') ? dataURLToBlob(imageUrl) : null,
-          });
-          await idbPutMeme(record);
-          setSavedMemes((cur) =>
-            cur.map((m) =>
-              m.id === id ? { ...m, thumbnailUrl, imageUrl: thumbnailUrl } : m
-            )
-          );
-          // Prune oldest beyond 100
-          const pruned = next.slice(100);
-          for (const p of pruned) {
-            try {
-              await idbDeleteMeme(p.id);
-            } catch { /* ignore */ }
-          }
-        } catch (e) {
-          console.error('Failed to persist meme to IndexedDB', e);
-        }
-      })();
-
-      return next;
-    });
+        thumbnailUrl,
+        imageBlob: imageUrl.startsWith('data:image') ? dataURLToBlob(imageUrl) : null,
+      });
+      await idbPutMeme(record);
+    } catch (e) {
+      console.error('Failed to save to My Studio', e);
+      return false;
+    }
+    setSavedMemes((prev) => [toMetadata(record), ...prev.filter((m) => m.id !== id)]);
     setLastBuilderView('custom-builder');
     setCurrentView('gallery');
+    return true;
   };
 
   const handleVideoSaved = (meta) => setSavedVideos((prev) => [meta, ...prev.filter((v) => v.id !== meta.id)]);
@@ -791,6 +798,7 @@ function App() {
                   onDeleteVideo={handleDeleteVideo}
                   onGetVideoFile={getSavedVideoFile}
                   onBrowseTemplates={() => setCurrentView('explore')}
+                  onRestored={reloadStudio}
                   onMake={(kind) => {
                     if (kind === 'sticker') handleSelectTemplate(makerTemplate('sticker', MEME_TEMPLATES));
                     else if (kind === 'gif') setCurrentView('gif');

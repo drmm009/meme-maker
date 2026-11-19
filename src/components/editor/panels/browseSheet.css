@@ -171,7 +171,7 @@
   background: #2c2c2e;
   color: var(--ui-text);
   font: inherit;
-  font-size: var(--ui-fs-body, 15px);
+  font-size: 16px; /* not under 16px, or phones zoom in on it */
   caret-color: var(--ui-accent);
   outline: none;
   transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;

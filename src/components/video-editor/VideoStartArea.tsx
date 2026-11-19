@@ -5,7 +5,8 @@
 // goes once anything sits in it: a clip or photo given to it, or any clip, photo, sticker or text
 // whose middle is there, including while one is dragged over it (panelDrag). Otherwise the
 // empty video's start card (StartPrompt), on the picture between the header and footer bars, while
-// there is no clip, photo or sticker yet (text, such as a caption layout's, doesn't count).
+// there is no clip, photo or sticker yet and no text on the picture (text in a caption layout's
+// bars doesn't count; text on the picture would sit on top of the card).
 import type { CSSProperties } from 'react';
 import { Clapperboard, Image as ImageIcon, SquarePlay } from 'lucide-react';
 import CanvasStartPrompt from '../ui/CanvasStartPrompt';
@@ -15,7 +16,7 @@ import { bandRects } from '../../utils/videoBands';
 import type { VideoBand } from '../../utils/videoBands';
 import { inkFor } from '../../utils/inkFor';
 import { usePanelDrag } from './preview/panelDrag';
-import { inSlot, slotTaken } from '../../utils/videoPanels';
+import { inSlot, itemCentre, pictureArea, slotTaken } from '../../utils/videoPanels';
 import type { DragPoint } from './preview/panelDrag';
 import '../editor/imagePanelPrompts.css';
 
@@ -87,8 +88,10 @@ export default function VideoStartArea({ open, onPick }: { open: boolean; onPick
     );
   }
 
-  // Nothing but text yet: the start card, between the bars.
+  // Nothing but text yet, and none of it on the picture: the start card, between the bars.
   if (items.some(isMedia)) return null;
+  const picture = pictureArea(header, footer, STAGE_WIDTH, stageH);
+  if (items.some((i) => i.type === 'text' && inSlot(picture, itemCentre(i)))) return null;
   const [headerBar] = bandRects(header, null, STAGE_WIDTH, stageH);
   const [footerBar] = bandRects(null, footer, STAGE_WIDTH, stageH);
   const headH = headerBar?.height ?? 0;

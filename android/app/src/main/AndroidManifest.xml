@@ -38,4 +38,9 @@
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- The video editor's Voice tool records with the microphone (getUserMedia); Capacitor asks
+         for it when the page does. Photos and the camera go through the system picker, which
+         needs no permission here. -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
 </manifest>

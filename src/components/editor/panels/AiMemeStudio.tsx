@@ -1,12 +1,10 @@
 import { useState } from 'react';
 import type { ChangeEvent, KeyboardEvent } from 'react';
-import { ChevronLeft, ChevronRight, ImagePlus, KeyRound, LayoutTemplate, Sparkles, Wand2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ImagePlus, LayoutTemplate, Sparkles, Wand2 } from 'lucide-react';
 import { useEditorUiStore } from '../store/useEditorUiStore';
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
 import TemplatesSheet from './TemplatesSheet';
-import { PickerSheet } from './MakerPage';
-import { AI_MEME_CATEGORIES, AI_MEME_IDEAS, generateMemeCaptionsWithGemini } from '../../../data/aiMemeCaptions';
-import { safeGet, safeRemove, safeSet } from '../../../utils/storage';
+import { AI_MEME_CATEGORIES, AI_MEME_IDEAS, generateMemeCaptions } from '../../../data/aiMemeCaptions';
 import { aiCaptionedTemplate, aiMemeTemplate } from '../aiMeme';
 import { pictureSize, readFile } from '../faceSwap';
 import type { EditorActions } from './selection';
@@ -17,7 +15,6 @@ interface Template { id: string | number; name?: string; imageUrl?: string; widt
 interface Vibe { id: string; label: string; icon: string }
 interface Idea { text: string; icon: string; category: string }
 
-const KEY = 'gemini_api_key';
 const IDEAS = 4;
 // The idea cards on the page: the first few, each tinted its own colour.
 const IDEA_CARDS = 4;
@@ -45,19 +42,15 @@ export function AiMemeGallerySheet({ actions, onClose }: { actions: EditorAction
 // the idea first, as in an AI chat: the Back chevron and the title; a big question over the prompt
 // box, which holds the idea to type and, along its foot, the meme it is for (a tap opens Templates)
 // and Upload; then ideas to start from as tinted cards (a tap sends one), the vibes as a row of
-// chips, and Generate captions at the bottom over a line saying where captions come from (the
-// user's Gemini key, opening its sheet). Sending asks for four captions (with the key, or else the
-// built-in library), the prompt box saying it's writing, then puts the first on the meme and opens
-// the editing page.
+// chips, and Generate captions at the bottom. Sending asks for four captions (from the built-in
+// library until a backend writes them), the prompt box saying it's writing, then puts the first on
+// the meme and opens the editing page.
 export default function AiMemeStudio({ actions, onBack }: { actions: EditorActions; onClose?: () => void; onBack?: () => void }) {
   const template: Template | null = useMemeEditorStore((s: { activeTemplate: Template | null }) => s.activeTemplate);
   const openSheet = useEditorUiStore((s: { openSheet: (sheet: string) => void }) => s.openSheet);
   const { idea, vibe, setIdea, setVibe } = useAsk();
-  const [keySheet, setKeySheet] = useState(false);
   // What was sent, while the captions are being written.
   const [sent, setSent] = useState<string | null>(null);
-  const [apiKey, setApiKey] = useState<string>(() => String(safeGet(KEY) || ''));
-  const [keyDraft, setKeyDraft] = useState('');
   const busy = sent !== null;
   const memeName = template?.name || 'your meme';
   const hasMeme = Boolean(template?.imageUrl);
@@ -78,7 +71,7 @@ export default function AiMemeStudio({ actions, onBack }: { actions: EditorActio
     setIdea(prompt);
     setVibe(category);
     setSent(prompt.trim() || 'Surprise me');
-    const ideas: string[] = await generateMemeCaptionsWithGemini({ apiKey, prompt, templateName: template.name, category, count: IDEAS }).catch(() => []);
+    const ideas: string[] = await generateMemeCaptions({ prompt, templateName: template.name, category, count: IDEAS }).catch(() => []);
     setSent(null);
     if (ideas.length) actions.handleChangeMeme(aiCaptionedTemplate(template, ideas[0], { prompt, category, ideas }));
   };
@@ -90,14 +83,6 @@ export default function AiMemeStudio({ actions, onBack }: { actions: EditorActio
     }
   };
 
-  const saveKey = () => {
-    const key = keyDraft.trim();
-    if (key) safeSet(KEY, key);
-    else safeRemove(KEY);
-    setApiKey(key);
-    setKeyDraft('');
-    setKeySheet(false);
-  };
 
   return (
     <section className="ie-swap ie-aim" aria-label="Make an AI meme">
@@ -196,28 +181,8 @@ export default function AiMemeStudio({ actions, onBack }: { actions: EditorActio
           <Sparkles aria-hidden="true" />
           {busy ? 'Writing captions…' : 'Generate captions'}
         </button>
-        <button
-          type="button"
-          className="ie-aim-key"
-          aria-label={apiKey ? 'Captions by Gemini with your key' : 'Built-in captions: add a Gemini key'}
-          onClick={() => setKeySheet(true)}
-        >
-          <KeyRound aria-hidden="true" />
-          {apiKey ? <>Captions by Gemini · <b>Change key</b></> : <>Built-in captions · <b>Add a Gemini key</b></>}
-        </button>
       </div>
 
-      {keySheet && (
-        <PickerSheet title="Gemini key" onClose={() => setKeySheet(false)}>
-          <p className="ie-ai-key-note">
-            {apiKey ? 'Captions are written by Gemini with your key.' : 'Without a key, captions come from the built-in library.'} Your key stays on this device.
-          </p>
-          <form className="ie-ai-key-form" onSubmit={(e) => { e.preventDefault(); saveKey(); }}>
-            <input className="ie-ai-key-field" type="password" autoComplete="off" aria-label="Gemini API key" placeholder={apiKey ? 'Leave empty to remove it' : 'Paste your Gemini API key'} value={keyDraft} onChange={(e) => setKeyDraft(e.target.value)} />
-            <button type="submit" className="ie-swap-btn ie-swap-btn--primary">Save</button>
-          </form>
-        </PickerSheet>
-      )}
     </section>
   );
 }

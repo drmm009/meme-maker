@@ -75,6 +75,17 @@ describe('VideoStartArea', () => {
     expect(area.style.getPropertyValue('--canvas-img-h')).toBe('70%');
   });
 
+  it('drops the start card once text sits on the picture, but not for text in the bars', () => {
+    const band = { enabled: true, bgColor: '#000000', height: 120 };
+    set({ canvasAspectRatio: 1, videoHeader: band, videoFooter: band, items: [{ id: 't', type: 'text', text: 'TOP TEXT', x: 300, y: 20, startMs: 0, endMs: 1000 }] });
+    const { unmount } = render(<VideoStartArea open onPick={() => {}} />);
+    expect(screen.getByRole('group', { name: 'Start your video' })).toBeTruthy();
+    unmount();
+    set({ items: [{ id: 't', type: 'text', text: 'NEW TEXT', x: 300, y: 380, startMs: 0, endMs: 1000 }] });
+    render(<VideoStartArea open onPick={() => {}} />);
+    expect(screen.queryByRole('group', { name: 'Start your video' })).toBeNull();
+  });
+
   it('shows nothing while the timeline is open', () => {
     render(<VideoStartArea open={false} onPick={() => {}} />);
     expect(screen.queryAllByRole('group')).toHaveLength(0);

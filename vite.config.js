@@ -33,7 +33,18 @@ export default defineConfig({
       registerType: 'autoUpdate',
       workbox: {
         maximumFileSizeToCacheInBytes: 5000000,
-        globIgnores: ["**/ffmpeg-core.wasm", "**/*.wasm"]
+        // Not downloaded up front: the wasm engines, FFmpeg's core script and the emoji list
+        // (emojibase's data.json, the data-* chunk). They are big and only some people use them;
+        // the rule below keeps each one once it has loaded.
+        globIgnores: ["**/*.wasm", "**/ffmpeg/ffmpeg-core.js", "**/assets/data-*.js"],
+        runtimeCaching: [
+          {
+            // Built files have a hash in their name, so a cached copy never goes stale.
+            urlPattern: ({ url }) => url.pathname.includes('/assets/') && /\.(js|mjs|css)$/.test(url.pathname),
+            handler: 'CacheFirst',
+            options: { cacheName: 'lazy-chunks', expiration: { maxEntries: 80 } }
+          }
+        ]
       },
       manifest: {
         name: 'Meme Maker',

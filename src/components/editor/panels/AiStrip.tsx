@@ -5,8 +5,7 @@ import { ToolStrip } from '../../ui';
 import type { StripItem } from '../../ui';
 import { useEditorUiStore } from '../store/useEditorUiStore';
 import { useMemeEditorStore, useMemeEditorStoreApi } from '../store/useMemeEditorStore';
-import { generateMemeCaptionsWithGemini } from '../../../data/aiMemeCaptions';
-import { safeGet } from '../../../utils/storage';
+import { generateMemeCaptions } from '../../../data/aiMemeCaptions';
 import { AI_CAPTION_PREFIX, AI_CAPTION_STYLES, aiCaptionStyleOf, aiCaptionedTemplate } from '../aiMeme';
 import type { EditorActions } from './selection';
 import './aiMemeStudio.css';
@@ -85,8 +84,8 @@ export default function AiStrip({ actions }: { actions: EditorActions }) {
       return;
     }
     setBusy(true);
-    const fresh: string[] = await generateMemeCaptionsWithGemini({
-      apiKey: String(safeGet('gemini_api_key') || ''), prompt: template?.aiPrompt, templateName: template?.name, category: template?.aiCategory || 'all', count: 4,
+    const fresh: string[] = await generateMemeCaptions({
+      prompt: template?.aiPrompt, templateName: template?.name, category: template?.aiCategory || 'all', count: 4,
     }).catch(() => []);
     setBusy(false);
     if (fresh.length) {

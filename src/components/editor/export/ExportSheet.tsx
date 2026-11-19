@@ -99,10 +99,10 @@ export default function ExportSheet({ actions, onClose }: { actions: EditorActio
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
           await navigator.share({ title: shareTitle, text: 'Check out this meme! 😂', files: [file] });
         } else {
-          await downloadImageHelper(URL.createObjectURL(blob), fileName);
+          await downloadImageHelper(blob, fileName);
         }
       } else {
-        await downloadImageHelper(URL.createObjectURL(blob), fileName);
+        await downloadImageHelper(blob, fileName);
       }
       triggerConfetti();
     } catch (e) {

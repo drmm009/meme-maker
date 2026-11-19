@@ -134,8 +134,13 @@ export default function FaceSwapStudio({ actions, onClose }: { actions: EditorAc
           <div className="ie-swap-offline" role="status">
             <CloudOff size={20} aria-hidden="true" />
             <div>
-              <p className="ie-swap-offline-title">Face swap is offline</p>
-              <p className="ie-swap-offline-body">Start face_swap_server.py on this computer, then try again.</p>
+              {/* The face swap server runs beside the dev server; anyone else gets a plain note. */}
+              <p className="ie-swap-offline-title">{import.meta.env.DEV ? 'Face swap is offline' : "Face swap isn't available yet"}</p>
+              <p className="ie-swap-offline-body">
+                {import.meta.env.DEV
+                  ? 'Start face_swap_server.py on this computer, then try again.'
+                  : "It's coming in a later version. Every other maker works as usual."}
+              </p>
             </div>
             <button type="button" className="ie-swap-chip" onClick={() => setCheck((n) => n + 1)}>
               <RefreshCw size={14} aria-hidden="true" /> Retry

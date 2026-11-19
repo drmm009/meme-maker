@@ -1,4 +1,4 @@
-// AI Meme Caption Generator Data & Gemini API Integration
+// AI Meme caption data: vibes, idea cards and the built-in caption library.
 
 export const AI_MEME_CATEGORIES = [
   { id: 'all', label: 'All Random', icon: '🎲' },
@@ -72,65 +72,10 @@ export const CURATED_CAPTIONS = [
   { category: 'students', text: 'Professor: "The test will be straightforward"\nThe test: Question 1a requires deciphering ancient hieroglyphs' }
 ];
 
-/**
- * Generate captions using Google Gemini API (if user provides key)
- * or fallback seamlessly to curated witty captions.
- */
-// Google's recommended Flash model (ai.google.dev/gemini-api/docs/models, checked November 2026).
-export const GEMINI_MODEL = 'gemini-3.8-flash';
-
-export async function generateMemeCaptionsWithGemini({ apiKey, prompt, templateName, category = 'all', count = 4 }) {
-  if (apiKey && apiKey.trim()) {
-    try {
-      const systemInstruction = `You are an elite internet meme creator and viral humorist.
-Generate ${count} extremely funny, punchy, modern meme captions based on the user request.
-Respond ONLY with a JSON array of strings, with NO markdown backticks, NO extra commentary.
-Example output format:
-["First funny caption here", "Second funny caption here", "Third caption here"]`;
-
-      const userContent = `Meme Template: ${templateName || 'Modern Image Meme'}
-Category / Theme: ${category}
-User's Idea / Context: ${prompt || 'Make a hilarious, relatable, viral meme'}`;
-
-      const ctl = new AbortController();
-      const t = setTimeout(() => ctl.abort(), 12000);
-      // The key goes in a header, not the URL, so it stays out of logs and history.
-      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`, {
-        method: 'POST',
-        signal: ctl.signal,
-        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey.trim() },
-        body: JSON.stringify({
-          contents: [
-            {
-              role: 'user',
-              parts: [{ text: `${systemInstruction}\n\n${userContent}` }]
-            }
-          ],
-          generationConfig: {
-            temperature: 0.9,
-            maxOutputTokens: 500,
-            responseMimeType: 'application/json'
-          }
-        })
-      });
-
-      clearTimeout(t);
-      if (res.ok) {
-        const data = await res.json();
-        const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
-        const arrayMatch = rawText.match(/\[[\s\S]*\]/);
-        const jsonToParse = arrayMatch ? arrayMatch[0] : rawText.replace(/```json/gi, '').replace(/```/g, '').trim();
-        const parsed = JSON.parse(jsonToParse);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed.map(item => String(typeof item === 'object' ? (item.text || item.caption || JSON.stringify(item)) : item).trim());
-        }
-      }
-    } catch (err) {
-      console.warn('Gemini API call failed, falling back to curated library:', err);
-    }
-  }
-
-  // Fallback: Smart curated library selection
+// Captions for a meme, from the built-in library (by vibe, shuffled). Async so a backend can
+// write them later without changing the callers (they pass the prompt and template name for it).
+/** @param {{ prompt?: string, templateName?: string, category?: string, count?: number }} [options] */
+export async function generateMemeCaptions({ category = 'all', count = 4 } = {}) {
   let pool = CURATED_CAPTIONS;
   if (category && category !== 'all') {
     pool = pool.filter(c => c.category === category);

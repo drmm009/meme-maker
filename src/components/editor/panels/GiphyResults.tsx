@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Clock, ImagePlay, KeyRound, WifiOff, Search, Flame } from 'lucide-react';
+import { Clock, ImageOff, ImagePlay, KeyRound, WifiOff, Search, Flame } from 'lucide-react';
 import { BrowseEmpty, ResultsHead, Thumb } from './BrowseSheet';
 import { GIPHY_MOODS, GIPHY_PAGE, appendPage, hasMorePages, readRecentGifs, rememberGif, searchGiphy } from '../../../services/giphy';
 
@@ -93,8 +93,12 @@ export default function GiphyResults({ kind, query, mood = 'trending', keyed, on
   const trending = mood === 'trending';
   const heading = trending ? (stickers ? 'Trending stickers' : 'Trending GIFs') : moodInfo.label;
 
+  // With no Giphy key built in: the developer is told how to add one; anyone else gets a plain
+  // note and what to use instead, never a setup step they can't do.
   if (!keyed) {
-    return <BrowseEmpty Icon={KeyRound} title="Animated stickers and GIFs need a Giphy key" text={<>Add <code>VITE_GIPHY_API_KEY</code> to <code>.env</code> and restart the app.</>} />;
+    return import.meta.env.DEV
+      ? <BrowseEmpty Icon={KeyRound} title="Animated stickers and GIFs need a Giphy key" text={<>Add <code>VITE_GIPHY_API_KEY</code> to <code>.env</code> and restart the app.</>} />
+      : <BrowseEmpty Icon={ImageOff} title={stickers ? "Animated stickers aren't available yet" : "GIF search isn't available yet"} text="Pick from the Stickers tab, or add a photo of your own." />;
   }
 
   const body = () => {

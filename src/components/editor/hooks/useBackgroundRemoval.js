@@ -10,14 +10,15 @@ const removeImageBackground = async (url) => {
     const res = await fetch(url);
     blob = await res.blob();
   }
-  // The background-removal library is big: it loads on first use.
-  const { removeBackground } = await import('@imgly/background-removal');
-  return blobToDataURL(await removeBackground(blob));
+  // The cut-out (utils/photoCutout, MediaPipe) loads on first use.
+  const { cutOutPhoto } = await import('../../../utils/photoCutout');
+  return blobToDataURL(await cutOutPhoto(blob));
 };
 
 const reportFailure = (err) => {
   console.error('Failed to remove background:', err);
-  alert('Failed to remove background: ' + (err.message || err.toString()));
+  // A picture with no person, pet or object in it says so plainly; anything else is a failure.
+  alert(err?.name === 'NoSubjectError' ? err.message : 'Failed to remove background: ' + (err.message || err.toString()));
 };
 
 // Magic Eraser: toggles background removal on the selected image layer or

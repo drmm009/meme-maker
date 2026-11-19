@@ -350,6 +350,8 @@ export function useLayerActions({ activeCaption, activeImageLayer, activeSticker
     const prev = nextTransforms[slotIndex] || { offsetX: 0, offsetY: 0, scale: 1.5 };
     nextTransforms[slotIndex] = updateFn(prev);
     setSlotTransforms(nextTransforms);
+    // Called on every move of a pan or pinch: one undo step once it stops.
+    pushHistoryDebounced();
   };
 
     // Emoji & Sticker Handlers

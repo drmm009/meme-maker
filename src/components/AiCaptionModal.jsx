@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { RefreshCw, Check, Copy, Key, ArrowRight, Type, PanelTop } from 'lucide-react';
-import { AI_MEME_CATEGORIES, generateMemeCaptionsWithGemini } from '../data/aiMemeCaptions';
-import { safeGet, safeSet, safeRemove } from '../utils/storage';
+import { RefreshCw, Check, Copy, ArrowRight, Type, PanelTop } from 'lucide-react';
+import { AI_MEME_CATEGORIES, generateMemeCaptions } from '../data/aiMemeCaptions';
 import BottomSheet from './BottomSheet';
 
 export default function AiCaptionModal({ isOpen, onClose, onApplyCaption, templateName, initialPrompt = '' }) {
@@ -14,8 +13,6 @@ export default function AiCaptionModal({ isOpen, onClose, onApplyCaption, templa
       setCustomPrompt(initialPrompt);
     }
   }, [initialPrompt]);
-  const [geminiApiKey, setGeminiApiKey] = useState(() => safeGet('gemini_api_key', '') || '');
-  const [showKeyInput, setShowKeyInput] = useState(false);
   const [captions, setCaptions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [copiedIdx, setCopiedIdx] = useState(null);
@@ -23,8 +20,7 @@ export default function AiCaptionModal({ isOpen, onClose, onApplyCaption, templa
   const fetchIdeas = async () => {
     setLoading(true);
     try {
-      const results = await generateMemeCaptionsWithGemini({
-        apiKey: geminiApiKey,
+      const results = await generateMemeCaptions({
         prompt: customPrompt,
         templateName,
         category: selectedCategory,
@@ -47,21 +43,6 @@ export default function AiCaptionModal({ isOpen, onClose, onApplyCaption, templa
       fetchIdeasRef.current();
     }
   }, [isOpen, selectedCategory]);
-
-  const handleSaveApiKey = (key) => {
-    const trimmed = String(key || '').trim();
-    setGeminiApiKey(trimmed);
-    if (trimmed) {
-      safeSet('gemini_api_key', trimmed);
-    } else {
-      safeRemove('gemini_api_key');
-    }
-  };
-
-  const handleClearApiKey = () => {
-    setGeminiApiKey('');
-    safeRemove('gemini_api_key');
-  };
 
   const handleCopy = (e, text, idx) => {
     e.stopPropagation();
@@ -146,30 +127,10 @@ export default function AiCaptionModal({ isOpen, onClose, onApplyCaption, templa
             style={{
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'space-between',
+              justifyContent: 'center',
               padding: '2px 0'
             }}
           >
-            <button
-              type="button"
-              onClick={() => setShowKeyInput(!showKeyInput)}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: geminiApiKey ? 'var(--cyber-cyan)' : 'rgba(255, 255, 255, 0.5)',
-                fontSize: '0.72rem',
-                fontWeight: 600,
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '5px',
-                cursor: 'pointer',
-                padding: '4px 0',
-                transition: 'color 0.15s ease'
-              }}
-            >
-              <Key size={13} style={{ color: geminiApiKey ? 'var(--cyber-cyan)' : 'rgba(255, 255, 255, 0.4)' }} />
-              <span>{geminiApiKey ? 'Gemini Key Configured' : 'Custom Gemini Key (Optional)'}</span>
-            </button>
             <span
               style={{
                 fontSize: '0.7rem',
@@ -182,61 +143,6 @@ export default function AiCaptionModal({ isOpen, onClose, onApplyCaption, templa
             </span>
           </div>
 
-          {showKeyInput && (
-            <div
-              style={{
-                display: 'flex',
-                gap: '8px',
-                padding: '8px 10px',
-                background: 'rgba(255, 255, 255, 0.04)',
-                borderRadius: '10px',
-                border: '1px solid rgba(255, 255, 255, 0.08)'
-              }}
-            >
-              <input
-                type="password"
-                className="form-input"
-                placeholder="Paste Google Gemini API Key..."
-                value={geminiApiKey}
-                onChange={(e) => handleSaveApiKey(e.target.value)}
-                style={{
-                  height: '38px',
-                  fontSize: '0.84rem',
-                  fontWeight: 500,
-                  padding: '0 16px',
-                  borderRadius: '9999px',
-                  flex: 1,
-                  background: '#16181f',
-                  border: '1px solid rgba(255, 255, 255, 0.14)',
-                  boxShadow: '0 3px 10px rgba(0, 0, 0, 0.35)',
-                  color: '#ffffff',
-                  outline: 'none',
-                  transition: 'all 0.22s cubic-bezier(0.16, 1, 0.3, 1)'
-                }}
-              />
-              {geminiApiKey && (
-                <button
-                  type="button"
-                  className="btn btn-xs"
-                  onClick={handleClearApiKey}
-                  title="Remove saved key from this browser"
-                  style={{
-                    padding: '0 14px',
-                    height: '38px',
-                    borderRadius: '9999px',
-                    background: 'rgba(239, 68, 68, 0.15)',
-                    border: '1px solid rgba(239, 68, 68, 0.3)',
-                    color: '#f87171',
-                    fontSize: '0.75rem',
-                    fontWeight: 600,
-                    cursor: 'pointer'
-                  }}
-                >
-                  Clear
-                </button>
-              )}
-            </div>
-          )}
         </div>
       }
     >

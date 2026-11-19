@@ -61,7 +61,7 @@ Do only what is listed. If something is unclear, ask before you build it.
   `!important` if a heading must differ.
 - Inputs must be at least 16px font size, or phones zoom in on focus.
 - Heavy libraries (FFmpeg, MediaPipe, background removal) load lazily. Never import them eagerly.
-- Never hard-code API keys. Gemini keys are entered by the user in the app.
+- Never hard-code API keys. There is no Gemini key in the app; AI captions come from the built-in library.
 - Keep asset paths relative (`./faces/x.jpg`, not `/faces/x.jpg`): `vite.config.js` has `base: './'`.
 
 ## Rules

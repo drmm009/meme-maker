@@ -95,16 +95,35 @@ const run = <T>(storeName: string, mode: IDBTransactionMode, fn: (store: IDBObje
 // Media keys already written this session, so a big video is stored once rather than on every save.
 const storedMedia = new Set<string>();
 
-// Stores the files behind a project's blob: URLs (once per session) and returns their keys.
+// Stores the files behind a project's blob: URLs (once per session) and returns the keys it has.
+// A link that can't be read any more is skipped, so one broken clip never stops the rest saving.
 async function storeMedia(project: VideoProject): Promise<string[]> {
   const urls = collectBlobUrls(project.items || []);
+  const kept: string[] = [];
   for (const url of urls) {
-    if (storedMedia.has(url)) continue;
-    const blob = await (await fetch(url)).blob();
-    await run(MEDIA, 'readwrite', (s) => s.put(blob, url));
-    storedMedia.add(url);
+    if (!storedMedia.has(url)) {
+      try {
+        const blob = await (await fetch(url)).blob();
+        await run(MEDIA, 'readwrite', (s) => s.put(blob, url));
+        storedMedia.add(url);
+      } catch (e) {
+        console.warn('[video draft] a clip could not be stored', e);
+        continue;
+      }
+    }
+    kept.push(url);
   }
-  return urls;
+  return kept;
+}
+
+// Every write to this database goes through one queue, one at a time. Saves can overlap (the
+// auto-save runs every 700ms and storing a big clip takes longer), and an earlier save's clean-up
+// (dropUnusedMedia) would otherwise delete a file a later save had just stored but not yet listed.
+let queue: Promise<unknown> = Promise.resolve();
+export function serially<T>(task: () => Promise<T>): Promise<T> {
+  const next = queue.then(task, task);
+  queue = next.catch(() => {});
+  return next;
 }
 
 // Files neither the draft nor any saved video uses any more.
@@ -121,7 +140,10 @@ async function dropUnusedMedia(): Promise<void> {
   if (stale.length) await run(MEDIA, 'readwrite', (s) => { stale.forEach((k) => { s.delete(k); storedMedia.delete(k); }); });
 }
 
-export async function saveVideoDraft(state: Partial<VideoProject> & Record<string, unknown>): Promise<void> {
+export const saveVideoDraft = (state: Partial<VideoProject> & Record<string, unknown>): Promise<void> =>
+  serially(() => writeVideoDraft(state));
+
+async function writeVideoDraft(state: Partial<VideoProject> & Record<string, unknown>): Promise<void> {
   const project = projectFromState(state);
   const urls = await storeMedia(project);
   const draft: VideoDraft = { id: DRAFT_ID, version: VIDEO_PROJECT_VERSION, savedAt: Date.now(), project, mediaKeys: urls };
@@ -183,7 +205,12 @@ export const videoName = (items: Clip[]): string => {
 
 // Saves (or, with the id of one saved before, replaces) a video in My Studio. Keeps the previous
 // exported file when this save has none.
-export async function saveVideoToStudio(
+export const saveVideoToStudio = (
+  state: Partial<VideoProject> & Record<string, unknown>,
+  meta: { id?: string | null; thumbnail: string; durationMs: number; exportBlob?: Blob | null },
+): Promise<SavedVideoMeta> => serially(() => writeVideoToStudio(state, meta));
+
+async function writeVideoToStudio(
   state: Partial<VideoProject> & Record<string, unknown>,
   { id, thumbnail, durationMs, exportBlob }: { id?: string | null; thumbnail: string; durationMs: number; exportBlob?: Blob | null },
 ): Promise<SavedVideoMeta> {
@@ -227,7 +254,36 @@ export async function getSavedVideoFile(id: string): Promise<Blob | null> {
   return saved?.exportBlob || null;
 }
 
-export async function deleteSavedVideo(id: string): Promise<void> {
+// Every saved video with the uploaded files they use, for a backup (model/studioBackup).
+export async function exportSavedVideos(): Promise<{ videos: SavedVideo[]; media: { key: string; blob: Blob }[] }> {
+  const videos = (await run<SavedVideo[]>(PROJECTS, 'readonly', (s) => s.getAll())) || [];
+  const media: { key: string; blob: Blob }[] = [];
+  const keys = new Set(videos.flatMap((v) => v.mediaKeys || []));
+  for (const key of keys) {
+    const blob = await run<Blob>(MEDIA, 'readonly', (s) => s.get(key));
+    if (blob) media.push({ key, blob });
+  }
+  return { videos, media };
+}
+
+// Puts videos from a backup back in My Studio, files first so no project points at a missing one.
+// A video with the same id as one already here replaces it.
+export const importSavedVideos = (videos: SavedVideo[], media: { key: string; blob: Blob }[]): Promise<number> =>
+  serially(() => writeImportedVideos(videos, media));
+
+async function writeImportedVideos(videos: SavedVideo[], media: { key: string; blob: Blob }[]): Promise<number> {
+  for (const { key, blob } of media) await run(MEDIA, 'readwrite', (s) => s.put(blob, key));
+  let added = 0;
+  for (const video of videos) {
+    if (!video?.id || !video.project) continue;
+    await run(PROJECTS, 'readwrite', (s) => s.put({ ...video, mediaKeys: video.mediaKeys || [] }));
+    added += 1;
+  }
+  await dropUnusedMedia();
+  return added;
+}
+
+export const deleteSavedVideo = (id: string): Promise<void> => serially(async () => {
   await run(PROJECTS, 'readwrite', (s) => { s.delete(id); });
   await dropUnusedMedia();
-}
+});

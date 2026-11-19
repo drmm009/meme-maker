@@ -34,10 +34,14 @@ export function useCanvasFrameActions() {
       }
       return c;
     }));
+    pushHistory();
   };
 
   // A gradient background (two colours, top-left to bottom-right); the bands keep the solid colour.
-  const handleSetCanvasBgGradient = (colors) => setCanvasBgGradient(colors);
+  const handleSetCanvasBgGradient = (colors) => {
+    setCanvasBgGradient(colors);
+    pushHistory();
+  };
 
   const handleWatermarkImageUpload = (e) => {
     const file = e.target.files?.[0];

@@ -54,12 +54,14 @@ export function useExport({ canvasRef, template, onSaveToGallery, imageFit, isNa
     return renderMotion(canvas, { format: prefs.format, width: prefs.width, onProgress, isCancelled });
   };
 
-  const saveToGallery = (customName) => {
+  // Saves to My Studio, celebrating only once it is stored; when it can't be (storage full or
+  // blocked), a red note over the canvas says so.
+  const saveToGallery = async (customName) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const { captions, stickers, imageLayers, aspectRatio, slotImages, slotTransforms } = store.getState();
     const finalName = (typeof customName === 'string' && customName.trim()) ? customName.trim() : memeName();
-    onSaveToGallery({
+    const saved = await onSaveToGallery({
       // The Sticker maker's saves go under Stickers in My Studio; everything else is a meme.
       kind: uiStore.getState().mode === 'sticker' ? 'sticker' : 'meme',
       id: `meme-${Date.now()}`,
@@ -72,6 +74,12 @@ export function useExport({ canvasRef, template, onSaveToGallery, imageFit, isNa
       aspectRatio, imageFit, isNativeLayout, layoutDef, slotImages, slotTransforms,
       createdAt: new Date().toISOString()
     });
+    if (saved === false) {
+      const ui = uiStore.getState();
+      ui.setPasteToast({ text: "Couldn't save to My Studio. Your device may be out of space. Download it instead.", error: true });
+      setTimeout(() => uiStore.getState().setPasteToast(false), 5000);
+      return;
+    }
     triggerConfetti();
   };
 

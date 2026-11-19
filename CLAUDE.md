@@ -26,7 +26,7 @@ Browser-first meme maker: React 19 + Vite 8, canvas-2D image editor, FFmpeg WASM
 - Saved data is versioned: when its shape changes, bump the version in `src/model/` and teach the migrate function the previous version.
 - `vite.config.js` uses `base: './'` — keep asset paths relative.
 - Heavy libs (FFmpeg, MediaPipe, background removal) load lazily; never import eagerly.
-- Optional env `VITE_GIPHY_API_KEY`. Gemini keys are user-supplied in-app — never hardcode keys.
+- Optional env `VITE_GIPHY_API_KEY`. Never hardcode keys. AI captions come from the built-in library until a backend writes them (no Gemini key in the app).
 - When a feature changes, update its section in `docs/architecture.md` (not this file).
 
 ## Not part of the app

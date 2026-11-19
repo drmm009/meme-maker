@@ -2,6 +2,7 @@ import { useLayoutEffect, useRef } from 'react';
 import type { ComponentType, PointerEvent, ReactNode } from 'react';
 import { Plus } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import useEscape from '../useEscape';
 
 export interface SheetAction {
   label: string;
@@ -120,6 +121,8 @@ export default function Sheet({ title, Icon, onClose, badge, action, className =
     isClosingRef.current = true;
     onClose();
   };
+  // Escape closes it too, unless a modal (a picker sheet) is open over it.
+  useEscape(true, triggerClose, { yieldToModals: true });
 
   const onPointerDown = (e: PointerEvent) => {
     if (isClosingRef.current) return;

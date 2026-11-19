@@ -1,32 +1,17 @@
-import { describe, it, expect, vi, afterEach } from 'vitest';
-import { generateMemeCaptionsWithGemini, GEMINI_MODEL } from './aiMemeCaptions';
+import { describe, it, expect } from 'vitest';
+import { generateMemeCaptions } from './aiMemeCaptions';
 
-const reply = (captions) => ({
-  ok: true,
-  json: async () => ({ candidates: [{ content: { parts: [{ text: JSON.stringify(captions) }] } }] }),
-});
-
-afterEach(() => vi.unstubAllGlobals());
-
-describe('generateMemeCaptionsWithGemini', () => {
-  it('asks the current Gemini model, the key in a header and not the URL', async () => {
-    const fetch = vi.fn(async () => reply(['one', 'two']));
-    vi.stubGlobal('fetch', fetch);
-    const captions = await generateMemeCaptionsWithGemini({ apiKey: ' test-key ', prompt: 'mondays', templateName: 'Drake', count: 2 });
-    expect(captions).toEqual(['one', 'two']);
-    const [url, init] = fetch.mock.calls[0];
-    expect(url).toBe(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`);
-    expect(url).not.toContain('test-key');
-    expect(init.headers['x-goog-api-key']).toBe('test-key');
+describe('generateMemeCaptions', () => {
+  it('picks captions from the built-in library, without calling anything', async () => {
+    const captions = await generateMemeCaptions({ prompt: 'mondays', templateName: 'Drake', count: 4 });
+    expect(captions).toHaveLength(4);
+    for (const c of captions) expect(typeof c).toBe('string');
+    expect(new Set(captions).size).toBe(4);
   });
 
-  it('falls back to the built-in library without a key, or when the call fails', async () => {
-    const fetch = vi.fn(async () => ({ ok: false, json: async () => ({}) }));
-    vi.stubGlobal('fetch', fetch);
-    expect(await generateMemeCaptionsWithGemini({ apiKey: '', count: 4 })).toHaveLength(4);
-    expect(fetch).not.toHaveBeenCalled();
-    vi.spyOn(console, 'warn').mockImplementation(() => {});
-    expect(await generateMemeCaptionsWithGemini({ apiKey: 'k', count: 3 })).toHaveLength(3);
-    expect(fetch).toHaveBeenCalledTimes(1);
+  it('keeps to the vibe asked for', async () => {
+    const all = await generateMemeCaptions({ category: 'students', count: 100 });
+    expect(all.length).toBeGreaterThan(0);
+    expect(all.some((c) => /exam|assignment|Professor/i.test(c))).toBe(true);
   });
 });

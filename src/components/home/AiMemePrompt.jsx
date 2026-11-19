@@ -94,7 +94,7 @@ export default function AiMemePrompt({ onOpen: openAiMeme }) {
           <div className="hero-text-content">
             <div className="hero-free-badge badge-cyan">
               <span className="hero-free-dot dot-cyan" />
-              <span>✨ POWERED BY GEMINI 2.5</span>
+              <span>✨ INSTANT MEME CAPTIONS</span>
             </div>
             <h2 className="hero-title">
               <span className="hero-title-line hero-title-line-1">

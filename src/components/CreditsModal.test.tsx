@@ -14,7 +14,9 @@ describe('CreditsModal', () => {
     const items = CREDIT_GROUPS.flatMap((g) => g.items);
     expect(screen.getAllByRole('link')).toHaveLength(items.length);
     expect(screen.getByRole('link', { name: /Fluent Emoji/ }).getAttribute('href')).toBe('https://github.com/microsoft/fluentui-emoji');
-    expect(screen.getByText('AGPL-3.0')).toBeTruthy();
+    expect(screen.getByRole('link', { name: /MediaPipe/ }).textContent).toContain('background removal');
+    // No copyleft (AGPL) library is shipped.
+    expect(screen.queryByText('AGPL-3.0')).toBeNull();
     fireEvent.keyDown(window, { key: 'Escape' });
     fireEvent.click(screen.getByRole('button', { name: 'Close' }));
     expect(onClose).toHaveBeenCalledTimes(2);

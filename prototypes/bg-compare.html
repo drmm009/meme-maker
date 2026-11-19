@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Background removal test</title>
+  <style>
+    :root { color-scheme: dark; --bg: #0b0b0f; --card: #17171c; --line: #2a2a31; --text: #f2f2f5; --muted: #9a9aa5; --accent: #ff5a36; }
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 20px 16px 60px; background: var(--bg); color: var(--text); font: 14px/1.45 system-ui, -apple-system, Segoe UI, sans-serif; }
+    h1 { margin: 0 0 6px; font-size: 22px; }
+    p.lede { margin: 0 0 16px; color: var(--muted); max-width: 70ch; }
+    .bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 18px; }
+    .bar label, .bar button { padding: 9px 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--card); color: var(--text); font: inherit; cursor: pointer; }
+    .bar button.primary { background: var(--accent); border-color: var(--accent); font-weight: 700; }
+    .status { color: var(--muted); }
+    .row { margin-bottom: 22px; padding: 12px; border-radius: 16px; background: var(--card); border: 1px solid var(--line); }
+    .row h2 { margin: 0 0 10px; font-size: 15px; }
+    .cells { display: grid; grid-template-columns: repeat(5, minmax(150px, 1fr)); gap: 10px; overflow-x: auto; }
+    .cell { min-width: 150px; }
+    .cell .head { display: flex; justify-content: space-between; gap: 6px; margin-bottom: 6px; font-weight: 700; font-size: 13px; }
+    .cell .time { color: var(--muted); font-weight: 500; font-variant-numeric: tabular-nums; }
+    .frame { position: relative; aspect-ratio: 1; border-radius: 12px; overflow: hidden; display: grid; place-items: center;
+      background: repeating-conic-gradient(#3a3a42 0% 25%, #24242a 0% 50%) 50% / 20px 20px; }
+    .frame.original { background: #000; cursor: crosshair; }
+    .frame img, .frame canvas { max-width: 100%; max-height: 100%; display: block; }
+    .dot { position: absolute; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 3px #fff; pointer-events: none; }
+    .note { color: var(--muted); font-size: 12px; margin-top: 4px; }
+    .err { color: #ff6b6b; font-size: 12px; padding: 8px; text-align: center; }
+    @media (max-width: 700px) { .cells { grid-template-columns: repeat(5, 160px); } }
+  </style>
+</head>
+<body>
+  <h1>Background removal test</h1>
+  <p class="lede">
+    A dev-only test page, not part of the app. Each photo goes through the app's cut-out
+    (<code>src/utils/photoCutout.ts</code>) and three MediaPipe models on their own: <b>People</b> (selfie multiclass), <b>General</b> (DeepLab:
+    people, pets, cars, furniture…) and <b>Tap</b> (Magic Touch: keeps the thing at the orange dot;
+    tap the original to move it). The first run of each downloads its model, so its time is slower.
+  </p>
+  <div class="bar">
+    <button type="button" class="primary" id="run">Run all</button>
+    <label>Add your photos <input type="file" id="files" accept="image/*" multiple hidden /></label>
+    <span class="status" id="status"></span>
+  </div>
+  <div id="rows"></div>
+  <script type="module" src="./bgCompare.ts"></script>
+</body>
+</html>
