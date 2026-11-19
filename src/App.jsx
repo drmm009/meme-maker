@@ -355,6 +355,18 @@ function App() {
     setCurrentView('custom-builder');
   };
 
+  // The Creator sheet's makers, as Home's maker cards open them: the GIF maker's own page, or the
+  // editor on that maker's starting template (editor/makers).
+  const openMaker = (maker) => {
+    setCreatorSheetOpen(false);
+    if (maker === 'gif') {
+      setCurrentView('gif');
+      return;
+    }
+    const template = makerTemplate(maker === 'stickers' ? 'sticker' : maker, MEME_TEMPLATES);
+    if (template) handleSelectTemplate(template);
+  };
+
   const handleCustomLayoutComplete = (customTemplate) => {
     setSelectedTemplate(customTemplate);
     if (builderMode === 'video' || customTemplate?.type === 'video') {
@@ -956,7 +968,7 @@ function App() {
       )}
 
       {/* The dock's Creator: Video meme or Image meme, then Choose Canvas Layout on that kind's section */}
-      <CreatorSheet open={creatorSheetOpen} onClose={() => setCreatorSheetOpen(false)} onPick={openCanvas} />
+      <CreatorSheet open={creatorSheetOpen} onClose={() => setCreatorSheetOpen(false)} onPick={openCanvas} onMaker={openMaker} />
 
       {/* Standalone AI Prompt Generator Modal */}
       {aiGeneratorModalOpen && (

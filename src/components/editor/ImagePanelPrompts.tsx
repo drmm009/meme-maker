@@ -5,7 +5,8 @@
 // (useLayerActions' handleAddImageLayer, through the UI store's `panelTarget`); text as a caption in
 // its middle. Only layouts of 2 to 4 panels get them (smaller panels start empty), only in the full
 // editor with no sheet open and not while drawing. A panel's card goes once a photo or a caption
-// sits in it.
+// sits in it, or any layer (photo, sticker, text) is moved there: drags update positions live, so
+// the card goes the moment a layer's middle crosses into the panel.
 import type { ChangeEvent } from 'react';
 import { ImagePlus, LayoutTemplate, Type } from 'lucide-react';
 import CanvasStartPrompt from '../ui/CanvasStartPrompt';
@@ -42,7 +43,7 @@ interface UiState {
 // Whether a panel has a photo of its own (an empty one holds the editor's white pixel).
 const hasPhoto = (src: string | null | undefined) => Boolean(src) && src !== WHITE_PIXEL_URL;
 
-// Whether a photo layer sits in a panel (its middle there).
+// Whether a photo or sticker layer sits in a panel (its middle there).
 const hasLayerIn = (r: PanelRect, layers: Layered[]) => layers.some((l) => inPanel(r, l.x ?? 0.5, l.y ?? 0.5));
 
 // Whether a panel already has a caption in it (one placed on the image, not in a band).
@@ -135,7 +136,7 @@ export default function ImagePanelPrompts({ layoutDef, isDrawingMode, onPhoto }:
 
   return (
     <div className="ie-panel-starts">
-      {rects.map((r, i) => (hasPhoto(slotImages?.[i]) || hasLayerIn(r, imageLayers || []) || hasCaptionIn(r, captions) ? null : (
+      {rects.map((r, i) => (hasPhoto(slotImages?.[i]) || hasLayerIn(r, [...(imageLayers || []), ...(stickers || [])]) || hasCaptionIn(r, captions) ? null : (
         <PanelCard key={i} index={i} rect={r} ink={inkFor(bg)} onText={() => addText(i)} onUpload={upload(i)} onTemplates={() => templates(i)} />
       )))}
     </div>

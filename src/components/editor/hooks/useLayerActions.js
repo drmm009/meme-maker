@@ -1,11 +1,12 @@
 import { blobToDataURL } from '../../../utils/galleryStore';
 import { getNonOverlappingPosition } from '../../../utils/captionLayout';
 import { isSocialCardCaption, isVideoUrl } from '../memeEditorUtils';
-import { useMemeEditorStore, useMemeEditorStoreApi, WHITE_PIXEL_URL } from '../store/useMemeEditorStore';
+import { useMemeEditorStore, useMemeEditorStoreApi } from '../store/useMemeEditorStore';
 import { useEditorUiStore, useEditorUiStoreApi } from '../store/useEditorUiStore';
 import { duplicateDrawing, isDragDrawing } from '../../canvas/interaction/drawingHits';
 import { fitLayerScale, panelPlacement } from '../../canvas/interaction/layerBoxes';
 import { inPanel, panelRects } from '../../canvas/layout/panels';
+import { emptyPanelOf, newLayerPosition } from './newLayerPosition';
 
 // A picture's natural size, or null if it can't be read (a video, a broken link) within a moment.
 const naturalSize = (src) => new Promise((resolve) => {
@@ -18,11 +19,7 @@ const naturalSize = (src) => new Promise((resolve) => {
   img.src = src;
 });
 
-// A multi-panel layout's first panel with nothing in it (no photo layer with its middle there, no
-// panel photo of its own), or null when every panel has one.
-export const firstEmptyPanel = (rects, layers = [], slotImages = []) => rects.find((r, i) =>
-  !(slotImages[i] && slotImages[i] !== WHITE_PIXEL_URL)
-  && !layers.some((l) => inPanel(r, l.x ?? 0.5, l.y ?? 0.5))) || null;
+export { firstEmptyPanel } from './newLayerPosition';
 
 export function useLayerActions({ activeCaption, activeImageLayer, activeSticker, updateActiveCaptionProps, canvasRef }) {
   const activeLayerId = useMemeEditorStore((s) => s.activeLayerId);
@@ -68,8 +65,7 @@ export function useLayerActions({ activeCaption, activeImageLayer, activeSticker
   // the others.
   const commitAddImageLayer = async (src, trimStart, trimEnd, target = null) => {
     // In a grid layout a photo with no panel named goes into the first empty one (else the canvas).
-    const { activeTemplate, imageLayers: nowLayers, slotImages } = docApi.getState();
-    const panel = target || (activeTemplate?.isNativeLayout ? firstEmptyPanel(panelRects(activeTemplate.layoutDef), nowLayers, slotImages) : null);
+    const panel = target || emptyPanelOf(docApi.getState());
     const area = canvasRef?.current?.imageArea;
     const size = area ? await naturalSize(src) : null;
     const box = panel && area ? { w: panel.width * area.w, h: panel.height * area.h } : area;
@@ -358,7 +354,7 @@ export function useLayerActions({ activeCaption, activeImageLayer, activeSticker
 
     // Emoji & Sticker Handlers
   const handleAddSticker = (stickerObj) => {
-    const pos = getNonOverlappingPosition('sticker', captions, stickers, imageLayers);
+    const pos = newLayerPosition('sticker', docApi.getState());
     const maxZ = Math.max(-1, ...captions.map(c => c.zIndex ?? -1), ...stickers.map(s => s.zIndex ?? -1), ...(imageLayers || []).map(i => i.zIndex ?? -1));
     const newSticker = {
       id: `stk-${Date.now()}`,
@@ -377,7 +373,7 @@ export function useLayerActions({ activeCaption, activeImageLayer, activeSticker
   };
 
   const handleAddGraphicSticker = (stickerObj) => {
-    const pos = getNonOverlappingPosition('sticker', captions, stickers, imageLayers);
+    const pos = newLayerPosition('sticker', docApi.getState());
     const maxZ = Math.max(-1, ...captions.map(c => c.zIndex ?? -1), ...stickers.map(s => s.zIndex ?? -1), ...(imageLayers || []).map(i => i.zIndex ?? -1));
     const newSticker = {
       id: `stk-graphic-${Date.now()}`,

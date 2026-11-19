@@ -45,10 +45,12 @@
   /* Dark Obsidian Spectrum (Original Default) */
   --bg-dark: #090a0f;
   --bg-base: #090a0f;
-  --bg-gradient:
+  /* Home's dark backdrop (the orange glow at the top), also behind the always-dark image editor. */
+  --bg-gradient-dark:
     radial-gradient(ellipse 90% 30% at 50% 0%, rgba(255, 255, 255, 0.04) 0%, transparent 60%),
     radial-gradient(ellipse 110% 70% at 50% -5%, rgba(255, 94, 54, 0.50) 0%, rgba(249, 115, 22, 0.35) 38%, rgba(255, 59, 96, 0.15) 65%, transparent 85%),
     linear-gradient(180deg, rgba(255, 94, 54, 0.06) 0%, transparent 40%, rgba(9, 10, 15, 0.95) 100%);
+  --bg-gradient: var(--bg-gradient-dark);
   --bg-surface-1: #13161f;
   --bg-surface-2: #181b24;
   --bg-surface-3: #202432;

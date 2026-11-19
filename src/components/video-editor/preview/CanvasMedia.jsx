@@ -4,6 +4,8 @@ import { useEditorStore } from '../../../store/useVideoEditorStore';
 import { applyMotion, applyPunch } from './nodeMotion';
 import { clipCrop } from '../../../utils/clipCrop';
 import { dropSlotIndex, fitPlacement, isOnScreen, mediaAttrs } from './previewMath';
+import { nodeCentre, setDragPoint } from './panelDrag';
+import { pictureArea } from '../../../utils/videoPanels';
 import { attachPreviewVideo } from './previewVideo';
 import { useFrameEffects } from './useFrameEffects';
 import { drawGifFrame, useGifFrames } from './useGifFrames';
@@ -30,7 +32,9 @@ const CanvasMedia = ({ item, isSelected, onSelect, onChange, canvasDimensions })
   // New media is placed once its size is known (through a ref: it closes over item and onChange).
   const positionMediaRef = useRef(null);
   positionMediaRef.current = (naturalWidth, naturalHeight) => {
-    const patch = fitPlacement(item, naturalWidth, naturalHeight, canvasDimensions, useEditorStore.getState().layoutSlots || []);
+    const { layoutSlots, videoHeader, videoFooter } = useEditorStore.getState();
+    const area = canvasDimensions ? pictureArea(videoHeader, videoFooter, canvasDimensions.width, canvasDimensions.height) : null;
+    const patch = fitPlacement(item, naturalWidth, naturalHeight, canvasDimensions, layoutSlots || [], area);
     if (patch) onChange({ ...item, ...patch });
   };
 
@@ -124,6 +128,12 @@ const CanvasMedia = ({ item, isSelected, onSelect, onChange, canvasDimensions })
     }
   }, [isSelected, item.id]);
 
+  // The selected clip's handles above every other clip (text and stickers drawn after it included),
+  // so a handle is never under another clip.
+  useEffect(() => {
+    if (isSelected) trRef.current?.moveToTop();
+  });
+
   return (
     <React.Fragment>
       <KonvaImage
@@ -134,7 +144,9 @@ const CanvasMedia = ({ item, isSelected, onSelect, onChange, canvasDimensions })
         draggable
         onClick={onSelect}
         onTap={onSelect}
+        onDragMove={(e) => setDragPoint(nodeCentre(e.target))}
         onDragEnd={(e) => {
+          setDragPoint(null);
           const x = e.target.x();
           const y = e.target.y();
           // The layout panel it was dropped on (used for z-order and background colour targets).

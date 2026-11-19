@@ -4,6 +4,7 @@
 import type { Clip, LayoutSlot, Placed, TextClip } from '../../../model/videoProject';
 import { clipOpacity } from '../../../model/videoProject';
 import { cornerForCenter, rotatedCenter } from '../../../utils/rotation';
+import { inSlot, itemCentre } from '../../../utils/videoPanels';
 
 export const STAGE_WIDTH = 800;
 
@@ -13,7 +14,7 @@ const KEY_MAX_SIDE = 640;
 const STILL_FX_MAX_SIDE = 1280;
 
 type PlacementPatch = Required<Pick<Placed, 'isPositioned' | 'x' | 'y' | 'width' | 'height'>> &
-  Partial<Pick<Placed, 'scaleX' | 'scaleY'>> & { crop?: undefined };
+  Partial<Pick<Placed, 'scaleX' | 'scaleY'>> & { crop?: undefined; startSlot?: undefined };
 
 export type PanelPlacement = 'fit' | 'cover' | 'stretch';
 
@@ -53,16 +54,60 @@ export function currentPanelPlacement(item: Pick<Placed, 'x' | 'y' | 'width' | '
   return !cropped && centred && touches && w <= slot.width + 0.5 && h <= slot.height + 0.5 ? 'fit' : null;
 }
 
+// A grid's canvas changed shape, its panels with it (same order): each clip or photo in a panel
+// keeps its Fit, Fill or Stretch in the new panel (one moved by hand keeps its size, its middle at
+// the same place in the panel); text and stickers keep their middle at the same place in the panel
+// they're in (or on the canvas, if in none). `wholeArea`: one "panel", the picture between any
+// header and footer bars, holding every clip and photo whose middle is in it; anything outside it
+// (text in a bar) is left for the bars to move.
+type Reflowable = Pick<Placed, 'x' | 'y' | 'width' | 'height' | 'scaleX' | 'scaleY' | 'crop' | 'slotIndex'> & { type: string; text?: string };
+export function reflowPanels<T extends Reflowable>(items: T[], oldSlots: LayoutSlot[], newSlots: LayoutSlot[], oldH: number, newH: number, { wholeArea = false } = {}): T[] {
+  const mapPoint = (p: { x: number; y: number }, from: LayoutSlot | null, to: LayoutSlot | null) => (from && to
+    ? { x: to.x + ((p.x - from.x) / Math.max(1, from.width)) * to.width, y: to.y + ((p.y - from.y) / Math.max(1, from.height)) * to.height }
+    : { x: p.x, y: p.y * (newH / Math.max(1, oldH)) });
+  return items.map((item) => {
+    const centre = itemCentre(item as never);
+    if (!centre || typeof item.x !== 'number' || typeof item.y !== 'number') return item;
+    const index = item.slotIndex !== undefined && item.slotIndex !== null ? item.slotIndex : oldSlots.findIndex((s) => inSlot(s, centre));
+    const from = index >= 0 ? oldSlots[index] ?? null : null;
+    const to = index >= 0 ? newSlots[index] ?? null : null;
+    if (wholeArea && !from) return item;
+    if (from && to && (wholeArea || item.slotIndex === index) && (item.type === 'video' || item.type === 'image')) {
+      const mode = currentPanelPlacement(item, from);
+      if (mode) {
+        const w = (item.width || 1) * (item.scaleX || 1);
+        const h = (item.height || 1) * (item.scaleY || 1);
+        const natural = mode === 'cover' && item.crop
+          ? { w: w / Math.max(0.001, item.crop.width), h: h / Math.max(0.001, item.crop.height) }
+          : mode === 'fit' ? { w, h } : { w: to.width, h: to.height };
+        return { ...item, ...panelPlacement(natural, to, mode) };
+      }
+    }
+    const next = mapPoint(centre, from, to);
+    return { ...item, x: item.x + (next.x - centre.x), y: item.y + (next.y - centre.y) };
+  });
+}
+
 // Where newly loaded media goes (null once it has been placed): fitted inside its layout panel,
-// or fitted and centred on the canvas. Stickers keep their natural size.
+// or fitted and centred on the canvas. Stickers keep their natural size (centred in the panel they
+// start in, `startSlot`, made smaller only if they'd overflow it).
 export function fitPlacement(
-  item: Pick<Clip, 'type'> & Pick<Placed, 'isPositioned' | 'slotIndex'>,
+  item: Pick<Clip, 'type'> & Pick<Placed, 'isPositioned' | 'slotIndex' | 'startSlot'>,
   naturalWidth: number,
   naturalHeight: number,
   canvas: { width: number; height: number } | null | undefined,
-  slots: LayoutSlot[] = []
+  slots: LayoutSlot[] = [],
+  // The picture's part of the canvas (less header and footer bars); the whole canvas if not given.
+  area?: LayoutSlot | null
 ): PlacementPatch | null {
   if (item.isPositioned || !canvas) return null;
+  const start = item.type === 'sticker' && item.startSlot !== undefined ? slots[item.startSlot] : null;
+  if (start) {
+    const scale = Math.min(1, (start.width * 0.8) / naturalWidth, (start.height * 0.8) / naturalHeight);
+    const width = naturalWidth * scale;
+    const height = naturalHeight * scale;
+    return { isPositioned: true, x: start.x + (start.width - width) / 2, y: start.y + (start.height - height) / 2, width, height, startSlot: undefined };
+  }
   const slot = item.slotIndex !== undefined ? slots[item.slotIndex] : null;
   if (slot) {
     const scale = Math.min(slot.width / naturalWidth, slot.height / naturalHeight);
@@ -79,10 +124,11 @@ export function fitPlacement(
       crop: undefined
     };
   }
-  const scale = item.type === 'sticker' ? 1 : Math.min(canvas.width / naturalWidth, canvas.height / naturalHeight);
+  const a = area ?? { x: 0, y: 0, width: canvas.width, height: canvas.height };
+  const scale = item.type === 'sticker' ? 1 : Math.min(a.width / naturalWidth, a.height / naturalHeight);
   const width = naturalWidth * scale;
   const height = naturalHeight * scale;
-  return { isPositioned: true, x: (canvas.width - width) / 2, y: (canvas.height - height) / 2, width, height };
+  return { isPositioned: true, x: a.x + (a.width - width) / 2, y: a.y + (a.height - height) / 2, width, height };
 }
 
 // The layout panel a photo or video was dropped on (by its centre), or undefined. Stickers float

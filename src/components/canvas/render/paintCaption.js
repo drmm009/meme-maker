@@ -7,6 +7,7 @@ import { drawTweetCard, getTweetCardHeight } from '../draw/socialCards/tweet';
 import { drawInstagramCard, getInstagramCardHeight } from '../draw/socialCards/instagram';
 import { drawSpeechBubble } from '../draw/speechBubble';
 import { captionGradient, ensureIndicFonts, underlineMetrics } from '../draw/captionFont';
+import { sameColor } from '../../../utils/sameColor';
 import { captionTextLayout } from './captionTextLayout';
 
 export function paintCaption({
@@ -128,7 +129,10 @@ if (cap.isBreakingNews) {
   const gradientFill = isBubble ? null : captionGradient(targetCtx, cap, maxLineWidth);
   if (gradientFill) textColor = gradientFill;
 
-  const shouldStroke = cap.stroke && cap.stroke !== 'transparent' && (!hasBg || (cap.stroke !== cap.bgColor && cap.stroke !== bgFillColor));
+  // No outline in the text's own colour (it would only thicken the letters): skipped then, as is
+  // one matching the text's box.
+  const shouldStroke = cap.stroke && cap.stroke !== 'transparent' && !sameColor(cap.stroke, textColor)
+    && (!hasBg || (cap.stroke !== cap.bgColor && cap.stroke !== bgFillColor));
   const { textAnchorX } = layout;
 
   // The caption's own drop shadow, under every line (the text effects may add their own).

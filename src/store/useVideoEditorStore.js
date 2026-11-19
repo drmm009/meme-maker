@@ -4,7 +4,8 @@ import { isEndCard, keepEndCardLast } from '../utils/brandCard';
 import { HISTORY_BURST_MS, historyBurst } from '../utils/historyBurst';
 import { duplicateGroup, shiftGroup, togglePick } from '../utils/clipGroup';
 import { moveLayer as moveLayerInItems } from '../utils/layerOrder';
-import { DEFAULT_VIDEO_BAND } from '../utils/videoBands';
+import { DEFAULT_VIDEO_BAND, bandRects } from '../utils/videoBands';
+import { firstEmptySlot, inSlot, itemCentre, pictureArea, textInSlot } from '../utils/videoPanels';
 
 
 // An "Item" represents a single piece of media on the timeline (Video, Image, Text)
@@ -48,6 +49,18 @@ const keepingEndCardLast = (creator) => (set, get, api) => creator((partial, rep
   return items === next.items ? next : { ...next, items, duration: calculateDuration(items) };
 }, replace), get, api);
 
+// Text, stickers and photos spanning the whole video before a video was added (start to end) are
+// made to span it after. Before the first video, "the whole video" is how long they all run.
+const isOverlay = (i) => i.type !== 'video' && i.type !== 'audio' && !isEndCard(i);
+const videoEnd = (items) => Math.max(0, ...items.filter(i => i.type === 'video').map(i => i.endMs).filter(Number.isFinite));
+function followVideoLength(before, after) {
+  const hadVideo = before.some(i => i.type === 'video');
+  const prevEnd = hadVideo ? videoEnd(before) : Math.max(0, ...before.filter(isOverlay).map(i => i.endMs).filter(Number.isFinite));
+  const nextEnd = videoEnd(after);
+  if (!prevEnd || !nextEnd || nextEnd === prevEnd || (hadVideo && nextEnd < prevEnd)) return after;
+  return after.map(i => (before.includes(i) && isOverlay(i) && (i.startMs || 0) === 0 && Math.abs(i.endMs - prevEnd) < 50 ? { ...i, endMs: nextEnd } : i));
+}
+
 export const useEditorStore = create(temporal(keepingEndCardLast((set, get) => ({
   playhead: 0, // Current time in milliseconds
   isPlaying: false,
@@ -86,7 +99,17 @@ export const useEditorStore = create(temporal(keepingEndCardLast((set, get) => (
   setDraggingTime: (time) => set({ draggingTime: time }),
   setIsExporting: (exporting) => set({ isExporting: exporting }),
   setExportProgress: (progress) => set({ exportProgress: progress }),
-  setCanvasAspectRatio: (ratio) => set({ canvasAspectRatio: ratio }),
+  // A new canvas shape moves the footer bar to the new bottom; text in it moves with it.
+  setCanvasAspectRatio: (ratio) => set((state) => {
+    const oldH = 800 / (state.canvasAspectRatio || 4 / 3);
+    const newH = 800 / ratio;
+    const [oldBar] = bandRects(null, state.videoFooter, 800, oldH);
+    const [newBar] = bandRects(null, state.videoFooter, 800, newH);
+    if (!oldBar || !newBar || oldBar.y === newBar.y) return { canvasAspectRatio: ratio };
+    const dy = newBar.y - oldBar.y;
+    const items = state.items.map((i) => (i.type === 'text' && inSlot(oldBar, itemCentre(i)) ? { ...i, y: i.y + dy } : i));
+    return { canvasAspectRatio: ratio, items };
+  }),
   setBackgroundColor: (color) => set({ backgroundColor: color }),
   // A handle in a corner for the whole video ({ text, corner }), or null.
   watermark: null,
@@ -125,19 +148,36 @@ export const useEditorStore = create(temporal(keepingEndCardLast((set, get) => (
   setGridOverlayUrl: (url) => set({ gridOverlayUrl: url }),
   
   addItem: (item) => set((state) => {
-    // A panel picked on its start card, else the first empty one.
+    // A panel picked on its start card, else the first empty one (nothing given to it, nothing
+    // with its middle there: utils/videoPanels).
     let slotIndex = item.slotIndex;
     const targeted = slotIndex === undefined && (item.type === 'image' || item.type === 'video')
       && Number.isInteger(state.targetSlot) && state.targetSlot < state.layoutSlots.length;
     if (targeted) slotIndex = state.targetSlot;
+    const emptySlot = firstEmptySlot(state.items, state.layoutSlots);
     if (slotIndex === undefined && (item.type === 'image' || item.type === 'video') && state.layoutSlots.length > 0) {
-      const usedSlots = new Set(state.items.filter(i => i.slotIndex !== undefined).map(i => i.slotIndex));
-      for (let i = 0; i < state.layoutSlots.length; i++) {
-        if (!usedSlots.has(i)) {
-          slotIndex = i;
-          break;
-        }
+      if (state.layoutSlots.length === 1) {
+        if (!state.items.some(i => i.slotIndex === 0)) slotIndex = 0;
+      } else if (emptySlot !== undefined) {
+        slotIndex = emptySlot;
+      } else {
+        // No panel is empty: the first one without a clip or photo of its own.
+        const free = state.layoutSlots.findIndex((_, i) => !state.items.some(it => it.slotIndex === i));
+        if (free !== -1) slotIndex = free;
       }
+    }
+    // In a grid, new text sits centred in the first empty panel (its font made smaller to fit), and
+    // a new sticker starts there. Otherwise new text sits in the middle of the picture, between any
+    // header and footer bars, each next one a little lower.
+    let place = {};
+    const emptyPanel = item.x === undefined && emptySlot !== undefined ? state.layoutSlots[emptySlot] : null;
+    if (emptyPanel && item.type === 'text') place = textInSlot(item, emptyPanel);
+    if (emptyPanel && item.type === 'sticker' && !item.isPositioned) place = { startSlot: emptySlot };
+    if (!emptyPanel && item.type === 'text' && item.x === undefined) {
+      const area = pictureArea(state.videoHeader, state.videoFooter, 800, 800 / (state.canvasAspectRatio || 16 / 9));
+      const texts = state.items.filter(i => i.type === 'text').length;
+      const step = (texts % 4) * 40;
+      place = textInSlot(item, { ...area, y: area.y + step, height: Math.max(40, area.height - step) });
     }
 
     // Videos join the end of the main sequence (in a multi-panel layout they play side by side
@@ -170,22 +210,29 @@ export const useEditorStore = create(temporal(keepingEndCardLast((set, get) => (
 
     const visualItems = state.items.filter(i => i.type === 'text' || i.type === 'sticker' || i.type === 'image');
     const offset = (visualItems.length % 6) * 35;
-    const defaultX = item.x !== undefined ? item.x : (50 + offset);
-    const defaultY = item.y !== undefined ? item.y : (50 + offset);
+    const defaultX = item.x !== undefined ? item.x : (place.x ?? (50 + offset));
+    const defaultY = item.y !== undefined ? item.y : (place.y ?? (50 + offset));
 
-    const newItems = [...state.items, { 
+    let newItems = [...state.items, { 
       ...item, 
       id: newItemId(),
       startMs: startMs,
       endMs: endMs,
       x: defaultX, y: defaultY, scale: 1, rotation: 0,
       slotIndex,
+      ...(place.startSlot !== undefined ? { startSlot: place.startSlot } : {}),
+      ...(place.fontSize ? { fontSize: place.fontSize } : {}),
       playbackRate: 1,
       muted: false,
       thumbnailUrl: item.thumbnailUrl || null,
       // Length of the source media, so trims can stop at its real start and end.
       sourceDurationMs: item.sourceDurationMs ?? ((item.type === 'video' || item.type === 'audio') ? item.durationMs : undefined)
     }];
+
+    // A new video sets how long the video runs: text, stickers and photos that ran the whole of it
+    // so far (from the start to its end, or to the 7 s placeholder before the first video) follow
+    // the new length, so a caption layout's captions last as long as its clip.
+    if (item.type === 'video') newItems = followVideoLength(state.items, newItems);
 
     return {
       targetSlot: null,

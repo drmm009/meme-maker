@@ -76,6 +76,8 @@ export interface Placed {
   isPositioned?: boolean;
   // The panel of a multi-panel layout the clip belongs to.
   slotIndex?: number;
+  // A new sticker's panel to start in (centred there once its size is known; then cleared).
+  startSlot?: number;
 }
 
 // A clip's opacity, 0..1 (1 when unset or not a number).

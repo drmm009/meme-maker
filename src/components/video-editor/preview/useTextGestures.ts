@@ -8,6 +8,7 @@ import { pinchChange } from '../../canvas/interaction/layerPinch';
 import type { TwoFingers } from '../../canvas/interaction/layerPinch';
 import { holdSelection } from './selectionStyle';
 import { centreOf, cornerForCentre, snapToCentre } from './textGestures';
+import { nodeCentre, setDragPoint } from './panelDrag';
 import type { Size } from './textGestures';
 
 type Look = Partial<TextClip>;
@@ -211,6 +212,7 @@ export function useTextGestures({ item, isSelected, nodeRef, trRef, bitmapRef, s
     if (!node || !layer || !canvas) return;
     const snap = snapToCentre(node.getClientRect({ relativeTo: layer, skipShadow: true }), canvas);
     if (snap.dx || snap.dy) node.position({ x: node.x() + snap.dx, y: node.y() + snap.dy });
+    setDragPoint(nodeCentre(node));
     const shown = snap.vertical !== null || snap.horizontal !== null ? { vertical: snap.vertical, horizontal: snap.horizontal } : null;
     setGuides((g) => (g?.vertical === shown?.vertical && g?.horizontal === shown?.horizontal ? g : shown));
   };
@@ -218,6 +220,7 @@ export function useTextGestures({ item, isSelected, nodeRef, trRef, bitmapRef, s
   const onDragEnd = () => {
     const node = nodeRef.current;
     setGuides(null);
+    setDragPoint(null);
     if (node) changeRef.current({ ...itemRef.current, x: node.x(), y: node.y() });
   };
 

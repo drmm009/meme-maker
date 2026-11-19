@@ -1,7 +1,16 @@
-import { getNonOverlappingPosition } from '../../../utils/captionLayout';
-import { useMemeEditorStore } from '../store/useMemeEditorStore';
+import { useMemeEditorStore, useMemeEditorStoreApi } from '../store/useMemeEditorStore';
+import { newLayerPosition } from './newLayerPosition';
 import { useEditorUiStore } from '../store/useEditorUiStore';
 import { captionBgPatch } from '../panels/captionBox';
+
+// The caption whose look new text copies: the selected one, else the last on the picture. Never a
+// header or footer bar's caption (white with no outline, made for the black bar, so it would vanish
+// on a white picture).
+const onPicture = (c) => !c.isHeaderCaption && !c.isFooterCaption;
+const lookFrom = (captions, activeId) => {
+  const picture = captions.filter(onPicture);
+  return picture.find(c => c.id === activeId) || (picture.length > 0 ? picture[picture.length - 1] : null);
+};
 
 export function useCaptionActions({ activeCaption }) {
   const captions = useMemeEditorStore((s) => s.captions);
@@ -12,11 +21,12 @@ export function useCaptionActions({ activeCaption }) {
   const imageLayers = useMemeEditorStore((s) => s.imageLayers);
   const activeLayerId = useMemeEditorStore((s) => s.activeLayerId);
   const setActiveTab = useEditorUiStore((s) => s.setActiveTab);
+  const docApi = useMemeEditorStoreApi();
 
   // Caption Handlers
   const handleAddCaption = () => {
-    const pos = getNonOverlappingPosition('caption', captions, stickers, imageLayers);
-    const referenceCap = captions.find(c => c.id === activeLayerId) || (captions.length > 0 ? captions[captions.length - 1] : null);
+    const pos = newLayerPosition('caption', docApi.getState());
+    const referenceCap = lookFrom(captions, activeLayerId);
     const maxZ = Math.max(-1, ...captions.map(c => c.zIndex ?? -1), ...stickers.map(s => s.zIndex ?? -1), ...(imageLayers || []).map(i => i.zIndex ?? -1));
     const newCap = {
       id: `cap-${Date.now()}`,
@@ -57,7 +67,7 @@ export function useCaptionActions({ activeCaption }) {
       });
       return;
     }
-    const pos = getNonOverlappingPosition('caption', captions, stickers, imageLayers);
+    const pos = newLayerPosition('caption', docApi.getState());
     const maxZ = Math.max(-1, ...captions.map(c => c.zIndex ?? -1), ...stickers.map(s => s.zIndex ?? -1), ...(imageLayers || []).map(i => i.zIndex ?? -1));
     const newCap = {
       id: `cap-curved-${Date.now()}`,
@@ -82,8 +92,8 @@ export function useCaptionActions({ activeCaption }) {
   };
 
   const handleAddPresetPhrase = (phraseText) => {
-    const pos = getNonOverlappingPosition('phrase', captions, stickers, imageLayers);
-    const referenceCap = captions.find(c => c.id === activeLayerId) || (captions.length > 0 ? captions[captions.length - 1] : null);
+    const pos = newLayerPosition('phrase', docApi.getState());
+    const referenceCap = lookFrom(captions, activeLayerId);
     const maxZ = Math.max(-1, ...captions.map(c => c.zIndex ?? -1), ...stickers.map(s => s.zIndex ?? -1), ...(imageLayers || []).map(i => i.zIndex ?? -1));
     const newCap = {
       id: `cap-${Date.now()}`,

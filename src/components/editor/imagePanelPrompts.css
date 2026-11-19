@@ -12,14 +12,17 @@
 
 /* A multi-panel layout's start cards (ImagePanelPrompts): each panel's box places a small copy of
    the blank canvas's start card (ui/canvasStartPrompt.css), which fills it. */
+/* Taps go through to the canvas (the layers on it), except on a card's buttons. */
 .ie-panel-starts {
   position: absolute;
   inset: 0;
+  pointer-events: none;
 }
 
 .ie-panel-start {
   position: absolute;
   box-sizing: border-box;
+  pointer-events: none;
 }
 
 /* A little less room around the card than on a whole canvas. */

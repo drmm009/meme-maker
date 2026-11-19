@@ -548,10 +548,15 @@ export function useCanvasInteraction({
       const current = dragTarget.current;
       if (!current) return;
       if (current.type === 'caption' && onUpdateCaptionBounds) {
-        // A header/footer caption dragged out of its band keeps its own position from now on.
+        // A header/footer caption dragged out of its band keeps its own position from now on. One
+        // with no outline (made for its bar) gets a black one as it leaves, so it stays readable
+        // on the picture.
         const fromBand = current.isHeaderCaption || current.isFooterCaption;
+        const leaving = fromBand && !current.hasCustomPos;
         if (fromBand) current.hasCustomPos = true;
-        onUpdateCaptionBounds(current.id, { x, y, ...(fromBand ? { hasCustomPos: true } : {}) });
+        const stroke = (captions || []).find((c) => c.id === current.id)?.stroke;
+        const outline = leaving && (!stroke || stroke === 'transparent' || stroke === 'none') ? { stroke: '#000000' } : {};
+        onUpdateCaptionBounds(current.id, { x, y, ...(fromBand ? { hasCustomPos: true } : {}), ...outline });
       } else if (current.type === 'sticker' && onUpdateStickerBounds) {
         onUpdateStickerBounds(current.id, { x, y });
       } else if (current.type === 'imageLayer' && onUpdateImageLayerBounds) {

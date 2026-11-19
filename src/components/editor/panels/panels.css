@@ -1,5 +1,12 @@
 /* The image editor's shell on the shared UI kit (components/ui). */
-.meme-editor-container.ui-theme { background: var(--ui-bg) !important; }
+/* Home's backdrop (the orange glow at the top over near-black), in its dark look whatever the app's
+   theme, as the editor itself is always dark. */
+.meme-editor-container.ui-theme {
+  background-color: #090a0f !important;
+  background-image: var(--bg-gradient-dark) !important;
+  background-repeat: no-repeat !important;
+  background-size: cover !important;
+}
 .ui-theme .editor-main { gap: 0 !important; padding: 0 !important; }
 
 /* Top bar undo & redo capsule, matching the video editor's .vt-history capsule */
@@ -2008,3 +2015,24 @@ div.ie-layer-pick { cursor: default; }
   overflow-y: auto;
   scrollbar-width: none;
 }
+
+/* Top bar glass: the back button, the undo & redo capsule and the aspect pill bar in the size
+   dropdown's soft see-through fill (sizeMenu.css .ui-size-menu-btn), so Home's backdrop glows
+   through all of them alike. */
+.meme-editor-container .ui-topbar-back,
+.meme-editor-container .ie-topbar-history,
+.meme-editor-container .ie-aspect-bar .ui-seg--floating {
+  background: rgba(255, 255, 255, 0.08);
+}
+.meme-editor-container .ui-topbar-back:hover,
+.meme-editor-container .ie-topbar-history:hover,
+.meme-editor-container .ie-aspect-bar .ui-seg--floating:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* The bar's shapes and dividers in white; the picked one on a brighter glass, not a solid grey block. */
+.meme-editor-container .ie-aspect-bar .ui-seg--floating,
+.meme-editor-container .ie-aspect-bar .ui-seg-btn {
+  color: #ffffff;
+}
+.meme-editor-container .ie-aspect-bar .ui-seg-btn.is-on { background: rgba(255, 255, 255, 0.18); }

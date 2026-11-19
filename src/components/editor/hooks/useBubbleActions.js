@@ -1,5 +1,5 @@
-import { getNonOverlappingPosition } from '../../../utils/captionLayout';
-import { useMemeEditorStore } from '../store/useMemeEditorStore';
+import { useMemeEditorStore, useMemeEditorStoreApi } from '../store/useMemeEditorStore';
+import { newLayerPosition } from './newLayerPosition';
 import { useEditorUiStore } from '../store/useEditorUiStore';
 import { BUBBLE_PRESETS } from '../panels/bubblePresets';
 
@@ -8,6 +8,7 @@ export function useBubbleActions({ activeCaption, updateActiveCaptionProps }) {
   const stickers = useMemeEditorStore((s) => s.stickers);
   const imageLayers = useMemeEditorStore((s) => s.imageLayers);
   const setShowBubbleLayouts = useEditorUiStore((s) => s.setShowBubbleLayouts);
+  const docApi = useMemeEditorStoreApi();
   const setCaptions = useMemeEditorStore((s) => s.setCaptions);
   const setActiveLayerId = useMemeEditorStore((s) => s.setActiveLayerId);
   const setActiveTab = useEditorUiStore((s) => s.setActiveTab);
@@ -70,7 +71,7 @@ export function useBubbleActions({ activeCaption, updateActiveCaptionProps }) {
       return;
     }
 
-    const pos = getNonOverlappingPosition('phrase', captions, stickers, imageLayers);
+    const pos = newLayerPosition('phrase', docApi.getState());
 
     const newCap = {
       id: `bubble-${Date.now()}`,

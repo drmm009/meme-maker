@@ -77,4 +77,15 @@ describe('ImagePanelPrompts', () => {
     act(() => doc.setState({ imageLayers: [{ id: 'img-1', url: 'a.png', x: 0.5, y: 0.25 }] }));
     expect(screen.getAllByRole('group', { name: /^Panel \d$/ }).map((g) => g.getAttribute('aria-label'))).toEqual(['Panel 2']);
   });
+
+  it("hides a panel's card as a sticker or text is moved into it, and brings it back when moved out", () => {
+    renderGrid({ id: '2-vert', slots: 2 });
+    const names = () => screen.queryAllByRole('group', { name: /^Panel \d$/ }).map((g) => g.getAttribute('aria-label'));
+    act(() => doc.setState({ stickers: [{ id: 's', url: 's.png', x: 0.5, y: 0.75 }] }));
+    expect(names()).toEqual(['Panel 1']);
+    act(() => doc.setState({ stickers: [], captions: [{ id: 'c', text: 'HI', x: 0.5, y: 0.25 }] }));
+    expect(names()).toEqual(['Panel 2']);
+    act(() => doc.setState({ captions: [] }));
+    expect(names()).toEqual(['Panel 1', 'Panel 2']);
+  });
 });

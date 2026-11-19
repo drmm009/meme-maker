@@ -1,6 +1,5 @@
 /* The Creator sheet (CreatorSheet.tsx), on the shared iOS look (pages/iosLook.css): a grabber, a
-   heading, and two large tiles side by side, each tinted with its kind's colour (video sky blue as
-   on Home's Meme video card, image the app's orange) with its icon on a solid tile of that colour. */
+   short heading, the two main makers as compact black cards with a meme photo, then More tools as a row of black round icons over their names. */
 
 .cs-backdrop {
   position: fixed;
@@ -49,83 +48,201 @@
   color: var(--ios-label);
 }
 
-.cs-choices {
+/* Each maker's colour, as on Home's maker cards (homeTools.css); Image meme amber, apart from
+   Face swap's orange. */
+.cs-tone--image { --cs-color: #ff9f0a; }
+.cs-tone--video { --cs-color: #38bdf8; }
+.cs-tone--ai { --cs-color: #a78bfa; }
+.cs-tone--stickers { --cs-color: #2fd39b; }
+.cs-tone--gif { --cs-color: #a8d834; }
+.cs-tone--faceswap { --cs-color: #ff6a48; }
+
+/* The two main makers: photo cards side by side, each a well-known meme of its kind with its name
+   on a white pill inside. */
+.cs-main {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
 }
 
-.cs-choice {
-  --cs-color: #ff5a36;
-  display: grid;
-  align-content: start;
-  justify-items: start;
-  gap: 4px;
+.cs-card {
+  display: flex;
+  flex-direction: column;
   min-width: 0;
-  min-height: 148px;
-  padding: 16px;
-  border: 1px solid var(--ios-hairline);
-  border: 1px solid color-mix(in srgb, var(--cs-color) 28%, transparent);
-  border-radius: 20px;
-  background: var(--ios-surface-2);
-  background: color-mix(in srgb, var(--cs-color) 13%, var(--ios-surface));
-  color: var(--ios-label);
+  padding: 0;
+  overflow: hidden;
+  border: none;
+  border-radius: 18px;
+  background: #111114;
+  color: #ffffff;
   text-align: left;
   cursor: pointer;
-  transition: transform 0.16s var(--ios-ease), background-color 0.2s var(--ios-ease);
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.16s var(--ios-ease), box-shadow 0.2s var(--ios-ease);
 }
 
-.cs-choice--video {
-  --cs-color: #38bdf8;
+/* The photo fills the card. */
+.cs-card-frame {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  aspect-ratio: 4 / 3;
 }
 
-.cs-choice--image {
-  --cs-color: #ff6a48;
+.cs-card-picture {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+  user-select: none;
+  transition: transform 0.4s var(--ios-ease);
 }
 
-.cs-choice:active {
-  transform: scale(0.97);
-}
+/* Batman's slap sits in the middle; Drake's face high. */
+.cs-card--image .cs-card-picture { object-position: 50% 62%; }
+.cs-card--video .cs-card-picture { object-position: 60% 25%; }
 
-@media (hover: hover) {
-  .cs-choice:hover {
-    background: color-mix(in srgb, var(--cs-color) 20%, var(--ios-surface));
-  }
-}
-
-.cs-choice:focus-visible {
-  outline: 2px solid var(--cs-color);
-  outline-offset: 2px;
-}
-
-.cs-choice-icon {
+/* The video photo reads as a clip: a small frosted play button and a time. */
+.cs-card-play {
+  position: absolute;
+  top: 42%;
+  left: 50%;
   display: grid;
   place-items: center;
-  width: 46px;
-  height: 46px;
-  margin-bottom: 14px;
-  border-radius: 14px;
-  background: var(--cs-color);
-  color: #101012;
-  box-shadow: 0 6px 16px -6px var(--cs-color);
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.35);
+  color: #ffffff;
+  transform: translate(-50%, -50%);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.3);
 }
 
-.cs-choice-icon svg {
-  width: 23px;
-  height: 23px;
+.cs-card-play svg { width: 14px; height: 14px; margin-left: 2px; }
+
+.cs-card-time {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.6);
+  font-size: 10.5px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.25;
 }
 
-.cs-choice-label {
-  font-size: 17px;
+/* The name inside the photo: a white pill at its foot, the maker's icon on a round tile of its
+   colour, the name in near-black, lifted by a soft shadow. */
+.cs-card-label {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: calc(100% - 16px);
+  padding: 4px 11px 4px 4px;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #0b0b0d;
+  font-size: 13.5px;
   font-weight: 800;
   line-height: 1.2;
   letter-spacing: -0.015em;
+  white-space: nowrap;
+  box-shadow: 0 6px 16px -4px rgba(0, 0, 0, 0.55);
 }
 
-.cs-choice-about {
+/* A small icon of the maker's colour before its name. */
+.cs-card-badge {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--cs-color);
+  color: #101012;
+}
+
+.cs-card-badge svg { width: 12px; height: 12px; }
+
+.cs-tool-icon {
+  display: grid;
+  place-items: center;
+  color: var(--cs-color);
+}
+
+/* More tools: a quiet heading, then a row of round icons over their names. */
+.cs-section {
+  margin: 22px 2px 12px;
   font-size: 13px;
-  line-height: 1.35;
+  font-weight: 600;
+  letter-spacing: 0;
   color: var(--ios-label-2);
+}
+
+.cs-tools {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.cs-tool {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 4px 0;
+  border: none;
+  background: none;
+  color: var(--ios-label);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* More tools sit on black circles, the glyph keeping its maker's colour. */
+.cs-tool-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #000000;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  transition: transform 0.16s var(--ios-ease), background-color 0.2s var(--ios-ease);
+}
+
+.cs-tool-icon svg { width: 27px; height: 27px; }
+
+.cs-tool-label {
+  max-width: 100%;
+  overflow: hidden;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cs-card:active { transform: scale(0.97); }
+.cs-tool:active .cs-tool-icon { transform: scale(0.92); background: #161618; }
+
+@media (hover: hover) {
+  .cs-card:hover .cs-card-picture { transform: scale(1.04); }
+  .cs-tool:hover .cs-tool-icon { background: #161618; }
+}
+
+.cs-card:focus-visible,
+.cs-tool:focus-visible {
+  outline: 2px solid var(--cs-color);
+  outline-offset: 2px;
+  border-radius: 18px;
 }
 
 /* A wide screen: the sheet in the middle, rounded all round. */
@@ -174,7 +291,8 @@
     animation: none;
   }
 
-  .cs-choice:active {
+  .cs-card:active,
+  .cs-tool:active .cs-tool-icon {
     transform: none;
   }
 }

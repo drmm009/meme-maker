@@ -1,4 +1,6 @@
 import { useEditorStore } from '../../store/useVideoEditorStore';
+import { bandsOn } from '../../utils/videoBands';
+import type { VideoBand } from '../../utils/videoBands';
 
 // The canvas taking a video's own shape: a video template, or the first video from a link or the
 // phone, fills the canvas instead of sitting in the 4:3 default with bars around it.
@@ -18,15 +20,18 @@ export const canvasAspectFor = (width?: number, height?: number): number | null 
 interface StoreLike {
   items: { type: string; width?: number; height?: number }[];
   layoutSlots?: unknown[];
+  videoHeader?: VideoBand;
+  videoFooter?: VideoBand;
   setCanvasAspectRatio: (ratio: number) => void;
 }
 const store = () => useEditorStore.getState() as unknown as StoreLike;
 
-// Sets the canvas to the video's shape, unless the canvas is split into layout panels.
+// Sets the canvas to the video's shape, unless the canvas is split into layout panels or has
+// header or footer bars (a caption layout keeps the shape it was made in).
 export function fitCanvasToVideo(width?: number, height?: number) {
   const aspect = canvasAspectFor(width, height);
   const s = store();
-  if (aspect && !s.layoutSlots?.length) s.setCanvasAspectRatio(aspect);
+  if (aspect && !s.layoutSlots?.length && !bandsOn(s.videoHeader, s.videoFooter)) s.setCanvasAspectRatio(aspect);
 }
 
 // True while nothing is on the canvas yet that a new canvas shape would move (a video or photo).

@@ -8,6 +8,8 @@ import ToolRail from './ToolRail';
 import AddMedia from './AddMedia';
 import ExportReadyCard from './ExportReadyCard';
 import VideoStartArea from './VideoStartArea';
+import { reflowPanels } from './preview/previewMath';
+import { inSlot, itemCentre, pictureArea } from '../../utils/videoPanels';
 import { aspectLabel, fitCanvasToVideo, originalAspect } from './videoCanvas';
 import { offerLinkText, parseVideoLink } from '../../utils/videoLink';
 import { useEditorStore } from '../../store/useVideoEditorStore';
@@ -72,10 +74,29 @@ const timeAgo = (ms) => {
 const changeAspectRatio = (newRatio) => {
   const store = useEditorStore.getState();
   const oldRatio = store.canvasAspectRatio;
+  // No grid: what's in the picture (between any bars) moves with it, clips and photos keeping their
+  // Fit, Fill or Stretch; text in a bar moves with the bar (setCanvasAspectRatio).
+  // Which is which is decided before anything moves.
+  const reflowArea = !store.layoutSlots?.length && oldRatio && oldRatio !== newRatio;
+  const oldH = 800 / oldRatio;
+  const from = pictureArea(store.videoHeader, store.videoFooter, 800, oldH);
+  const inPicture = new Set(store.items.filter((i) => inSlot(from, itemCentre(i))).map((i) => i.id));
   store.setCanvasAspectRatio(newRatio);
+  if (reflowArea) {
+    const newH = 800 / newRatio;
+    const to = pictureArea(store.videoHeader, store.videoFooter, 800, newH);
+    const items = useEditorStore.getState().items.map((i) => (inPicture.has(i.id) ? reflowPanels([i], [from], [to], oldH, newH, { wholeArea: true })[0] : i));
+    useEditorStore.setState({ items });
+  }
   if (store.layoutSlots?.length) {
-    const scaleY = (800 / newRatio) / (800 / oldRatio);
-    store.setLayoutSlots(store.layoutSlots.map((slot) => ({ ...slot, y: slot.y * scaleY, height: slot.height * scaleY })));
+    const oldH = 800 / oldRatio;
+    const newH = 800 / newRatio;
+    const scaleY = newH / oldH;
+    const slots = store.layoutSlots.map((slot) => ({ ...slot, y: slot.y * scaleY, height: slot.height * scaleY }));
+    // What's in the panels moves with them (clips and photos keep their Fit, Fill or Stretch).
+    const items = reflowPanels(useEditorStore.getState().items, store.layoutSlots, slots, oldH, newH);
+    useEditorStore.setState({ items });
+    store.setLayoutSlots(slots);
   }
 };
 

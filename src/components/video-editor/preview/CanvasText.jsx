@@ -142,6 +142,12 @@ const CanvasText = ({ item, isSelected, onSelect, onChange, onEditStart, canvasD
       trRef.current.getLayer()?.batchDraw();
     }
   }, [isSelected, item.id]);
+
+  // The selected text's handles above every other clip (text and stickers drawn after it included),
+  // so a handle is never under another clip.
+  useEffect(() => {
+    if (isSelected) trRef.current?.moveToTop();
+  });
   useEffect(() => {
     trRef.current?.forceUpdate();
   });
@@ -173,6 +179,14 @@ const CanvasText = ({ item, isSelected, onSelect, onChange, onEditStart, canvasD
     onPlaceCaret(start, end);
   };
   // While typed into, pressing the clip keeps the keyboard: the hidden text box stays focused.
+  // Taps land on the text's box only, not the room its picture keeps around it for the outline and
+  // shadow (which would cover the clips beside it, and their handles).
+  const hitBox = (ctx, shape) => {
+    ctx.beginPath();
+    ctx.rect(bitmap.boxX, bitmap.boxY, bitmap.boxWidth, bitmap.boxHeight);
+    ctx.closePath();
+    ctx.fillStrokeShape(shape);
+  };
   const keepFocus = (e) => {
     if (selection) e.evt.preventDefault();
   };
@@ -189,6 +203,7 @@ const CanvasText = ({ item, isSelected, onSelect, onChange, onEditStart, canvasD
             draggable
             onClick={startEdit}
             onTap={startEdit}
+            hitFunc={hitBox}
             onDblClick={selectWord}
             onDblTap={selectWord}
             onMouseDown={keepFocus}

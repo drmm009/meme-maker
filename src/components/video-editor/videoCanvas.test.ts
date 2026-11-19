@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { useEditorStore } from '../../store/useVideoEditorStore';
 import { aspectLabel, canvasAspectFor, canvasIsEmpty, fitCanvasToVideo, originalAspect } from './videoCanvas';
 
@@ -39,5 +39,26 @@ describe('videoCanvas', () => {
     expect(canvasIsEmpty()).toBe(true);
     expect(originalAspect([{ type: 'text' }, { type: 'video', width: 1080, height: 1350 }, { type: 'video', width: 1280, height: 720 }])).toBe(4 / 5);
     expect(originalAspect([{ type: 'audio' }])).toBeNull();
+  });
+});
+
+describe('caption layouts and the canvas shape', () => {
+  const bar = { enabled: true, bgColor: '#000000', height: 120 };
+  afterEach(() => useEditorStore.setState({ videoHeader: { ...bar, enabled: false }, videoFooter: { ...bar, enabled: false }, canvasAspectRatio: 4 / 3 } as never));
+
+  it("doesn't reshape a canvas with header or footer bars to a video", () => {
+    useEditorStore.setState({ canvasAspectRatio: 1, videoHeader: bar } as never);
+    fitCanvasToVideo(720, 1280);
+    expect(state().canvasAspectRatio).toBe(1);
+  });
+
+  it('moves the footer bar\'s text with the bar when the canvas changes shape', () => {
+    useEditorStore.setState({ canvasAspectRatio: 1, videoFooter: bar, items: [
+      { id: 'b', type: 'text', text: 'BOTTOM', x: 300, y: 700 },
+      { id: 'm', type: 'text', text: 'MIDDLE', x: 300, y: 300 },
+    ] } as never);
+    (useEditorStore.getState() as unknown as { setCanvasAspectRatio: (r: number) => void }).setCanvasAspectRatio(9 / 16);
+    const ys = (useEditorStore.getState() as unknown as { items: { y: number }[] }).items.map((i) => Math.round(i.y));
+    expect(ys).toEqual([700 + Math.round(800 / (9 / 16)) - 800, 300]);
   });
 });

@@ -8,6 +8,12 @@ import { PHOTO_MOTIONS } from '../../utils/photoMotion';
 import { TEXT_ANIMATIONS } from '../../utils/textAnimation';
 import { currentPanelPlacement, panelPlacement } from './preview/previewMath';
 import type { LayoutSlot } from '../../model/videoProject';
+import { pictureArea } from '../../utils/videoPanels';
+import type { VideoBand } from '../../utils/videoBands';
+
+// The header and footer bars: Fit to canvas fits the picture between them.
+interface Bars { header?: VideoBand | null; footer?: VideoBand | null }
+const NO_BARS: Bars = {};
 
 // A video or photo clip as these sheets see it.
 interface PlacedClip {
@@ -76,22 +82,22 @@ function OptionTiles({ label, options, columns }: {
 type Placement = 'fit' | 'cover' | 'stretch';
 
 // Picture placement on the 800-wide logical stage: contain, cover, or stretch to fill.
-const placeMedia = (item: PlacedClip, aspectRatio: number, mode: Placement) => {
-  const dims = { width: 800, height: 800 / aspectRatio };
+const placeMedia = (item: PlacedClip, aspectRatio: number, mode: Placement, bars: Bars = NO_BARS) => {
+  const dims = pictureArea(bars.header, bars.footer, 800, 800 / aspectRatio);
   const w0 = item.width || 200;
   const h0 = item.height || 200;
-  if (mode === 'stretch') return { x: 0, y: 0, scaleX: dims.width / w0, scaleY: dims.height / h0 };
+  if (mode === 'stretch') return { x: dims.x, y: dims.y, scaleX: dims.width / w0, scaleY: dims.height / h0 };
   const wider = w0 / h0 > dims.width / dims.height;
   const s = (mode === 'fit') === wider ? dims.width / w0 : dims.height / h0;
-  return { x: (dims.width - w0 * s) / 2, y: (dims.height - h0 * s) / 2, scaleX: s, scaleY: s };
+  return { x: dims.x + (dims.width - w0 * s) / 2, y: dims.y + (dims.height - h0 * s) / 2, scaleX: s, scaleY: s };
 };
 
 // Which placement the clip is in now, if any (it may have been moved or sized by hand since).
-const currentPlacement = (item: PlacedClip, aspectRatio: number): Placement | null => {
+const currentPlacement = (item: PlacedClip, aspectRatio: number, bars: Bars = NO_BARS): Placement | null => {
   const near = (a = 0, b = 0) => Math.abs(a - b) < 0.5;
   const nearScale = (a = 1, b = 1) => Math.abs(a - b) < 0.002;
   return (['fit', 'cover', 'stretch'] as const).find((mode) => {
-    const p = placeMedia(item, aspectRatio, mode);
+    const p = placeMedia(item, aspectRatio, mode, bars);
     return near(item.x, p.x) && near(item.y, p.y) && nearScale(item.scaleX, p.scaleX) && nearScale(item.scaleY, p.scaleY);
   }) ?? null;
 };
@@ -120,11 +126,14 @@ export function PlacePanel({ item }: { item: PlacedClip }) {
   const aspectRatio = useEditorStore((s) => s.canvasAspectRatio) as number;
   const slots = useEditorStore((s: { layoutSlots: LayoutSlot[] }) => s.layoutSlots);
   const slot = item.slotIndex !== undefined ? slots?.[item.slotIndex] : undefined;
-  const now = slot ? currentPanelPlacement(item, slot) : currentPlacement(item, aspectRatio);
+  const header = useEditorStore((s: { videoHeader?: VideoBand }) => s.videoHeader);
+  const footer = useEditorStore((s: { videoFooter?: VideoBand }) => s.videoFooter);
+  const bars = { header, footer };
+  const now = slot ? currentPanelPlacement(item, slot) : currentPlacement(item, aspectRatio, bars);
   // On a panel the source's own size decides the fit (the clip may be cropped or stretched now).
   const place = async (mode: Placement) => {
     if (!slot) {
-      update(item.id, placeMedia(item, aspectRatio, mode));
+      update(item.id, placeMedia(item, aspectRatio, mode, bars));
       return;
     }
     const size = await mediaSize(item);

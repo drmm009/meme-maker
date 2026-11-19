@@ -136,10 +136,30 @@ describe('video editor store', () => {
     expect(store().items[0]).toMatchObject({ startMs: 0, endMs: 7000 });
   });
 
-  it('staggers new overlays so they do not stack exactly', () => {
+  it('puts new text in the middle of the picture, each next one lower so they do not stack exactly', () => {
     store().addItem({ type: 'text', text: 'A' });
     store().addItem({ type: 'text', text: 'B' });
-    expect(store().items.map((i) => [i.x, i.y])).toEqual([[50, 50], [85, 85]]);
+    const [a, b] = store().items;
+    expect(a.x).toBeGreaterThan(200);
+    expect(a.x).toBeLessThanOrEqual(400);
+    expect(b.y).toBeGreaterThan(a.y);
+  });
+
+  it('keeps new text between the header and footer bars', () => {
+    useEditorStore.setState({ canvasAspectRatio: 1, videoHeader: { enabled: true, bgColor: '#000', height: 200 } });
+    store().addItem({ type: 'text', text: 'A' });
+    expect(store().items[0].y).toBeGreaterThan(200);
+    useEditorStore.setState({ canvasAspectRatio: 4 / 3, videoHeader: { enabled: false, bgColor: '#000000', height: 120 } });
+  });
+
+  it('makes text added before the first video last as long as it, and grow with a longer one', () => {
+    store().addItem({ type: 'text', text: 'TOP' });
+    store().addItem({ type: 'text', text: 'SHORT', startMs: 0 });
+    store().updateItem(store().items[1].id, { endMs: 1000 });
+    store().addItem({ type: 'video', url: 'a.mp4', durationMs: 2000 });
+    expect(store().items.map((i) => i.endMs)).toEqual([2000, 1000, 2000]);
+    store().addItem({ type: 'video', url: 'b.mp4', durationMs: 3000 });
+    expect(store().items[0].endMs).toBe(5000);
   });
 
   it('fills the first free layout slot with media', () => {

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
-  currentPanelPlacement, dropSlotIndex, effectCanvasSize, fitPlacement, fitStage, isOnScreen, mediaAttrs, panelPlacement, resizeAboutCenter, rotateAboutCenter,
+  currentPanelPlacement, dropSlotIndex, reflowPanels, effectCanvasSize, fitPlacement, fitStage, isOnScreen, mediaAttrs, panelPlacement, resizeAboutCenter, rotateAboutCenter,
   textResize, videoSyncPlan, videoTimeSec
 } from './previewMath';
 import { rotatedCenter } from '../../../utils/rotation';
@@ -8,6 +8,20 @@ import { rotatedCenter } from '../../../utils/rotation';
 const canvas = { width: 800, height: 450 };
 
 describe('fitPlacement', () => {
+  it('fits a photo or video between the header and footer bars, when given that area', () => {
+    const area = { x: 0, y: 100, width: 800, height: 400 };
+    const p = fitPlacement({ type: 'video' }, 640, 360, { width: 800, height: 600 }, [], area);
+    expect(p.y).toBe(100);
+    expect(p.height).toBe(400);
+    expect(p.x + p.width / 2).toBeCloseTo(400);
+  });
+
+  it('centres a new sticker in the panel it starts in, smaller only if it would overflow', () => {
+    const slots = [{ x: 0, y: 0, width: 400, height: 300 }, { x: 400, y: 0, width: 400, height: 300 }];
+    expect(fitPlacement({ type: 'sticker', startSlot: 1 }, 100, 100, { width: 800, height: 600 }, slots)).toEqual({ isPositioned: true, x: 550, y: 100, width: 100, height: 100, startSlot: undefined });
+    expect(fitPlacement({ type: 'sticker', startSlot: 0 }, 600, 600, { width: 800, height: 600 }, slots).width).toBe(240);
+  });
+
   it('fits a photo or video inside the canvas, centred', () => {
     expect(fitPlacement({ type: 'image' }, 300, 200, canvas)).toEqual({ isPositioned: true, x: 62.5, y: 0, width: 675, height: 450 });
     expect(fitPlacement({ type: 'video' }, 640, 360, canvas)).toEqual({ isPositioned: true, x: 0, y: 0, width: 800, height: 450 });
@@ -188,5 +202,36 @@ describe('panelPlacement', () => {
 
   it('names none once the clip has been moved by hand', () => {
     expect(currentPanelPlacement({ x: 420, y: 30, width: 200, height: 200 }, slot)).toBeNull();
+  });
+});
+
+describe('reflowPanels', () => {
+  const oldSlots = [{ x: 0, y: 0, width: 400, height: 300 }, { x: 400, y: 0, width: 400, height: 300 }];
+  const newSlots = [{ x: 0, y: 0, width: 400, height: 711 }, { x: 400, y: 0, width: 400, height: 711 }];
+
+  it('keeps a clip fitted or filling its panel when the panel changes shape', () => {
+    const fitted = { type: 'video', slotIndex: 1, ...panelPlacement({ w: 640, h: 360 }, oldSlots[1], 'fit') };
+    const filled = { type: 'image', slotIndex: 0, ...panelPlacement({ w: 600, h: 400 }, oldSlots[0], 'cover') };
+    const [a, b] = reflowPanels([fitted, filled], oldSlots, newSlots, 600, 1422);
+    expect(currentPanelPlacement(a, newSlots[1])).toBe('fit');
+    expect(a.y + a.height / 2).toBeCloseTo(355.5);
+    expect(currentPanelPlacement(b, newSlots[0])).toBe('cover');
+    expect(b.height).toBeCloseTo(711);
+  });
+
+  it('keeps a sticker at the same place in its panel', () => {
+    const [st] = reflowPanels([{ type: 'sticker', x: 150, y: 100, width: 100, height: 100 }], oldSlots, newSlots, 600, 1422);
+    expect(st.y + 50).toBeCloseTo(355.5);
+    expect(st.x).toBe(150);
+  });
+
+  it('keeps a photo fitted between the bars, and leaves text in a bar alone, with wholeArea', () => {
+    const from = { x: 0, y: 120, width: 800, height: 560 };
+    const to = { x: 0, y: 120, width: 800, height: 1182 };
+    const photo = { type: 'image', ...panelPlacement({ w: 600, h: 400 }, from, 'fit') };
+    const bar = { type: 'sticker', x: 300, y: 700, width: 50, height: 50 };
+    const [p, b] = reflowPanels([photo, bar], [from], [to], 800, 1422, { wholeArea: true });
+    expect(currentPanelPlacement(p, to)).toBe('fit');
+    expect(b).toBe(bar);
   });
 });

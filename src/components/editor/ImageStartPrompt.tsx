@@ -6,10 +6,10 @@ import { useEditorUiStore } from './store/useEditorUiStore';
 import { inkFor } from '../../utils/inkFor';
 
 type Layers = unknown[] | undefined;
-interface Caption { id: string; zIndex?: number }
+interface Caption { id: string; zIndex?: number; isHeaderCaption?: boolean; isFooterCaption?: boolean; hasCustomPos?: boolean }
 interface Layered { zIndex?: number }
 interface PromptState {
-  activeTemplate?: { canvasOnly?: boolean; isNativeLayout?: boolean; defaultCaptions?: unknown[] };
+  activeTemplate?: { canvasOnly?: boolean; isNativeLayout?: boolean; defaultCaptions?: Caption[]; captions?: Caption[] };
   imageLayers: Layers;
   stickers: Layers;
   drawings: Layers;
@@ -22,14 +22,21 @@ interface PromptState {
 // A blank canvas's first step, on the canvas's image area (CanvasStage's .ie-image-area, so a
 // caption layout's header and footer bars stay clear): add a photo, or start with text (a caption in
 // the middle of the picture, selected for typing), a template or stickers. It shows on a blank canvas (not a multi-panel one, whose panels have cards of their own)
-// with no photo, sticker or drawing and no text beyond its starting captions (a caption layout's
-// band captions count among them), while no sheet is open.
+// with no photo, sticker or drawing and no text on the picture beyond the template's own (a caption
+// layout's bar captions don't count either way, until one is dragged out of its bar onto the
+// picture), while no sheet is open.
+const inPicture = (c: Caption) => (!c.isHeaderCaption && !c.isFooterCaption) || Boolean(c.hasCustomPos);
+const startingText = (t: PromptState['activeTemplate']) => {
+  const own = t?.defaultCaptions || t?.captions;
+  return own ? own.filter(inPicture).length : 2;
+};
 export default function ImageStartPrompt({ onPhoto }: { onPhoto: (e: ChangeEvent<HTMLInputElement>) => void }) {
   const blank = useMemeEditorStore((s: PromptState) => Boolean(s.activeTemplate?.canvasOnly) && !s.activeTemplate?.isNativeLayout);
   const empty = useMemeEditorStore((s: PromptState) =>
     !s.imageLayers?.length && !s.stickers?.length && !s.drawings?.length
-    // The starting captions: the template's own, or the editor's TOP TEXT and BOTTOM TEXT.
-    && (s.captions?.length ?? 0) <= (s.activeTemplate?.defaultCaptions?.length ?? 2));
+    // Text on the picture, against the starting text there: the template's own, or (a template
+    // without any) the editor's TOP TEXT and BOTTOM TEXT.
+    && ((s.captions || []) as Caption[]).filter(inPicture).length <= startingText(s.activeTemplate));
   const bg = useMemeEditorStore((s: { canvasBgColor?: string; canvasBgGradient?: unknown }) => (s.canvasBgGradient ? undefined : s.canvasBgColor));
   const sheet = useEditorUiStore((s: { sheet: string | null }) => s.sheet);
   const mode = useEditorUiStore((s: { mode: string }) => s.mode);

@@ -70,6 +70,26 @@ describe('ImageStartPrompt', () => {
     expect(screen.getByRole('group', { name: 'Start your meme' })).toBeTruthy();
   });
 
+  it('goes away on a caption layout once text is added to the picture', () => {
+    storesFor({ id: 'caption', canvasOnly: true, canvasHeader: { enabled: true, bgColor: '#000000', height: 170 },
+      defaultCaptions: [{ id: 'h', text: 'TOP TEXT', isHeaderCaption: true }] });
+    renderIn(<ImageStartPrompt onPhoto={() => {}} />);
+    expect(screen.getByRole('group', { name: 'Start your meme' })).toBeTruthy();
+    const captions = doc.getState().captions as unknown[];
+    act(() => doc.setState({ captions: [...captions, { id: 'cap-new', text: 'MORE', x: 0.5, y: 0.5 }] }));
+    expect(screen.queryByRole('group', { name: 'Start your meme' })).toBeNull();
+  });
+
+  it('goes away on a caption layout once its bar caption is dragged onto the picture', () => {
+    storesFor({ id: 'caption', canvasOnly: true, canvasHeader: { enabled: true, bgColor: '#000000', height: 170 },
+      defaultCaptions: [{ id: 'h', text: 'TOP TEXT', isHeaderCaption: true }] });
+    renderIn(<ImageStartPrompt onPhoto={() => {}} />);
+    expect(screen.getByRole('group', { name: 'Start your meme' })).toBeTruthy();
+    const moved = (doc.getState().captions as AnyState[]).map((c) => ({ ...c, y: 0.5, hasCustomPos: true }));
+    act(() => doc.setState({ captions: moved }));
+    expect(screen.queryByRole('group', { name: 'Start your meme' })).toBeNull();
+  });
+
   it('is not shown on a multi-panel canvas (its panels have their own cards)', () => {
     storesFor({ id: 'grid', canvasOnly: true, isNativeLayout: true, layoutDef: { id: '2-vert', slots: 2 }, slotImages: [null, null], defaultCaptions: [] });
     renderIn(<ImageStartPrompt onPhoto={() => {}} />);
