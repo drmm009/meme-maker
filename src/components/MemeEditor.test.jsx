@@ -935,7 +935,7 @@ describe('MemeEditor', () => {
     fireEvent.click(within(sheet('Canvas Style')).getByText('Crop'));
     const cropper = screen.getByRole('dialog', { name: 'Crop photo' });
     for (const name of ['Free', '1:1', '4:5', '9:16', '16:9']) expect(within(cropper).getByText(name)).toBeTruthy();
-    fireEvent.click(within(cropper).getByText('Cancel'));
+    fireEvent.click(within(cropper).getByRole('button', { name: 'Cancel' }));
     expect(screen.queryByRole('dialog', { name: 'Crop photo' })).toBeNull();
   }, 30000);
 
@@ -1229,25 +1229,35 @@ describe('MemeEditor', () => {
     expect(within(page).getByRole('button', { name: 'Generate sticker' }).disabled).toBe(true);
   });
 
-  it('once the Stickers maker has cut its picture out, its strip has Die-cut, Crop, Text and Effects, the outline styles to restyle it, and the dock Export alone', () => {
+  it('once the Stickers maker has cut its picture out, its dock has Die-cut, Style, Text, Crop and Effects, Style opens the outline styles, and Export is in its header', () => {
     renderEditor({ ...TEMPLATE, editorMode: 'sticker', imageLayers: [{ id: 'p', url: 'cut.png', originalUrl: 'photo.png', x: 0.5, y: 0.5 }] });
-    const tabs = () => within(screen.getByRole('navigation', { name: 'Editor tools' })).getAllByRole('button').map((b) => b.textContent.trim());
     expect(screen.queryByRole('region', { name: 'Make a sticker' })).toBeNull();
-    expect(tabs()).toEqual(['Export']);
+    // No other dock: the tools are the dock, Export and undo/redo are in the header.
+    expect(screen.queryByRole('navigation', { name: 'Editor tools' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Undo' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Redo' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Export' }));
+    expect(screen.getByRole('dialog', { name: 'Export' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Export' }));
     expect(screen.getByText('Ready to export', { selector: '.ui-topbar-subtitle' })).toBeTruthy();
-    expect([...strip('Sticker tools').children].map((b) => b.textContent)).toEqual(['Die-cut', 'Crop', 'Text', 'Effects']);
-    // The outline styles are still to hand, shown on the photo as it was; a pick restyles the cut-out,
-    // leaving nothing of the style before it.
-    const styles = screen.getByRole('radiogroup', { name: 'Sticker style' });
-    expect(styles.querySelector('img').getAttribute('src')).toBe('photo.png');
-    fireEvent.click(within(styles).getByRole('radio', { name: 'Pop' }));
+    expect([...screen.getByRole('navigation', { name: 'Sticker tools' }).children].map((b) => b.textContent)).toEqual(['Die-cut', 'Style', 'Text', 'Crop', 'Effects']);
+    // Style opens the outline styles (the Filters sheet's tiles), each on the cut-out; a pick restyles
+    // it, leaving nothing of the style before it.
+    expect(screen.queryByRole('group', { name: 'Sticker style' })).toBeNull();
+    fireEvent.click(within(screen.getByRole('navigation', { name: 'Sticker tools' })).getByRole('button', { name: /^Style/ }));
+    const styles = screen.getByRole('group', { name: 'Sticker style' });
+    expect(styles.querySelector('img').getAttribute('src')).toBe('cut.png');
+    expect(within(styles).getAllByRole('button').map((b) => b.textContent)).toEqual(['Classic', 'Bold', 'Comic', 'Pop', 'Clean', 'Retro']);
+    fireEvent.click(within(styles).getByRole('button', { name: 'Pop' }));
     expect(canvas.props.imageLayers[0]).toMatchObject({ dieCut: true, dieCutColor: '#ffd60a', dieCutWidth: 14 });
-    fireEvent.click(within(styles).getByRole('radio', { name: 'Clean' }));
+    fireEvent.click(within(styles).getByRole('button', { name: 'Clean' }));
     expect(canvas.props.imageLayers[0]).toMatchObject({ dieCut: false, shadowSize: 28 });
-    fireEvent.click(within(styles).getByRole('radio', { name: 'Classic' }));
+    fireEvent.click(within(styles).getByRole('button', { name: 'Classic' }));
     expect(canvas.props.imageLayers[0]).toMatchObject({ dieCut: true, dieCutColor: '#ffffff', dieCutWidth: 12, shadowSize: 0 });
+    fireEvent.click(within(screen.getByRole('navigation', { name: 'Sticker tools' })).getByRole('button', { name: /^Style/ }));
+    expect(screen.queryByRole('group', { name: 'Sticker style' })).toBeNull();
     // Die-cut opens the DieCutSheet bottom sheet
-    const dieCut = within(strip('Sticker tools')).getByRole('button', { name: /Die-cut/ });
+    const dieCut = within(screen.getByRole('navigation', { name: 'Sticker tools' })).getByRole('button', { name: /Die-cut/ });
     expect(dieCut.getAttribute('aria-pressed')).toBe('false');
     fireEvent.click(dieCut);
     const diecut = sheet('Die-cut');
@@ -1264,19 +1274,19 @@ describe('MemeEditor', () => {
     expect(screen.queryByRole('dialog', { name: 'Die-cut' })).toBeNull();
 
     // Crop opens the PhotoCropSheet modal
-    fireEvent.click(within(strip('Sticker tools')).getByText('Crop'));
+    fireEvent.click(within(screen.getByRole('navigation', { name: 'Sticker tools' })).getByText('Crop'));
     expect(screen.getByRole('dialog', { name: 'Crop photo' })).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
     expect(screen.queryByRole('dialog', { name: 'Crop photo' })).toBeNull();
 
     // Effects opens the Filters sheet, and closes when tapped again
-    fireEvent.click(within(strip('Sticker tools')).getByText('Effects'));
+    fireEvent.click(within(screen.getByRole('navigation', { name: 'Sticker tools' })).getByText('Effects'));
     expect(sheet('Filters')).toBeTruthy();
-    fireEvent.click(within(strip('Sticker tools')).getByText('Effects'));
+    fireEvent.click(within(screen.getByRole('navigation', { name: 'Sticker tools' })).getByText('Effects'));
     expect(screen.queryByRole('dialog', { name: 'Filters' })).toBeNull();
 
-    // Export button in the dock opens the Export sheet and closes when tapped again
-    const exportBtn = within(screen.getByRole('navigation', { name: 'Editor tools' })).getByRole('button', { name: 'Export' });
+    // Export, in the header, opens the Export sheet
+    const exportBtn = screen.getByRole('button', { name: 'Export' });
     fireEvent.click(exportBtn);
     expect(sheet('Export')).toBeTruthy();
     // A sticker's is compact: PNG or WebP (JPG has no see-through), 512 px or full size, then
@@ -1288,18 +1298,32 @@ describe('MemeEditor', () => {
 
     // Text adds a caption to the sticker.
     const initialCount = canvas.props.captions.length;
-    fireEvent.click(within(strip('Sticker tools')).getByText('Text'));
+    fireEvent.click(within(screen.getByRole('navigation', { name: 'Sticker tools' })).getByText('Text'));
     expect(canvas.props.captions).toHaveLength(initialCount + 1);
     // A selected caption's tools have no Copy or Layers here.
     act(() => canvas.props.onSelectLayer(canvas.props.captions.at(-1).id));
     expect(within(layerToolbar()).queryByRole('button', { name: /Layers|Copy|Duplicate/ })).toBeNull();
     expect(within(layerToolbar()).getByRole('button', { name: /Delete/ })).toBeTruthy();
-    // They take only the four tools' place: the Style card and Export stay.
-    expect(screen.queryByRole('toolbar', { name: 'Sticker tools' })).toBeNull();
-    expect(screen.getByRole('radiogroup', { name: 'Sticker style' })).toBeTruthy();
-    expect(within(screen.getByRole('navigation', { name: 'Editor tools' })).getByRole('button', { name: 'Export' })).toBeTruthy();
+    // They show above the tools' dock, which stays; Export stays in the header.
+    expect(screen.getByRole('navigation', { name: 'Sticker tools' })).toBeTruthy();
+    expect(layerToolbar().compareDocumentPosition(screen.getByRole('navigation', { name: 'Sticker tools' })) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Export' })).toBeTruthy();
     act(() => canvas.props.onSelectLayer(null));
-    expect(strip('Sticker tools')).toBeTruthy();
+    expect(screen.getByRole('navigation', { name: 'Sticker tools' })).toBeTruthy();
+  });
+
+  it('on the sticker editing screen, selecting text closes a tool sheet that was open', () => {
+    renderEditor({ ...TEMPLATE, editorMode: 'sticker', imageLayers: [{ id: 'p', url: 'cut.png', originalUrl: 'photo.png', x: 0.5, y: 0.5 }] });
+    const dock = () => screen.getByRole('navigation', { name: 'Sticker tools' });
+    fireEvent.click(within(dock()).getByText('Text'));
+    const textId = canvas.props.captions.at(-1).id;
+    act(() => canvas.props.onSelectLayer(null));
+    fireEvent.click(within(dock()).getByRole('button', { name: /^Style/ }));
+    expect(screen.getByRole('group', { name: 'Sticker style' })).toBeTruthy();
+    act(() => canvas.props.onSelectLayer(textId));
+    expect(screen.queryByRole('group', { name: 'Sticker style' })).toBeNull();
+    expect(layerToolbar()).toBeTruthy();
+    expect(dock()).toBeTruthy();
   });
 
   it('Move to editor, a pill on the sticker\'s board, carries the sticker into the full editor', () => {

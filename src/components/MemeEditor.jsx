@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { ChevronLeft, Palette, Redo2, Sparkles, Undo2, Wand2 } from 'lucide-react';
+import { ChevronLeft, Download, Palette, Redo2, Undo2, Wand2 } from 'lucide-react';
 import { createMemeEditorStore, MemeEditorStoreContext, useMemeEditorStore, useMemeEditorHistory } from './editor/store/useMemeEditorStore';
 import { createEditorUiStore, EditorUiStoreContext, useEditorUiStore, useEditorUiStoreApi } from './editor/store/useEditorUiStore';
 import { useEditorSetup } from './editor/hooks/useEditorSetup';
@@ -96,6 +96,13 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, c
   const isAiPage = mode === 'ai' && opensOnPrompt(activeTemplate);
   // And once its meme is made, its editing page has the Stickers editing page's header too.
   const isAiEdit = mode === 'ai' && !isAiPage;
+  const sheet = useEditorUiStore((s) => s.sheet);
+  // The sticker editing screen's Export, in its header: opens the export sheet, or closes it.
+  const toggleExport = () => {
+    const ui = uiStore.getState();
+    if (ui.sheet === 'export') ui.closeSheet();
+    else ui.openSheet('export');
+  };
   const canUndo = useMemeEditorHistory((s) => s.pastStates.length > 0);
   const canRedo = useMemeEditorHistory((s) => s.futureStates.length > 0);
   const showTopBar = !isStickerMode && mode !== 'ai';
@@ -177,27 +184,24 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, c
         hasMakerBar ? <MakerTopBar mode={mode} onBack={onBack} /> : <EditorTopBar onBack={onBack} />
       ) : null}
 
-      {/* In sticker mode Step 3 (ready to export), render the integrated back header matching Step 1 & 2 */}
+      {/* The Stickers maker's editing screen (after Generate), stickerStudioPage.css: Back (to its
+          page) on the left, undo and redo in one capsule in the middle, Export on the right. The
+          title and where it stands are said for screen readers only. */}
       {isStickerMode && !isStickerPage && (
-        <header className="ie-stk-header ie-stk-header--step3">
-          <button
-            type="button"
-            className="ie-stk-back-btn"
-            onClick={handleStickerStepBack}
-            aria-label="Back"
-            title="Back"
-          >
+        <header className="sst-header sst-header--edit">
+          <button type="button" className="sst-back" onClick={handleStickerStepBack} aria-label="Back" title="Back">
             <ChevronLeft size={22} strokeWidth={2.4} />
           </button>
-          <div className="ie-stk-header-main">
-            <h1 className="ie-stk-title ui-topbar-title">
-              <Sparkles size={16} strokeWidth={2.4} className="ie-stk-title-icon" aria-hidden="true" />
-              <span>Sticker Studio</span>
-            </h1>
+          <div className="sst-history" role="group" aria-label="History">
+            <button type="button" onClick={handleUndo} disabled={!canUndo} aria-label="Undo" title="Undo"><Undo2 size={19} strokeWidth={2.2} /></button>
+            <button type="button" onClick={handleRedo} disabled={!canRedo} aria-label="Redo" title="Redo"><Redo2 size={19} strokeWidth={2.2} /></button>
           </div>
-          <p className="ie-stk-status ui-topbar-subtitle" aria-live="polite">
-            Ready to export
-          </p>
+          <button type="button" className="sst-export" onClick={toggleExport} aria-pressed={sheet === 'export'}>
+            <Download size={17} strokeWidth={2.4} aria-hidden="true" />
+            Export
+          </button>
+          <h1 className="sst-status ui-topbar-title">Sticker Studio</h1>
+          <p className="sst-status ui-topbar-subtitle" aria-live="polite">Ready to export</p>
         </header>
       )}
 
@@ -271,6 +275,7 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, c
         handleRestoreMainPhoto={handleRestoreMainPhoto}
         handleApplyLayerCrop={handleApplyLayerCrop}
         handleRestoreLayerPhoto={handleRestoreLayerPhoto}
+        stickerMode={isStickerMode}
         extractedMemeFace={extractedMemeFace}
         faceTarget={faceTarget}
         handleApplyFaceMorph={handleApplyFaceMorph}

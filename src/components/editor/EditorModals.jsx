@@ -25,6 +25,7 @@ export default function EditorModals({
   handleRestoreMainPhoto,
   handleApplyLayerCrop,
   handleRestoreLayerPhoto,
+  stickerMode = false,
 }) {
   const pendingVideoLayer = useEditorUiStore((s) => s.pendingVideoLayer);
   const setPendingVideoLayer = useEditorUiStore((s) => s.setPendingVideoLayer);
@@ -42,6 +43,7 @@ export default function EditorModals({
     <>
       {showPhotoCrop && mainPhoto && (
         <PhotoCropSheet
+          tone={stickerMode ? 'sticker' : undefined}
           url={mainPhoto}
           uncroppedUrl={activeTemplate?.uncroppedUrl}
           onApply={(url) => { handleApplyMainPhotoCrop(url); setShowPhotoCrop(false); }}
@@ -53,6 +55,7 @@ export default function EditorModals({
       {/* A photo layer's More > Crop: the same cropper, for that layer's picture. */}
       {cropLayer && (
         <PhotoCropSheet
+          tone={stickerMode ? 'sticker' : undefined}
           url={cropLayer.url}
           uncroppedUrl={cropLayer.uncroppedUrl}
           onApply={(url) => { handleApplyLayerCrop(cropLayer.id, url); setCropLayerId(null); }}

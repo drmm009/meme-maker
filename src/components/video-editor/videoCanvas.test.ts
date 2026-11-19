@@ -27,6 +27,15 @@ describe('videoCanvas', () => {
     expect(aspectLabel(1000 / 700)).toBe('10:7');
   });
 
+  it('keeps a shape picked on Choose Canvas Layout when the first video comes in', () => {
+    useEditorStore.setState({ canvasAspectRatio: 4 / 5, canvasShapePicked: true } as never);
+    fitCanvasToVideo(1280, 720);
+    expect(state().canvasAspectRatio).toBe(4 / 5);
+    useEditorStore.setState({ canvasShapePicked: false } as never);
+    fitCanvasToVideo(1280, 720);
+    expect(state().canvasAspectRatio).toBe(16 / 9);
+  });
+
   it('fits the canvas to a video, but not a canvas split into panels', () => {
     fitCanvasToVideo(720, 1280);
     expect(state().canvasAspectRatio).toBe(9 / 16);

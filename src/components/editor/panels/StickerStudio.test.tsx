@@ -29,7 +29,9 @@ describe('StickerStudio', () => {
     const page = screen.getByRole('region', { name: 'Make a sticker' });
     // The card itself uploads.
     expect(within(page).getByLabelText('Add your photo')).toBeTruthy();
-    expect(within(page).queryByText('Add a photo to start')).toBeNull();
+    // The stage invites the photo; a line under Generate says what comes first.
+    expect(within(page).getByText('Turn a photo into a sticker')).toBeTruthy();
+    expect(within(page).getByText('Add a photo to start')).toBeTruthy();
     expect(within(page).queryByText('Choose photo')).toBeNull();
     expect(within(page).queryByRole('radiogroup', { name: 'Preview backdrop' })).toBeNull();
     // Where the photo comes from, on the page, before the outline styles.
@@ -51,7 +53,7 @@ describe('StickerStudio', () => {
   it('with a photo: the styles are small pictures of it, and the pick shows on the big one', () => {
     renderStudio([{ id: 'p', url: 'photo.png', x: 0.5, y: 0.5 }]);
     const page = screen.getByRole('region', { name: 'Make a sticker' });
-    const preview = page.querySelector('img.ie-stk-preview') as HTMLImageElement;
+    const preview = page.querySelector('img.sst-preview') as HTMLImageElement;
     expect(preview.getAttribute('src')).toBe('photo.png');
     expect(preview.className).toContain('ie-stk-look--classic');
     const styles = within(page).getByRole('radiogroup', { name: 'Sticker style' });
@@ -68,7 +70,8 @@ describe('StickerStudio', () => {
     const sources = screen.getByRole('group', { name: 'Add a photo' });
     expect(within(sources).getByLabelText('Upload a photo')).toBeTruthy();
     expect(within(sources).getByRole('button', { name: 'Templates' })).toBeTruthy();
-    expect(screen.queryByText('Change photo')).toBeNull();
+    // Change on the stage picks another photo too.
+    expect(screen.getByLabelText('Change the photo')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Remove the photo' }));
     expect((doc.getState() as { imageLayers: unknown[] }).imageLayers).toHaveLength(0);
     expect(screen.getByLabelText('Add your photo')).toBeTruthy();

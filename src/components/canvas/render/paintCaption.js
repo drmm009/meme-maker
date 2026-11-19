@@ -1,4 +1,4 @@
-import { THEME_BADGE_BG, THEME_CORAL, drawDeleteHandle, drawResizeHandle, drawRotateHandle, drawSelectionBox, drawSideHandle } from './handles';
+import { THEME_BADGE_BG, accentOf, drawDeleteHandle, drawResizeHandle, drawRotateHandle, drawSelectionBox, drawSideHandle } from './handles';
 import { isColorDark } from '../../../utils/captionLayout';
 import { drawCurvedText, drawRoundRect, drawTextLineWithEffect } from '../draw/text';
 import { drawWhatsAppCard, getWhatsAppCardHeight } from '../draw/socialCards/whatsapp';
@@ -260,11 +260,11 @@ if (cap.id === activeLayerId && !isDrawingMode) {
       }
       uiCtx.fill();
 
-      uiCtx.strokeStyle = THEME_CORAL;
+      uiCtx.strokeStyle = accentOf(uiCtx);
       uiCtx.lineWidth = 1.5;
       uiCtx.stroke();
 
-      uiCtx.fillStyle = THEME_CORAL;
+      uiCtx.fillStyle = accentOf(uiCtx);
       uiCtx.textAlign = 'center';
       uiCtx.textBaseline = 'middle';
       uiCtx.fillText(label, 0, py + ph / 2);
@@ -290,11 +290,11 @@ if (cap.id === activeLayerId && !isDrawingMode) {
       }
       uiCtx.fill();
 
-      uiCtx.strokeStyle = THEME_CORAL;
+      uiCtx.strokeStyle = accentOf(uiCtx);
       uiCtx.lineWidth = 1.5;
       uiCtx.stroke();
 
-      uiCtx.fillStyle = THEME_CORAL;
+      uiCtx.fillStyle = accentOf(uiCtx);
       uiCtx.textAlign = 'center';
       uiCtx.textBaseline = 'middle';
       uiCtx.fillText(label, 0, py + ph / 2);

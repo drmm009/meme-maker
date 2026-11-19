@@ -1,19 +1,419 @@
 /* Choose Canvas Layout (CustomLayoutBuilder.tsx): what is its own, on the shared iOS look
-   (pages/iosLook.css): the Blank Canvas row under the title, the grids of layout cards with their
-   drawings, and the Custom Grid form. */
+   (pages/iosLook.css): the canvas shape picker, the Blank Canvas row, the Grid layouts slider, the
+   Caption layouts, Meme formats, Collages and the Custom Grid panel. Every preview is a frame of the
+   chosen shape on a rounded tile showing the same picture laid out as the layout opens, its words
+   in place in miniature (meme text in Impact, a news bar, a poster's serif title). */
 
 /* Room under the last row, so it scrolls clear of the dock. */
 .clb.ios-page {
-  padding-bottom: 48px;
+  padding-bottom: 56px;
 }
-
-/* ---- Sections ---- */
 
 .clb-section {
-  margin-top: 30px;
+  margin-top: 28px;
 }
 
-/* ---- Blank Canvas: a wide row under the title ---- */
+/* ---- Canvas shape ----
+   A pill bar of four: a small outline of each shape and its ratio; the picked one widens to say its
+   name, and a black key slides under it. */
+
+.clb-shape {
+  margin-top: 16px;
+}
+
+.clb-aspects {
+  position: relative;
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
+  background: var(--ios-fill);
+}
+
+.clb-aspect {
+  display: flex;
+  flex: 1 1 0;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 0;
+  height: 40px;
+  padding: 0 6px;
+  border: none;
+  border-radius: 999px;
+  background: none;
+  color: var(--ios-label-2);
+  font: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  position: relative;
+  z-index: 1;
+  transition: color 0.22s var(--ios-ease), transform 0.16s var(--ios-ease);
+}
+
+.clb-aspect:active { transform: scale(0.95); }
+
+.clb-aspect-shape {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+}
+
+.clb-aspect-shape > span {
+  border: 1.75px solid currentColor;
+  border-radius: 3px;
+}
+
+.clb-aspect-ratio {
+  font-size: 14px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+/* The picked one's name, after its ratio, lighter. */
+.clb-aspect-name {
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: 600;
+  opacity: 0.85;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  animation: clb-name-in 0.25s var(--ios-ease);
+}
+
+@keyframes clb-name-in {
+  from { opacity: 0; transform: translateX(-4px); }
+}
+
+/* The black key under the picked shape, as the app's other switches (My Studio's tabs): it slides
+   to the shape picked and grows into place when the page opens (useSlidingKey sets --ios-key-x and
+   --ios-key-w). The hairline keeps its edge on the dark track. */
+.clb-aspects-key {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 0;
+  width: var(--ios-key-w, 0);
+  border-radius: 999px;
+  background: var(--ios-key, #000000);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1), 0 3px 8px rgba(0, 0, 0, 0.3);
+  transform: translateX(var(--ios-key-x, 0));
+  transition: transform 0.34s var(--ios-ease), width 0.34s var(--ios-ease);
+}
+
+.ios-key-entering > .clb-aspects-key {
+  transition: width 0.42s var(--ios-ease);
+}
+
+/* The picked shape: wider (it says its name), white words over the key, its outline in the accent. */
+.clb-aspect.is-on {
+  flex-grow: 2;
+  color: #ffffff;
+}
+
+.clb-aspect.is-on .clb-aspect-shape > span { border-color: var(--ios-accent); }
+
+@media (hover: hover) {
+  .clb-aspect:not(.is-on):hover { color: var(--ios-label); }
+}
+
+.clb-aspect:focus-visible {
+  outline: 2px solid var(--ios-accent);
+  outline-offset: 2px;
+}
+
+/* ---- Frames and their drawings ---- */
+
+.clb-frame {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  border-radius: 9px;
+  background: #2b2b31;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12);
+  transition: width 0.28s var(--ios-ease), height 0.28s var(--ios-ease);
+}
+
+/* A panel: dark, a hairline gap round it, a photo or play mark in the middle. */
+.clb-panel {
+  position: absolute;
+  padding: 1.5px;
+}
+
+.clb-panel-fill {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 4px;
+  background: #34343b;
+}
+
+.clb-mark {
+  width: 22px;
+  max-width: 60%;
+  height: auto;
+  aspect-ratio: 1;
+  color: rgba(235, 235, 245, 0.45);
+}
+
+.clb-mark--big {
+  width: 30px;
+  max-width: 44%;
+}
+
+.clb-frame--custom {
+  display: grid;
+  place-items: center;
+  background: #34343b;
+}
+
+/* The preview picture, cropped to fill its spot. */
+.clb-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+  user-select: none;
+}
+
+.clb-panel-fill { position: relative; overflow: hidden; }
+
+/* A small frosted play mark, for a video meme's previews. */
+.clb-play {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.4);
+  color: #ffffff;
+  transform: translate(-50%, -50%);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+
+.clb-play svg { width: 10px; height: 10px; margin-left: 1px; }
+
+/* The photo mark: just the icon, in black on the bright picture. */
+.clb-play--photo {
+  width: auto;
+  height: auto;
+  background: none;
+  color: #000000;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.clb-play--photo svg {
+  width: 22px;
+  height: 22px;
+  margin-left: 0;
+}
+
+/* Meme text: Impact, white with a black outline, sized to the card. */
+.clb-meme {
+  position: relative;
+  z-index: 1;
+  max-width: 94%;
+  overflow: hidden;
+  color: #ffffff;
+  font-family: Impact, 'Anton', 'Arial Narrow', sans-serif;
+  font-size: 10px;
+  line-height: 1.05;
+  letter-spacing: 0.01em;
+  text-align: center;
+  text-overflow: clip;
+  white-space: nowrap;
+  text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+}
+
+.clb-meme--top,
+.clb-meme--bottom,
+.clb-meme--foot {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.clb-meme--top { top: 6%; }
+.clb-meme--bottom { bottom: 6%; }
+.clb-meme--foot { bottom: 8%; font-size: 8.5px; }
+
+/* A caption layout as it opens: black bars with white meme text, the picture between them. */
+.clb-frame--caption {
+  display: flex;
+  flex-direction: column;
+}
+
+.clb-bar {
+  display: grid;
+  flex: none;
+  place-items: center;
+  height: 20%;
+  min-height: 15px;
+  padding: 0 6%;
+  background: #000000;
+}
+
+.clb-bar .clb-meme { text-shadow: none; font-size: 9.5px; }
+
+.clb-picture {
+  position: relative;
+  display: block;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* White frames (the captioned collages): photos with a hairline gap, the caption in dark text. */
+.clb-frame--white { background: #ffffff; }
+
+.clb-bar--white { background: #ffffff; }
+
+.clb-plain {
+  color: #111111;
+  font-family: Arial, sans-serif;
+  font-size: 9px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.clb-picture--split,
+.clb-picture--quad {
+  display: grid;
+  gap: 2px;
+  padding: 3px 3px 0;
+}
+
+.clb-picture--split { grid-template-columns: 1fr 1fr; }
+.clb-frame--white .clb-bar--white:first-child + .clb-picture--quad { padding: 0 3px 3px; }
+.clb-picture--quad { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
+
+.clb-picture--split > span,
+.clb-picture--quad > span {
+  position: relative;
+  overflow: hidden;
+  border-radius: 2px;
+}
+
+/* Subtitle: small white words near the foot, as a film's subtitles. */
+.clb-subtitle {
+  position: absolute;
+  bottom: 8%;
+  left: 50%;
+  z-index: 1;
+  color: #ffffff;
+  font-family: Arial, sans-serif;
+  font-size: 9px;
+  font-weight: 600;
+  white-space: nowrap;
+  transform: translateX(-50%);
+  text-shadow: 0 0 2px #000, 0 1px 2px #000;
+}
+
+/* Poster: the picture in a thin white frame on black, a serif title and a small line under it. */
+.clb-frame--poster {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #000000;
+}
+
+.clb-poster-pic {
+  position: relative;
+  flex: 1;
+  width: 78%;
+  min-height: 0;
+  margin-top: 9%;
+  overflow: hidden;
+  box-shadow: 0 0 0 1.5px #000, 0 0 0 2.5px #ffffff;
+}
+
+.clb-poster-title {
+  margin-top: 7%;
+  color: #ffffff;
+  font-family: 'Times New Roman', serif;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  line-height: 1;
+}
+
+.clb-poster-sub {
+  margin: 3% 0 7%;
+  color: #c7c7cc;
+  font-family: Georgia, serif;
+  font-size: 6.5px;
+  font-style: italic;
+  line-height: 1;
+}
+
+/* Breaking news: a LIVE tag, then the red strap, the white headline and the dark ticker. */
+.clb-live {
+  position: absolute;
+  top: 6%;
+  left: 6%;
+  z-index: 1;
+  padding: 1px 4px;
+  border-radius: 2px;
+  background: #dc2626;
+  color: #ffffff;
+  font-family: Arial, sans-serif;
+  font-size: 6.5px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+
+.clb-news {
+  position: absolute;
+  right: 4%;
+  bottom: 7%;
+  left: 4%;
+  z-index: 1;
+  display: grid;
+  font-family: Arial, sans-serif;
+}
+
+.clb-news-tag {
+  justify-self: start;
+  padding: 1px 4px;
+  background: #dc2626;
+  color: #ffffff;
+  font-size: 5.5px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+}
+
+.clb-news-head {
+  overflow: hidden;
+  padding: 2px 4px;
+  background: #ffffff;
+  color: #0f172a;
+  font-size: 8px;
+  font-weight: 800;
+  text-overflow: clip;
+  white-space: nowrap;
+}
+
+.clb-news-ticker {
+  overflow: hidden;
+  padding: 1px 4px;
+  background: #1e293b;
+  color: #e2e8f0;
+  font-size: 5.5px;
+  white-space: nowrap;
+}
+
+/* ---- Blank Canvas ---- */
 
 .clb-start {
   display: grid;
@@ -22,42 +422,44 @@
   gap: 14px;
   width: 100%;
   margin-top: 14px;
-  padding: 12px 14px 12px 12px;
-  border: 1px solid var(--ios-hairline);
-  border-radius: 18px;
-  background: var(--ios-surface);
+  padding: 10px 14px 10px 10px;
+  border: none;
+  border-radius: 20px;
+  background: var(--ios-fill);
   color: var(--ios-label);
   text-align: left;
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
   transition: transform 0.16s var(--ios-ease), background-color 0.2s var(--ios-ease);
 }
 
-.clb-start:active {
-  transform: scale(0.98);
-}
+.clb-start:active { transform: scale(0.98); }
 
-@media (hover: hover) {
-  .clb-start:hover {
-    background: var(--ios-surface-2);
-  }
-}
-
-/* The empty frame (or the play mark of an empty video), dashed in orange. */
 .clb-start-pic {
   display: grid;
   place-items: center;
-  width: 52px;
-  height: 52px;
-  border-radius: 13px;
-  background: color-mix(in srgb, var(--ios-accent) 14%, transparent);
-  color: var(--ios-accent);
+  width: 56px;
+  height: 56px;
+  border-radius: 15px;
+  background: #0d0d10;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
 }
 
-.clb-start-frame {
-  width: 26px;
-  height: 26px;
-  border: 2px dashed var(--ios-accent);
-  border-radius: 6px;
+/* An empty frame of the chosen shape, dashed in the accent. */
+.clb-frame--blank {
+  display: grid;
+  place-items: center;
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--ios-accent) 12%, transparent);
+  box-shadow: none;
+  outline: 2px dashed var(--ios-accent);
+  outline-offset: -2px;
+}
+
+.clb-start-play {
+  width: 40%;
+  height: 40%;
+  color: var(--ios-accent);
 }
 
 .clb-start-text {
@@ -74,9 +476,12 @@
 }
 
 .clb-start-detail {
-  font-size: 14px;
+  overflow: hidden;
+  font-size: 13.5px;
   line-height: 1.35;
   color: var(--ios-label-2);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .clb-start-go {
@@ -85,64 +490,46 @@
   color: var(--ios-label-3);
 }
 
-/* ---- Layout cards: three across on a phone, more as the page widens ---- */
-
-.clb-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 18px 10px;
-  margin-top: 14px;
-}
+/* ---- Layout cards ---- */
 
 .clb-card {
   display: grid;
   align-content: start;
+  width: 100%;
   min-width: 0;
   padding: 0;
   border: 0;
-  border-radius: 16px;
   background: none;
   color: var(--ios-label);
   text-align: left;
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
 
+/* The tile the drawing sits on, as in a widget gallery. */
 .clb-card-pic {
-  position: relative;
   display: grid;
   place-items: center;
   aspect-ratio: 1;
-  border: 1px solid var(--ios-hairline);
-  border-radius: 16px;
-  background: var(--ios-surface);
-  overflow: hidden;
-  transition: transform 0.18s var(--ios-ease), background-color 0.2s var(--ios-ease);
+  border-radius: 24px;
+  background: var(--ios-fill);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+  transition: transform 0.18s var(--ios-ease), background-color 0.2s var(--ios-ease), box-shadow 0.2s var(--ios-ease);
 }
 
-.clb-card:active .clb-card-pic {
-  transform: scale(0.96);
-}
+.clb-card:active .clb-card-pic { transform: scale(0.95); }
 
-@media (hover: hover) {
-  .clb-card:hover .clb-card-pic {
-    background: var(--ios-surface-2);
-  }
-}
-
-.clb-card-icon {
-  width: 36%;
-  height: 36%;
-  color: var(--ios-label-2);
-  stroke-width: 1.8;
+.clb-card[aria-pressed='true'] .clb-card-pic {
+  box-shadow: inset 0 0 0 2px var(--ios-accent);
 }
 
 .clb-card-name {
-  margin-top: 8px;
+  margin-top: 9px;
   overflow: hidden;
-  font-size: 14px;
-  font-weight: 700;
-  line-height: 1.3;
-  letter-spacing: -0.01em;
+  font-size: 15px;
+  font-weight: 750;
+  line-height: 1.25;
+  letter-spacing: -0.012em;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -150,57 +537,51 @@
 .clb-card-detail {
   margin-top: 1px;
   overflow: hidden;
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.35;
   color: var(--ios-label-2);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-/* ---- Crisp Wireframe Drawings ---- */
+.clb-card:focus-visible { outline: none; }
+.clb-card:focus-visible .clb-card-pic { box-shadow: inset 0 0 0 2px var(--ios-accent); }
 
-.clb-glyph {
-  display: grid;
-  gap: 5px;
-  width: 56%;
-  aspect-ratio: 1;
+@media (hover: hover) {
+  .clb-start:hover,
+  .clb-card:hover .clb-card-pic {
+    background: var(--ios-fill-strong);
+  }
 }
 
-.clb-glyph > span {
-  border-radius: 5px;
-  background: var(--ios-fill-strong);
-}
+/* ---- Every section: one line of cards that slides sideways, to the page's edges ---- */
 
-/* A video with caption bars */
-.clb-video {
+.clb-slider {
   display: flex;
-  flex-direction: column;
-  gap: 5px;
-  width: 58%;
-  aspect-ratio: 1;
+  gap: 12px;
+  margin: 14px calc(-1 * var(--clb-bleed, 16px)) 0;
+  padding: 2px var(--clb-bleed, 16px) 6px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: var(--clb-bleed, 16px);
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
 }
 
-.clb-video-bar {
+.clb-slider::-webkit-scrollbar { display: none; }
+
+.clb-slide {
   flex: none;
-  height: 18%;
-  border-radius: 5px;
-  background: var(--ios-accent);
-}
-
-.clb-video-stage {
-  display: grid;
-  flex: 1;
-  place-items: center;
-  border-radius: 5px;
-  background: var(--ios-fill-strong);
-  color: var(--ios-label);
+  width: 132px;
+  scroll-snap-align: start;
 }
 
 /* ---- Custom Grid ---- */
 
 .clb-custom {
   display: grid;
-  gap: 14px;
+  gap: 12px;
   max-width: 520px;
   margin-top: 14px;
 }
@@ -208,24 +589,22 @@
 .clb-custom-preview {
   display: grid;
   place-items: center;
+  height: 150px;
+  border-radius: 20px;
+  background: var(--ios-fill);
+}
+
+.clb-custom-square {
+  display: grid;
+  place-items: center;
   height: 140px;
-  border-radius: 16px;
-  background: var(--ios-surface);
-}
-
-.clb-custom-preview .clb-glyph {
-  width: 96px;
-  gap: 4px;
-}
-
-.clb-custom-preview .clb-glyph > span {
-  border-radius: 4px;
+  aspect-ratio: 1;
 }
 
 .clb-form {
-  border-radius: 16px;
-  background: var(--ios-surface);
   overflow: hidden;
+  border-radius: 18px;
+  background: var(--ios-fill);
 }
 
 .clb-form-row {
@@ -244,7 +623,7 @@
   top: 0;
   right: 0;
   left: 16px;
-  height: 1px;
+  height: 0.5px;
   background: var(--ios-separator);
 }
 
@@ -298,9 +677,7 @@
   background: var(--ios-separator);
 }
 
-.clb-stepper button:active {
-  background: var(--ios-fill-strong);
-}
+.clb-stepper button:active { background: var(--ios-fill-strong); }
 
 .clb-stepper button:disabled {
   color: var(--ios-label-3);
@@ -313,20 +690,33 @@
   gap: 10px;
 }
 
+/* ---- Light theme: the drawings keep their dark picture, on a lighter tile ---- */
+
+[data-theme='light'] .clb-start-pic {
+  background: #ffffff;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+}
+
 /* ---- Wider screens ---- */
 
 @media (min-width: 720px) {
-  .clb-section {
-    margin-top: 38px;
-  }
+  .clb-section { margin-top: 36px; }
 
+  .clb-shape,
   .clb-start {
     max-width: 520px;
   }
 
-  .clb-grid {
-    grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
-    gap: 24px 18px;
-    max-width: 1080px;
+  .clb-slide { width: 156px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .clb-aspect-name { animation: none; }
+  .clb-aspects-key { transition: none; }
+
+  .clb-frame,
+  .clb-card-pic,
+  .clb-start {
+    transition: none;
   }
 }

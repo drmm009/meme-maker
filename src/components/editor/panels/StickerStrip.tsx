@@ -1,38 +1,60 @@
+import { useEffect } from 'react';
 import type { ReactNode } from 'react';
-import { Scissors, Crop, Type, Sparkles } from 'lucide-react';
-import { ToolStrip } from '../../ui';
-import type { StripItem } from '../../ui';
+import { Scissors, Crop, Type, Sparkles, Palette, RotateCcw } from 'lucide-react';
+import { Sheet, Tile, TileGrid, ToolDock } from '../../ui';
+import type { DockItem } from '../../ui';
 import { useEditorUiStore } from '../store/useEditorUiStore';
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
-import StickerStylePicker from './StickerStylePicker';
+import { STICKER_STYLES } from '../stickerMaker';
+import { useSelection } from './selection';
 import type { EditorActions } from './selection';
 
 interface LayerItem {
   id: string;
+  url?: string;
   originalUrl?: string | null;
 }
 
-// The Stickers maker's strip on its editing page, once the sticker is made (before that its page,
-// StickerStudio, shows), laid out as that page: Die-cut (border settings), Crop, Text and Effects
-// (photo filters) as a row of tiles, then the Style card (StickerStylePicker), above Export (EditorPanels).
-// With a text layer selected, its tools (LayerToolbar, as `tools`) take the four tiles' place; the rest
-// of the page stays as it is.
+const TOOLS: DockItem[] = [
+  { id: 'diecut', label: 'Die-cut', title: 'Die-cut border settings', Icon: Scissors },
+  { id: 'style', label: 'Style', title: 'Outline style', Icon: Palette },
+  { id: 'text', label: 'Text', title: 'Add text to the sticker', Icon: Type },
+  { id: 'crop', label: 'Crop', title: 'Crop or turn the picture', Icon: Crop },
+  { id: 'effects', label: 'Effects', title: 'Photo effects and filters', Icon: Sparkles },
+];
+
+// The sheet each tool opens (Crop and Text act at once).
+const SHEET_OF: Record<string, string> = { diecut: 'diecut', style: 'stickerStyle', effects: 'filters' };
+const TOOL_SHEETS = new Set(Object.values(SHEET_OF));
+
+// The photo the tools work on: the cut-out one, or else the first.
+const usePhoto = () => {
+  const imageLayers: LayerItem[] = useMemeEditorStore((s: { imageLayers: LayerItem[] }) => s.imageLayers);
+  return imageLayers.find((l) => Boolean(l.originalUrl)) || imageLayers[0];
+};
+
+// The Stickers maker's tools on its editing screen, once the sticker is made (before that its page,
+// StickerStudio, shows): Die-cut, Style, Text (in the middle), Crop and Effects in the image editor's
+// main dock (ToolDock, `ui-dock`), the open one lit. Die-cut, Style and Effects open their sheets on
+// the photo (Style is StickerStyleSheet); Crop and Text act at once. Export is in the header
+// (MemeEditor). With a text layer selected its tools (LayerToolbar, as `tools`) show above the dock,
+// and selecting it closes a Die-cut, Style or Effects sheet that was open.
 export default function StickerStrip({ actions, tools }: { actions: EditorActions; tools?: ReactNode }) {
   const sheet: string | null = useEditorUiStore((s: { sheet: string | null }) => s.sheet);
   const openSheet = useEditorUiStore((s: { openSheet: (sheet: string) => void }) => s.openSheet);
   const closeSheet = useEditorUiStore((s: { closeSheet: () => void }) => s.closeSheet);
   const setCropLayerId = useEditorUiStore((s: { setCropLayerId: (id: string | null) => void }) => s.setCropLayerId);
-  const imageLayers: LayerItem[] = useMemeEditorStore((s: { imageLayers: LayerItem[] }) => s.imageLayers);
   const setActiveLayerId = useMemeEditorStore((s: { setActiveLayerId: (id: string | null) => void }) => s.setActiveLayerId);
-  // The photo the tools work on: the cut-out one, or else the first.
-  const photo = imageLayers.find((l) => Boolean(l.originalUrl)) || imageLayers[0];
+  const photo = usePhoto();
+  const { id: selectedId, kind } = useSelection();
 
-  const items: StripItem[] = [
-    { id: 'diecut', label: 'Die-cut', title: 'Die-cut border settings', Icon: Scissors, active: sheet === 'diecut' },
-    { id: 'crop', label: 'Crop', title: 'Crop or turn the picture', Icon: Crop },
-    { id: 'text', label: 'Text', title: 'Add text to the sticker', Icon: Type },
-    { id: 'effects', label: 'Effects', title: 'Photo effects and filters', Icon: Sparkles, active: sheet === 'filters' },
-  ];
+  // Selecting a text layer puts its tools above the dock: a tool's sheet that was open makes way.
+  useEffect(() => {
+    if (kind !== 'caption' || !sheet || !TOOL_SHEETS.has(sheet)) return;
+    closeSheet();
+    // Only on a new selection, not when a sheet opens with the text still selected.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedId, kind]);
 
   // A sheet button opens its sheet on the photo, or closes it when it is open.
   const toggle = (name: string) => {
@@ -44,25 +66,56 @@ export default function StickerStrip({ actions, tools }: { actions: EditorAction
   };
 
   const onSelect = (id: string) => {
-    if (id === 'diecut') toggle('diecut');
-    else if (id === 'effects') toggle('filters');
+    if (SHEET_OF[id]) toggle(SHEET_OF[id]);
     else if (id === 'crop') {
       if (photo) setCropLayerId(photo.id);
     } else if (id === 'text') actions.handleAddCaption();
   };
 
+  const active = TOOLS.find((t) => SHEET_OF[t.id] && SHEET_OF[t.id] === sheet)?.id ?? null;
   return (
     <>
-      {tools ?? <ToolStrip ariaLabel="Sticker tools" layout="stacked" items={items} onSelect={onSelect} />}
-      {/* The style stays to hand after Generate (a pick restyles the cut-out), in its card as on the
-          sticker page, making way for an open sheet. */}
-      {!sheet && photo?.originalUrl && (
-        <div className="ie-stk-restyle">
-          <div className="ie-stk-panel-stack">
-            <StickerStylePicker previewUrl={photo.originalUrl} onPick={actions.handleStickerStyle} />
-          </div>
-        </div>
-      )}
+      {tools}
+      <ToolDock ariaLabel="Sticker tools" items={TOOLS} active={active} onSelect={onSelect} />
     </>
+  );
+}
+
+// The Style sheet, in the Filters sheet's design (FiltersSheet: its header, Reset, and the grid of
+// photo tiles, panels.css .ie-filter-*): each outline style as the cut-out sticker on the
+// see-through checkerboard in that outline, its name under it, the picked one lit. A pick restyles
+// the cut-out; Reset goes back to Classic.
+export function StickerStyleSheet({ actions, onClose }: { actions: EditorActions; onClose: () => void }) {
+  const photo = usePhoto();
+  const style: string = useEditorUiStore((s: { stickerStyle: string }) => s.stickerStyle);
+  // The cut-out itself, so each tile shows the sticker's own shape in that outline.
+  const src = photo?.url || photo?.originalUrl || '';
+  return (
+    <Sheet
+      Icon={Palette}
+      className="ie-filters-sheet ie-tool-sheet ie-stk-style-sheet"
+      title="Style"
+      onClose={onClose}
+      action={{ label: 'Reset', Icon: RotateCcw, variant: 'plain', disabled: style === 'classic', onClick: () => actions.handleStickerStyle('classic') }}
+    >
+      <div className="ie-filter-grid" role="group" aria-label="Sticker style">
+        <TileGrid>
+          {STICKER_STYLES.map((s) => (
+            <Tile
+              key={s.id}
+              className="ie-filter-tile"
+              label={s.label}
+              active={style === s.id}
+              onClick={() => actions.handleStickerStyle(s.id)}
+              icon={(
+                <span className="ie-filter-thumb ie-stk-style-thumb">
+                  <img className={`ie-stk-look--${s.id}`} src={src} alt="" draggable={false} />
+                </span>
+              )}
+            />
+          ))}
+        </TileGrid>
+      </div>
+    </Sheet>
   );
 }

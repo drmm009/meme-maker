@@ -64,6 +64,10 @@ export interface MemeCaption extends MemeLayerBase {
   isInstagramCard?: boolean;
   isWhatsAppCard?: boolean;
   isBreakingNews?: boolean;
+  // A label a collage layout starts with in a panel ("HOW IT STARTED"): it doesn't count as the
+  // panel's content, so the panel keeps its start card until a photo goes in (ImagePanelPrompts).
+  // Optional and ignored by older code, so saved data needs no migration.
+  isPanelLabel?: boolean;
 }
 
 // Blend mode and shadow (stickers and photos), corners and border (photos): canvas/draw/layerLook.

@@ -20,7 +20,7 @@ import './imagePanelPrompts.css';
 // Layouts with more panels than this start empty (their panels are too small for a card).
 const MAX_PROMPT_PANELS = 4;
 
-interface Caption { id: string; x?: number; y?: number; zIndex?: number; isHeaderCaption?: boolean; isFooterCaption?: boolean; hasCustomPos?: boolean }
+interface Caption { id: string; x?: number; y?: number; zIndex?: number; isHeaderCaption?: boolean; isFooterCaption?: boolean; hasCustomPos?: boolean; isPanelLabel?: boolean }
 interface Layered { zIndex?: number; x?: number; y?: number }
 interface DocState {
   slotImages: (string | null)[];
@@ -46,9 +46,10 @@ const hasPhoto = (src: string | null | undefined) => Boolean(src) && src !== WHI
 // Whether a photo or sticker layer sits in a panel (its middle there).
 const hasLayerIn = (r: PanelRect, layers: Layered[]) => layers.some((l) => inPanel(r, l.x ?? 0.5, l.y ?? 0.5));
 
-// Whether a panel already has a caption in it (one placed on the image, not in a band).
+// Whether a panel already has a caption in it (one placed on the image, not in a band, and not a
+// label the layout started it with).
 const hasCaptionIn = (r: PanelRect, captions: Caption[]) =>
-  captions.some((c) => !c.isHeaderCaption && !c.isFooterCaption && inPanel(r, c.x ?? 0.5, c.y ?? 0.5));
+  captions.some((c) => !c.isHeaderCaption && !c.isFooterCaption && !c.isPanelLabel && inPanel(r, c.x ?? 0.5, c.y ?? 0.5));
 
 function PanelCard({ index, rect, ink, onText, onUpload, onTemplates }: {
   index: number;

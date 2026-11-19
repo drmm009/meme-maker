@@ -1,4 +1,4 @@
-import { THEME_BADGE_BG, THEME_CORAL, drawDeleteHandle, drawResizeHandle, drawRotateHandle, drawSelectionBox, drawSideHandle } from './handles';
+import { THEME_BADGE_BG, accentOf, drawDeleteHandle, drawResizeHandle, drawRotateHandle, drawSelectionBox, drawSideHandle } from './handles';
 import { getFilterCss, drawImageFiltered } from '../../../data/photoFilters';
 import { applyShadow, compositeFor, cornerPx, isFramed, roundRectPath } from '../draw/layerLook';
 import { applyPhotoEffects, hasPhotoEffects, blurredCopy } from '../draw/photoEffects';
@@ -225,7 +225,7 @@ if (cached) {
 
       if (imgLayer.isFaceMorph) {
         // Sleek, glowing face reticle (matching coral theme)
-        uiCtx.strokeStyle = THEME_CORAL;
+        uiCtx.strokeStyle = accentOf(uiCtx);
         uiCtx.lineWidth = 2.4;
         uiCtx.setLineDash([5, 5]);
         uiCtx.beginPath();
@@ -245,7 +245,7 @@ if (cached) {
         // Floating badge
         uiCtx.save();
         uiCtx.fillStyle = THEME_BADGE_BG;
-        uiCtx.strokeStyle = THEME_CORAL;
+        uiCtx.strokeStyle = accentOf(uiCtx);
         uiCtx.lineWidth = 1.5;
         const badgeText = `🎭 ${imgLayer.faceName || 'Face Morph'} (${Math.round((imgLayer.opacity !== undefined ? imgLayer.opacity : 1) * 100)}%)`;
         uiCtx.font = 'bold 12px sans-serif';
@@ -254,7 +254,7 @@ if (cached) {
         uiCtx.roundRect(-textW / 2 - 8, hh + 12, textW + 16, 24, 12);
         uiCtx.fill();
         uiCtx.stroke();
-        uiCtx.fillStyle = THEME_CORAL;
+        uiCtx.fillStyle = accentOf(uiCtx);
         uiCtx.textAlign = 'center';
         uiCtx.textBaseline = 'middle';
         uiCtx.fillText(badgeText, 0, hh + 24);

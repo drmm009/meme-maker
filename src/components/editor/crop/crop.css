@@ -1,120 +1,111 @@
-/* ══════════════════════════════════════════════════════════════════════════
-   Photo Crop Studio — Impeccable & Watermelon UI Revamp
-   ══════════════════════════════════════════════════════════════════════════ */
+/* The photo cropper (PhotoCropSheet), full screen on black. On top a round Cancel, the title over the
+   crop's size and a Done pill; the photo with its crop box (white corner brackets, the thirds grid
+   while it is dragged); at the bottom a rounded panel: the shapes as a row of pills (outline beside
+   name), then Turn left, Turn right and Reset as one bar. The app's orange, or the Stickers maker's
+   green (.ie-crop--sticker). */
 
 .ie-crop {
+  --crop-accent: var(--ui-accent, #ff5a36);
+  --crop-ink: #ffffff;
+  --crop-card: rgba(255, 255, 255, 0.07);
   position: fixed;
   inset: 0;
   z-index: 1500;
   display: flex;
   flex-direction: column;
-  background: #090a0d;
+  background: #000;
   user-select: none;
-  animation: ie-crop-fade-in 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: ie-crop-in 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.ie-crop--sticker {
+  --crop-accent: #2fd39b;
+  --crop-ink: #062419;
 }
 
-@keyframes ie-crop-fade-in {
-  from { opacity: 0; transform: scale(0.99); }
-  to { opacity: 1; transform: scale(1); }
+@keyframes ie-crop-in {
+  from { opacity: 0; transform: scale(0.985); }
+  to { opacity: 1; transform: none; }
 }
 
-/* ── Top Bar ────────────────────────────────────────────────────────── */
+/* ── Top: Cancel, the title over the size, Done ── */
 .ie-crop-bar {
   flex: none;
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
   gap: 12px;
-  /* Top inset keeps Cancel / Done below the iPhone notch / status bar. */
-  box-sizing: border-box;
-  height: calc(56px + env(safe-area-inset-top, 0px));
-  padding: env(safe-area-inset-top, 0px) 18px 0;
-  background: #090a0d;
-  z-index: 20;
+  /* Below the notch / status bar. */
+  padding: calc(10px + env(safe-area-inset-top, 0px)) 14px 6px;
 }
-
+.ie-crop-round {
+  justify-self: start;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+.ie-crop-round:active { transform: scale(0.92); }
+.ie-crop-heading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  min-width: 0;
+}
 .ie-crop-title {
   margin: 0;
+  color: #fff;
   font-size: var(--ui-fs-headline, 17px);
-  font-weight: 800;
-  color: #ffffff;
+  font-weight: 700;
   letter-spacing: -0.01em;
-  text-align: center;
 }
-
-.ie-crop-cancel-btn,
-.ie-crop-text-btn {
+.ie-crop-size {
+  min-height: 15px;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: var(--ui-fs-label, 12px);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.ie-crop-done {
+  justify-self: end;
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  height: 34px;
-  padding: 0 16px;
-  border-radius: var(--ui-radius-full, 999px);
+  gap: 6px;
+  height: 40px;
+  padding: 0 16px 0 13px;
   border: none;
-  background: rgba(255, 255, 255, 0.08);
-  color: #f1f5f9;
-  font-size: var(--ui-fs-footnote, 13px);
-  font-weight: 600;
+  border-radius: 999px;
+  background: var(--crop-accent);
+  color: var(--crop-ink);
+  font: inherit;
+  font-size: var(--ui-fs-body, 15px);
+  font-weight: 700;
   cursor: pointer;
-  outline: none;
   -webkit-tap-highlight-color: transparent;
-  transition: all 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.15s ease, opacity 0.15s ease;
 }
+.ie-crop-done:active:not(:disabled) { transform: scale(0.95); }
+.ie-crop-done:disabled { opacity: 0.4; cursor: default; }
 
-.ie-crop-cancel-btn:hover,
-.ie-crop-text-btn:hover {
-  background: rgba(255, 255, 255, 0.12);
-  color: #ffffff;
-}
-
-.ie-crop-done-btn,
-.ie-crop-bar .ui-btn-accent {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  height: 34px;
-  padding: 0 20px;
-  border-radius: var(--ui-radius-full, 999px);
-  border: none;
-  background: var(--ui-accent, #ff5a36);
-  color: #ffffff;
-  font-size: var(--ui-fs-footnote, 13px);
-  font-weight: 600;
-  cursor: pointer;
-  box-shadow: 0 1px 8px rgba(255, 90, 54, 0.35);
-  outline: none;
-  -webkit-tap-highlight-color: transparent;
-  transition: all 0.16s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.ie-crop-done-btn:hover,
-.ie-crop-bar .ui-btn-accent:hover {
-  background: #ff6e4a;
-  box-shadow: 0 2px 12px rgba(255, 90, 54, 0.5);
-  transform: translateY(-0.5px);
-}
-
-.ie-crop-done-btn:disabled,
-.ie-crop-bar .ui-btn-accent:disabled {
-  opacity: 0.45;
-  transform: none;
-  box-shadow: none;
-  cursor: not-allowed;
-}
-
-/* ── Stage & Canvas ─────────────────────────────────────────────────── */
+/* ── The photo and its crop box ── */
 .ie-crop-stage {
   flex: 1;
   min-height: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px 20px;
+  padding: 26px 28px;
   overflow: hidden;
   touch-action: none;
-  background: #090a0d;
 }
-
 .ie-crop-frame {
   position: relative;
   display: inline-block;
@@ -122,173 +113,138 @@
   max-height: 100%;
   line-height: 0;
 }
-
 .ie-crop-photo {
   display: block;
   max-width: 100%;
-  max-height: calc(100vh - 250px);
-  border-radius: 2px;
+  max-height: calc(100dvh - 330px);
 }
-
 .ie-crop-box {
   position: absolute;
   box-sizing: border-box;
-  border: 1px solid rgba(255, 255, 255, 0.85);
-  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.72);
+  border: 1.5px solid rgba(255, 255, 255, 0.92);
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.66);
   cursor: move;
   touch-action: none;
 }
-
-/* Rule-of-thirds grid inside crop box */
+/* The thirds grid: faint at rest, clear while the box is dragged. */
 .ie-crop-box::before {
   content: '';
   position: absolute;
   inset: 0;
   pointer-events: none;
   background-image:
-    linear-gradient(to right, rgba(255, 255, 255, 0.22) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.22) 1px, transparent 1px);
-  background-size: 33.333% 33.333%;
+    linear-gradient(to right, transparent calc(33.333% - 0.5px), rgba(255, 255, 255, 0.5) calc(33.333% - 0.5px), rgba(255, 255, 255, 0.5) calc(33.333% + 0.5px), transparent calc(33.333% + 0.5px), transparent calc(66.666% - 0.5px), rgba(255, 255, 255, 0.5) calc(66.666% - 0.5px), rgba(255, 255, 255, 0.5) calc(66.666% + 0.5px), transparent calc(66.666% + 0.5px)),
+    linear-gradient(to bottom, transparent calc(33.333% - 0.5px), rgba(255, 255, 255, 0.5) calc(33.333% - 0.5px), rgba(255, 255, 255, 0.5) calc(33.333% + 0.5px), transparent calc(33.333% + 0.5px), transparent calc(66.666% - 0.5px), rgba(255, 255, 255, 0.5) calc(66.666% - 0.5px), rgba(255, 255, 255, 0.5) calc(66.666% + 0.5px), transparent calc(66.666% + 0.5px));
+  opacity: 0.35;
+  transition: opacity 0.2s ease;
 }
+.ie-crop-stage.is-dragging .ie-crop-box::before { opacity: 1; }
 
-/* ── Pro L-Bracket Corner Framing Handles ───────────────────────────── */
+/* Corner brackets: thick white L's on a 44px touch target. */
 .ie-crop-handle {
   position: absolute;
   width: 44px;
   height: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   touch-action: none;
   z-index: 10;
   cursor: pointer;
-  background: transparent;
-  outline: none;
 }
-
 .ie-crop-handle::after {
   content: '';
   position: absolute;
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   box-sizing: border-box;
-  border: 0 solid #ffffff;
+  border: 0 solid #fff;
   pointer-events: none;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.85));
-  transition: border-color 0.16s ease, transform 0.16s ease, filter 0.16s ease;
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.6));
+  transition: border-color 0.15s ease, transform 0.15s ease;
 }
+.ie-crop-handle--nw { top: -22px; left: -22px; cursor: nwse-resize; }
+.ie-crop-handle--ne { top: -22px; right: -22px; cursor: nesw-resize; }
+.ie-crop-handle--sw { bottom: -22px; left: -22px; cursor: nesw-resize; }
+.ie-crop-handle--se { bottom: -22px; right: -22px; cursor: nwse-resize; }
+.ie-crop-handle--nw::after { top: 19px; left: 19px; border-top-width: 4px; border-left-width: 4px; border-top-left-radius: 4px; }
+.ie-crop-handle--ne::after { top: 19px; right: 19px; border-top-width: 4px; border-right-width: 4px; border-top-right-radius: 4px; }
+.ie-crop-handle--sw::after { bottom: 19px; left: 19px; border-bottom-width: 4px; border-left-width: 4px; border-bottom-left-radius: 4px; }
+.ie-crop-handle--se::after { bottom: 19px; right: 19px; border-bottom-width: 4px; border-right-width: 4px; border-bottom-right-radius: 4px; }
+.ie-crop-handle:active::after { border-color: var(--crop-accent); transform: scale(1.12); }
 
-/* Northwest Corner */
-.ie-crop-handle--nw {
-  top: -22px;
-  left: -22px;
-  cursor: nwse-resize;
-}
-.ie-crop-handle--nw::after {
-  top: 21px;
-  left: 21px;
-  border-top-width: 3.5px;
-  border-left-width: 3.5px;
-  border-top-left-radius: 3px;
-}
-
-/* Northeast Corner */
-.ie-crop-handle--ne {
-  top: -22px;
-  right: -22px;
-  cursor: nesw-resize;
-}
-.ie-crop-handle--ne::after {
-  top: 21px;
-  right: 21px;
-  border-top-width: 3.5px;
-  border-right-width: 3.5px;
-  border-top-right-radius: 3px;
-}
-
-/* Southwest Corner */
-.ie-crop-handle--sw {
-  bottom: -22px;
-  left: -22px;
-  cursor: nesw-resize;
-}
-.ie-crop-handle--sw::after {
-  bottom: 21px;
-  left: 21px;
-  border-bottom-width: 3.5px;
-  border-left-width: 3.5px;
-  border-bottom-left-radius: 3px;
-}
-
-/* Southeast Corner */
-.ie-crop-handle--se {
-  bottom: -22px;
-  right: -22px;
-  cursor: nwse-resize;
-}
-.ie-crop-handle--se::after {
-  bottom: 21px;
-  right: 21px;
-  border-bottom-width: 3.5px;
-  border-right-width: 3.5px;
-  border-bottom-right-radius: 3px;
-}
-
-.ie-crop-handle:hover::after,
-.ie-crop-handle:active::after {
-  border-color: var(--ui-accent, #ff5a36);
-  filter: drop-shadow(0 0 7px rgba(255, 90, 54, 0.75));
-  transform: scale(1.14);
-}
-
-/* ── Controls: the crop size and turn/reset, then a tile per shape ─── */
-.ie-crop-tools {
+/* ── The bottom panel ── */
+.ie-crop-panel {
   flex: none;
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  padding: 14px 16px calc(18px + env(safe-area-inset-bottom));
-  background: var(--ui-surface, #1c1c1e);
-  border-top: 1px solid rgba(255, 255, 255, 0.09);
-  border-top-left-radius: 24px;
-  border-top-right-radius: 24px;
-  box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.55);
-  z-index: 20;
+  gap: 12px;
+  padding: 16px 0 calc(16px + env(safe-area-inset-bottom, 0px));
+  background: #1c1c1e;
+  border-radius: 28px 28px 0 0;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
-.ie-crop-tools > * { width: 100%; max-width: 480px; margin: 0 auto; }
+.ie-crop-panel > * { box-sizing: border-box; width: 100%; max-width: 520px; margin: 0 auto; }
 
-.ie-crop-tools-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-/* The crop's size in pixels, so you know what you'll get. */
-.ie-crop-size {
-  color: var(--ui-muted, #a5a6ad);
+/* The shapes: one scrolling row of pills, the outline beside the name, the picked one filled. */
+.ie-crop-shapes {
+  display: flex;
+  gap: 8px;
+  padding: 0 16px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  scroll-snap-type: x proximity;
+  scroll-padding-inline: 16px;
+}
+.ie-crop-shapes::-webkit-scrollbar { display: none; }
+.ie-crop-shape-btn {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 38px;
+  padding: 0 14px 0 11px;
+  border: none;
+  border-radius: 999px;
+  background: var(--crop-card);
+  color: rgba(255, 255, 255, 0.78);
+  font: inherit;
   font-size: var(--ui-fs-footnote, 13px);
   font-weight: 600;
-  font-variant-numeric: tabular-nums;
-}
-.ie-crop-turns { display: flex; align-items: center; gap: 8px; }
-.ie-crop-icon-btn {
-  display: grid;
-  place-items: center;
-  width: 38px;
-  height: 38px;
-  padding: 0;
-  border: none;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--ui-text, #f4f4f6);
+  white-space: nowrap;
   cursor: pointer;
+  scroll-snap-align: start;
   -webkit-tap-highlight-color: transparent;
-  transition: background 0.15s ease, transform 0.15s ease;
+  transition: background 0.18s ease, color 0.18s ease, transform 0.15s ease;
 }
-.ie-crop-icon-btn:hover { background: rgba(255, 255, 255, 0.1); }
-.ie-crop-icon-btn:active { transform: scale(0.94); }
-.ie-crop-reset {
-  height: 38px;
-  padding: 0 16px;
+.ie-crop-shape-btn:active { transform: scale(0.95); }
+.ie-crop-shape-btn.is-on { background: var(--crop-accent); color: var(--crop-ink); }
+.ie-crop-shape-box { display: grid; place-items: center; width: 18px; height: 18px; }
+.ie-crop-shape { display: block; box-sizing: border-box; border: 2px solid currentColor; border-radius: 3px; }
+.ie-crop-shape--free { border-style: dashed; }
+
+/* Turn left, Turn right and Reset: one bar, icon beside word. */
+.ie-crop-actions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  margin: 0 16px;
+  padding: 4px;
+  width: auto;
+  max-width: 488px;
+  border-radius: 18px;
+  background: var(--crop-card);
+}
+@media (min-width: 552px) {
+  .ie-crop-actions { margin: 0 auto; width: 100%; }
+}
+.ie-crop-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  height: 44px;
   border: none;
-  border-radius: var(--ui-radius-full, 999px);
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--ui-text, #f4f4f6);
+  border-radius: 14px;
+  background: transparent;
+  color: #fff;
   font: inherit;
   font-size: var(--ui-fs-footnote, 13px);
   font-weight: 600;
@@ -296,59 +252,39 @@
   -webkit-tap-highlight-color: transparent;
   transition: background 0.15s ease, opacity 0.15s ease;
 }
-.ie-crop-reset:hover:not(:disabled) { background: rgba(255, 255, 255, 0.1); }
-.ie-crop-reset:disabled { opacity: 0.4; cursor: default; }
-
-/* One tile per shape, its outline drawn to scale above the name. */
-.ie-crop-shapes {
-  display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 8px;
+.ie-crop-action svg { color: var(--crop-accent); }
+.ie-crop-action:active:not(:disabled) { background: rgba(255, 255, 255, 0.08); }
+.ie-crop-action:disabled { opacity: 0.35; cursor: default; }
+@media (hover: hover) {
+  .ie-crop-action:hover:not(:disabled) { background: rgba(255, 255, 255, 0.06); }
+  .ie-crop-round:hover { background: rgba(255, 255, 255, 0.16); }
 }
-.ie-crop-shape-btn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  min-width: 0;
-  height: 64px;
-  padding: 0;
-  border: none;
-  border-radius: var(--ui-radius-md, 16px);
-  background: rgba(255, 255, 255, 0.05);
-  color: var(--ui-muted, #a5a6ad);
-  font: inherit;
-  font-size: var(--ui-fs-label, 12px);
-  font-weight: 600;
-  white-space: nowrap;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  transition: background 0.15s ease, color 0.15s ease;
-}
-.ie-crop-shape-btn:hover:not(.is-on) { background: rgba(255, 255, 255, 0.09); color: var(--ui-text, #f4f4f6); }
-.ie-crop-shape-btn.is-on {
-  background: var(--ui-accent, #ff5a36);
-  color: #fff;
-  box-shadow: 0 6px 16px -8px rgba(255, 90, 54, 0.7);
-}
-.ie-crop-shape-box { display: grid; place-items: center; width: 22px; height: 22px; }
-.ie-crop-shape { display: block; box-sizing: border-box; border: 2px solid currentColor; border-radius: 3px; }
-.ie-crop-shape--free { border-style: dashed; }
 
 .ie-crop-restore-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 7px;
-  height: 40px;
+  height: 34px;
   border: none;
-  border-radius: var(--ui-radius-full, 999px);
   background: transparent;
-  color: var(--ui-muted, #a5a6ad);
+  color: rgba(255, 255, 255, 0.55);
   font: inherit;
   font-size: var(--ui-fs-footnote, 13px);
   font-weight: 600;
   cursor: pointer;
 }
-.ie-crop-restore-btn:hover { color: var(--ui-text, #f4f4f6); }
+.ie-crop-restore-btn:hover { color: #fff; }
+
+.ie-crop-round:focus-visible,
+.ie-crop-done:focus-visible,
+.ie-crop-shape-btn:focus-visible,
+.ie-crop-action:focus-visible,
+.ie-crop-restore-btn:focus-visible {
+  outline: 2px solid var(--crop-accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ie-crop { animation: none; }
+}

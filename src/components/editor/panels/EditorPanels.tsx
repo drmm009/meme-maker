@@ -30,7 +30,7 @@ import CardFormSheet, { CardLookSheet } from './CardFormSheet';
 import CardStrip from './CardStrip';
 import AiMemeStudio, { AiMemeGallerySheet } from './AiMemeStudio';
 import AiStrip from './AiStrip';
-import StickerStrip from './StickerStrip';
+import StickerStrip, { StickerStyleSheet } from './StickerStrip';
 import FaceSwapStudio from './FaceSwapStudio';
 import StickerStudio, { StickerGallerySheet } from './StickerStudio';
 import { makeStickerTemplate } from '../stickerMaker';
@@ -70,7 +70,7 @@ const DOCK: DockItem[] = [
 ];
 
 const SHEETS = { text: TextSheet, media: MediaSheet, draw: DrawSheet, canvasColor: CanvasColorSheet, watermark: WatermarkSheet, bands: BandsSheet, aiCaption: AiCaptionSheet, filters: FiltersSheet, background: BackgroundSheet, layers: LayersSheet, export: ExportSheet, library: LibrarySheet, mediaLink: LinkSheet,
-  templates: TemplatesSheet, memes: MemePickerSheet, stickers: StickersSheet, emoji: EmojiSheet, bubble: BubbleSheet, diecut: DieCutSheet, socialCard: SocialCardSheet,
+  templates: TemplatesSheet, memes: MemePickerSheet, stickers: StickersSheet, emoji: EmojiSheet, bubble: BubbleSheet, diecut: DieCutSheet, stickerStyle: StickerStyleSheet, socialCard: SocialCardSheet,
   card: CardFormSheet, cardLook: CardLookSheet, aiGallery: AiMemeGallerySheet, faceSwap: FaceSwapStudio, stickerGallery: StickerGallerySheet, crop: CropSheet };
 // Sheets for browsing a big library, shown full height (the meme needn't stay in view).
 const FULL_SHEETS = new Set<string>(['templates', 'memes', 'stickers', 'emoji', 'aiGallery', 'faceSwap', 'stickerGallery', 'crop']);
@@ -108,8 +108,9 @@ export default function EditorPanels({ actions, onBack }: { actions: EditorActio
   const swapDock: Partial<DockItem> = swapped
     ? { label: 'Swap again', title: 'Change the face or the picture', variant: 'secondary' }
     : { label: 'Swap face', title: 'Pick your face and a picture', variant: 'primary' };
-  // The makers with action buttons for a dock (ui.css DockItem variant).
-  const actionDock = mode === 'sticker' || mode === 'faceswap' || mode === 'ai';
+  // The makers with action buttons for a dock (ui.css DockItem variant). The Stickers maker isn't one:
+  // its tools are the image editor's own floating dock (StickerStrip).
+  const actionDock = mode === 'faceswap' || mode === 'ai';
   const modeDock = mode === 'faceswap' && !swapped ? EDITOR_MODES[mode].dock.slice(0, 1) : EDITOR_MODES[mode].dock;
   const dock = modeDock.map((id) => DOCK.find((d) => d.id === id)).filter((d): d is DockItem => Boolean(d))
     .map((d) => (d.id === 'swap' && mode === 'faceswap' ? { ...d, ...swapDock } : d));
@@ -167,7 +168,7 @@ export default function EditorPanels({ actions, onBack }: { actions: EditorActio
   // then draw rather than select). In the Stickers maker a photo keeps the Sticker strip: its few
   // buttons are the whole job there.
   const layerTools = Boolean(kind) && !isDrawingOn(dockTab, drawTool) && !faceMorph && !(mode === 'sticker' && kind === 'image');
-  // In the Stickers maker the layer's tools take only the tool tiles' place: its Style card stays.
+  // In the Stickers maker the layer's tools take the tools' dock's place.
   const layerPill = dockTab === 'sticker'
     ? <StickerStrip actions={actions} tools={<LayerToolbar actions={actions} />} />
     : <LayerToolbar actions={actions} />;
@@ -198,10 +199,13 @@ export default function EditorPanels({ actions, onBack }: { actions: EditorActio
     );
   }
 
+  // The Stickers maker's editing screen has its tools as the dock (StickerStrip) and Export in its
+  // header (MemeEditor), so no second dock under them.
+  const stickerEdit = mode === 'sticker';
   return (
     <div ref={panelRef} className={`ie-panels${actionDock ? ' ie-panels--maker' : ''}${actionDock ? ' ie-panels--actions' : ''}`} data-sheet-ghosts="">
       {layerTools ? layerPill : strip}
-      <ToolDock
+      {!stickerEdit && <ToolDock
         ariaLabel="Editor tools"
         items={dock}
         active={layerTools || actionDock ? null : dockTab}
@@ -228,7 +232,7 @@ export default function EditorPanels({ actions, onBack }: { actions: EditorActio
           setActiveLayerId(null);
           showDockTab(id);
         }}
-      />
+      />}
     </div>
   );
 }

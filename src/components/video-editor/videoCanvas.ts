@@ -22,16 +22,19 @@ interface StoreLike {
   layoutSlots?: unknown[];
   videoHeader?: VideoBand;
   videoFooter?: VideoBand;
+  // The shape was picked on Choose Canvas Layout: the first clip doesn't change it.
+  canvasShapePicked?: boolean;
   setCanvasAspectRatio: (ratio: number) => void;
 }
 const store = () => useEditorStore.getState() as unknown as StoreLike;
 
-// Sets the canvas to the video's shape, unless the canvas is split into layout panels or has
-// header or footer bars (a caption layout keeps the shape it was made in).
+// Sets the canvas to the video's shape, unless the canvas is split into layout panels, has header
+// or footer bars (a caption layout keeps the shape it was made in), or its shape was picked on
+// Choose Canvas Layout.
 export function fitCanvasToVideo(width?: number, height?: number) {
   const aspect = canvasAspectFor(width, height);
   const s = store();
-  if (aspect && !s.layoutSlots?.length && !bandsOn(s.videoHeader, s.videoFooter)) s.setCanvasAspectRatio(aspect);
+  if (aspect && !s.canvasShapePicked && !s.layoutSlots?.length && !bandsOn(s.videoHeader, s.videoFooter)) s.setCanvasAspectRatio(aspect);
 }
 
 // True while nothing is on the canvas yet that a new canvas shape would move (a video or photo).

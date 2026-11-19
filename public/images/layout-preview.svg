@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" preserveAspectRatio="xMidYMid slice">
+  <!-- The picture in Choose Canvas Layout's cards: a warm sunset over hills, drawn for the app. -->
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffb36b"/>
+      <stop offset="0.55" stop-color="#ff7f5c"/>
+      <stop offset="1" stop-color="#e8536b"/>
+    </linearGradient>
+    <radialGradient id="sun" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#fff6d6"/>
+      <stop offset="0.7" stop-color="#ffe08a"/>
+      <stop offset="1" stop-color="#ffd166" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="400" height="400" fill="url(#sky)"/>
+  <circle cx="250" cy="190" r="92" fill="url(#sun)" opacity="0.55"/>
+  <circle cx="250" cy="190" r="54" fill="#ffe7a3"/>
+  <g fill="#fff" opacity="0.55">
+    <ellipse cx="96" cy="104" rx="46" ry="12"/>
+    <ellipse cx="128" cy="94" rx="30" ry="14"/>
+    <ellipse cx="318" cy="70" rx="34" ry="9"/>
+  </g>
+  <path d="M0 268 C70 214 128 226 186 252 C238 275 292 220 400 236 V400 H0 Z" fill="#c9476b"/>
+  <path d="M0 304 C88 262 156 298 222 300 C290 302 330 270 400 282 V400 H0 Z" fill="#8f3366"/>
+  <path d="M0 348 C96 318 198 346 268 338 C330 331 366 318 400 324 V400 H0 Z" fill="#5b2556"/>
+</svg>

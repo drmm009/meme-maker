@@ -19,8 +19,8 @@ export interface EditorModeConfig {
 
 export const EDITOR_MODES: Record<EditorMode, EditorModeConfig> = {
   full: { title: 'Meme Editor', dock: ['draw', 'media', 'text', 'fx', 'canvas'], startTab: 'text' },
-  // Export alone: the sticker's Back button steps back to its page (no New), and Move to editor is
-  // a pill on the sticker's board (MemeEditor).
+  // Its editing screen draws no dock from this (EditorPanels): its tools are the dock
+  // (StickerStrip) and Export is in its header (MemeEditor); Move to editor is a pill on the board.
   sticker: { title: 'Stickers', dock: ['export'], startTab: 'sticker' },
   // Export alone, as the Stickers maker: Back returns to its page, and Move to editor is a pill on the board.
   ai: { title: 'AI Meme', dock: ['export'], startTab: 'ai' },

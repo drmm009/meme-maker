@@ -1,9 +1,10 @@
 import { drawImageFiltered } from '../../../data/photoFilters';
+import { STICKER_GREEN, accentOf } from './handles';
 
 // The snapping guides shown while a layer is dragged: the app's orange, as the selection frame and
-// the video editor's guides (video-editor/preview/CanvasText).
-const GUIDE = '#ff5a36';
+// the video editor's guides (video-editor/preview/CanvasText); green on the Stickers maker's screen.
 const GUIDE_GLOW = 'rgba(255, 90, 54, 0.55)';
+const STICKER_GLOW = 'rgba(47, 211, 155, 0.55)';
 
 export function paintOverlays({
   activeCaption, activeHandleDrawer, applyGlobalFilter, canvas, canvasH, compCanvas, ctx,
@@ -23,6 +24,8 @@ export function paintOverlays({
   // Draw Snapping Guides
   if (!skipHandles && isDragging.current && snappingLines.current && (snappingLines.current.horizontal !== null || snappingLines.current.vertical !== null)) {
     const { horizontal, vertical } = snappingLines.current;
+    const GUIDE = accentOf(ctx);
+    const glow = GUIDE === STICKER_GREEN ? STICKER_GLOW : GUIDE_GLOW;
     ctx.save();
     ctx.setLineDash([6, 6]);
 
@@ -32,7 +35,7 @@ export function paintOverlays({
       const isCenter = Math.abs(horizontal - 0.5) < 0.002;
       ctx.strokeStyle = GUIDE;
       ctx.lineWidth = isCenter ? 2 : 1.5;
-      ctx.shadowColor = GUIDE_GLOW;
+      ctx.shadowColor = glow;
       ctx.shadowBlur = 6;
       ctx.beginPath();
       ctx.moveTo(0, y);
@@ -45,7 +48,7 @@ export function paintOverlays({
       const isCenter = Math.abs(vertical - 0.5) < 0.002;
       ctx.strokeStyle = GUIDE;
       ctx.lineWidth = isCenter ? 2 : 1.5;
-      ctx.shadowColor = GUIDE_GLOW;
+      ctx.shadowColor = glow;
       ctx.shadowBlur = 6;
       ctx.beginPath();
       ctx.moveTo(x, 0);

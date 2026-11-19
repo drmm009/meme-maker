@@ -99,7 +99,7 @@
   background: var(--ui-accent, #ff5a36) !important;
   border-color: var(--ui-accent, #ff5a36) !important;
   color: #ffffff !important;
-  box-shadow: 0 1px 6px rgba(255, 90, 54, 0.35);
+  box-shadow: 0 1px 6px color-mix(in srgb, var(--ui-accent, #ff5a36) 35%, transparent);
 }
 .ui-btn:disabled { opacity: 0.4; cursor: default; }
 .ui-btn--danger { color: #ff4d4f; border-color: rgba(255, 77, 79, 0.4); background: transparent; }
@@ -276,7 +276,7 @@
 .ui-dock-item--primary {
   background: var(--ui-accent);
   color: #fff;
-  box-shadow: 0 6px 18px -6px rgba(255, 90, 54, 0.55);
+  box-shadow: 0 6px 18px -6px color-mix(in srgb, var(--ui-accent, #ff5a36) 55%, transparent);
 }
 .ui-dock-item--primary:hover:not(:disabled) { background: var(--ui-accent-hover); }
 .ui-dock-item--secondary {
@@ -533,7 +533,7 @@
   height: 30px;
   margin-right: -2px;
   border-radius: 50%;
-  background: rgba(255, 90, 54, 0.18);
+  background: color-mix(in srgb, var(--ui-accent, #ff5a36) 18%, transparent);
   color: var(--ui-accent, #ff5a36);
 }
 .ui-sheet-title { min-width: 0; margin: 0; overflow: hidden; font-size: var(--ui-fs-headline, 17px); font-weight: 600; letter-spacing: -0.01em; text-overflow: ellipsis; white-space: nowrap; }
@@ -655,7 +655,7 @@
   outline: none;
   resize: none;
 }
-.ui-field:focus, .ui-field--accent { border-color: var(--ui-accent); background: rgba(255, 90, 54, 0.1); }
+.ui-field:focus, .ui-field--accent { border-color: var(--ui-accent); background: color-mix(in srgb, var(--ui-accent, #ff5a36) 10%, transparent); }
 .ui-field::placeholder { color: var(--ui-faint); }
 /* App.css's pill fields stay out of the editor (.ui-theme), so these are the editor's fields. */
 .ui-theme .ui-field {

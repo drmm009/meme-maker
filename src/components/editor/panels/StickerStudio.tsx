@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import type { ChangeEvent, DragEvent } from 'react';
-import { Camera, ChevronLeft, ImagePlus, LayoutTemplate, Scissors, Sparkles, UploadCloud, X } from 'lucide-react';
+import { Camera, ChevronLeft, ImagePlus, LayoutTemplate, RefreshCw, Scissors, UploadCloud, X } from 'lucide-react';
 import { useEditorUiStore } from '../store/useEditorUiStore';
 import { useMemeEditorStore, useMemeEditorStoreApi } from '../store/useMemeEditorStore';
 import TemplatesSheet from './TemplatesSheet';
 import StickerStylePicker from './StickerStylePicker';
 import type { EditorActions } from './selection';
 import './stickerStudio.css';
+import './stickerStudioPage.css';
 
 interface Photo {
   id: string;
@@ -49,11 +50,15 @@ export function StickerGallerySheet({ actions, onClose }: { actions: EditorActio
   );
 }
 
-// The Stickers maker's page, in the Face Swap page's look (faceSwap.css, MakerPage): one photo card
-// (empty, a tap uploads; with a photo, the photo whole as the sticker will look, with a remove
-// button), a line saying where it stands, the choices in one card (where the photo comes from:
-// Upload, Camera, Templates; then the outline style), then Generate sticker, which cuts the photo
-// out and opens the editing page.
+// The Stickers maker's page (stickerStudioPage.css; the outline looks and the style row from
+// stickerStudio.css). Under the header (a round Back button, the title centred with green scissors
+// beside it), one stage on the
+// see-through checkerboard: with no photo, a tilted die-cut sticker with a plus over a short line
+// (a tap uploads, or drop a picture on it); with one, the sticker as it will look in the outline
+// picked, with Change (pick another) and Remove; while it is cut out, a green light sweeps across.
+// Then where the photo comes from (Upload, Camera, Templates) as one segmented bar, the outline
+// styles, and Generate sticker in the maker's green, which cuts the photo out and opens the
+// editing page.
 export default function StickerStudio({
   actions,
   onClose,
@@ -87,7 +92,7 @@ export default function StickerStudio({
     void replace(() => actions.handleFileUploadImageLayer(e));
   };
 
-  // A picture dropped on the photo card becomes the photo.
+  // A picture dropped on the stage becomes the photo.
   const onDragOver = (e: DragEvent<HTMLElement>) => {
     e.preventDefault();
     setIsDragging(true);
@@ -103,115 +108,97 @@ export default function StickerStudio({
     if (file && file.type.startsWith('image/')) pickFile({ target: { files: [file] } } as unknown as ChangeEvent<HTMLInputElement>);
   };
 
-  const openTemplates = () => {
-    openSheet('stickerGallery');
-  };
-
   const remove = () => {
     setImageLayers([]);
     pushHistory();
   };
 
-  // Under the card once there is a photo; nothing before.
-  const note = busy ? 'This takes a few seconds'
-    : photo ? 'The background comes off when you generate'
-    : null;
-
   return (
-    <section className="ie-swap ie-stk" aria-label="Make a sticker">
-      <header className="ie-stk-header">
-        <button type="button" className="ie-stk-back-btn" onClick={handleBack} aria-label="Back" title="Back">
+    <section className="ie-swap ie-stk sst" aria-label="Make a sticker">
+      <header className="sst-header">
+        <button type="button" className="sst-back" onClick={handleBack} aria-label="Back" title="Back">
           <ChevronLeft size={22} strokeWidth={2.4} />
         </button>
-        <div className="ie-stk-header-main">
-          <h1 className="ie-stk-title ui-topbar-title">
-            <Sparkles size={16} strokeWidth={2.4} className="ie-stk-title-icon" aria-hidden="true" />
-            <span>Sticker Studio</span>
-          </h1>
-        </div>
+        <h1 className="sst-title ui-topbar-title"><span className="sst-title-icon" aria-hidden="true"><Scissors size={17} strokeWidth={2.4} /></span><span>Sticker Studio</span></h1>
         {/* Said for screen readers (and the tests): where the sticker stands. */}
-        <p className="ie-stk-status ui-topbar-subtitle" aria-live="polite">
-          {!photo ? 'Add a photo' : 'Ready to generate'}
-        </p>
+        <p className="sst-status ui-topbar-subtitle" aria-live="polite">{!photo ? 'Add a photo' : 'Ready to generate'}</p>
       </header>
 
-      <div className="ie-swap-scroll">
-        <div className="ie-swap-stage">
-          <div className="ie-swap-inputs ie-stk-inputs">
-            {/* One card. Empty, a tap uploads a photo (or drop one on it); with one, it shows the
-                photo whole as the sticker will look, in the style picked, with a remove button. */}
-            <div className="ie-swap-slot" onDragOver={onDragOver} onDragLeave={onDragLeave} onDrop={onDrop}>
-              {photo ? (
-                <div className={`ie-swap-tile ie-stk-result${isDragging ? ' is-drag-over' : ''}`}>
-                  <img className={`ie-stk-preview ie-stk-look--${style}`} src={photo.url} alt="Sticker preview" />
+      <div className="sst-body">
+        {/* The stage: a picture dropped anywhere on it becomes the photo. */}
+        <div
+          className={`sst-stage${isDragging ? ' is-drag-over' : ''}${photo ? ' has-photo' : ''}${busy ? ' is-busy' : ''}`}
+          onDragOver={onDragOver}
+          onDragLeave={onDragLeave}
+          onDrop={onDrop}
+        >
+          {photo ? (
+            <>
+              <img className={`sst-preview ie-stk-look--${style}`} src={photo.url} alt="Sticker preview" />
+              {!busy && (
+                <div className="sst-stage-tools">
+                  <label className="sst-chip">
+                    <RefreshCw size={14} strokeWidth={2.4} aria-hidden="true" />
+                    Change
+                    <input type="file" accept="image/*" aria-label="Change the photo" onChange={pickFile} hidden />
+                  </label>
+                  <button type="button" className="sst-chip sst-chip--round" aria-label="Remove the photo" onClick={remove}>
+                    <X size={15} strokeWidth={2.6} aria-hidden="true" />
+                  </button>
                 </div>
-              ) : (
-                <label className={`ie-swap-tile is-empty ie-stk-drop${isDragging ? ' is-drag-over' : ''}`}>
-                  {/* A blank sticker waiting for its picture: a tilted card with a white die-cut
-                      edge and a peeled corner, on the see-through checkerboard. */}
-                  <span className="ie-stk-drop-art" aria-hidden="true">
-                    <span className="ie-stk-drop-sticker">
-                      <ImagePlus size={30} strokeWidth={1.8} />
-                    </span>
-                  </span>
-                  <span className="ie-stk-drop-title">{isDragging ? 'Drop it here' : 'Add a photo'}</span>
-                  <span className="ie-stk-drop-hint">A pet, a face or a snack: anything with a clear outline</span>
-                  <input type="file" accept="image/*" aria-label="Add your photo" onChange={pickFile} hidden />
-                </label>
               )}
-              {photo && !busy && (
-                <button type="button" className="ie-swap-remove" aria-label="Remove the photo" onClick={remove}>
-                  <X size={14} strokeWidth={2.6} aria-hidden="true" />
-                </button>
+              {busy && (
+                <div className="sst-busy" role="status">
+                  <span className="sst-sweep" aria-hidden="true" />
+                  <span className="sst-busy-pill"><span className="sst-spinner" aria-hidden="true" />Cutting out your sticker…</span>
+                </div>
               )}
-            </div>
-          </div>
-          {busy && (
-            <div className="ie-swap-busy" role="status">
-              <span className="ie-swap-spinner" aria-hidden="true" />
-              Cutting out your sticker…
-            </div>
+            </>
+          ) : (
+            <label className="sst-empty">
+              {/* A blank sticker waiting for its picture: tilted, a thick white die-cut edge. */}
+              <span className="sst-empty-art" aria-hidden="true">
+                <span className="sst-empty-sticker"><ImagePlus size={34} strokeWidth={1.8} /></span>
+              </span>
+              <span className="sst-empty-title">{isDragging ? 'Drop it here' : 'Turn a photo into a sticker'}</span>
+              <span className="sst-empty-hint">A pet, a face or a snack: anything with a clear outline</span>
+              <input type="file" accept="image/*" aria-label="Add your photo" onChange={pickFile} hidden />
+            </label>
           )}
         </div>
 
-        {note && <p className="ie-swap-note" aria-live="polite">{note}</p>}
-
-        {/* Where the photo comes from: three raised tiles of their own under the card. */}
-        <div className="ie-stk-sources" role="group" aria-label="Add a photo">
-          <label className={`ie-stk-source${busy ? ' is-disabled' : ''}`}>
-            <UploadCloud size={22} aria-hidden="true" />
+        {/* Where the photo comes from: one segmented bar. */}
+        <div className="sst-sources" role="group" aria-label="Add a photo">
+          <label className={`sst-source${busy ? ' is-disabled' : ''}`}>
+            <UploadCloud size={18} aria-hidden="true" />
             Upload
             <input type="file" accept="image/*" aria-label="Upload a photo" onChange={pickFile} disabled={busy} hidden />
           </label>
-          <label className={`ie-stk-source${busy ? ' is-disabled' : ''}`}>
-            <Camera size={22} aria-hidden="true" />
+          <label className={`sst-source${busy ? ' is-disabled' : ''}`}>
+            <Camera size={18} aria-hidden="true" />
             Camera
             <input type="file" accept="image/*" capture="environment" aria-label="Take a photo" onChange={pickFile} disabled={busy} hidden />
           </label>
-          <button type="button" className="ie-stk-source" aria-label="Templates" disabled={busy} onClick={openTemplates}>
-            <LayoutTemplate size={22} aria-hidden="true" />
+          <button type="button" className="sst-source" aria-label="Templates" disabled={busy} onClick={() => openSheet('stickerGallery')}>
+            <LayoutTemplate size={18} aria-hidden="true" />
             Templates
           </button>
         </div>
 
-        {/* The style, alone in its card above the button. */}
-        <div className="ie-swap-panel">
-          <div className="ie-swap-panel-row ie-stk-panel-stack">
-            <StickerStylePicker previewUrl={photo?.url ?? STYLE_PREVIEW_URL} disabled={busy} onPick={setStyle} />
-          </div>
+        {/* The outline styles, each shown on the photo (or a sample until there is one). */}
+        <div className="sst-styles">
+          <StickerStylePicker previewUrl={photo?.url ?? STYLE_PREVIEW_URL} disabled={busy} onPick={setStyle} />
         </div>
       </div>
 
-      <div className="ie-swap-actions">
-        <button
-          type="button"
-          className="ie-swap-btn ie-swap-btn--primary ie-stk-go"
-          disabled={!photo || busy}
-          onClick={() => void actions.handleGenerateSticker()}
-        >
+      <div className="sst-actions">
+        <button type="button" className="sst-go" disabled={!photo || busy} onClick={() => void actions.handleGenerateSticker()}>
           <Scissors size={18} aria-hidden="true" />
           <span>{busy ? 'Generating…' : 'Generate sticker'}</span>
         </button>
+        <p className="sst-note" aria-live="polite">
+          {busy ? 'This takes a few seconds' : photo ? 'The background comes off when you generate' : 'Add a photo to start'}
+        </p>
       </div>
     </section>
   );

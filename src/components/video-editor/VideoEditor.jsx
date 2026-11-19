@@ -214,6 +214,9 @@ export default function VideoEditor({ template, onBack, onSaved }) {
     store.setLayoutId(template.slots?.length ? template.layoutId || null : null);
     store.setVideoHeader(template.videoHeader || DEFAULT_VIDEO_BAND);
     store.setVideoFooter(template.videoFooter || DEFAULT_VIDEO_BAND);
+    // A layout from Choose Canvas Layout comes in the shape picked there, which then stays.
+    const picked = template.category === 'custom' && template.width > 0 && template.height > 0;
+    useEditorStore.setState({ canvasShapePicked: picked });
     savedIdRef.current = template.savedVideoId || null;
     if (template.savedVideoId) {
       // A video from My Studio: its project, with its files given fresh URLs.
@@ -226,11 +229,9 @@ export default function VideoEditor({ template, onBack, onSaved }) {
       return;
     }
     if (template.category === 'custom') {
-      // A layout from Choose Canvas Layout: a grid keeps the 4:3 its panels were drawn on, a caption
-      // layout its square, and its captions go in its bars.
-      if (template.slots?.length || template.videoHeader || template.videoFooter) {
-        store.setCanvasAspectRatio(template.width / template.height);
-      }
+      // A layout from Choose Canvas Layout: the canvas takes the shape picked there (a grid's panels
+      // were drawn on it), and a caption layout's captions go in its bars.
+      if (picked) store.setCanvasAspectRatio(template.width / template.height);
       addBandCaptions(template);
       return;
     }

@@ -69,6 +69,9 @@ export const useEditorStore = create(temporal(keepingEndCardLast((set, get) => (
   duration: 7000, // Total project duration (7 seconds default)
   
   canvasAspectRatio: 4/3, // Default to 4:3 (Classic)
+  // True when the shape was picked on Choose Canvas Layout, so the first clip doesn't reshape it
+  // (videoCanvas' fitCanvasToVideo). Not saved: an opened draft or saved video keeps its shape anyway.
+  canvasShapePicked: false,
   backgroundColor: '#ffffff', // Canvas colour behind everything (shows around letterboxed media)
   busy: null, // Label of a long-running clip job (e.g. 'Reversing clip…'), or null
   canvasDimensions: { width: 800, height: 600 }, // Actual pixel dimensions on screen

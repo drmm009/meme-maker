@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import { createPortal } from 'react-dom';
-import { RotateCcw, RotateCw, Undo2, ImageIcon } from 'lucide-react';
+import { Check, ImageIcon, RotateCcw, RotateCw, Undo2, X } from 'lucide-react';
 import { FULL_CROP, aspectCrop, bakeCrop, fractionRatio, resizeCrop, rotatedSize, turn } from './cropMath';
 import type { CropBox, CropHandle, Rotation } from './cropMath';
 import './crop.css';
@@ -16,12 +16,12 @@ const ASPECTS: { id: string; label: string; value: number | 'photo' | null }[] =
   { id: '16:9', label: '16:9', value: 16 / 9 },
 ];
 
-// A small outline of each shape on its tile; Free is dashed, Original is a photo icon.
+// A small outline of each shape beside its name; Free is dashed, Original is a photo icon.
 function ShapeIcon({ value }: { value: number | 'photo' | null }) {
-  if (value === 'photo') return <ImageIcon size={18} strokeWidth={2} aria-hidden="true" />;
+  if (value === 'photo') return <ImageIcon size={16} strokeWidth={2.2} aria-hidden="true" />;
   const r = value ?? 1;
-  const w = r >= 1 ? 20 : Math.round(20 * r);
-  const h = r >= 1 ? Math.round(20 / r) : 20;
+  const w = r >= 1 ? 16 : Math.round(16 * r);
+  const h = r >= 1 ? Math.round(16 / r) : 16;
   return <span className={`ie-crop-shape${value === null ? ' ie-crop-shape--free' : ''}`} style={{ width: w, height: h }} aria-hidden="true" />;
 }
 
@@ -32,16 +32,21 @@ interface Props {
   onApply: (dataUrl: string) => void;
   onRestore?: (url: string) => void;
   onClose: () => void;
+  /** 'sticker' when the Stickers maker opens it: its green in place of the app's orange. */
+  tone?: 'sticker';
 }
 
 // Crop and turn the main photo, or a photo layer's picture: drag the box or its corners, pick a shape, turn it a quarter at
-// a time. Done bakes it into a new photo (cropMath.bakeCrop).
-export default function PhotoCropSheet({ url, uncroppedUrl, onApply, onRestore, onClose }: Props) {
+// a time. Done bakes it into a new photo (cropMath.bakeCrop). Full screen on black: a round Cancel, the title over the
+// crop's size and a Done pill on top; the photo, its thirds grid showing while the box is dragged; and a rounded panel at
+// the bottom with the shapes as a row of pills (outline beside name) and Turn left, Turn right and Reset as one bar.
+export default function PhotoCropSheet({ url, uncroppedUrl, onApply, onRestore, onClose, tone }: Props) {
   const [img, setImg] = useState<HTMLImageElement | null>(null);
   const [failed, setFailed] = useState('');
   const [rotation, setRotation] = useState<Rotation>(0);
   const [aspect, setAspect] = useState('free');
   const [box, setBox] = useState<CropBox>(FULL_CROP);
+  const [dragging, setDragging] = useState(false);
   const preview = useRef<HTMLCanvasElement>(null);
   const stage = useRef<HTMLDivElement>(null);
   const drag = useRef<{ handle: CropHandle; x: number; y: number; start: CropBox } | null>(null);
@@ -103,6 +108,7 @@ export default function PhotoCropSheet({ url, uncroppedUrl, onApply, onRestore, 
     e.preventDefault();
     e.stopPropagation();
     drag.current = { handle, x: e.clientX, y: e.clientY, start: box };
+    setDragging(true);
     (e.target as Element).setPointerCapture?.(e.pointerId);
   };
   const onMove = (e: ReactPointerEvent) => {
@@ -115,6 +121,7 @@ export default function PhotoCropSheet({ url, uncroppedUrl, onApply, onRestore, 
   };
   const endDrag = () => {
     drag.current = null;
+    setDragging(false);
   };
 
   const apply = () => {
@@ -128,18 +135,26 @@ export default function PhotoCropSheet({ url, uncroppedUrl, onApply, onRestore, 
     }
   };
 
+  const cropSize = img ? `${Math.round(box.w * size.w)} × ${Math.round(box.h * size.h)}` : '';
+
   return createPortal(
-    <div className="ie-crop ui-theme" role="dialog" aria-label="Crop photo" aria-modal="true">
-      <div className="ie-crop-bar">
-        <button type="button" className="ie-crop-text-btn ie-crop-cancel-btn" onClick={onClose}>
-          Cancel
+    <div className={`ie-crop ui-theme${tone === 'sticker' ? ' ie-crop--sticker' : ''}`} role="dialog" aria-label="Crop photo" aria-modal="true">
+      <header className="ie-crop-bar">
+        <button type="button" className="ie-crop-round" onClick={onClose} aria-label="Cancel" title="Cancel">
+          <X size={20} strokeWidth={2.4} />
         </button>
-        <h2 className="ie-crop-title">Crop photo</h2>
-        <button type="button" className="ui-btn-accent ie-crop-done-btn" disabled={!img} onClick={apply}>
+        <div className="ie-crop-heading">
+          <h2 className="ie-crop-title">Crop</h2>
+          {/* The crop's size in pixels, so you know what you'll get. */}
+          <span className="ie-crop-size">{cropSize}</span>
+        </div>
+        <button type="button" className="ie-crop-done" disabled={!img} onClick={apply}>
+          <Check size={17} strokeWidth={2.8} aria-hidden="true" />
           Done
         </button>
-      </div>
-      <div className="ie-crop-stage" ref={stage} onPointerMove={onMove} onPointerUp={endDrag} onPointerCancel={endDrag}>
+      </header>
+
+      <div className={`ie-crop-stage${dragging ? ' is-dragging' : ''}`} ref={stage} onPointerMove={onMove} onPointerUp={endDrag} onPointerCancel={endDrag}>
         {failed && <p className="ie-empty">{failed}</p>}
         <div className="ie-crop-frame">
           <canvas ref={preview} className="ie-crop-photo" />
@@ -157,19 +172,8 @@ export default function PhotoCropSheet({ url, uncroppedUrl, onApply, onRestore, 
           )}
         </div>
       </div>
-      <div className="ie-crop-tools">
-        <div className="ie-crop-tools-head">
-          <span className="ie-crop-size">{img ? `${Math.round(box.w * size.w)} × ${Math.round(box.h * size.h)}` : ''}</span>
-          <div className="ie-crop-turns">
-            <button type="button" className="ie-crop-icon-btn" onClick={() => rotate(-90)} aria-label="Turn left" title="Turn left">
-              <RotateCcw size={18} strokeWidth={2.2} />
-            </button>
-            <button type="button" className="ie-crop-icon-btn" onClick={() => rotate(90)} aria-label="Turn right" title="Turn right">
-              <RotateCw size={18} strokeWidth={2.2} />
-            </button>
-            <button type="button" className="ie-crop-reset" onClick={reset} disabled={!changed}>Reset</button>
-          </div>
-        </div>
+
+      <div className="ie-crop-panel">
         <div className="ie-crop-shapes" role="radiogroup" aria-label="Crop shape">
           {ASPECTS.map((a) => (
             <button
@@ -185,9 +189,23 @@ export default function PhotoCropSheet({ url, uncroppedUrl, onApply, onRestore, 
             </button>
           ))}
         </div>
+        <div className="ie-crop-actions" role="group" aria-label="Turn and reset">
+          <button type="button" className="ie-crop-action" onClick={() => rotate(-90)} aria-label="Turn left">
+            <RotateCcw size={17} strokeWidth={2.2} aria-hidden="true" />
+            <span>Left</span>
+          </button>
+          <button type="button" className="ie-crop-action" onClick={() => rotate(90)} aria-label="Turn right">
+            <RotateCw size={17} strokeWidth={2.2} aria-hidden="true" />
+            <span>Right</span>
+          </button>
+          <button type="button" className="ie-crop-action" onClick={reset} disabled={!changed}>
+            <Undo2 size={17} strokeWidth={2.2} aria-hidden="true" />
+            <span>Reset</span>
+          </button>
+        </div>
         {uncroppedUrl && onRestore && (
           <button type="button" className="ie-crop-restore-btn" onClick={() => onRestore(uncroppedUrl)} aria-label="Restore original photo">
-            <Undo2 size={15} />
+            <ImageIcon size={15} aria-hidden="true" />
             <span>Back to the original photo</span>
           </button>
         )}

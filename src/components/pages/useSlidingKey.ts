@@ -1,4 +1,5 @@
-// The black key behind the picked tab of a row (the segmented control, Explore's chips): it slides
+// The black key behind the picked tab of a row (the segmented control, Explore's chips, Choose Canvas
+// Layout's shape picker): it slides
 // to the tab picked, and each time the row comes into view (the page opens, or a kept page is shown
 // again) it grows out from the picked tab's left edge. The row sets --ios-key-x and --ios-key-w on
 // itself; its key element reads them (pages/iosLook.css: .ios-key-entering, the class for the
@@ -8,7 +9,8 @@ import type { RefObject } from 'react';
 
 const ENTRANCE_MS = 420;
 
-export default function useSlidingKey(trackRef: RefObject<HTMLElement | null>, watch: string) {
+// `picked` finds the picked tab in the row (a radio group's is aria-checked).
+export default function useSlidingKey(trackRef: RefObject<HTMLElement | null>, watch: string, picked = '[aria-selected="true"]') {
   // True while the row is out of view (not yet shown, or inside a hidden page): its next placement is an entrance.
   const hidden = useRef(true);
 
@@ -19,7 +21,7 @@ export default function useSlidingKey(trackRef: RefObject<HTMLElement | null>, w
     let entranceFrame = 0;
 
     const place = () => {
-      const on = track.querySelector<HTMLElement>('[aria-selected="true"]');
+      const on = track.querySelector<HTMLElement>(picked);
       if (!on || track.offsetWidth === 0) {
         // Out of view: fold the key away, so showing the row again never flashes the old one.
         hidden.current = true;
@@ -38,9 +40,9 @@ export default function useSlidingKey(trackRef: RefObject<HTMLElement | null>, w
         window.clearTimeout(entranceTimer);
         entranceFrame = window.requestAnimationFrame(() => {
           entranceFrame = window.requestAnimationFrame(() => {
-            const picked = track.querySelector<HTMLElement>('[aria-selected="true"]');
-            track.style.setProperty('--ios-key-x', `${(picked || on).offsetLeft}px`);
-            track.style.setProperty('--ios-key-w', `${(picked || on).offsetWidth}px`);
+            const now = track.querySelector<HTMLElement>(picked);
+            track.style.setProperty('--ios-key-x', `${(now || on).offsetLeft}px`);
+            track.style.setProperty('--ios-key-w', `${(now || on).offsetWidth}px`);
             entranceTimer = window.setTimeout(() => track.classList.remove('ios-key-entering'), ENTRANCE_MS);
           });
         });
@@ -64,5 +66,5 @@ export default function useSlidingKey(trackRef: RefObject<HTMLElement | null>, w
       observer.disconnect();
       stop();
     };
-  }, [trackRef, watch]);
+  }, [trackRef, watch, picked]);
 }

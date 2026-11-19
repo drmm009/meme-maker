@@ -87,5 +87,8 @@ describe('ImagePanelPrompts', () => {
     expect(names()).toEqual(['Panel 2']);
     act(() => doc.setState({ captions: [] }));
     expect(names()).toEqual(['Panel 1', 'Panel 2']);
+    // A label a collage starts with (HOW IT STARTED) doesn't count as the panel's content.
+    act(() => doc.setState({ captions: [{ id: 'l', text: 'HOW IT STARTED', x: 0.5, y: 0.43, isPanelLabel: true }] }));
+    expect(names()).toEqual(['Panel 1', 'Panel 2']);
   });
 });

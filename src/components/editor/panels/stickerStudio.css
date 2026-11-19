@@ -36,7 +36,7 @@
   overflow: hidden;
   background:
     radial-gradient(ellipse 90% 45% at 50% -8%, rgba(20, 192, 138, 0.22) 0%, rgba(13, 14, 18, 0) 70%),
-    radial-gradient(ellipse 60% 30% at 85% 0%, rgba(255, 90, 54, 0.08) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 30% at 85% 0%, color-mix(in srgb, var(--ui-accent, #ff5a36) 8%, transparent) 0%, transparent 60%),
     linear-gradient(180deg, #101217 0%, #0b0c10 100%) !important;
   color: var(--ui-text, #f4f4f6);
   font-family: var(--ui-font, 'Plus Jakarta Sans', sans-serif);
@@ -411,7 +411,7 @@
 
 .ie-stk-style.is-on .ie-stk-thumb {
   border-color: var(--ui-accent, #ff5a36);
-  box-shadow: 0 0 14px rgba(255, 90, 54, 0.4), inset 0 0 0 1px var(--ui-accent, #ff5a36);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--ui-accent, #ff5a36) 40%, transparent), inset 0 0 0 1px var(--ui-accent, #ff5a36);
   transform: translateY(-2px);
 }
 
@@ -467,7 +467,7 @@
 .meme-editor-container.meme-editor--sticker-mode {
   background:
     radial-gradient(ellipse 90% 45% at 50% -8%, rgba(20, 192, 138, 0.22) 0%, rgba(13, 14, 18, 0) 70%),
-    radial-gradient(ellipse 60% 30% at 85% 0%, rgba(255, 90, 54, 0.08) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 30% at 85% 0%, color-mix(in srgb, var(--ui-accent, #ff5a36) 8%, transparent) 0%, transparent 60%),
     linear-gradient(180deg, #101217 0%, #0b0c10 100%) !important;
   gap: 0 !important;
   height: 100% !important;
@@ -571,60 +571,6 @@
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
-/* Action Dock (New, Move to editor, Export) */
-.meme-editor-container.meme-editor--sticker-mode .ui-dock {
-  background: transparent !important;
-  border: none !important;
-  padding: 0 !important;
-  gap: 8px !important;
-  box-shadow: none !important;
-  display: flex !important;
-  align-items: center !important;
-}
-
-.meme-editor-container.meme-editor--sticker-mode .ui-dock .ui-dock-item {
-  height: 48px !important;
-  border-radius: 9999px !important;
-  border: 1px solid rgba(255, 255, 255, 0.09) !important;
-  background: rgba(255, 255, 255, 0.05) !important;
-  color: #fff !important;
-  font-size: 12px !important;
-  font-weight: 600 !important;
-  flex: 1 1 0 !important;
-  flex-direction: row !important;
-  gap: 6px !important;
-  padding: 0 12px !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
-  transition: transform 0.14s ease, background-color 0.15s ease !important;
-}
-
-.meme-editor-container.meme-editor--sticker-mode .ui-dock .ui-dock-item:hover {
-  background: rgba(255, 255, 255, 0.09) !important;
-  transform: translateY(-1px) !important;
-}
-
-.meme-editor-container.meme-editor--sticker-mode .ui-dock .ui-dock-item:active {
-  transform: scale(0.97) !important;
-}
-
-/* Primary Export CTA: Big Orange Button matching Step 2 Generate sticker */
-.meme-editor-container.meme-editor--sticker-mode .ui-dock .ui-dock-item--primary {
-  flex: 1.5 1 0 !important;
-  height: 50px !important;
-  background: linear-gradient(135deg, #ff5a36 0%, #ff7347 100%) !important;
-  border: none !important;
-  color: #ffffff !important;
-  font-size: 14.5px !important;
-  font-weight: 700 !important;
-  letter-spacing: -0.01em !important;
-  box-shadow: 0 6px 20px -3px rgba(255, 90, 54, 0.45) !important;
-}
-
-.meme-editor-container.meme-editor--sticker-mode .ui-dock .ui-dock-item--primary:hover {
-  box-shadow: 0 8px 24px -3px rgba(255, 90, 54, 0.55) !important;
-}
-
-
 /* ── Flat buttons on the editing page ──
    The pill on the board and the dock's secondary buttons: one plain grey, no outline, glass or shadow. */
 .ie-stk-pill-btn {
@@ -645,16 +591,6 @@
 }
 .ie-stk-pill-btn:hover { background: var(--stk-btn-hover, #26272b); }
 .ie-stk-pill-btn:active { transform: scale(0.96); }
-.meme-editor-container.meme-editor--sticker-mode .ui-dock .ui-dock-item:not(.ui-dock-item--primary) {
-  background: var(--stk-btn, #1c1c1e) !important;
-  border: none !important;
-  box-shadow: none !important;
-}
-.meme-editor-container.meme-editor--sticker-mode .ui-dock .ui-dock-item:not(.ui-dock-item--primary):hover {
-  background: var(--stk-btn-hover, #26272b) !important;
-  transform: none !important;
-}
-
 @media (prefers-reduced-motion: reduce) {
   .ie-stk-preview,
   .ie-stk-pill-btn,
@@ -740,12 +676,6 @@
   }
 }
 
-/* Export: the page's one wide button, the size of Generate. */
-.meme-editor-container.meme-editor--sticker-mode .ui-dock .ui-dock-item--primary {
-  flex: 1 1 0 !important;
-  font-size: 15px !important;
-  font-weight: 700 !important;
-}
 
 /* A short screen: the tiles lose some height, the style thumbnails some size. */
 @media (max-height: 700px) {
@@ -981,18 +911,6 @@
   background: var(--ui-surface, #1c1c1e);
 }
 
-/* Export: Generate's button. */
-.meme-editor-container.meme-editor--sticker-mode .ui-dock .ui-dock-item--primary {
-  height: 50px !important;
-  border-radius: 999px !important;
-  background: var(--ui-accent, #ff5a36) !important;
-  box-shadow: 0 6px 18px -6px rgba(255, 90, 54, 0.55) !important;
-  font-size: 15px !important;
-  font-weight: 700 !important;
-}
-.meme-editor-container.meme-editor--sticker-mode .ui-dock .ui-dock-item--primary:hover {
-  background: var(--ui-accent-hover, #ff6d4d) !important;
-}
 
 /* A short screen: slimmer tiles and Style card. */
 @media (max-height: 700px) {
