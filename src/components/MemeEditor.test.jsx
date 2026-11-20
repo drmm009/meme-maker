@@ -1326,14 +1326,10 @@ describe('MemeEditor', () => {
     expect(dock()).toBeTruthy();
   });
 
-  it('Move to editor, a pill on the sticker\'s board, carries the sticker into the full editor', () => {
+  it('the sticker\'s editing screen has no Move to editor', () => {
     renderEditor({ ...TEMPLATE, editorMode: 'sticker', imageLayers: [{ id: 'p', url: 'cut.png', originalUrl: 'photo.png', x: 0.5, y: 0.5 }] });
-    const tabs = () => within(screen.getByRole('navigation', { name: 'Editor tools' })).getAllByRole('button').map((b) => b.textContent.trim());
-    fireEvent.click(screen.getByRole('button', { name: 'Move to editor' }));
+    expect(screen.getByRole('navigation', { name: 'Sticker tools' })).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Move to editor' })).toBeNull();
-    expect(tabs()).toEqual(['Draw', 'Media', 'Text', 'AI', 'Canvas']);
-    expect(screen.queryByText('Meme Editor')).toBeNull();
-    expect(canvas.props.imageLayers).toHaveLength(1);
   });
 
   it('the Face Swap maker opens on its page (your face and a picture); Memes starts afresh on another meme, still in Face Swap', async () => {

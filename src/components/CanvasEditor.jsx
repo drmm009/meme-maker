@@ -209,13 +209,23 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
 
   const zoomed = isZoomed(view);
 
-  // Smoothly animate canvas movement and scaling when bottom sheet opens/closes or layout shifts
+  // Smoothly animate canvas movement and scaling when the canvas's own shape changes. A sheet opening
+  // or closing is left alone: the bottom panel glides to its new height (useSmoothHeight) and the
+  // canvas follows it frame by frame, so a transform here too would fight that glide (the board
+  // jumped and bounced back). The resting place is measured again once the glide has ended.
   const prevRectRef = useRef(null);
+  const prevSheetRef = useRef(sheet);
   useEffect(() => {
     const el = wrapperRef.current;
-    if (!el || zoomed || isDragging.current) return;
+    if (!el || zoomed || isDragging.current) return undefined;
     const isTest = typeof navigator !== 'undefined' && (navigator.userAgent.includes('jsdom') || navigator.userAgent.includes('Node.js'));
-    if (isTest) return;
+    if (isTest) return undefined;
+
+    if (prevSheetRef.current !== sheet) {
+      prevSheetRef.current = sheet;
+      const settled = setTimeout(() => { prevRectRef.current = el.getBoundingClientRect(); }, 360);
+      return () => clearTimeout(settled);
+    }
 
     const nextRect = el.getBoundingClientRect();
     const prevRect = prevRectRef.current;
@@ -244,6 +254,7 @@ const CanvasEditor = React.forwardRef(function CanvasEditor(
         });
       });
     }
+    return undefined;
   }, [sheet, aspectRatio, totalCanvasH, zoomed]);
 
   return (

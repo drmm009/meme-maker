@@ -256,9 +256,8 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, c
             onDropMedia={media.handleDropMedia}
             onAddPhoto={handleFileUploadImageLayer}
           />
-          {/* The made sticker's board carries Move to editor as a pill on its corner, as the photo's
-              board carries Change and Remove; the dock under it is Export alone. */}
-          {((isStickerMode && !isStickerPage) || isAiEdit) && (
+          {/* The AI meme's board carries Move to editor as a pill on its corner. */}
+          {isAiEdit && (
             <button type="button" className="ie-stk-pill-btn ie-stk-to-editor" onClick={openFullEditor} title="Keep editing in the full editor">
               <Palette size={14} aria-hidden="true" />
               <span className="ie-stk-pill-text">Move to editor</span>

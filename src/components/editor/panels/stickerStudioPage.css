@@ -522,7 +522,7 @@
 
 /* ---- The editing screen after Generate ----
    The header (Back to the page, undo and redo in the middle, Export on the right), the made sticker
-   on the same rounded checkerboard with Move to editor as a frosted chip, and the five tools
+   on the same rounded checkerboard, and the five tools
    (Die-cut, Style, Crop, Text, Effects) as the image editor's main dock (ToolDock, ui.css). */
 
 .sst-header--edit {
@@ -539,20 +539,6 @@
 .meme-editor-container.meme-editor--sticker-mode .meme-canvas {
   border-radius: 28px !important;
 }
-
-.meme-editor--sticker-mode .ie-stk-to-editor,
-.meme-editor--sticker-mode .ie-stk-to-editor:hover {
-  height: 34px;
-  padding: 0 13px;
-  background: rgba(16, 17, 20, 0.62);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
-  font-size: 13px;
-  font-weight: 700;
-  -webkit-backdrop-filter: blur(12px);
-  backdrop-filter: blur(12px);
-}
-
-.meme-editor--sticker-mode .ie-stk-to-editor svg { color: var(--sst-green); }
 
 /* Header: Back on the left, undo and redo in one capsule in the middle, Export on the right. */
 .sst-header--edit {
@@ -692,26 +678,26 @@
   --ui-accent-edge: #29b886;
 }
 
-/* The board smaller, with room around it; Move to editor a chip centred under it. */
+/* The board at most 380px wide, centred in the room. The room keeps 84px free at the bottom: a
+   selected text's tools (LayerToolbar, .ie-layer-dock) float there over it, just above the dock,
+   instead of taking room from it, so the board stays where it is when they come and go. */
 .meme-editor-container.meme-editor--sticker-mode .editor-workspace {
-  padding: 14px 40px 58px !important;
+  padding: 10px 12px 84px !important;
 }
 .meme-editor-container.meme-editor--sticker-mode .canvas-wrapper {
-  max-width: 320px !important;
+  max-width: 380px !important;
   max-height: 100% !important;
 }
-.meme-editor--sticker-mode .ie-stk-to-editor,
-.meme-editor--sticker-mode .ie-stk-to-editor:hover {
-  /* Just under the board: the board is centred in the room (its padding 14px over 58px), half
-     of it at most 160px (320px wide) or half the width less the 40px sides; on a short screen it
-     fills the height and the chip sits in the 58px below. */
-  top: min(calc(50% - 22px + min(160px, (100vw - 80px) / 2) + 14px), calc(100% - 46px));
-  right: auto;
-  bottom: auto;
-  left: 50%;
-  transform: translateX(-50%);
+.meme-editor-container.meme-editor--sticker-mode .ie-panels:not(.ie-panels--full):not(.ie-panels--over):not(.ie-panels--sheet) {
+  position: relative;
 }
-.meme-editor--sticker-mode .ie-stk-to-editor:active { transform: translateX(-50%) scale(0.96); }
+.meme-editor-container.meme-editor--sticker-mode .ie-panels > .ie-layer-dock {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: calc(100% + 4px);
+  z-index: 62;
+}
 /* The board hugs the sticker's canvas (its own shape) instead of filling the room. */
 .meme-editor-container.meme-editor--sticker-mode .canvas-interactive-wrapper {
   width: auto !important;
