@@ -10,7 +10,6 @@ import { pictureSize, readFile } from '../faceSwap';
 import type { EditorActions } from './selection';
 import './faceSwap.css';
 import './aiMemeStudio.css';
-import './stickerStudioPage.css';
 import './aiMemePage.css';
 
 interface Template { id: string | number; name?: string; imageUrl?: string; width?: number; height?: number; [key: string]: unknown }

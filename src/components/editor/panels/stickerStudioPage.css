@@ -678,7 +678,7 @@
   --ui-accent-edge: #29b886;
 }
 
-/* The board at most 380px wide, centred in the room. The room keeps 84px free at the bottom: a
+/* The board at most 300px wide (on a phone it would otherwise fill the width), centred in the room. The room keeps 84px free at the bottom: a
    selected text's tools (LayerToolbar, .ie-layer-dock) or the Text tool's row (Add Text and
    Bubble, .ie-stk-text-tools) float there over it, just above the dock,
    instead of taking room from it, so the board stays where it is when they come and go. */
@@ -686,7 +686,7 @@
   padding: 10px 12px 84px !important;
 }
 .meme-editor-container.meme-editor--sticker-mode .canvas-wrapper {
-  max-width: 380px !important;
+  max-width: 300px !important;
   max-height: 100% !important;
 }
 .meme-editor-container.meme-editor--sticker-mode .ie-panels:not(.ie-panels--full):not(.ie-panels--over):not(.ie-panels--sheet) {
