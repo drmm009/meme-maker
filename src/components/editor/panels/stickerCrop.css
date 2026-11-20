@@ -1,0 +1,103 @@
+/* The Stickers maker's Crop (StickerCropSheet): on the board, the whole picture where the sticker
+   sits with a green crop box (the selection border's colour) and corner brackets, what's cut away
+   dimmed, the thirds while it's dragged; the sheet one bare row: round Cancel, the shapes as words,
+   round green Done. */
+.stk-crop {
+  position: absolute;
+  inset: 0;
+  z-index: 63;
+  overflow: hidden;
+  border-radius: inherit;
+  touch-action: none;
+  user-select: none;
+  animation: stk-crop-in 0.2s ease-out;
+}
+@keyframes stk-crop-in { from { opacity: 0; } }
+.stk-crop-pic { position: absolute; }
+.stk-crop-pic img { display: block; width: 100%; height: 100%; pointer-events: none; }
+.stk-crop-box {
+  position: absolute;
+  box-sizing: border-box;
+  border: 2px solid #2fd39b;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.6);
+  cursor: move;
+  touch-action: none;
+}
+.stk-crop-box::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(to right, transparent calc(33.333% - 0.5px), rgba(255, 255, 255, 0.45) calc(33.333% - 0.5px), rgba(255, 255, 255, 0.45) calc(33.333% + 0.5px), transparent calc(33.333% + 0.5px), transparent calc(66.666% - 0.5px), rgba(255, 255, 255, 0.45) calc(66.666% - 0.5px), rgba(255, 255, 255, 0.45) calc(66.666% + 0.5px), transparent calc(66.666% + 0.5px)),
+    linear-gradient(to bottom, transparent calc(33.333% - 0.5px), rgba(255, 255, 255, 0.45) calc(33.333% - 0.5px), rgba(255, 255, 255, 0.45) calc(33.333% + 0.5px), transparent calc(33.333% + 0.5px), transparent calc(66.666% - 0.5px), rgba(255, 255, 255, 0.45) calc(66.666% - 0.5px), rgba(255, 255, 255, 0.45) calc(66.666% + 0.5px), transparent calc(66.666% + 0.5px));
+}
+/* Corner brackets: thick green L's on a 40px touch target. */
+.stk-crop-handle { position: absolute; width: 40px; height: 40px; touch-action: none; }
+.stk-crop-handle::after {
+  content: '';
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  box-sizing: border-box;
+  border: 0 solid #2fd39b;
+  pointer-events: none;
+}
+.stk-crop-handle--nw { top: -20px; left: -20px; cursor: nwse-resize; }
+.stk-crop-handle--ne { top: -20px; right: -20px; cursor: nesw-resize; }
+.stk-crop-handle--sw { bottom: -20px; left: -20px; cursor: nesw-resize; }
+.stk-crop-handle--se { bottom: -20px; right: -20px; cursor: nwse-resize; }
+.stk-crop-handle--nw::after { top: 17px; left: 17px; border-top-width: 4px; border-left-width: 4px; border-top-left-radius: 4px; }
+.stk-crop-handle--ne::after { top: 17px; right: 17px; border-top-width: 4px; border-right-width: 4px; border-top-right-radius: 4px; }
+.stk-crop-handle--sw::after { bottom: 17px; left: 17px; border-bottom-width: 4px; border-left-width: 4px; border-bottom-left-radius: 4px; }
+.stk-crop-handle--se::after { bottom: 17px; right: 17px; border-bottom-width: 4px; border-right-width: 4px; border-bottom-right-radius: 4px; }
+
+/* The sheet: one row, round Cancel, the shapes as plain words (the picked one green), round Done. */
+.stk-crop-sheet .ui-sheet-body { padding-top: 2px; }
+.stk-crop-row { display: flex; align-items: center; gap: 10px; padding: 0 0 4px; }
+.stk-crop-shapes {
+  display: flex;
+  flex: 1;
+  gap: 4px;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.stk-crop-shapes::-webkit-scrollbar { display: none; }
+.ie-panels--sheet .stk-crop-shape {
+  flex: none;
+  height: 36px;
+  padding: 0 13px;
+  border: none;
+  border-radius: 999px !important;
+  background: transparent;
+  color: rgba(235, 235, 245, 0.6);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 650;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.ie-panels--sheet .stk-crop-shape.is-on { background: rgba(47, 211, 155, 0.16); color: #2fd39b; }
+.ie-panels--sheet .stk-crop-round {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: none;
+  border-radius: 999px !important;
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  cursor: pointer;
+  transition: transform 0.12s ease;
+}
+.ie-panels--sheet .stk-crop-round:active { transform: scale(0.92); }
+.ie-panels--sheet .stk-crop-done { background: #2fd39b; color: #062419; }
+.ie-panels--sheet .stk-crop-round:disabled { opacity: 0.4; cursor: default; }
+/* The shapes fade at their edges as they scroll between the two buttons. */
+.stk-crop-shapes { -webkit-mask-image: linear-gradient(90deg, transparent, #000 10px, #000 calc(100% - 10px), transparent); mask-image: linear-gradient(90deg, transparent, #000 10px, #000 calc(100% - 10px), transparent); padding: 0 6px; }
+@media (prefers-reduced-motion: reduce) {
+  .stk-crop { animation: none; }
+}

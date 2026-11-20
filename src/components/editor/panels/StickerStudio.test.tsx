@@ -70,8 +70,8 @@ describe('StickerStudio', () => {
     const sources = screen.getByRole('group', { name: 'Add a photo' });
     expect(within(sources).getByLabelText('Upload a photo')).toBeTruthy();
     expect(within(sources).getByRole('button', { name: 'Templates' })).toBeTruthy();
-    // Change on the stage picks another photo too.
-    expect(screen.getByLabelText('Change the photo')).toBeTruthy();
+    // Only Remove sits on the photo: the sources below change it, so there's no Change.
+    expect(screen.queryByLabelText('Change the photo')).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Remove the photo' }));
     expect((doc.getState() as { imageLayers: unknown[] }).imageLayers).toHaveLength(0);
     expect(screen.getByLabelText('Add your photo')).toBeTruthy();

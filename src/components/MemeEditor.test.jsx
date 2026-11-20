@@ -1274,11 +1274,18 @@ describe('MemeEditor', () => {
     fireEvent.click(dieCut);
     expect(screen.queryByRole('dialog', { name: 'Die-cut' })).toBeNull();
 
-    // Crop opens the PhotoCropSheet modal
-    fireEvent.click(within(screen.getByRole('navigation', { name: 'Sticker tools' })).getByText('Crop'));
-    expect(screen.getByRole('dialog', { name: 'Crop photo' })).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    // Crop opens its sheet (the crop box goes on the board), one bare row: Cancel, the shapes as words, Done.
+    const cropTool = within(screen.getByRole('navigation', { name: 'Sticker tools' })).getByText('Crop');
+    fireEvent.click(cropTool);
+    const cropSheet = sheet('Crop');
+    expect(within(within(cropSheet).getByRole('radiogroup', { name: 'Crop shape' })).getAllByRole('radio').map((r) => r.textContent)).toEqual(['Free', 'Original', '1:1', '4:5', '9:16', '16:9']);
+    expect(within(cropSheet).getByRole('button', { name: 'Cancel' })).toBeTruthy();
+    expect(within(cropSheet).queryByRole('heading', { name: 'Crop' })).toBeNull();
+    expect(within(cropSheet).getByRole('button', { name: 'Done' })).toBeTruthy();
     expect(screen.queryByRole('dialog', { name: 'Crop photo' })).toBeNull();
+    // Tapping Crop again closes it, the sticker as it was.
+    fireEvent.click(within(screen.getByRole('navigation', { name: 'Sticker tools' })).getByText('Crop'));
+    expect(screen.queryByRole('dialog', { name: 'Crop' })).toBeNull();
 
     // Effects opens the Filters sheet, and closes when tapped again
     fireEvent.click(within(screen.getByRole('navigation', { name: 'Sticker tools' })).getByText('Effects'));

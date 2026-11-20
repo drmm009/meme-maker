@@ -242,3 +242,14 @@
    coloured glow under them, and Download in the screen's dark ink, as Export in the header. */
 .meme-editor-container.meme-editor--ai-edit .ie-export-sheet .ui-seg-btn.is-on { box-shadow: none; }
 .meme-editor--ai-edit .ie-export-sheet .ie-export-btn-primary { color: #1b1036; }
+
+/* Export's dim reaches the header too (the sheet's own dim covers only the room under it). */
+.meme-editor-container.meme-editor--ai-edit .aie-header { position: relative; }
+.meme-editor-container.meme-editor--ai-edit:has(.ie-panels--over:not([aria-hidden])) .aie-header::after {
+  content: '';
+  position: absolute;
+  inset: 0 0 -1px;
+  z-index: 5;
+  background: rgba(0, 0, 0, 0.5);
+  animation: ie-dim-in 0.3s ease-out;
+}

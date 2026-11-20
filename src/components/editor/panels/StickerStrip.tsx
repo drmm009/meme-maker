@@ -30,8 +30,8 @@ const TEXT_TOOLS: StripItem[] = [
   { id: 'bubble', label: 'Bubble', title: 'Add Chat & Speech Bubble', Icon: BubbleIcon },
 ];
 
-// The sheet each tool opens (Crop acts at once; Text shows its row).
-const SHEET_OF: Record<string, string> = { diecut: 'diecut', style: 'stickerStyle', effects: 'filters' };
+// The sheet each tool opens (Text shows its row). Crop's sheet crops on the board (StickerCropSheet).
+const SHEET_OF: Record<string, string> = { diecut: 'diecut', style: 'stickerStyle', crop: 'stickerCrop', effects: 'filters' };
 const TOOL_SHEETS = new Set(Object.values(SHEET_OF));
 
 // The photo the tools work on: the cut-out one, or else the first.
@@ -52,7 +52,6 @@ export default function StickerStrip({ actions, tools }: { actions: EditorAction
   const sheet: string | null = useEditorUiStore((s: { sheet: string | null }) => s.sheet);
   const openSheet = useEditorUiStore((s: { openSheet: (sheet: string) => void }) => s.openSheet);
   const closeSheet = useEditorUiStore((s: { closeSheet: () => void }) => s.closeSheet);
-  const setCropLayerId = useEditorUiStore((s: { setCropLayerId: (id: string | null) => void }) => s.setCropLayerId);
   const setActiveLayerId = useMemeEditorStore((s: { setActiveLayerId: (id: string | null) => void }) => s.setActiveLayerId);
   const photo = usePhoto();
   const { id: selectedId, kind } = useSelection();
@@ -86,9 +85,6 @@ export default function StickerStrip({ actions, tools }: { actions: EditorAction
     }
     setTextOpen(false);
     if (SHEET_OF[id]) toggle(SHEET_OF[id]);
-    else if (id === 'crop') {
-      if (photo) setCropLayerId(photo.id);
-    }
   };
 
   const onText = (id: string) => {

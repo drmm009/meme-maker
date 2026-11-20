@@ -42,6 +42,7 @@ import BackgroundSheet from './BackgroundSheet';
 import DieCutSheet from './DieCutSheet';
 import SocialCardSheet from './SocialCardSheet';
 import CropSheet from './CropSheet';
+import StickerCropSheet from './StickerCropSheet';
 import LayerToolbar from './LayerToolbar';
 import { DRAW_TOOLS, isDrawingOn } from './drawTools';
 import { useSmoothHeight } from './useSmoothHeight';
@@ -73,7 +74,7 @@ const DOCK: DockItem[] = [
 const DRAWN_BY_DOCK = () => null;
 const SHEETS = { aiCaptionCard: DRAWN_BY_DOCK, aiCaptionStyle: DRAWN_BY_DOCK, text: TextSheet, media: MediaSheet, draw: DrawSheet, canvasColor: CanvasColorSheet, watermark: WatermarkSheet, bands: BandsSheet, aiCaption: AiCaptionSheet, filters: FiltersSheet, background: BackgroundSheet, layers: LayersSheet, export: ExportSheet, library: LibrarySheet, mediaLink: LinkSheet,
   templates: TemplatesSheet, memes: MemePickerSheet, stickers: StickersSheet, emoji: EmojiSheet, bubble: BubbleSheet, diecut: DieCutSheet, stickerStyle: StickerStyleSheet, socialCard: SocialCardSheet,
-  card: CardFormSheet, cardLook: CardLookSheet, aiGallery: AiMemeGallerySheet, faceSwap: FaceSwapStudio, stickerGallery: StickerGallerySheet, crop: CropSheet };
+  card: CardFormSheet, cardLook: CardLookSheet, aiGallery: AiMemeGallerySheet, faceSwap: FaceSwapStudio, stickerGallery: StickerGallerySheet, crop: CropSheet, stickerCrop: StickerCropSheet };
 // Sheets for browsing a big library, shown full height (the meme needn't stay in view).
 const FULL_SHEETS = new Set<string>(['templates', 'memes', 'stickers', 'emoji', 'aiGallery', 'faceSwap', 'stickerGallery', 'crop']);
 // Sheets laid over the canvas from the bottom, as tall as they need, on a dim that closes them.

@@ -678,15 +678,15 @@
   --ui-accent-edge: #29b886;
 }
 
-/* The board at most 300px wide (on a phone it would otherwise fill the width), centred in the room. The room keeps 84px free at the bottom: a
+/* The board as wide as the room allows (8px from the sides, at most 420px on a wide screen), centred. The room keeps 84px free at the bottom: a
    selected text's tools (LayerToolbar, .ie-layer-dock) or the Text tool's row (Add Text and
    Bubble, .ie-stk-text-tools) float there over it, just above the dock,
    instead of taking room from it, so the board stays where it is when they come and go. */
 .meme-editor-container.meme-editor--sticker-mode .editor-workspace {
-  padding: 10px 12px 84px !important;
+  padding: 10px 8px 84px !important;
 }
 .meme-editor-container.meme-editor--sticker-mode .canvas-wrapper {
-  max-width: 300px !important;
+  max-width: 420px !important;
   max-height: 100% !important;
 }
 .meme-editor-container.meme-editor--sticker-mode .ie-panels:not(.ie-panels--full):not(.ie-panels--over):not(.ie-panels--sheet) {
@@ -714,6 +714,16 @@
   display: flex;
   justify-content: center;
 }
+/* Its two buttons a size up from the strip's (76 × 56, 11px), so they read as the screen's main
+   text tools; still within the 84px the room keeps free above the dock. */
+.meme-editor-container.meme-editor--sticker-mode .ie-stk-text-tools .ui-strip-btn {
+  width: 104px !important;
+  min-width: 104px !important;
+  height: 64px !important;
+  gap: 6px;
+  font-size: 13px !important;
+}
+.meme-editor-container.meme-editor--sticker-mode .ie-stk-text-tools .ui-strip-btn svg { width: 22px; height: 22px; }
 .meme-editor-container.meme-editor--sticker-mode .ie-stk-text-tools > .ui-strip {
   flex: 1;
   padding: 0;
@@ -857,3 +867,56 @@
 .meme-editor-container.meme-editor--sticker-mode .ie-sticker-export .ui-seg-btn.is-on { box-shadow: none; }
 .meme-editor--sticker-mode .ie-sticker-export .ie-sticker-export-download,
 .meme-editor--sticker-mode .ie-sticker-export .ie-sticker-export-download svg { color: var(--sst-green-ink); }
+
+/* The Export sheet on the sticker editing screen: no blur on the board behind it (the dim stays),
+   and Share, Copy and Save as plain black circles with no border. */
+.meme-editor-container.meme-editor--sticker-mode .ie-panels--over > .ie-panels-dim {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+.meme-editor-container.meme-editor--sticker-mode .ie-sticker-export .ie-sticker-export-icon {
+  border: none !important;
+  background: #000 !important;
+  box-shadow: none !important;
+}
+.meme-editor-container.meme-editor--sticker-mode .ie-sticker-export .ie-sticker-export-icon:hover:not(:disabled) { background: #161618 !important; }
+
+/* With a photo: no box, just the photo as big as the room allows, with Remove (an X) on its top-right
+   corner and, while it's cut out, the light sweeping across it alone. */
+.sst-stage.has-photo {
+  container-type: size;
+  overflow: visible;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+.sst-photo { position: relative; display: inline-flex; max-width: 100%; max-height: 100%; }
+.sst-stage.has-photo .sst-preview { display: block; max-width: 100cqw; max-height: 100cqh; border-radius: 18px; }
+.sst-photo-remove { position: absolute; top: 6px; right: 6px; z-index: 2; }
+.sst-photo .sst-busy { overflow: hidden; border-radius: 18px; }
+
+/* With a sheet open the dock goes, and a selected text's tools too (nothing sits over the sheet; the
+   sheet's handle or a tap around the board closes it), and the room gives back the space
+   it keeps for the Text row, easing with the panel's glide so the board grows smoothly. Only the live
+   panel counts, not a closing sheet's fading copy (aria-hidden). */
+.meme-editor-container.meme-editor--sticker-mode .ie-panels--sheet > .ui-dock,
+.meme-editor-container.meme-editor--sticker-mode .ie-panels--sheet > .ie-layer-dock { display: none; }
+.meme-editor-container.meme-editor--sticker-mode .editor-workspace {
+  transition: padding-bottom 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+}
+.meme-editor-container.meme-editor--sticker-mode:has(.ie-panels--sheet:not([aria-hidden]):not(.ie-panels--over)) .editor-workspace {
+  padding-bottom: 10px !important;
+}
+/* Export's dim reaches the header too (the sheet's own dim covers only the room under it). */
+.meme-editor-container.meme-editor--sticker-mode .sst-header--edit { position: relative; }
+.meme-editor-container.meme-editor--sticker-mode:has(.ie-panels--over:not([aria-hidden])) .sst-header--edit::after {
+  content: '';
+  position: absolute;
+  inset: 0 0 -1px;
+  z-index: 5;
+  background: rgba(0, 0, 0, 0.5);
+  animation: ie-dim-in 0.3s ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .meme-editor-container.meme-editor--sticker-mode .editor-workspace { transition: none; }
+}

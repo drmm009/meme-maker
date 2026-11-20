@@ -285,6 +285,46 @@
   outline-offset: 2px;
 }
 
+/* ── In place, for the Stickers maker (.ie-crop--inline): minimal ──
+   On the editing screen's background (set inline), the header's height kept for Crop and the size,
+   the photo in the board's room, and one bar where the dock is: the shapes as plain words (the
+   picked one green), then round Cancel, Turn, Reset (and Back to the original) with Done on the right. */
+.ie-crop--inline { background-color: #090a0f; animation: ie-crop-fade 0.18s ease-out; }
+@keyframes ie-crop-fade { from { opacity: 0; } }
+.ie-crop-top {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+}
+.ie-crop--inline .ie-crop-stage { padding: 16px 20px; }
+.ie-crop--inline .ie-crop-photo { max-height: calc(100dvh - 300px); }
+.ie-crop-dock {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 4px 0 calc(16px + env(safe-area-inset-bottom, 0px));
+}
+.ie-crop-dock > * { box-sizing: border-box; width: 100%; max-width: 480px; margin: 0 auto; }
+.ie-crop--inline .ie-crop-shapes { justify-content: safe center; gap: 4px; }
+.ie-crop--inline .ie-crop-shape-btn {
+  height: 34px;
+  padding: 0 12px;
+  background: transparent;
+  color: rgba(235, 235, 245, 0.6);
+  font-size: 13.5px;
+}
+.ie-crop--inline .ie-crop-shape-btn.is-on { background: rgba(47, 211, 155, 0.16); color: var(--crop-accent); }
+.ie-crop-dock-row { display: flex; align-items: center; gap: 10px; padding: 0 16px; }
+.ie-crop-dock-row .ie-crop-round { width: 46px; height: 46px; background: rgba(255, 255, 255, 0.08); }
+.ie-crop-dock-row .ie-crop-round:disabled { opacity: 0.35; cursor: default; }
+.ie-crop-dock-row .ie-crop-done { margin-left: auto; height: 46px; padding: 0 22px 0 18px; }
+
 @media (prefers-reduced-motion: reduce) {
-  .ie-crop { animation: none; }
+  .ie-crop, .ie-crop--inline { animation: none; }
 }

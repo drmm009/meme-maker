@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { ChangeEvent, DragEvent } from 'react';
-import { Camera, ChevronLeft, ImagePlus, LayoutTemplate, RefreshCw, Scissors, UploadCloud, X } from 'lucide-react';
+import { Camera, ChevronLeft, ImagePlus, LayoutTemplate, Scissors, UploadCloud, X } from 'lucide-react';
 import { useEditorUiStore } from '../store/useEditorUiStore';
 import { useMemeEditorStore, useMemeEditorStoreApi } from '../store/useMemeEditorStore';
 import TemplatesSheet from './TemplatesSheet';
@@ -57,7 +57,8 @@ export function StickerGallerySheet({ actions, onClose }: { actions: EditorActio
 // beside it), one stage on the
 // see-through checkerboard: with no photo, a tilted die-cut sticker with a plus over a short line
 // (a tap uploads, or drop a picture on it); with one, the sticker as it will look in the outline
-// picked, with Change (pick another) and Remove; while it is cut out, a green light sweeps across.
+// picked, on its own with no box behind it and only Remove (an X on its top-right corner; Upload,
+// Camera and Templates below swap it); while it is cut out, a green light sweeps across it.
 // Then where the photo comes from (Upload, Camera, Templates) as three tiles, the outline
 // styles, and Generate sticker in the maker's green, which cuts the photo out and opens the
 // editing page.
@@ -135,19 +136,12 @@ export default function StickerStudio({
           onDrop={onDrop}
         >
           {photo ? (
-            <>
+            <div className="sst-photo">
               <img className={`sst-preview ie-stk-look--${style}`} src={photo.url} alt="Sticker preview" />
               {!busy && (
-                <div className="sst-stage-tools">
-                  <label className="sst-chip">
-                    <RefreshCw size={14} strokeWidth={2.4} aria-hidden="true" />
-                    Change
-                    <input type="file" accept="image/*" aria-label="Change the photo" onChange={pickFile} hidden />
-                  </label>
-                  <button type="button" className="sst-chip sst-chip--round" aria-label="Remove the photo" onClick={remove}>
-                    <X size={15} strokeWidth={2.6} aria-hidden="true" />
-                  </button>
-                </div>
+                <button type="button" className="sst-chip sst-chip--round sst-photo-remove" aria-label="Remove the photo" onClick={remove}>
+                  <X size={15} strokeWidth={2.6} aria-hidden="true" />
+                </button>
               )}
               {busy && (
                 <div className="sst-busy" role="status">
@@ -155,7 +149,7 @@ export default function StickerStudio({
                   <span className="sst-busy-pill"><span className="sst-spinner" aria-hidden="true" />Cutting out your sticker…</span>
                 </div>
               )}
-            </>
+            </div>
           ) : (
             <label className="sst-empty">
               {/* A blank sticker waiting for its picture: tilted, a thick white die-cut edge. */}
