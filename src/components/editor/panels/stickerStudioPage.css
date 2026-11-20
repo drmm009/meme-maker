@@ -820,6 +820,37 @@
 .sst-templates .ie-results-head button { color: var(--sst-green); }
 .sst-templates .ie-browse-empty-btn { background: var(--sst-green); color: var(--sst-green-ink); }
 
+/* As the GIF maker's Pick a clip (gifMaker.css .gm-clips), which these follow exactly: the editor's
+   full-height sheet rules (browseSheet.css, sheetLook.css) are more specific than the lines above,
+   so these name the sheet more closely. The glow over a near-black ground, solid (no blur); the
+   chips 14px, soft white on a faint grey, an icon only on All; the search with no ring; See all as
+   big as the shelf's text. The AI page's Pick a meme (aip-templates) shares them in its violet. */
+.ie-panels .ui-sheet.sst-templates {
+  background:
+    radial-gradient(ellipse 90% 40% at 50% -6%, color-mix(in srgb, var(--sst-green) 14%, transparent) 0%, rgba(13, 14, 18, 0) 70%),
+    #111216 !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  border-top: none;
+}
+/* (browseSheet.css gives every browse sheet's chips and search a faint border, and the search an
+   orange ring on focus, all !important.) */
+.meme-editor-container .ui-sheet.ie-browse-sheet.sst-templates .ie-browse-chip { border: none !important; font-size: 14px; font-weight: 650; }
+.meme-editor-container .ui-sheet.ie-browse-sheet.sst-templates .ie-browse-chip:not(.is-on) { background: rgba(255, 255, 255, 0.06) !important; color: rgba(235, 235, 245, 0.85); }
+.meme-editor-container .ui-sheet.ie-browse-sheet.sst-templates .ie-browse-chip:not(:first-child) svg { display: none; }
+.meme-editor-container .ui-sheet.ie-browse-sheet.sst-templates .ie-browse-chip.is-on { background: var(--sst-green); color: var(--sst-green-ink); }
+.meme-editor-container .ui-sheet.ie-browse-sheet.sst-templates .ie-browse-search input {
+  border: none !important;
+  background: rgba(255, 255, 255, 0.07) !important;
+  box-shadow: none !important;
+}
+.meme-editor-container .ui-sheet.ie-browse-sheet.sst-templates .ie-browse-search input:focus {
+  border: none !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  box-shadow: none !important;
+}
+.ie-panels .ui-sheet.sst-templates .ie-shelf-see-all { font-size: 16px; }
+
 /* The Export sheet on Sticker Studio's editing screen (StickerExportSheet): the picked format and
    size without the coloured glow under them, and Download in the screen's dark ink, as Export in
    the header. */
