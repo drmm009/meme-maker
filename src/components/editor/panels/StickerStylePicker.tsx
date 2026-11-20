@@ -1,9 +1,10 @@
 // The Stickers maker's outline styles (styled in stickerStudioPage.css, the outline looks
-// .ie-stk-look--* in stickerStudio.css): a header, Style and the picked one's name in a small green
+// .ie-stk-look--* in stickerStudio.css): a header, a green palette and Style, the picked one's name in a small green
 // pill, then a row of six tiles, each the picture in that outline on the see-through checkerboard
 // (as the sticker will show) over its name, the picked one ringed in green. On the sticker page
 // (StickerStudio) before Generate, and on the editing screen (StickerStrip) after it, where a pick
 // restyles the cut-out.
+import { Palette } from 'lucide-react';
 import { useEditorUiStore } from '../store/useEditorUiStore';
 import { STICKER_STYLES } from '../stickerMaker';
 
@@ -18,7 +19,7 @@ export default function StickerStylePicker({ previewUrl, disabled = false, onPic
   return (
     <div className="ssp">
       <div className="ssp-head">
-        <span className="ssp-title">Style</span>
+        <span className="ssp-title"><Palette size={17} strokeWidth={2.3} aria-hidden="true" />Style</span>
         <span className="ssp-picked" aria-hidden="true">{picked}</span>
       </div>
 

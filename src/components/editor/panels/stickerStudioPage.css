@@ -268,42 +268,53 @@
   animation: sst-spin 0.8s linear infinite;
 }
 
-/* ---- Photo sources: one segmented bar ---- */
+/* ---- Photo sources: three tiles ----
+   Each a raised card with its icon, bare and in the maker's green, over its name; a press sinks it a little. */
 
 .sst-sources {
   display: grid;
   flex: none;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 4px;
-  padding: 4px;
-  border-radius: 999px;
-  background: var(--sst-card);
+  gap: 10px;
 }
 
 .sst-source {
+  --src-tint: var(--sst-green);
+  position: relative;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 7px;
-  height: 42px;
+  gap: 8px;
   min-width: 0;
-  padding: 0 8px;
+  height: 84px;
+  padding: 0 6px;
   border: none;
-  border-radius: 999px;
-  background: none;
-  color: rgba(235, 235, 245, 0.85);
+  border-radius: 20px;
+  background: var(--sst-card);
+  box-shadow: inset 0 0 0 1px var(--sst-line);
+  color: rgba(235, 235, 245, 0.92);
   font: inherit;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 650;
   white-space: nowrap;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition: transform 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
 }
+/* Templates is a <button>: a tile despite the sheet's long round-button rule (panels.css). */
+.sst .sst-sources .sst-source { border-radius: 20px !important; }
 
-.sst-source svg { flex: none; color: var(--sst-green); }
+.sst-source-icon {
+  display: grid;
+  place-items: center;
+  color: var(--src-tint);
+}
+.sst-source-icon svg { width: 26px; height: 26px; }
+.sst-source-icon svg { flex: none; }
+.sst-source-label { overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
 
-.sst-source:active:not(:disabled):not(.is-disabled) { background: rgba(255, 255, 255, 0.1); color: #ffffff; }
+.sst-source:active:not(:disabled):not(.is-disabled) { transform: scale(0.96); }
 
 .sst-source.is-disabled,
 .sst-source:disabled {
@@ -312,7 +323,14 @@
 }
 
 @media (hover: hover) {
-  .sst-source:hover:not(:disabled):not(.is-disabled) { background: rgba(255, 255, 255, 0.07); color: #ffffff; }
+  .sst-source:hover:not(:disabled):not(.is-disabled) {
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--src-tint) 40%, transparent);
+  }
+}
+
+@media (max-height: 700px) {
+  .sst-source { height: 70px; gap: 6px; }
+  .sst-source-icon svg { width: 22px; height: 22px; }
 }
 
 /* ---- Outline styles: their card ---- */
@@ -342,11 +360,16 @@
 }
 
 .ssp-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
   font-size: 15px;
   font-weight: 750;
   letter-spacing: -0.01em;
   color: #ffffff;
 }
+
+.ssp-title svg { flex: none; color: var(--sst-green); }
 
 .ssp-picked {
   padding: 3px 10px;

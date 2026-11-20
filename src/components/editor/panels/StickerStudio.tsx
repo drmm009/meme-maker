@@ -56,7 +56,7 @@ export function StickerGallerySheet({ actions, onClose }: { actions: EditorActio
 // see-through checkerboard: with no photo, a tilted die-cut sticker with a plus over a short line
 // (a tap uploads, or drop a picture on it); with one, the sticker as it will look in the outline
 // picked, with Change (pick another) and Remove; while it is cut out, a green light sweeps across.
-// Then where the photo comes from (Upload, Camera, Templates) as one segmented bar, the outline
+// Then where the photo comes from (Upload, Camera, Templates) as three tiles, the outline
 // styles, and Generate sticker in the maker's green, which cuts the photo out and opens the
 // editing page.
 export default function StickerStudio({
@@ -167,21 +167,21 @@ export default function StickerStudio({
           )}
         </div>
 
-        {/* Where the photo comes from: one segmented bar. */}
+        {/* Where the photo comes from: three tiles, each a bare green icon over its name. */}
         <div className="sst-sources" role="group" aria-label="Add a photo">
-          <label className={`sst-source${busy ? ' is-disabled' : ''}`}>
-            <UploadCloud size={18} aria-hidden="true" />
-            Upload
+          <label className={`sst-source sst-source--upload${busy ? ' is-disabled' : ''}`}>
+            <span className="sst-source-icon" aria-hidden="true"><UploadCloud size={20} strokeWidth={2.2} /></span>
+            <span className="sst-source-label">Upload</span>
             <input type="file" accept="image/*" aria-label="Upload a photo" onChange={pickFile} disabled={busy} hidden />
           </label>
-          <label className={`sst-source${busy ? ' is-disabled' : ''}`}>
-            <Camera size={18} aria-hidden="true" />
-            Camera
+          <label className={`sst-source sst-source--camera${busy ? ' is-disabled' : ''}`}>
+            <span className="sst-source-icon" aria-hidden="true"><Camera size={20} strokeWidth={2.2} /></span>
+            <span className="sst-source-label">Camera</span>
             <input type="file" accept="image/*" capture="environment" aria-label="Take a photo" onChange={pickFile} disabled={busy} hidden />
           </label>
-          <button type="button" className="sst-source" aria-label="Templates" disabled={busy} onClick={() => openSheet('stickerGallery')}>
-            <LayoutTemplate size={18} aria-hidden="true" />
-            Templates
+          <button type="button" className="sst-source sst-source--templates" aria-label="Templates" disabled={busy} onClick={() => openSheet('stickerGallery')}>
+            <span className="sst-source-icon" aria-hidden="true"><LayoutTemplate size={20} strokeWidth={2.2} /></span>
+            <span className="sst-source-label">Templates</span>
           </button>
         </div>
 
