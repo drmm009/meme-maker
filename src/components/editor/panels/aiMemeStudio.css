@@ -237,3 +237,8 @@
 @media (prefers-reduced-motion: reduce) {
   .ie-ai-caption.is-turning .ie-ai-caption-text { animation: none; }
 }
+
+/* The Export sheet on the AI Meme maker's editing page: the picked format and size without the
+   coloured glow under them, and Download in the screen's dark ink, as Export in the header. */
+.meme-editor-container.meme-editor--ai-edit .ie-export-sheet .ui-seg-btn.is-on { box-shadow: none; }
+.meme-editor--ai-edit .ie-export-sheet .ie-export-btn-primary { color: #1b1036; }

@@ -475,8 +475,8 @@ function TrimBar({ video, trim, onChange, disabled }: { video: VideoSrc; trim: T
 }
 
 // Your GIF: the GIF on a rounded card with its size, weight and length as small pills; its name to
-// edit (the file's name and the name in My Studio) with .gif after it; Download, the wide lime
-// button; then Share (where the browser can share files) and Save to My Studio as two grey pills.
+// edit (the file's name and the name in My Studio) with .gif after it; Download (lime) and Save to
+// My Studio (a grey pill) side by side; then Share, where the browser can share files, under them.
 function ResultSheet({ result, name, onName, saved, saveFailed, onSave }: {
   result: Result;
   name: string;
@@ -520,25 +520,23 @@ function ResultSheet({ result, name, onName, saved, saveFailed, onSave }: {
         <span className="gm-result-ext" aria-hidden="true">.gif</span>
       </label>
 
-      <button type="button" className="gm-make gm-result-main" onClick={() => void download()}>
-        <Download size={18} strokeWidth={2.4} aria-hidden="true" />
-        <span>Download</span>
-      </button>
-      {(canShare || onSave) && (
-        <div className="gm-result-actions">
-          {canShare && (
-            <button type="button" className="gm-result-btn" onClick={() => void share()}>
-              <Share2 size={17} aria-hidden="true" />
-              <span>Share</span>
-            </button>
-          )}
-          {onSave && (
-            <button type="button" className={`gm-result-btn${saved ? ' is-done' : ''}`} aria-label={saved ? 'Saved to My Studio' : 'Save to My Studio'} disabled={saved} onClick={() => void onSave()}>
-              {saved ? <Check size={17} strokeWidth={2.6} aria-hidden="true" /> : <FolderHeart size={17} aria-hidden="true" />}
-              <span>{saved ? 'Saved' : 'Save to My Studio'}</span>
-            </button>
-          )}
-        </div>
+      <div className="gm-result-actions">
+        <button type="button" className="gm-make gm-result-main" onClick={() => void download()}>
+          <Download size={18} strokeWidth={2.4} aria-hidden="true" />
+          <span>Download</span>
+        </button>
+        {onSave && (
+          <button type="button" className={`gm-result-btn${saved ? ' is-done' : ''}`} aria-label={saved ? 'Saved to My Studio' : 'Save to My Studio'} disabled={saved} onClick={() => void onSave()}>
+            {saved ? <Check size={17} strokeWidth={2.6} aria-hidden="true" /> : <FolderHeart size={17} aria-hidden="true" />}
+            <span>{saved ? 'Saved' : 'Save to My Studio'}</span>
+          </button>
+        )}
+      </div>
+      {canShare && (
+        <button type="button" className="gm-result-btn gm-result-share" onClick={() => void share()}>
+          <Share2 size={17} aria-hidden="true" />
+          <span>Share</span>
+        </button>
       )}
       {saveFailed && (
         <p className="gm-result-error" role="alert">Couldn't save to My Studio. Your device may be out of space. Download it instead.</p>

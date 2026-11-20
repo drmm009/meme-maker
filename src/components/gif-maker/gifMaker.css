@@ -559,8 +559,9 @@
   align-items: center;
   justify-content: center;
   gap: 9px;
-  width: 100%;
-  height: 54px;
+  flex: 1;
+  min-width: 0;
+  height: 52px;
   border: none;
   border-radius: 999px;
   background: var(--gm-lime);
@@ -696,7 +697,7 @@
 .gm-export .gm-result-name input::placeholder { color: rgba(235, 235, 245, 0.45); }
 .gm-result-ext { flex: none; color: rgba(235, 235, 245, 0.45); font-size: 15px; font-weight: 650; }
 
-/* Download: the wide lime button; Share and Save: grey pills under it. */
+/* Download (lime, no glow) and Save to My Studio (a grey pill) side by side; Share under them. */
 .gm-export .gm-result-main {
   display: flex;
   align-items: center;
@@ -712,12 +713,15 @@
   font-weight: 800;
   letter-spacing: -0.01em;
   cursor: pointer;
-  box-shadow: 0 10px 24px -10px rgba(196, 240, 77, 0.6);
+  box-shadow: none !important;
   transition: transform 0.16s ease, filter 0.15s ease;
 }
 .gm-export .gm-result-main:active { transform: scale(0.98); }
 @media (hover: hover) { .gm-export .gm-result-main:hover { filter: brightness(1.06); } }
 .gm-result-actions { display: flex; gap: 8px; }
+.gm-export .gm-result-actions .gm-result-btn { height: 54px; }
+.gm-export .gm-result-btn span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gm-export .gm-result-btn.gm-result-share { width: 100%; flex: none; }
 .gm-export .gm-result-btn {
   display: inline-flex;
   flex: 1;

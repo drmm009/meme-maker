@@ -819,3 +819,10 @@
 .sst-templates .ie-tpl-star { width: 30px; height: 30px; background: rgba(16, 17, 20, 0.62); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12); }
 .sst-templates .ie-results-head button { color: var(--sst-green); }
 .sst-templates .ie-browse-empty-btn { background: var(--sst-green); color: var(--sst-green-ink); }
+
+/* The Export sheet on Sticker Studio's editing screen (StickerExportSheet): the picked format and
+   size without the coloured glow under them, and Download in the screen's dark ink, as Export in
+   the header. */
+.meme-editor-container.meme-editor--sticker-mode .ie-sticker-export .ui-seg-btn.is-on { box-shadow: none; }
+.meme-editor--sticker-mode .ie-sticker-export .ie-sticker-export-download,
+.meme-editor--sticker-mode .ie-sticker-export .ie-sticker-export-download svg { color: var(--sst-green-ink); }
