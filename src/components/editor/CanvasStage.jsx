@@ -12,6 +12,10 @@ const LAYER_SHEETS = ['text', 'media'];
 
 // The canvas area: the meme canvas with its overlays (paste toast, background-removal spinner,
 // face pinpointing). Tapping the empty space around the canvas deselects.
+// A press on the canvas's surroundings: this wrapper or its viewport themselves, not
+// the canvas, its handles or a button laid over it.
+const isAroundCanvas = (e) => e.target === e.currentTarget || Boolean(e.target?.hasAttribute?.('data-canvas-room'));
+
 export default function CanvasStage({
   canvasRef, imageFit, isNativeLayout, layoutDef, isDrawingMode, isRemovingBg, isBlurringBg,
   onAddDrawing, onDeleteLayer, onUpdateSlotTransform, faceMorph, onDropMedia, onAddPhoto
@@ -39,9 +43,10 @@ export default function CanvasStage({
     handleConfirmPinpoint, originalTemplateImgRef
   } = faceMorph;
 
-  // Tapping around the canvas closes the open sheet, or else deselects.
+  // Tapping around the canvas (the room it sits in, not the canvas or anything on it) closes the open
+  // sheet, or else deselects. MemeEditor does the same for the workspace around this wrapper.
   const handleWrapperPointerDown = (e) => {
-    if (e.target !== e.currentTarget) return;
+    if (!isAroundCanvas(e)) return;
     if (sheet) closeSheet();
     else if (activeLayerId) setActiveLayerId(null);
   };
@@ -67,6 +72,7 @@ export default function CanvasStage({
 
   return (
     <div
+      data-canvas-room=""
       // A sticker's see-through canvas sits on a checkerboard.
       className={`canvas-wrapper${mode === 'sticker' ? ' canvas-wrapper--sticker' : ''}`}
       onPointerDown={handleWrapperPointerDown}
@@ -80,7 +86,7 @@ export default function CanvasStage({
         onDropMedia(e.dataTransfer);
       }}
     >
-      <div className="canvas-viewport">
+      <div className="canvas-viewport" data-canvas-room="">
         <AnimatePresence>
           {pasteToast && (
             <motion.div

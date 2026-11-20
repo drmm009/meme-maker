@@ -97,6 +97,13 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, c
   // And once its meme is made, its editing page has the Stickers editing page's header too.
   const isAiEdit = mode === 'ai' && !isAiPage;
   const sheet = useEditorUiStore((s) => s.sheet);
+  const handleAroundCanvas = (e) => {
+    // Only the workspace itself: presses inside CanvasStage's wrapper are its own.
+    if (e.target !== e.currentTarget) return;
+    const ui = uiStore.getState();
+    if (ui.sheet) ui.closeSheet();
+    else setActiveLayerId(null);
+  };
   // The sticker editing screen's Export, in its header: opens the export sheet, or closes it.
   const toggleExport = () => {
     const ui = uiStore.getState();
@@ -240,7 +247,9 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, c
 
       <div className="editor-main">
         <AspectBar />
-        <div className="editor-workspace">
+        {/* A press in the room around the canvas closes the open sheet, or else deselects (as
+            CanvasStage does for its own wrapper). */}
+        <div className="editor-workspace" onPointerDown={handleAroundCanvas}>
           <CanvasStage
             canvasRef={canvasRef}
             imageFit={imageFit}

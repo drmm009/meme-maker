@@ -1,8 +1,9 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
-import { Scissors, Crop, Type, Sparkles, Palette, RotateCcw } from 'lucide-react';
-import { Sheet, Tile, TileGrid, ToolDock } from '../../ui';
-import type { DockItem } from '../../ui';
+import { Scissors, Crop, Type, Sparkles, Palette, Plus, RotateCcw } from 'lucide-react';
+import { Sheet, Tile, TileGrid, ToolDock, ToolStrip } from '../../ui';
+import type { DockItem, StripItem } from '../../ui';
+import { BubbleIcon } from './editorIcons';
 import { useEditorUiStore } from '../store/useEditorUiStore';
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
 import { STICKER_STYLES } from '../stickerMaker';
@@ -23,7 +24,13 @@ const TOOLS: DockItem[] = [
   { id: 'effects', label: 'Effects', title: 'Photo effects and filters', Icon: Sparkles },
 ];
 
-// The sheet each tool opens (Crop and Text act at once).
+// The Text tool's own row, as the image editor's Text tab (TextStrip) without Social Card.
+const TEXT_TOOLS: StripItem[] = [
+  { id: 'add', label: 'Add Text', title: 'Add Text Caption', Icon: Plus },
+  { id: 'bubble', label: 'Bubble', title: 'Add Chat & Speech Bubble', Icon: BubbleIcon },
+];
+
+// The sheet each tool opens (Crop acts at once; Text shows its row).
 const SHEET_OF: Record<string, string> = { diecut: 'diecut', style: 'stickerStyle', effects: 'filters' };
 const TOOL_SHEETS = new Set(Object.values(SHEET_OF));
 
@@ -36,9 +43,11 @@ const usePhoto = () => {
 // The Stickers maker's tools on its editing screen, once the sticker is made (before that its page,
 // StickerStudio, shows): Die-cut, Style, Text (in the middle), Crop and Effects in the image editor's
 // main dock (ToolDock, `ui-dock`), the open one lit. Die-cut, Style and Effects open their sheets on
-// the photo (Style is StickerStyleSheet); Crop and Text act at once. Export is in the header
-// (MemeEditor). With a text layer selected its tools (LayerToolbar, as `tools`) show above the dock,
-// and selecting it closes a Die-cut, Style or Effects sheet that was open.
+// the photo (Style is StickerStyleSheet); Crop acts at once. Text, as the image editor's Text tab,
+// shows a row above the dock, Add Text (a caption) and Bubble (the bubble sheet), until another tool
+// is picked or Text is tapped again; it is open when the screen comes up. Export is in the header (MemeEditor). With a text layer selected
+// its tools (LayerToolbar, as `tools`) show above the dock in the row's place, and selecting it
+// closes a Die-cut, Style or Effects sheet that was open.
 export default function StickerStrip({ actions, tools }: { actions: EditorActions; tools?: ReactNode }) {
   const sheet: string | null = useEditorUiStore((s: { sheet: string | null }) => s.sheet);
   const openSheet = useEditorUiStore((s: { openSheet: (sheet: string) => void }) => s.openSheet);
@@ -47,6 +56,8 @@ export default function StickerStrip({ actions, tools }: { actions: EditorAction
   const setActiveLayerId = useMemeEditorStore((s: { setActiveLayerId: (id: string | null) => void }) => s.setActiveLayerId);
   const photo = usePhoto();
   const { id: selectedId, kind } = useSelection();
+  // Text is the open tool when the editing screen comes up, its row showing.
+  const [textOpen, setTextOpen] = useState(true);
 
   // Selecting a text layer puts its tools above the dock: a tool's sheet that was open makes way.
   useEffect(() => {
@@ -66,16 +77,35 @@ export default function StickerStrip({ actions, tools }: { actions: EditorAction
   };
 
   const onSelect = (id: string) => {
+    if (id === 'text') {
+      // Text shows its row (or hides it); a tool's sheet that was open makes way.
+      if (sheet && TOOL_SHEETS.has(sheet)) closeSheet();
+      setTextOpen(!textOpen || sheet === 'bubble');
+      if (sheet === 'bubble') closeSheet();
+      return;
+    }
+    setTextOpen(false);
     if (SHEET_OF[id]) toggle(SHEET_OF[id]);
     else if (id === 'crop') {
       if (photo) setCropLayerId(photo.id);
-    } else if (id === 'text') actions.handleAddCaption();
+    }
   };
 
-  const active = TOOLS.find((t) => SHEET_OF[t.id] && SHEET_OF[t.id] === sheet)?.id ?? null;
+  const onText = (id: string) => {
+    if (id === 'add') actions.handleAddCaption();
+    else if (id === 'bubble') openSheet('bubble');
+  };
+
+  const active = textOpen || sheet === 'bubble' ? 'text' : TOOLS.find((t) => SHEET_OF[t.id] && SHEET_OF[t.id] === sheet)?.id ?? null;
+  // A selected text's tools take the row's place; with a sheet open (Bubble's too) the row waits.
+  const row = tools ?? (textOpen && !sheet ? (
+    <div className="ie-stk-text-tools">
+      <ToolStrip ariaLabel="Text tools" layout="stacked" items={TEXT_TOOLS} onSelect={onText} />
+    </div>
+  ) : null);
   return (
     <>
-      {tools}
+      {row}
       <ToolDock ariaLabel="Sticker tools" items={TOOLS} active={active} onSelect={onSelect} />
     </>
   );

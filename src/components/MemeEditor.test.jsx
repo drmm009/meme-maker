@@ -1296,9 +1296,24 @@ describe('MemeEditor', () => {
     fireEvent.click(within(sheet('Export')).getByLabelText('Close Export'));
     expect(screen.queryByRole('dialog', { name: 'Export' })).toBeNull();
 
-    // Text adds a caption to the sticker.
+    // Text is open, its row showing, as the image editor's Text tab: Add Text and Bubble. Text
+    // again hides the row and brings it back.
     const initialCount = canvas.props.captions.length;
+    const stickerDock = () => screen.getByRole('navigation', { name: 'Sticker tools' });
+    const textRow = () => screen.getByRole('toolbar', { name: 'Text tools' });
+    expect(within(textRow()).getAllByRole('button').map((b) => b.textContent)).toEqual(['Add Text', 'Bubble']);
+    expect(within(stickerDock()).getByText('Text').closest('button').getAttribute('aria-pressed')).toBe('true');
+    fireEvent.click(within(stickerDock()).getByText('Text'));
+    expect(screen.queryByRole('toolbar', { name: 'Text tools' })).toBeNull();
+    fireEvent.click(within(stickerDock()).getByText('Text'));
+    expect(canvas.props.captions).toHaveLength(initialCount);
+    // Bubble opens the bubble sheet; Text again brings the row back.
+    fireEvent.click(within(textRow()).getByText('Bubble'));
+    expect(screen.getByRole('dialog', { name: 'Bubbles' })).toBeTruthy();
     fireEvent.click(within(screen.getByRole('navigation', { name: 'Sticker tools' })).getByText('Text'));
+    expect(screen.queryByRole('dialog', { name: 'Bubbles' })).toBeNull();
+    // Add Text adds a caption to the sticker.
+    fireEvent.click(within(textRow()).getByText('Add Text'));
     expect(canvas.props.captions).toHaveLength(initialCount + 1);
     // A selected caption's tools have no Copy or Layers here.
     act(() => canvas.props.onSelectLayer(canvas.props.captions.at(-1).id));
@@ -1315,7 +1330,7 @@ describe('MemeEditor', () => {
   it('on the sticker editing screen, selecting text closes a tool sheet that was open', () => {
     renderEditor({ ...TEMPLATE, editorMode: 'sticker', imageLayers: [{ id: 'p', url: 'cut.png', originalUrl: 'photo.png', x: 0.5, y: 0.5 }] });
     const dock = () => screen.getByRole('navigation', { name: 'Sticker tools' });
-    fireEvent.click(within(dock()).getByText('Text'));
+    fireEvent.click(within(screen.getByRole('toolbar', { name: 'Text tools' })).getByText('Add Text'));
     const textId = canvas.props.captions.at(-1).id;
     act(() => canvas.props.onSelectLayer(null));
     fireEvent.click(within(dock()).getByRole('button', { name: /^Style/ }));
@@ -1324,6 +1339,26 @@ describe('MemeEditor', () => {
     expect(screen.queryByRole('group', { name: 'Sticker style' })).toBeNull();
     expect(layerToolbar()).toBeTruthy();
     expect(dock()).toBeTruthy();
+  });
+
+  it('a press in the room around the canvas deselects, or first closes an open sheet', () => {
+    renderEditor({ ...TEMPLATE, editorMode: 'sticker', imageLayers: [{ id: 'p', url: 'cut.png', originalUrl: 'photo.png', x: 0.5, y: 0.5 }] });
+    const workspace = document.querySelector('.editor-workspace');
+    const viewport = document.querySelector('.canvas-viewport');
+    act(() => canvas.props.onSelectLayer('p'));
+    expect(canvas.props.activeLayerId).toBe('p');
+    fireEvent.pointerDown(workspace);
+    expect(canvas.props.activeLayerId).toBeNull();
+    act(() => canvas.props.onSelectLayer('p'));
+    fireEvent.pointerDown(viewport);
+    expect(canvas.props.activeLayerId).toBeNull();
+    // With a sheet open, the press closes it and keeps the selection.
+    act(() => canvas.props.onSelectLayer('p'));
+    fireEvent.click(within(screen.getByRole('navigation', { name: 'Sticker tools' })).getByRole('button', { name: /^Die-cut/ }));
+    expect(screen.getByRole('dialog', { name: 'Die-cut' })).toBeTruthy();
+    fireEvent.pointerDown(workspace);
+    expect(screen.queryByRole('dialog', { name: 'Die-cut' })).toBeNull();
+    expect(canvas.props.activeLayerId).toBe('p');
   });
 
   it('the sticker\'s editing screen has no Move to editor', () => {

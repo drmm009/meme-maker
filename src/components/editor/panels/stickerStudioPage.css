@@ -679,7 +679,8 @@
 }
 
 /* The board at most 380px wide, centred in the room. The room keeps 84px free at the bottom: a
-   selected text's tools (LayerToolbar, .ie-layer-dock) float there over it, just above the dock,
+   selected text's tools (LayerToolbar, .ie-layer-dock) or the Text tool's row (Add Text and
+   Bubble, .ie-stk-text-tools) float there over it, just above the dock,
    instead of taking room from it, so the board stays where it is when they come and go. */
 .meme-editor-container.meme-editor--sticker-mode .editor-workspace {
   padding: 10px 12px 84px !important;
@@ -691,7 +692,8 @@
 .meme-editor-container.meme-editor--sticker-mode .ie-panels:not(.ie-panels--full):not(.ie-panels--over):not(.ie-panels--sheet) {
   position: relative;
 }
-.meme-editor-container.meme-editor--sticker-mode .ie-panels > .ie-layer-dock {
+.meme-editor-container.meme-editor--sticker-mode .ie-panels > .ie-layer-dock,
+.meme-editor-container.meme-editor--sticker-mode .ie-panels > .ie-stk-text-tools {
   position: absolute;
   left: 16px;
   right: 16px;
@@ -706,3 +708,13 @@
 /* The lit tool in the dock: the green with Export's dark ink. */
 .meme-editor--sticker-mode .ui-dock-item.is-on svg,
 .meme-editor--sticker-mode .ui-dock-item.is-on span { color: var(--sst-green-ink) !important; }
+
+/* The Text tool's row: Add Text and Bubble centred, as the image editor's Text strip. */
+.meme-editor-container.meme-editor--sticker-mode .ie-stk-text-tools {
+  display: flex;
+  justify-content: center;
+}
+.meme-editor-container.meme-editor--sticker-mode .ie-stk-text-tools > .ui-strip {
+  flex: 1;
+  padding: 0;
+}
