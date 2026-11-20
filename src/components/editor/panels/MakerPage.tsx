@@ -30,7 +30,8 @@ const isTest = typeof navigator !== 'undefined' && (navigator.userAgent.includes
 // it. However it closes (the X, a tap outside, Escape or a drag) it slides down from where it is
 // while the dim fades, and only then goes. A page may give it a class for its own look (the GIF
 // maker's Your GIF: gm-export).
-export function PickerSheet({ title, onClose, children, className }: { title: string; onClose: () => void; children: ReactNode; className?: string }) {
+// `head` takes the title's place at the top (the GIF maker's name field); `title` stays the sheet's name.
+export function PickerSheet({ title, onClose, children, className, head }: { title: string; onClose: () => void; children: ReactNode; className?: string; head?: ReactNode }) {
   const sheetRef = useRef<HTMLDivElement>(null);
   const backdropRef = useRef<HTMLDivElement>(null);
   const drag = useRef<{ y: number; dy: number } | null>(null);
@@ -60,7 +61,7 @@ export function PickerSheet({ title, onClose, children, className }: { title: st
 
   const onPointerDown = (e: PointerEvent) => {
     const target = e.target as HTMLElement;
-    if (closing.current || !target.closest('.ie-swap-sheet-grip, .ie-swap-sheet-head') || target.closest('button')) return;
+    if (closing.current || !target.closest('.ie-swap-sheet-grip, .ie-swap-sheet-head') || target.closest('button, input, label')) return;
     drag.current = { y: e.clientY, dy: 0 };
     e.currentTarget.setPointerCapture?.(e.pointerId);
     if (sheetRef.current) sheetRef.current.style.transition = 'none';
@@ -100,7 +101,7 @@ export function PickerSheet({ title, onClose, children, className }: { title: st
       >
         <span className="ie-swap-sheet-grip" aria-hidden="true" />
         <div className="ie-swap-sheet-head">
-          <h2 className="ie-swap-sheet-title">{title}</h2>
+          {head ?? <h2 className="ie-swap-sheet-title">{title}</h2>}
           <button type="button" className="ie-swap-sheet-close" aria-label="Close" onClick={close}><X size={18} aria-hidden="true" /></button>
         </div>
         {children}

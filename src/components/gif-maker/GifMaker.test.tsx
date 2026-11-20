@@ -59,10 +59,10 @@ describe('GifMaker', () => {
     expect(within(sources).getByLabelText('Upload a video')).toBeTruthy();
     expect(within(sources).getByLabelText('Record a video')).toBeTruthy();
     expect(screen.queryByLabelText('Choose photos')).toBeNull();
-    expect((screen.getByRole('button', { name: 'Export' }) as HTMLButtonElement).disabled).toBe(true);
-    // The stage invites the video; a line under Export says what comes first.
+    // Nothing to export yet, so no Export; the stage invites the video, with what comes next.
+    expect(screen.queryByRole('button', { name: 'Export' })).toBeNull();
     expect(screen.getByText('Turn a video into a GIF')).toBeTruthy();
-    expect(screen.getByText('Add a video to start')).toBeTruthy();
+    expect(screen.getByText('Trim it')).toBeTruthy();
   });
 
   it('Clips opens the meme clips; a pick is downloaded and becomes the clip', async () => {
@@ -82,10 +82,11 @@ describe('GifMaker', () => {
     }
   });
 
-  it('a video becomes a clip to trim, caption and make into a GIF to save; Remove goes back to the start', async () => {
+  it('a video becomes a clip to trim, caption and make into a GIF to save; Back goes back to the start', async () => {
     const GifMaker = await load();
     const onSave = vi.fn();
-    render(<GifMaker onBack={() => {}} onSaveToGallery={onSave} />);
+    const back = vi.fn();
+    render(<GifMaker onBack={back} onSaveToGallery={onSave} />);
     fireEvent.change(screen.getByLabelText('Upload a video'), { target: { files: [clip()] } });
 
     // Its first five seconds, ready to make.
@@ -94,10 +95,16 @@ describe('GifMaker', () => {
     expect(screen.getByRole('slider', { name: 'Clip end' }).getAttribute('aria-valuenow')).toBe('5');
     expect(screen.getByText('Ready to make', { selector: '.ui-topbar-subtitle' })).toBeTruthy();
     expect(screen.queryByRole('group', { name: 'Add a video' })).toBeNull();
-    // Change (another video) and Remove sit on the stage; Export moves to the header's right.
+    // Change (another video) sits on the clip, with no Remove; Export moves to the header's right.
+    expect(screen.queryByRole('button', { name: 'Remove the video' })).toBeNull();
     expect(screen.getByLabelText('Change the video')).toBeTruthy();
     expect(screen.getByRole('banner').contains(screen.getByRole('button', { name: 'Export' }))).toBe(true);
     expect(screen.getAllByRole('button', { name: 'Export' })).toHaveLength(1);
+    // Pause / Play on the clip.
+    fireEvent.click(screen.getByRole('button', { name: 'Pause the clip' }));
+    expect(screen.getByRole('button', { name: 'Play the clip' }).getAttribute('aria-pressed')).toBe('true');
+    fireEvent.click(screen.getByRole('button', { name: 'Play the clip' }));
+    expect(screen.getByRole('button', { name: 'Pause the clip' })).toBeTruthy();
 
     fireEvent.change(screen.getByLabelText('Caption'), { target: { value: 'when it works' } });
     fireEvent.click(within(screen.getByRole('radiogroup', { name: 'Caption place' })).getByRole('radio', { name: 'Bottom' }));
@@ -122,8 +129,12 @@ describe('GifMaker', () => {
     expect(within(sheet).getByRole('button', { name: 'Saved to My Studio' })).toBeTruthy();
     fireEvent.click(within(sheet).getByRole('button', { name: 'Close' }));
 
-    fireEvent.click(screen.getByRole('button', { name: 'Remove the video' }));
+    // Back with a clip starts over on this page; with none, it leaves.
+    fireEvent.click(screen.getByRole('button', { name: 'Back' }));
     expect(screen.getByLabelText('Choose a video')).toBeTruthy();
     expect(screen.queryByRole('slider', { name: 'Clip start' })).toBeNull();
+    expect(back).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Back' }));
+    expect(back).toHaveBeenCalledTimes(1);
   });
 });
