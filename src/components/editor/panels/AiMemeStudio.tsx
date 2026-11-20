@@ -1,24 +1,25 @@
 import { useState } from 'react';
 import type { ChangeEvent, KeyboardEvent } from 'react';
-import { ChevronLeft, ChevronRight, ImagePlus, LayoutTemplate, Sparkles, Wand2 } from 'lucide-react';
+import { ChevronLeft, ImagePlus, LayoutTemplate, Palette, RefreshCw, Sparkles, Wand2 } from 'lucide-react';
 import { useEditorUiStore } from '../store/useEditorUiStore';
 import { useMemeEditorStore } from '../store/useMemeEditorStore';
 import TemplatesSheet from './TemplatesSheet';
 import { AI_MEME_CATEGORIES, AI_MEME_IDEAS, generateMemeCaptions } from '../../../data/aiMemeCaptions';
-import { aiCaptionedTemplate, aiMemeTemplate } from '../aiMeme';
+import { aiCaptionedTemplate, aiMemeTemplate, hasAiMeme } from '../aiMeme';
 import { pictureSize, readFile } from '../faceSwap';
 import type { EditorActions } from './selection';
 import './faceSwap.css';
 import './aiMemeStudio.css';
+import './stickerStudioPage.css';
+import './aiMemePage.css';
 
 interface Template { id: string | number; name?: string; imageUrl?: string; width?: number; height?: number; [key: string]: unknown }
 interface Vibe { id: string; label: string; icon: string }
 interface Idea { text: string; icon: string; category: string }
 
 const IDEAS = 4;
-// The idea cards on the page: the first few, each tinted its own colour.
-const IDEA_CARDS = 4;
-const TINTS = ['violet', 'orange', 'teal', 'pink'] as const;
+// The idea chips under the prompt.
+const IDEA_CHIPS = 6;
 // 'All Random' reads as Anything.
 const vibeLabel = (v: Vibe) => (v.id === 'all' ? 'Anything' : v.label);
 
@@ -32,19 +33,23 @@ function useAsk() {
   return { idea, vibe, setIdea, setVibe };
 }
 
-// The AI Meme maker's Templates: the Templates browser, whose pick becomes the page's meme.
+// The AI Meme maker's Templates: the Templates browser, whose pick becomes the page's meme, in
+// Sticker Studio's Templates look (`sst-templates`) in the AI maker's violet (`aip-templates`).
 export function AiMemeGallerySheet({ actions, onClose }: { actions: EditorActions; onClose: () => void }) {
   const { idea, vibe } = useAsk();
-  return <TemplatesSheet actions={actions} onClose={onClose} title="Pick a meme" onPick={(t) => actions.handleChangeMeme(aiMemeTemplate({ ...t }, idea, vibe))} />;
+  return <TemplatesSheet actions={actions} onClose={onClose} title="Pick a meme" className="sst-templates aip-templates" onPick={(t) => actions.handleChangeMeme(aiMemeTemplate({ ...t }, idea, vibe))} />;
 }
 
-// The AI Meme maker's page, until its meme is made (EditorPanels shows it in the canvas's place),
-// the idea first, as in an AI chat: the Back chevron and the title; a big question over the prompt
-// box, which holds the idea to type and, along its foot, the meme it is for (a tap opens Templates)
-// and Upload; then ideas to start from as tinted cards (a tap sends one), the vibes as a row of
-// chips, and Generate captions at the bottom. Sending asks for four captions (from the built-in
-// library until a backend writes them), the prompt box saying it's writing, then puts the first on
-// the meme and opens the editing page.
+// The AI Meme maker's page, until its meme is made (EditorPanels shows it in the canvas's place), in
+// Sticker Studio's design (aiMemePage.css) with the AI maker's violet (#a78bfa, its colour in the
+// Creator sheet): a round Back button and the title centred with a bare violet wand; the meme on a
+// rounded stage (Change opens Templates, a round button uploads your own photo, its name on a
+// frosted pill; while captions are written a violet light sweeps across). It opens with no meme
+// (aiBlankTemplate): the stage asks for one, Templates or Upload, and Generate waits; then one card with the
+// question, the idea to type and ideas to start from as chips (a tap sends one); the vibes as
+// emoji tiles in their own card; and Generate captions, the wide violet button over a short note.
+// Sending asks for four captions (from the built-in library until a backend writes them), then puts
+// the first on the meme and opens the editing page.
 export default function AiMemeStudio({ actions, onBack }: { actions: EditorActions; onClose?: () => void; onBack?: () => void }) {
   const template: Template | null = useMemeEditorStore((s: { activeTemplate: Template | null }) => s.activeTemplate);
   const openSheet = useEditorUiStore((s: { openSheet: (sheet: string) => void }) => s.openSheet);
@@ -53,7 +58,9 @@ export default function AiMemeStudio({ actions, onBack }: { actions: EditorActio
   const [sent, setSent] = useState<string | null>(null);
   const busy = sent !== null;
   const memeName = template?.name || 'your meme';
-  const hasMeme = Boolean(template?.imageUrl);
+  // The maker opens with none (aiBlankTemplate): the stage asks for one first.
+  const hasMeme = hasAiMeme(template);
+  const picked = AI_MEME_CATEGORIES.find((c: Vibe) => c.id === vibe) as Vibe | undefined;
 
   const pickMeme = (t: Template) => actions.handleChangeMeme(aiMemeTemplate(t, idea, vibe));
   const upload = async (e: ChangeEvent<HTMLInputElement>) => {
@@ -67,7 +74,7 @@ export default function AiMemeStudio({ actions, onBack }: { actions: EditorActio
   const openTemplates = () => openSheet('aiGallery');
 
   const send = async (prompt = idea, category = vibe) => {
-    if (busy || !template) return;
+    if (busy || !template || !hasMeme) return;
     setIdea(prompt);
     setVibe(category);
     setSent(prompt.trim() || 'Surprise me');
@@ -83,106 +90,123 @@ export default function AiMemeStudio({ actions, onBack }: { actions: EditorActio
     }
   };
 
-
   return (
-    <section className="ie-swap ie-aim" aria-label="Make an AI meme">
-      <header className="ie-aim-header">
-        <button type="button" className="ie-aim-back" onClick={() => (onBack ? onBack() : window.history.back())} aria-label="Back" title="Back">
+    <section className="ie-swap aip" aria-label="Make an AI meme">
+      <header className="aip-header">
+        <button type="button" className="aip-back" onClick={() => (onBack ? onBack() : window.history.back())} aria-label="Back" title="Back">
           <ChevronLeft size={22} strokeWidth={2.4} />
         </button>
-        <h1 className="ie-aim-title ui-topbar-title">
-          <Wand2 size={16} strokeWidth={2.4} className="ie-aim-title-icon" aria-hidden="true" />
+        <h1 className="aip-title ui-topbar-title">
+          <span className="aip-title-icon" aria-hidden="true"><Wand2 size={17} strokeWidth={2.4} /></span>
           <span>AI Meme Studio</span>
         </h1>
         {/* Said for screen readers (and the tests): where the meme stands. */}
-        <p className="ie-aim-status ui-topbar-subtitle" aria-live="polite">{hasMeme ? 'Pick a meme and an idea' : 'Pick a meme'}</p>
+        <p className="aip-status ui-topbar-subtitle" aria-live="polite">{hasMeme ? 'Pick a meme and an idea' : 'Pick a meme'}</p>
       </header>
 
-      <div className="ie-aim-body">
-        <div className="ie-aim-hero">
-          <h2 className="ie-aim-question">What should the meme be about?</h2>
-          <p className="ie-aim-lede">Say it in a few words. You get four captions to pick from.</p>
+      <div className="aip-body">
+        {/* The stage: the meme the captions are for. */}
+        <div className={`aip-stage${busy ? ' is-busy' : ''}${hasMeme ? ' has-meme' : ''}`}>
+          {hasMeme ? (
+            <img className="aip-meme" src={template?.imageUrl} alt="" />
+          ) : (
+            <div className="aip-empty">
+              {/* A blank meme card, tilted, waiting for its picture. */}
+              <span className="aip-empty-art" aria-hidden="true"><LayoutTemplate size={32} strokeWidth={1.8} /></span>
+              <span className="aip-empty-title">Pick a meme to caption</span>
+              <span className="aip-empty-hint">A template, or a photo of your own</span>
+              <div className="aip-empty-actions">
+                <button type="button" className="aip-pick" aria-label="Meme: none" disabled={busy} onClick={openTemplates}>
+                  <LayoutTemplate size={17} strokeWidth={2.3} aria-hidden="true" />
+                  Templates
+                </button>
+                <label className="aip-pick aip-pick--quiet">
+                  <ImagePlus size={17} strokeWidth={2.3} aria-hidden="true" />
+                  Upload
+                  <input type="file" accept="image/*" aria-label="Upload a photo" onChange={(e) => void upload(e)} hidden />
+                </label>
+              </div>
+            </div>
+          )}
+          {hasMeme && !busy && (
+            <div className="aip-stage-tools">
+              <button type="button" className="aip-chip" aria-label={`Meme: ${template?.name || 'none'}`} onClick={openTemplates}>
+                <RefreshCw size={14} strokeWidth={2.4} aria-hidden="true" />
+                Change
+              </button>
+              <label className="aip-chip aip-chip--round" title="Use your own photo">
+                <ImagePlus size={16} strokeWidth={2.3} aria-hidden="true" />
+                <input type="file" accept="image/*" aria-label="Upload a photo" onChange={(e) => void upload(e)} hidden />
+              </label>
+            </div>
+          )}
+          {hasMeme && !busy && <span className="aip-meme-name">{memeName}</span>}
+          {busy && (
+            <div className="aip-busy" role="status">
+              <span className="aip-sweep" aria-hidden="true" />
+              <span className="aip-busy-pill">
+                <span className="aip-spinner" aria-hidden="true" />
+                <span>Writing captions on {memeName}… <i>“{sent}”</i></span>
+              </span>
+            </div>
+          )}
         </div>
 
-        {/* The prompt box: the idea, and the meme it's for along its foot. */}
-        <form className={`ie-aim-prompt${busy ? ' is-busy' : ''}`} onSubmit={(e) => { e.preventDefault(); void send(); }}>
+        {/* The idea: the question, the box to type in, and ideas to start from. */}
+        <form className="aip-card aip-ask" onSubmit={(e) => { e.preventDefault(); void send(); }}>
+          <h2 className="aip-question"><Sparkles size={17} strokeWidth={2.3} aria-hidden="true" />What should the meme be about?</h2>
           <textarea
-            className="ie-aim-prompt-field"
-            rows={3}
+            className="aip-field"
+            rows={2}
             aria-label="What's it about?"
             enterKeyHint="send"
-            placeholder="Mondays at work, my code finally running, the group chat at 2am…"
+            placeholder="Mondays at work, my code finally running…"
             value={idea}
             disabled={busy}
             onChange={(e) => setIdea(e.target.value)}
             onKeyDown={onKey}
           />
-          <div className="ie-aim-prompt-foot">
-            <button type="button" className="ie-aim-meme-chip" aria-label={`Meme: ${template?.name || 'none'}`} disabled={busy} onClick={openTemplates}>
-              <span className="ie-aim-meme-thumb" aria-hidden="true">
-                {hasMeme ? <img src={template?.imageUrl} alt="" /> : <LayoutTemplate size={18} />}
-              </span>
-              <span className="ie-aim-meme-text">
-                <span className="ie-aim-meme-kicker">Meme</span>
-                <span className="ie-aim-meme-name">{hasMeme ? memeName : 'Pick a meme'}</span>
-              </span>
-              <ChevronRight size={18} className="ie-aim-meme-go" aria-hidden="true" />
-            </button>
-            <label className={`ie-aim-upload${busy ? ' is-disabled' : ''}`} title="Use your own photo">
-              <ImagePlus size={19} aria-hidden="true" />
-              <input type="file" accept="image/*" aria-label="Upload a photo" onChange={(e) => void upload(e)} disabled={busy} hidden />
-            </label>
-          </div>
-          {busy && (
-            <div className="ie-aim-writing" role="status">
-              <Sparkles className="ie-aim-writing-icon" aria-hidden="true" />
-              <span className="ie-aim-writing-title">Writing captions on {memeName}…</span>
-              <span className="ie-aim-writing-idea">“{sent}”</span>
-            </div>
-          )}
-        </form>
-
-        {/* Ideas to start from: a tinted card each; a tap sends it. */}
-        <div className="ie-aim-section">
-          <h3 className="ie-aim-section-title">Try one</h3>
-          <div className="ie-aim-ideas" role="group" aria-label="Ideas">
-            {(AI_MEME_IDEAS as Idea[]).slice(0, IDEA_CARDS).map((s, i) => (
-              <button key={s.text} type="button" className={`ie-aim-idea is-${TINTS[i % TINTS.length]}`} disabled={busy || !template} onClick={() => void send(s.text, s.category)}>
-                <span className="ie-aim-idea-icon" aria-hidden="true">{s.icon}</span>
-                <span className="ie-aim-idea-text">{s.text}</span>
+          <div className="aip-ideas" role="group" aria-label="Ideas">
+            {(AI_MEME_IDEAS as Idea[]).slice(0, IDEA_CHIPS).map((s) => (
+              <button key={s.text} type="button" className="aip-idea" disabled={busy || !hasMeme} onClick={() => void send(s.text, s.category)}>
+                <span aria-hidden="true">{s.icon}</span>{s.text}
               </button>
             ))}
           </div>
-        </div>
+        </form>
 
-        {/* The vibe: a row of chips. */}
-        <div className="ie-aim-section">
-          <h3 className="ie-aim-section-title">Vibe</h3>
-          <div className="ie-aim-chips" role="radiogroup" aria-label="Choose a vibe">
+        {/* The vibe: emoji tiles in a row, the picked one ringed in violet. */}
+        <div className="aip-card aip-vibes">
+          <div className="aip-card-head">
+            <span className="aip-card-title"><Palette size={17} strokeWidth={2.3} aria-hidden="true" />Vibe</span>
+            <span className="aip-picked" aria-hidden="true">{picked ? vibeLabel(picked) : 'Anything'}</span>
+          </div>
+          <div className="aip-vibe-row" role="radiogroup" aria-label="Choose a vibe">
             {AI_MEME_CATEGORIES.map((c: Vibe) => (
               <button
                 key={c.id}
                 type="button"
                 role="radio"
                 aria-checked={vibe === c.id}
-                className={`ie-aim-chip${vibe === c.id ? ' is-on' : ''}`}
+                className={`aip-vibe${vibe === c.id ? ' is-on' : ''}`}
                 disabled={busy}
                 onClick={() => setVibe(c.id)}
               >
-                <span aria-hidden="true">{c.icon}</span>{vibeLabel(c)}
+                <span className="aip-vibe-icon" aria-hidden="true">{c.icon}</span>
+                <span className="aip-vibe-name">{vibeLabel(c)}</span>
               </button>
             ))}
           </div>
         </div>
       </div>
 
-      <div className="ie-aim-actions">
-        <button type="button" className="ie-aim-go" aria-label="Generate captions" disabled={busy || !template} onClick={() => void send()}>
-          <Sparkles aria-hidden="true" />
-          {busy ? 'Writing captions…' : 'Generate captions'}
+      <div className="aip-actions">
+        <button type="button" className="aip-go" aria-label="Generate captions" disabled={busy || !hasMeme} onClick={() => void send()}>
+          <Sparkles size={18} aria-hidden="true" />
+          <span>{busy ? 'Writing captions…' : 'Generate captions'}</span>
         </button>
+        <p className="aip-note">{busy ? 'This takes a moment' : hasMeme ? 'Four captions to pick from' : 'Pick a meme to start'}</p>
       </div>
-
     </section>
   );
 }

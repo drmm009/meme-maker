@@ -34,7 +34,7 @@ import StickerStrip, { StickerStyleSheet } from './StickerStrip';
 import FaceSwapStudio from './FaceSwapStudio';
 import StickerStudio, { StickerGallerySheet } from './StickerStudio';
 import { makeStickerTemplate } from '../stickerMaker';
-import { aiRestart, opensOnPrompt } from '../aiMeme';
+import { opensOnPrompt } from '../aiMeme';
 import StickersSheet from './StickersSheet';
 import EmojiSheet from './EmojiSheet';
 import BubbleSheet from './BubbleSheet';
@@ -69,7 +69,9 @@ const DOCK: DockItem[] = [
   { id: 'export', label: 'Export', Icon: Download, title: 'Save or share it', variant: 'primary' },
 ];
 
-const SHEETS = { text: TextSheet, media: MediaSheet, draw: DrawSheet, canvasColor: CanvasColorSheet, watermark: WatermarkSheet, bands: BandsSheet, aiCaption: AiCaptionSheet, filters: FiltersSheet, background: BackgroundSheet, layers: LayersSheet, export: ExportSheet, library: LibrarySheet, mediaLink: LinkSheet,
+// The AI Meme maker's caption card and caption style sheets are drawn by its dock (AiStrip), which keeps the captions.
+const DRAWN_BY_DOCK = () => null;
+const SHEETS = { aiCaptionCard: DRAWN_BY_DOCK, aiCaptionStyle: DRAWN_BY_DOCK, text: TextSheet, media: MediaSheet, draw: DrawSheet, canvasColor: CanvasColorSheet, watermark: WatermarkSheet, bands: BandsSheet, aiCaption: AiCaptionSheet, filters: FiltersSheet, background: BackgroundSheet, layers: LayersSheet, export: ExportSheet, library: LibrarySheet, mediaLink: LinkSheet,
   templates: TemplatesSheet, memes: MemePickerSheet, stickers: StickersSheet, emoji: EmojiSheet, bubble: BubbleSheet, diecut: DieCutSheet, stickerStyle: StickerStyleSheet, socialCard: SocialCardSheet,
   card: CardFormSheet, cardLook: CardLookSheet, aiGallery: AiMemeGallerySheet, faceSwap: FaceSwapStudio, stickerGallery: StickerGallerySheet, crop: CropSheet };
 // Sheets for browsing a big library, shown full height (the meme needn't stay in view).
@@ -108,9 +110,9 @@ export default function EditorPanels({ actions, onBack }: { actions: EditorActio
   const swapDock: Partial<DockItem> = swapped
     ? { label: 'Swap again', title: 'Change the face or the picture', variant: 'secondary' }
     : { label: 'Swap face', title: 'Pick your face and a picture', variant: 'primary' };
-  // The makers with action buttons for a dock (ui.css DockItem variant). The Stickers maker isn't one:
-  // its tools are the image editor's own floating dock (StickerStrip).
-  const actionDock = mode === 'faceswap' || mode === 'ai';
+  // The makers with action buttons for a dock (ui.css DockItem variant). The Stickers and AI Meme
+  // makers aren't: their tools are the image editor's own floating dock (StickerStrip, AiStrip).
+  const actionDock = mode === 'faceswap';
   const modeDock = mode === 'faceswap' && !swapped ? EDITOR_MODES[mode].dock.slice(0, 1) : EDITOR_MODES[mode].dock;
   const dock = modeDock.map((id) => DOCK.find((d) => d.id === id)).filter((d): d is DockItem => Boolean(d))
     .map((d) => (d.id === 'swap' && mode === 'faceswap' ? { ...d, ...swapDock } : d));
@@ -171,6 +173,7 @@ export default function EditorPanels({ actions, onBack }: { actions: EditorActio
   // In the Stickers maker the layer's tools take the tools' dock's place.
   const layerPill = dockTab === 'sticker'
     ? <StickerStrip actions={actions} tools={<LayerToolbar actions={actions} />} />
+    : dockTab === 'ai' ? <AiStrip actions={actions} tools={<LayerToolbar actions={actions} />} />
     : <LayerToolbar actions={actions} />;
   const SheetComponent = sheet && !orphaned ? SHEETS[sheet] : null;
   if (SheetComponent && full) {
@@ -199,19 +202,19 @@ export default function EditorPanels({ actions, onBack }: { actions: EditorActio
     );
   }
 
-  // The Stickers maker's editing screen has its tools as the dock (StickerStrip) and Export in its
-  // header (MemeEditor), so no second dock under them.
-  const stickerEdit = mode === 'sticker';
+  // The Stickers and AI Meme makers' editing screens have their tools as the dock (StickerStrip,
+  // AiStrip) and Export in their header (MemeEditor), so no second dock under them.
+  const ownDock = mode === 'sticker' || mode === 'ai';
   return (
     <div ref={panelRef} className={`ie-panels${actionDock ? ' ie-panels--maker' : ''}${actionDock ? ' ie-panels--actions' : ''}`} data-sheet-ghosts="">
       {layerTools ? layerPill : strip}
-      {!stickerEdit && <ToolDock
+      {!ownDock && <ToolDock
         ariaLabel="Editor tools"
         items={dock}
         active={layerTools || actionDock ? null : dockTab}
         onSelect={(id) => {
           if (id === 'new') {
-            actions.handleChangeMeme(mode === 'ai' && activeTemplate ? aiRestart(activeTemplate) : makeStickerTemplate());
+            actions.handleChangeMeme(makeStickerTemplate());
             return;
           }
           if (id === 'pro') {

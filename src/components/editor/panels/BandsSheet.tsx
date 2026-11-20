@@ -58,8 +58,11 @@ export default function BandsSheet({ onClose }: { actions?: EditorActions; onClo
   // The colour and height shown: the header's, or the footer's while only it is on.
   const shown = header.enabled || !footer.enabled ? header : footer;
 
+  // A band switched on takes the other's colour when that one is on: the two always match.
   const toggle = (which: 'header' | 'footer', on: boolean) => {
-    (which === 'header' ? setCanvasHeader : setCanvasFooter)((prev) => ({ ...prev, enabled: on }));
+    const other = which === 'header' ? footer : header;
+    const match = on && other.enabled ? { bgColor: other.bgColor, ownColor: other.ownColor } : {};
+    (which === 'header' ? setCanvasHeader : setCanvasFooter)((prev) => ({ ...prev, enabled: on, ...match }));
     pushHistory();
   };
 

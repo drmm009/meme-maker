@@ -26,13 +26,11 @@ describe('the makers as links', () => {
     expect(linkOfTemplate(null)).toBe('');
   });
 
-  it('AI Meme starts on a meme an AI caption suits, with the prompt; Social Card on a card', () => {
+  it('AI Meme starts with no meme picked, with the prompt; Social Card on a card', () => {
     const ai = makerTemplate('ai', MEME_TEMPLATES, 'mondays') as Record<string, unknown> | null;
-    expect(ai).toMatchObject({ aiPrompt: 'mondays' });
-    expect(ai?.category).not.toBe('social');
-    expect(ai?.demotivational).toBeFalsy();
+    expect(ai).toMatchObject({ aiPrompt: 'mondays', editorMode: 'ai', aiBlank: true, defaultCaptions: [] });
+    expect(makerTemplate('ai', [])).toMatchObject({ aiBlank: true });
     expect(String(makerTemplate('social', MEME_TEMPLATES)?.id)).toMatch(/whatsapp|tweet/);
-    expect(makerTemplate('ai', [])).toBeNull();
   });
 
   it('the home-screen shortcuts open every maker', () => {

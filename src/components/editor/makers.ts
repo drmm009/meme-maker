@@ -3,7 +3,7 @@
 // home-screen shortcuts (vite.config.js).
 import type { EditorMode } from './editorModes';
 import { makeStickerTemplate } from './stickerMaker';
-import { aiMemeTemplate, suitsAiCaption } from './aiMeme';
+import { aiBlankTemplate } from './aiMeme';
 
 export type Maker = Exclude<EditorMode, 'full'>;
 
@@ -30,14 +30,11 @@ export const linkOfTemplate = (template: { editorMode?: unknown; [key: string]: 
   (template && MAKER_LINKS[template.editorMode as Maker]) || '';
 
 // The template a maker opens on, from the app's templates (null when none suits): Stickers a blank
-// see-through square, AI Meme the first meme an AI caption suits (with `prompt`), Face Swap Drake,
+// see-through square, AI Meme with no meme yet (its page asks for one; with `prompt`), Face Swap Drake,
 // Social Card the WhatsApp or tweet card.
 export function makerTemplate(maker: Maker, templates: Template[], prompt = '') {
   if (maker === 'sticker') return makeStickerTemplate();
-  if (maker === 'ai') {
-    const base = templates.find(suitsAiCaption);
-    return base ? aiMemeTemplate(base, prompt) : null;
-  }
+  if (maker === 'ai') return aiBlankTemplate(prompt);
   if (maker === 'faceswap') {
     // The classic two-panel Drake: both faces face the camera, so the swap finds them (Drake
     // Approving's side profile has none it can find).

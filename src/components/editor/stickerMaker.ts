@@ -38,7 +38,7 @@ export const stickerStyleLook = (id: string): object => (STICKER_STYLES.find((s)
 export const STICKER_PHOTO = { x: 0.5, y: 0.5, scale: Math.round(((CANVAS_MAX_DIM * 0.85) / 320) * 100) / 100 } as const;
 
 // A fully transparent square PNG (empty when the browser can't draw one, as in tests).
-function clearSquare(size: number): string {
+export function clearSquare(size: number): string {
   if (typeof document === 'undefined') return '';
   try {
     const canvas = document.createElement('canvas');

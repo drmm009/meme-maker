@@ -6,10 +6,17 @@ import { rotateKnobGap, screenScaleOf } from '../interaction/layerBoxes';
 // frame with a soft dark shadow, plain white discs and pills with a soft shadow, a red bin for
 // Delete and a dark turning arrow on the rotate knob.
 export const THEME_CORAL = '#ff5a36';
-// The Stickers maker's editing screen is green (its Export button's), so there the frame, badges
-// and snapping guides are too: the canvas sits inside .meme-editor--sticker-mode.
+// The Stickers maker's editing screen is green (its Export button's) and the AI Meme maker's violet,
+// so there the frame, badges and snapping guides are too: the canvas sits inside
+// .meme-editor--sticker-mode or .meme-editor--ai-edit.
 export const STICKER_GREEN = '#2fd39b';
-export const accentOf = (ctx) => (ctx?.canvas?.closest?.('.meme-editor--sticker-mode') ? STICKER_GREEN : THEME_CORAL);
+export const AI_VIOLET = '#a78bfa';
+export const accentOf = (ctx) => {
+  const canvas = ctx?.canvas;
+  if (canvas?.closest?.('.meme-editor--sticker-mode')) return STICKER_GREEN;
+  if (canvas?.closest?.('.meme-editor--ai-edit')) return AI_VIOLET;
+  return THEME_CORAL;
+};
 const DELETE_RED = '#ff3b30';
 const INK = '#1c1c1e';
 const RING = 'rgba(0, 0, 0, 0.12)';

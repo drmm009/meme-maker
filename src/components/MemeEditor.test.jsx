@@ -65,6 +65,7 @@ vi.mock('../utils/faceGraftEngine', () => ({ fuseFaceIntoTemplate: vi.fn() }));
 vi.mock('../utils/memeDraftStore', async (importOriginal) => ({ ...(await importOriginal()), loadMemeDraft: async () => null, saveMemeDraft: async () => {} }));
 
 import MemeEditor from './MemeEditor';
+import { aiBlankTemplate } from './editor/aiMeme';
 
 const TEMPLATE = {
   id: 'test-template',
@@ -1464,7 +1465,23 @@ describe('MemeEditor', () => {
     expect(card().waMessages[0].text).toBe('hi');
   }, 30000);
 
-  it('the AI Meme maker opens on its page (the question, the prompt box with the meme along its foot, idea cards, vibe chips); sending makes the meme, whose caption card steps through the AI captions', async () => {
+  it('the AI Meme maker opens with no meme: the stage asks for one, and Generate waits until there is one', () => {
+    renderEditor(aiBlankTemplate('mondays'));
+    const page = () => screen.getByRole('region', { name: 'Make an AI meme' });
+    expect(within(page()).getByText('Pick a meme to caption')).toBeTruthy();
+    expect(screen.getByText('Pick a meme', { selector: '.ui-topbar-subtitle' })).toBeTruthy();
+    expect(within(page()).getByRole('button', { name: 'Generate captions' }).disabled).toBe(true);
+    expect(within(within(page()).getByRole('group', { name: 'Ideas' })).getAllByRole('button').every((b) => b.disabled)).toBe(true);
+    // Templates on the stage picks one; then Generate is ready.
+    fireEvent.click(within(page()).getByRole('button', { name: 'Meme: none' }));
+    const card = within(sheet('Pick a meme')).getAllByRole('button').find((b) => b.classList.contains('ie-card'));
+    fireEvent.click(card);
+    expect(within(page()).queryByText('Pick a meme to caption')).toBeNull();
+    expect(within(page()).getByRole('button', { name: 'Generate captions' }).disabled).toBe(false);
+    expect(within(page()).getByLabelText("What's it about?").value).toBe('mondays');
+  }, 30000);
+
+  it('the AI Meme maker opens on its page (the meme on its stage, the question with the idea and idea chips, the vibes); sending makes the meme, whose caption card steps through the AI captions', async () => {
     renderEditor({ ...TEMPLATE, editorMode: 'ai', aiPrompt: 'mondays' });
     const page = () => screen.getByRole('region', { name: 'Make an AI meme' });
     expect(within(page()).getByLabelText("What's it about?").value).toBe('mondays');
@@ -1472,7 +1489,7 @@ describe('MemeEditor', () => {
     expect(screen.getByText('Pick a meme and an idea', { selector: '.ui-topbar-subtitle' })).toBeTruthy();
     expect(screen.queryByRole('navigation', { name: 'Editor tools' })).toBeNull();
 
-    // Its own header and the question; the prompt box holds the meme it's for and Upload.
+    // Its own header and the question; the stage holds the meme it's for, Change and Upload.
     expect(within(page()).getByRole('heading', { name: 'What should the meme be about?' })).toBeTruthy();
     expect(within(page()).getByRole('heading', { name: 'AI Meme Studio' })).toBeTruthy();
     expect(within(page()).getByLabelText('Upload a photo')).toBeTruthy();
@@ -1483,7 +1500,7 @@ describe('MemeEditor', () => {
     fireEvent.click(card);
     expect(within(page()).getByRole('button', { name: `Meme: ${pickedName}` })).toBeTruthy();
     expect(within(page()).getByLabelText("What's it about?").value).toBe('mondays');
-    // The vibes are chips on the page, Anything picked to start.
+    // The vibes are tiles on the page, Anything picked to start.
     const vibe = (name) => within(within(page()).getByRole('radiogroup', { name: 'Choose a vibe' })).getByRole('radio', { name });
     expect(vibe(/Anything/).getAttribute('aria-checked')).toBe('true');
     fireEvent.click(vibe(/Tech & Code/));
@@ -1491,14 +1508,17 @@ describe('MemeEditor', () => {
 
     // Send: the first caption on the meme and the editing page; the caption card steps on through them.
     fireEvent.click(within(page()).getByRole('button', { name: 'Generate captions' }));
-    const tools = await screen.findByRole('toolbar', { name: 'AI meme tools' });
+    const tools = await screen.findByRole('navigation', { name: 'AI meme tools' });
     expect(screen.queryByRole('region', { name: 'Make an AI meme' })).toBeNull();
     expect(canvas.props.template.name).toBe(pickedName);
     const ideas = canvas.props.template.aiIdeas;
     expect(ideas).toHaveLength(4);
     expect(captionTexts()).toEqual([ideas[0]]);
-    expect([...tools.children].map((b) => b.textContent)).toEqual(['Text', 'Style', 'Header & Footer', 'Effects']);
-    expect(screen.getByText('Caption 1 of 4')).toBeTruthy();
+    // The tools are the image editor's floating dock, as Sticker Studio's; Caption opens the caption card's sheet.
+    expect([...tools.children].map((b) => b.textContent)).toEqual(['Caption', 'Style', 'Text', 'Header', 'Effects']);
+    expect(screen.queryByText('Caption 1 of 4')).toBeNull();
+    fireEvent.click(within(tools).getByText('Caption'));
+    expect(within(sheet('Caption')).getByText('Caption 1 of 4')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Previous caption' }).disabled).toBe(true);
     for (const text of ideas.slice(1)) {
       fireEvent.click(screen.getByRole('button', { name: 'Next caption' }));
@@ -1515,32 +1535,52 @@ describe('MemeEditor', () => {
     expect(screen.getByText('Writing new captions…')).toBeTruthy();
     await screen.findByText('Caption 1 of 4');
     expect(captionTexts()).toHaveLength(1);
+    // Caption again closes it; reopened, the new captions are still there.
+    fireEvent.click(within(screen.getByRole('navigation', { name: 'AI meme tools' })).getByText('Caption'));
+    expect(screen.queryByRole('dialog', { name: 'Caption' })).toBeNull();
+    fireEvent.click(within(screen.getByRole('navigation', { name: 'AI meme tools' })).getByText('Caption'));
+    expect(within(sheet('Caption')).getByText('Caption 1 of 4')).toBeTruthy();
+    fireEvent.click(within(screen.getByRole('navigation', { name: 'AI meme tools' })).getByText('Caption'));
     expect(screen.getByRole('radiogroup', { name: 'Aspect ratio' })).toBeTruthy();
     expect(screen.getByText('Ready to export', { selector: '.ui-topbar-subtitle' })).toBeTruthy();
-    expect(within(bar()).getAllByRole('button').map((b) => b.textContent.trim())).toEqual(['Export']);
-    // Its own header: the title, undo and redo; Move to editor is a pill on the board.
+    // No second dock: Export is in its header, as Sticker Studio's, with Back and undo and redo.
+    expect(screen.queryByRole('navigation', { name: 'Editor tools' })).toBeNull();
     expect(screen.getByRole('heading', { name: 'AI Meme Studio' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Undo' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Move to editor' })).toBeTruthy();
-    // Style opens its looks over the tools; a pick restyles the caption.
+    expect(screen.queryByRole('button', { name: 'Move to editor' })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Export' }));
+    expect(sheet('Export')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Export' }));
+    expect(screen.queryByRole('dialog', { name: 'Export' })).toBeNull();
+    // Style opens its looks in a sheet; a pick restyles the caption.
+    const aiTools = () => screen.getByRole('navigation', { name: 'AI meme tools' });
     const aiCap = () => canvas.props.captions.find((c) => c.id.startsWith('cap-ai-'));
-    fireEvent.click(within(tools).getByText('Style'));
-    const looks = screen.getByRole('radiogroup', { name: 'Caption style' });
+    fireEvent.click(within(aiTools()).getByText('Style'));
+    const looks = within(sheet('Caption style')).getByRole('radiogroup', { name: 'Caption style' });
     expect(within(looks).getByRole('radio', { name: /Classic/ }).getAttribute('aria-checked')).toBe('true');
     fireEvent.click(within(looks).getByRole('radio', { name: /Label/ }));
     expect(aiCap()).toMatchObject({ color: '#000000', bgColor: '#ffffff', bgStyle: 'box' });
-    fireEvent.click(within(tools).getByText('Style'));
+    fireEvent.click(within(aiTools()).getByText('Style'));
     expect(screen.queryByRole('radiogroup', { name: 'Caption style' })).toBeNull();
     // Header & Footer turns the header on and opens the bands' sheet; again closes it.
-    fireEvent.click(within(tools).getByText('Header & Footer'));
+    fireEvent.click(within(aiTools()).getByText('Header'));
     expect(screen.getByRole('dialog', { name: 'Header & footer' })).toBeTruthy();
     expect(canvas.props.canvasHeader.enabled).toBe(true);
     expect(canvas.props.captions.some((c) => c.isHeaderCaption)).toBe(false);
-    fireEvent.click(within(tools).getByText('Header & Footer'));
+    // The footer switched on comes in the header's colour: the two bands match.
+    fireEvent.click(within(sheet('Header & footer')).getByRole('switch', { name: 'Footer' }));
+    expect(canvas.props.canvasFooter).toMatchObject({ enabled: true, bgColor: canvas.props.canvasHeader.bgColor });
+    fireEvent.click(within(aiTools()).getByText('Header'));
     expect(screen.queryByRole('dialog', { name: 'Header & footer' })).toBeNull();
-    // Edit text selects the AI caption: its tools.
-    fireEvent.click(within(strip('AI meme tools')).getByText('Text'));
-    expect(within(layerToolbar()).getByText('Font')).toBeTruthy();
+    // Text shows its row, Add Text and Bubble, as Sticker Studio's; Add Text adds a caption.
+    fireEvent.click(within(aiTools()).getByText('Text'));
+    const textRow = screen.getByRole('toolbar', { name: 'Text tools' });
+    expect(within(textRow).getAllByRole('button').map((b) => b.textContent.trim())).toEqual(['Add Text', 'Bubble']);
+    fireEvent.click(within(textRow).getByText('Bubble'));
+    expect(screen.getByRole('dialog', { name: /bubble/i })).toBeTruthy();
+    fireEvent.click(within(aiTools()).getByText('Text'));
+    fireEvent.click(within(screen.getByRole('toolbar', { name: 'Text tools' })).getByText('Add Text'));
+    expect(canvas.props.captions).toHaveLength(2);
     act(() => canvas.props.onSelectLayer(null));
 
     // Back: the same meme, idea and vibe, back on the page.
@@ -1552,7 +1592,7 @@ describe('MemeEditor', () => {
 
     // An idea sends itself, with its vibe.
     fireEvent.click(within(within(page()).getByRole('group', { name: 'Ideas' })).getByRole('button', { name: /Mondays/ }));
-    await screen.findByRole('toolbar', { name: 'AI meme tools' });
+    await screen.findByRole('navigation', { name: 'AI meme tools' });
     expect(canvas.props.template.aiIdeas).toHaveLength(4);
     expect(canvas.props.template).toMatchObject({ aiPrompt: 'Mondays', aiCategory: 'work' });
   }, 30000);

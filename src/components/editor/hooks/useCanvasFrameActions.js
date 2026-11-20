@@ -60,10 +60,13 @@ export function useCanvasFrameActions() {
     pushHistory();
   };
 
-  // The header and footer bands: switching one on adds the band alone (in the canvas colour), no
-  // text layer with it; switching it off leaves the layers as they are.
+  // The header and footer bands: switching one on adds the band alone, no text layer with it, in the
+  // other band's colour when that one is on (the two always match), else in its own (black to start);
+  // switching it off leaves the layers as they are.
   const setBand = (setter, band, on) => {
-    setter({ ...band, enabled: on, ...(on && { bgColor: canvasBgColor || '#ffffff' }) });
+    const other = band === canvasHeader ? canvasFooter : canvasHeader;
+    const match = on && other?.enabled ? { bgColor: other.bgColor, ownColor: other.ownColor } : {};
+    setter({ ...band, enabled: on, ...match });
     pushHistory();
   };
   const handleToggleCanvasHeader = () => setBand(setCanvasHeader, canvasHeader, !canvasHeader.enabled);

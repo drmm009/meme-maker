@@ -1,0 +1,501 @@
+/* The AI Meme maker's page (AiMemeStudio), until its meme is made: Sticker Studio's design
+   (stickerStudioPage.css) with the AI maker's violet (#a78bfa, its colour in the Creator sheet) for
+   its accent. A dark page with a soft violet glow at the top; a round Back button and the title
+   centred with a bare violet wand; the meme on a rounded stage with Change and Upload on frosted
+   chips and its name on a frosted pill, the meme filling the stage (with none yet, a tilted card over Templates and Upload); one card with the question, the idea and idea chips; a card
+   of vibes as emoji tiles; and Generate captions, the wide violet button over a short note. */
+
+/* It covers the editor (the top bar is hidden on it) and keeps clear of the notch. */
+.meme-editor--ai-page .ie-panels.ie-panels--full { inset: 0 !important; }
+.meme-editor--ai-page .ie-panels.ie-panels--full:has(> .ui-sheet) {
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+.aip {
+  --aip-violet: #a78bfa;
+  --aip-ink: #1b1036;
+  --aip-card: rgba(255, 255, 255, 0.06);
+  --aip-line: rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  height: 100%;
+  max-height: 100%;
+  overflow: hidden;
+  box-sizing: border-box;
+  padding: calc(8px + env(safe-area-inset-top, 0px)) 14px calc(12px + env(safe-area-inset-bottom, 0px));
+  background:
+    radial-gradient(ellipse 90% 45% at 50% -8%, rgba(139, 110, 250, 0.24) 0%, rgba(13, 14, 18, 0) 70%),
+    linear-gradient(180deg, #101217 0%, #0b0c10 100%) !important;
+  color: var(--ui-text, #f4f4f6);
+  font-family: var(--ui-font, 'Plus Jakarta Sans', sans-serif);
+  -webkit-tap-highlight-color: transparent;
+}
+.aip *, .aip *::before, .aip *::after { box-sizing: border-box; }
+.aip button { font: inherit; color: inherit; }
+.aip p { margin: 0; }
+.aip :focus-visible { outline: 2px solid var(--aip-violet); outline-offset: 2px; }
+
+/* ---- Header: a round Back button, the title centred with its violet wand ---- */
+.aip-header {
+  position: relative;
+  display: grid;
+  flex: none;
+  grid-template-columns: 40px minmax(0, 1fr) 40px;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+}
+.aip .aip-back {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--aip-card);
+  color: #ffffff;
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.16s ease;
+}
+.aip .aip-back:active { transform: scale(0.92); background: rgba(255, 255, 255, 0.12); }
+@media (hover: hover) { .aip .aip-back:hover { background: rgba(255, 255, 255, 0.1); } }
+.aip .aip-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-width: 0;
+  margin: 0;
+  color: #ffffff;
+  font-size: clamp(22px, 6.2vw, 28px);
+  font-weight: 850;
+  line-height: 1.12;
+  letter-spacing: -0.022em;
+  white-space: nowrap;
+}
+.aip-title-icon { display: grid; flex: none; place-items: center; color: var(--aip-violet); }
+.aip-title-icon svg { width: 23px; height: 23px; }
+/* Said for screen readers only. */
+.aip .aip-status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ---- Body: one screen, scrolling only when it must ---- */
+.aip-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+.aip-body::-webkit-scrollbar { display: none; }
+
+/* ---- The stage: the meme the captions are for ---- */
+.aip-stage {
+  position: relative;
+  display: grid;
+  flex: 1 1 auto;
+  place-items: center;
+  min-height: 200px;
+  overflow: hidden;
+  border-radius: 28px;
+  /* Its own height, so the empty card can fit itself to it (below). */
+  container: aip-stage / size;
+  background:
+    radial-gradient(circle at 50% 45%, rgba(167, 139, 250, 0.12), transparent 62%),
+    linear-gradient(160deg, #1d1f24, #16171b);
+  box-shadow: inset 0 0 0 1px var(--aip-line);
+}
+.aip-meme {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+/* Over a picked meme: a soft shade at the top and bottom, so the chips and its name read on it. */
+.aip-stage.has-meme::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.38) 0%, transparent 26%, transparent 70%, rgba(0, 0, 0, 0.5) 100%);
+  pointer-events: none;
+}
+.aip-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 24px;
+  text-align: center;
+}
+.aip-empty-art {
+  display: grid;
+  margin-bottom: 10px;
+  place-items: center;
+  width: 84px;
+  height: 84px;
+  border: 5px solid #ffffff;
+  border-radius: 24px;
+  background: linear-gradient(145deg, #3a3d44, #2b2d33);
+  color: var(--aip-violet);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.45);
+  transform: rotate(-6deg);
+}
+.aip-empty-title { color: #ffffff; font-size: 19px; font-weight: 800; letter-spacing: -0.02em; }
+.aip-empty-hint { color: rgba(235, 235, 245, 0.6); font-size: 13.5px; }
+/* Templates (violet) and Upload (grey), side by side under it. */
+.aip-empty-actions { display: flex; gap: 8px; margin-top: 10px; }
+.aip .aip-pick {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 42px;
+  padding: 0 16px;
+  border: none;
+  border-radius: 999px;
+  background: var(--aip-violet);
+  color: var(--aip-ink);
+  font-size: 14.5px;
+  font-weight: 750;
+  cursor: pointer;
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+.aip .aip-pick--quiet { background: rgba(255, 255, 255, 0.1); color: #ffffff; }
+.aip .aip-pick:active { transform: scale(0.96); }
+.aip-pick:focus-within { outline: 2px solid var(--aip-violet); outline-offset: 2px; }
+@media (hover: hover) { .aip .aip-pick:hover { filter: brightness(1.08); } }
+/* A short stage (a short phone): the card beside the words and buttons, so the buttons stay in view. */
+@container aip-stage (max-height: 290px) {
+  .aip-empty {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-areas: 'art title' 'art hint' 'art actions';
+    align-items: center;
+    column-gap: 16px;
+    row-gap: 4px;
+    width: 100%;
+    padding: 16px 18px;
+    text-align: left;
+  }
+  .aip-empty-art { grid-area: art; width: 64px; height: 64px; margin: 0; border-width: 4px; border-radius: 18px; }
+  .aip-empty-art svg { width: 26px; height: 26px; }
+  .aip-empty-title { grid-area: title; font-size: 16.5px; }
+  .aip-empty-hint { grid-area: hint; font-size: 12.5px; }
+  .aip-empty-actions { grid-area: actions; margin-top: 6px; }
+  .aip .aip-pick { height: 38px; padding: 0 13px; font-size: 13.5px; }
+}
+@container aip-stage (max-height: 150px) {
+  .aip-empty-hint { display: none; }
+}
+
+/* Change and Upload on frosted chips along the top; the meme's name on a pill along the bottom. */
+.aip-stage-tools {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  left: 12px;
+  z-index: 2;
+  display: flex;
+  justify-content: space-between;
+}
+.aip .aip-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 13px;
+  border: none;
+  border-radius: 999px;
+  background: rgba(16, 17, 20, 0.62);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+.aip .aip-chip--round { justify-content: center; width: 34px; padding: 0; }
+.aip-chip:focus-within { outline: 2px solid var(--aip-violet); outline-offset: 2px; }
+.aip-meme-name {
+  position: absolute;
+  z-index: 2;
+  bottom: 12px;
+  left: 50%;
+  max-width: calc(100% - 32px);
+  padding: 6px 13px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(16, 17, 20, 0.62);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transform: translateX(-50%);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+
+/* Writing: a violet light sweeps across, a pill says what for. */
+.aip-busy {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: grid;
+  place-items: end center;
+  padding: 0 14px 16px;
+  overflow: hidden;
+  background: rgba(10, 11, 14, 0.3);
+}
+.aip-sweep {
+  position: absolute;
+  inset: -20% -60%;
+  background: linear-gradient(100deg, transparent 40%, rgba(167, 139, 250, 0.32) 50%, transparent 60%);
+  animation: aip-sweep 1.6s ease-in-out infinite;
+}
+@keyframes aip-sweep {
+  from { transform: translateX(-40%); }
+  to { transform: translateX(40%); }
+}
+.aip-busy-pill {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  max-width: 100%;
+  padding: 9px 14px;
+  border-radius: 999px;
+  background: rgba(16, 17, 20, 0.74);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+.aip-busy-pill > span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.aip-busy-pill i { color: rgba(235, 235, 245, 0.65); font-style: normal; font-weight: 600; }
+.aip-spinner {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(167, 139, 250, 0.3);
+  border-top-color: var(--aip-violet);
+  border-radius: 50%;
+  animation: aip-spin 0.8s linear infinite;
+}
+@keyframes aip-spin { to { transform: rotate(360deg); } }
+
+/* ---- Cards ---- */
+.aip-card { flex: none; border-radius: 22px; background: var(--aip-card); }
+
+/* The idea: the question, a soft field, then ideas as chips that scroll to the card's edges. */
+.aip-ask { display: flex; flex-direction: column; gap: 10px; padding: 14px 0 14px; }
+.aip .aip-question {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 0 14px;
+  color: #ffffff;
+  font-size: 15.5px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+.aip-question svg { flex: none; color: var(--aip-violet); }
+.aip .aip-field {
+  display: block;
+  width: calc(100% - 28px);
+  min-height: 62px;
+  margin: 0 14px;
+  padding: 12px 14px;
+  resize: none;
+  border: none;
+  border-radius: 16px;
+  outline: none;
+  background: rgba(0, 0, 0, 0.26);
+  box-shadow: inset 0 0 0 1px var(--aip-line);
+  color: #ffffff;
+  font: inherit;
+  font-size: 16px; /* 16px keeps phones from zooming in on focus */
+  font-weight: 600;
+  line-height: 1.35;
+  transition: box-shadow 0.15s ease;
+}
+.aip .aip-field:focus { box-shadow: inset 0 0 0 1.5px var(--aip-violet); }
+.aip .aip-field::placeholder { color: rgba(235, 235, 245, 0.4); }
+.aip .aip-field:disabled { opacity: 0.5; }
+.aip-ideas {
+  display: flex;
+  gap: 8px;
+  padding: 0 14px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.aip-ideas::-webkit-scrollbar { display: none; }
+.aip .aip-idea {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 12px;
+  border: none;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  color: rgba(235, 235, 245, 0.88);
+  font-size: 13px;
+  font-weight: 650;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.15s ease;
+}
+.aip .aip-idea:active:not(:disabled) { transform: scale(0.96); }
+.aip .aip-idea:disabled { opacity: 0.45; cursor: default; }
+@media (hover: hover) { .aip .aip-idea:hover:not(:disabled) { background: rgba(167, 139, 250, 0.16); } }
+
+/* The vibe: its name in a violet pill, then a row of emoji tiles, the picked one ringed. */
+.aip-vibes { display: grid; gap: 8px; padding: 14px 0 10px; }
+.aip-card-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 0 14px; }
+.aip-card-title { display: inline-flex; align-items: center; gap: 8px; color: #ffffff; font-size: 15.5px; font-weight: 800; letter-spacing: -0.01em; }
+.aip-card-title svg { color: var(--aip-violet); }
+.aip-picked {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(167, 139, 250, 0.16);
+  color: var(--aip-violet);
+  font-size: 12.5px;
+  font-weight: 750;
+}
+.aip-vibe-row {
+  display: flex;
+  gap: 8px;
+  /* Room for the picked tile's ring (4px outside it): a scrolling row clips what spills over. */
+  padding: 6px 14px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.aip-vibe-row::-webkit-scrollbar { display: none; }
+.aip .aip-vibe {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 74px;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+.aip-vibe-icon {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.07);
+  font-size: 26px;
+  line-height: 1;
+  transition: box-shadow 0.18s ease, background-color 0.18s ease, transform 0.15s ease;
+}
+.aip-vibe-name {
+  max-width: 100%;
+  overflow: hidden;
+  color: rgba(235, 235, 245, 0.6);
+  font-size: 11.5px;
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.aip .aip-vibe.is-on .aip-vibe-icon {
+  background: rgba(167, 139, 250, 0.16);
+  box-shadow: 0 0 0 2px #0f1014, 0 0 0 4px var(--aip-violet);
+}
+.aip .aip-vibe.is-on .aip-vibe-name { color: #ffffff; font-weight: 750; }
+.aip .aip-vibe:active:not(:disabled) .aip-vibe-icon { transform: scale(0.94); }
+.aip .aip-vibe:disabled { opacity: 0.5; cursor: default; }
+
+/* ---- Generate captions: the wide violet button over a short note ---- */
+.aip-actions { display: grid; flex: none; gap: 8px; }
+.aip .aip-go {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  height: 54px;
+  border: none;
+  border-radius: 999px;
+  background: var(--aip-violet);
+  color: var(--aip-ink);
+  font-size: 16.5px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  box-shadow: 0 10px 24px -10px rgba(167, 139, 250, 0.7);
+  transition: transform 0.16s ease, filter 0.15s ease;
+}
+.aip .aip-go:active:not(:disabled) { transform: scale(0.98); }
+.aip .aip-go:disabled { background: rgba(255, 255, 255, 0.08); color: rgba(235, 235, 245, 0.4); box-shadow: none; cursor: default; }
+@media (hover: hover) { .aip .aip-go:hover:not(:disabled) { filter: brightness(1.06); } }
+.aip-note { color: rgba(235, 235, 245, 0.5); font-size: 12.5px; line-height: 1.3; text-align: center; }
+
+/* Short phones: a smaller stage and slimmer cards. */
+@media (max-height: 700px) {
+  .aip-stage { min-height: 160px; }
+  .aip .aip-field { min-height: 52px; padding: 10px 12px; }
+  .aip-vibe-icon { width: 48px; height: 48px; border-radius: 16px; font-size: 22px; }
+  .aip .aip-vibe { width: 66px; }
+}
+@media (max-height: 620px) {
+  .aip-stage { min-height: 130px; }
+  .aip .aip-go { height: 48px; }
+  .aip-note { display: none; }
+}
+
+/* Room to breathe on a wide screen: the page keeps a phone's width. */
+@media (min-width: 720px) {
+  .aip-header, .aip-body, .aip-actions { width: 100%; max-width: 480px; margin-left: auto; margin-right: auto; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aip-sweep, .aip-spinner { animation: none; }
+  .aip .aip-back, .aip .aip-idea, .aip-vibe-icon, .aip .aip-go { transition: none; }
+}
+
+/* ---- Pick a meme: the Templates sheet, in Sticker Studio's Templates look (sst-templates,
+   stickerStudioPage.css) with the AI maker's violet: its mark, the picked chip, the rank tags, See
+   all and the search's ring; a violet glow at the top. ---- */
+.sst-templates.aip-templates {
+  --sst-green: #a78bfa;
+  --sst-green-ink: #1b1036;
+  --ui-accent: #a78bfa;
+  --ui-accent-hover: #b9a2fc;
+  --ui-accent-soft: rgba(167, 139, 250, 0.16);
+  --ui-accent-text: #c4b5fd;
+  background:
+    radial-gradient(ellipse 90% 40% at 50% -6%, rgba(167, 139, 250, 0.18) 0%, rgba(13, 14, 18, 0) 70%),
+    #111216 !important;
+}
+.aip-templates .ie-browse-title-icon { color: #a78bfa !important; }
+.aip-templates .ie-browse-chip.is-on .ie-browse-chip-count { background: rgba(27, 16, 54, 0.16); }
+.aip-templates .ie-browse-thumb.is-loading,
+.aip-templates .ie-browse-thumb.is-failed {
+  background:
+    radial-gradient(circle at 50% 40%, rgba(167, 139, 250, 0.1), transparent 60%),
+    linear-gradient(160deg, #26282e, #1a1b20);
+}

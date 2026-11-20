@@ -192,7 +192,7 @@ export default function TemplateDiscovery({ onSelectTemplate, onCreateCustom, on
     return cols;
   }, [displayedTemplates, columnsCount]);
 
-  // The AI Meme maker, on the first image meme, its prompt screen starting from `prompt` (or the
+  // The AI Meme maker, with no meme picked yet, its prompt screen starting from `prompt` (or the
   // AI caption generator when there's no editor to open).
   const openAiMeme = (prompt = '') => {
     const template = makerTemplate('ai', templatesList, prompt);

@@ -1,3 +1,4 @@
+import { clearSquare } from './stickerMaker';
 // The AI Meme maker (editor mode 'ai'): it opens on its page (panels/AiMemeStudio.tsx) in the
 // canvas's place, where a meme, an idea and a vibe make four AI captions; Generate puts the first on
 // the meme and opens the editing page, whose strip (panels/AiStrip.tsx) switches between them and
@@ -31,6 +32,27 @@ export const aiMemeTemplate = <T extends AiTemplate>(template: T, prompt = '', c
   aiPrompt: prompt,
   aiCategory: category,
 });
+
+// The AI Meme maker before a meme is picked: a clear square to stand in for the canvas
+// (`aiBlank`), the page showing Pick a meme until one is chosen from Templates or uploaded.
+export const aiBlankTemplate = (prompt = '', category = 'all') => {
+  const url = clearSquare(512);
+  return aiMemeTemplate({
+    id: `ai-blank-${Date.now()}`,
+    name: '',
+    imageUrl: url,
+    rawImageUrl: url,
+    width: 512,
+    height: 512,
+    category: 'custom',
+    defaultCaptions: [],
+    aiBlank: true,
+  }, prompt, category);
+};
+
+// Whether the AI Meme maker has a meme to write on yet.
+export const hasAiMeme = (template: { imageUrl?: unknown; aiBlank?: unknown } | null | undefined) =>
+  Boolean(template?.imageUrl) && !template?.aiBlank;
 
 // The id the AI caption gets, to find it again when another of the four is picked.
 export const AI_CAPTION_PREFIX = 'cap-ai-';

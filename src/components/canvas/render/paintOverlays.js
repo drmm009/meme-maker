@@ -1,10 +1,11 @@
 import { drawImageFiltered } from '../../../data/photoFilters';
-import { STICKER_GREEN, accentOf } from './handles';
+import { AI_VIOLET, STICKER_GREEN, accentOf } from './handles';
 
 // The snapping guides shown while a layer is dragged: the app's orange, as the selection frame and
-// the video editor's guides (video-editor/preview/CanvasText); green on the Stickers maker's screen.
+// the video editor's guides (video-editor/preview/CanvasText); green on the Stickers maker's screen, violet on the AI Meme maker's.
 const GUIDE_GLOW = 'rgba(255, 90, 54, 0.55)';
 const STICKER_GLOW = 'rgba(47, 211, 155, 0.55)';
+const AI_GLOW = 'rgba(167, 139, 250, 0.55)';
 
 export function paintOverlays({
   activeCaption, activeHandleDrawer, applyGlobalFilter, canvas, canvasH, compCanvas, ctx,
@@ -25,7 +26,7 @@ export function paintOverlays({
   if (!skipHandles && isDragging.current && snappingLines.current && (snappingLines.current.horizontal !== null || snappingLines.current.vertical !== null)) {
     const { horizontal, vertical } = snappingLines.current;
     const GUIDE = accentOf(ctx);
-    const glow = GUIDE === STICKER_GREEN ? STICKER_GLOW : GUIDE_GLOW;
+    const glow = GUIDE === STICKER_GREEN ? STICKER_GLOW : GUIDE === AI_VIOLET ? AI_GLOW : GUIDE_GLOW;
     ctx.save();
     ctx.setLineDash([6, 6]);
 

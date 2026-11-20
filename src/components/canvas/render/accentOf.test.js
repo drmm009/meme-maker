@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from 'vitest';
-import { STICKER_GREEN, THEME_CORAL, accentOf } from './handles';
+import { AI_VIOLET, STICKER_GREEN, THEME_CORAL, accentOf } from './handles';
 
 describe('accentOf', () => {
-  it('is the app orange, and green inside the Stickers maker', () => {
+  it('is the app orange, green inside the Stickers maker and violet inside the AI Meme maker', () => {
     const plain = document.createElement('canvas');
     expect(accentOf({ canvas: plain })).toBe(THEME_CORAL);
 
@@ -12,6 +12,12 @@ describe('accentOf', () => {
     const inSticker = document.createElement('canvas');
     screen.appendChild(inSticker);
     expect(accentOf({ canvas: inSticker })).toBe(STICKER_GREEN);
+
+    const aiScreen = document.createElement('div');
+    aiScreen.className = 'meme-editor-container meme-editor--ai-edit';
+    const inAi = document.createElement('canvas');
+    aiScreen.appendChild(inAi);
+    expect(accentOf({ canvas: inAi })).toBe(AI_VIOLET);
   });
 
   it('falls back to orange without a DOM canvas', () => {

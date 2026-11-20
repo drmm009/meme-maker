@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { ChevronLeft, Download, Palette, Redo2, Undo2, Wand2 } from 'lucide-react';
+import { ChevronLeft, Download, Redo2, Undo2 } from 'lucide-react';
 import { createMemeEditorStore, MemeEditorStoreContext, useMemeEditorStore, useMemeEditorHistory } from './editor/store/useMemeEditorStore';
 import { createEditorUiStore, EditorUiStoreContext, useEditorUiStore, useEditorUiStoreApi } from './editor/store/useEditorUiStore';
 import { useEditorSetup } from './editor/hooks/useEditorSetup';
@@ -71,7 +71,6 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, c
   const dockTab = useEditorUiStore((s) => s.dockTab);
   const mode = useEditorUiStore((s) => s.mode);
   const drawTool = useEditorUiStore((s) => s.drawTool);
-  const openFullEditor = useEditorUiStore((s) => s.openFullEditor);
 
   // Native Multi-Panel Layout Support
   const isNativeLayout = template?.isNativeLayout || false;
@@ -212,32 +211,25 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, c
         </header>
       )}
 
-      {/* The AI Meme maker's editing page: Back to its page (the same meme, idea and vibe), the title,
-          and undo and redo on the right. */}
+      {/* The AI Meme maker's editing page, as Sticker Studio's (stickerStudioPage.css, in its violet:
+          aiMemeStudio.css): Back to its page (the same meme, idea and vibe) on the left, undo and redo
+          in one capsule in the middle, Export on the right. The title and where it stands are said
+          for screen readers only. */}
       {isAiEdit && (
-        <header className="ie-stk-header ie-stk-header--step3 ie-aim-edit-header">
-          <button
-            type="button"
-            className="ie-stk-back-btn"
-            onClick={() => actions.handleChangeMeme(aiRestart(activeTemplate))}
-            aria-label="Back"
-            title="Back"
-          >
+        <header className="sst-header sst-header--edit aie-header">
+          <button type="button" className="sst-back" onClick={() => actions.handleChangeMeme(aiRestart(activeTemplate))} aria-label="Back" title="Back">
             <ChevronLeft size={22} strokeWidth={2.4} />
           </button>
-          <div className="ie-stk-header-main">
-            <h1 className="ie-stk-title ui-topbar-title">
-              <Wand2 size={16} strokeWidth={2.4} className="ie-aim-title-icon" aria-hidden="true" />
-              <span>AI Meme Studio</span>
-            </h1>
+          <div className="sst-history" role="group" aria-label="History">
+            <button type="button" onClick={handleUndo} disabled={!canUndo} aria-label="Undo" title="Undo"><Undo2 size={19} strokeWidth={2.2} /></button>
+            <button type="button" onClick={handleRedo} disabled={!canRedo} aria-label="Redo" title="Redo"><Redo2 size={19} strokeWidth={2.2} /></button>
           </div>
-          <div className="ie-aim-history">
-            <button type="button" onClick={handleUndo} disabled={!canUndo} aria-label="Undo" title="Undo"><Undo2 size={19} /></button>
-            <button type="button" onClick={handleRedo} disabled={!canRedo} aria-label="Redo" title="Redo"><Redo2 size={19} /></button>
-          </div>
-          <p className="ie-stk-status ui-topbar-subtitle" aria-live="polite">
-            Ready to export
-          </p>
+          <button type="button" className="sst-export" onClick={toggleExport} aria-pressed={sheet === 'export'}>
+            <Download size={17} strokeWidth={2.4} aria-hidden="true" />
+            Export
+          </button>
+          <h1 className="sst-status ui-topbar-title">AI Meme Studio</h1>
+          <p className="sst-status ui-topbar-subtitle" aria-live="polite">Ready to export</p>
         </header>
       )}
 
@@ -265,13 +257,6 @@ function MemeEditorContent({ template, onBack, onSaveToGallery, restoredDraft, c
             onDropMedia={media.handleDropMedia}
             onAddPhoto={handleFileUploadImageLayer}
           />
-          {/* The AI meme's board carries Move to editor as a pill on its corner. */}
-          {isAiEdit && (
-            <button type="button" className="ie-stk-pill-btn ie-stk-to-editor" onClick={openFullEditor} title="Keep editing in the full editor">
-              <Palette size={14} aria-hidden="true" />
-              <span className="ie-stk-pill-text">Move to editor</span>
-            </button>
-          )}
         </div>
 
         <EditorPanels actions={actions} onBack={onBack} />
