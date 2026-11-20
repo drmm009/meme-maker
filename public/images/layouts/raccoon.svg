@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" preserveAspectRatio="xMidYMid slice">
+  <!-- Choose Canvas Layout: a sneaky raccoon, drawn for the app. -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#b7a3ef"/>
+      <stop offset="1" stop-color="#6a4fc4"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="400" fill="url(#bg)"/>
+  <circle cx="86" cy="86" r="34" fill="#fff4c2" opacity="0.85"/>
+  <circle cx="98" cy="78" r="30" fill="url(#bg)"/>
+  <!-- body -->
+  <path d="M96 400 C100 320 146 290 200 290 C254 290 300 320 304 400 Z" fill="#8a8d96"/>
+  <path d="M160 400 C164 344 180 320 200 320 C220 320 236 344 240 400 Z" fill="#d6d8de"/>
+  <!-- ears -->
+  <path d="M116 168 L126 94 L180 132 Z" fill="#6d7079"/>
+  <path d="M132 154 L138 114 L166 134 Z" fill="#2c2e35"/>
+  <path d="M284 168 L274 94 L220 132 Z" fill="#6d7079"/>
+  <path d="M268 154 L262 114 L234 134 Z" fill="#2c2e35"/>
+  <!-- head -->
+  <ellipse cx="200" cy="204" rx="108" ry="90" fill="#9ea1aa"/>
+  <path d="M100 222 C130 250 166 262 200 262 C234 262 270 250 300 222 C290 270 248 296 200 296 C152 296 110 270 100 222 Z" fill="#e8e9ee"/>
+  <!-- white brows over the black mask -->
+  <path d="M120 176 C150 150 180 156 196 176" stroke="#f2f3f6" stroke-width="12" stroke-linecap="round" fill="none"/>
+  <path d="M204 176 C220 156 250 150 280 176" stroke="#f2f3f6" stroke-width="12" stroke-linecap="round" fill="none"/>
+  <path d="M112 200 C126 176 170 172 198 196 C186 222 140 228 112 200 Z" fill="#26282e"/>
+  <path d="M288 200 C274 176 230 172 202 196 C214 222 260 228 288 200 Z" fill="#26282e"/>
+  <!-- shifty eyes -->
+  <circle cx="158" cy="198" r="12" fill="#fff"/>
+  <circle cx="242" cy="198" r="12" fill="#fff"/>
+  <circle cx="152" cy="199" r="7" fill="#111"/>
+  <circle cx="236" cy="199" r="7" fill="#111"/>
+  <!-- nose and a sly grin -->
+  <ellipse cx="200" cy="236" rx="14" ry="10" fill="#26282e"/>
+  <path d="M176 262 C190 272 214 272 228 258" stroke="#26282e" stroke-width="5" stroke-linecap="round" fill="none"/>
+</svg>

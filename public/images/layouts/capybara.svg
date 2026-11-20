@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" preserveAspectRatio="xMidYMid slice">
+  <!-- Choose Canvas Layout: a perfectly calm capybara with an orange on its head, drawn for the app. -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#bfe8b2"/>
+      <stop offset="1" stop-color="#6cbf7a"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="400" fill="url(#bg)"/>
+  <ellipse cx="200" cy="420" rx="260" ry="90" fill="#4fa865"/>
+  <!-- body -->
+  <path d="M88 400 C92 318 140 286 200 286 C260 286 308 318 312 400 Z" fill="#a8774c"/>
+  <!-- ears -->
+  <ellipse cx="140" cy="136" rx="20" ry="16" fill="#8a5f3a"/>
+  <ellipse cx="260" cy="136" rx="20" ry="16" fill="#8a5f3a"/>
+  <!-- head: a long rounded block -->
+  <rect x="112" y="128" width="176" height="180" rx="76" fill="#b5835a"/>
+  <rect x="140" y="214" width="120" height="92" rx="46" fill="#9c6c45"/>
+  <!-- the orange -->
+  <circle cx="200" cy="112" r="34" fill="#ff9a2e"/>
+  <circle cx="190" cy="102" r="9" fill="#ffc27a"/>
+  <path d="M200 78 C206 68 220 66 228 70 C222 80 210 82 200 78 Z" fill="#4c9a3c"/>
+  <!-- calm, nearly shut eyes -->
+  <path d="M146 192 C154 200 170 200 178 192" stroke="#3a2416" stroke-width="6" stroke-linecap="round" fill="none"/>
+  <path d="M222 192 C230 200 246 200 254 192" stroke="#3a2416" stroke-width="6" stroke-linecap="round" fill="none"/>
+  <!-- nose and mouth -->
+  <ellipse cx="182" cy="240" rx="8" ry="11" fill="#3a2416"/>
+  <ellipse cx="218" cy="240" rx="8" ry="11" fill="#3a2416"/>
+  <path d="M184 276 C192 282 208 282 216 276" stroke="#3a2416" stroke-width="5" stroke-linecap="round" fill="none"/>
+  <ellipse cx="146" cy="226" rx="12" ry="7" fill="#e89a7e" opacity="0.4"/>
+  <ellipse cx="254" cy="226" rx="12" ry="7" fill="#e89a7e" opacity="0.4"/>
+</svg>

@@ -7,8 +7,10 @@
 // Meme formats (Classic, Subtitle, Poster, Breaking news) and Collages (Top & bottom, Then & now,
 // Side by side, 2 × 2 + caption); and Grid layouts last, Custom Grid at their end (its rows and
 // columns set in a panel under the slider), without the grids the collages already have.
-// Every preview is a frame of the chosen shape showing the same picture (public/images/
-// layout-preview.svg, drawn for the app) laid out as the layout opens, with its words in place.
+// Every preview is a frame of the chosen shape laid out as the layout opens, with its words in
+// place, showing cartoon animal characters drawn for the app (public/images/layouts/): a side-eyeing
+// shiba on the Caption layouts, an unimpressed cat on the Meme formats, and the collages and grids
+// a different animal in each panel (a capybara, a hamster, a penguin, a raccoon, then round again).
 import { useEffect, useRef, useState } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
 import { ChevronRight, Grid3x3, ImageIcon, Minus, Play, Plus } from 'lucide-react';
@@ -193,9 +195,15 @@ function Frame({ ratio, fill = 0.76, className = '', children }: { ratio: number
 }
 
 // The picture every preview shows, cropped to fill its spot.
-const PREVIEW = './images/layout-preview.svg';
+const PIC = (name: string) => `./images/layouts/${name}.svg`;
+const SHIBA = PIC('shiba');
+const CAT = PIC('grumpy-cat');
+// The panels of a collage or a grid, in turn.
+const CAST = ['capybara', 'hamster', 'penguin', 'raccoon', 'shiba', 'grumpy-cat'].map(PIC);
+const castAt = (i: number) => CAST[i % CAST.length];
+const PREVIEW = CAT;
 // The caption layouts' own picture (a beach), so that section reads apart from the rest.
-const CAPTION_PREVIEW = './images/layout-preview-beach.svg';
+const CAPTION_PREVIEW = SHIBA;
 const Photo = ({ src = PREVIEW }: { src?: string }) => <img className="clb-photo" src={src} alt="" draggable={false} />;
 
 // A small play mark over a picture, for a video meme's previews.
@@ -210,7 +218,7 @@ const at = (r: { x: number; y: number; width: number; height: number }): CSSProp
 
 // A grid's panels in a frame, each showing the picture (and a play mark for video, where it fits).
 // `labels` puts a line of meme text near each panel's foot, as a collage starts.
-function PanelsArt({ layout, ratio, video, labels }: { layout: PanelLayout; ratio: number; video: boolean; labels?: string[] }) {
+function PanelsArt({ layout, ratio, video, labels, first = 0 }: { layout: PanelLayout; ratio: number; video: boolean; labels?: string[]; first?: number }) {
   const rects = panelRects(layout);
   return (
     <Frame ratio={ratio}>
@@ -219,7 +227,7 @@ function PanelsArt({ layout, ratio, video, labels }: { layout: PanelLayout; rati
         return (
           <span key={i} className="clb-panel" style={at(r)}>
             <span className="clb-panel-fill">
-              <Photo />
+              <Photo src={castAt(first + i)} />
               {video && room >= 0.22 && <PlayBadge />}
               {labels?.[i] && <span className="clb-meme clb-meme--foot">{labels[i]}</span>}
             </span>
@@ -359,7 +367,7 @@ const COLLAGES: Format[] = [
     id: 'collage-top-bottom',
     title: 'Top & bottom',
     detail: '2 photos, text on each',
-    art: (ratio) => <PanelsArt layout={{ id: '2-vert', slots: 2 }} ratio={ratio} video={false} labels={['YOUR TEXT', 'GOES HERE']} />,
+    art: (ratio) => <PanelsArt layout={{ id: '2-vert', slots: 2 }} ratio={ratio} video={false} labels={['YOUR TEXT', 'GOES HERE']} first={2} />,
     make: (aspect) => {
       const stamp = Date.now();
       return {
@@ -375,7 +383,7 @@ const COLLAGES: Format[] = [
     id: 'collage-then-now',
     title: 'Then & now',
     detail: 'How it started / going',
-    art: (ratio) => <PanelsArt layout={{ id: '2-vert', slots: 2 }} ratio={ratio} video={false} labels={['HOW IT STARTED', "HOW IT'S GOING"]} />,
+    art: (ratio) => <PanelsArt layout={{ id: '2-vert', slots: 2 }} ratio={ratio} video={false} labels={['HOW IT STARTED', "HOW IT'S GOING"]} first={1} />,
     make: (aspect) => {
       const stamp = Date.now();
       return {
@@ -393,7 +401,7 @@ const COLLAGES: Format[] = [
     detail: '2 photos, caption under',
     art: (ratio) => (
       <Frame ratio={ratio} className="clb-frame--caption clb-frame--white">
-        <span className="clb-picture clb-picture--split"><span><Photo /></span><span><Photo /></span></span>
+        <span className="clb-picture clb-picture--split"><span><Photo src={SHIBA} /></span><span><Photo src={CAT} /></span></span>
         <span className="clb-bar clb-bar--white"><span className="clb-plain">Your text</span></span>
       </Frame>
     ),
@@ -415,7 +423,7 @@ const COLLAGES: Format[] = [
     art: (ratio) => (
       <Frame ratio={ratio} className="clb-frame--caption clb-frame--white">
         <span className="clb-bar clb-bar--white"><span className="clb-plain">Your text</span></span>
-        <span className="clb-picture clb-picture--quad"><span><Photo /></span><span><Photo /></span><span><Photo /></span><span><Photo /></span></span>
+        <span className="clb-picture clb-picture--quad">{[0, 1, 2, 3].map((i) => <span key={i}><Photo src={castAt(i)} /></span>)}</span>
       </Frame>
     ),
     make: (aspect) => {
@@ -605,10 +613,10 @@ export default function CustomLayoutBuilder({
         <p className="ios-section-sub">{isVideo ? 'Clips side by side, stacked or in a grid' : 'Photos side by side, stacked or in a grid'}</p>
         <Slider>
           {[
-            ...grids.map((g) => (
+            ...grids.map((g, n) => (
               <LayoutCard
                 key={g.id}
-                art={<PanelsArt layout={g} ratio={aspect.ratio} video={isVideo} />}
+                art={<PanelsArt layout={g} ratio={aspect.ratio} video={isVideo} first={n} />}
                 title={g.title}
                 detail={g.detail}
                 onClick={() => openGrid({ id: g.id, slots: g.slots, name: layoutName(g.id, `${g.title} (${g.detail})`) })}

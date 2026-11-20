@@ -121,10 +121,16 @@ describe('CustomLayoutBuilder', () => {
     expect(cards('Meme formats')).toEqual(['Classic', 'Subtitle', 'Poster', 'Breaking news']);
     expect(cards('Collages')).toEqual(['Top & bottom', 'Then & now', 'Side by side', '2 × 2 + caption']);
     expect(document.querySelectorAll('.clb-photo').length).toBeGreaterThan(20);
-    // The caption layouts have their own picture (a beach); everything else the sunset.
+    // Each section has its own animal characters: a shiba on the captions, a cat on the formats, and
+    // the collages and grids a different animal in each panel.
     const srcs = (heading) => new Set([...screen.getByRole('heading', { name: heading }).parentElement.querySelectorAll('.clb-photo')].map((i) => i.getAttribute('src')));
-    expect(srcs('Caption layouts')).toEqual(new Set(['./images/layout-preview-beach.svg']));
-    for (const heading of ['Meme formats', 'Collages', 'Grid layouts']) expect(srcs(heading)).toEqual(new Set(['./images/layout-preview.svg']));
+    expect(srcs('Caption layouts')).toEqual(new Set(['./images/layouts/shiba.svg']));
+    expect(srcs('Meme formats')).toEqual(new Set(['./images/layouts/grumpy-cat.svg']));
+    expect(srcs('Collages').size).toBeGreaterThanOrEqual(4);
+    expect(srcs('Grid layouts').size).toBeGreaterThanOrEqual(5);
+    for (const heading of ['Caption layouts', 'Meme formats', 'Collages', 'Grid layouts']) {
+      for (const src of srcs(heading)) expect(src).toMatch(/^\.\/images\/layouts\/[a-z-]+\.svg$/);
+    }
     // Every section is one line of cards that slides: Grid layouts, Caption layouts, Meme formats, Collages.
     expect(document.querySelectorAll('.clb-slider')).toHaveLength(4);
     unmount();

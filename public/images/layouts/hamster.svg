@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" preserveAspectRatio="xMidYMid slice">
+  <!-- Choose Canvas Layout: a shocked hamster, drawn for the app. -->
+  <defs>
+    <radialGradient id="bg" cx="0.5" cy="0.45" r="0.75">
+      <stop offset="0" stop-color="#ffd9e6"/>
+      <stop offset="1" stop-color="#f28bb0"/>
+    </radialGradient>
+  </defs>
+  <rect width="400" height="400" fill="url(#bg)"/>
+  <g stroke="#ffffff" stroke-width="6" stroke-linecap="round" opacity="0.7">
+    <path d="M86 112 L108 128"/>
+    <path d="M74 154 L100 160"/>
+    <path d="M314 112 L292 128"/>
+    <path d="M326 154 L300 160"/>
+  </g>
+  <!-- body -->
+  <ellipse cx="200" cy="300" rx="122" ry="110" fill="#f0b46a"/>
+  <ellipse cx="200" cy="324" rx="80" ry="78" fill="#fff4e4"/>
+  <!-- ears -->
+  <circle cx="134" cy="128" r="26" fill="#e09a4e"/>
+  <circle cx="134" cy="128" r="14" fill="#f7b9b9"/>
+  <circle cx="266" cy="128" r="26" fill="#e09a4e"/>
+  <circle cx="266" cy="128" r="14" fill="#f7b9b9"/>
+  <!-- head -->
+  <ellipse cx="200" cy="196" rx="100" ry="86" fill="#f0b46a"/>
+  <ellipse cx="200" cy="230" rx="70" ry="52" fill="#fff4e4"/>
+  <!-- wide eyes -->
+  <circle cx="160" cy="186" r="22" fill="#fff"/>
+  <circle cx="240" cy="186" r="22" fill="#fff"/>
+  <circle cx="160" cy="188" r="13" fill="#24160e"/>
+  <circle cx="240" cy="188" r="13" fill="#24160e"/>
+  <circle cx="165" cy="182" r="4" fill="#fff"/>
+  <circle cx="245" cy="182" r="4" fill="#fff"/>
+  <!-- nose and the open mouth -->
+  <ellipse cx="200" cy="220" rx="9" ry="6" fill="#d9707a"/>
+  <ellipse cx="200" cy="248" rx="13" ry="17" fill="#7a2e36"/>
+  <ellipse cx="200" cy="256" rx="8" ry="6" fill="#e58a96"/>
+  <!-- paws up -->
+  <ellipse cx="142" cy="286" rx="18" ry="14" fill="#f7cfa0"/>
+  <ellipse cx="258" cy="286" rx="18" ry="14" fill="#f7cfa0"/>
+  <ellipse cx="136" cy="230" rx="14" ry="8" fill="#ff8f8f" opacity="0.4"/>
+  <ellipse cx="264" cy="230" rx="14" ry="8" fill="#ff8f8f" opacity="0.4"/>
+</svg>

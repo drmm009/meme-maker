@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" preserveAspectRatio="xMidYMid slice">
+  <!-- Choose Canvas Layout's Meme formats: an unimpressed cat, drawn for the app. -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#7fd3d8"/>
+      <stop offset="1" stop-color="#3b8fa6"/>
+    </linearGradient>
+    <radialGradient id="face" cx="0.5" cy="0.6" r="0.6">
+      <stop offset="0" stop-color="#fbf3e6"/>
+      <stop offset="1" stop-color="#e2cfb4"/>
+    </radialGradient>
+  </defs>
+  <rect width="400" height="400" fill="url(#bg)"/>
+  <circle cx="320" cy="84" r="60" fill="#ffffff" opacity="0.12"/>
+  <!-- body -->
+  <path d="M92 400 C98 320 146 290 200 290 C254 290 302 320 308 400 Z" fill="#d9c3a3"/>
+  <path d="M150 400 C156 342 176 318 200 318 C224 318 244 342 250 400 Z" fill="#f6ecdd"/>
+  <!-- ears -->
+  <path d="M112 176 L118 84 L184 130 Z" fill="#8a6a4e"/>
+  <path d="M128 160 L132 108 L170 134 Z" fill="#f2b8b0"/>
+  <path d="M288 176 L282 84 L216 130 Z" fill="#8a6a4e"/>
+  <path d="M272 160 L268 108 L230 134 Z" fill="#f2b8b0"/>
+  <!-- head -->
+  <ellipse cx="200" cy="200" rx="108" ry="94" fill="url(#face)"/>
+  <!-- dark brown cap and mask round the eyes -->
+  <path d="M120 152 C140 112 174 104 200 104 C226 104 260 112 280 152 C258 150 240 158 228 176 L200 210 L172 176 C160 158 142 150 120 152 Z" fill="#8a6a4e"/>
+  <path d="M184 112 L200 160 L216 112" stroke="#6b4f39" stroke-width="5" fill="none" stroke-linecap="round"/>
+  <!-- half-shut eyes -->
+  <ellipse cx="160" cy="194" rx="22" ry="16" fill="#9fd4f2"/>
+  <ellipse cx="240" cy="194" rx="22" ry="16" fill="#9fd4f2"/>
+  <ellipse cx="160" cy="198" rx="6" ry="11" fill="#1d2633"/>
+  <ellipse cx="240" cy="198" rx="6" ry="11" fill="#1d2633"/>
+  <path d="M136 186 C150 182 172 182 184 188 L184 178 L136 178 Z" fill="#8a6a4e"/>
+  <path d="M216 188 C228 182 250 182 264 186 L264 178 L216 178 Z" fill="#8a6a4e"/>
+  <path d="M136 187 C150 183 172 183 184 189" stroke="#4b3626" stroke-width="4" stroke-linecap="round" fill="none"/>
+  <path d="M216 189 C228 183 250 183 264 187" stroke="#4b3626" stroke-width="4" stroke-linecap="round" fill="none"/>
+  <!-- muzzle, nose and the frown -->
+  <ellipse cx="178" cy="248" rx="28" ry="22" fill="#fffaf2"/>
+  <ellipse cx="222" cy="248" rx="28" ry="22" fill="#fffaf2"/>
+  <path d="M190 228 L210 228 L200 240 Z" fill="#d98a8a"/>
+  <path d="M200 240 L200 252" stroke="#4b3626" stroke-width="4" stroke-linecap="round"/>
+  <path d="M168 272 C180 258 220 258 232 272" stroke="#4b3626" stroke-width="5" stroke-linecap="round" fill="none"/>
+  <!-- whiskers -->
+  <g stroke="#ffffff" stroke-width="3" stroke-linecap="round" opacity="0.9">
+    <path d="M150 246 L96 236"/>
+    <path d="M150 256 L94 260"/>
+    <path d="M250 246 L304 236"/>
+    <path d="M250 256 L306 260"/>
+  </g>
+</svg>
