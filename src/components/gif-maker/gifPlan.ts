@@ -117,3 +117,9 @@ export function clock(s: number): string {
   const rest = safe - m * 60;
   return `${m}:${rest < 10 ? '0' : ''}${rest.toFixed(1)}`;
 }
+
+// The GIF's file name: its name in lower case, words joined by dashes (meme-<time> when it has none).
+export const gifFileName = (name: string) => {
+  const slug = name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 48);
+  return `${slug || `meme-${Date.now()}`}.gif`;
+};

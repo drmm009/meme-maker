@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { clock, defaultTrim, gifDimensions, gifSeconds, moveTrim, slideTrim, videoGifArgs, wrapCaption, MAX_CLIP_S } from './gifPlan';
+import { MAX_CLIP_S, clock, defaultTrim, gifDimensions, gifFileName, gifSeconds, moveTrim, slideTrim, videoGifArgs, wrapCaption } from './gifPlan';
 
 describe('gifPlan', () => {
   it('starts a video on its first five seconds, or the whole of a shorter one', () => {
@@ -49,5 +49,15 @@ describe('gifPlan', () => {
     expect(wrapCaption('   ', 100, measure)).toEqual([]);
     expect(clock(3.5)).toBe('0:03.5');
     expect(clock(65)).toBe('1:05.0');
+  });
+});
+
+describe('gifFileName', () => {
+  it('turns the name into a dashed lower-case file name', () => {
+    expect(gifFileName('When it WORKS!')).toBe('when-it-works.gif');
+    expect(gifFileName('  My GIF  ')).toBe('my-gif.gif');
+  });
+  it('falls back to meme-<time> for a name with no letters or digits', () => {
+    expect(gifFileName('  !!  ')).toMatch(/^meme-\d+\.gif$/);
   });
 });

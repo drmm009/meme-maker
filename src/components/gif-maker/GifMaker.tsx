@@ -1,17 +1,21 @@
 // The GIF maker: a video clip made into a looping GIF. A page of its own (App's 'gif' view, link
-// #/gif), in the Stickers page's look: the Back chevron and the title; one card that takes the video
-// (empty, a card like Face Swap's Your face that takes a tap or a drop; with one, the live preview with
-// the caption on it and a remove button); under it Upload, Record and Clips (the meme clips the video
-// editor offers, downloaded on a pick) until there is a video, then the clip's trim (a filmstrip with two handles, at
-// most 10 seconds), the caption (top or bottom), and Speed, Loop and Size, each in its grey card;
-// Make GIF pinned at the bottom, opening a sheet with the GIF to download, share or save to My Studio.
+// #/gif), in Sticker Studio's design (stickerStudioPage.css) with the GIF maker's lime (#c4f04d, its
+// colour in the Creator sheet) for its accent: a round Back button and the title centred with a bare
+// lime mark; one stage (empty, a tilted film frame that takes a tap or a drop; with a video, the live
+// preview with the caption on it, Change and Remove on frosted chips, a lime sweep while the GIF is
+// made); under it Upload, Record and Clips (the meme clips the video editor offers, downloaded on a
+// pick) as three tiles until there is a video, then the clip's trim (a filmstrip with two lime
+// handles, at most 10 seconds), the caption (top or bottom), and Speed, Loop and Size, each in its
+// card. Export (it makes the GIF): with no video a wide grey button at the bottom over a line saying
+// what comes first; with one, a lime pill on the right of the header (as Sticker Studio's Export),
+// opening Your GIF: the GIF, its name to edit, Download, Share and Save to My Studio.
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ChangeEvent, CSSProperties, DragEvent, KeyboardEvent, PointerEvent as ReactPointerEvent } from 'react';
-import { Camera, Check, ChevronLeft, Clapperboard, Download, FolderHeart, Gauge, ImagePlay, Maximize2, Repeat, Scissors, Share2, Type, UploadCloud, Video, X } from 'lucide-react';
-import { EmptyTile, PickerSheet } from '../editor/panels/MakerPage';
+import { Camera, Check, ChevronLeft, Clapperboard, Download, FolderHeart, Gauge, HardDrive, ImagePlay, Maximize2, Pencil, RefreshCw, Repeat, Scissors, Share2, Timer, Type, UploadCloud, Video, X } from 'lucide-react';
+import { PickerSheet } from '../editor/panels/MakerPage';
 import ClipsSheet from '../video-editor/ClipsSheet';
 import type { VideoClip } from '../video-editor/ClipsSheet';
-import { MAX_CLIP_S, clock, defaultTrim, gifDimensions, gifSeconds, moveTrim, slideTrim } from './gifPlan';
+import { MAX_CLIP_S, clock, defaultTrim, gifDimensions, gifFileName, gifSeconds, moveTrim, slideTrim } from './gifPlan';
 import type { CaptionPlace, GifSize, Loop, Trim } from './gifPlan';
 import { CAPTION_FONT, makeGif } from './renderGif';
 import { downloadImageHelper } from '../../utils/downloadHelper';
@@ -104,6 +108,8 @@ export default function GifMaker({ onBack, onSaveToGallery }: { onBack: () => vo
   const [result, setResult] = useState<Result | null>(null);
   const [saved, setSaved] = useState(false);
   const [saveFailed, setSaveFailed] = useState(false);
+  // The GIF's name (its file's and My Studio's): the caption, or My GIF, until it is edited.
+  const [name, setName] = useState('');
   const [dragging, setDragging] = useState(false);
   const [library, setLibrary] = useState(false);
   const [fetching, setFetching] = useState<string | null>(null);
@@ -175,6 +181,7 @@ export default function GifMaker({ onBack, onSaveToGallery }: { onBack: () => vo
       setResult({ blob, url: keep(URL.createObjectURL(blob)), ...dims, seconds });
       setSaved(false);
       setSaveFailed(false);
+      setName(caption.trim() || 'My GIF');
     } catch {
       setError("The GIF couldn't be made. Try a shorter clip.");
     } finally {
@@ -182,44 +189,77 @@ export default function GifMaker({ onBack, onSaveToGallery }: { onBack: () => vo
     }
   };
 
+  const makeButton = (top: boolean) => (
+    <button type="button" className={`gm-make${top ? ' gm-make--top' : ''}`} disabled={!video || making} onClick={() => void make()}>
+      <Download size={top ? 16 : 18} strokeWidth={2.4} aria-hidden="true" />
+      <span>{making ? `Exporting… ${Math.round((progress ?? 0) * 100)}%` : 'Export'}</span>
+    </button>
+  );
+
   return (
-    <div className="ui-theme gm">
+    <div className={`ui-theme gm${video ? ' gm--edit' : ''}`}>
       <header className="gm-header">
         <button type="button" className="gm-back" onClick={onBack} aria-label="Back" title="Back">
           <ChevronLeft size={22} strokeWidth={2.4} />
         </button>
         <h1 className="gm-title ui-topbar-title">
-          <ImagePlay size={17} strokeWidth={2.3} className="gm-title-icon" aria-hidden="true" />
+          <span className="gm-title-icon" aria-hidden="true"><ImagePlay size={17} strokeWidth={2.4} /></span>
           <span>GIF Studio</span>
         </h1>
         {/* Said for screen readers (and the tests): where the GIF stands. */}
         <p className="gm-status ui-topbar-subtitle" aria-live="polite">{['Add a video', 'Ready to make', 'Ready to export'][step]}</p>
+        {/* Once there is a video, Export is on the right of the header, as Sticker Studio's. */}
+        {video && makeButton(true)}
       </header>
 
       <main className="gm-body" aria-label="Make a GIF">
-        <div className="gm-stage" onDragOver={onDragOver} onDragLeave={onDragLeave} onDrop={onDrop}>
+        {/* The stage: a video dropped anywhere on it becomes the clip. */}
+        <div
+          className={`gm-stage${dragging ? ' is-drag-over' : ''}${video ? ' has-video' : ''}${making ? ' is-busy' : ''}`}
+          onDragOver={onDragOver}
+          onDragLeave={onDragLeave}
+          onDrop={onDrop}
+        >
           {video ? (
             <>
-              <Preview video={video} trim={trim} speed={speed} loop={loop} caption={caption} place={place} progress={progress} />
+              <Preview video={video} trim={trim} speed={speed} loop={loop} caption={caption} place={place} />
               {!making && (
-                <button type="button" className="gm-remove" aria-label="Remove the video" onClick={startOver}>
-                  <X size={14} strokeWidth={2.6} aria-hidden="true" />
-                </button>
+                <div className="gm-stage-tools">
+                  <label className="gm-chip">
+                    <RefreshCw size={14} strokeWidth={2.4} aria-hidden="true" />
+                    Change
+                    <input type="file" accept="video/*" aria-label="Change the video" onChange={pickVideo} hidden />
+                  </label>
+                  <button type="button" className="gm-chip gm-chip--round" aria-label="Remove the video" onClick={startOver}>
+                    <X size={15} strokeWidth={2.6} aria-hidden="true" />
+                  </button>
+                </div>
+              )}
+              {making && (
+                <div className="gm-busy" role="status">
+                  <span className="gm-sweep" aria-hidden="true" />
+                  <span className="gm-busy-pill"><span className="gm-spinner" aria-hidden="true" />Making your GIF… {Math.round((progress ?? 0) * 100)}%</span>
+                </div>
               )}
             </>
+          ) : fetching ? (
+            <div className="gm-empty" role="status">
+              <span className="gm-spinner gm-spinner--big" aria-hidden="true" />
+              <span className="gm-empty-title">Getting the clip…</span>
+              <span className="gm-empty-hint">{fetching}</span>
+            </div>
           ) : (
-            <label className={`ie-swap-tile is-empty gm-video-tile${dragging ? ' is-drag-over' : ''}`}>
-              {/* As Face Swap's Your face card: the icon in a soft orange circle, what goes in, Choose. */}
-              {fetching ? (
-                <span className="ie-swap-empty" role="status">
-                  <span className="ie-swap-spinner" aria-hidden="true" />
-                  <span className="ie-swap-empty-title gm-fetching">Getting the clip…</span>
-                  <span className="ie-swap-empty-hint">{fetching}</span>
+            <label className="gm-empty">
+              {/* A blank film frame, tilted: a thick white edge, sprocket holes and a lime GIF tag. */}
+              <span className="gm-empty-art" aria-hidden="true">
+                <span className="gm-empty-frame">
+                  <Video size={34} strokeWidth={1.8} />
+                  <span className="gm-empty-tag">GIF</span>
                 </span>
-              ) : (
-                <EmptyTile Icon={Video} title={dragging ? 'Drop it here' : 'Add a video'} hint={`Up to ${MAX_CLIP_S} seconds of it becomes your GIF`} />
-              )}
-              <input type="file" accept="video/*" aria-label="Choose a video" onChange={pickVideo} disabled={Boolean(fetching)} hidden />
+              </span>
+              <span className="gm-empty-title">{dragging ? 'Drop it here' : 'Turn a video into a GIF'}</span>
+              <span className="gm-empty-hint">Up to {MAX_CLIP_S} seconds of a clip, looping forever</span>
+              <input type="file" accept="video/*" aria-label="Choose a video" onChange={pickVideo} hidden />
             </label>
           )}
         </div>
@@ -227,28 +267,29 @@ export default function GifMaker({ onBack, onSaveToGallery }: { onBack: () => vo
         {error && <p className="gm-error" role="alert">{error}</p>}
 
         {!video ? (
+          /* Where the video comes from: three tiles, each a bare lime icon over its name. */
           <div className="gm-sources" role="group" aria-label="Add a video">
-            <label className="gm-source">
-              <UploadCloud size={22} aria-hidden="true" />
-              Upload
-              <input type="file" accept="video/*" aria-label="Upload a video" onChange={pickVideo} hidden />
+            <label className={`gm-source${fetching ? ' is-disabled' : ''}`}>
+              <span className="gm-source-icon" aria-hidden="true"><UploadCloud size={20} strokeWidth={2.2} /></span>
+              <span className="gm-source-label">Upload</span>
+              <input type="file" accept="video/*" aria-label="Upload a video" onChange={pickVideo} disabled={Boolean(fetching)} hidden />
             </label>
-            <label className="gm-source">
-              <Camera size={22} aria-hidden="true" />
-              Record
-              <input type="file" accept="video/*" capture="environment" aria-label="Record a video" onChange={pickVideo} hidden />
+            <label className={`gm-source${fetching ? ' is-disabled' : ''}`}>
+              <span className="gm-source-icon" aria-hidden="true"><Camera size={20} strokeWidth={2.2} /></span>
+              <span className="gm-source-label">Record</span>
+              <input type="file" accept="video/*" capture="environment" aria-label="Record a video" onChange={pickVideo} disabled={Boolean(fetching)} hidden />
             </label>
             <button type="button" className="gm-source" aria-label="Clips" disabled={Boolean(fetching)} onClick={() => setLibrary(true)}>
-              <Clapperboard size={22} aria-hidden="true" />
-              Clips
+              <span className="gm-source-icon" aria-hidden="true"><Clapperboard size={20} strokeWidth={2.2} /></span>
+              <span className="gm-source-label">Clips</span>
             </button>
           </div>
         ) : (
           <>
             <TrimBar video={video} trim={trim} onChange={setTrim} disabled={making} />
 
-            <div className="gm-panel gm-caption">
-              <Type size={16} className="gm-row-icon" aria-hidden="true" />
+            <div className="gm-card gm-caption">
+              <Type size={18} strokeWidth={2.3} className="gm-row-icon" aria-hidden="true" />
               <input
                 className="gm-caption-field"
                 type="text"
@@ -262,17 +303,17 @@ export default function GifMaker({ onBack, onSaveToGallery }: { onBack: () => vo
               <Segmented label="Caption place" options={PLACES} value={place} onChange={setPlace} disabled={making} />
             </div>
 
-            <div className="gm-panel gm-settings">
+            <div className="gm-card gm-settings">
               <div className="gm-setting">
-                <span className="gm-setting-name"><Gauge size={16} className="gm-row-icon" aria-hidden="true" />Speed</span>
+                <span className="gm-setting-name"><Gauge size={18} strokeWidth={2.3} className="gm-row-icon" aria-hidden="true" />Speed</span>
                 <Segmented label="Speed" options={SPEEDS} value={speed} onChange={setSpeed} disabled={making} />
               </div>
               <div className="gm-setting">
-                <span className="gm-setting-name"><Repeat size={16} className="gm-row-icon" aria-hidden="true" />Loop</span>
+                <span className="gm-setting-name"><Repeat size={18} strokeWidth={2.3} className="gm-row-icon" aria-hidden="true" />Loop</span>
                 <Segmented label="Loop" options={LOOPS} value={loop} onChange={setLoop} disabled={making} />
               </div>
               <div className="gm-setting">
-                <span className="gm-setting-name"><Maximize2 size={16} className="gm-row-icon" aria-hidden="true" />Size <small>{dims.w} × {dims.h}</small></span>
+                <span className="gm-setting-name"><Maximize2 size={18} strokeWidth={2.3} className="gm-row-icon" aria-hidden="true" />Size <small>{dims.w} × {dims.h}</small></span>
                 <Segmented label="Size" options={SIZES} value={size} onChange={setSize} disabled={making} />
               </div>
             </div>
@@ -280,25 +321,26 @@ export default function GifMaker({ onBack, onSaveToGallery }: { onBack: () => vo
         )}
       </main>
 
-      <div className="gm-actions">
-        <button type="button" className="gm-make" disabled={!video || making} onClick={() => void make()}>
-          <ImagePlay aria-hidden="true" />
-          {making ? `Making GIF… ${Math.round((progress ?? 0) * 100)}%` : 'Make GIF'}
-        </button>
-      </div>
+      {/* Before there is a video, Export waits at the bottom, grey, over what comes first. */}
+      {!video && (
+        <div className="gm-actions">
+          {makeButton(false)}
+          <p className="gm-note">Add a video to start</p>
+        </div>
+      )}
 
-      {/* The meme clips, full height over the page. */}
+      {/* The meme clips, full height over the page, in the page's look (gm-clips). */}
       {library && (
         <div className="gm-library ie-panels--full">
-          <ClipsSheet onClose={() => setLibrary(false)} onPick={(c) => void pickClip(c)} />
+          <ClipsSheet className="gm-clips" title="Pick a clip" Icon={Clapperboard} onClose={() => setLibrary(false)} onPick={(c) => void pickClip(c)} />
         </div>
       )}
 
       {result && (
-        <PickerSheet title="Your GIF" onClose={() => setResult(null)}>
-          <ResultSheet result={result} saved={saved} saveFailed={saveFailed} onSave={onSaveToGallery ? async () => {
+        <PickerSheet title="Your GIF" className="gm-export" onClose={() => setResult(null)}>
+          <ResultSheet result={result} name={name} onName={setName} saved={saved} saveFailed={saveFailed} onSave={onSaveToGallery ? async () => {
             const dataUrl = await readDataUrl(result.blob);
-            const ok = await onSaveToGallery({ kind: 'gif', name: caption.trim() || 'My GIF', imageUrl: dataUrl, rawImageUrl: dataUrl });
+            const ok = await onSaveToGallery({ kind: 'gif', name: name.trim() || 'My GIF', imageUrl: dataUrl, rawImageUrl: dataUrl });
             setSaveFailed(ok === false);
             setSaved(ok !== false);
           } : undefined} />
@@ -310,7 +352,7 @@ export default function GifMaker({ onBack, onSaveToGallery }: { onBack: () => vo
 
 // The live preview: the clip looping between its trim at its speed (a bounce played back by
 // stepping the video), the caption laid over in the GIF's look.
-function Preview({ video, trim, speed, loop, caption, place, progress }: { video: VideoSrc; trim: Trim; speed: number; loop: Loop; caption: string; place: CaptionPlace; progress: number | null }) {
+function Preview({ video, trim, speed, loop, caption, place }: { video: VideoSrc; trim: Trim; speed: number; loop: Loop; caption: string; place: CaptionPlace }) {
   const ref = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
@@ -351,17 +393,11 @@ function Preview({ video, trim, speed, loop, caption, place, progress }: { video
           <span className={`gm-preview-caption is-${place}`} style={{ fontFamily: CAPTION_FONT }} aria-hidden="true">{caption.toUpperCase()}</span>
         )}
       </div>
-      {progress !== null && (
-        <div className="gm-busy" role="status">
-          <span className="ie-swap-spinner" aria-hidden="true" />
-          Making your GIF… {Math.round(progress * 100)}%
-        </div>
-      )}
     </div>
   );
 }
 
-// The clip's trim, in its card: a filmstrip of the video with the chosen part framed in orange
+// The clip's trim, in its card: a filmstrip of the video with the chosen part framed in lime
 // between two handles; drag a handle to move that end, or the frame to slide the whole clip.
 function TrimBar({ video, trim, onChange, disabled }: { video: VideoSrc; trim: Trim; onChange: (t: Trim) => void; disabled: boolean }) {
   const track = useRef<HTMLDivElement>(null);
@@ -396,9 +432,9 @@ function TrimBar({ video, trim, onChange, disabled }: { video: VideoSrc; trim: T
   const pct = (s: number) => `${(s / d) * 100}%`;
 
   return (
-    <div className="gm-panel gm-trim">
+    <div className="gm-card gm-trim">
       <div className="gm-trim-head">
-        <span className="gm-setting-name"><Scissors size={16} className="gm-row-icon" aria-hidden="true" />Clip</span>
+        <span className="gm-setting-name"><Scissors size={18} strokeWidth={2.3} className="gm-row-icon" aria-hidden="true" />Clip</span>
         <span className="gm-trim-time">{clock(trim.start)} – {clock(trim.end)} · <b>{(trim.end - trim.start).toFixed(1)} s</b></span>
       </div>
       <div className={`gm-track${disabled ? ' is-off' : ''}`} ref={track} onPointerMove={move} onPointerUp={up} onPointerCancel={up}>
@@ -438,8 +474,19 @@ function TrimBar({ video, trim, onChange, disabled }: { video: VideoSrc; trim: T
   );
 }
 
-function ResultSheet({ result, saved, saveFailed, onSave }: { result: Result; saved: boolean; saveFailed?: boolean; onSave?: () => Promise<void> }) {
-  const file = useMemo(() => new File([result.blob], `meme-${Date.now()}.gif`, { type: 'image/gif' }), [result.blob]);
+// Your GIF: the GIF on a rounded card with its size, weight and length as small pills; its name to
+// edit (the file's name and the name in My Studio) with .gif after it; Download, the wide lime
+// button; then Share (where the browser can share files) and Save to My Studio as two grey pills.
+function ResultSheet({ result, name, onName, saved, saveFailed, onSave }: {
+  result: Result;
+  name: string;
+  onName: (name: string) => void;
+  saved: boolean;
+  saveFailed?: boolean;
+  onSave?: () => Promise<void>;
+}) {
+  const fileName = gifFileName(name);
+  const file = useMemo(() => new File([result.blob], fileName, { type: 'image/gif' }), [result.blob, fileName]);
   const canShare = typeof navigator !== 'undefined' && typeof navigator.canShare === 'function' && navigator.canShare({ files: [file] });
   const kb = result.blob.size / 1024;
   const weight = kb >= 1024 ? `${(kb / 1024).toFixed(1)} MB` : `${Math.max(1, Math.round(kb))} KB`;
@@ -449,24 +496,50 @@ function ResultSheet({ result, saved, saveFailed, onSave }: { result: Result; sa
 
   return (
     <div className="gm-result">
-      <div className="gm-result-pic"><img src={result.url} alt="Your GIF" /></div>
-      <p className="gm-result-meta">{result.w} × {result.h} · {weight} · {result.seconds.toFixed(1)} s</p>
-      <div className="gm-result-actions">
-        <button type="button" className="gm-make gm-result-main" onClick={() => void download()}>
-          <Download aria-hidden="true" />
-          Download
-        </button>
-        {canShare && (
-          <button type="button" className="gm-result-btn" aria-label="Share" title="Share" onClick={() => void share()}>
-            <Share2 aria-hidden="true" />
-          </button>
-        )}
-        {onSave && (
-          <button type="button" className="gm-result-btn" aria-label={saved ? 'Saved to My Studio' : 'Save to My Studio'} title={saved ? 'Saved to My Studio' : 'Save to My Studio'} disabled={saved} onClick={() => void onSave()}>
-            {saved ? <Check aria-hidden="true" /> : <FolderHeart aria-hidden="true" />}
-          </button>
-        )}
+      <div className="gm-result-pic">
+        <img src={result.url} alt="Your GIF" />
+        <span className="gm-result-tag" aria-hidden="true">GIF</span>
       </div>
+      <ul className="gm-result-meta" aria-label="About the GIF">
+        <li><Maximize2 size={13} strokeWidth={2.4} aria-hidden="true" />{result.w} × {result.h}</li>
+        <li><HardDrive size={13} strokeWidth={2.4} aria-hidden="true" />{weight}</li>
+        <li><Timer size={13} strokeWidth={2.4} aria-hidden="true" />{result.seconds.toFixed(1)} s</li>
+      </ul>
+
+      <label className="gm-result-name">
+        <Pencil size={16} strokeWidth={2.3} aria-hidden="true" />
+        <input
+          type="text"
+          aria-label="GIF name"
+          placeholder="Name your GIF"
+          maxLength={60}
+          value={name}
+          onChange={(e) => onName(e.target.value)}
+          onFocus={(e) => e.currentTarget.select()}
+        />
+        <span className="gm-result-ext" aria-hidden="true">.gif</span>
+      </label>
+
+      <button type="button" className="gm-make gm-result-main" onClick={() => void download()}>
+        <Download size={18} strokeWidth={2.4} aria-hidden="true" />
+        <span>Download</span>
+      </button>
+      {(canShare || onSave) && (
+        <div className="gm-result-actions">
+          {canShare && (
+            <button type="button" className="gm-result-btn" onClick={() => void share()}>
+              <Share2 size={17} aria-hidden="true" />
+              <span>Share</span>
+            </button>
+          )}
+          {onSave && (
+            <button type="button" className={`gm-result-btn${saved ? ' is-done' : ''}`} aria-label={saved ? 'Saved to My Studio' : 'Save to My Studio'} disabled={saved} onClick={() => void onSave()}>
+              {saved ? <Check size={17} strokeWidth={2.6} aria-hidden="true" /> : <FolderHeart size={17} aria-hidden="true" />}
+              <span>{saved ? 'Saved' : 'Save to My Studio'}</span>
+            </button>
+          )}
+        </div>
+      )}
       {saveFailed && (
         <p className="gm-result-error" role="alert">Couldn't save to My Studio. Your device may be out of space. Download it instead.</p>
       )}

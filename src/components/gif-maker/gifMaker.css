@@ -1,17 +1,22 @@
-/* The GIF maker (GifMaker), a page of its own over the app, in the Stickers page's look
-   (stickerStudio.css): a dark page with a soft glow in the maker's lime at the top, a plain centred
-   title, one card for the video, raised grey tiles and cards, orange kept for what's picked and for
-   Make GIF; no glass, blur or glow on the controls. */
+/* The GIF maker (GifMaker), a page of its own over the app, in Sticker Studio's design
+   (stickerStudioPage.css) with the GIF maker's lime (#c4f04d, its colour in the Creator sheet) as
+   its accent: a dark page with a soft lime glow at the top; a round Back button and the title
+   centred with a bare lime mark; one rounded stage; three grey source tiles with bare lime icons;
+   cards for the clip, caption and settings; and Export (it makes the GIF), grey at the bottom until there is a video, then a lime pill in the header. */
 .gm {
+  --gm-lime: #c4f04d;
+  --gm-lime-ink: #1a2400;
+  --gm-card: rgba(255, 255, 255, 0.06);
+  --gm-line: rgba(255, 255, 255, 0.08);
   position: fixed;
   inset: 0;
   z-index: 50;
   display: flex;
   flex-direction: column;
+  gap: 12px;
   padding: calc(8px + env(safe-area-inset-top, 0px)) 14px calc(12px + env(safe-area-inset-bottom, 0px));
-  gap: 8px;
   background:
-    radial-gradient(ellipse 90% 45% at 50% -8%, rgba(155, 208, 42, 0.18) 0%, rgba(13, 14, 18, 0) 70%),
+    radial-gradient(ellipse 90% 45% at 50% -8%, rgba(176, 222, 60, 0.2) 0%, rgba(13, 14, 18, 0) 70%),
     linear-gradient(180deg, #101217 0%, #0b0c10 100%) !important;
   color: var(--ui-text, #f4f4f6);
   font-family: var(--ui-font, 'Plus Jakarta Sans', sans-serif);
@@ -19,104 +24,159 @@
 }
 .gm *, .gm *::before, .gm *::after { box-sizing: border-box; }
 .gm button { font: inherit; color: inherit; }
-.gm :focus-visible { outline: 2px solid var(--ui-accent, #ff5a36); outline-offset: 2px; }
 .gm p { margin: 0; }
+.gm :focus-visible { outline: 2px solid var(--gm-lime); outline-offset: 2px; }
 
-/* ── Header: the Back chevron and the title, centred ── */
+/* ---- Header: a round Back button, the title centred with its lime mark ---- */
 .gm-header {
-  flex: none;
   position: relative;
+  display: grid;
+  flex: none;
+  grid-template-columns: 40px minmax(0, 1fr) 40px;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+}
+.gm-back {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--gm-card);
+  color: #ffffff;
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.16s ease;
+}
+.gm-back:active { transform: scale(0.92); background: rgba(255, 255, 255, 0.12); }
+@media (hover: hover) { .gm-back:hover { background: rgba(255, 255, 255, 0.1); } }
+.gm .gm-title {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 48px;
-  padding: 4px 2px 8px;
-}
-.gm-back {
-  position: absolute;
-  left: 0;
-  top: 50%;
-  display: grid;
-  place-items: center;
-  width: 42px;
-  height: 42px;
-  margin-top: -23px;
-  padding: 0;
-  border: none;
-  background: none;
-  color: #ffffff;
-  cursor: pointer;
-  transition: opacity 0.15s ease, transform 0.12s ease;
-}
-.gm-back svg { width: 26px; height: 26px; margin-left: -1px; }
-.gm-back:hover { opacity: 0.75; }
-.gm-back:active { opacity: 0.55; transform: scale(0.9); }
-.gm .gm-title {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
+  gap: 9px;
+  min-width: 0;
   margin: 0;
   color: #ffffff;
-  font-size: 19px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  line-height: 1.15;
+  font-size: clamp(24px, 6.6vw, 30px);
+  font-weight: 850;
+  line-height: 1.12;
+  letter-spacing: -0.022em;
   white-space: nowrap;
 }
-.gm-title-icon { flex: none; color: #b5e04a; }
+.gm-title-icon { display: grid; flex: none; place-items: center; color: var(--gm-lime); }
+.gm-title-icon svg { width: 24px; height: 24px; }
+/* Said for screen readers only. */
 .gm .gm-status {
   position: absolute;
   width: 1px;
   height: 1px;
-  margin: -1px;
   overflow: hidden;
-  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
   white-space: nowrap;
 }
 
-/* ── The body: one screen, scrolling only when the controls need it ── */
+/* ---- The body: one screen, scrolling only when the controls need it ---- */
 .gm-body {
   flex: 1;
   min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
   overflow-y: auto;
-  padding: 0 2px;
   scrollbar-width: none;
 }
 .gm-body::-webkit-scrollbar { display: none; }
 
-/* ── The card: the empty drop zone, or the preview ── */
+/* ---- The stage ---- */
 .gm-stage {
   position: relative;
+  display: grid;
   flex: 1 1 auto;
-  min-height: 200px;
-  display: flex;
+  place-items: center;
+  min-height: 220px;
+  overflow: hidden;
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(196, 240, 77, 0.07), transparent 62%),
+    linear-gradient(160deg, #1d1f24, #16171b);
+  box-shadow: inset 0 0 0 1px var(--gm-line);
+  transition: box-shadow 0.2s ease;
 }
-/* Empty: Face Swap's Your face card (faceSwap.css: .ie-swap-tile.is-empty, EmptyTile), filling the
-   room: lit softly from the top, a quiet edge, the icon in a soft orange circle, Add a video and Choose. */
-.gm .gm-video-tile {
-  flex: 1;
-  height: auto;
-  min-height: 0;
+.gm-stage.is-drag-over { box-shadow: inset 0 0 0 2px var(--gm-lime), 0 0 0 4px rgba(196, 240, 77, 0.18); }
+
+/* Empty: the whole stage takes the video. */
+.gm-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  height: 100%;
+  padding: 24px;
+  text-align: center;
   cursor: pointer;
 }
-.gm .gm-video-tile.is-drag-over { box-shadow: inset 0 0 0 2px var(--ui-accent, #ff5a36); }
-.gm .gm-video-tile:focus-within { outline: 2px solid var(--ui-accent, #ff5a36); outline-offset: 2px; }
-.gm .gm-video-tile .ie-swap-empty-hint { max-width: 22ch; }
-.gm .gm-video-tile .ie-swap-spinner { margin-bottom: 14px; }
-
-/* The preview: the GIF's shape, as large as the card allows. */
-.gm-preview-box {
+.gm-empty-art { display: grid; place-items: center; margin-bottom: 12px; }
+/* A blank film frame: tilted, a thick white edge, sprocket holes along top and bottom, a lime GIF tag. */
+.gm-empty-frame {
   position: relative;
-  flex: 1;
   display: grid;
   place-items: center;
-  padding: 12px;
-  overflow: hidden;
-  border-radius: var(--ui-radius-lg, 20px);
-  background: var(--ui-surface, #1c1c1e);
+  width: 136px;
+  height: 96px;
+  border: 6px solid #ffffff;
+  border-radius: 22px;
+  background:
+    radial-gradient(circle, rgba(255, 255, 255, 0.85) 0 2.4px, transparent 2.9px) 4px 3px / 16px 12px repeat-x,
+    radial-gradient(circle, rgba(255, 255, 255, 0.85) 0 2.4px, transparent 2.9px) 4px calc(100% - 3px) / 16px 12px repeat-x,
+    linear-gradient(145deg, #3a3d44, #2b2d33);
+  color: var(--gm-lime);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.45);
+  transform: rotate(-6deg);
+  transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+}
+.gm-empty-tag {
+  position: absolute;
+  top: -14px;
+  right: -16px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: var(--gm-lime);
+  color: var(--gm-lime-ink);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.4);
+  transform: rotate(10deg);
+}
+.gm-empty:hover .gm-empty-frame,
+.gm-stage.is-drag-over .gm-empty-frame { transform: rotate(-1deg) scale(1.04); }
+.gm-empty-title {
+  color: #ffffff;
+  font-size: 19px;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+.gm-empty-hint {
+  max-width: 28ch;
+  color: rgba(235, 235, 245, 0.6);
+  font-size: 13.5px;
+  line-height: 1.4;
+}
+.gm-empty:focus-within { outline: 2px solid var(--gm-lime); outline-offset: -4px; border-radius: 28px; }
+
+/* With a video: the GIF's shape, as large as the stage allows. */
+.gm-preview-box {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 56px 16px 16px;
   container-type: size;
 }
 .gm-preview {
@@ -124,8 +184,9 @@
   width: min(100cqw, calc(100cqh * var(--gm-ar, 1)));
   aspect-ratio: var(--gm-ar, 1);
   overflow: hidden;
-  border-radius: 12px;
+  border-radius: 16px;
   background: #000;
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.45);
   container-type: inline-size;
 }
 .gm-preview video { display: block; width: 100%; height: 100%; object-fit: cover; }
@@ -145,68 +206,123 @@
 }
 .gm-preview-caption.is-top { top: 4%; }
 .gm-preview-caption.is-bottom { bottom: 4%; }
+
+/* Change and Remove on frosted chips along the top. */
+.gm-stage-tools {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  left: 12px;
+  z-index: 2;
+  display: flex;
+  justify-content: space-between;
+}
+.gm-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 13px;
+  border: none;
+  border-radius: 999px;
+  background: rgba(16, 17, 20, 0.62);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+.gm .gm-chip--round { justify-content: center; width: 34px; padding: 0; }
+.gm-chip:focus-within { outline: 2px solid var(--gm-lime); outline-offset: 2px; }
+
+/* Making the GIF: a lime light sweeps across, a pill says how far along. */
 .gm-busy {
   position: absolute;
   inset: 0;
-  z-index: 2;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  border-radius: inherit;
-  background: rgba(12, 12, 14, 0.86);
-  color: #fff;
-  font-size: 15px;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-}
-/* Remove the video: the card's corner, as the sticker card's. */
-.gm-remove {
-  position: absolute;
-  top: 10px;
-  right: 10px;
   z-index: 3;
   display: grid;
-  place-items: center;
-  width: 30px;
-  height: 30px;
-  padding: 0;
-  border: none;
-  border-radius: 999px;
-  background: rgba(18, 18, 20, 0.86);
-  color: #fff;
-  cursor: pointer;
+  place-items: end center;
+  padding-bottom: 18px;
+  overflow: hidden;
+  background: rgba(10, 11, 14, 0.3);
 }
-.gm-remove::after { content: ''; position: absolute; inset: -7px; }
+.gm-sweep {
+  position: absolute;
+  inset: -20% -60%;
+  background: linear-gradient(100deg, transparent 40%, rgba(196, 240, 77, 0.28) 50%, transparent 60%);
+  animation: gm-sweep 1.6s ease-in-out infinite;
+}
+@keyframes gm-sweep {
+  from { transform: translateX(-40%); }
+  to { transform: translateX(40%); }
+}
+.gm-busy-pill {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgba(16, 17, 20, 0.72);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+.gm-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(196, 240, 77, 0.3);
+  border-top-color: var(--gm-lime);
+  border-radius: 50%;
+  animation: gm-spin 0.8s linear infinite;
+}
+.gm-spinner--big { width: 34px; height: 34px; border-width: 3px; margin-bottom: 10px; }
+@keyframes gm-spin { to { transform: rotate(360deg); } }
 
 .gm-error { color: #ff8a73; font-size: 13px; text-align: center; }
 
-/* ── Upload / Record: raised grey tiles, a soft white icon over the word ── */
-.gm-sources { flex: none; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
-.gm-source {
+/* ---- Upload, Record, Clips: three tiles, a bare lime icon over the name ---- */
+.gm-sources { flex: none; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.gm .gm-source {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  padding: 12px 4px 10px;
-  border-radius: 16px;
-  background: var(--ui-surface, #1c1c1e);
-  color: #ffffff;
-  font-size: 12.5px;
-  font-weight: 700;
+  gap: 8px;
+  min-width: 0;
+  height: 84px;
+  padding: 0 6px;
+  border: none;
+  border-radius: 20px !important;
+  background: var(--gm-card);
+  box-shadow: inset 0 0 0 1px var(--gm-line);
+  color: rgba(235, 235, 245, 0.92);
+  font-size: 13px;
+  font-weight: 650;
+  white-space: nowrap;
   cursor: pointer;
-  transition: background-color 0.15s ease, transform 0.1s ease;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
-.gm-source svg { width: 22px; height: 22px; color: rgba(255, 255, 255, 0.82); }
-.gm-source:hover { background: #26272b; }
-.gm-source:active { transform: scale(0.97); }
-.gm-source:focus-within { outline: 2px solid var(--ui-accent, #ff5a36); outline-offset: 2px; }
-.gm-source:disabled { opacity: 0.45; cursor: default; }
-.gm .gm-source { border: none; border-radius: 16px !important; font-size: 12.5px; font-weight: 700; }
+.gm-source-icon { display: grid; place-items: center; color: var(--gm-lime); }
+.gm-source-icon svg { width: 26px; height: 26px; }
+.gm-source-label { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+.gm .gm-source:active:not(:disabled):not(.is-disabled) { transform: scale(0.96); }
+.gm .gm-source.is-disabled, .gm .gm-source:disabled { opacity: 0.4; cursor: default; }
+.gm-source:focus-within { outline: 2px solid var(--gm-lime); outline-offset: 2px; }
+@media (hover: hover) {
+  .gm .gm-source:hover:not(:disabled):not(.is-disabled) { box-shadow: inset 0 0 0 1px rgba(196, 240, 77, 0.4); }
+}
 
-/* The meme clips (the video editor's Clips sheet), full height over the page. */
+/* ---- Pick a clip: the video editor's Clips sheet (ClipsSheet), full height over the page, in the
+   page's look (.gm-clips): the lime for what's lit, a bare lime clapperboard by the title, a round
+   close, the search a soft pill; the chips grey with the picked one lime and dark ink; the clips as
+   big rounded cards, the picture filling each with its name over a dark fade at the bottom, its
+   length on a frosted pill in the corner, and a lime play mark. ---- */
 .gm-library {
   position: fixed;
   inset: env(safe-area-inset-top, 0px) 0 0;
@@ -215,57 +331,148 @@
   flex-direction: column;
 }
 .gm-library > .ui-sheet:not(.ui-sheet-ghost) { flex: 1; min-height: 0; }
-.gm-library .vt-clip-card { flex-basis: 168px; width: 168px; }
-.gm-library .vt-clip-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
-.gm-library .vt-clip-thumb { position: relative; display: block; }
-.gm-library .vt-clip-media { aspect-ratio: 16 / 10; }
-.gm-library .vt-clip-play {
-  position: absolute;
-  inset: 0;
-  margin: auto;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  background: rgba(0, 0, 0, 0.55);
-  color: #fff;
+.gm-library .gm-clips {
+  --ui-accent: #c4f04d;
+  --ui-accent-soft: rgba(196, 240, 77, 0.14);
+  --ui-accent-edge: rgba(196, 240, 77, 0.6);
+  background:
+    radial-gradient(ellipse 90% 40% at 50% -6%, rgba(176, 222, 60, 0.14) 0%, rgba(13, 14, 18, 0) 70%),
+    #111216 !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  border-radius: 28px 28px 0 0 !important;
 }
-.gm-library .vt-clip-dur {
-  position: absolute;
-  right: 6px;
-  bottom: 6px;
-  padding: 2px 6px;
-  border-radius: 6px;
-  background: rgba(0, 0, 0, 0.7);
-  color: #fff;
-  font-size: 11px;
+.gm-clips .ie-browse-head { padding: 4px 14px 14px 20px; }
+.gm-clips .ie-browse-title { gap: 9px; font-size: 26px; font-weight: 850; letter-spacing: -0.022em; }
+.gm-clips .ie-browse-title-icon { width: auto; height: auto; padding: 0; background: none !important; box-shadow: none !important; color: #c4f04d; }
+.gm-clips .ie-browse-title-icon svg { width: 23px; height: 23px; }
+.gm-clips .ie-browse-total {
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(235, 235, 245, 0.6);
+  font-size: 13px;
   font-weight: 700;
 }
+.gm-clips .ie-browse-close { width: 40px; height: 40px; background: rgba(255, 255, 255, 0.08); color: #ffffff; }
+.gm-clips .ie-browse-search { margin: 0 14px 12px; }
+.gm-clips .ie-browse-search input {
+  height: 46px;
+  background: rgba(255, 255, 255, 0.07);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+.gm-clips .ie-browse-search input:focus { border-color: transparent; background: rgba(255, 255, 255, 0.09); box-shadow: inset 0 0 0 1.5px #c4f04d; }
+.gm-clips .ie-browse-chips { padding-left: 14px; padding-right: 14px; }
+.gm-clips .ie-browse-chip { height: 36px; background: rgba(255, 255, 255, 0.07); color: rgba(235, 235, 245, 0.85); font-weight: 650; }
+.gm-clips .ie-browse-chip .ie-browse-chip-count { background: rgba(255, 255, 255, 0.1); color: rgba(235, 235, 245, 0.7); }
+.gm-clips .ie-browse-chip.is-on { background: #c4f04d; color: #1a2400; }
+.gm-clips .ie-browse-chip.is-on svg { color: #1a2400 !important; }
+.gm-clips .ie-browse-chip.is-on .ie-browse-chip-count { background: rgba(26, 36, 0, 0.16); color: #1a2400; }
 
-/* ── The cards under the preview: Clip, Caption, and Speed / Loop / Size ── */
-.gm-panel { flex: none; border-radius: var(--ui-radius-lg, 20px); background: var(--ui-surface, #1c1c1e); }
-.gm-row-icon { flex: none; color: rgba(255, 255, 255, 0.6); }
+/* Shelves: the title with a lime mark, See all in lime. */
+.gm-clips .ie-shelf-title { font-size: 18px; font-weight: 800; letter-spacing: -0.015em; }
+.gm-clips .ie-shelf-see-all { color: #c4f04d; font-weight: 700; }
+.gm-clips .ie-shelf-rail { gap: 12px; padding-left: 14px; padding-right: 14px; }
+.gm-clips .vt-clip-card { flex-basis: 196px; width: 196px; }
+.gm-clips .vt-clip-grid { grid-template-columns: repeat(auto-fill, minmax(156px, 1fr)); gap: 12px; padding: 0 14px; }
+
+/* A clip: the picture fills a big rounded card, its name over a dark fade at the bottom. */
+.gm-clips .ie-card.ie-browse-item {
+  position: relative;
+  border-radius: 20px;
+  background: #1c1d22;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+.gm-clips .vt-clip-thumb { position: relative; display: block; }
+.gm-clips .vt-clip-media { aspect-ratio: 4 / 3; }
+.gm-clips .vt-clip-media video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+/* No picture to be had: a quiet dark card with a faint film mark instead of a grey slab. */
+.gm-clips .ie-browse-thumb.is-loading,
+.gm-clips .ie-browse-thumb.is-failed {
+  background:
+    radial-gradient(circle at 50% 40%, rgba(196, 240, 77, 0.08), transparent 60%),
+    linear-gradient(160deg, #26282e, #1a1b20);
+  animation: none;
+}
+.gm-clips .vt-clip-thumb::after {
+  content: '';
+  position: absolute;
+  inset: 45% 0 0;
+  background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.78));
+  pointer-events: none;
+}
+.gm-clips .ie-card-name {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+  padding: 0 12px 11px;
+  color: #ffffff;
+  font-size: 13.5px;
+  font-weight: 750;
+  letter-spacing: -0.01em;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
+}
+.gm-clips .vt-clip-play {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  inset: 10px auto auto 10px;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  margin: 0;
+  border-radius: 50%;
+  background: #c4f04d;
+  color: #1a2400;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+.gm-clips .vt-clip-play svg { margin-left: 2px; }
+.gm-clips .vt-clip-dur {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  bottom: auto;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(16, 17, 20, 0.62);
+  color: #ffffff;
+  font-size: 11.5px;
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+.gm-clips .ie-results-head button { color: #c4f04d; }
+.gm-clips .ie-browse-empty-btn { background: #c4f04d; color: #1a2400; }
+
+/* ---- The cards under the stage: Clip, Caption, and Speed / Loop / Size ---- */
+.gm-card { flex: none; border-radius: 22px; background: var(--gm-card); }
+.gm-row-icon { flex: none; color: var(--gm-lime); }
 .gm-setting-name {
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  color: #ffffff;
   font-size: 15px;
-  font-weight: 700;
+  font-weight: 750;
+  letter-spacing: -0.01em;
   white-space: nowrap;
 }
-.gm-setting-name small { margin-left: -2px; color: var(--ui-muted, #a5a6ad); font-size: 12px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.gm-setting-name small { margin-left: -2px; color: rgba(235, 235, 245, 0.5); font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; }
 
-/* The clip's trim. */
-.gm-trim { display: flex; flex-direction: column; gap: 10px; padding: 12px 14px 14px; }
+/* The clip's trim: a filmstrip, the chosen part framed in lime between two lime handles. */
+.gm-trim { display: flex; flex-direction: column; gap: 12px; padding: 14px 14px 16px; }
 .gm-trim-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.gm-trim-time { color: var(--ui-muted, #a5a6ad); font-size: 13px; font-variant-numeric: tabular-nums; }
-.gm-trim-time b { color: var(--ui-text, #f4f4f6); font-weight: 700; }
+.gm-trim-time { color: rgba(235, 235, 245, 0.55); font-size: 13px; font-variant-numeric: tabular-nums; }
+.gm-trim-time b { color: var(--gm-lime); font-weight: 750; }
 .gm-track {
   position: relative;
   height: 52px;
   margin: 0 12px;
-  border-radius: 10px;
+  border-radius: 12px;
   background: #2a2b31;
   touch-action: none;
   user-select: none;
@@ -274,13 +481,13 @@
 .gm-strip { position: absolute; inset: 0; display: flex; overflow: hidden; border-radius: inherit; }
 .gm-strip img { flex: 1; min-width: 0; height: 100%; object-fit: cover; }
 .gm-shade { position: absolute; top: 0; bottom: 0; background: rgba(0, 0, 0, 0.62); pointer-events: none; }
-.gm-shade:first-of-type { border-radius: 10px 0 0 10px; }
+.gm-shade:first-of-type { border-radius: 12px 0 0 12px; }
 .gm-window {
   position: absolute;
   top: -3px;
   bottom: -3px;
-  border-radius: 10px;
-  box-shadow: inset 0 0 0 3px var(--ui-accent, #ff5a36);
+  border-radius: 12px;
+  box-shadow: inset 0 0 0 3px var(--gm-lime);
   cursor: grab;
 }
 .gm-handle {
@@ -288,23 +495,23 @@
   top: 0;
   bottom: 0;
   width: 18px;
-  background: var(--ui-accent, #ff5a36);
+  background: var(--gm-lime);
   cursor: ew-resize;
 }
-/* A light grip line on each handle; the handles reach past the clip so a short one stays easy to hold. */
-.gm-handle::after { content: ''; position: absolute; top: 50%; left: 50%; width: 3px; height: 18px; border-radius: 2px; background: rgba(255, 255, 255, 0.9); transform: translate(-50%, -50%); }
-.gm-handle.is-start { left: -12px; border-radius: 10px 0 0 10px; }
-.gm-handle.is-end { right: -12px; border-radius: 0 10px 10px 0; }
+/* A dark grip line on each handle; the handles reach past the clip so a short one stays easy to hold. */
+.gm-handle::after { content: ''; position: absolute; top: 50%; left: 50%; width: 3px; height: 18px; border-radius: 2px; background: rgba(26, 36, 0, 0.75); transform: translate(-50%, -50%); }
+.gm-handle.is-start { left: -12px; border-radius: 12px 0 0 12px; }
+.gm-handle.is-end { right: -12px; border-radius: 0 12px 12px 0; }
 
 /* The caption: a line to type in, its icon before it and Top / Bottom after. */
 .gm-caption {
   display: flex;
   align-items: center;
   gap: 10px;
-  height: 54px;
+  height: 56px;
   padding: 0 8px 0 14px;
 }
-.gm-caption:focus-within { box-shadow: inset 0 0 0 2px var(--ui-accent, #ff5a36); }
+.gm-caption:focus-within { box-shadow: inset 0 0 0 2px var(--gm-lime); }
 .gm .gm-caption-field {
   flex: 1;
   min-width: 0;
@@ -314,100 +521,257 @@
   outline: none;
   background: none;
   box-shadow: none;
-  color: var(--ui-text, #f4f4f6);
+  color: #ffffff;
   font: inherit;
   font-size: 16px; /* 16px keeps phones from zooming in on focus */
+  font-weight: 600;
 }
-.gm .gm-caption-field::placeholder { color: var(--ui-muted, #a5a6ad); opacity: 1; }
+.gm .gm-caption-field::placeholder { color: rgba(235, 235, 245, 0.45); opacity: 1; }
 
 /* Speed, Loop, Size: a row each. */
-.gm-setting { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 54px; padding: 6px 8px 6px 14px; }
-.gm-setting + .gm-setting { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07); }
+.gm-setting { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 56px; padding: 6px 8px 6px 14px; }
+.gm-setting + .gm-setting { box-shadow: inset 0 1px 0 var(--gm-line); }
 
-/* A segmented control: a darker track, the picked one orange. */
-.gm-seg { display: flex; flex: none; gap: 2px; padding: 3px; border-radius: 12px; background: #2a2b31; }
-.gm-seg-btn {
+/* A segmented control: a darker track, the picked one lime with dark ink. */
+.gm-seg { display: flex; flex: none; gap: 2px; padding: 3px; border-radius: 999px; background: rgba(0, 0, 0, 0.28); }
+.gm .gm-seg-btn {
   height: 32px;
   min-width: 52px;
-  padding: 0 10px;
+  padding: 0 12px;
   border: none;
-  border-radius: 9px !important;
+  border-radius: 999px !important;
   background: none;
-  color: var(--ui-muted, #a5a6ad);
+  color: rgba(235, 235, 245, 0.6);
   font-size: 13px !important;
-  font-weight: 700;
+  font-weight: 750;
   white-space: nowrap;
   cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition: background-color 0.18s ease, color 0.18s ease;
 }
-.gm .gm-seg-btn.is-on { background: var(--ui-accent, #ff5a36); color: #fff; }
-.gm-seg-btn:disabled { cursor: default; opacity: 0.5; }
-@media (hover: hover) { .gm .gm-seg-btn:not(.is-on):not(:disabled):hover { color: var(--ui-text, #f4f4f6); } }
+.gm .gm-seg-btn.is-on { background: var(--gm-lime); color: var(--gm-lime-ink); }
+.gm .gm-seg-btn:disabled { cursor: default; opacity: 0.5; }
+@media (hover: hover) { .gm .gm-seg-btn:not(.is-on):not(:disabled):hover { color: #ffffff; } }
 
-/* ── Make GIF: the page's one wide button; grey until there is a video ── */
-.gm-actions { flex: none; }
-.gm-make {
+/* ---- Export: the page's one wide button at the bottom (grey, no video yet), over what comes first ---- */
+.gm-actions { display: grid; flex: none; gap: 8px; }
+.gm .gm-make {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 9px;
   width: 100%;
-  height: 50px;
+  height: 54px;
   border: none;
   border-radius: 999px;
-  background: var(--ui-accent, #ff5a36);
-  box-shadow: 0 6px 18px -6px rgba(255, 90, 54, 0.55);
-  color: #fff !important;
-  font-size: 15px;
-  font-weight: 700;
+  background: var(--gm-lime);
+  color: var(--gm-lime-ink);
+  font-size: 16.5px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
   font-variant-numeric: tabular-nums;
   cursor: pointer;
-  transition: background-color 0.15s ease, transform 0.1s ease;
+  box-shadow: 0 10px 24px -10px rgba(196, 240, 77, 0.6);
+  transition: transform 0.16s ease, filter 0.15s ease, background-color 0.2s ease;
 }
-.gm-make svg { width: 19px; height: 19px; }
-.gm-make:active:not(:disabled) { transform: scale(0.98); }
-.gm-make:disabled { background: var(--ui-surface, #1c1c1e); box-shadow: none; color: rgba(255, 255, 255, 0.38) !important; cursor: default; }
-@media (hover: hover) { .gm-make:hover:not(:disabled) { background: var(--ui-accent-hover, #ff6d4d); } }
+.gm .gm-make:active:not(:disabled) { transform: scale(0.98); }
+.gm .gm-make:disabled { background: rgba(255, 255, 255, 0.08); color: rgba(235, 235, 245, 0.4); box-shadow: none; cursor: default; }
+@media (hover: hover) { .gm .gm-make:hover:not(:disabled) { filter: brightness(1.06); } }
+.gm-note { color: rgba(235, 235, 245, 0.5); font-size: 12.5px; line-height: 1.3; text-align: center; }
 
-/* ── The finished GIF (in the PickerSheet) ── */
-.gm-result { display: flex; flex-direction: column; gap: 12px; }
-.gm-result-pic { display: grid; place-items: center; max-height: 46vh; overflow: hidden; border-radius: 14px; background: #000; }
-.gm-result-pic img { display: block; max-width: 100%; max-height: 46vh; object-fit: contain; }
-.gm-result-meta { color: var(--ui-muted, #a5a6ad); font-size: 13px; text-align: center; font-variant-numeric: tabular-nums; }
-.gm-result-error { margin: 0; color: #ff453a; font-size: 13px; line-height: 1.4; text-align: center; }
-.gm-result-actions { display: flex; gap: 8px; }
-.gm-result-main { flex: 1; }
-.gm-result-btn {
+/* With a video: Export a lime pill on the right of the header (as Sticker Studio's Export), the
+   title between Back and it. */
+.gm--edit .gm-header { grid-template-columns: 40px minmax(0, 1fr) auto; }
+.gm.gm--edit .gm-title { font-size: clamp(20px, 5.6vw, 24px); }
+.gm.gm--edit .gm-title-icon svg { width: 21px; height: 21px; }
+.gm .gm-make--top {
+  justify-self: end;
+  width: auto;
+  height: 40px;
+  gap: 6px;
+  padding: 0 15px 0 13px;
+  font-size: 14.5px;
+  box-shadow: 0 8px 18px -10px rgba(196, 240, 77, 0.7);
+}
+.gm .gm-make--top:disabled { background: rgba(196, 240, 77, 0.55); color: var(--gm-lime-ink); }
+
+/* ---- Your GIF (PickerSheet with gm-export): the page's look on its own sheet ----
+   Dark, a soft lime glow at the top, a round close; the GIF on a rounded card with a lime GIF tag in its bottom corner (clear of a top caption);
+   its size, weight and length as small grey pills; its name in a soft field with a pencil before
+   and .gif after; Download the wide lime button; Share and Save to My Studio as grey pills. */
+.gm-export {
+  --gm-lime: #c4f04d;
+  --gm-lime-ink: #1a2400;
+  padding: 8px 16px calc(18px + env(safe-area-inset-bottom, 0px)) !important;
+  border-radius: 28px 28px 0 0 !important;
+  background:
+    radial-gradient(ellipse 90% 40% at 50% -6%, rgba(176, 222, 60, 0.16) 0%, rgba(13, 14, 18, 0) 70%),
+    #111216 !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+}
+.gm-export .ie-swap-sheet-head { margin-bottom: 14px; }
+.gm-export .ie-swap-sheet-title { color: #ffffff; font-size: 22px; font-weight: 850; letter-spacing: -0.02em; }
+.gm-export .ie-swap-sheet-close { width: 36px; height: 36px; background: rgba(255, 255, 255, 0.08); color: #ffffff; }
+.gm-export :focus-visible { outline: 2px solid var(--gm-lime); outline-offset: 2px; }
+
+.gm-result { display: flex; flex-direction: column; gap: 12px; max-width: 480px; margin: 0 auto; }
+.gm-result-pic {
+  position: relative;
   display: grid;
-  flex: none;
   place-items: center;
-  width: 50px;
-  height: 50px;
+  max-height: 40vh;
+  overflow: hidden;
+  border-radius: 20px;
+  background: #000;
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.45), inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+.gm-result-pic img { display: block; max-width: 100%; max-height: 40vh; object-fit: contain; }
+.gm-result-tag {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--gm-lime);
+  color: var(--gm-lime-ink);
+  font-size: 11.5px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+.gm-result-meta {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.gm-result-meta li {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  color: rgba(235, 235, 245, 0.78);
+  font-size: 12.5px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+.gm-result-meta svg { color: var(--gm-lime); }
+
+/* The name: a soft field, the pencil before it, .gif after; lit in lime while typing. */
+.gm-result-name {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 52px;
+  padding: 0 16px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.07);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+  color: var(--gm-lime);
+  cursor: text;
+  transition: box-shadow 0.15s ease, background-color 0.15s ease;
+}
+.gm-result-name:focus-within { background: rgba(255, 255, 255, 0.09); box-shadow: inset 0 0 0 1.5px var(--gm-lime); }
+.gm-export .gm-result-name input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: none;
+  outline: none;
+  background: none;
+  box-shadow: none;
+  color: #ffffff;
+  font: inherit;
+  font-size: 16px; /* 16px keeps phones from zooming in on focus */
+  font-weight: 650;
+}
+.gm-export .gm-result-name input::placeholder { color: rgba(235, 235, 245, 0.45); }
+.gm-result-ext { flex: none; color: rgba(235, 235, 245, 0.45); font-size: 15px; font-weight: 650; }
+
+/* Download: the wide lime button; Share and Save: grey pills under it. */
+.gm-export .gm-result-main {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  width: 100%;
+  height: 54px;
   border: none;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--gm-lime);
+  color: var(--gm-lime-ink) !important;
+  font-size: 16.5px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
   cursor: pointer;
+  box-shadow: 0 10px 24px -10px rgba(196, 240, 77, 0.6);
+  transition: transform 0.16s ease, filter 0.15s ease;
 }
-.gm-result-btn svg { width: 20px; height: 20px; }
-.gm-result-btn:disabled { color: var(--ui-accent-text, #ff7652); cursor: default; }
+.gm-export .gm-result-main:active { transform: scale(0.98); }
+@media (hover: hover) { .gm-export .gm-result-main:hover { filter: brightness(1.06); } }
+.gm-result-actions { display: flex; gap: 8px; }
+.gm-export .gm-result-btn {
+  display: inline-flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 0;
+  height: 48px;
+  padding: 0 14px;
+  border: none;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  font-size: 14.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.15s ease;
+}
+.gm-export .gm-result-btn svg { flex: none; color: var(--gm-lime); }
+.gm-export .gm-result-btn:active:not(:disabled) { transform: scale(0.97); }
+.gm-export .gm-result-btn.is-done { color: var(--gm-lime); cursor: default; }
+@media (hover: hover) { .gm-export .gm-result-btn:hover:not(:disabled) { background: rgba(255, 255, 255, 0.12); } }
+.gm-result-error { margin: 0; color: #ff453a; font-size: 13px; line-height: 1.4; text-align: center; }
 
-/* A short phone: a smaller film frame, no hint, slimmer rows. */
 @media (max-height: 700px) {
-  .gm .gm-video-tile .ie-swap-empty-icon { width: 52px; height: 52px; margin-bottom: 10px; }
-  .gm-stage { min-height: 170px; }
-  .gm-setting, .gm-caption { min-height: 48px; height: auto; }
+  .gm-result-pic, .gm-result-pic img { max-height: 32vh; }
+  .gm-result-name { height: 48px; }
+}
+
+/* Short phones: slimmer rows and a smaller frame. */
+@media (max-height: 700px) {
+  .gm { gap: 10px; }
+  .gm-body { gap: 10px; }
+  .gm-stage { min-height: 180px; }
+  .gm-empty-frame { width: 112px; height: 80px; }
+  .gm-setting, .gm-caption { min-height: 48px; }
   .gm-caption { height: 48px; }
   .gm-trim { padding: 10px 14px 12px; gap: 8px; }
   .gm-track { height: 46px; }
+  .gm .gm-source { height: 70px; gap: 6px; }
+  .gm-source-icon svg { width: 22px; height: 22px; }
 }
-@media (max-height: 640px) {
-  .gm .gm-video-tile .ie-swap-empty-hint { display: none; }
-  .gm .gm-video-tile .ie-swap-empty-cta { margin-top: 12px; }
+@media (max-height: 620px) {
+  .gm-stage { min-height: 140px; }
+  .gm-empty-hint { display: none; }
+  .gm-track { height: 40px; }
+  .gm-setting { min-height: 44px; padding-top: 4px; padding-bottom: 4px; }
+  .gm .gm-seg-btn { height: 30px; }
+  .gm .gm-make { height: 48px; }
 }
-/* A 320px-wide phone: a smaller title and tighter segmented controls. */
+/* A 320px-wide phone: tighter segmented controls. */
 @media (max-width: 350px) {
-  .gm .gm-title { font-size: 17px; }
-  .gm-seg-btn { min-width: 44px; padding: 0 8px; }
+  .gm .gm-seg-btn { min-width: 44px; padding: 0 9px; }
 }
 
 /* Room to breathe on a wide screen: the page keeps a phone's width. */
@@ -416,21 +780,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .gm-source, .gm-make, .gm-seg-btn, .gm-back { transition: none; }
-  .gm-source:active, .gm-make:active:not(:disabled) { transform: none; }
-}
-
-/* The shortest phones: everything a notch tighter so the controls fit under the preview. */
-@media (max-height: 620px) {
-  .gm { gap: 6px; }
-  .gm-body { gap: 8px; }
-  .gm-header { min-height: 40px; padding-bottom: 4px; }
-  .gm-stage { min-height: 140px; }
-  .gm-preview-box { padding: 8px; }
-  .gm-trim { padding: 8px 12px 10px; gap: 6px; }
-  .gm-track { height: 40px; }
-  .gm-caption { height: 44px; }
-  .gm-setting { min-height: 44px; padding-top: 4px; padding-bottom: 4px; }
-  .gm-seg-btn { height: 30px; }
-  .gm-make { height: 46px; }
+  .gm-sweep, .gm-spinner { animation: none; }
+  .gm-empty-frame, .gm .gm-source, .gm .gm-make, .gm .gm-seg-btn, .gm-back { transition: none; }
 }

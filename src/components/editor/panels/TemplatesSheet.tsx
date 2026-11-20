@@ -102,10 +102,12 @@ interface TemplatesBrowserProps {
   onClose: () => void;
   onPick?: (t: SizedTemplate) => void;
   title?: string;
+  /** A maker's own look for the sheet (Sticker Studio: `sst-templates`, stickerStudioPage.css). */
+  className?: string;
 }
 
 // The sheet itself, on any list of templates (the video editor's, outside the image editor's store).
-export function TemplatesBrowser({ templates, actions, onClose, onPick, title = 'Templates' }: TemplatesBrowserProps) {
+export function TemplatesBrowser({ templates, actions, onClose, onPick, title = 'Templates', className }: TemplatesBrowserProps) {
   const [query, setQuery] = useState('');
   const [tag, setTag] = useState('all');
   const [favorites, setFavorites] = useState<string[]>(() => {
@@ -145,7 +147,7 @@ export function TemplatesBrowser({ templates, actions, onClose, onPick, title = 
 
   return (
     <BrowseSheet
-      className="ie-templates-sheet"
+      className={`ie-templates-sheet${className ? ` ${className}` : ''}`}
       title={title}
       Icon={LayoutTemplate}
       total={counts.all}

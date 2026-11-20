@@ -59,7 +59,10 @@ describe('GifMaker', () => {
     expect(within(sources).getByLabelText('Upload a video')).toBeTruthy();
     expect(within(sources).getByLabelText('Record a video')).toBeTruthy();
     expect(screen.queryByLabelText('Choose photos')).toBeNull();
-    expect((screen.getByRole('button', { name: 'Make GIF' }) as HTMLButtonElement).disabled).toBe(true);
+    expect((screen.getByRole('button', { name: 'Export' }) as HTMLButtonElement).disabled).toBe(true);
+    // The stage invites the video; a line under Export says what comes first.
+    expect(screen.getByText('Turn a video into a GIF')).toBeTruthy();
+    expect(screen.getByText('Add a video to start')).toBeTruthy();
   });
 
   it('Clips opens the meme clips; a pick is downloaded and becomes the clip', async () => {
@@ -69,11 +72,11 @@ describe('GifMaker', () => {
       const GifMaker = await load();
       render(<GifMaker onBack={() => {}} />);
       fireEvent.click(within(screen.getByRole('group', { name: 'Add a video' })).getByRole('button', { name: 'Clips' }));
-      const sheet = screen.getByRole('dialog', { name: 'Clips' });
+      const sheet = screen.getByRole('dialog', { name: 'Pick a clip' });
       fireEvent.click(within(sheet).getAllByRole('button').find((b) => b.classList.contains('ie-card'))!);
       expect(await screen.findByRole('slider', { name: 'Clip start' })).toBeTruthy();
       expect(fetchMock).toHaveBeenCalledWith(expect.stringMatching(/\.mp4$/));
-      expect(screen.queryByRole('dialog', { name: 'Clips' })).toBeNull();
+      expect(screen.queryByRole('dialog', { name: 'Pick a clip' })).toBeNull();
     } finally {
       vi.unstubAllGlobals();
     }
@@ -91,6 +94,10 @@ describe('GifMaker', () => {
     expect(screen.getByRole('slider', { name: 'Clip end' }).getAttribute('aria-valuenow')).toBe('5');
     expect(screen.getByText('Ready to make', { selector: '.ui-topbar-subtitle' })).toBeTruthy();
     expect(screen.queryByRole('group', { name: 'Add a video' })).toBeNull();
+    // Change (another video) and Remove sit on the stage; Export moves to the header's right.
+    expect(screen.getByLabelText('Change the video')).toBeTruthy();
+    expect(screen.getByRole('banner').contains(screen.getByRole('button', { name: 'Export' }))).toBe(true);
+    expect(screen.getAllByRole('button', { name: 'Export' })).toHaveLength(1);
 
     fireEvent.change(screen.getByLabelText('Caption'), { target: { value: 'when it works' } });
     fireEvent.click(within(screen.getByRole('radiogroup', { name: 'Caption place' })).getByRole('radio', { name: 'Bottom' }));
@@ -98,7 +105,7 @@ describe('GifMaker', () => {
     fireEvent.click(within(screen.getByRole('radiogroup', { name: 'Size' })).getByRole('radio', { name: 'Small' }));
     expect(screen.getByText('320 × 180')).toBeTruthy();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Make GIF' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Export' }));
     const sheet = await screen.findByRole('dialog', { name: 'Your GIF' });
     expect(makeGif).toHaveBeenCalledWith(
       expect.objectContaining({ trim: { start: 0, end: 5 }, speed: 1, loop: 'bounce', w: 320, h: 180, caption: { text: 'when it works', place: 'bottom' } }),
@@ -106,8 +113,12 @@ describe('GifMaker', () => {
     );
     expect(screen.getByText('Ready to export', { selector: '.ui-topbar-subtitle' })).toBeTruthy();
     expect(within(sheet).getByRole('button', { name: 'Download' })).toBeTruthy();
+    // Its name starts as the caption and can be edited; the edited name is what's saved.
+    const name = within(sheet).getByLabelText('GIF name') as HTMLInputElement;
+    expect(name.value).toBe('when it works');
+    fireEvent.change(name, { target: { value: 'Friday mood' } });
     fireEvent.click(within(sheet).getByRole('button', { name: 'Save to My Studio' }));
-    await waitFor(() => expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ name: 'when it works', imageUrl: expect.stringMatching(/^data:image\/gif/) })));
+    await waitFor(() => expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ name: 'Friday mood', imageUrl: expect.stringMatching(/^data:image\/gif/) })));
     expect(within(sheet).getByRole('button', { name: 'Saved to My Studio' })).toBeTruthy();
     fireEvent.click(within(sheet).getByRole('button', { name: 'Close' }));
 

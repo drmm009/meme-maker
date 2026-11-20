@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Clapperboard, LayoutGrid, Play, Search } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import BrowseSheet, { BrowseEmpty, ResultsHead, Shelf, Thumb } from '../editor/panels/BrowseSheet';
 import { VIDEO_MEME_TEMPLATES } from '../../data/videoTemplates';
 
@@ -75,8 +76,16 @@ function ClipCard({ clip, onPick }: { clip: VideoClip; onPick: (c: VideoClip) =>
 }
 
 // Media > Clips: meme video clips laid out like the image editor's Templates, a shelf per category
-// (Trending first) with See all; a category or a search shows a grid. A pick adds the clip.
-export default function ClipsSheet({ onPick, onClose }: { onPick: (c: VideoClip) => void; onClose: () => void }) {
+// (Trending first) with See all; a category or a search shows a grid. A pick adds the clip. A page
+// that shows it in its own look (the GIF maker: `gm-clips` in gifMaker.css) gives a class, a title
+// and an icon for the header.
+export default function ClipsSheet({ onPick, onClose, className, title = 'Clips', Icon }: {
+  onPick: (c: VideoClip) => void;
+  onClose: () => void;
+  className?: string;
+  title?: string;
+  Icon?: LucideIcon;
+}) {
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('all');
   const q = query.trim().toLowerCase();
@@ -94,7 +103,9 @@ export default function ClipsSheet({ onPick, onClose }: { onPick: (c: VideoClip)
 
   return (
     <BrowseSheet
-      title="Clips"
+      title={title}
+      Icon={Icon}
+      className={className}
       total={CLIPS.length}
       onClose={onClose}
       search={{ value: query, onChange: setQuery, placeholder: 'Search clips', label: 'Search clips' }}

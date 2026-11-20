@@ -37,7 +37,8 @@ function useReplacePhoto() {
   };
 }
 
-// The Stickers maker's Gallery: the Templates browser, whose pick becomes the sticker's photo.
+// The Stickers maker's Gallery: the Templates browser in Sticker Studio's look (sst-templates), whose
+// pick becomes the sticker's photo.
 export function StickerGallerySheet({ actions, onClose }: { actions: EditorActions; onClose: () => void }) {
   const replace = useReplacePhoto();
   return (
@@ -45,6 +46,7 @@ export function StickerGallerySheet({ actions, onClose }: { actions: EditorActio
       actions={actions}
       onClose={onClose}
       title="Pick a picture"
+      className="sst-templates"
       onPick={(t) => void replace(() => actions.handleAddImageLayer(t.imageUrl))}
     />
   );

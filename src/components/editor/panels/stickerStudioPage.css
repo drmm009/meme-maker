@@ -718,3 +718,104 @@
   flex: 1;
   padding: 0;
 }
+
+/* ---- Pick a picture: the Templates sheet on the sticker page, in Sticker Studio's look ----
+   (TemplatesBrowser with `sst-templates`): a bare green mark by the title, the count in a pill, a
+   round close, the search a soft pill; the chips grey with the picked one green and dark ink; every
+   shelf's mark and the top three's rank tags in green; the pictures as big rounded cards, each name
+   over a dark fade at the bottom, the kind and the star on frosted pills. */
+.sst-templates {
+  --sst-green: #2fd39b;
+  --sst-green-ink: #062419;
+  background:
+    radial-gradient(ellipse 90% 40% at 50% -6%, rgba(20, 192, 138, 0.16) 0%, rgba(13, 14, 18, 0) 70%),
+    #111216 !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  border-radius: 28px 28px 0 0 !important;
+}
+.sst-templates .ie-browse-head { padding: 4px 14px 14px 20px; }
+.sst-templates .ie-browse-title { gap: 9px; font-size: 26px; font-weight: 850; letter-spacing: -0.022em; }
+.sst-templates .ie-browse-title-icon { width: auto; height: auto; padding: 0; background: none !important; box-shadow: none !important; color: var(--sst-green); }
+.sst-templates .ie-browse-title-icon svg { width: 23px; height: 23px; }
+.sst-templates .ie-browse-total {
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(235, 235, 245, 0.6);
+  font-size: 13px;
+  font-weight: 700;
+}
+.sst-templates .ie-browse-close { width: 40px; height: 40px; background: rgba(255, 255, 255, 0.08); color: #ffffff; }
+.sst-templates .ie-browse-search { margin: 0 14px 12px; }
+.sst-templates .ie-browse-search input {
+  height: 46px;
+  background: rgba(255, 255, 255, 0.07);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+.sst-templates .ie-browse-search input:focus { border-color: transparent; background: rgba(255, 255, 255, 0.09); box-shadow: inset 0 0 0 1.5px var(--sst-green); }
+.sst-templates .ie-browse-chips { padding-left: 14px; padding-right: 14px; }
+.sst-templates .ie-browse-chip { height: 36px; background: rgba(255, 255, 255, 0.07); color: rgba(235, 235, 245, 0.85); font-weight: 650; }
+.sst-templates .ie-browse-chip svg { color: var(--sst-green) !important; }
+.sst-templates .ie-browse-chip .ie-browse-chip-count { background: rgba(255, 255, 255, 0.1); color: rgba(235, 235, 245, 0.7); }
+.sst-templates .ie-browse-chip.is-on { background: var(--sst-green); color: var(--sst-green-ink); }
+.sst-templates .ie-browse-chip.is-on svg { color: var(--sst-green-ink) !important; }
+.sst-templates .ie-browse-chip.is-on .ie-browse-chip-count { background: rgba(6, 36, 25, 0.16); color: var(--sst-green-ink); }
+
+/* Shelves: every mark green, See all in green, the cards a little bigger. */
+.sst-templates .ie-shelf-icon svg { color: var(--sst-green) !important; }
+.sst-templates .ie-shelf-title { font-size: 18px; font-weight: 800; letter-spacing: -0.015em; }
+.sst-templates .ie-shelf-see-all { color: var(--sst-green); font-weight: 700; }
+.sst-templates .ie-shelf-rail { gap: 12px; padding-left: 14px; padding-right: 14px; }
+.sst-templates .ie-shelf-card { flex-basis: 156px; width: 156px; }
+.sst-templates .ie-card-grid { gap: 12px; padding: 0 14px; }
+.sst-templates .ie-tpl-rank {
+  top: 8px;
+  left: 8px;
+  padding: 3px 9px;
+  background: var(--sst-green);
+  color: var(--sst-green-ink);
+  font-weight: 850;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+
+/* A picture: filling a big rounded card, its name over a dark fade at the bottom. */
+.sst-templates .ie-card.ie-browse-item {
+  position: relative;
+  border-radius: 20px;
+  background: #1c1d22;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+.sst-templates .ie-card-media { aspect-ratio: 1; }
+.sst-templates .ie-browse-thumb.is-loading,
+.sst-templates .ie-browse-thumb.is-failed {
+  background:
+    radial-gradient(circle at 50% 40%, rgba(47, 211, 155, 0.08), transparent 60%),
+    linear-gradient(160deg, #26282e, #1a1b20);
+  animation: none;
+}
+.sst-templates .ie-card.ie-browse-item::after {
+  content: '';
+  position: absolute;
+  inset: 50% 0 0;
+  border-radius: 0 0 20px 20px;
+  background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.78));
+  pointer-events: none;
+}
+.sst-templates .ie-card-name {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+  padding: 0 12px 11px;
+  color: #ffffff;
+  font-size: 13.5px;
+  font-weight: 750;
+  letter-spacing: -0.01em;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
+}
+.sst-templates .ie-tpl-badge { top: 8px; left: 8px; border: none !important; background: rgba(16, 17, 20, 0.62); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12); }
+.sst-templates .ie-tpl-star { width: 30px; height: 30px; background: rgba(16, 17, 20, 0.62); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12); }
+.sst-templates .ie-results-head button { color: var(--sst-green); }
+.sst-templates .ie-browse-empty-btn { background: var(--sst-green); color: var(--sst-green-ink); }

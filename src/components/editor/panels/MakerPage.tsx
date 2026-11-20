@@ -28,8 +28,9 @@ const isTest = typeof navigator !== 'undefined' && (navigator.userAgent.includes
 // A small sheet over the page, rising from the bottom: where a picture comes from. Glass over the
 // dimmed page; a drag down on its grip or title row moves it with the finger and, past 70px, closes
 // it. However it closes (the X, a tap outside, Escape or a drag) it slides down from where it is
-// while the dim fades, and only then goes.
-export function PickerSheet({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
+// while the dim fades, and only then goes. A page may give it a class for its own look (the GIF
+// maker's Your GIF: gm-export).
+export function PickerSheet({ title, onClose, children, className }: { title: string; onClose: () => void; children: ReactNode; className?: string }) {
   const sheetRef = useRef<HTMLDivElement>(null);
   const backdropRef = useRef<HTMLDivElement>(null);
   const drag = useRef<{ y: number; dy: number } | null>(null);
@@ -87,7 +88,7 @@ export function PickerSheet({ title, onClose, children }: { title: string; onClo
     <div ref={backdropRef} className="ie-swap-sheet-backdrop" onClick={close}>
       <div
         ref={sheetRef}
-        className="ie-swap-sheet"
+        className={`ie-swap-sheet${className ? ` ${className}` : ''}`}
         role="dialog"
         aria-modal="true"
         aria-label={title}
