@@ -1,8 +1,10 @@
 // Explore: every template, in the pages' iOS look (pages/iosLook.css, ExploreView.css). A large
 // title with a Sort menu, a search field, and a row of category chips (the picked one black, kept
-// in view). With All Templates picked and nothing searched it shows a shelf per category, each
-// with See All; a category or a search shows a grid. A card opens its template in the editor; its
-// star keeps it under My Favorites (on this device).
+// in view). With All picked and nothing searched it shows a shelf per category, each with See All;
+// a category or a search shows a grid. A card opens its template in the editor; its star keeps it
+// under My Favorites (on this device). A template with a `previewUrl` (the social cards: their own
+// picture is a plain white mock-up) shows that on its card instead. Trending leaves out the social
+// cards (they have their own shelf).
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import {
@@ -40,6 +42,8 @@ interface Template {
   tags?: string[];
   trendingScore?: number;
   imageUrl?: string;
+  // A livelier picture for its card here than the template's own (the social cards).
+  previewUrl?: string;
   thumbnailUrl?: string;
   videoUrl?: string;
   durationMs?: number;
@@ -70,7 +74,7 @@ const SORT_OPTIONS = [
   { id: 'name', label: 'Name' },
 ];
 
-// The shelves shown under All Templates, in order, with how many each holds.
+// The shelves shown under All, in order, with how many each holds.
 const SHELVES = [
   { id: 'trending', label: 'Trending Memes', size: 10, Icon: Flame, subtitle: 'Updated today' },
   { id: 'social', label: 'Social Media Cards', size: 8, Icon: Share2, subtitle: 'Twitter, WhatsApp & Instagram' },
@@ -184,6 +188,8 @@ export default function ExploreView({ onSelectTemplate, initialCategory = 'all' 
       case 'all':
         return true;
       case 'trending':
+        // Memes only: the social cards have their own shelf.
+        if (t.category === 'social' || tags.includes('social')) return false;
         return (t.trendingScore && t.trendingScore >= 140) || t.tag === 'trending';
       case 'social':
         return t.category === 'social' || tags.includes('social');
@@ -259,7 +265,7 @@ export default function ExploreView({ onSelectTemplate, initialCategory = 'all' 
     return sorted;
   }, [templatesList, selectedCategory, searchQuery, sortBy, matchesCategory]);
 
-  // The shelves, shown only under All Templates with nothing searched.
+  // The shelves, shown only under All with nothing searched.
   const shelves = useMemo(() => {
     if (searchQuery.trim().length > 0 || selectedCategory !== 'all') return null;
     return SHELVES
@@ -427,7 +433,7 @@ function TemplateCard({ template, rank, views, isFavorite, onToggleFavorite, onS
       <button type="button" className="ex-card-open" onClick={() => onSelectTemplate?.(template)}>
         <span className="ex-card-pic">
           <TemplateThumb
-            src={isVideo ? template.thumbnailUrl : (template.imageUrl || template.thumbnailUrl)}
+            src={isVideo ? template.thumbnailUrl : (template.previewUrl || template.imageUrl || template.thumbnailUrl)}
             videoUrl={isVideo ? template.videoUrl : undefined}
             className="ex-card-img"
           />

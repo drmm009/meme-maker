@@ -37,8 +37,19 @@ describe('ExploreView', () => {
   it('renders search bar and category tags slider', () => {
     render(<ExploreView onSelectTemplate={() => {}} />);
     expect(screen.getByPlaceholderText(/search templates/i)).toBeTruthy();
-    expect(screen.getByRole('tab', { name: /all templates/i })).toBeTruthy();
+    expect(screen.getByRole('tab', { name: /^All\s*\d*$/ })).toBeTruthy();
+    expect(screen.queryByRole('tab', { name: /all templates/i })).toBeNull();
     expect(screen.getByRole('tab', { name: /trending/i })).toBeTruthy();
+  });
+
+  it('keeps the social cards out of Trending, and shows them by their own previews', () => {
+    const { container } = render(<ExploreView onSelectTemplate={() => {}} initialCategory="trending" />);
+    expect(screen.queryByText('Tweet / X Post Card')).toBeNull();
+    cleanup();
+    render(<ExploreView onSelectTemplate={() => {}} initialCategory="social" />);
+    const srcs = [...document.querySelectorAll('.ex-card-pic img')].map((i) => i.getAttribute('src'));
+    expect(srcs.some((src) => /social-previews\/tweet\.svg/.test(src || ''))).toBe(true);
+    expect(container).toBeTruthy();
   });
 
   it('filters to empty state on unknown query', async () => {

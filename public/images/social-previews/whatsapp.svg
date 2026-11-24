@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+  <!-- Explore's preview of the WhatsApp chat card template: a short chat, bubbles on a green glow.
+       Drawn for the app; no brand marks. -->
+  <defs>
+    <radialGradient id="bg" cx="0.75" cy="0.1" r="1.05">
+      <stop offset="0" stop-color="#2fd17a"/>
+      <stop offset="0.55" stop-color="#0f6b4a"/>
+      <stop offset="1" stop-color="#062c22"/>
+    </radialGradient>
+  </defs>
+  <rect width="400" height="400" fill="url(#bg)"/>
+  <g transform="rotate(-3 200 200)">
+    <!-- the chat window -->
+    <rect x="56" y="58" width="288" height="288" rx="24" fill="#0b141a"/>
+    <!-- header: avatar, name, online -->
+    <path d="M56 82 a24 24 0 0 1 24 -24 h240 a24 24 0 0 1 24 24 v26 h-288 z" fill="#1f2c34"/>
+    <circle cx="90" cy="84" r="14" fill="#f4b26b"/>
+    <rect x="114" y="74" width="80" height="10" rx="5" fill="#e9edef"/>
+    <rect x="114" y="89" width="42" height="7" rx="3.5" fill="#25d366"/>
+    <!-- their bubbles -->
+    <rect x="74" y="128" width="170" height="40" rx="14" fill="#202c33"/>
+    <rect x="88" y="142" width="128" height="9" rx="4.5" fill="#e9edef"/>
+    <rect x="74" y="176" width="120" height="34" rx="14" fill="#202c33"/>
+    <rect x="88" y="189" width="80" height="9" rx="4.5" fill="#e9edef"/>
+    <!-- my bubbles, with ticks -->
+    <rect x="160" y="226" width="166" height="40" rx="14" fill="#005c4b"/>
+    <rect x="174" y="240" width="110" height="9" rx="4.5" fill="#e9edef"/>
+    <path d="M292 252 l4 4 l8 -9 M300 252 l4 4 l8 -9" stroke="#53bdeb" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="206" y="274" width="120" height="34" rx="14" fill="#005c4b"/>
+    <text x="222" y="297" font-family="Arial, sans-serif" font-size="18" font-weight="700" fill="#e9edef">😂😂</text>
+    <!-- typing bar -->
+    <rect x="74" y="318" width="200" height="18" rx="9" fill="#2a3942"/>
+    <circle cx="300" cy="327" r="13" fill="#25d366"/>
+  </g>
+</svg>

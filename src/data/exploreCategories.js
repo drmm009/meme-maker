@@ -2,7 +2,7 @@
 import { Briefcase, Clapperboard, Drama, Flame, Heart, Layers, LayoutGrid, Share2, Smile, Sparkles, Star } from 'lucide-react';
 
 export const EXPLORE_CATEGORIES = [
-  { id: 'all', label: 'All Templates', icon: Layers, color: '#ff5e36', description: 'Browse all templates categorically' },
+  { id: 'all', label: 'All', icon: Layers, color: '#ff5e36', description: 'Browse all templates categorically' },
   { id: 'trending', label: 'Trending', icon: Flame, color: '#ff3b60', description: 'Most viral memes right now' },
   { id: 'social', label: 'Social Cards', icon: Share2, color: '#38bdf8', description: 'Twitter, WhatsApp & Instagram cards' },
   { id: 'videos', label: 'Video Memes', icon: Clapperboard, color: '#06b6d4', description: 'Motion clips & video templates' },

@@ -105,7 +105,8 @@
   height: 36px;
   border-radius: 50%;
   background: var(--ios-fill);
-  color: var(--ios-label);
+  /* The app's orange, on the soft light round. */
+  color: #ff6a3d;
 }
 
 .ex-head-words {
