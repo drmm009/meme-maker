@@ -1,108 +1,185 @@
-/* Home's makers (HomeTools.tsx): a shelf heading, then a card each, tinted with the maker's own
-   colour (its edge too), with the icon on a solid tile of that colour, its name and a line about it.
-   On a phone the first card runs the full width as a row with a chevron, and the rest sit two
-   across; from 640px two wide cards sit over three; from 1000px all five share one row. */
+/* Home's makers (HomeTools.tsx), as the Creator sheet's Image and Video cards (creatorSheet.css): a
+   real meme photo filling each card, a hairline round it, the maker's icon on a frosted badge in its
+   corner, its name and a line about it on a dark fade at the foot; Meme video has the VIDEO · 0:12
+   pill with three bobbing sound bars in its colour. A bento grid: on a phone Meme video is a big tall
+   card on the left with Stickers and Face swap stacked beside it, AI meme and GIF maker side by side
+   under them; from 640px Meme video stands tall on the left with the other four two by two beside it. */
 
 .hh-makers {
   margin: 6px 0 22px;
 }
 
 .hh-tools {
-  --hh-card: #1c1c1e;
-  --hh-label: #f4f4f6;
-  --hh-label-2: rgba(235, 235, 245, 0.66);
-  --hh-tint: 14%;
-  --hh-tint-hover: 20%;
-  --hh-edge-tint: 26%;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-rows: 104px;
   gap: 10px;
   margin-top: 12px;
   font-family: 'Plus Jakarta Sans', sans-serif;
   -webkit-tap-highlight-color: transparent;
 }
 
-[data-theme='light'] .hh-tools {
-  --hh-card: #ffffff;
-  --hh-label: #1c1c1e;
-  --hh-label-2: rgba(60, 60, 67, 0.74);
-  --hh-tint: 11%;
-  --hh-tint-hover: 16%;
-  --hh-edge-tint: 30%;
-}
-
 .hh-tool {
   --tool-color: #ff5a36;
   position: relative;
   box-sizing: border-box;
-  display: grid;
-  align-content: start;
-  gap: 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
   min-width: 0;
-  min-height: 132px;
-  padding: 14px;
-  /* Plain card first, for a browser without color-mix. */
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border: 1px solid color-mix(in srgb, var(--tool-color) var(--hh-edge-tint), transparent);
-  border-radius: 20px;
-  background: var(--hh-card);
-  background: color-mix(in srgb, var(--tool-color) var(--hh-tint), var(--hh-card));
-  color: var(--hh-label);
+  height: 100%;
+  padding: 0;
+  overflow: hidden;
+  border: none;
+  border-radius: 18px;
+  background: #111114;
+  color: #ffffff;
   font: inherit;
   text-align: left;
   cursor: pointer;
-  transition: background-color 0.2s cubic-bezier(0.22, 1, 0.36, 1), transform 0.16s cubic-bezier(0.22, 1, 0.36, 1);
+  isolation: isolate;
+  transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* Each maker's own colour. */
+/* Each maker's own colour (its sound bars and focus ring). */
 .hh-tool--video { --tool-color: #38bdf8; }
 .hh-tool--stickers { --tool-color: #2fd39b; }
 .hh-tool--faceswap { --tool-color: #ff6a48; }
 .hh-tool--ai { --tool-color: #a78bfa; }
 .hh-tool--gif { --tool-color: #a8d834; }
 
+/* A hairline round the picture, so a light one keeps its edge on the page. */
+.hh-tool::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+  pointer-events: none;
+}
+
+/* The dark fade the name sits on. */
+.hh-tool::after {
+  content: '';
+  position: absolute;
+  inset: 40% 0 0;
+  z-index: -1;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.55) 45%, rgba(0, 0, 0, 0.88));
+  pointer-events: none;
+}
+
+.hh-tool-picture {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+  user-select: none;
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Where each picture's subject sits. */
+.hh-tool--video .hh-tool-picture { object-position: 78% 35%; }
+/* The big card: two rows tall. */
+.hh-tool--video { grid-row: span 2; }
+.hh-tool--stickers .hh-tool-picture { object-position: 45% 30%; }
+.hh-tool--faceswap .hh-tool-picture { object-position: 45% 30%; }
+.hh-tool--ai .hh-tool-picture { object-position: 50% 25%; }
+.hh-tool--gif .hh-tool-picture { object-position: 62% 30%; }
+
+/* Frosted chips on the picture: the maker's icon top left, the video's pill top right. */
+.hh-tool-icon,
+.hh-tool-pill {
+  position: absolute;
+  top: 8px;
+  display: inline-flex;
+  align-items: center;
+  background: rgba(20, 20, 24, 0.5);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.16);
+  -webkit-backdrop-filter: blur(12px) saturate(1.4);
+  backdrop-filter: blur(12px) saturate(1.4);
+}
+
 .hh-tool-icon {
-  display: grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
-  border-radius: 13px;
-  background: var(--tool-color);
-  color: #101012;
-  box-shadow: 0 6px 16px -6px var(--tool-color);
+  left: 8px;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 9px;
+  color: #ffffff;
 }
 
 .hh-tool-icon svg {
-  width: 22px;
+  width: 15px;
+  height: 15px;
+}
+
+.hh-tool-pill {
+  right: 8px;
+  gap: 5px;
   height: 22px;
+  padding: 0 8px 0 7px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Three little sound bars that bob, in the video's colour. */
+.hh-bars {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 11px;
+}
+
+.hh-bars i {
+  width: 2.5px;
+  height: 100%;
+  border-radius: 2px;
+  background: var(--tool-color);
+  transform-origin: bottom;
+  animation: hh-bar 1s ease-in-out infinite;
+}
+
+.hh-bars i:nth-child(2) { animation-delay: -0.35s; }
+.hh-bars i:nth-child(3) { animation-delay: -0.7s; }
+
+@keyframes hh-bar {
+  0%, 100% { transform: scaleY(0.35); }
+  50% { transform: scaleY(1); }
 }
 
 .hh-tool-text {
-  display: grid;
-  gap: 3px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
   min-width: 0;
+  padding: 0 11px 10px;
 }
 
 .hh-tool-label {
   font-size: 16px;
-  font-weight: 750;
-  line-height: 1.2;
-  letter-spacing: -0.015em;
+  font-weight: 850;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.45);
 }
 
 .hh-tool-about {
   display: -webkit-box;
   overflow: hidden;
-  font-size: 13px;
-  line-height: 1.35;
-  color: var(--hh-label-2);
+  font-size: 11.5px;
+  font-weight: 500;
+  line-height: 1.25;
+  color: rgba(255, 255, 255, 0.78);
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
-}
-
-/* The chevron shows only on the wide row card (phone); a tile is plainly tappable already. */
-.hh-tool-go {
-  display: none;
 }
 
 .hh-tool:active {
@@ -115,64 +192,40 @@
 }
 
 @media (hover: hover) {
-  .hh-tool:hover {
-    background: color-mix(in srgb, var(--tool-color) var(--hh-tint-hover), var(--hh-card));
+  .hh-tool:hover .hh-tool-picture {
+    transform: scale(1.04);
   }
 }
 
-/* On a phone, the first card is a full-width row: icon, words, chevron. */
-@media (max-width: 639px) {
-  .hh-tool:first-child {
-    grid-column: 1 / -1;
-    grid-template-columns: auto minmax(0, 1fr) auto;
-    align-items: center;
-    gap: 14px;
-    min-height: 0;
-  }
+/* The big card's name a size up. */
+.hh-tool--video .hh-tool-label { font-size: 19px; }
 
-  .hh-tool:first-child .hh-tool-go {
-    display: block;
-    width: 20px;
-    height: 20px;
-    color: var(--tool-color);
-  }
-}
-
-/* Two wide cards over three. */
+/* A wider screen: Meme video tall on the left, the other four two by two beside it. */
 @media (min-width: 640px) {
   .hh-tools {
-    grid-template-columns: repeat(6, minmax(0, 1fr));
+    grid-template-columns: 1.3fr 1fr 1fr;
+    grid-auto-rows: 132px;
     gap: 12px;
-  }
-
-  .hh-tool {
-    grid-column: span 2;
-    padding: 16px;
-  }
-
-  .hh-tool:nth-child(-n + 2) {
-    grid-column: span 3;
   }
 }
 
-/* All five in one row. */
 @media (min-width: 1000px) {
   .hh-tools {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-  }
-
-  .hh-tool,
-  .hh-tool:nth-child(-n + 2) {
-    grid-column: auto;
+    grid-auto-rows: 150px;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .hh-tool {
+  .hh-tool,
+  .hh-tool-picture {
     transition: none;
   }
 
   .hh-tool:active {
     transform: none;
+  }
+
+  .hh-bars i {
+    animation: none;
   }
 }
