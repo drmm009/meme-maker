@@ -64,16 +64,6 @@
   color: #fff;
 }
 
-.ex-chip-count {
-  color: var(--ios-label-2);
-  font-weight: 500;
-  font-variant-numeric: tabular-nums;
-}
-
-.ex-chip[aria-selected='true'] .ex-chip-count {
-  color: rgba(255, 255, 255, 0.66);
-}
-
 /* ---- Sections ---- */
 
 .ex-section {
@@ -239,17 +229,6 @@
   min-width: 0;
 }
 
-/* A chart's place, set large beside the name. */
-.ex-card-rank {
-  flex: none;
-  min-width: 1ch;
-  font-size: 20px;
-  font-weight: 700;
-  line-height: 1;
-  font-variant-numeric: tabular-nums;
-  color: var(--ios-label-2);
-}
-
 .ex-card-words {
   display: grid;
   min-width: 0;
@@ -349,3 +328,44 @@
     max-width: 420px;
   }
 }
+
+/* ---- A chart (Trending): the streaming-app look ----
+   Each card wider, its place a huge numeral outlined in orange (filled with the page's dark) at
+   the picture's left edge, half on the picture and half outside it, its foot on the picture's foot. */
+.ex-shelf--ranked {
+  grid-auto-columns: 172px;
+  gap: 10px;
+}
+.ex-card--ranked {
+  padding-left: 32px;
+}
+.ex-rank {
+  position: absolute;
+  /* Centred on the picture's left edge (the card's left padding), whatever its width: half on the
+     picture, half outside. The picture is as tall as it is wide (140px); its foot sits on its foot. */
+  left: 32px;
+  top: 140px;
+  z-index: 2;
+  transform: translate(-50%, -86%);
+  color: #0c0d12;
+  font-size: 96px;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  -webkit-text-stroke: 3px #ff6a3d;
+  paint-order: stroke fill;
+  text-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+  user-select: none;
+}
+.ex-rank--wide { letter-spacing: -0.12em; }
+/* Said to screen readers only. */
+.ex-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+[data-theme='light'] .ex-rank { color: #ffffff; }

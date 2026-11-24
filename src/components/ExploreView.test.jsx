@@ -37,7 +37,7 @@ describe('ExploreView', () => {
   it('renders search bar and category tags slider', () => {
     render(<ExploreView onSelectTemplate={() => {}} />);
     expect(screen.getByPlaceholderText(/search templates/i)).toBeTruthy();
-    expect(screen.getByRole('tab', { name: /^All\s*\d*$/ })).toBeTruthy();
+    expect(screen.getByRole('tab', { name: 'All' })).toBeTruthy();
     expect(screen.queryByRole('tab', { name: /all templates/i })).toBeNull();
     expect(screen.getByRole('tab', { name: /trending/i })).toBeTruthy();
   });

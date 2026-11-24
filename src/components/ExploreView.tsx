@@ -1,6 +1,6 @@
 // Explore: every template, in the pages' iOS look (pages/iosLook.css, ExploreView.css). A large
-// title with a Sort menu, a search field, and a row of category chips (the picked one black, kept
-// in view). With All picked and nothing searched it shows a shelf per category, each with See All;
+// title with a Sort menu, a search field, and a row of category chips, just their names (the picked
+// one black, kept in view); how many there are shows only on a category's or a search's results. With All picked and nothing searched it shows a shelf per category, each with See All;
 // a category or a search shows a grid. A card opens its template in the editor; its star keeps it
 // under My Favorites (on this device). A template with a `previewUrl` (the social cards: their own
 // picture is a plain white mock-up) shows that on its card instead. Trending leaves out the social
@@ -226,14 +226,6 @@ export default function ExploreView({ onSelectTemplate, initialCategory = 'all' 
     }
   }, [favorites]);
 
-  const categoryCounts = useMemo(() => {
-    const counts: Record<string, number> = {};
-    EXPLORE_CATEGORIES.forEach((cat) => {
-      counts[cat.id] = templatesList.filter((t) => matchesCategory(t, cat.id)).length;
-    });
-    return counts;
-  }, [templatesList, matchesCategory]);
-
   const filteredTemplates = useMemo(() => {
     let result = templatesList;
 
@@ -297,7 +289,7 @@ export default function ExploreView({ onSelectTemplate, initialCategory = 'all' 
             <ArrowUpDown size={18} aria-hidden="true" />
           </PullDownMenu>
         </div>
-        <p className="ios-subtitle">{templatesList.length} templates to start from</p>
+        <p className="ios-subtitle">Find a template to start from</p>
         <SearchField value={searchQuery} onChange={setSearchQuery} label="Search templates" placeholder="Search templates" />
       </header>
 
@@ -313,7 +305,6 @@ export default function ExploreView({ onSelectTemplate, initialCategory = 'all' 
             onClick={() => handleSelectCategory(cat.id)}
           >
             {cat.label}
-            {categoryCounts[cat.id] > 0 && <span className="ex-chip-count">{categoryCounts[cat.id]}</span>}
           </button>
         ))}
       </div>
@@ -343,7 +334,7 @@ export default function ExploreView({ onSelectTemplate, initialCategory = 'all' 
                   <ChevronRight size={14} aria-hidden="true" />
                 </button>
               </div>
-              <div className="ex-shelf">
+              <div className={`ex-shelf${shelf.id === 'trending' ? ' ex-shelf--ranked' : ''}`}>
                 {shelf.templates.map((template, idx) => (
                   <TemplateCard
                     key={template.id}
@@ -422,14 +413,16 @@ export default function ExploreView({ onSelectTemplate, initialCategory = 'all' 
 }
 
 // A template: its picture (a video's frame, with its length), then its name and views. Tapping it
-// opens it; the star on the picture keeps it as a favourite.
+// opens it; the star on the picture keeps it as a favourite. On a chart (Trending) its place stands
+// beside it as a huge outlined numeral, the picture sliding over its edge, as on a streaming app.
 function TemplateCard({ template, rank, views, isFavorite, onToggleFavorite, onSelectTemplate }: TemplateCardProps) {
   const isVideo = template.type === 'video';
   const [spread, lowest] = views;
   const hasLength = typeof template.durationMs === 'number' && Number.isFinite(template.durationMs);
 
   return (
-    <article className="ex-card">
+    <article className={`ex-card${rank !== undefined ? ' ex-card--ranked' : ''}`}>
+      {rank !== undefined && <span className={`ex-rank${rank >= 10 ? ' ex-rank--wide' : ''}`} aria-hidden="true">{rank}</span>}
       <button type="button" className="ex-card-open" onClick={() => onSelectTemplate?.(template)}>
         <span className="ex-card-pic">
           <TemplateThumb
@@ -440,8 +433,8 @@ function TemplateCard({ template, rank, views, isFavorite, onToggleFavorite, onS
           {isVideo && <span className="ex-card-time">{hasLength ? clock(template.durationMs as number) : 'Video'}</span>}
         </span>
         <span className="ex-card-text">
-          {rank !== undefined && <span className="ex-card-rank">{rank}</span>}
           <span className="ex-card-words">
+            {rank !== undefined && <span className="ex-sr">Number {rank}: </span>}
             <span className="ex-card-name" title={template.name}>{template.name}</span>
             <span className="ex-card-views">{(templateNumericId(template) % spread) + lowest}K views</span>
           </span>
