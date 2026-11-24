@@ -379,8 +379,12 @@
   max-width: 520px;
   max-height: 92dvh;
   padding: 8px 16px calc(18px + env(safe-area-inset-bottom, 0px));
+  border: none;
   border-radius: 28px 28px 0 0;
-  background: var(--ios-surface);
+  /* Frosted glass: the page shows through, blurred. */
+  background: color-mix(in srgb, var(--ios-surface) 70%, transparent);
+  -webkit-backdrop-filter: blur(30px) saturate(1.6);
+  backdrop-filter: blur(30px) saturate(1.6);
   box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.35);
   overflow-y: auto;
   outline: none;
@@ -461,9 +465,10 @@
   margin: 4px auto 0;
   max-width: 360px;
   width: 100%;
-  border-radius: 20px;
-  background: var(--ios-surface-2);
-  border: 1px solid var(--ios-hairline);
+  /* No box: the picture or video sits on the sheet itself. */
+  border-radius: 16px;
+  background: none;
+  border: none;
   overflow: hidden;
 }
 
@@ -552,14 +557,22 @@
   outline-offset: 2px;
 }
 
-/* No Re-Edit (a GIF): Download at its own size beside Delete, the pair in the middle. */
-.mg-sheet-actions--compact {
-  justify-content: center;
+/* Download's label and icon in black on the orange. */
+.mg-sheet-actions .mg-sheet-btn-download,
+.mg-sheet-actions .mg-sheet-btn-download svg {
+  color: #000000;
 }
 
-.mg-sheet-actions--compact .mg-sheet-btn-download {
-  flex: none;
-  padding: 0 22px;
+/* No Re-Edit (a GIF): Download and Delete share the row; Delete black, its name beside the red bin. */
+.mg-sheet-actions--compact .mg-sheet-btn-download,
+.mg-sheet-actions--compact .mg-sheet-btn-delete {
+  flex: 1 1 0;
+  width: auto;
+  padding: 0 16px;
+}
+
+.mg-sheet-actions--compact .mg-sheet-btn-delete {
+  background: #000000;
 }
 
 @keyframes mg-fade-in {

@@ -21,8 +21,12 @@
   width: 100%;
   max-width: 520px;
   padding: 8px 16px calc(16px + env(safe-area-inset-bottom, 0px));
+  border: none;
   border-radius: 24px 24px 0 0;
-  background: var(--ios-surface);
+  /* Frosted glass, as My Studio's other sheets. */
+  background: color-mix(in srgb, var(--ios-surface) 70%, transparent);
+  -webkit-backdrop-filter: blur(30px) saturate(1.6);
+  backdrop-filter: blur(30px) saturate(1.6);
   box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.4);
   text-align: center;
   animation: sb-up 0.32s var(--ios-ease);

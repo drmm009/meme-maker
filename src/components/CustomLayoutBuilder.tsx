@@ -5,15 +5,16 @@
 // on the page takes and every layout opens with; then the Blank canvas row; then every section as
 // one line of cards that slides sideways (Slider): the three Caption layouts; for an image meme,
 // Meme formats (Classic, Subtitle, Poster, Breaking news) and Collages (Top & bottom, Then & now,
-// Side by side, 2 × 2 + caption); and Grid layouts last, Custom Grid at their end (its rows and
-// columns set in a panel under the slider), without the grids the collages already have.
+// Side by side, 2 × 2 + caption); and Grid layouts last, Custom Grid first among them (its rows and
+// columns set in a bottom sheet, CustomGridSheet), without the grids the collages already have.
 // Every preview is a frame of the chosen shape laid out as the layout opens, with its words in
 // place, showing cartoon animal characters drawn for the app (public/images/layouts/): a side-eyeing
 // shiba on the Caption layouts, an unimpressed cat on the Meme formats, and the collages and grids
 // a different animal in each panel (a capybara, a hamster, a penguin, a raccoon, then round again).
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import type { CSSProperties, ReactNode } from 'react';
-import { ChevronRight, Grid3x3, ImageIcon, Minus, Play, Plus } from 'lucide-react';
+import { Captions, ChevronRight, Columns2, Grid3x3, ImageIcon, Minus, Play, Plus, X } from 'lucide-react';
 import { LAYOUT_OPTIONS } from '../data/templates';
 import { panelRects } from './canvas/layout/panels';
 import useSlidingKey from './pages/useSlidingKey';
@@ -195,6 +196,20 @@ function Frame({ ratio, fill = 0.76, className = '', children }: { ratio: number
 }
 
 // The picture every preview shows, cropped to fill its spot.
+// Meme formats' mark, drawn as the other sections' lucide icons are (24 grid, round strokes): a meme
+// frame, its top and bottom text as two bars, a laughing face between them.
+function MemeFormatIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} width={19} height={19} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="3" y="3" width="18" height="18" rx="3.5" />
+      <path d="M8 6.8h8" />
+      <path d="M8 17.2h8" />
+      <path d="M9 10.6h.01M15 10.6h.01" strokeWidth={2.8} />
+      <path d="M9.2 12.8c.7 1.3 1.6 1.9 2.8 1.9s2.1-.6 2.8-1.9z" fill="currentColor" strokeWidth={1.4} />
+    </svg>
+  );
+}
+
 const PIC = (name: string) => `./images/layouts/${name}.svg`;
 const SHIBA = PIC('shiba');
 const CAT = PIC('grumpy-cat');
@@ -511,6 +526,55 @@ function AspectPicker({ value, onChange }: { value: Aspect; onChange: (aspect: A
   );
 }
 
+// Custom Grid's sheet: from the bottom on a phone (a centred card on a wide screen), over a dim that
+// closes it, as does its round close or Escape. The grid as it will open, Columns and Rows steppers,
+// then Create with its panel count.
+function CustomGridSheet({ layout, ratio, video, cols, rows, onCols, onRows, onCreate, onClose }: {
+  layout: PanelLayout; ratio: number; video: boolean; cols: number; rows: number;
+  onCols: (n: number) => void; onRows: (n: number) => void; onCreate: () => void; onClose: () => void;
+}) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
+  const panels = cols * rows;
+  return createPortal(
+    <div className="ios ios-layer clb-sheet-backdrop" onClick={onClose} role="presentation">
+      <div className="clb-sheet" role="dialog" aria-modal="true" aria-labelledby="clb-sheet-title" onClick={(e) => e.stopPropagation()}>
+        <span className="clb-sheet-grabber" aria-hidden="true" />
+        <div className="clb-sheet-head">
+          <h2 className="clb-sheet-title" id="clb-sheet-title">Custom grid</h2>
+          <button type="button" className="clb-sheet-close" onClick={onClose} aria-label="Close">
+            <X size={18} strokeWidth={2.4} aria-hidden="true" />
+          </button>
+        </div>
+        <span className="clb-custom-preview" aria-hidden="true">
+          <span className="clb-custom-square">
+            <PanelsArt layout={layout} ratio={ratio} video={video} />
+          </span>
+        </span>
+        <div className="clb-form">
+          <div className="clb-form-row">
+            <span className="clb-form-label">Columns</span>
+            <Stepper value={cols} unit="columns" onChange={onCols} />
+          </div>
+          <div className="clb-form-row">
+            <span className="clb-form-label">Rows</span>
+            <Stepper value={rows} unit="rows" onChange={onRows} />
+          </div>
+        </div>
+        <button type="button" className="ios-btn ios-btn--filled clb-sheet-create" onClick={onCreate}>
+          Create {panels} {panels === 1 ? 'Panel' : 'Panels'}
+        </button>
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
 export default function CustomLayoutBuilder({
   kind = 'image',
   onLayoutComplete,
@@ -568,7 +632,10 @@ export default function CustomLayoutBuilder({
       </button>
 
       <section className="clb-section" aria-labelledby="clb-captions">
-        <h2 className="ios-section-title" id="clb-captions">Caption layouts</h2>
+        <h2 className="ios-section-title clb-section-title" id="clb-captions">
+          <Captions size={19} strokeWidth={2.2} className="clb-section-icon" aria-hidden="true" />
+          <span>Caption layouts</span>
+        </h2>
         <p className="ios-section-sub">{isVideo ? 'Caption bars above and below the clip' : 'Caption bars above and below the picture'}</p>
         <Slider>
           {CAPTIONS.map((c) => (
@@ -587,7 +654,10 @@ export default function CustomLayoutBuilder({
       {!isVideo && (
         <>
           <section className="clb-section" aria-labelledby="clb-formats">
-            <h2 className="ios-section-title" id="clb-formats">Meme formats</h2>
+            <h2 className="ios-section-title clb-section-title" id="clb-formats">
+              <MemeFormatIcon className="clb-section-icon" />
+              <span>Meme formats</span>
+            </h2>
             <p className="ios-section-sub">Famous looks, ready for your photo</p>
             <Slider>
               {FORMATS.map((f) => (
@@ -597,7 +667,10 @@ export default function CustomLayoutBuilder({
           </section>
 
           <section className="clb-section" aria-labelledby="clb-collages">
-            <h2 className="ios-section-title" id="clb-collages">Collages</h2>
+            <h2 className="ios-section-title clb-section-title" id="clb-collages">
+              <Columns2 size={19} strokeWidth={2.2} className="clb-section-icon" aria-hidden="true" />
+              <span>Collages</span>
+            </h2>
             <p className="ios-section-sub">Several photos with text already in place</p>
             <Slider>
               {COLLAGES.map((f) => (
@@ -609,10 +682,21 @@ export default function CustomLayoutBuilder({
       )}
 
       <section className="clb-section" aria-labelledby="clb-grids">
-        <h2 className="ios-section-title" id="clb-grids">Grid layouts</h2>
+        <h2 className="ios-section-title clb-section-title" id="clb-grids">
+          <Grid3x3 size={19} strokeWidth={2.2} className="clb-section-icon" aria-hidden="true" />
+          <span>Grid layouts</span>
+        </h2>
         <p className="ios-section-sub">{isVideo ? 'Clips side by side, stacked or in a grid' : 'Photos side by side, stacked or in a grid'}</p>
         <Slider>
           {[
+            <LayoutCard
+              key="custom"
+              art={<Frame ratio={aspect.ratio} className="clb-frame--custom"><Grid3x3 className="clb-mark clb-mark--big" strokeWidth={1.8} /></Frame>}
+              title="Custom Grid"
+              detail="Rows & columns"
+              pressed={customOpen}
+              onClick={() => setCustomOpen(true)}
+            />,
             ...grids.map((g, n) => (
               <LayoutCard
                 key={g.id}
@@ -622,47 +706,21 @@ export default function CustomLayoutBuilder({
                 onClick={() => openGrid({ id: g.id, slots: g.slots, name: layoutName(g.id, `${g.title} (${g.detail})`) })}
               />
             )),
-            <LayoutCard
-              key="custom"
-              art={<Frame ratio={aspect.ratio} className="clb-frame--custom"><Grid3x3 className="clb-mark clb-mark--big" strokeWidth={1.8} /></Frame>}
-              title="Custom Grid"
-              detail="Rows & columns"
-              pressed={customOpen}
-              onClick={() => setCustomOpen((v) => !v)}
-            />,
           ]}
         </Slider>
 
         {customOpen && (
-          <div className="clb-custom">
-            <span className="clb-custom-preview" aria-hidden="true">
-              <span className="clb-custom-square">
-                <PanelsArt layout={customLayout} ratio={aspect.ratio} video={isVideo} />
-              </span>
-            </span>
-            <div className="clb-form">
-              <div className="clb-form-row">
-                <span className="clb-form-label">Columns</span>
-                <Stepper value={customCols} unit="columns" onChange={setCustomCols} />
-              </div>
-              <div className="clb-form-row">
-                <span className="clb-form-label">Rows</span>
-                <Stepper value={customRows} unit="rows" onChange={setCustomRows} />
-              </div>
-            </div>
-            <div className="clb-custom-actions">
-              <button type="button" className="ios-btn ios-btn--gray" onClick={() => setCustomOpen(false)}>
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="ios-btn ios-btn--filled"
-                onClick={() => openGrid({ ...customLayout, name: `Custom ${customCols}x${customRows}` })}
-              >
-                Create {customCols * customRows} {customCols * customRows === 1 ? 'Panel' : 'Panels'}
-              </button>
-            </div>
-          </div>
+          <CustomGridSheet
+            layout={customLayout}
+            ratio={aspect.ratio}
+            video={isVideo}
+            cols={customCols}
+            rows={customRows}
+            onCols={setCustomCols}
+            onRows={setCustomRows}
+            onCreate={() => openGrid({ ...customLayout, name: `Custom ${customCols}x${customRows}` })}
+            onClose={() => setCustomOpen(false)}
+          />
         )}
       </section>
     </div>

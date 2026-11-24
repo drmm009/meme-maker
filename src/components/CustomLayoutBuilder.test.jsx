@@ -38,16 +38,16 @@ describe('CustomLayoutBuilder', () => {
     expect(order()).toEqual(['Caption layouts', 'Grid layouts']);
   });
 
-  it('lists the grids, Custom Grid last, leaving out for an image meme the ones Collages already have', () => {
+  it('lists the grids, Custom Grid first, leaving out for an image meme the ones Collages already have', () => {
     const grids = () => [...screen.getByRole('heading', { name: 'Grid layouts' }).parentElement.querySelectorAll('.clb-card')]
       .map((c) => `${c.querySelector('.clb-card-name').textContent} ${c.querySelector('.clb-card-detail').textContent}`);
     const { unmount } = render(<CustomLayoutBuilder />);
-    expect(grids()).toEqual(['3 Panels Stacked', '3 Panels Side by side', '3 Panels 1 top, 2 below', 'Custom Grid Rows & columns']);
+    expect(grids()).toEqual(['Custom Grid Rows & columns', '3 Panels Stacked', '3 Panels Side by side', '3 Panels 1 top, 2 below']);
     unmount();
     // The video editor has no collages, so it keeps them all.
     render(<CustomLayoutBuilder kind="video" />);
     expect(grids()).toEqual([
-      '2 Panels Top / Bottom', '2 Panels Side by side', '3 Panels Stacked', '3 Panels Side by side', '3 Panels 1 top, 2 below', '4 Panels 2 × 2 grid', 'Custom Grid Rows & columns',
+      'Custom Grid Rows & columns', '2 Panels Top / Bottom', '2 Panels Side by side', '3 Panels Stacked', '3 Panels Side by side', '3 Panels 1 top, 2 below', '4 Panels 2 × 2 grid',
     ]);
   });
 
@@ -186,6 +186,14 @@ describe('CustomLayoutBuilder', () => {
   it('makes a custom grid from the columns and rows picked', () => {
     const handleSelect = vi.fn();
     render(<CustomLayoutBuilder onSelectTemplate={handleSelect} />);
+    // Custom Grid opens its sheet; its close, or Escape, shuts it.
+    pick(/Custom Grid/);
+    expect(screen.getByRole('dialog', { name: 'Custom grid' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+    expect(screen.queryByRole('dialog', { name: 'Custom grid' })).toBeNull();
+    pick(/Custom Grid/);
+    fireEvent.keyDown(window, { key: 'Escape' });
+    expect(screen.queryByRole('dialog', { name: 'Custom grid' })).toBeNull();
     pick(/Custom Grid/);
     pick('More columns');
     pick('Fewer rows');

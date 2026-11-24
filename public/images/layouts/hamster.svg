@@ -1,43 +1,56 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" preserveAspectRatio="xMidYMid slice">
-  <!-- Choose Canvas Layout: a shocked hamster, drawn for the app. -->
+  <!-- Choose Canvas Layout: a dramatic hamster, cheeks stuffed, side-eyeing over a sunflower seed, in
+       the style of the shiba and the tabby (cream ground, thick brown outlines). -->
   <defs>
-    <radialGradient id="bg" cx="0.5" cy="0.45" r="0.75">
-      <stop offset="0" stop-color="#ffd9e6"/>
-      <stop offset="1" stop-color="#f28bb0"/>
-    </radialGradient>
+    <linearGradient id="fur" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f2b56a"/>
+      <stop offset="1" stop-color="#e29a4c"/>
+    </linearGradient>
   </defs>
-  <rect width="400" height="400" fill="url(#bg)"/>
-  <g stroke="#ffffff" stroke-width="6" stroke-linecap="round" opacity="0.7">
-    <path d="M86 112 L108 128"/>
-    <path d="M74 154 L100 160"/>
-    <path d="M314 112 L292 128"/>
-    <path d="M326 154 L300 160"/>
+  <rect width="400" height="400" fill="#f8e3bb"/>
+  <!-- surprise marks -->
+  <g stroke="#3a2315" stroke-width="7" stroke-linecap="round">
+    <path d="M318 96 L300 124"/>
+    <path d="M342 118 L316 138"/>
   </g>
-  <!-- body -->
-  <ellipse cx="200" cy="300" rx="122" ry="110" fill="#f0b46a"/>
-  <ellipse cx="200" cy="324" rx="80" ry="78" fill="#fff4e4"/>
-  <!-- ears -->
-  <circle cx="134" cy="128" r="26" fill="#e09a4e"/>
-  <circle cx="134" cy="128" r="14" fill="#f7b9b9"/>
-  <circle cx="266" cy="128" r="26" fill="#e09a4e"/>
-  <circle cx="266" cy="128" r="14" fill="#f7b9b9"/>
-  <!-- head -->
-  <ellipse cx="200" cy="196" rx="100" ry="86" fill="#f0b46a"/>
-  <ellipse cx="200" cy="230" rx="70" ry="52" fill="#fff4e4"/>
-  <!-- wide eyes -->
-  <circle cx="160" cy="186" r="22" fill="#fff"/>
-  <circle cx="240" cy="186" r="22" fill="#fff"/>
-  <circle cx="160" cy="188" r="13" fill="#24160e"/>
-  <circle cx="240" cy="188" r="13" fill="#24160e"/>
-  <circle cx="165" cy="182" r="4" fill="#fff"/>
-  <circle cx="245" cy="182" r="4" fill="#fff"/>
-  <!-- nose and the open mouth -->
-  <ellipse cx="200" cy="220" rx="9" ry="6" fill="#d9707a"/>
-  <ellipse cx="200" cy="248" rx="13" ry="17" fill="#7a2e36"/>
-  <ellipse cx="200" cy="256" rx="8" ry="6" fill="#e58a96"/>
-  <!-- paws up -->
-  <ellipse cx="142" cy="286" rx="18" ry="14" fill="#f7cfa0"/>
-  <ellipse cx="258" cy="286" rx="18" ry="14" fill="#f7cfa0"/>
-  <ellipse cx="136" cy="230" rx="14" ry="8" fill="#ff8f8f" opacity="0.4"/>
-  <ellipse cx="264" cy="230" rx="14" ry="8" fill="#ff8f8f" opacity="0.4"/>
+  <g stroke="#3a2315" stroke-width="7" stroke-linejoin="round" stroke-linecap="round">
+    <!-- body -->
+    <path d="M76 400 C68 320 120 268 200 266 C282 264 334 318 326 400 Z" fill="url(#fur)"/>
+    <path d="M140 400 C138 344 166 316 200 316 C236 316 264 344 262 400 Z" fill="#fff3df"/>
+    <!-- ears -->
+    <circle cx="124" cy="118" r="28" fill="#e29a4c"/>
+    <circle cx="278" cy="118" r="28" fill="#e29a4c"/>
+    <!-- head with stuffed cheeks -->
+    <path d="M200 96 C266 96 306 136 316 186 C330 250 290 292 200 292 C110 292 70 250 84 186 C94 136 134 96 200 96 Z" fill="url(#fur)"/>
+  </g>
+  <circle cx="124" cy="118" r="13" fill="#f5b3b0"/>
+  <circle cx="278" cy="118" r="13" fill="#f5b3b0"/>
+  <!-- cream face and puffed cheeks -->
+  <path d="M96 214 C106 268 150 288 200 288 C250 288 294 268 304 214 C282 236 244 244 200 244 C156 244 118 236 96 214 Z" fill="#fff3df"/>
+  <ellipse cx="200" cy="222" rx="54" ry="36" fill="#fff3df"/>
+  <g stroke="#3a2315" stroke-linecap="round">
+    <!-- side-eye, brows up, dramatic -->
+    <ellipse cx="158" cy="176" rx="20" ry="17" fill="#ffffff" stroke-width="5"/>
+    <ellipse cx="242" cy="176" rx="20" ry="17" fill="#ffffff" stroke-width="5"/>
+    <circle cx="170" cy="178" r="10" fill="#20140c" stroke="none"/>
+    <circle cx="254" cy="178" r="10" fill="#20140c" stroke="none"/>
+    <circle cx="167" cy="174" r="3" fill="#ffffff" stroke="none"/>
+    <circle cx="251" cy="174" r="3" fill="#ffffff" stroke="none"/>
+    <path d="M136 150 C146 140 166 138 178 144" stroke-width="6" fill="none"/>
+    <path d="M222 144 C234 138 254 140 264 150" stroke-width="6" fill="none"/>
+    <!-- nose and a tiny tight-lipped mouth -->
+    <ellipse cx="200" cy="208" rx="9" ry="6" fill="#e07b86" stroke-width="3"/>
+    <path d="M190 226 C196 230 204 230 210 226" stroke-width="5" fill="none"/>
+    <!-- whiskers -->
+    <path d="M132 214 L94 206 M132 226 L94 232 M268 214 L306 206 M268 226 L306 232" stroke-width="3" fill="none"/>
+  </g>
+  <ellipse cx="122" cy="232" rx="14" ry="8" fill="#ff8f86" opacity="0.4"/>
+  <ellipse cx="278" cy="232" rx="14" ry="8" fill="#ff8f86" opacity="0.4"/>
+  <!-- paws holding a sunflower seed -->
+  <g stroke="#3a2315" stroke-width="6" stroke-linejoin="round">
+    <path d="M186 262 L200 236 L214 262 C210 282 190 282 186 262 Z" fill="#3a3a3a"/>
+    <ellipse cx="174" cy="270" rx="16" ry="13" fill="#fbd3a6"/>
+    <ellipse cx="226" cy="270" rx="16" ry="13" fill="#fbd3a6"/>
+  </g>
+  <path d="M198 246 L200 270" stroke="#e8e8e8" stroke-width="3" stroke-linecap="round"/>
 </svg>

@@ -1,32 +1,54 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" preserveAspectRatio="xMidYMid slice">
-  <!-- Choose Canvas Layout: a perfectly calm capybara with an orange on its head, drawn for the app. -->
+  <!-- Choose Canvas Layout: a smug capybara with an orange on its head, chilling in a hot spring, in
+       the style of the shiba and the tabby (cream ground, thick brown outlines, side-eye). -->
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#bfe8b2"/>
-      <stop offset="1" stop-color="#6cbf7a"/>
+    <linearGradient id="fur" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#b98457"/>
+      <stop offset="1" stop-color="#9c6a43"/>
+    </linearGradient>
+    <linearGradient id="water" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9fd6dc"/>
+      <stop offset="1" stop-color="#6fb7c4"/>
     </linearGradient>
   </defs>
-  <rect width="400" height="400" fill="url(#bg)"/>
-  <ellipse cx="200" cy="420" rx="260" ry="90" fill="#4fa865"/>
-  <!-- body -->
-  <path d="M88 400 C92 318 140 286 200 286 C260 286 308 318 312 400 Z" fill="#a8774c"/>
-  <!-- ears -->
-  <ellipse cx="140" cy="136" rx="20" ry="16" fill="#8a5f3a"/>
-  <ellipse cx="260" cy="136" rx="20" ry="16" fill="#8a5f3a"/>
-  <!-- head: a long rounded block -->
-  <rect x="112" y="128" width="176" height="180" rx="76" fill="#b5835a"/>
-  <rect x="140" y="214" width="120" height="92" rx="46" fill="#9c6c45"/>
-  <!-- the orange -->
-  <circle cx="200" cy="112" r="34" fill="#ff9a2e"/>
-  <circle cx="190" cy="102" r="9" fill="#ffc27a"/>
-  <path d="M200 78 C206 68 220 66 228 70 C222 80 210 82 200 78 Z" fill="#4c9a3c"/>
-  <!-- calm, nearly shut eyes -->
-  <path d="M146 192 C154 200 170 200 178 192" stroke="#3a2416" stroke-width="6" stroke-linecap="round" fill="none"/>
-  <path d="M222 192 C230 200 246 200 254 192" stroke="#3a2416" stroke-width="6" stroke-linecap="round" fill="none"/>
-  <!-- nose and mouth -->
-  <ellipse cx="182" cy="240" rx="8" ry="11" fill="#3a2416"/>
-  <ellipse cx="218" cy="240" rx="8" ry="11" fill="#3a2416"/>
-  <path d="M184 276 C192 282 208 282 216 276" stroke="#3a2416" stroke-width="5" stroke-linecap="round" fill="none"/>
-  <ellipse cx="146" cy="226" rx="12" ry="7" fill="#e89a7e" opacity="0.4"/>
-  <ellipse cx="254" cy="226" rx="12" ry="7" fill="#e89a7e" opacity="0.4"/>
+  <rect width="400" height="400" fill="#f8e3bb"/>
+  <g stroke="#3a2315" stroke-width="7" stroke-linejoin="round" stroke-linecap="round">
+    <!-- body sitting in the water -->
+    <path d="M78 400 C74 330 120 288 200 286 C280 284 328 326 324 400 Z" fill="url(#fur)"/>
+    <!-- ears -->
+    <ellipse cx="128" cy="124" rx="18" ry="14" fill="#8a5a36"/>
+    <ellipse cx="270" cy="124" rx="18" ry="14" fill="#8a5a36"/>
+    <!-- head: a long rounded block, tipped a little -->
+    <path d="M110 150 C110 108 150 96 200 96 C252 96 292 108 292 152 L292 236 C292 286 250 304 200 304 C150 304 110 286 110 236 Z" fill="url(#fur)" transform="rotate(-5 200 200)"/>
+    <!-- the orange -->
+    <circle cx="196" cy="84" r="30" fill="#ff9b2f"/>
+    <path d="M196 54 C202 40 220 38 230 44 C222 56 208 58 196 54 Z" fill="#5aa648"/>
+  </g>
+  <!-- muzzle shading -->
+  <path d="M136 226 C140 276 176 292 202 292 C232 292 266 276 268 226 C246 240 222 244 202 244 C182 244 156 240 136 226 Z" fill="#8c5d3a" opacity="0.45" transform="rotate(-5 200 200)"/>
+  <circle cx="184" cy="74" r="7" fill="#ffc47a"/>
+  <g transform="rotate(-5 200 200)" stroke="#3a2315" stroke-linecap="round">
+    <!-- half-lidded side-eye -->
+    <ellipse cx="160" cy="176" rx="20" ry="13" fill="#ffffff" stroke-width="5"/>
+    <ellipse cx="240" cy="176" rx="20" ry="13" fill="#ffffff" stroke-width="5"/>
+    <circle cx="172" cy="178" r="8" fill="#20140c" stroke="none"/>
+    <circle cx="252" cy="178" r="8" fill="#20140c" stroke="none"/>
+    <path d="M139 172 C150 164 170 164 181 170" stroke-width="6" fill="none"/>
+    <path d="M219 170 C230 164 250 164 261 172" stroke-width="6" fill="none"/>
+    <!-- nostrils and a smug little smile -->
+    <ellipse cx="186" cy="232" rx="6" ry="9" fill="#3a2315" stroke="none"/>
+    <ellipse cx="218" cy="232" rx="6" ry="9" fill="#3a2315" stroke="none"/>
+    <path d="M182 266 C196 276 214 274 226 262" stroke-width="5" fill="none"/>
+  </g>
+  <!-- the hot spring, over its lower half -->
+  <path d="M0 330 C60 318 120 336 200 330 C280 324 340 336 400 328 V400 H0 Z" fill="url(#water)" stroke="#3a2315" stroke-width="6" stroke-linejoin="round"/>
+  <g stroke="#ffffff" stroke-width="5" stroke-linecap="round" fill="none" opacity="0.85">
+    <path d="M48 356 C60 350 72 350 84 356"/>
+    <path d="M300 362 C312 356 324 356 336 362"/>
+  </g>
+  <!-- steam -->
+  <g stroke="#ffffff" stroke-width="6" stroke-linecap="round" fill="none" opacity="0.9">
+    <path d="M60 300 C50 284 70 274 60 258"/>
+    <path d="M340 296 C330 280 350 270 340 254"/>
+  </g>
 </svg>

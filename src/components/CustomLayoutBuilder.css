@@ -13,6 +13,17 @@
   margin-top: 28px;
 }
 
+.clb-section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.clb-section-icon {
+  flex-shrink: 0;
+  color: var(--ios-accent);
+}
+
 /* ---- Canvas shape ----
    A pill bar of four: a small outline of each shape and its ratio; the picked one widens to say its
    name, and a black key slides under it. */
@@ -580,11 +591,64 @@
 
 /* ---- Custom Grid ---- */
 
-.clb-custom {
+/* Custom Grid's sheet (CustomGridSheet): from the bottom over a dim on a phone, a centred card on a
+   wide screen; frosted glass with no border, as My Studio's sheets. */
+.clb-sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 5000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+  animation: clb-sheet-fade 0.22s ease-out;
+}
+.clb-sheet {
+  box-sizing: border-box;
   display: grid;
-  gap: 12px;
+  gap: 14px;
+  width: 100%;
   max-width: 520px;
-  margin-top: 14px;
+  padding: 8px 16px calc(18px + env(safe-area-inset-bottom, 0px));
+  border: none;
+  border-radius: 28px 28px 0 0;
+  background: color-mix(in srgb, var(--ios-surface) 72%, transparent);
+  -webkit-backdrop-filter: blur(30px) saturate(1.6);
+  backdrop-filter: blur(30px) saturate(1.6);
+  box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.35);
+  animation: clb-sheet-up 0.34s cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+.clb-sheet-grabber {
+  justify-self: center;
+  width: 38px;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--ios-label-3);
+}
+.clb-sheet-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.clb-sheet-title { margin: 0; color: var(--ios-label); font-size: 20px; font-weight: 800; letter-spacing: -0.02em; }
+.clb-sheet-close {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: var(--ios-fill);
+  color: var(--ios-label);
+  cursor: pointer;
+}
+.clb-sheet .clb-sheet-create { width: 100%; height: 50px; border-radius: 999px; font-size: 16px; font-weight: 750; }
+@keyframes clb-sheet-fade { from { opacity: 0; } }
+@keyframes clb-sheet-up { from { transform: translateY(100%); } }
+@media (min-width: 640px) {
+  .clb-sheet-backdrop { align-items: center; padding: 24px; }
+  .clb-sheet { padding: 18px 20px 20px; border-radius: 28px; animation: clb-sheet-fade 0.22s ease-out; }
+  .clb-sheet-grabber { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .clb-sheet-backdrop, .clb-sheet { animation: none; }
 }
 
 .clb-custom-preview {
@@ -685,11 +749,6 @@
   cursor: default;
 }
 
-.clb-custom-actions {
-  display: grid;
-  grid-template-columns: 1fr 1.4fr;
-  gap: 10px;
-}
 
 /* ---- Light theme: the drawings keep their dark picture, on a lighter tile ---- */
 

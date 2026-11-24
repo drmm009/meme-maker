@@ -57,9 +57,9 @@ const day = (iso) =>
       })
     : 'Unknown date';
 
-// The sheet's actions in one row: Re-Edit (grey) and Download (orange) pills with their icon and
-// name, then Delete, a round grey button with only a red bin. With no Re-Edit (a GIF), Download keeps
-// its size and the two sit together in the middle instead of stretching across.
+// The sheet's actions in one row: Re-Edit (grey) and Download (orange, black text) pills with their
+// icon and name, then Delete, a round grey button with only a red bin. With no Re-Edit (a GIF),
+// Download and Delete share the row, Delete black with its name beside the red bin.
 function SheetActions({ editLabel, onEdit, onDownload, downloadDisabled, onDelete }) {
   return (
     <div className={`mg-sheet-actions ${onEdit ? '' : 'mg-sheet-actions--compact'}`}>
@@ -86,6 +86,7 @@ function SheetActions({ editLabel, onEdit, onDownload, downloadDisabled, onDelet
         title="Delete"
       >
         <Trash2 size={19} aria-hidden="true" />
+        {!onEdit && <span>Delete</span>}
       </button>
     </div>
   );

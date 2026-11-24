@@ -1,36 +1,53 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" preserveAspectRatio="xMidYMid slice">
-  <!-- Choose Canvas Layout: a sneaky raccoon, drawn for the app. -->
+  <!-- Choose Canvas Layout: a raccoon caught with a stolen slice of pizza, side-eyeing like it did
+       nothing, in the style of the shiba and the tabby (cream ground, thick brown outlines). -->
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#b7a3ef"/>
-      <stop offset="1" stop-color="#6a4fc4"/>
+    <linearGradient id="fur" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#a9adb6"/>
+      <stop offset="1" stop-color="#8b8f99"/>
     </linearGradient>
   </defs>
-  <rect width="400" height="400" fill="url(#bg)"/>
-  <circle cx="86" cy="86" r="34" fill="#fff4c2" opacity="0.85"/>
-  <circle cx="98" cy="78" r="30" fill="url(#bg)"/>
-  <!-- body -->
-  <path d="M96 400 C100 320 146 290 200 290 C254 290 300 320 304 400 Z" fill="#8a8d96"/>
-  <path d="M160 400 C164 344 180 320 200 320 C220 320 236 344 240 400 Z" fill="#d6d8de"/>
-  <!-- ears -->
-  <path d="M116 168 L126 94 L180 132 Z" fill="#6d7079"/>
-  <path d="M132 154 L138 114 L166 134 Z" fill="#2c2e35"/>
-  <path d="M284 168 L274 94 L220 132 Z" fill="#6d7079"/>
-  <path d="M268 154 L262 114 L234 134 Z" fill="#2c2e35"/>
-  <!-- head -->
-  <ellipse cx="200" cy="204" rx="108" ry="90" fill="#9ea1aa"/>
-  <path d="M100 222 C130 250 166 262 200 262 C234 262 270 250 300 222 C290 270 248 296 200 296 C152 296 110 270 100 222 Z" fill="#e8e9ee"/>
-  <!-- white brows over the black mask -->
-  <path d="M120 176 C150 150 180 156 196 176" stroke="#f2f3f6" stroke-width="12" stroke-linecap="round" fill="none"/>
-  <path d="M204 176 C220 156 250 150 280 176" stroke="#f2f3f6" stroke-width="12" stroke-linecap="round" fill="none"/>
-  <path d="M112 200 C126 176 170 172 198 196 C186 222 140 228 112 200 Z" fill="#26282e"/>
-  <path d="M288 200 C274 176 230 172 202 196 C214 222 260 228 288 200 Z" fill="#26282e"/>
-  <!-- shifty eyes -->
-  <circle cx="158" cy="198" r="12" fill="#fff"/>
-  <circle cx="242" cy="198" r="12" fill="#fff"/>
-  <circle cx="152" cy="199" r="7" fill="#111"/>
-  <circle cx="236" cy="199" r="7" fill="#111"/>
-  <!-- nose and a sly grin -->
-  <ellipse cx="200" cy="236" rx="14" ry="10" fill="#26282e"/>
-  <path d="M176 262 C190 272 214 272 228 258" stroke="#26282e" stroke-width="5" stroke-linecap="round" fill="none"/>
+  <rect width="400" height="400" fill="#f8e3bb"/>
+  <!-- sweat drop -->
+  <path d="M306 112 C298 128 300 140 310 140 C320 140 322 128 306 112 Z" fill="#8fd0f2" stroke="#3a2315" stroke-width="5" stroke-linejoin="round"/>
+  <g stroke="#3a2315" stroke-width="7" stroke-linejoin="round" stroke-linecap="round">
+    <!-- body -->
+    <path d="M84 400 C78 326 124 282 200 280 C276 278 322 326 316 400 Z" fill="url(#fur)"/>
+    <path d="M150 400 C148 346 172 318 200 318 C230 318 254 346 252 400 Z" fill="#eceef2"/>
+    <!-- ears -->
+    <path d="M110 150 L118 76 L178 120 Z" fill="#8b8f99"/>
+    <path d="M290 150 L282 76 L222 120 Z" fill="#8b8f99"/>
+    <!-- head -->
+    <path d="M200 96 C268 96 306 140 306 196 C306 254 262 290 200 290 C138 290 94 254 94 196 C94 140 132 96 200 96 Z" fill="url(#fur)"/>
+  </g>
+  <path d="M126 112 L130 90 L162 116 Z" fill="#2c2e35"/>
+  <path d="M274 112 L270 90 L238 116 Z" fill="#2c2e35"/>
+  <!-- white face and the black mask -->
+  <path d="M104 214 C116 262 156 286 200 286 C244 286 284 262 296 214 C270 238 236 246 200 246 C164 246 130 238 104 214 Z" fill="#eceef2"/>
+  <path d="M118 150 C142 132 176 138 196 156" stroke="#f4f5f8" stroke-width="12" stroke-linecap="round" fill="none"/>
+  <path d="M204 156 C224 138 258 132 282 150" stroke="#f4f5f8" stroke-width="12" stroke-linecap="round" fill="none"/>
+  <path d="M108 190 C120 160 170 156 198 180 C186 214 138 220 108 190 Z" fill="#2c2e35"/>
+  <path d="M292 190 C280 160 230 156 202 180 C214 214 262 220 292 190 Z" fill="#2c2e35"/>
+  <g stroke="#3a2315" stroke-linecap="round">
+    <!-- side-eye -->
+    <ellipse cx="160" cy="186" rx="18" ry="13" fill="#ffffff" stroke="none"/>
+    <ellipse cx="240" cy="186" rx="18" ry="13" fill="#ffffff" stroke="none"/>
+    <circle cx="150" cy="188" r="8" fill="#20140c" stroke="none"/>
+    <circle cx="230" cy="188" r="8" fill="#20140c" stroke="none"/>
+    <path d="M142 180 C152 174 170 174 178 180" stroke="#1a1b20" stroke-width="6" fill="none"/>
+    <path d="M222 180 C230 174 248 174 258 180" stroke="#1a1b20" stroke-width="6" fill="none"/>
+    <!-- nose and an innocent little smile -->
+    <ellipse cx="200" cy="222" rx="14" ry="10" fill="#2c2e35" stroke-width="3"/>
+    <path d="M186 244 C194 250 206 250 214 244" stroke-width="5" fill="none"/>
+  </g>
+  <!-- the pizza slice, held up in both paws -->
+  <g stroke="#3a2315" stroke-width="6" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M150 262 L250 262 L200 352 Z" fill="#ffd36b"/>
+    <path d="M146 256 C176 250 224 250 254 256 L250 270 C224 264 176 264 150 270 Z" fill="#d99a4a"/>
+    <ellipse cx="140" cy="276" rx="18" ry="14" fill="#5c5f68"/>
+    <ellipse cx="260" cy="276" rx="18" ry="14" fill="#5c5f68"/>
+  </g>
+  <circle cx="186" cy="284" r="9" fill="#e0533f"/>
+  <circle cx="214" cy="296" r="8" fill="#e0533f"/>
+  <circle cx="198" cy="318" r="7" fill="#e0533f"/>
 </svg>

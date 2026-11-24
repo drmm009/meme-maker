@@ -1,40 +1,44 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" preserveAspectRatio="xMidYMid slice">
-  <!-- Choose Canvas Layout: a puzzled penguin, drawn for the app. -->
+  <!-- Choose Canvas Layout: a smug penguin, flippers crossed, one brow up, in the style of the shiba
+       and the tabby (cream ground, thick brown outlines, side-eye). -->
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#cfe9ff"/>
-      <stop offset="1" stop-color="#6fa8e6"/>
+    <linearGradient id="coat" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3a4254"/>
+      <stop offset="1" stop-color="#262c3a"/>
     </linearGradient>
   </defs>
-  <rect width="400" height="400" fill="url(#bg)"/>
-  <g fill="#ffffff" opacity="0.8">
-    <circle cx="70" cy="80" r="5"/>
-    <circle cx="330" cy="60" r="4"/>
-    <circle cx="300" cy="130" r="3"/>
-    <circle cx="96" cy="160" r="3"/>
+  <rect width="400" height="400" fill="#f8e3bb"/>
+  <!-- huff marks -->
+  <g stroke="#3a2315" stroke-width="7" stroke-linecap="round">
+    <path d="M90 110 L108 132"/>
+    <path d="M70 136 L96 148"/>
   </g>
-  <ellipse cx="200" cy="420" rx="240" ry="70" fill="#eef7ff"/>
-  <!-- body -->
-  <ellipse cx="200" cy="268" rx="112" ry="128" fill="#1f2a3a"/>
-  <ellipse cx="200" cy="292" rx="78" ry="98" fill="#f8fbff"/>
-  <!-- flippers -->
-  <path d="M92 250 C64 288 70 330 98 340 C100 300 108 272 116 258 Z" fill="#1f2a3a"/>
-  <path d="M308 250 C336 288 330 330 302 340 C300 300 292 272 284 258 Z" fill="#1f2a3a"/>
-  <!-- face -->
-  <path d="M120 186 C130 150 160 132 200 132 C240 132 270 150 280 186 C260 210 232 214 200 206 C168 214 140 210 120 186 Z" fill="#f8fbff"/>
-  <circle cx="168" cy="184" r="15" fill="#1f2a3a"/>
-  <circle cx="232" cy="184" r="15" fill="#1f2a3a"/>
-  <circle cx="172" cy="179" r="5" fill="#fff"/>
-  <circle cx="236" cy="179" r="5" fill="#fff"/>
-  <!-- one eyebrow raised -->
-  <path d="M150 158 L184 164" stroke="#1f2a3a" stroke-width="6" stroke-linecap="round"/>
-  <path d="M216 156 C226 146 240 144 252 150" stroke="#1f2a3a" stroke-width="6" stroke-linecap="round" fill="none"/>
-  <!-- beak -->
-  <path d="M176 206 L224 206 L200 232 Z" fill="#ffa53a"/>
-  <path d="M182 206 L218 206 L200 216 Z" fill="#ffc46e"/>
-  <ellipse cx="146" cy="210" rx="13" ry="7" fill="#ff9aa8" opacity="0.5"/>
-  <ellipse cx="254" cy="210" rx="13" ry="7" fill="#ff9aa8" opacity="0.5"/>
-  <!-- feet -->
-  <ellipse cx="166" cy="392" rx="26" ry="10" fill="#ffa53a"/>
-  <ellipse cx="234" cy="392" rx="26" ry="10" fill="#ffa53a"/>
+  <g stroke="#3a2315" stroke-width="7" stroke-linejoin="round" stroke-linecap="round">
+    <!-- body -->
+    <path d="M200 74 C278 74 316 150 318 232 C320 320 290 400 290 400 H110 C110 400 80 320 82 232 C84 150 122 74 200 74 Z" fill="url(#coat)"/>
+    <!-- white face and belly -->
+    <path d="M200 120 C246 120 272 148 276 184 C280 214 262 236 236 240 C258 262 268 300 266 344 C264 380 256 400 256 400 H144 C144 400 136 380 134 344 C132 300 142 262 164 240 C138 236 120 214 124 184 C128 148 154 120 200 120 Z" fill="#fbf6ee"/>
+    <!-- feet -->
+    <path d="M140 392 C140 378 176 378 180 392 Z" fill="#ffa23a"/>
+    <path d="M220 392 C224 378 260 378 260 392 Z" fill="#ffa23a"/>
+    <!-- crossed flippers over the belly -->
+    <path d="M96 236 C120 286 190 300 266 282 C276 280 278 296 268 300 C196 324 116 308 88 262 Z" fill="url(#coat)"/>
+    <path d="M304 236 C280 286 210 300 134 282 C124 280 122 296 132 300 C204 324 284 308 312 262 Z" fill="url(#coat)"/>
+  </g>
+  <g stroke="#3a2315" stroke-linecap="round">
+    <!-- side-eye, one brow up -->
+    <ellipse cx="166" cy="176" rx="20" ry="14" fill="#ffffff" stroke-width="5"/>
+    <ellipse cx="236" cy="176" rx="20" ry="14" fill="#ffffff" stroke-width="5"/>
+    <circle cx="178" cy="178" r="9" fill="#20140c" stroke="none"/>
+    <circle cx="248" cy="178" r="9" fill="#20140c" stroke="none"/>
+    <path d="M145 171 C156 164 176 164 187 170" stroke-width="6" fill="none"/>
+    <path d="M215 170 C226 164 246 164 257 171" stroke-width="6" fill="none"/>
+    <path d="M216 148 C228 138 246 138 258 146" stroke-width="6" fill="none"/>
+    <path d="M146 154 L184 158" stroke-width="6" fill="none"/>
+    <!-- beak with a smirk under it -->
+    <path d="M182 196 L218 196 L200 216 Z" fill="#ffa23a" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M188 226 C198 232 212 230 220 222" stroke-width="5" fill="none"/>
+  </g>
+  <ellipse cx="146" cy="210" rx="13" ry="7" fill="#ff8f9c" opacity="0.45"/>
+  <ellipse cx="256" cy="210" rx="13" ry="7" fill="#ff8f9c" opacity="0.45"/>
 </svg>
