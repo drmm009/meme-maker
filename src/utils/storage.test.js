@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach } from 'vitest';
-import { safeGet, safeSet, safeRemove } from './storage';
+import { safeGet, safeSet } from './storage';
 
 describe('safeStorage', () => {
   beforeEach(() => {
@@ -24,9 +24,5 @@ describe('safeStorage', () => {
   it('returns raw strings that are not JSON (plain-string keys like API keys)', () => {
     localStorage.setItem('bad', '{not-json');
     expect(safeGet('bad', 'fb')).toBe('{not-json');
-  });
-
-  it('safeRemove never throws', () => {
-    expect(() => safeRemove('whatever')).not.toThrow();
   });
 });

@@ -10,7 +10,7 @@ import CanvasText from './preview/CanvasText';
 import GridOverlay from './preview/GridOverlay';
 import { BANDS, bandRects, bandsOn, withBands } from '../../utils/videoBands';
 import CanvasFlash from './preview/CanvasFlash';
-import { STAGE_WIDTH } from './preview/previewMath';
+import { STAGE_WIDTH } from '../../model/videoProject';
 import { useStageFit } from './preview/useStageFit';
 import { useTextEditing } from './preview/useTextEditing';
 import { placeSelection, useTextSelection } from '../canvas/useCaretIndex';

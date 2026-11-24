@@ -5,7 +5,7 @@ import { useEditorStore } from '../../store/useVideoEditorStore';
 import { resizeAboutCenter } from './preview/previewMath';
 import { DEFAULT_DIECUT_WIDTH, isGifSticker } from '../../utils/stickerLook';
 import type { StickerClip } from '../../model/videoProject';
-import { STAGE_WIDTH } from '../../utils/textBitmap';
+import { STAGE_WIDTH } from '../../model/videoProject';
 import '../editor/panels/panels.css';
 
 // A sticker's Edit and Die-cut sheets: the image editor's sticker controls (editor/panels/

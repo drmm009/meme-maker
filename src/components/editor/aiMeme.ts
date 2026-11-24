@@ -19,12 +19,6 @@ export interface AiAsk {
   ideas: string[];
 }
 
-// A template an AI caption suits: one picture to write on, not a video, social card, demotivational
-// poster or split-screen comparison.
-export const suitsAiCaption = (t: { imageUrl?: unknown; type?: unknown; category?: unknown; tags?: unknown; demotivational?: unknown }) =>
-  Boolean(t.imageUrl) && t.type !== 'video' && t.category !== 'social' && t.category !== 'comparison' &&
-  !(Array.isArray(t.tags) && t.tags.includes('social')) && !t.demotivational;
-
 // The AI Meme maker on a template, its page starting from `prompt` (Home's idea box) and `category`.
 export const aiMemeTemplate = <T extends AiTemplate>(template: T, prompt = '', category = 'all') => ({
   ...template,

@@ -1,14 +1,7 @@
 import { History, X } from 'lucide-react';
 import type { DraftOfferInfo } from './hooks/useMemeDraft';
+import { timeAgo } from '../../utils/timeLabels';
 import './DraftOffer.css';
-
-const timeAgo = (ms: number) => {
-  const min = Math.round((Date.now() - ms) / 60000);
-  if (min < 1) return 'just now';
-  if (min < 60) return `${min} min ago`;
-  const h = Math.round(min / 60);
-  return h < 24 ? `${h} h ago` : `${Math.round(h / 24)} d ago`;
-};
 
 // "Continue your last meme?" banner, shown under the top bar until the first edit.
 export default function DraftOffer({ offer, onRestore, onDismiss }: { offer: DraftOfferInfo; onRestore: () => void; onDismiss: () => void }) {

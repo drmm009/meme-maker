@@ -14,7 +14,8 @@ import { applyTextFrame, loadTextFonts, textBitmap, textImageAttrs } from '../..
 import type { TextBitmap } from '../../../utils/textBitmap';
 import { REST_FRAME, textAnimFrame } from '../../../utils/textAnimation';
 import { decodeGif, isGifUrl } from '../../../utils/gif';
-import { STAGE_WIDTH, isOnScreen, mediaAttrs, videoTimeSec } from './previewMath';
+import { STAGE_WIDTH } from '../../../model/videoProject';
+import { isOnScreen, mediaAttrs, videoTimeSec } from './previewMath';
 import { applyMotion, applyPunch } from './nodeMotion';
 import { clipCrop } from '../../../utils/clipCrop';
 import { effectsFor, hasEffects, processFrame } from './frameEffects';

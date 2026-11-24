@@ -23,16 +23,12 @@ import {
   Trash2,
 } from 'lucide-react';
 import { downloadImageHelper } from '../utils/downloadHelper';
+import { durationClock } from '../utils/timeLabels';
 import SegmentedControl from './pages/SegmentedControl';
 import SearchField from './pages/SearchField';
 import PullDownMenu from './pages/PullDownMenu';
 import StudioBackupSheet from './StudioBackupSheet';
 import './MyGallery.css';
-
-const clock = (ms) => {
-  const sec = Math.max(1, Math.round((ms || 0) / 1000));
-  return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
-};
 
 const KINDS = {
   meme: { label: 'Meme', plural: 'Memes', Icon: ImageIcon, make: 'Make a meme' },
@@ -557,7 +553,7 @@ export default function MyGallery({
                         ) : (
                           <Icon className="mg-tile-placeholder" aria-hidden="true" />
                         )}
-                        {it.video && <span className="mg-tile-time">{clock(it.video.durationMs)}</span>}
+                        {it.video && <span className="mg-tile-time">{durationClock(it.video.durationMs)}</span>}
                       </span>
                       {/* The collage shows only pictures; the name and date are read out, not shown. */}
                       <span className="mg-tile-words">
@@ -599,7 +595,7 @@ export default function MyGallery({
                     </span>
                     <span className="mg-row-meta">
                       {label} · {day(it.date)}
-                      {it.video && <> · <span className="mg-row-time">{clock(it.video.durationMs)}</span></>}
+                      {it.video && <> · <span className="mg-row-time">{durationClock(it.video.durationMs)}</span></>}
                     </span>
                   </span>
                 </button>

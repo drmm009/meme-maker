@@ -26,6 +26,7 @@ import { VIDEO_MEME_TEMPLATES } from '../data/videoTemplates';
 import { fetchOpenSourceMemes } from '../services/memeService';
 import { safeGet, safeSet } from '../utils/storage';
 import { templateNumericId } from '../utils/templateOrder';
+import { durationClock } from '../utils/timeLabels';
 import { EXPLORE_CATEGORIES } from '../data/exploreCategories';
 import TemplateThumb from './TemplateThumb';
 import SearchField from './pages/SearchField';
@@ -98,11 +99,6 @@ const CATEGORY_ICONS: Record<string, LucideIcon> = {
   classic: Drama,
   favorites: Star,
   popular: Star,
-};
-
-const clock = (ms: number) => {
-  const sec = Math.max(1, Math.round(ms / 1000));
-  return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
 };
 
 export default function ExploreView({ onSelectTemplate, initialCategory = 'all' }: ExploreViewProps) {
@@ -430,7 +426,7 @@ function TemplateCard({ template, rank, views, isFavorite, onToggleFavorite, onS
             videoUrl={isVideo ? template.videoUrl : undefined}
             className="ex-card-img"
           />
-          {isVideo && <span className="ex-card-time">{hasLength ? clock(template.durationMs as number) : 'Video'}</span>}
+          {isVideo && <span className="ex-card-time">{hasLength ? durationClock(template.durationMs as number) : 'Video'}</span>}
         </span>
         <span className="ex-card-text">
           <span className="ex-card-words">

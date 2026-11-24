@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   currentPanelPlacement, dropSlotIndex, reflowPanels, effectCanvasSize, fitPlacement, fitStage, isOnScreen, mediaAttrs, panelPlacement, resizeAboutCenter, rotateAboutCenter,
-  textResize, videoSyncPlan, videoTimeSec
+  videoSyncPlan, videoTimeSec
 } from './previewMath';
 import { rotatedCenter } from '../../../utils/rotation';
 
@@ -145,14 +145,6 @@ describe('rotateAboutCenter', () => {
     const after = rotatedCenter(turned.x, turned.y, 100, 100, 180);
     expect(after.x).toBeCloseTo(before.x);
     expect(after.y).toBeCloseTo(before.y);
-  });
-});
-
-describe('text', () => {
-  it('turns a resize into font size (and wrap width), at least 10px', () => {
-    expect(textResize({ fontSize: 40 }, { x: 1, y: 2, rotation: 15, scaleX: 2 })).toEqual({ x: 1, y: 2, rotation: 15, fontSize: 80 });
-    expect(textResize({ fontSize: 40, width: 300 }, { x: 0, y: 0, rotation: 0, scaleX: 0.5 })).toMatchObject({ fontSize: 20, width: 150 });
-    expect(textResize({}, { x: 0, y: 0, rotation: 0, scaleX: 0.1 }).fontSize).toBe(10);
   });
 });
 

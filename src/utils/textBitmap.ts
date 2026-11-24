@@ -10,10 +10,10 @@ import { wrapText } from '../components/canvas/draw/text';
 import { applyCaptionFont, fittedFontSize } from '../components/canvas/draw/captionFont';
 import { captionCaret, captionIndexAt, captionSelectionBoxes, captionTextLayout } from '../components/canvas/render/captionTextLayout';
 import type { MemeCaption } from '../model/memeDocument';
+import { STAGE_WIDTH } from '../model/videoProject';
 import type { TextClip } from '../model/videoProject';
 import type { TextFrame } from './textAnimation';
 
-export const STAGE_WIDTH = 800;
 // Wrap width when a clip has none of its own: as the image editor's captions, 90% of the canvas.
 const DEFAULT_WRAP = 0.9;
 const MAX_CACHED = 160;

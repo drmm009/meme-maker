@@ -1,12 +1,11 @@
 // Pure decisions behind the Konva preview (CanvasPreview and its parts). Positions and sizes are
 // in the preview's 800-wide stage units. How text is drawn lives in utils/textLayer (shared with
 // the export).
-import type { Clip, LayoutSlot, Placed, TextClip } from '../../../model/videoProject';
-import { clipOpacity } from '../../../model/videoProject';
+import type { Clip, LayoutSlot, Placed } from '../../../model/videoProject';
+import { STAGE_WIDTH, clipOpacity } from '../../../model/videoProject';
 import { cornerForCenter, rotatedCenter } from '../../../utils/rotation';
 import { inSlot, itemCentre } from '../../../utils/videoPanels';
 
-export const STAGE_WIDTH = 800;
 
 // Green-screen frames are keyed at most this many pixels on the long side; Konva scales them up.
 const KEY_MAX_SIDE = 640;
@@ -237,19 +236,6 @@ export const effectCanvasSize = (sourceWidth: number, sourceHeight: number, isVi
   const scale = Math.min(1, (isVideo ? KEY_MAX_SIDE : STILL_FX_MAX_SIDE) / Math.max(sourceWidth, sourceHeight));
   return { width: Math.max(1, Math.round(sourceWidth * scale)), height: Math.max(1, Math.round(sourceHeight * scale)) };
 };
-
-// What a transformer resize of text saves: the scale goes into the font size (and wrap width),
-// so the text stays crisp at scale 1.
-export const textResize = (
-  item: Pick<TextClip, 'fontSize' | 'width'>,
-  { x, y, rotation, scaleX }: { x: number; y: number; rotation: number; scaleX: number }
-): { x: number; y: number; rotation: number; fontSize: number; width?: number } => ({
-  x,
-  y,
-  rotation,
-  fontSize: Math.max(10, (item.fontSize || 32) * scaleX),
-  ...(item.width ? { width: item.width * scaleX } : {})
-});
 
 // The stage size that fits the available space at this aspect ratio, and its scale from the
 // 800-wide stage units.

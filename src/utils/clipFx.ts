@@ -43,15 +43,6 @@ const Y2K_DARK = [30, 20, 160];
 const Y2K_LIGHT = [255, 110, 200];
 export const y2kColour = (r: number, g: number, b: number): number[] => mix(Y2K_DARK, Y2K_LIGHT, lum(r, g, b) / 255).map(Math.round);
 
-// Pop: four flat levels a channel, colours pushed apart from grey.
-export const popColour = (r: number, g: number, b: number): number[] => {
-  const grey = lum(r, g, b);
-  return [r, g, b].map((c) => {
-    const vivid = Math.min(255, Math.max(0, grey + (c - grey) * 1.6));
-    return Math.round(Math.round((vivid / 255) * 3) * 85);
-  });
-};
-
 // A colour map by brightness as a table (256 levels, r g b each), built once: mapping every pixel
 // through it is quick enough for every frame.
 const tables = new Map<string, Uint8ClampedArray>();
@@ -74,7 +65,8 @@ function mapByBrightness(data: Uint8ClampedArray, table: Uint8ClampedArray) {
   }
 }
 
-// Pop, inline (it depends on each channel, not just brightness).
+// Pop: four flat levels a channel, colours pushed apart from grey. Inline, not a table: it depends
+// on each channel, not just brightness.
 function popPixels(data: Uint8ClampedArray) {
   for (let i = 0; i < data.length; i += 4) {
     const r = data[i];

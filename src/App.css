@@ -276,7 +276,6 @@
   flex-shrink: 0;
 }
 
-
 .main-content-container {
   box-sizing: border-box;
   flex: 1;
@@ -340,8 +339,6 @@ html.editor-view-locked .app-root {
     transform: none;
   }
 }
-
-
 
 html:has(.modal-backdrop),
 body:has(.modal-backdrop),
@@ -805,8 +802,6 @@ body.modal-open {
                 padding 0.38s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
-
-
 /* --- MOBILE FONT SIZE ENHANCEMENTS --- */
 @media (max-width: 900px) {
   .brand-title { font-size: 1.25rem !important; }
@@ -1110,18 +1105,6 @@ input:checked + .slider.round:before {
   color: #334155 !important;
 }
 
-[data-theme='light'] .sticker-chip-btn {
-  background: rgba(255, 255, 255, 0.42) !important;
-  backdrop-filter: blur(12px) !important;
-  -webkit-backdrop-filter: blur(12px) !important;
-  border: 1px solid rgba(230, 235, 240, 0.5) !important;
-}
-
-[data-theme='light'] .sticker-chip-btn:hover {
-  background: rgba(220, 225, 235, 0.6) !important;
-  border-color: #8b5cf6 !important;
-}
-
 [data-theme='light'] .btn-secondary {
   background: rgba(240, 242, 248, 0.4) !important;
   backdrop-filter: blur(14px) !important;
@@ -1396,9 +1379,6 @@ input:checked + .slider.round:before {
   border-color: rgba(168, 85, 247, 0.4) !important;
 }
 
-
-
-
 /* ============================================================
    BOLD POSTER LAYER  —  drop-in visual override (last wins)
    Ink + cream surfaces, orange/yellow accents, poster headings.
@@ -1407,9 +1387,6 @@ input:checked + .slider.round:before {
 :root,
 :root[data-theme='dark'] {
   --ink: #141210;
-  --ink-2: #1d1a17;
-  --ink-3: #262220;
-  --paper: #ffffff;
   --poster-orange: var(--primary-accent);
   --poster-yellow: var(--cyber-cyan);
   --line-dark: rgba(255, 255, 255, 0.14);
@@ -1597,7 +1574,6 @@ h1:not(:where(.ui-theme *)), h2:not(:where(.ui-theme *)), h3:not(:where(.ui-them
 
 /* --- Editor panels, modals, inputs ------------------------ */
 .panel,
-.modal,
 .modal-content,
 .sheet {
   background: var(--bg-surface-1) !important;
@@ -1619,13 +1595,6 @@ select:not(:where(.ui-theme *)) {
   color: var(--text-main) !important;
 }
 
-.sticker-chip-btn {
-  border-radius: 999px !important;
-  border: 2px solid var(--glass-border) !important;
-  background: var(--bg-surface-2) !important;
-  color: var(--text-main) !important;
-  font-weight: 700 !important;
-}
 .empty-state {
   text-align: center;
 }
@@ -1809,43 +1778,6 @@ select:not(:where(.ui-theme *)) {
   border-radius: var(--radius-md, 20px) !important;
   color: var(--text-main) !important;
   box-shadow: var(--shadow-card) !important;
-}
-
-.search-pill-container input.search-pill-input,
-.search-pill-container input[type='text'],
-input[type='text'].search-pill-input,
-[data-theme='light'] .search-pill-container input.search-pill-input,
-[data-theme='light'] input[type='text'].search-pill-input {
-  border: none !important;
-  background: transparent !important;
-  box-shadow: none !important;
-  outline: none !important;
-  border-radius: 0 !important;
-  color: var(--text-main) !important;
-}
-
-.search-pill-container input.search-pill-input:focus,
-.search-pill-container input[type='text']:focus,
-input[type='text'].search-pill-input:focus {
-  border: none !important;
-  background: transparent !important;
-  box-shadow: none !important;
-  outline: none !important;
-}
-
-[data-theme='light'] .sticker-chip-btn {
-  background: var(--bg-surface-1) !important;
-  border: 1px solid var(--glass-border) !important;
-  border-radius: var(--radius-pill) !important;
-  color: var(--text-muted) !important;
-  box-shadow: none !important;
-  transition: all 0.2s ease !important;
-}
-
-[data-theme='light'] .sticker-chip-btn:hover {
-  background: var(--bg-surface-2) !important;
-  color: var(--text-main) !important;
-  border-color: rgba(255, 94, 54, 0.3) !important;
 }
 
 [data-theme='light'] .template-card {
@@ -2093,15 +2025,13 @@ input[type='text'].search-pill-input:focus {
 /* Remove blue focus rings and active blue gradient effects on all buttons */
 button,
 .btn,
-.btn-icon,
-.sticker-chip-btn {
+.btn-icon {
   -webkit-tap-highlight-color: transparent !important;
   -webkit-touch-callout: none !important;
 }
 button:not(:where(.ui-theme *)),
 .btn:not(:where(.ui-theme *)),
-.btn-icon:not(:where(.ui-theme *)),
-.sticker-chip-btn:not(:where(.ui-theme *)) {
+.btn-icon:not(:where(.ui-theme *)) {
   outline: none !important;
 }
 
@@ -2113,9 +2043,7 @@ button:active:not(:where(.ui-theme *)),
 .btn:active:not(:where(.ui-theme *)),
 .btn-icon:focus:not(:where(.ui-theme *)),
 .btn-icon:focus-visible:not(:where(.ui-theme *)),
-.btn-icon:active:not(:where(.ui-theme *)),
-.sticker-chip-btn:focus:not(:where(.ui-theme *)),
-.sticker-chip-btn:active:not(:where(.ui-theme *)) {
+.btn-icon:active:not(:where(.ui-theme *)) {
   outline: none !important;
   box-shadow: none !important;
   -webkit-tap-highlight-color: transparent !important;
@@ -2147,16 +2075,6 @@ button:active:not(:where(.ui-theme *)) {
 .theme-toggle-header-btn:hover {
   filter: brightness(1.1);
 }
-
-@media (max-width: 640px) {
-  .theme-toggle-header-btn .theme-toggle-text {
-    display: none !important;
-  }
-}
-
-
-
-
 
 /* ============================================================
    COLLAGE VIEW — masonry template wall (Compact Spacing Across All Views)
@@ -2322,8 +2240,6 @@ button:active:not(:where(.ui-theme *)) {
    MODAL TEMPLATE CARDS (Picker modals in Meme Editor, Video Editor, Builder)
    Ensures uniform card style and high-contrast readable text in both themes
    ============================================================ */
-.modal-content .template-card,
-.modal-body .template-card,
 .modal-backdrop .template-card {
   transform: none !important;
   display: flex !important;
@@ -2335,24 +2251,16 @@ button:active:not(:where(.ui-theme *)) {
   position: relative !important;
 }
 
-.modal-content .template-card:hover,
-.modal-body .template-card:hover,
 .modal-backdrop .template-card:hover {
   transform: translateY(-3px) scale(1.02) !important;
   z-index: 2 !important;
 }
 
-.modal-content .card-sticker-tag,
-.modal-body .card-sticker-tag,
 .modal-backdrop .card-sticker-tag {
   display: none !important;
 }
 
 /* Dark Mode Modals: Clean dark card background with bright readable white/cream text */
-:root:not([data-theme='light']) .modal-content .template-card,
-[data-theme='dark'] .modal-content .template-card,
-:root:not([data-theme='light']) .modal-body .template-card,
-[data-theme='dark'] .modal-body .template-card,
 :root:not([data-theme='light']) .modal-backdrop .template-card,
 [data-theme='dark'] .modal-backdrop .template-card {
   background: var(--bg-surface-1, #1a1613) !important;
@@ -2361,8 +2269,6 @@ button:active:not(:where(.ui-theme *)) {
 
 /* Light Mode Modals: Clean white card background with crisp dark ink text */
 
-[data-theme='light'] .modal-content .template-card,
-[data-theme='light'] .modal-body .template-card,
 [data-theme='light'] .modal-backdrop .template-card {
   background: #ffffff !important;
   border: 2px solid #171310 !important;
@@ -2398,8 +2304,6 @@ button:active:not(:where(.ui-theme *)) {
     object-fit: cover !important;
   }
 }
-
-
 
 /* Ensure background color updates dynamically on html, body, and app-root */
 html,
@@ -2455,8 +2359,6 @@ button.btn-primary:hover {
 }
 
 /* --- Light Version Tab Buttons: Modern CurvX Pill Style --- */
-
-
 
 /* Theme-aligned styling for folded dock buttons */
 

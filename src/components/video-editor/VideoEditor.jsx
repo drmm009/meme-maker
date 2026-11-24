@@ -22,6 +22,7 @@ import { useVideoDraft } from './useVideoDraft';
 import { loadSavedVideo, restoreProject, saveVideoToStudio } from '../../utils/videoDraftStore';
 import { formatClock, getContentEnd } from './timeline/timelineMath';
 import { withWatermark } from '../../utils/brandCard';
+import { timeAgo } from '../../utils/timeLabels';
 import { loadVideoFonts } from './videoFonts';
 import { DEFAULT_TEXT_LOOK, textBitmap } from '../../utils/textBitmap';
 import { DEFAULT_VIDEO_BAND, bandRects, centreInBand } from '../../utils/videoBands';
@@ -62,14 +63,6 @@ function Clock() {
     </div>
   );
 }
-
-const timeAgo = (ms) => {
-  const min = Math.round((Date.now() - ms) / 60000);
-  if (min < 1) return 'just now';
-  if (min < 60) return `${min} min ago`;
-  const h = Math.round(min / 60);
-  return h < 24 ? `${h} h ago` : `${Math.round(h / 24)} d ago`;
-};
 
 const changeAspectRatio = (newRatio) => {
   const store = useEditorStore.getState();

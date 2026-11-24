@@ -1,19 +1,13 @@
 import { describe, it, expect } from 'vitest';
 import {
-  PRESET_PHRASES,
-  BUBBLE_LAYOUT_OPTIONS,
   COLOR_SWATCHES,
   DRAW_COLORS,
   getNonOverlappingPosition,
   isColorDark,
-  hslToHex,
-  hexToHue,
 } from './captionLayout';
 
 describe('captionLayout constants', () => {
-  it('exposes non-empty phrase, bubble and swatch lists', () => {
-    expect(PRESET_PHRASES.length).toBeGreaterThan(0);
-    expect(BUBBLE_LAYOUT_OPTIONS.length).toBeGreaterThan(0);
+  it('exposes the swatch lists', () => {
     expect(COLOR_SWATCHES).toContain('#ffffff');
     expect(DRAW_COLORS).toEqual(['#ffffff', '#ff2a5f', '#ffe600', '#00f0ff', '#000000']);
     expect(DRAW_COLORS.length).toBe(5);
@@ -63,19 +57,6 @@ describe('isColorDark', () => {
   it('handles rgb() strings', () => {
     expect(isColorDark('rgb(0, 0, 0)')).toBe(true);
     expect(isColorDark('rgb(255, 255, 255)')).toBe(false);
-  });
-});
-
-describe('hslToHex and hexToHue', () => {
-  it('converts hsl to hex and back', () => {
-    expect(hslToHex(0, 100, 50)).toBe('#ff0000');
-    expect(hslToHex(120, 100, 50)).toBe('#00ff00');
-    expect(hslToHex(240, 100, 50)).toBe('#0000ff');
-    expect(hexToHue('#ff0000')).toBe(0);
-    expect(hexToHue('#00ff00')).toBe(120);
-    expect(hexToHue('#0000ff')).toBe(240);
-    expect(hexToHue('#ffffff')).toBe(0);
-    expect(hexToHue('#000000')).toBe(0);
   });
 });
 

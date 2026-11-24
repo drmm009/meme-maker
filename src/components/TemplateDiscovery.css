@@ -19,112 +19,6 @@
 
 /* Mobile-only spacing for search and category tags */
 
-.search-pill-container {
-  position: relative;
-  display: flex;
-  align-items: center;
-  flex: 1;
-  height: 46px;
-  background: rgba(255, 255, 255, 0.05) !important;
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  border-radius: var(--radius-pill);
-  box-shadow: none !important;
-  padding: 0 14px 0 18px;
-  gap: 10px;
-  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
-  box-sizing: border-box;
-}
-
-[data-theme='light'] .search-pill-container {
-  background: rgba(255, 255, 255, 0.85) !important;
-  border: 1px solid rgba(0, 0, 0, 0.12) !important;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
-}
-
-.search-pill-container:hover {
-  background: rgba(30, 35, 52, 0.8) !important;
-  border-color: rgba(255, 255, 255, 0.25) !important;
-}
-
-.search-pill-container:focus-within {
-  background: rgba(255, 255, 255, 0.08) !important;
-  border-color: rgba(255, 255, 255, 0.35) !important;
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.06) !important;
-}
-
-.search-pill-icon {
-  color: #a1a1aa;
-  flex-shrink: 0;
-  width: 18px;
-  height: 18px;
-  transition: color 0.2s ease;
-}
-
-.search-pill-container:hover .search-pill-icon,
-.search-pill-container:focus-within .search-pill-icon {
-  color: #ffffff;
-}
-
-.search-pill-container input,
-.search-pill-container input[type="text"],
-.search-pill-input,
-input.search-pill-input[type="text"] {
-  flex: 1 1 0% !important;
-  min-width: 0 !important;
-  height: 100% !important;
-  background: transparent !important;
-  border: none !important;
-  outline: none !important;
-  box-shadow: none !important;
-  border-radius: 0 !important;
-  padding: 0 !important;
-  font-size: 0.92rem !important;
-  color: var(--text-main, #ffffff) !important;
-  font-family: inherit !important;
-  font-weight: 550 !important;
-}
-
-.search-pill-container input:focus,
-.search-pill-container input[type="text"]:focus,
-.search-pill-input:focus,
-input.search-pill-input[type="text"]:focus {
-  border: none !important;
-  outline: none !important;
-  box-shadow: none !important;
-  background: transparent !important;
-}
-
-.search-pill-input::placeholder,
-input.search-pill-input[type="text"]::placeholder {
-  color: #a1a1aa !important;
-  opacity: 0.85 !important;
-  font-weight: 500;
-}
-
-.search-pill-clear {
-  width: 22px;
-  height: 22px;
-  background: rgba(255, 255, 255, 0.12);
-  border: none;
-  border-radius: 50%;
-  color: #a1a1aa;
-  font-size: 11px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  padding: 0;
-  transition: all 0.2s;
-  flex-shrink: 0;
-}
-
-.search-pill-clear:hover {
-  background: rgba(255, 255, 255, 0.25);
-  color: #ffffff;
-}
-
 /* Creative Vibe Modes Row (Placed Below Input Box) */
 .ai-vibe-modes-row {
   display: flex;
@@ -445,10 +339,7 @@ input.ai-hero-prompt-input {
 }
 
 .hero-glow-orb-1,
-.glow-theme-studio .hero-glow-orb-1,
-.glow-theme-ai .hero-glow-orb-1,
-.glow-theme-face .hero-glow-orb-1,
-.glow-theme-cutout .hero-glow-orb-1 {
+.glow-theme-ai .hero-glow-orb-1 {
   width: 620px !important;
   max-width: 96vw !important;
   height: 320px !important;
@@ -872,33 +763,8 @@ input.ai-hero-prompt-input {
 }
 
 /* Video & Social 3D SVG Motion */
-.video-3d-svg {
-  filter: drop-shadow(0 14px 26px rgba(6, 182, 212, 0.45));
-}
 
-.video-motion-clapper {
-  animation: motionVideoFloat 3.4s ease-in-out infinite;
-  transform-origin: 56px 58px;
-}
-
-.video-motion-stick {
-  animation: motionStickSnip 1.8s ease-in-out infinite alternate;
-  transform-origin: 0px 0px;
-}
-
-@keyframes motionVideoFloat {
-  0%, 100% { transform: rotate(-8deg) translateY(0); }
-  50% { transform: rotate(-3deg) translateY(-7px) scale(1.02); }
-}
-
-@keyframes motionStickSnip {
-  0% { transform: translate(20px, 22px) rotate(0deg); }
-  50% { transform: translate(20px, 16px) rotate(-16deg); }
-  100% { transform: translate(20px, 22px) rotate(0deg); }
-}
-
-.ai-motion-sparkles,
-.video-motion-sparkles {
+.ai-motion-sparkles {
   animation: motionSparkleTwinkle 2.8s ease-in-out infinite alternate;
   transform-origin: 100px 20px;
 }
@@ -1871,20 +1737,6 @@ input.ai-hero-prompt-input {
 /* ==========================================================================
    LIGHT MODE OVERRIDES (SOLID HIGH-CONTRAST PEARL SURFACES)
    ========================================================================== */
-
-[data-theme='light'] .search-pill-container {
-  background: rgba(255, 255, 255, 0.85) !important;
-  border: 1px solid rgba(0, 0, 0, 0.12) !important;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
-}
-
-[data-theme='light'] .search-pill-input {
-  color: #0f172a !important;
-}
-
-[data-theme='light'] .search-pill-input::placeholder {
-  color: #94a3b8 !important;
-}
 
 [data-theme='light'] .shelf-heading,
 [data-theme='light'] .empty-state h3 {

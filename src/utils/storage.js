@@ -24,11 +24,3 @@ export function safeSet(key, value) {
     return false;
   }
 }
-
-export function safeRemove(key) {
-  try {
-    localStorage.removeItem(key);
-  } catch {
-    /* ignore */
-  }
-}

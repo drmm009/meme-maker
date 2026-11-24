@@ -9,7 +9,6 @@
   --vt-text: #f4f4f6;
   --vt-muted: #8e8e93;
   --vt-accent: #ff5a36;
-  --vt-accent-soft: rgba(255, 90, 54, 0.18);
   /* Solid, like the image editor: what used to be a gradient with a glow. */
   --vt-grad: #ff5a36;
   --vt-glow: none;

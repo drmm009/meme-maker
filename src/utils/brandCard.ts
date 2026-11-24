@@ -3,9 +3,9 @@
 // The watermark is a project setting, drawn as a text clip that isn't on the timeline; the end
 // card is an ordinary photo clip, marked so it can be redrawn and kept at the end.
 import type { Clip, ImageClip, StickerClip, TextClip, WatermarkSettings, EndCardSettings } from '../model/videoProject';
+import { STAGE_WIDTH } from '../model/videoProject';
 import { isSocialLogo, socialLogoUrl } from './socialLogos';
 
-export const STAGE_WIDTH = 800;
 export const WATERMARK_ID = '__watermark';
 export const WATERMARK_LOGO_ID = '__watermark-logo';
 export const WATERMARK_OPACITY = 0.75;

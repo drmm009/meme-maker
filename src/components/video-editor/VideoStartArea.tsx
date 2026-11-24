@@ -12,6 +12,7 @@ import { Clapperboard, Image as ImageIcon, SquarePlay } from 'lucide-react';
 import CanvasStartPrompt from '../ui/CanvasStartPrompt';
 import StartPrompt from './StartPrompt';
 import { useEditorStore } from '../../store/useVideoEditorStore';
+import { STAGE_WIDTH } from '../../model/videoProject';
 import { bandRects } from '../../utils/videoBands';
 import type { VideoBand } from '../../utils/videoBands';
 import { inkFor } from '../../utils/inkFor';
@@ -34,7 +35,6 @@ interface State {
   setTargetSlot: (index: number | null) => void;
 }
 
-const STAGE_WIDTH = 800;
 // Grids with more panels than this start empty (their panels are too small for a card).
 const MAX_PROMPT_PANELS = 4;
 const isMedia = (i: Item) => i.type === 'video' || i.type === 'image' || i.type === 'sticker';

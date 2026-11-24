@@ -5,7 +5,6 @@
   --ui-surface: #1c1c1e;
   --ui-surface-2: #34363c;
   --ui-surface-3: #3e4046;
-  --ui-glass: rgba(58, 59, 65, 0.92);
   --ui-line: rgba(255, 255, 255, 0.07);
   --ui-line-strong: rgba(255, 255, 255, 0.14);
   --ui-text: #f4f4f6;
@@ -28,7 +27,6 @@
   --ui-radius-sm: 12px;
   --ui-radius-md: 16px;
   --ui-radius-lg: 20px;
-  --ui-radius-xl: 24px;
   --ui-radius-full: 999px;
   --ui-shadow: 0 18px 40px -14px rgba(0, 0, 0, 0.75);
   /* The app's one UI font (src/styles/core.css), so the editor matches the other screens. */

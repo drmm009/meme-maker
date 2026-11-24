@@ -316,23 +316,11 @@
   color: var(--ios-accent-text);
 }
 
-.ios-btn--destructive {
-  background: rgba(255, 82, 104, 0.14);
-  color: var(--ios-red);
-}
-
 .ios-btn--capsule {
   min-height: 46px;
   padding: 0 24px;
   border-radius: 999px;
   font-size: 16px;
-}
-
-.ios-btn--small {
-  min-height: 34px;
-  padding: 0 16px;
-  border-radius: 999px;
-  font-size: 15px;
 }
 
 .ios-text-btn {

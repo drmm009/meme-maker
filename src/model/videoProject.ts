@@ -4,6 +4,9 @@
 import { resolveFilter } from '../utils/clipFilters';
 import type { VideoBand } from '../utils/videoBands';
 
+// The stage's width in those units; its height is STAGE_WIDTH / the canvas aspect ratio.
+export const STAGE_WIDTH = 800;
+
 export type ClipType = 'video' | 'image' | 'sticker' | 'text' | 'audio';
 export type TextAnimation = 'pop' | 'shake' | 'typewriter';
 export type TransitionType = 'fade' | 'zoom' | 'slide';

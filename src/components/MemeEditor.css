@@ -116,10 +116,6 @@
   padding: 12px;
   box-sizing: border-box;
 }
-@keyframes tabFadeIn {
-  from { opacity: 0; transform: translateY(5px); }
-  to { opacity: 1; transform: translateY(0); }
-}
 .form-field {
   flex-direction: column;
   gap: 6px;
@@ -131,50 +127,8 @@
   font-weight: 700;
 }
 
-/* ─── Kinetic Micro-Animations ─── */
-@keyframes wandWave {
-  0%, 100% { transform: rotate(0deg); }
-  25% { transform: rotate(-14deg); }
-  75% { transform: rotate(14deg); }
-}
-
-@keyframes aiSparklePulse {
-  0%, 100% { transform: scale(1) rotate(0deg); }
-  50% { transform: scale(1.18) rotate(12deg); }
-}
-
-@keyframes bubblePop {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.18) translateY(-1px); }
-}
-
-@keyframes trashShake {
-  0%, 100% { transform: rotate(0deg); }
-  25% { transform: rotate(-12deg); }
-  75% { transform: rotate(12deg); }
-}
-
 /* ── Revamp: same system as the video editor (minimal top bar, app-style dock with drop-ups) ── */
 .meme-editor-container { background: var(--bg-dark) !important; }
-/* The + overlay is portalled into <body>, so it gets the tokens too. */
-.meme-editor-container {
-  --ie-glass: rgba(18, 21, 31, 0.88);
-  --ie-glass-elevated: rgba(26, 29, 39, 0.94);
-  --ie-border-subtle: rgba(255, 255, 255, 0.08);
-  --ie-border-highlight: rgba(255, 255, 255, 0.16);
-  --ie-shadow-float: 0 20px 48px -12px rgba(0, 0, 0, 0.78), 0 0 0 1px rgba(255, 255, 255, 0.09);
-  --ie-grad: linear-gradient(135deg, #ff5e36, #ec4899);
-}
-
-/* + overlay: command palette at the top, orbit of favourites over the nucleus. */
-@keyframes ie-fade-in { from { opacity: 0; } to { opacity: 1; } }
-@keyframes ie-orbit-in {
-  from { opacity: 0; transform: translate(-50%, 0) scale(0.4); }
-  to { opacity: 1; transform: translate(calc(-50% + var(--tx)), var(--ty)) scale(1); }
-}
-
-/* Inspector card: kind Studio badge, the layer's tools, Done. */
-@keyframes ie-card-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 
 /* The Stickers maker: the see-through canvas on a soft checkerboard, so what will be transparent shows. */
 .canvas-wrapper--sticker .meme-canvas {

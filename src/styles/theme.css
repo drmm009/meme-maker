@@ -7,44 +7,26 @@
   
   /* Primary Flame Orange & Pink Accents */
   --primary-accent: #ff5e36;
-  --primary-accent-end: #ff3b60;
-  --secondary-accent: #ff3b60;
-  --tertiary-accent: #ec4899;
 
   --primary-gradient: linear-gradient(90deg, #ff5e36 0%, #ec4899 100%);
-  --primary-gradient-hover: linear-gradient(90deg, #ff4c21 0%, #db2777 100%);
-  --btn-blue-grad: linear-gradient(90deg, #ff3b60 0%, #ff5e36 100%);
   
   --poster-orange: #ff5e36;
   --poster-yellow: #ff9100;
   --cyber-cyan: #ff5e36;
   --cyber-pink: #ec4899;
-  --emerald-accent: #ff5e36;
-  --amber-accent: #ff9100;
   --primary-glow: rgba(255, 94, 54, 0.4);
 
   /* Geometry - Smooth Squircles */
-  --radius-xs: 8px;
   --radius-sm: 12px;
   --radius-md: 20px;
   --radius-lg: 28px;
-  --radius-xl: 36px;
   --radius-pill: 9999px;
 
   /* Solid Obsidian Surfaces & High-Contrast Tokens */
-  --surface-ground: #090a0f;
-  --surface-card: #13161f;
-  --surface-card-hover: #191c28;
-  --surface-card-elevated: #181b24;
-  --surface-input: #0e1017;
-  --surface-dock: #11141c;
   --border-subtle: transparent;
-  --border-medium: transparent;
-  --border-accent: transparent;
 
   /* Dark Obsidian Spectrum (Original Default) */
   --bg-dark: #090a0f;
-  --bg-base: #090a0f;
   /* Home's dark backdrop (the orange glow at the top), also behind the always-dark image editor. */
   --bg-gradient-dark:
     radial-gradient(ellipse 90% 30% at 50% 0%, rgba(255, 255, 255, 0.04) 0%, transparent 60%),
@@ -64,15 +46,10 @@
   --glass-border-glow: rgba(255, 94, 54, 0.45);
   --glass-shadow: 0 16px 36px -8px rgba(0, 0, 0, 0.7);
   --shadow-card: 0 10px 24px -6px rgba(0, 0, 0, 0.6);
-  --shadow-float: 0 20px 40px -10px rgba(0, 0, 0, 0.8), 0 0 20px rgba(255, 94, 54, 0.2);
-  --shadow-inner-glow: inset 0 1px 1px 0 rgba(255, 255, 255, 0.08);
-
-  --timeline-track-bg: #141620;
 }
 
 :root[data-theme='light'] {
   --bg-dark: #f8fafc;
-  --bg-base: #f8fafc;
   --bg-surface-1: rgba(255, 255, 255, 0.85);
   --bg-surface-2: rgba(255, 255, 255, 0.92);
   --bg-surface-3: #ffffff;
@@ -90,33 +67,17 @@
   --primary-accent: #ff5e36;
   --primary-gradient: linear-gradient(90deg, #ff5e36 0%, #ec4899 100%);
   --shadow-card: 0 14px 34px -8px rgba(15, 23, 42, 0.06);
-  --shadow-float: 0 24px 50px -10px rgba(255, 94, 54, 0.2);
-  --shadow-inner-glow: inset 0 1px 1px 0 rgba(255, 255, 255, 0.9);
-  --timeline-track-bg: #f1f5f9;
 }
 
 :root[data-theme='dark'] {
   --bg-dark: #090a0f;
-  --bg-base: #090a0f;
   --bg-surface-1: #13161f;
   --bg-surface-2: #181b24;
   --bg-surface-3: #202432;
-  --surface-ground: #090a0f;
-  --surface-card: #13161f;
-  --surface-card-hover: #191c28;
-  --surface-card-elevated: #181b24;
-  --surface-input: #0e1017;
-  --surface-dock: #11141c;
   --border-subtle: transparent;
-  --border-medium: transparent;
-  --border-accent: transparent;
 
   --primary-accent: #ff5e36;
-  --primary-accent-end: #ff3b60;
-  --secondary-accent: #ff3b60;
   --primary-gradient: linear-gradient(90deg, #ff5e36 0%, #ec4899 100%);
-  --primary-gradient-hover: linear-gradient(90deg, #ff4c21 0%, #db2777 100%);
-  --btn-blue-grad: linear-gradient(90deg, #ff3b60 0%, #ff5e36 100%);
   --poster-orange: #ff5e36;
   --cyber-cyan: #ff5e36;
   --primary-glow: rgba(255, 94, 54, 0.45);
@@ -130,8 +91,5 @@
   --glass-border-glow: rgba(255, 94, 54, 0.45);
   --glass-shadow: 0 16px 36px -8px rgba(0, 0, 0, 0.7);
   --shadow-card: 0 10px 24px -6px rgba(0, 0, 0, 0.6);
-  --shadow-float: 0 20px 40px -10px rgba(0, 0, 0, 0.8), 0 0 20px rgba(255, 94, 54, 0.2);
-  --shadow-inner-glow: inset 0 1px 1px 0 rgba(255, 255, 255, 0.08);
 
-  --timeline-track-bg: #141620;
 }

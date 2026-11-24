@@ -69,9 +69,6 @@ h1, h2, h3, h4, h5, h6 {
 .text-cyan {
   color: var(--cyber-cyan);
 }
-.text-danger {
-  color: #ef4444;
-}
 .btn {
   border-radius: var(--radius-pill);
   cursor: pointer;
@@ -216,7 +213,6 @@ h1, h2, h3, h4, h5, h6 {
     transform: none;
   }
 }
-
 
 /* Heading Subtitles Global Rules */
 .shelf-subtext,

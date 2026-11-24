@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { CLIP_FX, isClipFx, popColour, seeded, thermalColour, y2kColour } from './clipFx';
+import { CLIP_FX, isClipFx, seeded, thermalColour, y2kColour } from './clipFx';
 import { needsFrameRenderer } from './personSegmenter';
 
 describe('clip effects', () => {
@@ -20,13 +20,11 @@ describe('clip effects', () => {
     }
   });
 
-  it('maps colours: thermal dark blue to yellow-white, Y2K blue to pink, Pop to flat levels', () => {
+  it('maps colours: thermal dark blue to yellow-white, Y2K blue to pink', () => {
     expect(thermalColour(0, 0, 0)).toEqual([8, 8, 60]);
     expect(thermalColour(255, 255, 255)).toEqual([255, 240, 120]);
     expect(y2kColour(0, 0, 0)).toEqual([30, 20, 160]);
     expect(y2kColour(255, 255, 255)).toEqual([255, 110, 200]);
-    expect(popColour(250, 20, 20)).toEqual([255, 0, 0]);
-    popColour(123, 77, 200).forEach((c) => expect(c % 85).toBe(0));
   });
 
   it('sends a video with an effect to the frame-by-frame export', () => {

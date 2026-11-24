@@ -192,15 +192,6 @@
   object-fit: contain;
 }
 
-.sst-stage-tools {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  left: 12px;
-  display: flex;
-  justify-content: space-between;
-}
-
 .sst-chip {
   display: inline-flex;
   align-items: center;
