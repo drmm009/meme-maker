@@ -3,9 +3,9 @@
 // with a frosted icon badge, its name and a short line on a dark fade (the video one also has a
 // VIDEO · 0:12 pill with moving sound bars); they open Choose Canvas Layout on that kind (App's
 // openCanvas, `onPick`). Under them the AI meme maker as a quiet grouped row (its icon on a dark
-// tile, a NEW tag, a chevron), then More tools as an inset grouped list (each row the bare icon in
-// its maker's colour, the name and a short line beside it, a chevron): Stickers, GIF maker and Face
-// swap. Those open their makers (`onMaker`). The sheet itself is frosted glass. Each maker in its colour, as on Home's maker cards. In
+// tile, a NEW tag, a chevron), then More tools as three cards in a row, everything inside each: a
+// dark rounded tile with a glow of the maker's colour from its corner, the maker's icon in that
+// colour at the top, the name and a short line at the foot: Stickers, GIF maker and Face swap. Those open their makers (`onMaker`). The sheet itself is frosted glass. Each maker in its colour, as on Home's maker cards. In
 // the pages' iOS look (pages/iosLook.css, creatorSheet.css): from the bottom on a phone, centred on
 // a wide screen; the close button, Escape, a tap outside or dragging the grabber down closes it.
 import { useEffect, useRef } from 'react';
@@ -152,7 +152,6 @@ export default function CreatorSheet({ open, onClose, onPick, onMaker }: {
                   <span className="cs-tool-label">{label}</span>
                   <span className="cs-tool-about">{about}</span>
                 </span>
-                <ChevronRight className="cs-tool-go" strokeWidth={2.2} aria-hidden="true" />
               </button>
             ))}
           </div>
