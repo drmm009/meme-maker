@@ -639,6 +639,17 @@ input.ai-hero-prompt-input {
   color: #0f172a !important;
 }
 
+/* The hero is a photo with a dark fade in both themes, so its badge keeps its light-on-dark look. */
+[data-theme='light'] .hero-banner .hero-free-badge {
+  background: rgba(20, 20, 24, 0.45) !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  color: #ffffff !important;
+}
+
+[data-theme='light'] .hero-banner .hero-free-badge span {
+  color: #ffffff !important;
+}
+
 .hero-free-dot {
   position: relative;
   width: 6px;

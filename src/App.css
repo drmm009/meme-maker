@@ -512,8 +512,10 @@ body.modal-open {
   color: #ffffff;
 }
 
-[data-theme='light'] .dock-nav-item {
-  color: #64748b;
+[data-theme='light'] .dock-nav-item,
+[data-theme='light'] .dock-nav-item .dock-icon,
+[data-theme='light'] .dock-nav-item .dock-label {
+  color: #5b6474;
 }
 
 [data-theme='light'] .dock-nav-item:hover {

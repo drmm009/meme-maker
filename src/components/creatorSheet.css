@@ -90,6 +90,9 @@
 .cs-tone--stickers { --cs-color: #2fd39b; }
 .cs-tone--gif { --cs-color: #c4f04d; }
 .cs-tone--faceswap { --cs-color: #ff7a59; }
+/* On the light sheet the brightest colours wash out: deeper lime and green there. */
+[data-theme='light'] .cs-tone--gif { --cs-color: #5f8f0a; }
+[data-theme='light'] .cs-tone--stickers { --cs-color: #10a06f; }
 
 /* ---- The two photo cards ---- */
 
